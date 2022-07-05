@@ -137,7 +137,7 @@ def runChi2Tracking(
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters=smearAlg.config.outputTrackParameters,
         outputTrajectories="trajectories",
-        nUpdates = 3,
+        nUpdates=3,
         multipleScattering=True,
         energyLoss=True,
         pickTrack=-1,
