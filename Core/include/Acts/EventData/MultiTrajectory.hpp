@@ -1061,7 +1061,7 @@ class MultiTrajectory {
     return *std::any_cast<T*>(self().component_impl(key, istate));
   }
 
-  /// Retrieve a mutable reference to a component
+  /// Retrieve a const reference to a component
   /// @tparam T The type of the component to access
   /// @tparam key String key for the component to access
   /// @param istate The track state index to operate on
@@ -1072,7 +1072,7 @@ class MultiTrajectory {
     return *std::any_cast<const T*>(self().component_impl(key, istate));
   }
 
-  /// Retrieve a mutable reference to a component
+  /// Retrieve a const reference to a component
   /// @tparam T The type of the component to access
   /// @param key String key for the component to access
   /// @param istate The track state index to operate on
