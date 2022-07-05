@@ -54,11 +54,13 @@ class SpacePointBuilder {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param measurements vector of measurements
-  /// @param spacePointIt Output iterator for the space points
+  /// @param opt option for the space point bulding. It contains the ends of the strips for strip SP building
+  /// @param spacePointIt Output iterator for the space point
   template <template <typename...> typename container_t>
-  void calculateSingleHitSpacePoints(
+  void buildSpacePoint(
       const GeometryContext& gctx,
       const std::vector<const Measurement*>& measurements,
+      const SpacePointOptions& opt,
       std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const;
 
   /// @brief Searches possible combinations of two measurements on different
@@ -74,21 +76,6 @@ class SpacePointBuilder {
       const std::vector<const Measurement*>& measurementsBack,
       std::vector<std::pair<const Measurement*, const Measurement*>>&
           measurementPairs) const;
-
-  /// @brief Searches possible combinations of two measurements on different
-  /// surfaces that may come from the same particles
-  /// @param gctx The geometry context to use
-  /// @param measurementPair pair of measurements that are space point candidates
-  /// @param stripEndsPair The global positions of the ends of the strip pair
-  /// @param spacePoint The space point to be created.
-  /// @note If no configuration is set, the default values will be used
-  // template <template <typename...> typename container_t>
-  void calculateDoubleHitSpacePoint(
-      const Acts::GeometryContext& gctx,
-      const std::pair<const Measurement*, const Measurement*>& measurementPair,
-      const std::pair<const std::pair<Vector3, Vector3>,
-                      const std::pair<Vector3, Vector3>>& stripEndsPair,
-      std::shared_ptr<const spacepoint_t> spacePoint) const;
 
  protected:
   // configuration of the single hit space point builder

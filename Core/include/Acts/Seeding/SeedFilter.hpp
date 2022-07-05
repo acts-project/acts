@@ -19,7 +19,6 @@
 #include <vector>
 
 namespace Acts {
-
 /// Filter seeds at various stages with the currently
 /// available information.
 template <typename external_spacepoint_t>
@@ -40,27 +39,50 @@ class SeedFilter {
   /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
   /// @param impactParametersVec vector containing the impact parameters
   /// @param zOrigin on the z axis as defined by bottom and middle space point
-  /// @param outIt Output iterator for the seeds
+  /// @param numQualitySeeds number of high quality seeds in seed confirmation
+  /// @param numSeeds number of seeds that did not pass the quality confirmation but were still accepted, if quality confirmation is not used this is the total number of seeds
+  /// @param outCont Output container for the seeds
   virtual void filterSeeds_2SpFixed(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
       InternalSpacePoint<external_spacepoint_t>& middleSP,
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, float zOrigin,
-      std::back_insert_iterator<std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>>
-          outIt) const;
+      int& numQualitySeeds, int& numSeeds,
+      std::vector<std::pair<
+          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
+          outCont) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param seedsPerSpM vector of pairs containing weight and seed for all
+  /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
           seedsPerSpM,
+      int& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
+
+  /// Check if there is a lower quality seed that can be replaced
+  /// @param bottomSP fixed bottom space point
+  /// @param middleSP fixed middle space point
+  /// @param topSp fixed top space point
+  /// @param zOrigin on the z axis as defined by bottom and middle space point
+  /// @param isQualitySeed information whether the seed is quality confirmed or not
+  /// @param weight weight of the seed
+  /// @param outCont container for the seeds
+  virtual void checkReplaceSeeds(
+      InternalSpacePoint<external_spacepoint_t>& bottomSP,
+      InternalSpacePoint<external_spacepoint_t>& middleSP,
+      InternalSpacePoint<external_spacepoint_t>& topSp, float zOrigin,
+      bool isQualitySeed, float weight,
+      std::vector<std::pair<
+          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
+          outCont) const;
+
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
   const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {
     return m_experimentCuts;

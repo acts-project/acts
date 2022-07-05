@@ -36,7 +36,8 @@ def addVertexFitting(
     s,
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    associatedParticles: str = "associatedTruthParticles",
+    associatedParticles: str = "particles_input",
+    trackParameters: str = "estimatedparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
 ):
@@ -69,7 +70,6 @@ def addVertexFitting(
     inputParticles = "particles_input"
     outputVertices = "fittedVertices"
     selectedParticles = "particles_selected"
-    trackParameters = "trackparameters"
 
     outputTime = ""
     if vertexFinder == VertexFinder.Truth:
@@ -227,6 +227,7 @@ def runVertexFitting(
         field,
         outputDirRoot=outputDir if outputRoot else None,
         associatedParticles=associatedParticles,
+        trackParameters=trackParameters,
         vertexFinder=vertexFinder,
     )
 

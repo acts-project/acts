@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -114,12 +115,12 @@ constexpr bool MultiStepperStateConcept= require<
         static_assert(time_exists, "time method not found");
         constexpr static bool overstep_exists = has_method<const S, double, overstep_t, const state&>;
         static_assert(overstep_exists, "overstepLimit method not found");
-        constexpr static bool bound_state_method_exists= has_method<const S, Result<typename S::BoundState>, bound_state_method_t, state&, const Surface&, bool>;
+        constexpr static bool bound_state_method_exists= has_method<const S, Result<typename S::BoundState>, bound_state_method_t, state&, const Surface&, bool, const FreeToBoundCorrection&>;
         static_assert(bound_state_method_exists, "boundState method not found");
         constexpr static bool curvilinear_state_method_exists = has_method<const S, typename S::CurvilinearState, curvilinear_state_method_t, state&, bool>;
         static_assert(curvilinear_state_method_exists, "curvilinearState method not found");
         constexpr static bool covariance_transport_exists = require<has_method<const S, void, covariance_transport_curvilinear_t, state&>,
-                                                                    has_method<const S, void, covariance_transport_bound_t, state&, const Surface&>>;
+                                                                    has_method<const S, void, covariance_transport_bound_t, state&, const Surface&, const FreeToBoundCorrection&>>;
         static_assert(covariance_transport_exists, "covarianceTransport method not found");
         constexpr static bool update_surface_exists = has_method<const S, Intersection3D::Status, update_surface_status_t, state&, const Surface&, const BoundaryCheck&, LoggerWrapper>;
         static_assert(update_surface_exists, "updateSurfaceStatus method not found");

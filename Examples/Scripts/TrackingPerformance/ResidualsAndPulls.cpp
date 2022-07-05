@@ -47,7 +47,7 @@ int main(int argc, char** argv) {
 
     if (vm.count("help")) {
       std::cout << description;
-      return 1;
+      return 0;
     }
 
     // Parse the parameters
@@ -68,10 +68,12 @@ int main(int argc, char** argv) {
       case -1: {
         std::cout << "*** Input file could not be opened, check name/path."
                   << std::endl;
+        return -1;
       } break;
       case -2: {
         std::cout << "*** Input tree could not be found, check name."
                   << std::endl;
+        return -2;
       } break;
       default: {
         std::cout << "*** Successful run." << std::endl;
@@ -87,5 +89,5 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "*** Done." << std::endl;
-  return 1;
+  return 0;
 }

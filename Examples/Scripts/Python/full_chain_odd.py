@@ -23,8 +23,9 @@ rnd = acts.examples.RandomNumbers(seed=42)
 from particle_gun import addParticleGun, MomentumConfig, EtaConfig, ParticleConfig
 from fatras import addFatras
 from digitization import addDigitization
-from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
-from ckf_tracks import addCKFTracks
+from seeding import addSeeding, TruthSeedRanges
+from ckf_tracks import addCKFTracks, CKFPerformanceConfig
+from vertex_fitting import addVertexFitting, VertexFinder
 
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 
@@ -63,7 +64,13 @@ s = addCKFTracks(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(6, None)),
+    CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+    outputDirRoot=outputDir,
+)
+s = addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Truth,
     outputDirRoot=outputDir,
 )
 

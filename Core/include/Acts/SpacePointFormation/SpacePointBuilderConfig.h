@@ -16,6 +16,7 @@ struct SpacePointBuilderConfig{
    // Tracking geometry
    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry; 
   /// Accepted squared difference in theta for two clusters
+  Vector3 vertex = {0., 0., 0.};
   double diffTheta2 = 1.;
   /// Accepted squared difference in phi for two clusters
   double diffPhi2 = 1.;
@@ -25,12 +26,18 @@ struct SpacePointBuilderConfig{
   double stripLengthTolerance = 0.01;
   /// Allowed increase of strip length wrt gaps between strips
   double stripLengthGapTolerance = 0.01;
-  /// Assumed position of the vertex
-  Vector3 vertex = {0., 0., 0.};
   /// Perform the perpendicular projection for space point finding
   bool usePerpProj = false;
   
    SpacePointBuilderConfig()=default;
+};
+
+struct SpacePointOptions{
+
+   std::pair<
+    const std::pair<Vector3, Vector3>,
+    const std::pair<Vector3, Vector3>> StripEndsPair;
+  
 };
 
 }
