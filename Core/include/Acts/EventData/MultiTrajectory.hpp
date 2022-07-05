@@ -143,6 +143,8 @@ class TrackStateProxy {
     return component<IndexType, hashString("previous")>();
   }
 
+  /// Return whather this track state has a previous (parent) track state.
+  /// @return Boolean indicating whether a previous track state exists
   bool hasPrevious() const {
     return component<IndexType, hashString("previous")>() < kInvalid;
   }
@@ -152,12 +154,25 @@ class TrackStateProxy {
   /// @return The generated mask
   TrackStatePropMask getMask() const;
 
+  /// Share a shareable component within this track state
+  /// @param shareSource Which component to share from
+  /// @param shareTarget Which component to share as. This should be different from
+  ///                    as @p shareSource, e.g. predicted can be shared as filtered.
+  /// @note Shareable components are predicted, filtered, smoothed, calibrated, jacobian,
+  ///       or projector. See @c TrackStatePropMask.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void shareFrom(TrackStatePropMask shareSource,
                  TrackStatePropMask shareTarget) {
     shareFrom(*this, shareSource, shareTarget);
   }
 
+  /// Share a shareable component from another track state.
+  /// @param other Track state proxy to share component from
+  /// @param component Which component to share.
+  /// @note Shareable components are predicted, filtered, smoothed, calibrated, jacobian,
+  ///       or projector. See @c TrackStatePropMask.
+  /// @note The track states both need to be stored in the
+  ///       same @c MultiTrajectory instance
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if_t<!RO>>
   void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
@@ -165,6 +180,12 @@ class TrackStateProxy {
     shareFrom(other, component, component);
   }
 
+  /// Share a shareable component from anothe track state
+  /// @param shareSource Which component to share from
+  /// @param shareTarget Which component to share as. This can be be different from
+  ///                    as @p shareSource, e.g. predicted can be shared as filtered.
+  /// @note Shareable components are predicted, filtered, smoothed, calibrated, jacobian,
+  ///       or projector. See @c TrackStatePropMask.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if_t<!RO>>
   void shareFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
@@ -321,50 +342,81 @@ class TrackStateProxy {
               hashString("referenceSurface")>() = std::move(srf);
   }
 
+  /// Check if a component is set
+  /// @tparam key Hashed string key to check for
+  /// @return true if the component exists, false if not
   template <HashedString key>
   constexpr bool has() const {
     return m_traj->template has<key>(m_istate);
   }
 
+  /// Check if a component is set
+  /// @param key Hashed string key to check for
+  /// @return true if the component exists, false if not
   constexpr bool has(HashedString key) const {
     return m_traj->has(key, m_istate);
   }
 
+  /// Check if a component is set
+  /// @param key String key to check for
+  /// @note This might hash the @p key at runtime instead of compile-time
+  /// @return true if the component exists, false if not
   constexpr bool has(std::string_view key) const {
     return has(hashString(key));
   }
 
-  template <typename T>
-  constexpr bool has(T key) const {
-    return has(hashString(key));
-  }
-
+  /// Retrieve a mutable reference to a component
+  /// @tparam T The type of the component to access
+  /// @tparam key String key for the component to access
+  /// @return Mutable reference to the component given by @p key
   template <typename T, HashedString key, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   constexpr T& component() {
     return m_traj->template component<T, key>(m_istate);
   }
 
+  /// Retrieve a mutable reference to a component
+  /// @tparam T The type of the component to access
+  /// @param key String key for the component to access
+  /// @return Mutable reference to the component given by @p key
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr T& component(HashedString key) {
     return m_traj->template component<T>(key, m_istate);
   }
 
+  /// Retrieve a mutable reference to a component
+  /// @tparam T The type of the component to access
+  /// @param key String key for the component to access
+  /// @note This might hash the @p key at runtime instead of compile-time
+  /// @return Mutable reference to the component given by @p key
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr T& component(std::string_view key) {
     return m_traj->template component<T>(hashString(key), m_istate);
   }
 
+  /// Retrieve a const reference to a component
+  /// @tparam T The type of the component to access
+  /// @tparam key String key for the component to access
+  /// @return Const reference to the component given by @p key
   template <typename T, HashedString key>
   constexpr const T& component() const {
     return m_traj->template component<T, key>(m_istate);
   }
 
+  /// Retrieve a const reference to a component
+  /// @tparam T The type of the component to access
+  /// @param key String key for the component to access
+  /// @return Const reference to the component given by @p key
   template <typename T>
   constexpr const T& component(HashedString key) const {
     return m_traj->template component<T>(key, m_istate);
   }
 
+  /// Retrieve a const reference to a component
+  /// @tparam T The type of the component to access
+  /// @param key String key for the component to access
+  /// @note This might hash the @p key at runtime instead of compile-time
+  /// @return Const reference to the component given by @p key
   template <typename T>
   constexpr const T& component(std::string_view key) const {
     return m_traj->template component<T>(hashString(key), m_istate);
@@ -686,6 +738,9 @@ constexpr bool VisitorConcept = Concepts ::require<
 
 }  // namespace detail_lt
 
+/// This namespace contains typedefs and constant values that are used by
+/// other parts of the @c MultiTrajectory implementation. It extracts these
+/// from @c TrackStateTraits using the default maximum measurement dimension.
 namespace MultiTrajectoryTraits {
 constexpr unsigned int MeasurementSizeMax = eBoundSize;
 using IndexType = TrackStateTraits<MeasurementSizeMax, true>::IndexType;
@@ -706,6 +761,8 @@ class MultiTrajectory {
  public:
   using Derived = derived_t;
 
+  // Pull out type alias and re-expose them for ease of use.
+  //
   static constexpr unsigned int MeasurementSizeMax =
       MultiTrajectoryTraits::MeasurementSizeMax;
 
@@ -721,11 +778,15 @@ class MultiTrajectory {
   MultiTrajectory() = default;  // pseudo abstract base class
 
  private:
+  /// Helper to static cast this to the Derived class for CRTP
   constexpr Derived& self() { return static_cast<Derived&>(*this); }
+  /// Helper to static cast this to the Derived class for CRTP. Const version.
   constexpr const Derived& self() const {
     return static_cast<const Derived&>(*this);
   }
 
+  /// Helper function to check if a component exists IF it is an optional one.
+  /// Used in assertions
   constexpr bool checkOptional(HashedString key, IndexType istate) const {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
@@ -789,95 +850,182 @@ class MultiTrajectory {
     return self().addTrackState_impl(mask, iprevious);
   }
 
+  /// Add a column to the @c MultiTrajectory
+  /// @tparam T Type of the column values to add
+  /// @note This takes a string argument rather than a hashed string to maintain
+  ///       compatibility with backends.
   template <typename T>
   constexpr void addColumn(const std::string& key) {
     self().template addColumn_impl<T>(key);
   }
 
+  /// Check if a column with a key @p key exists.
+  /// @param key Key to check for a column with
+  /// @return True if the column exists, false if not.
   constexpr bool hasColumn(HashedString key) const {
     return self().hasColumn_impl(key);
   }
 
  protected:
+  // These are internal helper functions which the @c TrackStateProxy class talks to
+
+  /// Check for component existence of @p key in track satet @p istate
+  /// @param key The key for which to check
+  /// @param istate The track state index to check
+  /// @return True if the component exists, false if not
   constexpr bool has(HashedString key, IndexType istate) const {
     return self().has_impl(key, istate);
   }
 
+  /// Check for component existence of @p key in track satet @p istate
+  /// @tparam key The key for which to check
+  /// @param istate The track state index to check
+  /// @return True if the component exists, false if not
   template <HashedString key>
   constexpr bool has(IndexType istate) const {
     return self().has_impl(key, istate);
   }
 
+  /// Retrieve a parameter proxy instance for parameters at a given index
+  /// @param parIdx Index into the parameter column
+  /// @return Mutable proxy
   constexpr typename TrackStateProxy::Parameters parameters(IndexType parIdx) {
     return self().parameters_impl(parIdx);
   };
+
+  /// Retrieve a parameter proxy instance for parameters at a given index
+  /// @param parIdx Index into the parameter column
+  /// @return Const proxy
   constexpr typename ConstTrackStateProxy::Parameters parameters(
       IndexType parIdx) const {
     return self().parameters_impl(parIdx);
   }
 
+  /// Retrieve a covariance proxy instance for a covariance at a given index
+  /// @param covIdx Index into the covariance column
+  /// @return Mutable proxy
   constexpr typename TrackStateProxy::Covariance covariance(IndexType covIdx) {
     return self().covariance_impl(covIdx);
   }
+
+  /// Retrieve a covariance proxy instance for a covariance at a given index
+  /// @param covIdx Index into the covariance column
+  /// @return Const proxy
   constexpr typename ConstTrackStateProxy::Covariance covariance(
       IndexType covIdx) const {
     return self().covariance_impl(covIdx);
   }
 
-  constexpr typename TrackStateProxy::Covariance jacobian(IndexType covIdx) {
-    return self().jacobian_impl(covIdx);
-  }
-  constexpr typename ConstTrackStateProxy::Covariance jacobian(
-      IndexType covIdx) const {
-    return self().jacobian_impl(covIdx);
+  /// Retrieve a jacobian proxy instance for a jacobian at a given index
+  /// @param jacIdx Index into the jacobian column
+  /// @return Mutable proxy
+  constexpr typename TrackStateProxy::Covariance jacobian(IndexType jacIdx) {
+    return self().jacobian_impl(jacIdx);
   }
 
+  /// Retrieve a jacobian proxy instance for a jacobian at a given index
+  /// @param jacIdx Index into the jacobian column
+  /// @return Const proxy
+  constexpr typename ConstTrackStateProxy::Covariance jacobian(
+      IndexType jacIdx) const {
+    return self().jacobian_impl(jacIdx);
+  }
+
+  /// Retrieve a measurement proxy instance for a measurement at a given index
+  /// @param measIdx Index into the measurement column
+  /// @return Mutable proxy
   constexpr typename TrackStateProxy::Measurement measurement(
       IndexType measIdx) {
     return self().measurement_impl(measIdx);
   }
+
+  /// Retrieve a measurement proxy instance for a measurement at a given index
+  /// @param measIdx Index into the measurement column
+  /// @return Const proxy
   constexpr typename ConstTrackStateProxy::Measurement measurement(
       IndexType measIdx) const {
     return self().measurement_impl(measIdx);
   }
 
+  /// Retrieve a measurement covariance proxy instance for a measurement at a
+  /// given index
+  /// @param covIdx Index into the measurement covariance column
+  /// @return Mutable proxy
   constexpr typename TrackStateProxy::MeasurementCovariance
   measurementCovariance(IndexType covIdx) {
     return self().measurementCovariance_impl(covIdx);
   }
+
+  /// Retrieve a measurement covariance proxy instance for a measurement at a
+  /// given index
+  /// @param covIdx Index into the measurement covariance column
+  /// @return Const proxy
   constexpr typename ConstTrackStateProxy::MeasurementCovariance
   measurementCovariance(IndexType covIdx) const {
     return self().measurementCovariance_impl(covIdx);
   }
 
+  /// Share a shareable component from between track state.
+  /// @param iself The track state index to share "into"
+  /// @param iother The track state index to share from
+  /// @param shareSource Which component to share from
+  /// @param shareTarget Which component to share as. This doesn't have to be the same
+  ///                    as @p shareSource, e.g. predicted can be shared as filtered.
+  /// @note Shareable components are predicted, filtered, smoothed, calibrated, jacobian,
+  ///       or projector. See @c TrackStatePropMask.
+  /// @note The track states both need to be stored in the
+  ///       same @c MultiTrajectory instance
   constexpr void shareFrom(IndexType iself, IndexType iother,
                            TrackStatePropMask shareSource,
                            TrackStatePropMask shareTarget) {
     self().shareFrom_impl(iself, iother, shareSource, shareTarget);
   }
 
+  /// Unset an optional track state component
+  /// @param target The component to unset
+  /// @param istate The track state index to operate on
   constexpr void unset(TrackStatePropMask target, IndexType istate) {
     self().unset_impl(target, istate);
   }
 
+  /// Retrieve a mutable reference to a component
+  /// @tparam T The type of the component to access
+  /// @tparam key String key for the component to access
+  /// @param istate The track state index to operate on
+  /// @return Mutable reference to the component given by @p key
   template <typename T, HashedString key>
   constexpr T& component(IndexType istate) {
     assert(checkOptional(key, istate));
     return *std::any_cast<T*>(self().component_impl(key, istate));
   }
 
+  /// Retrieve a mutable reference to a component
+  /// @tparam T The type of the component to access
+  /// @param key String key for the component to access
+  /// @param istate The track state index to operate on
+  /// @return Mutable reference to the component given by @p key
   template <typename T>
   constexpr T& component(HashedString key, IndexType istate) {
     assert(checkOptional(key, istate));
     return *std::any_cast<T*>(self().component_impl(key, istate));
   }
 
+  /// Retrieve a mutable reference to a component
+  /// @tparam T The type of the component to access
+  /// @tparam key String key for the component to access
+  /// @param istate The track state index to operate on
+  /// @return Const reference to the component given by @p key
   template <typename T, HashedString key>
   constexpr const T& component(IndexType istate) const {
     assert(checkOptional(key, istate));
     return *std::any_cast<const T*>(self().component_impl(key, istate));
   }
 
+  /// Retrieve a mutable reference to a component
+  /// @tparam T The type of the component to access
+  /// @param key String key for the component to access
+  /// @param istate The track state index to operate on
+  /// @return Const reference to the component given by @p key
   template <typename T>
   constexpr const T& component(HashedString key, IndexType istate) const {
     assert(checkOptional(key, istate));
