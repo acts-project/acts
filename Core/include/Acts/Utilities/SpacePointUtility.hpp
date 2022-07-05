@@ -129,6 +129,7 @@ class SpacePointUtility {
   ///
   /// @param [in] pos1 position of the first measurement
   /// @param [in] pos2 position the second measurement
+  /// @param [in] posVertex Position of the vertex
   /// @param [in] maxDistance Maximum distance between two measurements
   /// @param [in] maxAngleTheta2 Maximum squared theta angle between two
   /// measurements
