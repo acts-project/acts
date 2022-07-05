@@ -11,16 +11,6 @@
 #include <iostream>
 namespace Acts {
 
-/// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two measurements
-///
-/// @param [in] pos1 position of the first measurement
-/// @param [in] pos2 position the second measurement
-/// @param [in] maxDistance Maximum distance between two measurements
-/// @param [in] maxAngleTheta2 Maximum squared theta angle between two
-/// measurements
-/// @param [in] maxAnglePhi2 Maximum squared phi angle between two measurements
-///
-/// @return The squared sum within configuration parameters, otherwise -1
 double SpacePointUtility::differenceOfMeasurementsChecked(
     const Vector3& pos1, const Vector3& pos2, const Vector3& posVertex,
     const double maxDistance, const double maxAngleTheta2,
@@ -172,19 +162,6 @@ Vector2 SpacePointUtility::globalCov(const GeometryContext& gctx,
   return gcov;
 }
 
-/// @brief This function performs a straight forward calculation of a space
-/// point and returns whether it was succesful or not.
-///
-/// @param [in] stripEnds1 Top and bottom end of the first strip detector
-/// element
-/// @param [in] stripEnds1 Top and bottom end of the second strip detector
-/// element
-/// @param [in] posVertex Position of the vertex
-/// @param [in, out] spParams Data container of the calculations
-/// @param [in] stripLengthTolerance Tolerance scaling factor on the strip
-/// detector element length
-///
-/// @return Boolean statement whether the space point calculation was succesful
 bool SpacePointUtility::calculateStripSPPosition(
     const std::pair<Vector3, Vector3>& stripEnds1,
     const std::pair<Vector3, Vector3>& stripEnds2, const Vector3& posVertex,
@@ -229,16 +206,6 @@ bool SpacePointUtility::calculateStripSPPosition(
                             spParams.r.dot(spParams.qs)) <= spParams.limit);
 }
 
-/// @brief This function tests if a space point can be estimated by a more
-/// tolerant treatment of construction. In fact, this function indirectly
-/// allows shifts of the vertex.
-///
-/// @param [in] spParams container that stores geometric parameters and rules of
-/// the space point formation
-/// @param [in] stripLengthGapTolerance Tolerance scaling factor of the gap
-/// between strip detector elements
-///
-/// @return indicator if the test was successful
 bool SpacePointUtility::recoverSpacePoint(
     SpacePointParameters& spParams, double stripLengthGapTolerance) const {
   /// Consider some cases that would allow an easy exit
@@ -320,15 +287,6 @@ bool SpacePointUtility::recoverSpacePoint(
   return false;
 }
 
-/// @brief Calculates a space point whithout using the vertex
-/// @note This is mostly to resolve space points from cosmic data
-/// @param stripEnds1 The ends of one strip
-/// @param stripEnds2 The ends of another strip
-/// @param spParams SpacePointParamaters for the SP
-/// @return parameter that indicates the location of the space point; returns
-/// 1. if it failed
-/// @note The meaning of the parameter is explained in more detail in the
-/// function body
 double SpacePointUtility::calcPerpendicularProjection(
     const std::pair<Vector3, Vector3>& stripEnds1,
     const std::pair<Vector3, Vector3>& stripEnds2,

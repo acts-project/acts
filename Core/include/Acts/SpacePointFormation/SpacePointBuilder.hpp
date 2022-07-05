@@ -54,13 +54,13 @@ class SpacePointBuilder {
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param measurements vector of measurements
-  /// @param spacePointIt Output iterator for the space points
+  /// @param opt option for the space point bulding. It contains the ends of the strips for strip SP building
+  /// @param spacePointIt Output iterator for the space point
   template <template <typename...> typename container_t>
   void buildSpacePoint(
       const GeometryContext& gctx,
       const std::vector<const Measurement*>& measurements,
       const SpacePointOptions& opt,
-      // std::shared_ptr<const spacepoint_t> spacePoint) const;
       std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const;
 
   /// @brief Searches possible combinations of two measurements on different
