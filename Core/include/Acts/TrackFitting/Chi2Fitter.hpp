@@ -83,6 +83,8 @@ struct Chi2FitterOptions {
   /// @param nIter Number of update steps to the parameters
   /// @param calcFinalChi2_ Whether to run additional propagation to calculate
   /// final chi2
+  /// @param freeToBoundCorrection_ Correction for non-linearity effect during
+  /// transform from free to bound
   Chi2FitterOptions(const GeometryContext& gctx,
                     const MagneticFieldContext& mctx,
                     std::reference_wrapper<const CalibrationContext> cctx,
