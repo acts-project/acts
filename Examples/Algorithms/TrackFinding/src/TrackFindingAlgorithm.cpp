@@ -127,6 +127,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                                              << " track candidates.");
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
-  ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(trackParametersContainer));
+  ctx.eventStore.add(m_cfg.outputTrackParameters,
+                     std::move(trackParametersContainer));
   return ActsExamples::ProcessCode::SUCCESS;
 }
