@@ -89,7 +89,9 @@ struct Chi2FitterOptions {
                     Chi2FitterExtensions extensions_, LoggerWrapper logger_,
                     const PropagatorPlainOptions& pOptions,
                     bool mScattering = false, bool eLoss = false, int nIter = 1,
-                    bool calcFinalChi2_ = true)
+                    bool calcFinalChi2_ = true,
+                    const FreeToBoundCorrection& freeToBoundCorrection_ =
+                          FreeToBoundCorrection(false))
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -99,6 +101,7 @@ struct Chi2FitterOptions {
         energyLoss(eLoss),
         nUpdates(nIter),
         calcFinalChi2(calcFinalChi2_),
+        freeToBoundCorrection(freeToBoundCorrection_),
         logger(logger_) {}
   /// Contexts are required and the options must not be default-constructible.
   Chi2FitterOptions() = delete;
@@ -127,6 +130,10 @@ struct Chi2FitterOptions {
   /// Whether to do an additional propagation step, just to get the latest chi2
   /// value
   bool calcFinalChi2;
+
+  /// Whether to include non-linear correction during global to local
+  /// transformation
+  FreeToBoundCorrection freeToBoundCorrection;
 
   /// Logger
   LoggerWrapper logger;
@@ -226,6 +233,10 @@ class Chi2Fitter {
     /// Whether to consider energy loss.
     bool energyLoss = false;  // TODO: add later
 
+    /// Whether to include non-linear correction during global to local
+    /// transformation
+    FreeToBoundCorrection freeToBoundCorrection;
+
     /// Extension struct
     Chi2FitterExtensions extensions;
 
@@ -299,7 +310,8 @@ class Chi2Fitter {
       // matter if we have a measurement or not.
 
       // Transport the covariance to the surface
-      stepper.transportCovarianceToBound(state.stepping, *surface);
+      stepper.transportCovarianceToBound(state.stepping, *surface,
+                                         freeToBoundCorrection);
 
       // Update state and stepper with pre material effects
       materialInteractor(surface, state, stepper,
@@ -309,8 +321,7 @@ class Chi2Fitter {
       // is called with fullUpdate *after* retrieving the boundState.
 
       // Bind the transported state to the current surface
-      auto res = stepper.boundState(state.stepping, *surface,
-                                    false);  // does not transport cov
+      auto res = stepper.boundState(state.stepping, *surface, false);
       if (!res.ok()) {
         return res.error();
       }
@@ -612,6 +623,8 @@ class Chi2Fitter {
     chi2Actor.inputMeasurements = &inputMeasurements;
     chi2Actor.multipleScattering = chi2FitterOptions.multipleScattering;
     chi2Actor.energyLoss = chi2FitterOptions.energyLoss;
+    chi2Actor.freeToBoundCorrection =
+        std::move(chi2FitterOptions.freeToBoundCorrection);
     chi2Actor.extensions = std::move(chi2FitterOptions.extensions);
 
     using paramType = typename std::conditional<
