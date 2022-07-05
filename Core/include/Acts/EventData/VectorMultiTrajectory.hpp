@@ -352,6 +352,10 @@ class ConstVectorMultiTrajectory final
 
   ConstVectorMultiTrajectory(const ConstVectorMultiTrajectory& other)
       : VectorMultiTrajectoryBase{other} {}
+
+  ConstVectorMultiTrajectory(const VectorMultiTrajectory& other)
+      : VectorMultiTrajectoryBase{other} {}
+
   ConstVectorMultiTrajectory(ConstVectorMultiTrajectory&&) = default;
   ConstVectorMultiTrajectory& operator=(const ConstVectorMultiTrajectory&) =
       default;
