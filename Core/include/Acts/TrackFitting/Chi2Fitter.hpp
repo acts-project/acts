@@ -91,7 +91,7 @@ struct Chi2FitterOptions {
                     bool mScattering = false, bool eLoss = false, int nIter = 1,
                     bool calcFinalChi2_ = true,
                     const FreeToBoundCorrection& freeToBoundCorrection_ =
-                          FreeToBoundCorrection(false))
+                        FreeToBoundCorrection(false))
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
@@ -719,7 +719,7 @@ class Chi2Fitter {
             BoundVector newParamsVec =
                 prevParams.parameters() - delta_start_parameters;
             ACTS_VERBOSE("chi2 | it=" << i << " | updated parameters = "
-                                   << newParamsVec.transpose());
+                                      << newParamsVec.transpose());
 
             return BoundTrackParameters(
                 prevParams.referenceSurface().getSharedPtr(), newParamsVec,
