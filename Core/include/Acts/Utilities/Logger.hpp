@@ -207,6 +207,8 @@ constexpr Level getFailureThreshold() {
 ///
 /// All messages with a debug level equal or higher than FAILURE_THRESHOLD will
 /// cause an exception to be thrown after log emission.
+/// @not This sets a global static runtime value, which is not thread-safe! This
+///      function should not be called during a job.
 void setFailureThreshold(Level level);
 
 /// Custom exception class so threshold failures can be caught
