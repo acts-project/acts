@@ -54,6 +54,7 @@ int runRecChi2Tracks(int argc, char* argv[],
                                      // copy them over to Chi2Options instead ?
   Options::addFittingChi2Options(desc);
   Options::addDigitizationOptions(desc);
+  Options::addParticleSmearingOptions(desc);
   TruthSeedSelector::addOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
