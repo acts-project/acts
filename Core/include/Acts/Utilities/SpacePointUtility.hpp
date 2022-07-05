@@ -99,7 +99,7 @@ class SpacePointUtility {
   /// point and returns whether it was succesful or not.
   ///
   /// @param [in] stripEnds1 Top and bottom end of the first strip
-  /// @param [in] stripEnds1 Top and bottom end of the second strip
+  /// @param [in] stripEnds2 Top and bottom end of the second strip
   /// @param [in] posVertex Position of the vertex
   /// @param [in, out] spParams Data container of the calculations
   /// @param [in] stripLengthTolerance Tolerance scaling factor on the strip
