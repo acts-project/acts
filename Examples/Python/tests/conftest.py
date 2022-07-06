@@ -6,6 +6,7 @@ import shutil
 from typing import Dict
 import warnings
 import pytest_check as check
+from collections import namedtuple
 
 
 sys.path += [
@@ -15,7 +16,7 @@ sys.path += [
 
 import helpers
 import helpers.hash_root
-from common import getOpenDataDetectorDirectory
+from common import getOpenDataDetectorDirectory, getOpenDataDetector
 
 import pytest
 
@@ -194,6 +195,68 @@ def basic_prop_seq(rng):
 def trk_geo(request):
     detector, geo, contextDecorators = acts.examples.GenericDetector.create()
     yield geo
+
+
+DetectorConfig = namedtuple(
+    "DetectorConfig",
+    [
+        "detector",
+        "trackingGeometry",
+        "decorators",
+        "geometrySelection",
+        "digiConfigFile",
+    ],
+)
+
+
+@pytest.fixture(
+    params=[
+        "generic",
+        "odd",
+    ]
+)
+def detector_config(request):
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
+    if request.param == "generic":
+        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+        return DetectorConfig(
+            detector,
+            trackingGeometry,
+            decorators,
+            geometrySelection=(
+                srcdir
+                / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            ),
+            digiConfigFile=(
+                srcdir
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            ),
+        )
+    elif request.param == "odd":
+        if not helpers.dd4hepEnabled:
+            pytest.skip("DD4hep not set up")
+
+        matDeco = acts.IMaterialDecorator.fromFile(
+            srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
+            level=acts.logging.INFO,
+        )
+        detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+        return DetectorConfig(
+            detector,
+            trackingGeometry,
+            decorators,
+            digiConfigFile=(
+                srcdir
+                / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+            ),
+            geometrySelection=(
+                srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
+            ),
+        )
+
+    else:
+        raise ValueError(f"Invalid detector {detector}")
 
 
 @pytest.fixture
