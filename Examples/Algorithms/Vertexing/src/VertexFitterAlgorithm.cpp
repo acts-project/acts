@@ -128,10 +128,14 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       }
     }
 
-    ACTS_DEBUG("Fitted Vertex "
-               << fittedVertices.back().fullPosition().transpose());
-    ACTS_DEBUG(
-        "Tracks at fitted Vertex: " << fittedVertices.back().tracks().size());
+    if (fittedVertices.size() > 0) {
+      ACTS_DEBUG("Fitted Vertex "
+                 << fittedVertices.back().fullPosition().transpose());
+      ACTS_DEBUG(
+          "Tracks at fitted Vertex: " << fittedVertices.back().tracks().size());
+    } else {
+      ACTS_DEBUG("No fitted vertex");
+    }
   }
 
   ctx.eventStore.add(m_cfg.outputVertices, std::move(fittedVertices));
