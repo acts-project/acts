@@ -766,6 +766,7 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
         outputDir=tmp_path,
         particlesInput=ptcl_dir / "particles.root",
         s=s,
+        doMerge=True,
     )
 
     s.run()
