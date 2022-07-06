@@ -10,7 +10,6 @@
 
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/HoughTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
@@ -41,11 +40,6 @@ struct ParticleHitCount {
 void identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const ProtoTrack& protoTrack,
-    std::vector<ParticleHitCount>& particleHitCounts);
-
-void identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-    const HoughTrack& houghTrack,
     std::vector<ParticleHitCount>& particleHitCounts);
 
 
