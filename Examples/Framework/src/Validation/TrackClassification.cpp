@@ -58,21 +58,6 @@ void ActsExamples::identifyContributingParticles(
   sortHitCount(particleHitCounts);
 }
 
-void ActsExamples::identifyContributingParticles(
-    const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
-    const HoughTrack& houghTrack,
-    std::vector<ActsExamples::ParticleHitCount>& particleHitCounts) {
-  particleHitCounts.clear();
-
-  for (auto hitIndex : houghTrack) {
-    // register all particles that generated this hit
-    for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
-      increaseHitCount(particleHitCounts, hitParticle.second);
-    }
-  }
-  sortHitCount(particleHitCounts);
-}
-
 
 void ActsExamples::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
