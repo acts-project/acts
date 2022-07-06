@@ -84,16 +84,15 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       continue;
     }
 
-    if (protoVertex.size() != trackParameters.size()) {
-      ACTS_ERROR("Proto-vertex and track parameters size mismatch "
-                 << protoVertex.size() << " vs " << trackParameters.size());
-      continue;
-    }
-
     // select input tracks for the input proto vertex
     inputTrackPtrCollection.clear();
     inputTrackPtrCollection.reserve(protoVertex.size());
     for (const auto& trackIdx : protoVertex) {
+      if (trackParameters.size() >= trackIdx) {
+        ACTS_ERROR("track parameters " << trackIdx << " does not exist");
+        continue;
+      }
+
       inputTrackPtrCollection.push_back(&trackParameters[trackIdx]);
     }
 
