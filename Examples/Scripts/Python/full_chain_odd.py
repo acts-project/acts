@@ -27,7 +27,7 @@ from seeding import addSeeding, TruthSeedRanges
 from ckf_tracks import addCKFTracks, CKFPerformanceConfig
 from vertex_fitting import addVertexFitting, VertexFinder
 
-s = acts.examples.Sequencer(events=100, numThreads=1, logLevel=acts.logging.INFO)
+s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 
 s = addParticleGun(
     s,
@@ -82,7 +82,7 @@ s.addAlgorithm(
 s = addVertexFitting(
     s,
     field,
-    vertexFinder=VertexFinder.Truth,
+    vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
     logLevel=acts.logging.VERBOSE,
 )

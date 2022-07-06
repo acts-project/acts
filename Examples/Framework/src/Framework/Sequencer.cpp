@@ -307,6 +307,7 @@ int ActsExamples::Sequencer::run() {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute algorithm: " << alg->name());
               if (alg->execute(++context) != ProcessCode::SUCCESS) {
+                ACTS_ERROR("Failed to execute algorithm: " << alg->name());
                 throw std::runtime_error("Failed to process event data");
               }
             }
