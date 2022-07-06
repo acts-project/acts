@@ -88,7 +88,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     inputTrackPtrCollection.clear();
     inputTrackPtrCollection.reserve(protoVertex.size());
     for (const auto& trackIdx : protoVertex) {
-      if (trackParameters.size() >= trackIdx) {
+      if (trackIdx >= trackParameters.size()) {
         ACTS_ERROR("track parameters " << trackIdx << " does not exist");
         continue;
       }
