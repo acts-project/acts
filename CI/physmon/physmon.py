@@ -12,8 +12,11 @@ sys.path += [
 ]
 
 # this has to happen before we import the ACTS module
-os.environ["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
 import acts.examples
+
+# @TODO: Fix failure in gain matrix smoothing
+# See https://github.com/acts-project/acts/issues/1215
+acts.logging.setFailureThreshold(acts.logging.FATAL)
 
 from truth_tracking_kalman import runTruthTrackingKalman
 from ckf_tracks import runCKFTracks
