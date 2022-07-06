@@ -777,7 +777,6 @@ INPUT                  = ../Core/include \
                          ../Plugins/Autodiff/include \
                          ../Plugins/Cuda/include \
                          ../Plugins/DD4hep/include \
-                         ../Plugins/Digitization/include \
                          ../Plugins/Identification/include \
                          ../Plugins/Json/include \
                          ../Plugins/Legacy/include \
