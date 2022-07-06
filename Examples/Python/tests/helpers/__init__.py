@@ -1,5 +1,6 @@
 import os
 from typing import List, Union
+import contextlib
 
 import acts
 from acts.examples import BareAlgorithm
@@ -69,3 +70,14 @@ class AssertCollectionExistsAlg(BareAlgorithm):
 
 
 doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ
+
+
+@contextlib.contextmanager
+def failure_threshold(level: acts.logging.Level, enabled: bool = True):
+    if enabled:
+        prev = acts.logging.getFailureThreshold()
+        acts.logging.setFailureThreshold(level)
+        yield
+        acts.logging.setFailureThreshold(prev)
+    else:
+        yield
