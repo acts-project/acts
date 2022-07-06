@@ -24,7 +24,6 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
-set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 # plugins related options
 option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
@@ -72,6 +71,9 @@ option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
 # profiling related optios
 option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
 option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" OFF)
+
+option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
+set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown. If ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set and this is unset, this will enable a runtime check of the log level.")
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
