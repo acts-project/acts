@@ -8,11 +8,8 @@
 
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 
-#include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
@@ -41,13 +38,17 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
      if (!(i.empty())) {
         foundInput = true;
         if (m_cfg.findLayerIDSP == nullptr) 
-           throw std::invalid_argument("We are using some spacepoints but don't have a function pointer to find the ID");
+           throw std::invalid_argument("We are using some spacepoints but don't have a function pointer to find the layer ID");
+        if (m_cfg.inSliceSP == nullptr) 
+           throw std::invalid_argument("We are using some spacepoints but don't have a function pointer to check the slice number");
     }
   }
   if (!(m_cfg.inputMeasurements.empty())) {
      foundInput = true;
      if (m_cfg.findLayerIDMeasurement == nullptr) 
         throw std::invalid_argument("We are using some input measurements but don't have a function pointer to find the ID");
+     if (m_cfg.inSliceMeasurement == nullptr) 
+        throw std::invalid_argument("We are using some input measurements but don't have a function pointer to check the slice number");
   }
 
   if (!foundInput) {
@@ -60,14 +61,6 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   if (m_cfg.inputSourceLinks.empty()) {
     throw std::invalid_argument("Missing source link input collection");
   }
-
-  if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax) {
-    throw std::invalid_argument("Inconsistent config rMax");
-  }
-
-  if (m_cfg.gridConfig.deltaRMax != m_cfg.seedFinderConfig.deltaRMax) {
-    throw std::invalid_argument("Inconsistent config deltaRMax");
-  } 
 
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
@@ -157,9 +150,6 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
       }
    }
 
-   // JAA need to use this later, keep for now, perhaps
-   auto finder = Acts::Seedfinder<SimSpacePoint>(m_cfg.seedFinderConfig);
-   
    const auto& measurements =
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
    const auto& sourceLinks =
@@ -210,28 +200,61 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
                surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
             double r = sqrt(globalPos[Acts::ePos0]*globalPos[Acts::ePos0] + globalPos[Acts::ePos1]*globalPos[Acts::ePos1]);
             double phi = atan2(globalPos[Acts::ePos1],globalPos[Acts::ePos0]);
+            double z = globalPos[Acts::ePos2];
             unsigned hitlayer = (*(m_cfg.findLayerIDMeasurement))(r);
-            std::shared_ptr<const MeasurementKludge> kludge = std::shared_ptr<const MeasurementKludge>(new MeasurementKludge(hitlayer,phi,r,sourceLink.get().index()));
+            std::shared_ptr<const MeasurementKludge> kludge = std::shared_ptr<const MeasurementKludge>(new MeasurementKludge(hitlayer,phi,r,z,sourceLink.get().index()));
             measurementKludges.push_back(kludge);
          }
       }
    }
 
-   ActsExamples::Image m_image = createImage(spacePointPtrs,measurementKludges);
    static thread_local ProtoTrackContainer protoTracks;
    protoTracks.clear();
-   
-   for (unsigned y = 0; y < m_cfg.m_imageSize_y; y++)
-      for (unsigned x = 0; x < m_cfg.m_imageSize_x; x++)
-         if (passThreshold(m_image, x, y))
-         {
-            ProtoTrack protoTrack;
-            for (auto index : m_image(y, x).second) protoTrack.push_back(index);
-            protoTracks.push_back(protoTrack);
-         }
+
+   for (auto subregion : m_cfg.m_subRegions) {
+      ActsExamples::Image m_image = createImage(spacePointPtrs,measurementKludges, subregion);
+      
+      for (unsigned y = 0; y < m_cfg.m_imageSize_y; y++)
+         for (unsigned x = 0; x < m_cfg.m_imageSize_x; x++)
+            if (passThreshold(m_image, x, y)) {
+               /* now we need to unpack the hits; there should be multiple track candidates if we have multiple hits in a given layer
+                  So the first thing is to unpack the indices (which is what we need) by layer */
+               std::vector<std::vector<Index> > hitIndicesAll(m_cfg.m_nLayers); // [layer,Index]
+               std::vector<size_t> nHitsPerLayer(m_cfg.m_nLayers);
+               for (auto index : m_image(y,x).second) {
+                  if (index < spacePointPtrs.size()) { // is a spacepoint
+                     const SimSpacePoint* sp = spacePointPtrs[index];
+                     double r = sqrt(sp->x()*sp->x()+sp->y()*sp->y());
+                     unsigned layer = (*(m_cfg.findLayerIDSP))(r);
+                     hitIndicesAll[layer].push_back(sp->measurementIndex());
+                     nHitsPerLayer[layer]++;
+                  }
+                  else { // based on the kludge of storing SP first, this must not be a sp
+                     std::shared_ptr<const MeasurementKludge> kludge = measurementKludges[index - spacePointPtrs.size()];
+                     unsigned layer = kludge->layer;
+                     hitIndicesAll[layer].push_back(kludge->index);
+                     nHitsPerLayer[layer]++;
+                  }
+               }
+               
+               std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
+               
+               for (size_t icomb = 0; icomb < combs.size(); icomb++) { // loop over all the combinations
+                  ProtoTrack protoTrack;
+                  std::vector<int> const & hit_indices = combs[icomb]; // one index per layer
+                  for (unsigned layer = 0; layer < m_cfg.m_nLayers; layer++) {
+                     if (hit_indices[layer] >= 0) {
+                        protoTrack.push_back(hitIndicesAll[layer][hit_indices[layer]]);
+                     }
+                  }
+                  protoTracks.push_back(protoTrack);
+               }
+            }
+   }
    ACTS_DEBUG("Created " << protoTracks.size() << " track seeds from "
-                        << spacePointPtrs.size() << " space points");
+              << spacePointPtrs.size() << " space points");
    
+
    ctx.eventStore.add(m_cfg.outputProtoTracks, ProtoTrackContainer{protoTracks});
 
    return ActsExamples::ProcessCode::SUCCESS;
@@ -239,81 +262,77 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
 
 
 
-ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges) const
-{
+ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges, int subregion) const {
+
    ActsExamples::Image image(m_cfg.m_imageSize_y, m_cfg.m_imageSize_x);
 
-    for (auto sp : spacepoints) 
-    {
-       float r = sqrt(sp->x()*sp->x()+sp->y()*sp->y());
-       unsigned hitlayer = (*(m_cfg.findLayerIDSP))(r);
-       if (hitlayer != layer) continue; 
-       float phi = atan2(sp->y(),sp->x());
+   for (unsigned index = 0; index < spacepoints.size(); index++) {
+      const SimSpacePoint* sp = spacepoints[index];
+      double r = sqrt(sp->x()*sp->x()+sp->y()*sp->y());
+      double z = sp->z();
+      unsigned hitlayer = (*(m_cfg.findLayerIDSP))(r);
+      if (hitlayer != layer) continue; 
+      if (!((*(m_cfg.inSliceSP))(z,hitlayer,subregion))) continue;
+      float phi = atan2(sp->y(),sp->x());
+      
+      // This scans over y (pT) because that is more efficient in memory, in C.
+      // Unknown if firmware will want to scan over x instead.
+      for (unsigned y_ = 0; y_ < m_cfg.m_imageSize_y; y_++) {
+         
+         unsigned y_bin_min = y_;
+         unsigned y_bin_max = (y_ + 1);
+         
+         // Find the min/max x bins
+         auto xBins = yToXBins(y_bin_min, y_bin_max, r, phi, hitlayer);
+         // Update the image
+         for (unsigned y = y_bin_min; y < y_bin_max; y++)
+            for (unsigned x = xBins.first; x < xBins.second; x++) {
+               image(y, x).first++;
+               image(y, x).second.insert(index);
+            }
+      }
+   }
 
-       // This scans over y (pT) because that is more efficient in memory, in C.
-       // Unknown if firmware will want to scan over x instead.
-       for (unsigned y_ = 0; y_ < m_cfg.m_imageSize_y; y_++)
-       {
-          unsigned y_bin_min = y_;
-          unsigned y_bin_max = (y_ + 1);
-          
-          // Find the min/max x bins
-          auto xBins = yToXBins(y_bin_min, y_bin_max, r, phi, hitlayer);
-          // Update the image
-          for (unsigned y = y_bin_min; y < y_bin_max; y++)
-             for (unsigned x = xBins.first; x < xBins.second; x++)
-             {
-                image(y, x).first++;
-                image(y, x).second.insert(sp->measurementIndex());
-             }
-       }
-    }
-
-    // now do the same thing for measurements, this is an extra kludge! And we will have to skip the SPs. And we are not separating the two strip sides
-    for (auto kludge : kludges)
-    {
-       if (kludge->layer != layer) continue; 
-
-       // This scans over y (pT) because that is more efficient in memory, in C.
-       // Unknown if firmware will want to scan over x instead.
-       for (unsigned y_ = 0; y_ < m_cfg.m_imageSize_y; y_++)
-       {
-          unsigned y_bin_min = y_;
-          unsigned y_bin_max = (y_ + 1);
-    
-          // Find the min/max x bins
-          auto xBins = yToXBins(y_bin_min, y_bin_max, kludge->radius, kludge->phi, kludge->layer);
-          // Update the image
-          for (unsigned y = y_bin_min; y < y_bin_max; y++)
-             for (unsigned x = xBins.first; x < xBins.second; x++)
-             {
-                image(y, x).first++;
-                image(y, x).second.insert(kludge->index);
-             }
-       }
-    }
-
-    return image;
+   for (unsigned index = 0; index < kludges.size(); index++) {
+      std::shared_ptr<const MeasurementKludge> kludge = kludges[index];
+      if (kludge->layer != layer) continue; 
+      if (!((*(m_cfg.inSliceMeasurement))(kludge->z,kludge->layer,subregion))) continue;
+      
+      // This scans over y (pT) because that is more efficient in memory, in C.
+      // Unknown if firmware will want to scan over x instead.
+      for (unsigned y_ = 0; y_ < m_cfg.m_imageSize_y; y_++) {
+         unsigned y_bin_min = y_;
+         unsigned y_bin_max = (y_ + 1);
+         
+         // Find the min/max x bins
+         auto xBins = yToXBins(y_bin_min, y_bin_max, kludge->radius, kludge->phi, kludge->layer);
+         // Update the image
+         for (unsigned y = y_bin_min; y < y_bin_max; y++)
+            for (unsigned x = xBins.first; x < xBins.second; x++) {
+               image(y, x).first++;
+               image(y, x).second.insert(index + spacepoints.size()); // add spacepoints size to differentiate them
+            }
+      }
+   }
+   
+   return image;
 }
 
-ActsExamples::Image ActsExamples::HoughTransformSeeder::createImage(std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges) const
-{
+ActsExamples::Image ActsExamples::HoughTransformSeeder::createImage(std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges, int subregion) const {
+
    ActsExamples::Image image(m_cfg.m_imageSize_y, m_cfg.m_imageSize_x);
-
-    for (unsigned i = 0; i < m_cfg.m_nLayers; i++)
-    {
-       Image layerImage = createLayerImage(i, spacepoints, kludges);
-        for (unsigned x = 0; x < m_cfg.m_imageSize_x; ++x)
-            for (unsigned y = 0; y < m_cfg.m_imageSize_y; ++y)
-                if (layerImage(y, x).first > 0)
-                {
-                    image(y, x).first++;
-                    image(y, x).second.insert(layerImage(y, x).second.begin(), layerImage(y, x).second.end());
-                }
-    }
-
-
-    return image;
+   
+   for (unsigned i = 0; i < m_cfg.m_nLayers; i++) {
+      Image layerImage = createLayerImage(i, spacepoints, kludges, subregion);
+      for (unsigned x = 0; x < m_cfg.m_imageSize_x; ++x)
+         for (unsigned y = 0; y < m_cfg.m_imageSize_y; ++y)
+            if (layerImage(y, x).first > 0) {               
+               image(y, x).first++;
+               image(y, x).second.insert(layerImage(y, x).second.begin(), layerImage(y, x).second.end());
+            }
+   } 
+     
+   return image;
 }
 
 bool ActsExamples::HoughTransformSeeder::passThreshold(Image const & image, unsigned x, unsigned y) const
@@ -322,29 +341,26 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(Image const & image, unsi
     // Pass window threshold
    unsigned width = m_cfg.m_threshold.size() / 2;
    if (x < width || (image.size(1) - x) < width) return false;
-    for (unsigned i = 0; i < m_cfg.m_threshold.size(); i++) {
-       if (image(y, x - width + i).first < m_cfg.m_threshold[i]) return false;
-    }
+   for (unsigned i = 0; i < m_cfg.m_threshold.size(); i++) {
+      if (image(y, x - width + i).first < m_cfg.m_threshold[i]) return false;
+   }
    
-    // Pass local-maximum check
-    if (m_cfg.m_localMaxWindowSize)
-        for (int j = -m_cfg.m_localMaxWindowSize; j <= m_cfg.m_localMaxWindowSize; j++)
-            for (int i = -m_cfg.m_localMaxWindowSize; i <= m_cfg.m_localMaxWindowSize; i++)
-            {
-                if (i == 0 && j == 0) continue;
-                if (y + j < image.size(0) && x + i < image.size(1))
-                {
-                    if (image(y+j, x+i).first > image(y, x).first) return false;
-                    if (image(y+j, x+i).first == image(y, x).first)
-                    {
-                        if (image(y+j, x+i).second.size() > image(y, x).second.size()) return false;
-                        if (image(y+j, x+i).second.size() == image(y, x).second.size()
-                            && j <= 0 && i <= 0) return false; // favor bottom-left (low phi, low neg q/pt)
-                    }
-                }
+   // Pass local-maximum check, if used
+   if (m_cfg.m_localMaxWindowSize)
+      for (int j = -m_cfg.m_localMaxWindowSize; j <= m_cfg.m_localMaxWindowSize; j++)
+         for (int i = -m_cfg.m_localMaxWindowSize; i <= m_cfg.m_localMaxWindowSize; i++) {
+            if (i == 0 && j == 0) continue;
+            if (y + j < image.size(0) && x + i < image.size(1)) {
+               if (image(y+j, x+i).first > image(y, x).first) return false;
+               if (image(y+j, x+i).first == image(y, x).first) {
+                  if (image(y+j, x+i).second.size() > image(y, x).second.size()) return false;
+                  if (image(y+j, x+i).second.size() == image(y, x).second.size()
+                      && j <= 0 && i <= 0) return false; // favor bottom-left (low phi, low neg q/pt)
+               }
             }
-
-     return true;
+         }
+   
+   return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -431,3 +447,48 @@ unsigned ActsExamples::HoughTransformSeeder::getExtension(unsigned y, unsigned l
 }
 
 
+
+/**
+ * Given a list of sizes (of arrays), generates a list of all combinations of indices to
+ * index one element from each array.
+ *
+ * For example, given [2 3], generates [(0 0) (1 0) (0 1) (1 1) (0 2) (1 2)].
+ *
+ * This basically amounts to a positional number system of where each digit has its own base.
+ * The number of digits is sizes.size(), and the base of digit i is sizes[i]. Then all combinations
+ * can be uniquely represented just by counting from [0, nCombs).
+ *
+ * For a decimal number like 1357, you get the thousands digit with n / 1000 = n / (10 * 10 * 10).
+ * So here, you get the 0th digit with n / (base_1 * base_2 * base_3);
+ */
+std::vector<std::vector<int>> ActsExamples::HoughTransformSeeder::getComboIndices(std::vector<size_t> & sizes) const
+{
+   size_t nCombs = 1;
+   std::vector<size_t> nCombs_prior(sizes.size());
+   std::vector<int> temp(sizes.size(), 0);
+
+   for (size_t i = 0; i < sizes.size(); i++)
+   {
+      if (sizes[i] > 0)
+      {
+         nCombs_prior[i] = nCombs;
+         nCombs *= sizes[i];
+      }
+      else temp[i] = -1;
+   }
+
+   std::vector<std::vector<int>> combos(nCombs, temp);
+
+   for (size_t icomb = 0; icomb < nCombs; icomb++)
+   {
+      size_t index = icomb;
+      for (size_t isize = sizes.size() - 1; isize < sizes.size(); isize--)
+      {
+         if (sizes[isize] == 0) continue;
+         combos[icomb][isize] = static_cast<int>(index / nCombs_prior[isize]);
+         index = index % nCombs_prior[isize];
+      }
+   }
+
+   return combos;
+}
