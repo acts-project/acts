@@ -123,21 +123,6 @@ class GainMatrixSmoother {
       ACTS_VERBOSE("Calculate smoothing matrix:");
       ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
       ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
-      ACTS_VERBOSE("Prev. predicted covariance\n"
-                   << prev_ts.predictedCovariance() << "\n, inverse: \n"
-                   << prev_ts.predictedCovariance().inverse());
-
-      // if (auto res = calculate(
-      // InternalTrackState{
-      // ts.filtered(), ts.filteredCovariance(), ts.smoothed(),
-      // prev_ts.predicted(), prev_ts.predictedCovariance(),
-      // prev_ts.smoothed(), prev_ts.smoothedCovariance(),
-      // prev_ts.jacobian()},
-      // logger);
-      // !res.ok()) {
-      // error = res.error();
-      // return false;
-      // }
 
       if (auto res = calculate(&ts, &prev_ts, filtered, filteredCovariance,
                                smoothed, predicted, predictedCovariance,
