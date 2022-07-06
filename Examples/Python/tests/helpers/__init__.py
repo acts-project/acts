@@ -27,19 +27,18 @@ except ImportError:
         )
 
 dd4hepEnabled = "DD4hep_DIR" in os.environ
-
 if dd4hepEnabled:
     try:
         import acts.examples.dd4hep
     except ImportError:
         dd4hepEnabled = False
 
-try:
-    import acts.examples.hepmc3
-
-    hepmc3Enabled = True
-except Exception as e:
-    hepmc3Enabled = False
+hepmc3Enabled = "HepMC3_DIR" in os.environ
+if hepmc3Enabled:
+    try:
+        import acts.examples.hepmc3
+    except:
+        hepmc3Enabled = False
 
 try:
     import acts.examples.edm4hep
