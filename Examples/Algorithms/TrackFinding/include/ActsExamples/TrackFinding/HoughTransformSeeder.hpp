@@ -62,10 +62,6 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Seeding/BinFinder.hpp"
-#include "Acts/Seeding/SeedFilterConfig.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
-#include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughVectors.hpp"
@@ -77,16 +73,16 @@
 
 // An image is a 2d array of points, where each point has a value.
 // The value starts as the number of hit layers, but can change with effects
-// like a convolution. Also stored are all hits that contributed to each bin.
+// like a convolution. Also stored are indices of all hits that contributed to each bin.
 // Size m_imageSize_y * m_imageSize_x. (NOTE y is row coordinate)
+// For now, what is stored is actually the index of the object in the vectors, so we can get the Index layer
     
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
-typedef vector2D<std::pair<int, std::unordered_set<Index>>> Image;
-////typedef vector2D<std::pair<int, std::unordered_set<const ActsExamples::SimSpacePoint*>>> Image;
+typedef vector2D<std::pair<int, std::unordered_set<unsigned>>> Image;
 
 /// Construct track seeds from space points.
 class HoughTransformSeeder final : public BareAlgorithm {
@@ -115,14 +111,10 @@ class HoughTransformSeeder final : public BareAlgorithm {
     /// selection must not have duplicates.
     std::vector<Acts::GeometryIdentifier> geometrySelection;
 
-    Acts::SeedFilterConfig seedFilterConfig;
-    Acts::SeedfinderConfig<SimSpacePoint> seedFinderConfig;
-    Acts::SpacePointGridConfig gridConfig;
-
      /// Input measurements collection.
      std::string inputMeasurements;
      
-     int m_subRegion = -1; // -1 for entire region (no slicing), slicing is to be added TODO
+     std::vector<int> m_subRegions = {-1}; // -1 for entire region (no slicing)
 
      unsigned m_nLayers=10;  
      
@@ -133,8 +125,8 @@ class HoughTransformSeeder final : public BareAlgorithm {
      
      float m_xMin = 0; // minphi
      float m_xMax = 2*3.14159; // maxphi
-     float m_yMin = -0.5; // min q/pt, -1/1 GeV JAAAAA check units
-     float m_yMax = 0.5; // max q/pt, +1/1 GeV JAAAAA check units
+     float m_yMin = -1.0; // min q/pt, -1/1 GeV
+     float m_yMax = 1.0; // max q/pt, +1/1 GeV 
      
      unsigned m_imageSize_x = 7000; // i.e. number of bins in phi_track
      unsigned m_imageSize_y = 216; // i.e. number of bins in q/pT
@@ -149,8 +141,12 @@ class HoughTransformSeeder final : public BareAlgorithm {
      
      // Function to apply correction due to B field not being constant everywhere. The returned correction should be ADDED to phi_track
      double (*fieldCorrection)(unsigned, double, double); // (unsigned region, double y, double r)
+
      double (*findLayerIDSP)(double); // (double r)
      double (*findLayerIDMeasurement)(double); // (double r)
+
+     bool (*inSliceSP)(double,unsigned,int); // (double z,unsigned layer, int slice)
+     bool (*inSliceMeasurement)(double,unsigned,int); // (double z,unsigned layer, int slice)
      
   };
 
@@ -174,7 +170,7 @@ class HoughTransformSeeder final : public BareAlgorithm {
   double getMinY() const { return m_cfg.m_yMin; }
   double getMaxY() const { return m_cfg.m_yMax; }
   unsigned getThreshold() const { return m_cfg.m_threshold[m_cfg.m_threshold.size() / 2]; }
-  int getSubRegion() const { return m_cfg.m_subRegion; }
+  std::vector<int> getSubRegions() const { return m_cfg.m_subRegions; }
 
  
   double yToX(double y, double r, double phi) const;
@@ -200,13 +196,14 @@ class HoughTransformSeeder final : public BareAlgorithm {
      unsigned layer;
      double phi;
      double radius;
+     double z;
      Index index;
-     MeasurementKludge(unsigned l, double p, double r, Index i) : layer(l), phi(p), radius(r), index(i) {}
+     MeasurementKludge(unsigned l, double p, double r, double thez, Index i) : layer(l), phi(p), radius(r), z(thez), index(i) {}
   };
 
   
-  Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges) const;
-  Image createImage(std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges) const;
+  Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges, int subregion) const;
+  Image createImage(std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges, int subregion) const;
 
   ///////////////////////////////////////////////////////////////////////
   // Helpers
@@ -215,7 +212,7 @@ class HoughTransformSeeder final : public BareAlgorithm {
   unsigned getExtension(unsigned y, unsigned layer) const;
   bool passThreshold(Image const & image, unsigned x, unsigned y) const;
   void drawImage(Image const & image, std::string const & name);
-
+  std::vector<std::vector<int>> getComboIndices(std::vector<size_t> & sizes) const;
 };
 
 }  // namespace ActsExamples

@@ -159,7 +159,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   for (const auto& isp : m_cfg.inputSpacePoints) {
     for (const auto& spacePoint :
          ctx.eventStore.get<SimSpacePointContainer>(isp)) {
-       ACTS_WARNING("\nJAAAA r = " << spacePoint.r() << "\n");
       // since the event store owns the space points, their pointers should be
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
