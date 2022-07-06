@@ -160,8 +160,8 @@ if "__main__" == __name__:
         inputParticlePath = None
 
     runTruthTrackingGsf(
-        trackingGeometry,
-        decorators,
+        trackingGeometry=trackingGeometry,
+        decorators=decorators,
         field=field,
         digiConfigFile=srcdir
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",

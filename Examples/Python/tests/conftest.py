@@ -14,6 +14,7 @@ sys.path += [
     str(Path(__file__).parent),
 ]
 
+
 import helpers
 import helpers.hash_root
 from common import getOpenDataDetectorDirectory, getOpenDataDetector
@@ -22,6 +23,8 @@ import pytest
 
 import acts
 import acts.examples
+
+acts.logging.setFailureThreshold(acts.logging.WARNING)
 
 u = acts.UnitConstants
 
@@ -205,6 +208,7 @@ DetectorConfig = namedtuple(
         "decorators",
         "geometrySelection",
         "digiConfigFile",
+        "name",
     ],
 )
 
@@ -232,6 +236,7 @@ def detector_config(request):
                 srcdir
                 / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
             ),
+            name=request.param,
         )
     elif request.param == "odd":
         if not helpers.dd4hepEnabled:
@@ -253,6 +258,7 @@ def detector_config(request):
             geometrySelection=(
                 srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
             ),
+            name=request.param,
         )
 
     else:
