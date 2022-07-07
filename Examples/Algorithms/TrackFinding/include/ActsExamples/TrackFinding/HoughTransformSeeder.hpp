@@ -71,18 +71,21 @@
 #include <utility>
 #include <unordered_set>
 
-// An image is a 2d array of points, where each point has a value.
-// The value starts as the number of hit layers, but can change with effects
-// like a convolution. Also stored are indices of all hits that contributed to each bin.
-// Size m_imageSize_y * m_imageSize_x. (NOTE y is row coordinate)
-// For now, what is stored is actually the index of the object in the vectors, so we can get the Index layer
+/// An image is a 2d array of points, where each point has a value.
+/// The value starts as the number of hit layers, but can change with effects
+/// like a convolution. Also stored are indices of all hits that contributed to each bin.
+/// Size m_imageSize_y * m_imageSize_x. (NOTE y is row coordinate)
+/// For now, what is stored is actually the index of the object in the vectors, so we can get the Index layer
     
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
-typedef vector2D<std::pair<int, std::unordered_set<unsigned>>> Image;
+/// Used in multiple places. The 2d vector refers to the 2d image. For a single layer, the int refers to the number of hits in the bin of the image
+//// For the total image, the int counts the number of layers with one or more hit in that bin
+// The unsigned is a counter that will point to a spacepoint or to a measurement object
+typedef vector2D<std::pair<int, std::unordered_set<unsigned>>> Image; 
 
 /// Construct track seeds from space points.
 class HoughTransformSeeder final : public BareAlgorithm {
@@ -94,6 +97,7 @@ class HoughTransformSeeder final : public BareAlgorithm {
     /// the detector to use different algorithms for space point construction,
     /// e.g. single-hit space points for pixel-like detectors or double-hit
     /// space points for strip-like detectors.
+    /// Note that we don't *need* spacepoints (measurements can be used instead)
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
@@ -111,42 +115,43 @@ class HoughTransformSeeder final : public BareAlgorithm {
     /// selection must not have duplicates.
     std::vector<Acts::GeometryIdentifier> geometrySelection;
 
-     /// Input measurements collection.
+    /// Input measurements collection. 
      std::string inputMeasurements;
      
-     std::vector<int> m_subRegions = {-1}; // -1 for entire region (no slicing)
+    std::vector<int> m_subRegions = {-1}; // -1 for entire region (no slicing), but this can be more than one region if data are sliced
 
-     unsigned m_nLayers=10;  
+    unsigned m_nLayers=10;   // total number of layers
      
-     // Trace each hit that goes in a bin
-     // Disabling this will save memory/time since each bin doesn't have to store all its hits
-     // but the roads created won't have hits from convolution, etc.
-     bool m_traceHits = true;
+    /// Trace each hit that goes in a bin
+    /// Disabling this will save memory/time since each bin doesn't have to store all its hits
+    /// but the roads created won't have hits from convolution, etc.
+    bool m_traceHits = true;
      
-     float m_xMin = 0; // minphi
-     float m_xMax = 2*3.14159; // maxphi
-     float m_yMin = -1.0; // min q/pt, -1/1 GeV
-     float m_yMax = 1.0; // max q/pt, +1/1 GeV 
+    float m_xMin = 0; // minphi
+    float m_xMax = 2*3.14159; // maxphi
+    float m_yMin = -1.0; // min q/pt, -1/1 GeV
+    float m_yMax = 1.0; // max q/pt, +1/1 GeV 
      
-     unsigned m_imageSize_x = 7000; // i.e. number of bins in phi_track
-     unsigned m_imageSize_y = 216; // i.e. number of bins in q/pT
+    unsigned m_imageSize_x = 7000; // i.e. number of bins in phi_track
+    unsigned m_imageSize_y = 216; // i.e. number of bins in q/pT
      
-     std::vector<unsigned> m_hitExtend_x = {1,1,0,0,0,0,0,0,0,0}; // Hit lines will fill extra bins in x by this amount on each side, size == nLayers
+    std::vector<unsigned> m_hitExtend_x = {1,1,0,0,0,0,0,0,0,0}; // Hit lines will fill extra bins in x by this amount on each side, size == nLayers
      
-     // === Seeds ==
-     std::vector<int> m_threshold = {9}; // Minimum point value post-convolution to accept as a road (inclusive)
-     int m_localMaxWindowSize = 0; // Only create roads from a local maximum, requires traceHits
-     double kA = 0.0003; // Assume B = 2T constant. 
+    /// === Seeds for Hough ==
+    std::vector<int> m_threshold = {9}; // Minimum point value post-convolution to accept as a road (inclusive)
+    int m_localMaxWindowSize = 0; // Only create candidates from a local maximum, requires traceHits
+    double kA = 0.0003; // Assume B = 2T constant. Can apply corrections to this with fieldCorrection function
      
      
-     // Function to apply correction due to B field not being constant everywhere. The returned correction should be ADDED to phi_track
-     double (*fieldCorrection)(unsigned, double, double); // (unsigned region, double y, double r)
+    /// Function to apply correction due to B field not being constant everywhere. The returned correction should be ADDED to phi_track
+    double (*fieldCorrection)(unsigned, double, double); // (unsigned region, double y, double r)
 
-     double (*findLayerIDSP)(double); // (double r)
-     double (*findLayerIDMeasurement)(double); // (double r)
+    /// these two functions are also used to remove SP and measurement duplicates (by returning unused layers where SP/measurements shouldn't be used)
+    double (*findLayerIDSP)(double); // (double r) this function will map the r of a SP to a layer. Note that this may need to be changed for more complex geometries and eta ranges
+    double (*findLayerIDMeasurement)(double); // (double r) this function will map the r of a SP to a layer. Note that this may need to be changed for more complex geometries and eta ranges
 
-     bool (*inSliceSP)(double,unsigned,int); // (double z,unsigned layer, int slice)
-     bool (*inSliceMeasurement)(double,unsigned,int); // (double z,unsigned layer, int slice)
+     bool (*inSliceSP)(double,unsigned,int); // (double z,unsigned layer, int slice) // given z, layer and slice, returns a bool indicating whether a SP is in a given slice
+     bool (*inSliceMeasurement)(double,unsigned,int); // (double z,unsigned layer, int slice) // given z, layer and slice, returns a bool indicating whether a measurement is in a given slice
      
   };
 
@@ -178,41 +183,39 @@ class HoughTransformSeeder final : public BareAlgorithm {
  private:
   Config m_cfg;
   
-  ///////////////////////////////////////////////////////////////////////
-  // Convenience
+  ////////////////////////////////////////////////////////////////////////
+  /// Convenience
   
-
   double m_step_x = 0; // step size of the bin boundaries in x
   double m_step_y = 0; // step size of the bin boundaries in y
+  /// Bin boundaries, where m_bins_x[i] is the lower bound of bin i.
+  /// These are calculated from m_xMin/m_xMax
   std::vector<double> m_bins_x; // size == m_imageSize_x + 1.
   std::vector<double> m_bins_y; // size == m_imageSize_y + 1
-  // Bin boundaries, where m_bins_x[i] is the lower bound of bin i.
-  // These are calculated from m_xMin/m_xMax
   
-  ///////////////////////////////////////////////////////////////////////
-  // Core
-
-  struct MeasurementKludge {
+  /// The measurements are ugly to use, this is a convenience struct that contains the needed information
+  struct MeasurementStruct {
      unsigned layer;
      double phi;
      double radius;
      double z;
      Index index;
-     MeasurementKludge(unsigned l, double p, double r, double thez, Index i) : layer(l), phi(p), radius(r), z(thez), index(i) {}
+     MeasurementStruct(unsigned l, double p, double r, double thez, Index i) : layer(l), phi(p), radius(r), z(thez), index(i) {}
   };
 
-  
-  Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges, int subregion) const;
-  Image createImage(std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges, int subregion) const;
 
   ///////////////////////////////////////////////////////////////////////
-  // Helpers
-  
-  std::pair<unsigned, unsigned> yToXBins(size_t yBin_min, size_t yBin_max, double r, double phi, unsigned layer) const;
-  unsigned getExtension(unsigned y, unsigned layer) const;
-  bool passThreshold(Image const & image, unsigned x, unsigned y) const;
-  void drawImage(Image const & image, std::string const & name);
-  std::vector<std::vector<int>> getComboIndices(std::vector<size_t> & sizes) const;
+  // Core functions , they take both measurements and spacepoints, the second one calls the first one per layer
+  Image createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementStruct >> & meas, int subregion) const;
+  Image createImage(std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementStruct >> & meas, int subregion) const;
+
+  ///////////////////////////////////////////////////////////////////////
+  // Helpers  
+  std::pair<unsigned, unsigned> yToXBins(size_t yBin_min, size_t yBin_max, double r, double phi, unsigned layer) const; // given y, return x bins passed
+  unsigned getExtension(unsigned y, unsigned layer) const; // return extensions
+  bool passThreshold(Image const & image, unsigned x, unsigned y) const; // did we pass extensions?
+  void drawImage(Image const & image, std::string const & name); // for making pretty plots
+  std::vector<std::vector<int>> getComboIndices(std::vector<size_t> & sizes) const; // useful to find all candidates from given bins that pass (looping over hit combinatorics)
 };
 
 }  // namespace ActsExamples
