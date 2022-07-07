@@ -50,7 +50,7 @@ You can now push the updated `releases` branch to the remote `releases` branch u
 On push, a CI job should run and create an additional commit on the `releases` branch, which bumps a number of version numbers. That commit is going to be the one tagged with the correct version. It doesn't hurt to make sure that commit looks right, as in it bumps to a sensible next version number.
 
 
-# Step 2: Prepare milestone
+## Step 2: Prepare milestone
 
 By convention, we assign all open PRs and issues to the `next` milestone. When a new release is cut, all closed issues and PRs are moved over to a dedicated milestone named after the next version number. To do this, go to the *Pull Requests* view on the main repository, and click *Milestones*:
 
@@ -92,7 +92,7 @@ width: 300px
 ---
 ```
 
-# Step 3: Publish release
+## Step 3: Publish release
 
 The release CI job should have created a draft release visible in the GitHub interface. If you navigate to the list of all releases, there should be an entry for this new release. You should
 
