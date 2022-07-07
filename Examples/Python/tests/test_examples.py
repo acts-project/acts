@@ -527,8 +527,8 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
@@ -604,8 +604,8 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
