@@ -52,6 +52,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
     Acts::TGeoLayerBuilder::Config layerBuilderConfig;
     layerBuilderConfig.configurationName = volume.name;
     layerBuilderConfig.unit = config.unitScalor;
+    layerBuilderConfig.elementFactory = config.elementFactory;
 
     // configure surface autobinning
     std::vector<std::pair<double, double>> binTolerances(
