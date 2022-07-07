@@ -284,8 +284,9 @@ jobs:
             ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_
 
       - name: Configure
-        run: > # disabling ninja because of race condition
+        run: >
           cmake -B build -S .
+          -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=$(find / -type f -name "ccache")
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
@@ -312,6 +313,7 @@ jobs:
         run: >
           ${SETUP} &&
           cmake -B build -S .
+          -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
@@ -332,6 +334,7 @@ jobs:
         run: >
           ${SETUP} &&
           cmake -B build-downstream-nodeps -S Tests/DownstreamProjectNodeps
+          -GNinja
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
