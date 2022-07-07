@@ -60,7 +60,7 @@ inline auto TrackStateProxy<M, ReadOnly>::parameters() const -> Parameters {
     idx = data().ipredicted;
   }
 
-  return Parameters(m_traj->m_params.data.col(idx).data());
+  return Parameters(m_traj->m_params.col(idx).data());
 }
 
 template <size_t M, bool ReadOnly>
@@ -73,7 +73,7 @@ inline auto TrackStateProxy<M, ReadOnly>::covariance() const -> Covariance {
   } else {
     idx = data().ipredicted;
   }
-  return Covariance(m_traj->m_cov.data.col(idx).data());
+  return Covariance(m_traj->m_cov.col(idx).data());
 }
 
 template <size_t M, bool ReadOnly>

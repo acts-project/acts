@@ -1,6 +1,5 @@
 add_unittest(Version VersionTests.cpp)
 
-add_subdirectory(Clusterization)
 add_subdirectory(Definitions)
 add_subdirectory(Digitization)
 add_subdirectory(EventData)
