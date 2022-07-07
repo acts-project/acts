@@ -128,7 +128,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
    const AlgorithmContext& ctx) const {
 
    // hopefully not needed in the future!
-   std::vector<std::shared_ptr<const MeasurementKludge >> measurementKludges;
+   std::vector<std::shared_ptr<const MeasurementStruct >> measurementStructs;
 
 
    // construct the combined input container of space point pointers from all
@@ -202,8 +202,8 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
             double phi = atan2(globalPos[Acts::ePos1],globalPos[Acts::ePos0]);
             double z = globalPos[Acts::ePos2];
             unsigned hitlayer = (*(m_cfg.findLayerIDMeasurement))(r);
-            std::shared_ptr<const MeasurementKludge> kludge = std::shared_ptr<const MeasurementKludge>(new MeasurementKludge(hitlayer,phi,r,z,sourceLink.get().index()));
-            measurementKludges.push_back(kludge);
+            std::shared_ptr<const MeasurementStruct> meas = std::shared_ptr<const MeasurementStruct>(new MeasurementStruct(hitlayer,phi,r,z,sourceLink.get().index()));
+            measurementStructs.push_back(meas);
          }
       }
    }
@@ -212,7 +212,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
    protoTracks.clear();
 
    for (auto subregion : m_cfg.m_subRegions) {
-      ActsExamples::Image m_image = createImage(spacePointPtrs,measurementKludges, subregion);
+      ActsExamples::Image m_image = createImage(spacePointPtrs,measurementStructs, subregion);
       
       for (unsigned y = 0; y < m_cfg.m_imageSize_y; y++)
          for (unsigned x = 0; x < m_cfg.m_imageSize_x; x++)
@@ -229,10 +229,10 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
                      hitIndicesAll[layer].push_back(sp->measurementIndex());
                      nHitsPerLayer[layer]++;
                   }
-                  else { // based on the kludge of storing SP first, this must not be a sp
-                     std::shared_ptr<const MeasurementKludge> kludge = measurementKludges[index - spacePointPtrs.size()];
-                     unsigned layer = kludge->layer;
-                     hitIndicesAll[layer].push_back(kludge->index);
+                  else { // we store SP first, this must not be a sp, updated the index appropriately 
+                     std::shared_ptr<const MeasurementStruct> meas = measurementStructs[index - spacePointPtrs.size()];
+                     unsigned layer = meas->layer;
+                     hitIndicesAll[layer].push_back(meas->index);
                      nHitsPerLayer[layer]++;
                   }
                }
@@ -262,7 +262,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
 
 
 
-ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges, int subregion) const {
+ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(unsigned layer, std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementStruct >> & meass, int subregion) const {
 
    ActsExamples::Image image(m_cfg.m_imageSize_y, m_cfg.m_imageSize_x);
 
@@ -293,10 +293,10 @@ ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(unsigne
       }
    }
 
-   for (unsigned index = 0; index < kludges.size(); index++) {
-      std::shared_ptr<const MeasurementKludge> kludge = kludges[index];
-      if (kludge->layer != layer) continue; 
-      if (!((*(m_cfg.inSliceMeasurement))(kludge->z,kludge->layer,subregion))) continue;
+   for (unsigned index = 0; index < meass.size(); index++) {
+      std::shared_ptr<const MeasurementStruct> meas = meass[index];
+      if (meas->layer != layer) continue; 
+      if (!((*(m_cfg.inSliceMeasurement))(meas->z,meas->layer,subregion))) continue;
       
       // This scans over y (pT) because that is more efficient in memory, in C.
       // Unknown if firmware will want to scan over x instead.
@@ -305,7 +305,7 @@ ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(unsigne
          unsigned y_bin_max = (y_ + 1);
          
          // Find the min/max x bins
-         auto xBins = yToXBins(y_bin_min, y_bin_max, kludge->radius, kludge->phi, kludge->layer);
+         auto xBins = yToXBins(y_bin_min, y_bin_max, meas->radius, meas->phi, meas->layer);
          // Update the image
          for (unsigned y = y_bin_min; y < y_bin_max; y++)
             for (unsigned x = xBins.first; x < xBins.second; x++) {
@@ -318,12 +318,12 @@ ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(unsigne
    return image;
 }
 
-ActsExamples::Image ActsExamples::HoughTransformSeeder::createImage(std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementKludge >> & kludges, int subregion) const {
+ActsExamples::Image ActsExamples::HoughTransformSeeder::createImage(std::vector<const SimSpacePoint*> & spacepoints, std::vector<std::shared_ptr<const MeasurementStruct >> & meas, int subregion) const {
 
    ActsExamples::Image image(m_cfg.m_imageSize_y, m_cfg.m_imageSize_x);
    
    for (unsigned i = 0; i < m_cfg.m_nLayers; i++) {
-      Image layerImage = createLayerImage(i, spacepoints, kludges, subregion);
+      Image layerImage = createLayerImage(i, spacepoints, meas, subregion);
       for (unsigned x = 0; x < m_cfg.m_imageSize_x; ++x)
          for (unsigned y = 0; y < m_cfg.m_imageSize_y; ++y)
             if (layerImage(y, x).first > 0) {               
