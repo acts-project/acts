@@ -344,8 +344,6 @@ def test_event_recording(tmp_path):
 
     env = os.environ.copy()
     env["NEVENTS"] = "1"
-    # @TODO: Fix failure in gain matrix smoothing
-    # See https://github.com/acts-project/acts/issues/1215
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call([str(script)], cwd=tmp_path, env=env)
 
@@ -881,10 +879,7 @@ def test_ckf_tracks_example(
         s=s,
     )
 
-    # @TODO: Fix failure in gain matrix smoothing
-    # See https://github.com/acts-project/acts/issues/1215
-    with failure_threshold(acts.logging.FATAL, enabled=detector_config.name == "odd"):
-        s.run()
+    s.run()
 
     del s  # files are closed in destructors, not great
 
@@ -1026,7 +1021,5 @@ def test_full_chain_odd_example(tmp_path):
     assert script.exists()
     env = os.environ.copy()
     env["NEVENTS"] = "1"
-    # @TODO: Fix failure in gain matrix smoothing
-    # See https://github.com/acts-project/acts/issues/1215
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call([str(script)], cwd=tmp_path, env=env)
