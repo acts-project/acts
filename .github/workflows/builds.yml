@@ -17,7 +17,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v22
+    container: ghcr.io/acts-project/${{ matrix.image }}:v27
     strategy:
       matrix:
         image:
@@ -94,7 +94,7 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v22
+    container: ghcr.io/acts-project/ubuntu2004:v27
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -172,7 +172,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v22
+    container: ghcr.io/acts-project/ubuntu2004:v27
     needs: [linux_ubuntu]
 
     steps:
@@ -210,7 +210,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v22
+    container: ghcr.io/acts-project/ubuntu2004:v27
     needs: [linux_ubuntu]
 
     steps:
@@ -417,7 +417,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v22
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v27
     steps:
       - uses: actions/checkout@v2
 
@@ -444,7 +444,7 @@ jobs:
         run: cmake --build build --
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v27
     steps:
       - uses: actions/checkout@v2
 
@@ -471,7 +471,7 @@ jobs:
         run: cmake --build build --
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v22
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v27
     defaults:
       run:
         shell: bash
@@ -505,7 +505,7 @@ jobs:
           && cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v22
+    container: ghcr.io/acts-project/ubuntu2004:v27
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:
