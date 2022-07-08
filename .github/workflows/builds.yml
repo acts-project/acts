@@ -17,7 +17,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v27
+    container: ghcr.io/acts-project/${{ matrix.image }}:v28
     strategy:
       matrix:
         image:
@@ -94,7 +94,7 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v27
+    container: ghcr.io/acts-project/ubuntu2004:v28
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -172,7 +172,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v27
+    container: ghcr.io/acts-project/ubuntu2004:v28
     needs: [linux_ubuntu]
 
     steps:
@@ -210,7 +210,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v27
+    container: ghcr.io/acts-project/ubuntu2004:v28
     needs: [linux_ubuntu]
 
     steps:
@@ -258,7 +258,7 @@ jobs:
         image: 
           - ubuntu2204
           - ubuntu2204_clang
-    container: ghcr.io/acts-project/${{ matrix.image }}:v27
+    container: ghcr.io/acts-project/${{ matrix.image }}:v28
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -500,7 +500,7 @@ jobs:
         run: ./build-downstream/bin/ShowActsVersion
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v27
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v28
     steps:
       - uses: actions/checkout@v2
 
@@ -527,7 +527,7 @@ jobs:
         run: cmake --build build --
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v27
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v28
     steps:
       - uses: actions/checkout@v2
 
@@ -554,7 +554,7 @@ jobs:
         run: cmake --build build --
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v27
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v28
     defaults:
       run:
         shell: bash
@@ -588,7 +588,7 @@ jobs:
           && cmake --build build --
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v27
+    container: ghcr.io/acts-project/ubuntu2004:v28
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:
