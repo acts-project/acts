@@ -37,8 +37,15 @@ hepmc3Enabled = "HepMC3_DIR" in os.environ
 if hepmc3Enabled:
     try:
         import acts.examples.hepmc3
-    except:
+    except ImportError:
         hepmc3Enabled = False
+
+edm4hepEnabled = "EDM4HEP_DIR" in os.environ
+if edm4hepEnabled:
+    try:
+        import acts.examples.edm4hep
+    except ImportError:
+        edm4hepEnabled = False
 
 isCI = os.environ.get("CI", "false") == "true"
 

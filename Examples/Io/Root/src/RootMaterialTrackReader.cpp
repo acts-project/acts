@@ -76,9 +76,14 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
 }
 
 ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
+  delete m_inputChain;
+
   delete m_step_x;
   delete m_step_y;
   delete m_step_z;
+  delete m_step_dx;
+  delete m_step_dy;
+  delete m_step_dz;
   delete m_step_length;
   delete m_step_X0;
   delete m_step_L0;
