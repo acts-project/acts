@@ -43,7 +43,7 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   // same file from multiple threads are unsafe.
   // must always be opened internally
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
-  if (not m_outputFile) {
+  if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + m_cfg.filePath + "'");
   }
 
@@ -59,13 +59,13 @@ ActsExamples::CKFPerformanceWriter::~CKFPerformanceWriter() {
   m_fakeRatePlotTool.clear(m_fakeRatePlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
     m_fakeRatePlotTool.write(m_fakeRatePlotCache);

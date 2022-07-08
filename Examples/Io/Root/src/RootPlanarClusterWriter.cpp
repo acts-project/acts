@@ -106,7 +106,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
   for (auto [moduleGeoId, moduleClusters] : groupByModule(clusters)) {
     const Acts::Surface* surfacePtr =
         m_cfg.trackingGeometry->findSurface(moduleGeoId);
-    if (not surfacePtr) {
+    if (surfacePtr == nullptr) {
       ACTS_ERROR("Could not find surface for " << moduleGeoId);
       return ProcessCode::ABORT;
     }
@@ -147,7 +147,8 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
         m_cell_IDy.push_back(cell.channel1);
         m_cell_data.push_back(cell.data);
         // for more we need the digitization module
-        if (detectorElement && detectorElement->digitizationModule()) {
+        if ((detectorElement != nullptr) &&
+            detectorElement->digitizationModule()) {
           auto digitationModule = detectorElement->digitizationModule();
           const Acts::Segmentation& segmentation =
               digitationModule->segmentation();

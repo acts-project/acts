@@ -372,7 +372,8 @@ void Acts::TrackingVolume::closeGeometry(
   if (materialDecorator != nullptr) {
     materialDecorator->decorate(*thisVolume);
   }
-  if (thisVolume->volumeMaterial() == nullptr && thisVolume->motherVolume() &&
+  if (thisVolume->volumeMaterial() == nullptr &&
+      thisVolume->motherVolume() != nullptr &&
       thisVolume->motherVolume()->volumeMaterial() != nullptr) {
     auto protoMaterial = dynamic_cast<const Acts::ProtoVolumeMaterial*>(
         thisVolume->motherVolume()->volumeMaterial());

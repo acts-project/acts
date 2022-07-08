@@ -67,7 +67,7 @@ ProcessCode PropagationAlgorithm::execute(
 
     // execute the test for charged particles
     PropagationOutput pOutput;
-    if (charge) {
+    if (charge != 0.0) {
       // charged extrapolation - with hit recording
       Acts::BoundTrackParameters startParameters(surface, std::move(pars),
                                                  std::move(cov));

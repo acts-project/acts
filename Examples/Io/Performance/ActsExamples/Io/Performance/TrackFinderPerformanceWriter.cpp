@@ -97,7 +97,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
     // same file from multiple threads are unsafe.
     // must always be opened internally
     file = TFile::Open(cfg.filePath.c_str(), cfg.fileMode.c_str());
-    if (not file) {
+    if (file == nullptr) {
       throw std::invalid_argument("Could not open '" + cfg.filePath + "'");
     }
 
@@ -226,7 +226,7 @@ struct ActsExamples::TrackFinderPerformanceWriter::Impl {
   }
   /// Write everything to disk and close the file.
   void close() {
-    if (not file) {
+    if (file == nullptr) {
       ACTS_ERROR("Output file is not available");
       return;
     }
