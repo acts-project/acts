@@ -147,14 +147,14 @@ struct Chi2FitterResult {
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
-  // Since this KF only stores one trajectory, it is unambiguous.
+  // Since this GX2F only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
   size_t lastMeasurementIndex = SIZE_MAX;
 
   // This is the index of the 'tip' of the states stored in multitrajectory.
   // This correspond to the last state in the multitrajectory.
-  // Since this KF only stores one trajectory, it is
-  // unambiguous. SIZE_MAX is the start of a trajectory.
+  // Since this GX2F only stores one trajectory, it is unambiguous.
+  // SIZE_MAX is the start of a trajectory.
   size_t lastTrackIndex = SIZE_MAX;
 
   // The optional Parameters at the provided surface
@@ -214,7 +214,7 @@ class Chi2Fitter {
 
   /// @brief Propagator Actor plugin for the Chi2Fitter
   ///
-  /// @tparam parameters_t The type of parameters used for "local" paremeters.
+  /// @tparam parameters_t The type of parameters used for "local" parameters.
   ///
   /// The Chi2Actor does not rely on the measurements to be
   /// sorted along the track.
@@ -308,7 +308,7 @@ class Chi2Fitter {
                                 result_type& result) const {
       const auto& logger = state.options.logger;
 
-      // we need the full jacobianFromStart, so we'll need to calculate it no
+      // We need the full jacobianFromStart, so we'll need to calculate it no
       // matter if we have a measurement or not.
 
       // Transport the covariance to the surface
@@ -637,7 +637,7 @@ class Chi2Fitter {
     // start_parameters_t and parameter_t can be the same
 
     Chi2Result c2r;
-    // the result object which will be returned. Overriden every iteration.
+    // the result object which will be returned. Overridden every iteration.
 
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
       auto result = std::visit(

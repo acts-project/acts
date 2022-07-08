@@ -44,18 +44,6 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
         const TrackParameters&, const TrackFitterChi2Options&) const = 0;
   };
 
-  /// Create the track fitter function implementation.
-  ///
-  /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
-  static std::shared_ptr<TrackFitterChi2Function> makeTrackFitterChi2Function(
-      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
-
-  // static std::shared_ptr<DirectedTrackFitterFunction>
-  // makeTrackFitterFunction(
-  //     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
-
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
@@ -95,6 +83,18 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
+
+  /// Create the track fitter function implementation.
+  ///
+  /// The magnetic field is intentionally given by-value since the variant
+  /// contains shared_ptr anyways.
+  static std::shared_ptr<TrackFitterChi2Function> makeTrackFitterChi2Function(
+      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
+
+  // static std::shared_ptr<DirectedTrackFitterFunction>
+  // makeTrackFitterFunction(
+  //     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
  private:
   /// Helper function to call correct FitterFunction

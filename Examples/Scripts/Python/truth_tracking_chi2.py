@@ -17,7 +17,6 @@ def addChi2Tracks(
     multipleScattering=False,
     energyLoss=False,
 ):
-
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
         inputParticles="truth_seeds_selected",
@@ -26,9 +25,11 @@ def addChi2Tracks(
     )
     s.addAlgorithm(truthTrkFndAlg)
 
-    chi2Options = dict(
-        nUpdates=nUpdates, multipleScattering=multipleScattering, energyLoss=energyLoss
-    )
+    chi2Options = {
+        "nUpdates": nUpdates,
+        "multipleScattering": multipleScattering,
+        "energyLoss": energyLoss
+    }
 
     # fitAlg = acts.examples.TrackFittingChi2Algorithm(
     #     level=acts.logging.INFO,
@@ -63,10 +64,6 @@ def addChi2Tracks(
             field
             # , **chi2Options  # TODO: implement
         )
-        # directNavigation=False,
-        # dFit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
-        #     field, **kalmanOptions
-        # ),
     )
     s.addAlgorithm(fitAlg)
 
@@ -149,7 +146,12 @@ def runTruthTrackingChi2(
     )
 
     s = addChi2Tracks(
-        s, trackingGeometry, field, nUpdates, multipleScattering, energyLoss
+        s,
+        trackingGeometry,
+        field,
+        nUpdates,
+        multipleScattering,
+        energyLoss,
     )
 
     # Output
@@ -199,6 +201,7 @@ def runTruthTrackingChi2(
 
 
 if "__main__" == __name__:
+
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     # detector, trackingGeometry, _ = getOpenDataDetector()
