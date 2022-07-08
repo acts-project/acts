@@ -63,7 +63,7 @@ alt: The milestones button
 
 First, create a new milestone here. Name it `vX.Y.Z`, corresponding to the next version (you can check the release CI job mentioned above to determine this. The job will also create an unreleased GitHub *release* which should have the right name).
 
-Next, go back to the list ofr milestones and go to the `next` milestone, and click on *closed* to get to a list of all closed PRs and issues assigned to it:
+Next, go back to the list of milestones and go to the `next` milestone, and click on *closed* to get to a list of all closed PRs and issues assigned to it:
 
 ```{image} /figures/release/next_milestone.png
 ---
