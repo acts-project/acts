@@ -91,7 +91,6 @@ jobs:
       - name: Downstream run
         run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
 
-
   linux_ubuntu:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v28
@@ -115,7 +114,6 @@ jobs:
           restore-keys: |
             ${{ runner.os  }}-ccache-linux_ubuntu_${{ env.CCACHE_KEY_SUFFIX }}_
 
-
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
@@ -132,6 +130,7 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
 
@@ -174,7 +173,6 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v28
     needs: [linux_ubuntu]
-
     steps:
       - name: Install git lfs
         run: apt-get install -y git-lfs
@@ -206,7 +204,7 @@ jobs:
           && source build/python/setup.sh
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest -rFs
+          && pytest -rFsv
 
   linux_physmon:
     runs-on: ubuntu-latest
@@ -368,7 +366,6 @@ jobs:
           restore-keys: |
             ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_
 
-
       - name: Configure
         run: >
           cmake -B build -S .
@@ -456,7 +453,6 @@ jobs:
           restore-keys: |
             ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_
 
-
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
@@ -474,6 +470,7 @@ jobs:
           -DACTS_BUILD_ODD=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
       - name: Build
         run: cmake --build build  --
       - name: Unit tests
@@ -498,6 +495,7 @@ jobs:
         run: cmake --build build-downstream --
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
+
   cuda:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu1804_cuda:v28
@@ -512,7 +510,6 @@ jobs:
           restore-keys: |
             ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_
 
-
       - name: Configure
         run: >
           cmake -B build -S .
@@ -525,6 +522,7 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
         run: cmake --build build --
+
   exatrkx:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004_exatrkx:v28
@@ -539,7 +537,6 @@ jobs:
           restore-keys: |
             ${{ runner.os  }}-ccache-exatrkx_${{ env.CCACHE_KEY_SUFFIX }}_
 
-
       - name: Configure
         run: >
           cmake -B build -S .
@@ -552,6 +549,7 @@ jobs:
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
         run: cmake --build build --
+
   sycl:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004_oneapi:v28
@@ -569,7 +567,6 @@ jobs:
           restore-keys: |
             ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_
 
-
       - name: Configure
         run: >
           source /opt/intel/oneapi/setvars.sh
@@ -586,6 +583,7 @@ jobs:
         run: >
           source /opt/intel/oneapi/setvars.sh
           && cmake --build build --
+
   docs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v28
