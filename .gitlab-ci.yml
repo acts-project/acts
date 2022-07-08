@@ -1,6 +1,6 @@
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004:v21
+  image: ghcr.io/acts-project/ubuntu2004:v26
   artifacts:
     paths:
       - src/clang-tidy/
@@ -38,7 +38,7 @@ clang_tidy:
 
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v26
   tags:
     - docker
   variables:
@@ -83,12 +83,11 @@ build:
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
     - cmake --build build --
 
-
 test:
   stage: test
   dependencies:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v23
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v26
   tags:
     - docker-gpu-nvidia
   script:
@@ -99,4 +98,3 @@ test:
     - source build/python/setup.sh
     - nvidia-smi
     - python3 src/Examples/Scripts/Python/exatrkx.py
-
