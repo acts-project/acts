@@ -97,7 +97,7 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
   }
 }
 
-ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() {}
+ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() = default;
 
 ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
   if (m_outputFile != nullptr) {

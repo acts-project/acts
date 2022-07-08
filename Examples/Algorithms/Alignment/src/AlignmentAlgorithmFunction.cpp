@@ -41,7 +41,7 @@ struct AlignmentFunctionImpl
       const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsAlignment::AlignmentOptions<
           ActsExamples::AlignmentAlgorithm::TrackFitterOptions>& options)
-      const {
+      const override {
     return align.align(sourceLinks, initialParameters, options);
   };
 };

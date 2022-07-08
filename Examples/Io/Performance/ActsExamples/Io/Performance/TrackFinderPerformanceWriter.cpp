@@ -241,9 +241,8 @@ ActsExamples::TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
     : WriterT(config.inputProtoTracks, "TrackFinderPerformanceWriter", level),
       m_impl(std::make_unique<Impl>(std::move(config), logger())) {}
 
-ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
-  // explicit destructor needed for pimpl idiom to work
-}
+ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() =
+    default;
 
 ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
