@@ -91,7 +91,7 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
                     ? z
                     : (ir % 2 ? z + 0.5 * ringStagger : z - 0.5 * ringStagger);
     // fill the ring positions
-    double psStagger = phiSubStagger.size() ? phiSubStagger[ir] : 0.;
+    double psStagger = phiSubStagger.empty() ? 0. : phiSubStagger[ir];
     mPositions.push_back(modulePositionsRing(rz, radii[ir], phiStagger[ir],
                                              psStagger, discBinning[ir]));
   }

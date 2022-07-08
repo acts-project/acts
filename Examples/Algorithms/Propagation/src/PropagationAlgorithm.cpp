@@ -87,7 +87,7 @@ ProcessCode PropagationAlgorithm::execute(
     // Record the propagator steps
     propagationSteps.push_back(std::move(pOutput.first));
     if (m_cfg.recordMaterialInteractions &&
-        pOutput.second.materialInteractions.size()) {
+        !pOutput.second.materialInteractions.empty()) {
       // Create a recorded material track
       RecordedMaterialTrack rmTrack;
       // Start position

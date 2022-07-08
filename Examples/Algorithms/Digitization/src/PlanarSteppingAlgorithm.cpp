@@ -148,7 +148,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
           m_cfg.planarModuleStepper->cellSteps(ctx.geoContext, *dg.digitizer,
                                                localIntersect, localDirection);
       // everything under threshold or edge effects
-      if (!dSteps.size()) {
+      if (dSteps.empty()) {
         ACTS_VERBOSE("No steps returned from stepper.");
         continue;
       }
