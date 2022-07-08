@@ -32,6 +32,7 @@ Key features:
    formats/formats
    api/api
    contributionguide
+   howto/howto
    codeguide
    authors
    license
