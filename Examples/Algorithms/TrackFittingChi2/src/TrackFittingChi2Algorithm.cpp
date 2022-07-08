@@ -100,7 +100,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
     ACTS_VERBOSE("chi2algo | ev="
                  << ctx.eventNumber << " | initial parameters: "
                  << initialParams.fourPosition(ctx.geoContext).transpose()
-                 << "  ->  " << initialParams.unitDirection().transpose());
+                 << " -> " << initialParams.unitDirection().transpose());
 
     // Clear & reserve the right size
     trackSourceLinks.clear();
