@@ -314,7 +314,8 @@ class VectorMultiTrajectory final
   std::vector<ProjectorBitset> m_projectors;
 
   // owning vector of shared pointers to surfaces
-  // @TODO: This might be problematic when appending a large number of surfaces
+  //
+  // This might be problematic when appending a large number of surfaces
   // trackstates, because vector has to reallocated and thus copy. This might
   // be handled in a smart way by moving but not sure.
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;

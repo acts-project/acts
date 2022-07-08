@@ -104,11 +104,8 @@ auto kalmanHandleMeasurement(
         "be an outlier. Stepping state is not updated.")
     // Set the outlier type flag
     typeFlags.set(TrackStateFlag::OutlierFlag);
-    // @FIXME: MTJ direct index access
-    // trackStateProxy.data().ifiltered =
-    // trackStateProxy.data().ipredicted;
-    using PM = TrackStatePropMask;
-    trackStateProxy.shareFrom(trackStateProxy, PM::Predicted, PM::Filtered);
+    trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
+                              TrackStatePropMask::Filtered);
   }
 
   return trackStateProxy;
@@ -183,11 +180,8 @@ auto kalmanHandleNoMeasurement(
 
   // Set the filtered parameter index to be the same with predicted
   // parameter
-  // @FIXME: MTJ direct index access
-  // trackStateProxy.data().ifiltered =
-  // trackStateProxy.data().ipredicted;
-  using PM = TrackStatePropMask;
-  trackStateProxy.shareFrom(trackStateProxy, PM::Predicted, PM::Filtered);
+  trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
+                            TrackStatePropMask::Filtered);
 
   return trackStateProxy;
 }

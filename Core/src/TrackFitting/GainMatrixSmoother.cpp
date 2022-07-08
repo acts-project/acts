@@ -10,47 +10,6 @@
 
 namespace Acts {
 
-// Result<void> GainMatrixSmoother::calculate(InternalTrackState trackState,
-// LoggerWrapper logger) const {
-// // Gain smoothing matrix
-// // NB: The jacobian stored in a state is the jacobian from previous
-// // state to this state in forward propagation
-// BoundMatrix G = trackState.filteredCovariance *
-// trackState.prevJacobian.transpose() *
-// trackState.prevPredictedCovariance.inverse();
-
-// if (G.hasNaN()) {
-// return KalmanFitterError::SmoothFailed;
-// }
-
-// ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
-
-// ACTS_VERBOSE("Calculate smoothed parameters:");
-// ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
-// ACTS_VERBOSE(
-// "Prev. smoothed parameters: " << trackState.prevSmoothed.transpose());
-// ACTS_VERBOSE(
-// "Prev. predicted parameters: " << trackState.prevPredicted.transpose());
-
-// // Calculate the smoothed parameters
-// trackState.smoothed = trackState.filtered + G * (trackState.prevSmoothed -
-// trackState.prevPredicted);
-
-// ACTS_VERBOSE("Smoothed parameters are: " << trackState.smoothed.transpose());
-// ACTS_VERBOSE("Calculate smoothed covariance:");
-// ACTS_VERBOSE("Prev. smoothed covariance:\n"
-// << trackState.prevSmoothedCovariance);
-
-// // And the smoothed covariance
-// trackState.prevSmoothedCovariance =
-// trackState.filteredCovariance - G *
-// (trackState.prevPredictedCovariance -
-// trackState.prevSmoothedCovariance) *
-// G.transpose();
-
-// return Result<void>::success();
-// }
-
 Result<void> GainMatrixSmoother::calculate(
     void* ts, void* prev_ts, const GetParameters& filtered,
     const GetCovariance& filteredCovariance, const GetParameters& smoothed,

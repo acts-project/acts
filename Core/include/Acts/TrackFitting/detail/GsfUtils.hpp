@@ -156,7 +156,6 @@ void computePosteriorWeights(
     const MultiTrajectory<D> &mt,
     const std::vector<MultiTrajectoryTraits::IndexType> &tips,
     std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
-  // @TODO: Put back into compilation unit
   // Helper Function to compute detR
 
   // Find minChi2, this can be used to factor some things later in the
@@ -201,7 +200,6 @@ auto extractMultiComponentState(
     const std::vector<MultiTrajectoryTraits::IndexType> &tips,
     const std::map<MultiTrajectoryTraits::IndexType, ActsScalar> &weights,
     StatesType type) -> MultiComponentBoundTrackParameters<SinglyCharged> {
-  // @TODO: Put back into compilation unit
   throw_assert(
       !tips.empty(),
       "need at least one component to extract trajectory of type " << type);

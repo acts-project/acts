@@ -24,17 +24,6 @@ namespace Acts {
 /// smoothing procedure for a filtered, forward trajectory using the stored
 /// linearization.
 class GainMatrixSmoother {
-  // struct InternalTrackState {
-  // TrackStateTraits::Parameters filtered;
-  // TrackStateTraits::Covariance filteredCovariance;
-  // TrackStateTraits::Parameters smoothed;
-  // TrackStateTraits::Parameters prevPredicted;
-  // TrackStateTraits::Covariance prevPredictedCovariance;
-  // TrackStateTraits::Parameters prevSmoothed;
-  // TrackStateTraits::Covariance prevSmoothedCovariance;
-  // TrackStateTraits::Covariance prevJacobian;
-  // };
-
  public:
   /// Run the Kalman smoothing for one trajectory.
   ///
@@ -83,10 +72,6 @@ class GainMatrixSmoother {
       return static_cast<TrackStateProxy*>(ts)->jacobian();
     });
 
-    // return calculate(entryIndex, filtered, filteredCovariance, smoothed,
-    // predicted, predictedCovariance, smoothedCovariance,
-    // jacobian, logger);
-
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
 
     // For the last state: smoothed is filtered - also: switch to next
@@ -104,8 +89,6 @@ class GainMatrixSmoother {
 
     ACTS_VERBOSE("Start smoothing from previous track state at index: "
                  << prev_ts.previous());
-
-    // @TODO: Put back into own compilation unit!
 
     // default-constructed error represents success, i.e. an invalid error code
     std::error_code error;
@@ -154,49 +137,6 @@ class GainMatrixSmoother {
                          const GetCovariance& smoothedCovariance,
                          const GetCovariance& jacobian,
                          LoggerWrapper logger) const;
-
-  // Result<void> calculate(InternalTrackState trackState,
-  // LoggerWrapper logger) const {
-  // // Gain smoothing matrix
-  // // NB: The jacobian stored in a state is the jacobian from previous
-  // // state to this state in forward propagation
-  // BoundMatrix G = trackState.filteredCovariance *
-  // trackState.prevJacobian.transpose() *
-  // trackState.prevPredictedCovariance.inverse();
-
-  // if (G.hasNaN()) {
-  // return KalmanFitterError::SmoothFailed;
-  // }
-
-  // ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
-
-  // ACTS_VERBOSE("Calculate smoothed parameters:");
-  // ACTS_VERBOSE("Filtered parameters: " << trackState.filtered.transpose());
-  // ACTS_VERBOSE(
-  // "Prev. smoothed parameters: " << trackState.prevSmoothed.transpose());
-  // ACTS_VERBOSE(
-  // "Prev. predicted parameters: " << trackState.prevPredicted.transpose());
-
-  // // Calculate the smoothed parameters
-  // trackState.smoothed = trackState.filtered + G * (trackState.prevSmoothed -
-  // trackState.prevPredicted);
-
-  // ACTS_VERBOSE(
-  // "Smoothed parameters are: " << trackState.smoothed.transpose());
-  // ACTS_VERBOSE("Calculate smoothed covariance:");
-  // ACTS_VERBOSE("Prev. smoothed covariance:\n"
-  // << trackState.prevSmoothedCovariance);
-
-  // // And the smoothed covariance
-  // trackState.prevSmoothedCovariance =
-  // trackState.filteredCovariance -
-  // G *
-  // (trackState.prevPredictedCovariance -
-  // trackState.prevSmoothedCovariance) *
-  // G.transpose();
-
-  // return Result<void>::success();
-  // }
 };
 
 }  // namespace Acts
