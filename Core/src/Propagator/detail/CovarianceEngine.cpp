@@ -195,7 +195,7 @@ Result<void> reinitializeJacobians(const GeometryContext& geoContext,
   if (not lpResult.ok()) {
     ACTS_LOCAL_LOGGER(
         Acts::getDefaultLogger("CovarianceEngine", Logging::INFO));
-    ACTS_FATAL(
+    ACTS_WARNING(
         "Inconsistency in global to local transformation during propagation.")
   }
   // Transform from free to bound parameters
