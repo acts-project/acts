@@ -84,6 +84,7 @@ s = addVertexFitting(
     field,
     vertexFinder=VertexFinder.AMVF,
     outputDirRoot=outputDir,
+    vertexFinderErrorLevel=acts.logging.INFO,
 )
 
 s.run()

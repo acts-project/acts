@@ -39,6 +39,7 @@ def addVertexFitting(
     associatedParticles: str = "particles_input",
     trackParameters: str = "trackparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
+    vertexFinderErrorLevel: acts.logging.Level = acts.logging.ERROR,
     logLevel: Optional[acts.logging.Level] = None,
 ):
     """This function steers the vertex fitting
@@ -86,6 +87,7 @@ def addVertexFitting(
             inputTrackParameters=trackParameters,
             inputProtoVertices=findVertices.config.outputProtoVertices,
             outputVertices=outputVertices,
+            errorLevel=vertexFinderErrorLevel,
         )
         s.addAlgorithm(fitVertices)
     elif vertexFinder == VertexFinder.Iterative:
@@ -95,6 +97,7 @@ def addVertexFitting(
             inputTrackParameters=trackParameters,
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
+            errorLevel=vertexFinderErrorLevel,
         )
         s.addAlgorithm(findVertices)
     elif vertexFinder == VertexFinder.AMVF:
@@ -106,6 +109,7 @@ def addVertexFitting(
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
             outputTime=outputTime,
+            errorLevel=vertexFinderErrorLevel,
         )
         s.addAlgorithm(findVertices)
     else:

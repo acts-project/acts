@@ -1021,7 +1021,5 @@ def test_full_chain_odd_example(tmp_path):
     assert script.exists()
     env = os.environ.copy()
     env["NEVENTS"] = "1"
-    # increased threshold because of vertexing
-    # see https://github.com/acts-project/acts/pull/1299
-    env["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call([str(script)], cwd=tmp_path, env=env)

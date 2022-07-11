@@ -39,6 +39,8 @@ class VertexFitterAlgorithm final : public BareAlgorithm {
                       10 * Acts::UnitConstants::mm * Acts::UnitConstants::mm,
                       1 * Acts::UnitConstants::ns * Acts::UnitConstants::ns)
             .asDiagonal();
+    /// Vertex fit error level
+    Acts::Logging::Level errorLevel = Acts::Logging::ERROR;
   };
 
   VertexFitterAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
