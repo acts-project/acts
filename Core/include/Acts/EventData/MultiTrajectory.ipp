@@ -48,7 +48,6 @@ TrackStatePropMask TrackStateProxy<D, M, ReadOnly>::getMask() const {
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
-  IndexType idx;
   if (hasSmoothed()) {
     return smoothed();
   } else if (hasFiltered()) {
@@ -56,21 +55,17 @@ inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
   } else {
     return predicted();
   }
-
-  return m_traj->self().parameters(idx);
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const -> Covariance {
-  IndexType idx;
   if (hasSmoothed()) {
-    return smoothed();
+    return smoothedCovariance();
   } else if (hasFiltered()) {
-    return filtered();
+    return filteredCovariance();
   } else {
-    return predicted();
+    return predictedCovariance();
   }
-  return m_traj->self().covariance(idx);
 }
 
 template <typename D, size_t M, bool ReadOnly>
