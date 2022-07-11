@@ -294,6 +294,7 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
 
@@ -308,14 +309,6 @@ jobs:
 
       - name: Install
         run: cmake --build build -- install
-
-      - name: Package build
-        run: tar czf build.tar.gz -C build . 
-
-      - uses: actions/upload-artifact@v3
-        with:
-          name: acts-linux-ubuntu
-          path: build.tar.gz
 
       - name: Downstream configure
         run: >
