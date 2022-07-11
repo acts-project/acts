@@ -1,26 +1,16 @@
-/*
-  Copyright (C) 2002-2022 CERN for the benefit of the ATLAS collaboration
-*/
+// This file is part of the Acts project.
+//
+// Copyright (C) 2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#ifndef HTTVECTORS_H
-#define HTTVECTORS_H
-
-/**
- * @file HTTVectors.h
- * @author Riley Xu - rixu@cern.ch
- * @date Jan 27 2020
- * @brief Defines several vector wrappers for homogenous multi-dimensional vectors, declared as 1D arrays for locality.
- */
-
+#pragma once
 
 #include <vector>
 #include <stdexcept>
-
-// #define DEBUG_HTTVECTORS
-
-#ifdef DEBUG_HTTVECTORS
 #include <sstream>
-#endif
 
 
 template <typename T>
@@ -176,6 +166,3 @@ class vector3D
     return m_data.data();
   }
 };
-
-
-#endif
