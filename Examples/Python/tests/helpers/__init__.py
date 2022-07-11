@@ -35,12 +35,14 @@ if dd4hepEnabled:
 
 try:
     import acts.examples.hepmc3
+
     hepmc3Enabled = True
 except ImportError:
     hepmc3Enabled = False
 
 try:
     import acts.examples.edm4hep
+
     edm4hepEnabled = True
 except ImportError:
     edm4hepEnabled = False
