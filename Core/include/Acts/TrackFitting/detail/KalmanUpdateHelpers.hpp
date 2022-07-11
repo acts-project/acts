@@ -30,20 +30,21 @@ namespace detail {
 /// @param lastTrackIndex The parent index for the new state in the MT
 /// @param doCovTransport Wether to perform a covariance transport when
 /// computing the bound state or not
+/// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t,
           typename extensions_t>
-auto kalmanHandleMeasurement(propagator_state_t &state,
-                             const stepper_t &stepper,
-                             const extensions_t &extensions,
-                             const Surface &surface,
-                             const SourceLink &source_link,
-                             MultiTrajectory &fittedStates,
-                             const size_t lastTrackIndex, bool doCovTransport)
-    -> Result<MultiTrajectory::TrackStateProxy> {
+auto kalmanHandleMeasurement(
+    propagator_state_t &state, const stepper_t &stepper,
+    const extensions_t &extensions, const Surface &surface,
+    const SourceLink &source_link, MultiTrajectory &fittedStates,
+    const size_t lastTrackIndex, bool doCovTransport,
+    const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
+        false)) -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // Bind the transported state to the current surface
-  auto res = stepper.boundState(state.stepping, surface, doCovTransport);
+  auto res = stepper.boundState(state.stepping, surface, doCovTransport,
+                                freeToBoundCorrection);
   if (!res.ok()) {
     return res.error();
   }
@@ -120,12 +121,14 @@ auto kalmanHandleMeasurement(propagator_state_t &state,
 /// @param lastTrackIndex The parent index for the new state in the MT
 /// @param doCovTransport Wether to perform a covariance transport when
 /// computing the bound state or not
+/// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t>
-auto kalmanHandleNoMeasurement(propagator_state_t &state,
-                               const stepper_t &stepper, const Surface &surface,
-                               MultiTrajectory &fittedStates,
-                               const size_t lastTrackIndex, bool doCovTransport)
-    -> Result<MultiTrajectory::TrackStateProxy> {
+auto kalmanHandleNoMeasurement(
+    propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
+    MultiTrajectory &fittedStates, const size_t lastTrackIndex,
+    bool doCovTransport,
+    const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
+        false)) -> Result<MultiTrajectory::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // No source links on surface, add either hole or passive material
@@ -157,7 +160,8 @@ auto kalmanHandleNoMeasurement(propagator_state_t &state,
   }
 
   // Transport & bind the state to the current surface
-  auto res = stepper.boundState(state.stepping, surface, doCovTransport);
+  auto res = stepper.boundState(state.stepping, surface, doCovTransport,
+                                freeToBoundCorrection);
   if (!res.ok()) {
     ACTS_ERROR("Propagate to surface " << surface.geometryId()
                                        << " failed: " << res.error());

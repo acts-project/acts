@@ -11,5 +11,6 @@
 #include "DigitizationExample.hpp"
 
 int main(int argc, char* argv[]) {
-  return runDigitizationExample(argc, argv, std::make_shared<DD4hepDetector>());
+  return runDigitizationExample(
+      argc, argv, std::make_shared<ActsExamples::DD4hep::DD4hepDetector>());
 }

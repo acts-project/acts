@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/DD4hep/ActsExtension.hpp"
+#include "ActsDD4hep/ActsExtension.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorHelper.hpp"
 
 #include "DD4hep/DetFactoryHelper.h"

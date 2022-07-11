@@ -249,9 +249,9 @@ int main(int argc, char** argv) {
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
   fitter.trackingGeometry = tGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
+  fitter.dFit = TrackFittingAlgorithm::makeKalmanFitterFunction(magneticField);
   fitter.fit =
-      TrackFittingAlgorithm::makeTrackFitterFunction(tGeometry, magneticField);
+      TrackFittingAlgorithm::makeKalmanFitterFunction(tGeometry, magneticField);
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 

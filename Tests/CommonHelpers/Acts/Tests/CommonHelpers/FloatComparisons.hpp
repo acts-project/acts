@@ -296,8 +296,8 @@ boost::test_tools::predicate_result checkCloseCovariance(
                       << val(row, col) << " and its reference " << ref(row, col)
                       << ","
                       << " at index (" << row << ", " << col << "),"
-                      << " is not within tolerance " << tol << '.'
-                      << " The covariance matrix being tested was\n"
+                      << " is not within tolerance " << tol * orderOfMagnitude
+                      << '.' << " The covariance matrix being tested was\n"
                       << val << '\n'
                       << "and the reference covariance matrix was\n"
                       << ref << '\n';
