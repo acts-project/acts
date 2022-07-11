@@ -262,7 +262,6 @@ void Fill(std::map<uint64_t,std::vector<TH1F*>>& surface_hist,  std::map<uint64_
 /// nbprocess : number of parameter to be processed.
 /// name : name of the output directory.
 
-
 void Mat_map_surface_plot_1D(std::string input_file = "", int nbprocess = -1, std::string name = ""){
 
   gStyle->SetOptStat(0);

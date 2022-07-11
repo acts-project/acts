@@ -237,7 +237,7 @@ void Mat_map_surface_plot(std::string input_file = "", int nbprocess = -1, std::
   std::map<uint64_t,std::vector<TH2F*>> surface_hist;
   std::map<uint64_t,sinfo> surface_info;
 
-  Fill(surface_hist, surface_info, input_file, json_surface_file, nbprocess);
+  Fill(surface_hist, surface_info, input_file, nbprocess);
   for (auto hist_it = surface_hist.begin(); hist_it != surface_hist.end(); hist_it++){
     plot(hist_it->second, surface_info[hist_it->first], name);
     for (auto hist : hist_it->second){
