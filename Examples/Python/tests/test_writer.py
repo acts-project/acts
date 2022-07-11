@@ -11,9 +11,9 @@ from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
     geant4Enabled,
+    edm4hepEnabled,
     AssertCollectionExistsAlg,
 )
-
 
 import acts
 
@@ -43,13 +43,11 @@ from acts.examples import (
     CsvMultiTrajectoryWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
-    TrackParamsEstimationAlgorithm,
     PlanarSteppingAlgorithm,
     JsonMaterialWriter,
     JsonFormat,
     Sequencer,
     GenericDetector,
-    RootNuclearInteractionParametersWriter,
 )
 
 
@@ -499,7 +497,6 @@ def test_csv_multitrajectory_writer(tmp_path):
 
 @pytest.fixture(scope="session")
 def hepmc_data_impl(tmp_path_factory):
-
     import subprocess
 
     script = (
@@ -540,7 +537,6 @@ def hepmc_data(hepmc_data_impl: Path, tmp_path):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.slow
 def test_hepmc3_histogram(hepmc_data, tmp_path):
-
     from acts.examples.hepmc3 import (
         HepMC3AsciiReader,
         HepMCProcessExtractor,
@@ -578,3 +574,123 @@ def test_hepmc3_histogram(hepmc_data, tmp_path):
     s.addAlgorithm(alg)
 
     s.run()
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_measurement_writer(tmp_path, fatras):
+    from acts.examples.edm4hep import EDM4hepMeasurementWriter
+
+    s = Sequencer(numThreads=1, events=10)
+    _, simAlg, digiAlg = fatras(s)
+
+    out = tmp_path / "measurements_edm4hep.root"
+
+    s.addWriter(
+        EDM4hepMeasurementWriter(
+            level=acts.logging.VERBOSE,
+            inputMeasurements=digiAlg.config.outputMeasurements,
+            inputClusters=digiAlg.config.outputClusters,
+            inputSimHits=simAlg.config.outputSimHits,
+            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            outputPath=str(out),
+        )
+    )
+
+    s.run()
+
+    assert os.path.isfile(out)
+    assert os.stat(out).st_size > 10
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_simhit_writer(tmp_path, fatras, conf_const):
+    from acts.examples.edm4hep import EDM4hepSimHitWriter
+
+    s = Sequencer(numThreads=1, events=10)
+    _, simAlg, _ = fatras(s)
+
+    out = tmp_path / "simhits_edm4hep.root"
+
+    s.addWriter(
+        conf_const(
+            EDM4hepSimHitWriter,
+            level=acts.logging.INFO,
+            inputSimHits=simAlg.config.outputSimHits,
+            outputPath=str(out),
+        )
+    )
+
+    s.run()
+
+    assert os.path.isfile(out)
+    assert os.stat(out).st_size > 200
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_particle_writer(tmp_path, conf_const, ptcl_gun):
+    from acts.examples.edm4hep import EDM4hepParticleWriter
+
+    s = Sequencer(numThreads=1, events=10)
+    evGen = ptcl_gun(s)
+
+    out = tmp_path / "particles_edm4hep.root"
+
+    out.mkdir()
+
+    s.addWriter(
+        conf_const(
+            EDM4hepParticleWriter,
+            acts.logging.INFO,
+            inputParticles=evGen.config.outputParticles,
+            outputPath=str(out),
+        )
+    )
+
+    s.run()
+
+    assert os.path.isfile(out)
+    assert os.stat(out).st_size > 200
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_multitrajectory_writer(tmp_path):
+    from acts.examples.edm4hep import EDM4hepMultiTrajectoryWriter
+
+    detector, trackingGeometry, decorators = GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    out = tmp_path / "trajectories_edm4hep.root"
+
+    s.addWriter(
+        EDM4hepMultiTrajectoryWriter(
+            level=acts.logging.VERBOSE,
+            inputTrajectories="trajectories",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            outputPath=str(out),
+        )
+    )
+
+    s.run()
+
+    assert os.path.isfile(out)
+    assert os.stat(out).st_size > 200
