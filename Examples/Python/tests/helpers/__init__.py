@@ -80,10 +80,17 @@ doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.enviro
 
 @contextlib.contextmanager
 def failure_threshold(level: acts.logging.Level, enabled: bool = True):
+    err = "Runtime log failure threshold could not be set. Compile-time value is probably set via CMake"
     if enabled:
         prev = acts.logging.getFailureThreshold()
-        acts.logging.setFailureThreshold(level)
+        try:
+            acts.logging.setFailureThreshold(level)
+        except RuntimeError:
+            print(err)
         yield
-        acts.logging.setFailureThreshold(prev)
+        try:
+            acts.logging.setFailureThreshold(prev)
+        except RuntimeError:
+            pass
     else:
         yield
