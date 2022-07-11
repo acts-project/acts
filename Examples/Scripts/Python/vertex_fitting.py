@@ -22,6 +22,7 @@ import pythia8
 
 from acts.examples.reconstruction import VertexFinder, addVertexFitting
 
+
 def runVertexFitting(
     field,
     outputDir: Path,

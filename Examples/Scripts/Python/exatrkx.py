@@ -7,8 +7,6 @@ import acts
 from acts import UnitConstants as u
 
 
-
-
 if "__main__" == __name__:
     import os
     from digitization import configureDigitization

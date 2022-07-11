@@ -69,7 +69,7 @@ def addParticleGun(
     phiConfig : PhiConfig(min, max)
         azimuthal angle configuration: phi min, phi max
     particleConfig : ParticleConfig(num, pdg, randomizeCharge)
-        partilce configuration: number of particles, particle type, charge flip
+        particle configuration: number of particles, particle type, charge flip
     multiplicity : int, 1
         number of generated vertices
     vtxGen : VertexGenerator, None
@@ -151,7 +151,6 @@ def addParticleGun(
         )
 
     return s
-
 
 
 def addPythia8(

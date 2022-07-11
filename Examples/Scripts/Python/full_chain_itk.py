@@ -10,8 +10,20 @@ detector, trackingGeometry, decorators = itk.buildITkGeometry(geo_dir)
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-from acts.examples.simulation import addParticleGun, MomentumConfig, EtaConfig, ParticleConfig, addFatras, addDigitization
-from acts.examples.reconstruction import addSeeding, TruthSeedRanges, addCKFTracks, CKFPerformanceConfig
+from acts.examples.simulation import (
+    addParticleGun,
+    MomentumConfig,
+    EtaConfig,
+    ParticleConfig,
+    addFatras,
+    addDigitization,
+)
+from acts.examples.reconstruction import (
+    addSeeding,
+    TruthSeedRanges,
+    addCKFTracks,
+    CKFPerformanceConfig,
+)
 
 s = acts.examples.Sequencer(events=100, numThreads=-1)
 s = addParticleGun(

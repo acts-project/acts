@@ -10,7 +10,6 @@ import acts
 from acts import UnitConstants as u
 
 
-
 def runCKFTracks(
     trackingGeometry,
     decorators,
@@ -26,12 +25,13 @@ def runCKFTracks(
 ):
 
     from acts.examples.simulation import (
-        addParticleGun, 
-        EtaConfig, 
-        PhiConfig, 
-        ParticleConfig, 
-        addFatras, 
-        addDigitization)
+        addParticleGun,
+        EtaConfig,
+        PhiConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
 
     from acts.examples.reconstruction import (
         addSeeding,
@@ -41,7 +41,7 @@ def runCKFTracks(
         SeedingAlgorithm,
         TrackParamsEstimationConfig,
         CKFPerformanceConfig,
-        addCKFTracks
+        addCKFTracks,
     )
 
     s = s or acts.examples.Sequencer(

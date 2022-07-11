@@ -8,6 +8,7 @@ import acts.examples
 
 u = acts.UnitConstants
 
+
 def configureDigitization(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
@@ -19,7 +20,13 @@ def configureDigitization(
     doMerge: Optional[bool] = None,
 ) -> acts.examples.Sequencer:
 
-    from acts.examples.simulation import addParticleGun, EtaConfig, PhiConfig, ParticleConfig, addFatras
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        PhiConfig,
+        ParticleConfig,
+        addFatras,
+    )
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
@@ -53,6 +60,7 @@ def configureDigitization(
         rnd=rnd,
     )
     from acts.examples.simulation import addDigitization
+
     s = addDigitization(
         s,
         trackingGeometry,

@@ -20,8 +20,20 @@ def runTruthTrackingKalman(
     s: acts.examples.Sequencer = None,
     inputParticlePath: Optional[Path] = None,
 ):
-    from acts.examples.simulation import addParticleGun, EtaConfig, PhiConfig, ParticleConfig, addFatras, addDigitization
-    from acts.examples.reconstruction import addSeeding, SeedingAlgorithm, TruthSeedRanges, addKalmanTracks
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        PhiConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
+    from acts.examples.reconstruction import (
+        addSeeding,
+        SeedingAlgorithm,
+        TruthSeedRanges,
+        addKalmanTracks,
+    )
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO

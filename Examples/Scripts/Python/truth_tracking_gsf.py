@@ -20,8 +20,19 @@ def runTruthTrackingGsf(
     s=None,
 ):
 
-    from acts.examples.simulation import addParticleGun, EtaConfig, PhiConfig, ParticleConfig, addFatras, addDigitization
-    from acts.examples.reconstruction import addSeeding, SeedingAlgorithm, addTruthTrackingGsf
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        PhiConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
+    from acts.examples.reconstruction import (
+        addSeeding,
+        SeedingAlgorithm,
+        addTruthTrackingGsf,
+    )
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO

@@ -380,6 +380,7 @@ def addSeeding(
 
     return s
 
+
 def addKalmanTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
@@ -436,6 +437,7 @@ def addKalmanTracks(
 
     return s
 
+
 def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
@@ -465,6 +467,7 @@ def addTruthTrackingGsf(
     s.addAlgorithm(gsfAlg)
 
     return s
+
 
 CKFPerformanceConfig = namedtuple(
     "CKFPerformanceConfig",
@@ -593,6 +596,7 @@ def addCKFTracks(
 
     return s
 
+
 def addExaTrkx(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
@@ -665,6 +669,7 @@ def addExaTrkx(
 
     return s
 
+
 class VertexFinder(Enum):
     Truth = (1,)
     AMVF = (2,)
@@ -712,7 +717,14 @@ def addVertexFitting(
 
     outputTime = ""
     if vertexFinder == VertexFinder.Truth:
-        from acts.examples import TruthVertexFinder, VertexFitterAlgorithm, IterativeVertexFinderAlgorithm, AdaptiveMultiVertexFinderAlgorithm, RootVertexPerformanceWriter
+        from acts.examples import (
+            TruthVertexFinder,
+            VertexFitterAlgorithm,
+            IterativeVertexFinderAlgorithm,
+            AdaptiveMultiVertexFinderAlgorithm,
+            RootVertexPerformanceWriter,
+        )
+
         findVertices = TruthVertexFinder(
             level=customLogLevel(acts.logging.VERBOSE),
             inputParticles=selectedParticles,

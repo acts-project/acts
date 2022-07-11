@@ -4,6 +4,7 @@ import argparse
 
 import acts
 import acts.examples
+
 u = acts.UnitConstants
 
 # Graciously taken from https://stackoverflow.com/a/60750535/4280680
@@ -38,8 +39,9 @@ class EnumAction(argparse.Action):
             raise ValueError("%s is not a validly enumerated algorithm." % values)
 
 
-
 from acts.examples.reconstruction import SeedingAlgorithm
+
+
 def runSeeding(
     trackingGeometry,
     field,
@@ -48,7 +50,14 @@ def runSeeding(
     seedingAlgorithm=SeedingAlgorithm.Default,
 ):
 
-    from acts.examples.simulation import addParticleGun, EtaConfig, PhiConfig, ParticleConfig, addFatras, addDigitization
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        PhiConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
@@ -86,7 +95,13 @@ def runSeeding(
         / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
         rnd=rnd,
     )
-    from acts.examples.reconstruction import addSeeding, TruthSeedRanges, ParticleSmearingSigmas, SeedfinderConfigArg
+    from acts.examples.reconstruction import (
+        addSeeding,
+        TruthSeedRanges,
+        ParticleSmearingSigmas,
+        SeedfinderConfigArg,
+    )
+
     s = addSeeding(
         s,
         trackingGeometry,
