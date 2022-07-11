@@ -227,9 +227,9 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
                 ? m_cfg.identifierProvider->identify(gctx, *snode.node)
                 : Identifier();
 
-        auto tgElement = std::make_shared<const Acts::TGeoDetectorElement>(
-            identifier, *snode.node, *snode.transform, layerCfg.localAxes,
-            m_cfg.unit);
+        auto tgElement =
+            m_cfg.elementFactory(identifier, *snode.node, *snode.transform,
+                                 layerCfg.localAxes, m_cfg.unit, nullptr);
 
         std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
             tgElements =
@@ -287,4 +287,13 @@ void Acts::TGeoLayerBuilder::buildLayers(const GeometryContext& gctx,
     }
   }
   return;
+}
+
+std::shared_ptr<Acts::TGeoDetectorElement>
+Acts::TGeoLayerBuilder::defaultElementFactory(
+    const Identifier& identifier, const TGeoNode& tGeoNode,
+    const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+    std::shared_ptr<const Acts::ISurfaceMaterial> material) {
+  return std::make_shared<TGeoDetectorElement>(identifier, tGeoNode, tGeoMatrix,
+                                               axes, scalor, material);
 }
