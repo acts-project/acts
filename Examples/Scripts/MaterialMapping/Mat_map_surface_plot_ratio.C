@@ -82,16 +82,13 @@ void plot_ratio(std::vector<TH2F*> Map_prop, std::vector<TH2F*> Map_geant, const
 
 
 /// Plot the material ratio between the geantino scan and the map validation for each surface.
-/// If a surface map json file is specify it is parse to associate name to the different surface id
 /// nbprocess : number of parameter to be processed
 /// name : name of the output directory.
 /// name_prop : name of the output directory for the map valdation.
 /// name_geant : name of the output directory for the geantino scan.
 /// The map valdation and geantino scan plots are only saved if name_prop and name_geant are defined.
-/// The parsing of the Json surface map file (use to associate the name to the volumes)
-/// might not work with version of root newer that version 6.18.04
 
-void Mat_map_surface_plot_ratio(std::string input_file_prop = "", std::string input_file_geant = "", std::string json_surface_file = "", int nbprocess = -1, std::string name = "", std::string name_prop = "", std::string name_geant = ""){
+void Mat_map_surface_plot_ratio(std::string input_file_prop = "", std::string input_file_geant = "", int nbprocess = -1, std::string name = "", std::string name_prop = "", std::string name_geant = ""){
 
   gStyle->SetOptStat(0);
   gStyle->SetOptTitle(0);
@@ -102,8 +99,8 @@ void Mat_map_surface_plot_ratio(std::string input_file_prop = "", std::string in
   std::map<uint64_t,std::vector<TH2F*>> surface_hist_geant;
   std::map<uint64_t,sinfo> surface_info_geant;
 
-  Fill(surface_hist_prop, surface_info_prop, input_file_prop, json_surface_file, nbprocess);
-  Fill(surface_hist_geant, surface_info_geant, input_file_geant, json_surface_file, nbprocess);
+  Fill(surface_hist_prop, surface_info_prop, input_file_prop, nbprocess);
+  Fill(surface_hist_geant, surface_info_geant, input_file_geant, nbprocess);
 
   for (auto hist_it = surface_hist_prop.begin(); hist_it != surface_hist_prop.end(); hist_it++){
     if(name_prop != "") plot(hist_it->second, surface_info_prop[hist_it->first], name_prop);
