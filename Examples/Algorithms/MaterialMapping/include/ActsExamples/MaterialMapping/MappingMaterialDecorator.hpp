@@ -172,15 +172,13 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   /// @param surface protomaterial will be added to
   std::shared_ptr<const Acts::ISurfaceMaterial> binnedSurfaceMaterial(
       std::shared_ptr<const Acts::Surface> surface) const {
-    auto bin = m_binningMap.find(surface->geometryId().value())
-                   Acts::BinUtility bUtility;
+    auto bin = m_binningMap.find(surface->geometryId().value());
+    Acts::BinUtility bUtility;
     if (bin == m_binningMap.end()) {
-      ACTS_Warning("The processed surface: "
-                   << surface.geometryId()
-                   << " doesn't have a corrresponding binning in the map "
-                      "returning and empty BinUtility");
+      ACTS_ERROR("No corrresponding binning in the map to surface "
+                 << surface->geometryId());
     } else {
-      binning = bin->second;
+      auto binning = bin->second;
       // Check which type of bounds is associated to the surface
       const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
       const Acts::RadialBounds* radialBounds =

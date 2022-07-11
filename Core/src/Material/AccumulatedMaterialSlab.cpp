@@ -60,5 +60,5 @@ Acts::AccumulatedMaterialSlab::totalAverage() const {
 
 std::pair<float, unsigned int> Acts::AccumulatedMaterialSlab::totalVariance()
     const {
-  return (m_totalVariance, m_totalCount);
+  return {m_totalVariance, m_totalCount};
 }
