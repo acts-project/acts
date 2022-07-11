@@ -133,7 +133,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
       vertices = std::move(result.value());
     } else {
       ACTS_LOG(m_cfg.errorLevel,
-        "Error in vertex finder: " << result.error().message());
+               "Error in vertex finder: " << result.error().message());
     }
   }
 

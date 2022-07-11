@@ -90,7 +90,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     for (const auto& trackIdx : protoVertex) {
       if (trackIdx >= trackParameters.size()) {
         ACTS_LOG(m_cfg.errorLevel,
-          "track parameters " << trackIdx << " does not exist");
+                 "track parameters " << trackIdx << " does not exist");
         continue;
       }
 
@@ -106,7 +106,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
         fittedVertices.push_back(*fitRes);
       } else {
         ACTS_LOG(m_cfg.errorLevel,
-          "Error in vertex fitter: " << fitRes.error().message());
+                 "Error in vertex fitter: " << fitRes.error().message());
       }
     } else {
       // Vertex constraint
@@ -124,8 +124,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
-        ACTS_LOG(m_cfg.errorLevel,
-          "Error in constrainted vertex fitter: " << fitRes.error().message());
+        ACTS_LOG(m_cfg.errorLevel, "Error in constrainted vertex fitter: "
+                                       << fitRes.error().message());
       }
     }
 
