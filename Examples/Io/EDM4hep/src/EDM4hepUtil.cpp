@@ -272,17 +272,20 @@ void EDM4hepUtil::writeTrajectory(
       return true;
     }
 
-    Acts::BoundVector meas = state.projector().transpose() * state.parameters();
-    Acts::BoundMatrix cov =
-        state.projector() * state.covariance() * state.projector().transpose();
+    Acts::BoundVector params = state.parameters();
+    Acts::BoundMatrix cov = state.covariance();
 
     edm4hep::TrackState trackState;
 
-    trackState.D0 = meas[Acts::eBoundLoc0];
-    trackState.Z0 = meas[Acts::eBoundLoc1];
-    trackState.phi = meas[Acts::eBoundPhi];
-    trackState.tanLambda = std::tan(M_PI_2 - meas[Acts::eBoundTheta]);
-    trackState.omega = meas[Acts::eBoundQOverP];  // TODO convert
+    // @FIXME: Using D0/Z0 to store local 0/local 1
+    // For proper d0/z0 we'd have to propagate to the perigee here or convert to
+    // perigee relative to surface center, but it's also not really what we want
+    // to store anyway
+    trackState.D0 = params[Acts::eBoundLoc0];
+    trackState.Z0 = params[Acts::eBoundLoc1];
+    trackState.phi = params[Acts::eBoundPhi];
+    trackState.tanLambda = std::tan(M_PI_2 - params[Acts::eBoundTheta]);
+    trackState.omega = params[Acts::eBoundQOverP];  // TODO convert
     trackState.referencePoint = {0, 0, 0};
 
     // TODO apply jacobian to covariance
