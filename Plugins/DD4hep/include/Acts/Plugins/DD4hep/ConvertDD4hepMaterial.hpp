@@ -10,7 +10,6 @@
 
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsDD4hep/ActsExtension.hpp"
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetFactoryHelper.h>
@@ -51,10 +50,10 @@ void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
 /// @param actsExtension the ActsExtension for the binning parameters
 /// @param layer the Layer to assign the proto material
 /// @param binning the Binning prescription for the ActsExtension
-void addLayerProtoMaterial(
-    const ActsExtension& actsExtension, Layer& layer,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning);
+// void addLayerProtoMaterial(
+// const ActsExtension& actsExtension, Layer& layer,
+// const std::vector<std::pair<const std::string, Acts::BinningOption> >&
+// binning);
 
 void addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
@@ -68,10 +67,10 @@ void addLayerProtoMaterial(
 /// @param actsExtension the ActExtension to be checked
 /// @param valueTag the xml tag for to ActsExtension to be parsed
 /// @param binning the Binning prescription for the ActsExtension
-std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
-    const ActsExtension& actsExtension, const std::string& valueTag,
-    const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning);
+// std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
+// const ActsExtension& actsExtension, const std::string& valueTag,
+// const std::vector<std::pair<const std::string, Acts::BinningOption> >&
+// binning);
 
 std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,

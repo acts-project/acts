@@ -469,7 +469,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     /// the dd4hep::DetElements of the layers of the central volume
     std::vector<dd4hep::DetElement> centralLayers, centralVolumes;
     collectLayers_dd4hep(subDetector, centralLayers, loggerWrapper);
-    collectVolumes_dd4hep(subDetector, centralVolumes);
+    // collectVolumes_dd4hep(subDetector, centralVolumes);
 
     // configure SurfaceArrayCreator
     auto surfaceArrayCreator =
@@ -630,21 +630,21 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
   }
 }
 
-void collectVolumes_dd4hep(dd4hep::DetElement& detElement,
-                           std::vector<dd4hep::DetElement>& volumes) {
-  const dd4hep::DetElement::Children& children = detElement.children();
-  for (auto& child : children) {
-    dd4hep::DetElement childDetElement = child.second;
-    Acts::ActsExtension* detExtension = nullptr;
-    try {
-      detExtension = childDetElement.extension<Acts::ActsExtension>();
-    } catch (std::runtime_error& e) {
-    }
-    if ((detExtension != nullptr) && detExtension->hasType("volume")) {
-      volumes.push_back(childDetElement);
-      continue;
-    }
-    collectVolumes_dd4hep(childDetElement, volumes);
-  }
-}
+// void collectVolumes_dd4hep(dd4hep::DetElement& detElement,
+// std::vector<dd4hep::DetElement>& volumes) {
+// const dd4hep::DetElement::Children& children = detElement.children();
+// for (auto& child : children) {
+// dd4hep::DetElement childDetElement = child.second;
+// Acts::ActsExtension* detExtension = nullptr;
+// try {
+// detExtension = childDetElement.extension<Acts::ActsExtension>();
+// } catch (std::runtime_error& e) {
+// }
+// if ((detExtension != nullptr) && detExtension->hasType("volume")) {
+// volumes.push_back(childDetElement);
+// continue;
+// }
+// collectVolumes_dd4hep(childDetElement, volumes);
+// }
+// }
 }  // End of namespace Acts

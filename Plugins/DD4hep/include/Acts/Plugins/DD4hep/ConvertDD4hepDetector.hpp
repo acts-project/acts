@@ -180,11 +180,11 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
                           std::vector<dd4hep::DetElement>& layers,
                           LoggerWrapper logger);
 
-/// Method internally used by convertDD4hepDetector
-/// @param [in] detElement the dd4hep::DetElement of the volume of which the
-/// volumes should be collected
-/// @param [out] volumes the DD4hep::DetElements of the volumes contained by
-/// detElement
-void collectVolumes_dd4hep(dd4hep::DetElement& detElement,
-                           std::vector<dd4hep::DetElement>& volumes);
+// /// Method internally used by convertDD4hepDetector
+// /// @param [in] detElement the dd4hep::DetElement of the volume of which the
+// /// volumes should be collected
+// /// @param [out] volumes the DD4hep::DetElements of the volumes contained by
+// /// detElement
+// void collectVolumes_dd4hep(dd4hep::DetElement& detElement,
+// std::vector<dd4hep::DetElement>& volumes);
 }  // namespace Acts
