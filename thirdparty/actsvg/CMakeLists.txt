@@ -11,12 +11,12 @@ cmake_minimum_required( VERSION 3.11 )
 include( FetchContent )
 
 # Tell the user what's happening.
-message( STATUS "Building actsvg as part of the Acts project" )
+message( STATUS "Building actsvg as part of the ACTS project" )
 
 # Declare where to get VecMem from.
 set( ACTS_ACTSVG_GIT_REPOSITORY "https://github.com/acts-project/actsvg.git"
    CACHE STRING "Git repository to take actsvg from" )
-set( ACTS_ACTSVG_GIT_TAG "v0.4.7" CACHE STRING "Version of actsvg to build" )
+set( ACTS_ACTSVG_GIT_TAG "v0.4.11" CACHE STRING "Version of actsvg to build" )
 mark_as_advanced( ACTS_ACTSVG_GIT_REPOSITORY ACTS_ACTSVG_GIT_TAG )
 FetchContent_Declare( actsvg
    GIT_REPOSITORY "${ACTS_ACTSVG_GIT_REPOSITORY}"

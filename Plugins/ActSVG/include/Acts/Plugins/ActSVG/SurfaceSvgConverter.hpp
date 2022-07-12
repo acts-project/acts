@@ -28,13 +28,12 @@ using ProtoSurface = actsvg::proto::surface<Point3Container>;
 ///
 /// @param gtcx is the geometry context of the conversion call
 /// @param surface is the surface to convert
-/// @param nSegs is the number of segments to approximate curves
 /// @param surfaceStyle is the surface style in question
 /// @param templateSurface is a directive to create a template surface w/o transform
 ///
 /// @return a proto surface object
 ProtoSurface convert(const GeometryContext& gctx, const Surface& surface,
-                     unsigned int nSegs, const Style& surfaceStyle,
+                     const Style& surfaceStyle,
                      bool templateSurface = false);
 
 /// Convert into an acts::svg::object with an XY view
@@ -43,7 +42,7 @@ ProtoSurface convert(const GeometryContext& gctx, const Surface& surface,
 /// @param identification is the to be translated id_ for actsvg
 ///
 /// @return an svg object that can be written out directly to disc
-static inline actsvg::svg::object xyView(const ProtoSurface& pSurface,
+static inline actsvg::svg::object surfaceViewXY(const ProtoSurface& pSurface,
                                          const std::string& identification) {
   actsvg::views::x_y xyView;
   return actsvg::display::surface(identification, pSurface, xyView, true);
@@ -55,12 +54,10 @@ static inline actsvg::svg::object xyView(const ProtoSurface& pSurface,
 /// @param identification is the to be translated id_ for actsvg
 ///
 /// @return an svg object that can be written out directly to disc
-static inline actsvg::svg::object xySheet(const ProtoSurface& pSurface,
+static inline actsvg::svg::object surfaceSheetXY(const ProtoSurface& pSurface,
                                          const std::string& identification) {
-  return actsvg::display::surface_sheet(identification, pSurface);
+  return actsvg::display::surface_sheet_xy(identification, pSurface);
 }
-
-
 
 }  // namespace Svg
 
