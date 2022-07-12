@@ -112,7 +112,7 @@ template <typename parameters_t, typename propagator_options_t,
 auto Acts::Propagator<S, N>::propagate(
     const parameters_t& start, const propagator_options_t& options,
     action_list_t_result_t<CurvilinearTrackParameters,
-                           typename propagator_options_t::action_list_type>
+                           typename propagator_options_t::action_list_type>&&
         inputResult) const
     -> Result<action_list_t_result_t<
         CurvilinearTrackParameters,
@@ -157,7 +157,7 @@ auto Acts::Propagator<S, N>::propagate(
     lProtection(state, m_stepper);
   }
   // Perform the actual propagation & check its outcome
-  auto result = propagate_impl(state, std::move(inputResult));
+  auto result = propagate_impl(state, std::forward<ResultType>(inputResult));
   if (result.ok()) {
     auto& propRes = *result;
     /// Convert into return type and fill the result object

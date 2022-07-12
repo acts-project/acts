@@ -398,7 +398,7 @@ class Propagator final {
   propagate(
       const parameters_t& start, const propagator_options_t& options,
       action_list_t_result_t<CurvilinearTrackParameters,
-                             typename propagator_options_t::action_list_type>
+                             typename propagator_options_t::action_list_type>&&
           inputResult) const;
 
   /// @brief Propagate track parameters - User method
