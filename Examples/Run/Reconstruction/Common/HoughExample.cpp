@@ -139,9 +139,9 @@ int runHoughExample(int argc, char* argv[],
   houghCfg.m_imageSize_y = 216;  // i.e. number of bins in q/pT
 
   houghCfg.m_hitExtend_x = {
-      2, 1, 0, 0, 0, 0,
-      0, 0, 0, 0};  // Hit lines will fill extra bins in x by this amount on
-                    // each side, size == nLayers
+      2, 1, 0, 0, 0,
+      0, 0, 0, 0, 0};  // Hit lines will fill extra bins in x by this amount on
+                       // each side, size == nLayers
   houghCfg.m_nLayers = 10;
 
   houghCfg.m_threshold = {9};  // Minimum point value post-convolution to accept
