@@ -23,7 +23,6 @@
 #include "Acts/Plugins/DD4hep/DD4hepLayerBuilder.hpp"
 #include "Acts/Plugins/DD4hep/DD4hepVolumeBuilder.hpp"
 #include "Acts/Utilities/BinningData.hpp"
-#include "ActsDD4hep/ActsExtension.hpp"
 
 #include <list>
 #include <regex>

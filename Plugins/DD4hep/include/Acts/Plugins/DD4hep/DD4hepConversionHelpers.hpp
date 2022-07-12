@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include <csignal>
+
 #include <DD4hep/DetElement.h>
 #include <DDRec/DetectorData.h>
 
@@ -15,28 +17,29 @@ namespace Acts {
 
 template <typename T>
 T getParam(const std::string& key, dd4hep::DetElement& elt) {
-  auto* params = elt.extension<dd4hep::rec::VariantParameters>();
+  auto* params = elt.extension<dd4hep::rec::VariantParameters>(false);
+  if (params == nullptr) {
+    throw std::runtime_error{"Detector Element has no VariantParameters"};
+  }
   return params->get<T>(key);
 }
 
 inline dd4hep::rec::VariantParameters& getParams(dd4hep::DetElement& elt) {
-  auto* params = elt.extension<dd4hep::rec::VariantParameters>();
+  auto* params = elt.extension<dd4hep::rec::VariantParameters>(false);
+  if (params == nullptr) {
+    throw std::runtime_error{"Detector Element has no VariantParameters"};
+  }
   return *params;
 }
 
 inline const dd4hep::rec::VariantParameters& getParams(
     const dd4hep::DetElement& elt) {
-  const auto* params = elt.extension<dd4hep::rec::VariantParameters>();
+  const auto* params = elt.extension<dd4hep::rec::VariantParameters>(false);
+  if (params == nullptr) {
+    throw std::runtime_error{"Detector Element has no VariantParameters"};
+  }
   return *params;
 }
-
-// template <typename T>
-// T getParamOr(const std::string& key, dd4hep::DetElement& elt, T alternative)
-// { auto* params = elt.extension<dd4hep::rec::VariantParameters>(false); if
-// (params == nullptr) { return alternative;
-// }
-// return params->value_or<T>(key, alternative);
-// }
 
 template <typename T>
 T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
@@ -45,10 +48,7 @@ T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
   if (params == nullptr) {
     return alternative;
   }
-  if (!params->contains(key)) {
-    return alternative;
-  }
-  return params->get<T>(key);
+  return params->value_or<T>(key, alternative);
 }
 
 inline bool hasParam(const std::string& key, dd4hep::DetElement& elt) {

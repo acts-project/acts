@@ -26,7 +26,6 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinnedArrayXD.hpp"
-#include "ActsDD4hep/ActsExtension.hpp"
 
 #include <boost/algorithm/string.hpp>
 
@@ -68,8 +67,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
       auto& params = getParams(detElement);
-      Acts::ActsExtension* detExtension =
-          detElement.extension<Acts::ActsExtension>();
+      // Acts::ActsExtension* detExtension =
+      // detElement.extension<Acts::ActsExtension>();
       // collect the sensitive detector elements possibly contained by the layer
       resolveSensitive(detElement, layerSurfaces);
       // access the global transformation matrix of the layer
@@ -217,8 +216,9 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
-      Acts::ActsExtension* detExtension =
-          detElement.extension<Acts::ActsExtension>();
+      // Acts::ActsExtension* detExtension =
+      // detElement.extension<Acts::ActsExtension>();
+      auto& params = getParams(detElement);
       // collect the sensitive detector elements possibly contained by the layer
       resolveSensitive(detElement, layerSurfaces);
       // access the global transformation matrix of the layer
@@ -230,20 +230,21 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
 
-      if (detExtension->hasValue("r_min", "envelope") &&
-          detExtension->hasValue("r_max", "envelope") &&
-          detExtension->hasValue("z_min", "envelope") &&
-          detExtension->hasValue("z_max", "envelope")) {
+      if (params.contains("envelope_r_min") &&
+          params.contains("envelope_r_max") &&
+          params.contains("envelope_z_min") &&
+          params.contains("envelope_z_max")) {
         // set the values of the proto layer in case enevelopes are handed over
-        pl.envelope[Acts::binR] = {detExtension->getValue("r_min", "envelope"),
-                                   detExtension->getValue("r_max", "envelope")};
-        pl.envelope[Acts::binZ] = {detExtension->getValue("z_min", "envelope"),
-                                   detExtension->getValue("z_max", "envelope")};
+        pl.envelope[Acts::binR] = {params.get<double>("envelope_r_min"),
+                                   params.get<double>("envelope_r_max")};
+        pl.envelope[Acts::binZ] = {params.get<double>("envelope_z_min"),
+                                   params.get<double>("envelope_z_max")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (tube == nullptr)
+        if (tube == nullptr) {
           ACTS_ERROR(
               " Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
+        }
 
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;
@@ -338,16 +339,8 @@ void Acts::DD4hepLayerBuilder::resolveSensitive(
 std::shared_ptr<const Acts::Surface>
 Acts::DD4hepLayerBuilder::createSensitiveSurface(
     const dd4hep::DetElement& detElement, bool isDisc) const {
-  // access the possible extension of the DetElement
-  Acts::ActsExtension* detExtension = nullptr;
-  try {
-    detExtension = detElement.extension<Acts::ActsExtension>();
-  } catch (std::runtime_error& e) {
-    ACTS_WARNING("Could not get Acts::Extension");
-    return nullptr;
-  }
-
-  auto detAxis = detExtension->getType("axes", "definitions");
+  auto& params = getParams(detElement);
+  std::string detAxis = params.value_or<std::string>("axis_definitions", "XYZ");
   // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =
       new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
