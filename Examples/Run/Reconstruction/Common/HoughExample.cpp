@@ -21,6 +21,7 @@
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
+#include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMakerOptions.hpp"
@@ -28,7 +29,6 @@
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
 
 #include <memory>
 
@@ -38,7 +38,7 @@ using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
 int runHoughExample(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+                    std::shared_ptr<ActsExamples::IBaseDetector> detector) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -127,24 +127,29 @@ int runHoughExample(int argc, char* argv[],
   houghCfg.inputSourceLinks = digiCfg.outputSourceLinks;
   houghCfg.geometrySelection = {Acts::GeometryIdentifier().setVolume(0)};
 
-  houghCfg.m_subRegions = {0,1};
+  houghCfg.m_subRegions = {0, 1};
   houghCfg.m_traceHits = true;
-     
-  houghCfg.m_xMin = -0.05; // minphi
-  houghCfg.m_xMax = 0.25; // maxphi
-  houghCfg.m_yMin = -1.25; // min q/pt, -1/0.8 GeV  for extension
-  houghCfg.m_yMax = 1.25; // max q/pt, -1/0.8 GeV  for extension
-     
-  houghCfg.m_imageSize_x = 216;
-  houghCfg.m_imageSize_y = 216; // i.e. number of bins in q/pT
 
-  houghCfg.m_hitExtend_x = {2,1,0,0,0,0,0,0,0,0}; // Hit lines will fill extra bins in x by this amount on each side, size == nLayers
+  houghCfg.m_xMin = -0.05;  // minphi
+  houghCfg.m_xMax = 0.25;   // maxphi
+  houghCfg.m_yMin = -1.25;  // min q/pt, -1/0.8 GeV  for extension
+  houghCfg.m_yMax = 1.25;   // max q/pt, -1/0.8 GeV  for extension
+
+  houghCfg.m_imageSize_x = 216;
+  houghCfg.m_imageSize_y = 216;  // i.e. number of bins in q/pT
+
+  houghCfg.m_hitExtend_x = {
+      2, 1, 0, 0, 0, 0,
+      0, 0, 0, 0};  // Hit lines will fill extra bins in x by this amount on
+                    // each side, size == nLayers
   houghCfg.m_nLayers = 10;
 
-  houghCfg.m_threshold = {9}; // Minimum point value post-convolution to accept as a road (inclusive)
+  houghCfg.m_threshold = {9};  // Minimum point value post-convolution to accept
+                               // as a road (inclusive)
 
-  houghCfg.m_localMaxWindowSize = 0; // Only create roads from a local maximum, requires traceHits
-  houghCfg.kA = 0.0003; // Assume B = 2T constant. 
+  houghCfg.m_localMaxWindowSize =
+      0;  // Only create roads from a local maximum, requires traceHits
+  houghCfg.kA = 0.0003;  // Assume B = 2T constant.
 
   houghCfg.fieldCorrection = &fieldCorrectionDefault;
   houghCfg.findLayerIDSP = &findLayerIDSPDefault;
@@ -154,21 +159,21 @@ int runHoughExample(int argc, char* argv[],
   houghCfg.inSliceMeasurement = &inSliceMeasurementDefault;
 
   sequencer.addAlgorithm(
-       std::make_shared<HoughTransformSeeder>(houghCfg, logLevel));
+      std::make_shared<HoughTransformSeeder>(houghCfg, logLevel));
 
   // Algorithm estimating track parameter from seed
-   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-   paramsEstimationCfg.inputProtoTracks = houghCfg.outputProtoTracks;
-   paramsEstimationCfg.inputSpacePoints = {
-       spCfg.outputSpacePoints,
-   };
-   paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
-   paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-   paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
-   paramsEstimationCfg.trackingGeometry = tGeometry;
-   paramsEstimationCfg.magneticField = magneticField;
-   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
-                             paramsEstimationCfg, logLevel)); ///Object 'prototracks' does not exists
+  TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
+  paramsEstimationCfg.inputProtoTracks = houghCfg.outputProtoTracks;
+  paramsEstimationCfg.inputSpacePoints = {
+      spCfg.outputSpacePoints,
+  };
+  paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
+  paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
+  paramsEstimationCfg.trackingGeometry = tGeometry;
+  paramsEstimationCfg.magneticField = magneticField;
+  sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
+      paramsEstimationCfg, logLevel));  /// Object 'prototracks' does not exists
 
   // Seeding performance Writers
   TrackFinderPerformanceWriter::Config tfPerfCfg;
@@ -177,7 +182,7 @@ int runHoughExample(int argc, char* argv[],
   tfPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   tfPerfCfg.filePath = outputDir + "/performance_seeding_trees.root";
-   sequencer.addWriter(
+  sequencer.addWriter(
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
   SeedingPerformanceWriter::Config seedPerfCfg;
@@ -186,25 +191,24 @@ int runHoughExample(int argc, char* argv[],
   seedPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   seedPerfCfg.filePath = outputDir + "/performance_seeding_hists.root";
-   sequencer.addWriter(
-       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
+  sequencer.addWriter(
+      std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
 
   // The track parameters estimation writer
-   RootTrackParameterWriter::Config trackParamsWriterCfg;
-   trackParamsWriterCfg.inputTrackParameters =
-       paramsEstimationCfg.outputTrackParameters;
-   trackParamsWriterCfg.inputProtoTracks = paramsEstimationCfg.outputProtoTracks;
-   trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
-   trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
-   trackParamsWriterCfg.inputMeasurementParticlesMap =
-       digiCfg.outputMeasurementParticlesMap;
-   trackParamsWriterCfg.inputMeasurementSimHitsMap =
-       digiCfg.outputMeasurementSimHitsMap;
-   trackParamsWriterCfg.filePath = outputDir + "/estimatedparams.root";
-   trackParamsWriterCfg.treeName = "estimatedparams";
-    sequencer.addWriter(std::make_shared<RootTrackParameterWriter>(
-        trackParamsWriterCfg, logLevel));
-
+  RootTrackParameterWriter::Config trackParamsWriterCfg;
+  trackParamsWriterCfg.inputTrackParameters =
+      paramsEstimationCfg.outputTrackParameters;
+  trackParamsWriterCfg.inputProtoTracks = paramsEstimationCfg.outputProtoTracks;
+  trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
+  trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
+  trackParamsWriterCfg.inputMeasurementParticlesMap =
+      digiCfg.outputMeasurementParticlesMap;
+  trackParamsWriterCfg.inputMeasurementSimHitsMap =
+      digiCfg.outputMeasurementSimHitsMap;
+  trackParamsWriterCfg.filePath = outputDir + "/estimatedparams.root";
+  trackParamsWriterCfg.treeName = "estimatedparams";
+  sequencer.addWriter(std::make_shared<RootTrackParameterWriter>(
+      trackParamsWriterCfg, logLevel));
 
   return sequencer.run();
 }

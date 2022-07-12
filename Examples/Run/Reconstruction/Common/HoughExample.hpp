@@ -9,6 +9,8 @@
 #pragma once
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
+#include <memory>
+
 namespace ActsExamples {
 class IBaseDetector;
 }
@@ -20,4 +22,4 @@ class IBaseDetector;
 /// @param argv the argument list
 /// @param detector The detector descriptor instance
 int runHoughExample(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector);
+                    std::shared_ptr<ActsExamples::IBaseDetector> detector);

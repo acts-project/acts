@@ -42,7 +42,6 @@ void identifyContributingParticles(
     const ProtoTrack& protoTrack,
     std::vector<ParticleHitCount>& particleHitCounts);
 
-
 /// Identify all particles that contribute to a trajectory.
 ///
 /// @param[in] hitParticlesMap Map hit indices to contributing particles

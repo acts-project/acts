@@ -58,7 +58,6 @@ void ActsExamples::identifyContributingParticles(
   sortHitCount(particleHitCounts);
 }
 
-
 void ActsExamples::identifyContributingParticles(
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap,
     const Trajectories& trajectories, size_t tip,

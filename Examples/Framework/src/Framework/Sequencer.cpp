@@ -344,7 +344,7 @@ int ActsExamples::Sequencer::run() {
       return EXIT_FAILURE;
     }
   }
-    
+
   // summarize timing
   Duration totalWall = Clock::now() - clockWallStart;
   Duration totalReal = std::accumulate(
@@ -360,7 +360,6 @@ int ActsExamples::Sequencer::run() {
   }
   storeTiming(names, clocksAlgorithms, numEvents,
               joinPaths(m_cfg.outputDir, m_cfg.outputTimingFile));
-
 
   return EXIT_SUCCESS;
 }
