@@ -4,9 +4,6 @@ import os
 import sys
 import subprocess
 
-from m2r import MdInclude
-from recommonmark.transform import AutoStructify
-
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
 
@@ -14,7 +11,7 @@ on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
 
 project = "Acts"
 author = "The Acts authors"
-copyright = "2014–2021 CERN for the benefit of the Acts project"
+copyright = "2014–2022 CERN for the benefit of the Acts project"
 # version = '@PROJECT_VERSION@'
 # release = '@PROJECT_VERSION@'
 
@@ -22,7 +19,7 @@ copyright = "2014–2021 CERN for the benefit of the Acts project"
 
 extensions = [
     "breathe",
-    "recommonmark",
+    "myst_parser",
     "sphinx.ext.mathjax",
     "sphinx_markdown_tables",
 ]
@@ -40,6 +37,8 @@ primary_domain = "cpp"
 highlight_language = "cpp"
 smartquotes = True
 numfig = True
+
+myst_enable_extensions = ["dollarmath"]
 
 # -- Options for HTML output --------------------------------------------------
 
@@ -116,18 +115,4 @@ if on_readthedocs or tags.has("run_apidoc"):
 
 
 def setup(app):
-    app.add_config_value(
-        "recommonmark_config",
-        {
-            "enable_math": True,
-            "enable_inline_math": True,
-        },
-        True,
-    )
-    app.add_transform(AutoStructify)
-
-    app.add_config_value("no_underscore_emphasis", False, "env")
-    app.add_config_value("m2r_parse_relative_links", False, "env")
-    app.add_config_value("m2r_anonymous_references", False, "env")
-    app.add_config_value("m2r_disable_inline_math", False, "env")
-    app.add_directive("mdinclude", MdInclude)
+    pass

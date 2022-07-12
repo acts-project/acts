@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -268,6 +268,9 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
                          state.options.tolerance / std::abs(error_estimate))))),
             4.0f);
   }
+
+  state.stepping.stepSize.nStepTrials = nStepTrials;
+
   return h;
 }
 

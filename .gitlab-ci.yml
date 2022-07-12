@@ -1,6 +1,6 @@
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004:v21
+  image: ghcr.io/acts-project/ubuntu2004:v26
   artifacts:
     paths:
       - src/clang-tidy/
@@ -34,10 +34,11 @@ clang_tidy:
     - pip install -r CI/clang_tidy/requirements.txt
     - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy.log clang-tidy/clang-tidy.json
     - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
+    - codereport clang-tidy/clang-tidy.json clang-tidy/html
 
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v26
   tags:
     - docker
   variables:
@@ -76,17 +77,17 @@ build:
       -DCMAKE_BUILD_TYPE=Release 
       -DCMAKE_CXX_FLAGS=-w 
       -DCMAKE_CUDA_FLAGS=-w 
+      -DCMAKE_CUDA_ARCHITECTURES="75;86"
       -DACTS_BUILD_PLUGIN_EXATRKX=ON 
       -DACTS_BUILD_EXAMPLES_EXATRKX=ON 
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
     - cmake --build build --
 
-
 test:
   stage: test
   dependencies:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v26
   tags:
     - docker-gpu-nvidia
   script:
@@ -97,4 +98,3 @@ test:
     - source build/python/setup.sh
     - nvidia-smi
     - python3 src/Examples/Scripts/Python/exatrkx.py
-
