@@ -131,7 +131,7 @@ def runITkSeeding(field, inputSPs, outputDir, inputSpacePointsType, s=None):
         maxSeedsPerSpMConf = 10**100
         maxQualitySeedsPerSpMConf = 10**100
         useDeltaRorTopRadius = False
-
+    import math
     gridConfig = acts.SpacePointGridConfig(
         bFieldInZ=2 * u.T,
         minPt=900 * u.MeV,
@@ -139,7 +139,7 @@ def runITkSeeding(field, inputSPs, outputDir, inputSpacePointsType, s=None):
         zMax=3000 * u.mm,
         zMin=-3000 * u.mm,
         phiMin=0,
-        phiMax=2 * acts.M_PI,
+        phiMax=2 * math.pi,
         deltaRMax=deltaRMax,
         cotThetaMax=27.2899,
         impactMax=impactMax,
