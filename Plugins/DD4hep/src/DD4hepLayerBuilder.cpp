@@ -61,6 +61,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
                                             "disc layers");
     // go through layers
     for (auto& detElement : dendcapLayers) {
+      ACTS_VERBOSE("=> Translating layer from: " << detElement.name());
       // prepare the layer surfaces
       std::vector<std::shared_ptr<const Surface>> layerSurfaces;
       // access the extension of the layer
@@ -79,6 +80,25 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
+      if (logger().doPrint(Logging::VERBOSE)) {
+        std::stringstream ss;
+        pl.toStream(ss);
+        ACTS_VERBOSE("Extent from surfaces: " << ss.str());
+
+        std::vector<double> rvalues;
+        std::transform(layerSurfaces.begin(), layerSurfaces.end(),
+                       std::back_inserter(rvalues), [&](const auto& surface) {
+                         return VectorHelpers::perp(surface->center(gctx));
+                       });
+        std::sort(rvalues.begin(), rvalues.end());
+        std::vector<std::string> locs;
+        std::transform(rvalues.begin(),
+                       std::unique(rvalues.begin(), rvalues.end()),
+                       std::back_inserter(locs),
+                       [](const auto& v) { return std::to_string(v); });
+        ACTS_VERBOSE(
+            "-> unique r locations: " << boost::algorithm::join(locs, ", "));
+      }
 
       if (params.contains("envelope_r_min") &&
           params.contains("envelope_r_max") &&
@@ -211,6 +231,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
         "cylindrical layers");
     // go through layers
     for (auto& detElement : m_cfg.centralLayers) {
+      ACTS_VERBOSE("=> Translating layer from: " << detElement.name());
       // prepare the layer surfaces
       std::vector<std::shared_ptr<const Surface>> layerSurfaces;
       // access the extension of the layer
@@ -229,6 +250,24 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
           detElement.placement().ptr()->GetVolume()->GetShape();
       // create the proto layer
       ProtoLayer pl(gctx, layerSurfaces);
+      if (logger().doPrint(Logging::VERBOSE)) {
+        std::stringstream ss;
+        pl.toStream(ss);
+        ACTS_VERBOSE("Extent from surfaces: " << ss.str());
+        std::vector<double> zvalues;
+        std::transform(layerSurfaces.begin(), layerSurfaces.end(),
+                       std::back_inserter(zvalues), [&](const auto& surface) {
+                         return surface->center(gctx)[eZ];
+                       });
+        std::sort(zvalues.begin(), zvalues.end());
+        std::vector<std::string> locs;
+        std::transform(zvalues.begin(),
+                       std::unique(zvalues.begin(), zvalues.end()),
+                       std::back_inserter(locs),
+                       [](const auto& v) { return std::to_string(v); });
+        ACTS_VERBOSE(
+            "-> unique z locations: " << boost::algorithm::join(locs, ", "));
+      }
 
       if (params.contains("envelope_r_min") &&
           params.contains("envelope_r_max") &&

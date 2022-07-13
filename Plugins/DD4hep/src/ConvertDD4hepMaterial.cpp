@@ -144,8 +144,9 @@ void Acts::addLayerProtoMaterial(
   // Now loop over it and create the ProtoMaterial
   for (unsigned int is = 0; is < materialOptions.size(); ++is) {
     // if (actsExtension.hasValue(materialOptions[is])) {
+    ACTS_VERBOSE(" - checking material for: " << materialOptions[is]);
     if (params.contains(materialOptions[is])) {
-      ACTS_VERBOSE(" - have material for: " << materialOptions[is])
+      ACTS_VERBOSE(" - have material");
       // Create the material and assign it
       auto psMaterial =
           createProtoMaterial(params, materialOptions[is], binning, logger);
