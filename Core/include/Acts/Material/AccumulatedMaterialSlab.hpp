@@ -51,10 +51,11 @@ class AccumulatedMaterialSlab {
   /// Use the accumulated material to update the material variance
   ///
   /// @param slabReference reference slab (from the map) used to compute the variance
+  /// @param useEmptyTrack indicate whether to consider an empty track store
   ///
   /// The material variance can be used to optimised the mapping process as it
   /// should be inversly proportionnal to the map quality
-  void trackVariance(MaterialSlab slabReference);
+  void trackVariance(MaterialSlab slabReference, bool useEmptyTrack = false);
 
   /// Add the accumulated material for the current track to the total average.
   ///
