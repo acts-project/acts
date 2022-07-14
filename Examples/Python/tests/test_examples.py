@@ -935,6 +935,7 @@ import itertools
     ],
 )
 @pytest.mark.filterwarnings("ignore::UserWarning")
+@pytest.mark.flaky(reruns=2)
 def test_vertex_fitting_reading(
     tmp_path, ptcl_gun, rng, finder, inputTracks, entries, assert_root_hash
 ):
