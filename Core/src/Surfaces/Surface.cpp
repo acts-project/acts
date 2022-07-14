@@ -346,3 +346,9 @@ void Acts::Surface::assignSurfaceMaterial(
 void Acts::Surface::associateLayer(const Acts::Layer& lay) {
   m_associatedLayer = (&lay);
 }
+
+std::ostream& Acts::operator<<(
+    std::ostream& os, const std::pair<const Surface&, GeometryContext>& pair) {
+  pair.first.toStream(pair.second, os);
+  return os;
+}

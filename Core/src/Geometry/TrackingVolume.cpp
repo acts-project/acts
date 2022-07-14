@@ -514,7 +514,8 @@ Acts::TrackingVolume::compatibleBoundaries(
       const auto& bSurfaceRep = bsIter->surfaceRepresentation();
       if (logger().doPrint(Logging::VERBOSE)) {
         std::ostringstream os;
-        os << "Consider boundary surface " << &bSurfaceRep << " :\n";
+        os << "Consider boundary surface " << bSurfaceRep.geometryId()
+           << " :\n";
         bSurfaceRep.toStream(gctx, os);
         logger().log(Logging::VERBOSE, os.str());
       }

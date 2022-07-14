@@ -501,4 +501,8 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const FreeVector& parameters) const;
 };
 
+/// print surface information to the provided stream. Internally invokes
+std::ostream& operator<<(std::ostream&,
+                         const std::pair<const Surface&, GeometryContext>&);
+
 }  // namespace Acts
