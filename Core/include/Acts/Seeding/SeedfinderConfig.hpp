@@ -18,12 +18,10 @@
 namespace Acts {
 
 // forward declaration to avoid cyclic dependence
-template <typename T>
 class SeedFilter;
 
-template <typename SpacePoint>
 struct SeedfinderConfig {
-  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
+  std::shared_ptr<Acts::SeedFilter> seedFilter;
 
   // Seed Cuts
   // lower cutoff for seeds
@@ -119,8 +117,6 @@ struct SeedfinderConfig {
   float bFieldInZ = 2.08 * Acts::UnitConstants::T;
   // location of beam in x,y plane.
   // used as offset for Space Points
-  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
-                        0 * Acts::UnitConstants::mm};
 
   boost::container::small_vector<size_t, 20> zBinsCustomLooping = {};
 
@@ -129,17 +125,6 @@ struct SeedfinderConfig {
   // default is 5%
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
-  // alignment uncertainties, used for uncertainties in the
-  // non-measurement-plane of the modules
-  // which otherwise would be 0
-  // will be added to spacepoint measurement uncertainties (and therefore also
-  // multiplied by sigmaError)
-  // FIXME: call align1 and align2
-  float zAlign = 0 * Acts::UnitConstants::mm;
-  float rAlign = 0 * Acts::UnitConstants::mm;
-  // used for measurement (+alignment) uncertainties.
-  // find seeds within 5sigma error ellipse
-  float sigmaError = 5;
 
   // derived values, set on Seedfinder construction
   float highland = 0;
