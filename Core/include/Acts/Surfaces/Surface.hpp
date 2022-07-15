@@ -503,6 +503,6 @@ class Surface : public virtual GeometryObject,
 
 /// print surface information to the provided stream. Internally invokes
 std::ostream& operator<<(std::ostream&,
-                         const std::pair<const Surface&, GeometryContext>&);
+                         const std::tuple<const Surface&, const GeometryContext &>&);
 
 }  // namespace Acts
