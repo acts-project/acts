@@ -42,9 +42,9 @@ build:
   tags:
     - docker
   variables:
-    CCACHE_DIR: ${CI_PROJECT_DIR}/ccache
-    CCACHE_MAXSIZE: 10G
+    CCACHE_MAXSIZE: 500M
     CCACHE_KEY_SUFFIX: r1
+    CCACHE_DIR: ${CI_PROJECT_DIR}/ccache_${CCACHE_KEY_SUFFIX}
 
   cache:
     key: ccache-exatrkx-$CI_COMMIT_REF_SLUG
