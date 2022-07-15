@@ -41,6 +41,8 @@ struct MultiStepperSurfaceReached {
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const Surface& targetSurface) const {
     bool reached = true;
+    const auto oldCurrentSurface = state.navigation.currentSurface;
+
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
@@ -53,7 +55,7 @@ struct MultiStepperSurfaceReached {
     // These values are changed by the single component aborters but must be
     // reset if not all components are on the target
     if (!reached) {
-      state.navigation.currentSurface = nullptr;
+      state.navigation.currentSurface = oldCurrentSurface;
       state.navigation.targetReached = false;
     }
 
