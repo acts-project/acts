@@ -26,7 +26,7 @@ ActsExamples::CsvSpacepointWriter::CsvSpacepointWriter(
     : WriterT(config.inputSpacepoints, "CsvSpacepointWriter", level),
       m_cfg(config) {}
 
-ActsExamples::CsvSpacepointWriter::~CsvSpacepointWriter() {}
+ActsExamples::CsvSpacepointWriter::~CsvSpacepointWriter() = default;
 
 ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::endRun() {
   // Write the tree

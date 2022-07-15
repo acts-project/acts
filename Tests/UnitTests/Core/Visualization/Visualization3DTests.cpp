@@ -46,7 +46,7 @@ l 4 1
 
   // Valid obj
   auto objErrors = testObjString(validObj);
-  BOOST_CHECK(objErrors.size() == 0);
+  BOOST_CHECK(objErrors.empty());
 
   // Valid obj, but triangular mesh is requested
   objErrors = testObjString(validObj, true);
@@ -112,11 +112,11 @@ end_header
 
   // Valid ply
   auto plyErrors = testPlyString(validPly);
-  BOOST_CHECK(plyErrors.size() == 0);
+  BOOST_CHECK(plyErrors.empty());
 
   // Valid ply, but triangular mesh is requested
   plyErrors = testPlyString(validPly, true);
-  BOOST_CHECK(plyErrors.size() == 0);
+  BOOST_CHECK(plyErrors.empty());
   for (auto plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }

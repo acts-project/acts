@@ -119,7 +119,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
   }
 }
 
-ActsExamples::Geant4Simulation::~Geant4Simulation() {}
+ActsExamples::Geant4Simulation::~Geant4Simulation() = default;
 
 ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
     const ActsExamples::AlgorithmContext& ctx) const {

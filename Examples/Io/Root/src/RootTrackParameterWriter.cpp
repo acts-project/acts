@@ -97,10 +97,10 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
   }
 }
 
-ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() {}
+ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() = default;
 
 ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_INFO("Write estimated parameters from seed to tree '"

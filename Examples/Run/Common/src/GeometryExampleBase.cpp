@@ -83,7 +83,7 @@ int processGeometry(int argc, char* argv[],
     }
 
     std::string geoContextStr = "";
-    if (contextDecorators.size() > 0) {
+    if (!contextDecorators.empty()) {
       // We need indeed a context object
       if (nEvents > 1) {
         geoContextStr = "_geoContext" + std::to_string(ievt);
