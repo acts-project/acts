@@ -34,6 +34,7 @@ clang_tidy:
     - pip install -r CI/clang_tidy/requirements.txt
     - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy.log clang-tidy/clang-tidy.json
     - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
+    - codereport clang-tidy/clang-tidy.json clang-tidy/html
 
 build:
   stage: build
