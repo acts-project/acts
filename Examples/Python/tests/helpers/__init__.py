@@ -33,19 +33,19 @@ if dd4hepEnabled:
     except ImportError:
         dd4hepEnabled = False
 
-hepmc3Enabled = "HepMC3_DIR" in os.environ
-if hepmc3Enabled:
-    try:
-        import acts.examples.hepmc3
-    except ImportError:
-        hepmc3Enabled = False
+try:
+    import acts.examples.hepmc3
 
-edm4hepEnabled = "EDM4HEP_DIR" in os.environ
-if edm4hepEnabled:
-    try:
-        import acts.examples.edm4hep
-    except ImportError:
-        edm4hepEnabled = False
+    hepmc3Enabled = True
+except ImportError:
+    hepmc3Enabled = False
+
+try:
+    import acts.examples.edm4hep
+
+    edm4hepEnabled = True
+except ImportError:
+    edm4hepEnabled = False
 
 isCI = os.environ.get("CI", "false") == "true"
 

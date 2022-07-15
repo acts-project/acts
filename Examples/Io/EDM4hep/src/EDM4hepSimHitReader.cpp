@@ -96,8 +96,7 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
               });
           unordered.push_back(std::move(hit));
         } catch (...) {
-          m_logger->log(Acts::Logging::Level::ERROR,
-                        "EDM4hepSimHitReader: failed to convert SimTrackerHit");
+          ACTS_ERROR("EDM4hepSimHitReader: failed to convert SimTrackerHit");
           continue;
         }
       }
