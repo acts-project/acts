@@ -347,8 +347,9 @@ void Acts::Surface::associateLayer(const Acts::Layer& lay) {
   m_associatedLayer = (&lay);
 }
 
-std::ostream& Acts::operator<<(std::ostream& os,
-                         const std::tuple<const Acts::Surface&, const Acts::GeometryContext &>&tup) {
+std::ostream& Acts::operator<<(
+    std::ostream& os,
+    const std::tuple<const Acts::Surface&, const Acts::GeometryContext&>& tup) {
   std::get<0>(tup).toStream(std::get<1>(tup), os);
   return os;
 }

@@ -513,7 +513,8 @@ Acts::TrackingVolume::compatibleBoundaries(
       // Get the boundary surface pointer
       const auto& bSurfaceRep = bsIter->surfaceRepresentation();
       ACTS_VERBOSE("Consider boundary surface " << bSurfaceRep.geometryId()
-           << " :\n" << std::tie(bSurfaceRep, gctx));
+                                                << " :\n"
+                                                << std::tie(bSurfaceRep, gctx));
 
       // Exclude the boundary where you are on
       if (excludeObject != &bSurfaceRep) {

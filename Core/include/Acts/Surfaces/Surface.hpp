@@ -501,8 +501,13 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const FreeVector& parameters) const;
 };
 
-/// print surface information to the provided stream. Internally invokes
-std::ostream& operator<<(std::ostream&,
-                         const std::tuple<const Surface&, const GeometryContext &>&);
+/// Print surface information to the provided stream. Internally invokes the
+/// toStream-method.
+inline std::ostream& operator<<(
+    std::ostream& os,
+    const std::tuple<const Surface&, const GeometryContext&>& tup) {
+  std::get<0>(tup).toStream(std::get<1>(tup), os);
+  return os;
+}
 
 }  // namespace Acts

@@ -988,9 +988,13 @@ class Navigator {
                      << stepper.outputStepSize(state.stepping));
         return true;
       } else {
-        ACTS_VERBOSE("Boundary " << std::distance(state.navigation.navBoundaryIter,
-                              state.navigation.navBoundaries.end()) << " out of " << state.navigation.navBoundaries.size() << " not reachable anymore, switching to next.");
-        ACTS_VERBOSE("Targeted boundary surface was: \n" << std::tie(*boundarySurface, state.geoContext));
+        ACTS_VERBOSE("Boundary "
+                     << std::distance(state.navigation.navBoundaryIter,
+                                      state.navigation.navBoundaries.end())
+                     << " out of " << state.navigation.navBoundaries.size()
+                     << " not reachable anymore, switching to next.");
+        ACTS_VERBOSE("Targeted boundary surface was: \n"
+                     << std::tie(*boundarySurface, state.geoContext));
       }
       // Increase the iterator to the next one
       ++state.navigation.navBoundaryIter;
