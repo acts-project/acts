@@ -219,13 +219,13 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
 }
 
 ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_INFO("Write states of trajectories to tree '"
