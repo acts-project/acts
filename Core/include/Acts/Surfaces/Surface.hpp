@@ -507,7 +507,8 @@ class Surface : public virtual GeometryObject,
 inline std::ostream& operator<<(
     std::ostream& os,
     const std::tuple<const Surface&, const GeometryContext&>& tup) {
-  std::get<0>(tup).toStream(std::get<1>(tup), os);
+  const auto [surface, gctx] = tup;
+  surface.toStream(gctx, os);
   return os;
 }
 
