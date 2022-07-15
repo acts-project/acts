@@ -47,7 +47,7 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
   // must always be opened internally
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), "RECREATE");
-  if (not m_outputFile) {
+  if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }
 
@@ -62,7 +62,7 @@ ActsExamples::TrackFitterPerformanceWriter::~TrackFitterPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
@@ -71,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
   // fill residual and pull details into additional hists
   m_resPlotTool.refinement(m_resPlotCache);
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_resPlotTool.write(m_resPlotCache);
     m_effPlotTool.write(m_effPlotCache);

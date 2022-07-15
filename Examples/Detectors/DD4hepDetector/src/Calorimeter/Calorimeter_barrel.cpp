@@ -35,7 +35,7 @@ static Ref_t create_element(Detector& oddd, xml_h xml, SensitiveDetector) {
   // Create the tubes with their respective material, etc
   size_t VolIdx = 0;
   // loop through layers
-  for (xml_coll_t tubIt(x_det, _U(tubs)); tubIt; ++tubIt) {
+  for (xml_coll_t tubIt(x_det, _U(tubs)); tubIt != nullptr; ++tubIt) {
     xml_comp_t VolDet = tubIt;
     dd4hep::Tube VolShape(VolDet.rmin(), VolDet.rmax(), VolDet.dz());
     std::string VolName = dd4hep::xml::_toString(VolDet.nameStr());

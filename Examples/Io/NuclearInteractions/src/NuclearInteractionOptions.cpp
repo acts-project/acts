@@ -143,7 +143,7 @@ ActsExamples::Options::readParametrisations(const std::string& fileName) {
   gDirectory->cd();
   auto listOfParticles = gDirectory->GetListOfKeys();
   auto initialParticle = listOfParticles->First();
-  while (initialParticle) {
+  while (initialParticle != nullptr) {
     // Get the initial particle
     char const* particleName = initialParticle->GetName();
     gDirectory->cd(particleName);
@@ -151,7 +151,7 @@ ActsExamples::Options::readParametrisations(const std::string& fileName) {
     // Walk over all initial momenta for a particle
     auto listOfMomenta = gDirectory->GetListOfKeys();
     auto initialMomentum = listOfMomenta->First();
-    while (initialMomentum) {
+    while (initialMomentum != nullptr) {
       // Parameters for a fixed inital momentum
       ActsFatras::detail::NuclearInteractionParameters parameters;
       // Get the initial momentum
@@ -198,7 +198,7 @@ ActsExamples::Options::readParametrisations(const std::string& fileName) {
       // Get the distributions for each final state multiplicity
       auto softList = gDirectory->GetListOfKeys();
       auto softElement = softList->First();
-      while (softElement) {
+      while (softElement != nullptr) {
         readKinematicParameters(parameters, softElement, true);
         softElement = softList->After(softElement);
       }
@@ -212,7 +212,7 @@ ActsExamples::Options::readParametrisations(const std::string& fileName) {
       // Get the distributions for each final state multiplicity
       auto hardList = gDirectory->GetListOfKeys();
       auto hardElement = hardList->First();
-      while (hardElement) {
+      while (hardElement != nullptr) {
         readKinematicParameters(parameters, hardElement, false);
         hardElement = hardList->After(hardElement);
       }

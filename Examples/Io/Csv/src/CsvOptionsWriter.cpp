@@ -74,6 +74,6 @@ ActsExamples::Options::readCsvTrackingGeometryWriterConfig(
     cfg.outputDir = vm["output-dir"].as<std::string>();
   }
   cfg.outputPrecision = vm["csv-output-precision"].as<size_t>();
-  cfg.writePerEvent = vm.count("csv-tg-perevent");
+  cfg.writePerEvent = (vm.count("csv-tg-perevent") != 0u);
   return cfg;
 }
