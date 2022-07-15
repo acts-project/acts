@@ -131,7 +131,7 @@ EventAction* EventAction::instance() {
 
 EventAction::EventAction(std::vector<std::string> processFilter)
     : G4UserEventAction(), m_processFilter(std::move(processFilter)) {
-  if (s_instance) {
+  if (s_instance != nullptr) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
     s_instance = this;

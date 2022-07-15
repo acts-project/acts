@@ -70,7 +70,8 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("nStepTrials", &m_nStepTrials);
 }
 
-ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {}
+ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() =
+    default;
 
 ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
   // Write the tree
@@ -138,7 +139,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
         }
       }
       // a current volume overwrites the surface tagged one
-      if (step.volume) {
+      if (step.volume != nullptr) {
         volumeID = step.volume->geometryId().volume();
       }
       // now fill

@@ -341,7 +341,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::
 }
 
 ActsExamples::RootNuclearInteractionParametersWriter::
-    ~RootNuclearInteractionParametersWriter() {}
+    ~RootNuclearInteractionParametersWriter() = default;
 
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::endRun() {

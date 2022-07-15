@@ -174,7 +174,7 @@ void filterAndSort(
 }
 }  // namespace
 
-ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() {}
+ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() = default;
 
 ActsExamples::HepMCProcessExtractor::HepMCProcessExtractor(
     ActsExamples::HepMCProcessExtractor::Config cfg, Acts::Logging::Level level)
