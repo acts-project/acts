@@ -61,7 +61,7 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
     // Saturated addition that does not overflow and exceed SIZE_MAX.
     // From http://locklessinc.com/articles/sat_arithmetic/
     size_t nend = ihit + m_cfg.selectIndexLength;
-    nend |= -(nend < ihit);
+    nend |= -static_cast<int>(nend < ihit);
     // restrict to available hits
     nend = std::min(clusters.size(), nend);
 
@@ -101,12 +101,12 @@ ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
 
   // print hits within geometry selection
   auto geoSelection = makeRange(clusters.begin(), clusters.begin());
-  if (m_cfg.selectModule) {
+  if (m_cfg.selectModule != 0u) {
     geoSelection = selectModule(clusters, m_cfg.selectVolume, m_cfg.selectLayer,
                                 m_cfg.selectModule);
-  } else if (m_cfg.selectLayer) {
+  } else if (m_cfg.selectLayer != 0u) {
     geoSelection = selectLayer(clusters, m_cfg.selectVolume, m_cfg.selectLayer);
-  } else if (m_cfg.selectVolume) {
+  } else if (m_cfg.selectVolume != 0u) {
     geoSelection = selectVolume(clusters, m_cfg.selectVolume);
   }
   if (not geoSelection.empty()) {
