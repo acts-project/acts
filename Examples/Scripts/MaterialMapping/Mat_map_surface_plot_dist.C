@@ -98,8 +98,7 @@ void Initialise_hist(TGraph*& surface_hist,
 
 void Fill(std::map<uint64_t,TGraph*>& surface_hist,  std::map<uint64_t,sinfo>& surface_info,
   const std::string& input_file, const int& nbprocess){
-
-
+  std::map<std::string,std::string> surface_name;
   std::map<uint64_t,std::pair<std::vector<float>,std::vector<float>>> surface_pos;
 
   //Get file, tree and set top branch address

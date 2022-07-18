@@ -161,7 +161,7 @@ void Initialise_hist(std::vector<TH1F*>& surface_hist,
 
 void Fill(std::map<uint64_t,std::vector<TH1F*>>& surface_hist,  std::map<uint64_t,sinfo>& surface_info,
   const std::string& input_file, const int& nbprocess){
-
+  std::map<std::string,std::string> surface_name;
   std::map<uint64_t,float> surface_weight;
 
   //Get file, tree and set top branch address
