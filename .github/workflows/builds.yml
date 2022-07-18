@@ -192,6 +192,7 @@ jobs:
       - name: Examples
         run: >
           export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+          && source /usr/local/bin/thisdd4hep_only.sh
           && ./CI/run_examples.sh
 
       - name: Python level tests
