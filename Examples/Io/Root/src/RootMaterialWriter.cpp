@@ -36,7 +36,7 @@ ActsExamples::RootMaterialWriter::RootMaterialWriter(
 
   // Setup ROOT I/O
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
-  if (!m_outputFile) {
+  if (m_outputFile == nullptr) {
     throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
   }
 }
@@ -76,7 +76,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
     // understand what sort of material you have in mind
     const Acts::BinnedSurfaceMaterial* bsm =
         dynamic_cast<const Acts::BinnedSurfaceMaterial*>(sMaterial);
-    if (bsm) {
+    if (bsm != nullptr) {
       // overwrite the bin numbers
       bins0 = bsm->binUtility().bins(0);
       bins1 = bsm->binUtility().bins(1);
@@ -187,10 +187,10 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
         Acts::MaterialMapper<Acts::MaterialGrid2D>>*>(vMaterial);
 
     size_t points = 1;
-    if (bvMaterial3D || bvMaterial2D) {
+    if (bvMaterial3D != nullptr || bvMaterial2D != nullptr) {
       // Get the binning data
       std::vector<Acts::BinningData> binningData;
-      if (bvMaterial3D) {
+      if (bvMaterial3D != nullptr) {
         binningData = bvMaterial3D->binUtility().binningData();
         Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
         points = grid.size();
@@ -261,7 +261,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
       rho->SetBinContent(1, mat.massDensity());
     } else {
       // 3d grid volume
-      if (bvMaterial3D) {
+      if (bvMaterial3D != nullptr) {
         Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
         for (size_t point = 0; point < points; point++) {
           auto mat = Acts::Material(grid.at(point));
@@ -275,7 +275,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
         }
       }
       // 2d grid volume
-      else if (bvMaterial2D) {
+      else if (bvMaterial2D != nullptr) {
         Acts::MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
         for (size_t point = 0; point < points; point++) {
           auto mat = Acts::Material(grid.at(point));
@@ -298,7 +298,7 @@ void ActsExamples::RootMaterialWriter::writeMaterial(
 }
 
 ActsExamples::RootMaterialWriter::~RootMaterialWriter() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }

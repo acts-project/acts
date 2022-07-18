@@ -39,7 +39,7 @@ CsvTrackingGeometryWriter::CsvTrackingGeometryWriter(
     throw std::invalid_argument("Missing tracking geometry");
   }
   m_world = m_cfg.trackingGeometry->highestTrackingVolume();
-  if (not m_world) {
+  if (m_world == nullptr) {
     throw std::invalid_argument("Could not identify the world volume");
   }
 }
@@ -211,7 +211,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
                  bool writeBoundary, bool writeSurfaceGrid,
                  bool writeLayerVolume, const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
-  if (volume.confinedLayers()) {
+  if (volume.confinedLayers() != nullptr) {
     const auto& vTransform = volume.transform();
 
     // Get the values of the volume boundaries
@@ -316,7 +316,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
           // Write the sensitive surface if configured
           if (writeSensitive) {
             for (auto surface : sfArray->surfaces()) {
-              if (surface) {
+              if (surface != nullptr) {
                 writeSurface(sfWriter, *surface, geoCtx);
               }
             }

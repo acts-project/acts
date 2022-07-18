@@ -37,7 +37,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // go trough possible layers
   size_t layer_num = 0;
   // if it is the positive or negative endcap
-  for (xml_coll_t j(xml, _U(layer)); j; ++j) {
+  for (xml_coll_t j(xml, _U(layer)); j != nullptr; ++j) {
     xml_comp_t x_layer = j;
     double l_rmin = x_layer.inner_r();
     double l_rmax = x_layer.outer_r();
@@ -52,7 +52,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
     int module_num_num = 0;
     // go trough possible modules
     if (x_layer.hasChild(_U(module))) {
-      for (xml_coll_t i(x_layer, _U(module)); i; i++) {
+      for (xml_coll_t i(x_layer, _U(module)); i != nullptr; i++) {
         xml_comp_t x_module = i;
         int repeat = x_module.repeat();
         double deltaphi = 2. * M_PI / repeat;
@@ -83,7 +83,8 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
         std::shared_ptr<const Acts::DigitizationModule> digiComponent = nullptr;
         // go through possible components
         int comp_num = 0;
-        for (xml_coll_t comp(x_module, _U(module_component)); comp; comp++) {
+        for (xml_coll_t comp(x_module, _U(module_component)); comp != nullptr;
+             comp++) {
           xml_comp_t x_comp = comp;
           // create the component volume
           string comp_name =

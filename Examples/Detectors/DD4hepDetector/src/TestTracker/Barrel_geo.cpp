@@ -37,7 +37,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // go trough possible layers
   size_t layer_num = 0;
 
-  for (xml_coll_t j(xml, _U(layer)); j; ++j) {
+  for (xml_coll_t j(xml, _U(layer)); j != nullptr; ++j) {
     xml_comp_t x_layer = j;
     double l_rmin = x_layer.inner_r();
     double l_rmax = x_layer.outer_r();
