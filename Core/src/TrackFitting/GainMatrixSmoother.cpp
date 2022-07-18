@@ -48,18 +48,23 @@ Result<void> GainMatrixSmoother::operator()(const GeometryContext& gctx,
     assert(prev_ts.hasPredicted());
     assert(prev_ts.hasJacobian());
 
+    static constexpr double epsilon = 1e-13;
+    auto regularization = BoundMatrix::Identity() * epsilon;
+
     ACTS_VERBOSE("Calculate smoothing matrix:");
     ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
     ACTS_VERBOSE("Jacobian:\n" << prev_ts.jacobian());
     ACTS_VERBOSE("Prev. predicted covariance\n"
                  << prev_ts.predictedCovariance() << "\n, inverse: \n"
-                 << prev_ts.predictedCovariance().inverse());
+                 << prev_ts.predictedCovariance().inverse()
+                 << "\n, regularized inverse: \n"
+                 << (prev_ts.predictedCovariance() + regularization).inverse());
 
     // Gain smoothing matrix
     // NB: The jacobian stored in a state is the jacobian from previous
     // state to this state in forward propagation
     BoundMatrix G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
-                    prev_ts.predictedCovariance().inverse();
+                    (prev_ts.predictedCovariance() + regularization).inverse();
 
     if (G.hasNaN()) {
       error = KalmanFitterError::SmoothFailed;  // set to error

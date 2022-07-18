@@ -1,5 +1,6 @@
 import os
 from typing import List, Union
+import contextlib
 
 import acts
 from acts.examples import BareAlgorithm
@@ -26,7 +27,6 @@ except ImportError:
         )
 
 dd4hepEnabled = "DD4hep_DIR" in os.environ
-
 if dd4hepEnabled:
     try:
         import acts.examples.dd4hep
@@ -39,6 +39,13 @@ try:
     hepmc3Enabled = True
 except ImportError:
     hepmc3Enabled = False
+
+try:
+    import acts.examples.edm4hep
+
+    edm4hepEnabled = True
+except ImportError:
+    edm4hepEnabled = False
 
 isCI = os.environ.get("CI", "false") == "true"
 
@@ -69,3 +76,14 @@ class AssertCollectionExistsAlg(BareAlgorithm):
 
 
 doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ
+
+
+@contextlib.contextmanager
+def failure_threshold(level: acts.logging.Level, enabled: bool = True):
+    if enabled:
+        prev = acts.logging.getFailureThreshold()
+        acts.logging.setFailureThreshold(level)
+        yield
+        acts.logging.setFailureThreshold(prev)
+    else:
+        yield

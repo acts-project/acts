@@ -97,7 +97,7 @@ BOOST_AUTO_TEST_CASE(TGeoLayerBuilderTests) {
   BOOST_CHECK_EQUAL(tglb.detectorElements().size(), 14u + 16u);
   for (const auto& pLayer : positiveLayers) {
     auto sArray = pLayer->surfaceArray();
-    if (sArray) {
+    if (sArray != nullptr) {
       for (auto& surface : sArray->surfaces()) {
         GeometryView3D::drawSurface(objVis, *surface, tgContext);
       }
