@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     store(command_line_parser(argc, argv).options(description).run(), vm);
     notify(vm);
 
-    if (vm.count("help")) {
+    if (vm.count("help") != 0u) {
       std::cout << description;
     }
 

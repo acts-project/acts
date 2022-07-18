@@ -317,7 +317,10 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
     from DDSim.DD4hepSimulation import DD4hepSimulation
 
     ddsim = DD4hepSimulation()
-    ddsim.compactFile = input
+    if isinstance(ddsim.compactFile, list):
+        ddsim.compactFile = [input]
+    else:
+        ddsim.compactFile = input
     ddsim.enableGun = True
     ddsim.gun.direction = (1, 0, 0)
     ddsim.gun.distribution = "eta"

@@ -63,10 +63,10 @@ ActsExamples::RootSimHitWriter::RootSimHitWriter(
   m_outputTree->Branch("sensitive_id", &m_sensitiveId);
 }
 
-ActsExamples::RootSimHitWriter::~RootSimHitWriter() {}
+ActsExamples::RootSimHitWriter::~RootSimHitWriter() = default;
 
 ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::endRun() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_VERBOSE("Wrote hits to tree '" << m_cfg.treeName << "' in '"
@@ -78,7 +78,7 @@ ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::writeT(
     const AlgorithmContext& ctx, const ActsExamples::SimHitContainer& hits) {
-  if (not m_outputFile) {
+  if (m_outputFile == nullptr) {
     ACTS_ERROR("Missing output file");
     return ProcessCode::ABORT;
   }
