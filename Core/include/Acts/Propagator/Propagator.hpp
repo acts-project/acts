@@ -337,12 +337,12 @@ class Propagator final {
   /// @tparam propagator_state_t Type of of propagator state with options
   ///
   /// @param [in,out] state the propagator state object
-  /// @param [in] result an existing result object to start from
+  /// @param [in,out] result an existing result object to start from
   ///
   /// @return Propagation result
   template <typename result_t, typename propagator_state_t>
-  Result<result_t> propagate_impl(propagator_state_t& state,
-                                  result_t result) const;
+  Result<void> propagate_impl(propagator_state_t& state,
+                              result_t& result) const;
 
  public:
   /// @brief Propagate track parameters
