@@ -378,8 +378,8 @@ void Acts::DD4hepLayerBuilder::resolveSensitive(
 std::shared_ptr<const Acts::Surface>
 Acts::DD4hepLayerBuilder::createSensitiveSurface(
     const dd4hep::DetElement& detElement, bool isDisc) const {
-  auto& params = getParams(detElement);
-  std::string detAxis = params.value_or<std::string>("axis_definitions", "XYZ");
+  std::string detAxis =
+      getParamOr<std::string>("axis_definitions", detElement, "XYZ");
   // Create the corresponding detector element !- memory leak --!
   Acts::DD4hepDetectorElement* dd4hepDetElement =
       new Acts::DD4hepDetectorElement(detElement, detAxis, UnitConstants::cm,
