@@ -93,7 +93,7 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:updated-dd4hep
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -171,7 +171,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:updated-dd4hep
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
@@ -208,7 +208,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:updated-dd4hep
     needs: [linux_ubuntu]
 
     steps:
