@@ -41,6 +41,17 @@ inline const dd4hep::rec::VariantParameters& getParams(
   return *params;
 }
 
+// template <typename T>
+// T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
+// T alternative) {
+// auto* params = elt.extension<dd4hep::rec::VariantParameters>(false);
+// if (params == nullptr) {
+// return alternative;
+// }
+// return params->value_or<T>(key, alternative);
+// }
+
+// @TODO: Remove in favor of workaround above after fix is merged upstream
 template <typename T>
 T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
              T alternative) {
@@ -48,7 +59,10 @@ T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
   if (params == nullptr) {
     return alternative;
   }
-  return params->value_or<T>(key, alternative);
+  if (!params->contains(key)) {
+    return alternative;
+  }
+  return params->get<T>(key);
 }
 
 inline bool hasParam(const std::string& key, dd4hep::DetElement& elt) {
