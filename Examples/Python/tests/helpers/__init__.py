@@ -80,17 +80,20 @@ doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.enviro
 
 @contextlib.contextmanager
 def failure_threshold(level: acts.logging.Level, enabled: bool = True):
-    err = "Runtime log failure threshold could not be set. Compile-time value is probably set via CMake"
     if enabled:
         prev = acts.logging.getFailureThreshold()
         try:
             acts.logging.setFailureThreshold(level)
         except RuntimeError:
-            print(err)
+            # Repackage with different error string
+            raise RuntimeError(
+                "Runtime log failure threshold could not be set. "
+                "Compile-time value is probably set via CMake, i.e. "
+                f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set. The "
+                "pytest test-suite will not work in this configuration."
+            )
+
         yield
-        try:
-            acts.logging.setFailureThreshold(prev)
-        except RuntimeError:
-            pass
+        acts.logging.setFailureThreshold(prev)
     else:
         yield
