@@ -129,13 +129,13 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
 }
 
 ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_INFO("Write parameters of trajectories to tree '"
@@ -271,7 +271,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           t_eta = eta(particle.unitDirection());
           t_pT = t_p * perp(particle.unitDirection());
 
-          if (pSurface) {
+          if (pSurface != nullptr) {
             // get the truth perigee parameter
             auto lpResult = pSurface->globalToLocal(
                 ctx.geoContext, particle.position(), particle.unitDirection());

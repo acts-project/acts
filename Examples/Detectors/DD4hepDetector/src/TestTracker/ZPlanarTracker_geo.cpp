@@ -58,7 +58,7 @@ static Ref_t create_element(Detector& lcdd, xml_h e, SensitiveDetector sens) {
   //=========  loop over layer elements in xml
   //======================================
 
-  for (xml_coll_t c(e, _U(layer)); c; ++c) {
+  for (xml_coll_t c(e, _U(layer)); c != nullptr; ++c) {
     xml_comp_t x_layer(c);
 
     // child elements: ladder and sensitive

@@ -372,7 +372,8 @@ void Acts::TrackingVolume::closeGeometry(
   if (materialDecorator != nullptr) {
     materialDecorator->decorate(*thisVolume);
   }
-  if (thisVolume->volumeMaterial() == nullptr && thisVolume->motherVolume() &&
+  if (thisVolume->volumeMaterial() == nullptr &&
+      thisVolume->motherVolume() != nullptr &&
       thisVolume->motherVolume()->volumeMaterial() != nullptr) {
     auto protoMaterial = dynamic_cast<const Acts::ProtoVolumeMaterial*>(
         thisVolume->motherVolume()->volumeMaterial());
@@ -512,12 +513,9 @@ Acts::TrackingVolume::compatibleBoundaries(
     for (auto& bsIter : bSurfaces) {
       // Get the boundary surface pointer
       const auto& bSurfaceRep = bsIter->surfaceRepresentation();
-      if (logger().doPrint(Logging::VERBOSE)) {
-        std::ostringstream os;
-        os << "Consider boundary surface " << &bSurfaceRep << " :\n";
-        bSurfaceRep.toStream(gctx, os);
-        logger().log(Logging::VERBOSE, os.str());
-      }
+      ACTS_VERBOSE("Consider boundary surface " << bSurfaceRep.geometryId()
+                                                << " :\n"
+                                                << std::tie(bSurfaceRep, gctx));
 
       // Exclude the boundary where you are on
       if (excludeObject != &bSurfaceRep) {

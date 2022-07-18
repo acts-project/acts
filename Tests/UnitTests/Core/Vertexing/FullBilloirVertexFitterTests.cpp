@@ -211,14 +211,14 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     // Do the actual fit with 4 tracks without constraint
     Vertex<BoundTrackParameters> fittedVertex =
         billoirFitter.fit(tracksPtr, linearizer, vfOptions, state).value();
-    if (fittedVertex.tracks().size() > 0) {
+    if (!fittedVertex.tracks().empty()) {
       CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1_mm);
     }
     // Do the fit with a constraint
     Vertex<BoundTrackParameters> fittedVertexConstraint =
         billoirFitter.fit(tracksPtr, linearizer, vfOptionsConstr, state)
             .value();
-    if (fittedVertexConstraint.tracks().size() > 0) {
+    if (!fittedVertexConstraint.tracks().empty()) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
 
@@ -347,14 +347,14 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     // Do the actual fit with 4 tracks without constraint
     Vertex<InputTrack> fittedVertex =
         billoirFitter.fit(tracksPtr, linearizer, vfOptions, state).value();
-    if (fittedVertex.tracks().size() > 0) {
+    if (!fittedVertex.tracks().empty()) {
       CHECK_CLOSE_ABS(fittedVertex.position(), vertexPosition, 1_mm);
     }
     // Do the fit with a constraint
     Vertex<InputTrack> fittedVertexConstraint =
         billoirFitter.fit(tracksPtr, linearizer, vfOptionsConstr, state)
             .value();
-    if (fittedVertexConstraint.tracks().size() > 0) {
+    if (!fittedVertexConstraint.tracks().empty()) {
       CHECK_CLOSE_ABS(fittedVertexConstraint.position(), vertexPosition, 1_mm);
     }
 
