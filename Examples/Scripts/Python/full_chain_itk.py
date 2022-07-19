@@ -14,6 +14,7 @@ from particle_gun import addParticleGun, MomentumConfig, EtaConfig, ParticleConf
 from fatras import addFatras
 from digitization import addDigitization
 from seeding import addSeeding, TruthSeedRanges
+from itk_seeding import itkSeedingAlgConfig
 from ckf_tracks import addCKFTracks, CKFPerformanceConfig
 
 s = acts.examples.Sequencer(events=100, numThreads=-1)
@@ -40,6 +41,12 @@ s = addDigitization(
     rnd=rnd,
 )
 # from seeding import SeedingAlgorithm, ParticleSmearingSigmas
+(
+    seedfinderConfigArg,
+    seedFilterConfigArg,
+    spacePointGridConfigArg,
+    seedingAlgorithmConfigArg,
+) = itkSeedingAlgConfig("PixelSpacePoints")
 s = addSeeding(
     s,
     trackingGeometry,
@@ -47,6 +54,10 @@ s = addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
     # SeedingAlgorithm.TruthEstimated,
     # SeedingAlgorithm.TruthSmeared, ParticleSmearingSigmas(pRel=0.01), rnd=rnd,
+    seedfinderConfigArg,
+    seedFilterConfigArg,
+    spacePointGridConfigArg,
+    seedingAlgorithmConfigArg,
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
