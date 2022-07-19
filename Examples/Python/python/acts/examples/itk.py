@@ -5,6 +5,7 @@ from pathlib import Path
 
 u = acts.UnitConstants
 
+
 def buildITkGeometry(
     geo_dir: Path,
     material: bool = True,

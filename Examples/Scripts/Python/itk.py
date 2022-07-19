@@ -91,6 +91,7 @@ def runITk(
 
             jmw.write(trackingGeometry)
 
+
 if "__main__" == __name__:
     p = argparse.ArgumentParser(
         description="Example script to construct the ITk geometry and write it out to CSV and OBJ formats"
@@ -126,6 +127,7 @@ if "__main__" == __name__:
     geo_example_dir = Path(args.geo_dir)
     assert geo_example_dir.exists(), "Detector example input directory missing"
     from acts.examples.itk import buildITkGeometry
+
     detector, trackingGeometry, decorators = buildITkGeometry(
         geo_example_dir,
         material=not args.no_material,
