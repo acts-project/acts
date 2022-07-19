@@ -28,7 +28,7 @@ from acts.examples import (
     RootParticleWriter,
 )
 
-from common import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector
 
 u = acts.UnitConstants
 

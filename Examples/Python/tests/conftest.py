@@ -17,7 +17,7 @@ sys.path += [
 
 import helpers
 import helpers.hash_root
-from common import getOpenDataDetectorDirectory, getOpenDataDetector
+from acts.examples.odd import getOpenDataDetectorDirectory, getOpenDataDetector
 
 import pytest
 

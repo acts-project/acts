@@ -13,7 +13,7 @@ import acts.examples.geant4.hepmc3
 
 u = acts.UnitConstants
 
-from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 
 def runEventRecording(g4geo, outputDir, s=None):

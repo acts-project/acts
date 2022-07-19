@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-from common import getOpenDataDetector
 import os
 
 from acts.examples import (
-    GenericDetector,
     AlignedDetector,
     WhiteBoard,
     AlgorithmContext,

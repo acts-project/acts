@@ -25,7 +25,7 @@ from acts import (
     MaterialMapJsonConverter,
 )
 
-from common import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector
 
 
 def runMaterialMapping(

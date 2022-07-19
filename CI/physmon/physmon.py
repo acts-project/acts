@@ -20,7 +20,7 @@ acts.logging.setFailureThreshold(acts.logging.FATAL)
 
 from truth_tracking_kalman import runTruthTrackingKalman
 from ckf_tracks import runCKFTracks
-from common import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector
 
 parser = argparse.ArgumentParser()
 parser.add_argument("outdir")

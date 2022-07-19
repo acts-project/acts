@@ -8,7 +8,7 @@ from helpers import (
     AssertCollectionExistsAlg,
 )
 
-from common import (
+from acts.examples.odd import (
     getOpenDataDetectorDirectory,
     getOpenDataDetector,
 )

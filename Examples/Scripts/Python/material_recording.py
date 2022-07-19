@@ -15,7 +15,7 @@ from acts.examples import (
 import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.geant4.dd4hep
-from common import getOpenDataDetectorDirectory
+from acts.example.odd import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 

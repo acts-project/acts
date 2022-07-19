@@ -2,7 +2,7 @@
 import argparse
 import pathlib, acts, acts.examples
 import acts.examples.dd4hep
-from common import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
 
 
 u = acts.UnitConstants

@@ -17,7 +17,7 @@ from helpers import (
 
 import acts
 
-from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 from acts import PlanarModuleStepper, UnitConstants as u
 

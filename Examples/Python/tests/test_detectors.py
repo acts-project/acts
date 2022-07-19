@@ -4,7 +4,7 @@ import pytest
 
 from helpers import dd4hepEnabled
 
-from common import (
+from acts.examples.odd import (
     getOpenDataDetectorDirectory,
     getOpenDataDetector,
 )

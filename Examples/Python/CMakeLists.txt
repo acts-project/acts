@@ -59,6 +59,7 @@ set(py_files
   examples/simulation.py
   examples/reconstruction.py
   examples/itk.py
+  examples/odd.py
   _adapter.py
 )
 
