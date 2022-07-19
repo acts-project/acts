@@ -190,6 +190,7 @@ jobs:
         run: mkdir build && tar xf build.tar.gz -C build
 
       - name: Examples
+        shell: bash
         run: >
           export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && source /usr/local/bin/thisdd4hep_only.sh
