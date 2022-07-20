@@ -24,7 +24,17 @@ import pytest
 import acts
 import acts.examples
 
-acts.logging.setFailureThreshold(acts.logging.WARNING)
+try:
+    acts.logging.setFailureThreshold(acts.logging.WARNING)
+except RuntimeError:
+    # Repackage with different error string
+    raise RuntimeError(
+        "Runtime log failure threshold could not be set. "
+        "Compile-time value is probably set via CMake, i.e. "
+        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set. The "
+        "pytest test-suite will not work in this configuration."
+    )
+
 
 u = acts.UnitConstants
 

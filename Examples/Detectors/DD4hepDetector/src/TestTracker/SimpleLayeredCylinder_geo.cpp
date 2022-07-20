@@ -46,7 +46,7 @@ static dd4hep::Ref_t createSimpleLayeredCylinder(
   // Create layer cylinders with their respective material, etc
   size_t layerIdx = 0;
   // loop through layers
-  for (xml_coll_t layerIt(xmlDet, _U(layer)); layerIt; ++layerIt) {
+  for (xml_coll_t layerIt(xmlDet, _U(layer)); layerIt != nullptr; ++layerIt) {
     xml_comp_t layerDet = layerIt;
     dd4hep::Tube layerShape(layerDet.rmin(), layerDet.rmax(), layerDet.dz());
     std::string layerName = dd4hep::xml::_toString(layerIdx, "layer%d");

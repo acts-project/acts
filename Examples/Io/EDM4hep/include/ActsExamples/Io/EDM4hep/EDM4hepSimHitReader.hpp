@@ -71,6 +71,8 @@ class EDM4hepSimHitReader final : public IReader {
   std::vector<std::string> m_collections;
 
   const edm4hep::MCParticleCollection* m_mcParticleCollection;
+
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples
