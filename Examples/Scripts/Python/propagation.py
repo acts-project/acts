@@ -6,7 +6,7 @@ import acts.examples
 
 from acts.examples import GenericDetector, AlignedDetector
 
-from common import getOpenDataDetectorDirectory, getOpenDataDetector
+from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -32,10 +32,9 @@ def runPropagation(trackingGeometry, field, outputDir, s=None, decorators=[]):
         propagatorImpl=prop,
         level=acts.logging.INFO,
         randomNumberSvc=rnd,
-        ntests=100,
-        sterileLogger=False,
+        ntests=1000,
+        sterileLogger=True,
         propagationStepCollection="propagation-steps",
-        etaRange=(-5, 5),
     )
 
     s.addAlgorithm(alg)
@@ -66,11 +65,11 @@ if "__main__" == __name__:
     # matDeco = acts.IMaterialDecorator.fromFile("material.root")
 
     ## Generic detector: Default
-    #  (
-    #  detector,
-    #  trackingGeometry,
-    #  contextDecorators,
-    #  ) = GenericDetector.create(mdecorator=matDeco)
+    (
+        detector,
+        trackingGeometry,
+        contextDecorators,
+    ) = GenericDetector.create(mdecorator=matDeco)
 
     ## Alternative: Aligned detector in a couple of modes
     # detector, trackingGeometry, contextDecorators = AlignedDetector.create(
@@ -86,22 +85,10 @@ if "__main__" == __name__:
     # )
 
     ## Alternative: DD4hep detector
-    #  dd4hepCfg = acts.examples.DD4hepDetector.Config()
-    #  dd4hepCfg.xmlFileNames = [
-    #  str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")
-    #  ]
-    #  detector = acts.examples.DD4hepDetector()
-    #  trackingGeometry, contextDecorators = detector.finalize(dd4hepCfg, None)
-    oddDir = getOpenDataDetectorDirectory()
-
-    oddMaterialMap = oddDir / "data/odd-material-maps.root"
-    oddDigiConfig = oddDir / "config/odd-digi-smearing-config.json"
-    oddSeedingSel = oddDir / "config/odd-seeding-config.json"
-    oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
-
-    detector, trackingGeometry, contextDecorators = getOpenDataDetector(
-        mdecorator=oddMaterialDeco
-    )
+    # dd4hepCfg = acts.examples.DD4hepDetector.Config()
+    # dd4hepCfg.xmlFileNames = [str(getOpenDataDetectorDirectory()/"xml/OpenDataDetector.xml")]
+    # detector = acts.examples.DD4hepDetector()
+    # trackingGeometry, contextDecorators = detector.finalize(dd4hepCfg, None)
 
     ## Magnetic field setup: Default: constant 2T longitudinal field
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
