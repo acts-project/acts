@@ -47,14 +47,9 @@ void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
 ///
 /// For both, cylinder and disc, the closed binning value is "binPhi"
 ///
-/// @param actsExtension the ActsExtension for the binning parameters
+/// @param params An instance of @c DD4hep::VariantParameters
 /// @param layer the Layer to assign the proto material
 /// @param binning the Binning prescription for the ActsExtension
-// void addLayerProtoMaterial(
-// const ActsExtension& actsExtension, Layer& layer,
-// const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-// binning);
-
 void addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
@@ -64,14 +59,9 @@ void addLayerProtoMaterial(
 /// Helper method to create proto material - to be called from the
 /// addProto(...) methods
 ///
-/// @param actsExtension the ActExtension to be checked
+/// @param params An instance of @c DD4hep::VariantParameters
 /// @param valueTag the xml tag for to ActsExtension to be parsed
 /// @param binning the Binning prescription for the ActsExtension
-// std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
-// const ActsExtension& actsExtension, const std::string& valueTag,
-// const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-// binning);
-
 std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&

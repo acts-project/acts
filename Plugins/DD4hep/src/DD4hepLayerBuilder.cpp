@@ -68,8 +68,6 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
       auto& params = getParams(detElement);
-      // Acts::ActsExtension* detExtension =
-      // detElement.extension<Acts::ActsExtension>();
       // collect the sensitive detector elements possibly contained by the layer
       resolveSensitive(detElement, layerSurfaces);
       // access the global transformation matrix of the layer
@@ -237,8 +235,6 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
       // access the extension of the layer
       // at this stage all layer detElements have extension (checked in
       // ConvertDD4hepDetector)
-      // Acts::ActsExtension* detExtension =
-      // detElement.extension<Acts::ActsExtension>();
       auto& params = getParams(detElement);
       // collect the sensitive detector elements possibly contained by the layer
       resolveSensitive(detElement, layerSurfaces);

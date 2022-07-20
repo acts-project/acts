@@ -32,16 +32,13 @@ def getOpenDataDetector(mdecorator=None):
 
     if lib_name is not None and len(env_vars) > 0:
         found = False
-        tried = []
         for env_var in env_vars:
             for lib_dir in os.environ.get(env_var, "").split(":"):
                 lib_dir = Path(lib_dir)
-                tried.append(lib_dir)
                 if (lib_dir / map_name).exists() and (lib_dir / lib_name).exists():
                     found = True
                     break
         if not found:
-            tried = "\n".join(map(str, tried))
             msg = (
                 "Unable to find OpenDataDetector factory library. "
                 f"You might need to point {'/'.join(env_vars)} to build/thirdparty/OpenDataDetector/factory or other ODD install location"

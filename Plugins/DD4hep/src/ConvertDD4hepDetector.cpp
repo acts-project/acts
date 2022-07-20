@@ -224,7 +224,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           ACTS_VERBOSE("-> collecting layers");
           collectLayers_dd4hep(volumeDetElement, negativeLayers, loggerWrapper);
           // Fill the volume material for barrel case
-          // if (volumeExtension->hasType("boundary_material")) {
           if (getParamOr<bool>("boundary_material", volumeDetElement, false)) {
             ACTS_VERBOSE(
                 "-> boundary_material flag detected, creating proto "
@@ -258,13 +257,11 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
           ACTS_VERBOSE("-> collecting layers");
           collectLayers_dd4hep(volumeDetElement, positiveLayers, loggerWrapper);
           // Fill the volume material for barrel case
-          // if (volumeExtension->hasType("boundary_material")) {
           if (getParamOr<bool>("boundary_material", volumeDetElement, false)) {
             ACTS_VERBOSE(
                 "-> boundary_material flag detected, creating proto "
                 "material.");
             auto& params = getParams(volumeDetElement);
-            // if (volumeExtension->hasValue("boundary_material_negative")) {
             if (params.contains("boundary_material_negative")) {
               ACTS_VERBOSE("--> negative");
               cvbConfig.boundaryMaterial[4] = Acts::createProtoMaterial(
@@ -272,7 +269,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                   {{"binPhi", Acts::closed}, {"binR", Acts::open}},
                   LoggerWrapper{logger()});
             }
-            // if (volumeExtension->hasValue("boundary_material_positive")) {
             if (params.contains("boundary_material_positive")) {
               ACTS_VERBOSE("--> positive");
               cvbConfig.boundaryMaterial[5] = Acts::createProtoMaterial(
@@ -296,13 +292,11 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         ACTS_VERBOSE("-> collecting layers");
         collectLayers_dd4hep(volumeDetElement, centralLayers, loggerWrapper);
         // Fill the volume material for barrel case
-        // if (volumeExtension->hasType("boundary_material")) {
         if (getParamOr<bool>("boundary_material", volumeDetElement, false)) {
           ACTS_VERBOSE(
               "-> boundary_material flag detected, creating proto "
               "material.");
           auto& params = getParams(volumeDetElement);
-          // if (volumeExtension->hasValue("boundary_material_negative")) {
           if (params.contains("boundary_material_negative")) {
             ACTS_VERBOSE("--> negative");
             cvbConfig.boundaryMaterial[3] = Acts::createProtoMaterial(
@@ -310,7 +304,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
                 {{"binPhi", Acts::closed}, {"binR", Acts::open}},
                 LoggerWrapper{logger()});
           }
-          // if (volumeExtension->hasValue("boundary_material_positive")) {
           if (params.contains("boundary_material_positive")) {
             ACTS_VERBOSE("--> positive");
             cvbConfig.boundaryMaterial[4] = Acts::createProtoMaterial(
@@ -322,14 +315,12 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
       } else {
         throw std::logic_error(
             std::string("Current DetElement: ") + volumeDetElement.name() +
-            std::string(
-                " has wrong ActsExtension! At this stage it should be a "
-                "detector volume declared as Barrel or Endcap. Please "
-                "check your detector construction."));
+            std::string(" has inconsistent settings. It's a compound,"
+                        " but its DetectorType is neither BARREL nor ENDCAP
+                        " Please check your detector construction."));
       }
 
       // Fill the volume material for the inner / outer cover
-      // if (volumeExtension->hasType("boundary_material")) {
       if (getParamOr<bool>("boundary_material", volumeDetElement, false)) {
         ACTS_VERBOSE(
             "-> boundary_material flag detected, creating proto "
@@ -427,7 +418,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         << rMin << " / " << rMax << " / " << halfZ << " )");
 
     std::shared_ptr<Acts::ISurfaceMaterial> plMaterial = nullptr;
-    // if (subDetExtension->hasType("layer_material")) {
     if (getParamOr<bool>("layer_material", subDetector, false)) {
       // get the possible material of the surounding volume
       ACTS_VERBOSE("--> adding layer material at 'representing'");
@@ -460,7 +450,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     cvbConfig.buildToRadiusZero = subDetType.is(dd4hep::DetType::BEAMPIPE);
 
     // Fill the volume material for the inner / outer cover
-    // if (subDetExtension->hasType("boundary_material")) {
     if (getParamOr<bool>("boundary_material", subDetector, false)) {
       ACTS_VERBOSE(
           "-> boundary_material flag detected, creating proto "
@@ -496,7 +485,6 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     std::vector<dd4hep::DetElement> centralLayers, centralVolumes;
     ACTS_VERBOSE("-> collecting layers");
     collectLayers_dd4hep(subDetector, centralLayers, loggerWrapper);
-    // collectVolumes_dd4hep(subDetector, centralVolumes);
 
     // configure SurfaceArrayCreator
     auto surfaceArrayCreator =
@@ -559,13 +547,14 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
     ACTS_INFO(
         "Subdetector with name : '"
         << subDetector.name()
-        << "' has wrong ActsExtension for translation and is not of type "
+        << "' has inconsistent information for translation and is not of type "
            "'compound'. If you want to have this DetElement be translated "
-           "into the tracking geometry you need add the right "
-           "ActsExtension (at this stage the subvolume needs to be "
-           "declared as beampipe or barrel) or if it is a compound "
-           "DetElement (containing a barrel-endcap hierarchy), the type "
-           "needs to be set to 'compound'.");
+           "into the tracking geometry you need add the right DetectorType "
+           "or VariantParameters (at this stage the subvolume needs to be "
+           "declared as BEAMPIPE or BARREl, or have a VariantParameter "
+           "passive_layer=true) or if it is a compound DetElement (containing "
+           "a barrel-endcap hierarchy), the type needs to be set to "
+           "'compound'.");
     return nullptr;
   }
 }
@@ -657,21 +646,4 @@ void collectLayers_dd4hep(dd4hep::DetElement& detElement,
   }
 }
 
-// void collectVolumes_dd4hep(dd4hep::DetElement& detElement,
-// std::vector<dd4hep::DetElement>& volumes) {
-// const dd4hep::DetElement::Children& children = detElement.children();
-// for (auto& child : children) {
-// dd4hep::DetElement childDetElement = child.second;
-// Acts::ActsExtension* detExtension = nullptr;
-// try {
-// detExtension = childDetElement.extension<Acts::ActsExtension>();
-// } catch (std::runtime_error& e) {
-// }
-// if ((detExtension != nullptr) && detExtension->hasType("volume")) {
-// volumes.push_back(childDetElement);
-// continue;
-// }
-// collectVolumes_dd4hep(childDetElement, volumes);
-// }
-// }
 }  // End of namespace Acts

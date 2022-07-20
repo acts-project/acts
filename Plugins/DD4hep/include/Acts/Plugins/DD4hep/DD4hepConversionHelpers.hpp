@@ -15,6 +15,12 @@
 
 namespace Acts {
 
+/// Helper function to extract a parameter value from a dd4hep detector element
+/// from VariantParameters
+/// @tparam T The value type
+/// @param key The key of the value to extract
+/// @param elt The detector element instance
+/// @return A copy of the value contained in the params instance
 template <typename T>
 T getParam(const std::string& key, dd4hep::DetElement& elt) {
   auto* params = elt.extension<dd4hep::rec::VariantParameters>(false);
@@ -24,6 +30,9 @@ T getParam(const std::string& key, dd4hep::DetElement& elt) {
   return params->get<T>(key);
 }
 
+/// Helper function to extract a VariantParameters instance
+/// @param elt The detector element instance
+/// @return The VariantParameters instance
 inline dd4hep::rec::VariantParameters& getParams(dd4hep::DetElement& elt) {
   auto* params = elt.extension<dd4hep::rec::VariantParameters>(false);
   if (params == nullptr) {
@@ -32,6 +41,9 @@ inline dd4hep::rec::VariantParameters& getParams(dd4hep::DetElement& elt) {
   return *params;
 }
 
+/// Helper function to extract a VariantParameters instance, const version
+/// @param elt The detector element instance
+/// @return The VariantParameters instance
 inline const dd4hep::rec::VariantParameters& getParams(
     const dd4hep::DetElement& elt) {
   const auto* params = elt.extension<dd4hep::rec::VariantParameters>(false);
@@ -41,6 +53,14 @@ inline const dd4hep::rec::VariantParameters& getParams(
   return *params;
 }
 
+/// Get a parameter value or an alternative value if either the
+/// VariantParameters extension isn't set, or it doesn't contain the demanded
+/// key
+/// @tparam T The value type
+/// @param key The key of the value to extract
+/// @param elt The detector element instance
+/// @param alternative The value to return if no params are set of the key doesn't exist
+/// @return The value behind key, or @p alternative
 // template <typename T>
 // T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
 // T alternative) {
@@ -52,6 +72,14 @@ inline const dd4hep::rec::VariantParameters& getParams(
 // }
 
 // @TODO: Remove in favor of workaround above after fix is merged upstream
+/// Get a parameter value or an alternative value if either the
+/// VariantParameters extension isn't set, or it doesn't contain the demanded
+/// key
+/// @tparam T The value type
+/// @param key The key of the value to extract
+/// @param elt The detector element instance
+/// @param alternative The value to return if no params are set of the key doesn't exist
+/// @return The value behind key, or @p alternative
 template <typename T>
 T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
              T alternative) {
@@ -65,6 +93,11 @@ T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
   return params->get<T>(key);
 }
 
+/// Check if a detector element has a key set in its VariantParameters
+/// @param key The key to check existance for
+/// @param elt The detector element instance
+/// @return True if the element has VariantParameters and the key exists, false if
+///         either of these is not true
 inline bool hasParam(const std::string& key, dd4hep::DetElement& elt) {
   auto* params = elt.extension<dd4hep::rec::VariantParameters>(false);
   if (params == nullptr) {
@@ -73,6 +106,9 @@ inline bool hasParam(const std::string& key, dd4hep::DetElement& elt) {
   return params->contains(key);
 }
 
+/// Check if a detector element has VariantParameters set
+/// @param elt The detector element instance
+/// @return True if the VariantParameters exist, false if not
 inline bool hasParams(dd4hep::DetElement& elt) {
   return elt.extension<dd4hep::rec::VariantParameters>(false) != nullptr;
 }
