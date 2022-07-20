@@ -16,7 +16,7 @@ import acts.examples
 
 # @TODO: Fix failure in gain matrix smoothing
 # See https://github.com/acts-project/acts/issues/1215
-#acts.logging.setFailureThreshold(acts.logging.FATAL)
+acts.logging.setFailureThreshold(acts.logging.FATAL)
 
 from truth_tracking_kalman import runTruthTrackingKalman
 from acts.examples.odd import getOpenDataDetector
