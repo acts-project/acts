@@ -103,7 +103,7 @@ auto Acts::Propagator<S, N>::propagate(
       action_list_t_result_t<ReturnParameterType,
                              typename propagator_options_t::action_list_type>;
 
-  return propagate(start, options, ResultType{});
+  return propagate<parameters_t, propagator_options_t, path_aborter_t>(start, options, ResultType{});
 }
 
 template <typename S, typename N>
@@ -197,7 +197,7 @@ auto Acts::Propagator<S, N>::propagate(
       action_list_t_result_t<return_parameter_type,
                              typename propagator_options_t::action_list_type>;
 
-  return propagate(start, target, options, ResultType{});
+  return propagate<parameters_t, propagator_options_t, target_aborter_t, path_aborter_t>(start, target, options, ResultType{});
 }
 
 template <typename S, typename N>
