@@ -102,7 +102,7 @@ namespace {
 // From http://locklessinc.com/articles/sat_arithmetic/
 size_t saturatedAdd(size_t a, size_t b) {
   size_t res = a + b;
-  res |= -(res < a);
+  res |= -static_cast<int>(res < a);
   return res;
 }
 }  // namespace

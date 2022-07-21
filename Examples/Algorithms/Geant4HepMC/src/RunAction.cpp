@@ -23,7 +23,7 @@ RunAction* RunAction::instance() {
 }
 
 RunAction::RunAction() : G4UserRunAction() {
-  if (s_instance) {
+  if (s_instance != nullptr) {
     throw std::logic_error("Attempted to duplicate the RunAction singleton");
   } else {
     s_instance = this;

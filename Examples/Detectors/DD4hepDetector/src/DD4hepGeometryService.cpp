@@ -30,7 +30,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
 }
 
 ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
-  if (m_lcdd)
+  if (m_lcdd != nullptr)
     m_lcdd->destroyInstance();
 }
 
@@ -79,8 +79,9 @@ ActsExamples::DD4hep::DD4hepGeometryService::dd4hepGeometry() {
 
 dd4hep::Detector*
 ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService::lcdd() {
-  if (!m_lcdd)
+  if (m_lcdd == nullptr) {
     buildDD4hepGeometry();
+  }
   return m_lcdd;
 }
 

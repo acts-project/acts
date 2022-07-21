@@ -40,8 +40,8 @@ std::string joinPaths(const std::string& a, const std::string& b) {
 
 std::string getWorkingDirectory() {
   char buffer[PATH_MAX];
-  return (getcwd(buffer, sizeof(buffer)) ? std::string(buffer)
-                                         : std::string(""));
+  return (getcwd(buffer, sizeof(buffer)) != nullptr ? std::string(buffer)
+                                                    : std::string(""));
 }
 
 }  // namespace

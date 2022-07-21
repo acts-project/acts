@@ -114,7 +114,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
   ACTS_DEBUG("Trying to read recorded particles.");
 
   // read in the particle
-  if (m_inputChain && context.eventNumber < m_events) {
+  if (m_inputChain != nullptr && context.eventNumber < m_events) {
     // lock the mutex
     std::lock_guard<std::mutex> lock(m_read_mutex);
     // now read
