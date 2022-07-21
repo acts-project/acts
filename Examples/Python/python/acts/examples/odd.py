@@ -2,9 +2,7 @@ from pathlib import Path
 
 
 def getOpenDataDetectorDirectory():
-    return (
-        Path(__file__).parent.parent.parent.parent / "thirdparty" / "OpenDataDetector"
-    )
+    return Path(__file__).parents[5] / "thirdparty" / "OpenDataDetector"
 
 
 def getOpenDataDetector(mdecorator=None):

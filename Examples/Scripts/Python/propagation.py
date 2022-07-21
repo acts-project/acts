@@ -4,7 +4,8 @@ import os
 import acts
 import acts.examples
 
-from acts.examples import GenericDetector
+from acts.examples import GenericDetector, AlignedDetector
+from acts.examples.odd import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
