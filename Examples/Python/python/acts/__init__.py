@@ -18,6 +18,7 @@ if (
         f"`ACTS_LOG_FAILURE_THRESHOLD={os.environ['ACTS_LOG_FAILURE_THRESHOLD']}`"
         "However, a compile-time value is set via CMake, i.e. "
         f"`ACTS_LOG_FAILURE_THRESHOLD={logging.getFailureThreshold().name}`. "
+        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`, which disables runtime thresholds."
     )
     if "PYTEST_CURRENT_TEST" in os.environ:
         # test environment, fail hard
