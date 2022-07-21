@@ -353,9 +353,8 @@ class Propagator final {
   /// propagation options is reached.
   ///
   /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam action_list_t Type list of actions, type ActionList<>
-  /// @tparam aborter_list_t Type list of abort conditions, type AbortList<>
   /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
@@ -379,9 +378,8 @@ class Propagator final {
   /// propagation options is reached.
   ///
   /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam action_list_t Type list of actions, type ActionList<>
-  /// @tparam aborter_list_t Type list of abort conditions, type AbortList<>
   /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
@@ -409,10 +407,9 @@ class Propagator final {
   /// steps/path length as given in the propagation options is reached.
   ///
   /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam surface_t Type of target surface
-  /// @tparam action_list_t Type list of actions
-  /// @tparam aborter_list_t Type list of abort conditions
   /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam target_aborter_t The target aborter type to be added
+  /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
@@ -436,10 +433,9 @@ class Propagator final {
   /// steps/path length as given in the propagation options is reached.
   ///
   /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam surface_t Type of target surface
-  /// @tparam action_list_t Type list of actions
-  /// @tparam aborter_list_t Type list of abort conditions
   /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam target_aborter_t The target aborter type to be added
+  /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
