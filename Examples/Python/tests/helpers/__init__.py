@@ -80,8 +80,8 @@ doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.enviro
 
 @contextlib.contextmanager
 def failure_threshold(level: acts.logging.Level, enabled: bool = True):
-    if enabled:
-        prev = acts.logging.getFailureThreshold()
+    prev = acts.logging.getFailureThreshold()
+    if enabled and prev != level:
         try:
             acts.logging.setFailureThreshold(level)
         except RuntimeError:
