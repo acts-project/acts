@@ -422,10 +422,18 @@ def addSeeding(
                     rMax=seedfinderConfigArg.r[1],
                     deltaRMin=seedfinderConfigArg.deltaR[0],
                     deltaRMax=seedfinderConfigArg.deltaR[1],
-                    deltaRMinTopSP=seedfinderConfigArg.deltaRTopSP[0],
-                    deltaRMinBottomSP=seedfinderConfigArg.deltaRBottomSP[0],
-                    deltaRMaxTopSP=seedfinderConfigArg.deltaRTopSP[1],
-                    deltaRMaxBottomSP=seedfinderConfigArg.deltaRBottomSP[1],
+                    deltaRMinTopSP=seedfinderConfigArg.deltaR[0]
+                    if seedfinderConfigArg.deltaRTopSP[0] == None
+                    else seedfinderConfigArg.deltaRTopSP[0],
+                    deltaRMinBottomSP=seedfinderConfigArg.deltaR[0]
+                    if seedfinderConfigArg.deltaRBottomSP[0] == None
+                    else seedfinderConfigArg.deltaRBottomSP[0],
+                    deltaRMaxTopSP=seedfinderConfigArg.deltaR[1]
+                    if seedfinderConfigArg.deltaRTopSP[1] == None
+                    else seedfinderConfigArg.deltaRTopSP[1],
+                    deltaRMaxBottomSP=seedfinderConfigArg.deltaR[1]
+                    if seedfinderConfigArg.deltaRBottomSP[1] == None
+                    else seedfinderConfigArg.deltaRBottomSP[1],
                     deltaRMiddleMinSPRange=seedfinderConfigArg.deltaRMiddleSPRange[0],
                     deltaRMiddleMaxSPRange=seedfinderConfigArg.deltaRMiddleSPRange[1],
                     collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
@@ -641,8 +649,6 @@ def runSeeding(
         SeedfinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
             deltaR=(1 * u.mm, 60 * u.mm),
-            deltaRTopSP=(1 * u.mm, 60 * u.mm),
-            deltaRBottomSP=(1 * u.mm, 60 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
             maxSeedsPerSpM=1,
