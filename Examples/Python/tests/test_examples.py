@@ -346,7 +346,12 @@ def test_event_recording(tmp_path):
     env = os.environ.copy()
     env["NEVENTS"] = "1"
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call([str(script)], cwd=tmp_path, env=env)
+    subprocess.check_call(
+        [str(script)],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
 
     from acts.examples.hepmc3 import HepMC3AsciiReader
 
@@ -640,7 +645,10 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         pytest.param(
             getOpenDataDetector,
             540,
-            marks=pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
+            marks=[
+                pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
+                pytest.mark.slow,
+            ],
         ),
         (functools.partial(AlignedDetector.create, iovSize=1), 450),
     ],
@@ -1027,4 +1035,9 @@ def test_full_chain_odd_example(tmp_path):
     env = os.environ.copy()
     env["NEVENTS"] = "1"
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call([str(script)], cwd=tmp_path, env=env)
+    subprocess.check_call(
+        [str(script)],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
