@@ -383,7 +383,7 @@ class Propagator final {
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
-  /// @param [in] result an existing result object to start from
+  /// @param [in] inputResult an existing result object to start from
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
@@ -440,7 +440,7 @@ class Propagator final {
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
   /// @param [in] options Propagation options
-  /// @param [in] result an existing result object to start from
+  /// @param [in] inputResult an existing result object to start from
   ///
   /// @return Propagation result containing the propagation status, final
   ///         track parameters, and output of actions (if they produce any)
