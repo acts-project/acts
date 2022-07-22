@@ -32,12 +32,4 @@ struct SpacePointBuilderConfig{
    SpacePointBuilderConfig()=default;
 };
 
-struct SpacePointOptions{
-
-   std::pair<
-    const std::pair<Vector3, Vector3>,
-    const std::pair<Vector3, Vector3>> StripEndsPair;
-  
-};
-
 }
