@@ -22,7 +22,6 @@ extensions = [
     "myst_parser",
     "sphinx.ext.mathjax",
     "sphinx.ext.autosectionlabel",
-    "sphinx_markdown_tables",
 ]
 source_suffix = {
     ".rst": "restructuredtext",
@@ -45,12 +44,8 @@ myst_enable_extensions = ["dollarmath", "colon_fence"]
 
 # ensure we use the RTD them when building locally
 if not on_readthedocs:
-    import sphinx_rtd_theme
-
     html_theme = "sphinx_rtd_theme"
-    html_theme_path = [
-        sphinx_rtd_theme.get_html_theme_path(),
-    ]
+    extensions.append("sphinx_rtd_theme")
 
 html_theme_options = {
     "collapse_navigation": False,

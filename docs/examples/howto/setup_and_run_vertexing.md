@@ -1,3 +1,4 @@
+(vertexing)=
 # ACTS Vertexing Tutorial - Example: Adaptive Multi-Vertex Finder (AMVF) - Pythia8
 
 This tutorial sets up and runs the ACTS Adaptive Multi-Vertex Finder on smeared ACTS Pythia8 truth tracks.

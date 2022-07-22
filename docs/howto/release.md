@@ -6,10 +6,10 @@ The next version number for a release is automatically determined from the PRs (
 
 ## Step 1: Update the release branch
 
-```{note}
+:::{note}
 This assumes you have a local clone of the ACTS repository at hand.
 You'll also need write permissions on the upstream ACTS repository to be able to push to the `releases` branch.
-```
+:::
 
 
 ```console
@@ -54,43 +54,35 @@ On push, a CI job should run and create an additional commit on the `releases` b
 
 By convention, we assign all open PRs and issues to the `next` milestone. When a new release is cut, all closed issues and PRs are moved over to a dedicated milestone named after the next version number. To do this, go to the *Pull Requests* view on the main repository, and click *Milestones*:
 
-```{image} /figures/release/milestones.png
----
-width: 300px
-alt: The milestones button
----
-```
+:::{image} /figures/release/milestones.png
+:width: 300px
+:alt: The milestones button
+:::
 
 First, create a new milestone here. Name it `vX.Y.Z`, corresponding to the next version (you can check the release CI job mentioned above to determine this. The job will also create an unreleased GitHub *release* which should have the right name).
 
 Next, go back to the list of milestones and go to the `next` milestone, and click on *closed* to get to a list of all closed PRs and issues assigned to it:
 
-```{image} /figures/release/next_milestone.png
----
-alt: The next milestone, which has a "closed" button
----
-```
+:::{image} /figures/release/next_milestone.png
+:alt: The next milestone, which has a "closed" button
+:::
 
 You'll be taken to a list view which shows all closed PRs and issues assigned to the `next` milestone. On the top left there should be a checkbox allowing you to select all visible items:
 
-```{image} /figures/release/select_all_closed.png
----
-alt: Checkbox to select all visible PRs and issues.
-width: 200px
----
-```
+:::{image} /figures/release/select_all_closed.png
+:alt: Checkbox to select all visible PRs and issues.
+:width: 200px
+:::
 
 ```{note} The checkbox will only select the items on the visible page. If there are many items, it's possible you'll have to redo this step until it has been applied to all items.
 ```
 
 Towards the right there's a button called *Milestone* which allows you to select a milestone to assign. Assign all closed items to the new milestone you created above.
 
-```{image} /figures/release/milestone_drop.png
----
-alt: Dropdown to assign the selected items to a new milestone
-width: 300px
----
-```
+:::{image} /figures/release/milestone_drop.png
+:alt: Dropdown to assign the selected items to a new milestone
+:width: 300px
+:::
 
 ## Step 3: Publish release
 
