@@ -28,7 +28,6 @@ Key features:
    core/core
    plugins/plugins
    examples/examples
-   integration/integration
    formats/formats
    api/api
    contributionguide
