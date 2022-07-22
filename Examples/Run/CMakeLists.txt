@@ -17,3 +17,6 @@ add_subdirectory(Reconstruction)
 add_subdirectory(Show)
 add_subdirectory(Vertexing)
 add_subdirectory_if(Alignment ACTS_BUILD_ALIGNMENT)
+
+add_executable(test_combine test_combine.cpp)
+target_link_libraries(test_combine ActsCore)

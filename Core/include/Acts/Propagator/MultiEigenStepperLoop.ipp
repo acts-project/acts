@@ -35,14 +35,12 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       }
     }
 
-    if (failedBoundTransforms > 0) {
-      ACTS_ERROR("Multi component bound state: "
-                 << failedBoundTransforms << " of " << numberComponents(state)
-                 << " transforms failed");
-    }
-
     if (states.size() == 0) {
       return MultiStepperError::AllComponentsConversionToBoundFailed;
+    }
+
+    if (failedBoundTransforms > 0) {
+      return MultiStepperError::SomeComponentsConversionToBoundFailed;
     }
 
     // TODO At ATLAS, the final parameters seem to be computed with the mode of
@@ -100,6 +98,7 @@ template <typename E, typename R, typename A>
 template <typename propagator_state_t>
 Result<double> MultiEigenStepperLoop<E, R, A>::step(
     propagator_state_t& state) const {
+  const auto &logger = state.options.logger;
   State& stepping = state.stepping;
 
   // Update step count
@@ -177,6 +176,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   // Return no component was updated
   if (results.empty()) {
+    ACTS_VERBOSE("No Step performed:" << ss.str());
     return 0.0;
   }
 
@@ -188,16 +188,16 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     }
   }
 
-  // Return error if there is no ok result
-  if (ok_results.empty()) {
-    return MultiStepperError::AllComponentsSteppingError;
-  }
-
   // Print the summary
   if (ok_results.size() == results.size()) {
     ACTS_VERBOSE("Performed steps: " << ss.str());
   } else {
     ACTS_WARNING("Performed steps with errors: " << ss.str());
+  }
+
+  // Return error if there is no ok result
+  if (ok_results.empty()) {
+    return MultiStepperError::AllComponentsSteppingError;
   }
 
   // Return the weighted accumulated path length of all successful steps
