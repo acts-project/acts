@@ -137,7 +137,7 @@ class SpacePointUtility {
   /// measurements
   /// @param [in] maxAnglePhi2 Maximum squared phi angle between two measurements
   ///
-  /// @return The squared sum within configuration parameters, otherwise -1
+  /// @return Result with the squared sum within configuration parameters.
   Result<double> differenceOfMeasurementsChecked(
       const Vector3& pos1, const Vector3& pos2, const Vector3& posVertex,
       const double maxDistance, const double maxAngleTheta2,
