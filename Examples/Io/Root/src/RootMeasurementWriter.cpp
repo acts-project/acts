@@ -78,7 +78,7 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
       std::move(dTrees));
 }
 
-ActsExamples::RootMeasurementWriter::~RootMeasurementWriter() {}
+ActsExamples::RootMeasurementWriter::~RootMeasurementWriter() = default;
 
 ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::endRun() {
   /// Close the file if it's yours

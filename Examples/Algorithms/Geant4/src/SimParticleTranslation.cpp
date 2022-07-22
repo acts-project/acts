@@ -34,7 +34,7 @@ ActsExamples::SimParticleTranslation::SimParticleTranslation(
   }
 }
 
-ActsExamples::SimParticleTranslation::~SimParticleTranslation() {}
+ActsExamples::SimParticleTranslation::~SimParticleTranslation() = default;
 
 void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   anEvent->SetEventID(m_eventNr++);

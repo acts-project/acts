@@ -14,6 +14,7 @@ sys.path += [
     str(Path(__file__).parent),
 ]
 
+
 import helpers
 import helpers.hash_root
 from common import getOpenDataDetectorDirectory, getOpenDataDetector
@@ -22,6 +23,18 @@ import pytest
 
 import acts
 import acts.examples
+
+try:
+    acts.logging.setFailureThreshold(acts.logging.WARNING)
+except RuntimeError:
+    # Repackage with different error string
+    raise RuntimeError(
+        "Runtime log failure threshold could not be set. "
+        "Compile-time value is probably set via CMake, i.e. "
+        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set. The "
+        "pytest test-suite will not work in this configuration."
+    )
+
 
 u = acts.UnitConstants
 
@@ -205,6 +218,7 @@ DetectorConfig = namedtuple(
         "decorators",
         "geometrySelection",
         "digiConfigFile",
+        "name",
     ],
 )
 
@@ -232,6 +246,7 @@ def detector_config(request):
                 srcdir
                 / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
             ),
+            name=request.param,
         )
     elif request.param == "odd":
         if not helpers.dd4hepEnabled:
@@ -253,6 +268,7 @@ def detector_config(request):
             geometrySelection=(
                 srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
             ),
+            name=request.param,
         )
 
     else:

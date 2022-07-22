@@ -14,6 +14,7 @@ from helpers import (
     AssertCollectionExistsAlg,
     isCI,
     doHashChecks,
+    failure_threshold,
 )
 
 pytestmark = pytest.mark.skipif(not rootEnabled, reason="ROOT not set up")
@@ -343,6 +344,7 @@ def test_event_recording(tmp_path):
 
     env = os.environ.copy()
     env["NEVENTS"] = "1"
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call([str(script)], cwd=tmp_path, env=env)
 
     from acts.examples.hepmc3 import HepMC3AsciiReader
@@ -443,7 +445,9 @@ def test_truth_tracking_gsf(tmp_path, assert_root_hash, detector_config):
         s=seq,
     )
 
-    seq.run()
+    # See https://github.com/acts-project/acts/issues/1300
+    with failure_threshold(acts.logging.FATAL):
+        seq.run()
 
     del seq
 
@@ -523,8 +527,8 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
@@ -600,8 +604,8 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     # test the validation as well
 
     # we need to destroy the ODD to reload with material
-    # del trackingGeometry
-    # del detector
+    del trackingGeometry
+    del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
@@ -760,6 +764,7 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
         outputDir=tmp_path,
         particlesInput=ptcl_dir / "particles.root",
         s=s,
+        doMerge=True,
     )
 
     s.run()
@@ -873,6 +878,7 @@ def test_ckf_tracks_example(
         truthEstimatedSeeded=truthEstimated,
         s=s,
     )
+
     s.run()
 
     del s  # files are closed in destructors, not great
@@ -929,6 +935,7 @@ import itertools
     ],
 )
 @pytest.mark.filterwarnings("ignore::UserWarning")
+@pytest.mark.flaky(reruns=2)
 def test_vertex_fitting_reading(
     tmp_path, ptcl_gun, rng, finder, inputTracks, entries, assert_root_hash
 ):
@@ -1013,4 +1020,7 @@ def test_full_chain_odd_example(tmp_path):
         / "full_chain_odd.py"
     )
     assert script.exists()
-    subprocess.check_call([str(script)], cwd=tmp_path)
+    env = os.environ.copy()
+    env["NEVENTS"] = "1"
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    subprocess.check_call([str(script)], cwd=tmp_path, env=env)

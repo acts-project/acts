@@ -40,7 +40,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml,
   barrelVolume.setVisAttributes(lcdd, x_det.visStr());
 
   // Loop over the layers and build them
-  for (xml_coll_t j(xml, _U(layer)); j; ++j) {
+  for (xml_coll_t j(xml, _U(layer)); j != nullptr; ++j) {
     // Get the layer xml configuration
     xml_comp_t x_layer = j;
     double rmin = x_layer.rmin();
@@ -94,7 +94,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml,
 
       std::vector<PlacedVolume> sensComponents;
 
-      for (xml_coll_t comp(x_module, _U(module_component)); comp;
+      for (xml_coll_t comp(x_module, _U(module_component)); comp != nullptr;
            ++comp, ++compNum) {
         xml_comp_t x_comp = comp;
         // Component volume
@@ -208,7 +208,8 @@ static Ref_t create_element(Detector& lcdd, xml_h xml,
     Acts::ActsExtension* layerExtension = new Acts::ActsExtension();
     layerExtension->addType("barrel", "layer");
     // Add the proto layer material
-    for (xml_coll_t lmat(x_layer, _Unicode(layer_material)); lmat; ++lmat) {
+    for (xml_coll_t lmat(x_layer, _Unicode(layer_material)); lmat != nullptr;
+         ++lmat) {
       xml_comp_t x_layer_material = lmat;
       xmlToProtoSurfaceMaterial(x_layer_material, *layerExtension,
                                 "layer_material");

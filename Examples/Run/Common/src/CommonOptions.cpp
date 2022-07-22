@@ -158,7 +158,7 @@ boost::program_options::variables_map ActsExamples::Options::parse(
   store(command_line_parser(argc, argv).options(opt).run(), vm);
   notify(vm);
 
-  if (vm.count("response-file") and
+  if (vm.count("response-file") != 0u and
       not vm["response-file"].template as<std::string>().empty()) {
     // Load the file and tokenize it
     std::ifstream ifs(vm["response-file"].as<std::string>().c_str());
@@ -185,7 +185,7 @@ boost::program_options::variables_map ActsExamples::Options::parse(
   }
 
   // Automatically handle help
-  if (vm.count("help")) {
+  if (vm.count("help") != 0u) {
     std::cout << opt << std::endl;
     vm.clear();
   }

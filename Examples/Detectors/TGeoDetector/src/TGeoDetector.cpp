@@ -52,6 +52,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
     Acts::TGeoLayerBuilder::Config layerBuilderConfig;
     layerBuilderConfig.configurationName = volume.name;
     layerBuilderConfig.unit = config.unitScalor;
+    layerBuilderConfig.elementFactory = config.elementFactory;
 
     // configure surface autobinning
     std::vector<std::pair<double, double>> binTolerances(
@@ -264,7 +265,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     Acts::CylinderVolumeBuilder::Config volumeConfig;
     volumeConfig.trackingVolumeHelper = cylinderVolumeHelper;
     volumeConfig.volumeName = lbc.configurationName;
-    volumeConfig.buildToRadiusZero = (volumeBuilders.size() == 0);
+    volumeConfig.buildToRadiusZero = volumeBuilders.empty();
     volumeConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
                                    5. * Acts::UnitConstants::mm};
     auto ringLayoutConfiguration =

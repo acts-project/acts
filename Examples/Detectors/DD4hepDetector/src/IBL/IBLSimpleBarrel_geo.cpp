@@ -36,7 +36,7 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
   // go trough possible layers
   size_t layer_num = 0;
 
-  for (xml_coll_t j(xml, _U(layer)); j; ++j) {
+  for (xml_coll_t j(xml, _U(layer)); j != nullptr; ++j) {
     xml_comp_t x_layer = j;
     double l_rmin = x_layer.inner_r();
     double l_rmax = x_layer.outer_r();
@@ -73,7 +73,8 @@ static Ref_t create_element(Detector& lcdd, xml_h xml, SensitiveDetector sens) {
       std::vector<PlacedVolume> sensComponents;
       int comp_num = 0;
       // go through module components
-      for (xml_coll_t comp(x_module, _U(module_component)); comp; ++comp) {
+      for (xml_coll_t comp(x_module, _U(module_component)); comp != nullptr;
+           ++comp) {
         string component_name = _toString((int)comp_num, "component%d");
         xml_comp_t x_component = comp;
         Volume comp_vol(component_name,

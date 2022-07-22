@@ -91,7 +91,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
-  if (m_cfg.seedFinderConfig.zBinsCustomLooping.size() != 0) {
+  if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
     // check if zBinsCustomLooping contains numbers from 1 to the total number
     // of bin in zBinEdges
     for (size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {

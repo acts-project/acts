@@ -15,7 +15,7 @@
 /// @param argv The argument list
 int main(int argc, char* argv[]) {
   // --------------------------------------------------------------------------------
-  DD4hepDetector detector;
+  ActsExamples::DD4hep::DD4hepDetector detector;
   // now process it
   return runMaterialMapping(argc, argv, detector);
 }

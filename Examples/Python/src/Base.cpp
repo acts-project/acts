@@ -95,6 +95,7 @@ class PythonLogger {
 void addLogging(Acts::Python::Context& ctx) {
   auto& m = ctx.get("main");
   auto logging = m.def_submodule("logging", "");
+
   py::enum_<Acts::Logging::Level>(logging, "Level")
       .value("VERBOSE", Acts::Logging::VERBOSE)
       .value("DEBUG", Acts::Logging::DEBUG)
@@ -166,6 +167,26 @@ void addLogging(Acts::Python::Context& ctx) {
       pythonLoggers.at("root")->log(level, message);
     };
   };
+
+  logging.def("setFailureThreshold", &Logging::setFailureThreshold);
+  logging.def("getFailureThreshold", &Logging::getFailureThreshold);
+
+  static py::exception<Logging::ThresholdFailure> exc(
+      logging, "ThresholdFailure", PyExc_RuntimeError);
+  py::register_exception_translator([](std::exception_ptr p) {
+    try {
+      if (p) {
+        std::rethrow_exception(p);
+      }
+    } catch (const std::exception& e) {
+      std::string what = e.what();
+      if (what.find("ACTS_LOG_FAILURE_THRESHOLD") != std::string::npos) {
+        exc(e.what());
+      } else {
+        std::rethrow_exception(p);
+      }
+    }
+  });
 
   logging.def("verbose", makeModuleLogFunction(Acts::Logging::VERBOSE));
   logging.def("debug", makeModuleLogFunction(Acts::Logging::DEBUG));
