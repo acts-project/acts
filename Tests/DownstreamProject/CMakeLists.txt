@@ -9,7 +9,6 @@ find_package(
     Core
     Fatras
     PluginAutodiff
-    PluginDD4hep
     PluginIdentification
     PluginJson
     PluginLegacy
@@ -28,8 +27,14 @@ target_link_libraries(
   PRIVATE
     ActsCore
     ActsFatras
-    ActsPluginDD4hep
     ActsPluginIdentification
     ActsPluginJson
     ActsPluginLegacy
     ActsPluginTGeo)
+
+option(DD4HEP "Build with DD4hep" ON)
+if(DD4HEP)
+  message(STATUS "Adding DD4hep plugin")
+  find_package(Acts CONFIG REQUIRED COMPONENTS PluginDD4hep)
+  target_link_libraries( ShowActsVersion PRIVATE ActsPluginDD4hep)
+endif()
