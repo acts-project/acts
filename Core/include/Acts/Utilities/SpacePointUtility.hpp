@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
+#include "Acts/Utilities/Result.hpp"
 
 #include <array>
 #include <cstddef>
@@ -71,25 +72,26 @@ class SpacePointUtility {
   std::pair<Vector3, Vector2> globalCoords(const GeometryContext& gctx,
                                            const Measurement& meas) const;
 
-  /// @brief Get global covariance from the local position and covariance
+  /// @brief Get rho and phi covariance from the local position and covariance
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param geoId The geometry ID
   /// @param globalPos The global position
   /// @param localCov The local covariance matrix
   /// @return (rho, z) components of the global covariance
-  Acts::Vector2 globalCov(const Acts::GeometryContext& gctx,
-                          const Acts::GeometryIdentifier& geoId,
-                          const Acts::Vector3& globalPos,
-                          const Acts::SymMatrix2& localCov) const;
 
-  /// @brief Calculate the global covariance from the front and back measurement in the strip SP formation
+  Acts::Vector2 rhoPhiCovariance(const Acts::GeometryContext& gctx,
+                                 const Acts::GeometryIdentifier& geoId,
+                                 const Acts::Vector3& globalPos,
+                                 const Acts::SymMatrix2& localCov) const;
+
+  /// @brief Calculate the rho and phi covariance from the front and back measurement in the strip SP formation
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param measFront The measurement on the front layer
   /// @param measBack The measurement on the back layer
   /// @param globalPos global position
   /// @param theta The angle between the two strips
   /// @return (rho, z) components of the global covariance
-  Acts::Vector2 calcGlobalVars(const Acts::GeometryContext& gctx,
+  Acts::Vector2 calcRhoPhiVars(const Acts::GeometryContext& gctx,
                                const Measurement& measFront,
                                const Measurement& measBack,
                                const Vector3& globalPos,
@@ -136,12 +138,10 @@ class SpacePointUtility {
   /// @param [in] maxAnglePhi2 Maximum squared phi angle between two measurements
   ///
   /// @return The squared sum within configuration parameters, otherwise -1
-  double differenceOfMeasurementsChecked(const Vector3& pos1,
-                                         const Vector3& pos2,
-                                         const Vector3& posVertex,
-                                         const double maxDistance,
-                                         const double maxAngleTheta2,
-                                         const double maxAnglePhi2) const;
+  Result<double> differenceOfMeasurementsChecked(
+      const Vector3& pos1, const Vector3& pos2, const Vector3& posVertex,
+      const double maxDistance, const double maxAngleTheta2,
+      const double maxAnglePhi2) const;
 
   /// @brief Calculates a space point whithout using the vertex
   /// @note This is mostly to resolve space points from cosmic data

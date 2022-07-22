@@ -74,7 +74,7 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
     double theta = acos(spParams.q.dot(spParams.r) /
                         (spParams.q.norm() * spParams.r.norm()));
 
-    gCov = m_spUtility->calcGlobalVars(gctx, *(measurements.at(0)),
+    gCov = m_spUtility->calcRhoPhiVars(gctx, *(measurements.at(0)),
                                        *(measurements.at(1)), gPos, theta);
 
   } else {
@@ -121,9 +121,15 @@ void SpacePointBuilder<spacepoint_t>::makeMeasurementPairs(
       auto [gposBack, gcovBack] = m_spUtility->globalCoords(
           gctx, *(measurementsBack[iMeasurementsBack]));
 
-      currentDiff = m_spUtility->differenceOfMeasurementsChecked(
+      // currentDiff = m_spUtility->differenceOfMeasurementsChecked(      auto
+      // diff_res =
+      auto res = m_spUtility->differenceOfMeasurementsChecked(
           gposFront, gposBack, m_config.vertex, m_config.diffDist,
           m_config.diffPhi2, m_config.diffTheta2);
+      if (!res.ok())
+        continue;
+
+      currentDiff = res.value();
 
       // Store the closest Measurements (distance and index) calculated so far
       if (currentDiff < diffMin && currentDiff >= 0.) {

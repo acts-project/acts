@@ -11,13 +11,14 @@
 #include <iostream>
 namespace Acts {
 
-double SpacePointUtility::differenceOfMeasurementsChecked(
+Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
     const Vector3& pos1, const Vector3& pos2, const Vector3& posVertex,
     const double maxDistance, const double maxAngleTheta2,
     const double maxAnglePhi2) const {
+  std::error_code error;
   // Check if measurements are close enough to each other
   if ((pos1 - pos2).norm() > maxDistance) {
-    return -1.;
+    return Result<double>::failure(error);
   }
 
   // Calculate the angles of the vectors
@@ -25,19 +26,18 @@ double SpacePointUtility::differenceOfMeasurementsChecked(
   double theta1 = VectorHelpers::theta(pos1 - posVertex);
   double phi2 = VectorHelpers::phi(pos2 - posVertex);
   double theta2 = VectorHelpers::theta(pos2 - posVertex);
-
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
   if (diffTheta2 > maxAngleTheta2) {
-    return -1.;
+    return Result<double>::failure(error);
   }
   // Calculate the squared difference between the phi angles
   double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
   if (diffPhi2 > maxAnglePhi2) {
-    return -1.;
+    return Result<double>::failure(error);
   }
   // Return the squared distance between both vector
-  return diffTheta2 + diffPhi2;
+  return Result<double>::success(diffTheta2 + diffPhi2);
 }
 
 std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
@@ -93,7 +93,7 @@ std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
   return std::make_pair(globalPos, gcov);
 }
 
-Vector2 SpacePointUtility::calcGlobalVars(const GeometryContext& gctx,
+Vector2 SpacePointUtility::calcRhoPhiVars(const GeometryContext& gctx,
                                           const Measurement& measFront,
                                           const Measurement& measBack,
                                           const Vector3& globalPos,
@@ -116,7 +116,7 @@ Vector2 SpacePointUtility::calcGlobalVars(const GeometryContext& gctx,
 
   const auto geoId = slink_meas1->geometryId();
 
-  auto gcov = globalCov(gctx, geoId, globalPos, lcov);
+  auto gcov = rhoPhiCovariance(gctx, geoId, globalPos, lcov);
 
   return gcov;
 }
@@ -133,10 +133,10 @@ double SpacePointUtility::getLoc0Var(const Measurement& meas) const {
   return cov(0, 0);
 }
 
-Vector2 SpacePointUtility::globalCov(const GeometryContext& gctx,
-                                     const GeometryIdentifier& geoId,
-                                     const Vector3& globalPos,
-                                     const SymMatrix2& localCov) const {
+Vector2 SpacePointUtility::rhoPhiCovariance(const GeometryContext& gctx,
+                                            const GeometryIdentifier& geoId,
+                                            const Vector3& globalPos,
+                                            const SymMatrix2& localCov) const {
   Vector3 globalFakeMom(1, 1, 1);
 
   const Surface* surface = m_config.trackingGeometry->findSurface(geoId);
