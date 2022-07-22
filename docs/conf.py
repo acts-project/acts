@@ -39,7 +39,7 @@ highlight_language = "cpp"
 smartquotes = True
 numfig = True
 
-myst_enable_extensions = ["dollarmath"]
+myst_enable_extensions = ["dollarmath", "colon_fence"]
 
 # -- Options for HTML output --------------------------------------------------
 
