@@ -27,7 +27,7 @@ class Layer;
 /// @param detElement the DD4hep detector element for which this material is
 ///                   assigned
 /// @param cylinderLayer is the target layer
-/// @param loggingLevel is the output level for the conversion
+/// @param logger a @c LoggerWrapper for output
 void addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
                                    Layer& cylinderLayer,
                                    LoggerWrapper logger = getDummyLogger());
@@ -39,7 +39,7 @@ void addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
 /// @param detElement the DD4hep detector element for which this material is
 /// assigned
 /// @param discLayer is the target layer
-/// @param loggingLevel is the output level for the conversion
+/// @param logger a @c LoggerWrapper for output
 void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
                                LoggerWrapper logger = getDummyLogger());
 
@@ -50,6 +50,7 @@ void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
 /// @param params An instance of @c DD4hep::VariantParameters
 /// @param layer the Layer to assign the proto material
 /// @param binning the Binning prescription for the ActsExtension
+/// @param logger a @c LoggerWrapper for output
 void addLayerProtoMaterial(
     const dd4hep::rec::VariantParameters& params, Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
@@ -62,6 +63,7 @@ void addLayerProtoMaterial(
 /// @param params An instance of @c DD4hep::VariantParameters
 /// @param valueTag the xml tag for to ActsExtension to be parsed
 /// @param binning the Binning prescription for the ActsExtension
+/// @param logger a @c LoggerWrapper for output
 std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
     const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&

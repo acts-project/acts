@@ -316,7 +316,7 @@ std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
         throw std::logic_error(
             std::string("Current DetElement: ") + volumeDetElement.name() +
             std::string(" has inconsistent settings. It's a compound,"
-                        " but its DetectorType is neither BARREL nor ENDCAP
+                        " but its DetectorType is neither BARREL nor ENDCAP"
                         " Please check your detector construction."));
       }
 
