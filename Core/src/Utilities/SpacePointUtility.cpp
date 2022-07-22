@@ -93,11 +93,11 @@ std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
   return std::make_pair(globalPos, gcov);
 }
 
-Vector2 SpacePointUtility::calcRhoPhiVars(const GeometryContext& gctx,
-                                          const Measurement& measFront,
-                                          const Measurement& measBack,
-                                          const Vector3& globalPos,
-                                          const double theta) const {
+Vector2 SpacePointUtility::calcRhoZVars(const GeometryContext& gctx,
+                                        const Measurement& measFront,
+                                        const Measurement& measBack,
+                                        const Vector3& globalPos,
+                                        const double theta) const {
   const auto var1 = getLoc0Var(measFront);
   const auto var2 = getLoc0Var(measBack);
   // strip1 and strip2 are tilted at +/- theta/2
@@ -116,7 +116,7 @@ Vector2 SpacePointUtility::calcRhoPhiVars(const GeometryContext& gctx,
 
   const auto geoId = slink_meas1->geometryId();
 
-  auto gcov = rhoPhiCovariance(gctx, geoId, globalPos, lcov);
+  auto gcov = rhoZCovariance(gctx, geoId, globalPos, lcov);
 
   return gcov;
 }
@@ -133,10 +133,10 @@ double SpacePointUtility::getLoc0Var(const Measurement& meas) const {
   return cov(0, 0);
 }
 
-Vector2 SpacePointUtility::rhoPhiCovariance(const GeometryContext& gctx,
-                                            const GeometryIdentifier& geoId,
-                                            const Vector3& globalPos,
-                                            const SymMatrix2& localCov) const {
+Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
+                                          const GeometryIdentifier& geoId,
+                                          const Vector3& globalPos,
+                                          const SymMatrix2& localCov) const {
   Vector3 globalFakeMom(1, 1, 1);
 
   const Surface* surface = m_config.trackingGeometry->findSurface(geoId);

@@ -74,8 +74,8 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
     double theta = acos(spParams.q.dot(spParams.r) /
                         (spParams.q.norm() * spParams.r.norm()));
 
-    gCov = m_spUtility->calcRhoPhiVars(gctx, *(measurements.at(0)),
-                                       *(measurements.at(1)), gPos, theta);
+    gCov = m_spUtility->calcRhoZVars(gctx, *(measurements.at(0)),
+                                     *(measurements.at(1)), gPos, theta);
 
   } else {
     ACTS_ERROR("More than 2 measurements are given for a space point.");
