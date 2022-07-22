@@ -117,9 +117,10 @@ SpacePointGridConfigArg = namedtuple(
         "rMax",
         "zBinEdges",
         "phiBinDeflectionCoverage",
+        "impactMax",
         "phi",  # (min,max)
     ],
-    defaults=[None] * 3 + [(None, None)] * 1,
+    defaults=[None] * 4 + [(None, None)] * 1,
 )
 
 SeedingAlgorithmConfigArg = namedtuple(
@@ -193,12 +194,12 @@ def addSeeding(
     seedfinderConfigArg : SeedfinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, forceRadialSorting, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, beamPos)
         SeedfinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedfinderConfig.hpp
-                seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, curvatureSortingInFilter, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
+    seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, curvatureSortingInFilter, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
                                 Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
-                spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi)
+    spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
-                seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
+    seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     trackParamsEstimationConfig : TrackParamsEstimationConfig(deltaR)
         TrackParamsEstimationAlgorithm configuration. Currently only deltaR=(min,max) range specified here.
@@ -397,7 +398,7 @@ def addSeeding(
                     cotThetaMax=seedFinderConfig.cotThetaMax,
                     phiMin=spacePointGridConfigArg.phi[0],
                     phiMax=spacePointGridConfigArg.phi[1],
-                    impactMax=seedFinderConfig.impactMax,
+                    impactMax=spacePointGridConfigArg.impactMax,
                     zBinEdges=spacePointGridConfigArg.zBinEdges,
                     phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
                 )

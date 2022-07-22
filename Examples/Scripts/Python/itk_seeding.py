@@ -268,6 +268,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         zBinEdges=zBinEdges,
         phiBinDeflectionCoverage=phiBinDeflectionCoverage,
         phi=(phiMin, phiMax),
+        impactMax=impactMax,
     )
     seedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(
         allowSeparateRMax=allowSeparateRMax,
