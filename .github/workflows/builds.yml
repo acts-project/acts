@@ -17,7 +17,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v28
+    container: ghcr.io/acts-project/${{ matrix.image }}:v29
     strategy:
       matrix:
         image:
@@ -258,7 +258,7 @@ jobs:
         image: 
           - ubuntu2204
           - ubuntu2204_clang
-    container: ghcr.io/acts-project/${{ matrix.image }}:v28
+    container: ghcr.io/acts-project/${{ matrix.image }}:v29
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -493,7 +493,7 @@ jobs:
 
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v28
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v29
     steps:
       - uses: actions/checkout@v2
 
@@ -520,7 +520,7 @@ jobs:
 
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v28
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
     steps:
       - uses: actions/checkout@v2
 
@@ -547,7 +547,7 @@ jobs:
 
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v28
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v29
     defaults:
       run:
         shell: bash
@@ -581,7 +581,7 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:v29
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:
