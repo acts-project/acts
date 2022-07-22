@@ -292,9 +292,9 @@ jobs:
         uses: actions/cache@v3
         with:
           path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-linux_ubuntu_extra_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          key: ${{ runner.os  }}-ccache-linux_${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
           restore-keys: |
-            ${{ runner.os  }}-ccache-linux_ubuntu_extra_${{ env.CCACHE_KEY_SUFFIX }}_
+            ${{ runner.os  }}-ccache-linux_${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_
 
 
       - name: Configure
