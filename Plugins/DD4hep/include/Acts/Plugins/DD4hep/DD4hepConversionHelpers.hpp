@@ -61,25 +61,6 @@ inline const dd4hep::rec::VariantParameters& getParams(
 /// @param elt The detector element instance
 /// @param alternative The value to return if no params are set of the key doesn't exist
 /// @return The value behind key, or @p alternative
-// template <typename T>
-// T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
-// T alternative) {
-// auto* params = elt.extension<dd4hep::rec::VariantParameters>(false);
-// if (params == nullptr) {
-// return alternative;
-// }
-// return params->value_or<T>(key, alternative);
-// }
-
-// @TODO: Remove in favor of workaround above after fix is merged upstream
-/// Get a parameter value or an alternative value if either the
-/// VariantParameters extension isn't set, or it doesn't contain the demanded
-/// key
-/// @tparam T The value type
-/// @param key The key of the value to extract
-/// @param elt The detector element instance
-/// @param alternative The value to return if no params are set of the key doesn't exist
-/// @return The value behind key, or @p alternative
 template <typename T>
 T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
              T alternative) {
@@ -87,10 +68,7 @@ T getParamOr(const std::string& key, const dd4hep::DetElement& elt,
   if (params == nullptr) {
     return alternative;
   }
-  if (!params->contains(key)) {
-    return alternative;
-  }
-  return params->get<T>(key);
+  return params->value_or<T>(key, alternative);
 }
 
 /// Check if a detector element has a key set in its VariantParameters
