@@ -13,10 +13,11 @@
 
 namespace Acts {
 struct SpacePointBuilderConfig{
-   // Tracking geometry
-   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry; 
-  /// Accepted squared difference in theta for two clusters
+   /// Tracking geometry
+   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+  /// vertex position
   Vector3 vertex = {0., 0., 0.};
+  /// Accepted squared difference in theta for two clusters
   double diffTheta2 = 1.;
   /// Accepted squared difference in phi for two clusters
   double diffPhi2 = 1.;
