@@ -314,10 +314,18 @@ def addSeeding(
                     rMax=seedfinderConfigArg.r[1],
                     deltaRMin=seedfinderConfigArg.deltaR[0],
                     deltaRMax=seedfinderConfigArg.deltaR[1],
-                    deltaRMinTopSP=seedfinderConfigArg.deltaRTopSP[0],
-                    deltaRMinBottomSP=seedfinderConfigArg.deltaRBottomSP[0],
-                    deltaRMaxTopSP=seedfinderConfigArg.deltaRTopSP[1],
-                    deltaRMaxBottomSP=seedfinderConfigArg.deltaRBottomSP[1],
+                    deltaRMinTopSP=seedfinderConfigArg.deltaR[0]
+                    if seedfinderConfigArg.deltaRTopSP[0] == None
+                    else seedfinderConfigArg.deltaRTopSP[0],
+                    deltaRMinBottomSP=seedfinderConfigArg.deltaR[0]
+                    if seedfinderConfigArg.deltaRBottomSP[0] == None
+                    else seedfinderConfigArg.deltaRBottomSP[0],
+                    deltaRMaxTopSP=seedfinderConfigArg.deltaR[1]
+                    if seedfinderConfigArg.deltaRTopSP[1] == None
+                    else seedfinderConfigArg.deltaRTopSP[1],
+                    deltaRMaxBottomSP=seedfinderConfigArg.deltaR[1]
+                    if seedfinderConfigArg.deltaRBottomSP[1] == None
+                    else seedfinderConfigArg.deltaRBottomSP[1],
                     deltaRMiddleMinSPRange=seedfinderConfigArg.deltaRMiddleSPRange[0],
                     deltaRMiddleMaxSPRange=seedfinderConfigArg.deltaRMiddleSPRange[1],
                     collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
@@ -422,18 +430,6 @@ def addSeeding(
                     rMax=seedfinderConfigArg.r[1],
                     deltaRMin=seedfinderConfigArg.deltaR[0],
                     deltaRMax=seedfinderConfigArg.deltaR[1],
-                    deltaRMinTopSP=seedfinderConfigArg.deltaR[0]
-                    if seedfinderConfigArg.deltaRTopSP[0] == None
-                    else seedfinderConfigArg.deltaRTopSP[0],
-                    deltaRMinBottomSP=seedfinderConfigArg.deltaR[0]
-                    if seedfinderConfigArg.deltaRBottomSP[0] == None
-                    else seedfinderConfigArg.deltaRBottomSP[0],
-                    deltaRMaxTopSP=seedfinderConfigArg.deltaR[1]
-                    if seedfinderConfigArg.deltaRTopSP[1] == None
-                    else seedfinderConfigArg.deltaRTopSP[1],
-                    deltaRMaxBottomSP=seedfinderConfigArg.deltaR[1]
-                    if seedfinderConfigArg.deltaRBottomSP[1] == None
-                    else seedfinderConfigArg.deltaRBottomSP[1],
                     deltaRMiddleMinSPRange=seedfinderConfigArg.deltaRMiddleSPRange[0],
                     deltaRMiddleMaxSPRange=seedfinderConfigArg.deltaRMiddleSPRange[1],
                     collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
@@ -459,8 +455,6 @@ def addSeeding(
                     binSizeR=seedfinderConfigArg.binSizeR,
                     forceRadialSorting=seedfinderConfigArg.forceRadialSorting,
                     seedConfirmation=seedfinderConfigArg.seedConfirmation,
-                    centralSeedConfirmationRange=seedfinderConfigArg.centralSeedConfirmationRange,
-                    forwardSeedConfirmationRange=seedfinderConfigArg.forwardSeedConfirmationRange,
                     beamPos=(
                         None
                         if seedfinderConfigArg.beamPos is None
@@ -483,31 +477,10 @@ def addSeeding(
                     numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
                     seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
                     seedConfirmation=seedFilterConfigArg.seedConfirmation,
-                    centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
-                    forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
                     curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
                     maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
                     maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
                     useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
-                )
-            )
-
-            gridConfig = acts.SpacePointGridConfig(
-                **acts.examples.defaultKWArgs(
-                    bFieldInZ=seedFinderConfig.bFieldInZ,
-                    minPt=seedFinderConfig.minPt,
-                    rMax=seedFinderConfig.rMax
-                    if spacePointGridConfigArg.rMax == None
-                    else spacePointGridConfigArg.rMax,
-                    zMax=seedFinderConfig.zMax,
-                    zMin=seedFinderConfig.zMin,
-                    deltaRMax=seedFinderConfig.deltaRMax,
-                    cotThetaMax=seedFinderConfig.cotThetaMax,
-                    phiMin=spacePointGridConfigArg.phi[0],
-                    phiMax=spacePointGridConfigArg.phi[1],
-                    impactMax=seedFinderConfig.impactMax,
-                    zBinEdges=spacePointGridConfigArg.zBinEdges,
-                    phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
                 )
             )
 
@@ -516,13 +489,6 @@ def addSeeding(
                 inputSpacePoints=[spAlg.config.outputSpacePoints],
                 outputSeeds="seeds",
                 outputProtoTracks="prototracks",
-                **acts.examples.defaultKWArgs(
-                    allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
-                    zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
-                    zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
-                    numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
-                ),
-                gridConfig=gridConfig,
                 seedFilterConfig=seedFilterConfig,
                 seedFinderConfig=seedFinderConfig,
             )
