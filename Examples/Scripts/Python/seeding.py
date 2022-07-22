@@ -318,12 +318,12 @@ def addSeeding(
                     deltaRMinTopSP=seedfinderConfigArg.deltaR[0]
                     if seedfinderConfigArg.deltaRTopSP[0] == None
                     else seedfinderConfigArg.deltaRTopSP[0],
-                    deltaRMinBottomSP=seedfinderConfigArg.deltaR[0]
-                    if seedfinderConfigArg.deltaRBottomSP[0] == None
-                    else seedfinderConfigArg.deltaRBottomSP[0],
                     deltaRMaxTopSP=seedfinderConfigArg.deltaR[1]
                     if seedfinderConfigArg.deltaRTopSP[1] == None
                     else seedfinderConfigArg.deltaRTopSP[1],
+                    deltaRMinBottomSP=seedfinderConfigArg.deltaR[0]
+                    if seedfinderConfigArg.deltaRBottomSP[0] == None
+                    else seedfinderConfigArg.deltaRBottomSP[0],
                     deltaRMaxBottomSP=seedfinderConfigArg.deltaR[1]
                     if seedfinderConfigArg.deltaRBottomSP[1] == None
                     else seedfinderConfigArg.deltaRBottomSP[1],
