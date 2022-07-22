@@ -1,3 +1,5 @@
+.. _dd4hep plugin:
+
 DD4hep plugin
 =============
 
@@ -34,18 +36,52 @@ through the detector tree. The ``DetElement`` can also be extended, to add
 specific features or to access information. This extension mechanism is used
 during the translation process.
 
-Acts extension
---------------
+The ACTS DD4hep plugin inspects the geometry hierarchy and searches for
+sensitive detector elements and passive material structures.  ACTS identifies
+relevant parts of the detector by DD4hep's ``DetType`` (see `documentation
+<https://dd4hep.web.cern.ch/dd4hep/reference/classdd4hep_1_1DetType.html#ae353f4bccf0f288793526efa10866af2>`_),
+which can be set from XML. ACTS will attempt to translate detector elements
+marked as ``DetType::TRACKER``. ``DetType::BARREL`` and ``DetType::ENDCAP``
+tell ACTS to convert a detector element as a sensitive volume, while the
+beampipe is identified by ``DetType::BEAMPIPE``.
 
-DD4hep provides a special extension mechanism for the ``DetElement`` which
-allows to add custom features. In Acts this functionality is used for the
-conversion from ``DD4hep`` into Acts. The extensions are used to indicate
-certain volumes, e.g. if a ``DetElement`` is the beam pipe or if a
-``DetElement`` is a layer carrying the sensitive modules. In addition the
-extensions are used in order to distinguish if a sub detector is a barrel
-(described as a cylinder volume in Acts) or an endcap (which is described as a
-disc volume in Acts). Furthermore the extensions are used to hand over specific
-information needed for tracking, e.g. paramters for material mapping.
+In addition, ACTS looks for specific markup that can be attached to
+detector elements via XML or from the experiment specific geometry driver /
+factory.
+
+ACTS specific markup
+--------------------
+
+In cases where ACTS requires information that is not accessible or derivable
+from DD4hep data, it will look for additional parameters that mark up detector
+elements. One such example is the layer pattern. ACTS looks for detector
+elements which represent subdetectors, identified by ``DetType::BARREL`` and
+``ENDCAP``. To group sensors into layers correctly, it will search for the
+detector element corresponding to a layer **by name**. Which detector element
+names are interpreted as *layers* is steered by the ``layer_pattern``
+parameter. It contains a regex that is evaluated against every detector element
+name encountered. It can be set from the XML using DD4hep's plugin mechanism
+and the provided ``ParametersPlugin`` like:
+
+.. code-block:: xml
+
+   <detector id="ODD_PixelEndcapN_ID" name="PixelEndcapN" 
+     type="ODDPixelEndcap" readout="PixelEndcapReadout" vis="invisible">
+     <type_flags type="DetType_TRACKER + DetType_ENDCAP"/>
+     <!-- ... -->
+   </detector>
+   <!-- ... -->
+   <plugins>
+    <plugin name="DD4hep_ParametersPlugin">
+      <argument value="PixelEndcapN"/>
+      <argument value="layer_pattern: str=PixelEndcapN\d|PixelEndplate"/>
+    </plugin>	
+   </plugins>
+
+In this snippet, ``ParametersPlugin`` assigns a value of ``layer_pattern:
+str=PixelEndcapN\d|PixelEndplate`` to the detector of name ``PixelEndcapN``.
+ACTS uses this parameter to resolve the layer detector elements.
+
 
 DD4hepDetectorElement
 ---------------------
@@ -66,6 +102,8 @@ configuration the flags ``ACTS_BUILD_PLUGIN_DD4HEP=on`` and
 ``ACTS_BUILD_PLUGIN_TGEO=on`` need to be set. In addition ROOT and DD4hep
 installations need to be available to cmake.
 
+.. _dd4hep prereq:
+
 Prerequisites
 -------------
 
@@ -79,6 +117,8 @@ following conditions need to be met:
   #. {barrel}
   #. {barrel + 2 endcaps}
   #. {2 endcaps} - in case there is no barrel at this stage (e.g. forward end caps)
+
+  These subdetectors need to be flagged using the correct ``DetType``.
 
 - If a hierachy is not only a single barrel but is decomposed of a barrel
   and its corresponding endcaps they need to be grouped together in an
@@ -98,13 +138,13 @@ following conditions need to be met:
        </detector>
      </detectors>
 
-  If a user wants to create his/her own constructor to group these
-  volumes together the type needs to be set to "compound".
+    If a user wants to create his/her own constructor to group these
+    volumes together the type needs to be set to "compound".
 
 - Since the translation walks trough the ``DetElement`` tree the following
   objects need to be declared as a DD4hep ``DetElement``:
  
-  - The subvolumes e.g. barrel, endcap, beampipe (they are usually build with
+  - The subvolumes e.g. barrel, endcap, beampipe (they are usually built with
     different DD4hep constructors and are therefore DD4hep ``DetElement``'s
     per default).
   - Layers when containing sensitive material and/or the layer should
@@ -116,6 +156,8 @@ following conditions need to be met:
        the layer does not need to be a direct child of the volume (barrel or
        endcap),it an be nested in substructures
 
+    
+
   - Sensitive detector modules
     
     .. note::
@@ -124,19 +166,11 @@ following conditions need to be met:
        it can be nested in substructures (can be a component of a modules)
        i.e. it does not need to be a direct child of the layer
 
-- The Tracking geometry needs to be built from bottom to top to ensure
+- The tracking geometry needs to be built from bottom to top to ensure
   navigation. Therefore the different hierarchies need to be sorted ascending.
   Per default the sub detectors are sorted by the id of their ``DetElement``.
   In case another sorting needs to be applied, the users can provide their own
   function.
-
-- The :class:`Acts::ActsExtension`'s need to be used during the detector
-  construction indicating if a ``DetElement``
-  
-  - is a barrel
-  - is an endcap
-  - is the beampipe
-  - is a layer
 
 There are two modes building the layers around the sensitive detector modules:
 
@@ -151,7 +185,13 @@ There are two modes building the layers around the sensitive detector modules:
   The boundaries of the layers are calculated automatically by adding a
   tolerance to the geometric extension of the contained surfaces. The
   tolerances in r and z need to be set for every ``DetElement`` representing
-  layer using envelopeR and envelopeZ in :class:`Acts::ActsExtension`.
+  layer using DD4hep parameters ``envelope_r_min``, ``envelope_r_max``,
+  ``envelope_z_min``, ``envelope_z_max``. attached to the layer detector
+  element.
+
+  .. note:: 
+    Either all or none of the ``envelope_*`` parameters need to be set.
+
 
 The volumes are automatically build around the layers:
 
@@ -173,11 +213,40 @@ consists of cylindrical (for a barrel) or disc (for endcaps) layers which either
 have material, or, are declared sensitive in dd4hep themselves without
 containing any detector modules.
 
+Possible parameters ACTS will interpret
+---------------------------------------
+* Layer
+
+  * ``envelope_{r,z}_{min,max}``: explicit envelope for a layer
+  * Surface binning:
+
+    * ``surface_binning``: set to true to indicate that explicit surface binning is set.
+    * ``surface_binning_n_{phi,r}``: surface binning for a layer
+
+  * Layer material:
+
+    * ``layer_material``: set to true to indicate that the layer has layer material configuration
+
+      * ``layer_material_representing``: set to true to indicate representing layer material
+      * ``layer_material_inner``: set to true to indicate inner layer material
+      * ``layer_material_outer``: set to true to indicate outer layer material
+      * ``layer_material_{representing,inner,outer}_bin{X,Y,Z,R,Phi,RPhi,H,Eta,Mag}`` to give the number of bins in a direction
+
+* Sensor
+
+  * ``axis_definitions``: local axis definitions for a sensor. Default: ``XYZ``. See :class:`Acts::DD4hepDetectorElement` for details
+
+* Volume / subdetector
+
+  * ``boundary_material``: set to true to indicate boundary material is set
+  * ``boundary_material_{negative,positive,inner,outer}`` to indicate which boundary material surfaces should be set
+  * ``boundary_material_{negative,positive,inner,outer}_bin{X,Y,Z,R,Phi,RPhi,H,Eta,Mag}`` to give the number of bins in a direction
+
 Usage
 -----
 
-To receive the :class:`Acts::TrackingGeometry` the user should use the global
-function :func:`Acts::convertDD4hepDetector()`, where he/she needs to hand over
-the DD4hep world ``DetElement``. For a valid translation the user needs to make
-sure, that all prerequisites described above are met and that the right
-:class:`Acts::ActsExtension`'s are added during the DD4hep construction.
+To receive the :class:`Acts::TrackingGeometry` the the global function
+:func:`Acts::convertDD4hepDetector()` should be used, where the DD4hep world
+``DetElement`` needs to be handed over. For a valid translation, that all
+prerequisites described above are met and that the right ``VariantParameter``
+are added during the DD4hep construction.

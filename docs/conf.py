@@ -21,6 +21,7 @@ extensions = [
     "breathe",
     "myst_parser",
     "sphinx.ext.mathjax",
+    "sphinx.ext.autosectionlabel",
     "sphinx_markdown_tables",
 ]
 source_suffix = {
