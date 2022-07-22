@@ -115,7 +115,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
 
     for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
-     for (auto& sourceLink : moduleSourceLinks) {
+      for (auto& sourceLink : moduleSourceLinks) {
         const auto& meas = measurements[sourceLink.get().index()];
 
         m_spacePointBuilder.buildSpacePoint(ctx.geoContext, {&meas}, spOpt,
