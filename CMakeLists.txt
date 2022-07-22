@@ -157,7 +157,7 @@ endif()
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
-set(_acts_dd4hep_version 1.11)
+set(_acts_dd4hep_version 1.21)
 set(_acts_actsdd4hep_version 1.0.0)
 set(_acts_edm4hep_version v00-04-01)
 set(_acts_doxygen_version 1.8.15)
