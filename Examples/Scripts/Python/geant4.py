@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from typing import Optional, Union
 from pathlib import Path
-from Examples.Scripts.Python.fatras import addFratrasWriters
 
 import acts
 import acts.examples
@@ -85,7 +84,11 @@ def addGeant4(
 
 
 def runGeant4(
-    geometryService, trackingGeometry, field, s: acts.examples.Sequencer = None
+    geometryService,
+    trackingGeometry,
+    field,
+    outputDir,
+    s: acts.examples.Sequencer = None,
 ):
     from particle_gun import addParticleGun, EtaConfig
 
@@ -115,4 +118,4 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runGeant4(detector.geometryService, trackingGeometry, field).run()
+    runGeant4(detector.geometryService, trackingGeometry, field, Path.cwd()).run()
