@@ -78,7 +78,7 @@ def addGeant4(
     s.addAlgorithm(alg)
 
     # Output
-    addFatrasWriters(s, None, None)
+    addFatrasWriters(s, outputDirCsv, outputDirRoot)
 
     return s
 
