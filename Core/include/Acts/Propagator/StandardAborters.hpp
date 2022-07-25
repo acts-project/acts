@@ -152,10 +152,6 @@ struct SurfaceReached {
       if (distance < overstepLimit and sIntersection.alternative) {
         // Update the distance to the alternative solution
         distance = sIntersection.alternative.pathLength;
-        ACTS_VERBOSE("Use alternative intersection, distance:" << distance);
-      }
-      else {
-        ACTS_VERBOSE("Use intersection with distance " << distance);
       }
       stepper.setStepSize(state.stepping, state.stepping.navDir * distance,
                           ConstrainedStep::aborter, false);
