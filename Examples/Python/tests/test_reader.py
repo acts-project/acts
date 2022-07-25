@@ -341,7 +341,9 @@ def test_edm4hep_simhit_reader(tmp_path):
 
     assert os.path.exists(tmp_file)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     s = Sequencer(numThreads=1)
 

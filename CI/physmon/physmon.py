@@ -61,7 +61,9 @@ matDeco = acts.IMaterialDecorator.fromFile(
     srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
     level=acts.logging.INFO,
 )
-detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory(), matDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(
+    getOpenDataDetectorDirectory(), matDeco
+)
 digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
 geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 

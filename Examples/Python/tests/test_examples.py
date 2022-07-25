@@ -492,7 +492,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     from material_mapping import runMaterialMapping
 
@@ -531,8 +533,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     del trackingGeometry
     del detector
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory(),
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
     from material_validation import runMaterialValidation
@@ -568,7 +571,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
         getOpenDataDetectorDirectory,
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+        mdecorator=acts.IMaterialDecorator.fromFile(geo_map),
     )
 
     from material_mapping import runMaterialMapping
@@ -611,7 +614,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
         getOpenDataDetectorDirectory(),
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
     from material_validation import runMaterialValidation
@@ -901,7 +904,9 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
-    detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -1013,7 +1018,9 @@ def test_vertex_fitting_reading(
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector(getOpenDataDetectorDirectory())  # just to make sure it can build
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent

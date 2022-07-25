@@ -1,7 +1,8 @@
 from pathlib import Path
-import sys,os
+import sys, os
 
-def getOpenDataDetector( odd_dir,  mdecorator=None):
+
+def getOpenDataDetector(odd_dir, mdecorator=None):
 
     odd_xml = odd_dir / "xml" / "OpenDataDetector.xml"
     if not odd_xml.exists():
