@@ -3,8 +3,6 @@ name: Builds
 on:
   push:
   pull_request:
-    paths-ignore:
-      - 'docs/**'
     branches:
       - main
       - 'release/**'
