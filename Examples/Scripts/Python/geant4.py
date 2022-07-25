@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from typing import Optional, Union
 from pathlib import Path
+from Examples.Scripts.Python.fatras import addFratrasWriters
 
 import acts
 import acts.examples
@@ -8,6 +9,7 @@ import acts.examples.dd4hep
 from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
 from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 from common import getOpenDataDetector
+from fatras import addFatrasWriters
 
 u = acts.UnitConstants
 
@@ -17,6 +19,8 @@ def addGeant4(
     geometryService: acts.examples.dd4hep.DD4hepGeometryService,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
     seed: Optional[int] = None,
     preselectParticles: bool = True,
 ) -> acts.examples.Sequencer:
@@ -28,6 +32,10 @@ def addGeant4(
         the sequencer module to which we add the Geant4 steps (returned from addGeant4)
     trackingGeometry : tracking geometry
     field : magnetic field
+    outputDirCsv : Path|str, path, None
+        the output folder for the Csv output, None triggers no output
+    outputDirRoot : Path|str, path, None
+        the output folder for the Root output, None triggers no output
     seed : int, None
         random number generator seed
     """
@@ -70,6 +78,9 @@ def addGeant4(
     # Sequencer
     s.addAlgorithm(alg)
 
+    # Output
+    addFatrasWriters(s, None, None)
+
     return s
 
 
@@ -87,11 +98,14 @@ def runGeant4(
         EtaConfig(-2.0, 2.0),
         rnd=rnd,
     )
+    outputDir = Path(outputDir)
     return addGeant4(
         s,
         geometryService,
         trackingGeometry,
         field,
+        outputDirCsv=outputDir / "csv",
+        outputDirRoot=outputDir,
         seed=seed,
     )
 

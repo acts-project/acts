@@ -69,6 +69,16 @@ def addFatras(
     s.addAlgorithm(alg)
 
     # Output
+    addFatrasWriters(s, outputDirCsv, outputDirRoot)
+
+    return s
+
+
+def addFatrasWriters(
+    s: acts.examples.Sequencer,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+) -> acts.examples.Sequencer:
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
         if not outputDirCsv.exists():
