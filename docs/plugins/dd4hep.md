@@ -119,17 +119,17 @@ following conditions need to be met:
   and pEndCap0 are sub detectors defined in the file `PixelTracker.xml`):
   
   ```xml
-   <include ref="PixelTracker.xml"/>
-   <detectors>
-     <detector id="1" name="PixelTracker" type="DD4hep_SubdetectorAssembly"
-               vis="BlueVisTrans">
-       <shape name="PixelEnvelope" type="Tube" rmin="Env0_rmin"
-              rmax="Env0_rmax"dz="Env0_dz" material="Air"/>
-       <composite name="Barrel0"/>
-       <composite name="nEndCap0"/>
-       <composite name="pEndCap0"/>
-     </detector>
-   </detectors>
+  <include ref="PixelTracker.xml"/>
+  <detectors>
+    <detector id="1" name="PixelTracker" type="DD4hep_SubdetectorAssembly"
+              vis="BlueVisTrans">
+      <shape name="PixelEnvelope" type="Tube" rmin="Env0_rmin"
+             rmax="Env0_rmax"dz="Env0_dz" material="Air"/>
+      <composite name="Barrel0"/>
+      <composite name="nEndCap0"/>
+      <composite name="pEndCap0"/>
+    </detector>
+  </detectors>
   ```
 
   If a user wants to create his/her own constructor to group these
@@ -205,9 +205,33 @@ containing any detector modules.
 (acts-params)=
 ## Possible parameters ACTS will interpret
 
+ACTS geometry translation uses parameters attached to DD4hep detector elements via the `VariantParameters` extension. You can set this extension from your factory code, or use DD4hep's plugin mechanism to set parameters on detector elements via name. Here's an excerpt from the Open Data Detector on how to use this to mark a passive structure as a *passive layer*:
+
+```xml
+<lccdd>
+  <detectors>
+    <detector id="ODD_Solenoid_ID" name="Solenoid" type="ODDCylinder" beampipe="false" vis="Aluminum">
+      <type_flags type="DetType_TRACKER" />
+      <boundary_material surface="inner" binning="binPhi,binZ" bins0="mat_sol_bPhi" bins1="mat_sol_bZ"/>
+      <tubs name="Solenoid" rmin="sol_rmin" rmax="sol_rmax" dz="sol_hlength" material="Aluminum">
+        <layer_material surface="representing" binning="binPhi,binZ" bins0="mat_sol_bPhi" bins1="mat_sol_bZ"/>
+      </tubs>
+    </detector>
+  </detectors>
+
+  <plugins>
+    <plugin name="DD4hep_ParametersPlugin">
+      <argument value="Solenoid"/>
+      <argument value="passive_layer: bool = true"/>
+    </plugin>	
+  </plugins>
+</lccdd>
+```
+
 * Layer
 
   * `envelope_{r,z}_{min,max}`: explicit envelope for a layer
+  * `layer_material`: mark a layer as passive (use this if you want to add a passive layer that is not a beampipe)
   * Surface binning:
 
     * `surface_binning`: set to true to indicate that explicit surface binning is set.
@@ -237,5 +261,5 @@ containing any detector modules.
 To receive the {class}`Acts::TrackingGeometry` the the global function
 {func}`Acts::convertDD4hepDetector()` should be used, where the DD4hep world
 `DetElement` needs to be handed over. For a valid translation, that all
-prerequisites described above are met and that the right `VariantParameter`
+prerequisites described above are met and that the right `VariantParameters`
 are added during the DD4hep construction.
