@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 
 #include <array>
@@ -33,22 +33,12 @@ class SeedFinderOrthogonal {
   static constexpr std::size_t NDims = 3;
 
   /**
-   * @brief The seed type used by this seeder internally.
-   */
-  using seed_t = Seed<external_spacepoint_t>;
-
-  /**
-   * @brief The spacepoint type used by this seeder internally.
-   */
-  using internal_sp_t = InternalSpacePoint<external_spacepoint_t>;
-
-  /**
    * @brief The k-d tree type used by this seeder internally, which is
    * three-dimensional, contains internal spacepoint pointers, uses the Acts
    * scalar type for coordinates, stores its coordinates in std::arrays, and
    * has leaf size 4.
    */
-  using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
+  using tree_t = KDTree<NDims, Acts::SpacePoint *, ActsScalar, std::array, 4>;
 
   /**
    * @brief Construct a new orthogonal seed finder.
@@ -56,7 +46,7 @@ class SeedFinderOrthogonal {
    * @param config The configuration parameters for this seed finder.
    */
   SeedFinderOrthogonal(
-      Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> config);
+      Acts::SeedFinderOrthogonalConfig config);
 
   /**
    * @brief Destroy the orthogonal seed finder object.
@@ -117,7 +107,7 @@ class SeedFinderOrthogonal {
    * @return A vector of seeds.
    */
   template <typename input_container_t>
-  std::vector<seed_t> createSeeds(const input_container_t &spacePoints) const;
+  std::vector<InternalSeed> createSeeds(const input_container_t &spacePoints) const;
 
  private:
   /**
@@ -140,7 +130,7 @@ class SeedFinderOrthogonal {
    * @return An N-dimensional axis-aligned search range.
    */
   typename tree_t::range_t validTupleOrthoRangeLH(
-      const internal_sp_t &low) const;
+      const Acts::SpacePoint &low) const;
 
   /**
    * @brief Return the AABB rearch range for a given spacepoint, searching
@@ -157,7 +147,7 @@ class SeedFinderOrthogonal {
    * @return An N-dimensional axis-aligned search range.
    */
   typename tree_t::range_t validTupleOrthoRangeHL(
-      const internal_sp_t &high) const;
+      const Acts::SpacePoint &high) const;
 
   /**
    * @brief Check whether two spacepoints form a valid tuple.
@@ -175,7 +165,7 @@ class SeedFinderOrthogonal {
    *
    * @return True if the two points form a valid pair, false otherwise.
    */
-  bool validTuple(const internal_sp_t &low, const internal_sp_t &high) const;
+  bool validTuple(const Acts::SpacePoint &low, const Acts::SpacePoint &high) const;
 
   /**
    * @brief Create a k-d tree from a set of spacepoints.
@@ -184,7 +174,7 @@ class SeedFinderOrthogonal {
    *
    * @return A k-d tree containing the given spacepoints.
    */
-  tree_t createTree(const std::vector<internal_sp_t *> &spacePoints) const;
+  tree_t createTree(const std::vector<Acts::SpacePoint *> &spacePoints) const;
 
   /**
    * @brief Filter potential candidate pairs, and output seeds into an
@@ -199,9 +189,9 @@ class SeedFinderOrthogonal {
    * @param cont The container to write the resulting seeds to.
    */
   template <typename output_container_t>
-  void filterCandidates(internal_sp_t &middle,
-                        std::vector<internal_sp_t *> &bottom,
-                        std::vector<internal_sp_t *> &top, int numQualitySeeds,
+  void filterCandidates(Acts::SpacePoint &middle,
+                        std::vector<Acts::SpacePoint *> &bottom,
+                        std::vector<Acts::SpacePoint *> &top, int numQualitySeeds,
                         output_container_t &cont) const;
 
   /**
@@ -221,7 +211,7 @@ class SeedFinderOrthogonal {
   /**
    * @brief The configuration for the seeding algorithm.
    */
-  Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderOrthogonalConfig m_config;
 };
 }  // namespace Acts
 

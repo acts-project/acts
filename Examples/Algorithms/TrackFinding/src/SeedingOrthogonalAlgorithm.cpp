@@ -12,8 +12,8 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonal.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     ActsExamples::SeedingOrthogonalAlgorithm::Config cfg,
@@ -39,8 +39,8 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
   Acts::SeedFilterConfig filterCfg;
   filterCfg.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
-          Acts::SeedFilter<SimSpacePoint>(filterCfg));
+      std::make_unique<Acts::SeedFilter>(
+          Acts::SeedFilter(filterCfg));
 
   m_cfg.seedFinderConfig.rMax = m_cfg.rMax;
   m_cfg.seedFinderConfig.deltaRMin = m_cfg.deltaRMin;
@@ -96,17 +96,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
 
   Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig);
 
-  SimSeedContainer seeds = finder.createSeeds(spacePoints);
+  Acts::SeedContainer seeds = finder.createSeeds(spacePoints);
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
+  // FIXME: remove internal SpacePoint
   size_t nSeeds = seeds.size();
   ProtoTrackContainer protoTracks;
   protoTracks.reserve(nSeeds);
   for (const auto &seed : seeds) {
     ProtoTrack protoTrack;
-    protoTrack.reserve(seed.sp().size());
-    for (auto spacePointPtr : seed.sp()) {
-      protoTrack.push_back(spacePointPtr->measurementIndex());
+    protoTrack.reserve(seed.sp.size());
+    for (auto layerLinks : seed.sp[0]->getSourceLinks()) {
+      const auto * indHolder= dynamic_cast<const ActsExamples::IndexSourceLink*>(0,&(layerLinks[0]));
+      protoTrack.push_back(indHolder->index());
     }
     protoTracks.push_back(std::move(protoTrack));
   }

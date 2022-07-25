@@ -37,7 +37,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::string outputProtoTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
-    Acts::SeedfinderConfig<SimSpacePoint> seedFinderConfig;
+    Acts::SeedfinderConfig seedFinderConfig;
     Acts::SpacePointGridConfig gridConfig;
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
@@ -50,6 +50,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
     // used to search for SPs
     int numPhiNeighbors;
   };
+
 
   /// Construct the seeding algorithm.
   ///

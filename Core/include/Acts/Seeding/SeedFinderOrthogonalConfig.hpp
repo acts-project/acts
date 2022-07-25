@@ -15,12 +15,10 @@
 
 namespace Acts {
 // forward declaration to avoid cyclic dependence
-template <typename T>
 class SeedFilter;
 
-template <typename SpacePoint>
 struct SeedFinderOrthogonalConfig {
-  std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
+  std::shared_ptr<Acts::SeedFilter> seedFilter;
 
   // Seed Cuts
   // lower cutoff for seeds

@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Seeding/IExperimentCuts.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 
@@ -21,11 +20,11 @@
 namespace Acts {
 /// Filter seeds at various stages with the currently
 /// available information.
-template <typename external_spacepoint_t>
+
 class SeedFilter {
  public:
   SeedFilter(SeedFilterConfig config,
-             IExperimentCuts<external_spacepoint_t>* expCuts = 0);
+             IExperimentCuts* expCuts = 0);
 
   SeedFilter() = delete;
   virtual ~SeedFilter() = default;
@@ -43,14 +42,14 @@ class SeedFilter {
   /// @param numSeeds number of seeds that did not pass the quality confirmation but were still accepted, if quality confirmation is not used this is the total number of seeds
   /// @param outCont Output container for the seeds
   virtual void filterSeeds_2SpFixed(
-      InternalSpacePoint<external_spacepoint_t>& bottomSP,
-      InternalSpacePoint<external_spacepoint_t>& middleSP,
-      std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
+      Acts::SpacePoint& bottomSP,
+      Acts::SpacePoint& middleSP,
+      std::vector<Acts::SpacePoint*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, float zOrigin,
       int& numQualitySeeds, int& numSeeds,
       std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
+          float, std::unique_ptr<const InternalSeed>>>&
           outCont) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
@@ -60,10 +59,10 @@ class SeedFilter {
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
       std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
+          float, std::unique_ptr<const InternalSeed>>>&
           seedsPerSpM,
       int& numQualitySeeds,
-      std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
+      std::back_insert_iterator<std::vector<InternalSeed>> outIt)
       const;
 
   /// Check if there is a lower quality seed that can be replaced
@@ -75,22 +74,22 @@ class SeedFilter {
   /// @param weight weight of the seed
   /// @param outCont container for the seeds
   virtual void checkReplaceSeeds(
-      InternalSpacePoint<external_spacepoint_t>& bottomSP,
-      InternalSpacePoint<external_spacepoint_t>& middleSP,
-      InternalSpacePoint<external_spacepoint_t>& topSp, float zOrigin,
-      bool isQualitySeed, float weight,
-      std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
+      Acts::SpacePoint& bottomSP,
+      Acts::SpacePoint& middleSP,
+      Acts::SpacePoint& topSp,
+      float zOrigin,
+      bool isQualitySeed,
+      float weight,
+      std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>&
           outCont) const;
 
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
-  const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {
+  const IExperimentCuts* getExperimentCuts() const {
     return m_experimentCuts;
   }
 
  private:
   const SeedFilterConfig m_cfg;
-  const IExperimentCuts<external_spacepoint_t>* m_experimentCuts;
+  const IExperimentCuts* m_experimentCuts;
 };
 }  // namespace Acts
-#include "Acts/Seeding/SeedFilter.ipp"

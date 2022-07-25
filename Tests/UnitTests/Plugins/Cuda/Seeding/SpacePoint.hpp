@@ -20,11 +20,12 @@ struct SpacePoint {
   float y() const { return m_y; }
   float z() const { return m_z; }
   float r() const { return m_r; }
+  operator==(SpacePoint a)
 };
 
-bool operator==(SpacePoint a, SpacePoint b) {
-  if (fabs(a.m_x - b.m_x) < 1e-6 && fabs(a.m_y - b.m_y) < 1e-6 &&
-      fabs(a.m_z - b.m_z) < 1e-6) {
+bool SpacePoint::operator==(SpacePoint a) {
+  if (fabs(a.m_x - m_x) < 1e-6 && fabs(a.m_y - m_y) < 1e-6 &&
+      fabs(a.m_z - m_z) < 1e-6) {
     return true;
   } else {
     return false;

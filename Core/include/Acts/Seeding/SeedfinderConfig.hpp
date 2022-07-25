@@ -14,6 +14,7 @@
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace Acts {
 
@@ -87,8 +88,10 @@ struct SeedfinderConfig {
   // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
 
-  // how many sigmas of scattering angle should be considered?
+  // how many standard deviations of scattering angle should be considered?
   float sigmaScattering = 5;
+  // how many standard deviations of measurement uncertainty + alignment uncertainty should be considered?
+  float sigmaError = 5;
   // Upper pt limit for scattering calculation
   float maxPtScattering = 10 * Acts::UnitConstants::GeV;
 
@@ -117,6 +120,8 @@ struct SeedfinderConfig {
   float bFieldInZ = 2.08 * Acts::UnitConstants::T;
   // location of beam in x,y plane.
   // used as offset for Space Points
+  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
+                        0 * Acts::UnitConstants::mm};
 
   boost::container::small_vector<size_t, 20> zBinsCustomLooping = {};
 
@@ -184,9 +189,6 @@ struct SeedfinderConfig {
 
     config.beamPos[0] /= 1_mm;
     config.beamPos[1] /= 1_mm;
-
-    config.zAlign /= 1_mm;
-    config.rAlign /= 1_mm;
 
     config.toleranceParam /= 1_mm;
 

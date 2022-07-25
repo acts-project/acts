@@ -6,29 +6,31 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-template <typename external_spacepoint_t>
-Acts::BinFinder<external_spacepoint_t>::BinFinder()
-    : Acts::BinFinder<external_spacepoint_t>::BinFinder(
+#include "Acts/Seeding/BinFinder.hpp"
+
+
+Acts::BinFinder::BinFinder()
+    : Acts::BinFinder::BinFinder(
           std::vector<std::pair<int, int>>(), 1) {}
 
-template <typename external_spacepoint_t>
-Acts::BinFinder<external_spacepoint_t>::BinFinder(
+
+Acts::BinFinder::BinFinder(
     const std::vector<std::pair<int, int>>&& zBinNeighbors,
     const int&& numPhiNeighbors)
     : m_zBinNeighbors(std::move(zBinNeighbors)),
       m_numPhiNeighbors(std::move(numPhiNeighbors)) {}
 
-template <typename external_spacepoint_t>
-Acts::BinFinder<external_spacepoint_t>::BinFinder(
+
+Acts::BinFinder::BinFinder(
     const std::vector<std::pair<int, int>>& zBinNeighbors,
     const int& numPhiNeighbors)
     : m_zBinNeighbors(zBinNeighbors), m_numPhiNeighbors(numPhiNeighbors) {}
 
-template <typename external_spacepoint_t>
+
 boost::container::small_vector<size_t, 10>
-Acts::BinFinder<external_spacepoint_t>::findBins(
+Acts::BinFinder::findBins(
     size_t phiBin, size_t zBin,
-    const Acts::SpacePointGrid<external_spacepoint_t>* binnedSP) {
+    const Acts::SpacePointGrid* binnedSP) {
   boost::container::small_vector<size_t, 9> indices;
   // if zBinNeighbors is not defined, get the indices using
   // neighborHoodIndices

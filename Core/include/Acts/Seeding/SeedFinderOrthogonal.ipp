@@ -10,6 +10,9 @@
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 
+//FIXME: this is a temporary crutch. remove external/internal SP distinction
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+
 #include <cmath>
 #include <functional>
 #include <numeric>
@@ -18,7 +21,7 @@
 namespace Acts {
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
-    const internal_sp_t &low) const -> typename tree_t::range_t {
+    const Acts::SpacePoint &low) const -> typename tree_t::range_t {
   float colMin = m_config.collisionRegionMin;
   float colMax = m_config.collisionRegionMax;
   float pL = low.phi();
@@ -87,7 +90,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
 
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
-    const internal_sp_t &high) const -> typename tree_t::range_t {
+    const Acts::SpacePoint &high) const -> typename tree_t::range_t {
   float pM = high.phi();
   float rM = high.radius();
 
@@ -145,7 +148,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
 
 template <typename external_spacepoint_t>
 bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
-    const internal_sp_t &low, const internal_sp_t &high) const {
+    const Acts::SpacePoint &low, const Acts::SpacePoint &high) const {
   float rL = low.radius();
   float rH = high.radius();
 
@@ -178,7 +181,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
 
 template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
-    SeedFinderOrthogonalConfig<external_spacepoint_t> config)
+    SeedFinderOrthogonalConfig config)
     : m_config(config.toInternalUnits()) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
@@ -201,14 +204,14 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
 template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
-    internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-    std::vector<internal_sp_t *> &top, int numQualitySeeds,
+    Acts::SpacePoint &middle, std::vector<Acts::SpacePoint *> &bottom,
+    std::vector<Acts::SpacePoint *> &top, int numQualitySeeds,
     output_container_t &cont) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
 
-  std::vector<internal_sp_t *> top_valid;
+  std::vector<Acts::SpacePoint *> top_valid;
   std::vector<float> curvatures;
   std::vector<float> impactParameters;
 
@@ -362,7 +365,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     const tree_t &tree, output_container_t &out_cont,
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
-  internal_sp_t &middle = *middle_p.second;
+  Acts::SpacePoint &middle = *middle_p.second;
 
   /*
    * Prepare four output vectors for seed candidates:
@@ -374,7 +377,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * increasing z track, and top_hl_v are the candidate top points for a
    * decreasing z track.
    */
-  std::vector<internal_sp_t *> bottom_lh_v, bottom_hl_v, top_lh_v, top_hl_v;
+  std::vector<Acts::SpacePoint *> bottom_lh_v, bottom_hl_v, top_lh_v, top_hl_v;
 
   /*
    * Cut: Ensure that the middle spacepoint lies within a valid r-region for
@@ -506,7 +509,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Create a vector to contain protoseeds.
    */
   std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed<ActsExamples::SimSpacePoint>>>>
+      float, std::unique_ptr<const InternalSeed>>>
       protoseeds;
 
   int numQualitySeeds = 0;
@@ -536,7 +539,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
 
 template <typename external_spacepoint_t>
 auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
-    const std::vector<internal_sp_t *> &spacePoints) const -> tree_t {
+    const std::vector<Acts::SpacePoint *> &spacePoints) const -> tree_t {
   std::vector<typename tree_t::pair_t> points;
 
   /*
@@ -544,7 +547,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
    * linearly pass to the k-d tree constructor. That constructor will take care
    * of sorting the pairs and splitting the space.
    */
-  for (internal_sp_t *sp : spacePoints) {
+  for (Acts::SpacePoint *sp : spacePoints) {
     typename tree_t::coordinate_t point;
 
     point[DimPhi] = sp->phi();
@@ -567,7 +570,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * types.
    */
   static_assert(std::is_same_v<typename output_container_t::value_type,
-                               Seed<external_spacepoint_t>>,
+                               InternalSeed>,
                 "Output iterator container type must accept seeds.");
   static_assert(std::is_same_v<typename input_container_t::value_type,
                                const external_spacepoint_t *>,
@@ -579,11 +582,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * take each external spacepoint, allocate a corresponding internal space
    * point, and save it in a vector.
    */
-  std::vector<internal_sp_t *> internalSpacePoints;
+ // FIXME: remove external_spacepoint_t and have everything directly work on Acts::SpacePoint
+  std::vector<Acts::SpacePoint *> internalSpacePoints;
   for (const external_spacepoint_t *p : spacePoints) {
-    internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
-        *p, {p->x(), p->y(), p->z()}, {0.0, 0.0},
-        {p->varianceR(), p->varianceZ()}));
+    internalSpacePoints.push_back(new Acts::SpacePoint(
+        {p->x(), p->y(), p->z()}, 
+        {0.0, 0.0},
+        {p->varianceR(), p->varianceZ()},
+        {0.0, 0.0},
+        m_config.sigmaScattering, // actually sigmaError in practice usually same
+        {new ActsExamples::IndexSourceLink(0,p->measurementIndex())}));
   }
 
   /*
@@ -603,17 +611,17 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   /*
    * Don't forget to get rid of all the spacepoints we just allocated!
    */
-  for (const internal_sp_t *p : internalSpacePoints) {
+  for (const Acts::SpacePoint *p : internalSpacePoints) {
     delete p;
   }
 }
 
 template <typename external_spacepoint_t>
 template <typename input_container_t>
-std::vector<Seed<external_spacepoint_t>>
+std::vector<InternalSeed>
 SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const input_container_t &spacePoints) const {
-  std::vector<seed_t> r;
+  std::vector<InternalSeed> r;
 
   createSeeds(spacePoints, r);
 

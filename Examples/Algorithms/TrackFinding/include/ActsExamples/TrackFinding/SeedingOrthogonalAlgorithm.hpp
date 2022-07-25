@@ -8,12 +8,11 @@
 
 #pragma once
 
-#include "Acts/Seeding/InternalSeed.hpp"
+#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/KDTree.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
@@ -40,7 +39,7 @@ class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
     std::string outputProtoTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
-    Acts::SeedFinderOrthogonalConfig<SimSpacePoint> seedFinderConfig;
+    Acts::SeedFinderOrthogonalConfig seedFinderConfig;
 
     float rMax = 200.;
     float deltaRMin = 1.;

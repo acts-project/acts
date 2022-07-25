@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -70,14 +71,16 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
       m_cfg.sigmaT0;
 }
 
-ActsExamples::SimSeedContainer
+Acts::SeedContainer
 ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     const ActsExamples::ProtoTrackContainer& protoTracks,
     const ActsExamples::SimSpacePointContainer& spacePoints) const {
-  SimSeedContainer seeds;
+  Acts::SeedContainer seeds;
   seeds.reserve(protoTracks.size());
 
   std::unordered_map<Index, const SimSpacePoint*> spMap;
+  // store Acts::SpacePoints that hold a reference to SimSpacePoint separately
+  std::vector<Acts::SpacePoint> seedSPs;
 
   for (const SimSpacePoint& i : spacePoints) {
     spMap.emplace(i.measurementIndex(), &i);
@@ -137,10 +140,20 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     }
 
     if (seedFound) {
-      seeds.emplace_back(*spacePointsOnTrack[bestSPIndices[0]],
-                         *spacePointsOnTrack[bestSPIndices[1]],
-                         *spacePointsOnTrack[bestSPIndices[2]],
-                         spacePointsOnTrack[bestSPIndices[1]]->z());
+      for (int i = 0; i< 3; i++){
+        Acts::Vector3 globalPos = {spacePointsOnTrack[bestSPIndices[i]]->x(), 
+                                   spacePointsOnTrack[bestSPIndices[i]]->y(),
+                                   spacePointsOnTrack[bestSPIndices[i]]->z()};
+        Acts::Vector2 variance = {spacePointsOnTrack[bestSPIndices[i]]->varianceR(),
+                                  spacePointsOnTrack[bestSPIndices[i]]->varianceZ()};
+        ActsExamples::SimSPSourceLink* sl = new ActsExamples::SimSPSourceLink{spacePointsOnTrack[bestSPIndices[i]]};
+        seedSPs.push_back({globalPos,{0.,0.},variance,{0.,0.},1,{static_cast<Acts::SourceLink*>(sl)}});
+      }
+      
+      seeds.emplace_back(seedSPs[seedSPs.size()-3],
+                         seedSPs[seedSPs.size()-2],
+                         seedSPs[seedSPs.size()-1],
+                         0);
     }
   }
   return seeds;
@@ -152,10 +165,10 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   const auto& sourceLinks =
       ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
   // Read seeds or create them from proto tracks and space points
-  SimSeedContainer seeds;
+  Acts::SeedContainer seeds;
   SimSpacePointContainer spacePoints;
   if (not m_cfg.inputSeeds.empty()) {
-    seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
+    seeds = ctx.eventStore.get<Acts::SeedContainer>(m_cfg.inputSeeds);
     ACTS_VERBOSE("Read " << seeds.size() << " seeds");
   } else {
     const auto& protoTracks =
@@ -176,12 +189,15 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   auto bCache = m_cfg.magneticField->makeCache(ctx.magFieldContext);
 
+  if (not seeds.empty()){
+    assert((dynamic_cast<const SimSPSourceLink*>(seeds[0].sp.front()->getSourceLinks()[0]) != nullptr));
+  }
   // Loop over all found seeds to estimate track parameters
   for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
-    const auto bottomSP = seed.sp().front();
-    const auto hitIdx = bottomSP->measurementIndex();
+    const auto bottomSP = seed.sp.front();
+    const auto hitIdx = static_cast<const SimSPSourceLink*>(bottomSP->getSourceLinks()[0])->getSimSP()->measurementIndex();
     const auto sourceLink = sourceLinks.nth(hitIdx);
     auto geoId = sourceLink->get().geometryId();
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
@@ -202,7 +218,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
     // Estimate the track parameters from seed
     auto optParams = Acts::estimateTrackParamsFromSeed(
-        ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
+        ctx.geoContext, seed.sp.begin(), seed.sp.end(), *surface, field,
         m_cfg.bFieldMin);
     if (not optParams.has_value()) {
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
@@ -216,8 +232,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       // Create a proto track for this seed
       ProtoTrack track;
       track.reserve(3);
-      for (const auto& sp : seed.sp()) {
-        track.push_back(sp->measurementIndex());
+      for (const auto& sp : seed.sp) {
+        track.push_back(static_cast<const SimSPSourceLink*>(sp->getSourceLinks()[0])->getSimSP()->measurementIndex());
       }
       tracks.emplace_back(track);
     }

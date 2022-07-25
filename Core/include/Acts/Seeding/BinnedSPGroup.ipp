@@ -5,22 +5,19 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-template <typename external_spacepoint_t>
 template <typename spacepoint_iterator_t>
-Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
-    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-        const external_spacepoint_t&, float, float, float)>
-        globTool,
-    std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
-    std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
-    std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-    const SeedfinderConfig<external_spacepoint_t>& _config) {
+Acts::BinnedSPGroup::BinnedSPGroup(
+    spacepoint_iterator_t spBegin,
+    spacepoint_iterator_t spEnd,
+    std::shared_ptr<Acts::BinFinder> botBinFinder,
+    std::shared_ptr<Acts::BinFinder> tBinFinder,
+    std::unique_ptr<SpacePointGrid> grid,
+    const SeedfinderConfig& _config) {
   auto config = _config.toInternalUnits();
   static_assert(
       std::is_same<
           typename std::iterator_traits<spacepoint_iterator_t>::value_type,
-          const external_spacepoint_t*>::value,
+          Acts::SpacePoint*>::value,
       "Iterator does not contain type this class was templated with");
 
   // get region of interest (or full detector if configured accordingly)
@@ -36,38 +33,32 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // binSizeR allows to increase or reduce numRBins if needed
   size_t numRBins = (config.rMax + config.beamPos.norm()) / config.binSizeR;
   std::vector<
-      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
+      std::vector<Acts::SpacePoint*>>
       rBins(numRBins);
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
       continue;
     }
-    const external_spacepoint_t& sp = **it;
-    const auto& [spPosition, variance] =
-        globTool(sp, config.zAlign, config.rAlign, config.sigmaError);
+    Acts::SpacePoint* sp = *it;
 
-    float spX = spPosition[0];
-    float spY = spPosition[1];
-    float spZ = spPosition[2];
-
+    float spZ = sp->z();
     if (spZ > zMax || spZ < zMin) {
       continue;
     }
-    float spPhi = std::atan2(spY, spX);
+
+    float spPhi = sp->phi();
     if (spPhi > phiMax || spPhi < phiMin) {
       continue;
     }
 
-    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        sp, spPosition, config.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    size_t rIndex = isp->radius() / config.binSizeR;
+    size_t rIndex = sp->radius() / config.binSizeR;
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;
     }
-    rBins[rIndex].push_back(std::move(isp));
+    rBins[rIndex].push_back(sp);
   }
 
   // if requested, it is possible to force sorting in R for each (z, phi) grid
@@ -76,8 +67,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     for (auto& rbin : rBins) {
       std::sort(
           rbin.begin(), rbin.end(),
-          [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
-             std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
+          [](Acts::SpacePoint* a,
+             Acts::SpacePoint* b) {
             return a->radius() < b->radius();
           });
     }
@@ -87,11 +78,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // space points with delta r < rbin size can be out of order is sorting is not
   // requested
   for (auto& rbin : rBins) {
-    for (auto& isp : rbin) {
-      Acts::Vector2 spLocation(isp->phi(), isp->z());
-      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
+    for (auto& sp : rbin) {
+      Acts::Vector2 spLocation(sp->phi(), sp->z());
+      std::vector<Acts::SpacePoint*>&
           bin = grid->atPosition(spLocation);
-      bin.push_back(std::move(isp));
+      bin.push_back(std::move(sp));
     }
   }
   m_binnedSP = std::move(grid);

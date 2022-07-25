@@ -8,8 +8,7 @@
 
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/Seedfinder.hpp"
@@ -24,14 +23,19 @@
 #include <boost/type_erasure/any_cast.hpp>
 
 #include "ATLASCuts.hpp"
-#include "SpacePoint.hpp"
 
 using namespace Acts::UnitLiterals;
 
-std::vector<const SpacePoint*> readFile(std::string filename) {
+class LayerLink : public Acts::SourceLink{
+  public:
+  LayerLink(size_t layer): SourceLink(layer){
+  }
+};
+
+std::vector<Acts::SpacePoint*> readFile(std::string filename) {
   std::string line;
-  int layer;
-  std::vector<const SpacePoint*> readSP;
+  size_t layer;
+  std::vector<Acts::SpacePoint*> readSP;
 
   std::ifstream spFile(filename);
   if (spFile.is_open()) {
@@ -56,8 +60,16 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
           varianceR = 9. * cov;
           varianceZ = .06;
         }
-        SpacePoint* sp =
-            new SpacePoint{x, y, z, r, layer, varianceR, varianceZ};
+        
+        LayerLink layerLink{layer};
+        Acts::SourceLink* sourceLink = dynamic_cast<Acts::SourceLink*>(&layerLink);
+
+        auto sp = new Acts::SpacePoint{Acts::Vector3(x, y, z),
+                            Acts::Vector2(-.5_mm, -.5_mm),
+                            Acts::Vector2(varianceR, varianceZ),
+                            Acts::Vector2(0.,0.),
+                            5.,
+                            {sourceLink}};
         //     if(r < 200.){
         //       sp->setClusterList(1,0);
         //     }
@@ -107,14 +119,14 @@ int main(int argc, char** argv) {
   }
 
   auto start_read = std::chrono::system_clock::now();
-  std::vector<const SpacePoint*> spVec = readFile(file);
+  std::vector<Acts::SpacePoint*> spVec = readFile(file);
   auto end_read = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_read = end_read - start_read;
 
   std::cout << "read " << spVec.size() << " SP from file " << file << " in "
             << elapsed_read.count() << "s" << std::endl;
 
-  Acts::SeedfinderConfig<SpacePoint> config;
+  Acts::SeedfinderConfig config;
   // silicon detector max
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
@@ -146,23 +158,15 @@ int main(int argc, char** argv) {
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
-      Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
+  auto bottomBinFinder = std::make_shared<Acts::BinFinder>(
+      Acts::BinFinder(zBinNeighborsBottom, numPhiNeighbors));
+  auto topBinFinder = std::make_shared<Acts::BinFinder>(
+      Acts::BinFinder(zBinNeighborsTop, numPhiNeighbors));
   Acts::SeedFilterConfig sfconf;
-  Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
-  config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
-      Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::Seedfinder<SpacePoint> a(config);
-
-  // covariance tool, sets covariances per spacepoint as required
-  auto ct = [=](const SpacePoint& sp, float, float,
-                float) -> std::pair<Acts::Vector3, Acts::Vector2> {
-    Acts::Vector3 position(sp.x(), sp.y(), sp.z());
-    Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
-    return std::make_pair(position, covariance);
-  };
+  Acts::ATLASCuts atlasCuts = Acts::ATLASCuts();
+  config.seedFilter = std::make_unique<Acts::SeedFilter>(
+      Acts::SeedFilter(sfconf, &atlasCuts));
+  Acts::Seedfinder seedfinder(config);
 
   // setup spacepoint grid config
   Acts::SpacePointGridConfig gridConf;
@@ -174,20 +178,20 @@ int main(int argc, char** argv) {
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
   // create grid with bin sizes according to the configured geometry
-  std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), ct,
+  std::unique_ptr<Acts::SpacePointGrid> grid =
+      Acts::SpacePointGridCreator::createGrid(gridConf);
+  auto spGroup = Acts::BinnedSPGroup(spVec.begin(), spVec.end(),
                                                  bottomBinFinder, topBinFinder,
                                                  std::move(grid), config);
 
-  std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
-  decltype(a)::State state;
+  std::vector<std::vector<Acts::InternalSeed>> seedVector;
+  decltype(seedfinder)::State state;
   auto start = std::chrono::system_clock::now();
   auto groupIt = spGroup.begin();
   auto endOfGroups = spGroup.end();
   for (; !(groupIt == endOfGroups); ++groupIt) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
+    seedfinder.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
                           groupIt.middle(), groupIt.top(), rRangeSPExtent);
   }
   auto end = std::chrono::system_clock::now();
@@ -202,15 +206,15 @@ int main(int argc, char** argv) {
   if (!quiet) {
     for (auto& regionVec : seedVector) {
       for (size_t i = 0; i < regionVec.size(); i++) {
-        const Acts::Seed<SpacePoint>* seed = &regionVec[i];
-        const SpacePoint* sp = seed->sp()[0];
+        Acts::InternalSeed* seed = &regionVec[i];
+        Acts::SpacePoint* sp = seed->sp[0];
         std::cout << " (" << sp->x() << ", " << sp->y() << ", " << sp->z()
                   << ") ";
-        sp = seed->sp()[1];
-        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
+        sp = seed->sp[1];
+        std::cout << sp->getSourceLinks()[0]->geometryId() << " (" << sp->x() << ", " << sp->y() << ", "
                   << sp->z() << ") ";
-        sp = seed->sp()[2];
-        std::cout << sp->layer << " (" << sp->x() << ", " << sp->y() << ", "
+        sp = seed->sp[2];
+        std::cout << sp->getSourceLinks()[0]->geometryId() << " (" << sp->x() << ", " << sp->y() << ", "
                   << sp->z() << ") ";
         std::cout << std::endl;
       }

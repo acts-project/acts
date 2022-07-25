@@ -232,6 +232,9 @@ int main(int argc, char** argv) {
   paramsEstimationCfg.sigmaTheta = 0.001_degree;
   paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
   paramsEstimationCfg.sigmaT0 = 1400._s;
+  paramsEstimationCfg.getMeasurementIndex.connect([](const void*, const Acts::SpacePoint& sp) -> Acts::Index {
+          const auto* simSPSL = static_cast<const ActsExamples::SimSPSourceLink*>(sp.getSourceLinks()[0]);
+          return simSPSL->getSimSP()->measurementIndex();
   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
       paramsEstimationCfg, logLevel));
 

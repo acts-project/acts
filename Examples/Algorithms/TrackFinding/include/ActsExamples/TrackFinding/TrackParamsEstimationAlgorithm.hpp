@@ -13,8 +13,11 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
+#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
@@ -112,7 +115,7 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
   /// @param protoTracks The proto tracks
   /// @param spacePoints The existing space points
   /// @return the created seeds
-  SimSeedContainer createSeeds(const ProtoTrackContainer& protoTracks,
+  Acts::SeedContainer createSeeds(const ProtoTrackContainer& protoTracks,
                                const SimSpacePointContainer& spacePoints) const;
 };
 

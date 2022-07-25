@@ -10,6 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 
 #include <cmath>
@@ -34,6 +36,7 @@ class SimSpacePoint {
   /// @param stripCenterDistance distance between the center of the two strips
   /// @param topStripCenterPosition position of the center of the top strip
   /// @param validDoubleMeasurementDetails boolean to check if double measurements are valid
+  /// TODO: THIS WILL SET SIGMAERROR TO 5 STANDARD DEVIATIONS
   template <typename position_t>
   SimSpacePoint(const Eigen::MatrixBase<position_t>& pos, float varRho,
                 float varZ, Index measurementIndex,
@@ -142,5 +145,14 @@ constexpr bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
 
 /// Container of space points.
 using SimSpacePointContainer = std::vector<SimSpacePoint>;
+
+class SimSPSourceLink : public Acts::SourceLink{
+  public:
+  const SimSpacePoint* getSimSP()const{return simSpacePoint;}
+  SimSPSourceLink(const SimSpacePoint* sp) : Acts::SourceLink(0), simSpacePoint(sp){}
+  SimSPSourceLink() = delete;
+  private:
+  const SimSpacePoint* simSpacePoint;
+};
 
 }  // namespace ActsExamples

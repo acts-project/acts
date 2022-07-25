@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 
@@ -25,7 +25,7 @@
 
 namespace Acts {
 
-template <typename external_spacepoint_t, typename platform_t = void*>
+template <typename platform_t = void*>
 class Seedfinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
@@ -34,8 +34,8 @@ class Seedfinder {
  public:
   struct State {
     // bottom space point
-    std::vector<InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
-    std::vector<InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
+    std::vector<SpacePoint*> compatBottomSP;
+    std::vector<SpacePoint*> compatTopSP;
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom;
@@ -43,27 +43,27 @@ class Seedfinder {
     std::vector<LinCircle> linCircleTop;
 
     // create vectors here to avoid reallocation in each loop
-    std::vector<InternalSpacePoint<external_spacepoint_t>*> topSpVec;
+    std::vector<SpacePoint*> topSpVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
     std::vector<float> etaVec;
     std::vector<float> ptVec;
 
     std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
+        float, std::unique_ptr<const InternalSeed>>>
         seedsPerSpM;
   };
 
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the Seedfinder
-  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
+  Seedfinder(Acts::SeedfinderConfig config);
   ~Seedfinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
   Seedfinder() = delete;
-  Seedfinder(const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
-  Seedfinder<external_spacepoint_t, platform_t>& operator=(
-      const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
+  Seedfinder(const Seedfinder<platform_t>&) = delete;
+  Seedfinder<platform_t>& operator=(
+      const Seedfinder<platform_t>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -79,8 +79,10 @@ class Seedfinder {
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
       State& state,
-      std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
+      std::back_insert_iterator<container_t<InternalSeed>> outIt,
+      sp_range_t bottomSPs,
+      sp_range_t middleSPs,
+      sp_range_t topSPs,
       Extent rRangeSPExtent) const;
 
   /// @brief Compatibility method for the new-style seed finding API.
@@ -101,11 +103,11 @@ class Seedfinder {
   /// @param topSPs group of space points to be used as outermost SP in a seed.
   /// @returns a vector of seeds.
   template <typename sp_range_t>
-  std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
+  std::vector<InternalSeed> createSeedsForGroup(
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
  private:
-  Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedfinderConfig m_config;
 };
 
 }  // namespace Acts

@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -66,18 +66,15 @@ struct SpacePointGridConfig {
   }
 };
 
-template <typename external_spacepoint_t>
 using SpacePointGrid = detail::Grid<
-    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>,
+    std::vector<SpacePoint*>,
     detail::Axis<detail::AxisType::Equidistant,
                  detail::AxisBoundaryType::Closed>,
     detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>>;
 
 class SpacePointGridCreator {
  public:
-  template <typename external_spacepoint_t>
-  static std::unique_ptr<SpacePointGrid<external_spacepoint_t>> createGrid(
+  static std::unique_ptr<SpacePointGrid> createGrid(
       const Acts::SpacePointGridConfig& _config);
 };
 }  // namespace Acts
-#include "Acts/Seeding/SpacePointGrid.ipp"

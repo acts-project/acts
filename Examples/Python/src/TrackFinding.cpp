@@ -76,7 +76,7 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SeedfinderConfig<SimSpacePoint>;
+    using Config = Acts::SeedfinderConfig;
     auto c = py::class_<Config>(m, "SeedfinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
@@ -102,8 +102,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(bFieldInZ);
     ACTS_PYTHON_MEMBER(beamPos);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
-    ACTS_PYTHON_MEMBER(zAlign);
-    ACTS_PYTHON_MEMBER(rAlign);
     ACTS_PYTHON_MEMBER(sigmaError);
     ACTS_PYTHON_MEMBER(highland);
     ACTS_PYTHON_MEMBER(maxScatteringAngle2);
@@ -146,7 +144,7 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
+    using Config = Acts::SeedFinderOrthogonalConfig;
     auto c =
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);

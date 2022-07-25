@@ -7,11 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <memory>
 
-template <typename SpacePoint>
-std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
+std::unique_ptr<Acts::SpacePointGrid>
 Acts::SpacePointGridCreator::createGrid(
     const Acts::SpacePointGridConfig& _config) {
   Acts::SpacePointGridConfig config = _config.toInternalUnits();
@@ -107,6 +107,6 @@ Acts::SpacePointGridCreator::createGrid(
 
   detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>
       zAxis(zValues);
-  return std::make_unique<Acts::SpacePointGrid<SpacePoint>>(
+  return std::make_unique<Acts::SpacePointGrid>(
       std::make_tuple(phiAxis, zAxis));
 }

@@ -9,8 +9,6 @@
 #pragma once
 
 #include "Acts/Seeding/BinFinder.hpp"
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
@@ -26,16 +24,15 @@ using NeighborhoodVector = boost::container::small_vector<size_t, 10>;
 /// Iterates over the elements of all bins given
 /// by the indices parameter in the given SpacePointGrid.
 /// Fullfills the forward iterator.
-template <typename external_spacepoint_t>
 class NeighborhoodIterator {
  public:
-  using sp_it_t = typename std::vector<std::unique_ptr<
-      InternalSpacePoint<external_spacepoint_t>>>::const_iterator;
+  using sp_it_t = typename std::vector<
+      Acts::SpacePoint*>::const_iterator;
 
   NeighborhoodIterator() = delete;
 
   NeighborhoodIterator(NeighborhoodVector indices,
-                       const SpacePointGrid<external_spacepoint_t>* spgrid) {
+                       const SpacePointGrid* spgrid) {
     m_grid = spgrid;
     m_indices = indices;
     m_curInd = 0;
@@ -46,7 +43,7 @@ class NeighborhoodIterator {
   }
 
   NeighborhoodIterator(NeighborhoodVector indices,
-                       const SpacePointGrid<external_spacepoint_t>* spgrid,
+                       const SpacePointGrid* spgrid,
                        size_t curInd, sp_it_t curIt) {
     m_grid = spgrid;
     m_indices = indices;
@@ -56,10 +53,10 @@ class NeighborhoodIterator {
       m_binEnd = std::end(spgrid->at(m_indices[m_curInd]));
     }
   }
-  static NeighborhoodIterator<external_spacepoint_t> begin(
+  static NeighborhoodIterator begin(
       NeighborhoodVector indices,
-      const SpacePointGrid<external_spacepoint_t>* spgrid) {
-    auto nIt = NeighborhoodIterator<external_spacepoint_t>(indices, spgrid);
+      const SpacePointGrid* spgrid) {
+    auto nIt = NeighborhoodIterator(indices, spgrid);
     // advance until first non-empty bin or last bin
     if (nIt.m_curIt == nIt.m_binEnd) {
       ++nIt;
@@ -68,7 +65,7 @@ class NeighborhoodIterator {
   }
 
   NeighborhoodIterator(
-      const NeighborhoodIterator<external_spacepoint_t>& other) {
+      const NeighborhoodIterator& other) {
     m_grid = other.m_grid;
     m_indices = other.m_indices;
     m_curInd = other.m_curInd;
@@ -94,11 +91,11 @@ class NeighborhoodIterator {
     }
   }
 
-  InternalSpacePoint<external_spacepoint_t>* operator*() {
-    return (*m_curIt).get();
+  Acts::SpacePoint* operator*() {
+    return *m_curIt;
   }
 
-  bool operator!=(const NeighborhoodIterator<external_spacepoint_t>& other) {
+  bool operator!=(const NeighborhoodIterator& other) {
     return m_curIt != other.m_curIt || m_curInd != other.m_curInd;
   }
 
@@ -109,39 +106,37 @@ class NeighborhoodIterator {
   NeighborhoodVector m_indices;
   // current bin
   size_t m_curInd;
-  const Acts::SpacePointGrid<external_spacepoint_t>* m_grid;
+  const Acts::SpacePointGrid* m_grid;
 };
 
 /// @c Neighborhood Used to access iterators to access a group of bins
 /// returned by a BinFinder.
 /// Fulfills the range_expression interface
-template <typename external_spacepoint_t>
 class Neighborhood {
  public:
   Neighborhood() = delete;
   Neighborhood(NeighborhoodVector indices,
-               const SpacePointGrid<external_spacepoint_t>* spgrid) {
+               const SpacePointGrid* spgrid) {
     m_indices = indices;
     m_spgrid = spgrid;
   }
-  NeighborhoodIterator<external_spacepoint_t> begin() {
-    return NeighborhoodIterator<external_spacepoint_t>::begin(m_indices,
+  NeighborhoodIterator begin() {
+    return NeighborhoodIterator::begin(m_indices,
                                                               m_spgrid);
   }
-  NeighborhoodIterator<external_spacepoint_t> end() {
-    return NeighborhoodIterator<external_spacepoint_t>(
+  NeighborhoodIterator end() {
+    return NeighborhoodIterator(
         m_indices, m_spgrid, m_indices.size() - 1,
         std::end(m_spgrid->at(m_indices.back())));
   }
 
  private:
   NeighborhoodVector m_indices;
-  const SpacePointGrid<external_spacepoint_t>* m_spgrid;
+  const SpacePointGrid* m_spgrid;
 };
 
 /// @c BinnedSPGroupIterator Allows to iterate over all groups of bins
 /// a provided BinFinder can generate for each bin of a provided SPGrid
-template <typename external_spacepoint_t>
 class BinnedSPGroupIterator {
  public:
   BinnedSPGroupIterator& operator++() {
@@ -179,21 +174,21 @@ class BinnedSPGroupIterator {
     return !(this->operator==(otherState));
   }
 
-  Neighborhood<external_spacepoint_t> middle() {
-    return Neighborhood<external_spacepoint_t>(currentBin, grid);
+  Neighborhood middle() {
+    return Neighborhood(currentBin, grid);
   }
 
-  Neighborhood<external_spacepoint_t> bottom() {
-    return Neighborhood<external_spacepoint_t>(bottomBinIndices, grid);
+  Neighborhood bottom() {
+    return Neighborhood(bottomBinIndices, grid);
   }
 
-  Neighborhood<external_spacepoint_t> top() {
-    return Neighborhood<external_spacepoint_t>(topBinIndices, grid);
+  Neighborhood top() {
+    return Neighborhood(topBinIndices, grid);
   }
 
-  BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,
-                        BinFinder<external_spacepoint_t>* botBinFinder,
-                        BinFinder<external_spacepoint_t>* tBinFinder,
+  BinnedSPGroupIterator(const SpacePointGrid* spgrid,
+                        BinFinder* botBinFinder,
+                        BinFinder* tBinFinder,
                         boost::container::small_vector<size_t, 20> bins = {}) {
     grid = spgrid;
     m_bottomBinFinder = botBinFinder;
@@ -212,9 +207,9 @@ class BinnedSPGroupIterator {
     topBinIndices = m_topBinFinder->findBins(phiIndex, this_zIndex, grid);
   }
 
-  BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,
-                        BinFinder<external_spacepoint_t>* botBinFinder,
-                        BinFinder<external_spacepoint_t>* tBinFinder,
+  BinnedSPGroupIterator(const SpacePointGrid* spgrid,
+                        BinFinder* botBinFinder,
+                        BinFinder* tBinFinder,
                         size_t phiInd, size_t zInd,
                         boost::container::small_vector<size_t, 20> bins = {}) {
     m_bottomBinFinder = botBinFinder;
@@ -245,13 +240,13 @@ class BinnedSPGroupIterator {
   NeighborhoodVector currentBin;
   NeighborhoodVector bottomBinIndices;
   NeighborhoodVector topBinIndices;
-  const SpacePointGrid<external_spacepoint_t>* grid;
+  const SpacePointGrid* grid;
   size_t phiIndex = 1;
   size_t zIndex = 1;
   size_t outputIndex = 0;
   std::array<long unsigned int, 2ul> phiZbins;
-  BinFinder<external_spacepoint_t>* m_bottomBinFinder;
-  BinFinder<external_spacepoint_t>* m_topBinFinder;
+  BinFinder* m_bottomBinFinder;
+  BinFinder* m_topBinFinder;
   boost::container::small_vector<size_t, 20> customZorder;
   // 	bool start = true;
 };
@@ -259,44 +254,41 @@ class BinnedSPGroupIterator {
 /// @c BinnedSPGroup Provides access to begin and end BinnedSPGroupIterator
 /// for given BinFinders and SpacePointGrid.
 /// Fulfills the range_expression interface.
-template <typename external_spacepoint_t>
 class BinnedSPGroup {
  public:
   BinnedSPGroup() = delete;
 
   template <typename spacepoint_iterator_t>
-  BinnedSPGroup<external_spacepoint_t>(
+  BinnedSPGroup(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-      std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-          const external_spacepoint_t&, float, float, float)>,
-      std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
-      std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
-      std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-      const SeedfinderConfig<external_spacepoint_t>& _config);
+      std::shared_ptr<Acts::BinFinder> botBinFinder,
+      std::shared_ptr<Acts::BinFinder> tBinFinder,
+      std::unique_ptr<SpacePointGrid> grid,
+      const SeedfinderConfig& _config);
 
   size_t size() { return m_binnedSP->size(); }
 
-  BinnedSPGroupIterator<external_spacepoint_t> begin() {
-    return BinnedSPGroupIterator<external_spacepoint_t>(
+  BinnedSPGroupIterator begin() {
+    return BinnedSPGroupIterator(
         m_binnedSP.get(), m_bottomBinFinder.get(), m_topBinFinder.get(),
         m_bins);
   }
 
-  BinnedSPGroupIterator<external_spacepoint_t> end() {
+  BinnedSPGroupIterator end() {
     auto phiZbins = m_binnedSP->numLocalBins();
-    return BinnedSPGroupIterator<external_spacepoint_t>(
+    return BinnedSPGroupIterator(
         m_binnedSP.get(), m_bottomBinFinder.get(), m_topBinFinder.get(),
         phiZbins[0], phiZbins[1] + 1, m_bins);
   }
 
  private:
-  // grid with ownership of all InternalSpacePoint
-  std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_binnedSP;
+  // grid holding pointers to all SpacePoints
+  std::unique_ptr<Acts::SpacePointGrid> m_binnedSP;
 
   // BinFinder must return std::vector<Acts::Seeding::Bin> with content of
   // each bin sorted in r (ascending)
-  std::shared_ptr<BinFinder<external_spacepoint_t>> m_topBinFinder;
-  std::shared_ptr<BinFinder<external_spacepoint_t>> m_bottomBinFinder;
+  std::shared_ptr<BinFinder> m_topBinFinder;
+  std::shared_ptr<BinFinder> m_bottomBinFinder;
 
   boost::container::small_vector<size_t, 20> m_bins;
 };

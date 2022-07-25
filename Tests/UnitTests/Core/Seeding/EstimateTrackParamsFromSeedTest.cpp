@@ -30,7 +30,7 @@
 #include <array>
 #include <vector>
 
-#include "SpacePoint.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 
 namespace {
 
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                                                  start, resolutions, rng);
 
           // Create space points from different detector layers
-          std::map<GeometryIdentifier::Value, SpacePoint> spacePoints;
+          std::map<GeometryIdentifier::Value, Acts::SpacePoint> spacePoints;
           const Surface* bottomSurface = nullptr;
           for (const auto& sl : measurements.sourceLinks) {
             const auto& geoId = sl.geometryId();
@@ -125,12 +125,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
                 surface->localToGlobal(geoCtx, localPos, globalFakeMom);
             // Create a space point (varianceR and varianceZ are lazily set to
             // zero since they are not important for the test)
-            float r = std::hypot(globalPos.x(), globalPos.y());
             spacePoints.emplace(
-                layer, SpacePoint{static_cast<float>(globalPos.x()),
-                                  static_cast<float>(globalPos.y()),
-                                  static_cast<float>(globalPos.z()), r,
-                                  static_cast<int>(geoId.layer()), 0., 0.});
+                layer, Acts::SpacePoint{globalPos,{0.,0.},{0.,0.},{0.,0.},1,{}});
             if (spacePoints.size() == 1) {
               bottomSurface = surface;
             }
@@ -152,7 +148,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           double rho = expParams[eBoundQOverP] * 0.3 * 2. / UnitConstants::m;
 
           // The space point pointers
-          std::array<const SpacePoint*, 3> spacePointPtrs;
+          std::array<const Acts::SpacePoint*, 3> spacePointPtrs;
           std::transform(spacePoints.begin(), std::next(spacePoints.begin(), 3),
                          spacePointPtrs.begin(),
                          [](const auto& sp) { return &sp.second; });

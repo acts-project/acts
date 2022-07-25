@@ -6,40 +6,23 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
+#include "Acts/Seeding/SeedFinderUtils.hpp"
+
 namespace Acts {
-template <typename external_spacepoint_t>
-LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
-                               InternalSpacePoint<external_spacepoint_t>& spM,
+LinCircle transformCoordinates(Acts::SpacePoint& sp,
+                               Acts::SpacePoint& spM,
                                bool bottom) {
-  auto extractFunction =
-      [](const InternalSpacePoint<external_spacepoint_t>& obj)
-      -> std::array<float, 6> {
-    std::array<float, 6> output{obj.x(),      obj.y(),         obj.z(),
-                                obj.radius(), obj.varianceR(), obj.varianceZ()};
-    return output;
-  };
-
-  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      sp, spM, bottom, extractFunction);
-}
-
-template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               external_spacepoint_t& spM, bool bottom,
-                               callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
   // detailed comments.
 
-  auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
-  auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(sp);
-
-  float cosPhiM = xM / rM;
-  float sinPhiM = yM / rM;
-  float deltaX = xSP - xM;
-  float deltaY = ySP - yM;
-  float deltaZ = zSP - zM;
+  float cosPhiM = spM.x() / spM.radius();
+  float sinPhiM = spM.y() / spM.radius();
+  float deltaX = sp.x() - spM.x();
+  float deltaY = sp.y() - spM.y();
+  float deltaZ = sp.z() - spM.z();
   float x = deltaX * cosPhiM + deltaY * sinPhiM;
   float y = deltaY * cosPhiM - deltaX * sinPhiM;
   float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
@@ -48,48 +31,27 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
   float cot_theta = deltaZ * iDeltaR * bottomFactor;
   LinCircle l;
   l.cotTheta = cot_theta;
-  l.Zo = zM - rM * cot_theta;
+  l.Zo = spM.z() - spM.radius() * cot_theta;
   l.iDeltaR = iDeltaR;
   l.U = x * iDeltaR2;
   l.V = y * iDeltaR2;
-  l.Er = ((varianceZM + varianceZSP) +
-          (cot_theta * cot_theta) * (varianceRM + varianceRSP)) *
+  l.Er = ((spM.varianceZ() + sp.varianceZ()) +
+          (cot_theta * cot_theta) * (spM.varianceR() + sp.varianceR())) *
          iDeltaR2;
   return l;
 }
 
-template <typename external_spacepoint_t>
-void transformCoordinates(
-    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
-    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec) {
-  auto extractFunction =
-      [](const InternalSpacePoint<external_spacepoint_t>& obj)
-      -> std::array<float, 6> {
-    std::array<float, 6> output{obj.x(),      obj.y(),         obj.z(),
-                                obj.radius(), obj.varianceR(), obj.varianceZ()};
-    return output;
-  };
+void transformCoordinates(std::vector<Acts::SpacePoint*>& vec,
+                          Acts::SpacePoint& spM, bool bottom,
+                          std::vector<LinCircle>& linCircleVec) {
 
-  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      vec, spM, bottom, linCircleVec, extractFunction);
-}
-
-template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
-                          external_spacepoint_t& spM, bool bottom,
-                          std::vector<LinCircle>& linCircleVec,
-                          callable_t&& extractFunction) {
-  auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
-
-  float cosPhiM = xM / rM;
-  float sinPhiM = yM / rM;
+  float cosPhiM = spM.x() / spM.radius();
+  float sinPhiM = spM.y() / spM.radius();
   for (auto sp : vec) {
-    auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
 
-    float deltaX = xSP - xM;
-    float deltaY = ySP - yM;
-    float deltaZ = zSP - zM;
+    float deltaX = sp->x() - spM.x();
+    float deltaY = sp->y() - spM.y();
+    float deltaZ = sp->z() - spM.z();
     // calculate projection fraction of spM->sp vector pointing in same
     // direction as
     // vector origin->spM (x) and projection fraction of spM->sp vector pointing
@@ -103,11 +65,11 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
     int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
     // cot_theta = (deltaZ/deltaR)
     float cot_theta = deltaZ * iDeltaR * bottomFactor;
-    // VERY frequent (SP^3) access
+    // VERY frequent O(SP^3) access
     LinCircle l;
     l.cotTheta = cot_theta;
     // location on z-axis of this SP-duplet
-    l.Zo = zM - rM * cot_theta;
+    l.Zo = spM.z() - spM.radius() * cot_theta;
     l.iDeltaR = iDeltaR;
     // transformation of circle equation (x,y) into linear equation (u,v)
     // x^2 + y^2 - 2x_0*x - 2y_0*y = 0
@@ -118,8 +80,8 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
     l.U = x * iDeltaR2;
     l.V = y * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
-    l.Er = ((varianceZM + sp->varianceZ()) +
-            (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
+    l.Er = ((spM.varianceZ() + sp->varianceZ()) +
+            (cot_theta * cot_theta) * (spM.varianceR() + sp->varianceR())) *
            iDeltaR2;
 
     l.x = x;
@@ -134,7 +96,7 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
   }
   // sort the SP in order of cotTheta
   std::sort(vec.begin(), vec.end(),
-            [](external_spacepoint_t* a, external_spacepoint_t* b) -> bool {
+            [](Acts::SpacePoint* a, Acts::SpacePoint* b) -> bool {
               return (a->cotTheta() < b->cotTheta());
             });
   std::sort(linCircleVec.begin(), linCircleVec.end(),
@@ -143,22 +105,23 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
             });
 }
 
-template <typename external_spacepoint_t, typename sp_range_t>
-bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
-                        sp_range_t sp, const double* spacepointPosition,
-                        const float toleranceParam, double* outputCoordinates) {
+bool xyzCoordinateCheck(Acts::SeedfinderConfig m_config,
+                        Acts::SpacePoint* sp,
+                        const double* spacepointPosition,
+                        const float toleranceParam,
+                        double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 
-  const float topHalfStripLength = m_config.getTopHalfStripLength(sp->sp());
+  const float topHalfStripLength = m_config.getTopHalfStripLength(*sp);
   const float bottomHalfStripLength =
-      m_config.getBottomHalfStripLength(sp->sp());
+      m_config.getBottomHalfStripLength(*sp);
   const Acts::Vector3 topStripDirection =
-      m_config.getTopStripDirection(sp->sp());
+      m_config.getTopStripDirection(*sp);
   const Acts::Vector3 bottomStripDirection =
-      m_config.getBottomStripDirection(sp->sp());
+      m_config.getBottomStripDirection(*sp);
   const Acts::Vector3 stripCenterDistance =
-      m_config.getStripCenterDistance(sp->sp());
+      m_config.getStripCenterDistance(*sp);
 
   // cross product between top strip vector and spacepointPosition
   double d1[3] = {
@@ -206,7 +169,7 @@ bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> m_config,
   // detector elements
 
   const Acts::Vector3 topStripCenterPosition =
-      m_config.getTopStripCenterPosition(sp->sp());
+      m_config.getTopStripCenterPosition(*sp);
 
   // spacepointPosition corected with respect to the top strip position and
   // direction and the distance between the strips

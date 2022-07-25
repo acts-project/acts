@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/Seed.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
 
 namespace Acts {
@@ -31,45 +31,33 @@ struct LinCircle {
 ///
 /// This function is a non-vectorized version of @a transformCoordinates.
 ///
-/// @tparam external_spacepoint_t The external spacepoint type.
-///
 /// @param[in] sp The first spacepoint to use, either a bottom or top.
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottom Should be true if sp is a bottom SP.
-template <typename external_spacepoint_t>
-LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
-                               InternalSpacePoint<external_spacepoint_t>& spM,
+LinCircle transformCoordinates(Acts::SpacePoint& sp,
+                               Acts::SpacePoint& spM,
                                bool bottom);
-
-template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               external_spacepoint_t& spM, bool bottom,
-                               callable_t&& extractFunction);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
-///
-/// @tparam external_spacepoint_t The external spacepoint type.
 ///
 /// @param[in] vec The list of bottom or top spacepoints
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
-template <typename external_spacepoint_t>
 void transformCoordinates(
-    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
-    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    std::vector<Acts::SpacePoint*>& vec,
+    Acts::SpacePoint& spM,
+    bool bottom,
     std::vector<LinCircle>& linCircleVec);
 
-template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
-                          external_spacepoint_t& spM, bool bottom,
-                          std::vector<LinCircle>& linCircleVec,
-                          callable_t&& extractFunction);
+void transformCoordinates(std::vector<Acts::SpacePoint*>& vec,
+                          Acts::SpacePoint& spM,
+                          bool bottom,
+                          std::vector<LinCircle>& linCircleVec);
 
-/// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
+/// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip measurement details
 ///
-/// @tparam external_spacepoint_t The external spacepoint type.
 /// @tparam sp_range_t Container type for the space point collections.
 ///
 /// @param[in] config Seedfinder config containing the delegates to the strip measurement details.
@@ -78,11 +66,8 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
 /// @param[in] toleranceParam Parameter used to evaluate if spacepointPosition is inside the detector elements.
 /// @param[out] outputCoordinates The output vector to write to.
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
-template <typename external_spacepoint_t, typename sp_range_t>
-bool xyzCoordinateCheck(Acts::SeedfinderConfig<external_spacepoint_t> config,
-                        sp_range_t sp, const double* spacepointPosition,
+bool xyzCoordinateCheck(Acts::SeedfinderConfig config,
+                        Acts::SpacePoint* sp, const double* spacepointPosition,
                         const float toleranceParam, double* outputCoordinates);
 
 }  // namespace Acts
-
-#include "Acts/Seeding/SeedFinderUtils.ipp"

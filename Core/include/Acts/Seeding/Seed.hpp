@@ -8,42 +8,51 @@
 
 #pragma once
 
-#include <vector>
+#include "Acts/Seeding/SpacePoint.hpp"
 
-#include <boost/container/small_vector.hpp>
+#include <memory>
 
 namespace Acts {
-template <typename SpacePoint>
-class Seed {
+class InternalSeed {
   /////////////////////////////////////////////////////////////////////////////////
   // Public methods:
   /////////////////////////////////////////////////////////////////////////////////
 
  public:
-  Seed(const SpacePoint& b, const SpacePoint& m, const SpacePoint& u,
-       float vertex);
-  Seed(const Seed&) = default;
-  Seed& operator=(const Seed&) = default;
+  InternalSeed(Acts::SpacePoint& s0,
+               Acts::SpacePoint& s1,
+               Acts::SpacePoint& s2,
+               float z,
+               bool qualitySeed = false);
 
-  const auto& sp() const { return m_spacepoints; }
-  double z() const { return m_zvertex; }
+  std::array<Acts::SpacePoint*, 3> sp;
+  float z() const { return m_z; }
+  bool qualitySeed() const { return m_qualitySeed; }
+  
 
- private:
-  boost::container::small_vector<const SpacePoint*, 3> m_spacepoints;
-  float m_zvertex;
+ protected:
+  float m_z;
+  bool m_qualitySeed;
 };
 
-///////////////////////////////////////////////////////////////////////////////
-// Constructors
-///////////////////////////////////////////////////////////////////////////////
+/// @cond
 
-template <typename SpacePoint>
-Seed<SpacePoint>::Seed(const SpacePoint& b, const SpacePoint& m,
-                       const SpacePoint& u, float vertex) {
-  m_zvertex = vertex;
-  m_spacepoints.push_back(&b);
-  m_spacepoints.push_back(&m);
-  m_spacepoints.push_back(&u);
+/////////////////////////////////////////////////////////////////////////////////
+// Inline methods
+/////////////////////////////////////////////////////////////////////////////////
+
+inline InternalSeed::InternalSeed(
+    Acts::SpacePoint& s0,
+    Acts::SpacePoint& s1,
+    Acts::SpacePoint& s2,
+    float z,
+    bool qualitySeed)
+    : sp({&s0, &s1, &s2}) {
+  m_z = z;
+  m_qualitySeed = qualitySeed;
 }
+
+using SeedContainer = std::vector<Acts::InternalSeed>;
+/// @endcond
 
 }  // namespace Acts

@@ -21,7 +21,6 @@ namespace Acts {
 /// used to find both bins that could be bottom bins as well as bins that could
 /// be top bins, which are assumed to be the same bins. Does not take
 /// interaction region into account to limit z-bins.
-template <typename external_spacepoint_t>
 class BinFinder {
  public:
   /// constructor
@@ -43,11 +42,10 @@ class BinFinder {
   /// @param binnedSP phi-z grid containing all bins
   boost::container::small_vector<size_t, 10> findBins(
       size_t phiBin, size_t zBin,
-      const SpacePointGrid<external_spacepoint_t>* binnedSP);
+      const SpacePointGrid* binnedSP);
 
  private:
   const std::vector<std::pair<int, int> > m_zBinNeighbors;
   const int m_numPhiNeighbors;
 };
 }  // namespace Acts
-#include "Acts/Seeding/BinFinder.ipp"
