@@ -254,9 +254,11 @@ struct GsfActor {
       }
 
       for (auto cmp : stepper.componentIterable(state.stepping)) {
+        const auto old = cmp.cov()(eBoundPhi, eBoundPhi);
         auto singleState = cmp.singleState(state);
         cmp.singleStepper(stepper).transportCovarianceToBound(
             singleState.stepping, surface);
+        ACTS_VERBOSE("cov transport phi: " << old << " -> " << cmp.cov()(eBoundPhi, eBoundPhi));
       }
 
       if (haveMaterial) {
@@ -582,6 +584,7 @@ struct GsfActor {
                             result_type& result,
                             const SourceLink& source_link) const {
     const auto& surface = *state.navigation.currentSurface;
+    const auto& logger = state.options.logger;
 
     // We will overwrite this soon with new components
     result.currentTips.clear();
@@ -592,11 +595,15 @@ struct GsfActor {
     // is thus counted as an outlier
     bool is_valid_measurement = false;
 
+    // Fore VERBOSE printing
+    int i=0;
+
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto [idx, cmp] : zip(result.parentTips, cmps)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
+      ACTS_VERBOSE("Component #" << i++);
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           singleState, singleStepper, m_cfg.extensions, surface, source_link,
           result.fittedStates, idx, false);
@@ -724,6 +731,7 @@ struct GsfActor {
         // Update the state and stepper with material effects
         interaction.updateState(singleState, singleStepper, addNoise);
 
+        ACTS_VERBOSE("variancePhi on cov: " << singleState.stepping.cov(eBoundPhi, eBoundPhi));
         throw_assert(singleState.stepping.cov.array().isFinite().all(),
                      "covariance not finite after update");
       }
@@ -733,3 +741,4 @@ struct GsfActor {
 
 }  // namespace detail
 }  // namespace Acts
+

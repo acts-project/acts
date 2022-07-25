@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Identity.hpp"
+#include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
 #include <tuple>
@@ -75,6 +76,10 @@ auto combineBoundGaussianMixture(
     const auto &[weight_l, pars_l, cov_l] = projector(*l);
     throw_assert(cov_l, "we require a covariance here");
 
+    // NOTE in principle the spherical components (phi, theta) cannot be
+    // combined like this, it gives errors for theta != 90°. However, in these
+    // cases the differences are generally very small, so the errors are
+    // neglectable.
     sumOfWeights += weight_l;
     mean += weight_l * pars_l;
     cov1 += weight_l * *cov_l;
@@ -101,7 +106,21 @@ auto combineBoundGaussianMixture(
       const auto &[weight_m, pars_m, cov_m] = projector(*m);
       throw_assert(cov_m, "we require a covariance here");
 
-      const BoundVector diff = pars_l - pars_m;
+      BoundVector diff = pars_l - pars_m;
+
+      // Here we also have to handle cyclic coordinates like above
+      auto handleCyclicCoorCov = [&l = pars_l, &m = pars_m,
+                                  &diff = diff](auto desc) {
+        diff[desc.idx] =
+            difference_periodic(l[desc.idx] / desc.constant,
+                                m[desc.idx] / desc.constant, 2 * M_PI) *
+            desc.constant;
+      };
+
+      std::apply(
+          [&](auto... idx_desc) { (handleCyclicCoorCov(idx_desc), ...); },
+          angle_desc);
+
       cov2 += weight_l * weight_m * diff * diff.transpose();
     }
   }
@@ -112,3 +131,5 @@ auto combineBoundGaussianMixture(
 
 }  // namespace detail
 }  // namespace Acts
+
+

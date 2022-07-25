@@ -28,7 +28,7 @@ def addTruthTrackingGsf(
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="gsf_trajectories",
         directNavigation=False,
-        pickTrack=-1,
+        pickTrack=5,
         trackingGeometry=trackingGeometry,
         fit=acts.examples.TrackFittingAlgorithm.makeGsfFitterFunction(
             trackingGeometry, field, **gsfOptions
@@ -57,7 +57,7 @@ def runTruthTrackingGsf(
     from seeding import addSeeding, SeedingAlgorithm
 
     s = s or acts.examples.Sequencer(
-        events=100, numThreads=-1, logLevel=acts.logging.INFO
+        events=1, numThreads=1, logLevel=acts.logging.INFO, skip=57
     )
 
     for d in decorators:
@@ -160,7 +160,7 @@ if "__main__" == __name__:
         inputParticlePath = None
 
     runTruthTrackingGsf(
-        trackingGeometry=trackingGeometry,
+        trackingGeometry,
         decorators=decorators,
         field=field,
         digiConfigFile=srcdir
