@@ -77,16 +77,16 @@ BOOST_AUTO_TEST_CASE(toString_test_helper) {
   mat << 1, 2, 3, 4, 5, 6, 7, 8, 9;
   std::string out;
   out = toString(mat);
-  BOOST_CHECK(out.size() > 0);
+  BOOST_CHECK(!out.empty());
 
   Translation3 trl{Vector3{1, 2, 3}};
   out = toString(trl);
-  BOOST_CHECK(out.size() > 0);
+  BOOST_CHECK(!out.empty());
 
   Transform3 trf;
   trf = trl;
   out = toString(trf);
-  BOOST_CHECK(out.size() > 0);
+  BOOST_CHECK(!out.empty());
 }
 
 BOOST_AUTO_TEST_CASE(shared_vector_helper_test) {
