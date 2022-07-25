@@ -7,30 +7,28 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Seeding/SeedFilter.hpp"
+
 #include <algorithm>
 #include <numeric>
 #include <utility>
 
 namespace Acts {
 // constructor
-SeedFilter::SeedFilter(
-    SeedFilterConfig config,
-    IExperimentCuts* expCuts /* = 0*/)
+SeedFilter::SeedFilter(SeedFilterConfig config,
+                       IExperimentCuts* expCuts /* = 0*/)
     : m_cfg(config.toInternalUnits()), m_experimentCuts(expCuts) {}
 
 // function to filter seeds based on all seeds with same bottom- and
 // middle-spacepoint.
 // return vector must contain weight of each seed
 void SeedFilter::filterSeeds_2SpFixed(
-    Acts::SpacePoint& bottomSP,
-    Acts::SpacePoint& middleSP,
+    Acts::SpacePoint& bottomSP, Acts::SpacePoint& middleSP,
     std::vector<Acts::SpacePoint*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
     std::vector<float>& impactParametersVec, float zOrigin,
     int& numQualitySeeds, int& numSeeds,
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed>>>&
-        outCont) const {
+    std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>& outCont)
+    const {
   // seed confirmation
   int nTopSeedConf = 0;
   if (m_cfg.seedConfirmation) {
@@ -171,9 +169,8 @@ void SeedFilter::filterSeeds_2SpFixed(
           // fill high quality seed
           ++numQualitySeeds;
           outCont.push_back(std::make_pair(
-              weight,
-              std::make_unique<const InternalSeed>(
-                  bottomSP, middleSP, *topSpVec[i], zOrigin, true)));
+              weight, std::make_unique<const InternalSeed>(
+                          bottomSP, middleSP, *topSpVec[i], zOrigin, true)));
         } else {
           // otherwise we check if there is a lower quality seed to remove
           checkReplaceSeeds(bottomSP, middleSP, *topSpVec[i], zOrigin, true,
@@ -212,10 +209,9 @@ void SeedFilter::filterSeeds_2SpFixed(
       // fill seed
       ++numSeeds;
       outCont.push_back(std::make_pair(
-          weightMax,
-          std::make_unique<const InternalSeed>(
-              bottomSP, middleSP, *topSpVec[maxWeightSeedIndex], zOrigin,
-              false)));
+          weightMax, std::make_unique<const InternalSeed>(
+                         bottomSP, middleSP, *topSpVec[maxWeightSeedIndex],
+                         zOrigin, false)));
     } else {
       // otherwise we check if there is a lower quality seed to remove
       checkReplaceSeeds(bottomSP, middleSP, *topSpVec[maxWeightSeedIndex],
@@ -226,34 +222,33 @@ void SeedFilter::filterSeeds_2SpFixed(
 
 // after creating all seeds with a common middle space point, filter again
 void SeedFilter::filterSeeds_1SpFixed(
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed>>>&
+    std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>&
         seedsPerSpM,
     int& numQualitySeeds,
-    std::back_insert_iterator<std::vector<InternalSeed>> outIt)
-    const {
+    std::back_insert_iterator<std::vector<InternalSeed>> outIt) const {
   // sort by weight and iterate only up to configured max number of seeds per
   // middle SP
-  std::sort((seedsPerSpM.begin()), (seedsPerSpM.end()),
-            [](const std::pair<float, std::unique_ptr<const Acts::InternalSeed
-                                          >>& i1,
-               const std::pair<float, std::unique_ptr<const Acts::InternalSeed>>& i2) {
-              if (i1.first != i2.first) {
-                return i1.first > i2.first;
-              } else {
-                // This is for the case when the weights from different seeds
-                // are same. This makes cpu & cuda results same
-                float seed1_sum = 0;
-                float seed2_sum = 0;
-                for (int i = 0; i < 3; i++) {
-                  seed1_sum += pow(i1.second->sp[i]->y(), 2) +
-                               pow(i1.second->sp[i]->z(), 2);
-                  seed2_sum += pow(i2.second->sp[i]->y(), 2) +
-                               pow(i2.second->sp[i]->z(), 2);
-                }
-                return seed1_sum > seed2_sum;
-              }
-            });
+  std::sort(
+      (seedsPerSpM.begin()), (seedsPerSpM.end()),
+      [](const std::pair<float, std::unique_ptr<const Acts::InternalSeed>>& i1,
+         const std::pair<float, std::unique_ptr<const Acts::InternalSeed>>&
+             i2) {
+        if (i1.first != i2.first) {
+          return i1.first > i2.first;
+        } else {
+          // This is for the case when the weights from different seeds
+          // are same. This makes cpu & cuda results same
+          float seed1_sum = 0;
+          float seed2_sum = 0;
+          for (int i = 0; i < 3; i++) {
+            seed1_sum +=
+                pow(i1.second->sp[i]->y(), 2) + pow(i1.second->sp[i]->z(), 2);
+            seed2_sum +=
+                pow(i2.second->sp[i]->y(), 2) + pow(i2.second->sp[i]->z(), 2);
+          }
+          return seed1_sum > seed2_sum;
+        }
+      });
   if (m_experimentCuts != nullptr) {
     seedsPerSpM = m_experimentCuts->cutPerMiddleSP(std::move(seedsPerSpM));
   }
@@ -299,33 +294,27 @@ void SeedFilter::filterSeeds_1SpFixed(
 }
 
 void SeedFilter::checkReplaceSeeds(
-    Acts::SpacePoint& bottomSP,
-    Acts::SpacePoint& middleSP,
-    Acts::SpacePoint& topSp, float zOrigin,
-    bool isQualitySeed, float weight,
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed>>>&
-        outCont) const {
+    Acts::SpacePoint& bottomSP, Acts::SpacePoint& middleSP,
+    Acts::SpacePoint& topSp, float zOrigin, bool isQualitySeed, float weight,
+    std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>& outCont)
+    const {
   // find the index of the seeds with qualitySeed() == isQualitySeed in outCont
   // and store in seed_indices
   std::vector<size_t> seed_indices;
   seed_indices.reserve(outCont.size());
   auto it = std::find_if(
       outCont.begin(), outCont.end(),
-      [&](std::pair<float,
-                    std::unique_ptr<const InternalSeed>>&
-              weight_seed) {
+      [&](std::pair<float, std::unique_ptr<const InternalSeed>>& weight_seed) {
         return weight_seed.second->qualitySeed() == isQualitySeed;
       });
   while (it != outCont.end()) {
     seed_indices.emplace_back(std::distance(std::begin(outCont), it));
-    it = std::find_if(
-        std::next(it), outCont.end(),
-        [&](std::pair<
-            float, std::unique_ptr<const InternalSeed>>&
-                outContCheck) {
-          return outContCheck.second->qualitySeed() == isQualitySeed;
-        });
+    it = std::find_if(std::next(it), outCont.end(),
+                      [&](std::pair<float, std::unique_ptr<const InternalSeed>>&
+                              outContCheck) {
+                        return outContCheck.second->qualitySeed() ==
+                               isQualitySeed;
+                      });
   }
 
   // find index of the seed with the minimum weight
@@ -337,8 +326,8 @@ void SeedFilter::checkReplaceSeeds(
   // replace that seed with the new one if new one is better
   if (outCont.at(index).first < weight) {
     outCont.at(index) = std::make_pair(
-        weight, std::make_unique<const InternalSeed>(
-                    bottomSP, middleSP, topSp, zOrigin, isQualitySeed));
+        weight, std::make_unique<const InternalSeed>(bottomSP, middleSP, topSp,
+                                                     zOrigin, isQualitySeed));
   }
 }
 

@@ -115,8 +115,9 @@ class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
   /// @param protoTracks The proto tracks
   /// @param spacePoints The existing space points
   /// @return the created seeds
-  Acts::SeedContainer createSeeds(const ProtoTrackContainer& protoTracks,
-                               const SimSpacePointContainer& spacePoints) const;
+  Acts::SeedContainer createSeeds(
+      const ProtoTrackContainer& protoTracks,
+      const SimSpacePointContainer& spacePoints) const;
 };
 
 }  // namespace ActsExamples

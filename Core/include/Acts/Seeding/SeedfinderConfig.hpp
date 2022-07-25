@@ -90,7 +90,8 @@ struct SeedfinderConfig {
 
   // how many standard deviations of scattering angle should be considered?
   float sigmaScattering = 5;
-  // how many standard deviations of measurement uncertainty + alignment uncertainty should be considered?
+  // how many standard deviations of measurement uncertainty + alignment
+  // uncertainty should be considered?
   float sigmaError = 5;
   // Upper pt limit for scattering calculation
   float maxPtScattering = 10 * Acts::UnitConstants::GeV;

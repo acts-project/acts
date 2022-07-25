@@ -10,7 +10,7 @@
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 
-//FIXME: this is a temporary crutch. remove external/internal SP distinction
+// FIXME: this is a temporary crutch. remove external/internal SP distinction
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <cmath>
@@ -508,9 +508,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   /*
    * Create a vector to contain protoseeds.
    */
-  std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed>>>
-      protoseeds;
+  std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>> protoseeds;
 
   int numQualitySeeds = 0;
 
@@ -569,9 +567,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * run some basic checks to make sure the containers have the correct value
    * types.
    */
-  static_assert(std::is_same_v<typename output_container_t::value_type,
-                               InternalSeed>,
-                "Output iterator container type must accept seeds.");
+  static_assert(
+      std::is_same_v<typename output_container_t::value_type, InternalSeed>,
+      "Output iterator container type must accept seeds.");
   static_assert(std::is_same_v<typename input_container_t::value_type,
                                const external_spacepoint_t *>,
                 "Input container must contain external spacepoints.");
@@ -582,16 +580,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * take each external spacepoint, allocate a corresponding internal space
    * point, and save it in a vector.
    */
- // FIXME: remove external_spacepoint_t and have everything directly work on Acts::SpacePoint
+  // FIXME: remove external_spacepoint_t and have everything directly work on
+  // Acts::SpacePoint
   std::vector<Acts::SpacePoint *> internalSpacePoints;
   for (const external_spacepoint_t *p : spacePoints) {
     internalSpacePoints.push_back(new Acts::SpacePoint(
-        {p->x(), p->y(), p->z()}, 
+        {p->x(), p->y(), p->z()}, {0.0, 0.0}, {p->varianceR(), p->varianceZ()},
         {0.0, 0.0},
-        {p->varianceR(), p->varianceZ()},
-        {0.0, 0.0},
-        m_config.sigmaScattering, // actually sigmaError in practice usually same
-        {new ActsExamples::IndexSourceLink(0,p->measurementIndex())}));
+        m_config
+            .sigmaScattering,  // actually sigmaError in practice usually same
+        {new ActsExamples::IndexSourceLink(0, p->measurementIndex())}));
   }
 
   /*

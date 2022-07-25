@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 
 #include <array>
 #include <list>
@@ -45,8 +45,7 @@ class SeedFinderOrthogonal {
    *
    * @param config The configuration parameters for this seed finder.
    */
-  SeedFinderOrthogonal(
-      Acts::SeedFinderOrthogonalConfig config);
+  SeedFinderOrthogonal(Acts::SeedFinderOrthogonalConfig config);
 
   /**
    * @brief Destroy the orthogonal seed finder object.
@@ -107,7 +106,8 @@ class SeedFinderOrthogonal {
    * @return A vector of seeds.
    */
   template <typename input_container_t>
-  std::vector<InternalSeed> createSeeds(const input_container_t &spacePoints) const;
+  std::vector<InternalSeed> createSeeds(
+      const input_container_t &spacePoints) const;
 
  private:
   /**
@@ -165,7 +165,8 @@ class SeedFinderOrthogonal {
    *
    * @return True if the two points form a valid pair, false otherwise.
    */
-  bool validTuple(const Acts::SpacePoint &low, const Acts::SpacePoint &high) const;
+  bool validTuple(const Acts::SpacePoint &low,
+                  const Acts::SpacePoint &high) const;
 
   /**
    * @brief Create a k-d tree from a set of spacepoints.
@@ -191,8 +192,8 @@ class SeedFinderOrthogonal {
   template <typename output_container_t>
   void filterCandidates(Acts::SpacePoint &middle,
                         std::vector<Acts::SpacePoint *> &bottom,
-                        std::vector<Acts::SpacePoint *> &top, int numQualitySeeds,
-                        output_container_t &cont) const;
+                        std::vector<Acts::SpacePoint *> &top,
+                        int numQualitySeeds, output_container_t &cont) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.

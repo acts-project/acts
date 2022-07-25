@@ -23,8 +23,7 @@ namespace Acts {
 
 class SeedFilter {
  public:
-  SeedFilter(SeedFilterConfig config,
-             IExperimentCuts* expCuts = 0);
+  SeedFilter(SeedFilterConfig config, IExperimentCuts* expCuts = 0);
 
   SeedFilter() = delete;
   virtual ~SeedFilter() = default;
@@ -42,14 +41,12 @@ class SeedFilter {
   /// @param numSeeds number of seeds that did not pass the quality confirmation but were still accepted, if quality confirmation is not used this is the total number of seeds
   /// @param outCont Output container for the seeds
   virtual void filterSeeds_2SpFixed(
-      Acts::SpacePoint& bottomSP,
-      Acts::SpacePoint& middleSP,
+      Acts::SpacePoint& bottomSP, Acts::SpacePoint& middleSP,
       std::vector<Acts::SpacePoint*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, float zOrigin,
       int& numQualitySeeds, int& numSeeds,
-      std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed>>>&
+      std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>&
           outCont) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
@@ -58,12 +55,10 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
-      std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed>>>&
+      std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>&
           seedsPerSpM,
       int& numQualitySeeds,
-      std::back_insert_iterator<std::vector<InternalSeed>> outIt)
-      const;
+      std::back_insert_iterator<std::vector<InternalSeed>> outIt) const;
 
   /// Check if there is a lower quality seed that can be replaced
   /// @param bottomSP fixed bottom space point
@@ -74,19 +69,13 @@ class SeedFilter {
   /// @param weight weight of the seed
   /// @param outCont container for the seeds
   virtual void checkReplaceSeeds(
-      Acts::SpacePoint& bottomSP,
-      Acts::SpacePoint& middleSP,
-      Acts::SpacePoint& topSp,
-      float zOrigin,
-      bool isQualitySeed,
-      float weight,
+      Acts::SpacePoint& bottomSP, Acts::SpacePoint& middleSP,
+      Acts::SpacePoint& topSp, float zOrigin, bool isQualitySeed, float weight,
       std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>&
           outCont) const;
 
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
-  const IExperimentCuts* getExperimentCuts() const {
-    return m_experimentCuts;
-  }
+  const IExperimentCuts* getExperimentCuts() const { return m_experimentCuts; }
 
  private:
   const SeedFilterConfig m_cfg;

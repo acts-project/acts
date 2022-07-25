@@ -20,6 +20,7 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Seeding/EstimateTrackParamsFromSeed.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -29,8 +30,6 @@
 #include <algorithm>
 #include <array>
 #include <vector>
-
-#include "Acts/Seeding/SpacePoint.hpp"
 
 namespace {
 
@@ -126,7 +125,8 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
             // Create a space point (varianceR and varianceZ are lazily set to
             // zero since they are not important for the test)
             spacePoints.emplace(
-                layer, Acts::SpacePoint{globalPos,{0.,0.},{0.,0.},{0.,0.},1,{}});
+                layer, Acts::SpacePoint{
+                           globalPos, {0., 0.}, {0., 0.}, {0., 0.}, 1, {}});
             if (spacePoints.size() == 1) {
               bottomSurface = surface;
             }

@@ -8,11 +8,8 @@
 
 #include "Acts/Seeding/BinFinder.hpp"
 
-
 Acts::BinFinder::BinFinder()
-    : Acts::BinFinder::BinFinder(
-          std::vector<std::pair<int, int>>(), 1) {}
-
+    : Acts::BinFinder::BinFinder(std::vector<std::pair<int, int>>(), 1) {}
 
 Acts::BinFinder::BinFinder(
     const std::vector<std::pair<int, int>>&& zBinNeighbors,
@@ -20,17 +17,13 @@ Acts::BinFinder::BinFinder(
     : m_zBinNeighbors(std::move(zBinNeighbors)),
       m_numPhiNeighbors(std::move(numPhiNeighbors)) {}
 
-
 Acts::BinFinder::BinFinder(
     const std::vector<std::pair<int, int>>& zBinNeighbors,
     const int& numPhiNeighbors)
     : m_zBinNeighbors(zBinNeighbors), m_numPhiNeighbors(numPhiNeighbors) {}
 
-
-boost::container::small_vector<size_t, 10>
-Acts::BinFinder::findBins(
-    size_t phiBin, size_t zBin,
-    const Acts::SpacePointGrid* binnedSP) {
+boost::container::small_vector<size_t, 10> Acts::BinFinder::findBins(
+    size_t phiBin, size_t zBin, const Acts::SpacePointGrid* binnedSP) {
   boost::container::small_vector<size_t, 9> indices;
   // if zBinNeighbors is not defined, get the indices using
   // neighborHoodIndices

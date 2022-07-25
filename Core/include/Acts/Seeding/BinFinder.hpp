@@ -41,8 +41,7 @@ class BinFinder {
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
   boost::container::small_vector<size_t, 10> findBins(
-      size_t phiBin, size_t zBin,
-      const SpacePointGrid* binnedSP);
+      size_t phiBin, size_t zBin, const SpacePointGrid* binnedSP);
 
  private:
   const std::vector<std::pair<int, int> > m_zBinNeighbors;

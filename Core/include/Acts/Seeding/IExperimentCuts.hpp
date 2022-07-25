@@ -35,11 +35,9 @@ class IExperimentCuts {
   /// @param top top space point of the current seed
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
-  virtual bool singleSeedCut(
-      float weight,
-      const Acts::SpacePoint& bottom,
-      const Acts::SpacePoint& middle,
-      const Acts::SpacePoint& top) const = 0;
+  virtual bool singleSeedCut(float weight, const Acts::SpacePoint& bottom,
+                             const Acts::SpacePoint& middle,
+                             const Acts::SpacePoint& top) const = 0;
 
   /// @param seeds contains pairs of weight and seed created for one middle
   /// space
@@ -47,7 +45,7 @@ class IExperimentCuts {
   /// @return vector of seeds that pass the cut
   virtual std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>
   cutPerMiddleSP(
-      std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>
-          seeds) const = 0;
+      std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>> seeds)
+      const = 0;
 };
 }  // namespace Acts

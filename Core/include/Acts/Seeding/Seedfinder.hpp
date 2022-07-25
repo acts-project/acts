@@ -10,9 +10,9 @@
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 
 #include <array>
 #include <list>
@@ -49,8 +49,7 @@ class Seedfinder {
     std::vector<float> etaVec;
     std::vector<float> ptVec;
 
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed>>>
+    std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>
         seedsPerSpM;
   };
 
@@ -62,8 +61,7 @@ class Seedfinder {
   //@{
   Seedfinder() = delete;
   Seedfinder(const Seedfinder<platform_t>&) = delete;
-  Seedfinder<platform_t>& operator=(
-      const Seedfinder<platform_t>&) = delete;
+  Seedfinder<platform_t>& operator=(const Seedfinder<platform_t>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -78,11 +76,8 @@ class Seedfinder {
   /// @note Ranges must be separate objects for each parallel call.
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
-      State& state,
-      std::back_insert_iterator<container_t<InternalSeed>> outIt,
-      sp_range_t bottomSPs,
-      sp_range_t middleSPs,
-      sp_range_t topSPs,
+      State& state, std::back_insert_iterator<container_t<InternalSeed>> outIt,
+      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
       Extent rRangeSPExtent) const;
 
   /// @brief Compatibility method for the new-style seed finding API.
@@ -103,8 +98,9 @@ class Seedfinder {
   /// @param topSPs group of space points to be used as outermost SP in a seed.
   /// @returns a vector of seeds.
   template <typename sp_range_t>
-  std::vector<InternalSeed> createSeedsForGroup(
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+  std::vector<InternalSeed> createSeedsForGroup(sp_range_t bottomSPs,
+                                                sp_range_t middleSPs,
+                                                sp_range_t topSPs) const;
 
  private:
   Acts::SeedfinderConfig m_config;

@@ -18,7 +18,6 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-
 #include <stdexcept>
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
@@ -109,37 +108,49 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
     m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
         [](const void*, const Acts::SpacePoint& sp) -> float {
-          const auto* simSPSL = static_cast<const ActsExamples::SimSPSourceLink*>(sp.getSourceLinks()[0]);
+          const auto* simSPSL =
+              static_cast<const ActsExamples::SimSPSourceLink*>(
+                  sp.getSourceLinks()[0]);
           return simSPSL->getSimSP()->topHalfStripLength();
         });
 
     m_cfg.seedFinderConfig.getBottomHalfStripLength.connect(
         [](const void*, const Acts::SpacePoint& sp) -> float {
-          const auto* simSPSL = static_cast<const ActsExamples::SimSPSourceLink*>(sp.getSourceLinks()[0]);
+          const auto* simSPSL =
+              static_cast<const ActsExamples::SimSPSourceLink*>(
+                  sp.getSourceLinks()[0]);
           return simSPSL->getSimSP()->bottomHalfStripLength();
         });
 
     m_cfg.seedFinderConfig.getTopStripDirection.connect(
         [](const void*, const Acts::SpacePoint& sp) -> Acts::Vector3 {
-          const auto* simSPSL = static_cast<const ActsExamples::SimSPSourceLink*>(sp.getSourceLinks()[0]);
+          const auto* simSPSL =
+              static_cast<const ActsExamples::SimSPSourceLink*>(
+                  sp.getSourceLinks()[0]);
           return simSPSL->getSimSP()->topStripDirection();
         });
 
     m_cfg.seedFinderConfig.getBottomStripDirection.connect(
         [](const void*, const Acts::SpacePoint& sp) -> Acts::Vector3 {
-          const auto* simSPSL = static_cast<const ActsExamples::SimSPSourceLink*>(sp.getSourceLinks()[0]);
+          const auto* simSPSL =
+              static_cast<const ActsExamples::SimSPSourceLink*>(
+                  sp.getSourceLinks()[0]);
           return simSPSL->getSimSP()->bottomStripDirection();
         });
 
     m_cfg.seedFinderConfig.getStripCenterDistance.connect(
         [](const void*, const Acts::SpacePoint& sp) -> Acts::Vector3 {
-          const auto* simSPSL = static_cast<const ActsExamples::SimSPSourceLink*>(sp.getSourceLinks()[0]);
+          const auto* simSPSL =
+              static_cast<const ActsExamples::SimSPSourceLink*>(
+                  sp.getSourceLinks()[0]);
           return simSPSL->getSimSP()->stripCenterDistance();
         });
 
     m_cfg.seedFinderConfig.getTopStripCenterPosition.connect(
         [](const void*, const Acts::SpacePoint& sp) -> Acts::Vector3 {
-          const auto* simSPSL = static_cast<const ActsExamples::SimSPSourceLink*>(sp.getSourceLinks()[0]);
+          const auto* simSPSL =
+              static_cast<const ActsExamples::SimSPSourceLink*>(
+                  sp.getSourceLinks()[0]);
           return simSPSL->getSimSP()->topStripCenterPosition();
         });
   }
@@ -161,42 +172,32 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-
-  struct pointer_iterator : std::iterator_traits<Acts::SpacePoint*>{
+  struct pointer_iterator : std::iterator_traits<Acts::SpacePoint*> {
     using value_type = std::add_pointer_t<Acts::SpacePoint>;
-  
+
     value_type ptr;
-  
-    pointer_iterator(value_type i) : ptr(i) {};
-  
-    void operator++(int) {
-        ptr++;
-    }
-    
-    void operator++() {
-        ++ptr;
-    }
-  
-    bool operator!=(const pointer_iterator & o) {
-        return ptr != o.ptr;
-    }
-  
-    value_type operator*() {
-        return ptr;
-    }
+
+    pointer_iterator(value_type i) : ptr(i){};
+
+    void operator++(int) { ptr++; }
+
+    void operator++() { ++ptr; }
+
+    bool operator!=(const pointer_iterator& o) { return ptr != o.ptr; }
+
+    value_type operator*() { return ptr; }
   };
 
-
-  struct SPContainer{
-    SPContainer(std::vector<Acts::SpacePoint>& vec) : spacePoints(vec){}
+  struct SPContainer {
+    SPContainer(std::vector<Acts::SpacePoint>& vec) : spacePoints(vec) {}
 
     std::vector<Acts::SpacePoint>& spacePoints;
     size_t index = 0;
 
-    void operator++(){++index;}
-    void operator++(int){index++;}
+    void operator++() { ++index; }
+    void operator++(int) { index++; }
 
-    Acts::SpacePoint* operator*(){return &(spacePoints.at(index));}
+    Acts::SpacePoint* operator*() { return &(spacePoints.at(index)); }
 
     pointer_iterator begin() const {
       return pointer_iterator(&*spacePoints.begin());
@@ -207,21 +208,24 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   };
 
-
   std::vector<Acts::SpacePoint> actsSpacePoints;
   for (const auto& isp : m_cfg.inputSpacePoints) {
     for (const auto& spacePoint :
          ctx.eventStore.get<SimSpacePointContainer>(isp)) {
       // since the event store owns the space points, their pointers should be
       // stable and we do not need to create local copies.
-      Acts::SpacePoint sp({spacePoint.x(),spacePoint.y(),spacePoint.z()},
-                          {0.,0.}, // beamspot position in x,y of the Seedfinder coordinate system, used as offset to position
-                          {spacePoint.varianceR(),spacePoint.varianceZ()},
-                          {0.,0.}, //alignment uncertainty, added to measurement uncertainty (varianceR, varianceZ)
-                          m_cfg.seedFinderConfig.sigmaError,
-                          {static_cast<const Acts::SourceLink *>(new SimSPSourceLink(&spacePoint))});
+      Acts::SpacePoint sp(
+          {spacePoint.x(), spacePoint.y(), spacePoint.z()},
+          {0., 0.},  // beamspot position in x,y of the Seedfinder coordinate
+                     // system, used as offset to position
+          {spacePoint.varianceR(), spacePoint.varianceZ()},
+          {0., 0.},  // alignment uncertainty, added to measurement uncertainty
+                     // (varianceR, varianceZ)
+          m_cfg.seedFinderConfig.sigmaError,
+          {static_cast<const Acts::SourceLink*>(
+              new SimSPSourceLink(&spacePoint))});
       actsSpacePoints.push_back(sp);
-      
+
       // store x,y,z values in extent
       rRangeSPExtent.check({spacePoint.x(), spacePoint.y(), spacePoint.z()});
     }
@@ -229,16 +233,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   SPContainer actsSpPtrs(actsSpacePoints);
 
   auto bottomBinFinder = std::make_shared<Acts::BinFinder>(
-      Acts::BinFinder(m_cfg.zBinNeighborsBottom,
-                                     m_cfg.numPhiNeighbors));
+      Acts::BinFinder(m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors));
   auto topBinFinder = std::make_shared<Acts::BinFinder>(
-      Acts::BinFinder(m_cfg.zBinNeighborsTop,
-                                     m_cfg.numPhiNeighbors));
-  auto grid =
-      Acts::SpacePointGridCreator::createGrid(m_cfg.gridConfig);
+      Acts::BinFinder(m_cfg.zBinNeighborsTop, m_cfg.numPhiNeighbors));
+  auto grid = Acts::SpacePointGridCreator::createGrid(m_cfg.gridConfig);
   auto spacePointsGrouping = Acts::BinnedSPGroup(
-      actsSpPtrs.begin(), actsSpPtrs.end(), 
-      bottomBinFinder, topBinFinder, std::move(grid), m_cfg.seedFinderConfig);
+      actsSpPtrs.begin(), actsSpPtrs.end(), bottomBinFinder, topBinFinder,
+      std::move(grid), m_cfg.seedFinderConfig);
   auto finder = Acts::Seedfinder(m_cfg.seedFinderConfig);
 
   // run the seeding
@@ -263,7 +264,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     ProtoTrack& protoTrack = protoTracks.emplace_back();
     protoTrack.reserve(seed.sp.size());
     for (auto spacePointPtr : seed.sp) {
-      protoTrack.push_back(static_cast<const SimSPSourceLink*>(spacePointPtr->getSourceLinks()[0])->getSimSP()->measurementIndex());
+      protoTrack.push_back(static_cast<const SimSPSourceLink*>(
+                               spacePointPtr->getSourceLinks()[0])
+                               ->getSimSP()
+                               ->measurementIndex());
     }
   }
 

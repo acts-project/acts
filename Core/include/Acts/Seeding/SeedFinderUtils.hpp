@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Seeding/SpacePoint.hpp"
 #include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SpacePoint.hpp"
 
 namespace Acts {
 /// @brief A partial description of a circle in u-v space.
@@ -34,8 +34,7 @@ struct LinCircle {
 /// @param[in] sp The first spacepoint to use, either a bottom or top.
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottom Should be true if sp is a bottom SP.
-LinCircle transformCoordinates(Acts::SpacePoint& sp,
-                               Acts::SpacePoint& spM,
+LinCircle transformCoordinates(Acts::SpacePoint& sp, Acts::SpacePoint& spM,
                                bool bottom);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
@@ -45,15 +44,12 @@ LinCircle transformCoordinates(Acts::SpacePoint& sp,
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
-void transformCoordinates(
-    std::vector<Acts::SpacePoint*>& vec,
-    Acts::SpacePoint& spM,
-    bool bottom,
-    std::vector<LinCircle>& linCircleVec);
+void transformCoordinates(std::vector<Acts::SpacePoint*>& vec,
+                          Acts::SpacePoint& spM, bool bottom,
+                          std::vector<LinCircle>& linCircleVec);
 
 void transformCoordinates(std::vector<Acts::SpacePoint*>& vec,
-                          Acts::SpacePoint& spM,
-                          bool bottom,
+                          Acts::SpacePoint& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip measurement details
@@ -66,8 +62,8 @@ void transformCoordinates(std::vector<Acts::SpacePoint*>& vec,
 /// @param[in] toleranceParam Parameter used to evaluate if spacepointPosition is inside the detector elements.
 /// @param[out] outputCoordinates The output vector to write to.
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
-bool xyzCoordinateCheck(Acts::SeedfinderConfig config,
-                        Acts::SpacePoint* sp, const double* spacepointPosition,
+bool xyzCoordinateCheck(Acts::SeedfinderConfig config, Acts::SpacePoint* sp,
+                        const double* spacepointPosition,
                         const float toleranceParam, double* outputCoordinates);
 
 }  // namespace Acts

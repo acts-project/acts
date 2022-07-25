@@ -19,16 +19,12 @@ class InternalSeed {
   /////////////////////////////////////////////////////////////////////////////////
 
  public:
-  InternalSeed(Acts::SpacePoint& s0,
-               Acts::SpacePoint& s1,
-               Acts::SpacePoint& s2,
-               float z,
-               bool qualitySeed = false);
+  InternalSeed(Acts::SpacePoint& s0, Acts::SpacePoint& s1, Acts::SpacePoint& s2,
+               float z, bool qualitySeed = false);
 
   std::array<Acts::SpacePoint*, 3> sp;
   float z() const { return m_z; }
   bool qualitySeed() const { return m_qualitySeed; }
-  
 
  protected:
   float m_z;
@@ -41,12 +37,9 @@ class InternalSeed {
 // Inline methods
 /////////////////////////////////////////////////////////////////////////////////
 
-inline InternalSeed::InternalSeed(
-    Acts::SpacePoint& s0,
-    Acts::SpacePoint& s1,
-    Acts::SpacePoint& s2,
-    float z,
-    bool qualitySeed)
+inline InternalSeed::InternalSeed(Acts::SpacePoint& s0, Acts::SpacePoint& s1,
+                                  Acts::SpacePoint& s2, float z,
+                                  bool qualitySeed)
     : sp({&s0, &s1, &s2}) {
   m_z = z;
   m_qualitySeed = qualitySeed;

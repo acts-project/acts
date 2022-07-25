@@ -27,10 +27,8 @@ class ATLASCuts : public IExperimentCuts {
   /// @param top top space point of the current seed
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
-  bool singleSeedCut(float weight,
-                     const Acts::SpacePoint& bottom,
-                     const Acts::SpacePoint&,
-                     const Acts::SpacePoint&) const;
+  bool singleSeedCut(float weight, const Acts::SpacePoint& bottom,
+                     const Acts::SpacePoint&, const Acts::SpacePoint&) const;
 
   /// @param seeds contains pairs of weight and seed created for one middle
   /// space
@@ -38,15 +36,13 @@ class ATLASCuts : public IExperimentCuts {
   /// @return vector of seeds that pass the cut
   std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>
   cutPerMiddleSP(
-      std::vector<
-          std::pair<float, std::unique_ptr<const InternalSeed>>>
-          seeds) const;
+      std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>> seeds)
+      const;
 };
 
-float ATLASCuts::seedWeight(
-    const Acts::SpacePoint& bottom,
-    const Acts::SpacePoint&,
-    const Acts::SpacePoint& top) const {
+float ATLASCuts::seedWeight(const Acts::SpacePoint& bottom,
+                            const Acts::SpacePoint&,
+                            const Acts::SpacePoint& top) const {
   float weight = 0;
   if (bottom.radius() > 150) {
     weight = 400;
@@ -57,18 +53,16 @@ float ATLASCuts::seedWeight(
   return weight;
 }
 
-bool ATLASCuts::singleSeedCut(
-    float weight, const Acts::SpacePoint& b,
-    const Acts::SpacePoint&,
-    const Acts::SpacePoint&) const {
+bool ATLASCuts::singleSeedCut(float weight, const Acts::SpacePoint& b,
+                              const Acts::SpacePoint&,
+                              const Acts::SpacePoint&) const {
   return !(b.radius() > 150. && weight < 380.);
 }
 
 std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>
 ATLASCuts::cutPerMiddleSP(
-    std::vector<
-        std::pair<float, std::unique_ptr<const InternalSeed>>>
-        seeds) const {
+    std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>> seeds)
+    const {
   std::vector<std::pair<float, std::unique_ptr<const InternalSeed>>>
       newSeedsVector;
   if (seeds.size() > 1) {

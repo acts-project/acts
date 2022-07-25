@@ -51,7 +51,6 @@ class SeedingAlgorithm final : public BareAlgorithm {
     int numPhiNeighbors;
   };
 
-
   /// Construct the seeding algorithm.
   ///
   /// @param cfg is the algorithm configuration

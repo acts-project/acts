@@ -6,12 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 
 namespace Acts {
-LinCircle transformCoordinates(Acts::SpacePoint& sp,
-                               Acts::SpacePoint& spM,
+LinCircle transformCoordinates(Acts::SpacePoint& sp, Acts::SpacePoint& spM,
                                bool bottom) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
@@ -44,11 +42,9 @@ LinCircle transformCoordinates(Acts::SpacePoint& sp,
 void transformCoordinates(std::vector<Acts::SpacePoint*>& vec,
                           Acts::SpacePoint& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec) {
-
   float cosPhiM = spM.x() / spM.radius();
   float sinPhiM = spM.y() / spM.radius();
   for (auto sp : vec) {
-
     float deltaX = sp->x() - spM.x();
     float deltaY = sp->y() - spM.y();
     float deltaZ = sp->z() - spM.z();
@@ -105,19 +101,15 @@ void transformCoordinates(std::vector<Acts::SpacePoint*>& vec,
             });
 }
 
-bool xyzCoordinateCheck(Acts::SeedfinderConfig m_config,
-                        Acts::SpacePoint* sp,
+bool xyzCoordinateCheck(Acts::SeedfinderConfig m_config, Acts::SpacePoint* sp,
                         const double* spacepointPosition,
-                        const float toleranceParam,
-                        double* outputCoordinates) {
+                        const float toleranceParam, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 
   const float topHalfStripLength = m_config.getTopHalfStripLength(*sp);
-  const float bottomHalfStripLength =
-      m_config.getBottomHalfStripLength(*sp);
-  const Acts::Vector3 topStripDirection =
-      m_config.getTopStripDirection(*sp);
+  const float bottomHalfStripLength = m_config.getBottomHalfStripLength(*sp);
+  const Acts::Vector3 topStripDirection = m_config.getTopStripDirection(*sp);
   const Acts::Vector3 bottomStripDirection =
       m_config.getBottomStripDirection(*sp);
   const Acts::Vector3 stripCenterDistance =

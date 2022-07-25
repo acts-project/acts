@@ -6,13 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+
+#include "Acts/Utilities/detail/Axis.hpp"
 
 #include <memory>
 
-std::unique_ptr<Acts::SpacePointGrid>
-Acts::SpacePointGridCreator::createGrid(
+std::unique_ptr<Acts::SpacePointGrid> Acts::SpacePointGridCreator::createGrid(
     const Acts::SpacePointGridConfig& _config) {
   Acts::SpacePointGridConfig config = _config.toInternalUnits();
   using AxisScalar = Acts::Vector3::Scalar;

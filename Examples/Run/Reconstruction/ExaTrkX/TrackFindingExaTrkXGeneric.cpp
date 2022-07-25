@@ -233,52 +233,54 @@ int main(int argc, char** argv) {
   paramsEstimationCfg.sigmaQOverP = 0.1 / 1._GeV;
   paramsEstimationCfg.sigmaT0 = 1400._s;
   paramsEstimationCfg.getMeasurementIndex.connect([](const void*, const Acts::SpacePoint& sp) -> Acts::Index {
-          const auto* simSPSL = static_cast<const ActsExamples::SimSPSourceLink*>(sp.getSourceLinks()[0]);
-          return simSPSL->getSimSP()->measurementIndex();
-  sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
-      paramsEstimationCfg, logLevel));
+    const auto* simSPSL = static_cast<const ActsExamples::SimSPSourceLink*>(
+        sp.getSourceLinks()[0]);
+    return simSPSL->getSimSP()->measurementIndex();
+    sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
+        paramsEstimationCfg, logLevel));
 
-  // Track fitting
-  // setup the fitter
-  TrackFittingAlgorithm::Config fitter;
-  fitter.inputMeasurements = digiCfg.outputMeasurements;
-  fitter.inputSourceLinks = digiCfg.outputSourceLinks;
-  fitter.inputProtoTracks = trkFinderCfg.outputProtoTracks;
-  if (dirNav) {
-    fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
-  }
-  fitter.inputInitialTrackParameters =
-      paramsEstimationCfg.outputTrackParameters;
-  fitter.outputTrajectories = "trajectories";
-  fitter.directNavigation = dirNav;
-  fitter.trackingGeometry = tGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeKalmanFitterFunction(magneticField);
-  fitter.fit =
-      TrackFittingAlgorithm::makeKalmanFitterFunction(tGeometry, magneticField);
-  sequencer.addAlgorithm(
-      std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
+    // Track fitting
+    // setup the fitter
+    TrackFittingAlgorithm::Config fitter;
+    fitter.inputMeasurements = digiCfg.outputMeasurements;
+    fitter.inputSourceLinks = digiCfg.outputSourceLinks;
+    fitter.inputProtoTracks = trkFinderCfg.outputProtoTracks;
+    if (dirNav) {
+      fitter.inputProtoTracks = sorterCfg.outputProtoTracks;
+    }
+    fitter.inputInitialTrackParameters =
+        paramsEstimationCfg.outputTrackParameters;
+    fitter.outputTrajectories = "trajectories";
+    fitter.directNavigation = dirNav;
+    fitter.trackingGeometry = tGeometry;
+    fitter.dFit =
+        TrackFittingAlgorithm::makeKalmanFitterFunction(magneticField);
+    fitter.fit = TrackFittingAlgorithm::makeKalmanFitterFunction(tGeometry,
+                                                                 magneticField);
+    sequencer.addAlgorithm(
+        std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
-  // write out performance
-  // write track finding/seeding performance
-  TrackFinderPerformanceWriter::Config tfPerfCfg;
-  tfPerfCfg.inputProtoTracks = trkFinderCfg.outputProtoTracks;
-  // using selected particles
-  tfPerfCfg.inputParticles = inputParticles;
-  tfPerfCfg.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
-  sequencer.addWriter(
-      std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
+    // write out performance
+    // write track finding/seeding performance
+    TrackFinderPerformanceWriter::Config tfPerfCfg;
+    tfPerfCfg.inputProtoTracks = trkFinderCfg.outputProtoTracks;
+    // using selected particles
+    tfPerfCfg.inputParticles = inputParticles;
+    tfPerfCfg.inputMeasurementParticlesMap =
+        digiCfg.outputMeasurementParticlesMap;
+    sequencer.addWriter(
+        std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
-  // Write track finding performance data
-  CKFPerformanceWriter::Config perfWriterCfg;
-  perfWriterCfg.inputParticles = inputParticles;
-  perfWriterCfg.inputTrajectories = fitter.outputTrajectories;
-  perfWriterCfg.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
-  // The bottom seed on a pixel detector 'eats' one or two measurements?
-  perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin;
-  sequencer.addWriter(
-      std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
+    // Write track finding performance data
+    CKFPerformanceWriter::Config perfWriterCfg;
+    perfWriterCfg.inputParticles = inputParticles;
+    perfWriterCfg.inputTrajectories = fitter.outputTrajectories;
+    perfWriterCfg.inputMeasurementParticlesMap =
+        digiCfg.outputMeasurementParticlesMap;
+    // The bottom seed on a pixel detector 'eats' one or two measurements?
+    perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin;
+    sequencer.addWriter(
+        std::make_shared<CKFPerformanceWriter>(perfWriterCfg, logLevel));
 
-  return sequencer.run();
+    return sequencer.run();
 }

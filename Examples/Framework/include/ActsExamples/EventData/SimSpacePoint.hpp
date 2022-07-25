@@ -146,12 +146,14 @@ constexpr bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
 /// Container of space points.
 using SimSpacePointContainer = std::vector<SimSpacePoint>;
 
-class SimSPSourceLink : public Acts::SourceLink{
-  public:
-  const SimSpacePoint* getSimSP()const{return simSpacePoint;}
-  SimSPSourceLink(const SimSpacePoint* sp) : Acts::SourceLink(0), simSpacePoint(sp){}
+class SimSPSourceLink : public Acts::SourceLink {
+ public:
+  const SimSpacePoint* getSimSP() const { return simSpacePoint; }
+  SimSPSourceLink(const SimSpacePoint* sp)
+      : Acts::SourceLink(0), simSpacePoint(sp) {}
   SimSPSourceLink() = delete;
-  private:
+
+ private:
   const SimSpacePoint* simSpacePoint;
 };
 

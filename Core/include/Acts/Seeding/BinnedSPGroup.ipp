@@ -7,12 +7,10 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 template <typename spacepoint_iterator_t>
 Acts::BinnedSPGroup::BinnedSPGroup(
-    spacepoint_iterator_t spBegin,
-    spacepoint_iterator_t spEnd,
+    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
     std::shared_ptr<Acts::BinFinder> botBinFinder,
     std::shared_ptr<Acts::BinFinder> tBinFinder,
-    std::unique_ptr<SpacePointGrid> grid,
-    const SeedfinderConfig& _config) {
+    std::unique_ptr<SpacePointGrid> grid, const SeedfinderConfig& _config) {
   auto config = _config.toInternalUnits();
   static_assert(
       std::is_same<
@@ -32,9 +30,7 @@ Acts::BinnedSPGroup::BinnedSPGroup(
   // (worst case minR: configured minR + 1mm)
   // binSizeR allows to increase or reduce numRBins if needed
   size_t numRBins = (config.rMax + config.beamPos.norm()) / config.binSizeR;
-  std::vector<
-      std::vector<Acts::SpacePoint*>>
-      rBins(numRBins);
+  std::vector<std::vector<Acts::SpacePoint*>> rBins(numRBins);
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
       continue;
@@ -65,12 +61,10 @@ Acts::BinnedSPGroup::BinnedSPGroup(
   // bin
   if (config.forceRadialSorting) {
     for (auto& rbin : rBins) {
-      std::sort(
-          rbin.begin(), rbin.end(),
-          [](Acts::SpacePoint* a,
-             Acts::SpacePoint* b) {
-            return a->radius() < b->radius();
-          });
+      std::sort(rbin.begin(), rbin.end(),
+                [](Acts::SpacePoint* a, Acts::SpacePoint* b) {
+                  return a->radius() < b->radius();
+                });
     }
   }
 
@@ -80,8 +74,7 @@ Acts::BinnedSPGroup::BinnedSPGroup(
   for (auto& rbin : rBins) {
     for (auto& sp : rbin) {
       Acts::Vector2 spLocation(sp->phi(), sp->z());
-      std::vector<Acts::SpacePoint*>&
-          bin = grid->atPosition(spLocation);
+      std::vector<Acts::SpacePoint*>& bin = grid->atPosition(spLocation);
       bin.push_back(std::move(sp));
     }
   }

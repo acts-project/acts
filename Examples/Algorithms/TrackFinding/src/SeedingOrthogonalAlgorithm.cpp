@@ -11,9 +11,9 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonal.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     ActsExamples::SeedingOrthogonalAlgorithm::Config cfg,
@@ -39,8 +39,7 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
   Acts::SeedFilterConfig filterCfg;
   filterCfg.maxSeedsPerSpM = m_cfg.maxSeedsPerSpM;
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter>(
-          Acts::SeedFilter(filterCfg));
+      std::make_unique<Acts::SeedFilter>(Acts::SeedFilter(filterCfg));
 
   m_cfg.seedFinderConfig.rMax = m_cfg.rMax;
   m_cfg.seedFinderConfig.deltaRMin = m_cfg.deltaRMin;
@@ -107,7 +106,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     ProtoTrack protoTrack;
     protoTrack.reserve(seed.sp.size());
     for (auto layerLinks : seed.sp[0]->getSourceLinks()) {
-      const auto * indHolder= dynamic_cast<const ActsExamples::IndexSourceLink*>(0,&(layerLinks[0]));
+      const auto *indHolder =
+          dynamic_cast<const ActsExamples::IndexSourceLink *>(0,
+                                                              &(layerLinks[0]));
       protoTrack.push_back(indHolder->index());
     }
     protoTracks.push_back(std::move(protoTrack));
