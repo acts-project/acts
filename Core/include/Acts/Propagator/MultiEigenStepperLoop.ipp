@@ -112,11 +112,12 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   // Lambda for reweighting the components
   auto reweight = [](auto& cmps) {
-    const auto sum_of_weights = std::accumulate(
-        cmps.begin(), cmps.end(), ActsScalar{0},
-        [](auto sum, const auto& cmp) { return sum + cmp.weight; });
+    ActsScalar sumOfWeights = 0.0;
+    for (const auto& cmp : cmps) {
+      sumOfWeights += cmp.weight;
+    }
     for (auto& cmp : cmps) {
-      cmp.weight /= sum_of_weights;
+      cmp.weight /= sumOfWeights;
     }
   };
 
