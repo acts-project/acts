@@ -1,0 +1,87 @@
+# This is a terrible workaround to allow required statuses even if their builds don't 
+# trigger due to path patterns.
+# See: https://docs.github.com/en/repositories/configuring-branches-and-merges-in-your-repository/defining-the-mergeability-of-pull-requests/troubleshooting-required-status-checks#handling-skipped-but-required-checks
+
+name: Builds
+
+on:
+  push:
+  pull_request:
+    paths:
+      - '!/**'
+      - 'docs/**'
+    branches:
+      - main
+      - 'release/**'
+
+jobs:
+  lcg:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          - centos7-lcg100-gcc10
+          - centos7-lcg101-gcc11
+          - centos8-lcg100-gcc10
+          - centos8-lcg101-gcc11
+    steps:
+      - run: echo "No build needed"
+
+  linux_ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No build needed"
+
+  linux_examples_test:
+    runs-on: ubuntu-latest
+    needs: [linux_ubuntu]
+    steps:
+      - run: echo "No build needed"
+
+  linux_physmon:
+    runs-on: ubuntu-latest
+    needs: [linux_ubuntu]
+    steps:
+      - run: echo "No build needed"
+
+  linux_ubuntu_extra:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: 
+          - ubuntu2204
+          - ubuntu2204_clang
+    steps:
+      - run: echo "No build needed"
+
+  linux-nodeps:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image:
+          # Note: We only want the centos8 base here, and so we do not
+          # setup the lcg environment below
+          - centos8-lcg100-gcc10
+    steps:
+      - run: echo "No build needed"
+
+  macos:
+    runs-on: ubuntu-latest # Doesn't actually need macOS
+    steps:
+      - run: echo "No build needed"
+
+  cuda:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No build needed"
+
+  exatrkx:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No build needed"
+
+  sycl:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "No build needed"
+
