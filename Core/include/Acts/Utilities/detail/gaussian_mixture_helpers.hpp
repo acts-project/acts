@@ -75,11 +75,6 @@ auto combineBoundGaussianMixture(
     const auto &[weight_l, pars_l, cov_l] = projector(*l);
     throw_assert(cov_l, "we require a covariance here");
 
-    // NOTE In general (for theta != 90°) it does not give correct results if we
-    // average over spherical angles (phi, theta) like this, the correct way
-    // would be through a conversion to cartesian coordinates. However, in
-    // general we have quite small differences here, which makes these errors
-    // negligible.
     sumOfWeights += weight_l;
     mean += weight_l * pars_l;
     cov1 += weight_l * *cov_l;

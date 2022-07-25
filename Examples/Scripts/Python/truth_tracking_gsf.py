@@ -160,7 +160,7 @@ if "__main__" == __name__:
         inputParticlePath = None
 
     runTruthTrackingGsf(
-        trackingGeometry,
+        trackingGeometry=trackingGeometry,
         decorators=decorators,
         field=field,
         digiConfigFile=srcdir
