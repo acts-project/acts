@@ -8,8 +8,6 @@
 
 #pragma once
 
-#include <csignal>
-
 #include <DD4hep/DetElement.h>
 #include <DDRec/DetectorData.h>
 
