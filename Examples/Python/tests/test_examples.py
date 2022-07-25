@@ -29,6 +29,7 @@ from acts.examples import (
 )
 
 from acts.examples.odd import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -491,7 +492,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
 
     from material_mapping import runMaterialMapping
 
@@ -530,7 +531,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     del trackingGeometry
     del detector
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(
+    detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory(),
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
     )
 
@@ -566,6 +567,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         assert json.load(fh)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory,
         mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
     )
 
@@ -608,6 +610,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(),
         mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
     )
 
@@ -898,7 +901,7 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory())
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -1010,7 +1013,7 @@ def test_vertex_fitting_reading(
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+    getOpenDataDetector(getOpenDataDetectorDirectory())  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent

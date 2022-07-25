@@ -2,7 +2,8 @@
 import argparse
 import pathlib, acts, acts.examples
 import acts.examples.dd4hep
-from acts.examples.odd import getOpenDataDetector, getOpenDataDetectorDirectory
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 
 u = acts.UnitConstants
@@ -16,7 +17,8 @@ oddDigiConfig = oddDir / "config/odd-digi-smearing-config.json"
 oddSeedingSel = oddDir / "config/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=oddMaterialDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory(), 
+                mdecorator=oddMaterialDeco)
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
 

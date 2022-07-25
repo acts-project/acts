@@ -331,7 +331,7 @@ DYLD_LIBRARY_PATH and DD4HEP_LIBRARY_PATH on MacOs to the install path of the OD
 You can now use the ODD in the python binding by using : 
 
 ```oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
-detector, trackingGeometry, decorators = getOpenDataDetector(oddMaterialDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(odd_dir, oddMaterialDeco)
 ```
 
 

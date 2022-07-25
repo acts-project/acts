@@ -19,6 +19,7 @@ import acts.examples
 acts.logging.setFailureThreshold(acts.logging.FATAL)
 
 from truth_tracking_kalman import runTruthTrackingKalman
+from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
@@ -60,7 +61,7 @@ matDeco = acts.IMaterialDecorator.fromFile(
     srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
     level=acts.logging.INFO,
 )
-detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory(), matDeco)
 digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
 geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 

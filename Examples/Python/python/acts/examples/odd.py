@@ -1,12 +1,7 @@
 from pathlib import Path
+import sys,os
 
-
-def getOpenDataDetectorDirectory():
-    return Path(__file__).parents[5] / "thirdparty" / "OpenDataDetector"
-
-
-def getOpenDataDetector(mdecorator=None):
-    odd_dir = getOpenDataDetectorDirectory()
+def getOpenDataDetector( odd_dir,  mdecorator=None):
 
     odd_xml = odd_dir / "xml" / "OpenDataDetector.xml"
     if not odd_xml.exists():
