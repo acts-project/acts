@@ -67,9 +67,6 @@ auto combineBoundGaussianMixture(
   if (std::distance(begin, end) == 1) {
     return ret_type{begin_pars, *begin_cov};
   }
-  
-  // Averageing over angles gives wrong results, handle specially
-  Vector3 dir = Vector3::Zero();
 
   // clang-format off
   // x = \sum_{l} w_l * x_l
@@ -79,12 +76,13 @@ auto combineBoundGaussianMixture(
     const auto &[weight_l, pars_l, cov_l] = projector(*l);
     throw_assert(cov_l, "we require a covariance here");
 
+    // NOTE In general it does not give correct results if we average over
+    // spherical angles (phi, theta) like this, the correct way would be through
+    // a conversion to cartesian coordinates. However, in general we have quite
+    // small differences here, which makes these errors negligible.
     sumOfWeights += weight_l;
     mean += weight_l * pars_l;
     cov1 += weight_l * *cov_l;
-    
-    dir += weight_l * Acts::makeDirectionUnitFromPhiTheta(pars_l[eBoundPhi],
-                                                          pars_l[eBoundTheta]);
 
     // Avoid problems with cyclic coordinates. The indices for these are taken
     // from the angle_description_t template parameter, and applied with the
@@ -112,9 +110,6 @@ auto combineBoundGaussianMixture(
       cov2 += weight_l * weight_m * diff * diff.transpose();
     }
   }
-  
-//   mean[eBoundTheta] = VectorHelpers::theta(dir);
-//   mean[eBoundPhi] = VectorHelpers::phi(dir);
 
   return ret_type{mean / sumOfWeights,
                   cov1 / sumOfWeights + cov2 / (sumOfWeights * sumOfWeights)};
