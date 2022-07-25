@@ -137,9 +137,10 @@ int main(int argc, char** argv) {
       ptBorders = {0., std::numeric_limits<double>::infinity()};
     }
 
-    TApplication* tApp = vm["silent"].as<bool>()
-                             ? nullptr
-                             : new TApplication("TrackSummary", 0, 0);
+    TApplication* tApp =
+        vm["silent"].as<bool>()
+            ? nullptr
+            : new TApplication("TrackSummary", nullptr, nullptr);
 
     std::bitset<7> residualPulls;
     std::bitset<5> auxiliaries;
