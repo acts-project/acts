@@ -93,8 +93,9 @@ int main(int /*argc*/, char** /*argv[]*/) {
     double tmin = -INFINITY, tmax = INFINITY;
 
     for (size_t i = 0; i < 3; i++) {
-      if (d[i] == 0.0)
+      if (d[i] == 0.0) {
         continue;
+      }
       double t1 = (box.min()[i] - origin[i]) / d[i];
       double t2 = (box.max()[i] - origin[i]) / d[i];
       tmin = std::max(tmin, std::min(t1, t2));

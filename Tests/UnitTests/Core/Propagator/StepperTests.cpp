@@ -89,8 +89,9 @@ struct EndOfWorld {
     const double tolerance = state.options.targetTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
-        std::abs(stepper.position(state.stepping).z()) >= 0.5_m)
+        std::abs(stepper.position(state.stepping).z()) >= 0.5_m) {
       return true;
+    }
     return false;
   }
 };
@@ -574,8 +575,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
-    if (pos == stepResult.position.back())
+    if (pos == stepResult.position.back()) {
       CHECK_CLOSE_ABS(pos.x(), 1_m, 1_um);
+    }
   }
   for (const auto& mom : stepResult.momentum) {
     CHECK_CLOSE_ABS(mom, startMom, 1_keV);

@@ -19,9 +19,10 @@ std::vector<ActsExamples::SimParticle> genParticlesToActs(
     const std::vector<HepMC3::GenParticlePtr>& genParticles) {
   std::vector<ActsExamples::SimParticle> actsParticles;
   // Translate all particles
-  for (auto& genParticle : genParticles)
+  for (auto& genParticle : genParticles) {
     actsParticles.push_back(ActsExamples::HepMC3Particle::particle(
         std::make_shared<HepMC3::GenParticle>(*genParticle)));
+  }
   return actsParticles;
 }
 
@@ -126,8 +127,9 @@ void ActsExamples::HepMC3Vertex::removeParticleIn(
     std::shared_ptr<SimParticle> particle) {
   // Remove particle if it exists
   if (HepMC3::GenParticlePtr genParticle =
-          matchParticles(vertex->particles_in(), particle))
+          matchParticles(vertex->particles_in(), particle)) {
     vertex->remove_particle_in(genParticle);
+  }
 }
 
 void ActsExamples::HepMC3Vertex::removeParticleOut(
@@ -135,8 +137,9 @@ void ActsExamples::HepMC3Vertex::removeParticleOut(
     std::shared_ptr<SimParticle> particle) {
   // Remove particle if it exists
   if (HepMC3::GenParticlePtr genParticle =
-          matchParticles(vertex->particles_out(), particle))
+          matchParticles(vertex->particles_out(), particle)) {
     vertex->remove_particle_out(genParticle);
+  }
 }
 
 void ActsExamples::HepMC3Vertex::position(

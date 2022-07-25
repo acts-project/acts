@@ -109,8 +109,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
       addTranslation * transform, cBounds, std::move(sArray), layerThickness,
       std::move(ad), active);
 
-  if (!cLayer)
+  if (!cLayer) {
     ACTS_ERROR("Creation of cylinder layer did not succeed!");
+  }
   associateSurfacesToLayer(*cLayer);
 
   // now return
@@ -181,8 +182,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
       addTranslation * transform, cBounds, std::move(sArray), layerThickness,
       std::move(ad), active);
 
-  if (!cLayer)
+  if (!cLayer) {
     ACTS_ERROR("Creation of cylinder layer did not succeed!");
+  }
   associateSurfacesToLayer(*cLayer);
 
   // now return
@@ -245,8 +247,9 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
       DiscLayer::create(addTranslation * transform, dBounds, std::move(sArray),
                         layerThickness, std::move(ad), active);
 
-  if (!dLayer)
+  if (!dLayer) {
     ACTS_ERROR("Creation of disc layer did not succeed!");
+  }
   associateSurfacesToLayer(*dLayer);
   // return the layer
   return dLayer;

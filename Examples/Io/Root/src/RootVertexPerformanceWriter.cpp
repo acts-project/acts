@@ -68,9 +68,9 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
-  else {
+  } else {
     // I/O parameters
     m_outputTree->Branch("diffx", &m_diffx);
     m_outputTree->Branch("diffy", &m_diffy);
@@ -152,8 +152,9 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   m_nrecoVtx = vertices.size();
 
   ACTS_DEBUG("Number of reco vertices in event: " << m_nrecoVtx);
-  if (m_outputFile == nullptr)
+  if (m_outputFile == nullptr) {
     return ProcessCode::SUCCESS;
+  }
 
   // Read truth particle input collection
   const auto& allTruthParticles =
