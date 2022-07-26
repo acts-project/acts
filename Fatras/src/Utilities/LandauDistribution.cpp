@@ -179,10 +179,12 @@ double ActsFatras::LandauDistribution::quantile(double z) {
       40.157721, 41.622399, 43.202525, 44.912465, 46.769077, 48.792279,
       51.005773, 53.437996, 56.123356, 59.103894};
 
-  if (z <= 0)
+  if (z <= 0) {
     return -std::numeric_limits<double>::infinity();
-  if (z >= 1)
+  }
+  if (z >= 1) {
     return std::numeric_limits<double>::infinity();
+  }
 
   double ranlan, u, v;
   u = 1000 * z;

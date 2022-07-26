@@ -71,9 +71,9 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
-  else {
+  } else {
     // The estimated track parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
     m_outputTree->Branch("loc0", &m_loc0);
@@ -97,7 +97,11 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
   }
 }
 
-ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() = default;
+ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
   if (m_outputFile != nullptr) {
