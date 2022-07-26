@@ -142,14 +142,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
         ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
         ACTS_VERBOSE("  " << params.parameters().transpose());
         // Push the fitted parameters to the container
-        indexedParams.emplace(fitOutput.lastMeasurementIndex,
-                              std::move(params));
+        indexedParams.emplace(fitOutput.lastMeasurementIndex, params);
       } else {
         ACTS_DEBUG("No fitted paramemeters for track " << itrack);
       }
       // store the result
-      trajectories.emplace_back(std::move(fitOutput.fittedStates),
-                                std::move(trackTips), std::move(indexedParams));
+      trajectories.emplace_back(fitOutput.fittedStates, std::move(trackTips),
+                                std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track "
                    << itrack << " with error: " << result.error() << ", "
