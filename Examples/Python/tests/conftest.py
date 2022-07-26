@@ -264,7 +264,9 @@ def detector_config(request):
             srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
             level=acts.logging.INFO,
         )
-        detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory(), matDeco)
+        detector, trackingGeometry, decorators = getOpenDataDetector(
+            getOpenDataDetectorDirectory(), matDeco
+        )
         return DetectorConfig(
             detector,
             trackingGeometry,
