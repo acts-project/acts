@@ -274,6 +274,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
     assert_csv_output(csv, "particles_initial")
 
 
+@pytest.mark.slow
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
     from propagation import runPropagation
 
@@ -345,7 +346,12 @@ def test_event_recording(tmp_path):
     env = os.environ.copy()
     env["NEVENTS"] = "1"
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call([str(script)], cwd=tmp_path, env=env)
+    subprocess.check_call(
+        [str(script)],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
 
     from acts.examples.hepmc3 import HepMC3AsciiReader
 
@@ -639,11 +645,15 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         pytest.param(
             getOpenDataDetector,
             540,
-            marks=pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
+            marks=[
+                pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
+                pytest.mark.slow,
+            ],
         ),
         (functools.partial(AlignedDetector.create, iovSize=1), 450),
     ],
 )
+@pytest.mark.slow
 def test_geometry_example(geoFactory, nobj, tmp_path):
     detector, trackingGeometry, decorators = geoFactory()
 
@@ -825,6 +835,7 @@ def test_digitization_config_example(trk_geo, tmp_path):
     ],
     ids=["full_seeding", "truth_estimated", "truth_smeared"],
 )
+@pytest.mark.slow
 def test_ckf_tracks_example(
     tmp_path, assert_root_hash, truthSmeared, truthEstimated, detector_config
 ):
@@ -1008,6 +1019,7 @@ def test_vertex_fitting_reading(
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.slow
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
     getOpenDataDetector()  # just to make sure it can build
@@ -1023,4 +1035,9 @@ def test_full_chain_odd_example(tmp_path):
     env = os.environ.copy()
     env["NEVENTS"] = "1"
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
-    subprocess.check_call([str(script)], cwd=tmp_path, env=env)
+    subprocess.check_call(
+        [str(script)],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )

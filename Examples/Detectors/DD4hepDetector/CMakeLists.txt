@@ -1,20 +1,5 @@
 add_library(
   ActsExamplesDetectorDD4hep SHARED
-  src/Demonstrator/DemonstratorBarrel_geo.cpp
-  src/Demonstrator/DemonstratorBeamPipe_geo.cpp
-  src/FCChh/FCChhTrackerTkLayout_Barrel.cpp
-  src/FCChh/FCChhTrackerTkLayout_Beampipe.cpp
-  src/FCChh/FCChhTrackerTkLayout_Endcap.cpp
-  src/IBL/IBLSimpleBarrel_geo.cpp
-  src/Calorimeter/Calorimeter_barrel.cpp
-  src/TestTracker/AirTube_geo.cpp
-  src/TestTracker/Barrel_geo.cpp
-  src/TestTracker/BeamPipe_geo.cpp
-  src/TestTracker/Endcap_geo.cpp
-  src/TestTracker/SimpleLayeredCylinder_geo.cpp
-  src/TestTracker/ZPlanarTracker_geo.cpp
-  src/TKLayout/TKLayoutBarrel_geo.cpp
-  src/TKLayout/TKLayoutEndcap_geo.cpp
   src/DD4hepDetector.cpp
   src/DD4hepDetectorHelper.cpp
   src/DD4hepGeometryService.cpp
