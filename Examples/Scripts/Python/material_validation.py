@@ -8,7 +8,7 @@ from acts import (
     UnitConstants as u,
 )
 from common import getOpenDataDetectorDirectory
-from actes.examples.odd import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector
 
 
 def runMaterialValidation(
