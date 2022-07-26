@@ -70,8 +70,11 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("nStepTrials", &m_nStepTrials);
 }
 
-ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() =
-    default;
+ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
   // Write the tree

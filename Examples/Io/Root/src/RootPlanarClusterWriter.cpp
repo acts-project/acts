@@ -78,7 +78,11 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   m_outputTree->Branch("truth_barcode", &m_t_barcode);
 }
 
-ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() = default;
+ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   // Write the tree
