@@ -26,14 +26,21 @@ import acts
 import acts.examples
 
 try:
-    acts.logging.setFailureThreshold(acts.logging.WARNING)
+    if acts.logging.getFailureThreshold() != acts.logging.WARNING:
+        acts.logging.setFailureThreshold(acts.logging.WARNING)
 except RuntimeError:
     # Repackage with different error string
-    raise RuntimeError(
+    errtype = (
+        "negative"
+        if acts.logging.getFailureThreshold() < acts.logging.WARNING
+        else "positive"
+    )
+    warnings.warn(
         "Runtime log failure threshold could not be set. "
         "Compile-time value is probably set via CMake, i.e. "
-        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set. The "
-        "pytest test-suite will not work in this configuration."
+        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
+        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
+        f"The pytest test-suite can produce false-{errtype} results in this configuration"
     )
 
 
@@ -257,9 +264,7 @@ def detector_config(request):
             srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
             level=acts.logging.INFO,
         )
-        detector, trackingGeometry, decorators = getOpenDataDetector(
-            getOpenDataDetectorDirectory(), matDeco
-        )
+        detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory(), matDeco)
         return DetectorConfig(
             detector,
             trackingGeometry,
