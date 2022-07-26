@@ -83,8 +83,11 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
   }
 }
 
-ActsExamples::RootVertexPerformanceWriter::~RootVertexPerformanceWriter() =
-    default;
+ActsExamples::RootVertexPerformanceWriter::~RootVertexPerformanceWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::endRun() {
   if (m_outputFile != nullptr) {

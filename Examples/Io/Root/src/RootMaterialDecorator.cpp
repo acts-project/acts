@@ -352,5 +352,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
 }
 
 ActsExamples::RootMaterialDecorator::~RootMaterialDecorator() {
-  m_inputFile->Close();
+  if (m_inputFile != nullptr) {
+    m_inputFile->Close();
+  }
 }
