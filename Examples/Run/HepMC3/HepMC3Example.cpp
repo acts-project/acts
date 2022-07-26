@@ -59,14 +59,16 @@ int main(int argc, char** argv) {
   using namespace ActsExamples::HepMC3Event;
   std::cout << "Event data:" << std::endl;
   std::cout << "Units: ";
-  if (momentumUnit(genevt) == Acts::UnitConstants::GeV)
+  if (momentumUnit(genevt) == Acts::UnitConstants::GeV) {
     std::cout << "[GEV], ";
-  else if (momentumUnit(genevt) == Acts::UnitConstants::MeV)
+  } else if (momentumUnit(genevt) == Acts::UnitConstants::MeV) {
     std::cout << "[MeV], ";
-  if (lengthUnit(genevt) == Acts::UnitConstants::mm)
+  }
+  if (lengthUnit(genevt) == Acts::UnitConstants::mm) {
     std::cout << "[mm]" << std::endl;
-  else if (lengthUnit(genevt) == Acts::UnitConstants::cm)
+  } else if (lengthUnit(genevt) == Acts::UnitConstants::cm) {
     std::cout << "[cm]" << std::endl;
+  }
   Acts::Vector3 evtPos = eventPos(genevt);
   std::cout << "Event position: " << evtPos(0) << ", " << evtPos(1) << ", "
             << evtPos(2) << std::endl;
@@ -74,9 +76,9 @@ int main(int argc, char** argv) {
 
   std::cout << "Beam particles: ";
   std::vector<ActsExamples::SimParticle> beam = beams(genevt);
-  if (beam.empty())
+  if (beam.empty()) {
     std::cout << "none" << std::endl;
-  else {
+  } else {
     for (auto& pbeam : beam) {
       std::cout << ActsFatras::findName(
                        static_cast<Acts::PdgParticle>(pbeam.pdg()))
@@ -88,9 +90,9 @@ int main(int argc, char** argv) {
   std::cout << std::endl << "Vertices: ";
   std::vector<std::unique_ptr<ActsExamples::SimVertex>> vertices =
       ActsExamples::HepMC3Event::vertices(genevt);
-  if (vertices.empty())
+  if (vertices.empty()) {
     std::cout << "none" << std::endl;
-  else {
+  } else {
     std::cout << std::endl;
     for (auto& vertex : vertices) {
       for (auto& particle : vertex->incoming) {
