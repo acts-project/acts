@@ -242,7 +242,7 @@ ActsExamples::TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
       m_impl(std::make_unique<Impl>(std::move(config), logger())) {}
 
 ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() =
-    default:
+    default;
 
 ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
