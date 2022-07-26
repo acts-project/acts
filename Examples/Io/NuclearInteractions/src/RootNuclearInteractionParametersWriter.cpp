@@ -341,11 +341,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::
 }
 
 ActsExamples::RootNuclearInteractionParametersWriter::
-    ~RootNuclearInteractionParametersWriter() {
-  if (tf != nullptr) {
-    tf->Close();
-  }
-}
+    ~RootNuclearInteractionParametersWriter() = default;
 
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
