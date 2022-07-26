@@ -241,8 +241,11 @@ ActsExamples::TrackFinderPerformanceWriter::TrackFinderPerformanceWriter(
     : WriterT(config.inputProtoTracks, "TrackFinderPerformanceWriter", level),
       m_impl(std::make_unique<Impl>(std::move(config), logger())) {}
 
-ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() =
-    default;
+ActsExamples::TrackFinderPerformanceWriter::~TrackFinderPerformanceWriter() {
+  if (file != nullptr) {
+    file->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
