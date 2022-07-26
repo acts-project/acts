@@ -570,7 +570,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         assert json.load(fh)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        getOpenDataDetectorDirectory,
+        getOpenDataDetectorDirectory(),
         mdecorator=acts.IMaterialDecorator.fromFile(geo_map),
     )
 
@@ -643,7 +643,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     [
         (GenericDetector.create, 450),
         pytest.param(
-            getOpenDataDetector,
+            functools.partial(getOpenDataDetector, getOpenDataDetectorDirectory()),
             540,
             marks=pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
         ),
