@@ -48,6 +48,15 @@ class AccumulatedMaterialSlab {
   ///  in material structures.
   void accumulate(MaterialSlab slabAlongTrack, float pathCorrection = 1);
 
+  /// Use the accumulated material to update the material variance
+  ///
+  /// @param slabReference reference slab (from the map) used to compute the variance
+  /// @param useEmptyTrack indicate whether to consider an empty track store
+  ///
+  /// The material variance can be used to optimised the mapping process as it
+  /// should be inversly proportionnal to the map quality
+  void trackVariance(MaterialSlab slabReference, bool useEmptyTrack = false);
+
   /// Add the accumulated material for the current track to the total average.
   ///
   /// @param useEmptyTrack indicate whether to consider an empty track store
@@ -72,11 +81,23 @@ class AccumulatedMaterialSlab {
   /// the average thickness seen by the tracks.
   std::pair<MaterialSlab, unsigned int> totalAverage() const;
 
+  /// Return the material variance from all accumulated tracks.
+  ///
+  /// @returns Average material properties and the number of contributing tracks
+  ///
+  /// Only contains the information up to the last `.trackVariance(...)` call.
+  /// If there have been additional calls to `.accumulate(...)` afterwards, the
+  /// information is not part of the total average. The number of tracks is only
+  /// opdated on the call of `.trackAverage(...)`
+  std::pair<float, unsigned int> totalVariance() const;
+
  private:
   /// Averaged properties for a single track.
   MaterialSlab m_trackAverage;
   /// Averaged properties over multiple tracks.
   MaterialSlab m_totalAverage;
+  /// Averaged variance over multiple tracks.
+  float m_totalVariance = 0.0;
   // Number of tracks contributing to the total average.
   unsigned int m_totalCount = 0u;
 };
