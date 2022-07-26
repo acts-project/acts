@@ -107,8 +107,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     protoTrack.reserve(seed.sp.size());
     for (auto layerLinks : seed.sp[0]->getSourceLinks()) {
       const auto *indHolder =
-          dynamic_cast<const ActsExamples::IndexSourceLink *>(
-                                                              &(layerLinks[0]));
+          dynamic_cast<const ActsExamples::IndexSourceLink *>(&(layerLinks[0]));
       protoTrack.push_back(indHolder->index());
     }
     protoTracks.push_back(std::move(protoTrack));
