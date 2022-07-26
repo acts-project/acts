@@ -61,8 +61,9 @@ std::vector<std::vector<Acts::Vector3>> modulePositionsDisc(
   } else {
     double totalLength = 0;
     // sum up the total length
-    for (auto& mhlength : moduleHalfLength)
+    for (auto& mhlength : moduleHalfLength) {
       totalLength += 2 * mhlength;
+    }
     // now calculate the overlap (equal pay)
     double rOverlap = (totalLength - deltaR) / (moduleHalfLength.size() - 1);
     // and now fill the radii and gaps

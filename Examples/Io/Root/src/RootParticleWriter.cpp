@@ -65,7 +65,11 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("sub_particle", &m_subParticle);
 }
 
-ActsExamples::RootParticleWriter::~RootParticleWriter() = default;
+ActsExamples::RootParticleWriter::~RootParticleWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
   if (m_outputFile != nullptr) {
