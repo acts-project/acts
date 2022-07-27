@@ -48,8 +48,9 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_nr", &m_eventNr);
@@ -78,7 +79,11 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   m_outputTree->Branch("truth_barcode", &m_t_barcode);
 }
 
-ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() = default;
+ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   // Write the tree

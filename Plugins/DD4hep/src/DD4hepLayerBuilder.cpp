@@ -236,9 +236,10 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
                                    detExtension->getValue("z_max", "envelope")};
       } else if (geoShape != nullptr) {
         TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-        if (tube == nullptr)
+        if (tube == nullptr) {
           ACTS_ERROR(
               " Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
+        }
 
         // extract the boundaries
         double rMin = tube->GetRmin() * UnitConstants::cm;

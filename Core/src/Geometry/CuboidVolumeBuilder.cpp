@@ -197,9 +197,11 @@ std::shared_ptr<Acts::TrackingVolume> Acts::CuboidVolumeBuilder::buildVolume(
                                BinningType::arbitrary, BinningValue::binX));
 
   // Build confined volumes
-  if (cfg.trackingVolumes.empty())
-    for (VolumeConfig vc : cfg.volumeCfg)
+  if (cfg.trackingVolumes.empty()) {
+    for (VolumeConfig vc : cfg.volumeCfg) {
       cfg.trackingVolumes.push_back(buildVolume(gctx, vc));
+    }
+  }
 
   std::shared_ptr<TrackingVolume> trackVolume;
   if (layVec.empty()) {
