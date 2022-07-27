@@ -42,8 +42,9 @@ ActsExamples::makeMagneticFieldMapRzFromText(
   double br = 0., bz = 0.;
   while (std::getline(map_file, line)) {
     if (line.empty() || line[0] == '%' || line[0] == '#' ||
-        line.find_first_not_of(' ') == std::string::npos)
+        line.find_first_not_of(' ') == std::string::npos) {
       continue;
+    }
 
     std::istringstream tmp(line);
     tmp >> r >> z >> br >> bz;
@@ -86,8 +87,9 @@ ActsExamples::makeMagneticFieldMapXyzFromText(
   double bx = 0., by = 0., bz = 0.;
   while (std::getline(map_file, line)) {
     if (line.empty() || line[0] == '%' || line[0] == '#' ||
-        line.find_first_not_of(' ') == std::string::npos)
+        line.find_first_not_of(' ') == std::string::npos) {
       continue;
+    }
 
     std::istringstream tmp(line);
     tmp >> x >> y >> z >> bx >> by >> bz;

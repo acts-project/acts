@@ -172,11 +172,11 @@ To do the validation, five root macros are available in ``scripts/MaterialMappin
   mkdir Surfaces/dist_plot
   mkdir Surfaces/1D_plot
 
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root",-1,"Surfaces/dist_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root",100000,"Surfaces/1D_plot")'
   .q
 
 Using the validation plots you can then adapt the binning and the mapped surface to improve the mapping.
@@ -190,9 +190,6 @@ On top of those plots :
 
 Can be use with X,Y,Z is a list of volumes, this will plot the material ratio between the map and the Geantino scan for the given volumes.
 
-
-.. warning::
-  Depending on your root version those macros might not work. They have been tested with version 6.18.04 so you can always revert to that version in case of problems.
 
 Using a different detector
 --------------------------

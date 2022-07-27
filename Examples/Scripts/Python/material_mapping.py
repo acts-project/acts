@@ -24,8 +24,8 @@ from acts import (
     StraightLineStepper,
     MaterialMapJsonConverter,
 )
-
-from common import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 
 def runMaterialMapping(
@@ -124,7 +124,9 @@ def runMaterialMapping(
 
 if "__main__" == __name__:
     matDeco = acts.IMaterialDecorator.fromFile("geometry-map.json")
-    detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(), matDeco
+    )
 
     runMaterialMapping(
         trackingGeometry, decorators, outputDir=os.getcwd(), inputDir=os.getcwd()

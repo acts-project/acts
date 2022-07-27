@@ -172,7 +172,7 @@ Measurement EDM4hepUtil::readMeasurement(
 
   auto to = createMeasurement(dParameters, sourceLink);
 
-  if (fromClusters) {
+  if (fromClusters != nullptr) {
     for (const auto objectId : from.getRawHits()) {
       const auto& c = fromClusters->at(objectId.index);
 
