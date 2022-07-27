@@ -16,12 +16,17 @@
 #include <iomanip>
 #include <limits>
 #include <sstream>
+#include <stdexcept>
+#include <iostream>
+#include <csignal>
 
 namespace Acts {
 
 /// A constrained step class for the steppers
 struct ConstrainedStep {
   using Scalar = ActsScalar;
+
+  inline static constexpr auto max_scalar = std::numeric_limits<Scalar>::max();
 
   /// the types of constraints
   /// from accuracy - this can vary up and down given a good step estimator
@@ -31,9 +36,7 @@ struct ConstrainedStep {
   enum Type : int { accuracy = 0, actor = 1, aborter = 2, user = 3 };
 
   /// the step size tuple
-  std::array<Scalar, 4> values = {
-      {std::numeric_limits<Scalar>::max(), std::numeric_limits<Scalar>::max(),
-       std::numeric_limits<Scalar>::max(), std::numeric_limits<Scalar>::max()}};
+  std::array<Scalar, 4> values = {max_scalar, max_scalar, max_scalar, max_scalar};
 
   /// The Navigation direction
   NavigationDirection direction = NavigationDirection::Forward;
@@ -52,6 +55,10 @@ struct ConstrainedStep {
     }
     // The check the current value and set it if appropriate
     Scalar cValue = values[type];
+    if ((value < 0 && direction == NavigationDirection::Forward) ||
+        (value > 0 && direction == NavigationDirection::Backward)) {
+      std::cout << "ConstrainedStep " << toString() << " update value " << value << " original direction " << direction << std::endl;
+    }
     values[type] = std::abs(cValue) < std::abs(value) ? cValue : value;
   }
 
@@ -95,10 +102,17 @@ struct ConstrainedStep {
   /// Cast operator to double, returning the min/max value
   /// depending on the direction
   operator Scalar() const {
+    Scalar result;
     if (direction == NavigationDirection::Forward) {
-      return (*std::min_element(values.begin(), values.end()));
+      result = *(std::min_element(values.begin(), values.end()));
+    } else {
+      result = *(std::max_element(values.begin(), values.end()));
     }
-    return (*std::max_element(values.begin(), values.end()));
+    assert(std::abs(result) < max_scalar);
+    if (std::abs(result) < max_scalar) {
+      throw std::runtime_error("should never return max");
+    }
+    return result;
   }
 
   /// Access to a specific value
@@ -144,7 +158,7 @@ inline std::string ConstrainedStep::toString() const {
   auto streamValue = [&](ConstrainedStep cstep) -> void {
     Scalar val = values[cstep];
     dstream << std::setw(5);
-    if (std::abs(val) == std::numeric_limits<Scalar>::max()) {
+    if (std::abs(val) == max_scalar) {
       dstream << (val > 0 ? "+∞" : "-∞");
     } else {
       dstream << val;

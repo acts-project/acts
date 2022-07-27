@@ -75,7 +75,7 @@ struct PropagatorPlainOptions {
   unsigned int maxSteps = 1000;
 
   /// Maximum number of Runge-Kutta steps for the stepper step call
-  unsigned int maxRungeKuttaStepTrials = 10000;
+  unsigned int maxRungeKuttaStepTrials = 10;
 
   /// Absolute maximum step size
   double maxStepSize = std::numeric_limits<double>::max();

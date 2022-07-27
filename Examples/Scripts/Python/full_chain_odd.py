@@ -27,12 +27,12 @@ from seeding import addSeeding, TruthSeedRanges
 from ckf_tracks import addCKFTracks, CKFPerformanceConfig
 from vertex_fitting import addVertexFitting, VertexFinder
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
+s = acts.examples.Sequencer(events=100, numThreads=1, logLevel=acts.logging.INFO)
 
 s = addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-3.0, 3.0, True),
+    EtaConfig(-1.8, 1.8, True),
     ParticleConfig(2, acts.PdgParticle.eMuon, True),
     rnd=rnd,
 )
@@ -55,10 +55,9 @@ s = addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.7, 2.7), nHits=(9, None)),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
-    initialVarInflation=[100, 100, 100, 100, 100, 100],
+    logLevel=acts.logging.INFO,
 )
 s = addCKFTracks(
     s,
@@ -84,7 +83,7 @@ s = addVertexFitting(
     field,
     vertexFinder=VertexFinder.AMVF,
     outputDirRoot=outputDir,
-    vertexFinderErrorLevel=acts.logging.INFO,
+    logLevel=acts.logging.INFO,
 )
 
 s.run()
