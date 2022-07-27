@@ -10,7 +10,7 @@ import acts.examples
 
 from acts.examples import CsvSpacePointReader
 from collections import namedtuple
-from seeding import (
+from acts.examples.reconstruction import (
     SeedfinderConfigArg,
     SeedFilterConfigArg,
     SpacePointGridConfigArg,
