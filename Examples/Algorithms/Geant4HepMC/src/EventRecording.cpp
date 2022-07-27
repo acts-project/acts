@@ -138,23 +138,26 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
         while (true) {
           bool sane = true;
           for (auto v : event.vertices()) {
-            if (!v)
+            if (!v) {
               continue;
+            }
             if (v->particles_out().empty()) {
               event.remove_vertex(v);
               sane = false;
             }
           }
           for (auto p : event.particles()) {
-            if (!p)
+            if (!p) {
               continue;
+            }
             if (!p->production_vertex()) {
               event.remove_particle(p);
               sane = false;
             }
           }
-          if (sane)
+          if (sane) {
             break;
+          }
         }
         events.push_back(std::move(event));
       }

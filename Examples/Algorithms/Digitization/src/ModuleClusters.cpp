@@ -108,8 +108,9 @@ void ModuleClusters::merge() {
       // indices (a good example of this would a for a timing
       // detector).
 
-      for (std::vector<ModuleValue>& remerged : mergeParameters(cellv))
+      for (std::vector<ModuleValue>& remerged : mergeParameters(cellv)) {
         newVals.push_back(squash(remerged));
+      }
     }
     m_moduleValues = std::move(newVals);
   } else {
@@ -142,8 +143,9 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
 
   std::vector<bool> used(values.size(), false);
   for (size_t i = 0; i < values.size(); i++) {
-    if (used.at(i))
+    if (used.at(i)) {
       continue;
+    }
 
     retv.emplace_back();
     std::vector<ModuleValue>& thisvec = retv.back();
@@ -157,8 +159,9 @@ std::vector<std::vector<ModuleValue>> ModuleClusters::mergeParameters(
     // next unseen one
     for (size_t j = i + 1; j < values.size(); j++) {
       // Still may have already been used, so check it
-      if (used.at(j))
+      if (used.at(j)) {
         continue;
+      }
 
       // Now look for a match between current cluster and value `j' Consider
       // them matched until we find evidence to the contrary. This
@@ -234,8 +237,9 @@ ModuleValue ModuleClusters::squash(std::vector<ModuleValue>& values) {
       if (std::find(m_geoIndices.begin(), m_geoIndices.end(), idx) ==
           m_geoIndices.end()) {
         if (std::find(mval.paramIndices.begin(), mval.paramIndices.end(),
-                      idx) == mval.paramIndices.end())
+                      idx) == mval.paramIndices.end()) {
           mval.paramIndices.push_back(idx);
+        }
         if (mval.paramValues.size() < (j + 1)) {
           mval.paramValues.push_back(0);
           mval.paramVariances.push_back(0);
