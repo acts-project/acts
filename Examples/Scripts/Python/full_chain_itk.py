@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
-import pathlib, acts, acts.examples, itk
+import pathlib, acts, acts.examples
+from acts.examples.itk import buildITkGeometry
 
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd()
 
 # acts.examples.dump_args_calls(locals())
-detector, trackingGeometry, decorators = itk.buildITkGeometry(geo_dir)
+detector, trackingGeometry, decorators = buildITkGeometry(geo_dir)
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
@@ -48,7 +49,7 @@ s = addDigitization(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-# from seeding import SeedingAlgorithm, ParticleSmearingSigmas
+# from acts.examples.reconstruction import SeedingAlgorithm, ParticleSmearingSigmas
 s = addSeeding(
     s,
     trackingGeometry,
