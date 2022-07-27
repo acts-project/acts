@@ -49,11 +49,12 @@ void ActsFatras::DummyDetectorConstruction::dummyDetector() {
 
   // G4 material: vacuum setup
   G4Material* g4vacuum = G4Material::GetMaterial("Vacuum", false);
-  if (g4vacuum == nullptr)
+  if (g4vacuum == nullptr) {
     g4vacuum =
         new G4Material("FatrasDummyVacuum", 1., 1.01 * CLHEP::g / CLHEP::mole,
                        CLHEP::universe_mean_density, kStateGas,
                        0.1 * CLHEP::kelvin, 1.e-19 * CLHEP::pascal);
+  }
 
   // Build the logical and physical volume
   m_worldLog =

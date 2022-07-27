@@ -70,7 +70,9 @@ void setFailureThreshold(Level level) {
 
 void setFailureThreshold(Level) {
   throw std::logic_error{
-      "Compile-time log failure threshold defined, unable to override"};
+      "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
+      "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
+      "override"};
 }
 
 #endif
