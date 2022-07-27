@@ -208,11 +208,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
                  4.0f);
 
     std::cout << "EigenStepper: pre step size " << state.stepping.stepSize.toString()
-        << " direction " << state.stepping.stepSize.direction
+        << " direction " << state.stepping.stepSize.direction()
         << " scaling " << stepSizeScaling << std::endl;
-    state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
+    state.stepping.stepSize.scale(stepSizeScaling);
     std::cout << "EigenStepper: post step size " << state.stepping.stepSize.toString()
-        << " direction " << state.stepping.stepSize.direction
+        << " direction " << state.stepping.stepSize.direction()
         << " scaling " << stepSizeScaling << std::endl;
 
     // If step size becomes too small the particle remains at the initial
