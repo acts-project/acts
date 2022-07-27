@@ -101,7 +101,7 @@ struct ConstrainedStep {
     } else {
       result = (*std::max_element(values.begin(), values.end()));
     }
-    assert(std::abs(result) < max_scalar);
+    assert(std::abs(result) < std::numeric_limits<Scalar>::max());
     return result;
   }
 
