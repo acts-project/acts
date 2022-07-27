@@ -40,8 +40,9 @@ void RootBFieldWriter::run(const Config& config,
   outputFile->cd();
   TTree* outputTree =
       new TTree(config.treeName.c_str(), config.treeName.c_str());
-  if (outputTree == nullptr)
+  if (outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // The position values
   double z;

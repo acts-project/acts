@@ -3,6 +3,7 @@ import os
 import argparse
 import tempfile
 import argparse
+import math
 
 import acts
 import acts.examples
@@ -83,7 +84,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     compatSeedWeight = 100
     curvatureSortingInFilter = True
     phiMin = 0
-    phiMax = 2 * 3.14159265359
+    phiMax = 2 * math.pi
     zBinEdges = [
         -3000.0,
         -2500.0,

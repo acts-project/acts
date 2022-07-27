@@ -96,10 +96,13 @@ const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
   }
 
   // search for dense volumes
-  if (!m_confinedDenseVolumes.empty())
-    for (auto& denseVolume : m_confinedDenseVolumes)
-      if (denseVolume->inside(position, tol))
+  if (!m_confinedDenseVolumes.empty()) {
+    for (auto& denseVolume : m_confinedDenseVolumes) {
+      if (denseVolume->inside(position, tol)) {
         return denseVolume.get();
+      }
+    }
+  }
 
   // there is no lower sub structure
   return this;

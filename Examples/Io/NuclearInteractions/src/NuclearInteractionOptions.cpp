@@ -41,8 +41,9 @@ Acts::ActsDynamicVector readVector(const std::string&& vectorName) {
     Acts::ActsDynamicVector result;
     const unsigned int sizeVec = vector->size();
     result.resize(sizeVec);
-    for (unsigned int i = 0; i < sizeVec; i++)
+    for (unsigned int i = 0; i < sizeVec; i++) {
       result(i) = (*vector)[i];
+    }
 
     return result;
   }
@@ -102,12 +103,14 @@ void readKinematicParameters(
               invariantMassEigenvalues, invariantMassEigenvectors,
               invariantMassMean);
       if (softInteractionParameters) {
-        if (mult >= parameters.softKinematicParameters.size())
+        if (mult >= parameters.softKinematicParameters.size()) {
           parameters.softKinematicParameters.resize(mult + 1);
+        }
         parameters.softKinematicParameters[mult] = kinematicParameters;
       } else {
-        if (mult >= parameters.hardKinematicParameters.size())
+        if (mult >= parameters.hardKinematicParameters.size()) {
           parameters.hardKinematicParameters.resize(mult + 1);
+        }
         parameters.hardKinematicParameters[mult] = kinematicParameters;
       }
     }
@@ -177,8 +180,10 @@ ActsExamples::Options::readParametrisations(const std::string& fileName) {
       parameters.pdgMap.reserve(branchingPdgIds.size());
       for (unsigned int i = 0; i < branchingPdgIds.size(); i++) {
         auto it = parameters.pdgMap.begin();
-        while (it->first != branchingPdgIds[i] && it != parameters.pdgMap.end())
+        while (it->first != branchingPdgIds[i] &&
+               it != parameters.pdgMap.end()) {
           it++;
+        }
 
         const auto target =
             std::make_pair(targetPdgIds[i], targetPdgProbability[i]);
