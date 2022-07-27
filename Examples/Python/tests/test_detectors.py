@@ -4,10 +4,8 @@ import pytest
 
 from helpers import dd4hepEnabled
 
-from common import (
-    getOpenDataDetectorDirectory,
-    getOpenDataDetector,
-)
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 import acts.examples
 
@@ -45,7 +43,7 @@ def test_odd():
         level=acts.logging.WARNING,
     )
 
-    detector, geo, _ = getOpenDataDetector(matDeco)
+    detector, geo, _ = getOpenDataDetector(getOpenDataDetectorDirectory(), matDeco)
 
     assert count_surfaces(geo) == 18824
 
