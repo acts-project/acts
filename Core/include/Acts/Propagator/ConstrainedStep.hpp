@@ -20,7 +20,8 @@
 namespace Acts {
 
 /// A constrained step class for the steppers
-struct ConstrainedStep {
+class ConstrainedStep {
+ public:
   using Scalar = ActsScalar;
 
   /// the types of constraints
@@ -30,13 +31,55 @@ struct ConstrainedStep {
   /// from user     - this is user given for what reason ever
   enum Type : int { accuracy = 0, actor = 1, aborter = 2, user = 3 };
 
-  /// the step size tuple
-  std::array<Scalar, 4> values = {
-      {std::numeric_limits<Scalar>::max(), std::numeric_limits<Scalar>::max(),
-       std::numeric_limits<Scalar>::max(), std::numeric_limits<Scalar>::max()}};
+  /// Number of iterations needed by the stepsize finder
+  /// (e.g. Runge-Kutta) of the stepper.
+  size_t nStepTrials = std::numeric_limits<size_t>::max();
 
-  /// The Navigation direction
-  NavigationDirection direction = NavigationDirection::Forward;
+  ConstrainedStep() = default;
+
+  /// constructor from Scalar
+  /// @param value is the user given initial value
+  explicit ConstrainedStep(Scalar value) {
+    m_values[user] = std::abs(value);
+    m_direction = Acts::directionFromStepSize(value);
+  }
+
+  /// Assignment from one Scalar
+  /// @note this will set only the accuracy, as this is the most
+  /// exposed to the Propagator, this adapts also the direction
+  ///
+  /// @param value is the new accuracy value
+  void setValue(Scalar value) {
+    /// set the accuracy value
+    m_values[accuracy] = std::abs(value);
+    // set/update the direction
+    m_direction = Acts::directionFromStepSize(value);
+  }
+
+  /// returns the min/max value depending on the direction
+  Scalar value() const {
+    Scalar value = (*std::min_element(m_values.begin(), m_values.end()));
+    return value * m_direction;
+  }
+
+  /// Access to a specific value
+  ///
+  /// @param type is the resquested parameter type
+  Scalar value(Type type) const { return m_values[type] * m_direction; }
+
+  /// Access to currently leading min type
+  ///
+  Type currentType() const {
+    return Type(std::min_element(m_values.begin(), m_values.end()) -
+                m_values.begin());
+  }
+
+  /// release a certain constraint value
+  /// to the (signed) biggest value available, hence
+  /// it depends on the direction
+  ///
+  /// @param type is the constraint type to be released
+  void release(Type type) { m_values[type] = not_set; }
 
   /// Update the step size of a certain type
   ///
@@ -46,121 +89,58 @@ struct ConstrainedStep {
   /// @param value is the new value to be updated
   /// @param type is the constraint type
   /// @param releaseStep Allow step size to increase again
-  void update(const Scalar& value, Type type, bool releaseStep = false) {
+  void update(Scalar value, Type type, bool releaseStep = false) {
+    assert((value != 0) && (value != not_set));
     if (releaseStep) {
       release(type);
     }
-    // The check the current value and set it if appropriate
-    Scalar cValue = values[type];
-    values[type] = std::abs(cValue) < std::abs(value) ? cValue : value;
-  }
-
-  /// release a certain constraint value
-  /// to the (signed) biggest value available, hence
-  /// it depends on the direction
-  ///
-  /// @param type is the constraint type to be released
-  void release(Type type) {
-    Scalar mvalue = (direction == NavigationDirection::Forward)
-                        ? (*std::max_element(values.begin(), values.end()))
-                        : (*std::min_element(values.begin(), values.end()));
-    values[type] = mvalue;
-  }
-
-  /// constructor from double
-  /// @param value is the user given initial value
-  ConstrainedStep(Scalar value)
-      : direction(value > 0. ? NavigationDirection::Forward
-                             : NavigationDirection::Backward) {
-    values[accuracy] *= direction;
-    values[actor] *= direction;
-    values[aborter] *= direction;
-    values[user] = value;
-  }
-
-  /// The assignment operator from one double
-  /// @note this will set only the accuracy, as this is the most
-  /// exposed to the Propagator, this adapts also the direction
-  ///
-  /// @param value is the new accuracy value
-  ConstrainedStep& operator=(const Scalar& value) {
-    /// set the accuracy value
-    values[accuracy] = value;
-    // set/update the direction
-    direction = value > 0. ? NavigationDirection::Forward
-                           : NavigationDirection::Backward;
-    return (*this);
-  }
-
-  /// Cast operator to double, returning the min/max value
-  /// depending on the direction
-  operator Scalar() const {
-    if (direction == NavigationDirection::Forward) {
-      return (*std::min_element(values.begin(), values.end()));
+    // check the current value and set it if appropriate
+    // this will also allow signed values due to overstepping
+    if (std::abs(m_values[type]) > std::abs(value)) {
+      m_values[type] = value * m_direction;
     }
-    return (*std::max_element(values.begin(), values.end()));
   }
 
-  /// Access to a specific value
-  ///
-  /// @param type is the resquested parameter type
-  Scalar value(Type type) const { return values[type]; }
-
-  /// Return the maximum step constraint
-  /// @return The max step constraint
-  Scalar max() const {
-    return (*std::max_element(values.begin(), values.end()));
-  }
-
-  /// Return the minimum step constraint
-  /// @return The min step constraint
-  Scalar min() const {
-    return (*std::min_element(values.begin(), values.end()));
-  }
-
-  /// Access to currently leading min type
-  ///
-  Type currentType() const {
-    if (direction == NavigationDirection::Forward) {
-      return Type(std::min_element(values.begin(), values.end()) -
-                  values.begin());
-    }
-    return Type(std::max_element(values.begin(), values.end()) -
-                values.begin());
+  void scale(Scalar factor) {
+    assert(factor > 0);
+    setValue(value() * factor);
   }
 
   /// return the split value as string for debugging
-  std::string toString() const;
+  std::string toString() const {
+    std::stringstream dstream;
 
-  /// Number of iterations needed by the stepsize finder
-  /// (e.g. Runge-Kutta) of the stepper.
-  size_t nStepTrials = std::numeric_limits<size_t>::max();
+    // Helper method to avoid unreadable screen output
+    auto streamValue = [&](Type type) {
+      Scalar val = value(type);
+      dstream << std::setw(5);
+      if (std::abs(val) == not_set) {
+        dstream << (val > 0 ? "+∞" : "-∞");
+      } else {
+        dstream << val;
+      }
+    };
+
+    dstream << "(";
+    streamValue(accuracy);
+    dstream << ", ";
+    streamValue(actor);
+    dstream << ", ";
+    streamValue(aborter);
+    dstream << ", ";
+    streamValue(user);
+    dstream << ")";
+    return dstream.str();
+  }
+
+ private:
+  inline static constexpr auto not_set = std::numeric_limits<Scalar>::max();
+
+  /// the step size tuple
+  std::array<Scalar, 4> m_values = {not_set, not_set, not_set, not_set};
+
+  /// The Navigation direction
+  NavigationDirection m_direction = NavigationDirection::Forward;
 };
-
-inline std::string ConstrainedStep::toString() const {
-  std::stringstream dstream;
-
-  // Helper method to avoid unreadable screen output
-  auto streamValue = [&](ConstrainedStep cstep) -> void {
-    Scalar val = values[cstep];
-    dstream << std::setw(5);
-    if (std::abs(val) == std::numeric_limits<Scalar>::max()) {
-      dstream << (val > 0 ? "+∞" : "-∞");
-    } else {
-      dstream << val;
-    }
-  };
-
-  dstream << "(";
-  streamValue(accuracy);
-  dstream << ", ";
-  streamValue(actor);
-  dstream << ", ";
-  streamValue(aborter);
-  dstream << ", ";
-  streamValue(user);
-  dstream << " )";
-  return dstream.str();
-}
 
 }  // namespace Acts
