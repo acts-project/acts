@@ -97,9 +97,9 @@ struct ConstrainedStep {
   operator Scalar() const {
     Scalar result;
     if (direction == NavigationDirection::Forward) {
-      result = *(std::min_element(values.begin(), values.end()));
+      result = (*std::min_element(values.begin(), values.end()));
     } else {
-      result = *(std::max_element(values.begin(), values.end()));
+      result = (*std::max_element(values.begin(), values.end()));
     }
     assert(std::abs(result) < max_scalar);
     return result;
