@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """
-This scripts accepts a cmake lists file as an argument extracts all
-`option` and `set(... CACHE ...)` variables.
-It then writes a markdown table to stdout
+This script accepts a cmake lists file as an argument extracts all
+`option` and `set(... CACHE ...)` variables. It then writes a
+markdown table to stdout
 """
 
 import argparse
