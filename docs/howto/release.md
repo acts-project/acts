@@ -20,7 +20,7 @@ $ git merge --no-ff upstream/main
 
 At this point, your commit graph should look something like this:
 
-```
+```console
 de4bffa 2022-06-23 11:02 +0200 Paul Gessinger             M─┐ [releases] Merge remote-tracking branch 'origin/main' into releases
 75f0835 2022-06-22 19:27 +0200 Andreas Stefl              │ o fix: SimulationActor produces negative MaterialSlab thickness (#1288)
 c586094 2022-06-22 18:41 +0200 Andreas Stefl              │ o refactor: python examples vertex_fitting.py (#1286)

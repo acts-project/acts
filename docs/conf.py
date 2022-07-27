@@ -21,7 +21,6 @@ extensions = [
     "breathe",
     "myst_parser",
     "sphinx.ext.mathjax",
-    "sphinx.ext.autosectionlabel",
 ]
 source_suffix = {
     ".rst": "restructuredtext",
@@ -39,6 +38,7 @@ smartquotes = True
 numfig = True
 
 myst_enable_extensions = ["dollarmath", "colon_fence"]
+myst_heading_anchors = 3
 
 # -- Options for HTML output --------------------------------------------------
 
