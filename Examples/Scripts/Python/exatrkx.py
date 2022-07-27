@@ -10,6 +10,7 @@ from acts import UnitConstants as u
 if "__main__" == __name__:
     import os
     from digitization import configureDigitization
+    from acts.examples.reconstruction import addExaTrkx
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
