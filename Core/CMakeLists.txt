@@ -54,7 +54,7 @@ endif()
 if(ACTS_ENABLE_CPU_PROFILING)
   message(STATUS "added lprofiler")
 
-  if(DEFINED ACTS_GPERF_INSTALL_DIR)
+  if(NOT ACTS_GPERF_INSTALL_DIR STREQUAL "")
     find_library(PROFILER_LIBRARY profiler HINTS ${ACTS_GPERF_INSTALL_DIR})
 
     target_link_libraries(
@@ -74,7 +74,7 @@ endif()
 if(ACTS_ENABLE_MEMORY_PROFILING)
   message(STATUS "added ltcmalloc")
 
-  if(DEFINED ACTS_GPERF_INSTALL_DIR)
+  if(NOT ACTS_GPERF_INSTALL_DIR STREQUAL "")
     find_library(TCMALLOC_LIBRARY tcmalloc HINTS ${ACTS_GPERF_INSTALL_DIR})
 
     target_link_libraries(
