@@ -148,6 +148,9 @@ TrackParamsEstimationConfig = namedtuple(
     truthSeedRanges=TruthSeedRanges,
     particleSmearingSigmas=ParticleSmearingSigmas,
     seedfinderConfigArg=SeedfinderConfigArg,
+    seedFilterConfigArg=SeedFilterConfigArg,
+    spacePointGridConfigArg=SpacePointGridConfigArg,
+    seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg,
     trackParamsEstimationConfig=TrackParamsEstimationConfig,
     logLevel=acts.logging.Level,
 )
