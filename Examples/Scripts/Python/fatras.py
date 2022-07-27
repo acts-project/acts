@@ -1,143 +1,14 @@
 #!/usr/bin/env python3
-from typing import Optional, Union
 from pathlib import Path
 
 import acts
 import acts.examples
+from acts.examples.simulation import addParticleGun, addFatras, EtaConfig
 
 u = acts.UnitConstants
 
 
-def addFatras(
-    s: acts.examples.Sequencer,
-    trackingGeometry: acts.TrackingGeometry,
-    field: acts.MagneticFieldProvider,
-    outputDirCsv: Optional[Union[Path, str]] = None,
-    outputDirRoot: Optional[Union[Path, str]] = None,
-    rnd: Optional[acts.examples.RandomNumbers] = None,
-    preselectParticles: bool = True,
-) -> acts.examples.Sequencer:
-    """This function steers the detector simulation using Fatras
-
-    Parameters
-    ----------
-    s: Sequencer
-        the sequencer module to which we add the Fatras steps (returned from addFatras)
-    trackingGeometry : tracking geometry
-    field : magnetic field
-    outputDirCsv : Path|str, path, None
-        the output folder for the Csv output, None triggers no output
-    outputDirRoot : Path|str, path, None
-        the output folder for the Root output, None triggers no output
-    rnd : RandomNumbers, None
-        random number generator
-    """
-
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
-
-    # Preliminaries
-    rnd = rnd or acts.examples.RandomNumbers()
-
-    # Selector
-    if preselectParticles:
-        particles_selected = "particles_selected"
-        s.addAlgorithm(
-            acts.examples.ParticleSelector(
-                level=s.config.logLevel,
-                inputParticles="particles_input",
-                outputParticles=particles_selected,
-            )
-        )
-    else:
-        particles_selected = "particles_input"
-
-    # Simulation
-    alg = acts.examples.FatrasSimulation(
-        level=s.config.logLevel,
-        inputParticles=particles_selected,
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
-        outputSimHits="simhits",
-        randomNumbers=rnd,
-        trackingGeometry=trackingGeometry,
-        magneticField=field,
-        generateHitsOnSensitive=True,
-    )
-
-    # Sequencer
-    s.addAlgorithm(alg)
-
-    # Output
-    if outputDirCsv is not None:
-        outputDirCsv = Path(outputDirCsv)
-        if not outputDirCsv.exists():
-            outputDirCsv.mkdir()
-        s.addWriter(
-            acts.examples.CsvParticleWriter(
-                level=s.config.logLevel,
-                outputDir=str(outputDirCsv),
-                inputParticles="particles_final",
-                outputStem="particles_final",
-            )
-        )
-
-    if outputDirRoot is not None:
-        outputDirRoot = Path(outputDirRoot)
-        if not outputDirRoot.exists():
-            outputDirRoot.mkdir()
-        s.addWriter(
-            acts.examples.RootParticleWriter(
-                level=s.config.logLevel,
-                inputParticles="particles_final",
-                filePath=str(outputDirRoot / "fatras_particles_final.root"),
-            )
-        )
-
-    if outputDirCsv is not None:
-        s.addWriter(
-            acts.examples.CsvParticleWriter(
-                level=s.config.logLevel,
-                outputDir=str(outputDirCsv),
-                inputParticles="particles_initial",
-                outputStem="particles_initial",
-            )
-        )
-
-    if outputDirRoot is not None:
-        s.addWriter(
-            acts.examples.RootParticleWriter(
-                level=s.config.logLevel,
-                inputParticles="particles_initial",
-                filePath=str(outputDirRoot / "fatras_particles_initial.root"),
-            )
-        )
-
-    if outputDirCsv is not None:
-        s.addWriter(
-            acts.examples.CsvSimHitWriter(
-                level=s.config.logLevel,
-                inputSimHits=alg.config.outputSimHits,
-                outputDir=str(outputDirCsv),
-                outputStem="hits",
-            )
-        )
-
-    if outputDirRoot is not None:
-        s.addWriter(
-            acts.examples.RootSimHitWriter(
-                level=s.config.logLevel,
-                inputSimHits=alg.config.outputSimHits,
-                filePath=str(outputDirRoot / "hits.root"),
-            )
-        )
-
-    return s
-
-
 def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = None):
-    from particle_gun import addParticleGun, EtaConfig
-
     s = s or acts.examples.Sequencer(events=100, numThreads=-1)
     s.config.logLevel = acts.logging.INFO
     rnd = acts.examples.RandomNumbers()
