@@ -275,7 +275,7 @@ class AtlasStepper {
     double pathAccumulated = 0.;
 
     // Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize;
 
     // Previous step size for overstep estimation
     double previousStepSize = 0.;
@@ -417,7 +417,7 @@ class AtlasStepper {
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor,
                    bool release = true) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
 
@@ -1113,7 +1113,7 @@ class AtlasStepper {
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const {
     // we use h for keeping the nominclature with the original atlas code
-    auto& h = state.stepping.stepSize;
+    auto h = state.stepping.stepSize.value();
     bool Jac = state.stepping.useJacobian;
 
     double* R = &(state.stepping.pVector[0]);  // Coordinates
@@ -1170,6 +1170,7 @@ class AtlasStepper {
         // This is sd.B_middle in EigenStepper
         auto fRes = getField(state.stepping, pos);
         if (!fRes.ok()) {
+          state.stepping.stepSize.setValue(h);
           return fRes.error();
         }
         f = *fRes;
@@ -1200,6 +1201,7 @@ class AtlasStepper {
         // This is sd.B_last in Eigen stepper
         auto fRes = getField(state.stepping, pos);
         if (!fRes.ok()) {
+          state.stepping.stepSize.setValue(h);
           return fRes.error();
         }
         f = *fRes;
@@ -1357,11 +1359,13 @@ class AtlasStepper {
 
       state.stepping.pathAccumulated += h;
       state.stepping.stepSize.nStepTrials = nStepTrials;
+      state.stepping.stepSize.setValue(h);
       return h;
     }
 
     // that exit path should actually not happen
     state.stepping.pathAccumulated += h;
+    state.stepping.stepSize.setValue(h);
     return h;
   }
 

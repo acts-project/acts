@@ -21,7 +21,7 @@ namespace Acts {
 
 /// A constrained step class for the steppers
 class ConstrainedStep {
-public:
+ public:
   using Scalar = ActsScalar;
 
   /// the types of constraints
@@ -35,11 +35,13 @@ public:
   /// (e.g. Runge-Kutta) of the stepper.
   size_t nStepTrials = std::numeric_limits<size_t>::max();
 
+  ConstrainedStep() = default;
+
   /// constructor from Scalar
   /// @param value is the user given initial value
-  explicit ConstrainedStep(Scalar value)
-      : m_direction(direction(value)) {
+  explicit ConstrainedStep(Scalar value) {
     m_values[user] = std::abs(value);
+    m_direction = Acts::directionFromStepSize(value);
   }
 
   /// Assignment from one Scalar
@@ -48,18 +50,15 @@ public:
   ///
   /// @param value is the new accuracy value
   void setValue(Scalar value) {
-    assert(value != not_set);
     /// set the accuracy value
     m_values[accuracy] = std::abs(value);
     // set/update the direction
-    m_direction = direction(value);
-    return (*this);
+    m_direction = Acts::directionFromStepSize(value);
   }
 
   /// returns the min/max value depending on the direction
   Scalar value() const {
     Scalar value = (*std::min_element(m_values.begin(), m_values.end()));
-    assert(value != not_set);
     return value * m_direction;
   }
 
@@ -67,8 +66,6 @@ public:
   ///
   /// @param type is the resquested parameter type
   Scalar value(Type type) const { return m_values[type] * m_direction; }
-
-  Direction direction() const { return m_direction; }
 
   /// Access to currently leading min type
   ///
@@ -82,9 +79,7 @@ public:
   /// it depends on the direction
   ///
   /// @param type is the constraint type to be released
-  void release(Type type) {
-    m_values[type] = not_set;
-  }
+  void release(Type type) { m_values[type] = not_set; }
 
   /// Update the step size of a certain type
   ///
@@ -95,18 +90,19 @@ public:
   /// @param type is the constraint type
   /// @param releaseStep Allow step size to increase again
   void update(Scalar value, Type type, bool releaseStep = false) {
-    assert(value != not_set);
-    assert(direction(value) == m_direction);
+    assert((value != 0) && (value != not_set));
     if (releaseStep) {
       release(type);
     }
-    value = std::abs(value);
-    // The check the current value and set it if appropriate
-    Scalar cValue = m_values[type];
-    m_values[type] = cValue < value ? cValue : value;
+    // check the current value and set it if appropriate
+    // this will also allow signed values due to overstepping
+    if (std::abs(m_values[type]) > std::abs(value)) {
+      m_values[type] = value * m_direction;
+    }
   }
 
   void scale(Scalar factor) {
+    assert(factor > 0);
     setValue(value() * factor);
   }
 
@@ -137,7 +133,7 @@ public:
     return dstream.str();
   }
 
-private:
+ private:
   inline static constexpr auto not_set = std::numeric_limits<Scalar>::max();
 
   /// the step size tuple
