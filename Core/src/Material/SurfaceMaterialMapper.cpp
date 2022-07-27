@@ -119,6 +119,10 @@ void Acts::SurfaceMaterialMapper::checkAndInsert(State& mState,
   auto surfaceMaterial = surface.surfaceMaterial();
   // Check if the surface has a proxy
   if (surfaceMaterial != nullptr) {
+    if (m_cfg.computeVariance) {
+      mState.inputSurfaceMaterial[surface.geometryId()] =
+          surface.surfaceMaterialSharedPtr();
+    }
     auto geoID = surface.geometryId();
     size_t volumeID = geoID.volume();
     ACTS_DEBUG("Material surface found with volumeID " << volumeID);
@@ -257,9 +261,12 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   // To remember the bins of this event
   using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<size_t, 3>>;
+  using MaterialBin = std::pair<AccumulatedSurfaceMaterial*,
+                                std::shared_ptr<const ISurfaceMaterial>>;
   std::multimap<AccumulatedSurfaceMaterial*, std::array<size_t, 3>>
       touchedMapBins;
-
+  std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
+      touchedMaterialBin;
   if (sfIter != mappingSurfaces.end() &&
       sfIter->surface->surfaceMaterial()->mappingType() ==
           Acts::MappingType::PostMapping) {
@@ -365,7 +372,11 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, currentPathCorrection);
-    touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
+    auto itBin =
+        touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
+    if (m_cfg.computeVariance) {
+      touchedMaterialBin[itBin->first] = mState.inputSurfaceMaterial[currentID];
+    }
     ++assignedMaterial[currentID];
     // Update the material interaction with the associated surface
     rmIter->surface = sfIter->surface;
@@ -381,6 +392,11 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   // After mapping this track, average the touched bins
   for (auto tmapBin : touchedMapBins) {
     std::vector<std::array<size_t, 3>> trackBins = {tmapBin.second};
+    if (m_cfg.computeVariance) {
+      tmapBin.first->trackVariance(
+          trackBins, touchedMaterialBin[tmapBin.first]->materialSlab(
+                         trackBins[0][0], trackBins[0][1]));
+    }
     tmapBin.first->trackAverage(trackBins);
   }
 
@@ -395,6 +411,12 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
       // list of assigned surfaces
       if (assignedMaterial[mgID] == 0) {
         auto missedMaterial = mState.accumulatedMaterial.find(mgID);
+        if (m_cfg.computeVariance) {
+          missedMaterial->second.trackVariance(
+              mSurface.position,
+              mState.inputSurfaceMaterial[currentID]->materialSlab(
+                  mSurface.position));
+        }
         missedMaterial->second.trackAverage(mSurface.position, true);
       }
     }

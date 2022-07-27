@@ -47,8 +47,9 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
         float f22 = varianceR;
         float wid = varianceZ;
         float cov = wid * wid * .08333;
-        if (cov < f22)
+        if (cov < f22) {
           cov = f22;
+        }
         if (std::abs(z) > 450.) {
           varianceZ = 9. * cov;
           varianceR = .06;

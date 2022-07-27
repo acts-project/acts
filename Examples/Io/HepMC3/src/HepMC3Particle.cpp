@@ -34,22 +34,24 @@ std::unique_ptr<ActsExamples::SimVertex>
 ActsExamples::HepMC3Particle::productionVertex(
     const std::shared_ptr<HepMC3::GenParticle> particle) {
   // Return the vertex if it exists
-  if (particle->production_vertex())
+  if (particle->production_vertex()) {
     return HepMC3Vertex::processVertex(
         std::make_shared<HepMC3::GenVertex>(*particle->production_vertex()));
-  else
+  } else {
     return nullptr;
+  }
 }
 
 std::unique_ptr<ActsExamples::SimVertex>
 ActsExamples::HepMC3Particle::endVertex(
     const std::shared_ptr<HepMC3::GenParticle> particle) {
   // Return the vertex if it exists
-  if (particle->end_vertex())
+  if (particle->end_vertex()) {
     return HepMC3Vertex::processVertex(
         std::make_shared<HepMC3::GenVertex>(*(particle->end_vertex())));
-  else
+  } else {
     return nullptr;
+  }
 }
 
 int ActsExamples::HepMC3Particle::pdgID(

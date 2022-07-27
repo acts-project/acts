@@ -466,10 +466,11 @@ Acts::SurfaceArrayCreator::createVariableAxis(
     const Acts::Surface* backSurface = keys.back();
     const Acts::PlanarBounds* backBounds =
         dynamic_cast<const Acts::PlanarBounds*>(&(backSurface->bounds()));
-    if (backBounds == nullptr)
+    if (backBounds == nullptr) {
       ACTS_ERROR(
           "Given SurfaceBounds are not planar - not implemented for "
           "other bounds yet! ");
+    }
     // get the global vertices
     std::vector<Acts::Vector3> backVertices =
         makeGlobalVertices(gctx, *backSurface, backBounds->vertices(segments));
