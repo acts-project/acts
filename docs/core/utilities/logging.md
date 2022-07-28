@@ -118,7 +118,7 @@ the following way (tested under Unix)
 $ LD_PRELOAD=<YOUR_SHARED_LIBRARY> path/to/your/exectuable
 ```
 
-For an example have a look at CustomDefaultLogger.cpp which you can use as
+For an example have a look at `CustomDefaultLogger.cpp` which you can use as
 follows:
 
 ```console
