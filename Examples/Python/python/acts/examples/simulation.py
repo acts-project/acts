@@ -394,7 +394,7 @@ def addFatras(
     s.addAlgorithm(alg)
 
     # Output
-    addFatrasWriters(s, outputDirCsv, outputDirRoot)
+    addSimWriters(s, outputDirCsv, outputDirRoot)
 
     return s
 
@@ -538,7 +538,7 @@ def addGeant4(
     s.addAlgorithm(alg)
 
     # Output
-    addFatrasWriters(s, outputDirCsv, outputDirRoot)
+    addSimWriters(s, outputDirCsv, outputDirRoot)
 
     return s
 
