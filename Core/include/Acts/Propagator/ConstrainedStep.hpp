@@ -9,13 +9,13 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Definitions/Common.hpp"
 
 #include <algorithm>
 #include <array>
 #include <iomanip>
 #include <limits>
 #include <sstream>
+#include <cassert>
 
 namespace Acts {
 
@@ -40,43 +40,38 @@ class ConstrainedStep {
   /// constructor from Scalar
   /// @param value is the user given initial value
   explicit ConstrainedStep(Scalar value) {
-    m_values[user] = std::abs(value);
-    m_direction = Acts::directionFromStepSize(value);
+    m_values[user] = value;
   }
 
   /// Assignment from one Scalar
   /// @note this will set only the accuracy, as this is the most
-  /// exposed to the Propagator, this adapts also the direction
+  /// exposed to the Propagator
   ///
   /// @param value is the new accuracy value
   void setValue(Scalar value) {
     /// set the accuracy value
     m_values[accuracy] = std::abs(value);
-    // set/update the direction
-    m_direction = Acts::directionFromStepSize(value);
   }
 
-  /// returns the min/max value depending on the direction
+  /// returns the min step size
   Scalar value() const {
-    Scalar value = (*std::min_element(m_values.begin(), m_values.end()));
-    return value * m_direction;
+    return value(currentType());
   }
 
   /// Access to a specific value
   ///
   /// @param type is the resquested parameter type
-  Scalar value(Type type) const { return m_values[type] * m_direction; }
+  Scalar value(Type type) const { return m_values[type]; }
 
   /// Access to currently leading min type
   ///
   Type currentType() const {
-    return Type(std::min_element(m_values.begin(), m_values.end()) -
+    return Type(std::min_element(m_values.begin(), m_values.end(),
+                [](auto a, auto b) { return std::abs(a) < std::abs(b); }) -
                 m_values.begin());
   }
 
   /// release a certain constraint value
-  /// to the (signed) biggest value available, hence
-  /// it depends on the direction
   ///
   /// @param type is the constraint type to be released
   void release(Type type) { m_values[type] = not_set; }
@@ -90,20 +85,19 @@ class ConstrainedStep {
   /// @param type is the constraint type
   /// @param releaseStep Allow step size to increase again
   void update(Scalar value, Type type, bool releaseStep = false) {
-    assert((value != 0) && (value != not_set));
     if (releaseStep) {
       release(type);
     }
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
     if (std::abs(m_values[type]) > std::abs(value)) {
-      m_values[type] = value * m_direction;
+      m_values[type] = value;
     }
   }
 
   void scale(Scalar factor) {
     assert(factor > 0);
-    setValue(value() * factor);
+    m_values[accuracy] = value() * factor;
   }
 
   /// return the split value as string for debugging
@@ -138,9 +132,6 @@ class ConstrainedStep {
 
   /// the step size tuple
   std::array<Scalar, 4> m_values = {not_set, not_set, not_set, not_set};
-
-  /// The Navigation direction
-  NavigationDirection m_direction = NavigationDirection::Forward;
 };
 
 }  // namespace Acts
