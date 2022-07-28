@@ -2,6 +2,14 @@
 import acts
 from acts.examples import TGeoDetector
 from pathlib import Path
+import math
+
+from acts.examples.reconstruction import (
+    SeedfinderConfigArg,
+    SeedFilterConfigArg,
+    SpacePointGridConfigArg,
+    SeedingAlgorithmConfigArg,
+)
 
 u = acts.UnitConstants
 
@@ -248,4 +256,270 @@ def buildITkGeometry(
                 discMap={},
             ),
         ],
+    )
+
+
+def itkSeedingAlgConfig(inputSpacePointsType):
+
+    # variables that do not change for pixel and strip SPs:
+    zMax = 3000 * u.mm
+    zMin = -3000 * u.mm
+    beamPos = (0 * u.mm, 0 * u.mm)
+    collisionRegionMin = -200 * u.mm
+    collisionRegionMax = 200 * u.mm
+    maxSeedsPerSpM = 4
+    cotThetaMax = 27.2899
+    sigmaScattering = 2
+    radLengthPerSeed = 0.1
+    minPt = 900 * u.MeV
+    bFieldInZ = 2 * u.T
+    deltaRMin = 20 * u.mm
+    maxPtScattering = float("inf") * u.GeV
+    zBinEdges = [
+        -3000.0,
+        -2500.0,
+        -1400.0,
+        -925.0,
+        -450.0,
+        -250.0,
+        250.0,
+        450.0,
+        925.0,
+        1400.0,
+        2500.0,
+        3000.0,
+    ]  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
+    rRangeMiddleSP = [
+        [40.0, 90.0],
+        [40.0, 200.0],
+        [46.0, 200.0],
+        [46.0, 200.0],
+        [46.0, 250.0],
+        [46.0, 250.0],
+        [46.0, 250.0],
+        [46.0, 200.0],
+        [46.0, 200.0],
+        [40.0, 200.0],
+        [40.0, 90.0],
+    ]  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
+    useVariableMiddleSPRange = True  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
+    binSizeR = 1 * u.mm
+    forceRadialSorting = True
+    seedConfirmation = True
+    centralSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
+        zMinSeedConf=-250 * u.mm,
+        zMaxSeedConf=250 * u.mm,
+        rMaxSeedConf=140 * u.mm,
+        nTopForLargeR=1,
+        nTopForSmallR=2,
+    )  # contains parameters for seed confirmation
+    forwardSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
+        zMinSeedConf=-3000 * u.mm,
+        zMaxSeedConf=3000 * u.mm,
+        rMaxSeedConf=140 * u.mm,
+        nTopForLargeR=1,
+        nTopForSmallR=2,
+    )
+    compatSeedWeight = 100
+    curvatureSortingInFilter = True
+    phiMin = 0
+    phiMax = 2 * math.pi
+    zBinEdges = [
+        -3000.0,
+        -2500.0,
+        -1400.0,
+        -925.0,
+        -450.0,
+        -250.0,
+        250.0,
+        450.0,
+        925.0,
+        1400.0,
+        2500.0,
+        3000.0,
+    ]  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
+    phiBinDeflectionCoverage = 3
+    numPhiNeighbors = 1
+
+    # variables that change for pixel and strip SPs:
+    if inputSpacePointsType == "PixelSpacePoints":
+        outputSeeds = "PixelSeeds"
+        allowSeparateRMax = False
+        rMaxGridConfig = 320 * u.mm
+        rMaxSeedFinderConfig = rMaxGridConfig
+        deltaRMinSP = 6 * u.mm
+        deltaRMax = 280 * u.mm
+        deltaRMaxTopSP = 280 * u.mm
+        deltaRMaxBottomSP = 120 * u.mm
+        interactionPointCut = True
+        arithmeticAverageCotTheta = False
+        deltaZMax = 600 * u.mm
+        impactMax = 2 * u.mm
+        zBinsCustomLooping = [
+            1,
+            2,
+            3,
+            4,
+            11,
+            10,
+            9,
+            8,
+            6,
+            5,
+            7,
+        ]  # enable custom z looping when searching for SPs, must contain numbers from 1 to the total number of bin in zBinEdges
+        skipPreviousTopSP = True
+        zBinNeighborsTop = [
+            [0, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 0],
+        ]  # allows to specify the number of neighbors desired for each bin, [-1,1] means one neighbor on the left and one on the right, if the vector is empty the algorithm returns the 8 surrounding bins
+        zBinNeighborsBottom = [
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+        ]
+        deltaRMiddleMinSPRange = 10 * u.mm
+        deltaRMiddleMaxSPRange = 10 * u.mm
+        seedConfirmationFilter = True
+        impactWeightFactor = 100
+        compatSeedLimit = 3
+        numSeedIncrement = 10**100  # inf
+        seedWeightIncrement = 0
+        useDetailedDoubleMeasurementInfo = False
+        maxSeedsPerSpMConf = 5
+        maxQualitySeedsPerSpMConf = 5
+        useDeltaRorTopRadius = True
+    else:
+        outputSeeds = "StripSeeds"
+        allowSeparateRMax = True
+        rMaxGridConfig = 1000.0 * u.mm
+        rMaxSeedFinderConfig = 1200.0 * u.mm
+        deltaRMinSP = 20 * u.mm
+        deltaRMax = 600 * u.mm
+        deltaRMaxTopSP = 300 * u.mm
+        deltaRMaxBottomSP = deltaRMaxTopSP
+        interactionPointCut = False
+        arithmeticAverageCotTheta = True
+        deltaZMax = 900 * u.mm
+        impactMax = 20 * u.mm
+        zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
+        skipPreviousTopSP = False
+        zBinNeighborsTop = [
+            [0, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 0],
+        ]
+        zBinNeighborsBottom = [
+            [0, 1],
+            [0, 1],
+            [0, 1],
+            [0, 2],
+            [0, 1],
+            [0, 0],
+            [-1, 0],
+            [-2, 0],
+            [-1, 0],
+            [-1, 0],
+            [-1, 0],
+        ]
+        deltaRMiddleMinSPRange = 30 * u.mm
+        deltaRMiddleMaxSPRange = 150 * u.mm
+        seedConfirmationFilter = False
+        impactWeightFactor = 1
+        compatSeedLimit = 4
+        numSeedIncrement = 1
+        seedWeightIncrement = 10100
+        useDetailedDoubleMeasurementInfo = True
+        maxSeedsPerSpMConf = 1000000000
+        maxQualitySeedsPerSpMConf = 1000000000
+        useDeltaRorTopRadius = False
+
+    # fill namedtuples
+    seedfinderConfigArg = SeedfinderConfigArg(
+        maxSeedsPerSpM=maxSeedsPerSpM,
+        cotThetaMax=cotThetaMax,
+        sigmaScattering=sigmaScattering,
+        radLengthPerSeed=radLengthPerSeed,
+        minPt=minPt,
+        bFieldInZ=bFieldInZ,
+        impactMax=impactMax,
+        interactionPointCut=interactionPointCut,
+        arithmeticAverageCotTheta=arithmeticAverageCotTheta,
+        deltaZMax=deltaZMax,
+        maxPtScattering=maxPtScattering,
+        zBinEdges=zBinEdges,
+        skipPreviousTopSP=skipPreviousTopSP,
+        zBinsCustomLooping=zBinsCustomLooping,
+        rRangeMiddleSP=rRangeMiddleSP,
+        useVariableMiddleSPRange=useVariableMiddleSPRange,
+        binSizeR=binSizeR,
+        forceRadialSorting=forceRadialSorting,
+        seedConfirmation=seedConfirmation,
+        centralSeedConfirmationRange=centralSeedConfirmationRange,
+        forwardSeedConfirmationRange=forwardSeedConfirmationRange,
+        deltaR=(deltaRMin, deltaRMax),
+        deltaRBottomSP=(deltaRMinSP, deltaRMaxBottomSP),
+        deltaRTopSP=(deltaRMinSP, deltaRMaxTopSP),
+        deltaRMiddleSPRange=(deltaRMiddleMinSPRange, deltaRMiddleMaxSPRange),
+        collisionRegion=(collisionRegionMin, collisionRegionMax),
+        r=(None, rMaxSeedFinderConfig),
+        z=(zMin, zMax),
+        beamPos=beamPos,
+    )
+    seedFilterConfigArg = SeedFilterConfigArg(
+        impactWeightFactor=impactWeightFactor,
+        compatSeedWeight=compatSeedWeight,
+        compatSeedLimit=compatSeedLimit,
+        numSeedIncrement=numSeedIncrement,
+        seedWeightIncrement=seedWeightIncrement,
+        seedConfirmation=seedConfirmation,
+        curvatureSortingInFilter=curvatureSortingInFilter,
+        maxSeedsPerSpMConf=maxSeedsPerSpMConf,
+        maxQualitySeedsPerSpMConf=maxQualitySeedsPerSpMConf,
+        useDeltaRorTopRadius=useDeltaRorTopRadius,
+    )
+    spacePointGridConfigArg = SpacePointGridConfigArg(
+        rMax=rMaxGridConfig,
+        zBinEdges=zBinEdges,
+        phiBinDeflectionCoverage=phiBinDeflectionCoverage,
+        phi=(phiMin, phiMax),
+        impactMax=impactMax,
+    )
+    seedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(
+        allowSeparateRMax=allowSeparateRMax,
+        zBinNeighborsTop=zBinNeighborsTop,
+        zBinNeighborsBottom=zBinNeighborsBottom,
+        numPhiNeighbors=numPhiNeighbors,
+    )
+
+    return (
+        seedfinderConfigArg,
+        seedFilterConfigArg,
+        spacePointGridConfigArg,
+        seedingAlgorithmConfigArg,
     )
