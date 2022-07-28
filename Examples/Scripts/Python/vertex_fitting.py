@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Optional
 
 import acts
-from acts.examples import Sequencer
-from acts.examples.simulation import addPythia8, ParticleSelector, ParticleSmearing
+from acts.examples import Sequencer, ParticleSelector, ParticleSmearing
+from acts.examples.simulation import addPythia8
 from acts.examples.reconstruction import addVertexFitting, VertexFinder
 
 u = acts.UnitConstants
