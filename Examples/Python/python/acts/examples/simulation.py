@@ -1,4 +1,4 @@
-from typing import Optional, Union
+from typing import Optional, Union, Any
 from pathlib import Path
 from collections import namedtuple
 from collections.abc import Iterable
@@ -472,7 +472,7 @@ def addSimWriters(
 
 def addGeant4(
     s: acts.examples.Sequencer,
-    geometryService: acts.examples.dd4hep.DD4hepGeometryService,
+    geometryService: Any,  # acts.examples.dd4hep.DD4hepGeometryService
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     outputDirCsv: Optional[Union[Path, str]] = None,
