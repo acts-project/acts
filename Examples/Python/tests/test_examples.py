@@ -170,7 +170,9 @@ def test_geant4(tmp_path, field, assert_root_hash):
         assert not (tmp_path / rf).exists()
 
     seq = Sequencer(events=nevents)
-    runGeant4(detector.geometryService, trackingGeometry, field, str(tmp_path), s=seq).run()
+    runGeant4(
+        detector.geometryService, trackingGeometry, field, str(tmp_path), s=seq
+    ).run()
 
     del seq
 
