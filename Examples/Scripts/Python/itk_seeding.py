@@ -17,6 +17,8 @@ from acts.examples.reconstruction import (
     SeedingAlgorithmConfigArg,
 )
 
+from acts.examples.itk import itkSeedingAlgConfig
+
 u = acts.UnitConstants
 
 
@@ -175,24 +177,13 @@ def runITkSeedingFromCsv():
 
         s.addReader(evReader)
 
-        # ITk seeding configuration
-        (
-            seedfinderConfigArg,
-            seedFilterConfigArg,
-            spacePointGridConfigArg,
-            seedingAlgorithmConfigArg,
-        ) = itkSeedingAlgConfig(inputSpacePointsType)
-
         print(SeedfinderConfigArg, SeedFilterConfigArg)
 
         # run seeding
         addITkSeedingCsv(
             s,
             evReader,
-            seedfinderConfigArg,
-            seedFilterConfigArg,
-            spacePointGridConfigArg,
-            seedingAlgorithmConfigArg,
+            *itkSeedingAlgConfig(inputSpacePointsType),
         ).run()
 
     # create temporary file with strips SPs and run the seeding
@@ -227,22 +218,11 @@ def runITkSeedingFromCsv():
 
         s.addReader(evReader)
 
-        # ITk seeding configuration
-        (
-            seedfinderConfigArg,
-            seedFilterConfigArg,
-            spacePointGridConfigArg,
-            seedingAlgorithmConfigArg,
-        ) = itkSeedingAlgConfig(inputSpacePointsType)
-
         # run seeding
         addITkSeedingCsv(
             s,
             evReader,
-            seedfinderConfigArg,
-            seedFilterConfigArg,
-            spacePointGridConfigArg,
-            seedingAlgorithmConfigArg,
+            *itkSeedingAlgConfig(inputSpacePointsType),
         ).run()
 
 
