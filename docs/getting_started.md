@@ -15,7 +15,7 @@ $ cmake --build <build>
 ```
 
 For a full list of dependencies, including specific versions, see the
-[Prerequisites](#Prerequisites) section below. Build options to activate
+[Prerequisites](#prerequisites) section below. Build options to activate
 additional components are described in the [Build options](#build-options)
 section.
 
