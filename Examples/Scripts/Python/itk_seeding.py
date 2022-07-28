@@ -3,7 +3,6 @@ import os
 import argparse
 import tempfile
 import argparse
-import math
 
 import acts
 import acts.examples
