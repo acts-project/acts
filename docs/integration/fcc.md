@@ -40,7 +40,38 @@ forwarded to the Gaudi message service during an event by overloading the
 default Acts logging implementation. In the following one can see, for example,
 overload of the Acts print policy (definition how and where to print):
 
-![Alt Image Text](/figures/integration_fcc/GaudiLogger.png "GaudiLogger")
+```cpp
+class GaudiPrintPolicy : public Acts::Logging::OutputPrintPolicy {
+public:
+  GaudiPrintPolicy(IMessageSvc* owner) : m_messenger(owner) {}
+  void flush(const Acts::Logging::Level& lvl, const std::ostringstream& input) {
+    MSG::Level l = MSG::VERBOSE;
+    switch (lvl) {
+    case Acts::Logging::VERBOSE:
+      l = MSG::VERBOSE;
+      break;
+    case Acts::Logging::DEBUG:
+      l = MSG::DEBUG;
+      break;
+    case Acts::Logging::INFO:
+      l = MSG::INFO;
+      break;
+    case Acts::Logging::WARNING:
+      l = MSG::WARNING;
+      break;
+    case Acts::Logging::ERROR:
+      l = MSG::ERROR;
+      break;
+    case Acts::Logging::FATAL:
+      l = MSG::FATAL;
+      break;
+    }
+    m_messenger << l << input.str() << endmsg;
+  }
+private:
+  MsgStream m_messenger;
+};
+```
 
 ## <a name="fcc_geoTranslation">Geometry Translation</a>
 
@@ -73,12 +104,23 @@ FCC magnetic field service implementations (constant and interpolated) hold the
 dedicated Acts magnetic field implementation as a member and forward the calls
 to it:
 
-![Alt Image Text](/figures/integration_fcc/BField_FCCSW_ACTS.png "BField")
+```cpp
+fcc::Vector3D InterpolatedBFieldSvc::getField(const fcc::Vector3D& position) const {
+  return m_actsBField->getField(position);
+}
+Acts::concept::AnyFieldCell<> InterpolatedBFieldSvc::getFieldCell(const fcc::Vector3D& position) const {
+  return m_actsBField->getFieldCell(position);
+}
+```
 
 The FCChh magnetic field map which acts as input for the FCC interpolated
 magnetic service can be easily configured using the gaudi job option file:
 
-![Alt Image Text](/figures/integration_fcc/BField_FCCSW_ACTS1.png "BField1")
+```python
+# Set up the magnetic field service
+from Configurables import InterpolatedBFieldSvc
+bFieldSvc = InterpolatedBFieldSvc("BfieldSvc", fieldMap ='/eos/experiment/fcc/hh/simulation/MagenticField/FCChhBField_rz.root', treeName = <...>
+```
  
 ## <a name="fcc_extrapolation">Extrapolation</a>
 
@@ -89,14 +131,34 @@ with different configuration a Gaudi Tool which holds an instance to the Acts
 extrapolation was created. This tool can be configured differently for both
 applications at runtime:
 
-![Alt Image Text](/figures/integration_fcc/FCCSW_extrapolationTool.png "extrapolation1")
+```python
+## configure the extrapolation tool
+from Configurables import ExtrapolationTool
+extrapolationTool = ExtrapolationTool("ExtrapolationTool")
+extrapolationTool.trackingGeometrySvc  = trkgeoservice
+extrapolationTool.magneticFieldSvc     = bFieldSvc
+extrapolationTool.collectSensitive     = TRUE
+extrapolationTool.collectPassive       = TRUE
+extrapolationTool.collectBoundary      = TRUE
+extrapolationTool.collectMaterial      = TRUE
+extrapolationTool.sensitiveCurvilinear = FALSE
+extrapolationTool.searchMode           = 1
+extrapolationTool.pathLimit            = -1
+```
 
 The extrapolation tool can then be used by an Gaudi algorithm which handles the
 translations from and to the FCC edm. For example in the ExtrapolationTest below
 the reads in generated particles from the event store and after extrapolating
 through the tracking geometry, translates the output into FCC track hits:
 
-![Alt Image Text](/figures/integration_fcc/FCCSW_extrapolationTest.png "extrapolation2")
+```python
+## configure the extrapolation test
+from Configurables import ExtrapolationTool
+extrapolationTest = ExtrapolationTest("ExtrapolationTest", OutputLevel=INFO)
+extrapolationTest.extrapolationTool = extrapolationTool
+extrapolationTest.positionedTrackHits.Path = "positionedHits"
+extrapolationTest.genParticles.Path = "allGenParticles"
+```
 
 ## <a name="fcc_digitization">Geometric Digitization</a>
 
@@ -127,5 +189,12 @@ inside FCCSW and uses the Acts digitization tools, can be used in the python job
 options. It reads in hits (`digiTrackHitAssociation`) produced by FCC geant4
 full simulation and writes out `trackClusters` to the FCC event store:    
 
-
-![Alt Image Text](/figures/integration_fcc/FCCSW_digitization.png "digitization")
+```python
+## configure the extrapolation test
+from Configurables import GeometricTrackerDigitizer
+digitizer = GeometricTrackerDigitizer()
+digitizer.digiTrackHitAssociation.Path = "digiHits"
+digitizer.trackClusters.Path = "trackClusters"
+digitizer.clusterTrackHits.Path = "clusterTrackHits"
+digitizer.analogReadout = FALSE
+```
