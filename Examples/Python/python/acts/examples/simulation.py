@@ -399,7 +399,7 @@ def addFatras(
     return s
 
 
-def addFatrasWriters(
+def addSimWriters(
     s: acts.examples.Sequencer,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
