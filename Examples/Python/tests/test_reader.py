@@ -7,11 +7,9 @@ from helpers import (
     edm4hepEnabled,
     AssertCollectionExistsAlg,
 )
+from common import getOpenDataDetectorDirectory
 
-from common import (
-    getOpenDataDetectorDirectory,
-    getOpenDataDetector,
-)
+from acts.examples.odd import getOpenDataDetector
 
 import acts
 from acts import PlanarModuleStepper
@@ -343,7 +341,9 @@ def test_edm4hep_simhit_reader(tmp_path):
 
     assert os.path.exists(tmp_file)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     s = Sequencer(numThreads=1)
 

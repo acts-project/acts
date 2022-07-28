@@ -155,11 +155,11 @@ BOOST_AUTO_TEST_CASE(test_matrix_dimension_switch) {
   }
 }
 
-typedef std::tuple<std::pair<ActsMatrix<3, 3>, ActsMatrix<3, 3>>,
-                   std::pair<ActsMatrix<4, 4>, ActsMatrix<4, 4>>,
-                   std::pair<ActsMatrix<8, 8>, ActsMatrix<8, 8>>,
-                   std::pair<ActsMatrix<8, 7>, ActsMatrix<7, 4>>>
-    MatrixProductTypes;
+using MatrixProductTypes =
+    std::tuple<std::pair<ActsMatrix<3, 3>, ActsMatrix<3, 3>>,
+               std::pair<ActsMatrix<4, 4>, ActsMatrix<4, 4>>,
+               std::pair<ActsMatrix<8, 8>, ActsMatrix<8, 8>>,
+               std::pair<ActsMatrix<8, 7>, ActsMatrix<7, 4>>>;
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
                               MatrixProductTypes) {
