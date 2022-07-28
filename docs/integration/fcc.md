@@ -29,7 +29,7 @@ based on the Acts implementation. Another example is the application of fast
 simulation using the [extrapolation](#fcc_extrapolation) through the tracking
 geometry. Since for the FCChh conceptual design study no specific detector
 technologies are selected yet, Acts is used to perform geometric
-[digitization](#fcc_digitization).  
+[digitization](#fcc_digitization).
 
 ![Alt Image Text](/figures/integration_fcc/FCCSW_ACTS.png "Gaudi_ACTS")
 
@@ -78,12 +78,12 @@ private:
 In FCCSW we require to have one common source of detector description for all
 applications, including the differnt types of simulation and reconstruction. In
 order to allow fast reconstruction Acts internally uses a simplfied tracking
-geometry.    For automatic and consistent geometry translation from DD4hep the
+geometry. For automatic and consistent geometry translation from DD4hep the
 [plugin mechanism]() was used and a DD4hepPlugin established. The DD4hepPlugin
 provides a convenience function handing back the world volume of the Acts
-tracking geometry from the DD4hep detector.    Inside FCCSW a tracking geometry
+tracking geometry from the DD4hep detector. Inside FCCSW a tracking geometry
 service was established which calls the function and hands back the Acts
-tracking geometry.   The sensitive surfaces in the tracking geometry have a
+tracking geometry. The sensitive surfaces in the tracking geometry have a
 direct link to the underlying detector element of Acts, which allows to handle
 conditions data and alignment.
 
@@ -183,11 +183,11 @@ using a connected components analysis algorithm from boost. The user can decide
 if pixels sharing a common corner or a common edge should be merged.
 
 Using the Acts digitzation tools one can emulate digital readout as well as
-analogue readout which smears the energy deposit in the cells.   Below one can
+analogue readout which smears the energy deposit in the cells. Below one can
 see how the `GeometricTrackerDigitizer`, which is currently being developed
 inside FCCSW and uses the Acts digitization tools, can be used in the python job
 options. It reads in hits (`digiTrackHitAssociation`) produced by FCC geant4
-full simulation and writes out `trackClusters` to the FCC event store:    
+full simulation and writes out `trackClusters` to the FCC event store:
 
 ```python
 ## configure the extrapolation test

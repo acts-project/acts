@@ -105,7 +105,7 @@ following conditions need to be met:
   objects need to be declared as a DD4hep ``DetElement``:
  
   - The subvolumes e.g. barrel, endcap, beampipe (they are usually build with
-    different DD4hep constructors and are therefore DD4hep ``DetElement``'s
+    different DD4hep constructors and are therefore DD4hep ``DetElement``s
     per default).
   - Layers when containing sensitive material and/or the layer should
     carry material (which will be mapped on the layer if indicated), or
@@ -130,7 +130,7 @@ following conditions need to be met:
   In case another sorting needs to be applied, the users can provide their own
   function.
 
-- The :class:`Acts::ActsExtension`'s need to be used during the detector
+- The :class:`Acts::ActsExtension`s need to be used during the detector
   construction indicating if a ``DetElement``
   
   - is a barrel
@@ -180,4 +180,4 @@ To receive the :class:`Acts::TrackingGeometry` the user should use the global
 function :func:`Acts::convertDD4hepDetector()`, where he/she needs to hand over
 the DD4hep world ``DetElement``. For a valid translation the user needs to make
 sure, that all prerequisites described above are met and that the right
-:class:`Acts::ActsExtension`'s are added during the DD4hep construction.
+:class:`Acts::ActsExtension`s are added during the DD4hep construction.

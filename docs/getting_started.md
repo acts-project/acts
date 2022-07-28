@@ -325,7 +325,7 @@ $ git submodule init
 $ git submodule update
 ```
 
-To use it, you will then need to build acts with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or  
+To use it, you will then need to build acts with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or 
 `DYLD_LIBRARY_PATH` and `DD4HEP_LIBRARY_PATH` on MacOs to the install path of the ODD factory (for example: `build/thirdparty/OpenDataDetector/factory`).
 
 You can now use the ODD in the python binding by using:
