@@ -64,7 +64,7 @@ class MeasurementSelector {
   /// @brief Function that select the measurements compatible with
   /// the given track parameter on a surface
   ///
-  /// @param candidates The track state candidates which already contain predicted paremeters
+  /// @param candidates The track state candidates which already contain predicted parameters
   /// @param isOutlier The indicator for outlier or not
   /// @param logger The logger wrapper
   ///
