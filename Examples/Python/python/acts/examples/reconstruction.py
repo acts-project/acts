@@ -5,7 +5,6 @@ from enum import Enum
 from collections import namedtuple
 import warnings
 
-
 import acts
 import acts.examples
 
@@ -522,6 +521,7 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
+        outputTrackParameters="fittedTrackParameters",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
@@ -681,7 +681,7 @@ def addVertexFitting(
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
     associatedParticles: str = "particles_input",
-    trackParameters: str = "estimatedparameters",
+    trackParameters: str = "trackparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
 ):
@@ -701,6 +701,13 @@ def addVertexFitting(
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     """
+    from acts.examples import (
+        TruthVertexFinder,
+        VertexFitterAlgorithm,
+        IterativeVertexFinderAlgorithm,
+        AdaptiveMultiVertexFinderAlgorithm,
+        RootVertexPerformanceWriter,
+    )
 
     def customLogLevel(custom: acts.logging.Level = acts.logging.INFO):
         """override logging level"""
@@ -717,14 +724,6 @@ def addVertexFitting(
 
     outputTime = ""
     if vertexFinder == VertexFinder.Truth:
-        from acts.examples import (
-            TruthVertexFinder,
-            VertexFitterAlgorithm,
-            IterativeVertexFinderAlgorithm,
-            AdaptiveMultiVertexFinderAlgorithm,
-            RootVertexPerformanceWriter,
-        )
-
         findVertices = TruthVertexFinder(
             level=customLogLevel(acts.logging.VERBOSE),
             inputParticles=selectedParticles,
@@ -740,7 +739,6 @@ def addVertexFitting(
             outputVertices=outputVertices,
         )
         s.addAlgorithm(fitVertices)
-
     elif vertexFinder == VertexFinder.Iterative:
         findVertices = IterativeVertexFinderAlgorithm(
             level=customLogLevel(),
@@ -760,7 +758,6 @@ def addVertexFitting(
             outputVertices=outputVertices,
             outputTime=outputTime,
         )
-
         s.addAlgorithm(findVertices)
     else:
         raise RuntimeError("Invalid finder argument")
