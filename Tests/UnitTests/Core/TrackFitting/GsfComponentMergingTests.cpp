@@ -10,8 +10,8 @@
 
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
-#include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
 
@@ -26,6 +26,7 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 using namespace Acts::UnitConstants;
 
+// Describes a component of a D-dimensional gaussian component
 template <int D>
 struct DummyComponent {
   Acts::ActsScalar weight;
@@ -33,6 +34,8 @@ struct DummyComponent {
   std::optional<Acts::ActsSymMatrix<D>> cov;
 };
 
+// A Multivariate distribution object working in the same way as the
+// distributions in the standard library
 template <typename T, int D>
 class MultivariateNormalDistribution {
  public:
@@ -59,48 +62,100 @@ class MultivariateNormalDistribution {
   }
 };
 
+// Sample data from a multi-component multivariate distribution
 template <int D>
-auto meanCovFromData(const std::vector<DummyComponent<D>> &cmps,
-                     std::size_t n_samples, std::mt19937 &gen) {
+auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
+                            std::size_t n_samples, std::mt19937 &gen) {
   using MultiNormal = MultivariateNormalDistribution<double, D>;
 
-  std::vector<std::pair<double, MultiNormal>> dists;
+  std::vector<MultiNormal> dists;
+  std::vector<double> weights;
   for (const auto &cmp : cmps) {
-    dists.emplace_back(cmp.weight, MultiNormal(cmp.pars, *cmp.cov));
+    dists.push_back(MultiNormal(cmp.pars, *cmp.cov));
+    weights.push_back(cmp.weight);
   }
 
+  std::discrete_distribution choice(weights.begin(), weights.end());
+
   auto sample = [&]() {
-    typename MultiNormal::Vector ret = MultiNormal::Vector::Zero();
-
-    for (const auto &[w, dist] : dists) {
-      ret += w * dist(gen);
-    }
-
-    return ret;
+    const auto n = choice(gen);
+    return dists[n](gen);
   };
 
   std::vector<ActsVector<D>> samples(n_samples);
   std::generate(samples.begin(), samples.end(), sample);
 
+  return samples;
+}
+
+// Simple arithmetic mean computation
+template <int D>
+auto mean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
   ActsVector<D> mean = ActsVector<D>::Zero();
+
   for (const auto &x : samples) {
     mean += x;
   }
-  mean /= samples.size();
 
-  ActsSymMatrix<D> cov = ActsSymMatrix<D>::Zero();
-  for (const auto &x : samples) {
-    cov += (x - mean) * (x - mean).transpose();
-  }
-  cov /= samples.size();
-
-  return std::make_tuple(mean, cov);
+  return mean / samples.size();
 }
 
-BoundVector meanFromFree(const std::vector<DummyComponent<eBoundSize>> &cmps,
+// A method to compute the circular mean, since the normal arithmetic mean
+// doesn't work for angles in general
+template <int D>
+auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
+  ActsVector<D> x = ActsVector<D>::Zero();
+  ActsVector<D> y = ActsVector<D>::Zero();
+
+  for (const auto &s : samples) {
+    for (int i = 0; i < D; ++i) {
+      x[i] += std::cos(s[i]);
+      y[i] += std::sin(s[i]);
+    }
+  }
+
+  ActsVector<D> mean = ActsVector<D>::Zero();
+
+  for (int i = 0; i < D; ++i) {
+    mean[i] = std::atan2(y[i], x[i]);
+  }
+
+  return mean;
+}
+
+// This general covariance estimator can be equiped with a custom subtraction
+// object to enable circular behaviour
+template <int D, typename subtract_t = std::minus<ActsVector<D>>>
+auto cov(const std::vector<ActsVector<D>> &samples, const ActsVector<D> &mu,
+         const subtract_t &sub = subtract_t{}) -> ActsSymMatrix<D> {
+  ActsSymMatrix<D> cov = ActsSymMatrix<D>::Zero();
+
+  for (const auto &smpl : samples) {
+    cov += sub(smpl, mu) * sub(smpl, mu).transpose();
+  }
+
+  return cov / samples.size();
+}
+
+// This function computes the mean of a bound gaussian mixture by converting
+// them to cartesian coordinates, computing the mean, and converting back to
+// bound.
+BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
                          const Surface &surface) {
+  // Specially handle LOC0, since the free mean would not be on the surface
+  // likely
   if (surface.type() == Surface::Cylinder) {
-    throw std::runtime_error("Cylinder surface not yet supported");
+    auto x = 0.0, y = 0.0;
+    const auto r = surface.bounds().values()[CylinderBounds::eR];
+
+    for (const auto &cmp : cmps) {
+      x += cmp.weight * std::cos(cmp.pars[eBoundLoc0] / r);
+      y += cmp.weight * std::sin(cmp.pars[eBoundLoc0] / r);
+    }
+
+    for (auto &cmp : cmps) {
+      cmp.pars[eBoundLoc0] = std::atan2(y, x) * r;
+    }
   }
 
   if (surface.type() == Surface::Cone) {
@@ -120,77 +175,36 @@ BoundVector meanFromFree(const std::vector<DummyComponent<eBoundSize>> &cmps,
                                                  GeometryContext{});
 }
 
-// Instantiate a global random number generator
-BOOST_AUTO_TEST_CASE(test_simple_mixture_from_data) {
-  const auto desc = std::tuple<>{};
+// Typedef to describe local positions of 4 components
+using LocPosArray = std::array<std::pair<double, double>, 4>;
+
+// Test the combination for a surface type. The local positions are given from
+// the outside since their meaning differs between surface types
+template <typename angle_description_t>
+void test_surface(const Surface &surface, const angle_description_t &desc,
+                  const LocPosArray &loc_pos, double expectedError) {
   const auto proj = Identity{};
 
-  // Create start state
-  constexpr int D = 2;
-
-  // Make a collection of standard normals
-  std::vector<DummyComponent<D>> cmps_standard;
-
-  for (auto w : {0.5, 0.5}) {
-    DummyComponent<D> a;
-    a.pars = ActsVector<D>::Zero();
-    a.cov = ActsSymMatrix<D>::Identity();
-    a.weight = w;
-    cmps_standard.push_back(a);
-  }
-
-  // Make a collection of slightly different
-  std::vector<DummyComponent<D>> cmps_random;
-
-  {
-    ActsSymMatrix<D> cov;
-    cov << 2.0, 0.5, 0.5, 1.0;
-
-    DummyComponent<D> a;
-    a.pars << 0.1, 0.2;
-    a.cov = cov;
-    a.weight = 0.5;
-    cmps_random.push_back(a);
-
-    DummyComponent<D> b = a;
-    b.pars = -a.pars;
-    cmps_random.push_back(b);
-  }
-
-  std::mt19937 gen(42);
-
-  for (const auto &cmps : {cmps_standard, cmps_random}) {
-    const auto [mean_test, cov_test] = detail::combineBoundGaussianMixture(
-        cmps.begin(), cmps.end(), proj, desc);
-
-    const auto [mean_data, cov_data] = meanCovFromData(cmps, 1'000, gen);
-
-    CHECK_CLOSE_MATRIX(mean_test, mean_data, 0.1);
-    CHECK_CLOSE_MATRIX(*cov_test, cov_data, 0.1);
-  }
-}
-
-BOOST_AUTO_TEST_CASE(test_plane_surface) {
-  const auto desc = detail::AngleDescription::Default{};
-  const auto proj = Identity{};
-
-  const auto surface =
-      Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0}, Vector3{1, 0, 0});
-
-  for (auto phi : {-180_degree, 0_degree, 180_degree}) {
+  for (auto phi : {-175_degree, 0_degree, 175_degree}) {
     for (auto theta : {5_degree, 90_degree, 175_degree}) {
       // Go create mixture with 4 cmps
       std::vector<DummyComponent<eBoundSize>> cmps;
 
+      auto p_it = loc_pos.begin();
+
       for (auto dphi : {-10_degree, 10_degree}) {
-        for (auto dtheta : {-10_degree, 10_degree}) {
+        for (auto dtheta : {-5_degree, 5_degree}) {
           DummyComponent<eBoundSize> a;
           a.weight = 1. / 4.;
-          a.pars = BoundVector::Zero();
-          a.pars[eBoundPhi] = phi + dphi;
+          a.pars = BoundVector::Ones();
+          a.pars[eBoundLoc0] *= p_it->first;
+          a.pars[eBoundLoc1] *= p_it->second;
+          a.pars[eBoundPhi] =
+              detail::wrap_periodic(phi + dphi, -M_PI, 2 * M_PI);
           a.pars[eBoundTheta] = theta + dtheta;
 
           cmps.push_back(a);
+          ++p_it;
         }
       }
 
@@ -200,158 +214,123 @@ BOOST_AUTO_TEST_CASE(test_plane_surface) {
       // We don't have a covariance in this test
       BOOST_CHECK(not cov_test);
 
-      const auto mean_ref = meanFromFree(cmps, *surface);
+      const auto mean_ref = meanFromFree(cmps, surface);
 
-      CHECK_CLOSE_MATRIX(mean_test, mean_ref, 1.e-1_degree);
-      return;
+      CHECK_CLOSE_MATRIX(mean_test, mean_ref, expectedError);
     }
   }
+}
+
+BOOST_AUTO_TEST_CASE(test_with_data) {
+  std::mt19937 gen(42);
+  std::vector<DummyComponent<2>> cmps(2);
+
+  cmps[0].pars << 1.0, 1.0;
+  cmps[0].cov = decltype(cmps[0].cov)::value_type{};
+  *cmps[0].cov << 1.0, 0.0, 0.0, 1.0;
+  cmps[0].weight = 0.5;
+
+  cmps[1].pars << -2.0, -2.0;
+  cmps[1].cov = decltype(cmps[1].cov)::value_type{};
+  *cmps[1].cov << 1.0, 1.0, 1.0, 2.0;
+  cmps[1].weight = 0.5;
+
+  const auto samples = sampleFromMultivariate(cmps, 10000, gen);
+  const auto mean_data = mean(samples);
+  const auto cov_data = cov(samples, mean_data);
+
+  const auto [mean_test, cov_test] = detail::combineBoundGaussianMixture(
+      cmps.begin(), cmps.end(), Identity{}, std::tuple<>{});
+
+  CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
+  CHECK_CLOSE_MATRIX(cov_data, *cov_test, 1.e-1);
+}
+
+BOOST_AUTO_TEST_CASE(test_with_data_circular) {
+  std::mt19937 gen(42);
+  std::vector<DummyComponent<2>> cmps(2);
+
+  cmps[0].pars << 175_degree, 5_degree;
+  cmps[0].cov = decltype(cmps[0].cov)::value_type{};
+  *cmps[0].cov << 20_degree, 0.0, 0.0, 20_degree;
+  cmps[0].weight = 0.5;
+
+  cmps[1].pars << -175_degree, -5_degree;
+  cmps[1].cov = decltype(cmps[1].cov)::value_type{};
+  *cmps[1].cov << 20_degree, 20_degree, 20_degree, 40_degree;
+  cmps[1].weight = 0.5;
+
+  const auto samples = sampleFromMultivariate(cmps, 10000, gen);
+  const auto mean_data = circularMean(samples);
+  const auto cov_data = cov(samples, mean_data, [](auto a, auto b) {
+    Vector2 res = Vector2::Zero();
+    for (int i = 0; i < 2; ++i)
+      res[i] = detail::difference_periodic(a[i], b[i], 2 * M_PI);
+    return res;
+  });
+
+  using detail::AngleDescription::CyclicAngle;
+  const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
+  const auto [mean_test, cov_test] = detail::combineBoundGaussianMixture(
+      cmps.begin(), cmps.end(), Identity{}, d);
+
+  CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
+  CHECK_CLOSE_MATRIX(cov_data, *cov_test, 1.e-1);
+}
+
+BOOST_AUTO_TEST_CASE(test_plane_surface) {
+  const auto desc = detail::AngleDescription::Default{};
+
+  const auto surface =
+      Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0}, Vector3{1, 0, 0});
+
+  const LocPosArray p{{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
+
+  test_surface(*surface, desc, p, 0.01);
+}
+
+BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
+  const Transform3 trafo = Transform3::Identity();
+  const double r = 2;
+  const double halfz = 100;
+
+  const auto surface = Surface::makeShared<CylinderSurface>(trafo, r, halfz);
+
+  const double z1 = -1, z2 = 1;
+  const double phi1 = 178_degree, phi2 = -176_degree;
+
+  const LocPosArray p{
+      {{r * phi1, z1}, {r * phi1, -z2}, {r * phi2, z1}, {r * phi2, z2}}};
+
+  auto desc = detail::AngleDescription::Cylinder{};
+  std::get<0>(desc).constant = r;
+
+  test_surface(*surface, desc, p, 0.01);
+}
+
+BOOST_AUTO_TEST_CASE(test_disc_surface) {
+  const Transform3 trafo = Transform3::Identity();
+  const auto radius = 1;
+
+  const auto surface = Surface::makeShared<DiscSurface>(trafo, 0.0, radius);
+
+  const double r1 = 0.4, r2 = 0.8;
+  const double phi1 = -178_degree, phi2 = 176_degree;
+
+  const LocPosArray p{{{r1, phi1}, {r2, phi2}, {r1, phi2}, {r2, phi1}}};
+
+  auto desc = detail::AngleDescription::Disk{};
+
+  test_surface(*surface, desc, p, 0.01);
 }
 
 /*
-BOOST_AUTO_TEST_CASE(test_merge_two_equal_components) {
-  DummyComponent a;
-  a.pars = Acts::BoundVector::Random();
-  a.cov = Acts::BoundSymMatrix::Random().cwiseAbs();
-  *a.cov *= a.cov->transpose();
-  a.weight = 0.5;
-
-  DummyComponent c = Acts::detail::mergeComponents(a, a, Identity{});
-  BOOST_CHECK(c.pars == a.pars);
-  BOOST_CHECK(*c.cov == *a.cov);
-  BOOST_CHECK(c.weight == 1.0);
-}
-
-BOOST_AUTO_TEST_CASE(test_merge_two_different_components) {
-  DummyComponent a;
-  a.pars = Acts::BoundVector::Random();
-  a.cov = Acts::BoundSymMatrix::Random().cwiseAbs();
-  *a.cov *= a.cov->transpose();
-  a.weight = 0.5;
-
-  DummyComponent b;
-  b.pars = Acts::BoundVector::Random();
-  b.cov = Acts::BoundSymMatrix::Random().cwiseAbs();
-  *b.cov *= b.cov->transpose();
-  b.weight = 0.5;
-
-  DummyComponent c = Acts::detail::mergeComponents(a, b, Identity{});
-  BOOST_CHECK(c.pars == 0.5 * (a.pars + b.pars));
-  BOOST_CHECK(c.weight == 1.0);
-}
-
-BOOST_AUTO_TEST_CASE(test_component_reduction_equal) {
-  const std::size_t NCompsBefore = 10;
-
-  // Create start state
-  std::vector<DummyComponent> cmps;
-
-  DummyComponent a;
-  a.pars = Acts::BoundVector::Random();
-  a.cov = Acts::BoundSymMatrix::Random().cwiseAbs();
-  *a.cov *= a.cov->transpose();
-  a.weight = 1.0 / NCompsBefore;
-
-  for (auto i = 0ul; i < NCompsBefore; ++i) {
-    cmps.push_back(a);
-  }
-
-  const double weightSumBefore = std::accumulate(
-      cmps.begin(), cmps.end(), 0.0,
-      [](auto sum, const auto &cmp) { return sum + cmp.weight; });
-
-  BOOST_CHECK_CLOSE(weightSumBefore, 1.0, 0.0001);
-
-  // Combine
-  while (cmps.size() >= 2) {
-    auto merge_iter_a = cmps.begin();
-    auto merge_iter_b = std::next(cmps.begin());
-
-    *merge_iter_a =
-        Acts::detail::mergeComponents(*merge_iter_a, *merge_iter_b, Identity{});
-    cmps.erase(merge_iter_b);
-
-    const auto mean = std::accumulate(
-        cmps.begin(), cmps.end(), Acts::BoundVector::Zero().eval(),
-        [](auto sum, const auto &cmp) -> Acts::BoundVector {
-          return sum + cmp.weight * cmp.pars;
-        });
-
-    const double weightSum = std::accumulate(
-        cmps.begin(), cmps.end(), 0.0,
-        [](auto sum, const auto &cmp) { return sum + cmp.weight; });
-
-    BOOST_CHECK((mean - a.pars).cwiseAbs().all() < 1.e-4);
-    BOOST_CHECK_CLOSE(weightSum, 1.0, 0.0001);
-
-    if (cmps.size() == 1) {
-      BOOST_CHECK_CLOSE(weightSum, merge_iter_a->weight, 0.0001);
-      BOOST_CHECK((a.pars - merge_iter_a->pars).cwiseAbs().all() <
-                  1.e-4);
-      BOOST_CHECK((*a.cov - *merge_iter_a->cov).cwiseAbs().all() <
-                  1.e-4);
-    }
-  }
-}
-
-BOOST_AUTO_TEST_CASE(test_component_reduction_different) {
-  const std::size_t NCompsBefore = 10;
-
-  // Create start state
-  std::vector<DummyComponent> cmps;
-
-  for (auto i = 0ul; i < NCompsBefore; ++i) {
-    DummyComponent a;
-    a.pars = Acts::BoundVector::Random();
-    a.cov = Acts::BoundSymMatrix::Random().cwiseAbs();
-    *a.cov *= a.cov->transpose();
-    a.weight = 1.0 / NCompsBefore;
-    cmps.push_back(a);
-  }
-
-  // Determine mean
-  const auto meanBefore = std::accumulate(
-      cmps.begin(), cmps.end(), Acts::BoundVector::Zero().eval(),
-      [](auto sum, const auto &cmp) -> Acts::BoundVector {
-        return sum + cmp.weight * cmp.pars;
-      });
-
-  const double weightSumBefore = std::accumulate(
-      cmps.begin(), cmps.end(), 0.0,
-      [](auto sum, const auto &cmp) { return sum + cmp.weight; });
-
-  BOOST_CHECK_CLOSE(weightSumBefore, 1.0, 0.0001);
-
-  // Combine
-  while (cmps.size() >= 2) {
-    auto merge_iter_a = cmps.begin();
-    auto merge_iter_b = std::next(cmps.begin());
-
-    *merge_iter_a =
-        Acts::detail::mergeComponents(*merge_iter_a, *merge_iter_b, Identity{});
-    cmps.erase(merge_iter_b);
-
-    const auto mean = std::accumulate(
-        cmps.begin(), cmps.end(), Acts::BoundVector::Zero().eval(),
-        [](auto sum, const auto &cmp) -> Acts::BoundVector {
-          return sum + cmp.weight * cmp.pars;
-        });
-
-    const double weightSum = std::accumulate(
-        cmps.begin(), cmps.end(), 0.0,
-        [](auto sum, const auto &cmp) { return sum + cmp.weight; });
-
-    BOOST_CHECK((mean - meanBefore).cwiseAbs().all() < 1.e-4);
-    BOOST_CHECK_CLOSE(weightSum, 1.0, 0.0001);
-  }
-}
-
 BOOST_AUTO_TEST_CASE(test_kl_mixture_reduction) {
   const std::size_t NCompsBefore = 10;
   const std::size_t NCompsAfter = 5;
 
   // Create start state
-  std::vector<DummyComponent> cmps;
+  std::vector<DummyComponent<eBoundSize>> cmps;
 
   for (auto i = 0ul; i < NCompsBefore; ++i) {
     DummyComponent a;

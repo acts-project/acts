@@ -15,8 +15,7 @@
 
 #include <cmath>
 #include <tuple>
-
-#include <eigen3/Eigen/src/Core/util/StaticAssert.h>
+#include <optional>
 
 namespace Acts {
 namespace detail {
@@ -40,12 +39,21 @@ struct CyclicRadiusAngle {
 using Default = std::tuple<CyclicAngle<eBoundPhi>>;
 using Cylinder =
     std::tuple<CyclicRadiusAngle<eBoundLoc0>, CyclicAngle<eBoundPhi>>;
+using Disk = std::tuple<CyclicAngle<eBoundLoc1>, CyclicAngle<eBoundPhi>>;
 }  // namespace AngleDescription
 
 /// @brief Combine multiple components into one representative track state
 /// object. The function takes iterators to allow for arbitrary ranges to be
 /// combined. The dimension of the vectors is infeared from the inputs.
-/// @note If one component does not contain a covariance, no covariance is computed
+///
+/// @note If one component does not contain a covariance, no covariance is
+/// computed.
+///
+/// @note The correct mean and variances for cyclic coordnates or spherical
+/// coordinates (theta, phi) must generally be computed using a special circular
+/// mean or in cartesian coordinates. This implements a approximation, which
+/// only works well for close components.
+///
 /// @tparam component_iterator_t An iterator of a range of components
 /// @tparam projector_t A projector, which maps the component to a
 /// std::tuple< weight, mean, std::optional< cov > >
@@ -57,6 +65,7 @@ auto combineBoundGaussianMixture(
     const component_iterator_t begin, const component_iterator_t end,
     projector_t &&projector = projector_t{},
     const angle_desc_t &angleDesc = angle_desc_t{}) {
+  // Extract the first component
   const auto &[begin_weight, begin_pars, begin_cov] = projector(*begin);
 
   // Assert type properties
@@ -73,6 +82,7 @@ auto combineBoundGaussianMixture(
       [&](auto... d) { static_assert((std::less<int>{}(d.idx, D) && ...)); },
       angleDesc);
 
+  // Define the return type
   using RetType = std::tuple<ActsVector<D>, std::optional<ActsSymMatrix<D>>>;
 
   // Early return in case of range with length 1
@@ -80,9 +90,12 @@ auto combineBoundGaussianMixture(
     return RetType{begin_pars, *begin_cov};
   }
 
+  // Zero initialized values for aggregation
   ActsVector<D> mean = ActsVector<D>::Zero();
-  std::optional<ActsSymMatrix<D>> cov = ActsSymMatrix<D>::Zero();
+  ActsSymMatrix<D> cov1 = ActsSymMatrix<D>::Zero();
+  ActsSymMatrix<D> cov2 = ActsSymMatrix<D>::Zero();
   WeightType sumOfWeights{0.0};
+  bool haveCov = true;
 
   // clang-format off
   // x = \sum_{l} w_l * x_l
@@ -91,15 +104,10 @@ auto combineBoundGaussianMixture(
   for (auto l = begin; l != end; ++l) {
     const auto &[weight_l, pars_l, cov_l] = projector(*l);
 
-    // NOTE in principle the spherical components (phi, theta) cannot be
-    // combined like this. However, we assume the differences are generally very
-    // small, so the errors are neglectable.
     sumOfWeights += weight_l;
     mean += weight_l * pars_l;
 
-    // Avoid problems with cyclic coordinates. The indices for these are taken
-    // from the angle_description_t template parameter, and applied with the
-    // following lambda.
+    // Apply corrections for cyclic coordinates
     auto handleCyclicMean = [&ref = begin_pars, &pars = pars_l,
                              &weight = weight_l, &mean = mean](auto desc) {
       const auto delta = (ref[desc.idx] - pars[desc.idx]) / desc.constant;
@@ -113,21 +121,19 @@ auto combineBoundGaussianMixture(
 
     std::apply([&](auto... dsc) { (handleCyclicMean(dsc), ...); }, angleDesc);
 
-    // If we have a covariance, proceed with computation
-    if (not cov_l) {
-      cov.reset();
+    if (not cov_l || not haveCov) {
+      haveCov = false;
       continue;
     }
 
-    *cov += weight_l * weight_l * *cov_l;
+    cov1 += weight_l * *cov_l;
 
-    // For covariance we must loop over all other following components
     for (auto m = std::next(l); m != end; ++m) {
       const auto &[weight_m, pars_m, cov_m] = projector(*m);
 
       ActsVector<D> diff = pars_l - pars_m;
 
-      // Here we also have to handle cyclic coordinates like above
+      // Apply corrections for cyclic coordinates
       auto handleCyclicCov = [&l = pars_l, &m = pars_m,
                               &diff = diff](auto desc) {
         diff[desc.idx] =
@@ -138,18 +144,27 @@ auto combineBoundGaussianMixture(
 
       std::apply([&](auto... dsc) { (handleCyclicCov(dsc), ...); }, angleDesc);
 
-      *cov += weight_l * weight_m * diff * diff.transpose();
+      cov2 += weight_l * weight_m * diff * diff.transpose();
     }
   }
 
-  // Reweight
   mean /= sumOfWeights;
 
-  if (cov) {
-    *cov /= sumOfWeights * sumOfWeights;
-  }
+  auto wrap = [&](auto desc) {
+    mean[desc.idx] =
+        wrap_periodic(mean[desc.idx] / desc.constant, -M_PI, 2 * M_PI) *
+        desc.constant;
+  };
 
-  return RetType{mean, cov};
+  std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
+
+  if (haveCov) {
+    cov1 /= sumOfWeights;
+    cov2 /= sumOfWeights * sumOfWeights;
+    return RetType{mean, cov1 + cov2};
+  } else {
+    return RetType{mean, std::nullopt};
+  }
 }
 
 }  // namespace detail
