@@ -46,8 +46,6 @@ add_custom_target(
       -b html
       -d ${sphinx_doctrees}
       -j auto
-      -W
-      --keep-going
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${sphinx_html}
   DEPENDS ${doxygen_index}
@@ -61,8 +59,6 @@ add_custom_target(
       -b html
       -d ${sphinx_doctrees}
       -j auto
-      -W
-      --keep-going
       -t run_apidoc
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${sphinx_html}
