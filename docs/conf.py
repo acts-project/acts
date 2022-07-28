@@ -39,7 +39,6 @@ smartquotes = True
 numfig = True
 
 myst_enable_extensions = ["dollarmath"]
-myst_heading_anchors = 2
 
 # -- Options for HTML output --------------------------------------------------
 
