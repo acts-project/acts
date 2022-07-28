@@ -6,7 +6,7 @@ u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd()
 
-# acts.examples.dump_args_calls(locals())
+# acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 detector, trackingGeometry, decorators = buildITkGeometry(geo_dir)
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
@@ -16,12 +16,16 @@ from acts.examples.simulation import (
     MomentumConfig,
     EtaConfig,
     ParticleConfig,
+    addPythia8,
     addFatras,
+    ParticleSelectorConfig,
     addDigitization,
 )
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
+    SeedingAlgorithm,
+    ParticleSmearingSigmas,
     addCKFTracks,
     CKFPerformanceConfig,
 )
@@ -36,10 +40,22 @@ s = addParticleGun(
     ParticleConfig(1, acts.PdgParticle.eMuon, True),
     rnd=rnd,
 )
+# # Uncomment addPythia8 and ParticleSelectorConfig, instead of addParticleGun, to generate ttbar with mu=200 pile-up.
+# s = addPythia8(
+#     s,
+#     hardProcess=["Top:qqbar2ttbar=on"],
+#     vtxGen=acts.examples.GaussianVertexGenerator(
+#         stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+#         mean=acts.Vector4(0, 0, 0, 0),
+#     ),
+#     rnd=rnd,
+#     outputDirRoot=outputDir,
+# )
 s = addFatras(
     s,
     trackingGeometry,
     field,
+    # ParticleSelectorConfig(eta=(-4.0, 4.0), pt=(1.0 * u.GeV, 10.0 * u.GeV), removeNeutral=True),
     outputDirRoot=outputDir,
     rnd=rnd,
 )
@@ -51,7 +67,6 @@ s = addDigitization(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-# from acts.examples.reconstruction import SeedingAlgorithm, ParticleSmearingSigmas
 s = addSeeding(
     s,
     trackingGeometry,
