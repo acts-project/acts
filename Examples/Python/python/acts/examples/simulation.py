@@ -31,6 +31,21 @@ ParticleConfig = namedtuple(
     ["num", "pdg", "randomizeCharge"],
     defaults=[None, None, None],
 )
+ParticleSelectorConfig = namedtuple(
+    "ParticleSelectorConfig",
+    [
+        "rho",  # (min,max)
+        "absZ",  # (min,max)
+        "time",  # (min,max)
+        "phi",  # (min,max)
+        "eta",  # (min,max)
+        "absEta",  # (min,max)
+        "pt",  # (min,max)
+        "removeCharged",  # bool
+        "removeNeutral",  # bool
+    ],
+    defaults=[(None, None)] * 7 + [None] * 2,
+)
 
 
 @acts.examples.NamedTypeArgs(
@@ -293,6 +308,9 @@ def addPythia8(
     return evGen if returnEvGen else s
 
 
+@acts.examples.NamedTypeArgs(
+    preselectParticles=ParticleSelectorConfig,
+)
 def addFatras(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
@@ -300,7 +318,7 @@ def addFatras(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
-    preselectParticles: bool = True,
+    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
 ) -> acts.examples.Sequencer:
     """This function steers the detector simulation using Fatras
 
@@ -316,6 +334,10 @@ def addFatras(
         the output folder for the Root output, None triggers no output
     rnd : RandomNumbers, None
         random number generator
+    preselectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
+        ParticleSelector configuration to select particles as input to Fatras. Each range is specified as a tuple of (min,max).
+        Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
+        Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
     if int(s.config.logLevel) <= int(acts.logging.DEBUG):
@@ -325,10 +347,28 @@ def addFatras(
     rnd = rnd or acts.examples.RandomNumbers()
 
     # Selector
-    if preselectParticles:
+    if preselectParticles is not None:
         particles_selected = "particles_selected"
         s.addAlgorithm(
             acts.examples.ParticleSelector(
+                **acts.examples.defaultKWArgs(
+                    rhoMin=preselectParticles.rho[0],
+                    rhoMax=preselectParticles.rho[1],
+                    absZMin=preselectParticles.absZ[0],
+                    absZMax=preselectParticles.absZ[1],
+                    timeMin=preselectParticles.time[0],
+                    timeMax=preselectParticles.time[1],
+                    phiMin=preselectParticles.phi[0],
+                    phiMax=preselectParticles.phi[1],
+                    etaMin=preselectParticles.eta[0],
+                    etaMax=preselectParticles.eta[1],
+                    absEtaMin=preselectParticles.absEta[0],
+                    absEtaMax=preselectParticles.absEta[1],
+                    ptMin=preselectParticles.pt[0],
+                    ptMax=preselectParticles.pt[1],
+                    removeCharged=preselectParticles.removeCharged,
+                    removeNeutral=preselectParticles.removeNeutral,
+                ),
                 level=s.config.logLevel,
                 inputParticles="particles_input",
                 outputParticles=particles_selected,
