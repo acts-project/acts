@@ -133,9 +133,10 @@ struct SurfaceReached {
     double distance = sIntersection.intersection.pathLength;
 
     std::cout << "intersect " << std::tie(targetSurface, state.geoContext)
-      << " from pos " << stepper.position(state.stepping).transpose()
-      << " with direction " << stepper.direction(state.stepping).transpose()
-      << " navDir " << state.stepping.navDir << std::endl;
+              << " from pos " << stepper.position(state.stepping).transpose()
+              << " with direction "
+              << stepper.direction(state.stepping).transpose() << " navDir "
+              << state.stepping.navDir << std::endl;
 
     // Return true if you fall below tolerance
     if (targetReached) {
@@ -158,7 +159,9 @@ struct SurfaceReached {
         // Update the distance to the alternative solution
         distance = sIntersection.alternative.pathLength;
       }
-      std::cout << "StandardAborters: setStepSize navDir " << state.stepping.navDir << " distance " << distance << std::endl;
+      std::cout << "StandardAborters: setStepSize navDir "
+                << state.stepping.navDir << " distance " << distance
+                << std::endl;
       stepper.setStepSize(state.stepping, state.stepping.navDir * distance,
                           ConstrainedStep::aborter, false);
 

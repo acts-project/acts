@@ -12,10 +12,10 @@
 
 #include <algorithm>
 #include <array>
+#include <cassert>
 #include <iomanip>
 #include <limits>
 #include <sstream>
-#include <cassert>
 
 namespace Acts {
 
@@ -39,9 +39,7 @@ class ConstrainedStep {
 
   /// constructor from Scalar
   /// @param value is the user given initial value
-  explicit ConstrainedStep(Scalar value) {
-    m_values[user] = value;
-  }
+  explicit ConstrainedStep(Scalar value) { m_values[user] = value; }
 
   /// Assignment from one Scalar
   /// @note this will set only the accuracy, as this is the most
@@ -54,9 +52,7 @@ class ConstrainedStep {
   }
 
   /// returns the min step size
-  Scalar value() const {
-    return value(currentType());
-  }
+  Scalar value() const { return value(currentType()); }
 
   /// Access to a specific value
   ///
@@ -66,8 +62,9 @@ class ConstrainedStep {
   /// Access to currently leading min type
   ///
   Type currentType() const {
-    return Type(std::min_element(m_values.begin(), m_values.end(),
-                [](auto a, auto b) { return std::abs(a) < std::abs(b); }) -
+    return Type(std::min_element(
+                    m_values.begin(), m_values.end(),
+                    [](auto a, auto b) { return std::abs(a) < std::abs(b); }) -
                 m_values.begin());
   }
 
