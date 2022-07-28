@@ -21,11 +21,12 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    itkSeedingAlgConfig,
     TruthSeedRanges,
     addCKFTracks,
     CKFPerformanceConfig,
 )
+
+from acts.examples.itk import itkSeedingAlgConfig
 
 s = acts.examples.Sequencer(events=100, numThreads=-1)
 s = addParticleGun(
