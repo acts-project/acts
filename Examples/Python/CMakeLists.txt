@@ -56,6 +56,10 @@ target_link_libraries(ActsPythonBindings PUBLIC
 set(py_files 
   __init__.py 
   examples/__init__.py
+  examples/simulation.py
+  examples/reconstruction.py
+  examples/itk.py
+  examples/odd.py
   _adapter.py
 )
 

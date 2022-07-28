@@ -90,6 +90,8 @@ class SurfaceMaterialMapper {
     bool emptyBinCorrection = true;
     /// Mapping output to debug stream
     bool mapperDebugOutput = false;
+    /// Compute the variance of each material slab (only if using an input map)
+    bool computeVariance = false;
   };
 
   /// @struct State
@@ -108,6 +110,10 @@ class SurfaceMaterialMapper {
     /// The created surface material from it
     std::map<GeometryIdentifier, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
+
+    /// The surface material of the input tracking geometry
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
+        inputSurfaceMaterial;
 
     /// The volume material of the input tracking geometry
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>
