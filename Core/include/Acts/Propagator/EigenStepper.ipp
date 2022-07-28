@@ -210,11 +210,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
                                      state.options.tolerance /
                                      std::abs(2. * error_estimate))))),
                  4.0f);
-    std::cout << "EigenStepper: pre step " << state.stepping.stepSize.toString()
-              << " scale " << stepSizeScaling << std::endl;
     state.stepping.stepSize.scale(stepSizeScaling);
-    std::cout << "EigenStepper: post step "
-              << state.stepping.stepSize.toString() << std::endl;
 
     // If step size becomes too small the particle remains at the initial
     // place
