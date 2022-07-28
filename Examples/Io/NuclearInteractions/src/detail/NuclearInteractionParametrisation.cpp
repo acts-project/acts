@@ -112,7 +112,7 @@ Parametrisation buildMomentumParameters(const EventCollection& events,
   // Calculate the transformation into the eigenspace of the covariance matrix
   EigenspaceComponents eigenspaceElements =
       calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
-  // Calculate the the cumulative distributions
+  // Calculate the cumulative distributions
   return std::make_pair(eigenspaceElements, histos);
 }
 
@@ -245,7 +245,7 @@ Parametrisation buildInvariantMassParameters(const EventCollection& events,
   // Calculate the transformation into the eigenspace of the covariance matrix
   EigenspaceComponents eigenspaceElements =
       calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
-  // Calculate the the cumulative distributions
+  // Calculate the cumulative distributions
   return std::make_pair(eigenspaceElements, histos);
 }
 

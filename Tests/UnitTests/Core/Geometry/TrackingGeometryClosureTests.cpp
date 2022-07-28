@@ -23,7 +23,7 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 
 /// we test a two-level hierarchy
-/// every deeper level hierarchy is a a derivate of this
+/// every deeper level hierarchy is a derivate of this
 ///
 /// WorldVolume   with volumeID       == 1
 /// - InnerVolume with volumeID       == 2

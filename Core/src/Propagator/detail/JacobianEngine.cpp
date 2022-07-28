@@ -145,7 +145,7 @@ BoundMatrix boundToCurvilinearTransportJacobian(
     const Vector3& direction, const BoundToFreeMatrix& boundToFreeJacobian,
     const FreeMatrix& freeTransportJacobian,
     const FreeVector& freeToPathDerivatives) {
-  // Calculate the derivative of path length at the the curvilinear surface
+  // Calculate the derivative of path length at the curvilinear surface
   // w.r.t. free parameters
   FreeToPathMatrix freeToPath = FreeToPathMatrix::Zero();
   freeToPath.segment<3>(eFreePos0) = -1.0 * direction;

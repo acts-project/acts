@@ -1193,7 +1193,7 @@ class CombinatorialKalmanFilter {
   };
 
  public:
-  /// Combinatorial Kalman Filter implementation, calls the the Kalman filter
+  /// Combinatorial Kalman Filter implementation, calls the Kalman filter
   /// and smoother
   ///
   /// @tparam source_link_iterator_t Type of the source link iterator

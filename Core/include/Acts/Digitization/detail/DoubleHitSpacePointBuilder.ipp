@@ -20,9 +20,9 @@ struct SpacePointParameters {
   Vector3 q;
   /// Vector pointing from bottom to top end of second SDE
   Vector3 r;
-  /// Twice the vector pointing from vertex to to midpoint of first SDE
+  /// Twice the vector pointing from vertex to midpoint of first SDE
   Vector3 s;
-  /// Twice the vector pointing from vertex to to midpoint of second SDE
+  /// Twice the vector pointing from vertex to midpoint of second SDE
   Vector3 t;
   /// Cross product between SpacePointParameters::q and
   /// SpacePointParameters::s
