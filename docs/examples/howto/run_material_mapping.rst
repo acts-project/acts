@@ -170,11 +170,11 @@ To do the validation, five root macros are available in ``scripts/MaterialMappin
   mkdir Surfaces/dist_plot
   mkdir Surfaces/1D_plot
 
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root",-1,"Surfaces/dist_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root",100000,"Surfaces/1D_plot")'
   .q
 
 Using the validation plots you can then adapt the binning and the mapped surface to improve the mapping.
@@ -189,11 +189,7 @@ On top of those plots:
 Can be use with X,Y,Z is a list of volumes, this will plot the material ratio between the map and the Geantino scan for the given volumes.
 
 
-.. warning::
-  Depending on your root version those macros might not work. They have been tested with version 6.18.04 so you can always revert to that version in case of problems.
-
 Using a different detector
 --------------------------
 
 If you want to use a different type of detector, you will first need to ensure that the relevant packages were added during the compilation. After that, if your detector is a DD4hep detector you will just need to replace the path given to the ``--dd4hep-input`` option. In case it is another type of detector implementation, you can replace DD4hep in the name of the algorithm by what corresponds to your detector implementation. For more information on how to include your detector in that case you can refer to the documentation of the algorithm using the ``-h`` option.
-

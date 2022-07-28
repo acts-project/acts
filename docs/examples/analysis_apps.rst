@@ -39,6 +39,7 @@ For the output of the material recording, of e.g. the ``OpenDateDetector``, the 
 will create a material composition plot of the entire detector:
 
 .. code-block:: console
+
     $ <build>/bin/ActsAnalysisMaterialComposition \
         -i geant4_material_tracks.root \
         -t material-tracks \
