@@ -110,8 +110,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   if (result.ok()) {
     vertices = std::move(result.value());
   } else {
-    ACTS_LOG(m_cfg.errorLevel,
-             "Error in vertex finder: " << result.error().message());
+    ACTS_ERROR("Error in vertex finder: " << result.error().message());
   }
 
   // show some debug output

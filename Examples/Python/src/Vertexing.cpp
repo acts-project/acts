@@ -45,7 +45,6 @@ void addVertexing(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputVertices);
     ACTS_PYTHON_MEMBER(outputTime);
     ACTS_PYTHON_MEMBER(bField);
-    ACTS_PYTHON_MEMBER(errorLevel);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -67,7 +66,6 @@ void addVertexing(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputVertices);
     ACTS_PYTHON_MEMBER(outputTime);
     ACTS_PYTHON_MEMBER(bField);
-    ACTS_PYTHON_MEMBER(errorLevel);
     ACTS_PYTHON_STRUCT_END();
   }
 
@@ -110,7 +108,6 @@ void addVertexing(Context& ctx) {
     ACTS_PYTHON_MEMBER(doConstrainedFit);
     ACTS_PYTHON_MEMBER(constraintPos);
     ACTS_PYTHON_MEMBER(constraintCov);
-    ACTS_PYTHON_MEMBER(errorLevel);
     ACTS_PYTHON_STRUCT_END();
   }
 }

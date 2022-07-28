@@ -29,8 +29,6 @@ class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
     std::string outputTime = "time";
     /// The magnetic field
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
-    /// Vertex fit error level
-    Acts::Logging::Level errorLevel = Acts::Logging::ERROR;
   };
 
   AdaptiveMultiVertexFinderAlgorithm(const Config& config,
