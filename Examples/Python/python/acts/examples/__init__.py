@@ -140,7 +140,11 @@ def NamedTypeArgs(**namedTypeArgs):
 
             for k, v in kwargs.items():
                 cls = namedTypeArgs.get(k)
-                if cls is not None and v.__class__.__module__ == int.__module__:
+                if (
+                    cls is not None
+                    and v is not None
+                    and type(v).__module__ == int.__module__  # is v a 'builtins'?
+                ):
                     if issubclass(cls, Iterable):
                         kwargs[k] = cls(*v)
                     else:
