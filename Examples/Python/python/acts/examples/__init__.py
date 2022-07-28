@@ -151,12 +151,16 @@ def NamedTypeArgs(**namedTypeArgs):
                         kwargs[k] = cls(v)
 
             newargs = []
-            for a in args:
+            for i, a in enumerate(args):
                 k = namedTypeClasses.get(type(a))
                 if k is None:
                     newargs.append(a)
+                    if i > len(newargs):
+                        raise TypeError(
+                            f"{func.__name__}() positional argument {i} follows named-type arguments, which were converted to keyword arguments"
+                        )
                 elif k in kwargs:
-                    raise KeyError(k)
+                    raise TypeError(f"{func.__name__}() keyword argument repeated: {k}")
                 else:
                     kwargs[k] = a
             return func(*newargs, **kwargs)
