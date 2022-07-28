@@ -48,7 +48,7 @@ class ConstrainedStep {
   /// @param value is the new accuracy value
   void setValue(Scalar value) {
     /// set the accuracy value
-    m_values[accuracy] = std::abs(value);
+    m_values[accuracy] = value;
   }
 
   /// returns the min step size
