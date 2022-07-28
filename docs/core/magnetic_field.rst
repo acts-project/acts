@@ -1,6 +1,9 @@
 Magnetic field
 ==============
 
+.. attention::
+   This section is largely **outdated** and will be replaced in the future.
+
 This module collects information about classes and typedefs useful for
 describing different magnetic field configurations. Acts is independent of the
 magnetic field implementation used. Algorithms which need magnetic field
@@ -197,7 +200,7 @@ In the implementation the factor of :math:`(\mu_0\cdot I)` is defined to be a sc
 .. _sharedbfield:
 
 Shared magnetic field
---------------------
+---------------------
 
 :class:`Acts::SharedBField` wraps another one of the magnetic field types from above.
 Internally, it holds a ``std::shared_ptr<...>``, so the same field provider can be reused. This is useful in case of a larger map, for example.
