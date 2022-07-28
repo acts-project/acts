@@ -1,10 +1,12 @@
 ACTS Material Mapping Tutorial
 ==============================
+
 When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps: 
 
 - first, a JSON geometry file is created, it will be used to configure which surface the material is mapped onto and with which binning.
 - second, a Geant4 simulation is used to collect the material inside the detector from the detailed geometry.
 - third, all the steps are projected onto the closest surfaces (or volume in case of volume mapping) and averaged out over many events to create a map.
+
 This page will explain how to perform the material mapping with the ACTS Examples. For this example we will use the Open Data Detector (ODD) the last paragraph will explain what needs to be changed if you want to perform the material mapping with another detector.
 
 Prerequisites
