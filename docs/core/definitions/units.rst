@@ -35,7 +35,7 @@ Here, the following native units are used:
 Depending on the context a physical quantity might not be given in the native
 units. In this case we need to convert to the native unit first before the value
 can be used. The necessary conversion factors are defined in
-:ref:`namespace_acts_1_1_unit_constants`. Multiplying a value with the unit constant
+:ref:`namespace_Acts__UnitConstants`. Multiplying a value with the unit constant
 produces the equivalent value in the native unit, e.g.
 
 .. code-block:: cpp
