@@ -394,12 +394,7 @@ def addFatras(
     s.addAlgorithm(alg)
 
     # Output
-    addSimWriters(
-        s,
-        alg.config.outputSimHits,
-        outputDirCsv,
-        outputDirRoot
-    )
+    addSimWriters(s, alg.config.outputSimHits, outputDirCsv, outputDirRoot)
 
     return s
 
@@ -544,12 +539,7 @@ def addGeant4(
     s.addAlgorithm(alg)
 
     # Output
-    addSimWriters(
-        s,
-        g4conf.outputSimHits,
-        outputDirCsv,
-        outputDirRoot
-    )
+    addSimWriters(s, g4conf.outputSimHits, outputDirCsv, outputDirRoot)
 
     return s
 
