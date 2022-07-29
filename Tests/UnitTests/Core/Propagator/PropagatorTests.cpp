@@ -19,9 +19,12 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Tests/CommonHelpers/CylindricalTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 namespace bdata = boost::unit_test::data;
@@ -350,6 +353,81 @@ BOOST_DATA_TEST_CASE(
   for (unsigned int i = 0; i < cov_1s.rows(); i++) {
     for (unsigned int j = 0; j < cov_1s.cols(); j++) {
       CHECK_CLOSE_OR_SMALL(cov_1s(i, j), cov_2s(i, j), 0.001, 1e-6);
+    }
+  }
+}
+
+CylindricalTrackingGeometry cGeometry(tgContext);
+auto tGeometry = cGeometry();
+
+using MagneticField = Acts::ConstantBField;
+using Stepper = Acts::EigenStepper<>;
+using Propagator = Acts::Propagator<Stepper, Navigator>;
+
+inline Propagator makePropagator(double bz) {
+  Navigator::Config navigatorCfg;
+  navigatorCfg.trackingGeometry = tGeometry;
+  Navigator navigator(navigatorCfg);
+
+  auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
+  Stepper stepper(std::move(magField));
+  return Propagator(std::move(stepper), navigator);
+}
+
+// Dedicated test case if the propagation to a Perigee surface outside
+// a perigee volume works without problems
+BOOST_AUTO_TEST_CASE(PerigeePropagationFromOutside) {
+  ACTS_LOCAL_LOGGER(getDefaultLogger("PerigeePropagationTest", Logging::INFO));
+
+  // Perigee surface at (0,0,0)
+  auto pSurface = Surface::makeShared<PerigeeSurface>(Vector3{0., 0., 0.});
+
+  // Propagator with constant magnetic field
+  auto propagator = makePropagator(2. * Acts::UnitConstants::T);
+  auto pLogger = getDefaultLogger("Propagator", Logging::INFO);
+
+  // Start parameters are in the Pixel volume
+  ActsScalar radius = 30.;
+  ActsScalar phi = 0.24;
+  ActsScalar z = 10.;
+
+  std::vector<ActsScalar> momenta = {0.1, 0.25, 0.5, 1., 10., 100.};
+  std::vector<ActsScalar> charges = {-1., 1.};
+
+  Vector4 sPosition(radius * std::cos(phi), radius * std::sin(phi), z, 0.);
+  Vector3 mDirection(-std::sin(phi), std::cos(phi), 0.);
+
+  // Action list and abort list
+  using EndOfWorld = Acts::EndOfWorldReached;
+  using ActionList = Acts::ActionList<>;
+  using AbortList = Acts::AbortList<EndOfWorld>;
+  using PropagatorOptions = Acts::PropagatorOptions<ActionList, AbortList>;
+
+  for (auto q : charges) {
+    for (auto p : momenta) {
+      BoundTrackParameters::ParametersVector pVector;
+      pVector << 30., 10., 0.3, 0.45 * M_PI, q / p, 0.;
+      BoundTrackParameters startPerigee(pSurface, pVector, q);
+
+      PropagatorOptions pOptions(tgContext, mfContext, LoggerWrapper(*pLogger));
+
+      auto outsideResult = propagator.propagate(startPerigee, pOptions);
+      BOOST_CHECK(outsideResult.ok());
+
+      if (outsideResult.ok()) {
+        // And back
+        const auto& endOfWorld = outsideResult.value().endParameters;
+        pOptions.direction = NavigationDirection::Backward;
+        // Here's the backward result
+        auto backwardResult =
+            propagator.propagate(*endOfWorld, *pSurface, pOptions);
+        BOOST_CHECK(backwardResult.ok());
+        if (backwardResult.ok()) {
+          const auto& endPerigee = backwardResult.value().endParameters;
+          BOOST_CHECK(startPerigee.position(tgContext).isApprox(
+              endPerigee->position(tgContext), 1e-4));
+        }
+      }
     }
   }
 }

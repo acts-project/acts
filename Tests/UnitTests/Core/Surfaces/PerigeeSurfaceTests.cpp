@@ -95,6 +95,21 @@ BOOST_AUTO_TEST_CASE(EqualityOperators) {
   BOOST_CHECK(*assignedPerigeeSurface == *perigeeSurfaceObject);
 }
 
+BOOST_AUTO_TEST_CASE(PerigeeIntersectionEstimates) {
+  Vector3 nominal(0., 0., 0);
+  auto pSurface = Surface::makeShared<PerigeeSurface>(nominal);
+
+  // Test intersection from an outside position
+  Vector3 position(-294.8633, -72.1580, 10.0000);
+  Vector3 direction = Vector3(-0.2377, 0.9713, 0.0000).normalized();
+
+  auto pIntersection =
+      pSurface->intersect(GeometryContext(), position, direction);
+
+  BOOST_CHECK(pIntersection.intersection.status ==
+                  Intersection3D::Status::reachable);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 }  // namespace Test
