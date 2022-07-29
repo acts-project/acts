@@ -659,7 +659,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         }
         if (predicted) {
           std::string drawOptions = (smoothed or filtered) ? "same" : "";
-          res_flt[vlID + paramNames.at(ipar)]->DrawNormalized(
+          res_prt[vlID + paramNames.at(ipar)]->DrawNormalized(
               drawOptions.c_str());
           res_prt[vlID + paramNames.at(ipar)]->Write();
           legend->AddEntry(res_prt[vlID + paramNames.at(ipar)], "predicted",
