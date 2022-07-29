@@ -211,7 +211,7 @@ auto smoothAndCombineTrajectories(
     // and predicted and no smoothed state
     if (not proxy.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
       const auto [mean, cov] = combineGaussianMixture(
-          bwdTips.begin(), bwdTips.end(), FiltProjector{bwd, bwdWeights});
+          bwdTips, FiltProjector{bwd, bwdWeights});
 
       proxy.predicted() = mean;
       proxy.predictedCovariance() = cov.value();
@@ -224,13 +224,13 @@ auto smoothAndCombineTrajectories(
 
       // The predicted state is the forward pass
       const auto [fwdMeanPred, fwdCovPred] = combineGaussianMixture(
-          fwdTips.begin(), fwdTips.end(), PredProjector{fwd, fwdWeights});
+          fwdTips, PredProjector{fwd, fwdWeights});
       proxy.predicted() = fwdMeanPred;
       proxy.predictedCovariance() = fwdCovPred.value();
 
       // The filtered state is the backward pass
       const auto [bwdMeanFilt, bwdCovFilt] = combineGaussianMixture(
-          bwdTips.begin(), bwdTips.end(), FiltProjector{bwd, bwdWeights});
+          bwdTips, FiltProjector{bwd, bwdWeights});
       proxy.filtered() = bwdMeanFilt;
       proxy.filteredCovariance() = bwdCovFilt.value();
 
@@ -252,7 +252,7 @@ auto smoothAndCombineTrajectories(
 
       // The smoothed state is a combination
       const auto [smoothedMean, smoothedCov] =
-          combineGaussianMixture(smoothedState.begin(), smoothedState.end());
+          combineGaussianMixture(smoothedState);
       proxy.smoothed() = smoothedMean;
       proxy.smoothedCovariance() = smoothedCov.value();
       ACTS_VERBOSE("Added smoothed state to MultiTrajectory");

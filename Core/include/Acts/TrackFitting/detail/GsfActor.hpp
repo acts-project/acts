@@ -428,19 +428,25 @@ struct GsfActor {
 
     // We must differ between surface types, since there can be different
     // local coordinates
-    // TODO add other surface types
     switch (surface.type()) {
+      case Surface::Plane: {
+        detail::AngleDescription<Surface::Plane>::Desc desc;
+        detail::reduceWithKLDistance(cmps, final_cmp_number, proj, desc);
+      } break;
       case Surface::Cylinder: {
         // The cylinder coordinate is phi*R, so we need to pass R
-        detail::AngleDescription::Cylinder angle_desc;
-        std::get<0>(angle_desc).constant =
-            static_cast<const CylinderSurface&>(surface).bounds().get(
-                CylinderBounds::eR);
-
-        detail::reduceWithKLDistance(cmps, final_cmp_number, proj, angle_desc);
+        detail::AngleDescription<Surface::Cylinder>::Desc desc;
+        const auto& b = static_cast<const CylinderSurface&>(surface).bounds();
+        std::get<0>(desc).constant = b.get(CylinderBounds::eR);
+        detail::reduceWithKLDistance(cmps, final_cmp_number, proj, desc);
+      } break;
+      case Surface::Disc: {
+        detail::AngleDescription<Surface::Cylinder>::Desc desc;
+        detail::reduceWithKLDistance(cmps, final_cmp_number, proj, desc);
       } break;
       default: {
-        detail::reduceWithKLDistance(cmps, final_cmp_number, proj);
+        std::runtime_error("Surface not yet supported by GSF: " +
+                           surface.name());
       }
     }
   }

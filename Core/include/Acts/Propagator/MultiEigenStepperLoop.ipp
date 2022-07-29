@@ -48,7 +48,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     // there should be done a comparison sometimes in the future. This could
     // also be configurable maybe...
     const auto [params, cov] = detail::combineGaussianMixture(
-        states.begin(), states.end(), [&](const auto& wbs) {
+        states, [&](const auto& wbs) {
           return std::tie(wbs.first, wbs.second.parameters(),
                           wbs.second.covariance());
         });
