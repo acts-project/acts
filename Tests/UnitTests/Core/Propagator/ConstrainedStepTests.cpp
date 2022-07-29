@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
   // now we release the accuracy - to the highest available value
   stepSize_n.release(ConstrainedStep::accuracy);
   BOOST_CHECK_EQUAL(stepSize_n.value(ConstrainedStep::accuracy),
-                    std::numeric_limits<double>::max());
+                    -std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stepSize_n.value(), -0.05);
 }
 
