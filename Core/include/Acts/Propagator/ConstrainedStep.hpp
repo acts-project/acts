@@ -57,8 +57,10 @@ class ConstrainedStep {
   /// constructor from Scalar
   /// navigation direction is inverred by the sign of the step size
   /// @param value is the user given initial value
-  explicit ConstrainedStep(Scalar value)
-      : ConstrainedStep(value, Acts::directionFromStepSize(value)) {}
+  explicit ConstrainedStep(Scalar value) {
+    m_values[user] = std::abs(value);
+    m_direction = Acts::directionFromStepSize(value);
+  }
 
   /// constructor from Scalar and NavigationDirection
   /// @param value is the user given initial value
@@ -68,13 +70,17 @@ class ConstrainedStep {
     m_direction = direction;
   }
 
-  /// Assignment from one Scalar
-  /// @note this will set only the accuracy
+  /// set accuracy by one Scalar
+  ///
+  /// this will set only the accuracy, as this is the most
+  /// exposed to the Propagator, this adapts also the direction
   ///
   /// @param value is the new accuracy value
   void setValue(Scalar value) {
     /// set the accuracy value
-    m_values[accuracy] = value * m_direction;
+    m_values[accuracy] = std::abs(value);
+    /// set the direction
+    m_direction = Acts::directionFromStepSize(value);
   }
 
   /// returns the min step size
@@ -87,7 +93,9 @@ class ConstrainedStep {
 
   /// Access the currently leading type
   Type currentType() const {
-    return Type(std::min_element(m_values.begin(), m_values.end()) -
+    return Type(std::min_element(
+                    m_values.begin(), m_values.end(),
+                    [](auto a, auto b) { return std::abs(a) < std::abs(b); }) -
                 m_values.begin());
   }
 
