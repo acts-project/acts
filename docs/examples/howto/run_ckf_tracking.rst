@@ -1,5 +1,5 @@
 Run the CombinatorialKalmanFilter (CKF) tracking example
-===============================
+========================================================
 
 Prerequisites
 -------------
@@ -12,7 +12,7 @@ We assume that you have generated a simulation dataset based on the TrackML dete
 :ref:`simulate-TrackML`. A good example dataset would be e.g. a ttbar sample with pileup 200 in a 2T magnetic field. Suppose the generated ttbar sample is available at ``data/sim_trackML/ttbar_mu200``.
 
 Run the CKF tracking
-----------------------
+--------------------
 
 Run the CKF tracking tool that reads the simulation output (truth hits and truth particles), creates smeared
 measurements from the true hits, creates seeds (i.e. starting track parameters) from the pre-selected truth particles, 
@@ -43,7 +43,7 @@ In default, the starting track parameters estimated from reconstructed seeds by 
 The magnetic field setup should be consistent between simulation and CKF tracking.
 
 Look at the CKF tracking performance
-----------------------
+------------------------------------
 
 The CKF tracking will generate a root file named ``performance_ckf.root`` (the name is currently not configurable via the command line) in the ``data/reco_trackML/ttbar_mu200``.
 This file includes a few efficiency plots showing the CKF efficiency, fake rate, duplication rate and other plots showing detailed reconstruction info etc.
