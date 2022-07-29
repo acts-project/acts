@@ -39,7 +39,7 @@ using namespace ROOT;
 /// @param inFile the input root file
 /// @param treeNAme the input tree name (default: 'trackstates)
 /// @param outFile the output root file
-/// @param pTypes the track parameter types (prd, flt, smt)
+/// @param pTypes the track parameter types (prt, flt, smt)
 /// @param saveAs the plot saving type
 int boundParamResolution(const std::string& inFile, const std::string& treeName,
                          const std::string& outFile, bool predicted = true,
