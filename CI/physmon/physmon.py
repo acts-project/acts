@@ -38,6 +38,8 @@ from acts.examples.reconstruction import (
     TrackParamsEstimationConfig,
     addCKFTracks,
     CKFPerformanceConfig,
+    addVertexFitting,
+    VertexFinder,
 )
 
 
@@ -173,6 +175,26 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
             outputDirRoot=tp,
             outputDirCsv=None,
+        )
+
+        s.addAlgorithm(
+            acts.examples.TrackSelector(
+                level=acts.logging.INFO,
+                inputTrackParameters="fittedTrackParameters",
+                outputTrackParameters="trackparameters",
+                outputTrackIndices="outputTrackIndices",
+                removeNeutral=True,
+                absEtaMax=2.5,
+                loc0Max=4.0 * u.mm,  # rho max
+                ptMin=500 * u.MeV,
+            )
+        )
+
+        s = addVertexFitting(
+            s,
+            field,
+            vertexFinder=VertexFinder.AMVF,
+            outputDirRoot=tp,
         )
 
         s.run()
