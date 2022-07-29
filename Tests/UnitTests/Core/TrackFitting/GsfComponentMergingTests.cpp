@@ -209,8 +209,7 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
       }
 
       const auto [mean_test, boundCov_test] =
-          detail::combineBoundGaussianMixture(cmps.begin(), cmps.end(), proj,
-                                              desc);
+          detail::combineGaussianMixture(cmps.begin(), cmps.end(), proj, desc);
 
       // We don't have a boundCovariance in this test
       BOOST_CHECK(not boundCov_test);
@@ -240,7 +239,7 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto mean_data = mean(samples);
   const auto boundCov_data = boundCov(samples, mean_data);
 
-  const auto [mean_test, boundCov_test] = detail::combineBoundGaussianMixture(
+  const auto [mean_test, boundCov_test] = detail::combineGaussianMixture(
       cmps.begin(), cmps.end(), Identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
@@ -272,8 +271,8 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
 
   using detail::AngleDescription::CyclicAngle;
   const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
-  const auto [mean_test, boundCov_test] = detail::combineBoundGaussianMixture(
-      cmps.begin(), cmps.end(), Identity{}, d);
+  const auto [mean_test, boundCov_test] =
+      detail::combineGaussianMixture(cmps.begin(), cmps.end(), Identity{}, d);
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);

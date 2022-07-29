@@ -52,7 +52,7 @@ auto mergeComponents(const component_t &a, const component_t &b,
   throw_assert(proj(a).weight > 0.0 && proj(b).weight > 0.0, "weight error");
 
   std::array range = {std::ref(proj(a)), std::ref(proj(b))};
-  auto [mergedPars, mergedCov] = combineBoundGaussianMixture(
+  auto [mergedPars, mergedCov] = combineGaussianMixture(
       range.begin(), range.end(),
       [](auto &c) {
         return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);

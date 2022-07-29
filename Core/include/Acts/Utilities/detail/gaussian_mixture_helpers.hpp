@@ -61,17 +61,17 @@ using Disk = std::tuple<CyclicAngle<eBoundLoc1>, CyclicAngle<eBoundPhi>>;
 /// angles in the bound parameters
 template <typename component_iterator_t, typename projector_t = Identity,
           typename angle_desc_t = AngleDescription::Default>
-auto combineBoundGaussianMixture(
-    const component_iterator_t begin, const component_iterator_t end,
-    projector_t &&projector = projector_t{},
-    const angle_desc_t &angleDesc = angle_desc_t{}) {
+auto combineGaussianMixture(const component_iterator_t begin,
+                            const component_iterator_t end,
+                            projector_t &&projector = projector_t{},
+                            const angle_desc_t &angleDesc = angle_desc_t{}) {
   // Extract the first component
-  const auto &[begin_weight, begin_pars, begin_cov] = projector(*begin);
+  const auto &[beginWeight, beginPars, beginCov] = projector(*begin);
 
   // Assert type properties
-  using ParsType = std::decay_t<decltype(begin_pars)>;
-  using CovType = std::decay_t<decltype(*begin_cov)>;
-  using WeightType = std::decay_t<decltype(begin_weight)>;
+  using ParsType = std::decay_t<decltype(beginPars)>;
+  using CovType = std::decay_t<decltype(*beginCov)>;
+  using WeightType = std::decay_t<decltype(beginWeight)>;
 
   constexpr int D = ParsType::RowsAtCompileTime;
   EIGEN_STATIC_ASSERT_VECTOR_ONLY(ParsType);
@@ -87,7 +87,7 @@ auto combineBoundGaussianMixture(
 
   // Early return in case of range with length 1
   if (std::distance(begin, end) == 1) {
-    return RetType{begin_pars, *begin_cov};
+    return RetType{beginPars / beginWeight, *beginCov / beginWeight};
   }
 
   // Zero initialized values for aggregation
@@ -99,7 +99,7 @@ auto combineBoundGaussianMixture(
 
   // clang-format off
   // x = \sum_{l} w_l * x_l
-  // C = \sum_{l} w_l * w_l * C_l + \sum_{l} \sum_{m>l} w_l * w_m * (x_l - x_m)(x_l - x_m)^T
+  // C = \sum_{l} w_l * C_l + \sum_{l} \sum_{m>l} w_l * w_m * (x_l - x_m)(x_l - x_m)^T
   // clang-format on
   for (auto l = begin; l != end; ++l) {
     const auto &[weight_l, pars_l, cov_l] = projector(*l);
@@ -108,7 +108,7 @@ auto combineBoundGaussianMixture(
     mean += weight_l * pars_l;
 
     // Apply corrections for cyclic coordinates
-    auto handleCyclicMean = [&ref = begin_pars, &pars = pars_l,
+    auto handleCyclicMean = [&ref = beginPars, &pars = pars_l,
                              &weight = weight_l, &mean = mean](auto desc) {
       const auto delta = (ref[desc.idx] - pars[desc.idx]) / desc.constant;
 
