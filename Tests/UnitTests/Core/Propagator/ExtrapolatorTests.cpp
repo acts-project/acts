@@ -269,13 +269,7 @@ BOOST_DATA_TEST_CASE(
   options.maxStepSize = 25_cm;
   options.pathLimit = 1500_mm;
 
-  const auto& status = epropagator.propagate(start, options).value();
-  // this test assumes state.options.loopFraction = 0.5
-  // maximum momentum allowed
-  auto bCache = bField->makeCache(mfContext);
-  double pmax =
-      options.pathLimit *
-      bField->getField(start.position(tgContext), bCache).value().norm() / M_PI;
+  epropagator.propagate(start, options).value();
 }
 
 }  // namespace Test
