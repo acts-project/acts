@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Common.hpp"
 
 #include <algorithm>
 #include <array>
@@ -20,6 +21,22 @@
 namespace Acts {
 
 /// A constrained step class for the steppers
+///
+/// As simple as this class looks it hides a few very important details:
+/// - Overstepping handling. The step size sign will flip if we happened to pass
+/// our target.
+/// - Convergence handling. Smaller and smaller step sizes have to be used in
+/// order to converge on a target.
+///
+/// Because of the points mentioned above, the update function will always
+/// prefer step sizes that point opposite the nagivation direction. A side
+/// effect of this is that we will propagate in the opposite direction if the
+/// target is "behind us".
+///
+/// The hierarchy is:
+/// - Overstepping resolution / backpropagation
+/// - Convergence
+/// - Step into the void with `std::numeric_limits<Scalar>::max()`
 class ConstrainedStep {
  public:
   using Scalar = ActsScalar;
@@ -38,33 +55,42 @@ class ConstrainedStep {
   ConstrainedStep() = default;
 
   /// constructor from Scalar
+  /// navigation direction is inverred by the sign of the step size
   /// @param value is the user given initial value
-  explicit ConstrainedStep(Scalar value) { m_values[user] = value; }
+  explicit ConstrainedStep(Scalar value)
+      : ConstrainedStep(value, Acts::directionFromStepSize(value)) {}
+
+  /// constructor from Scalar and NavigationDirection
+  /// @param value is the user given initial value
+  /// @param direction is the final navigation direction
+  ConstrainedStep(Scalar value, NavigationDirection direction) {
+    m_values[user] = value * direction;
+    m_direction = direction;
+  }
 
   /// Assignment from one Scalar
-  /// @note this will set only the accuracy, as this is the most
-  /// exposed to the Propagator
+  /// @note this will set only the accuracy
   ///
   /// @param value is the new accuracy value
   void setValue(Scalar value) {
     /// set the accuracy value
-    m_values[accuracy] = value;
+    m_values[accuracy] = value * m_direction;
   }
 
   /// returns the min step size
   Scalar value() const { return value(currentType()); }
 
-  /// Access to a specific value
+  /// Access a specific value
   ///
   /// @param type is the resquested parameter type
-  Scalar value(Type type) const { return m_values[type]; }
+  Scalar value(Type type) const { return m_values[type] * m_direction; }
 
-  /// Access to currently leading min type
-  ///
+  /// Access the currently leading type
   Type currentType() const {
-    return Type(std::min_element(
-                    m_values.begin(), m_values.end(),
-                    [](auto a, auto b) { return std::abs(a) < std::abs(b); }) -
+    return Type(std::min_element(m_values.begin(), m_values.end(),
+                                 [this](auto a, auto b) {
+                                   return (a * m_direction) < (b * m_direction);
+                                 }) -
                 m_values.begin());
   }
 
@@ -88,7 +114,7 @@ class ConstrainedStep {
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
     if (std::abs(m_values[type]) > std::abs(value)) {
-      m_values[type] = value;
+      m_values[type] = value * m_direction;
     }
   }
 
@@ -97,30 +123,34 @@ class ConstrainedStep {
     m_values[accuracy] = value() * factor;
   }
 
-  /// return the split value as string for debugging
-  std::string toString() const {
-    std::stringstream dstream;
-
+  std::ostream& toStream(std::ostream& os) const {
     // Helper method to avoid unreadable screen output
     auto streamValue = [&](Type type) {
       Scalar val = value(type);
-      dstream << std::setw(5);
+      os << std::setw(5);
       if (std::abs(val) == not_set) {
-        dstream << (val > 0 ? "+∞" : "-∞");
+        os << (val > 0 ? "+∞" : "-∞");
       } else {
-        dstream << val;
+        os << val;
       }
     };
 
-    dstream << "(";
+    os << "(";
     streamValue(accuracy);
-    dstream << ", ";
+    os << ", ";
     streamValue(actor);
-    dstream << ", ";
+    os << ", ";
     streamValue(aborter);
-    dstream << ", ";
+    os << ", ";
     streamValue(user);
-    dstream << ")";
+    os << ")";
+
+    return os;
+  }
+
+  std::string toString() const {
+    std::stringstream dstream;
+    toStream(dstream);
     return dstream.str();
   }
 
@@ -128,7 +158,15 @@ class ConstrainedStep {
   inline static constexpr auto not_set = std::numeric_limits<Scalar>::max();
 
   /// the step size tuple
+  /// all values point in the `m_direction`
   std::array<Scalar, 4> m_values = {not_set, not_set, not_set, not_set};
+  /// the navigation direction
+  /// the direction is invariant after initialization
+  NavigationDirection m_direction = NavigationDirection::Forward;
 };
+
+inline std::ostream& operator<<(std::ostream& os, const ConstrainedStep& step) {
+  return step.toStream(os);
+}
 
 }  // namespace Acts
