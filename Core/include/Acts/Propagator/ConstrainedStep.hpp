@@ -110,7 +110,7 @@ class ConstrainedStep {
     }
     // check the current value and set it if appropriate
     // this will also allow signed values due to overstepping
-    if (std::abs(m_values[type]) > std::abs(value)) {
+    if (std::abs(value) <= std::abs(m_values[type])) {
       m_values[type] = value * m_direction;
     }
   }
