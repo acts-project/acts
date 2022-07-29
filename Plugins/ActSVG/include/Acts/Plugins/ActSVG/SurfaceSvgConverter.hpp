@@ -12,17 +12,15 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "actsvg/core.hpp"
-#include "actsvg/display/geometry.hpp"
+#include "actsvg/meta.hpp"
 
 namespace Acts {
-
-using Point3Container = std::vector<Vector3>;
 
 class Surface;
 
 namespace Svg {
 
-using ProtoSurface = actsvg::proto::surface<Point3Container>;
+using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 
 /// Convert into a svg::proto surface
 ///
@@ -33,8 +31,7 @@ using ProtoSurface = actsvg::proto::surface<Point3Container>;
 ///
 /// @return a proto surface object
 ProtoSurface convert(const GeometryContext& gctx, const Surface& surface,
-                     const Style& surfaceStyle,
-                     bool templateSurface = false);
+                     const Style& surfaceStyle, bool templateSurface = false);
 
 /// Convert into an acts::svg::object with an XY view
 ///
@@ -42,8 +39,8 @@ ProtoSurface convert(const GeometryContext& gctx, const Surface& surface,
 /// @param identification is the to be translated id_ for actsvg
 ///
 /// @return an svg object that can be written out directly to disc
-static inline actsvg::svg::object surfaceViewXY(const ProtoSurface& pSurface,
-                                         const std::string& identification) {
+static inline actsvg::svg::object surfaceViewXY(
+    const ProtoSurface& pSurface, const std::string& identification) {
   actsvg::views::x_y xyView;
   return actsvg::display::surface(identification, pSurface, xyView, true);
 }
@@ -54,8 +51,8 @@ static inline actsvg::svg::object surfaceViewXY(const ProtoSurface& pSurface,
 /// @param identification is the to be translated id_ for actsvg
 ///
 /// @return an svg object that can be written out directly to disc
-static inline actsvg::svg::object surfaceSheetXY(const ProtoSurface& pSurface,
-                                         const std::string& identification) {
+static inline actsvg::svg::object surfaceSheetXY(
+    const ProtoSurface& pSurface, const std::string& identification) {
   return actsvg::display::surface_sheet_xy(identification, pSurface);
 }
 

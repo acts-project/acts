@@ -41,9 +41,16 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
   // Positioned
   auto svgObject = Acts::Svg::convert(geoCtx, surface, style, false);
   auto xyObject = Acts::Svg::surfaceViewXY(svgObject, identification);
-  Acts::Svg::toFile({xyObject}, xyObject._id + ".svg");
+  auto xyAxes =
+      Acts::Svg::axesXY(static_cast<Acts::ActsScalar>(xyObject._x_range[0]),
+                        static_cast<Acts::ActsScalar>(xyObject._x_range[1]),
+                        static_cast<Acts::ActsScalar>(xyObject._y_range[0]),
+                        static_cast<Acts::ActsScalar>(xyObject._y_range[1]));
+
+  Acts::Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
   // As sheet
-  auto svgSheet = Acts::Svg::surfaceSheetXY(svgTemplate, identification + "_sheet");
+  auto svgSheet =
+      Acts::Svg::surfaceSheetXY(svgTemplate, identification + "_sheet");
   Acts::Svg::toFile({svgSheet}, svgSheet._id + ".svg");
 };
 
@@ -73,6 +80,25 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   auto trapeozidPlane =
       Acts::Surface::makeShared<Acts::PlaneSurface>(transform, trapezoidBounds);
   runPlanarTests(*trapeozidPlane, planarStyle, "trapezoid");
+
+  // Trapezoid case shifted and rotated
+  Acts::ActsScalar phi = 0.125*M_PI;
+  Acts::ActsScalar radius = 150.;
+  Acts::Vector3 center(radius * std::cos(phi), radius * std::sin(phi), 0.);
+
+  Acts::Vector3 localY(std::cos(phi), std::sin(phi), 0.);
+  Acts::Vector3 localZ(0., 0., 1.);
+  Acts::Vector3 localX = localY.cross(localZ);
+  Acts::RotationMatrix3 rotation;
+  rotation.col(0) = localX;
+  rotation.col(1) = localY;
+  rotation.col(2) = localZ;
+  transform = Acts::Transform3(Acts::Translation3(center) * rotation);
+  // Create the module surface
+  auto trapeozidPlaneTransformed =
+      Acts::Surface::makeShared<Acts::PlaneSurface>(transform, trapezoidBounds);
+
+  runPlanarTests(*trapeozidPlaneTransformed, planarStyle, "trapezoid_rotated");
 
   // Diamond
 

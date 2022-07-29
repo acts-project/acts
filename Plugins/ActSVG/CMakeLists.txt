@@ -1,6 +1,7 @@
 add_library(
   ActsPluginActSVG SHARED
   src/LayerSvgConverter.cpp
+  src/SurfaceArraySvgConverter.cpp
   src/SurfaceSvgConverter.cpp)
 target_include_directories(
   ActsPluginActSVG

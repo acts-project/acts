@@ -9,13 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Common.hpp"
+#include "actsvg/meta.hpp"
 
 #include <array>
+#include <fstream>
 #include <string>
 #include <vector>
-#include <fstream>
-
-#include "actsvg/meta.hpp"
 
 namespace Acts {
 
@@ -36,27 +35,40 @@ struct Style {
   unsigned int nSegments = 72u;
 };
 
+// Helper method to draw axes
+///
+/// @param xMin the minimum x value
+/// @param xMax the maximum x value
+/// @param yMin the minimum y value
+/// @param yMax the maximum y value
+///
+/// @retrun an svg object
+inline static actsvg::svg::object axesXY(ActsScalar xMin, ActsScalar xMax,
+                                         ActsScalar yMin, ActsScalar yMax) {
+  return actsvg::draw::x_y_axes(
+      "x_y_axis",
+      {static_cast<actsvg::scalar>(xMin), static_cast<actsvg::scalar>(xMax)},
+      {static_cast<actsvg::scalar>(yMin), static_cast<actsvg::scalar>(yMax)});
+}
 
 /// Helper method to write to file
 ///
 /// @param objects to be written out
 /// @param fileName the file name is to be given
 ///
-inline static void toFile(const std::vector<actsvg::svg::object>& objects, const std::string& fileName) {
+inline static void toFile(const std::vector<actsvg::svg::object>& objects,
+                          const std::string& fileName) {
+  actsvg::svg::file foutFile;
 
-    actsvg::svg::file foutFile;
-    
-    for (const auto& o : objects){
-        foutFile.add_object(o);
-    }
+  for (const auto& o : objects) {
+    foutFile.add_object(o);
+  }
 
-    std::ofstream fout;
-    fout.open(fileName);
-    fout << foutFile;
-    fout.close();
-
+  std::ofstream fout;
+  fout.open(fileName);
+  fout << foutFile;
+  fout.close();
 }
-
 
 }  // namespace Svg
 
