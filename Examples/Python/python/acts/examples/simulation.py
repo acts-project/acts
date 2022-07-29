@@ -394,13 +394,19 @@ def addFatras(
     s.addAlgorithm(alg)
 
     # Output
-    addSimWriters(s, outputDirCsv, outputDirRoot)
+    addSimWriters(
+        s,
+        alg.config.outputSimHits,
+        outputDirCsv,
+        outputDirRoot
+    )
 
     return s
 
 
 def addSimWriters(
     s: acts.examples.Sequencer,
+    inputSimHits: str = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
 ) -> acts.examples.Sequencer:
@@ -452,7 +458,7 @@ def addSimWriters(
         s.addWriter(
             acts.examples.CsvSimHitWriter(
                 level=s.config.logLevel,
-                inputSimHits=alg.config.outputSimHits,
+                inputSimHits=inputSimHits,
                 outputDir=str(outputDirCsv),
                 outputStem="hits",
             )
@@ -462,7 +468,7 @@ def addSimWriters(
         s.addWriter(
             acts.examples.RootSimHitWriter(
                 level=s.config.logLevel,
-                inputSimHits=alg.config.outputSimHits,
+                inputSimHits=inputSimHits,
                 filePath=str(outputDirRoot / "hits.root"),
             )
         )
@@ -538,7 +544,12 @@ def addGeant4(
     s.addAlgorithm(alg)
 
     # Output
-    addSimWriters(s, outputDirCsv, outputDirRoot)
+    addSimWriters(
+        s,
+        g4conf.outputSimHits,
+        outputDirCsv,
+        outputDirRoot
+    )
 
     return s
 
