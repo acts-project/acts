@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -659,7 +659,8 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         }
         if (predicted) {
           std::string drawOptions = (smoothed or filtered) ? "same" : "";
-          res_prt[vlID + paramNames.at(ipar)]->DrawNormalized("same");
+          res_flt[vlID + paramNames.at(ipar)]->DrawNormalized(
+              drawOptions.c_str());
           res_prt[vlID + paramNames.at(ipar)]->Write();
           legend->AddEntry(res_prt[vlID + paramNames.at(ipar)], "predicted",
                            "l");
