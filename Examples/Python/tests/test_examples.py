@@ -135,17 +135,20 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
         assert_root_hash(f, rfp)
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_geant4(tmp_path, field, assert_root_hash):
-    from geant4 import runGeant4
-
-    detector, trackingGeometry, decorators = getOpenDataDetector(
+    # This test literally only ensures that the full chain example can run without erroring out
+    getOpenDataDetector(
         getOpenDataDetectorDirectory()
-    )
+    )  # just to make sure it can build
 
     csv = tmp_path / "csv"
     csv.mkdir()
 
-    nevents = 10
+    # this is hardcoded in geant4.py
+    nevents = 100
 
     root_files = [
         (
@@ -161,7 +164,7 @@ def test_geant4(tmp_path, field, assert_root_hash):
         (
             "hits.root",
             "hits",
-            115,
+            1699,
         ),
     ]
 
@@ -169,12 +172,22 @@ def test_geant4(tmp_path, field, assert_root_hash):
     for rf, _, _ in root_files:
         assert not (tmp_path / rf).exists()
 
-    seq = Sequencer(events=nevents)
-    runGeant4(
-        detector.geometryService, trackingGeometry, field, str(tmp_path), s=seq
-    ).run()
-
-    del seq
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "geant4.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    subprocess.check_call(
+        [str(script)],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
 
     assert_csv_output(csv, "particles_final")
     assert_csv_output(csv, "particles_initial")
