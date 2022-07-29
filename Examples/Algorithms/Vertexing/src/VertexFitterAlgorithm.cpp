@@ -127,13 +127,13 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       }
     }
 
-    if (fittedVertices.size() > 0) {
+    if (fittedVertices.empty()) {
+      ACTS_DEBUG("No fitted vertex");
+    } else {
       ACTS_DEBUG("Fitted Vertex "
                  << fittedVertices.back().fullPosition().transpose());
       ACTS_DEBUG(
           "Tracks at fitted Vertex: " << fittedVertices.back().tracks().size());
-    } else {
-      ACTS_DEBUG("No fitted vertex");
     }
   }
 
