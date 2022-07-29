@@ -230,7 +230,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
 
   // use the adjusted step size
-  double h = state.stepping.stepSize.value();
+  const double h = state.stepping.stepSize.value();
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
@@ -273,7 +273,6 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
 
   state.stepping.stepSize.nStepTrials = nStepTrials;
 
-  h = state.stepping.stepSize.value();
   return h;
 }
 
