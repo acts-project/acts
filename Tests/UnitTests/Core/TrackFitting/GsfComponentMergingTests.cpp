@@ -24,14 +24,13 @@
 
 using namespace Acts;
 using namespace Acts::UnitLiterals;
-using namespace Acts::UnitConstants;
 
 // Describes a component of a D-dimensional gaussian component
 template <int D>
 struct DummyComponent {
   Acts::ActsScalar weight;
-  Acts::ActsVector<D> pars;
-  std::optional<Acts::ActsSymMatrix<D>> cov;
+  Acts::ActsVector<D> boundPars;
+  std::optional<Acts::ActsSymMatrix<D>> boundCov;
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -47,9 +46,9 @@ class MultivariateNormalDistribution {
   Matrix m_transform;
 
  public:
-  MultivariateNormalDistribution(Vector const &mean, Matrix const &cov)
+  MultivariateNormalDistribution(Vector const &mean, Matrix const &boundCov)
       : m_mean(mean) {
-    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigenSolver(cov);
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXd> eigenSolver(boundCov);
     m_transform = eigenSolver.eigenvectors() *
                   eigenSolver.eigenvalues().cwiseSqrt().asDiagonal();
   }
@@ -71,7 +70,7 @@ auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
   std::vector<MultiNormal> dists;
   std::vector<double> weights;
   for (const auto &cmp : cmps) {
-    dists.push_back(MultiNormal(cmp.pars, *cmp.cov));
+    dists.push_back(MultiNormal(cmp.boundPars, *cmp.boundCov));
     weights.push_back(cmp.weight);
   }
 
@@ -123,18 +122,19 @@ auto circularMean(const std::vector<ActsVector<D>> &samples) -> ActsVector<D> {
   return mean;
 }
 
-// This general covariance estimator can be equiped with a custom subtraction
-// object to enable circular behaviour
+// This general boundCovariance estimator can be equiped with a custom
+// subtraction object to enable circular behaviour
 template <int D, typename subtract_t = std::minus<ActsVector<D>>>
-auto cov(const std::vector<ActsVector<D>> &samples, const ActsVector<D> &mu,
-         const subtract_t &sub = subtract_t{}) -> ActsSymMatrix<D> {
-  ActsSymMatrix<D> cov = ActsSymMatrix<D>::Zero();
+auto boundCov(const std::vector<ActsVector<D>> &samples,
+              const ActsVector<D> &mu, const subtract_t &sub = subtract_t{})
+    -> ActsSymMatrix<D> {
+  ActsSymMatrix<D> boundCov = ActsSymMatrix<D>::Zero();
 
   for (const auto &smpl : samples) {
-    cov += sub(smpl, mu) * sub(smpl, mu).transpose();
+    boundCov += sub(smpl, mu) * sub(smpl, mu).transpose();
   }
 
-  return cov / samples.size();
+  return boundCov / samples.size();
 }
 
 // This function computes the mean of a bound gaussian mixture by converting
@@ -149,12 +149,12 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
     const auto r = surface.bounds().values()[CylinderBounds::eR];
 
     for (const auto &cmp : cmps) {
-      x += cmp.weight * std::cos(cmp.pars[eBoundLoc0] / r);
-      y += cmp.weight * std::sin(cmp.pars[eBoundLoc0] / r);
+      x += cmp.weight * std::cos(cmp.boundPars[eBoundLoc0] / r);
+      y += cmp.weight * std::sin(cmp.boundPars[eBoundLoc0] / r);
     }
 
     for (auto &cmp : cmps) {
-      cmp.pars[eBoundLoc0] = std::atan2(y, x) * r;
+      cmp.boundPars[eBoundLoc0] = std::atan2(y, x) * r;
     }
   }
 
@@ -166,7 +166,7 @@ BoundVector meanFromFree(std::vector<DummyComponent<eBoundSize>> cmps,
 
   for (const auto &cmp : cmps) {
     mean += cmp.weight * detail::transformBoundToFreeParameters(
-                             surface, GeometryContext{}, cmp.pars);
+                             surface, GeometryContext{}, cmp.boundPars);
   }
 
   mean.segment<3>(eFreeDir0).normalize();
@@ -196,23 +196,24 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
         for (auto dtheta : {-5_degree, 5_degree}) {
           DummyComponent<eBoundSize> a;
           a.weight = 1. / 4.;
-          a.pars = BoundVector::Ones();
-          a.pars[eBoundLoc0] *= p_it->first;
-          a.pars[eBoundLoc1] *= p_it->second;
-          a.pars[eBoundPhi] =
+          a.boundPars = BoundVector::Ones();
+          a.boundPars[eBoundLoc0] *= p_it->first;
+          a.boundPars[eBoundLoc1] *= p_it->second;
+          a.boundPars[eBoundPhi] =
               detail::wrap_periodic(phi + dphi, -M_PI, 2 * M_PI);
-          a.pars[eBoundTheta] = theta + dtheta;
+          a.boundPars[eBoundTheta] = theta + dtheta;
 
           cmps.push_back(a);
           ++p_it;
         }
       }
 
-      const auto [mean_test, cov_test] = detail::combineBoundGaussianMixture(
-          cmps.begin(), cmps.end(), proj, desc);
+      const auto [mean_test, boundCov_test] =
+          detail::combineBoundGaussianMixture(cmps.begin(), cmps.end(), proj,
+                                              desc);
 
-      // We don't have a covariance in this test
-      BOOST_CHECK(not cov_test);
+      // We don't have a boundCovariance in this test
+      BOOST_CHECK(not boundCov_test);
 
       const auto mean_ref = meanFromFree(cmps, surface);
 
@@ -225,44 +226,44 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   std::mt19937 gen(42);
   std::vector<DummyComponent<2>> cmps(2);
 
-  cmps[0].pars << 1.0, 1.0;
-  cmps[0].cov = decltype(cmps[0].cov)::value_type{};
-  *cmps[0].cov << 1.0, 0.0, 0.0, 1.0;
+  cmps[0].boundPars << 1.0, 1.0;
+  cmps[0].boundCov = decltype(cmps[0].boundCov)::value_type{};
+  *cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
   cmps[0].weight = 0.5;
 
-  cmps[1].pars << -2.0, -2.0;
-  cmps[1].cov = decltype(cmps[1].cov)::value_type{};
-  *cmps[1].cov << 1.0, 1.0, 1.0, 2.0;
+  cmps[1].boundPars << -2.0, -2.0;
+  cmps[1].boundCov = decltype(cmps[1].boundCov)::value_type{};
+  *cmps[1].boundCov << 1.0, 1.0, 1.0, 2.0;
   cmps[1].weight = 0.5;
 
   const auto samples = sampleFromMultivariate(cmps, 10000, gen);
   const auto mean_data = mean(samples);
-  const auto cov_data = cov(samples, mean_data);
+  const auto boundCov_data = boundCov(samples, mean_data);
 
-  const auto [mean_test, cov_test] = detail::combineBoundGaussianMixture(
+  const auto [mean_test, boundCov_test] = detail::combineBoundGaussianMixture(
       cmps.begin(), cmps.end(), Identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
-  CHECK_CLOSE_MATRIX(cov_data, *cov_test, 1.e-1);
+  CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   std::mt19937 gen(42);
   std::vector<DummyComponent<2>> cmps(2);
 
-  cmps[0].pars << 175_degree, 5_degree;
-  cmps[0].cov = decltype(cmps[0].cov)::value_type{};
-  *cmps[0].cov << 20_degree, 0.0, 0.0, 20_degree;
+  cmps[0].boundPars << 175_degree, 5_degree;
+  cmps[0].boundCov = decltype(cmps[0].boundCov)::value_type{};
+  *cmps[0].boundCov << 20_degree, 0.0, 0.0, 20_degree;
   cmps[0].weight = 0.5;
 
-  cmps[1].pars << -175_degree, -5_degree;
-  cmps[1].cov = decltype(cmps[1].cov)::value_type{};
-  *cmps[1].cov << 20_degree, 20_degree, 20_degree, 40_degree;
+  cmps[1].boundPars << -175_degree, -5_degree;
+  cmps[1].boundCov = decltype(cmps[1].boundCov)::value_type{};
+  *cmps[1].boundCov << 20_degree, 20_degree, 20_degree, 40_degree;
   cmps[1].weight = 0.5;
 
   const auto samples = sampleFromMultivariate(cmps, 10000, gen);
   const auto mean_data = circularMean(samples);
-  const auto cov_data = cov(samples, mean_data, [](auto a, auto b) {
+  const auto boundCov_data = boundCov(samples, mean_data, [](auto a, auto b) {
     Vector2 res = Vector2::Zero();
     for (int i = 0; i < 2; ++i)
       res[i] = detail::difference_periodic(a[i], b[i], 2 * M_PI);
@@ -271,11 +272,11 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
 
   using detail::AngleDescription::CyclicAngle;
   const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
-  const auto [mean_test, cov_test] = detail::combineBoundGaussianMixture(
+  const auto [mean_test, boundCov_test] = detail::combineBoundGaussianMixture(
       cmps.begin(), cmps.end(), Identity{}, d);
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
-  CHECK_CLOSE_MATRIX(cov_data, *cov_test, 1.e-1);
+  CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_plane_surface) {
@@ -324,50 +325,70 @@ BOOST_AUTO_TEST_CASE(test_disc_surface) {
   test_surface(*surface, desc, p, 0.01);
 }
 
-/*
 BOOST_AUTO_TEST_CASE(test_kl_mixture_reduction) {
-  const std::size_t NCompsBefore = 10;
-  const std::size_t NCompsAfter = 5;
+  auto meanAndSumOfWeights = [](const auto &cmps) {
+    const auto mean = std::accumulate(
+        cmps.begin(), cmps.end(), Acts::BoundVector::Zero().eval(),
+        [](auto sum, const auto &cmp) -> Acts::BoundVector {
+          return sum + cmp.weight * cmp.boundPars;
+        });
 
-  // Create start state
+    const double sumOfWeights = std::accumulate(
+        cmps.begin(), cmps.end(), 0.0,
+        [](auto sum, const auto &cmp) { return sum + cmp.weight; });
+
+    return std::make_tuple(mean, sumOfWeights);
+  };
+
+  // Do not bother with circular angles in this test
+  const auto desc = std::tuple<>{};
+
+  // Need this projection, since we need to write to the lvalue references which
+  // isn't possible through Identity / std::identity due to perfect forwarding
+  const auto proj = [](auto &a) -> decltype(auto) { return a; };
+
+  const std::size_t NComps = 4;
   std::vector<DummyComponent<eBoundSize>> cmps;
 
-  for (auto i = 0ul; i < NCompsBefore; ++i) {
-    DummyComponent a;
-    a.pars = Acts::BoundVector::Random();
-    a.cov = Acts::BoundSymMatrix::Random().cwiseAbs();
-    *a.cov *= a.cov->transpose();
-    a.weight = 1.0 / NCompsBefore;
+  for (auto i = 0ul; i < NComps; ++i) {
+    DummyComponent<eBoundSize> a;
+    a.boundPars = Acts::BoundVector::Zero();
+    a.boundCov = Acts::BoundSymMatrix::Identity();
+    a.weight = 1.0 / NComps;
     cmps.push_back(a);
   }
 
-  // Determine mean
-  const auto meanBefore = std::accumulate(
-      cmps.begin(), cmps.end(), Acts::BoundVector::Zero().eval(),
-      [](auto sum, const auto &cmp) -> Acts::BoundVector {
-        return sum + cmp.weight * cmp.pars;
-      });
+  cmps[0].boundPars[eBoundQOverP] = 0.5_GeV;
+  cmps[1].boundPars[eBoundQOverP] = 1.5_GeV;
+  cmps[2].boundPars[eBoundQOverP] = 3.5_GeV;
+  cmps[3].boundPars[eBoundQOverP] = 4.5_GeV;
 
-  const double weightSumBefore = std::accumulate(
-      cmps.begin(), cmps.end(), 0.0,
-      [](auto sum, const auto &cmp) { return sum + cmp.weight; });
+  // Check start properties
+  const auto [mean0, sumOfWeights0] = meanAndSumOfWeights(cmps);
 
-  BOOST_CHECK_CLOSE(weightSumBefore, 1.0, 0.0001);
+  BOOST_CHECK_CLOSE(mean0[eBoundQOverP], 2.5_GeV, 1.e-8);
+  BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
 
-  Acts::detail::reduceWithKLDistance(cmps, NCompsAfter, Identity{});
+  // Reduce by factor of 2 and check if weights and QoP are correct
+  Acts::detail::reduceWithKLDistance(cmps, 2, proj, desc);
 
-  const auto meanAfter = std::accumulate(
-      cmps.begin(), cmps.end(), Acts::BoundVector::Zero().eval(),
-      [](auto sum, const auto &cmp) -> Acts::BoundVector {
-        return sum + cmp.weight * cmp.pars;
-      });
+  BOOST_CHECK(cmps.size() == 2);
 
-  const double weightSumAfter = std::accumulate(
-      cmps.begin(), cmps.end(), 0.0,
-      [](auto sum, const auto &cmp) { return sum + cmp.weight; });
+  std::sort(cmps.begin(), cmps.end(), [](const auto &a, const auto &b) {
+    return a.boundPars[eBoundQOverP] < b.boundPars[eBoundQOverP];
+  });
+  BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 1.0_GeV, 1.e-8);
+  BOOST_CHECK_CLOSE(cmps[1].boundPars[eBoundQOverP], 4.0_GeV, 1.e-8);
 
-  BOOST_CHECK_CLOSE(weightSumAfter, 1.0, 0.0001);
-  BOOST_CHECK((meanAfter - meanBefore).cwiseAbs().all() < 1.e-4);
-  BOOST_CHECK(cmps.size() == NCompsAfter);
+  const auto [mean1, sumOfWeights1] = meanAndSumOfWeights(cmps);
+
+  BOOST_CHECK_CLOSE(mean1[eBoundQOverP], 2.5_GeV, 1.e-8);
+  BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
+
+  // Reduce by factor of 2 and check if weights and QoP are correct
+  Acts::detail::reduceWithKLDistance(cmps, 1, proj, desc);
+
+  BOOST_CHECK(cmps.size() == 1);
+  BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);
+  BOOST_CHECK_CLOSE(cmps[0].weight, 1.0, 1.e-8);
 }
-*/

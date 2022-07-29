@@ -14,8 +14,8 @@
 #include "Acts/Utilities/detail/periodic.hpp"
 
 #include <cmath>
-#include <tuple>
 #include <optional>
+#include <tuple>
 
 namespace Acts {
 namespace detail {
