@@ -148,7 +148,8 @@ def test_geant4(tmp_path, field, assert_root_hash):
     csv.mkdir()
 
     root_files = [
-        "fatras_particles_final.root" "fatras_particles_initial.root",
+        "fatras_particles_final.root",
+        "fatras_particles_initial.root",
         "hits.root",
     ]
 
