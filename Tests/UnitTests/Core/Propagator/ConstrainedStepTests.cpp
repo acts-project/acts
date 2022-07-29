@@ -68,11 +68,11 @@ BOOST_AUTO_TEST_CASE(ConstrainedStepTest) {
 
   // All of the types should be 0.25 now
   BOOST_CHECK_EQUAL(stepSize_n.value(ConstrainedStep::accuracy),
-                    std::numeric_limits<double>::max());
+                    -std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stepSize_n.value(ConstrainedStep::actor),
-                    std::numeric_limits<double>::max());
+                    -std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stepSize_n.value(ConstrainedStep::aborter),
-                    std::numeric_limits<double>::max());
+                    -std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stepSize_n.value(ConstrainedStep::user), -0.25);
 
   // Check the cast operation to double

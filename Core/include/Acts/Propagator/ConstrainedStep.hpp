@@ -117,7 +117,7 @@ class ConstrainedStep {
 
   void scale(Scalar factor) {
     assert(factor > 0);
-    m_values[accuracy] = value() * factor;
+    m_values[accuracy] = value() * factor * m_direction;
   }
 
   std::ostream& toStream(std::ostream& os) const {
