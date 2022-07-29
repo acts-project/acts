@@ -275,6 +275,134 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
     assert_csv_output(csv, "particles_initial")
 
 
+def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    seq = Sequencer(events=10, numThreads=1)
+
+    root_files = [
+        (
+            "estimatedparams.root",
+            "estimatedparams",
+            22,
+        ),
+        (
+            "performance_seeding_trees.root",
+            "track_finder_tracks",
+            22,
+        ),
+        (
+            "performance_seeding_hists.root",
+            None,
+            0,
+        ),
+        (
+            "particles.root",
+            "particles",
+            seq.config.events,
+        ),
+        (
+            "fatras_particles_final.root",
+            "particles",
+            seq.config.events,
+        ),
+        (
+            "fatras_particles_initial.root",
+            "particles",
+            seq.config.events,
+        ),
+    ]
+
+    for fn, _, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    assert len(list(csv.iterdir())) == 0
+
+    rnd = acts.examples.RandomNumbers(seed=42)
+
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        MomentumConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
+
+    seq = addParticleGun(
+        seq,
+        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
+        EtaConfig(-4.0, 4.0, True),
+        ParticleConfig(1, acts.PdgParticle.eMuon, True),
+        outputDirCsv=tmp_path / "csv",
+        outputDirRoot=str(tmp_path),
+        rnd=rnd,
+    )
+
+    seq = addFatras(
+        seq,
+        trk_geo,
+        field,
+        outputDirCsv=tmp_path / "csv",
+        outputDirRoot=str(tmp_path),
+        rnd=rnd,
+        preselectParticles=False,
+    )
+
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+    seq = addDigitization(
+        seq,
+        trk_geo,
+        field,
+        digiConfigFile=srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        rnd=rnd,
+    )
+
+    from acts.examples.reconstruction import (
+        addSeeding,
+        TruthSeedRanges,
+    )
+    from acts.examples.reconstruction import (
+        addSeeding,
+        TruthSeedRanges,
+    )
+    from acts.examples.itk import itkSeedingAlgConfig
+
+    seq = addSeeding(
+        seq,
+        trk_geo,
+        field,
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4, 4), nHits=(9, None)),
+        *itkSeedingAlgConfig("PixelSpacePoints"),
+        acts.logging.VERBOSE,
+        geoSelectionConfigFile=srcdir
+        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        inputParticles="particles_final",  # use this to reproduce the original root_file_hashes.txt - remove to fix
+        outputDirRoot=str(tmp_path),
+    ).run()
+
+    del seq
+
+    for fn, tn, exp_entries in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 100
+
+        if tn is not None:
+            assert_entries(fp, tn, exp_entries)
+            assert_root_hash(fn, fp)
+
+    assert_csv_output(csv, "particles")
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
+
+
 @pytest.mark.slow
 def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
     from propagation import runPropagation
