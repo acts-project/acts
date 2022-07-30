@@ -83,8 +83,7 @@ class ConstrainedStep {
 
   /// Access the currently leading type
   Type currentType() const {
-    return Type(std::min_element(
-                    m_values.begin(), m_values.end()) -
+    return Type(std::min_element(m_values.begin(), m_values.end()) -
                 m_values.begin());
   }
 
