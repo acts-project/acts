@@ -1,5 +1,9 @@
 # Propagation and extrapolation
 
+:::{attention}
+This section is largely **outdated** and will be replaced in the future.
+:::
+
 The track propagation is an essential part of track reconstruction. The Acts
 propagation code is based on the ATLAS `RungeKuttaPropagator`, against which
 newer developments where validated. It has since been removed from the
