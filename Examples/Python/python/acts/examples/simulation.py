@@ -401,7 +401,7 @@ def addFatras(
 
 def addSimWriters(
     s: acts.examples.Sequencer,
-    inputSimHits: str = None,
+    inputSimHits: Optional[str] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
 ) -> acts.examples.Sequencer:
