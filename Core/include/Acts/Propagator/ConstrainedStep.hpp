@@ -55,7 +55,7 @@ class ConstrainedStep {
   ConstrainedStep() = default;
 
   /// constructor from Scalar
-  /// navigation direction is inverred by the sign of the step size
+  /// navigation direction is inferred by the sign of the step size
   /// @param value is the user given initial value
   explicit ConstrainedStep(Scalar value) {
     m_values[user] = std::abs(value);
