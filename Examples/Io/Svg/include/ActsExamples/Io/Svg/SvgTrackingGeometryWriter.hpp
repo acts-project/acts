@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/Io/Svg/SvgDefaults.hpp"
+
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Utilities/Logger.hpp>
@@ -34,8 +36,10 @@ class SvgTrackingGeometryWriter {
   // The nested config class
   class Config {
    public:
-    double outputScalor = 1.0;   ///< scale output values
-    size_t outputPrecision = 6;  ///< floating point precision
+    Acts::Svg::Style svgStyle = s_defaultLayerStyle;
+
+    std::string baseName = "";
+
     std::string outputDir = ".";
   };
 
@@ -59,6 +63,11 @@ class SvgTrackingGeometryWriter {
   std::unique_ptr<const Acts::Logger> m_logger;  ///< the logger instance
 
   Config m_cfg;  ///< the config class
+
+  std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
+
+  std::vector<actsvg::svg::object> m_xyCrossection;
+  std::vector<actsvg::svg::object> m_zrCrossection;
 
   /// process this volume
   /// @param context the Algorithm/Event context for this call

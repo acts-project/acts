@@ -45,6 +45,18 @@ static inline actsvg::svg::object surfaceViewXY(
   return actsvg::display::surface(identification, pSurface, xyView, true);
 }
 
+/// Convert into an acts::svg::object with an Zr view
+///
+/// @param pSurface is the proto object
+/// @param identification is the to be translated id_ for actsvg
+///
+/// @return an svg object that can be written out directly to disc
+static inline actsvg::svg::object surfaceViewZR(
+    const ProtoSurface& pSurface, const std::string& identification) {
+  actsvg::views::z_r zrView;
+  return actsvg::display::surface(identification, pSurface, zrView, true);
+}
+
 /// Convert into an acts::svg::object with an XY sheet
 ///
 /// @param pSurface is the proto object

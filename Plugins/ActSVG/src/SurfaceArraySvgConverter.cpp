@@ -109,9 +109,6 @@ std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid> Acts::Svg::convert(
 
   // Now draw the surfaces from the correct template
   for (const auto& sf : surfaces) {
-    std::stringstream sstream;
-    sstream << sf->geometryId();
-    // Get it
     radius += Acts::VectorHelpers::perp(sf->center(gctx));
 
     // Convert the surface from ACTS to actsvg
@@ -119,9 +116,9 @@ std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid> Acts::Svg::convert(
         Acts::Svg::convert(gctx, *sf, surfaceStyle, vType != cylinder);
     cSurface._name = "Module_n_" + std::to_string(pSurfaces.size());
 
-    cSurface._aux_info["grid_info"] = {"* module " +
-                                       std::to_string(pSurfaces.size()) +
-                                       ", id = " + sstream.str()};
+    cSurface._aux_info["grid_info"] = {
+        "* module " + std::to_string(pSurfaces.size()) +
+        ", surface = " + std::to_string(sf->geometryId().sensitive())};
     // Assign the template for cylinder layers
     if (vType == cylinder) {
       const SurfaceBounds& sBounds = sf->bounds();
@@ -142,13 +139,21 @@ std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid> Acts::Svg::convert(
     if (vType == planar or vType == polar) {
       // Get the transform and estimate the rotation of phi
       // Assumes x/y view
-      Vector3 localA = sf->transform(gctx).rotation().col(0);
+      const auto& sTransform = sf->transform(gctx);
+      Vector3 localA = sTransform.rotation().col(0);
+      Vector3 localZ = sTransform.rotation().col(2);
+      // Find out orientation w.r.t. global transform
+      ActsScalar projZ = localZ.dot(Vector3(0., 0., 1.));
       ActsScalar alpha = std::atan2(localA[1], localA[0]) / M_PI * 180.;
+      if (projZ < 0.) {
+        alpha += 180.;
+      }
       auto surfaceCenter = sf->center(gctx);
       // Set the transform for an eventual placement
       cSurface._transform._tr = {static_cast<actsvg::scalar>(surfaceCenter[0]),
                                  static_cast<actsvg::scalar>(surfaceCenter[1])};
-      cSurface._transform._rot = {static_cast<actsvg::scalar>(alpha), 0., 0.};
+      cSurface._transform._rot = {
+          static_cast<actsvg::scalar>(alpha), 0., 0.};
     }
 
     pSurfaces.push_back(cSurface);

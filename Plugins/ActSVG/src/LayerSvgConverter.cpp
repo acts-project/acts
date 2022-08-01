@@ -42,6 +42,8 @@ std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
   // The sheet
   actsvg::svg::object module_sheet;
   actsvg::svg::object grid_sheet;
+  actsvg::svg::object xy_layer;
+  actsvg::svg::object zr_layer;
 
   const auto& layerSurface = layer.surfaceRepresentation();
   if (layerSurface.type() == Acts::Surface::Disc) {
@@ -50,7 +52,8 @@ std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
         actsvg::display::e_module_info);
     grid_sheet = actsvg::display::endcap_sheet(
         layerName + "_grid", volume, {800, 800}, actsvg::display::e_grid_info);
-  } else if (layerSurface.type() == Acts::Surface::Cylinder){
+  } else if (layerSurface.type() == Acts::Surface::Cylinder) {
+    // Draw the barrel type
     module_sheet = actsvg::display::barrel_sheet(
         layerName + "_modules", volume, {800, 800},
         actsvg::display::e_module_info);
@@ -58,9 +61,34 @@ std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
         layerName + "_grid", volume, {800, 800}, actsvg::display::e_grid_info);
   }
 
+  // The z_r view of things
+  actsvg::views::z_r z_r_view;
+  actsvg::views::x_y x_y_view;
+
+  if (layer.surfaceArray() != nullptr) {
+    // The x_y view of things
+    xy_layer._tag = "g";
+    xy_layer._id = layerName + "_xy_view";
+    // The x_r view of things
+    zr_layer._tag = "g";
+    zr_layer._id = layerName + "_zr_view";
+    unsigned int m = 0;
+    for (const auto& sf : layer.surfaceArray()->surfaces()) {
+      actsvg::proto::surface<std::vector<Acts::Vector3>> projSurface;
+      projSurface._vertices = sf->polyhedronRepresentation(gctx, 1u).vertices;
+      std::string m_zr_id = std::string("zr_") + std::to_string(m++);
+      zr_layer.add_object(Acts::Svg::surfaceViewZR(projSurface, m_zr_id));
+
+      std::string m_xy_id = std::string("xy_") + std::to_string(m++);
+      xy_layer.add_object(Acts::Svg::surfaceViewXY(projSurface, m_xy_id));
+    }
+  }
+
   // Register
   sheets.push_back(module_sheet);
   sheets.push_back(grid_sheet);
+  sheets.push_back(xy_layer);
+  sheets.push_back(zr_layer);
 
   return sheets;
 }

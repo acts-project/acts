@@ -6,7 +6,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesIoSvg
-  PUBLIC ActsCore ActsExamplesFramework Threads::Threads)
+  PUBLIC ActsCore ActsExamplesFramework ActsPluginActSVG Threads::Threads)
 
 install(
   TARGETS ActsExamplesIoSvg
