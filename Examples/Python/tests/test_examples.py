@@ -288,12 +288,12 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         (
             "estimatedparams.root",
             "estimatedparams",
-            22,
+            25,
         ),
         (
             "performance_seeding_trees.root",
             "track_finder_tracks",
-            22,
+            25,
         ),
         (
             "performance_seeding_hists.root",
