@@ -351,7 +351,6 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         outputDirCsv=tmp_path / "csv",
         outputDirRoot=str(tmp_path),
         rnd=rnd,
-        preselectParticles=False,
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
