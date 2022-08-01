@@ -148,7 +148,7 @@ class ConstrainedStep {
   }
 
  private:
-  inline static constexpr auto not_set = std::numeric_limits<Scalar>::max();
+  inline static constexpr auto kNotSet = std::numeric_limits<Scalar>::max();
 
   /// the step size tuple
   /// all values point in the `m_direction`
