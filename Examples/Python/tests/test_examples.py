@@ -139,7 +139,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_geant4(tmp_path, field, assert_root_hash):
-    # This test literally only ensures that the full chain example can run without erroring out
+    # This test literally only ensures that the geant 4 example can run without erroring out
     getOpenDataDetector(
         getOpenDataDetectorDirectory()
     )  # just to make sure it can build
