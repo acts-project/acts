@@ -37,8 +37,9 @@ static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
 enum class NavigationDirection : int { Backward = -1, Forward = 1 };
 
 inline constexpr NavigationDirection directionFromStepSize(double value) {
-  return value >= 0 ? NavigationDirection::Forward
-                    : NavigationDirection::Backward;
+  assert(value != 0);
+  return value > 0 ? NavigationDirection::Forward
+                   : NavigationDirection::Backward;
 }
 
 std::ostream& operator<<(std::ostream& os, NavigationDirection navDir);

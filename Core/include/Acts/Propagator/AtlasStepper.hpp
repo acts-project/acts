@@ -1170,7 +1170,6 @@ class AtlasStepper {
         // This is sd.B_middle in EigenStepper
         auto fRes = getField(state.stepping, pos);
         if (!fRes.ok()) {
-          state.stepping.stepSize.setValue(h);
           return fRes.error();
         }
         f = *fRes;
@@ -1201,7 +1200,6 @@ class AtlasStepper {
         // This is sd.B_last in Eigen stepper
         auto fRes = getField(state.stepping, pos);
         if (!fRes.ok()) {
-          state.stepping.stepSize.setValue(h);
           return fRes.error();
         }
         f = *fRes;
@@ -1226,6 +1224,7 @@ class AtlasStepper {
            std::abs((C1 + C6) - (C3 + C4)));
       if (EST > state.options.tolerance) {
         h = h * .5;
+        state.stepping.stepSize.setValue(h);
         //        dltm = 0.;
         nStepTrials++;
         continue;
@@ -1359,13 +1358,11 @@ class AtlasStepper {
 
       state.stepping.pathAccumulated += h;
       state.stepping.stepSize.nStepTrials = nStepTrials;
-      state.stepping.stepSize.setValue(h);
       return h;
     }
 
     // that exit path should actually not happen
     state.stepping.pathAccumulated += h;
-    state.stepping.stepSize.setValue(h);
     return h;
   }
 
