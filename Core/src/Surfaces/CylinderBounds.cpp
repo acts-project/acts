@@ -57,12 +57,13 @@ bool Acts::CylinderBounds::inside(const Vector2& lposition,
         lposition[0] > radius ? 2 * radius - lposition[0] : lposition[0];
     Vector2 shiftedlposition = shifted(lposition);
     if ((std::fabs(shiftedlposition[0]) <= halfPhi &&
-         std::fabs(shiftedlposition[1]) <= halfLengthZ))
+         std::fabs(shiftedlposition[1]) <= halfLengthZ)) {
       return true;
-    else if ((lposition[1] >= -(localx * std::tan(bevelMinZ) + halfLengthZ)) &&
-             (lposition[1] <= (localx * std::tan(bevelMaxZ) + halfLengthZ)))
+    } else if ((lposition[1] >=
+                -(localx * std::tan(bevelMinZ) + halfLengthZ)) &&
+               (lposition[1] <= (localx * std::tan(bevelMaxZ) + halfLengthZ))) {
       return true;
-    else {
+    } else {
       // check within tolerance
       auto boundaryCheck = bcheck.transformed(jacobian());
 

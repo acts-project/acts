@@ -121,3 +121,27 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
                          std::move(mtrackCollection));
   return ActsExamples::ProcessCode::SUCCESS;
 }
+
+std::vector<std::pair<double, int>>
+ActsExamples::MaterialMapping::scoringParameters(uint64_t surfaceID) {
+  std::vector<std::pair<double, int>> scoringParameters;
+
+  if (m_cfg.materialSurfaceMapper) {
+    auto surfaceAccumulatedMaterial = m_mappingState.accumulatedMaterial.find(
+        Acts::GeometryIdentifier(surfaceID));
+
+    if (surfaceAccumulatedMaterial !=
+        m_mappingState.accumulatedMaterial.end()) {
+      auto matrixMaterial =
+          surfaceAccumulatedMaterial->second.accumulatedMaterial();
+      for (const auto& vectorMaterial : matrixMaterial) {
+        for (const auto& AccumulatedMaterial : vectorMaterial) {
+          auto totalVariance = AccumulatedMaterial.totalVariance();
+          scoringParameters.push_back(
+              {totalVariance.first, totalVariance.second});
+        }
+      }
+    }
+  }
+  return scoringParameters;
+}
