@@ -85,7 +85,7 @@ build:
 
 test:
   stage: test
-  dependencies:
+  needs:
     - build
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v26
   tags:
