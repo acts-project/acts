@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -39,7 +39,7 @@ using namespace ROOT;
 /// @param inFile the input root file
 /// @param treeNAme the input tree name (default: 'trackstates)
 /// @param outFile the output root file
-/// @param pTypes the track parameter types (prd, flt, smt)
+/// @param pTypes the track parameter types (prt, flt, smt)
 /// @param saveAs the plot saving type
 int boundParamResolution(const std::string& inFile, const std::string& treeName,
                          const std::string& outFile, bool predicted = true,
@@ -659,7 +659,8 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         }
         if (predicted) {
           std::string drawOptions = (smoothed or filtered) ? "same" : "";
-          res_prt[vlID + paramNames.at(ipar)]->DrawNormalized("same");
+          res_prt[vlID + paramNames.at(ipar)]->DrawNormalized(
+              drawOptions.c_str());
           res_prt[vlID + paramNames.at(ipar)]->Write();
           legend->AddEntry(res_prt[vlID + paramNames.at(ipar)], "predicted",
                            "l");
