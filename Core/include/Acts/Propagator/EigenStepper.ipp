@@ -190,7 +190,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return success(error_estimate <= state.options.tolerance);
   };
 
-  double stepSizeScaling = 1;
+  double stepSizeScaling = 1.;
   size_t nStepTrials = 0;
   // Select and adjust the appropriate Runge-Kutta step size as given
   // ATL-SOFT-PUB-2009-001
