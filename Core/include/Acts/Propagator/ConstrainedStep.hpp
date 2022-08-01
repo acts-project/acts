@@ -78,7 +78,7 @@ class ConstrainedStep {
 
   /// Access a specific value
   ///
-  /// @param type is the resquested parameter type
+  /// @param type is the requested parameter type
   Scalar value(Type type) const { return m_values[type] * m_direction; }
 
   /// Access the currently leading type
