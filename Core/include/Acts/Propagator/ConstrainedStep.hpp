@@ -112,7 +112,7 @@ class ConstrainedStep {
   }
 
   void scale(Scalar factor) {
-    assert(factor > 0);
+    assert(factor > 0 && "ConstrainedStep scale factor was zero or negative.");
     m_values[accuracy] = value() * factor * m_direction;
   }
 
