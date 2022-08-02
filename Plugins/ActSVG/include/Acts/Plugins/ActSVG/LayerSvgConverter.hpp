@@ -40,7 +40,7 @@ std::vector<actsvg::svg::object> layerSheets(
     const GeometryContext& gctx, const Layer& layer,
     const std::string& layerName, const Style& surfaceStyle,
     const std::array<std::array<ActsScalar, 2>, 2>& rangeRes = {noLimitZ,
-                                                             noLimitPhi});
+                                                                noLimitPhi});
 
 }  // namespace Svg
 

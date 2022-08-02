@@ -16,9 +16,9 @@
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonOptionsWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
+#include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgOptionsWriter.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
-#include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjWriterOptions.hpp"
@@ -142,8 +142,8 @@ int processGeometry(int argc, char* argv[],
     // SVG output
     if (vm["output-svg"].as<bool>()) {
       // setup the tracking geometry writer
-      ActsExamples::SvgTrackingGeometryWriter::Config tgSvgWriterConfig
-        = ActsExamples::Options::readSvgTrackingGeometryWriterConfig(vm);
+      ActsExamples::SvgTrackingGeometryWriter::Config tgSvgWriterConfig =
+          ActsExamples::Options::readSvgTrackingGeometryWriterConfig(vm);
       auto tgSvgWriter =
           std::make_shared<ActsExamples::SvgTrackingGeometryWriter>(
               tgSvgWriterConfig, logLevel);

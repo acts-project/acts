@@ -6,11 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
-
 
 #include <memory>
 
@@ -26,7 +25,7 @@ namespace Acts::Python {
 void addSvg(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-    {
+  {
     using Writer = ActsExamples::SvgTrackingGeometryWriter;
     auto w = py::class_<Writer, std::shared_ptr<Writer>>(
                  mex, "SvgTrackingGeometryWriter")

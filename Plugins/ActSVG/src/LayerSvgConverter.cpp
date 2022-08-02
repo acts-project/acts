@@ -92,8 +92,8 @@ std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
       if (phi >= rangeRes[1][0] and phi <= rangeRes[1][1]) {
         std::string m_zr_id = std::string("zr_") + std::to_string(m++);
         zr_layer.add_object(Acts::Svg::surfaceViewZR(projSurface, m_zr_id));
-      } 
-      // for z 
+      }
+      // for z
       if (z >= rangeRes[0][0] and z <= rangeRes[0][1]) {
         std::string m_xy_id = std::string("xy_") + std::to_string(m++);
         xy_layer.add_object(Acts::Svg::surfaceViewXY(projSurface, m_xy_id));

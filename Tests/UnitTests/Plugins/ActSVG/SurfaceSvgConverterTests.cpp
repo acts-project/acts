@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   runPlanarTests(*trapeozidPlane, planarStyle, "trapezoid");
 
   // Trapezoid case shifted and rotated
-  Acts::ActsScalar phi = 0.125*M_PI;
+  Acts::ActsScalar phi = 0.125 * M_PI;
   Acts::ActsScalar radius = 150.;
   Acts::Vector3 center(radius * std::cos(phi), radius * std::sin(phi), 0.);
 
@@ -101,11 +101,13 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   runPlanarTests(*trapeozidPlaneTransformed, planarStyle, "trapezoid_rotated");
   // A reference test for the rotated one
   Acts::GeometryContext geoCtx;
-  actsvg::proto::surface<std::vector<Acts::Vector3>>  reference;
-  reference._vertices = trapeozidPlaneTransformed->polyhedronRepresentation(geoCtx, 1u).vertices;
+  actsvg::proto::surface<std::vector<Acts::Vector3>> reference;
+  reference._vertices =
+      trapeozidPlaneTransformed->polyhedronRepresentation(geoCtx, 1u).vertices;
   auto referenceTrapezoid = Acts::Svg::surfaceViewXY(reference, "trapezoid");
-  auto referenceAxes = Acts::Svg::axesXY(-200.,200.,-200.,200);
-  Acts::Svg::toFile({referenceTrapezoid, referenceAxes}, "trapezoid_reference.svg");
+  auto referenceAxes = Acts::Svg::axesXY(-200., 200., -200., 200);
+  Acts::Svg::toFile({referenceTrapezoid, referenceAxes},
+                    "trapezoid_reference.svg");
 
   // Let's create one with a flipped z-axis
   Acts::Vector3 flocalZ(0., 0., -1.);
@@ -117,15 +119,19 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   auto ftransform = Acts::Transform3(Acts::Translation3(center) * frotation);
   // Create the module surface
   auto ftrapeozidPlaneTransformed =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(ftransform, trapezoidBounds);
+      Acts::Surface::makeShared<Acts::PlaneSurface>(ftransform,
+                                                    trapezoidBounds);
 
-  runPlanarTests(*ftrapeozidPlaneTransformed, planarStyle, "flipped_trapezoid_rotated");
-  actsvg::proto::surface<std::vector<Acts::Vector3>>  freference;
-  freference._vertices = ftrapeozidPlaneTransformed->polyhedronRepresentation(geoCtx, 1u).vertices;
+  runPlanarTests(*ftrapeozidPlaneTransformed, planarStyle,
+                 "flipped_trapezoid_rotated");
+  actsvg::proto::surface<std::vector<Acts::Vector3>> freference;
+  freference._vertices =
+      ftrapeozidPlaneTransformed->polyhedronRepresentation(geoCtx, 1u).vertices;
 
-  auto freferenceTrapezoid = Acts::Svg::surfaceViewXY(freference, "flipped_trapezoid");
-  Acts::Svg::toFile({freferenceTrapezoid, referenceAxes}, "flipped_trapezoid_reference.svg");
-
+  auto freferenceTrapezoid =
+      Acts::Svg::surfaceViewXY(freference, "flipped_trapezoid");
+  Acts::Svg::toFile({freferenceTrapezoid, referenceAxes},
+                    "flipped_trapezoid_reference.svg");
 
   // Diamond
 

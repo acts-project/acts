@@ -152,8 +152,7 @@ std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid> Acts::Svg::convert(
       // Set the transform for an eventual placement
       cSurface._transform._tr = {static_cast<actsvg::scalar>(surfaceCenter[0]),
                                  static_cast<actsvg::scalar>(surfaceCenter[1])};
-      cSurface._transform._rot = {
-          static_cast<actsvg::scalar>(alpha), 0., 0.};
+      cSurface._transform._rot = {static_cast<actsvg::scalar>(alpha), 0., 0.};
     }
 
     pSurfaces.push_back(cSurface);
