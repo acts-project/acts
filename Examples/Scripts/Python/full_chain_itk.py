@@ -55,7 +55,7 @@ s = addFatras(
     s,
     trackingGeometry,
     field,
-    # ParticleSelectorConfig(eta=(-4.0, 4.0), pt=(1.0 * u.GeV, 10.0 * u.GeV), removeNeutral=True),
+    # ParticleSelectorConfig(eta=(-4.0, 4.0), pt=(150 * u.MeV, None), removeNeutral=True),
     outputDirRoot=outputDir,
     rnd=rnd,
 )
@@ -82,7 +82,7 @@ s = addCKFTracks(
     s,
     trackingGeometry,
     field,
-    CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+    CKFPerformanceConfig(ptMin=1.0 * u.GeV, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
 
