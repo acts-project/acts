@@ -180,7 +180,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         // Set the primarty generator
         g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
             g4PrCfg, Acts::getDefaultLogger("SimParticleTranslation", level));
-        g4Cfg.detectorConstruction = std::move(detector);
+        g4Cfg.detectorConstruction = detector;
 
         // Set the user actions
         g4Cfg.runActions = runActions;

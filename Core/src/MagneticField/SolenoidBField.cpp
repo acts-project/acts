@@ -16,7 +16,7 @@
 #include <boost/math/special_functions/ellint_1.hpp>
 #include <boost/math/special_functions/ellint_2.hpp>
 
-Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(std::move(config)) {
+Acts::SolenoidBField::SolenoidBField(Config config) : m_cfg(config) {
   m_dz = m_cfg.length / m_cfg.nCoils;
   m_R2 = m_cfg.radius * m_cfg.radius;
   // we need to scale so we reproduce the expected B field strength
