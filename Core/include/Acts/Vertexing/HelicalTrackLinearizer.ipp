@@ -8,6 +8,8 @@
 
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 
+#include <csignal>
+
 template <typename propagator_t, typename propagator_options_t>
 Acts::Result<Acts::LinearizedTrack> Acts::
     HelicalTrackLinearizer<propagator_t, propagator_options_t>::linearizeTrack(
@@ -20,21 +22,29 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       Surface::makeShared<PerigeeSurface>(linPointPos);
 
   // Create propagator options
-  auto logger = getDefaultLogger("HelTrkLinProp", Logging::INFO);
+  auto logger = getDefaultLogger("HelTrkLinProp", Logging::FATAL);
   propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
   pOptions.direction = NavigationDirection::Backward;
 
   const BoundTrackParameters* endParams = nullptr;
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
+  if (!result.ok()) {
+    std::cout << "forward" << std::endl;
+    logger = getDefaultLogger("HelTrkLinProp", Logging::INFO);
+    pOptions = propagator_options_t(gctx, mctx, LoggerWrapper{*logger});
+    pOptions.direction = NavigationDirection::Forward;
+    result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
+  }
   if (result.ok()) {
     endParams = (*result).endParameters.get();
-
   } else {
+    std::raise(SIGINT);
     return result.error();
   }
 
   BoundVector paramsAtPCA = endParams->parameters();
+  std::cout << "paramsAtPCA: " << paramsAtPCA.transpose() << std::endl;
   Vector4 positionAtPCA = Vector4::Zero();
   {
     auto pos = endParams->position(gctx);
