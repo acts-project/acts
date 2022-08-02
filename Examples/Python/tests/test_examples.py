@@ -138,7 +138,7 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 @pytest.mark.slow
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
-def test_geant4(tmp_path, field, assert_root_hash):
+def test_geant4(tmp_path, assert_root_hash):
     # This test literally only ensures that the geant 4 example can run without erroring out
     getOpenDataDetector(
         getOpenDataDetectorDirectory()
@@ -181,6 +181,8 @@ def test_geant4(tmp_path, field, assert_root_hash):
         rfp = tmp_path / f
         assert rfp.exists()
         assert rfp.stat().st_size > 2**10 * 10
+
+        assert_root_hash(f, rfp)
 
 
 def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
