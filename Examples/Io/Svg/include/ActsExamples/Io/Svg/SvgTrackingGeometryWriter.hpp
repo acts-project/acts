@@ -8,10 +8,9 @@
 
 #pragma once
 
-#include "ActsExamples/Io/Svg/SvgDefaults.hpp"
-
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Io/Svg/SvgDefaults.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
 #include <fstream>
@@ -39,6 +38,12 @@ class SvgTrackingGeometryWriter {
     Acts::Svg::Style svgStyle = s_defaultLayerStyle;
 
     std::string baseName = "";
+
+    std::array<Acts::ActsScalar, 2> zViewRangeXY = {
+        std::numeric_limits<Acts::ActsScalar>::lowest(),
+        std::numeric_limits<Acts::ActsScalar>::max()};
+
+    std::array<Acts::ActsScalar, 2> phiViewRangeRZ = {-M_PI, M_PI};
 
     std::string outputDir = ".";
   };
