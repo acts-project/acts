@@ -274,7 +274,7 @@ class AtlasStepper {
     double pathAccumulated = 0.;
 
     // Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize;
 
     // Previous step size for overstep estimation
     double previousStepSize = 0.;
@@ -546,8 +546,16 @@ class AtlasStepper {
   /// @param stype [in] The step size type to be set
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, true);
+  }
+
+  /// Get the step size
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @param stype [in] The step size type to be returned
+  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
+    return state.stepSize.value(stype);
   }
 
   /// Release the Step size
@@ -1116,7 +1124,7 @@ class AtlasStepper {
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const {
     // we use h for keeping the nominclature with the original atlas code
-    auto& h = state.stepping.stepSize;
+    auto h = state.stepping.stepSize.value();
     bool Jac = state.stepping.useJacobian;
 
     double* R = &(state.stepping.pVector[0]);  // Coordinates
@@ -1226,6 +1234,7 @@ class AtlasStepper {
            std::abs((C1 + C6) - (C3 + C4)));
       if (EST > state.options.tolerance) {
         h = h * .5;
+        state.stepping.stepSize.setValue(h);
         //        dltm = 0.;
         continue;
       }
