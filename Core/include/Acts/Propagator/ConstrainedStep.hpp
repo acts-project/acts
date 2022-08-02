@@ -79,7 +79,9 @@ class ConstrainedStep {
   /// Access a specific value
   ///
   /// @param type is the requested parameter type
-  constexpr Scalar value(Type type) const { return m_values[type] * m_direction; }
+  constexpr Scalar value(Type type) const {
+    return m_values[type] * m_direction;
+  }
 
   /// Access the currently leading type
   constexpr Type currentType() const {
