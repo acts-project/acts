@@ -52,37 +52,34 @@ class ConstrainedStep {
   /// (e.g. Runge-Kutta) of the stepper.
   size_t nStepTrials = std::numeric_limits<size_t>::max();
 
-  ConstrainedStep() = default;
+  constexpr ConstrainedStep() = default;
 
   /// constructor from Scalar
-  /// navigation direction is inverred by the sign of the step size
+  /// navigation direction is inferred by the sign of the step size
   /// @param value is the user given initial value
-  explicit ConstrainedStep(Scalar value) {
+  constexpr explicit ConstrainedStep(Scalar value) {
     m_values[user] = std::abs(value);
     m_direction = Acts::directionFromStepSize(value);
   }
 
-  /// set accuracy by one Scalar
-  ///
-  /// this will set only the accuracy, as this is the most
-  /// exposed to the Propagator
-  ///
   /// @param value is the new accuracy value
-  void setValue(Scalar value) {
+  constexpr void setValue(Scalar value) {
     /// set the accuracy value
     m_values[accuracy] = value * m_direction;
   }
 
   /// returns the min step size
-  Scalar value() const { return value(currentType()); }
+  constexpr Scalar value() const { return value(currentType()); }
 
   /// Access a specific value
   ///
-  /// @param type is the resquested parameter type
-  Scalar value(Type type) const { return m_values[type] * m_direction; }
+  /// @param type is the requested parameter type
+  constexpr Scalar value(Type type) const {
+    return m_values[type] * m_direction;
+  }
 
   /// Access the currently leading type
-  Type currentType() const {
+  constexpr Type currentType() const {
     return Type(std::min_element(m_values.begin(), m_values.end()) -
                 m_values.begin());
   }
@@ -90,7 +87,7 @@ class ConstrainedStep {
   /// release a certain constraint value
   ///
   /// @param type is the constraint type to be released
-  void release(Type type) { m_values[type] = not_set; }
+  constexpr void release(Type type) { m_values[type] = kNotSet; }
 
   /// Update the step size of a certain type
   ///
@@ -100,7 +97,7 @@ class ConstrainedStep {
   /// @param value is the new value to be updated
   /// @param type is the constraint type
   /// @param releaseStep Allow step size to increase again
-  void update(Scalar value, Type type, bool releaseStep = false) {
+  constexpr void update(Scalar value, Type type, bool releaseStep = false) {
     if (releaseStep) {
       release(type);
     }
@@ -111,8 +108,8 @@ class ConstrainedStep {
     }
   }
 
-  void scale(Scalar factor) {
-    assert(factor > 0);
+  constexpr void scale(Scalar factor) {
+    assert(factor > 0 && "ConstrainedStep scale factor was zero or negative.");
     m_values[accuracy] = value() * factor * m_direction;
   }
 
@@ -121,7 +118,7 @@ class ConstrainedStep {
     auto streamValue = [&](Type type) {
       Scalar val = value(type);
       os << std::setw(5);
-      if (std::abs(val) == not_set) {
+      if (std::abs(val) == kNotSet) {
         os << (val > 0 ? "+∞" : "-∞");
       } else {
         os << val;
@@ -148,11 +145,11 @@ class ConstrainedStep {
   }
 
  private:
-  inline static constexpr auto not_set = std::numeric_limits<Scalar>::max();
+  inline static constexpr auto kNotSet = std::numeric_limits<Scalar>::max();
 
   /// the step size tuple
   /// all values point in the `m_direction`
-  std::array<Scalar, 4> m_values = {not_set, not_set, not_set, not_set};
+  std::array<Scalar, 4> m_values = {kNotSet, kNotSet, kNotSet, kNotSet};
   /// the navigation direction
   /// the direction is invariant after initialization
   NavigationDirection m_direction = NavigationDirection::Forward;
