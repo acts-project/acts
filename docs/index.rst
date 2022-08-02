@@ -13,12 +13,12 @@ description of track parameters and measurements.
 
 Key features:
 
--   A tracking geometry description which can be constructed manually or from
-    TGeo and DD4hep input.
--   Simple event data model.
--   Implementations of common algorithms for track propagation and fitting.
--   Implementations of basic seed finding algorithms.
--   Implementations of common vertexing algorithms.
+* A tracking geometry description which can be constructed manually or from
+  TGeo and DD4hep input.
+* Simple event data model.
+* Implementations of common algorithms for track propagation and fitting.
+* Implementations of basic seed finding algorithms.
+* Implementations of common vertexing algorithms.
 
 .. toctree::
    :maxdepth: 2
@@ -28,10 +28,10 @@ Key features:
    core/core
    plugins/plugins
    examples/examples
-   integration/integration
    formats/formats
    api/api
    contributionguide
+   howto/howto
    codeguide
    authors
    license

@@ -19,15 +19,15 @@ apt install google-perftools libgoogle-perftools-dev
 
 Alternatively, you can use the following commands to install it:
 
-```
-git clone https://github.com/gperftools/gperftools
-cd gperftools
-git tag -l # checkout the latest release version
-git checkout <gperftools-X.x>
-./autogen.sh
-./configure --prefix=<your/desired/install/dir>
-make
-make install
+```console 
+$ git clone https://github.com/gperftools/gperftools
+$ cd gperftools
+$ git tag -l # checkout the latest release version
+$ git checkout <gperftools-X.x>
+$ ./autogen.sh
+$ ./configure --prefix=<your/desired/install/dir>
+$ make
+$ make install
 ```
 
 This will install gperftools in `your/desired/install/dir/lib` which is the path you should use when specifying where gperftools is, if necessary.
@@ -47,8 +47,8 @@ Optionally, you can install [Graphviz](http://www.graphviz.org/download/) to pro
 
 Then, run the following command to install pprof itself:
 
-```
-go install github.com/google/pprof@latest
+```console
+$ go install github.com/google/pprof@latest
 ```
 
 ## Link gperftools Libraries When Compiling

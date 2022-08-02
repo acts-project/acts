@@ -9,77 +9,31 @@ import acts.examples
 u = acts.UnitConstants
 
 
-def addKalmanTracks(
-    s: acts.examples.Sequencer,
-    trackingGeometry: acts.TrackingGeometry,
-    field: acts.MagneticFieldProvider,
-    directNavigation=False,
-    reverseFilteringMomThreshold=0 * u.GeV,
-):
-    truthTrkFndAlg = acts.examples.TruthTrackFinder(
-        level=acts.logging.INFO,
-        inputParticles="truth_seeds_selected",
-        inputMeasurementParticlesMap="measurement_particles_map",
-        outputProtoTracks="prototracks",
-    )
-    s.addAlgorithm(truthTrkFndAlg)
-
-    if directNavigation:
-        srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
-            level=acts.logging.INFO,
-            inputProtoTracks="prototracks",
-            inputSimulatedHits=outputSimHits,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
-            outputProtoTracks="sortedprototracks",
-        )
-        s.addAlgorithm(srfSortAlg)
-        inputProtoTracks = srfSortAlg.config.outputProtoTracks
-    else:
-        inputProtoTracks = "prototracks"
-
-    kalmanOptions = {
-        "multipleScattering": True,
-        "energyLoss": True,
-        "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
-        "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
-    }
-
-    fitAlg = acts.examples.TrackFittingAlgorithm(
-        level=acts.logging.INFO,
-        inputMeasurements="measurements",
-        inputSourceLinks="sourcelinks",
-        inputProtoTracks=inputProtoTracks,
-        inputInitialTrackParameters="estimatedparameters",
-        outputTrajectories="trajectories",
-        directNavigation=directNavigation,
-        pickTrack=-1,
-        trackingGeometry=trackingGeometry,
-        dFit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
-            field, **kalmanOptions
-        ),
-        fit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
-            trackingGeometry, field, **kalmanOptions
-        ),
-    )
-    s.addAlgorithm(fitAlg)
-
-    return s
-
-
 def runTruthTrackingKalman(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     outputDir: Path,
     digiConfigFile: Path,
+    decorators=[],
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
     inputParticlePath: Optional[Path] = None,
 ):
-    from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
-    from fatras import addFatras
-    from digitization import addDigitization
-    from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        PhiConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
+    from acts.examples.reconstruction import (
+        addSeeding,
+        SeedingAlgorithm,
+        TruthSeedRanges,
+        addKalmanTracks,
+    )
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO

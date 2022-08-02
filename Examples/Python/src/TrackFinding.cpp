@@ -123,9 +123,12 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
+    ACTS_PYTHON_MEMBER(binSizeR);
+    ACTS_PYTHON_MEMBER(forceRadialSorting);
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(arithmeticAverageCotTheta);
     ACTS_PYTHON_MEMBER(useDetailedDoubleMeasurementInfo);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);

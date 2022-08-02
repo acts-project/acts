@@ -34,11 +34,12 @@ void labelEvents(
     for (const ActsExamples::SimParticle& p : event.finalParticles) {
       // Search for the maximum in particles with the same PDG ID as the
       // interacting one
-      if (p.pdg() == event.initialParticle.pdg())
+      if (p.pdg() == event.initialParticle.pdg()) {
         maxMom = std::max(p.absoluteMomentum(), maxMom);
-      // And the maximum among the others
-      else
+        // And the maximum among the others
+      } else {
         maxMomOthers = std::max(p.absoluteMomentum(), maxMomOthers);
+      }
     }
 
     // Label the initial momentum
@@ -60,8 +61,9 @@ void labelEvents(
     pt = ptVec.norm();
 
     // Use the final state p_T as veto for the soft label
-    if (event.soft && pt <= event.interactingParticle.transverseMomentum())
+    if (event.soft && pt <= event.interactingParticle.transverseMomentum()) {
       event.soft = false;
+    }
 
     // Store the multiplicity
     event.multiplicity = event.finalParticles.size();
@@ -105,8 +107,9 @@ buildNotNormalisedMap(TH1F const* hist) {
   }
 
   // Set the bin borders
-  for (iBin = 1; iBin <= nBins; iBin++)
+  for (iBin = 1; iBin <= nBins; iBin++) {
     histoBorders[iBin - 1] = hist->GetXaxis()->GetBinLowEdge(iBin);
+  }
   histoBorders[nBins] = hist->GetXaxis()->GetXmax();
 
   return std::make_tuple(histoBorders, temp_HistoContents, integral);
@@ -147,8 +150,9 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(
   std::vector<double>& histoContents = std::get<1>(map);
 
   // Fast exit if the histogram is empty
-  if (histoContents.empty())
+  if (histoContents.empty()) {
     return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
+  }
 
   // Set the bin content
   std::vector<uint32_t> normalisedHistoContents(nBins);
@@ -184,8 +188,9 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist,
   std::vector<double>& histoContents = std::get<1>(map);
 
   // Fast exit if the histogram is empty
-  if (histoContents.empty())
+  if (histoContents.empty()) {
     return std::make_pair(std::get<0>(map), std::vector<uint32_t>());
+  }
 
   // Set the bin content
   std::vector<uint32_t> normalisedHistoContents(nBins);
@@ -341,13 +346,14 @@ ActsExamples::RootNuclearInteractionParametersWriter::
 }
 
 ActsExamples::RootNuclearInteractionParametersWriter::
-    ~RootNuclearInteractionParametersWriter() {}
+    ~RootNuclearInteractionParametersWriter() = default;
 
 ActsExamples::ProcessCode
 ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   namespace Parametrisation = detail::NuclearInteractionParametrisation;
-  if (m_eventFractionCollection.empty())
+  if (m_eventFractionCollection.empty()) {
     return ProcessCode::ABORT;
+  }
 
   // Exclusive access to the file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
@@ -374,9 +380,10 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
       Parametrisation::cumulativeNuclearInteractionProbability(
           m_eventFractionCollection, m_cfg.interactionProbabilityBins);
 
-  if (m_cfg.writeOptionalHistograms)
+  if (m_cfg.writeOptionalHistograms) {
     gDirectory->WriteObject(nuclearInteractionProbability,
                             "NuclearInteractionHistogram");
+  }
   const auto mapNIprob =
       buildMap(nuclearInteractionProbability, m_cfg.nSimulatedEvents);
   gDirectory->WriteObject(&mapNIprob.first, "NuclearInteractionBinBorders");
@@ -420,8 +427,9 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
   ACTS_DEBUG("Parametrisation of multiplicity probabilities finished");
 
   gDirectory->cd("soft");
-  if (m_cfg.writeOptionalHistograms)
+  if (m_cfg.writeOptionalHistograms) {
     gDirectory->WriteObject(multiplicity.first, "MultiplicityHistogram");
+  }
   const auto multProbSoft = buildMap(multiplicity.first);
   gDirectory->WriteObject(&multProbSoft.first, "MultiplicityBinBorders");
   gDirectory->WriteObject(&multProbSoft.second, "MultiplicityBinContents");
@@ -433,8 +441,9 @@ ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
                std::to_string(i) + " particle(s) final state finished");
   }
   gDirectory->cd("../hard");
-  if (m_cfg.writeOptionalHistograms)
+  if (m_cfg.writeOptionalHistograms) {
     gDirectory->WriteObject(multiplicity.second, "MultiplicityHistogram");
+  }
   const auto multProbHard = buildMap(multiplicity.second);
   gDirectory->WriteObject(&multProbHard.first, "MultiplicityBinBorders");
   gDirectory->WriteObject(&multProbHard.second, "MultiplicityBinContents");

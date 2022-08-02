@@ -68,9 +68,9 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
-  else {
+  } else {
     // I/O parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
     m_outputTree->Branch("multiTraj_nr", &m_multiTrajNr);
@@ -218,15 +218,18 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
   }
 }
 
-ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {}
+ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_INFO("Write states of trajectories to tree '"
               << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
-    m_outputFile->Close();
   }
   return ProcessCode::SUCCESS;
 }
@@ -236,8 +239,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
 
-  if (m_outputFile == nullptr)
+  if (m_outputFile == nullptr) {
     return ProcessCode::SUCCESS;
+  }
 
   auto& gctx = ctx.geoContext;
   // Read additional input collections

@@ -17,7 +17,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v22
+    container: ghcr.io/acts-project/${{ matrix.image }}:v28
     strategy:
       matrix:
         image:
@@ -53,9 +53,29 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
-          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_BUILD_EXAMPLES=ON
+          -DACTS_BUILD_PLUGIN_DD4HEP=ON
+          -DACTS_BUILD_PLUGIN_TGEO=ON
+          -DACTS_BUILD_PLUGIN_IDENTIFICATION=ON
+          -DACTS_BUILD_PLUGIN_JSON=ON
+          -DACTS_BUILD_FATRAS=ON
+          -DACTS_BUILD_PLUGIN_LEGACY=ON
+          -DACTS_BUILD_PLUGIN_AUTODIFF=ON
+          -DACTS_BUILD_BENCHMARKS=ON
+          -DACTS_BUILD_UNITTESTS=ON
+          -DACTS_BUILD_INTEGRATIONTESTS=ON
+          -DACTS_BUILD_EXAMPLES_DD4HEP=ON
+          -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
+          -DACTS_BUILD_EXAMPLES_GEANT4=ON
+          -DACTS_BUILD_EXAMPLES_HEPMC3=ON
+          -DACTS_BUILD_EXAMPLES_PYTHIA8=ON
+          -DACTS_BUILD_FATRAS_GEANT4=ON
+          -DACTS_BUILD_FATRAS=ON
+          -DACTS_BUILD_ALIGNMENT=ON
+          -DACTS_BUILD_ANALYSIS_APPS=ON
 
       - name: Build
         run: ${SETUP} && cmake --build build --
@@ -90,10 +110,9 @@ jobs:
       - name: Downstream run
         run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
 
-
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v22
+    container: ghcr.io/acts-project/ubuntu2004:v28
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -114,7 +133,6 @@ jobs:
           restore-keys: |
             ${{ runner.os  }}-ccache-linux_ubuntu_${{ env.CCACHE_KEY_SUFFIX }}_
 
-
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
@@ -127,9 +145,11 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
 
@@ -170,11 +190,8 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v22
+    container: ghcr.io/acts-project/ubuntu2004:v28
     needs: [linux_ubuntu]
-    env:
-      ACTS_LOG_FAILURE_THRESHOLD: FATAL
-
     steps:
       - name: Install git lfs
         run: apt-get install -y git-lfs
@@ -206,14 +223,12 @@ jobs:
           && source build/python/setup.sh
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest -rFs
+          && pytest -rFsv
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v22
+    container: ghcr.io/acts-project/ubuntu2004:v28
     needs: [linux_ubuntu]
-    env:
-      ACTS_LOG_FAILURE_THRESHOLD: FATAL
 
     steps:
       - name: Install git lfs
@@ -236,7 +251,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.4.1
+          && pip3 install histcmp==0.4.4
           && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
@@ -252,6 +267,82 @@ jobs:
         with:
           name: physmon
           path: physmon
+
+  linux_ubuntu_extra:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        image: 
+          - ubuntu2204
+          - ubuntu2204_clang
+    container: ghcr.io/acts-project/${{ matrix.image }}:v28
+    env:
+      INSTALL_DIR: ${{ github.workspace }}/install
+      ACTS_LOG_FAILURE_THRESHOLD: WARNING
+    steps:
+      - name: Install git lfs
+        run: apt-get install -y git-lfs
+
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+          lfs: true
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache-linux_${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os  }}-ccache-linux_${{ matrix.image }}_${{ env.CCACHE_KEY_SUFFIX }}_
+
+
+      - name: Configure
+        # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
+        # dd4hep CMake configuration that gets triggered on recent CMake
+        # versions 
+        run: >
+          cmake -B build -S .
+          -GNinja
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
+          -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
+          -DACTS_BUILD_EVERYTHING=ON
+          -DACTS_BUILD_ODD=ON
+          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
+          -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_BUILD_ANALYSIS_APPS=ON
+
+      - name: Build
+        run: cmake --build build --
+
+      - name: Unit tests
+        run: cmake --build build -- test
+
+      - name: Integration tests
+        run: cmake --build build -- integrationtests
+
+      - name: Install
+        run: cmake --build build -- install
+
+      - name: Downstream configure
+        run: >
+          cmake -B build-downstream -S Tests/DownstreamProject
+          -GNinja
+          -DCMAKE_BUILD_TYPE=Release
+          -DCMAKE_CXX_FLAGS=-Werror
+          -DCMAKE_CXX_STANDARD=17
+          -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+
+      - name: Downstream build
+        run: cmake --build build-downstream --
+
+      - name: Downstream run
+        run: ./build-downstream/bin/ShowActsVersion
 
   linux-nodeps:
     runs-on: ubuntu-latest
@@ -286,7 +377,6 @@ jobs:
           key: ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
           restore-keys: |
             ${{ runner.os  }}-ccache-linux-nodeps_${{ env.CCACHE_KEY_SUFFIX }}_
-
 
       - name: Configure
         run: >
@@ -375,7 +465,6 @@ jobs:
           restore-keys: |
             ${{ runner.os  }}-ccache_${{ env.CCACHE_KEY_SUFFIX }}_
 
-
       - name: Configure
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
@@ -393,6 +482,7 @@ jobs:
           -DACTS_BUILD_ODD=ON
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
           -DACTS_FORCE_ASSERTIONS=ON
+          -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
       - name: Build
         run: cmake --build build  --
       - name: Unit tests
@@ -417,9 +507,10 @@ jobs:
         run: cmake --build build-downstream --
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
+
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v22
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v28
     steps:
       - uses: actions/checkout@v2
 
@@ -430,7 +521,6 @@ jobs:
           key: ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
           restore-keys: |
             ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_
-
 
       - name: Configure
         run: >
@@ -444,9 +534,10 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
         run: cmake --build build --
+
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v22
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v28
     steps:
       - uses: actions/checkout@v2
 
@@ -457,7 +548,6 @@ jobs:
           key: ${{ runner.os  }}-ccache-exatrkx_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
           restore-keys: |
             ${{ runner.os  }}-ccache-exatrkx_${{ env.CCACHE_KEY_SUFFIX }}_
-
 
       - name: Configure
         run: >
@@ -471,9 +561,10 @@ jobs:
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
         run: cmake --build build --
+
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v22
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v28
     defaults:
       run:
         shell: bash
@@ -487,7 +578,6 @@ jobs:
           key: ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
           restore-keys: |
             ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_
-
 
       - name: Configure
         run: >
@@ -505,9 +595,10 @@ jobs:
         run: >
           source /opt/intel/oneapi/setvars.sh
           && cmake --build build --
+
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v22
+    container: ghcr.io/acts-project/ubuntu2004:v28
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:

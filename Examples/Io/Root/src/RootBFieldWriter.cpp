@@ -34,14 +34,15 @@ void RootBFieldWriter::run(const Config& config,
   ACTS_INFO("Registering new ROOT output File : " << config.fileName);
   TFile* outputFile =
       TFile::Open(config.fileName.c_str(), config.fileMode.c_str());
-  if (!outputFile) {
+  if (outputFile == nullptr) {
     throw std::ios_base::failure("Could not open '" + config.fileName);
   }
   outputFile->cd();
   TTree* outputTree =
       new TTree(config.treeName.c_str(), config.treeName.c_str());
-  if (!outputTree)
+  if (outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // The position values
   double z;

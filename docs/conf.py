@@ -4,9 +4,6 @@ import os
 import sys
 import subprocess
 
-from m2r import MdInclude
-from recommonmark.transform import AutoStructify
-
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
 
@@ -22,9 +19,8 @@ copyright = "2014–2022 CERN for the benefit of the Acts project"
 
 extensions = [
     "breathe",
-    "recommonmark",
+    "myst_parser",
     "sphinx.ext.mathjax",
-    "sphinx_markdown_tables",
 ]
 source_suffix = {
     ".rst": "restructuredtext",
@@ -41,16 +37,15 @@ highlight_language = "cpp"
 smartquotes = True
 numfig = True
 
+myst_enable_extensions = ["dollarmath", "colon_fence"]
+myst_heading_anchors = 3
+
 # -- Options for HTML output --------------------------------------------------
 
 # ensure we use the RTD them when building locally
 if not on_readthedocs:
-    import sphinx_rtd_theme
-
     html_theme = "sphinx_rtd_theme"
-    html_theme_path = [
-        sphinx_rtd_theme.get_html_theme_path(),
-    ]
+    extensions.append("sphinx_rtd_theme")
 
 html_theme_options = {
     "collapse_navigation": False,
@@ -116,18 +111,4 @@ if on_readthedocs or tags.has("run_apidoc"):
 
 
 def setup(app):
-    app.add_config_value(
-        "recommonmark_config",
-        {
-            "enable_math": True,
-            "enable_inline_math": True,
-        },
-        True,
-    )
-    app.add_transform(AutoStructify)
-
-    app.add_config_value("no_underscore_emphasis", False, "env")
-    app.add_config_value("m2r_parse_relative_links", False, "env")
-    app.add_config_value("m2r_anonymous_references", False, "env")
-    app.add_config_value("m2r_disable_inline_math", False, "env")
-    app.add_directive("mdinclude", MdInclude)
+    pass

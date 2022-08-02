@@ -12,12 +12,34 @@ sys.path += [
 ]
 
 # this has to happen before we import the ACTS module
-os.environ["ACTS_LOG_FAILURE_THRESHOLD"] = "FATAL"
 import acts.examples
 
+# @TODO: Fix failure in gain matrix smoothing
+# See https://github.com/acts-project/acts/issues/1215
+acts.logging.setFailureThreshold(acts.logging.FATAL)
+
 from truth_tracking_kalman import runTruthTrackingKalman
-from ckf_tracks import runCKFTracks
-from common import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
+from acts.examples.simulation import (
+    addParticleGun,
+    EtaConfig,
+    PhiConfig,
+    ParticleConfig,
+    addFatras,
+    addDigitization,
+)
+from acts.examples.reconstruction import (
+    addSeeding,
+    TruthSeedRanges,
+    ParticleSmearingSigmas,
+    SeedfinderConfigArg,
+    SeedingAlgorithm,
+    TrackParamsEstimationConfig,
+    addCKFTracks,
+    CKFPerformanceConfig,
+)
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("outdir")
@@ -39,7 +61,9 @@ matDeco = acts.IMaterialDecorator.fromFile(
     srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
     level=acts.logging.INFO,
 )
-detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(
+    getOpenDataDetectorDirectory(), matDeco
+)
 digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
 geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 
@@ -68,7 +92,9 @@ with tempfile.TemporaryDirectory() as temp:
     shutil.copy(perf_file, outdir / "performance_truth_tracking.root")
 
 
-for truthSmeared, truthEstimated, label in [
+### CKF track finding variations
+
+for truthSmearedSeeded, truthEstimatedSeeded, label in [
     (True, False, "truth_smeared"),  # if first is true, second is ignored
     (False, True, "truth_estimated"),
     (False, False, "seeded"),
@@ -79,17 +105,74 @@ for truthSmeared, truthEstimated, label in [
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
-        runCKFTracks(
+
+        for d in decorators:
+            s.addContextDecorator(d)
+
+        rnd = acts.examples.RandomNumbers(seed=42)
+
+        s = addParticleGun(
+            s,
+            EtaConfig(-4.0, 4.0),
+            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            PhiConfig(0.0, 360.0 * u.degree),
+            multiplicity=2,
+            rnd=rnd,
+        )
+
+        s = addFatras(
+            s,
             trackingGeometry,
-            decorators=decorators,
-            field=field,
+            field,
+            rnd=rnd,
+        )
+
+        s = addDigitization(
+            s,
+            trackingGeometry,
+            field,
             digiConfigFile=digiConfig,
-            geometrySelection=geoSel,
-            outputDir=tp,
-            outputCsv=False,
-            truthSmearedSeeded=truthSmeared,
-            truthEstimatedSeeded=truthEstimated,
-            s=s,
+            rnd=rnd,
+        )
+
+        s = addSeeding(
+            s,
+            trackingGeometry,
+            field,
+            TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
+            ParticleSmearingSigmas(
+                pRel=0.01
+            ),  # only used by SeedingAlgorithm.TruthSmeared
+            SeedfinderConfigArg(
+                r=(None, 200 * u.mm),  # rMin=default, 33mm
+                deltaR=(1 * u.mm, 60 * u.mm),
+                collisionRegion=(-250 * u.mm, 250 * u.mm),
+                z=(-2000 * u.mm, 2000 * u.mm),
+                maxSeedsPerSpM=1,
+                sigmaScattering=50,
+                radLengthPerSeed=0.1,
+                minPt=500 * u.MeV,
+                bFieldInZ=1.99724 * u.T,
+                impactMax=3 * u.mm,
+            ),
+            TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
+            seedingAlgorithm=SeedingAlgorithm.TruthSmeared
+            if truthSmearedSeeded
+            else SeedingAlgorithm.TruthEstimated
+            if truthEstimatedSeeded
+            else SeedingAlgorithm.Default,
+            geoSelectionConfigFile=geoSel,
+            outputDirRoot=tp,
+            rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
+        )
+
+        s = addCKFTracks(
+            s,
+            trackingGeometry,
+            field,
+            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+            outputDirRoot=tp,
+            outputDirCsv=None,
         )
 
         s.run()
@@ -99,7 +182,7 @@ for truthSmeared, truthEstimated, label in [
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(perf_file, outdir / f"performance_ckf_tracks_{label}.root")
 
-        if not truthSmeared and not truthEstimated:
+        if not truthSmearedSeeded and not truthEstimatedSeeded:
             residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"
             # @TODO: Add try/except
             subprocess.check_call(

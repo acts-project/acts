@@ -74,18 +74,18 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
     Digitizable dg;
     // require a valid surface
     dg.surface = surface;
-    if (not dg.surface) {
+    if (dg.surface == nullptr) {
       return;
     }
     // require an associated detector element
     dg.detectorElement = dynamic_cast<const Acts::IdentifiedDetectorElement*>(
         dg.surface->associatedDetectorElement());
-    if (not dg.detectorElement) {
+    if (dg.detectorElement == nullptr) {
       return;
     }
     // require an associated digitization module
     dg.digitizer = dg.detectorElement->digitizationModule().get();
-    if (not dg.digitizer) {
+    if (dg.digitizer == nullptr) {
       return;
     }
     // record all valid surfaces
@@ -148,7 +148,7 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
           m_cfg.planarModuleStepper->cellSteps(ctx.geoContext, *dg.digitizer,
                                                localIntersect, localDirection);
       // everything under threshold or edge effects
-      if (!dSteps.size()) {
+      if (dSteps.empty()) {
         ACTS_VERBOSE("No steps returned from stepper.");
         continue;
       }

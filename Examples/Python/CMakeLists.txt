@@ -56,6 +56,10 @@ target_link_libraries(ActsPythonBindings PUBLIC
 set(py_files 
   __init__.py 
   examples/__init__.py
+  examples/simulation.py
+  examples/reconstruction.py
+  examples/itk.py
+  examples/odd.py
   _adapter.py
 )
 
@@ -150,6 +154,14 @@ if(ACTS_BUILD_EXAMPLES_EXATRKX)
   target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFinding.cpp)
 else()
   target_sources(ActsPythonBindings PRIVATE src/ExaTrkXTrackFindingStub.cpp)
+endif()
+
+if(ACTS_BUILD_EXAMPLES_EDM4HEP)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoEDM4hep)
+  target_sources(ActsPythonBindings PRIVATE src/EDM4hep.cpp)
+  list(APPEND py_files examples/edm4hep.py)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/EDM4hepStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)

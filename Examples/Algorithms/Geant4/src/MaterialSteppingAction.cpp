@@ -23,7 +23,7 @@ ActsExamples::MaterialSteppingAction::MaterialSteppingAction(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
     : G4UserSteppingAction(), m_cfg(cfg), m_logger(std::move(logger)) {}
 
-ActsExamples::MaterialSteppingAction::~MaterialSteppingAction() {}
+ActsExamples::MaterialSteppingAction::~MaterialSteppingAction() = default;
 
 void ActsExamples::MaterialSteppingAction::UserSteppingAction(
     const G4Step* step) {

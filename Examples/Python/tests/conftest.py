@@ -6,6 +6,7 @@ import shutil
 from typing import Dict
 import warnings
 import pytest_check as check
+from collections import namedtuple
 
 
 sys.path += [
@@ -13,14 +14,35 @@ sys.path += [
     str(Path(__file__).parent),
 ]
 
+
 import helpers
 import helpers.hash_root
 from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 import pytest
 
 import acts
 import acts.examples
+
+try:
+    if acts.logging.getFailureThreshold() != acts.logging.WARNING:
+        acts.logging.setFailureThreshold(acts.logging.WARNING)
+except RuntimeError:
+    # Repackage with different error string
+    errtype = (
+        "negative"
+        if acts.logging.getFailureThreshold() < acts.logging.WARNING
+        else "positive"
+    )
+    warnings.warn(
+        "Runtime log failure threshold could not be set. "
+        "Compile-time value is probably set via CMake, i.e. "
+        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
+        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
+        f"The pytest test-suite can produce false-{errtype} results in this configuration"
+    )
+
 
 u = acts.UnitConstants
 
@@ -194,6 +216,73 @@ def basic_prop_seq(rng):
 def trk_geo(request):
     detector, geo, contextDecorators = acts.examples.GenericDetector.create()
     yield geo
+
+
+DetectorConfig = namedtuple(
+    "DetectorConfig",
+    [
+        "detector",
+        "trackingGeometry",
+        "decorators",
+        "geometrySelection",
+        "digiConfigFile",
+        "name",
+    ],
+)
+
+
+@pytest.fixture(
+    params=[
+        "generic",
+        "odd",
+    ]
+)
+def detector_config(request):
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+
+    if request.param == "generic":
+        detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
+        return DetectorConfig(
+            detector,
+            trackingGeometry,
+            decorators,
+            geometrySelection=(
+                srcdir
+                / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json"
+            ),
+            digiConfigFile=(
+                srcdir
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            ),
+            name=request.param,
+        )
+    elif request.param == "odd":
+        if not helpers.dd4hepEnabled:
+            pytest.skip("DD4hep not set up")
+
+        matDeco = acts.IMaterialDecorator.fromFile(
+            srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
+            level=acts.logging.INFO,
+        )
+        detector, trackingGeometry, decorators = getOpenDataDetector(
+            getOpenDataDetectorDirectory(), matDeco
+        )
+        return DetectorConfig(
+            detector,
+            trackingGeometry,
+            decorators,
+            digiConfigFile=(
+                srcdir
+                / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+            ),
+            geometrySelection=(
+                srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
+            ),
+            name=request.param,
+        )
+
+    else:
+        raise ValueError(f"Invalid detector {detector}")
 
 
 @pytest.fixture
