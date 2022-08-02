@@ -40,7 +40,7 @@ struct PropagatorState {
     double pathAccumulated = 0.;
 
     // adaptive sep size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize;
   };
 
   /// emulate the options template
