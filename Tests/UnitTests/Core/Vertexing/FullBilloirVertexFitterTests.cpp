@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_empty_input_test) {
   myCovMat(1, 1) = 30.;
   myCovMat(2, 2) = 30.;
   myCovMat(3, 3) = 30.;
-  myConstraint.setFullCovariance(std::move(myCovMat));
+  myConstraint.setFullCovariance(myCovMat);
   myConstraint.setFullPosition(Vector4(0, 0, 0, 0));
 
   const std::vector<const BoundTrackParameters*> emptyVector;
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_defaulttrack_test) {
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
     myCovMat(3, 3) = 30.;
-    myConstraint.setFullCovariance(std::move(myCovMat));
+    myConstraint.setFullCovariance(myCovMat);
     myConstraint.setFullPosition(Vector4(0, 0, 0, 0));
     VertexingOptions<BoundTrackParameters> vfOptions(geoContext,
                                                      magFieldContext);
@@ -287,7 +287,7 @@ BOOST_AUTO_TEST_CASE(billoir_vertex_fitter_usertrack_test) {
     myCovMat(1, 1) = 30.;
     myCovMat(2, 2) = 30.;
     myCovMat(3, 3) = 30.;
-    myConstraint.setFullCovariance(std::move(myCovMat));
+    myConstraint.setFullCovariance(myCovMat);
     myConstraint.setFullPosition(Vector4(0, 0, 0, 0));
 
     VertexingOptions<InputTrack> vfOptions(geoContext, magFieldContext);

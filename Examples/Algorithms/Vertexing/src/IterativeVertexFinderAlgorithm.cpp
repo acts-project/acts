@@ -83,18 +83,18 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
                                    Acts::LoggerWrapper{logger()});
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
-  VertexFitter vertexFitter(std::move(vertexFitterCfg));
+  VertexFitter vertexFitter(vertexFitterCfg);
   // Setup the track linearizer
   Linearizer::Config linearizerCfg(m_cfg.bField, propagator);
-  Linearizer linearizer(std::move(linearizerCfg));
+  Linearizer linearizer(linearizerCfg);
   // Setup the seed finder
   ImpactPointEstimator::Config ipEstCfg(m_cfg.bField, propagator);
-  ImpactPointEstimator ipEst(std::move(ipEstCfg));
+  ImpactPointEstimator ipEst(ipEstCfg);
   VertexSeeder::Config seederCfg(ipEst);
-  VertexSeeder seeder(std::move(seederCfg));
+  VertexSeeder seeder(seederCfg);
   // Set up the actual vertex finder
-  VertexFinder::Config finderCfg(std::move(vertexFitter), std::move(linearizer),
-                                 std::move(seeder), ipEst);
+  VertexFinder::Config finderCfg(vertexFitter, linearizer, std::move(seeder),
+                                 ipEst);
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);
@@ -130,7 +130,8 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   int timeMS =
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   // store reconstruction time
-  ctx.eventStore.add(m_cfg.outputTime, std::move(timeMS));
+  ctx.eventStore.add(m_cfg.outputTime,
+                     std::move(timeMS));  // NOLINT(performance-move-const-arg)
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
