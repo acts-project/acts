@@ -1,10 +1,12 @@
 ACTS Material Mapping Tutorial
 ==============================
+
 When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps: 
 
 - first, a JSON geometry file is created, it will be used to configure which surface the material is mapped onto and with which binning.
 - second, a Geant4 simulation is used to collect the material inside the detector from the detailed geometry.
 - third, all the steps are projected onto the closest surfaces (or volume in case of volume mapping) and averaged out over many events to create a map.
+
 This page will explain how to perform the material mapping with the ACTS Examples. For this example we will use the Open Data Detector (ODD) the last paragraph will explain what needs to be changed if you want to perform the material mapping with another detector.
 
 Prerequisites
@@ -170,11 +172,11 @@ To do the validation, five root macros are available in ``scripts/MaterialMappin
   mkdir Surfaces/dist_plot
   mkdir Surfaces/1D_plot
 
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root",-1,"Surfaces/dist_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root",100000,"Surfaces/1D_plot")'
   .q
 
 Using the validation plots you can then adapt the binning and the mapped surface to improve the mapping.
@@ -188,9 +190,6 @@ On top of those plots :
 
 Can be use with X,Y,Z is a list of volumes, this will plot the material ratio between the map and the Geantino scan for the given volumes.
 
-
-.. warning::
-  Depending on your root version those macros might not work. They have been tested with version 6.18.04 so you can always revert to that version in case of problems.
 
 Using a different detector
 --------------------------
