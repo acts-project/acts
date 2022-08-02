@@ -45,7 +45,7 @@ Acts::ConeSurface::ConeSurface(const Transform3& transform, double alpha,
 Acts::ConeSurface::ConeSurface(const Transform3& transform,
                                std::shared_ptr<const ConeBounds> cbounds)
     : GeometryObject(), Surface(transform), m_bounds(std::move(cbounds)) {
-  throw_assert(cbounds, "ConeBounds must not be nullptr");
+  throw_assert(m_bounds, "ConeBounds must not be nullptr");
 }
 
 Acts::Vector3 Acts::ConeSurface::binningPosition(
