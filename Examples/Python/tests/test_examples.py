@@ -135,6 +135,56 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
         assert_root_hash(f, rfp)
 
 
+@pytest.mark.slow
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_geant4(tmp_path, assert_root_hash):
+    # This test literally only ensures that the geant 4 example can run without erroring out
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    root_files = [
+        "fatras_particles_final.root",
+        "fatras_particles_initial.root",
+        "hits.root",
+    ]
+
+    assert len(list(csv.iterdir())) == 0
+    for rf in root_files:
+        assert not (tmp_path / rf).exists()
+
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "geant4.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    subprocess.check_call(
+        [str(script)],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
+
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "hits")
+    for f in root_files:
+        rfp = tmp_path / f
+        assert rfp.exists()
+        assert rfp.stat().st_size > 2**10 * 10
+
+        assert_root_hash(f, rfp)
+
+
 def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
     from seeding import runSeeding
 

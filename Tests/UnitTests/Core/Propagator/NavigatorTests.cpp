@@ -133,7 +133,7 @@ struct PropagatorState {
     void setStepSize(State& state, double stepSize,
                      ConstrainedStep::Type stype = ConstrainedStep::actor,
                      bool release = true) const {
-      state.previousStepSize = state.stepSize;
+      state.previousStepSize = state.stepSize.value();
       state.stepSize.update(stepSize, stype, release);
     }
 
@@ -236,9 +236,9 @@ struct PropagatorState {
 template <typename stepper_state_t>
 void step(stepper_state_t& sstate) {
   // update the cache position
-  sstate.pos4[Acts::ePos0] += sstate.stepSize * sstate.dir[Acts::eMom0];
-  sstate.pos4[Acts::ePos1] += sstate.stepSize * sstate.dir[Acts::eMom1];
-  sstate.pos4[Acts::ePos2] += sstate.stepSize * sstate.dir[Acts::eMom2];
+  sstate.pos4[Acts::ePos0] += sstate.stepSize.value() * sstate.dir[Acts::eMom0];
+  sstate.pos4[Acts::ePos1] += sstate.stepSize.value() * sstate.dir[Acts::eMom1];
+  sstate.pos4[Acts::ePos2] += sstate.stepSize.value() * sstate.dir[Acts::eMom2];
   // create navigation parameters
   return;
 }
@@ -478,7 +478,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   // Cache the beam pipe radius
   double beamPipeR = perp(state.navigation.navLayerIter->intersection.position);
   // step size has been updated
-  CHECK_CLOSE_ABS(state.stepping.stepSize, beamPipeR, s_onSurfaceTolerance);
+  CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
+                  s_onSurfaceTolerance);
   if (debug) {
     std::cout << "<<< Test 1a >>> initialize at "
               << toString(state.stepping.pos4) << std::endl;
