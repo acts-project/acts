@@ -183,7 +183,7 @@ using LocPosArray = std::array<std::pair<double, double>, 4>;
 // the outside since their meaning differs between surface types
 template <typename angle_description_t, typename exact_combiner_t>
 void test_surface(const Surface &surface, const angle_description_t &desc, exact_combiner_t &exact,
-                  const LocPosArray &loc_pos) {
+                  const LocPosArray &loc_pos, double expectedApproxError) {
   const auto proj = Identity{};
 
   for (auto phi : {-175_degree, 0_degree, 175_degree}) {
@@ -219,13 +219,20 @@ void test_surface(const Surface &surface, const angle_description_t &desc, exact
       BOOST_CHECK(not cov_approx);
 
       const auto mean_ref = meanFromFree(cmps, surface);
+      
+      if( ((mean_approx - mean_ref).array().abs() > expectedApproxError).any() || ((mean_exact - mean_ref).array().abs() > 1.e-5).any() ) {
 
+      for(const auto &cmp : cmps) {
+        std::cout << "# " << cmp.boundPars.transpose() << "\n";
+      }
+        
       std::cout << "phi: " << phi << ", theta: " << theta << "\n";
-      std::cout << "mean_approx: " << mean_approx.transpose() << "\n";
+      std::cout << std::setprecision(10) << "mean_approx: " << mean_approx.transpose() << "\n";
       std::cout << "mean_exact:  " << mean_exact.transpose() << "\n";
       std::cout << "mean_ref:    " << mean_ref.transpose() << "\n";
+      }
 
-      CHECK_CLOSE_MATRIX(mean_approx, mean_ref, 1.e-2);
+      CHECK_CLOSE_MATRIX(mean_approx, mean_ref, expectedApproxError);
       CHECK_CLOSE_MATRIX(mean_exact, mean_ref, 1.e-5);
     }
   }
@@ -297,7 +304,7 @@ BOOST_AUTO_TEST_CASE(test_plane_surface) {
 
   const LocPosArray p{{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
 
-  test_surface(*surface, desc, exact, p);
+  test_surface(*surface, desc, exact, p, 1.e-2);
 }
 
 BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
@@ -317,7 +324,7 @@ BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
   std::get<0>(desc).constant = r;
   const auto exact = detail::CombineMeanExact<Surface::Cylinder>{};
 
-  test_surface(*surface, desc, exact, p);
+  test_surface(*surface, desc, exact, p, 1.e-2);
 }
 
 BOOST_AUTO_TEST_CASE(test_disc_surface) {
@@ -334,7 +341,7 @@ BOOST_AUTO_TEST_CASE(test_disc_surface) {
   const auto desc = detail::AngleDescription<Surface::Disc>::Desc{};
   const auto exact = detail::CombineMeanExact<Surface::Disc>{};
 
-  test_surface(*surface, desc, exact, p);
+  test_surface(*surface, desc, exact, p, 1.e-2);
 }
 
 BOOST_AUTO_TEST_CASE(test_perigee_surface) {
@@ -349,7 +356,7 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
 
   const LocPosArray p{{{d, z}, {d, -z}, {2*d, z}, {2*d, -z}}};
 
-  test_surface(*surface, desc, exact, p);
+  test_surface(*surface, desc, exact, p, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_kl_mixture_reduction) {
