@@ -62,6 +62,11 @@ class ConstrainedStep {
     m_direction = Acts::directionFromStepSize(value);
   }
 
+  /// set accuracy by one Scalar
+  ///
+  /// this will set only the accuracy, as this is the most
+  /// exposed to the Propagator
+  ///
   /// @param value is the new accuracy value
   constexpr void setValue(Scalar value) {
     /// set the accuracy value
