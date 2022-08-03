@@ -130,9 +130,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     if (result.ok()) {
       // Get the fit output object
-      const auto& fitOutput = result.value();
+      auto& fitOutput = result.value();
       // The track entry indices container. One element here.
-      std::vector<size_t> trackTips;
+      std::vector<Acts::MultiTrajectoryTraits::IndexType> trackTips;
       trackTips.reserve(1);
       trackTips.emplace_back(fitOutput.lastMeasurementIndex);
       // The fitted parameters container. One element (at most) here.

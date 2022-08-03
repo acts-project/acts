@@ -11,6 +11,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <cassert>
@@ -41,8 +42,10 @@ class MeasurementCalibrator {
   /// @tparam parameters_t Track parameters type
   /// @param gctx The geometry context (unused)
   /// @param trackState The track state to calibrate
-  void calibrate(const Acts::GeometryContext& /*gctx*/,
-                 Acts::MultiTrajectory::TrackStateProxy trackState) const {
+  void calibrate(
+      const Acts::GeometryContext& /*gctx*/,
+      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
+          trackState) const {
     const auto& sourceLink =
         static_cast<const IndexSourceLink&>(trackState.uncalibrated());
     assert(m_measurements and
