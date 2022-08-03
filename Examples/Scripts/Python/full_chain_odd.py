@@ -33,20 +33,19 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     addCKFTracks,
     CKFPerformanceConfig,
     addVertexFitting,
     VertexFinder,
 )
 
-s = acts.examples.Sequencer(events=100, numThreads=1, logLevel=acts.logging.INFO)
+s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 
 s = addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-1.8, 1.8, True),
-    ParticleConfig(2, acts.PdgParticle.eMuon, True),
+    EtaConfig(-3.0, 3.0, True),
+    ParticleConfig(4, acts.PdgParticle.eMuon, True),
     rnd=rnd,
 )
 s = addFatras(
@@ -70,7 +69,6 @@ s = addSeeding(
     field,
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
-    logLevel=acts.logging.INFO,
 )
 s = addCKFTracks(
     s,

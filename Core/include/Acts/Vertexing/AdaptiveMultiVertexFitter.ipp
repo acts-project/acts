@@ -48,16 +48,9 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
   // Number of iterations counter
   unsigned int nIter = 0;
 
-  std::cout << "AMVF fit vertices " << state.vertexCollection.size() << std::endl;
-
   // Start iterating
   while (nIter < m_cfg.maxIterations &&
          (!state.annealingState.equilibriumReached || !isSmallShift)) {
-    std::cout << "AMVF fit iter " << nIter << std::endl;
-    for (auto v : state.vertexCollection) {
-      std::cout << "AMVF fit vertex " << v->position().transpose() << std::endl;
-      std::cout << v->covariance() << std::endl;
-    }
     // Initial loop over all vertices in state.vertexCollection
     for (auto currentVtx : state.vertexCollection) {
       VertexInfo<input_track_t>& currentVtxInfo = state.vtxInfoMap[currentVtx];
