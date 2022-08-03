@@ -20,16 +20,21 @@ Acts::Result<Acts::LinearizedTrack> Acts::
       Surface::makeShared<PerigeeSurface>(linPointPos);
 
   // Create propagator options
-  auto logger = getDefaultLogger("HelTrkLinProp", Logging::INFO);
+  auto logger = getDefaultLogger("HelTrkLinProp", Logging::FATAL);
   propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
   pOptions.direction = NavigationDirection::Backward;
 
   const BoundTrackParameters* endParams = nullptr;
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
+  if (!result.ok()) {
+    logger = getDefaultLogger("HelTrkLinProp", Logging::INFO);
+    pOptions = propagator_options_t(gctx, mctx, LoggerWrapper{*logger});
+    pOptions.direction = NavigationDirection::Forward;
+    result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
+  }
   if (result.ok()) {
     endParams = (*result).endParameters.get();
-
   } else {
     return result.error();
   }
