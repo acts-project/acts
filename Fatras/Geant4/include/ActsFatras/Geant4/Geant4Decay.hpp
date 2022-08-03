@@ -70,8 +70,9 @@ Particle::Scalar Geant4Decay::generateProperTimeLimit(
   // Get the particle properties
   const Acts::PdgParticle pdgCode = particle.pdg();
   // Keep muons stable
-  if (makeAbsolutePdgParticle(pdgCode) == Acts::PdgParticle::eMuon)
+  if (makeAbsolutePdgParticle(pdgCode) == Acts::PdgParticle::eMuon) {
     return std::numeric_limits<Scalar>::infinity();
+  }
 
   // Get the Geant4 particle
   G4ParticleDefinition* pDef = m_pdgToG4Conv.getParticleDefinition(pdgCode);

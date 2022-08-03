@@ -63,8 +63,9 @@ class AnyVector {
 
   // Delete a type-erased vector
   ~AnyVector() {
-    if (m_vector)
+    if (m_vector) {
       m_deleter();
+    }
   }
 
  private:
@@ -164,8 +165,9 @@ void selectionSort(const std::size_t firstIndex, const std::size_t lastIndex,
         minIndex = readIndex;
       }
     }
-    if (minIndex != targetIndex)
+    if (minIndex != targetIndex) {
       swap(minIndex, targetIndex);
+    }
   }
 }
 
@@ -381,8 +383,9 @@ struct BranchComparisonHarness {
     // Setup order-sensitive tree comparison
     result.eventDataEqual = [&tree1Data, &tree2Data]() -> bool {
       for (std::size_t i = 0; i < tree1Data.size(); ++i) {
-        if (compare(tree1Data[i], tree2Data[i]) != Ordering::EQUAL)
+        if (compare(tree1Data[i], tree2Data[i]) != Ordering::EQUAL) {
           return false;
+        }
       }
       return true;
     };

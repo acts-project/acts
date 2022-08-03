@@ -43,15 +43,17 @@ struct NuclearInteractionParameters {
       const unsigned int sizeMom = eigenvaluesMomentum.size();
       eigenvectorsMomentum.resize(sizeMom, sizeMom);
       for (unsigned int i = 0; i < sizeMom; i++) {
-        for (unsigned int j = 0; j < sizeMom; j++)
+        for (unsigned int j = 0; j < sizeMom; j++) {
           eigenvectorsMomentum(i, j) = eVecMom[i * sizeMom + j];
+        }
       }
 
       const unsigned int sizeInvMass = eigenvaluesInvariantMass.size();
       eigenvectorsInvariantMass.resize(sizeInvMass, sizeInvMass);
       for (unsigned int i = 0; i < sizeInvMass; i++) {
-        for (unsigned int j = 0; j < sizeInvMass; j++)
+        for (unsigned int j = 0; j < sizeInvMass; j++) {
           eigenvectorsInvariantMass(i, j) = eVecIM[i * sizeInvMass + j];
+        }
       }
     }
 
