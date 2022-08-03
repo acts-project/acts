@@ -215,7 +215,7 @@ ProtoLayerCreatorT<detector_element_t>::centralProtoLayers(
   // ----------------------- central layers -------------------------
   // the central layers
   size_t numcLayers = m_cfg.centralLayerRadii.size();
-  if (numcLayers) {
+  if (numcLayers != 0u) {
     ACTS_DEBUG("Configured to build " << numcLayers
                                       << " active central layers.");
     cpLayers.reserve(numcLayers);
@@ -415,7 +415,7 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
   // -------------------------------- endcap type layers
   // pos/neg layers
   size_t numpnLayers = m_cfg.posnegLayerPositionsZ.size();
-  if (numpnLayers) {
+  if (numpnLayers != 0u) {
     ACTS_DEBUG("Configured to build 2 * "
                << numpnLayers << " passive positive/negative side layers.");
     epLayers.reserve(numpnLayers);
