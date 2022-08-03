@@ -177,7 +177,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
     results.emplace_back(SingleStepper::step(single_state));
 
-    if (results.back().first.ok()) {
+    if (results.back()->ok()) {
       accumulatedPathLength += component.weight * *results.back().first;
     } else {
       ++errorSteps;
