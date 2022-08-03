@@ -31,9 +31,11 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
  public:
   /// Track fitter function that takes input measurements, initial trackstate
   /// and fitter options and returns some track-fitter-specific result.
-  using TrackFitterOptions = Acts::KalmanFitterOptions;
+  using TrackFitterOptions =
+      Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory>;
 
-  using TrackFitterResult = Acts::Result<Acts::KalmanFitterResult>;
+  using TrackFitterResult =
+      Acts::Result<Acts::KalmanFitterResult<Acts::VectorMultiTrajectory>>;
 
   /// General options that do not depend on the fitter type, but need to be
   /// handed over by the algorithm

@@ -33,9 +33,9 @@ namespace detail {
 ///
 /// @return The global track parameters covariance matrix and the starting
 /// row/column for smoothed states
-template <typename parameters_t = BoundTrackParameters>
+template <typename traj_t, typename parameters_t = BoundTrackParameters>
 std::pair<ActsDynamicMatrix, std::unordered_map<size_t, size_t>>
-globalTrackParametersCovariance(const Acts::MultiTrajectory& multiTraj,
+globalTrackParametersCovariance(const Acts::MultiTrajectory<traj_t>& multiTraj,
                                 const size_t& entryIndex) {
   using CovMatrix = typename parameters_t::CovarianceMatrix;
   using GainMatrix = CovMatrix;
