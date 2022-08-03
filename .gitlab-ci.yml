@@ -12,7 +12,7 @@ clang_tidy:
     - git checkout $HEAD_SHA
     - >
         apt-get update
-        && apt-get install -y clang-10 clang-tidy-10 g++-8 libstdc++-8-dev
+        && apt-get install -y clang-10 clang-tidy-10 g++-8 libstdc++-8-dev parallel
         && ln -s /usr/bin/clang++-10 /usr/bin/clang++
         && ln -s /usr/bin/clang-10 /usr/bin/clang
         && ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
@@ -32,7 +32,13 @@ clang_tidy:
     - mkdir clang-tidy
     - CI/clang_tidy/run_clang_tidy.sh build > clang-tidy/clang-tidy.log
     - pip install -r CI/clang_tidy/requirements.txt
-    - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy.log clang-tidy/clang-tidy.json --exclude "*thirdparty*"
+
+    - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy.log clang-tidy/clang-tidy-build.json --exclude "*thirdparty*"
+    - CI/clang_tidy/run_clang_tidy_headers.sh > clang-tidy/clang-tidy-headers.log
+
+    - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy-headers.log clang-tidy/clang-tidy-headers.json --exclude "*thirdparty*" --ignore clang-diagnostic-error --filter "$PWD/*"
+    - CI/clang_tidy/merge.py clang-tidy-build.json clang-tidy-headers.json --output clang-tidy.json
+
     - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
     - codereport clang-tidy/clang-tidy.json clang-tidy/html
 
