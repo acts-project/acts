@@ -12,3 +12,4 @@ limits:
   # "performance-unnecessary-value-param": 0
   # "modernize-use-equals-default": 0
   "modernize-use-nullptr": 0
+  "performance-move-const-arg": 0

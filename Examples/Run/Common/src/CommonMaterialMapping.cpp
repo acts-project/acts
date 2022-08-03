@@ -122,7 +122,7 @@ int runMaterialMapping(int argc, char* argv[],
     Acts::Navigator navigator({tGeometry, true, true, true});
     // Make stepper and propagator
     SlStepper stepper;
-    Propagator propagator(std::move(stepper), std::move(navigator));
+    Propagator propagator(stepper, std::move(navigator));
     /// The material surface mapper
     Acts::SurfaceMaterialMapper::Config smmConfig;
     auto smm = std::make_shared<Acts::SurfaceMaterialMapper>(
@@ -135,7 +135,7 @@ int runMaterialMapping(int argc, char* argv[],
     Acts::Navigator navigator({tGeometry});
     // Make stepper and propagator
     SlStepper stepper;
-    Propagator propagator(std::move(stepper), std::move(navigator));
+    Propagator propagator(stepper, std::move(navigator));
     /// The material volume mapper
     Acts::VolumeMaterialMapper::Config vmmConfig;
     vmmConfig.mappingStep = volumeStep;

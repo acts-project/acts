@@ -26,7 +26,7 @@ namespace detail {
 
 /// @brief the step information for
 struct Step {
-  ConstrainedStep stepSize = 0.;
+  ConstrainedStep stepSize;
   Vector3 position = Vector3(0., 0., 0.);
   Vector3 momentum = Vector3(0., 0., 0.);
   std::shared_ptr<const Surface> surface = nullptr;
