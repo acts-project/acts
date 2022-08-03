@@ -1,5 +1,15 @@
-DD4hep plugin
+.. _dd4hep_old:
+
+DD4hep plugin (old integration model)
 =============
+
+.. warning::
+   The DD4hep integration mechanism has been removed in `v20.0.0
+   <https://github.com/acts-project/acts/releases/tag/v20.0.0>`_. Starting from
+   this version, the DD4hep plugin requires a minimum DD4hep version of
+   ``1.21``, which includes facilities for a new integration model.
+
+   See :ref:`DD4hep plugin` for documentation on the new integration model.
 
 The DD4hepPlugin allows building of a :class:`Acts::TrackingGeometry` from
 `DD4hep`_ input. DD4hep uses `ROOT`_ TGeo as the underlying geometry model.
@@ -36,6 +46,12 @@ during the translation process.
 
 Acts extension
 --------------
+
+.. warning::
+   The DD4hep integration mechanism has been removed in `v20.0.0
+   <https://github.com/acts-project/acts/releases/tag/v20.0.0>`_. Starting from
+   this version, the DD4hep plugin requires a minimum DD4hep version of
+   ``1.21``, which includes facilities for a new integration model.
 
 DD4hep provides a special extension mechanism for the ``DetElement`` which
 allows to add custom features. In Acts this functionality is used for the

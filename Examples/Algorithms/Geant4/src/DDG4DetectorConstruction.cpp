@@ -30,7 +30,7 @@ G4VPhysicalVolume* ActsExamples::DDG4DetectorConstruction::Construct() {
     g4map.attach(geo_info);
     // All volumes are deleted in ~G4PhysicalVolumeStore()
     m_world = geo_info->world();
-    m_detector.apply("DD4hepVolumeManager", 0, 0);
+    m_detector.apply("DD4hepVolumeManager", 0, nullptr);
     // Create Geant4 volume manager
     g4map.volumeManager();
   }

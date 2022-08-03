@@ -37,7 +37,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
 
 ActsExamples::ProcessCode
 ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
-  switch (m_cfg.logLevel) {
+  switch (m_cfg.dd4hepLogLevel) {
     case Acts::Logging::Level::VERBOSE:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::VERBOSE);
       break;
@@ -65,7 +65,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
     m_lcdd->fromCompact(file.c_str());
   }
   m_lcdd->volumeManager();
-  m_lcdd->apply("DD4hepVolumeManager", 0, 0);
+  m_lcdd->apply("DD4hepVolumeManager", 0, nullptr);
   m_dd4hepGeometry = m_lcdd->world();
 
   return ActsExamples::ProcessCode::SUCCESS;
