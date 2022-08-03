@@ -147,7 +147,7 @@ auto GeometryHierarchyMapJsonConverter<value_t>::fromJson(
   for (const auto& entry : encoded.at(kEntriesKey)) {
     auto id = decodeIdentifier(entry);
     auto value = entry.at("value").get<Value>();
-    elements.emplace_back(std::move(id), std::move(value));
+    elements.emplace_back(id, std::move(value));
   }
   return elements;
 }
