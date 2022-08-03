@@ -13,6 +13,7 @@
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
+#include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
 
 #include <random>
@@ -208,15 +209,15 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
         }
       }
 
-      const auto [mean_test, boundCov_test] =
-          detail::combineGaussianMixture(cmps.begin(), cmps.end(), proj, desc);
+      const auto [mean_approx, cov_approx] =
+          detail::combineGaussianMixture(cmps, proj, desc);
 
       // We don't have a boundCovariance in this test
-      BOOST_CHECK(not boundCov_test);
+      BOOST_CHECK(not cov_approx);
 
       const auto mean_ref = meanFromFree(cmps, surface);
 
-      CHECK_CLOSE_MATRIX(mean_test, mean_ref, expectedError);
+      CHECK_CLOSE_MATRIX(mean_approx, mean_ref, expectedError);
     }
   }
 }
@@ -240,7 +241,7 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto boundCov_data = boundCov(samples, mean_data);
 
   const auto [mean_test, boundCov_test] = detail::combineGaussianMixture(
-      cmps.begin(), cmps.end(), Identity{}, std::tuple<>{});
+      cmps, Identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
@@ -269,24 +270,24 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
     return res;
   });
 
-  using detail::AngleDescription::CyclicAngle;
+  using detail::CyclicAngle;
   const auto d = std::tuple<CyclicAngle<eBoundLoc0>, CyclicAngle<eBoundLoc1>>{};
   const auto [mean_test, boundCov_test] =
-      detail::combineGaussianMixture(cmps.begin(), cmps.end(), Identity{}, d);
+      detail::combineGaussianMixture(cmps, Identity{}, d);
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_plane_surface) {
-  const auto desc = detail::AngleDescription::Default{};
+  const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
 
   const auto surface =
       Surface::makeShared<PlaneSurface>(Vector3{0, 0, 0}, Vector3{1, 0, 0});
 
   const LocPosArray p{{{1, 1}, {1, -1}, {-1, 1}, {-1, -1}}};
 
-  test_surface(*surface, desc, p, 0.01);
+  test_surface(*surface, desc, p, 1.e-2);
 }
 
 BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
@@ -302,10 +303,10 @@ BOOST_AUTO_TEST_CASE(test_cylinder_surface) {
   const LocPosArray p{
       {{r * phi1, z1}, {r * phi1, -z2}, {r * phi2, z1}, {r * phi2, z2}}};
 
-  auto desc = detail::AngleDescription::Cylinder{};
+  auto desc = detail::AngleDescription<Surface::Cylinder>::Desc{};
   std::get<0>(desc).constant = r;
 
-  test_surface(*surface, desc, p, 0.01);
+  test_surface(*surface, desc, p, 1.e-2);
 }
 
 BOOST_AUTO_TEST_CASE(test_disc_surface) {
@@ -319,9 +320,24 @@ BOOST_AUTO_TEST_CASE(test_disc_surface) {
 
   const LocPosArray p{{{r1, phi1}, {r2, phi2}, {r1, phi2}, {r2, phi1}}};
 
-  auto desc = detail::AngleDescription::Disk{};
+  const auto desc = detail::AngleDescription<Surface::Disc>::Desc{};
 
-  test_surface(*surface, desc, p, 0.01);
+  test_surface(*surface, desc, p, 1.e-2);
+}
+
+BOOST_AUTO_TEST_CASE(test_perigee_surface) {
+  const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
+
+  const auto surface =
+      Surface::makeShared<PerigeeSurface>(Vector3{0,0,0});
+
+  const auto z = 5;
+  const auto d = 1;
+
+  const LocPosArray p{{{d, z}, {d, -z}, {2*d, z}, {2*d, -z}}};
+
+  // Here we expect a very bad approximation
+  test_surface(*surface, desc, p, 1.);
 }
 
 BOOST_AUTO_TEST_CASE(test_kl_mixture_reduction) {
