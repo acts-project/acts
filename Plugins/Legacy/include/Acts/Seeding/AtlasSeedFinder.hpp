@@ -269,7 +269,7 @@ inline SPForSeed<SpacePoint>* AtlasSeedFinder<SpacePoint>::newSpacePoint(
     float x = r[0] * m_dzdrmin;
     float y = r[1] * m_dzdrmin;
     if ((z * z) < (x * x + y * y)) {
-      return 0;
+      return nullptr;
     }
   }
 
