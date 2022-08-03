@@ -63,7 +63,7 @@ struct PathLimitReached {
     double tolerance = state.options.targetTolerance;
     stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
                         false);
-    bool limitReached = (distance * distance < tolerance * tolerance);
+    bool limitReached = (std::abs(distance) < std::abs(tolerance));
     if (limitReached) {
       ACTS_VERBOSE("Target: x | "
                    << "Path limit reached at distance " << distance);

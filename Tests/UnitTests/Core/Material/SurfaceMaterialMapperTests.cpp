@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   Navigator navigator({tGeometry});
   StraightLineStepper stepper;
   SurfaceMaterialMapper::StraightLinePropagator propagator(
-      std::move(stepper), std::move(navigator));
+      stepper, std::move(navigator));
 
   /// The config object
   SurfaceMaterialMapper::Config smmConfig;
