@@ -20,7 +20,7 @@ ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
     std::shared_ptr<const Acts::ISurfaceMaterial> material,
     std::shared_ptr<const Acts::DigitizationModule> digitizationModule)
     : Acts::IdentifiedDetectorElement(),
-      m_elementIdentifier(std::move(identifier)),
+      m_elementIdentifier(identifier),
       m_elementTransform(std::move(transform)),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::PlaneSurface>(pBounds, *this)),
@@ -40,7 +40,7 @@ ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
     std::shared_ptr<const Acts::ISurfaceMaterial> material,
     std::shared_ptr<const Acts::DigitizationModule> digitizationModule)
     : Acts::IdentifiedDetectorElement(),
-      m_elementIdentifier(std::move(identifier)),
+      m_elementIdentifier(identifier),
       m_elementTransform(std::move(transform)),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::DiscSurface>(dBounds, *this)),

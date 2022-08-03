@@ -215,7 +215,7 @@ struct TimingInfo {
 void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
                  std::string path) {
-  dfe::NamedTupleTsvWriter<TimingInfo> writer(std::move(path), 4);
+  dfe::NamedTupleTsvWriter<TimingInfo> writer(path, 4);
   for (size_t i = 0; i < identifiers.size(); ++i) {
     TimingInfo info;
     info.identifier = identifiers[i];

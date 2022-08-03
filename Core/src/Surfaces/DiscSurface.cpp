@@ -36,7 +36,7 @@ Acts::DiscSurface::DiscSurface(const GeometryContext& gctx,
 Acts::DiscSurface::DiscSurface(const Transform3& transform, double rmin,
                                double rmax, double hphisec)
     : GeometryObject(),
-      Surface(std::move(transform)),
+      Surface(transform),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
 Acts::DiscSurface::DiscSurface(const Transform3& transform, double minhalfx,
