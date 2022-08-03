@@ -93,7 +93,7 @@ namespace utils {
                           double gridSizeX,
                           double gridSizeZ);
 
-  /// @brief Retrieves the node componet from a mother by the string names
+  /// @brief Retrieves the node component from a mother by the string names
   /// @param mother The Handle to the mother volume
   /// @param nodeName The name of the note
   /// @param attrName The name of the Atribute
