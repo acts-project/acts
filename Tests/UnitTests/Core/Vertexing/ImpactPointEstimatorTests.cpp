@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
   auto res2 = ipEstimator.estimate3DImpactParameters(
       geoContext, magFieldContext, params1, vtxPos, state);
   BOOST_CHECK(res2.ok());
-  BoundTrackParameters endParams = std::move(**res2);
+  BoundTrackParameters endParams = **res2;
   Vector3 surfaceCenter = endParams.referenceSurface().center(geoContext);
 
   BOOST_CHECK_EQUAL(surfaceCenter, vtxPos);

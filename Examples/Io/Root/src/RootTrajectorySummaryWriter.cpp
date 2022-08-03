@@ -60,9 +60,9 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
-  else {
+  } else {
     // I/O parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
     m_outputTree->Branch("multiTraj_nr", &m_multiTrajNr);
@@ -148,8 +148,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
-  if (m_outputFile == nullptr)
+  if (m_outputFile == nullptr) {
     return ProcessCode::SUCCESS;
+  }
 
   // Read additional input collections
   const auto& particles =

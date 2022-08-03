@@ -2,7 +2,8 @@
 import argparse
 import pathlib, acts, acts.examples
 import acts.examples.dd4hep
-from common import getOpenDataDetector, getOpenDataDetectorDirectory
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 
 u = acts.UnitConstants
@@ -16,16 +17,28 @@ oddDigiConfig = oddDir / "config/odd-digi-smearing-config.json"
 oddSeedingSel = oddDir / "config/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=oddMaterialDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(
+    getOpenDataDetectorDirectory(), mdecorator=oddMaterialDeco
+)
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-from particle_gun import addParticleGun, MomentumConfig, EtaConfig, ParticleConfig
-from fatras import addFatras
-from digitization import addDigitization
-from seeding import addSeeding, TruthSeedRanges
-from ckf_tracks import addCKFTracks, CKFPerformanceConfig
-from vertex_fitting import addVertexFitting, VertexFinder
+from acts.examples.simulation import (
+    addParticleGun,
+    MomentumConfig,
+    EtaConfig,
+    ParticleConfig,
+    addFatras,
+    addDigitization,
+)
+from acts.examples.reconstruction import (
+    addSeeding,
+    TruthSeedRanges,
+    addCKFTracks,
+    CKFPerformanceConfig,
+    addVertexFitting,
+    VertexFinder,
+)
 
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 

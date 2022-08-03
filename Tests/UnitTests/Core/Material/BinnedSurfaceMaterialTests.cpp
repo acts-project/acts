@@ -33,9 +33,9 @@ BOOST_AUTO_TEST_CASE(BinnedSurfaceMaterial_construction_test) {
   MaterialSlab a12(Material::fromMolarDensity(6., 7., 8., 9., 10.), 11.);
 
   // Prepare the matrix
-  std::vector<MaterialSlab> l0 = {std::move(a00), std::move(a10)};
-  std::vector<MaterialSlab> l1 = {std::move(a01), std::move(a11)};
-  std::vector<MaterialSlab> l2 = {std::move(a02), std::move(a12)};
+  std::vector<MaterialSlab> l0 = {a00, a10};
+  std::vector<MaterialSlab> l1 = {a01, a11};
+  std::vector<MaterialSlab> l2 = {a02, a12};
 
   // Build the matrix
   std::vector<std::vector<MaterialSlab>> m = {std::move(l0), std::move(l1),

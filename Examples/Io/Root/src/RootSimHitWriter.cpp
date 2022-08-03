@@ -63,7 +63,11 @@ ActsExamples::RootSimHitWriter::RootSimHitWriter(
   m_outputTree->Branch("sensitive_id", &m_sensitiveId);
 }
 
-ActsExamples::RootSimHitWriter::~RootSimHitWriter() = default;
+ActsExamples::RootSimHitWriter::~RootSimHitWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::endRun() {
   if (m_outputFile != nullptr) {

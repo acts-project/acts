@@ -19,20 +19,27 @@ import acts.examples
 acts.logging.setFailureThreshold(acts.logging.FATAL)
 
 from truth_tracking_kalman import runTruthTrackingKalman
-from ckf_tracks import addCKFTracks, CKFPerformanceConfig
-from fatras import addFatras
-from digitization import addDigitization
-from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
-from seeding import (
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
+from acts.examples.simulation import (
+    addParticleGun,
+    EtaConfig,
+    PhiConfig,
+    ParticleConfig,
+    addFatras,
+    addDigitization,
+)
+from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
     ParticleSmearingSigmas,
     SeedfinderConfigArg,
     SeedingAlgorithm,
     TrackParamsEstimationConfig,
+    addCKFTracks,
+    CKFPerformanceConfig,
 )
 
-from common import getOpenDataDetector
 
 parser = argparse.ArgumentParser()
 parser.add_argument("outdir")
@@ -54,7 +61,9 @@ matDeco = acts.IMaterialDecorator.fromFile(
     srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
     level=acts.logging.INFO,
 )
-detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(
+    getOpenDataDetectorDirectory(), matDeco
+)
 digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
 geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 
