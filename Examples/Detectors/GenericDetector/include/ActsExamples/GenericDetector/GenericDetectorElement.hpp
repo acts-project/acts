@@ -69,7 +69,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
           nullptr);
 
   /// Identifier
-  Identifier identifier() const override final;
+  Identifier identifier() const final;
 
   /// Return local to global transform associated with this identifier
   ///
@@ -81,17 +81,17 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
       const Acts::GeometryContext& gctx) const override;
 
   /// Return surface associated with this identifier,
-  const Acts::Surface& surface() const final override;
+  const Acts::Surface& surface() const override;
 
   /// Set the identifier after construction (sometimes needed)
   void assignIdentifier(const Identifier& identifier);
 
   /// The maximal thickness of the detector element wrt normal axis
-  double thickness() const final override;
+  double thickness() const override;
 
   /// Retrieve the DigitizationModule
   const std::shared_ptr<const Acts::DigitizationModule> digitizationModule()
-      const final override;
+      const override;
 
  private:
   /// the element representation

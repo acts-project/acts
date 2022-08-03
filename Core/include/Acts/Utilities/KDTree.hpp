@@ -541,7 +541,7 @@ class KDTree {
     ///
     /// @param r The orthogonal range to search for.
     /// @param f The mapping function to execute.
-    virtual void rangeSearchMapDiscard(
+    void rangeSearchMapDiscard(
         const range_t &r,
         std::function<void(const coordinate_t &, const Type &)> f)
         const override {
@@ -578,7 +578,7 @@ class KDTree {
     /// defined by this node. Not designed for use in real code.
     ///
     /// @param i The amount of indentation to use.
-    virtual std::string toString(std::size_t i) const override {
+    std::string toString(std::size_t i) const override {
       std::stringstream out;
 
       // First, we print some indentation to make the output look nicer.
@@ -634,7 +634,7 @@ class KDTree {
     ///
     /// @param r The range to search for.
     /// @param f The mapping function to apply.
-    virtual void rangeSearchMapDiscard(
+    void rangeSearchMapDiscard(
         const range_t &r,
         std::function<void(const coordinate_t &, const Type &)> f)
         const override {
@@ -661,7 +661,7 @@ class KDTree {
     /// defined by this node. Not designed for use in real code.
     ///
     /// @param i The amount of indentation to use.
-    virtual std::string toString(std::size_t i) const override {
+    std::string toString(std::size_t i) const override {
       std::stringstream out;
 
       // Again, we start out by printing some nice indentation.

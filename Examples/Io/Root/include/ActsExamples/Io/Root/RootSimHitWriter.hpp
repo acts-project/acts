@@ -48,10 +48,10 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
   RootSimHitWriter(const Config& config, Acts::Logging::Level level);
 
   /// Ensure underlying file is closed.
-  ~RootSimHitWriter() final override;
+  ~RootSimHitWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -62,7 +62,7 @@ class RootSimHitWriter final : public WriterT<SimHitContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] hits are the hits to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimHitContainer& hits) final override;
+                     const SimHitContainer& hits) override;
 
  private:
   Config m_cfg;

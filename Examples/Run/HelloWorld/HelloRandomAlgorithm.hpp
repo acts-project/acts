@@ -36,8 +36,7 @@ class HelloRandomAlgorithm : public ActsExamples::BareAlgorithm {
                        Acts::Logging::Level level = Acts::Logging::INFO);
 
   // Generate random numbers from various distributions.
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
  private:
   Config m_cfg;

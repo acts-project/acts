@@ -81,8 +81,8 @@ class AnnulusBounds : public DiscBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  virtual bool inside(const Vector2& lposition,
-                      const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2& lposition,
+              const BoundaryCheck& bcheck) const final;
 
   /// Outstream operator
   ///

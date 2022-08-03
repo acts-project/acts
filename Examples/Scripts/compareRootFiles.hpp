@@ -424,7 +424,7 @@ struct BranchComparisonHarness {
           branch1Data(tree1Data),
           branch2Data(tree2Data) {}
 
-    void operator()() final override {
+    void operator()() override {
       branch1Data.push_back(*branch1Reader);
       branch2Data.push_back(*branch2Reader);
     }

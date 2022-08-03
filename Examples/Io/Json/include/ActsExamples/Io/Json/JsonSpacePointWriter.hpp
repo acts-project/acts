@@ -44,7 +44,7 @@ class JsonSpacePointWriter : public WriterT<GeometryIdMultimap<T>> {
  protected:
   ActsExamples::ProcessCode writeT(
       const ActsExamples::AlgorithmContext& context,
-      const GeometryIdMultimap<T>& spacePoints) final override;
+      const GeometryIdMultimap<T>& spacePoints) override;
 
  private:
   // since class itself is templated, base class template must be fixed

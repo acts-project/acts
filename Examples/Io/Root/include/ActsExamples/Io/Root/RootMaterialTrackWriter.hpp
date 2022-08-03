@@ -68,7 +68,7 @@ class RootMaterialTrackWriter
   ~RootMaterialTrackWriter() override;
 
   /// Framework intialize method
-  ActsExamples::ProcessCode endRun() final override;
+  ActsExamples::ProcessCode endRun() override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -82,7 +82,7 @@ class RootMaterialTrackWriter
   ProcessCode writeT(
       const AlgorithmContext& ctx,
       const std::unordered_map<size_t, Acts::RecordedMaterialTrack>&
-          materialtracks) final override;
+          materialtracks) override;
 
  private:
   /// The config class
