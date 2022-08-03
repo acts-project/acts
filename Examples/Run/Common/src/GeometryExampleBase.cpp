@@ -180,8 +180,7 @@ int processGeometry(int argc, char* argv[],
       }
       jmWriterCfg.writeFormat = format;
 
-      ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg),
-                                               logLevel);
+      ActsExamples::JsonMaterialWriter jmwImpl(jmWriterCfg, logLevel);
 
       jmwImpl.write(*tGeometry);
     }

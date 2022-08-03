@@ -30,6 +30,8 @@ from acts.examples.reconstruction import (
     CKFPerformanceConfig,
 )
 
+from acts.examples.itk import itkSeedingAlgConfig
+
 s = acts.examples.Sequencer(events=100, numThreads=-1)
 s = addParticleGun(
     s,
@@ -53,7 +55,7 @@ s = addFatras(
     s,
     trackingGeometry,
     field,
-    # ParticleSelectorConfig(eta=(-4.0, 4.0), pt=(1.0 * u.GeV, 10.0 * u.GeV), removeNeutral=True),
+    # ParticleSelectorConfig(eta=(-4.0, 4.0), pt=(150 * u.MeV, None), removeNeutral=True),
     outputDirRoot=outputDir,
     rnd=rnd,
 )
@@ -72,6 +74,7 @@ s = addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None)),
     # SeedingAlgorithm.TruthEstimated,
     # SeedingAlgorithm.TruthSmeared, ParticleSmearingSigmas(pRel=0.01), rnd=rnd,
+    *itkSeedingAlgConfig("PixelSpacePoints"),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
@@ -79,7 +82,7 @@ s = addCKFTracks(
     s,
     trackingGeometry,
     field,
-    CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+    CKFPerformanceConfig(ptMin=1.0 * u.GeV, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
 

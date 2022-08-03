@@ -46,8 +46,7 @@ auto cSegmentation =
 DigitizationModule pdModule(cSegmentation, hThickness, 1, lAngle, 0., true);
 // (2) negative readout
 DigitizationModule ndModule(cSegmentation, hThickness, -1, lAngle, 0., true);
-std::vector<DigitizationModule> testModules = {std::move(pdModule),
-                                               std::move(ndModule)};
+std::vector<DigitizationModule> testModules = {pdModule, ndModule};
 
 /// The Planar module stepper
 PlanarModuleStepper pmStepper;
