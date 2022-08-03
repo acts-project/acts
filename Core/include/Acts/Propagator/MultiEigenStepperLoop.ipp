@@ -154,7 +154,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   // Loop over all components and collect results in vector, write some
   // summary information to a stringstream
-  SmallVector<std::pair<Result<double>, bool>> results;
+  SmallVector<std::optional<Result<double>>> results;
   double accumulatedPathLength = 0.0;
   std::size_t errorSteps = 0;
 
@@ -164,7 +164,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     if (component.status == Intersection3D::Status::onSurface) {
       // We need to add these, so the propagation does not fail if we have only
       // components on surfaces and failing states
-      results.emplace_back(0.0, true);
+      results.emplace_back(std::nullopt);
       continue;
     }
 
@@ -175,7 +175,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     ThisSinglePropState single_state(component.state, state.navigation,
                                      state.options, state.geoContext);
 
-    results.push_back({SingleStepper::step(single_state), false});
+    results.emplace_back(SingleStepper::step(single_state));
 
     if (results.back().first.ok()) {
       accumulatedPathLength += component.weight * *results.back().first;
@@ -193,13 +193,13 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   // Print the result vector to a string so we can log it
   auto summary = [](auto& result_vec) {
     std::stringstream ss;
-    for (auto& [res, onSurface] : result_vec) {
-      if (onSurface) {
+    for (auto& optRes : result_vec) {
+      if (not optRes) {
         ss << "on surface | ";
-      } else if (res.ok()) {
-        ss << res.value() << " | ";
+      } else if (optRes->ok()) {
+        ss << optRes->value() << " | ";
       } else {
-        ss << res.error() << " | ";
+        ss << optRes->error() << " | ";
       }
     }
     auto str = ss.str();
