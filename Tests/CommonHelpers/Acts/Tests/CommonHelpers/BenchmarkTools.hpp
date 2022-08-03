@@ -246,7 +246,7 @@ struct MicroBenchmarkResult {
   // run time distribution is roughly symmetric.
   //
   Duration runTimeMedian() const {
-    assert(run_timings.size() >= 1);
+    assert(!run_timings.empty());
     const std::vector<Duration> sorted_timings = sortedRunTimes();
     const size_t midpoint = sorted_timings.size() / 2;
     if (sorted_timings.size() % 2 == 0) {
