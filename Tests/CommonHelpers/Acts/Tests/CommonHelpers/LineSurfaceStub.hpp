@@ -38,10 +38,7 @@ class LineSurfaceStub : public LineSurface {
       : GeometryObject(), LineSurface(ls) { /* nop */
   }
 
-  LineSurfaceStub& operator=(const LineSurfaceStub& ls) {
-    LineSurface::operator=(ls);
-    return *this;
-  }
+  LineSurfaceStub& operator=(const LineSurfaceStub& ls) = default;
 
   //
   LineSurfaceStub(const GeometryContext& gctx, const LineSurfaceStub& ls,

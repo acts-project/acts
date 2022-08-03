@@ -23,7 +23,7 @@ namespace ActsExamples {
 namespace PlotHelpers {
 /// @brief Nested binning struct for booking plots
 struct Binning {
-  Binning(){};
+  Binning() = default;
 
   Binning(std::string bTitle, int bins, float bMin, float bMax)
       : title(bTitle), nBins(bins), min(bMin), max(bMax){};

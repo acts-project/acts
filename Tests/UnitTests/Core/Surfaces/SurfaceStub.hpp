@@ -26,8 +26,7 @@ class SurfaceStub : public Surface {
   SurfaceStub(const DetectorElementBase& detelement)
       : GeometryObject(), Surface(detelement) {}
 
-  ~SurfaceStub() override { /*nop */
-  }
+  ~SurfaceStub() override = default;
 
   /// Return method for the Surface type to avoid dynamic casts
   SurfaceType type() const final { return Surface::Other; }
