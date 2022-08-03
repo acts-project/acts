@@ -17,7 +17,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v28
+    container: ghcr.io/acts-project/${{ matrix.image }}:v29
     strategy:
       matrix:
         image:
@@ -57,7 +57,7 @@ jobs:
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_EXAMPLES=ON
-          -DACTS_BUILD_PLUGIN_DD4HEP=ON
+          -DACTS_BUILD_PLUGIN_DD4HEP=OFF
           -DACTS_BUILD_PLUGIN_TGEO=ON
           -DACTS_BUILD_PLUGIN_IDENTIFICATION=ON
           -DACTS_BUILD_PLUGIN_JSON=ON
@@ -67,7 +67,7 @@ jobs:
           -DACTS_BUILD_BENCHMARKS=ON
           -DACTS_BUILD_UNITTESTS=ON
           -DACTS_BUILD_INTEGRATIONTESTS=ON
-          -DACTS_BUILD_EXAMPLES_DD4HEP=ON
+          -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
           -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
           -DACTS_BUILD_EXAMPLES_GEANT4=ON
           -DACTS_BUILD_EXAMPLES_HEPMC3=ON
@@ -103,6 +103,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+          -DDD4HEP=OFF
 
       - name: Downstream build
         run: ${SETUP} && cmake --build build-downstream --
@@ -112,7 +113,7 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:v29
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -190,7 +191,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:v29
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
@@ -209,8 +210,10 @@ jobs:
         run: mkdir build && tar xf build.tar.gz -C build
 
       - name: Examples
+        shell: bash
         run: >
           export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+          && source /usr/local/bin/thisdd4hep_only.sh
           && ./CI/run_examples.sh
 
       - name: Python level tests
@@ -227,7 +230,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:v29
     needs: [linux_ubuntu]
 
     steps:
@@ -275,7 +278,7 @@ jobs:
         image: 
           - ubuntu2204
           - ubuntu2204_clang
-    container: ghcr.io/acts-project/${{ matrix.image }}:v28
+    container: ghcr.io/acts-project/${{ matrix.image }}:v29
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -346,7 +349,7 @@ jobs:
 
   linux-nodeps:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:latest
+    container: ghcr.io/acts-project/${{ matrix.image }}:v29
     strategy:
       matrix:
         image:
@@ -454,7 +457,7 @@ jobs:
           brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.395f534.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.f2b4e25.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
 
       - name: Cache build
@@ -510,7 +513,7 @@ jobs:
 
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v28
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v29
     steps:
       - uses: actions/checkout@v2
 
@@ -537,7 +540,7 @@ jobs:
 
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v28
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
     steps:
       - uses: actions/checkout@v2
 
@@ -564,7 +567,7 @@ jobs:
 
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v28
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v29
     defaults:
       run:
         shell: bash
@@ -598,7 +601,7 @@ jobs:
 
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:v29
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:
