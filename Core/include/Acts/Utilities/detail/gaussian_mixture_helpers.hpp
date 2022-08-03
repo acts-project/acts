@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Identity.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
 
@@ -21,207 +20,34 @@
 namespace Acts {
 namespace detail {
 
-/// Description a cyclic angle
+/// Namespace containing Angle descriptions for the combineBoundGaussianMixture
+/// function
+namespace AngleDescription {
+
 template <BoundIndices Idx>
 struct CyclicAngle {
   constexpr static BoundIndices idx = Idx;
   constexpr static double constant = 1.0;
 };
 
-/// Description of a cyclic coordinate with a radius not known at compile time
 template <BoundIndices Idx>
 struct CyclicRadiusAngle {
   constexpr static BoundIndices idx = Idx;
   double constant = 1.0;  // the radius
 };
 
-/// A compile time map to provide angle descriptions for different surfaces
-template <Surface::SurfaceType type_t>
-struct AngleDescription {};
-
-template <>
-struct AngleDescription<Surface::Plane> {
-  using Desc = std::tuple<CyclicAngle<eBoundPhi>>;
-};
-
-template <>
-struct AngleDescription<Surface::Perigee> {
-  using Desc = std::tuple<CyclicAngle<eBoundPhi>>;
-};
-
-template <>
-struct AngleDescription<Surface::Disc> {
-  using Desc = std::tuple<CyclicAngle<eBoundLoc1>, CyclicAngle<eBoundPhi>>;
-};
-
-template <>
-struct AngleDescription<Surface::Cylinder> {
-  using Desc =
-      std::tuple<CyclicRadiusAngle<eBoundLoc0>, CyclicAngle<eBoundPhi>>;
-};
-
-/// A function object computing the approximate mean of a gaussian mixture
-/// (approximations are applied for spherical, polar and angle coordinates)
-struct CombineMeanApprox {
-  template <typename components_t, typename projector_t, typename angle_desc_t>
-  auto operator()(const components_t &cmps, const projector_t &proj,
-                  const angle_desc_t &angleDesc) const {
-    const auto &[beginWeight, beginPars, beginCov] = proj(cmps.front());
-
-    constexpr int D = std::decay_t<decltype(beginPars)>::RowsAtCompileTime;
-
-    ActsVector<D> mean = ActsVector<D>::Zero();
-    double sumOfWeights = 0.0;
-
-    for (const auto &cmp : cmps) {
-      const auto &[weight, pars, cov] = proj(cmp);
-
-      sumOfWeights += weight;
-      mean += weight * pars;
-
-      // Apply corrections for cyclic coordinates
-      auto handleCyclicMean = [&ref = beginPars, &pars = pars, &weight = weight,
-                               &mean = mean](auto desc) {
-        const auto delta = (ref[desc.idx] - pars[desc.idx]) / desc.constant;
-
-        if (delta > M_PI) {
-          mean[desc.idx] += (2 * M_PI) * weight * desc.constant;
-        } else if (delta < -M_PI) {
-          mean[desc.idx] -= (2 * M_PI) * weight * desc.constant;
-        }
-      };
-
-      std::apply([&](auto... dsc) { (handleCyclicMean(dsc), ...); }, angleDesc);
-    }
-
-    mean /= sumOfWeights;
-
-    auto wrap = [&](auto desc) {
-      mean[desc.idx] =
-          wrap_periodic(mean[desc.idx] / desc.constant, -M_PI, 2 * M_PI) *
-          desc.constant;
-    };
-
-    std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
-
-    return mean;
-  }
-};
-
-/// Function object that computes the exact mean of Bound Coordinates on a plane
-/// surface
-template <Surface::SurfaceType type>
-struct CombineMeanExact {
-  template <typename components_t, typename projector_t, typename angle_desc_t>
-  auto operator()(const components_t &cmps, const projector_t &proj,
-                  const angle_desc_t &desc) const {
-    // Basic mean for all cartesian coordinates
-    BoundVector mean = CombineMeanApprox{}(cmps, proj, std::tuple<>{});
-
-    // Direction mean in free coordinates
-    Vector3 dir = Vector3::Zero();
-    double sumOfWeights = 0.0;
-
-    for (const auto &cmp : cmps) {
-      const auto &[weight, pars, cov] = proj(cmp);
-
-      sumOfWeights += weight;
-      dir += weight *
-             makeDirectionUnitFromPhiTheta(pars[eBoundPhi], pars[eBoundTheta]);
-    }
-
-    dir.normalize();
-    mean.segment<2>(eBoundPhi) =
-        Vector2{VectorHelpers::phi(dir), VectorHelpers::theta(dir)};
-
-    // For plane surface we can return here
-    if constexpr (type == Surface::Plane) {
-      return mean;
-    }
-
-    // Special function for cylinder: circular mean
-    auto circularMean = [&](auto i, auto c) {
-      double x = 0.0, y = 0.0;
-
-      for (const auto &cmp : cmps) {
-        const auto &[weight, pars, cov] = proj(cmp);
-
-        x += weight * std::cos(pars[i] / c);
-        y += weight * std::sin(pars[i] / c);
-      }
-
-      return std::atan2(y / sumOfWeights, x / sumOfWeights) * c;
-    };
-
-    if constexpr (type == Surface::Cylinder) {
-      mean[eBoundLoc0] = circularMean(eBoundLoc0, std::get<0>(desc).constant);
-      return mean;
-    }
-
-    // Special function for disc and perigee: polar mean
-    auto polarMean = [&](auto eR, auto ePhi) {
-      double x = 0.0, y = 0.0;
-
-      for (const auto &cmp : cmps) {
-        const auto &[weight, pars, cov] = proj(cmp);
-        x += weight * pars[eR] * std::cos(pars[ePhi]);
-        y += weight * pars[eR] * std::sin(pars[ePhi]);
-      }
-
-      x /= sumOfWeights;
-      y /= sumOfWeights;
-
-      return Vector2{std::hypot(x, y), std::atan2(y, x)};
-    };
-
-    if constexpr (type == Surface::Disc) {
-      mean.segment<2>(eBoundLoc0) = polarMean(eBoundLoc0, eBoundLoc1);
-      return mean;
-    }
-
-    if constexpr (type == Surface::Perigee) {
-      mean[eBoundLoc0] = polarMean(eBoundLoc0, eBoundPhi)[0];
-      return mean;
-    }
-  }
-};
-
-template <int D, typename components_t, typename projector_t,
-          typename angle_desc_t>
-auto combineCov(const components_t &components, const ActsVector<D> &mean,
-                const projector_t &proj, const angle_desc_t &angleDesc) {
-  ActsSymMatrix<D> aggregatedCov = ActsSymMatrix<D>::Zero();
-  double sumOfWeights{0.0};
-
-  for (const auto &cmp : components) {
-    const auto &[weight, pars, cov] = proj(cmp);
-
-    sumOfWeights += weight;
-    ActsVector<D> diff = pars - mean;
-
-    // Apply corrections for cyclic coordinates
-    auto handleCyclicCov = [&l = pars, &m = mean, &diff = diff](auto desc) {
-      diff[desc.idx] =
-          difference_periodic(l[desc.idx] / desc.constant,
-                              m[desc.idx] / desc.constant, 2 * M_PI) *
-          desc.constant;
-    };
-
-    std::apply([&](auto... dsc) { (handleCyclicCov(dsc), ...); }, angleDesc);
-
-    aggregatedCov += weight * (*cov + diff * diff.transpose());
-  }
-
-  aggregatedCov /= sumOfWeights;
-  return aggregatedCov;
-}
+using Default = std::tuple<CyclicAngle<eBoundPhi>>;
+using Cylinder =
+    std::tuple<CyclicRadiusAngle<eBoundLoc0>, CyclicAngle<eBoundPhi>>;
+using Disk = std::tuple<CyclicAngle<eBoundLoc1>, CyclicAngle<eBoundPhi>>;
+}  // namespace AngleDescription
 
 /// @brief Combine multiple components into one representative track state
 /// object. The function takes iterators to allow for arbitrary ranges to be
 /// combined. The dimension of the vectors is infeared from the inputs.
 ///
-/// @note The behaviour is undefined, if some components have a covariance
-/// and others not
+/// @note If one component does not contain a covariance, no covariance is
+/// computed.
 ///
 /// @note The correct mean and variances for cyclic coordnates or spherical
 /// coordinates (theta, phi) must generally be computed using a special circular
@@ -229,19 +55,18 @@ auto combineCov(const components_t &components, const ActsVector<D> &mean,
 /// only works well for close components.
 ///
 /// @tparam component_iterator_t An iterator of a range of components
-/// @tparam projector_t A proj, which maps the component to a
+/// @tparam projector_t A projector, which maps the component to a
 /// std::tuple< weight, mean, std::optional< cov > >
 /// @tparam angle_desc_t A angle description object which defines the cyclic
 /// angles in the bound parameters
-template <typename components_t, typename projector_t = Identity,
-          typename angle_desc_t = AngleDescription<Surface::Plane>::Desc,
-          typename combine_mean_t = CombineMeanApprox>
-auto combineGaussianMixture(
-    const components_t &components, projector_t &&proj = projector_t{},
-    const angle_desc_t &angleDesc = angle_desc_t{},
-    const combine_mean_t &combineMean = combine_mean_t{}) {
+template <typename component_iterator_t, typename projector_t = Identity,
+          typename angle_desc_t = AngleDescription::Default>
+auto combineGaussianMixture(const component_iterator_t begin,
+                            const component_iterator_t end,
+                            projector_t &&projector = projector_t{},
+                            const angle_desc_t &angleDesc = angle_desc_t{}) {
   // Extract the first component
-  const auto &[beginWeight, beginPars, beginCov] = proj(components.front());
+  const auto &[beginWeight, beginPars, beginCov] = projector(*begin);
 
   // Assert type properties
   using ParsType = std::decay_t<decltype(beginPars)>;
@@ -261,39 +86,84 @@ auto combineGaussianMixture(
   using RetType = std::tuple<ActsVector<D>, std::optional<ActsSymMatrix<D>>>;
 
   // Early return in case of range with length 1
-  if (components.size() == 1) {
+  if (std::distance(begin, end) == 1) {
     return RetType{beginPars / beginWeight, *beginCov / beginWeight};
   }
 
-  const auto mean = combineMean(components, proj, angleDesc);
+  // Zero initialized values for aggregation
+  ActsVector<D> mean = ActsVector<D>::Zero();
+  ActsSymMatrix<D> cov1 = ActsSymMatrix<D>::Zero();
+  ActsSymMatrix<D> cov2 = ActsSymMatrix<D>::Zero();
+  WeightType sumOfWeights{0.0};
+  bool haveCov = true;
 
-  if (beginCov) {
-    const auto cov = combineCov(components, mean, proj, angleDesc);
-    return RetType{std::move(mean), std::move(cov)};
-  } else {
-    return RetType{std::move(mean), std::nullopt};
-  }
-}
+  // clang-format off
+  // x = \sum_{l} w_l * x_l
+  // C = \sum_{l} w_l * C_l + \sum_{l} \sum_{m>l} w_l * w_m * (x_l - x_m)(x_l - x_m)^T
+  // clang-format on
+  for (auto l = begin; l != end; ++l) {
+    const auto &[weight_l, pars_l, cov_l] = projector(*l);
 
-template <bool exact, Surface::SurfaceType type>
-auto makeCombineFunction(const Surface &surface) {
-  // Make angle description object
-  auto desc = typename AngleDescription<type>::Desc{};
+    sumOfWeights += weight_l;
+    mean += weight_l * pars_l;
 
-  if constexpr (type == Surface::Cylinder) {
-    const auto &bounds = static_cast<const CylinderSurface &>(surface).bounds();
-    std::get<0>(desc).constant = bounds.get(CylinderBounds::eR);
-  }
+    // Apply corrections for cyclic coordinates
+    auto handleCyclicMean = [&ref = beginPars, &pars = pars_l,
+                             &weight = weight_l, &mean = mean](auto desc) {
+      const auto delta = (ref[desc.idx] - pars[desc.idx]) / desc.constant;
 
-  // Exact functions
-  if constexpr (exact) {
-    return [=](const auto &cmps, auto &&proj) {
-      return combineGaussianMixture(cmps, proj, desc, CombineMeanExact<type>{});
+      if (delta > M_PI) {
+        mean[desc.idx] += (2 * M_PI) * weight * desc.constant;
+      } else if (delta < -M_PI) {
+        mean[desc.idx] -= (2 * M_PI) * weight * desc.constant;
+      }
     };
+
+    std::apply([&](auto... dsc) { (handleCyclicMean(dsc), ...); }, angleDesc);
+
+    if (not cov_l || not haveCov) {
+      haveCov = false;
+      continue;
+    }
+
+    cov1 += weight_l * *cov_l;
+
+    for (auto m = std::next(l); m != end; ++m) {
+      const auto &[weight_m, pars_m, cov_m] = projector(*m);
+
+      ActsVector<D> diff = pars_l - pars_m;
+
+      // Apply corrections for cyclic coordinates
+      auto handleCyclicCov = [&l = pars_l, &m = pars_m,
+                              &diff = diff](auto desc) {
+        diff[desc.idx] =
+            difference_periodic(l[desc.idx] / desc.constant,
+                                m[desc.idx] / desc.constant, 2 * M_PI) *
+            desc.constant;
+      };
+
+      std::apply([&](auto... dsc) { (handleCyclicCov(dsc), ...); }, angleDesc);
+
+      cov2 += weight_l * weight_m * diff * diff.transpose();
+    }
+  }
+
+  mean /= sumOfWeights;
+
+  auto wrap = [&](auto desc) {
+    mean[desc.idx] =
+        wrap_periodic(mean[desc.idx] / desc.constant, -M_PI, 2 * M_PI) *
+        desc.constant;
+  };
+
+  std::apply([&](auto... dsc) { (wrap(dsc), ...); }, angleDesc);
+
+  if (haveCov) {
+    cov1 /= sumOfWeights;
+    cov2 /= sumOfWeights * sumOfWeights;
+    return RetType{mean, cov1 + cov2};
   } else {
-    return [=](const auto &cmps, auto &&proj) {
-      return combineGaussianMixture(cmps, proj, desc, CombineMeanApprox{});
-    };
+    return RetType{mean, std::nullopt};
   }
 }
 
