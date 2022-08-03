@@ -62,7 +62,7 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
   ///
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

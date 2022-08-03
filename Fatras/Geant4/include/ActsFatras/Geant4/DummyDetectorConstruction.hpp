@@ -25,10 +25,10 @@ G4RunManager* ensureGeant4RunManager();
 class DummyDetectorConstruction : public G4VUserDetectorConstruction {
  public:
   /// Destructor
-  ~DummyDetectorConstruction();
+  ~DummyDetectorConstruction() override;
 
   /// Interface method for Geant4.
-  G4VPhysicalVolume* Construct();
+  G4VPhysicalVolume* Construct() override;
 
  private:
   /// This method builds a dummy Geant4 detector.

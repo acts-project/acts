@@ -53,7 +53,7 @@ class RootPropagationStepsWriter
   ~RootPropagationStepsWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -63,9 +63,10 @@ class RootPropagationStepsWriter
   /// and is called by the WriterT<>::write interface
   ///
   /// @param context The Algorithm context with per event information
-  /// @param steps is the data to be written out
-  ProcessCode writeT(const AlgorithmContext& context,
-                     const std::vector<PropagationSteps>& steps) final override;
+  /// @param stepCollection is the data to be written out
+  ProcessCode writeT(
+      const AlgorithmContext& context,
+      const std::vector<PropagationSteps>& stepCollection) override;
 
  private:
   Config m_cfg;                    ///< the configuration object

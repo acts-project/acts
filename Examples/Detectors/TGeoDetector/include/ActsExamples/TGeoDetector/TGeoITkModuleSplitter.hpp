@@ -48,7 +48,7 @@ class TGeoITkModuleSplitter : public Acts::ITGeoDetectorElementSplitter {
                             Acts::getDefaultLogger("TGeoITkModuleSplitter",
                                                    Acts::Logging::INFO));
 
-  virtual ~TGeoITkModuleSplitter() = default;
+  ~TGeoITkModuleSplitter() override = default;
 
   /// Take a geometry context and TGeoElement and find the correct splitting
   /// method for the module type.

@@ -59,7 +59,7 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// @param [in] context is the algorithm context for consistency
   /// @param [in] tracks is the track collection
   ProcessCode writeT(const AlgorithmContext& context,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
  private:
   Config m_cfg;  //!< Nested configuration struct

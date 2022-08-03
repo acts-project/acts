@@ -90,13 +90,13 @@ class MaterialMapping : public ActsExamples::BareAlgorithm {
 
   /// Destructor
   /// - it also writes out the file
-  ~MaterialMapping();
+  ~MaterialMapping() override;
 
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
 
   /// Return the parameters to optimised the material map for a given surface
   /// Those parameters are the variance and the number of track for each bin

@@ -246,10 +246,10 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   RootMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~RootMeasurementWriter() final override;
+  ~RootMeasurementWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }
@@ -261,7 +261,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const MeasurementContainer& measurements) final override;
+                     const MeasurementContainer& measurements) override;
 
  private:
   Config m_cfg;

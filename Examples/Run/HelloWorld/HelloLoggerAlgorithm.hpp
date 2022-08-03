@@ -20,8 +20,7 @@ class HelloLoggerAlgorithm : public ActsExamples::BareAlgorithm {
   HelloLoggerAlgorithm(Acts::Logging::Level level);
 
   // Log a few messages.
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 };
 
 }  // namespace ActsExamples

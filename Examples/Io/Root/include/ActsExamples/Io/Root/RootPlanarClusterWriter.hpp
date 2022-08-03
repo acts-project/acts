@@ -56,7 +56,7 @@ class RootPlanarClusterWriter
   ~RootPlanarClusterWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -67,9 +67,9 @@ class RootPlanarClusterWriter
   ///
   /// @param ctx The Algorithm context with per event information
   /// @param clusters is the data to be written out
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const GeometryIdMultimap<Acts::PlanarModuleCluster>&
-                         clusters) final override;
+  ProcessCode writeT(
+      const AlgorithmContext& ctx,
+      const GeometryIdMultimap<Acts::PlanarModuleCluster>& clusters) override;
 
  private:
   Config m_cfg;                    ///< the configuration object
