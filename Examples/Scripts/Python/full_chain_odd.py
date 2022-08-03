@@ -94,7 +94,6 @@ s = addVertexFitting(
     field,
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
-    logLevel=acts.logging.INFO,
 )
 
 s.run()
