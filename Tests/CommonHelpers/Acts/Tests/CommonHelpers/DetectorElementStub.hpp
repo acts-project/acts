@@ -77,8 +77,7 @@ class DetectorElementStub : public DetectorElementBase {
   }
 
   ///  Destructor
-  ~DetectorElementStub() override { /*nop */
-  }
+  ~DetectorElementStub() override = default;
 
   /// Return local to global transform associated with this identifier
   ///

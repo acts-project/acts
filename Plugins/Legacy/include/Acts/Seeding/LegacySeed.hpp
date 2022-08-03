@@ -93,7 +93,7 @@ Seed<SpacePoint>& Seed<SpacePoint>::operator=(const Seed<SpacePoint>& s) {
 }
 
 template <typename SpacePoint>
-Seed<SpacePoint>::Seed() {}
+Seed<SpacePoint>::Seed() = default;
 
 template <typename SpacePoint>
 Seed<SpacePoint>::Seed(const SpacePoint* b, const SpacePoint* m,
@@ -105,7 +105,7 @@ Seed<SpacePoint>::Seed(const SpacePoint* b, const SpacePoint* m,
 }
 
 template <typename SpacePoint>
-Seed<SpacePoint>::~Seed() {}
+Seed<SpacePoint>::~Seed() = default;
 
 /// @endcond
 

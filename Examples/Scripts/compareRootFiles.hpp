@@ -39,7 +39,7 @@ class AnyVector {
   }
 
   // Default-construct a null type-erased vector
-  AnyVector() : m_vector{nullptr} {}
+  AnyVector() = default;
 
   // Move-construct a type-erased vector
   AnyVector(AnyVector&& other)
@@ -73,7 +73,7 @@ class AnyVector {
   AnyVector(void* vector, std::function<void()>&& deleter)
       : m_vector{vector}, m_deleter{std::move(deleter)} {}
 
-  void* m_vector;                   // Casted std::vector<T>*
+  void* m_vector{nullptr};          // Casted std::vector<T>*
   std::function<void()> m_deleter;  // Deletes the underlying vector
 };
 

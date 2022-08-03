@@ -103,7 +103,7 @@ inline InternalSeed<SpacePoint>::InternalSeed(const InternalSeed& sp)
 /////////////////////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-inline InternalSeed<SpacePoint>::~InternalSeed() {}
+inline InternalSeed<SpacePoint>::~InternalSeed() = default;
 
 /////////////////////////////////////////////////////////////////////////////////
 // Set
