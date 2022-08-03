@@ -83,7 +83,7 @@ auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
   Acts::Navigator navigator(cfg);
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
-      std::move(stepper), std::move(navigator));
+      stepper, std::move(navigator));
 }
 
 // Construct a propagator using a constant magnetic field along z.

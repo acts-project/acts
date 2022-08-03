@@ -387,7 +387,7 @@ struct GsfActor {
       new_pars[eBoundQOverP] = old_bound.charge() / (p_prev + delta_p);
 
       // compute inverse variance of p from mixture and update covariance
-      auto new_cov = std::move(old_bound.covariance());
+      auto new_cov = old_bound.covariance();
 
       if (new_cov.has_value()) {
         const auto varInvP = [&]() {
@@ -536,7 +536,7 @@ struct GsfActor {
       const auto& [weight, pars, cov] = pcache;
 
       // Add the component to the stepper
-      const BoundTrackParameters bound(surface.getSharedPtr(), pars, cov);
+      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov);
 
       auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
 

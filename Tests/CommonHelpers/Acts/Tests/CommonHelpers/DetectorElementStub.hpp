@@ -36,7 +36,7 @@ class DetectorElementStub : public DetectorElementBase {
   DetectorElementStub() : DetectorElementBase() {}
 
   DetectorElementStub(const Transform3& transform)
-      : DetectorElementBase(), m_elementTransform(std::move(transform)) {}
+      : DetectorElementBase(), m_elementTransform(transform) {}
 
   /// Constructor for single sided detector element
   /// - bound to a Plane Surface
