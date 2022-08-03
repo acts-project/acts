@@ -407,3 +407,19 @@ BOOST_AUTO_TEST_CASE(test_kl_mixture_reduction) {
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(cmps[0].weight, 1.0, 1.e-8);
 }
+
+BOOST_AUTO_TEST_CASE(test_mode) {
+  std::vector<DummyComponent<2>> cmps(2);
+
+  cmps[0].boundPars << 1.0, 1.0;
+  cmps[0].boundCov = decltype(cmps[0].boundCov)::value_type{};
+  *cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
+  cmps[0].weight = 0.5;
+
+  cmps[1].boundPars << -2.0, -2.0;
+  cmps[1].boundCov = decltype(cmps[1].boundCov)::value_type{};
+  *cmps[1].boundCov << 1.0, 1.0, 1.0, 2.0;
+  cmps[1].weight = 0.5;
+
+  detail::computeModeOfMixture(cmps, Identity{});
+}

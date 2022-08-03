@@ -17,6 +17,10 @@
 #include <cmath>
 #include <optional>
 #include <tuple>
+#include <numeric>
+
+#include <Eigen/Eigenvalues>
+
 
 namespace Acts {
 namespace detail {
@@ -196,6 +200,104 @@ auto combineGaussianMixture(const components_t components,
 
     return RetType{mean, cov};
   }
+}
+
+// Use fixed point algorithm
+/// TODO potential optimization: cache inverse covariances
+// https://faculty.ucmerced.edu/mcarreira-perpinan/papers/cs-99-03.pdf
+template <typename components_t, typename projector_t = Identity>
+auto computeModeOfMixture(const components_t components,
+                          projector_t &&proj = projector_t{}) {
+  const auto &[beginWeight, beginPars, beginCov] =
+      proj(components.front());
+
+  using ParsType = std::decay_t<decltype(beginPars)>;
+  constexpr int D = ParsType::RowsAtCompileTime;
+
+  auto single_pdf = [&](const auto &x, const auto &mean, const auto &cov) {
+      const auto a = std::sqrt(std::pow(2*M_PI, D)*cov->determinant());
+      const auto b = -0.5 * (x-mean).transpose() * cov->inverse() * (x-mean);
+      return a * std::exp(b);
+  };
+
+  auto mixture_pdf = [&](const auto &x) {
+    double res = 0.0;
+
+    for(const auto &cmp : components) {
+      const auto &[weight, mean, cov] = proj(cmp);
+      res += weight * single_pdf(x, mean, cov);
+    }
+
+    return res;
+  };
+
+  auto f = [&](const auto &x) {
+    const auto p_x = mixture_pdf(x);
+
+    ActsSymMatrix<D> a = ActsSymMatrix<D>::Zero();
+    ActsVector<D> b = ActsVector<D>::Zero();
+
+    for(const auto &cmp : components) {
+      const auto &[weight, mean, cov] = proj(cmp);
+      const auto p_m_x = weight * single_pdf(x, mean, cov) / p_x;
+
+      a += p_m_x * cov->inverse();
+      b += p_m_x * (cov->inverse() * mean);
+    }
+
+    return a.inverse() * b;
+  };
+
+  auto hessian = [&](const auto &x) {
+    ActsSymMatrix<D> h = ActsSymMatrix<D>::Zero();
+
+    for(const auto &cmp : components) {
+      const auto &[weight, mean, cov] = proj(cmp);
+      const auto a = weight * single_pdf(x, mean, cov);
+      const auto b = (x - mean) * (x-mean).transpose() * *cov;
+
+      h += a * (cov->inverse() * b * cov->inverse());
+    }
+
+    return h;
+  };
+
+  std::optional<ActsVector<D>> mode;
+  double mode_val = 0;
+
+  constexpr double tol = 1.e-8;
+  constexpr double eigv_max = 0.01;
+  constexpr int iter_max = 20;
+
+  for(const auto &cmp : components) {
+    const auto &[weight, mean, cov] = proj(cmp);
+
+    ActsVector<D> x = mean;
+    ActsVector<D> x_old = ActsVector<D>::Zero();
+
+    for(auto i=0; i<iter_max; ++i) {
+      x_old = x;
+      x = f(x);
+
+      if( (x - x_old).norm() < tol ) {
+        break;
+      }
+    }
+
+    const auto H = hessian(x);
+    const auto evs = H.eigenvalues();
+    const double max_ev = std::max_element(evs.data(), evs.data()+evs.size(), [](const auto &a, const auto &b){ return a.real() < b.real(); })->real();
+
+    if( max_ev < eigv_max ) {
+      const auto this_val = mixture_pdf(x);
+      if( this_val > mode_val ) {
+        mode = x;
+        mode_val = this_val;
+      }
+    }
+  }
+
+  return mode;
 }
 
 }  // namespace detail
