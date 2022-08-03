@@ -56,7 +56,7 @@ class ConeSurface : public Surface {
   /// @param transform is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
   ConeSurface(const Transform3& transform,
-              const std::shared_ptr<const ConeBounds>& cbounds);
+              std::shared_ptr<const ConeBounds> cbounds);
 
   /// Copy constructor
   ///

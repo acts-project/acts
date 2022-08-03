@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_state_test) {
   CHECK_CLOSE_OR_SMALL(sls.time(slsState), time, eps, eps);
   BOOST_CHECK_EQUAL(slsState.navDir, ndir);
   BOOST_CHECK_EQUAL(slsState.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(slsState.stepSize, ndir * stepSize);
+  BOOST_CHECK_EQUAL(slsState.stepSize.value(), ndir * stepSize);
   BOOST_CHECK_EQUAL(slsState.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(slsState.tolerance, tolerance);
 
@@ -136,10 +136,10 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   sls.setStepSize(slsState, 1337.);
   BOOST_CHECK_EQUAL(slsState.previousStepSize, ndir * stepSize);
-  BOOST_CHECK_EQUAL(slsState.stepSize, 1337.);
+  BOOST_CHECK_EQUAL(slsState.stepSize.value(), 1337.);
 
   sls.releaseStepSize(slsState);
-  BOOST_CHECK_EQUAL(slsState.stepSize, -123.);
+  BOOST_CHECK_EQUAL(slsState.stepSize.value(), -123.);
   BOOST_CHECK_EQUAL(sls.outputStepSize(slsState), originalStepSize);
 
   // Test the curvilinear state construction
@@ -180,8 +180,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   ps.stepping.covTransport = false;
   double h = sls.step(ps).value();
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize, ndir * stepSize);
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize, h);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), ndir * stepSize);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());
   CHECK_CLOSE_ABS(sls.direction(ps.stepping), newMom.normalized(), 1e-6);
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
 
   ps.stepping.covTransport = true;
   double h2 = sls.step(ps).value();
-  BOOST_CHECK_EQUAL(ps.stepping.stepSize, ndir * stepSize);
+  BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), ndir * stepSize);
   BOOST_CHECK_EQUAL(h2, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
   BOOST_CHECK_GT(sls.position(ps.stepping).norm(), newPos.norm());
@@ -241,7 +241,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(slsStateCopy.stepSize, ndir * stepSize2);
+  BOOST_CHECK_EQUAL(slsStateCopy.stepSize.value(), ndir * stepSize2);
   BOOST_CHECK_EQUAL(slsStateCopy.previousStepSize,
                     ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(slsStateCopy.tolerance, ps.stepping.tolerance);
@@ -267,8 +267,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(slsStateCopy.stepSize,
-                    ndir * std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(slsStateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(slsStateCopy.previousStepSize,
                     ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(slsStateCopy.tolerance, ps.stepping.tolerance);
@@ -294,7 +294,8 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   CHECK_CLOSE_ABS(sls.time(slsStateCopy), freeParams[eFreeTime], 1e-6);
   BOOST_CHECK_EQUAL(slsStateCopy.navDir, NavigationDirection::Forward);
   BOOST_CHECK_EQUAL(slsStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(slsStateCopy.stepSize, std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(slsStateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(slsStateCopy.previousStepSize,
                     ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(slsStateCopy.tolerance, ps.stepping.tolerance);
@@ -321,14 +322,14 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
                          slsState.geoContext, sls.position(slsState),
                          slsState.navDir * sls.direction(slsState), false),
                      false);
-  CHECK_CLOSE_ABS(slsState.stepSize, 2, 1e-6);
-  slsState.stepSize = ndir * stepSize;
+  CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
+  slsState.stepSize.setValue(ndir * stepSize);
   sls.updateStepSize(slsState,
                      targetSurface->intersect(
                          slsState.geoContext, sls.position(slsState),
                          slsState.navDir * sls.direction(slsState), false),
                      true);
-  CHECK_CLOSE_ABS(slsState.stepSize, 2, 1e-6);
+  CHECK_CLOSE_ABS(slsState.stepSize.value(), 2, 1e-6);
 
   // Test the bound state construction
   FreeToBoundCorrection freeToBoundCorrection(false);
