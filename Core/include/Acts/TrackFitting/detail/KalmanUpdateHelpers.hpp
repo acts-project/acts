@@ -32,14 +32,14 @@ namespace detail {
 /// computing the bound state or not
 /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
 template <typename propagator_state_t, typename stepper_t,
-          typename extensions_t>
+          typename extensions_t, typename traj_t>
 auto kalmanHandleMeasurement(
     propagator_state_t &state, const stepper_t &stepper,
     const extensions_t &extensions, const Surface &surface,
-    const SourceLink &source_link, MultiTrajectory &fittedStates,
+    const SourceLink &source_link, MultiTrajectory<traj_t> &fittedStates,
     const size_t lastTrackIndex, bool doCovTransport,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
-        false)) -> Result<MultiTrajectory::TrackStateProxy> {
+        false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // Bind the transported state to the current surface
@@ -99,12 +99,13 @@ auto kalmanHandleMeasurement(
     typeFlags.set(TrackStateFlag::MeasurementFlag);
   } else {
     ACTS_VERBOSE(
-        "Filtering step successful. But measurement is deterimined "
+        "Filtering step successful. But measurement is determined "
         "to "
         "be an outlier. Stepping state is not updated.")
     // Set the outlier type flag
     typeFlags.set(TrackStateFlag::OutlierFlag);
-    trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+    trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
+                              TrackStatePropMask::Filtered);
   }
 
   return trackStateProxy;
@@ -122,21 +123,20 @@ auto kalmanHandleMeasurement(
 /// @param doCovTransport Wether to perform a covariance transport when
 /// computing the bound state or not
 /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound (only corrected when performing CovTransport)
-template <typename propagator_state_t, typename stepper_t>
+template <typename propagator_state_t, typename stepper_t, typename traj_t>
 auto kalmanHandleNoMeasurement(
     propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
-    MultiTrajectory &fittedStates, const size_t lastTrackIndex,
+    MultiTrajectory<traj_t> &fittedStates, const size_t lastTrackIndex,
     bool doCovTransport,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
-        false)) -> Result<MultiTrajectory::TrackStateProxy> {
+        false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
   const auto &logger = state.options.logger;
 
   // No source links on surface, add either hole or passive material
   // TrackState entry multi trajectory. No storage allocation for
   // uncalibrated/calibrated measurement and filtered parameter
   const auto newTrackIndex = fittedStates.addTrackState(
-      ~(TrackStatePropMask::Uncalibrated | TrackStatePropMask::Calibrated |
-        TrackStatePropMask::Filtered),
+      ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered),
       lastTrackIndex);
 
   // now get track state proxy back
@@ -180,7 +180,8 @@ auto kalmanHandleNoMeasurement(
 
   // Set the filtered parameter index to be the same with predicted
   // parameter
-  trackStateProxy.data().ifiltered = trackStateProxy.data().ipredicted;
+  trackStateProxy.shareFrom(trackStateProxy, TrackStatePropMask::Predicted,
+                            TrackStatePropMask::Filtered);
 
   return trackStateProxy;
 }
