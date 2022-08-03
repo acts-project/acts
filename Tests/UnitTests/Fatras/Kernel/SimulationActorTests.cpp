@@ -166,7 +166,7 @@ std::shared_ptr<Acts::Surface> makeMaterialSurface() {
   auto surface = makeEmptySurface();
   auto slab = Acts::Test::makeUnitSlab();
   surface->assignSurfaceMaterial(
-      std::make_shared<Acts::HomogeneousSurfaceMaterial>(std::move(slab)));
+      std::make_shared<Acts::HomogeneousSurfaceMaterial>(slab));
   return surface;
 }
 

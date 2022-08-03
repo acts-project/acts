@@ -423,13 +423,14 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
 
   ACTS_VERBOSE("Parsing the " << layers.size()
                               << " layers to gather overall dimensions");
-  if (cylinderVolumeBounds != nullptr)
+  if (cylinderVolumeBounds != nullptr) {
     ACTS_DEBUG("Cylinder volume bounds are given: (rmin/rmax/dz) = "
                << "(" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR)
                << "/" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR)
                << "/"
                << cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ)
                << ")");
+  }
 
   // prepare for parsing the layers
   double layerRmin = 10e10;
@@ -591,8 +592,9 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     // list the volume names:
     //  and make the screen output readable
     size_t ivol = 0;
-    for (auto& vol : volumes)
+    for (auto& vol : volumes) {
       ACTS_VERBOSE("[" << ivol++ << "] - volume : " << vol->volumeName());
+    }
 
     // the needed iterators
     auto tVolIter = volumes.begin();
@@ -702,23 +704,27 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
     ACTS_VERBOSE("[GV] Register " << glueVolumesNegativeFace.size()
                                   << " volumes at face negativeFaceXY:");
     for (tVolIter = glueVolumesNegativeFace.begin();
-         tVolIter != glueVolumesNegativeFace.end(); ++tVolIter)
+         tVolIter != glueVolumesNegativeFace.end(); ++tVolIter) {
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
+    }
     ACTS_VERBOSE("[GV] Register " << glueVolumesPositiveFace.size()
                                   << " volumes at face positiveFaceXY: ");
     for (tVolIter = glueVolumesPositiveFace.begin();
-         tVolIter != glueVolumesPositiveFace.end(); ++tVolIter)
+         tVolIter != glueVolumesPositiveFace.end(); ++tVolIter) {
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
+    }
     ACTS_VERBOSE("[GV] Register " << glueVolumesInnerTube.size()
                                   << " volumes at face tubeInnerCover: ");
     for (tVolIter = glueVolumesInnerTube.begin();
-         tVolIter != glueVolumesInnerTube.end(); ++tVolIter)
+         tVolIter != glueVolumesInnerTube.end(); ++tVolIter) {
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName() << "'");
+    }
     ACTS_VERBOSE("[GV] Register " << glueVolumesOuterTube.size()
                                   << " volumes at face tubeOuterCover:");
     for (tVolIter = glueVolumesOuterTube.begin();
-         tVolIter != glueVolumesOuterTube.end(); ++tVolIter)
+         tVolIter != glueVolumesOuterTube.end(); ++tVolIter) {
       ACTS_VERBOSE("   -> volume '" << (*tVolIter)->volumeName());
+    }
   }
   // return success
   return true;

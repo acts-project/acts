@@ -141,10 +141,12 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     std::sort(matchedTracks.begin(), matchedTracks.end(),
               [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
                 // sort by nMajorityHits
-                if (lhs.first.nMajorityHits > rhs.first.nMajorityHits)
+                if (lhs.first.nMajorityHits > rhs.first.nMajorityHits) {
                   return true;
-                if (lhs.first.nMajorityHits < rhs.first.nMajorityHits)
+                }
+                if (lhs.first.nMajorityHits < rhs.first.nMajorityHits) {
                   return false;
+                }
                 // sort by nOutliers
                 return (lhs.first.nOutliers < rhs.first.nOutliers);
               });

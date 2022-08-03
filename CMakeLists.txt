@@ -72,6 +72,7 @@ option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
 # profiling related optios
 option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
 option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" OFF)
+set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling is enabled")
 
 option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
 set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown. If ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set and this is unset, this will enable a runtime check of the log level.")
@@ -90,6 +91,8 @@ set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_EXAMPLES_EDM4HEP ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_ANALYSIS_APPS ACTS_BUILD_EVERYTHING)
 
 # any examples component activates the general examples option
 set_option_if(
@@ -269,6 +272,10 @@ if(ACTS_BUILD_PLUGIN_SYCL)
   find_package(SYCL REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_TGEO)
+  find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)
+  check_root_compatibility()
+endif()
+if(ACTS_BUILD_ANALYSIS_APPS)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)
   check_root_compatibility()
 endif()

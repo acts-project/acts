@@ -186,7 +186,7 @@ StraightPropagator makeStraightPropagator(
   cfg.resolveSensitive = true;
   Navigator navigator(cfg);
   StraightLineStepper stepper;
-  return StraightPropagator(std::move(stepper), std::move(navigator));
+  return StraightPropagator(stepper, std::move(navigator));
 }
 
 // Construct a propagator using a constant magnetic field along z.

@@ -67,18 +67,17 @@ ProcessCode PropagationAlgorithm::execute(
 
     // execute the test for charged particles
     PropagationOutput pOutput;
-    if (charge) {
+    if (charge != 0.0) {
       // charged extrapolation - with hit recording
-      Acts::BoundTrackParameters startParameters(surface, std::move(pars),
-                                                 std::move(cov));
+      Acts::BoundTrackParameters startParameters(surface, pars, std::move(cov));
       sPosition = startParameters.position(context.geoContext);
       sMomentum = startParameters.momentum();
       pOutput = m_cfg.propagatorImpl->execute(
           context, m_cfg, Acts::LoggerWrapper{logger()}, startParameters);
     } else {
       // execute the test for neutral particles
-      Acts::NeutralBoundTrackParameters neutralParameters(
-          surface, std::move(pars), std::move(cov));
+      Acts::NeutralBoundTrackParameters neutralParameters(surface, pars,
+                                                          std::move(cov));
       sPosition = neutralParameters.position(context.geoContext);
       sMomentum = neutralParameters.momentum();
       pOutput = m_cfg.propagatorImpl->execute(
@@ -87,7 +86,7 @@ ProcessCode PropagationAlgorithm::execute(
     // Record the propagator steps
     propagationSteps.push_back(std::move(pOutput.first));
     if (m_cfg.recordMaterialInteractions &&
-        pOutput.second.materialInteractions.size()) {
+        !pOutput.second.materialInteractions.empty()) {
       // Create a recorded material track
       RecordedMaterialTrack rmTrack;
       // Start position

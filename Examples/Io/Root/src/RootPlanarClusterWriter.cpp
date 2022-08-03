@@ -48,8 +48,9 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_nr", &m_eventNr);
@@ -78,7 +79,11 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   m_outputTree->Branch("truth_barcode", &m_t_barcode);
 }
 
-ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {}
+ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   // Write the tree
@@ -106,7 +111,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
   for (auto [moduleGeoId, moduleClusters] : groupByModule(clusters)) {
     const Acts::Surface* surfacePtr =
         m_cfg.trackingGeometry->findSurface(moduleGeoId);
-    if (not surfacePtr) {
+    if (surfacePtr == nullptr) {
       ACTS_ERROR("Could not find surface for " << moduleGeoId);
       return ProcessCode::ABORT;
     }
@@ -147,7 +152,8 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
         m_cell_IDy.push_back(cell.channel1);
         m_cell_data.push_back(cell.data);
         // for more we need the digitization module
-        if (detectorElement && detectorElement->digitizationModule()) {
+        if ((detectorElement != nullptr) &&
+            detectorElement->digitizationModule()) {
           auto digitationModule = detectorElement->digitizationModule();
           const Acts::Segmentation& segmentation =
               digitationModule->segmentation();

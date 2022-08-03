@@ -167,7 +167,7 @@ ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
   // construct all components for the fitter
   Stepper stepper(std::move(magneticField));
   Acts::DirectNavigator navigator;
-  DirectPropagator propagator(std::move(stepper), std::move(navigator));
+  DirectPropagator propagator(std::move(stepper), navigator);
   DirectFitter fitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.

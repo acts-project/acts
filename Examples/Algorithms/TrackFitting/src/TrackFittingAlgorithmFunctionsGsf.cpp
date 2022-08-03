@@ -139,7 +139,7 @@ TrackFittingAlgorithm::makeGsfFitterFunction(
     bool disableAllMaterialHandling) {
   Acts::MultiEigenStepperLoop stepper(std::move(magneticField));
   Acts::DirectNavigator navigator;
-  Acts::Propagator propagator(std::move(stepper), std::move(navigator));
+  Acts::Propagator propagator(std::move(stepper), navigator);
   Acts::GaussianSumFitter<decltype(propagator), Acts::VectorMultiTrajectory>
       trackFitter(std::move(propagator));
 

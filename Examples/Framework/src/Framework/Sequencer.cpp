@@ -102,7 +102,7 @@ namespace {
 // From http://locklessinc.com/articles/sat_arithmetic/
 size_t saturatedAdd(size_t a, size_t b) {
   size_t res = a + b;
-  res |= -(res < a);
+  res |= -static_cast<int>(res < a);
   return res;
 }
 }  // namespace
@@ -215,7 +215,7 @@ struct TimingInfo {
 void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
                  std::string path) {
-  dfe::NamedTupleTsvWriter<TimingInfo> writer(std::move(path), 4);
+  dfe::NamedTupleTsvWriter<TimingInfo> writer(path, 4);
   for (size_t i = 0; i < identifiers.size(); ++i) {
     TimingInfo info;
     info.identifier = identifiers[i];

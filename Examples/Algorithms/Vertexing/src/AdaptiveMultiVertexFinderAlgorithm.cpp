@@ -156,7 +156,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   int timeMS =
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   // store reconstruction time
-  ctx.eventStore.add(m_cfg.outputTime, std::move(timeMS));
+  ctx.eventStore.add(m_cfg.outputTime,
+                     std::move(timeMS));  // NOLINT(performance-move-const-arg)
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

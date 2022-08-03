@@ -117,7 +117,7 @@ Acts::Layer::compatibleSurfaces(
   // check if you have to stop at the endSurface
   double pathLimit = options.pathLimit;
   double overstepLimit = options.overstepLimit;
-  if (options.endObject) {
+  if (options.endObject != nullptr) {
     // intersect the end surface
     // - it is the final one don't use the bounday check at all
     SurfaceIntersection endInter = options.endObject->intersect(
@@ -149,7 +149,7 @@ Acts::Layer::compatibleSurfaces(
       return true;
     }
     // next option: it's a material surface and you want to have it
-    if (options.resolveMaterial && sf.surfaceMaterial()) {
+    if (options.resolveMaterial && sf.surfaceMaterial() != nullptr) {
       return true;
     }
     // last option: resovle all
@@ -260,7 +260,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   bool resolvePS = options.resolveSensitive || options.resolvePassive;
   bool resolveMS = options.resolveMaterial &&
                    (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
-                    surfaceRepresentation().surfaceMaterial());
+                    (surfaceRepresentation().surfaceMaterial() != nullptr));
 
   // The signed direction: solution (except overstepping) is positive
   auto sDirection = options.navDir * direction;

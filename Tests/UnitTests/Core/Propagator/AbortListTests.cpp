@@ -62,7 +62,7 @@ struct PropagatorState {
     // Navigation direction
     NavigationDirection navDir = NavigationDirection::Forward;
     // adaptive sep size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize;
   };
 
   /// emulate the options template
@@ -130,22 +130,22 @@ BOOST_AUTO_TEST_CASE(AbortListTest_PathLimit) {
   // It should not abort yet
   BOOST_CHECK(!abortList(result, state, stepper));
   // The step size should be adapted to 1 meter now
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, 1_m);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), 1_m);
   // Let's do a step of 90 cm now
   state.stepping.pathAccumulated = 90_cm;
   // Still no abort yet
   BOOST_CHECK(!abortList(result, state, stepper));
   // 10 cm are left
   // The step size should be adapted to 10 cm now
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, 10_cm);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), 10_cm);
 
   // Approach the target
   while (!abortList(result, state, stepper)) {
-    state.stepping.pathAccumulated += 0.5 * state.stepping.stepSize;
+    state.stepping.pathAccumulated += 0.5 * state.stepping.stepSize.value();
   }
 
   // now we need to be smaller than the tolerance
-  BOOST_CHECK_LT(state.stepping.stepSize, 1_um);
+  BOOST_CHECK_LT(state.stepping.stepSize.value(), 1_um);
 
   // Check if you can expand the AbortList
   EndOfWorld eow;

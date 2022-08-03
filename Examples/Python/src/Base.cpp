@@ -96,14 +96,25 @@ void addLogging(Acts::Python::Context& ctx) {
   auto& m = ctx.get("main");
   auto logging = m.def_submodule("logging", "");
 
-  py::enum_<Acts::Logging::Level>(logging, "Level")
-      .value("VERBOSE", Acts::Logging::VERBOSE)
-      .value("DEBUG", Acts::Logging::DEBUG)
-      .value("INFO", Acts::Logging::INFO)
-      .value("WARNING", Acts::Logging::WARNING)
-      .value("ERROR", Acts::Logging::ERROR)
-      .value("FATAL", Acts::Logging::FATAL)
-      .export_values();
+  auto levelEnum = py::enum_<Acts::Logging::Level>(logging, "Level")
+                       .value("VERBOSE", Acts::Logging::VERBOSE)
+                       .value("DEBUG", Acts::Logging::DEBUG)
+                       .value("INFO", Acts::Logging::INFO)
+                       .value("WARNING", Acts::Logging::WARNING)
+                       .value("ERROR", Acts::Logging::ERROR)
+                       .value("FATAL", Acts::Logging::FATAL)
+                       .export_values();
+
+  levelEnum
+      .def("__lt__", [](Acts::Logging::Level self,
+                        Acts::Logging::Level other) { return self < other; })
+      .def("__gt__", [](Acts::Logging::Level self,
+                        Acts::Logging::Level other) { return self > other; })
+      .def("__le__", [](Acts::Logging::Level self,
+                        Acts::Logging::Level other) { return self <= other; })
+      .def("__ge__", [](Acts::Logging::Level self, Acts::Logging::Level other) {
+        return self >= other;
+      });
 
   auto makeLogFunction = [](Acts::Logging::Level level) {
     return

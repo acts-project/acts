@@ -78,12 +78,13 @@ int processGeometry(int argc, char* argv[],
 
     /// Decorate the context
     for (auto& cdr : contextDecorators) {
-      if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS)
+      if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS) {
         throw std::runtime_error("Failed to decorate event context");
+      }
     }
 
     std::string geoContextStr = "";
-    if (contextDecorators.size() > 0) {
+    if (!contextDecorators.empty()) {
       // We need indeed a context object
       if (nEvents > 1) {
         geoContextStr = "_geoContext" + std::to_string(ievt);
@@ -179,8 +180,7 @@ int processGeometry(int argc, char* argv[],
       }
       jmWriterCfg.writeFormat = format;
 
-      ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg),
-                                               logLevel);
+      ActsExamples::JsonMaterialWriter jmwImpl(jmWriterCfg, logLevel);
 
       jmwImpl.write(*tGeometry);
     }
