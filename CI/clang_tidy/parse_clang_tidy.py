@@ -35,7 +35,7 @@ def parse_clang_tidy_item(itemstr):
             line=int(m.group("line")),
             col=int(m.group("col")),
             #  message=m.group("msg").strip(),
-            message="\n".join(lines[1:]),
+            message=m.group("msg").strip() + "\n" + "\n".join(lines[1:]),
             code=m.group("code"),
             severity=m.group("sev"),
         )
