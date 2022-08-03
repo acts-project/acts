@@ -73,7 +73,7 @@ ActsExamples::ProcessCode ActsExamples::JsonSpacePointWriter<T>::writeT(
   std::string path = perEventFilepath(m_cfg.outputDir, "spacepoints.json",
                                       context.eventNumber);
   std::ofstream os(path, std::ofstream::out | std::ofstream::trunc);
-  if (!os) {
+  if (!os) {  // NOLINT(readability-implicit-bool-conversion)
     throw std::ios_base::failure("Could not open '" + path + "' to write");
   }
 

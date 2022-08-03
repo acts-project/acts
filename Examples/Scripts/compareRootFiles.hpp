@@ -63,7 +63,7 @@ class AnyVector {
 
   // Delete a type-erased vector
   ~AnyVector() {
-    if (m_vector) {
+    if (m_vector != nullptr) {
       m_deleter();
     }
   }
