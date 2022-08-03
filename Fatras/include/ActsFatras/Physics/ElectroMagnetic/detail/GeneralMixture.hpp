@@ -114,10 +114,11 @@ struct GeneralMixture {
     double epsi;
     double var1 = (-1.843e-3 * d1 + 3.347e-2) * d1 + 8.471e-1;  // Variance of
                                                                 // core
-    if (d2 < 0.5)
+    if (d2 < 0.5) {
       epsi = (6.096e-4 * d2 + 6.348e-3) * d2 + 4.841e-2;
-    else
+    } else {
       epsi = (-5.729e-3 * d2 + 1.106e-1) * d2 - 1.908e-2;
+    }
     scattering_params[1] = var1;                            // Variance of core
     scattering_params[2] = (1 - (1 - epsi) * var1) / epsi;  // Variance of tails
     scattering_params[3] = epsi;  // Mixture weight of tail component
@@ -166,10 +167,11 @@ struct GeneralMixture {
     double epsi = scattering_params[3];
     bool ind = udist(generator) > epsi;
     double u = udist(generator);
-    if (ind)
+    if (ind) {
       return std::sqrt(var1) * std::sqrt(-2 * std::log(u)) * sigma_tot;
-    else
+    } else {
       return std::sqrt(var2) * std::sqrt(-2 * std::log(u)) * sigma_tot;
+    }
   }
 
   /// @brief Retrieve the semi-gaussian mixture
@@ -191,10 +193,11 @@ struct GeneralMixture {
     double sigma_tot = scattering_params[4];
     bool ind = udist(generator) > epsi;
     double u = udist(generator);
-    if (ind)
+    if (ind) {
       return std::sqrt(var1) * std::sqrt(-2 * std::log(u)) * sigma_tot;
-    else
+    } else {
       return a * b * std::sqrt((1 - u) / (u * b * b + a * a)) * sigma_tot;
+    }
   }
 };
 

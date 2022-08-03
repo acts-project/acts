@@ -94,8 +94,9 @@ class ObjPropagationStepsWriter
         }
         // Write out the line - only if we have at least two points created
         size_t vBreak = vCounter + steps.size() - 1;
-        for (; vCounter < vBreak; ++vCounter)
+        for (; vCounter < vBreak; ++vCounter) {
           os << "l " << vCounter << " " << vCounter + 1 << '\n';
+        }
       }
     }
     return ActsExamples::ProcessCode::SUCCESS;

@@ -448,11 +448,12 @@ ProtoLayerCreatorT<detector_element_t>::createProtoLayers(
         // (1) module bounds
         // create the bounds
         Acts::PlanarBounds* pBounds = nullptr;
-        if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX)
+        if (moduleMaxHalfX != 0. && moduleMinHalfX != moduleMaxHalfX) {
           pBounds = new Acts::TrapezoidBounds(moduleMinHalfX, moduleMaxHalfX,
                                               moduleHalfY);
-        else
+        } else {
           pBounds = new Acts::RectangleBounds(moduleMinHalfX, moduleHalfY);
+        }
         // now create the shared bounds from it
         std::shared_ptr<const Acts::PlanarBounds> moduleBounds(pBounds);
         // (2) create digitizaiton module

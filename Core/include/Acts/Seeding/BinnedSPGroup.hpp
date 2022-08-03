@@ -154,8 +154,9 @@ class BinnedSPGroupIterator {
     }
 
     size_t this_zIndex = zIndex;
-    if (not customZorder.empty())
+    if (not customZorder.empty()) {
       this_zIndex = customZorder.at(this_zIndex - 1);
+    }
 
     // set current & neighbor bins only if bin indices valid
     if (phiIndex <= phiZbins[0] && zIndex <= phiZbins[1]) {

@@ -406,10 +406,11 @@ struct GsfActor {
       auto new_pars = old_bound.parameters();
 
       const auto delta_p = [&]() {
-        if (state.stepping.navDir == NavigationDirection::Forward)
+        if (state.stepping.navDir == NavigationDirection::Forward) {
           return p_prev * (gaussian.mean - 1.);
-        else
+        } else {
           return p_prev * (1. / gaussian.mean - 1.);
+        }
       }();
 
       throw_assert(p_prev + delta_p > 0.,

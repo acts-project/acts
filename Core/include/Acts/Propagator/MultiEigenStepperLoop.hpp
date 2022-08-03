@@ -746,8 +746,9 @@ class MultiEigenStepperLoop
   /// @param state [in,out] The stepping state (thread-local cache)
   std::string outputStepSize(const State& state) const {
     std::stringstream ss;
-    for (const auto& component : state.components)
+    for (const auto& component : state.components) {
       ss << component.state.stepSize.toString() << " || ";
+    }
 
     return ss.str();
   }
