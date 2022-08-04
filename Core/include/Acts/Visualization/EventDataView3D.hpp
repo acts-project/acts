@@ -189,8 +189,9 @@ struct EventDataView3D {
   /// parameters
   /// @param smoothedConfig The visualization options for the smoothed
   /// parameters
-  static inline void drawMultiTrajectory(
-      IVisualization3D& helper, const Acts::MultiTrajectory& multiTraj,
+  template <typename D>
+  static void drawMultiTrajectory(
+      IVisualization3D& helper, const Acts::MultiTrajectory<D>& multiTraj,
       const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
