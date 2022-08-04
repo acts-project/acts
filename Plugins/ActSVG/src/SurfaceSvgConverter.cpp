@@ -91,6 +91,11 @@ Acts::Svg::ProtoSurface Acts::Svg::convert(const GeometryContext& gctx,
     pSurface._measures = {static_cast<actsvg::scalar>(boundValues[0]),
                           static_cast<actsvg::scalar>(boundValues[1]),
                           static_cast<actsvg::scalar>(boundValues[2])};
+  } else if (bType == Acts::SurfaceBounds::BoundsType::eDiamond) {
+    // Set the measure
+    for (const auto& bv : boundValues) {
+      pSurface._measures.push_back(static_cast<actsvg::scalar>(bv));
+    }
   } else if (bType == Acts::SurfaceBounds::BoundsType::eAnnulus) {
     pSurface._type = ProtoSurface::type::e_trapez;
     // Set the measure

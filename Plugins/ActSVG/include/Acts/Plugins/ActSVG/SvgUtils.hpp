@@ -35,6 +35,37 @@ struct Style {
   unsigned int nSegments = 72u;
 };
 
+/// Helper method to a measure
+///
+/// @param xStart the start position
+/// @param yStart the start position
+/// @param xEnd the start position
+/// @param yEnd the start position
+inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
+                                          ActsScalar xEnd, ActsScalar yEnd,
+                                          const std::string& variable = "",
+                                          ActsScalar value = 0.,
+                                          const std::string& unit = "") {
+  std::string mlabel = "";
+  if (not variable.empty()) {
+    mlabel = variable + " = ";
+  }
+  if (value != 0.) {
+    mlabel += actsvg::utils::to_string(static_cast<actsvg::scalar>(value));
+  }
+  if (not unit.empty()) {
+    mlabel += " ";
+    mlabel += unit;
+  }
+  return actsvg::draw::measure(
+      "measure",
+      {static_cast<actsvg::scalar>(xStart),
+       static_cast<actsvg::scalar>(yStart)},
+      {static_cast<actsvg::scalar>(xEnd), static_cast<actsvg::scalar>(yEnd)},
+      actsvg::style::stroke(), actsvg::style::marker({"o"}),
+      actsvg::style::marker({"|<<"}), actsvg::style::font(), mlabel);
+}
+
 // Helper method to draw axes
 ///
 /// @param xMin the minimum x value

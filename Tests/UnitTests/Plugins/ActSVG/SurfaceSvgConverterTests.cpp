@@ -12,6 +12,8 @@
 #include "Acts/Plugins/ActSVG/SurfaceSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
+#include "Acts/Surfaces/ConvexPolygonBounds.hpp"
+#include "Acts/Surfaces/DiamondBounds.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
@@ -134,8 +136,21 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
                     "flipped_trapezoid_reference.svg");
 
   // Diamond
+  auto diamondBounds =
+      std::make_shared<Acts::DiamondBounds>(36., 64., 14., 40., 30.);
+  transform = Acts::Transform3::Identity();
+  auto diamond =
+      Acts::Surface::makeShared<Acts::PlaneSurface>(transform, diamondBounds);
+  runPlanarTests(*diamond, planarStyle, "diamond");
 
   // ConvexPolygon
+  std::vector<Acts::Vector2> vertices = {
+      {-10., -10.}, {10., -15.}, {20., 5.}, {-5., 15.}, {-12, 0.}};
+  auto polygonBounds =
+      std::make_shared<Acts::ConvexPolygonBounds<5u>>(vertices);
+  auto polygon =
+      Acts::Surface::makeShared<Acts::PlaneSurface>(transform, polygonBounds);
+  runPlanarTests(*polygon, planarStyle, "polygon");
 }
 
 BOOST_AUTO_TEST_CASE(DiscSurfaces) {

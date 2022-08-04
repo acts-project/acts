@@ -19,7 +19,7 @@
 std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
     const GeometryContext& gctx, const Layer& layer,
     const std::string& layerName, const Style& surfaceStyle,
-    const std::array<std::array<ActsScalar, 2>, 2>& rangeRes) {
+    const LayerConvConf& lConfiguration) {
   // The local logger
   ACTS_LOCAL_LOGGER(
       getDefaultLogger("SurfaceArraySvgConverter", Logging::INFO));
@@ -85,20 +85,34 @@ std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
       Acts::ActsScalar radius = Acts::VectorHelpers::perp(rCenter);
       Acts::ActsScalar phi = Acts::VectorHelpers::phi(rCenter);
       Acts::ActsScalar z = sfCenter.z();
+      // Get the average radius
+      avgRadius += radius;
+      avgZ += z;
       // Raw display surfaces for projects
       actsvg::proto::surface<std::vector<Acts::Vector3>> projSurface;
       projSurface._vertices = sf->polyhedronRepresentation(gctx, 1u).vertices;
       // Draw only if they fall into the range restriction - for phi
-      if (phi >= rangeRes[1][0] and phi <= rangeRes[1][1]) {
+      if (phi >= lConfiguration.phiRange[0] and phi <= lConfiguration.phiRange[1]) {
         std::string m_zr_id = std::string("zr_") + std::to_string(m++);
         zr_layer.add_object(Acts::Svg::surfaceViewZR(projSurface, m_zr_id));
       }
       // for z
-      if (z >= rangeRes[0][0] and z <= rangeRes[0][1]) {
+      if (z >= lConfiguration.zRange[0] and z <= lConfiguration.zRange[1]) {
         std::string m_xy_id = std::string("xy_") + std::to_string(m++);
         xy_layer.add_object(Acts::Svg::surfaceViewXY(projSurface, m_xy_id));
       }
     }
+    // Do the average
+    avgRadius /= layer.surfaceArray()->surfaces().size();
+    avgZ /= layer.surfaceArray()->surfaces().size();
+
+    // Add a measure iuf requested
+    if (lConfiguration.labelProjection){
+      ActsScalar xEnd = avgRadius * std::cos(lConfiguration.labelGauge);
+      ActsScalar yEnd = avgRadius * std::sin(lConfiguration.labelGauge);
+      xy_layer.add_object(measure(0.,0.,xEnd,yEnd,"r", avgRadius, "mm"));
+    }
+
   }
 
   // Register

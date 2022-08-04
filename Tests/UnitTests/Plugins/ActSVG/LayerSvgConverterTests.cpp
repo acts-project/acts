@@ -125,12 +125,14 @@ BOOST_AUTO_TEST_CASE(DiscLayerRadialSvg) {
   discLayerStyle.strokeColor = {25, 25, 25};
   discLayerStyle.strokeWidth = 0.5;
   discLayerStyle.nSegments = 72u;
+  // Configuration
+  Acts::Svg::LayerConvConf lConfig;
 
   // Get the layer
   auto discLayer = generateDiscLayer(100, 250, 32u, 4u);
   // Get the layer sheets
   auto discLayerSheets = Acts::Svg::layerSheets(
-      tgContext, *discLayer, "disc_layer_sector", discLayerStyle);
+      tgContext, *discLayer, "disc_layer_sector", discLayerStyle, lConfig);
 
   Acts::Svg::toFile({discLayerSheets[0]}, discLayerSheets[0]._id + ".svg");
   Acts::Svg::toFile({discLayerSheets[1]}, discLayerSheets[1]._id + ".svg");
@@ -146,12 +148,14 @@ BOOST_AUTO_TEST_CASE(DiscLayerTrapezoidSvg) {
   discLayerStyle.strokeColor = {25, 25, 25};
   discLayerStyle.strokeWidth = 0.5;
   discLayerStyle.nSegments = 72u;
+  // Configuration
+  Acts::Svg::LayerConvConf lConfig;
 
   // Get the layer
   auto discLayer = generateDiscLayer(100, 250, 32u, 4u, true);
   // Get the layer sheets
   auto discLayerSheets = Acts::Svg::layerSheets(
-      tgContext, *discLayer, "disc_layer_trapezoid", discLayerStyle);
+      tgContext, *discLayer, "disc_layer_trapezoid", discLayerStyle, lConfig);
 
   Acts::Svg::toFile({discLayerSheets[0]}, discLayerSheets[0]._id + ".svg");
   Acts::Svg::toFile({discLayerSheets[1]}, discLayerSheets[1]._id + ".svg");
@@ -167,6 +171,8 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
   cylinderLayerStyle.strokeColor = {25, 25, 25};
   cylinderLayerStyle.strokeWidth = 0.5;
   cylinderLayerStyle.nSegments = 72u;
+  // Configuration
+  Acts::Svg::LayerConvConf lConfig;
 
   Acts::Test::CylindricalTrackingGeometry cGeometry(tgContext);
   auto tGeometry = cGeometry();
@@ -180,7 +186,7 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
         // Get the layer sheets
         auto layerSheet = Acts::Svg::layerSheets(
             tgContext, *layer, "cylinder_layer_" + std::to_string(il++),
-            cylinderLayerStyle);
+            cylinderLayerStyle, lConfig);
 
         Acts::Svg::toFile({layerSheet[0]}, layerSheet[0]._id + ".svg");
         Acts::Svg::toFile({layerSheet[1]}, layerSheet[1]._id + ".svg");

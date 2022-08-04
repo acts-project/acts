@@ -135,8 +135,8 @@ void ActsExamples::Options::addOutputOptions(
   if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Txt)) {
     opt.add_options()("output-txt", bool_switch(),
                       "Switch on to write '.txt' ouput file(s).");
-
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Svg)){
+  }
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Svg)) {
     opt.add_options()("output-svg", bool_switch(),
                       "Switch on to write '.svg' ouput file(s).");
   }

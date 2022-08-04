@@ -53,9 +53,12 @@ void ActsExamples::SvgTrackingGeometryWriter::write(
                                 std::to_string(geoID.layer());
 
         // Get the layer sheets
+        Acts::Svg::LayerConvConf lConfig;
+        lConfig.phiRange = m_cfg.phiViewRangeRZ;
+        lConfig.zRange = m_cfg.zViewRangeXY;
+        lConfig.labelProjection = true;
         auto layerSheet = Acts::Svg::layerSheets(
-            context.geoContext, *layer, layerName, m_cfg.svgStyle,
-            {m_cfg.zViewRangeXY, m_cfg.phiViewRangeRZ});
+            context.geoContext, *layer, layerName, m_cfg.svgStyle, lConfig);
         // Write the individual sheets
         for (unsigned int is = 0; is < layerSheet.size(); ++is) {
           Acts::Svg::toFile({layerSheet[is]}, layerSheet[is]._id + ".svg");
