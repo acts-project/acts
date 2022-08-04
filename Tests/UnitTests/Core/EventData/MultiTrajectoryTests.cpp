@@ -12,6 +12,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
@@ -134,12 +135,11 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   ts.chi2() = pc.chi2;
   ts.pathLength() = pc.pathLength;
   // source link defines the uncalibrated measurement
-  if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Uncalibrated)) {
-    ts.setUncalibrated(pc.sourceLink);
-  }
+  ts.setUncalibrated(pc.sourceLink);
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
-    testSourceLinkCalibrator(Acts::GeometryContext{}, ts);
+    testSourceLinkCalibrator<VectorMultiTrajectory>(Acts::GeometryContext{},
+                                                    ts);
   }
 }
 
@@ -155,7 +155,8 @@ BOOST_AUTO_TEST_CASE(Build) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
 
   // construct trajectory w/ multiple components
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
+
   auto i0 = t.addTrackState(kMask);
   // trajectory bifurcates here into multiple hypotheses
   auto i1a = t.addTrackState(kMask, i0);
@@ -167,7 +168,6 @@ BOOST_AUTO_TEST_CASE(Build) {
   std::vector<size_t> act;
   auto collect = [&](auto p) {
     act.push_back(p.index());
-    BOOST_CHECK(!p.hasUncalibrated());
     BOOST_CHECK(!p.hasCalibrated());
     BOOST_CHECK(!p.hasFiltered());
     BOOST_CHECK(!p.hasSmoothed());
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(Build) {
 
 BOOST_AUTO_TEST_CASE(Clear) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   BOOST_CHECK_EQUAL(t.size(), 0);
 
   auto i0 = t.addTrackState(kMask);
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(ApplyWithAbort) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
 
   // construct trajectory with three components
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   auto i0 = t.addTrackState(kMask);
   auto i1 = t.addTrackState(kMask, i0);
   auto i2 = t.addTrackState(kMask, i1);
@@ -243,31 +243,30 @@ BOOST_AUTO_TEST_CASE(ApplyWithAbort) {
 BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   using PM = TrackStatePropMask;
 
-  auto bs1 = PM::Uncalibrated;
+  auto bs1 = PM::Predicted;
 
-  BOOST_CHECK(ACTS_CHECK_BIT(bs1, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs1, PM::Predicted));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs1, PM::Calibrated));
 
   auto bs2 = PM::Calibrated;
 
-  BOOST_CHECK(!ACTS_CHECK_BIT(bs2, PM::Uncalibrated));
+  BOOST_CHECK(!ACTS_CHECK_BIT(bs2, PM::Predicted));
   BOOST_CHECK(ACTS_CHECK_BIT(bs2, PM::Calibrated));
 
-  auto bs3 = PM::Calibrated | PM::Uncalibrated;
+  auto bs3 = PM::Calibrated | PM::Predicted;
 
-  BOOST_CHECK(ACTS_CHECK_BIT(bs3, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs3, PM::Predicted));
   BOOST_CHECK(ACTS_CHECK_BIT(bs3, PM::Calibrated));
 
-  BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Uncalibrated));
+  BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Predicted));
   BOOST_CHECK(ACTS_CHECK_BIT(PM::All, PM::Calibrated));
 
-  auto bs4 = PM::Predicted | PM::Jacobian | PM::Uncalibrated;
+  auto bs4 = PM::Predicted | PM::Jacobian | PM::Smoothed;
   BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Predicted));
-  BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Uncalibrated));
   BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Jacobian));
+  BOOST_CHECK(ACTS_CHECK_BIT(bs4, PM::Smoothed));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Calibrated));
   BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Filtered));
-  BOOST_CHECK(!ACTS_CHECK_BIT(bs4, PM::Smoothed));
 
   auto cnv = [](auto a) -> std::bitset<8> {
     return static_cast<std::underlying_type<PM>::type>(a);
@@ -277,8 +276,8 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
   BOOST_CHECK(cnv(PM::None).none());  // all zeros
 
   // test orthogonality
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian, PM::Calibrated};
   for (size_t i = 0; i < values.size(); i++) {
     for (size_t j = 0; j < values.size(); j++) {
       PM a = values[i];
@@ -315,68 +314,68 @@ BOOST_AUTO_TEST_CASE(BitmaskOperators) {
 
 BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   using PM = TrackStatePropMask;
+  using namespace Acts::HashedStringLiteral;
 
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
+
+  auto alwaysPresent = [](auto& ts) {
+    BOOST_CHECK(ts.template has<"calibratedSourceLink"_hash>());
+    BOOST_CHECK(ts.template has<"referenceSurface"_hash>());
+    BOOST_CHECK(ts.template has<"measdim"_hash>());
+    BOOST_CHECK(ts.template has<"chi2"_hash>());
+    BOOST_CHECK(ts.template has<"pathLength"_hash>());
+    BOOST_CHECK(ts.template has<"typeFlags"_hash>());
+  };
 
   auto ts = t.getTrackState(t.addTrackState(PM::All));
   BOOST_CHECK(ts.hasPredicted());
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK(ts.hasSmoothed());
-  BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
   BOOST_CHECK(ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::None));
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::Predicted));
   BOOST_CHECK(ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::Filtered));
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::Smoothed));
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
-
-  ts = t.getTrackState(t.addTrackState(PM::Uncalibrated));
-  BOOST_CHECK(!ts.hasPredicted());
-  BOOST_CHECK(!ts.hasFiltered());
-  BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(ts.hasUncalibrated());
-  BOOST_CHECK(!ts.hasCalibrated());
-  BOOST_CHECK(!ts.hasProjector());
-  BOOST_CHECK(!ts.hasJacobian());
+  alwaysPresent(ts);
 
   ts = t.getTrackState(t.addTrackState(PM::Calibrated));
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
@@ -385,10 +384,10 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(!ts.hasUncalibrated());
   BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(!ts.hasProjector());
   BOOST_CHECK(ts.hasJacobian());
+  alwaysPresent(ts);
 }
 
 // assert expected "cross-talk" between trackstate proxies
@@ -396,7 +395,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
   TestTrackState pc(rng, 2u);
 
   // multi trajectory w/ a single, fully set, track state
-  MultiTrajectory traj;
+  VectorMultiTrajectory traj;
   size_t index = traj.addTrackState();
   {
     auto ts = traj.getTrackState(index);
@@ -488,7 +487,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
 BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
   TestTrackState pc(rng, 1u);
 
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   size_t index = t.addTrackState();
   auto ts = t.getTrackState(index);
   fillTrackState(pc, TrackStatePropMask::All, ts);
@@ -503,7 +502,7 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
   // use temporary measurement to reset calibrated data
   TestTrackState ttsb(rng, 2u);
   ts.setUncalibrated(ttsb.sourceLink);
-  auto meas = testSourceLinkCalibratorReturn(gctx, ts);
+  auto meas = testSourceLinkCalibratorReturn<VectorMultiTrajectory>(gctx, ts);
   auto m2 = std::get<Measurement<BoundIndices, 2u>>(meas);
 
   BOOST_CHECK_EQUAL(ts.calibratedSize(), 2);
@@ -514,7 +513,7 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
   // check that the overallocated parts are zeroed
   ParametersVector mParFull = ParametersVector::Zero();
   CovarianceMatrix mCovFull = CovarianceMatrix::Zero();
-  ActsMatrix<MultiTrajectory::MeasurementSizeMax, eBoundSize> projFull;
+  ActsMatrix<VectorMultiTrajectory::MeasurementSizeMax, eBoundSize> projFull;
   mParFull.head<2>() = ts.effectiveCalibrated();
   mCovFull.topLeftCorner<2, 2>() = ts.effectiveCalibratedCovariance();
   projFull.setZero();
@@ -529,7 +528,7 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   TestTrackState pc(rng, nMeasurements);
 
   // create trajectory with a single fully-filled random track state
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   size_t index = t.addTrackState();
   auto ts = t.getTrackState(index);
   fillTrackState(pc, TrackStatePropMask::All, ts);
@@ -561,7 +560,6 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   BOOST_CHECK_EQUAL(ts.chi2(), pc.chi2);
 
   // check that the uncalibrated source link is set
-  BOOST_CHECK(ts.hasUncalibrated());
   BOOST_CHECK_EQUAL(&ts.uncalibrated(), &pc.sourceLink);
 
   // check that the calibrated measurement is set
@@ -583,11 +581,11 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   }
 
   BOOST_CHECK(ts.hasProjector());
-  ActsMatrix<MultiTrajectory::MeasurementSizeMax, eBoundSize> fullProj;
+  ActsMatrix<VectorMultiTrajectory::MeasurementSizeMax, eBoundSize> fullProj;
   fullProj.setZero();
   {
     // create a temporary measurement to extract the projector matrix
-    auto meas = testSourceLinkCalibratorReturn(gctx, ts);
+    auto meas = testSourceLinkCalibratorReturn<VectorMultiTrajectory>(gctx, ts);
     std::visit(
         [&](const auto& m) {
           fullProj.topLeftCorner(nMeasurements, eBoundSize) = m.projector();
@@ -600,36 +598,79 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
 }
 
 BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
+  using namespace Acts::HashedStringLiteral;
+
   TestTrackState pc(rng, 2u);
 
   // this should allocate for all components in the trackstate, plus filtered
-  MultiTrajectory t;
-  size_t i = t.addTrackState(
-      TrackStatePropMask::Predicted | TrackStatePropMask::Filtered |
-      TrackStatePropMask::Uncalibrated | TrackStatePropMask::Jacobian);
+  VectorMultiTrajectory t;
+  size_t i = t.addTrackState(TrackStatePropMask::Predicted |
+                             TrackStatePropMask::Filtered |
+                             TrackStatePropMask::Jacobian);
   auto tso = t.getTrackState(i);
   fillTrackState(pc, TrackStatePropMask::Predicted, tso);
   fillTrackState(pc, TrackStatePropMask::Filtered, tso);
-  fillTrackState(pc, TrackStatePropMask::Uncalibrated, tso);
   fillTrackState(pc, TrackStatePropMask::Jacobian, tso);
 
   BOOST_CHECK(tso.hasPredicted());
   BOOST_CHECK(tso.hasFiltered());
   BOOST_CHECK(!tso.hasSmoothed());
-  BOOST_CHECK(tso.hasUncalibrated());
   BOOST_CHECK(!tso.hasCalibrated());
   BOOST_CHECK(tso.hasJacobian());
+
+  auto tsnone = t.getTrackState(t.addTrackState(TrackStatePropMask::None));
+  BOOST_CHECK(!tsnone.has<"predicted"_hash>());
+  BOOST_CHECK(!tsnone.has<"filtered"_hash>());
+  BOOST_CHECK(!tsnone.has<"smoothed"_hash>());
+  BOOST_CHECK(!tsnone.has<"jacobian"_hash>());
+  BOOST_CHECK(!tsnone.has<"calibrated"_hash>());
+  BOOST_CHECK(!tsnone.has<"projector"_hash>());
+  BOOST_CHECK(
+      !tsnone.has<"uncalibrated"_hash>());  // separate optional mechanism
+  BOOST_CHECK(tsnone.has<"calibratedSourceLink"_hash>());
+  BOOST_CHECK(tsnone.has<"referenceSurface"_hash>());
+  BOOST_CHECK(tsnone.has<"measdim"_hash>());
+  BOOST_CHECK(tsnone.has<"chi2"_hash>());
+  BOOST_CHECK(tsnone.has<"pathLength"_hash>());
+  BOOST_CHECK(tsnone.has<"typeFlags"_hash>());
+
+  auto tsall = t.getTrackState(t.addTrackState(TrackStatePropMask::All));
+  BOOST_CHECK(tsall.has<"predicted"_hash>());
+  BOOST_CHECK(tsall.has<"filtered"_hash>());
+  BOOST_CHECK(tsall.has<"smoothed"_hash>());
+  BOOST_CHECK(tsall.has<"jacobian"_hash>());
+  BOOST_CHECK(tsall.has<"calibrated"_hash>());
+  BOOST_CHECK(tsall.has<"projector"_hash>());
+  BOOST_CHECK(!tsall.has<"uncalibrated"_hash>());  // separate optional
+                                                   // mechanism: nullptr
+  BOOST_CHECK(tsall.has<"calibratedSourceLink"_hash>());
+  BOOST_CHECK(tsall.has<"referenceSurface"_hash>());
+  BOOST_CHECK(tsall.has<"measdim"_hash>());
+  BOOST_CHECK(tsall.has<"chi2"_hash>());
+  BOOST_CHECK(tsall.has<"pathLength"_hash>());
+  BOOST_CHECK(tsall.has<"typeFlags"_hash>());
+
+  tsall.unset(TrackStatePropMask::Predicted);
+  BOOST_CHECK(!tsall.has<"predicted"_hash>());
+  tsall.unset(TrackStatePropMask::Filtered);
+  BOOST_CHECK(!tsall.has<"filtered"_hash>());
+  tsall.unset(TrackStatePropMask::Smoothed);
+  BOOST_CHECK(!tsall.has<"smoothed"_hash>());
+  tsall.unset(TrackStatePropMask::Jacobian);
+  BOOST_CHECK(!tsall.has<"jacobian"_hash>());
+  tsall.unset(TrackStatePropMask::Calibrated);
+  BOOST_CHECK(!tsall.has<"calibrated"_hash>());
 }
 
 BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
   using PM = TrackStatePropMask;
 
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian, PM::Calibrated};
   PM all = std::accumulate(values.begin(), values.end(), PM::None,
                            [](auto a, auto b) { return a | b; });
 
-  MultiTrajectory mj;
+  VectorMultiTrajectory mj;
   {
     auto ts = mj.getTrackState(mj.addTrackState(PM::All));
     BOOST_CHECK(ts.getMask() == all);
@@ -654,10 +695,10 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   using PM = TrackStatePropMask;
 
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian, PM::Calibrated};
 
-  MultiTrajectory mj;
+  VectorMultiTrajectory mj;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
 
   // orthogonal ones
@@ -800,11 +841,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   using PM = TrackStatePropMask;
 
-  std::array<PM, 6> values{PM::Predicted, PM::Filtered,     PM::Smoothed,
-                           PM::Jacobian,  PM::Uncalibrated, PM::Calibrated};
+  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian, PM::Calibrated};
 
-  MultiTrajectory mj;
-  MultiTrajectory mj2;
+  VectorMultiTrajectory mj;
+  VectorMultiTrajectory mj2;
   auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
   auto mkts2 = [&](PM mask) {
     return mj2.getTrackState(mj2.addTrackState(mask));
@@ -827,8 +868,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   }
 
   // make sure they are actually on different MultiTrajectories
-  BOOST_CHECK_EQUAL(mj.size(), 36);
-  BOOST_CHECK_EQUAL(mj2.size(), 36);
+  BOOST_CHECK_EQUAL(mj.size(), values.size() * values.size());
+  BOOST_CHECK_EQUAL(mj2.size(), values.size() * values.size());
 
   auto ts1 = mkts(PM::Filtered | PM::Predicted);  // this has both
   ts1.filtered().setRandom();
@@ -858,12 +899,12 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
 
 BOOST_AUTO_TEST_CASE(ProxyAssignment) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
-  MultiTrajectory t;
+  VectorMultiTrajectory t;
   auto i0 = t.addTrackState(kMask);
 
-  MultiTrajectory::TrackStateProxy tp = t.getTrackState(i0);  // mutable
-  MultiTrajectory::TrackStateProxy tp2{tp};       // mutable to mutable
-  MultiTrajectory::ConstTrackStateProxy tp3{tp};  // mutable to const
+  VectorMultiTrajectory::TrackStateProxy tp = t.getTrackState(i0);  // mutable
+  VectorMultiTrajectory::TrackStateProxy tp2{tp};       // mutable to mutable
+  VectorMultiTrajectory::ConstTrackStateProxy tp3{tp};  // mutable to const
   // const to mutable: this won't compile
   // MultiTrajectory::TrackStateProxy tp4{tp3};
 }
@@ -871,20 +912,160 @@ BOOST_AUTO_TEST_CASE(ProxyAssignment) {
 // Check if the copy from const does compile, assume the copy is done correctly
 BOOST_AUTO_TEST_CASE(CopyFromConst) {
   using PM = TrackStatePropMask;
-  MultiTrajectory mj;
+  VectorMultiTrajectory mj;
 
   const auto idx_a = mj.addTrackState(PM::All);
   const auto idx_b = mj.addTrackState(PM::All);
 
-  MultiTrajectory::TrackStateProxy mutableProxy = mj.getTrackState(idx_a);
+  VectorMultiTrajectory::TrackStateProxy mutableProxy = mj.getTrackState(idx_a);
 
-  const MultiTrajectory& cmj = mj;
-  MultiTrajectory::ConstTrackStateProxy constProxy = cmj.getTrackState(idx_b);
+  const VectorMultiTrajectory& cmj = mj;
+  VectorMultiTrajectory::ConstTrackStateProxy constProxy =
+      cmj.getTrackState(idx_b);
 
   mutableProxy.copyFrom(constProxy);
 
   // copy mutable to const: this won't compile
   // constProxy.copyFrom(mutableProxy);
+}
+
+BOOST_AUTO_TEST_CASE(TrackStateProxyShare) {
+  TestTrackState pc(rng, 2u);
+
+  {
+    VectorMultiTrajectory traj;
+    size_t ia = traj.addTrackState(TrackStatePropMask::All);
+    size_t ib = traj.addTrackState(TrackStatePropMask::None);
+
+    auto tsa = traj.getTrackState(ia);
+    auto tsb = traj.getTrackState(ib);
+
+    fillTrackState(pc, TrackStatePropMask::All, tsa);
+
+    BOOST_CHECK(tsa.hasPredicted());
+    BOOST_CHECK(!tsb.hasPredicted());
+    tsb.shareFrom(tsa, TrackStatePropMask::Predicted);
+    BOOST_CHECK(tsa.hasPredicted());
+    BOOST_CHECK(tsb.hasPredicted());
+    BOOST_CHECK_EQUAL(tsa.predicted(), tsb.predicted());
+    BOOST_CHECK_EQUAL(tsa.predictedCovariance(), tsb.predictedCovariance());
+
+    BOOST_CHECK(tsa.hasFiltered());
+    BOOST_CHECK(!tsb.hasFiltered());
+    tsb.shareFrom(tsa, TrackStatePropMask::Filtered);
+    BOOST_CHECK(tsa.hasFiltered());
+    BOOST_CHECK(tsb.hasFiltered());
+    BOOST_CHECK_EQUAL(tsa.filtered(), tsb.filtered());
+    BOOST_CHECK_EQUAL(tsa.filteredCovariance(), tsb.filteredCovariance());
+
+    BOOST_CHECK(tsa.hasSmoothed());
+    BOOST_CHECK(!tsb.hasSmoothed());
+    tsb.shareFrom(tsa, TrackStatePropMask::Smoothed);
+    BOOST_CHECK(tsa.hasSmoothed());
+    BOOST_CHECK(tsb.hasSmoothed());
+    BOOST_CHECK_EQUAL(tsa.smoothed(), tsb.smoothed());
+    BOOST_CHECK_EQUAL(tsa.smoothedCovariance(), tsb.smoothedCovariance());
+
+    BOOST_CHECK(tsa.hasJacobian());
+    BOOST_CHECK(!tsb.hasJacobian());
+    tsb.shareFrom(tsa, TrackStatePropMask::Jacobian);
+    BOOST_CHECK(tsa.hasJacobian());
+    BOOST_CHECK(tsb.hasJacobian());
+    BOOST_CHECK_EQUAL(tsa.jacobian(), tsb.jacobian());
+  }
+
+  {
+    VectorMultiTrajectory traj;
+    size_t i = traj.addTrackState(TrackStatePropMask::All &
+                                  ~TrackStatePropMask::Filtered &
+                                  ~TrackStatePropMask::Smoothed);
+
+    auto ts = traj.getTrackState(i);
+
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(!ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    ts.predicted().setRandom();
+    ts.predictedCovariance().setRandom();
+
+    ts.shareFrom(TrackStatePropMask::Predicted, TrackStatePropMask::Filtered);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(!ts.hasSmoothed());
+    BOOST_CHECK_EQUAL(ts.predicted(), ts.filtered());
+    BOOST_CHECK_EQUAL(ts.predictedCovariance(), ts.filteredCovariance());
+
+    ts.shareFrom(TrackStatePropMask::Predicted, TrackStatePropMask::Smoothed);
+    BOOST_CHECK(ts.hasPredicted());
+    BOOST_CHECK(ts.hasFiltered());
+    BOOST_CHECK(ts.hasSmoothed());
+    BOOST_CHECK_EQUAL(ts.predicted(), ts.filtered());
+    BOOST_CHECK_EQUAL(ts.predicted(), ts.smoothed());
+    BOOST_CHECK_EQUAL(ts.predictedCovariance(), ts.filteredCovariance());
+    BOOST_CHECK_EQUAL(ts.predictedCovariance(), ts.smoothedCovariance());
+  }
+}
+
+BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumns) {
+  using namespace HashedStringLiteral;
+  using MTJ = VectorMultiTrajectory;
+
+  struct TestColumn {
+    double value;
+  };
+
+  MTJ traj;
+  traj.addColumn<int>("extra_column");
+  traj.addColumn<TestColumn>("another_column");
+
+  auto ts1 = traj.getTrackState(traj.addTrackState());
+  auto ts2 = traj.getTrackState(
+      traj.addTrackState(TrackStatePropMask::All, ts1.index()));
+  auto ts3 = traj.getTrackState(
+      traj.addTrackState(TrackStatePropMask::All, ts2.index()));
+
+  BOOST_CHECK(ts1.has<"extra_column"_hash>());
+  BOOST_CHECK(ts2.has<"extra_column"_hash>());
+  BOOST_CHECK(ts3.has<"extra_column"_hash>());
+
+  BOOST_CHECK(ts1.has<"another_column"_hash>());
+  BOOST_CHECK(ts2.has<"another_column"_hash>());
+  BOOST_CHECK(ts3.has<"another_column"_hash>());
+
+  ts2.component<int, "extra_column"_hash>() = 6;
+
+  BOOST_CHECK_EQUAL((ts2.component<int, "extra_column"_hash>()), 6);
+
+  ts3.component<TestColumn, "another_column"_hash>().value = 7;
+  BOOST_CHECK_EQUAL((ts3.component<TestColumn, "another_column"_hash>().value),
+                    7);
+}
+
+BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
+  auto runTest = [](auto&& fn) {
+    VectorMultiTrajectory mt;
+    std::vector<std::string> columns = {"one", "two", "three", "four"};
+    for (const auto& c : columns) {
+      BOOST_CHECK(!mt.hasColumn(fn(c)));
+      mt.addColumn<int>(c);
+      BOOST_CHECK(mt.hasColumn(fn(c)));
+    }
+    for (const auto& c : columns) {
+      auto ts1 = mt.getTrackState(mt.addTrackState());
+      auto ts2 = mt.getTrackState(mt.addTrackState());
+      BOOST_CHECK(ts1.has(fn(c)));
+      BOOST_CHECK(ts2.has(fn(c)));
+      ts1.component<int>(fn(c)) = 674;
+      ts2.component<int>(fn(c)) = 421;
+      BOOST_CHECK_EQUAL(ts1.component<int>(fn(c)), 674);
+      BOOST_CHECK_EQUAL(ts2.component<int>(fn(c)), 421);
+    }
+  };
+
+  runTest([](const std::string& c) { return hashString(c.c_str()); });
+  // runTest([](const std::string& c) { return c.c_str(); });
+  // runTest([](const std::string& c) { return c; });
+  // runTest([](std::string_view c) { return c; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()
