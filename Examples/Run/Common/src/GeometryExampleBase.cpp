@@ -17,8 +17,6 @@
 #include "ActsExamples/Io/Json/JsonOptionsWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
-#include "ActsExamples/Io/Svg/SvgOptionsWriter.hpp"
-#include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjWriterOptions.hpp"
@@ -41,13 +39,12 @@ int processGeometry(int argc, char* argv[],
   ActsExamples::Options::addMaterialOptions(desc);
   ActsExamples::Options::addObjWriterOptions(desc);
   ActsExamples::Options::addCsvWriterOptions(desc);
-  ActsExamples::Options::addSvgWriterOptions(desc);
   ActsExamples::Options::addJsonWriterOptions(desc);
   ActsExamples::Options::addOutputOptions(
       desc,
       ActsExamples::OutputFormat::Root | ActsExamples::OutputFormat::Json |
           ActsExamples::OutputFormat::Cbor | ActsExamples::OutputFormat::Csv |
-          ActsExamples::OutputFormat::Obj | ActsExamples::OutputFormat::Svg);
+          ActsExamples::OutputFormat::Obj);
 
   // Add specific options for this geometry
   detector.addOptions(desc);
@@ -138,18 +135,6 @@ int processGeometry(int argc, char* argv[],
 
       // Write the tracking geometry object
       sJsonWriter->write(context);
-    }
-
-    // SVG output
-    if (vm["output-svg"].as<bool>()) {
-      // setup the tracking geometry writer
-      ActsExamples::SvgTrackingGeometryWriter::Config tgSvgWriterConfig =
-          ActsExamples::Options::readSvgTrackingGeometryWriterConfig(vm);
-      auto tgSvgWriter =
-          std::make_shared<ActsExamples::SvgTrackingGeometryWriter>(
-              tgSvgWriterConfig, logLevel);
-      // Write the tracking geometry object
-      tgSvgWriter->write(context, *tGeometry);
     }
 
     // Get the file name from the options

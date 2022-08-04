@@ -27,7 +27,6 @@ enum class OutputFormat : uint8_t {
   Json = 8,
   Cbor = 16,
   Txt = 32,
-  Svg = 40,
   All = std::numeric_limits<uint8_t>::max()
 };
 

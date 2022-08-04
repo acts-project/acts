@@ -18,7 +18,7 @@ target_link_libraries(
     ActsExamplesFramework ActsExamplesMagneticField
     ActsExamplesDetectorsCommon ActsExamplesPropagation ActsExamplesGenerators
     ActsExamplesMaterialMapping ActsExamplesIoCsv ActsExamplesIoJson
-    ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoSvg ActsExamplesIoPerformance
+    ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance
     ActsExamplesDigitization ActsExamplesTrackFitting
     ActsExamplesTrackFinding ActsExamplesTruthTracking
     ActsExamplesIoCsv)

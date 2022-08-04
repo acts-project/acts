@@ -93,6 +93,7 @@ void addJson(Context& ctx);
 void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
+void addSvg(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -234,4 +235,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
+  addSvg(ctx);
 }
