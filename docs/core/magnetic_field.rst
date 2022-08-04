@@ -56,7 +56,7 @@ Constant magnetic field
 The simplest implementation is a constant field, which returns the same field values at every queried location. It is implemented in the :class:`Acts::ConstantBField` class.
 
 .. doxygenclass:: Acts::ConstantBField
-    :members: ConstantBField
+   :members: ConstantBField
 
 As seen above, the class is constructed from a three-dimensional field vector, which is returned unmodified to every call to :func:`Acts::ConstantBField::getField`.
 
@@ -74,9 +74,9 @@ typical access patterns, e.g. the propagation, subsequent steps are relatively
 likely to not cross the field cell boundary, the field cell can be cached.
 
 .. figure:: ../figures/bfield/field_cell.svg
-  :width: 300
+   :width: 300
 
-  Illustration of the field cell concept. Subsequent steps are clustered in the same field cell. The field cell only needs to be refetched when the propagation crosses into the next grid region.
+   Illustration of the field cell concept. Subsequent steps are clustered in the same field cell. The field cell only needs to be refetched when the propagation crosses into the next grid region.
 
 
 The class constructor
@@ -103,7 +103,7 @@ Most notably it exposes a type
 concept of a field cell discussed above. It also exposes a function
 
 .. doxygenfunction:: Acts::InterpolatedBFieldMap::getFieldCell
-    :outline:
+   :outline:
 
 that allows the retrieval of such a field cell at a given position. This function
 is used by :class:`Acts::InterpolatedBFieldMap` to lookup and use field cells.
@@ -113,8 +113,8 @@ the ``Cache`` object provided by the client, and only talk to
 field cell. Access to the magnetic field is done using the common interface methods
 
 .. doxygenclass:: Acts::InterpolatedBFieldMap
-    :members: getField
-    :outline:
+   :members: getField
+   :outline:
 
 where the ``Cache`` type hides the concrete mapper used.
 
@@ -131,8 +131,8 @@ Analytical solenoid magnetic field
 Acts also provides a field provider that calculates the field vectors analytically for a solenoid field. 
 
 .. image:: ../figures/bfield/quiver.png
-    :width: 600
-    :alt: Picture of a solenoid field in rz, with arrows indicating the direction of the field, and their size denoting the strength. The field is almost homogeneous in the center.
+   :width: 600
+   :alt: Picture of a solenoid field in rz, with arrows indicating the direction of the field, and their size denoting the strength. The field is almost homogeneous in the center.
 
 The implementation has configurable solenoid parameters:
 
@@ -191,11 +191,11 @@ In the implementation the factor of :math:`(\mu_0\cdot I)` is defined to be a sc
 
 .. warning::
     
-    Evaluation of :math:`E_1(k^2)` and :math:`E_2(k^2)` is **slow**. The
-    :class:`Acts::InterpolatedBFieldMap` easily outperforms
-    :class:`Acts::SolenoidBField`. A helper :func:`Acts::solenoidFieldMapper`
-    is provided that builds a map from the analytical implementation and is
-    much faster to lookup.
+   Evaluation of :math:`E_1(k^2)` and :math:`E_2(k^2)` is **slow**. The
+   :class:`Acts::InterpolatedBFieldMap` easily outperforms
+   :class:`Acts::SolenoidBField`. A helper :func:`Acts::solenoidFieldMapper`
+   is provided that builds a map from the analytical implementation and is
+   much faster to lookup.
 
 .. _sharedbfield:
 
