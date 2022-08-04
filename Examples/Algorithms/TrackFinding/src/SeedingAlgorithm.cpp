@@ -70,7 +70,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   if (std::isnan(m_cfg.seedFinderConfig.deltaRMinBottomSP)) {
     m_cfg.seedFinderConfig.deltaRMinBottomSP = m_cfg.seedFinderConfig.deltaRMin;
   }
-				
+
   if (m_cfg.gridConfig.zMin != m_cfg.seedFinderConfig.zMin) {
     throw std::invalid_argument("Inconsistent config zMin");
   }
