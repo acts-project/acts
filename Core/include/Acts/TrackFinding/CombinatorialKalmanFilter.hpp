@@ -296,7 +296,7 @@ class CombinatorialKalmanFilter {
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
   /// @tparam source_link_accessor_t The type of source link accessor
-  /// @tparam parameters_t The type of parameters used for "local" paremeters.
+  /// @tparam parameters_t The type of parameters used for "local" parameters.
   ///
   /// The CombinatorialKalmanFilter Actor does not rely on the measurements to
   /// be sorted along the track.
@@ -1206,7 +1206,7 @@ class CombinatorialKalmanFilter {
   };
 
  public:
-  /// Combinatorial Kalman Filter implementation, calls the the Kalman filter
+  /// Combinatorial Kalman Filter implementation, calls the Kalman filter
   /// and smoother
   ///
   /// @tparam source_link_iterator_t Type of the source link iterator
