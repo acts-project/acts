@@ -1,4 +1,4 @@
 ---
-Checks: '-*,readability-container-size-empty,readability-implicit-bool-cast,readability-implicit-bool-conversion,modernize-use-equals-default,modernize-use-override,modernize-use-using,readability-braces-around-statements,performance-move-const-arg'
+Checks: '-*,readability-container-size-empty,readability-implicit-bool-cast,readability-implicit-bool-conversion,modernize-use-equals-default,modernize-use-override,modernize-use-using,readability-braces-around-statements,modernize-use-nullptr,performance-move-const-arg'
 HeaderFilterRegex: '.*(?<!nlohmann\/json)\.(hpp|cpp|ipp)$'
 AnalyzeTemporaryDtors: true
