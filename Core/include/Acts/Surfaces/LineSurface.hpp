@@ -102,7 +102,7 @@ class LineSurface : public Surface {
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
   /// for StraightLine and Perigee Surface
-  ///  - the default implementation is the the RotationMatrix3 of the transform
+  ///  - the default implementation is the RotationMatrix3 of the transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
