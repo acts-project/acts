@@ -63,13 +63,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions extensions;
+  Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
+      extensions;
   extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+  extensions.updater.connect<
+      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.smoother.connect<
+      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
       &kfSmoother);
-  extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
-      &measSel);
+  extensions.measurementSelector
+      .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
+          &measSel);
 
   IndexSourceLinkAccessor slAccessor;
   slAccessor.container = &sourceLinks;
@@ -98,12 +103,11 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     auto& result = results[iseed];
     if (result.ok()) {
       // Get the track finding output object
-      const auto& trackFindingOutput = result.value();
+      auto& trackFindingOutput = result.value();
       // Create a Trajectories result struct
-      trajectories.emplace_back(
-          std::move(trackFindingOutput.fittedStates),
-          std::move(trackFindingOutput.lastMeasurementIndices),
-          std::move(trackFindingOutput.fittedParameters));
+      trajectories.emplace_back(trackFindingOutput.fittedStates,
+                                trackFindingOutput.lastMeasurementIndices,
+                                trackFindingOutput.fittedParameters);
     } else {
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());

@@ -54,7 +54,7 @@ Stepper estepper(bField);
 Stepper dstepper(bField);
 
 ReferencePropagator rpropagator(std::move(estepper), std::move(navigator));
-DirectPropagator dpropagator(std::move(dstepper), std::move(dnavigator));
+DirectPropagator dpropagator(std::move(dstepper), dnavigator);
 
 const int ntests = 1000;
 const int skip = 0;
