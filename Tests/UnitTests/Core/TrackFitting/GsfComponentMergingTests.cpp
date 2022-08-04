@@ -12,8 +12,8 @@
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
 
 #include <random>
@@ -240,8 +240,8 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto mean_data = mean(samples);
   const auto boundCov_data = boundCov(samples, mean_data);
 
-  const auto [mean_test, boundCov_test] = detail::combineGaussianMixture(
-      cmps, Identity{}, std::tuple<>{});
+  const auto [mean_test, boundCov_test] =
+      detail::combineGaussianMixture(cmps, Identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
@@ -328,13 +328,12 @@ BOOST_AUTO_TEST_CASE(test_disc_surface) {
 BOOST_AUTO_TEST_CASE(test_perigee_surface) {
   const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
 
-  const auto surface =
-      Surface::makeShared<PerigeeSurface>(Vector3{0,0,0});
+  const auto surface = Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0});
 
   const auto z = 5;
   const auto d = 1;
 
-  const LocPosArray p{{{d, z}, {d, -z}, {2*d, z}, {2*d, -z}}};
+  const LocPosArray p{{{d, z}, {d, -z}, {2 * d, z}, {2 * d, -z}}};
 
   // Here we expect a very bad approximation
   test_surface(*surface, desc, p, 1.);
@@ -408,18 +407,61 @@ BOOST_AUTO_TEST_CASE(test_kl_mixture_reduction) {
   BOOST_CHECK_CLOSE(cmps[0].weight, 1.0, 1.e-8);
 }
 
-BOOST_AUTO_TEST_CASE(test_mode) {
-  std::vector<DummyComponent<2>> cmps(2);
+BOOST_AUTO_TEST_CASE(test_mode_finding) {
+  constexpr int D = 2;
 
-  cmps[0].boundPars << 1.0, 1.0;
-  cmps[0].boundCov = decltype(cmps[0].boundCov)::value_type{};
-  *cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
-  cmps[0].weight = 0.5;
+  auto mixture_pdf = [&](const auto &x, const auto &components) {
+    double res = 0.0;
 
-  cmps[1].boundPars << -2.0, -2.0;
-  cmps[1].boundCov = decltype(cmps[1].boundCov)::value_type{};
-  *cmps[1].boundCov << 1.0, 1.0, 1.0, 2.0;
-  cmps[1].weight = 0.5;
+    for (const auto &cmp : components) {
+      const auto &[weight, mean, cov] = cmp;
+      const auto a = std::sqrt(std::pow(2 * M_PI, D) * cov->determinant());
+      const auto b =
+          -0.5 * (x - mean).transpose() * cov->inverse() * (x - mean);
+      res += weight * a * std::exp(b);
+    }
 
-  detail::computeModeOfMixture(cmps, Identity{});
+    return res;
+  };
+
+  auto find_mode_ref = [&](double x_min, double x_max, double step,
+                           const auto &components) {
+    ActsVector<D> res_pos = ActsVector<D>::Zero();
+    double res_val = 0.0;
+
+    for (auto x = x_min; x < x_max; x += step) {
+      ActsVector<D> p;
+      p << x, x;
+
+      const auto val = mixture_pdf(p, components);
+      if (val > res_val) {
+        res_pos = p;
+        res_val = val;
+      }
+    }
+
+    return std::make_tuple(res_pos, res_val);
+  };
+
+  for (auto d : {2.0, 4.0}) {
+    std::vector<DummyComponent<D>> cmps;
+
+    auto x = 0.0;
+    for (auto w : {0.1, 0.2, 0.3, 0.4}) {
+      DummyComponent<D> cmp;
+      cmp.boundPars << x, x;
+      cmp.boundCov = ActsSymMatrix<D>::Identity();
+      cmp.weight = w;
+      cmps.push_back(cmp);
+      x += d;
+    }
+
+    const auto mode_test = detail::computeModeOfMixture(cmps, Identity{});
+
+    BOOST_CHECK(mode_test.has_value());
+
+    const auto [mode_ref, val_ref] = find_mode_ref(-d, 4 * d, 1.e-4, cmps);
+
+    CHECK_CLOSE_MATRIX(*mode_test, mode_ref, 1.e-3);
+  }
 }

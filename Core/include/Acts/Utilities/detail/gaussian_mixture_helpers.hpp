@@ -10,17 +10,16 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Utilities/Identity.hpp"
 #include "Acts/Utilities/detail/periodic.hpp"
-#include "Acts/Surfaces/CylinderSurface.hpp"
 
 #include <cmath>
+#include <numeric>
 #include <optional>
 #include <tuple>
-#include <numeric>
 
 #include <Eigen/Eigenvalues>
-
 
 namespace Acts {
 namespace detail {
@@ -202,28 +201,40 @@ auto combineGaussianMixture(const components_t components,
   }
 }
 
-// Use fixed point algorithm
+/// This function implements a mode-search using an iterative fixed-point algorithm
+/// x = f(x)
 /// TODO potential optimization: cache inverse covariances
 // https://faculty.ucmerced.edu/mcarreira-perpinan/papers/cs-99-03.pdf
-template <typename components_t, typename projector_t = Identity>
-auto computeModeOfMixture(const components_t components,
-                          projector_t &&proj = projector_t{}) {
-  const auto &[beginWeight, beginPars, beginCov] =
-      proj(components.front());
-
-  using ParsType = std::decay_t<decltype(beginPars)>;
+template <typename components_t, typename projector_t = Identity,
+          typename angle_desc_t = AngleDescription<Surface::Plane>::Desc>
+auto myComputeModeOfMixture(const components_t components,
+                            projector_t &&proj = projector_t{},
+                            const angle_desc_t &desc = angle_desc_t{}) {
+  using ParsType = std::decay_t<decltype(std::get<1>(proj(components.front())))>;
   constexpr int D = ParsType::RowsAtCompileTime;
 
-  auto single_pdf = [&](const auto &x, const auto &mean, const auto &cov) {
-      const auto a = std::sqrt(std::pow(2*M_PI, D)*cov->determinant());
-      const auto b = -0.5 * (x-mean).transpose() * cov->inverse() * (x-mean);
-      return a * std::exp(b);
+  // Lambda used to correct cyclic coordinates in the computation
+  auto cyclicDiff = [](auto desc, auto &diff, const auto &a, const auto &b) {
+    diff[desc.idx] =
+        difference_periodic(a[desc.idx] / desc.constant,
+                            b[desc.idx] / desc.constant, 2 * M_PI) *
+        desc.constant;
   };
 
+  // Compute the value of the pdf of a single multivariate gaussian
+  auto single_pdf = [&](const auto &x, const auto &mean, const auto &cov) {
+    const auto a = 1.0 / std::sqrt(std::pow(2 * M_PI, D) * cov->determinant());
+    auto r = x - mean;
+    std::apply([&](auto... d) { (handleCyclicCov(d, r, x, mean), ...); }, desc);
+    const auto b = -0.5 * (x - mean).transpose() * cov->inverse() * (x - mean);
+    return a * std::exp(b);
+  };
+
+  // Compute the value of the gaussian mixture pdf at x
   auto mixture_pdf = [&](const auto &x) {
     double res = 0.0;
 
-    for(const auto &cmp : components) {
+    for (const auto &cmp : components) {
       const auto &[weight, mean, cov] = proj(cmp);
       res += weight * single_pdf(x, mean, cov);
     }
@@ -231,13 +242,14 @@ auto computeModeOfMixture(const components_t components,
     return res;
   };
 
+  // The fixed-point equation (see ref)
   auto f = [&](const auto &x) {
     const auto p_x = mixture_pdf(x);
 
     ActsSymMatrix<D> a = ActsSymMatrix<D>::Zero();
     ActsVector<D> b = ActsVector<D>::Zero();
 
-    for(const auto &cmp : components) {
+    for (const auto &cmp : components) {
       const auto &[weight, mean, cov] = proj(cmp);
       const auto p_m_x = weight * single_pdf(x, mean, cov) / p_x;
 
@@ -248,49 +260,59 @@ auto computeModeOfMixture(const components_t components,
     return a.inverse() * b;
   };
 
+  // Compute the hessian of a gaussian mixture at x
   auto hessian = [&](const auto &x) {
     ActsSymMatrix<D> h = ActsSymMatrix<D>::Zero();
 
-    for(const auto &cmp : components) {
+    for (const auto &cmp : components) {
       const auto &[weight, mean, cov] = proj(cmp);
       const auto a = weight * single_pdf(x, mean, cov);
-      const auto b = (x - mean) * (x-mean).transpose() * *cov;
-
+      auto r = x - mean;
+      std::apply([&](auto... d) { (handleCyclicCov(d, r, x, mean), ...); },
+                 desc);
+      const auto b = (x - mean) * (x - mean).transpose() - *cov;
       h += a * (cov->inverse() * b * cov->inverse());
     }
 
     return h;
   };
 
+  // We only store the highest mode
   std::optional<ActsVector<D>> mode;
   double mode_val = 0;
 
+  // Algorithm parameters
   constexpr double tol = 1.e-8;
   constexpr double eigv_max = 0.01;
-  constexpr int iter_max = 20;
+  constexpr int iter_max = 50;
 
-  for(const auto &cmp : components) {
+  // The algorithm
+  for (const auto &cmp : components) {
     const auto &[weight, mean, cov] = proj(cmp);
 
     ActsVector<D> x = mean;
     ActsVector<D> x_old = ActsVector<D>::Zero();
 
-    for(auto i=0; i<iter_max; ++i) {
+    for (auto i = 0; i < iter_max; ++i) {
       x_old = x;
       x = f(x);
 
-      if( (x - x_old).norm() < tol ) {
+      if ((x - x_old).norm() < tol) {
         break;
       }
     }
 
     const auto H = hessian(x);
     const auto evs = H.eigenvalues();
-    const double max_ev = std::max_element(evs.data(), evs.data()+evs.size(), [](const auto &a, const auto &b){ return a.real() < b.real(); })->real();
+    const double max_ev = std::max_element(evs.data(), evs.data() + evs.size(),
+                                           [](const auto &a, const auto &b) {
+                                             return a.real() < b.real();
+                                           })
+                              ->real();
 
-    if( max_ev < eigv_max ) {
+    if (max_ev < eigv_max) {
       const auto this_val = mixture_pdf(x);
-      if( this_val > mode_val ) {
+      if (this_val > mode_val) {
         mode = x;
         mode_val = this_val;
       }

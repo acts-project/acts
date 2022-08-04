@@ -53,10 +53,11 @@ auto mergeComponents(const component_t &a, const component_t &b,
 
   std::array range = {std::ref(proj(a)), std::ref(proj(b))};
   const auto refProj = [](auto &c) {
-        return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
-      };
+    return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
+  };
 
-  auto [mergedPars, mergedCov] = combineGaussianMixture(range, refProj, angle_desc);
+  auto [mergedPars, mergedCov] =
+      combineGaussianMixture(range, refProj, angle_desc);
 
   component_t ret = a;
   proj(ret).boundPars = mergedPars;
