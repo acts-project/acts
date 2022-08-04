@@ -83,12 +83,12 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
 /// @brief Projector type which maps a MultiTrajectory-Index to a tuple of
 /// [weight, parameters, covariance]. Therefore, it contains a MultiTrajectory
 /// and for now a std::map for the weights
-template <StatesType type>
+template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
-  const MultiTrajectory &mt;
-  const std::map<std::size_t, double> &weights;
+  const MultiTrajectory<traj_t> &mt;
+  const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
 
-  auto operator()(std::size_t idx) const {
+  auto operator()(MultiTrajectoryTraits::IndexType idx) const {
     const auto proxy = mt.getTrackState(idx);
     switch (type) {
       case StatesType::ePredicted:
@@ -113,12 +113,14 @@ struct MultiTrajectoryProjector {
 /// TODO this function does not handle outliers correctly at the moment I think
 /// TODO change std::vector< size_t > to boost::small_vector for better
 /// performance
-template <bool ReturnSmootedStates = false>
+template <typename traj_t, bool ReturnSmootedStates = false>
 auto smoothAndCombineTrajectories(
-    const MultiTrajectory &fwd, const std::vector<std::size_t> &fwdStartTips,
-    const std::map<std::size_t, double> &fwdWeights, const MultiTrajectory &bwd,
-    const std::vector<std::size_t> &bwdStartTips,
-    const std::map<std::size_t, double> &bwdWeights,
+    const MultiTrajectory<traj_t> &fwd,
+    const std::vector<MultiTrajectoryTraits::IndexType> &fwdStartTips,
+    const std::map<MultiTrajectoryTraits::IndexType, double> &fwdWeights,
+    const MultiTrajectory<traj_t> &bwd,
+    const std::vector<MultiTrajectoryTraits::IndexType> &bwdStartTips,
+    const std::map<MultiTrajectoryTraits::IndexType, double> &bwdWeights,
     LoggerWrapper logger = getDummyLogger()) {
   // This vector gets only filled if ReturnSmootedStates is true
   std::vector<std::pair<const Surface *,
@@ -128,16 +130,16 @@ auto smoothAndCombineTrajectories(
 
   // Use backward trajectory as basic trajectory, so that final trajectory is
   // ordered correctly. We ensure also that they are unique.
-  std::vector<std::size_t> bwdTips = bwdStartTips;
+  std::vector<MultiTrajectoryTraits::IndexType> bwdTips = bwdStartTips;
 
-  // Ensures that the bwd tips are unique and do not contain MAX_SIZE which
+  // Ensures that the bwd tips are unique and do not contain kInvalid which
   // represents an invalid trajectory state
   auto sortUniqueValidateBwdTips = [&]() {
     std::sort(bwdTips.begin(), bwdTips.end());
     bwdTips.erase(std::unique(bwdTips.begin(), bwdTips.end()), bwdTips.end());
 
     auto invalid_it = std::find(bwdTips.begin(), bwdTips.end(),
-                                std::numeric_limits<uint16_t>::max());
+                                MultiTrajectoryTraits::kInvalid);
     if (invalid_it != bwdTips.end()) {
       bwdTips.erase(invalid_it);
     }
@@ -145,7 +147,8 @@ auto smoothAndCombineTrajectories(
 
   sortUniqueValidateBwdTips();
 
-  KalmanFitterResult result;
+  KalmanFitterResult<traj_t> result;
+  // result.fittedStates = std::make_shared<traj_t>();
 
   while (!bwdTips.empty()) {
     // Ensure that we update the bwd tips whenever we go to the next iteration
@@ -164,7 +167,7 @@ auto smoothAndCombineTrajectories(
 
     // Search corresponding forward tips
     const auto bwdGeoId = currentSurface.geometryId();
-    std::vector<std::size_t> fwdTips;
+    std::vector<MultiTrajectoryTraits::IndexType> fwdTips;
 
     for (const auto tip : fwdStartTips) {
       fwd.visitBackwards(tip, [&](const auto &state) {
@@ -196,8 +199,10 @@ auto smoothAndCombineTrajectories(
     proxy.copyFrom(firstBwdState);
 
     // Define some Projector types we need in the following
-    using PredProjector = MultiTrajectoryProjector<StatesType::ePredicted>;
-    using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered>;
+    using PredProjector =
+        MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
+    using FiltProjector =
+        MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
     if (proxy.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
       result.measurementHoles++;
@@ -215,7 +220,8 @@ auto smoothAndCombineTrajectories(
 
       proxy.predicted() = mean;
       proxy.predictedCovariance() = cov.value();
-      proxy.data().ifiltered = proxy.data().ipredicted;
+      using PM = TrackStatePropMask;
+      proxy.shareFrom(proxy, PM::Predicted, PM::Filtered);
 
     }
     // If we have a measurement, do the smoothing
