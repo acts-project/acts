@@ -41,6 +41,14 @@ class RootVertexPerformanceWriter final
     std::string inputAssociatedTruthParticles;
     /// All event fitted tracks
     std::string inputFittedTracks;
+    /// All event fitted tracks indices
+    std::string inputFittedTracksIndices;
+    /// All event fitted tracks tips
+    std::string inputAllFittedTracksTips;
+    /// Trajectories object from track finidng
+    std::string inputTrajectories;
+    /// Input hit-particles map collection.
+    std::string inputMeasurementParticlesMap;
     /// Input vertex collection.
     std::string inputVertices;
     /// Input reconstruction time.

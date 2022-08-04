@@ -194,6 +194,8 @@ def addSeeding(
         acts.examples.dump_args_calls(locals())
     logger = acts.logging.getLogger("addSeeding")
 
+    inputMeasurementParticlesMap = "measurement_particles_map"
+
     if truthSeedRanges is not None:
         selAlg = acts.examples.TruthSeedSelector(
             **acts.examples.defaultKWArgs(
@@ -214,7 +216,7 @@ def addSeeding(
             ),
             level=customLogLevel(),
             inputParticles=inputParticles,
-            inputMeasurementParticlesMap="measurement_particles_map",
+            inputMeasurementParticlesMap=inputMeasurementParticlesMap,
             outputParticles="truth_seeds_selected",
         )
         s.addAlgorithm(selAlg)
@@ -270,7 +272,7 @@ def addSeeding(
             truthTrackFinder = acts.examples.TruthTrackFinder(
                 level=customLogLevel(),
                 inputParticles=selectedParticles,
-                inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                inputMeasurementParticlesMap=inputMeasurementParticlesMap,
                 outputProtoTracks="prototracks",
             )
             s.addAlgorithm(truthTrackFinder)
@@ -506,7 +508,7 @@ def addSeeding(
                     level=customLogLevel(),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,  # the original selected particles after digitization
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap=inputMeasurementParticlesMap,
                     filePath=str(outputDirRoot / "performance_seeding_trees.root"),
                 )
             )
@@ -516,7 +518,7 @@ def addSeeding(
                     level=customLogLevel(acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap=inputMeasurementParticlesMap,
                     filePath=str(outputDirRoot / "performance_seeding_hists.root"),
                 )
             )
@@ -528,7 +530,7 @@ def addSeeding(
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
                     inputParticles=inputParticles,
                     inputSimHits="simhits",
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap=inputMeasurementParticlesMap,
                     inputMeasurementSimHitsMap="measurement_simhits_map",
                     filePath=str(outputDirRoot / "estimatedparams.root"),
                     treeName="estimatedparams",
@@ -680,6 +682,7 @@ def addCKFTracks(
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
         outputTrackParameters="fittedTrackParameters",
+        outputTrackParametersTips="fittedTrackParametersTips",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
@@ -931,12 +934,16 @@ def addVertexFitting(
             )
         s.addWriter(
             RootVertexPerformanceWriter(
-                level=customLogLevel(),
+                level=acts.logging.VERBOSE,
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                inputAssociatedTruthParticles=associatedParticles,
                 inputFittedTracks=trackParameters,
+                inputFittedTracksIndices="outputTrackIndices",
+                inputAllFittedTracksTips="fittedTrackParametersTips",
+                inputTrajectories="trajectories",
+                inputMeasurementParticlesMap="measurement_particles_map",
                 inputVertices=outputVertices,
+                minTrackVtxMatchFraction=0.1,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),

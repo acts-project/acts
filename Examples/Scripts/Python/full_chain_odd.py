@@ -39,7 +39,7 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
+s = acts.examples.Sequencer(events=500, numThreads=1, logLevel=acts.logging.INFO)
 
 s = addParticleGun(
     s,
