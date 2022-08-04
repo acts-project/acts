@@ -1,6 +1,6 @@
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004:v26
+  image: ghcr.io/acts-project/ubuntu2004:v29
   artifacts:
     paths:
       - src/clang-tidy/
@@ -38,7 +38,7 @@ clang_tidy:
 
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v26
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
   tags:
     - docker
   variables:
@@ -85,9 +85,9 @@ build:
 
 test:
   stage: test
-  dependencies:
+  needs:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v26
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
   tags:
     - docker-gpu-nvidia
   script:

@@ -97,9 +97,10 @@ int main(int argc, char** argv) {
           {snames[is], rmins[is], rmaxs[is], zmins[is], zmaxs[is]});
     }
 
-    TApplication* tApp = vm["silent"].as<bool>()
-                             ? nullptr
-                             : new TApplication("ResidualAndPulls", 0, 0);
+    TApplication* tApp =
+        vm["silent"].as<bool>()
+            ? nullptr
+            : new TApplication("ResidualAndPulls", nullptr, nullptr);
 
     materialComposition(iFile, iTree, oFile, bins, eta, dRegion);
 

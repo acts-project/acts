@@ -43,9 +43,9 @@ Acts::ConeSurface::ConeSurface(const Transform3& transform, double alpha,
 }
 
 Acts::ConeSurface::ConeSurface(const Transform3& transform,
-                               const std::shared_ptr<const ConeBounds>& cbounds)
-    : GeometryObject(), Surface(transform), m_bounds(cbounds) {
-  throw_assert(cbounds, "ConeBounds must not be nullptr");
+                               std::shared_ptr<const ConeBounds> cbounds)
+    : GeometryObject(), Surface(transform), m_bounds(std::move(cbounds)) {
+  throw_assert(m_bounds, "ConeBounds must not be nullptr");
 }
 
 Acts::Vector3 Acts::ConeSurface::binningPosition(
@@ -76,7 +76,7 @@ Acts::ConeSurface& Acts::ConeSurface::operator=(const ConeSurface& other) {
 
 Acts::Vector3 Acts::ConeSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
-  return std::move(transform(gctx).matrix().block<3, 1>(0, 2));
+  return transform(gctx).matrix().block<3, 1>(0, 2);
 }
 
 Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(

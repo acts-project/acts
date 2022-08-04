@@ -334,7 +334,7 @@ class Propagator final {
   /// @note Does not (yet) convert into  the return_type of the propagation
   ///
   /// @tparam result_t Type of the result object for this propagation
-  /// @tparam propagator_state_t Type of of propagator state with options
+  /// @tparam propagator_state_t Type of the propagator state with options
   ///
   /// @param [in,out] state the propagator state object
   /// @param [in,out] result an existing result object to start from

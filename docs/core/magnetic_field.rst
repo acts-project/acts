@@ -1,6 +1,9 @@
 Magnetic field
 ==============
 
+.. attention::
+   This section is largely **outdated** and will be replaced in the future.
+
 This module collects information about classes and typedefs useful for
 describing different magnetic field configurations. Acts is independent of the
 magnetic field implementation used. Algorithms which need magnetic field
@@ -50,7 +53,7 @@ with the following implementations of this (implicit) interface:
 Constant magnetic field
 -----------------------
 
-The simplest implementation is the a constant field, which returns the same field values at every queried location. It is implemented in the :class:`Acts::ConstantBField` class.
+The simplest implementation is a constant field, which returns the same field values at every queried location. It is implemented in the :class:`Acts::ConstantBField` class.
 
 .. doxygenclass:: Acts::ConstantBField
    :members: ConstantBField
@@ -71,9 +74,9 @@ typical access patterns, e.g. the propagation, subsequent steps are relatively
 likely to not cross the field cell boundary, the field cell can be cached.
 
 .. figure:: ../figures/bfield/field_cell.svg
-  :width: 300
+   :width: 300
 
-  Illustration of the field cell concept. Subsequent steps are clustered in the same field cell. The field cell only need to be refetched when the propagation crosses into the next grid region.
+   Illustration of the field cell concept. Subsequent steps are clustered in the same field cell. The field cell only needs to be refetched when the propagation crosses into the next grid region.
 
 
 The class constructor
@@ -99,12 +102,12 @@ Most notably it exposes a type
 :struct:`Acts::InterpolatedBFieldMapper::FieldCell` that corresponds to the
 concept of a field cell discussed above. It also exposes a function
 
-.. doxygenfunction:: Acts::InterpolatedBFieldMapper::getFieldCell
+.. doxygenfunction:: Acts::InterpolatedBFieldMap::getFieldCell
    :outline:
 
-that allows retrieval of such a field cell at a given position. This function
+that allows the retrieval of such a field cell at a given position. This function
 is used by :class:`Acts::InterpolatedBFieldMap` to lookup and use field cells.
-:class:`Acts::InterpolatedBFieldMap` will store the most recent field cell in
+:class:`Acts::InterpolatedBFieldMap` stores the most recent field cell in
 the ``Cache`` object provided by the client, and only talk to
 :struct:`Acts::InterpolatedBFieldMapper` when the position leaves the current
 field cell. Access to the magnetic field is done using the common interface methods
@@ -131,7 +134,7 @@ Acts also provides a field provider that calculates the field vectors analytical
    :width: 600
    :alt: Picture of a solenoid field in rz, with arrows indicating the direction of the field, and their size denoting the strength. The field is almost homogeneous in the center.
 
-The implementation can has configurable solenoid parameters:
+The implementation has configurable solenoid parameters:
 
 .. doxygenstruct:: Acts::SolenoidBField::Config
 
@@ -184,20 +187,20 @@ Using these, you can evaluate the two components :math:`B_r` and :math:`B_z` of 
 
   B_z(r,z) = \frac{\mu_0 I}{4\pi} \frac{k}{\sqrt{Rr}} \left[ \left( \frac{(R+r)k^2-2r}{2r(1-k^2)} \right ) E_2(k^2) + E_1(k^2) \right ]
 
-In the implementation the factor of :math:`(\mu_0\cdot I)` is defined to be a scaling factor. It is evaluated and defined the magnetic field in the center of the coil, i.e. the scale set in :any:`Acts::SolenoidBField::Config::bMagCenter`.
+In the implementation the factor of :math:`(\mu_0\cdot I)` is defined to be a scaling factor. It is evaluated and defined as the magnetic field in the center of the coil, i.e. the scale set in :any:`Acts::SolenoidBField::Config::bMagCenter`.
 
 .. warning::
     
-    Evaluation of :math:`E_1(k^2)` and :math:`E_2(k^2)` is **slow**. The
-    :class:`Acts::InterpolatedBFieldMap` easily outperforms
-    :class:`Acts::SolenoidBField`. A helper :func:`Acts::solenoidFieldMapper`
-    is provided that builds a map from the analytical implementation and is
-    much faster to lookup.
+   Evaluation of :math:`E_1(k^2)` and :math:`E_2(k^2)` is **slow**. The
+   :class:`Acts::InterpolatedBFieldMap` easily outperforms
+   :class:`Acts::SolenoidBField`. A helper :func:`Acts::solenoidFieldMapper`
+   is provided that builds a map from the analytical implementation and is
+   much faster to lookup.
 
 .. _sharedbfield:
 
 Shared magnetic field
---------------------
+---------------------
 
 :class:`Acts::SharedBField` wraps another one of the magnetic field types from above.
 Internally, it holds a ``std::shared_ptr<...>``, so the same field provider can be reused. This is useful in case of a larger map, for example.

@@ -28,7 +28,8 @@ class AlignmentAlgorithm final : public BareAlgorithm {
   /// Alignment function that takes sets of input measurements, initial
   /// trackstate and alignment options and returns some alignment-specific
   /// result.
-  using TrackFitterOptions = Acts::KalmanFitterOptions;
+  using TrackFitterOptions =
+      Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory>;
 
   /// Alignment function that takes the above parameters and runs alignment
   /// @note This is separated into a virtual interface to keep compilation units

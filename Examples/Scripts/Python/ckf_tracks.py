@@ -9,133 +9,6 @@ import acts
 
 from acts import UnitConstants as u
 
-CKFPerformanceConfig = namedtuple(
-    "CKFPerformanceConfig",
-    ["truthMatchProbMin", "nMeasurementsMin", "ptMin"],
-    defaults=[None] * 3,
-)
-
-
-@acts.examples.NamedTypeArgs(
-    CKFPerformanceConfigArg=CKFPerformanceConfig,
-)
-def addCKFTracks(
-    s: acts.examples.Sequencer,
-    trackingGeometry: acts.TrackingGeometry,
-    field: acts.MagneticFieldProvider,
-    CKFPerformanceConfigArg: CKFPerformanceConfig = CKFPerformanceConfig(),
-    outputDirCsv: Optional[Union[Path, str]] = None,
-    outputDirRoot: Optional[Union[Path, str]] = None,
-    selectedParticles: str = "truth_seeds_selected",
-) -> acts.examples.Sequencer:
-    """This function steers the seeding
-
-    Parameters
-    ----------
-    s: Sequencer
-        the sequencer module to which we add the Seeding steps (returned from addSeeding)
-    trackingGeometry : tracking geometry
-    field : magnetic field
-    CKFPerformanceConfigArg : CKFPerformanceConfig(truthMatchProbMin, nMeasurementsMin, ptMin)
-        CKFPerformanceWriter configuration.
-        Defaults specified in Examples/Io/Performance/ActsExamples/Io/Performance/CKFPerformanceWriter.hpp
-    outputDirCsv : Path|str, path, None
-        the output folder for the Csv output, None triggers no output
-    outputDirRoot : Path|str, path, None
-        the output folder for the Root output, None triggers no output
-    selectedParticles : str, "truth_seeds_selected"
-        CKFPerformanceWriter truth input
-    """
-
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
-
-    # Setup the track finding algorithm with CKF
-    # It takes all the source links created from truth hit smearing, seeds from
-    # truth particle smearing and source link selection config
-    trackFinder = acts.examples.TrackFindingAlgorithm(
-        level=s.config.logLevel,
-        measurementSelectorCfg=acts.MeasurementSelector.Config(
-            [(acts.GeometryIdentifier(), ([], [15.0], [10]))]
-        ),
-        inputMeasurements="measurements",
-        inputSourceLinks="sourcelinks",
-        inputInitialTrackParameters="estimatedparameters",
-        outputTrajectories="trajectories",
-        findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
-            trackingGeometry, field
-        ),
-    )
-    s.addAlgorithm(trackFinder)
-
-    if outputDirRoot is not None:
-        outputDirRoot = Path(outputDirRoot)
-        if not outputDirRoot.exists():
-            outputDirRoot.mkdir()
-
-        # write track states from CKF
-        trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputSimHits="simhits",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            inputMeasurementSimHitsMap="measurement_simhits_map",
-            filePath=str(outputDirRoot / "trackstates_ckf.root"),
-            treeName="trackstates",
-        )
-        s.addWriter(trackStatesWriter)
-
-        # write track summary from CKF
-        trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "tracksummary_ckf.root"),
-            treeName="tracksummary",
-        )
-        s.addWriter(trackSummaryWriter)
-
-        # Write CKF performance data
-        ckfPerfWriter = acts.examples.CKFPerformanceWriter(
-            level=s.config.logLevel,
-            inputParticles=selectedParticles,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            **acts.examples.defaultKWArgs(
-                # The bottom seed could be the first, second or third hits on the truth track
-                nMeasurementsMin=CKFPerformanceConfigArg.nMeasurementsMin,
-                ptMin=CKFPerformanceConfigArg.ptMin,
-                truthMatchProbMin=CKFPerformanceConfigArg.truthMatchProbMin,
-            ),
-            filePath=str(outputDirRoot / "performance_ckf.root"),
-        )
-        s.addWriter(ckfPerfWriter)
-
-    if outputDirCsv is not None:
-        outputDirCsv = Path(outputDirCsv)
-        if not outputDirCsv.exists():
-            outputDirCsv.mkdir()
-        acts.logging.getLogger("CKFExample").info("Writing CSV files")
-        csvMTJWriter = acts.examples.CsvMultiTrajectoryWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputDir=str(outputDirCsv),
-        )
-        s.addWriter(csvMTJWriter)
-
-    return s
-
 
 def runCKFTracks(
     trackingGeometry,
@@ -151,16 +24,24 @@ def runCKFTracks(
     s=None,
 ):
 
-    from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
-    from fatras import addFatras
-    from digitization import addDigitization
-    from seeding import (
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        PhiConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
+
+    from acts.examples.reconstruction import (
         addSeeding,
         TruthSeedRanges,
         ParticleSmearingSigmas,
         SeedfinderConfigArg,
         SeedingAlgorithm,
         TrackParamsEstimationConfig,
+        CKFPerformanceConfig,
+        addCKFTracks,
     )
 
     s = s or acts.examples.Sequencer(

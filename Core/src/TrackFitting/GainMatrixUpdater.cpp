@@ -10,38 +10,15 @@
 
 namespace Acts {
 
-Result<void> GainMatrixUpdater::operator()(
-    const GeometryContext& gctx, MultiTrajectory::TrackStateProxy trackState,
-    NavigationDirection direction, LoggerWrapper logger) const {
-  (void)gctx;
-  ACTS_VERBOSE("Invoked GainMatrixUpdater");
-
-  // we should definitely have an uncalibrated measurement here
-  assert(trackState.hasUncalibrated());
-  // there should be a calibrated measurement
-  assert(trackState.hasCalibrated());
-  // we should have predicted state set
-  assert(trackState.hasPredicted());
-  // filtering should not have happened yet, but is allocated, therefore set
-  assert(trackState.hasFiltered());
-
-  // read-only handles. Types are eigen maps to backing storage
-  const auto predicted = trackState.predicted();
-  const auto predictedCovariance = trackState.predictedCovariance();
-
-  ACTS_VERBOSE("Predicted parameters: " << predicted.transpose());
-  ACTS_VERBOSE("Predicted covariance:\n" << predictedCovariance);
-
-  // read-write handles. Types are eigen maps into backing storage.
-  // This writes directly into the trajectory storage
-  auto filtered = trackState.filtered();
-  auto filteredCovariance = trackState.filteredCovariance();
-
+std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
+    InternalTrackState trackState, NavigationDirection direction,
+    LoggerWrapper logger) const {
   // default-constructed error represents success, i.e. an invalid error code
   std::error_code error;
+  double chi2 = 0;
   visit_measurement(
-      trackState.calibrated(), trackState.calibratedCovariance(),
-      trackState.calibratedSize(),
+      trackState.calibrated, trackState.calibratedCovariance,
+      trackState.calibratedSize,
       [&](const auto calibrated, const auto calibratedCovariance) {
         constexpr size_t kMeasurementSize =
             decltype(calibrated)::RowsAtCompileTime;
@@ -54,17 +31,17 @@ Result<void> GainMatrixUpdater::operator()(
                      << calibratedCovariance);
 
         const auto H =
-            trackState.projector()
+            trackState.projector
                 .template topLeftCorner<kMeasurementSize, eBoundSize>()
                 .eval();
 
         ACTS_VERBOSE("Measurement projector H:\n" << H);
 
-        const auto K =
-            (predictedCovariance * H.transpose() *
-             (H * predictedCovariance * H.transpose() + calibratedCovariance)
-                 .inverse())
-                .eval();
+        const auto K = (trackState.predictedCovariance * H.transpose() *
+                        (H * trackState.predictedCovariance * H.transpose() +
+                         calibratedCovariance)
+                            .inverse())
+                           .eval();
 
         ACTS_VERBOSE("Gain Matrix K:\n" << K);
 
@@ -76,11 +53,13 @@ Result<void> GainMatrixUpdater::operator()(
           return false;                                       // abort execution
         }
 
-        filtered = predicted + K * (calibrated - H * predicted);
-        filteredCovariance =
-            (BoundSymMatrix::Identity() - K * H) * predictedCovariance;
-        ACTS_VERBOSE("Filtered parameters: " << filtered.transpose());
-        ACTS_VERBOSE("Filtered covariance:\n" << filteredCovariance);
+        trackState.filtered =
+            trackState.predicted + K * (calibrated - H * trackState.predicted);
+        trackState.filteredCovariance = (BoundSymMatrix::Identity() - K * H) *
+                                        trackState.predictedCovariance;
+        ACTS_VERBOSE(
+            "Filtered parameters: " << trackState.filtered.transpose());
+        ACTS_VERBOSE("Filtered covariance:\n" << trackState.filteredCovariance);
 
         // calculate filtered residual
         //
@@ -90,20 +69,20 @@ Result<void> GainMatrixUpdater::operator()(
         //        overhead problems (Acts issue #350) are sorted out.
         //
         ParametersVector residual;
-        residual = calibrated - H * filtered;
+        residual = calibrated - H * trackState.filtered;
         ACTS_VERBOSE("Residual: " << residual.transpose());
 
-        trackState.chi2() =
-            (residual.transpose() *
-             ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance)
-                 .inverse() *
-             residual)
-                .value();
+        chi2 = (residual.transpose() *
+                ((CovarianceMatrix::Identity() - H * K) * calibratedCovariance)
+                    .inverse() *
+                residual)
+                   .value();
 
-        ACTS_VERBOSE("Chi2: " << trackState.chi2());
+        ACTS_VERBOSE("Chi2: " << chi2);
         return true;  // continue execution
       });
 
-  return error ? Result<void>::failure(error) : Result<void>::success();
+  return {chi2, error};
 }
+
 }  // namespace Acts
