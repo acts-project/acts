@@ -55,6 +55,25 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config deltaRMax");
   }
 
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxTopSP)) {
+    m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.seedFinderConfig.deltaRMax;
+  }
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMinTopSP)) {
+    m_cfg.seedFinderConfig.deltaRMinTopSP = m_cfg.seedFinderConfig.deltaRMin;
+  }
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxBottomSP)) {
+    m_cfg.seedFinderConfig.deltaRMaxBottomSP = m_cfg.seedFinderConfig.deltaRMax;
+  }
+				std::cout << m_cfg.seedFinderConfig.deltaRMinBottomSP << std::endl;
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMinBottomSP)) {
+    m_cfg.seedFinderConfig.deltaRMinBottomSP = m_cfg.seedFinderConfig.deltaRMin;
+  }
+				
+				std::cout << m_cfg.seedFinderConfig.deltaRMinBottomSP << std::endl;
+
   if (m_cfg.gridConfig.zMin != m_cfg.seedFinderConfig.zMin) {
     throw std::invalid_argument("Inconsistent config zMin");
   }
