@@ -28,14 +28,13 @@ static std::array<ActsScalar, 2> noLimitZ = {
 static std::array<ActsScalar, 2> noLimitPhi = {-M_PI, M_PI};
 
 struct LayerConvConf {
-  /// The z limit 
+  /// The z limit
   std::array<ActsScalar, 2> zRange = noLimitZ;
-  /// The phi limit 
+  /// The phi limit
   std::array<ActsScalar, 2> phiRange = noLimitPhi;
   // Label checks
   bool labelProjection = false;
   ActsScalar labelGauge = 0.;
-
 };
 
 /// Write/create the layer sheets for a given layer
