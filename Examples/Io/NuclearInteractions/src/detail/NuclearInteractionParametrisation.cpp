@@ -45,7 +45,7 @@ float gaussianValue(TH1F const* histo, const float mom) {
 /// @param [in] fourVector1 The one four vector
 /// @param [in] fourVector2 The other four vector
 ///
-/// @return The invarian mass
+/// @return The invariant mass
 float invariantMass(const ActsExamples::SimParticle::Vector4& fourVector1,
                     const ActsExamples::SimParticle::Vector4& fourVector2) {
   ActsExamples::SimParticle::Vector4 sum = fourVector1 + fourVector2;
@@ -112,7 +112,7 @@ Parametrisation buildMomentumParameters(const EventCollection& events,
   // Calculate the transformation into the eigenspace of the covariance matrix
   EigenspaceComponents eigenspaceElements =
       calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
-  // Calculate the the cumulative distributions
+  // Calculate the cumulative distributions
   return std::make_pair(eigenspaceElements, histos);
 }
 
@@ -245,7 +245,7 @@ Parametrisation buildInvariantMassParameters(const EventCollection& events,
   // Calculate the transformation into the eigenspace of the covariance matrix
   EigenspaceComponents eigenspaceElements =
       calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
-  // Calculate the the cumulative distributions
+  // Calculate the cumulative distributions
   return std::make_pair(eigenspaceElements, histos);
 }
 

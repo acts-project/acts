@@ -6,4 +6,4 @@ Acts is licensed under the `Mozilla Public License Version 2.0
 below.
 
 .. literalinclude:: ../LICENSE
-    :language: none
+   :language: none

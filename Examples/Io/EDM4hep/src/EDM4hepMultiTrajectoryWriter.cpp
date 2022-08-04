@@ -44,7 +44,7 @@ ProcessCode EDM4hepMultiTrajectoryWriter::writeT(
           m_cfg.inputMeasurementParticlesMap);
 
   for (const auto& from : trajectories) {
-    for (const std::size_t& trackTip : from.tips()) {
+    for (const auto& trackTip : from.tips()) {
       auto to = m_trackCollection->create();
       EDM4hepUtil::writeTrajectory(from, to, trackTip, hitParticlesMap);
     }

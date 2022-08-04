@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(CylinderIntersectionTests) {
     CHECK_CLOSE_ABS(aIntersection.alternative.pathLength, -2_m,
                     s_onSurfaceTolerance);
 
-    // Intersect from the the center
+    // Intersect from the center
     auto cIntersection =
         aCylinder->intersect(tgContext, atCenter, alongX, true);
 

@@ -10,10 +10,10 @@
 
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsDD4hep/ActsExtension.hpp"
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetFactoryHelper.h>
+#include <DDRec/DetectorData.h>
 
 namespace Acts {
 
@@ -27,10 +27,10 @@ class Layer;
 /// @param detElement the DD4hep detector element for which this material is
 ///                   assigned
 /// @param cylinderLayer is the target layer
-/// @param loggingLevel is the output level for the conversion
-void addCylinderLayerProtoMaterial(
-    dd4hep::DetElement detElement, Layer& cylinderLayer,
-    Logging::Level loggingLevel = Logging::Level::INFO);
+/// @param logger a @c LoggerWrapper for output
+void addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
+                                   Layer& cylinderLayer,
+                                   LoggerWrapper logger = getDummyLogger());
 
 /// Helper method to translate DD4hep material to Acts::ISurfaceMaterial
 ///
@@ -39,32 +39,35 @@ void addCylinderLayerProtoMaterial(
 /// @param detElement the DD4hep detector element for which this material is
 /// assigned
 /// @param discLayer is the target layer
-/// @param loggingLevel is the output level for the conversion
-void addDiscLayerProtoMaterial(
-    dd4hep::DetElement detElement, Layer& discLayer,
-    Logging::Level loggingLevel = Logging::Level::INFO);
+/// @param logger a @c LoggerWrapper for output
+void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
+                               LoggerWrapper logger = getDummyLogger());
 
 /// Helper method to be called for Cylinder and Disc Proto material
 ///
 /// For both, cylinder and disc, the closed binning value is "binPhi"
 ///
-/// @param actsExtension the ActsExtension for the binning parameters
+/// @param params An instance of @c DD4hep::VariantParameters
 /// @param layer the Layer to assign the proto material
 /// @param binning the Binning prescription for the ActsExtension
+/// @param logger a @c LoggerWrapper for output
 void addLayerProtoMaterial(
-    const ActsExtension& actsExtension, Layer& layer,
+    const dd4hep::rec::VariantParameters& params, Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning);
+        binning,
+    LoggerWrapper logger = getDummyLogger());
 
 /// Helper method to create proto material - to be called from the
 /// addProto(...) methods
 ///
-/// @param actsExtension the ActExtension to be checked
+/// @param params An instance of @c DD4hep::VariantParameters
 /// @param valueTag the xml tag for to ActsExtension to be parsed
 /// @param binning the Binning prescription for the ActsExtension
+/// @param logger a @c LoggerWrapper for output
 std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
-    const ActsExtension& actsExtension, const std::string& valueTag,
+    const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning);
+        binning,
+    LoggerWrapper logger = getDummyLogger());
 
 }  // namespace Acts
