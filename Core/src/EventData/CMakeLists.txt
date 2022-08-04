@@ -8,4 +8,5 @@ target_sources(
     TransformationFreeToBound.cpp
     CorrectedTransformationFreeToBound.cpp
     TrackStatePropMask.cpp
+    VectorMultiTrajectory.cpp
 )

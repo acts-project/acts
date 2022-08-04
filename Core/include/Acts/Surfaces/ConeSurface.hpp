@@ -56,7 +56,7 @@ class ConeSurface : public Surface {
   /// @param transform is the transform that places the cone in the global frame
   /// @param cbounds is the boundary class, the bounds must exit
   ConeSurface(const Transform3& transform,
-              const std::shared_ptr<const ConeBounds>& cbounds);
+              std::shared_ptr<const ConeBounds> cbounds);
 
   /// Copy constructor
   ///
@@ -94,7 +94,7 @@ class ConeSurface : public Surface {
 
   /// Return the measurement frame - this is needed for alignment, in particular
   ///  for StraightLine and Perigee Surface
-  ///  - the default implementation is the the RotationMatrix3 of the transform
+  ///  - the default implementation is the RotationMatrix3 of the transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
@@ -233,7 +233,7 @@ class ConeSurface : public Surface {
   ///   The calculation will be done in the 3-dim frame of the cone,
   ///   i.e. the symmetry axis of the cone is the z-axis, x- and y-axis are
   /// perpendicular
-  ///   to the the z-axis. In this frame the cone is centered around the origin.
+  ///   to the z-axis. In this frame the cone is centered around the origin.
   ///   Therefore the two points describing the line have to be first
   ///   recalculated
   /// into the new frame.

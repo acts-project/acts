@@ -89,8 +89,9 @@ struct EndOfWorld {
     const double tolerance = state.options.targetTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
-        std::abs(stepper.position(state.stepping).z()) >= 0.5_m)
+        std::abs(stepper.position(state.stepping).z()) >= 0.5_m) {
       return true;
+    }
     return false;
   }
 };
@@ -157,7 +158,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
   BOOST_CHECK_EQUAL(esState.navDir, ndir);
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esState.stepSize, ndir * stepSize);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), ndir * stepSize);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
 
@@ -219,10 +220,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   es.setStepSize(esState, 1337.);
   BOOST_CHECK_EQUAL(esState.previousStepSize, ndir * stepSize);
-  BOOST_CHECK_EQUAL(esState.stepSize, 1337.);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), 1337.);
 
   es.releaseStepSize(esState);
-  BOOST_CHECK_EQUAL(esState.stepSize, -123.);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), -123.);
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
   // Test the curvilinear state construction
@@ -348,7 +349,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize, ndir * stepSize2);
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(), ndir * stepSize2);
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
@@ -373,8 +374,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize,
-                    ndir * std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
@@ -399,7 +400,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, NavigationDirection::Forward);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize, std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
@@ -425,14 +427,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
       targetSurface->intersect(esState.geoContext, es.position(esState),
                                esState.navDir * es.direction(esState), false),
       false);
-  CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
-  esState.stepSize = ndir * stepSize;
+  CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
+  esState.stepSize.setValue(ndir * stepSize);
   es.updateStepSize(
       esState,
       targetSurface->intersect(esState.geoContext, es.position(esState),
                                esState.navDir * es.direction(esState), false),
       true);
-  CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
+  CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction
   auto boundState = es.boundState(esState, *plane).value();
@@ -473,9 +475,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Test a case where no step size adjustment is required
   ps.options.tolerance = 2. * 4.4258e+09;
-  double h0 = esState.stepSize;
+  double h0 = esState.stepSize.value();
   es.step(ps);
-  CHECK_CLOSE_ABS(h0, esState.stepSize, eps);
+  CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 
   // Produce some errors
   auto nBfield = std::make_shared<NullBField>();
@@ -574,8 +576,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
-    if (pos == stepResult.position.back())
+    if (pos == stepResult.position.back()) {
       CHECK_CLOSE_ABS(pos.x(), 1_m, 1_um);
+    }
   }
   for (const auto& mom : stepResult.momentum) {
     CHECK_CLOSE_ABS(mom, startMom, 1_keV);

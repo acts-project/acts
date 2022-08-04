@@ -45,7 +45,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
   const auto& hitParticlesMap = context.eventStore.get<HitParticlesMap>(
       m_cfg.inputMeasurementParticlesMap);
 
-  std::unordered_map<size_t, trackInfo> infoMap;
+  std::unordered_map<Acts::MultiTrajectoryTraits::IndexType, trackInfo> infoMap;
 
   // Counter of truth-matched reco tracks
   using RecoTrackInfo = std::pair<trackInfo, size_t>;
@@ -62,7 +62,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     }
 
     // Loop over all trajectories in a multiTrajectory
-    for (const size_t& trackTip : trackTips) {
+    for (auto trackTip : trackTips) {
       // Collect the trajectory summary info
       auto trajState =
           Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
@@ -141,10 +141,12 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     std::sort(matchedTracks.begin(), matchedTracks.end(),
               [](const RecoTrackInfo& lhs, const RecoTrackInfo& rhs) {
                 // sort by nMajorityHits
-                if (lhs.first.nMajorityHits > rhs.first.nMajorityHits)
+                if (lhs.first.nMajorityHits > rhs.first.nMajorityHits) {
                   return true;
-                if (lhs.first.nMajorityHits < rhs.first.nMajorityHits)
+                }
+                if (lhs.first.nMajorityHits < rhs.first.nMajorityHits) {
                   return false;
+                }
                 // sort by nOutliers
                 return (lhs.first.nOutliers < rhs.first.nOutliers);
               });

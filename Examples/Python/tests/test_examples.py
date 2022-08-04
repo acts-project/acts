@@ -28,7 +28,8 @@ from acts.examples import (
     RootParticleWriter,
 )
 
-from common import getOpenDataDetector
+from acts.examples.odd import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
@@ -131,6 +132,56 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
         assert rfp.stat().st_size > 2**10 * 10
 
         assert_entries(rfp, tn, exp_entries)
+        assert_root_hash(f, rfp)
+
+
+@pytest.mark.slow
+@pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+def test_geant4(tmp_path, assert_root_hash):
+    # This test literally only ensures that the geant 4 example can run without erroring out
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    root_files = [
+        "fatras_particles_final.root",
+        "fatras_particles_initial.root",
+        "hits.root",
+    ]
+
+    assert len(list(csv.iterdir())) == 0
+    for rf in root_files:
+        assert not (tmp_path / rf).exists()
+
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "geant4.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    subprocess.check_call(
+        [str(script)],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
+
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
+    assert_csv_output(csv, "hits")
+    for f in root_files:
+        rfp = tmp_path / f
+        assert rfp.exists()
+        assert rfp.stat().st_size > 2**10 * 10
+
         assert_root_hash(f, rfp)
 
 
@@ -256,6 +307,133 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
         outputDir=str(tmp_path),
         s=seq,
         seedingAlgorithm=SeedingAlgorithm.Orthogonal,
+    ).run()
+
+    del seq
+
+    for fn, tn, exp_entries in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 100
+
+        if tn is not None:
+            assert_entries(fp, tn, exp_entries)
+            assert_root_hash(fn, fp)
+
+    assert_csv_output(csv, "particles")
+    assert_csv_output(csv, "particles_final")
+    assert_csv_output(csv, "particles_initial")
+
+
+def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
+
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
+
+    csv = tmp_path / "csv"
+    csv.mkdir()
+
+    seq = Sequencer(events=10, numThreads=1)
+
+    root_files = [
+        (
+            "estimatedparams.root",
+            "estimatedparams",
+            25,
+        ),
+        (
+            "performance_seeding_trees.root",
+            "track_finder_tracks",
+            25,
+        ),
+        (
+            "performance_seeding_hists.root",
+            None,
+            0,
+        ),
+        (
+            "particles.root",
+            "particles",
+            seq.config.events,
+        ),
+        (
+            "fatras_particles_final.root",
+            "particles",
+            seq.config.events,
+        ),
+        (
+            "fatras_particles_initial.root",
+            "particles",
+            seq.config.events,
+        ),
+    ]
+
+    for fn, _, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    assert len(list(csv.iterdir())) == 0
+
+    rnd = acts.examples.RandomNumbers(seed=42)
+
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        MomentumConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
+
+    seq = addParticleGun(
+        seq,
+        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
+        EtaConfig(-4.0, 4.0, True),
+        ParticleConfig(1, acts.PdgParticle.eMuon, True),
+        outputDirCsv=tmp_path / "csv",
+        outputDirRoot=str(tmp_path),
+        rnd=rnd,
+    )
+
+    seq = addFatras(
+        seq,
+        trk_geo,
+        field,
+        outputDirCsv=tmp_path / "csv",
+        outputDirRoot=str(tmp_path),
+        rnd=rnd,
+    )
+
+    srcdir = Path(__file__).resolve().parent.parent.parent.parent
+    seq = addDigitization(
+        seq,
+        trk_geo,
+        field,
+        digiConfigFile=srcdir
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        rnd=rnd,
+    )
+
+    from acts.examples.reconstruction import (
+        addSeeding,
+        TruthSeedRanges,
+    )
+    from acts.examples.reconstruction import (
+        addSeeding,
+        TruthSeedRanges,
+    )
+    from acts.examples.itk import itkSeedingAlgConfig
+
+    seq = addSeeding(
+        seq,
+        trk_geo,
+        field,
+        TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4, 4), nHits=(9, None)),
+        *itkSeedingAlgConfig("PixelSpacePoints"),
+        acts.logging.VERBOSE,
+        geoSelectionConfigFile=srcdir
+        / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
+        inputParticles="particles_final",  # use this to reproduce the original root_file_hashes.txt - remove to fix
+        outputDirRoot=str(tmp_path),
     ).run()
 
     del seq
@@ -497,7 +675,9 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
 
     s = Sequencer(numThreads=1)
 
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     from material_mapping import runMaterialMapping
 
@@ -537,7 +717,8 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
     del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
     from material_validation import runMaterialValidation
@@ -572,7 +753,8 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         assert json.load(fh)
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(geo_map)
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(geo_map),
     )
 
     from material_mapping import runMaterialMapping
@@ -614,7 +796,8 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     del detector
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
-        mdecorator=acts.IMaterialDecorator.fromFile(mat_file)
+        getOpenDataDetectorDirectory(),
+        mdecorator=acts.IMaterialDecorator.fromFile(mat_file),
     )
 
     from material_validation import runMaterialValidation
@@ -643,7 +826,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
     [
         (GenericDetector.create, 450),
         pytest.param(
-            getOpenDataDetector,
+            functools.partial(getOpenDataDetector, getOpenDataDetectorDirectory()),
             540,
             marks=[
                 pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
@@ -909,7 +1092,9 @@ def test_ckf_tracks_example(
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
-    detector, trackingGeometry, decorators = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -1022,7 +1207,9 @@ def test_vertex_fitting_reading(
 @pytest.mark.slow
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
-    getOpenDataDetector()  # just to make sure it can build
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
 
     script = (
         Path(__file__).parent.parent.parent.parent

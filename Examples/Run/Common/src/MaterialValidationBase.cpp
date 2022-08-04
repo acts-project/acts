@@ -111,7 +111,7 @@ ActsExamples::ProcessCode setupStraightLinePropagation(
   using Propagator = Acts::Propagator<SlStepper, Acts::Navigator>;
   // Make stepper and propagator
   SlStepper stepper;
-  Propagator propagator(std::move(stepper), std::move(navigator));
+  Propagator propagator(stepper, std::move(navigator));
 
   // Read the propagation config and create the algorithms
   auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);

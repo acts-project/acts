@@ -23,4 +23,4 @@ Acts::DD4hepDetectorElement::DD4hepDetectorElement(
                                 *(detElement.placement().ptr()),
                                 detElement.nominal().worldTransformation(),
                                 axes, scalor, std::move(material)),
-      m_detElement(std::move(detElement)) {}
+      m_detElement(detElement) {}
