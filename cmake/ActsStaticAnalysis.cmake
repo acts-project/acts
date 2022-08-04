@@ -41,6 +41,7 @@ if(ACTS_RUN_CLANG_TIDY)
     list(APPEND _chks "performance-for-range-copy")
     list(APPEND _chks "modernize-use-equals-default")
     list(APPEND _chks "modernize-use-nullptr")
+    list(APPEND _chks "cppcoreguidelines-pro-type-member-init")
     list(JOIN _chks "," CLANG_TIDY_CHECKS)
 
     message(STATUS "Configured checks")
