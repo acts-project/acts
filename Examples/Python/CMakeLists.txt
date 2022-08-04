@@ -1,4 +1,4 @@
-Examples/Python/CMakeLists.txtadd_library(ActsPythonUtilities INTERFACE)
+add_library(ActsPythonUtilities INTERFACE)
 target_include_directories(ActsPythonUtilities INTERFACE include)
 
 set(_python_dir "${CMAKE_BINARY_DIR}/python")
