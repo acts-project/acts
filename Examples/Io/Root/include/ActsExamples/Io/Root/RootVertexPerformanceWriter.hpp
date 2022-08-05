@@ -96,6 +96,11 @@ class RootVertexPerformanceWriter final
   std::vector<float>
       m_diffz;  ///< Difference in z positon between reco and true vtx
 
+  std::vector<float> m_covXX;
+  std::vector<float> m_covYY;
+  std::vector<float> m_covXY;
+  std::vector<float> m_covYX;
+
   int m_nrecoVtx = -1;           ///< Number of reconstructed vertices
   int m_ntrueVtx = -1;           ///< Number of true vertices
   int m_nVtxDetAcceptance = -1;  ///< Number of vertices in detector acceptance

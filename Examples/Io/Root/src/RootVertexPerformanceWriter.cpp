@@ -81,6 +81,10 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
     m_outputTree->Branch("diffx", &m_diffx);
     m_outputTree->Branch("diffy", &m_diffy);
     m_outputTree->Branch("diffz", &m_diffz);
+    m_outputTree->Branch("covXX", &m_covXX);
+    m_outputTree->Branch("covYY", &m_covYY);
+    m_outputTree->Branch("covXY", &m_covXY);
+    m_outputTree->Branch("covYX", &m_covYX);
     m_outputTree->Branch("nRecoVtx", &m_nrecoVtx);
     m_outputTree->Branch("nTrueVtx", &m_ntrueVtx);
     m_outputTree->Branch("nVtxDetectorAcceptance", &m_nVtxDetAcceptance);
@@ -418,6 +422,10 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
             m_diffx.push_back(vtx.position()[0] - truePos[0]);
             m_diffy.push_back(vtx.position()[1] - truePos[1]);
             m_diffz.push_back(vtx.position()[2] - truePos[2]);
+            m_covXX.push_back(vtx.covariance()(0, 0));
+            m_covYY.push_back(vtx.covariance()(1, 1));
+            m_covXY.push_back(vtx.covariance()(0, 1));
+            m_covYX.push_back(vtx.covariance()(1, 0));
             // Next vertex now
             break;
           }
@@ -445,6 +453,10 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   m_diffx.clear();
   m_diffy.clear();
   m_diffz.clear();
+  m_covXX.clear();
+  m_covYY.clear();
+  m_covXY.clear();
+  m_covYX.clear();
 
   return ProcessCode::SUCCESS;
 }

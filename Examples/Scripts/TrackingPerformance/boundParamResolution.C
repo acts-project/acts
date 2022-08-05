@@ -26,7 +26,7 @@
 #include <TStyle.h>
 #include <TTree.h>
 
-#include "CommonUtils.h"
+#include "../CommonUtils.h"
 #include "TreeReader.h"
 
 using namespace ROOT;
