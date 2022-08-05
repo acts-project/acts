@@ -44,9 +44,9 @@ def runGeometry(
                 raise RuntimeError("Failed to decorate event context")
 
         if outputCsv:
-            csvOutputDir = os.path.join(outputDir, "csv");
+            csvOutputDir = os.path.join(outputDir, "csv")
             if not os.path.exists(csvOutputDir):
-                os.makedirs(csvOutputDir)               
+                os.makedirs(csvOutputDir)
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
@@ -59,7 +59,7 @@ def runGeometry(
         if outputObj:
             outputDirObj = os.path.join(outputDir, "obj")
             if not os.path.exists(outputDirObj):
-                os.makedirs(outputDirObj)    
+                os.makedirs(outputDirObj)
             writer = ObjTrackingGeometryWriter(
                 level=acts.logging.INFO, outputDir=outputDirObj
             )
@@ -68,16 +68,17 @@ def runGeometry(
         if outputSvg:
             outputDirSvg = os.path.join(outputDir, "svg")
             if not os.path.exists(outputDirSvg):
-                os.makedirs(outputDirSvg)    
-            svgWriterCfg = SvgTrackingGeometryWriter.Config( outputDir=outputDirSvg)
+                os.makedirs(outputDirSvg)
+            svgWriterCfg = SvgTrackingGeometryWriter.Config(outputDir=outputDirSvg)
             svgWriter = SvgTrackingGeometryWriter(
-                level=acts.logging.INFO, config=svgWriterCfg)
+                level=acts.logging.INFO, config=svgWriterCfg
+            )
             svgWriter.write(context, trackingGeometry)
 
         if outputJson:
             outputDirJson = os.path.join(outputDir, "json")
             if not os.path.exists(outputDirJson):
-                os.makedirs(outputDirJson)   
+                os.makedirs(outputDirJson)
             writer = JsonSurfacesWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,

@@ -6,20 +6,16 @@ from acts.examples import (
     AlgorithmContext,
     ProcessCode,
     GenericDetector,
-    SvgTrackingGeometryWriter
+    SvgTrackingGeometryWriter,
 )
 from pathlib import Path
 import acts
 
 
-def runGeometry(
-        trackingGeometry,
-        outputDir,
-        events=1):
+def runGeometry(trackingGeometry, outputDir, events=1):
 
     for ievt in range(events):
-        eventStore = WhiteBoard(
-            name=f"EventStore#{ievt}", level=acts.logging.INFO)
+        eventStore = WhiteBoard(name=f"EventStore#{ievt}", level=acts.logging.INFO)
         ialg = 0
 
         context = AlgorithmContext(ialg, ievt, eventStore)
@@ -29,11 +25,12 @@ def runGeometry(
             os.makedirs(outputDirSvg)
         svgWriterCfg = SvgTrackingGeometryWriter.Config(outputDir=outputDirSvg)
         svgWriter = SvgTrackingGeometryWriter(
-            level=acts.logging.INFO, config=svgWriterCfg)
+            level=acts.logging.INFO, config=svgWriterCfg
+        )
         svgWriter.write(context, trackingGeometry)
 
 
 if "__main__" == __name__:
     detector, trackingGeometry, decorators = GenericDetector.create()
-    
+
     runGeometry(trackingGeometry, outputDir=os.getcwd())
