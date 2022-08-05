@@ -30,11 +30,13 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
   std::vector<Acts::Vector2> bField;
   // [1] Read in file and fill values
   TFile* inputFile = TFile::Open(fieldMapFile.c_str());
-  if (!inputFile)
+  if (inputFile == nullptr) {
     throw std::runtime_error("file does not exist");
+  }
   TTree* tree = inputFile->Get<TTree>(treeName.c_str());
-  if (!tree)
+  if (tree == nullptr) {
     throw std::runtime_error("object not found in file");
+  }
   Int_t entries = tree->GetEntries();
 
   double r, z;
@@ -79,11 +81,13 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
   std::vector<Acts::Vector3> bField;
   // [1] Read in file and fill values
   TFile* inputFile = TFile::Open(fieldMapFile.c_str());
-  if (!inputFile)
+  if (inputFile == nullptr) {
     throw std::runtime_error("file does not exist");
+  }
   TTree* tree = inputFile->Get<TTree>(treeName.c_str());
-  if (!tree)
+  if (tree == nullptr) {
     throw std::runtime_error("object not found in file");
+  }
   Int_t entries = tree->GetEntries();
 
   double x, y, z;
