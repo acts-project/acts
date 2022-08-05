@@ -41,7 +41,7 @@ constexpr float NaNint = std::numeric_limits<int>::quiet_NaN();
 /// implement the type-specific write method.
 ///
 /// Default no-op implementations for `initialize` and `finalize` are provided
-/// but can be overriden by the user.
+/// but can be overridden by the user.
 template <typename write_data_t>
 class WriterT : public IWriter {
  public:

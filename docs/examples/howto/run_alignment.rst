@@ -13,7 +13,7 @@ We assume that you have generated a simulation dataset based on the TrackML dete
 Run track fitting with misaligned detector 
 ------------------------------------------
 
-The effects of misalignment on the track parameters estimation can be mimicked by decorating some misalignment to the detector. The AlignedDetector and PayloaDetector are two 'misaligned' versions of the TrackML detector. The difference between them is that they have different handling of the alignment parameters for the detector modules. In addition to the options as used for truth fitting in in :ref:`truth-fit-TrackML`, additional options for misalignment decoration must be specified to run the track fiting with the AlignedDetector: 
+The effects of misalignment on the track parameters estimation can be mimicked by decorating some misalignment to the detector. The AlignedDetector and PayloaDetector are two 'misaligned' versions of the TrackML detector. The difference between them is that they have different handling of the alignment parameters for the detector modules. In addition to the options as used for truth fitting in :ref:`truth-fit-TrackML`, additional options for misalignment decoration must be specified to run the track fiting with the AlignedDetector: 
 
 .. code-block:: console
 
