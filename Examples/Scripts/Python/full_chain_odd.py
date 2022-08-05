@@ -45,7 +45,7 @@ s = addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
     EtaConfig(-3.0, 3.0, True),
-    ParticleConfig(4, acts.PdgParticle.eMuon, True),
+    ParticleConfig(2, acts.PdgParticle.eMuon, True),
     rnd=rnd,
 )
 s = addFatras(
