@@ -31,13 +31,13 @@
 
 using namespace ROOT;
 
-/// Plot the bound parameter resoltuions
+/// Plot the bound parameter resolutions
 ///
 /// (loc1, phi, theta, q/p, t) at all track states from root file produced by
 /// the RootTrajectoryStatesWriter
 ///
 /// @param inFile the input root file
-/// @param treeNAme the input tree name (default: 'trackstates)
+/// @param treeName the input tree name (default: 'trackstates)
 /// @param outFile the output root file
 /// @param pTypes the track parameter types (prt, flt, smt)
 /// @param saveAs the plot saving type
@@ -56,7 +56,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
 
   // Pull range, residual ranges are automatically determined
   double pullRange = 5;
-  
+
   //
   // Residual ranges should be largest in predicted and smallest in smoothed,
   // hence reverse the order.
@@ -91,7 +91,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   TFile* out = TFile::Open(outFile.c_str(), "recreate");
   out->cd();
 
-  // Section 1: geometry parsing -------------------------------------------
+  // Section 1: geometry parsing ------------------------------------------
   //
   // Gathers accessible volume_id and layer_id values
   // Draw the volume_id : layer_id correlation matrix
@@ -150,12 +150,12 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
     }
   }
 
-  // Section 2: Branch assignment
+  // Section 2: Branch assignment -----------------------------------------
   //
   // Helper for assigning branches to the input tree
   TrackStatesReader tsReader(tree, false);
 
-  // Section 3: Histogram booking ...
+  // Section 3: Histogram booking -----------------------------------------
 
   TCanvas* rangeCanvas =
       new TCanvas("rangeCanvas", "Range Estimation", 10, 10, 900, 600);
@@ -303,7 +303,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
     }
   }
 
-  // Resiudal / Pull histograms
+  // Residual / Pull histograms
   std::map<std::string, TH1F*> res_prt;
   std::map<std::string, TH1F*> res_flt;
   std::map<std::string, TH1F*> res_smt;
@@ -322,11 +322,11 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
 
       // Residual range
       std::map<std::pair<std::string,std::string>, double> paramResidualRange = {
-          {{"loc0", "l_{0}"}, ranges[0]}, 
-          {{"loc1", "l_{1}"}, ranges[1]}, 
+          {{"loc0", "l_{0}"}, ranges[0]},
+          {{"loc1", "l_{1}"}, ranges[1]},
           {{"#phi", "#phi"}, ranges[2]},
-          {{"#theta","#theta"}, ranges[3]}, 
-          {{"q/p","q/p"}, ranges[4]},  
+          {{"#theta","#theta"}, ranges[3]},
+          {{"q/p","q/p"}, ranges[4]},
           {{"t","t"}, ranges[5]}};
 
       // Create the hists and set up for them
@@ -337,7 +337,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
 
         TString par_string(partwin.second.c_str());
         TString res_string = par_string + TString("^{rec} - ") + par_string + TString("^{true}");
-        
+
         TString pull_string = TString("(") + res_string + TString(")/#sigma_{")+par_string+TString("}");
 
         if (predicted) {
@@ -402,7 +402,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
     }
   }
 
-  // Section 4: Histogram filling
+  // Section 4: Histogram filling -----------------------------------------
   //
   // - Running through the entries and filling the histograms
   int entries = tree->GetEntries();
@@ -747,7 +747,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         legend->Draw();
       }
 
-      // Save the Canvae as pictures
+      // Save the Canvases as pictures
       if (not saveAs.empty()) {
         pulls->SaveAs((vlID + std::string("pulls.") + saveAs).c_str());
       }

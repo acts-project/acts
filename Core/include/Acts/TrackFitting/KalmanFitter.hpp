@@ -191,8 +191,8 @@ struct KalmanFitterResult {
 
   // This is the index of the 'tip' of the states stored in multitrajectory.
   // This correspond to the last state in the multitrajectory.
-  // Since this KF only stores one trajectory, it is
-  // unambiguous. SIZE_MAX is the start of a trajectory.
+  // Since this KF only stores one trajectory, it is unambiguous.
+  // SIZE_MAX is the start of a trajectory.
   size_t lastTrackIndex = SIZE_MAX;
 
   // The optional Parameters at the provided surface
@@ -268,7 +268,7 @@ class KalmanFitter {
 
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
-  /// @tparam parameters_t The type of parameters used for "local" paremeters.
+  /// @tparam parameters_t The type of parameters used for "local" parameters.
   /// @tparam calibrator_t The type of calibrator
   /// @tparam outlier_finder_t Type of the outlier finder class
   ///
