@@ -35,12 +35,31 @@ struct Style {
   unsigned int nSegments = 72u;
 };
 
+/// Create a group
+///
+/// @param objects are the individual objects to be grouped
+/// @param name is the name of the group
+///
+/// @return a signle svg object as a group
+inline static actsvg::svg::object group(
+    const std::vector<actsvg::svg::object>& objects, const std::string& name) {
+  actsvg::svg::object gr;
+  gr._tag = "g";
+  gr._id = name;
+  for (const auto& o : objects) {
+    gr.add_object(o);
+  }
+  return gr;
+}
+
 /// Helper method to a measure
 ///
 /// @param xStart the start position
 /// @param yStart the start position
 /// @param xEnd the start position
 /// @param yEnd the start position
+///
+/// @return a single svg object as a measure
 inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
                                           ActsScalar xEnd, ActsScalar yEnd,
                                           const std::string& variable = "",

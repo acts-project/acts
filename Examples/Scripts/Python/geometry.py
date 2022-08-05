@@ -9,6 +9,7 @@ from acts.examples import (
     ProcessCode,
     CsvTrackingGeometryWriter,
     ObjTrackingGeometryWriter,
+    SvgTrackingGeometryWriter,
     JsonSurfacesWriter,
     JsonMaterialWriter,
     JsonFormat,
@@ -28,6 +29,7 @@ def runGeometry(
     outputCsv=True,
     outputJson=True,
     outputRoot=True,
+    outputSvg=True,
 ):
 
     for ievt in range(events):
@@ -42,25 +44,44 @@ def runGeometry(
                 raise RuntimeError("Failed to decorate event context")
 
         if outputCsv:
+            csvOutputDir = os.path.join(outputDir, "csv");
+            if not os.path.exists(csvOutputDir):
+                os.makedirs(csvOutputDir)               
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
-                outputDir=os.path.join(outputDir, "csv"),
+                outputDir=csvOutputDir,
                 writePerEvent=True,
             )
+
             writer.write(context)
 
         if outputObj:
+            outputDirObj = os.path.join(outputDir, "obj")
+            if not os.path.exists(outputDirObj):
+                os.makedirs(outputDirObj)    
             writer = ObjTrackingGeometryWriter(
-                level=acts.logging.INFO, outputDir=os.path.join(outputDir, "obj")
+                level=acts.logging.INFO, outputDir=outputDirObj
             )
             writer.write(context, trackingGeometry)
 
+        if outputSvg:
+            outputDirSvg = os.path.join(outputDir, "svg")
+            if not os.path.exists(outputDirSvg):
+                os.makedirs(outputDirSvg)    
+            svgWriterCfg = SvgTrackingGeometryWriter.Config( outputDir=outputDirSvg)
+            svgWriter = SvgTrackingGeometryWriter(
+                level=acts.logging.INFO, config=svgWriterCfg)
+            svgWriter.write(context, trackingGeometry)
+
         if outputJson:
+            outputDirJson = os.path.join(outputDir, "json")
+            if not os.path.exists(outputDirJson):
+                os.makedirs(outputDirJson)   
             writer = JsonSurfacesWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
-                outputDir=os.path.join(outputDir, "json"),
+                outputDir=outputDirJson,
                 writePerEvent=True,
                 writeSensitive=True,
             )
@@ -78,7 +99,7 @@ def runGeometry(
             jmw = JsonMaterialWriter(
                 level=acts.logging.VERBOSE,
                 converterCfg=jmConverterCfg,
-                fileName=os.path.join(outputDir, "geometry-map"),
+                fileName=os.path.join(outputDirJson, "geometry-map"),
                 writeFormat=JsonFormat.Json,
             )
 
@@ -86,8 +107,8 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    detector, trackingGeometry, decorators = AlignedDetector.create()
-    # detector, trackingGeometry, decorators = GenericDetector.create()
+    # detector, trackingGeometry, decorators = AlignedDetector.create()
+    detector, trackingGeometry, decorators = GenericDetector.create()
     # detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory() )
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())

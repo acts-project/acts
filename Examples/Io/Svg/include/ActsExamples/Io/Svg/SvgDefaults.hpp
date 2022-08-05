@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include <Acts/Plugins/ActSVG/LayerSvgConverter.hpp>
+#include <Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp>
 
 namespace {
 
@@ -24,10 +26,32 @@ static inline Acts::Svg::Style layerStyle() {
 
   return defaultStyle;
 };
+
+static inline Acts::Svg::TrackingGeometryConverter::Options
+trackingGeometryOptions() {
+  Acts::GeometryIdentifier geoID(0);
+
+  Acts::Svg::LayerConverter::Options lOptions;
+
+  lOptions.name = "layer";
+  lOptions.surfaceStyles =
+      Acts::GeometryHierarchyMap<Acts::Svg::Style>({{geoID, layerStyle()}});
+
+  Acts::Svg::TrackingGeometryConverter::Options tgOptions;
+  tgOptions.prefix = "";
+  tgOptions.layerOptions =
+      Acts::GeometryHierarchyMap<Acts::Svg::LayerConverter::Options>(
+          {{geoID, lOptions}});
+
+  return tgOptions;
+};
+
 }  // namespace
 
 namespace ActsExamples {
 
 static Acts::Svg::Style s_defaultLayerStyle = layerStyle();
 
-}
+static Acts::Svg::TrackingGeometryConverter::Options
+    s_defaultTrackingGeometryOptions = trackingGeometryOptions();
+}  // namespace ActsExamples

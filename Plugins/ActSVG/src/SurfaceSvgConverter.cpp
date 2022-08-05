@@ -12,17 +12,21 @@
 #include "Acts/Surfaces/PlanarBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
-Acts::Svg::ProtoSurface Acts::Svg::convert(const GeometryContext& gctx,
-                                           const Surface& surface,
-                                           const Style& surfaceStyle,
-                                           bool templateSurface) {
+Acts::Svg::ProtoSurface Acts::Svg::SurfaceConverter::convert(
+    const GeometryContext& gctx, const Surface& surface,
+    const SurfaceConverter::Options& cOptions) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(
+      getDefaultLogger("SurfaceArraySvgConverter", cOptions.logLevel));
+
   ProtoSurface pSurface;
 
   // In case of non-template surfaces, the polyhedron does the trick
-  if (not templateSurface) {
+  if (not cOptions.templateSurface) {
+    ACTS_DEBUG("Not building template surface!");
     // Polyhedron surface for vertices needed anyways
     Polyhedron surfaceHedron =
-        surface.polyhedronRepresentation(gctx, surfaceStyle.nSegments);
+        surface.polyhedronRepresentation(gctx, cOptions.style.nSegments);
     auto vertices3D = surfaceHedron.vertices;
     pSurface._vertices = vertices3D;
   } else {
@@ -31,7 +35,7 @@ Acts::Svg::ProtoSurface Acts::Svg::convert(const GeometryContext& gctx,
     auto planarBounds =
         dynamic_cast<const Acts::PlanarBounds*>(&(surface.bounds()));
     if (planarBounds != nullptr) {
-      auto vertices2D = planarBounds->vertices(surfaceStyle.nSegments);
+      auto vertices2D = planarBounds->vertices(cOptions.style.nSegments);
       pSurface._vertices.reserve(vertices2D.size());
       for (const auto& v2 : vertices2D) {
         pSurface._vertices.push_back({v2[0], v2[1], 0.});
@@ -41,7 +45,7 @@ Acts::Svg::ProtoSurface Acts::Svg::convert(const GeometryContext& gctx,
       auto annulusBounds =
           dynamic_cast<const Acts::AnnulusBounds*>(&(surface.bounds()));
       if (annulusBounds != nullptr) {
-        auto vertices2D = annulusBounds->vertices(surfaceStyle.nSegments);
+        auto vertices2D = annulusBounds->vertices(cOptions.style.nSegments);
         pSurface._vertices.reserve(vertices2D.size());
         for (const auto& v2 : vertices2D) {
           pSurface._vertices.push_back({v2[0], v2[1], 0.});
@@ -118,16 +122,17 @@ Acts::Svg::ProtoSurface Acts::Svg::convert(const GeometryContext& gctx,
   }
 
   // Attach the style
-  pSurface._fill._fc = {surfaceStyle.fillColor,
-                        static_cast<actsvg::scalar>(surfaceStyle.fillOpacity)};
+  pSurface._fill._fc = {
+      cOptions.style.fillColor,
+      static_cast<actsvg::scalar>(cOptions.style.fillOpacity)};
 
   // Fill style
-  pSurface._fill._fc._hl_rgb = surfaceStyle.highlightColor;
-  pSurface._fill._fc._highlight = surfaceStyle.highlights;
+  pSurface._fill._fc._hl_rgb = cOptions.style.highlightColor;
+  pSurface._fill._fc._highlight = cOptions.style.highlights;
 
   // Stroke sytle
-  pSurface._stroke._sc = actsvg::style::color{surfaceStyle.strokeColor};
-  pSurface._stroke._width = surfaceStyle.strokeWidth;
+  pSurface._stroke._sc = actsvg::style::color{cOptions.style.strokeColor};
+  pSurface._stroke._width = cOptions.style.strokeWidth;
 
   return pSurface;
 }

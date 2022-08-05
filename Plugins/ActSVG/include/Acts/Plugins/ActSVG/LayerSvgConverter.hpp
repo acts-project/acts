@@ -9,7 +9,9 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "actsvg/core.hpp"
 #include "actsvg/meta.hpp"
 
@@ -27,29 +29,49 @@ static std::array<ActsScalar, 2> noLimitZ = {
 
 static std::array<ActsScalar, 2> noLimitPhi = {-M_PI, M_PI};
 
-struct LayerConvConf {
-  /// The z limit
+namespace LayerConverter {
+
+/// The enumeration for sheets
+enum Sheets {
+  eModuleInfo = 0,
+  eGridInfo = 1,
+  eCrossSectionXY = 2,
+  eCrossSectionZR = 3
+};
+
+/// A nested options class for the layer conversion
+struct Options {
+  /// The name for the conversion object
+  std::string name = "";
+  /// The style of the surface objects
+  GeometryHierarchyMap<Style> surfaceStyles;
+  /// The z limit for projections
   std::array<ActsScalar, 2> zRange = noLimitZ;
-  /// The phi limit
+  /// The phi limit for projections
   std::array<ActsScalar, 2> phiRange = noLimitPhi;
-  // Label checks
+  /// Configuration of the views
+  bool gridInfo = true;
+  bool moduleInfo = true;
+  bool projectionInfo = true;
+  /// Label checks
   bool labelProjection = false;
   ActsScalar labelGauge = 0.;
+  /// ACTS log level
+  Logging::Level logLevel = Logging::INFO;
 };
 
 /// Write/create the layer sheets for a given layer
 ///
 /// @param gctx the geometry context
 /// @param layer the layer to be displayed
-/// @param surfaceStyle the style of the surface drawings
-/// @param name an optional name of the objects
-/// @param lConfiguration is a struct to configure the conversion
+/// @param cOptions the conversion objects
 ///
 /// @return a vector of svg objects
-std::vector<actsvg::svg::object> layerSheets(
-    const GeometryContext& gctx, const Layer& layer,
-    const std::string& layerName, const Style& surfaceStyle,
-    const LayerConvConf& lConfiguration);
+std::vector<actsvg::svg::object> convert(const GeometryContext& gctx,
+                                         const Layer& layer,
+                                         const Options& cOptions);
+
+}  // namespace LayerConverter
 
 }  // namespace Svg
 

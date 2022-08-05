@@ -10,7 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "actsvg/meta.hpp"
 
 #include <tuple>
@@ -26,18 +28,31 @@ using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 using ProtoSurfaces = std::vector<ProtoSurface>;
 using ProtoGrid = actsvg::proto::grid;
 
+namespace SurfaceArrayConverter {
+
+/// Nested options struct
+struct Options {
+  /// Hierarchy map of styles
+  GeometryHierarchyMap<Style> surfaceStyles;
+
+  /// ACTS Logging level
+  Logging::Level logLevel = Logging::INFO;
+};
+
 /// Convert a surface array into needed constituents
 ///
 /// @param gtcx is the geometry context of the conversion call
 /// @param surfaceArray is the surface to convert
-/// @param surfaceStyle is the surface style in question
+/// @param cOptions the conversion options
 ///
 /// @note the type of view is auto-generated from the binning information
 ///
 /// @return a collection of proto surface object and a grid with associations
 std::tuple<ProtoSurfaces, ProtoGrid> convert(const GeometryContext& gctx,
                                              const SurfaceArray& surfaceArray,
-                                             const Style& surfaceStyle);
+                                             const Options& cOptions);
+
+}  // namespace SurfaceArrayConverter
 
 }  // namespace Svg
 

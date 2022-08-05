@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Io/Svg/SvgTrackingGeometryWriter.hpp"
 
+#include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/Layer.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Geometry/TrackingVolume.hpp>
@@ -31,54 +32,13 @@ ActsExamples::ProcessCode ActsExamples::SvgTrackingGeometryWriter::write(
 
   m_writeMutex.lock();
 
-  auto world = tGeometry.highestTrackingVolume();
-  if (world) {
-    write(context, *world);
+  auto geometrySheets = Acts::Svg::TrackingGeometryConverter::convert(
+      context.geoContext, tGeometry, m_cfg.converterOptions);
+
+  // Write them out
+  for (const auto& sheet : geometrySheets) {
+    Acts::Svg::toFile({sheet}, joinPaths(m_cfg.outputDir, sheet._id + ".svg"));
   }
-
-  Acts::Svg::toFile(m_xyCrossection, m_cfg.baseName + "crosssection_xy.svg");
-  Acts::Svg::toFile(m_zrCrossection, m_cfg.baseName + "crosssection_zr.svg");
-
+  // Successfully done
   return ActsExamples::ProcessCode::SUCCESS;
-}
-
-void ActsExamples::SvgTrackingGeometryWriter::write(
-    const AlgorithmContext& context, const Acts::TrackingVolume& tVolume) {
-  if (tVolume.confinedLayers() != nullptr) {
-    for (const auto& layer : tVolume.confinedLayers()->arrayObjects()) {
-      if (layer->surfaceArray() != nullptr) {
-        Acts::GeometryIdentifier geoID = layer->geometryId();
-        std::string layerName = m_cfg.baseName + "vol_" +
-                                std::to_string(geoID.volume()) + "_layer_" +
-                                std::to_string(geoID.layer());
-
-        // Get the layer sheets
-        Acts::Svg::LayerConvConf lConfig;
-        lConfig.phiRange = m_cfg.phiViewRangeRZ;
-        lConfig.zRange = m_cfg.zViewRangeXY;
-        lConfig.labelProjection = true;
-        auto layerSheet = Acts::Svg::layerSheets(
-            context.geoContext, *layer, layerName, m_cfg.svgStyle, lConfig);
-        // Write the individual sheets
-        for (unsigned int is = 0; is < layerSheet.size(); ++is) {
-          Acts::Svg::toFile({layerSheet[is]}, layerSheet[is]._id + ".svg");
-        }
-        // Collect the xy views
-        if (layerSheet[2].is_defined() and
-            layer->surfaceRepresentation().type() == Acts::Surface::Cylinder) {
-          m_xyCrossection.push_back(layerSheet[2]);
-        }
-        // Collect the zr views
-        if (layerSheet[3].is_defined()) {
-          m_zrCrossection.push_back(layerSheet[3]);
-        }
-      }
-    }
-  }
-
-  if (tVolume.confinedVolumes() != nullptr) {
-    for (const auto& sVolume : tVolume.confinedVolumes()->arrayObjects()) {
-      write(context, *sVolume);
-    }
-  }
 }

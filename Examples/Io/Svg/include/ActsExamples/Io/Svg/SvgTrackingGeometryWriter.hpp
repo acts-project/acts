@@ -11,6 +11,7 @@
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Io/Svg/SvgDefaults.hpp"
+#include <Acts/Plugins/ActSVG/TrackingGeometrySvgConverter.hpp>
 #include <Acts/Utilities/Logger.hpp>
 
 #include <fstream>
@@ -30,22 +31,15 @@ namespace ActsExamples {
 /// It delegates the writing to the converter from the Svg plugin
 class SvgTrackingGeometryWriter {
  public:
-  // @class Config
-  //
-  // The nested config class
+  /// @class Config
+  ///
+  /// The nested config class for this writer
   class Config {
    public:
-    Acts::Svg::Style svgStyle = s_defaultLayerStyle;
+    Acts::Svg::TrackingGeometryConverter::Options converterOptions =
+        s_defaultTrackingGeometryOptions;
 
-    std::string baseName = "";
-
-    std::array<Acts::ActsScalar, 2> zViewRangeXY = {
-        std::numeric_limits<Acts::ActsScalar>::lowest(),
-        std::numeric_limits<Acts::ActsScalar>::max()};
-
-    std::array<Acts::ActsScalar, 2> phiViewRangeRZ = {-M_PI, M_PI};
-
-    std::string outputDir = ".";
+    std::string outputDir = "";
   };
 
   /// Constructor
@@ -70,15 +64,6 @@ class SvgTrackingGeometryWriter {
   Config m_cfg;  ///< the config class
 
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
-
-  std::vector<actsvg::svg::object> m_xyCrossection;
-  std::vector<actsvg::svg::object> m_zrCrossection;
-
-  /// process this volume
-  /// @param context the Algorithm/Event context for this call
-  /// @param tVolume the volume to be processed
-  void write(const AlgorithmContext& context,
-             const Acts::TrackingVolume& tVolume);
 
   /// Private access to the logging instance
   const Acts::Logger& logger() const { return *m_logger; }

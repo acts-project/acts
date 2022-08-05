@@ -13,9 +13,10 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
-std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid> Acts::Svg::convert(
-    const Acts::GeometryContext& gctx, const Acts::SurfaceArray& surfaceArray,
-    const Style& surfaceStyle) {
+std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid>
+Acts::Svg::SurfaceArrayConverter::convert(
+    const GeometryContext& gctx, const SurfaceArray& surfaceArray,
+    const SurfaceArrayConverter::Options& cOptions) {
   // Prepare the return objects
   ProtoSurfaces pSurfaces;
   ProtoGrid pGrid;
@@ -24,7 +25,7 @@ std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid> Acts::Svg::convert(
 
   // The local logger
   ACTS_LOCAL_LOGGER(
-      getDefaultLogger("SurfaceArraySvgConverter", Logging::INFO));
+      getDefaultLogger("SurfaceArraySvgConverter", cOptions.logLevel));
 
   // The edges of the grid
   auto binning = surfaceArray.binningValues();
@@ -84,6 +85,7 @@ std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid> Acts::Svg::convert(
   std::vector<const SurfaceBounds*> templateBounds;
 
   for (const auto& sf : surfaces) {
+    // Get bounds and check them
     const SurfaceBounds& sBounds = sf->bounds();
     // Helper to find bounds
     auto sameBounds = [&](const SurfaceBounds* test) {
@@ -94,16 +96,26 @@ std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid> Acts::Svg::convert(
         std::find_if(templateBounds.begin(), templateBounds.end(), sameBounds);
     // New reference bounds and new reference object
     if (tBounds == templateBounds.end()) {
-      auto referenceSurface = Acts::Svg::convert(gctx, *sf, surfaceStyle, true);
+      // Let's get the right style
+      SurfaceConverter::Options sOptions;
+      sOptions.templateSurface = true;
+      // Find a corresponding file in the playbook
+      auto sfStyle = cOptions.surfaceStyles.find(sf->geometryId());
+      if (sfStyle != cOptions.surfaceStyles.end()) {
+        sOptions.style = *sfStyle;
+      }
+
+      // Create a referese surface and reference object from it
+      auto referenceSurface = SurfaceConverter::convert(gctx, *sf, sOptions);
       auto referenceObject =
-          surfaceViewXY(referenceSurface,
-                        "Template_" + std::to_string(templateObjects.size()));
+          View::xy(referenceSurface,
+                   "Template_" + std::to_string(templateObjects.size()));
       templateBounds.push_back(&sBounds);
       templateObjects.push_back(referenceObject);
     }
   }
 
-  ACTS_INFO("Found " << templateObjects.size() << " templates for this layer");
+  ACTS_DEBUG("Found " << templateObjects.size() << " templates for this layer");
   // Estimate a reference radius
   ActsScalar radius = 0.;
 
@@ -111,9 +123,17 @@ std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid> Acts::Svg::convert(
   for (const auto& sf : surfaces) {
     radius += Acts::VectorHelpers::perp(sf->center(gctx));
 
+    // Let's get the right style
+    SurfaceConverter::Options sOptions;
+    sOptions.templateSurface = vType != cylinder;
+    // Find a corresponding file in the playbook
+    auto sfStyle = cOptions.surfaceStyles.find(sf->geometryId());
+    if (sfStyle != cOptions.surfaceStyles.end()) {
+      sOptions.style = *sfStyle;
+    }
+
     // Convert the surface from ACTS to actsvg
-    auto cSurface =
-        Acts::Svg::convert(gctx, *sf, surfaceStyle, vType != cylinder);
+    auto cSurface = Acts::Svg::SurfaceConverter::convert(gctx, *sf, sOptions);
     cSurface._name = "Module_n_" + std::to_string(pSurfaces.size());
 
     cSurface._aux_info["grid_info"] = {

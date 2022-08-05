@@ -16,26 +16,27 @@
 #include <set>
 #include <sstream>
 
-std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
+std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     const GeometryContext& gctx, const Layer& layer,
-    const std::string& layerName, const Style& surfaceStyle,
-    const LayerConvConf& lConfiguration) {
+    const LayerConverter::Options& cOptions) {
   // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("SurfaceArraySvgConverter", Logging::INFO));
+  ACTS_LOCAL_LOGGER(getDefaultLogger("LayerSvgConverter", cOptions.logLevel));
 
   // The sheets
   std::vector<actsvg::svg::object> sheets;
 
   // The volume
   Acts::Svg::ProtoVolume volume;
-  volume._name = layerName;
-  ACTS_INFO("Processing layer: " << layerName);
+  volume._name = cOptions.name;
+  ACTS_DEBUG("Processing layer: " << cOptions.name);
 
   /// Convert the surface array into proto surfaces and a grid structure
   if (layer.surfaceArray() != nullptr) {
-    auto [surfaces, grid] =
-        convert(gctx, *(layer.surfaceArray()), surfaceStyle);
+    SurfaceArrayConverter::Options sacOptions;
+    sacOptions.surfaceStyles = cOptions.surfaceStyles;
+    sacOptions.logLevel = cOptions.logLevel;
+    auto [surfaces, grid] = SurfaceArrayConverter::convert(
+        gctx, *(layer.surfaceArray()), sacOptions);
     volume._surfaces = surfaces;
     volume._surface_grid = grid;
   }
@@ -46,20 +47,30 @@ std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
   actsvg::svg::object xy_layer;
   actsvg::svg::object zr_layer;
 
+  // The module / grid information
   const auto& layerSurface = layer.surfaceRepresentation();
   if (layerSurface.type() == Acts::Surface::Disc) {
-    module_sheet = actsvg::display::endcap_sheet(
-        layerName + "_modules", volume, {800, 800},
-        actsvg::display::e_module_info);
-    grid_sheet = actsvg::display::endcap_sheet(
-        layerName + "_grid", volume, {800, 800}, actsvg::display::e_grid_info);
+    if (cOptions.moduleInfo) {
+      module_sheet = actsvg::display::endcap_sheet(
+          cOptions.name + "_modules", volume, {800, 800},
+          actsvg::display::e_module_info);
+    }
+    if (cOptions.gridInfo) {
+      grid_sheet = actsvg::display::endcap_sheet(cOptions.name + "_grid",
+                                                 volume, {800, 800},
+                                                 actsvg::display::e_grid_info);
+    }
   } else if (layerSurface.type() == Acts::Surface::Cylinder) {
-    // Draw the barrel type
-    module_sheet = actsvg::display::barrel_sheet(
-        layerName + "_modules", volume, {800, 800},
-        actsvg::display::e_module_info);
-    grid_sheet = actsvg::display::barrel_sheet(
-        layerName + "_grid", volume, {800, 800}, actsvg::display::e_grid_info);
+    if (cOptions.moduleInfo) {
+      module_sheet = actsvg::display::barrel_sheet(
+          cOptions.name + "_modules", volume, {800, 800},
+          actsvg::display::e_module_info);
+    }
+    if (cOptions.gridInfo) {
+      grid_sheet = actsvg::display::barrel_sheet(cOptions.name + "_grid",
+                                                 volume, {800, 800},
+                                                 actsvg::display::e_grid_info);
+    }
   }
 
   // The z_r view of things
@@ -69,10 +80,10 @@ std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
   if (layer.surfaceArray() != nullptr) {
     // The x_y view of things
     xy_layer._tag = "g";
-    xy_layer._id = layerName + "_xy_view";
+    xy_layer._id = cOptions.name + "_xy_view";
     // The x_r view of things
     zr_layer._tag = "g";
-    zr_layer._id = layerName + "_zr_view";
+    zr_layer._id = cOptions.name + "_zr_view";
     unsigned int m = 0;
     // Potential labels
     Acts::ActsScalar avgRadius = 0.;
@@ -92,15 +103,14 @@ std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
       actsvg::proto::surface<std::vector<Acts::Vector3>> projSurface;
       projSurface._vertices = sf->polyhedronRepresentation(gctx, 1u).vertices;
       // Draw only if they fall into the range restriction - for phi
-      if (phi >= lConfiguration.phiRange[0] and
-          phi <= lConfiguration.phiRange[1]) {
+      if (phi >= cOptions.phiRange[0] and phi <= cOptions.phiRange[1]) {
         std::string m_zr_id = std::string("zr_") + std::to_string(m++);
-        zr_layer.add_object(Acts::Svg::surfaceViewZR(projSurface, m_zr_id));
+        zr_layer.add_object(Acts::Svg::View::zr(projSurface, m_zr_id));
       }
       // for z
-      if (z >= lConfiguration.zRange[0] and z <= lConfiguration.zRange[1]) {
+      if (z >= cOptions.zRange[0] and z <= cOptions.zRange[1]) {
         std::string m_xy_id = std::string("xy_") + std::to_string(m++);
-        xy_layer.add_object(Acts::Svg::surfaceViewXY(projSurface, m_xy_id));
+        xy_layer.add_object(Acts::Svg::View::xy(projSurface, m_xy_id));
       }
     }
     // Do the average
@@ -108,18 +118,19 @@ std::vector<actsvg::svg::object> Acts::Svg::layerSheets(
     avgZ /= layer.surfaceArray()->surfaces().size();
 
     // Add a measure iuf requested
-    if (lConfiguration.labelProjection) {
-      ActsScalar xEnd = avgRadius * std::cos(lConfiguration.labelGauge);
-      ActsScalar yEnd = avgRadius * std::sin(lConfiguration.labelGauge);
+    if (cOptions.labelProjection) {
+      ActsScalar xEnd = avgRadius * std::cos(cOptions.labelGauge);
+      ActsScalar yEnd = avgRadius * std::sin(cOptions.labelGauge);
       xy_layer.add_object(measure(0., 0., xEnd, yEnd, "r", avgRadius, "mm"));
     }
   }
 
-  // Register
+  // Register according to the enums
   sheets.push_back(module_sheet);
   sheets.push_back(grid_sheet);
   sheets.push_back(xy_layer);
   sheets.push_back(zr_layer);
 
+  // Return the created sheets
   return sheets;
 }

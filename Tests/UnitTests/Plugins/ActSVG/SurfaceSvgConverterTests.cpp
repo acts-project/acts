@@ -35,14 +35,23 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
   // Default Geometry context
   Acts::GeometryContext geoCtx;
 
+  using SurfaceOptions = Acts::Svg::SurfaceConverter::Options;
+
+  SurfaceOptions sOptions;
+  sOptions.style = style;
+  sOptions.templateSurface = true;
+
   // Svg proto object & actual object
-  auto svgTemplate = Acts::Svg::convert(geoCtx, surface, style, true);
+  auto svgTemplate =
+      Acts::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
   auto xyTemplate =
-      Acts::Svg::surfaceViewXY(svgTemplate, identification + "_template");
+      Acts::Svg::View::xy(svgTemplate, identification + "_template");
   Acts::Svg::toFile({xyTemplate}, xyTemplate._id + ".svg");
   // Positioned
-  auto svgObject = Acts::Svg::convert(geoCtx, surface, style, false);
-  auto xyObject = Acts::Svg::surfaceViewXY(svgObject, identification);
+  sOptions.templateSurface = false;
+  auto svgObject =
+      Acts::Svg::SurfaceConverter::convert(geoCtx, surface, sOptions);
+  auto xyObject = Acts::Svg::View::xy(svgObject, identification);
   auto xyAxes =
       Acts::Svg::axesXY(static_cast<Acts::ActsScalar>(xyObject._x_range[0]),
                         static_cast<Acts::ActsScalar>(xyObject._x_range[1]),
@@ -51,8 +60,7 @@ void runPlanarTests(const Acts::Surface& surface, const Acts::Svg::Style& style,
 
   Acts::Svg::toFile({xyObject, xyAxes}, xyObject._id + ".svg");
   // As sheet
-  auto svgSheet =
-      Acts::Svg::surfaceSheetXY(svgTemplate, identification + "_sheet");
+  auto svgSheet = Acts::Svg::Sheet::xy(svgTemplate, identification + "_sheet");
   Acts::Svg::toFile({svgSheet}, svgSheet._id + ".svg");
 };
 
@@ -106,7 +114,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
   actsvg::proto::surface<std::vector<Acts::Vector3>> reference;
   reference._vertices =
       trapeozidPlaneTransformed->polyhedronRepresentation(geoCtx, 1u).vertices;
-  auto referenceTrapezoid = Acts::Svg::surfaceViewXY(reference, "trapezoid");
+  auto referenceTrapezoid = Acts::Svg::View::xy(reference, "trapezoid");
   auto referenceAxes = Acts::Svg::axesXY(-200., 200., -200., 200);
   Acts::Svg::toFile({referenceTrapezoid, referenceAxes},
                     "trapezoid_reference.svg");
@@ -131,7 +139,7 @@ BOOST_AUTO_TEST_CASE(PlanarSurfaces) {
       ftrapeozidPlaneTransformed->polyhedronRepresentation(geoCtx, 1u).vertices;
 
   auto freferenceTrapezoid =
-      Acts::Svg::surfaceViewXY(freference, "flipped_trapezoid");
+      Acts::Svg::View::xy(freference, "flipped_trapezoid");
   Acts::Svg::toFile({freferenceTrapezoid, referenceAxes},
                     "flipped_trapezoid_reference.svg");
 

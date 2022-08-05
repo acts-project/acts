@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryHierarchyMap.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
@@ -125,17 +126,24 @@ BOOST_AUTO_TEST_CASE(DiscLayerRadialSvg) {
   discLayerStyle.strokeColor = {25, 25, 25};
   discLayerStyle.strokeWidth = 0.5;
   discLayerStyle.nSegments = 72u;
-  // Configuration
-  Acts::Svg::LayerConvConf lConfig;
+
+  Acts::GeometryIdentifier geoID{0};
 
   // Get the layer
   auto discLayer = generateDiscLayer(100, 250, 32u, 4u);
-  // Get the layer sheets
-  auto discLayerSheets = Acts::Svg::layerSheets(
-      tgContext, *discLayer, "disc_layer_sector", discLayerStyle, lConfig);
 
-  Acts::Svg::toFile({discLayerSheets[0]}, discLayerSheets[0]._id + ".svg");
-  Acts::Svg::toFile({discLayerSheets[1]}, discLayerSheets[1]._id + ".svg");
+  Acts::Svg::LayerConverter::Options lOptions;
+  lOptions.name = "disc_layer_sectors";
+  lOptions.surfaceStyles =
+      Acts::GeometryHierarchyMap<Acts::Svg::Style>({{geoID, discLayerStyle}});
+
+  // Get the layer sheets
+  auto discLayerSheets =
+      Acts::Svg::LayerConverter::convert(tgContext, *discLayer, lOptions);
+
+  for (const auto& s : discLayerSheets) {
+    Acts::Svg::toFile({s}, s._id + ".svg");
+  }
 }
 
 BOOST_AUTO_TEST_CASE(DiscLayerTrapezoidSvg) {
@@ -148,17 +156,24 @@ BOOST_AUTO_TEST_CASE(DiscLayerTrapezoidSvg) {
   discLayerStyle.strokeColor = {25, 25, 25};
   discLayerStyle.strokeWidth = 0.5;
   discLayerStyle.nSegments = 72u;
-  // Configuration
-  Acts::Svg::LayerConvConf lConfig;
+
+  Acts::GeometryIdentifier geoID{0};
 
   // Get the layer
   auto discLayer = generateDiscLayer(100, 250, 32u, 4u, true);
-  // Get the layer sheets
-  auto discLayerSheets = Acts::Svg::layerSheets(
-      tgContext, *discLayer, "disc_layer_trapezoid", discLayerStyle, lConfig);
 
-  Acts::Svg::toFile({discLayerSheets[0]}, discLayerSheets[0]._id + ".svg");
-  Acts::Svg::toFile({discLayerSheets[1]}, discLayerSheets[1]._id + ".svg");
+  Acts::Svg::LayerConverter::Options lOptions;
+  lOptions.name = "disc_layer_trapezoid";
+  lOptions.surfaceStyles =
+      Acts::GeometryHierarchyMap<Acts::Svg::Style>({{geoID, discLayerStyle}});
+
+  // Get the layer sheets
+  auto discLayerSheets =
+      Acts::Svg::LayerConverter::convert(tgContext, *discLayer, lOptions);
+
+  for (const auto& s : discLayerSheets) {
+    Acts::Svg::toFile({s}, s._id + ".svg");
+  }
 }
 
 BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
@@ -171,8 +186,8 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
   cylinderLayerStyle.strokeColor = {25, 25, 25};
   cylinderLayerStyle.strokeWidth = 0.5;
   cylinderLayerStyle.nSegments = 72u;
-  // Configuration
-  Acts::Svg::LayerConvConf lConfig;
+
+  Acts::GeometryIdentifier geoID{0};
 
   Acts::Test::CylindricalTrackingGeometry cGeometry(tgContext);
   auto tGeometry = cGeometry();
@@ -183,18 +198,22 @@ BOOST_AUTO_TEST_CASE(CylinderLayerSvg) {
     size_t il = 0;
     for (const auto& layer : layers) {
       if (layer->surfaceArray() != nullptr) {
-        // Get the layer sheets
-        auto layerSheet = Acts::Svg::layerSheets(
-            tgContext, *layer, "cylinder_layer_" + std::to_string(il++),
-            cylinderLayerStyle, lConfig);
+        Acts::Svg::LayerConverter::Options lOptions;
+        lOptions.name = "cylinder_layer_" + std::to_string(il++);
+        lOptions.surfaceStyles = Acts::GeometryHierarchyMap<Acts::Svg::Style>(
+            {{geoID, cylinderLayerStyle}});
 
-        Acts::Svg::toFile({layerSheet[0]}, layerSheet[0]._id + ".svg");
-        Acts::Svg::toFile({layerSheet[1]}, layerSheet[1]._id + ".svg");
+        // Get the layer sheets
+        auto layerSheets =
+            Acts::Svg::LayerConverter::convert(tgContext, *layer, lOptions);
+        for (const auto& s : layerSheets) {
+          Acts::Svg::toFile({s}, s._id + ".svg");
+        }
       }
     }
   }
 }
 
-BOOST_AUTO_TEST_CASE(PlanyLayerSvg) {}
+BOOST_AUTO_TEST_CASE(PlaeyLayerSvg) {}
 
 BOOST_AUTO_TEST_SUITE_END()
