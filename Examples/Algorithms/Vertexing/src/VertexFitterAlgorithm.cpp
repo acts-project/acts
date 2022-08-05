@@ -122,8 +122,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
-        ACTS_ERROR("Error in constrained vertex fitter: "
-                   << fitRes.error().message());
+        ACTS_ERROR(
+            "Error in constrained vertex fitter: " << fitRes.error().message());
       }
     }
 
