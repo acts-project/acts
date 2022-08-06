@@ -398,7 +398,9 @@ jobs:
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_PLUGIN_JSON=ON
       - name: Build
-        run: ${SETUP} && cmake --build build
+        run: ${SETUP} && ( cmake --build build || cmake --build build )
+      # The above line is required as a sort of retry mechanism. Without it,
+      # the build fails for technical reasons.
       - name: Unit tests
         run: ${SETUP} && ${PRELOAD} && cmake --build build --target test
       - name: Integration tests
