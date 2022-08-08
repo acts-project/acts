@@ -141,7 +141,7 @@ Often, magnetic fields are not homogeneous, however. In the presence of such
 changing fields, the corresponding differential equations of motions need to be
 solved using numerical integration techniques.
 
-### Numeric integration
+### Numerical integration
 
 In ACTS, numerical integration is done using the *Runge-Kutta-Nyström* (RKN) method.
 Commonly used in the variant at fourth order, it describes how to calculate a
@@ -274,7 +274,209 @@ starting point and the destination can be obtained.
 
 ## Material effects
 
+Charged particles interact with matter as they pass through it. Since
+particle detectors inevitably consist of some form or material, this effect
+cannot be completely avoided. By building tracking detectors as light as
+possible, and arranging passive components, such as services and support
+structures carefully, the material a particle encounters before being
+measured can be reduced. Charged particles traversing any form of matter
+undergo elastic and inelastic interactions with the atomic structure of the
+material, depending on the particle properties.
+
+(multiple_scattering)=
+
+:::{figure} /figures/tracking/multiple_scattering.svg
+:width: 200px
+:align: center
+
+Illustration of the effect of multiple scattering on the
+trajectory of a charged particle passing through a block of material.
+Entering from the left, it undergoes a series of scattering events,
+deflecting the trajectory statistically, before exiting on the right
+
+:::
+
+In elastic interactions, the particle does not lose a significant amount of
+energy, while its trajectory is affected. {numref}`multiple_scattering` shows a
+sketch of the way multiple Coulomb scattering affects the direction of a
+particle trajectory. In addition, a shift in the transverse plane relative to
+the incident direction can occur. As the scattering events occur in
+statistically independent directions, the means of both the deflection and
+offset tends toward zero as the number of scatters increases. Therefore, in the
+numerical particle propagation, this can be accounted for by simply increasing
+the uncertainties associated with the direction, depending on the amount of
+material encountered.
+
+On the other hand, there are interactions during which the particle loses
+some of its energy. Relevant processes here are ionization, as well as
+bremsstrahlung for light particles like electrons. For hadronic particles,
+hadronic interactions with the nuclei of surrounding material is another
+process of interest. In such hadronic interactions, the incoming particle
+often disintegrates, and does not propagate further. Since the size of
+ionization losses only fluctuates to a small degree for thin layers of
+material, they can usually be accounted for by reducing the trajectory energy
+correspondingly. For bremsstrahlung, where fluctuations are much larger,
+dedicated techniques are needed (see [](gsf)).
+
+Two main approaches are implemented in ACTS. The first approximates the
+material interaction by using a description that averages the real material
+onto thin surfaces across the detector (more on this in
+[](#geometry-and-material-modelling)). When the propagation encounters such a
+surface, it retrieves the material properties, and executes parametrized
+modifications to the particle properties and uncertainties. In the second
+approach, material effects are continuously incorporated during propagation,
+rather than at discrete locations. The latter approach is especially suited for
+propagation through volumes of dense material, where the discretization of the
+material distribution will not work as well.
+
 ## Geometry and material modelling
+
+A detailed model of the geometry of an experiment is required for tracking. In
+many cases, external information is needed to associate a sensitive element
+with a position and rotation in the laboratory frame. In case of silicon
+sensors, the intrinsic information captured by the sensor is restricted to the
+measurement plane. Using a transformation matrix, this local measurement can be
+turned into a global one.
+
+Full simulation using tools like Geant4 are frequently used in HEP.
+It includes its own geometry
+description framework. For the precise simulation of particle interactions
+with the detector, this geometry modelling
+is highly detailed. Even very small details of the
+physical hardware can be crucial, and are often included in the geometry
+description. An example for this are readout chips on silicon sensors, or cooling
+elements. {numref}`geometry_detail` (a) shows a sketch of such a detailed
+geometry description. Shown as an example is a *layer* of silicon
+sensors in a barrel configuration. The green rectangles represent the actual
+sensitive surfaces, while other elements include cooling, readout and other components.
+
+(geometry_detail)=
+
+:::{figure} /figures/tracking/geometry_detail.svg
+:align: center
+
+Sketch of the way a fully detailed simulation geometry (a) models passive
+elements, in addition to the sensitive elements shown in green. (b) shows a
+simplified version, where all non-sensitive elements are approximated.
+
+:::
+
+In the majority of cases in track reconstruction, this detailed
+geometry is unnecessary. During track reconstruction, the aforementioned
+associated information needs to be accessible for measurements, so all
+sensitive elements need to be included in some form. Passive elements, on the
+other hand, are only required to factor in material interaction effects (see
+[](#particle-propagation)). Moreover, the fully detailed geometry comes
+at the disadvantage of introducing significant overhead during navigation. In
+this process, an algorithm attempts to figure out which elements the particle
+propagation needs to target, as the trajectory is likely to intersect them.
+With a geometry description this precise, the navigation process becomes a
+significant performance bottleneck.
+
+(layer_barrel)=
+:::{figure} /figures/tracking/layer_barrel.svg
+:width: 300px
+:align: center
+
+Sketch of the way sensitive elements are grouped into layers.
+Shown is an $xy$-view of a number of sensors, arranged as in e.g. the ATLAS
+silicon detector barrels. The grouping is based on their mounting radius.
+The layers are indicated in different colors.
+
+:::
+
+As a compromise between modelling accuracy and performance, ACTS
+uses a simplified geometry model . It
+focusses on the sensitive elements, which are strictly needed, while passive
+elements are discarded from the explicit description and approximated.
+{numref}`geometry_detail` (b) shows such a simplified geometry. Here, the
+sensitive elements are still shown in green, and other elements are greyed
+out, indicating that they are discarded. The sensitive elements are then
+grouped into layers, as sketched in {numref}`layer_barrel`. How exactly the
+grouping occurs depends on the concrete experiment geometrym. In some cases, the layers have the shape
+of cylinder surfaces with increasing radii. This example is shown in the
+figure in the transverse plane at radii $r_{1,2,3}$. In the endcaps, where
+modules are arranged on disks, these are used as the layer shape. An
+illustration of endcap disk layers can be found in {numref}`layer_ec`, where
+six disks are located at six distinct positions in $\pm z_{1,2,3}$, and
+shown in different colors.
+
+(layer_ec)=
+:::{figure} /figures/tracking/layer_ec.svg
+:width: 400px
+:align: center
+
+Sketch of the way sensitive elements are grouped into layers.
+Shown is a view of a number of sensors, arranged as in e.g. the ATLAS
+silicon detector endcaps. They are grouped into disks based on their
+mounting position in $z$. The layers are indicated in different colors.
+
+:::
+
+During particle propagation, the navigation makes use of this layer
+system. Each layer contains a binned structure, which maps a bin to a set
+of sensitive surfaces that overlap with the bin area. This is illustrated in
+\cref{fig:geo_binning}, where the left picture shows the sensitive surface
+structure of an exemplary endcap disk. The picture on the right overlays the
+binning structure that can be used to enable fast retrieval of compatible
+sensitive surfaces. By performing a simple bin lookup, the navigation can
+ascertain which sensors it needs to attempt propagation to.
+
+
+:::{figure} /figures/tracking/surface_array.svg
+:width: 400px
+:align: center
+
+Illustration of the binning structure that is used to subdivide
+layer surfaces. (a) shows two sensor rings of
+different radii grouped into one disk layer. (b)
+overlays the binning structure that the navigation queries for compatible
+surfaces.
+
+:::
+
+Furthermore, layers are grouped into volumes. Each volume loosely corresponds
+to a region of the detector.
+Volumes are set up such that their boundary surfaces always touch another
+volume. An exception to this is the outermost volume. Each volume's boundary
+surfaces store which volume is located on their other side, essentially
+forming portals between the volumes. This glueing enables the geometry
+navigation between volumes. When the propagation has finished processing a
+set of layers, it attempts to target the boundary surfaces. Once a boundary
+surface is reached, the active volume is switched, and the next set of layers
+is processed.
+
+Care has to be taken to correctly model the passive material, that is
+initially discarded with non-sensitive elements. For the material effects to
+be correctly taken into account during particle propagation, the material is
+projected onto dedicated material surfaces. These material surfaces are
+spread across the detector geometry. Each layer is created with two
+\emph{approach surfaces} on either side. Their distance can be interpreted as
+the thickness of the layer in question. Examples of these approach surfaces
+can be found in {numref}`geometry_detail`, at the inner and outer radius.
+Approach surfaces, and the boundary surfaces between volumes mentioned before,
+are candidates to receive a projection of the surrounding material.
+Additional artificial material layers can also be inserted to receive
+projected material.
+
+The projection procedure works by extrapolating test particles using the
+fully detailed simulation geometry. During the extrapolation, the material
+properties of the geometry are sampled in small intervals. Subsequently, the
+same test particle is extrapolated through the tracking geometry. All
+material samples are then assigned and projected onto the closest material
+surface. Finally, the projection is averaged. The exact number and placement
+of the material surfaces has to be optimized to yield a sufficiently accurate
+representation of the inactive material in the detector.
+
+The numerical integration uses these projected material surfaces. Whenever
+such a surface is encountered in the propagation, the material properties are
+retrieved, and the corresponding modifications to the trajectory are
+executed. In case material is supposed to be integrated in a continuous way
+(as mentioned in [](#particle-propagation)), volumes can also store an
+effective volumetric material composition, which is queried by the numerical
+integration when needed. As the actual physical location of the detection
+hardware can vary over time, possible misalignment of the sensors needs to be
+handled correctly (see [](#alignment-of-particle-sensors)).
 
 ## Clusterization
 
