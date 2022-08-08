@@ -3,7 +3,7 @@
 :::{toctree}
 :maxdepth: 1
 
-../../CONTRIBUTING
+guide
 run_formatting
 documentation_build
 clang_tidy
