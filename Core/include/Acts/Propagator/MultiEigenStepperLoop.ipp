@@ -43,19 +43,27 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       return MultiStepperError::SomeComponentsConversionToBoundFailed;
     }
 
-    // TODO At ATLAS, the final parameters seem to be computed with the mode of
-    // the mixture. At the moment, we use the mean of the mixture here, but
-    // there should be done a comparison sometimes in the future. This could
-    // also be configurable maybe...
     const auto proj = [&](const auto& wbs) {
       return std::tie(wbs.first, wbs.second.parameters(),
                       wbs.second.covariance());
     };
 
-    const auto [params, cov] =
+    auto [params, cov] =
         detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
           return detail::combineGaussianMixture(states, proj, desc);
         });
+
+    // Mode covariance estimation not yet done
+    if( m_useMode ) {
+      const auto mode =
+        detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
+          return detail::computeModeOfMixture(states, proj, desc);
+        });
+      if( mode ) {
+        params = *mode;
+        std::cout << "INFO: Mode found\n";
+      }
+    }
 
     return BoundState{BoundTrackParameters(surface.getSharedPtr(), params, cov),
                       Jacobian::Zero(), accumulatedPathLength};

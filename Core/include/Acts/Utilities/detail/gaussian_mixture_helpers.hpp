@@ -201,31 +201,40 @@ auto combineGaussianMixture(const components_t components,
   }
 }
 
+
+template <typename components_t, typename projector_t>
+auto unevaluated_context_mean(const components_t &cmps, const projector_t &proj)
+{
+  const auto &[w, mean, c] = proj(cmps.front());
+  return mean;
+}
+
 /// This function implements a mode-search using an iterative fixed-point algorithm
-/// x = f(x)
 /// TODO potential optimization: cache inverse covariances
 // https://faculty.ucmerced.edu/mcarreira-perpinan/papers/cs-99-03.pdf
 template <typename components_t, typename projector_t = Identity,
           typename angle_desc_t = AngleDescription<Surface::Plane>::Desc>
-auto myComputeModeOfMixture(const components_t components,
+auto computeModeOfMixture(const components_t components,
                             projector_t &&proj = projector_t{},
                             const angle_desc_t &desc = angle_desc_t{}) {
-  using ParsType = std::decay_t<decltype(std::get<1>(proj(components.front())))>;
-  constexpr int D = ParsType::RowsAtCompileTime;
+  constexpr int D = [](){
+    using ParsType = decltype(unevaluated_context_mean(std::declval<components_t>(), std::declval<projector_t>()));
+    return ParsType::RowsAtCompileTime;
+  }();
 
   // Lambda used to correct cyclic coordinates in the computation
-  auto cyclicDiff = [](auto desc, auto &diff, const auto &a, const auto &b) {
-    diff[desc.idx] =
-        difference_periodic(a[desc.idx] / desc.constant,
-                            b[desc.idx] / desc.constant, 2 * M_PI) *
-        desc.constant;
+  auto cyclicDiff = [](auto d, auto &diff, const auto &a, const auto &b) {
+    diff[d.idx] =
+        difference_periodic(a[d.idx] / d.constant,
+                            b[d.idx] / d.constant, 2 * M_PI) *
+        d.constant;
   };
 
   // Compute the value of the pdf of a single multivariate gaussian
   auto single_pdf = [&](const auto &x, const auto &mean, const auto &cov) {
     const auto a = 1.0 / std::sqrt(std::pow(2 * M_PI, D) * cov->determinant());
-    auto r = x - mean;
-    std::apply([&](auto... d) { (handleCyclicCov(d, r, x, mean), ...); }, desc);
+    ActsVector<D> r = x - mean;
+    std::apply([&](auto... d) { (cyclicDiff(d, r, x, mean), ...); }, desc);
     const auto b = -0.5 * (x - mean).transpose() * cov->inverse() * (x - mean);
     return a * std::exp(b);
   };
@@ -267,8 +276,8 @@ auto myComputeModeOfMixture(const components_t components,
     for (const auto &cmp : components) {
       const auto &[weight, mean, cov] = proj(cmp);
       const auto a = weight * single_pdf(x, mean, cov);
-      auto r = x - mean;
-      std::apply([&](auto... d) { (handleCyclicCov(d, r, x, mean), ...); },
+      ActsVector<D> r = x - mean;
+      std::apply([&](auto... d) { (cyclicDiff(d, r, x, mean), ...); },
                  desc);
       const auto b = (x - mean) * (x - mean).transpose() - *cov;
       h += a * (cov->inverse() * b * cov->inverse());

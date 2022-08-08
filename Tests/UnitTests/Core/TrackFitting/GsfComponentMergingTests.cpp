@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(test_mode_finding) {
       x += d;
     }
 
-    const auto mode_test = detail::computeModeOfMixture(cmps, Identity{});
+    const auto mode_test = detail::computeModeOfMixture(cmps, Identity{}, std::tuple<>{});
 
     BOOST_CHECK(mode_test.has_value());
 

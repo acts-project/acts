@@ -110,8 +110,8 @@ TrackFittingAlgorithm::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     std::size_t maxComponents, bool abortOnError,
-    bool disableAllMaterialHandling) {
-  Acts::MultiEigenStepperLoop stepper(std::move(magneticField));
+    bool disableAllMaterialHandling, bool useMode) {
+  Acts::MultiEigenStepperLoop stepper(std::move(magneticField), useMode);
   Acts::Navigator::Config cfg{trackingGeometry};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
@@ -136,8 +136,8 @@ std::shared_ptr<TrackFittingAlgorithm::DirectedTrackFitterFunction>
 TrackFittingAlgorithm::makeGsfFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     std::size_t maxComponents, bool abortOnError,
-    bool disableAllMaterialHandling) {
-  Acts::MultiEigenStepperLoop stepper(std::move(magneticField));
+    bool disableAllMaterialHandling, bool useMode) {
+  Acts::MultiEigenStepperLoop stepper(std::move(magneticField), useMode);
   Acts::DirectNavigator navigator;
   Acts::Propagator propagator(std::move(stepper), navigator);
   Acts::GaussianSumFitter<decltype(propagator), Acts::VectorMultiTrajectory>

@@ -85,7 +85,8 @@ class ScopedGsfInfoPrinterAndChecker {
       ACTS_VERBOSE("  #" << i++ << " pos: " << getVector(eFreePos0) << ", dir: "
                          << getVector(eFreeDir0) << ", weight: " << cmp.weight()
                          << ", status: " << cmp.status()
-                         << ", qop: " << cmp.pars()[eFreeQOverP]);
+                         << ", qop: " << cmp.pars()[eFreeQOverP]
+                         << ", det(cov): " << cmp.cov().determinant());
     }
   }
 

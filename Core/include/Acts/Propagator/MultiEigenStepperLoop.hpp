@@ -181,6 +181,9 @@ class MultiEigenStepperLoop
   /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
 
+  /// Boolean flag if the Stepper should use mean or mode for component combination
+  bool m_useMode = false;
+
   /// Small vector type for speeding up some computations where we need to
   /// accumulate stuff of components. We think 16 is a reasonable amount here.
   template <typename T>
@@ -206,8 +209,8 @@ class MultiEigenStepperLoop
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
   /// Constructor from a magnetic field and a optionally provided Logger
-  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField)
-      : EigenStepper<extensionlist_t, auctioneer_t>(bField) {}
+  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField, bool useMode = false)
+      : EigenStepper<extensionlist_t, auctioneer_t>(bField), m_useMode(useMode) {}
 
   struct State {
     /// The struct that stores the individual components

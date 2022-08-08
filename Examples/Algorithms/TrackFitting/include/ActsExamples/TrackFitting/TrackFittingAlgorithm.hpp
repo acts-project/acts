@@ -139,12 +139,12 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       std::size_t maxComponents = 4, bool abortOnError = true,
-      bool disableAllMaterialHandling = false);
+      bool disableAllMaterialHandling = false, bool useMode = false);
 
   static std::shared_ptr<DirectedTrackFitterFunction> makeGsfFitterFunction(
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       std::size_t maxComponents = 4, bool abortOnError = true,
-      bool disableAllMaterialHandling = false);
+      bool disableAllMaterialHandling = false, bool useMode = false);
 
  private:
   /// Helper function to call correct FitterFunction
