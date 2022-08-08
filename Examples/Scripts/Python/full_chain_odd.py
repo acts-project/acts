@@ -42,21 +42,21 @@ from acts.examples.reconstruction import (
 
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 
-s = addParticleGun(
+addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
     EtaConfig(-3.0, 3.0, True),
     ParticleConfig(1, acts.PdgParticle.eMuon, True),
     rnd=rnd,
 )
-s = addFatras(
+addFatras(
     s,
     trackingGeometry,
     field,
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-s = addDigitization(
+addDigitization(
     s,
     trackingGeometry,
     field,
@@ -64,7 +64,7 @@ s = addDigitization(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-s = addSeeding(
+addSeeding(
     s,
     trackingGeometry,
     field,
@@ -73,14 +73,14 @@ s = addSeeding(
     outputDirRoot=outputDir,
     initialVarInflation=[100, 100, 100, 100, 100, 100],
 )
-s = addCKFTracks(
+addCKFTracks(
     s,
     trackingGeometry,
     field,
     CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
-s = addVertexFitting(
+addVertexFitting(
     s,
     field,
     vertexFinder=VertexFinder.Truth,
