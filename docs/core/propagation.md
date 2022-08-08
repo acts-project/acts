@@ -6,7 +6,7 @@ The track propagation is an essential part of track reconstruction. This section
 
 The propagation through a geometry is based on the interaction of two different components:
 
-* The **Stepper** provides the implementation of the numerical integration of the equation of motion in the magnetic field.
+* The **Stepper** provides the implementation of the the solution of the equation of motion (either by analytical means or through numerical integration).
 * The **Navigator** keeps track of the current position in the geometry and adjusts the step size so that the stepper does not step through a surface.
 
 Following the general Acts design, these clases do not manage their internal state via member variables, but provide a internal `State` struct which contains all relevant data and is managed by the propagator.
@@ -46,7 +46,7 @@ using MyOptions = Acts::PropagatorOptions<
                   >;
 ```
 
-The actors and aborters are instantiated with the options and can be accessed with the corresponding `get`-method. Besides this, the {class}`Acts::PropagatorOptions` also contain a lot general options like the `maxStepSize`:
+The actors and aborters are instantiated with the options and can be accessed with the `get`-method that expects the corresponding actor type as template parameter. Besides this, the {class}`Acts::PropagatorOptions` also contain a lot general options like the `maxStepSize`:
 
 ```c++
 auto options = MyOptions();
