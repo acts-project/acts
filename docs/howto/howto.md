@@ -3,6 +3,7 @@
 :::{toctree}
 :maxdepth: 1
 
-profiling
-release
+material_mapping_and_validation
+produce_digitizer_config
+produce_geometry_selection
 :::
