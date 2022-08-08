@@ -7,8 +7,6 @@ on:
       - main
       - 'release/**'
       - 'develop/**'
-  paths:
-    - "docs/**"
 
 jobs:
   docs:
