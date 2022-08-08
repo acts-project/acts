@@ -35,14 +35,12 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       }
     }
 
-    if (failedBoundTransforms > 0) {
-      ACTS_ERROR("Multi component bound state: "
-                 << failedBoundTransforms << " of " << numberComponents(state)
-                 << " transforms failed");
-    }
-
     if (states.size() == 0) {
       return MultiStepperError::AllComponentsConversionToBoundFailed;
+    }
+
+    if (failedBoundTransforms > 0) {
+      return MultiStepperError::SomeComponentsConversionToBoundFailed;
     }
 
     // TODO At ATLAS, the final parameters seem to be computed with the mode of
@@ -100,7 +98,28 @@ template <typename E, typename R, typename A>
 template <typename propagator_state_t>
 Result<double> MultiEigenStepperLoop<E, R, A>::step(
     propagator_state_t& state) const {
+  const auto& logger = state.options.logger;
   State& stepping = state.stepping;
+
+  // It is not possible to remove components from the vector, since the
+  // GSF actor relies on the fact that the ordering and number of
+  // components does not change
+  auto invalidateComponent = [](auto& cmp) {
+    cmp.status = Intersection3D::Status::missed;
+    cmp.weight = 0.0;
+    cmp.state.pars.template segment<3>(eFreeDir0) = Vector3::Zero();
+  };
+
+  // Lambda for reweighting the components
+  auto reweight = [](auto& cmps) {
+    ActsScalar sumOfWeights = 0.0;
+    for (const auto& cmp : cmps) {
+      sumOfWeights += cmp.weight;
+    }
+    for (auto& cmp : cmps) {
+      cmp.weight /= sumOfWeights;
+    }
+  };
 
   // Update step count
   stepping.steps++;
@@ -113,30 +132,19 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     // surface, reweight the components, perform no step and return 0
     if (*stepping.stepCounterAfterFirstComponentOnSurface >=
         m_stepLimitAfterFirstComponentOnSurface) {
-      auto& cmps = stepping.components;
-
-      // It is not possible to remove components from the vector, since the
-      // GSF actor relies on the fact that the ordering and number of
-      // components does not change
-      for (auto& cmp : cmps) {
+      for (auto& cmp : stepping.components) {
         if (cmp.status != Intersection3D::Status::onSurface) {
-          cmp.status = Intersection3D::Status::missed;
-          cmp.weight = 0.0;
-          cmp.state.pars.template segment<3>(eFreeDir0) = Vector3::Zero();
+          invalidateComponent(cmp);
         }
       }
 
-      // Reweight
-      const auto sum_of_weights = std::accumulate(
-          cmps.begin(), cmps.end(), ActsScalar{0},
-          [](auto sum, const auto& cmp) { return sum + cmp.weight; });
-      for (auto& cmp : cmps) {
-        cmp.weight /= sum_of_weights;
-      }
+      reweight(stepping.components);
 
+      ACTS_VERBOSE("Stepper performed "
+                   << m_stepLimitAfterFirstComponentOnSurface
+                   << " after the first component hit a surface.");
       ACTS_VERBOSE(
-          "hit m_stepLimitAfterFirstComponentOnSurface, "
-          "perform no step");
+          "-> remove all components not on a surface, perform no step");
 
       stepping.stepCounterAfterFirstComponentOnSurface.reset();
 
@@ -146,15 +154,17 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   // Loop over all components and collect results in vector, write some
   // summary information to a stringstream
-  SmallVector<Result<double>> results;
-  std::stringstream ss;
+  SmallVector<std::optional<Result<double>>> results;
   double accumulatedPathLength = 0.0;
+  std::size_t errorSteps = 0;
 
   for (auto& component : stepping.components) {
     // We must also propagate missed components for the case that all
     // components miss the target and we need to re-target
     if (component.status == Intersection3D::Status::onSurface) {
-      ss << "cmp skipped\t";
+      // We need to add these, so the propagation does not fail if we have only
+      // components on surfaces and failing states
+      results.emplace_back(std::nullopt);
       continue;
     }
 
@@ -165,39 +175,48 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     ThisSinglePropState single_state(component.state, state.navigation,
                                      state.options, state.geoContext);
 
-    results.push_back(SingleStepper::step(single_state));
+    results.emplace_back(SingleStepper::step(single_state));
 
-    if (results.back().ok()) {
-      accumulatedPathLength += component.weight * *results.back();
-      ss << *results.back() << "\t";
+    if (results.back()->ok()) {
+      accumulatedPathLength += component.weight * results.back()->value();
     } else {
-      ss << "step error: " << results.back().error() << "\t";
+      ++errorSteps;
+      invalidateComponent(component);
     }
   }
 
-  // Return no component was updated
-  if (results.empty()) {
-    return 0.0;
+  // Since we have invalidated some components, we need to reweight
+  if (errorSteps > 0) {
+    reweight(stepping.components);
   }
 
-  // Collect pointers to results which are ok, since Result is not copyable
-  SmallVector<Result<double>*> ok_results;
-  for (auto& res : results) {
-    if (res.ok()) {
-      ok_results.push_back(&res);
+  // Print the result vector to a string so we can log it
+  auto summary = [](auto& result_vec) {
+    std::stringstream ss;
+    for (auto& optRes : result_vec) {
+      if (not optRes) {
+        ss << "on surface | ";
+      } else if (optRes->ok()) {
+        ss << optRes->value() << " | ";
+      } else {
+        ss << optRes->error() << " | ";
+      }
     }
+    auto str = ss.str();
+    str.resize(str.size() - 3);
+    return str;
+  };
+
+  // Print the summary
+  if (errorSteps == 0) {
+    ACTS_VERBOSE("Performed steps: " << summary(results));
+  } else {
+    ACTS_WARNING("Performed steps with errors: " << summary(results));
   }
 
   // Return error if there is no ok result
-  if (ok_results.empty()) {
+  if (errorSteps == results.size()) {
     return MultiStepperError::AllComponentsSteppingError;
-  }
-
-  // Print the summary
-  if (ok_results.size() == results.size()) {
-    ACTS_VERBOSE("Performed steps: " << ss.str());
-  } else {
-    ACTS_WARNING("Performed steps with errors: " << ss.str());
   }
 
   // Return the weighted accumulated path length of all successful steps

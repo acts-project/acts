@@ -19,17 +19,21 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(linPointPos);
 
+  auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
+                                                params.unitDirection(), false);
+
   // Create propagator options
   auto logger = getDefaultLogger("HelTrkLinProp", Logging::INFO);
   propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
-  pOptions.direction = NavigationDirection::Backward;
+  pOptions.direction = intersection.intersection.pathLength >= 0
+                           ? NavigationDirection::Forward
+                           : NavigationDirection::Backward;
 
   const BoundTrackParameters* endParams = nullptr;
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
   if (result.ok()) {
     endParams = (*result).endParameters.get();
-
   } else {
     return result.error();
   }

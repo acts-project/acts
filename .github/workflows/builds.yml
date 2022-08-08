@@ -6,6 +6,9 @@ on:
     branches:
       - main
       - 'release/**'
+      - 'develop/**'
+  paths-ignore:
+    - "docs/**"
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
@@ -17,7 +20,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v28
+    container: ghcr.io/acts-project/${{ matrix.image }}:v29
     strategy:
       matrix:
         image:
@@ -57,7 +60,7 @@ jobs:
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_EXAMPLES=ON
-          -DACTS_BUILD_PLUGIN_DD4HEP=ON
+          -DACTS_BUILD_PLUGIN_DD4HEP=OFF
           -DACTS_BUILD_PLUGIN_TGEO=ON
           -DACTS_BUILD_PLUGIN_IDENTIFICATION=ON
           -DACTS_BUILD_PLUGIN_JSON=ON
@@ -67,7 +70,7 @@ jobs:
           -DACTS_BUILD_BENCHMARKS=ON
           -DACTS_BUILD_UNITTESTS=ON
           -DACTS_BUILD_INTEGRATIONTESTS=ON
-          -DACTS_BUILD_EXAMPLES_DD4HEP=ON
+          -DACTS_BUILD_EXAMPLES_DD4HEP=OFF
           -DACTS_BUILD_PLUGIN_EDM4HEP=OFF
           -DACTS_BUILD_EXAMPLES_GEANT4=ON
           -DACTS_BUILD_EXAMPLES_HEPMC3=ON
@@ -78,16 +81,16 @@ jobs:
           -DACTS_BUILD_ANALYSIS_APPS=ON
 
       - name: Build
-        run: ${SETUP} && cmake --build build --
+        run: ${SETUP} && cmake --build build
 
       - name: Unit tests
-        run: ${SETUP} && cmake --build build -- test
+        run: ${SETUP} && cmake --build build --target test
 
       - name: Integration tests
-        run: ${SETUP} && cmake --build build -- integrationtests
+        run: ${SETUP} && cmake --build build --target integrationtests
 
       - name: Install
-        run: ${SETUP} && cmake --build build -- install
+        run: ${SETUP} && cmake --build build --target install
 
       - uses: actions/upload-artifact@v3
         with:
@@ -103,16 +106,17 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
+          -DDD4HEP=OFF
 
       - name: Downstream build
-        run: ${SETUP} && cmake --build build-downstream --
+        run: ${SETUP} && cmake --build build-downstream
 
       - name: Downstream run
         run: ${SETUP} && ./build-downstream/bin/ShowActsVersion
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:v29
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -154,16 +158,16 @@ jobs:
           -DACTS_BUILD_ANALYSIS_APPS=ON
 
       - name: Build
-        run: cmake --build build --
+        run: cmake --build build
 
       - name: Unit tests
-        run: cmake --build build -- test
+        run: cmake --build build --target test
 
       - name: Integration tests
-        run: cmake --build build -- integrationtests
+        run: cmake --build build --target integrationtests
 
       - name: Install
-        run: cmake --build build -- install
+        run: cmake --build build --target install
 
       - name: Package build
         run: tar czf build.tar.gz -C build . 
@@ -183,14 +187,14 @@ jobs:
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
       - name: Downstream build
-        run: cmake --build build-downstream --
+        run: cmake --build build-downstream
 
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:v29
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
@@ -209,8 +213,10 @@ jobs:
         run: mkdir build && tar xf build.tar.gz -C build
 
       - name: Examples
+        shell: bash
         run: >
           export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
+          && source /usr/local/bin/thisdd4hep_only.sh
           && ./CI/run_examples.sh
 
       - name: Python level tests
@@ -227,7 +233,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
+    container: ghcr.io/acts-project/ubuntu2004:v29
     needs: [linux_ubuntu]
 
     steps:
@@ -275,7 +281,7 @@ jobs:
         image: 
           - ubuntu2204
           - ubuntu2204_clang
-    container: ghcr.io/acts-project/${{ matrix.image }}:v28
+    container: ghcr.io/acts-project/${{ matrix.image }}:v29
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -318,16 +324,16 @@ jobs:
           -DACTS_BUILD_ANALYSIS_APPS=ON
 
       - name: Build
-        run: cmake --build build --
+        run: cmake --build build
 
       - name: Unit tests
-        run: cmake --build build -- test
+        run: cmake --build build --target test
 
       - name: Integration tests
-        run: cmake --build build -- integrationtests
+        run: cmake --build build --target integrationtests
 
       - name: Install
-        run: cmake --build build -- install
+        run: cmake --build build --target install
 
       - name: Downstream configure
         run: >
@@ -339,14 +345,14 @@ jobs:
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
 
       - name: Downstream build
-        run: cmake --build build-downstream --
+        run: cmake --build build-downstream
 
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
   linux-nodeps:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:latest
+    container: ghcr.io/acts-project/${{ matrix.image }}:v29
     strategy:
       matrix:
         image:
@@ -394,13 +400,15 @@ jobs:
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_PLUGIN_JSON=ON
       - name: Build
-        run: ${SETUP} && ( cmake --build build -- || cmake --build build -- )
+        run: ${SETUP} && ( cmake --build build || cmake --build build )
+      # The above line is required as a sort of retry mechanism. Without it,
+      # the build fails for technical reasons.
       - name: Unit tests
-        run: ${SETUP} && ${PRELOAD} && cmake --build build -- test
+        run: ${SETUP} && ${PRELOAD} && cmake --build build --target test
       - name: Integration tests
-        run: ${SETUP} && cmake --build build -- integrationtests
+        run: ${SETUP} && cmake --build build --target integrationtests
       - name: Install
-        run: ${SETUP} && cmake --build build -- install
+        run: ${SETUP} && cmake --build build --target install
       # For some reasons, this version of ROOT complains that it
       # cannot find the nlohmann::json config before we even installed
       # it. So we have to do the examples in separate step.
@@ -418,9 +426,9 @@ jobs:
           -DACTS_USE_SYSTEM_EIGEN3=OFF
           -DACTS_BUILD_EXAMPLES=ON
       - name: Build Examples
-        run: ${SETUP} && cmake --build build --
+        run: ${SETUP} && cmake --build build
       - name: Install Examples
-        run: ${SETUP} && cmake --build build -- install
+        run: ${SETUP} && cmake --build build --target install
       - name: Run Examples
         # Run a single example to be sure that the boost dependencies
         # got linked correctly
@@ -434,7 +442,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR}"
       - name: Downstream build
-        run: cmake --build build-downstream-nodeps --
+        run: cmake --build build-downstream-nodeps
       - name: Downstream run
         run: ./build-downstream-nodeps/bin/ShowActsVersion
              && CI/check_boost_eigen_versions.sh ./build-downstream-nodeps/bin/ShowActsVersion
@@ -454,7 +462,7 @@ jobs:
           brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.395f534.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.f2b4e25.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
 
       - name: Cache build
@@ -484,13 +492,13 @@ jobs:
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
       - name: Build
-        run: cmake --build build  --
+        run: cmake --build build
       - name: Unit tests
-        run: cmake --build build -- test
+        run: cmake --build build --target test
       - name: Integration tests
-        run: cmake --build build -- integrationtests
+        run: cmake --build build --target integrationtests
       - name: Install
-        run: cmake --build build -- install
+        run: cmake --build build --target install
       - uses: actions/upload-artifact@v2
         with:
           name: acts-macos
@@ -504,13 +512,13 @@ jobs:
           -DCMAKE_CXX_STANDARD=17
           -DCMAKE_PREFIX_PATH="${INSTALL_DIR};/usr/local/acts"
       - name: Downstream build
-        run: cmake --build build-downstream --
+        run: cmake --build build-downstream
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v28
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v29
     steps:
       - uses: actions/checkout@v2
 
@@ -533,11 +541,11 @@ jobs:
           -DACTS_BUILD_PLUGIN_CUDA=ON
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
-        run: cmake --build build --
+        run: cmake --build build
 
   exatrkx:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v28
+    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
     steps:
       - uses: actions/checkout@v2
 
@@ -560,11 +568,11 @@ jobs:
           -DACTS_BUILD_EXAMPLES_EXATRKX=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
-        run: cmake --build build --
+        run: cmake --build build
 
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v28
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v29
     defaults:
       run:
         shell: bash
@@ -594,25 +602,5 @@ jobs:
       - name: Build
         run: >
           source /opt/intel/oneapi/setvars.sh
-          && cmake --build build --
+          && cmake --build build
 
-  docs:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v28
-    env:
-        DOXYGEN_WARN_AS_ERROR: YES
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install dependencies
-        run: >
-          apt-get install -y doxygen
-          && pip3 install --upgrade pip
-          && pip install -r docs/requirements.txt
-      - name: Configure
-        run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=ON
-      - name: Build
-        run: cmake --build build -- docs-with-api
-      - uses: actions/upload-artifact@v2
-        with:
-          name: acts-docs
-          path: docs/_build/html/
