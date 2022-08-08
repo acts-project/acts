@@ -24,6 +24,7 @@ Key features:
    :maxdepth: 2
 
    getting_started
+   acts_project
    versioning
    core/core
    plugins/plugins
