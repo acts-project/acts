@@ -161,7 +161,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
