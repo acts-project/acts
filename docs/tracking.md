@@ -44,24 +44,24 @@ opposite charges. These charge pairs are separated by an electric field and
 drift toward the electrodes. At this point, an electric signal is created
 which can be amplified and read out. By means of segmentation, the measured
 signal can be associated with a location on the sensor. Silicon sensors are
-usually segmented in one dimension (**strips**) or in two dimensions
-(**pixels**) (see {numref}`segmentation`).
+usually segmented in one dimension (*strips*) or in two dimensions
+(*pixels*) (see {numref}`segmentation`).
 
+(track_parametrization)=
 
 ## Track parametrization
 
-In order to be able to express the properties of a particle's trajectory, a choice
-of parameters has to be made. The parameters need to be able to express all
-the relevant quantities of interest. In the presence of a magnetic field,
-which affects charged trajectories, the global position and momentum, as well
-as the charge are needed to fully specify the particle properties. In
-addition, a time parameter can be included, but is not used in this
-chapter. Apart from the global reference frame, track quantities often need
-to be represented with respect to a surface. This can be achieved with a
+To express the properties of a particle's trajectory, a choice of parameters
+has to be made. The parameters need to express all the relevant quantities of
+interest. In the presence of a magnetic field, which affects charged
+trajectories, the global position and momentum, as well as the charge are
+needed to fully specify the particle properties. In addition, a time parameter
+can be included. Apart from the global reference frame, track quantities often
+need to be represented with respect to a surface. This can be achieved with a
 parametrization like
 
 \begin{equation*}
-  \vec x = \left(l_0, l_1, \phi, \theta, q/p\right)^T
+  \vec x = \left(l_0, l_1, \phi, \theta, q/p, t\right)^T
 \end{equation*}
 
 although other parameter conventions exist as well.
@@ -121,9 +121,158 @@ uncertainties associated with the local position, as well as the momentum
 direction are indicated in {numref}`parameters` (a) as an ellipse and a cone
 around the momentum vector $\vec p$, respectively. 
 
+(particle_propagation)=
+
 ## Particle propagation
+
+A central for track reconstruction is the ability to calculate the trajectory
+of a charged particle, given its properties at a given point. This process,
+called *particle propagation* or *extrapolation*, is used to predict a
+particle's properties after it has travelled a certain distance. In many cases,
+the projected intersection with various types of surfaces is desired. The
+trajectory of a charged particle is governed by the [magnetic
+field](core/magnetic_field.rst) through which it travels, as well as any
+[material effects](core/material.rst). In case of a homogeneous magnetic field,
+and in the absence of material interaction, the particle follows a helical
+trajectory. Such a helix can be calculated purely analytically, although
+intersections require numerical methods nevertheless.
+
+Often, magnetic fields are not homogeneous, however. In the presence of such
+changing fields, the corresponding differential equations of motions need to be
+solved using numerical integration techniques.
+
 ### Numeric integration
+
+In ACTS, numerical integration is done using the *Runge-Kutta-Nyström* (RKN) method.
+Commonly used in the variant at fourth order, it describes how to calculate a
+solution to an initial value problem that can be formulated generically like
+
+$$
+  \frac{dy}{dt} = f(t,y), \qquad y(t_0) = y_0,
+$$
+
+ where $y_0$ refers to the initial value of $y$ at $t_0$, and
+$f(t,y)$ is the functional form describing the dynamics. The method then
+successively approximates the analytical solution $y(t)$ in a stepwise
+fashion. At each step $(t_n, y_n)$, the goal is effectively to approximate
+the next step $y(t_{n+1})$. Using a step size $h$, the algorithm evaluates
+the function $f$ at four points $k_{1-4}$:
+
+$$
+  \begin{aligned}
+    k_1 &= f(t_n, y_n) \\
+    k_2 &= f\left( t_n + \frac h 2, y_n + h \frac{k_1} 2 \right) \\
+    k_3 &= f\left( t_n + \frac h 2, y_n + h \frac{k_2} 2 \right)\\
+    k_4 &= f\left( t_n + h, y_n + hk_3 \right).
+  \end{aligned}
+$$
+
+
+(rk)=
+:::{figure} /figures/tracking/rk.svg
+:width: 400px
+:align: center
+
+Illustration of the RKN method approximating a first order
+differential equation. Shown is the calculation of an estimate $y_{n+1}$ at
+$t_{n+1} = t_n + h$, based on the current step $(t_n,y_n)$. Shown are the four
+distinct points at which function $y(t)$ is evaluated, and which are blended to
+form the estimate.
+
+:::
+
+
+Looking at {numref}`rk`, the meaning of these four points in relation
+to the step size $h$ can be understood. $k_1$ is the derivative at the
+current location, $k_{2,3}$ use $k_1$ and $k_2$ respectively to calculate two
+envelope derivatives at $h/2$ and $k_4$ uses $k_3$ to make an estimate of the
+derivative at $h$. Combining $k_{1-4}$, $(t_{n+1},y_{n+1})$ can be calculated
+as the approximation of $y(t_{n+1})$ like
+
+$$
+  \begin{aligned}
+    y_{n+1} &= y_n + \frac 1 6 h ( k_1 + 2 k_2 + 2 k_2 + k_4)\\
+    t_{n+1} &= t_n + h
+  \end{aligned}
+$$
+
+by effectively averaging the four derivatives. It is apparent that
+the step size crucially influences the accuracy of the approximation. A large
+step size weakens the approximation, especially if the magnetic field changes
+strongly. On the other hand, a too small step size will negatively affect the
+execution time of the algorithm.
+
+
+The Runge-Kutta-Nyström method from above can be adapted to handle second order
+differential equations, as is needed for the equations of motion in question,
+
+$$
+  \frac{d^2 \vec r}{ds^2} = \frac q p \left( \frac{d\vec r}{ds} \times \vec B (\vec r) \right) = f(s, \vec r, \vec T), \qquad \vec T \equiv \frac{d \vec r}{ds},
+$$
+
+with the global position $\vec r$, the path element $s$, the
+normalized tangent vector $\vec T$ and the magnetic field $\vec B(\vec r)$ at
+the global position. A slight modification of $k_{1-4}$ is also required,
+incorporating the first derivative of $f(s, \vec r, \vec r')$, finally
+leading to
+
+$$
+  \begin{aligned}
+    \vec T_{n+1} &= \vec T_n + \frac h 6 (k_1 + 2k_2 + 2k_3 + k_4) \\
+    \vec r_{n+1} &= \vec r_n + h \vec T_n + \frac{h^2}{6} (k_1 + k_2 + k_3).
+  \end{aligned}
+$$
+
+A strategy exists to dynamically adapt the step size according to the magnetic
+field strength, with the definition of a target accuracy that the algorithm
+tries to achieve. Here, the step size $h$ will successively be decreased and
+the approximation recalculated until the accuracy goal is achieved. Even with
+these additional calculations, the approach is still preferable over a
+consistently low step size.
+
 ### Covariance transport
+
+Aside from the prediction of the track parameters at a given path length, a key
+ingredient to many dependent applications are the uncertainties in the form of
+the associated covariance matrix $C$. Conversions between covariance matrices
+$C^i\to C^f$ can generally be achieved like
+
+$$
+  C^f = J \cdot C^i \cdot J^T,
+$$
+
+using the Jacobian matrix
+
+$$
+  J = \begin{bmatrix}
+    \frac{\partial l_0^f}{\partial l_0^i} & \cdots & \frac{\partial l_0^f}{\partial (q/p)^i} \\
+    \vdots & \ddots & \vdots \\
+    \frac{\partial (q/p)^f}{\partial l_0^i} & \cdots & \frac{\partial (q/p)^f}{\partial (q/p)^i}
+  \end{bmatrix},
+$$
+
+between initial and final parameters $\vec x^i$ and $\vec x^f$. The
+task therefore becomes calculating the necessary Jacobians to achieve correct
+transformation.
+
+One part is the transformation between different
+coordinate systems, but at the same location along the trajectory. For this
+purpose, generic Jacobians can be calculated between each coordinate system
+type, and a common coordinate system. The common coordinate system used for
+this purpose is the curvilinear frame, which consists of the global direction
+angles, and a plane surface located at the track location, with its normal
+aligned with the track momentum. By using Jacobians to the curvilinear frame
+and the corresponding inverse matrices, conversions between any two
+coordinate systems can be performed.
+
+The second part is the calculation of the evolution of the covariance matrix
+during the propagation between surfaces. To this end, a semi-analytical
+method which calculates the effective derivatives between two consecutive
+RKN steps can be used. By accumulating the Jacobian
+matrices calculated for each step, the effective Jacobian between the
+starting point and the destination can be obtained.
+
+## Material effects
 
 ## Geometry and material modelling
 
