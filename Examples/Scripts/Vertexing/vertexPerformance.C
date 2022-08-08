@@ -25,6 +25,9 @@
 #include <TProfile2D.h>
 #include <TStyle.h>
 #include <TTree.h>
+#include <TEfficiency.h>
+#include <TTreeReader.h>
+
 
 #include "../CommonUtils.h"
 
@@ -54,59 +57,29 @@ int vertexPerformance(const std::string& inFile, const std::string& treeName,
   }
 
   std::cout << "Reading tree: " << treeName << std::endl;
-  TTree* tree = (TTree*)file->Get(treeName.c_str());
+  /* TTree* tree = (TTree*)file->Get(treeName.c_str()); */
 
-  // Bail out if no tree was found
-  if (tree == nullptr) {
-    return -2;
-  }
+  /* // Bail out if no tree was found */
+  /* if (tree == nullptr) { */
+    /* return -2; */
+  /* } */
 
   TFile* out = TFile::Open(outFile.c_str(), "recreate");
   out->cd();
 
-  std::vector<float>* vdiffx{nullptr};
-  std::vector<float>* vdiffy{nullptr};
-  std::vector<float>* vdiffz{nullptr};
+  auto* recoOverTrue = new TEfficiency("nRecoOverTrue", "nRecoOverTrue", 1, -0.5, 0.5);
 
-  std::vector<float>* vcovXX{nullptr};
+  TTreeReader reader{treeName.c_str(), file};
 
-  tree->SetBranchAddress("diffx", &vdiffx);
-  tree->SetBranchAddress("diffy", &vdiffy);
-  tree->SetBranchAddress("diffz", &vdiffz);
-  tree->SetBranchAddress("covXX", &vcovXX);
+  TTreeReaderValue<int> nRecoVtx{reader, "nRecoVtx"};
 
-  auto* h_diffx = new TH1F{"diffx", "diffx", 100, -1, 1};
-  auto* h_diffy = new TH1F{"diffy", "diffy", 100, -1, 1};
-  auto* h_diffz = new TH1F{"diffz", "diffz", 100, -50, 50};
-  auto* h_covXX = new TH1F{"covXX", "covXX", 100, -50, 50};
-
-  auto fill = [](const auto& v, auto* h) {
-    for (auto value : v) {
-      h->Fill(value);
-    }
-  };
-
-  for (size_t i = 0; i <= tree->GetEntries(); i++) {
-    tree->GetEntry(i);
-    // for (auto diffx : *vdiffx) {
-    // h_diffx->Fill(diffx);
-    // }
-    // for (auto diffy : *vdiffy) {
-    // h_diffy->Fill(diffy);
-    // }
-    // for (auto diffy : *vdiffy) {
-    // h_diffy->Fill(diffy);
-    // }
-    fill(*vdiffx, h_diffx);
-    fill(*vdiffy, h_diffy);
-    fill(*vdiffz, h_diffz);
-    fill(*vcovXX, h_covXX);
+  while(reader.Next()) {
+    std::cout << *nRecoVtx << std::endl;
   }
 
-  h_diffx->Write();
-  h_diffy->Write();
-  h_diffz->Write();
-  h_covXX->Write();
+
+  recoOverTrue->Write();
+
 
   if (out != nullptr) {
     out->Close();
