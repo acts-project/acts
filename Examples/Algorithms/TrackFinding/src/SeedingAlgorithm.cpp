@@ -161,17 +161,12 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  // construct the combined input container of space point pointers from all
-  // configured input sources.
-  // pre-compute the total size required so we only need to allocate once
-  size_t nSpacePoints = 0;
-  for (const auto& isp : m_cfg.inputSpacePoints) {
-    nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
-  }
 
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
+  // create iterator and wrapper container to loop over all space points
+  // without copying them
   struct pointer_iterator : std::iterator_traits<Acts::SpacePoint*> {
     using value_type = std::add_pointer_t<Acts::SpacePoint>;
 
