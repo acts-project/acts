@@ -9,7 +9,6 @@ dependencies and are thus disabled by default.
    :maxdepth: 1
 
    autodiff
-   cuda
    dd4hep
    exatrkx
    json

@@ -20,3 +20,4 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
    vertexing
    utilities/grid_axis
    logging
+   visualization/visualization
