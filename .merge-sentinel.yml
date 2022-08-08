@@ -6,26 +6,26 @@ rules:
     required_pattern:
       - "review-required: *"
 
- - branch_filter:
+  - branch_filter:
      - "main"
      - "develop/*"
-   paths_ignore:
+    paths_ignore:
      - "docs/*" 
 
-   required_checks:
+    required_checks:
      - codecov/project
      - Docs / docs
 
-   required_pattern:
+    required_pattern:
      - "Builds / *"
      - "Checks / *"
      - "Analysis / *"
      - "CI Bridge / *"
 
- - branch_filter:
+  - branch_filter:
      - "main"
      - "develop/*"
-   paths:
+    paths:
      - "docs/*" 
-   required_checks:
+    required_checks:
      - Docs / docs
