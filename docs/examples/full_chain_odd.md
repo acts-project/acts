@@ -43,7 +43,7 @@ In our simple example we generate a single muon with random charge (e.g. muon or
 Relativistic muons are hardly deflected in the detector and will keep most of their energy which makes them almost ideal for track reconstruction.
 
 ```
-s = addParticleGun(
+addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
     EtaConfig(-3.0, 3.0, True),
@@ -57,7 +57,7 @@ These newly created particles now need to be propagated through our detector. Fa
 Learn more about Fatras [here](TODO-link-me).
 
 ```
-s = addFatras(
+addFatras(
     s,
     trackingGeometry,
     field,
@@ -73,7 +73,7 @@ In the simplest case we use a gaussian smearing of the true hit and displace it 
 ```
 oddDigiConfig = oddDir / "config/odd-digi-smearing-config.json"
 
-s = addDigitization(
+addDigitization(
     s,
     trackingGeometry,
     field,
@@ -92,7 +92,7 @@ TODO why do we need a config here?
 ```
 oddSeedingSel = oddDir / "config/odd-seeding-config.json"
 
-s = addSeeding(
+addSeeding(
     s,
     trackingGeometry,
     field,
@@ -104,7 +104,7 @@ s = addSeeding(
 The Combinatorial Kalman Filter (CKF) will use the seeds to propagate the trajectory forward and backward in time with the idea to find more measurements along the way. It combines (i.e. smoothes) these measurements and outputs reconstructed tracks which include smoothed track parameters for each measurement.
 
 ```
-s = addCKFTracks(
+addCKFTracks(
     s,
     trackingGeometry,
     field,
@@ -116,7 +116,7 @@ s = addCKFTracks(
 Our very last step in the reconstruction is the vertexing. In this step we try to find the origin of our tracks which are usually in the beam pipe at center of our detector.
 
 ```
-s = addVertexFitting(
+addVertexFitting(
     s,
     field,
     vertexFinder=VertexFinder.AMVF,
