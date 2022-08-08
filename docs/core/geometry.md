@@ -264,6 +264,15 @@ optimised, but used for templating:
 Further exensions exist in dedicated experiment contexts, such as e.g. a `GeoModel`
 binding for the ATLAS experiment.
 
+```{note}
+While `DD4hep` offers a descriptive language with a dedicated extension mechanism
+that can be used by Acts to interpret the underlying geometry hierarchy and and structure,
+there is no such guarantee when having the already as built `TGeo` geometry in hand.
+Therefor a dedicated Acts configuration file based on `json` can be provided that allows
+to specify parsing restrictions for sub detectors. 
+```
+
+
 ### Layer building
 
 `Surface` object that are to be grouped on a layer should be put into a
@@ -272,6 +281,14 @@ translation and create appropriate binning structure: The`SurfaceArrayCreator`
 can create cylindrical, disc-like & planar layers, where the dimensions of the
 layer are determined by parsing the provided surfaces. Additionally, an envelope
 covering the surfaces can be chosen.
+
+```{note}
+There exist standard layer builders that are desinged to build cylindrical, disk like 
+and planar layers and perform the ordering of the surfaces onto those layers. These
+builders are called from the top level translation entry points from either `TGeo` 
+or `DD4hep`.
+```
+
 
 ### Volume building, packing, and gluing
 
@@ -292,3 +309,8 @@ possible, they are *attached*.
 
 For cylindrical detector setups, a dedicated `CylinderVolumeBuilder` is
 provided, which performs a variety of volume building, packing and gluing.
+
+```{note}
+For most cylindrical detectors, there exist automated glueing and geometry building 
+modules that take care of the glueing process.
+```
