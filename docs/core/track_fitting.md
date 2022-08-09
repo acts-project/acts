@@ -12,9 +12,9 @@ In particular this is used in Acts for electron refitting. The energy-loss of Br
 
 ### Implementation
 
-To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`. On a surface with material, for each component the material loss is modeled with a approximated Bethe-Heitler distribution with a fixed number of components. Since the number of components would grow exponentially with each material interaction, close components are merged afterwards to limit the computational cost.
+To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`. On a surface with material, the Bethe-Heitler loss distribution is approximated  with a fixed number of gaussian components. Since the number of components would grow exponentially with each material interaction, components in close proximity are merged to limit the computational cost.
 
-The kalman update mechanism is based on the code for the {class}`Acts::KalmanFitter`. For the smoothing, the GSF implements the smoothing algorithm described [here](https://doi.org/10.1016/S0010-4655(96)00155-5).
+The kalman update mechanism is based on the code for the {class}`Acts::KalmanFitter`. The implemented GSF smoothing algorithm is described [here](https://doi.org/10.1016/S0010-4655(96)00155-5).
 
 ### Using the GSF
 
@@ -22,12 +22,12 @@ The GSF is implemented in the class {class}`Acts::GaussianSumFitter`. The interf
 
 To simplify integration, the GSF also returns a {class}`Acts::KalmanFitter` object. This allows to use the same analysis tools for both fitters. Currently, the states of the individual components are not returned by the fitter.
 
-For an usage example in the Acts Examples Framework see [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_gsf.py).
+A GSF example can be found in the Acts Examples Framework [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_gsf.py).
 
 ### Customizing the Bethe-Heitler approximation
 
-The approximation of the Bethe-Heitler distribution is described in {class}`Acts::BetheHeitlerApprox`. The classis  templated on the number of components and the degree of the polynomial, and is designed to be used with the [parameterization files from ATLAS](https://gitlab.cern.ch/atlas/athena/-/tree/master/Tracking/TrkFitter/TrkGaussianSumFilter/Data). However, in principle the GSF could be constructed with custom classes with the same interface of {class}`Acts::BetheHeitlerApprox`.
+The approximation of the Bethe-Heitler distribution is described in {class}`Acts::BetheHeitlerApprox`. The class is templated on the number of components and the degree of the polynomial, and is designed to be used with the [parameterization files from ATLAS](https://gitlab.cern.ch/atlas/athena/-/tree/master/Tracking/TrkFitter/TrkGaussianSumFilter/Data). However, in principle the GSF could be constructed with custom classes with the same interface as {class}`Acts::BetheHeitlerApprox`.
 
 To be able to evaluate the approximation of the Bethe-Heitler distribution for different materials and thicknesses, the individuall gaussian components (weight, mean, variance of the ratio $E_f/E_i$) are parameterized as polynomials in $x/x_0$. The default parameterization uses 6 components and 5th order polynomials.
 
-For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-component mixture or even no change at all. When loading custom parameterizations, it is possible to specify one for high momentum and one for low $x/x_0$. The thresholds cannot be customized currently.
+For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-component mixture or no change at all. When loading custom parameterizations, it is possible to specify one for high momentum and one for low $x/x_0$. The thresholds are currently not configurable.
