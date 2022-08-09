@@ -167,4 +167,34 @@ BOOST_AUTO_TEST_CASE(DelegateReferenceMember) {
   // d.connect<&SignatureTest::noModify>(&s);
 }
 
+BOOST_AUTO_TEST_CASE(StatefullLambdas) {
+  std::vector<int> v;
+
+  auto lambda = [&](int n) -> int {
+    for (int i = 0; i < n; ++n)
+      v.push_back(i);
+    return v.size();
+  };
+
+  Delegate<int(int)> d(lambda);
+
+  BOOST_CHECK(d);
+  BOOST_CHECK(d.connected());
+  BOOST_CHECK(d(2) == 2);
+
+  d.disconnect();
+  d = lambda;
+
+  BOOST_CHECK(d);
+  BOOST_CHECK(d.connected());
+  BOOST_CHECK(d(2) == 4);
+
+  d.disconnect();
+  d.connect(lambda);
+
+  BOOST_CHECK(d);
+  BOOST_CHECK(d.connected());
+  BOOST_CHECK(d(2) == 6);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
