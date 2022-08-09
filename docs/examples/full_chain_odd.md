@@ -89,7 +89,7 @@ The first step in our reconstruction is the track seeding. Here we try to find t
 
 TODO why do we need a config here?
 
-```
+```python
 oddSeedingSel = oddDir / "config/odd-seeding-config.json"
 
 addSeeding(
