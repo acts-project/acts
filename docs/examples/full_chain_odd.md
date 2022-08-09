@@ -56,7 +56,7 @@ These newly created particles now need to be propagated through our detector. Fa
 
 Learn more about Fatras [here](TODO-link-me).
 
-```
+```python
 addFatras(
     s,
     trackingGeometry,
