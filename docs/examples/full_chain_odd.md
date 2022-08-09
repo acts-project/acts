@@ -4,7 +4,7 @@ The OpenDataDatector (ODD) is fictious Silicon detector which resides in its own
 
 Our full chain ODD example is written in Python and can be found [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/full_chain_odd.py).
 
-The first step is to load the ODD detector description and to construct the detector. `getOpenDataDetectorDirectory` gives us the ODD folder within the `thirdparty` directory in Acts. We load our favorite material map and provide it to the detector construction `getOpenDataDetector`.
+The first step is to load the ODD detector description and to construct the detector. `getOpenDataDetectorDirectory` gives us the ODD folder within the `thirdparty` directory in Acts. We load our prefered material map and provide it to the detector construction `getOpenDataDetector`.
 
 ```python
 oddDir = getOpenDataDetectorDirectory()
