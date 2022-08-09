@@ -129,11 +129,11 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     // find vertices and measure elapsed time
     auto result = finder.find(inputTrackPointers, finderOpts, state);
 
-    if (not result.ok()) {
+    if (result.ok()) {
+      vertices = std::move(result.value());
+    } else {
       ACTS_ERROR("Error in vertex finder: " << result.error().message());
-      return ProcessCode::ABORT;
     }
-    vertices = *result;
   }
 
   auto t2 = std::chrono::high_resolution_clock::now();
