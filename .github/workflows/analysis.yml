@@ -9,6 +9,8 @@ on:
       - main
       - 'release/**'
       - 'develop/**'
+  paths-ignore:
+    - "docs/**"
 
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
