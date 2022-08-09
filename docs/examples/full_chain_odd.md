@@ -70,7 +70,7 @@ The last step in the simulation is the digitization. Here we simulate the readou
 
 In the simplest case we use a gaussian smearing of the true hit and displace it slightly.
 
-```
+```python
 oddDigiConfig = oddDir / "config/odd-digi-smearing-config.json"
 
 addDigitization(
