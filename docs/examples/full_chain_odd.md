@@ -18,7 +18,7 @@ detector, trackingGeometry, decorators = getOpenDataDetector(
 )
 ```
 
-In our simple example we assume a homogenous magnetic field along the beam axis with 2 T. Which is then passed to all the different algorithms in our simulation and reconstruction pipeline.
+In our simple example we assume a homogenous magnetic field along the beam axis with 2 T. The magnetic field is passed to all the different algorithms in our simulation and the reconstruction pipeline.
 
 ```python
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
