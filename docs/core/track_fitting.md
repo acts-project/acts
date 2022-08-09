@@ -12,7 +12,7 @@ In particular this is used in Acts for electron refitting. The energy-loss of Br
 
 ### Implementation
 
-To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`. On a surface with material, the Bethe-Heitler loss distribution is approximated  with a fixed number of gaussian components. Since the number of components would grow exponentially with each material interaction, components in close proximity are merged to limit the computational cost.
+To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`. On a surface with material, the Bethe-Heitler energy-loss distribution is approximated with a fixed number of gaussians for each component. Since the number of components would grow exponentially with each material interaction, components that are close in terms of their *Kullback–Leibler divergence* are merged to limit the computational cost.
 
 The kalman update mechanism is based on the code for the {class}`Acts::KalmanFitter`. The implemented GSF smoothing algorithm is described [here](https://doi.org/10.1016/S0010-4655(96)00155-5).
 
@@ -30,4 +30,4 @@ The approximation of the Bethe-Heitler distribution is described in {class}`Acts
 
 To be able to evaluate the approximation of the Bethe-Heitler distribution for different materials and thicknesses, the individuall gaussian components (weight, mean, variance of the ratio $E_f/E_i$) are parameterized as polynomials in $x/x_0$. The default parameterization uses 6 components and 5th order polynomials.
 
-For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-component mixture or no change at all. When loading custom parameterizations, it is possible to specify one for high momentum and one for low $x/x_0$. The thresholds are currently not configurable.
+For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-component mixture or no change at all. When loading a custom parameterization, it is possible to specify different parameterizations for high and for low $x/x_0$. The thresholds are currently not configurable.
