@@ -17,7 +17,7 @@ The interaction of these two components is handled by the {class}`Acts::Propagat
 Propagator<Navigator, Stepper>
 ```
 
-Additional to these mandatory components the propagator can be equipped with **Actors** and **Aborters** to allow for custom behaviour. These are function objects that are hooked in the propagation loop. Actors just perform some action on the propagator state (e.g. the {class}`Acts::KalmanFitter` is an actor), aborts can abort propagation (e.g., the {class}`Acts::PathLimitReached`).
+Additional to these mandatory components, the propagator can be equipped with **Actors** and **Aborters** to allow for custom behaviour. These are function objects that are hooked in the propagation loop. Actors just perform some action on the propagator state (e.g. the {class}`Acts::KalmanFitter` is an actor), aborts can abort propagation (e.g., the {class}`Acts::PathLimitReached`).
 
 The propagator exposes its state to the actors and aborters as arguments to `operator()`. Actors must define a default-constructable `result_type`, which can be modified in each call:
 
@@ -59,8 +59,8 @@ The propagator also contains a loop-protection mechanism. It estimates a circle 
 :::
 
 To run the propagation, we must call the member function `propagate(...)` with the initial track parameters and the propagator options. There are several overloads to the `propagate(...)` function, which allow further customization:
-* With/without a target surfac: The overload with a target surface automatically adds an aborter for the passed `Surface` to the `AbortList`.
-* With/without a prepared result objec: Without a result object, a suitable result object is default-constructed internally.
+* With/without a target surface: The overload with a target surface automatically adds an aborter for the passed `Surface` to the `AbortList`.
+* With/without a prepared result object: Without a result object, a suitable result object is default-constructed internally.
 
 The result is an instance of {class}`Acts::Result`. It contains the actual result, or an error code in case something went wrong. In the actual result, the results of the different actors can again be accessed via a `get` method:
 
