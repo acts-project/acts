@@ -26,7 +26,7 @@ field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 
 The simulation step involves random processes and in order to get the same results across different executions we provide our favorite random number generator with an arbitraty seed.
 
-```
+```python
 rnd = acts.examples.RandomNumbers(seed=42)
 ```
 
