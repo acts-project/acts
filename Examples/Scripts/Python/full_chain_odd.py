@@ -33,7 +33,6 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
-    TruthSeedRanges,
     addCKFTracks,
     CKFPerformanceConfig,
     addVertexFitting,
@@ -46,7 +45,7 @@ s = addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
     EtaConfig(-3.0, 3.0, True),
-    ParticleConfig(1, acts.PdgParticle.eMuon, True),
+    ParticleConfig(2, acts.PdgParticle.eMuon, True),
     rnd=rnd,
 )
 s = addFatras(
@@ -68,10 +67,8 @@ s = addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.7, 2.7), nHits=(9, None)),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
-    initialVarInflation=[100, 100, 100, 100, 100, 100],
 )
 s = addCKFTracks(
     s,
@@ -80,10 +77,22 @@ s = addCKFTracks(
     CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
+s.addAlgorithm(
+    acts.examples.TrackSelector(
+        level=acts.logging.INFO,
+        inputTrackParameters="fittedTrackParameters",
+        outputTrackParameters="trackparameters",
+        outputTrackIndices="outputTrackIndices",
+        removeNeutral=True,
+        absEtaMax=2.5,
+        loc0Max=4.0 * u.mm,  # rho max
+        ptMin=500 * u.MeV,
+    )
+)
 s = addVertexFitting(
     s,
     field,
-    vertexFinder=VertexFinder.Truth,
+    vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
 )
 
