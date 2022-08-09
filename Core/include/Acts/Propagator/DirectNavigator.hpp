@@ -95,7 +95,7 @@ class DirectNavigator {
     /// along the path
     SurfaceSequence navSurfaces = {};
 
-    /// Iterator the the next surface
+    /// Iterator the next surface
     SurfaceIter navSurfaceIter = navSurfaces.begin();
 
     /// Navigation state - external interface: the start surface

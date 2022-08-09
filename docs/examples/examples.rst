@@ -40,6 +40,10 @@ At the time of writing, there are two aspects to the ACTS examples:
 .. toctree::
    :maxdepth: 2
 
-   howto/howto
-   Analysis Apps <analysis_apps>
    Python bindings <python_bindings>
+   full_chain_odd
+   material_mapping
+   digizier_config
+   geo_selection
+   alignment
+   Analysis Apps <analysis_apps>

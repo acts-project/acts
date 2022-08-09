@@ -32,7 +32,7 @@ class SingleFreeTrackParameters {
   using ParametersVector = FreeVector;
   using CovarianceMatrix = FreeSymMatrix;
 
-  /// Construct from a parameters vector and and particle charge.
+  /// Construct from a parameters vector and particle charge.
   ///
   /// @param params Free parameters vector
   /// @param q Particle charge
