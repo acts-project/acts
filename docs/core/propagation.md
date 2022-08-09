@@ -25,7 +25,6 @@ The propagator exposes its state to the Actors and Aborters as arguments to `ope
 
 template<typename propagator_state_t, typename stepper_t>
 auto operator(propagator_state_t &state, const stepper_t &stepper, result_type &result) const {
-
   const auto &navigatorState = state.navigation;
   const auto &stepperState = state.stepping;
   const auto &options = state.options;
@@ -33,7 +32,6 @@ auto operator(propagator_state_t &state, const stepper_t &stepper, result_type &
 ```
 
 The result of a propagation consists of the track parameters at the endpoint of the propagation as well as the results of all actors.
-
 
 ## Initialization and running
 
@@ -46,7 +44,7 @@ using MyOptions = Acts::PropagatorOptions<
                   >;
 ```
 
-The actors and aborters are instantiated with the options and can be accessed with the `get`-method that expects the corresponding actor type as template parameter. Besides this, the {class}`Acts::PropagatorOptions` also contain a lot general options like the `maxStepSize`:
+The actors and aborters are instantiated with the options and can be accessed with the `get`-method that expects the corresponding actor type as template parameter. Besides this, the {class}`Acts::PropagatorOptions` also contains a lot of general options like the `maxStepSize`:
 
 ```c++
 auto options = MyOptions();
@@ -64,7 +62,7 @@ To run the propagation, we must call the member function `propagate(...)` with t
 * With target surface or without: The overload with a target surface automatically adds an aborter for the passed `Surface` to the `AbortList`.
 * With a prepared result object or without. Without a result object, a suitable result object is default-constructed internally.
 
-The result is a instance of {class}`Acts::Result`, so it can contain an error code if something went wrong, or the actual result. In the actual result, the results of the different actors can again accessed a `get` method:
+The result is a instance of {class}`Acts::Result`, so it can contain an error code if something went wrong, or the actual result. In the actual result, the results of the different actors can again accessed via a `get` method:
 
 ```c++
 auto res = propagator.propagate(myParams, options);
@@ -74,12 +72,11 @@ if( res.ok() ) {
 }
 ```
 
-
 ## Navigators
 
-Acts comes with two navigators: The standard navigator {class}`Acts::Navigator` that performs the full navigation in the volume/layer/surface hierarchy, and the {class}`Acts::DirectNavigator` that takes a sequence of surfaces and just navigates along this. This sequence must be initialized with a special actor, the {class}`Acts::DirectNavigator::Initializer`.
+Acts comes with two navigators: The standard navigator {class}`Acts::Navigator` that performs the full navigation in the volume/layer/surface hierarchy, and the {class}`Acts::DirectNavigator` that takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {class}`Acts::DirectNavigator::Initializer`.
 
-The navigators provide information about the current position in the geometry in their state ({struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`),  e.g. pointers to the `currentSurface` and the `currentVolume`.
+The navigators provide information about the current position inside the geometry in their state variable ({struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
 
 ## Steppers
 
@@ -94,8 +91,7 @@ auto operator(propagator_state_t &state, const stepper_t &stepper) const {
 
 ### AtlasStepper
 
-The {class}`Acts::AtlasStepper` is a pure transcript from the ATLAS `RungeKuttaPropagator`
-and `RungeKuttaUtils`.
+The {class}`Acts::AtlasStepper` is a pure transcript from the ATLAS `RungeKuttaPropagator` and `RungeKuttaUtils`.
 
 ### StraightLineStepper
 
@@ -103,8 +99,7 @@ The {class}`Acts::StraightLineStepper` is a very stripped down stepper that just
 
 ### EigenStepper
 
-The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS stepper,
-however, the stepping code is rewritten with using `Eigen` primitives. Thus, it also uses a 4th-order Runge-Kutta algorithm for the integration of the EOM. Additionally, the {class}`Acts::EigenStepper` allows to customize the concrete integration step via **extensions**.
+The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS stepper, however, the stepping code is rewritten by using `Eigen` primitives. Thus, it also uses a 4th-order Runge-Kutta algorithm for the integration of the EOM. Additionally, the {class}`Acts::EigenStepper` allows to customize the concrete integration step via **extensions**.
 
 The extensions encapsulate the relevant equations for different environments. There exists a {class}`Acts::DefaultExtension` that is suited for propagation in a vacuum, and the {class}`Acts::DenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is selected by a bidding-system.
 
