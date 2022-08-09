@@ -30,7 +30,7 @@ The simulation step involves random processes and in order to get the same resul
 rnd = acts.examples.RandomNumbers(seed=42)
 ```
 
-All simulation and reconstruction pipelines in Acts begin with a `Sequencer`. It constrols the execution of the different algorithms in the chain. We provide the number of events, the threads we want to utilize (-1 means all) and the desired log leve.
+All simulation and reconstruction pipelines in Acts begin with a `Sequencer`. It controls the execution of the different algorithms in the chain. We provide the number of events, the threads we want to utilize (-1 means all) and the desired log level.
 
 ```
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
