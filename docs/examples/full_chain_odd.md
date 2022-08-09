@@ -42,7 +42,7 @@ In our simple example we generate a single muon with random charge (e.g. muon or
 
 Relativistic muons are hardly deflected in the detector and will keep most of their energy which makes them almost ideal for track reconstruction.
 
-```
+```python
 addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
