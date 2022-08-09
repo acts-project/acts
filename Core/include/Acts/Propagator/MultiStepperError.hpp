@@ -18,7 +18,8 @@ enum class MultiStepperError {
   StateOfMultipleComponentsRequested = 2,
   AverageTrackLeftCurrentVolume = 3,
   AllComponentsSteppingError = 4,
-  AllComponentsConversionToBoundFailed = 5
+  AllComponentsConversionToBoundFailed = 5,
+  SomeComponentsConversionToBoundFailed = 6
 };
 
 std::error_code make_error_code(Acts::MultiStepperError e);

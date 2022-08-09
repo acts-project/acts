@@ -35,7 +35,8 @@ using ConstantFieldPropagator =
 
 using KalmanUpdater = Acts::GainMatrixUpdater;
 using KalmanSmoother = Acts::GainMatrixSmoother;
-using KalmanFitter = Acts::KalmanFitter<ConstantFieldPropagator>;
+using KalmanFitter =
+    Acts::KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
 
 KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
@@ -69,10 +70,13 @@ const auto kfZero = KalmanFitter(kfZeroPropagator);
 std::default_random_engine rng(42);
 
 auto makeDefaultKalmanFitterOptions() {
-  KalmanFitterExtensions extensions;
-  extensions.calibrator.connect<&testSourceLinkCalibrator>();
-  extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
+  KalmanFitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.smoother
+      .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
 
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
                              extensions, LoggerWrapper{*kfLogger},
@@ -171,8 +175,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
   auto kfOptions = makeDefaultKalmanFitterOptions();
 
   TestOutlierFinder tof{5_mm};
-  kfOptions.extensions.outlierFinder.connect<&TestOutlierFinder::operator()>(
-      &tof);
+  kfOptions.extensions.outlierFinder
+      .connect<&TestOutlierFinder::operator()<VectorMultiTrajectory>>(&tof);
 
   bool expected_reversed = false;
   bool expected_smoothed = true;
@@ -189,7 +193,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
 
     TestReverseFilteringLogic trfl{threshold};
     kfOptions.extensions.reverseFilteringLogic
-        .connect<&TestReverseFilteringLogic::operator()>(&trfl);
+        .connect<&TestReverseFilteringLogic::operator()<VectorMultiTrajectory>>(
+            &trfl);
 
     kfOptions.reversedFiltering = reverse;
     kfOptions.reversedFilteringCovarianceScaling = 100.0;

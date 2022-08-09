@@ -350,7 +350,7 @@ constexpr bool has_member = identical_to<V, M, T>;
      * not the actual function pointer extracted through `&T::method_name` can \
      * be assigned to a prepared function pointer type with the given          \
      * signature. This checks the exact signature, and not just callability    \
-     * nad validity of the expression. */                                      \
+     * and validity of the expression. */                                      \
                                                                                \
     /* Meta function which constructs the right type to check a function       \
      * pointer, non-const version*/                                            \

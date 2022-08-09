@@ -23,7 +23,7 @@ namespace Test {
 GeometryContext tgContext = GeometryContext();
 
 /// we test a two-level hierarchy
-/// every deeper level hierarchy is a a derivate of this
+/// every deeper level hierarchy is a derivate of this
 ///
 /// WorldVolume   with volumeID       == 1
 /// - InnerVolume with volumeID       == 2
@@ -43,7 +43,7 @@ double iiv_surfaceR = 25_mm;
 double iiv_volumeR =
     iiv_surfaceR + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
 
-///  inner outer volume defininitions
+///  inner outer volume definitions
 double iov_surfaceR = 100_mm;
 double iov_volumeR =
     iov_surfaceR + 0.5 * surfaceRstagger + layerEnvelope + volumeEnvelope;
@@ -81,7 +81,7 @@ auto volume = constructContainerVolume(tgContext, iVolume, oVolume, ov_volumeR,
                                        volumeHalfZ, "WorldVolume");
 
 // creating a TrackingGeometry
-// -> closs the geometry, this should set the GeometryIdentifier
+// -> close the geometry, this should set the GeometryIdentifier
 TrackingGeometry tGeometry(volume);
 // get the world back
 auto world = tGeometry.highestTrackingVolume();
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
     // check the geometry id of the volume
     BOOST_CHECK_EQUAL(geoid, vol.geometryId().volume());
     // check the geometry id of all boundary surfaces of the volume
-    // - this is strictly only possible when glueing if OFF
+    // - this is strictly only possible when glueing is OFF
     GeometryIdentifier::Value bsurface_id = 0;
     for (auto bSf : vol.boundarySurfaces()) {
       // check the bsurface volume id
@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
       auto bs_bsf_id = bSf->surfaceRepresentation().geometryId().boundary();
       BOOST_CHECK_EQUAL(++bsurface_id, bs_bsf_id);
     }
-    // testing the layer and it's approach surfaces
+    // testing the layer and its approach surfaces
     if (vol.confinedLayers() != nullptr) {
       // layers start are counted from 1 - n
       GeometryIdentifier::Value layer_id = 0;

@@ -32,7 +32,7 @@ namespace Acts {
 ///
 /// With a defined covariance matrix, the closest point and the distance are
 /// not defined along the usual Euclidean metric, but by the Mahalanobis
-/// distance induced by the the covariance.
+/// distance induced by the covariance.
 class BoundaryCheck {
  public:
   /// Construct either hard cut in both dimensions or no cut at all.
