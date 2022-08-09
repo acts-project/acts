@@ -103,7 +103,7 @@ addSeeding(
 
 The Combinatorial Kalman Filter (CKF) will use the seeds to propagate the trajectory forward and backward in time with the idea to find more measurements along the way. It combines (i.e. smoothes) these measurements and outputs reconstructed tracks which include smoothed track parameters for each measurement.
 
-```
+```python
 addCKFTracks(
     s,
     trackingGeometry,
