@@ -247,7 +247,8 @@ def addPythia8(
     if npileup > 0:
         generators.append(
             acts.examples.EventGenerator.Generator(
-                multiplicity=acts.examples.FixedMultiplicityGenerator(n=npileup),
+                multiplicity=acts.examples.FixedMultiplicityGenerator(
+                    n=npileup),
                 vertex=vtxGen,
                 particles=acts.examples.pythia8.Pythia8Generator(
                     level=s.config.logLevel,
@@ -317,8 +318,10 @@ def addFatras(
     field: acts.MagneticFieldProvider,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirSvg: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
-    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
+    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(
+    ),
 ) -> acts.examples.Sequencer:
     """This function steers the detector simulation using Fatras
 
@@ -394,7 +397,8 @@ def addFatras(
     s.addAlgorithm(alg)
 
     # Output
-    addSimWriters(s, alg.config.outputSimHits, outputDirCsv, outputDirRoot)
+    addSimWriters(s, alg.config.outputSimHits, outputDirCsv,
+                  outputDirRoot, outputDirSvg, trackingGeometry)
 
     return s
 
@@ -404,6 +408,8 @@ def addSimWriters(
     inputSimHits: Optional[str] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirSvg: Optional[Union[Path, str]] = None,
+    trackingGeometry=None,
 ) -> acts.examples.Sequencer:
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
@@ -457,6 +463,17 @@ def addSimWriters(
                 outputDir=str(outputDirCsv),
                 outputStem="hits",
             )
+        )
+
+    if outputDirSvg is not None:
+        sc = acts.examples.SvgSimHitWriter.Config(
+            writerName = 'SvgSimHitWriter',
+            inputCollection=inputSimHits,
+            trackingGeometry=trackingGeometry)
+
+        s.addWriter(
+            acts.examples.SvgSimHitWriter(
+                level=s.config.logLevel, config=sc)
         )
 
     if outputDirRoot is not None:
@@ -605,11 +622,13 @@ def addDigitization(
             inputClusters=digiAlg.config.outputClusters,
             inputSimHits=digiAlg.config.inputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
-            filePath=str(outputDirRoot / f"{digiAlg.config.outputMeasurements}.root"),
+            filePath=str(outputDirRoot /
+                         f"{digiAlg.config.outputMeasurements}.root"),
             trackingGeometry=trackingGeometry,
         )
         rmwConfig.addBoundIndicesFromDigiConfig(digiAlg.config)
-        s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, s.config.logLevel))
+        s.addWriter(acts.examples.RootMeasurementWriter(
+            rmwConfig, s.config.logLevel))
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)

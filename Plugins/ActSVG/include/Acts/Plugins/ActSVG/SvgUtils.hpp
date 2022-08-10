@@ -15,6 +15,7 @@
 #include <fstream>
 #include <string>
 #include <vector>
+#include <tuple>
 
 namespace Acts {
 
@@ -33,6 +34,23 @@ struct Style {
   std::array<int, 3> strokeColor = {0, 0, 0};
 
   unsigned int nSegments = 72u;
+
+  /// Conversion to fill and stroke object from the base library
+  /// @return a tuple of actsvg digestable objects
+  std::tuple<actsvg::style::fill, actsvg::style::stroke> fillAndStroke() const {
+    actsvg::style::fill fll;
+    fll._fc._rgb = fillColor;
+    fll._fc._opacity = fillOpacity;
+    fll._fc._hl_rgb = highlightColor;
+    fll._fc._highlight = highlights;
+
+    actsvg::style::stroke str;
+    str._sc._rgb = strokeColor;
+    str._width = strokeWidth;
+
+    return std::tie(fll,str);
+  }
+
 };
 
 /// Create a group
@@ -54,10 +72,10 @@ inline static actsvg::svg::object group(
 
 /// Helper method to a measure
 ///
-/// @param xStart the start position
-/// @param yStart the start position
-/// @param xEnd the start position
-/// @param yEnd the start position
+/// @param xStart the start position x
+/// @param yStart the start position y
+/// @param xEnd the end position x
+/// @param yEnd the end position y
 ///
 /// @return a single svg object as a measure
 inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
