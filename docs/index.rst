@@ -24,14 +24,18 @@ Key features:
    :maxdepth: 2
 
    getting_started
-   versioning
+   tracking
+   acts
    core/core
+   fatras/fatras
    plugins/plugins
    examples/examples
+   howto/howto
+   contribution/contribution
+
+   versioning
    formats/formats
    api/api
-   contributionguide
-   howto/howto
    codeguide
    authors
    license
