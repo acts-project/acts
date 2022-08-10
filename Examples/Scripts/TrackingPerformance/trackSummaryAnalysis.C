@@ -27,7 +27,7 @@
 #include <TTree.h>
 #include <TVectorF.h>
 
-#include "CommonUtils.h"
+#include "../CommonUtils.h"
 #include "TreeReader.h"
 
 using namespace ROOT;
@@ -296,7 +296,8 @@ int trackSummaryAnalysis(
   /// @param handle the parameter handle in question
   /// @param handleTag the unique tangle tag
   /// @param peakE the number of entries used for range peaking
-  auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag, unsigned int peakE) -> void {
+  auto handleRange = [&](ResidualPullHandle& handle, const TString& handleTag,
+                         unsigned int peakE) -> void {
     bool rangeDetermined = false;
     if (not inConfig.empty()) {
       if (handle_configs.contains((handleTag).Data())) {
@@ -404,8 +405,8 @@ int trackSummaryAnalysis(
 
 #ifdef BOOST_AVAILABLE
   std::cout << "*** Handle Preparation: " << std::endl;
-  progress_display handle_preparation_progress(
-      nPhiBins * nEtaBins * nPtBins * baseResidualPulls.size());
+  progress_display handle_preparation_progress(nPhiBins * nEtaBins * nPtBins *
+                                               baseResidualPulls.size());
 #endif
 
   std::string land = " && ";
@@ -731,7 +732,7 @@ int trackSummaryAnalysis(
       // Create a unique handle tag
       TString auxiliaryTag = TString(aHandle.tag) + matrixTag;
       TH2F* auxHist = new TH2F(auxiliaryTag, auxiliaryTag, nOuterBins,
-                                 outerValues, nInnerBins, innerValues);
+                               outerValues, nInnerBins, innerValues);
       summary.auxiliaries.push_back(auxHist);
     }
 

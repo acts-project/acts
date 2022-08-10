@@ -100,6 +100,7 @@ class RootVertexPerformanceWriter final
   std::vector<float> m_covYY;
   std::vector<float> m_covXY;
   std::vector<float> m_covYX;
+  std::vector<float> m_trackVtxMatchFraction;
 
   int m_nrecoVtx = -1;           ///< Number of reconstructed vertices
   int m_ntrueVtx = -1;           ///< Number of true vertices

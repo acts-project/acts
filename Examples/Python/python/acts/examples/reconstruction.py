@@ -943,7 +943,7 @@ def addVertexFitting(
                 inputTrajectories="trajectories",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputVertices=outputVertices,
-                minTrackVtxMatchFraction=0.1,
+                minTrackVtxMatchFraction=0.0,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),

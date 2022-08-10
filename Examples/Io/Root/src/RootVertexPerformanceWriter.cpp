@@ -85,6 +85,7 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
     m_outputTree->Branch("covYY", &m_covYY);
     m_outputTree->Branch("covXY", &m_covXY);
     m_outputTree->Branch("covYX", &m_covYX);
+    m_outputTree->Branch("trkVtxMatch", &m_trackVtxMatchFraction);
     m_outputTree->Branch("nRecoVtx", &m_nrecoVtx);
     m_outputTree->Branch("nTrueVtx", &m_ntrueVtx);
     m_outputTree->Branch("nVtxDetectorAcceptance", &m_nVtxDetAcceptance);
@@ -265,8 +266,9 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         }
 
         // Match reco to truth vertex if at least 50% of tracks match
-        if ((double)fmap[maxOccurrenceId] / tracks.size() >
-            m_cfg.minTrackVtxMatchFraction) {
+        double trackVtxMatchFraction =
+            (double)fmap[maxOccurrenceId] / tracks.size();
+        if (trackVtxMatchFraction >= m_cfg.minTrackVtxMatchFraction) {
           for (const auto& particle : associatedTruthParticles) {
             int priVtxId = particle.particleId().vertexPrimary();
             int secVtxId = particle.particleId().vertexSecondary();
@@ -283,6 +285,11 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
               m_diffx.push_back(vtx.position()[0] - truePos[0]);
               m_diffy.push_back(vtx.position()[1] - truePos[1]);
               m_diffz.push_back(vtx.position()[2] - truePos[2]);
+              m_covXX.push_back(vtx.covariance()(0, 0));
+              m_covYY.push_back(vtx.covariance()(1, 1));
+              m_covXY.push_back(vtx.covariance()(0, 1));
+              m_covYX.push_back(vtx.covariance()(1, 0));
+              m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
               // Next vertex now
               break;
             }
@@ -402,10 +409,11 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         }
       }
 
-      ACTS_INFO((double)fmap[maxOccurrenceId] / tracks.size());
+      // ACTS_INFO((double)fmap[maxOccurrenceId] / tracks.size());
       // Match reco to truth vertex if at least 50% of tracks match
-      if ((double)fmap[maxOccurrenceId] / tracks.size() >
-          m_cfg.minTrackVtxMatchFraction) {
+      double trackVtxMatchFraction =
+          (double)fmap[maxOccurrenceId] / tracks.size();
+      if (trackVtxMatchFraction >= m_cfg.minTrackVtxMatchFraction) {
         for (const auto& particle : associatedTruthParticles) {
           int priVtxId = particle.particleId().vertexPrimary();
           int secVtxId = particle.particleId().vertexSecondary();
@@ -426,6 +434,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
             m_covYY.push_back(vtx.covariance()(1, 1));
             m_covXY.push_back(vtx.covariance()(0, 1));
             m_covYX.push_back(vtx.covariance()(1, 0));
+            m_trackVtxMatchFraction.push_back(trackVtxMatchFraction);
             // Next vertex now
             break;
           }
@@ -457,6 +466,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   m_covYY.clear();
   m_covXY.clear();
   m_covYX.clear();
+  m_trackVtxMatchFraction.clear();
 
   return ProcessCode::SUCCESS;
 }

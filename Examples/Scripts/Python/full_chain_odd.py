@@ -39,20 +39,28 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
-s = acts.examples.Sequencer(events=500, numThreads=1, logLevel=acts.logging.INFO)
+s = acts.examples.Sequencer(events=None, numThreads=8, logLevel=acts.logging.INFO)
 
-s = addParticleGun(
-    s,
-    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-3.0, 3.0, True),
-    ParticleConfig(2, acts.PdgParticle.eMuon, True),
-    rnd=rnd,
+#  s = addParticleGun(
+#  s,
+#  MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
+#  EtaConfig(-3.0, 3.0, True),
+#  ParticleConfig(2, acts.PdgParticle.eMuon, True),
+#  rnd=rnd,
+#  )
+evGen = acts.examples.RootParticleReader(
+    level=s.config.logLevel,
+    particleCollection="particles_input",
+    filePath="pythia8_particles.root",
+    orderedEvents=False,
 )
+s.addReader(evGen)
+
 s = addFatras(
     s,
     trackingGeometry,
     field,
-    outputDirRoot=outputDir,
+    #  outputDirRoot=outputDir,
     rnd=rnd,
 )
 s = addDigitization(
@@ -60,7 +68,7 @@ s = addDigitization(
     trackingGeometry,
     field,
     digiConfigFile=oddDigiConfig,
-    outputDirRoot=outputDir,
+    #  outputDirRoot=outputDir,
     rnd=rnd,
 )
 s = addSeeding(
@@ -68,14 +76,14 @@ s = addSeeding(
     trackingGeometry,
     field,
     geoSelectionConfigFile=oddSeedingSel,
-    outputDirRoot=outputDir,
+    #  outputDirRoot=outputDir,
 )
 s = addCKFTracks(
     s,
     trackingGeometry,
     field,
     CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-    outputDirRoot=outputDir,
+    #  outputDirRoot=outputDir,
 )
 s.addAlgorithm(
     acts.examples.TrackSelector(
