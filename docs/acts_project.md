@@ -5,7 +5,7 @@ The *A Common Tracking Software (Acts)* project is an attempt to preserve and ev
 A [coherent write-up of the project](https://link.springer.com/article/10.1007/s41781-021-00078-8) has been published in 2022 in Springer's CSBS.
 
 ```{note}
-Acts is designed as a library that *contains components* for assembling a track reconstruction suite for High Energy Physics and Nuclear Physics. Acts does not strive to provide a complete experiment framework, but rather modules and connections to be used within an experiment context. These connections contain e.g.~binding mechanisms to different geometry libraries, a cost-free yet flexible mechanism to use experiment specific contextual data (calibrations, detector alignment, experiment condidtions), or simply the possibility to integrate an external screen logging facility.
+Acts is designed as a library that *contains components* for assembling a track reconstruction suite for High Energy Physics and Nuclear Physics. Acts does not strive to provide a complete experiment framework, but rather modules and connections to be used within an experiment context. These connections contain e.g. binding mechanisms to different geometry libraries, a cost-free yet flexible mechanism to use experiment specific contextual data (calibrations, detector alignment, experiment conditions), or simply the possibility to integrate an external screen logging facility.
 ```
 
 The library is structured as follows:
