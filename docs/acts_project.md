@@ -16,7 +16,8 @@ The library is structured as follows:
  * A `Tests` folder that contains unit tests, benchmark tests and other integration tests
 
 
-```{tip} Developers and R&D meetings can be found in the [Acts indico category](https://indico.cern.ch/category/7968/).
+```{tip}
+Developers and R&D meetings can be found in the [Acts indico category](https://indico.cern.ch/category/7968/).
 ```
 
  ## Philosophy
