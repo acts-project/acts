@@ -15,11 +15,11 @@ rules:
     required_checks:
      - codecov/project
      - Docs / docs
+     - Analysis / build_debug
 
     required_pattern:
      - "Builds / *"
      - "Checks / *"
-     - "Analysis / *"
      - "CI Bridge / *"
 
   - branch_filter:

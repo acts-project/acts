@@ -9,7 +9,7 @@ The propagation through a geometry is based on the interaction of two different 
 * The **Stepper** provides the implementation of the the solution of the equation of motion (either by analytical means or through numerical integration).
 * The **Navigator** keeps track of the current position in the geometry and adjusts the step size so that the stepper does not step through a surface.
 
-Following the general Acts design, these clases do not manage their internal state via member variables, but provide a internal `State` struct which contains all relevant data and is managed by the propagator.
+Following the general Acts design, these classes do not manage their internal state via member variables, but provide an internal `State` struct which contains all relevant data and is managed by the propagator.
 
 The interaction of these two components is handled by the {class}`Acts::Propagator` class template that takes the stepper and the navigator as template parameters:
 
@@ -17,9 +17,9 @@ The interaction of these two components is handled by the {class}`Acts::Propagat
 Propagator<Navigator, Stepper>
 ```
 
-Additional to these mandatory components the Propagator can be equipped with **Actors** and **Aborters** to allow for custom behaviour. These are function objects that are hooked in the propagation loop. Actors just perform some action on the propagator state (e.g. the {class}`Acts::KalmanFitter` is an actor), aborts can abort propagation (e.g., the {class}`Acts::PathLimitReached`).
+Additional to these mandatory components, the propagator can be equipped with **Actors** and **Aborters** to allow for custom behaviour. These are function objects that are hooked in the propagation loop. Actors just perform some action on the propagator state (e.g. the {class}`Acts::KalmanFitter` is an actor), aborts can abort propagation (e.g., the {class}`Acts::PathLimitReached`).
 
-The propagator exposes its state to the Actors and Aborters as arguments to `operator()`. Actors must define a default-constructable `result_type`, which can be modified in each call:
+The propagator exposes its state to the actors and aborters as arguments to `operator()`. Actors must define a default-constructable `result_type`, which can be modified in each call:
 
 ```c++
 
@@ -59,10 +59,10 @@ The propagator also contains a loop-protection mechanism. It estimates a circle 
 :::
 
 To run the propagation, we must call the member function `propagate(...)` with the initial track parameters and the propagator options. There are several overloads to the `propagate(...)` function, which allow further customization:
-* With target surface or without: The overload with a target surface automatically adds an aborter for the passed `Surface` to the `AbortList`.
-* With a prepared result object or without. Without a result object, a suitable result object is default-constructed internally.
+* With/without a target surface: The overload with a target surface automatically adds an aborter for the passed `Surface` to the `AbortList`.
+* With/without a prepared result object: Without a result object, a suitable result object is default-constructed internally.
 
-The result is a instance of {class}`Acts::Result`, so it can contain an error code if something went wrong, or the actual result. In the actual result, the results of the different actors can again accessed via a `get` method:
+The result is an instance of {class}`Acts::Result`. It contains the actual result, or an error code in case something went wrong. In the actual result, the results of the different actors can again be accessed via a `get` method:
 
 ```c++
 auto res = propagator.propagate(myParams, options);
@@ -118,4 +118,4 @@ By default, the {class}`Acts::EigenStepper` only uses the {class}`Acts::DefaultE
 
 ### MultiEigenStepperLoop
 
-The {class}`Acts::MultiEigenStepper` is a extension of the {class}`Acts::EigenStepper` and designed to internally handle a multi-component state, while interfacing as a single component to the navigator. It is mainly used for the {class}`Acts::GaussianSumFitter`.
+The {class}`Acts::MultiEigenStepper` is an extension of the {class}`Acts::EigenStepper` and is designed to internally handle a multi-component state, while interfacing as a single component to the navigator. It is mainly used for the {class}`Acts::GaussianSumFitter`.
