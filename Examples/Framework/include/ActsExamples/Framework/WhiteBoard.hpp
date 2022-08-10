@@ -100,11 +100,14 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
     throw std::out_of_range("Object '" + name + "' does not exists");
   }
   const IHolder* holder = it->second.get();
-  if (typeid(T) != holder->type()) {
+
+  const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);
+  if (castedHolder == nullptr) {
     throw std::out_of_range("Type mismatch for object '" + name + "'");
   }
+
   ACTS_VERBOSE("Retrieved object '" << name << "'");
-  return reinterpret_cast<const HolderT<T>*>(holder)->value;
+  return castedHolder->value;
 }
 
 inline bool ActsExamples::WhiteBoard::exists(const std::string& name) const {
