@@ -24,27 +24,37 @@ namespace py = pybind11;
 using namespace ActsExamples;
 
 namespace {
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#endif
 class PyIAlgorithm : public IAlgorithm {
  public:
   using IAlgorithm::IAlgorithm;
 
   std::string name() const override {
     py::gil_scoped_acquire acquire{};
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
-#endif
     PYBIND11_OVERRIDE_PURE(std::string, IAlgorithm, name);
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
   }
 
   ProcessCode execute(const AlgorithmContext& ctx) const override {
     py::gil_scoped_acquire acquire{};
     PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
   }
+
+  ProcessCode initialize() const override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, initialize);
+  }
+
+  ProcessCode finalize() const override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, finalize);
+  }
 };
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 class PyBareAlgorithm : public BareAlgorithm {
  public:
