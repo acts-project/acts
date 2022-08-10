@@ -34,4 +34,3 @@ In addition, two dedicated R&D lines are part of the `acts-project`, one for mac
 
 Code spill-over from the R&D lines into the main Acts repository are performed on demand and depending on the maturity of the R&D projects.
 
-
