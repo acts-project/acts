@@ -73,7 +73,6 @@ void RootBFieldWriter::run(const Config& config,
     ACTS_INFO("Map will be written out in cartesian coordinates (x,y,z).");
 
     // Write out the interpolated magnetic field map
-    double stepX = 0., stepY = 0., stepZ = 0.;
     double minX = 0., minY = 0., minZ = 0.;
     double maxX = 0., maxY = 0., maxZ = 0.;
     size_t nBinsX = 0, nBinsY = 0, nBinsZ = 0;
@@ -149,9 +148,13 @@ void RootBFieldWriter::run(const Config& config,
       }
     }
 
-    stepX = fabs(minX - maxX) / (nBinsX - 1);
-    stepY = fabs(minY - maxY) / (nBinsY - 1);
-    stepZ = fabs(minZ - maxZ) / (nBinsZ - 1);
+    assert(maxX > minX);
+    assert(maxY > minY);
+    assert(maxZ > minZ);
+
+    double stepX = (maxX - minX) / (nBinsX - 1);
+    double stepY = (maxY - minY) / (nBinsY - 1);
+    double stepZ = (maxZ - minZ) / (nBinsZ - 1);
 
     for (size_t i = 0; i < nBinsX; i++) {
       double raw_x = minX + i * stepX;
@@ -190,7 +193,6 @@ void RootBFieldWriter::run(const Config& config,
     double minR = 0, maxR = 0;
     double minZ = 0, maxZ = 0;
     size_t nBinsR = 0, nBinsZ = 0;
-    double stepR = 0, stepZ = 0;
 
     if (config.rBounds && config.zBounds) {
       ACTS_INFO("User defined ranges handed over.");
@@ -234,8 +236,11 @@ void RootBFieldWriter::run(const Config& config,
       }
     }
 
-    stepR = fabs(minR - maxR) / (nBinsR - 1);
-    stepZ = fabs(minZ - maxZ) / (nBinsZ - 1);
+    assert(maxR > minR);
+    assert(maxZ > minZ);
+
+    double stepR = (maxR - minR) / (nBinsR - 1);
+    double stepZ = (maxZ - minZ) / (nBinsZ - 1);
 
     for (size_t k = 0; k < nBinsZ; k++) {
       double raw_z = minZ + k * stepZ;
