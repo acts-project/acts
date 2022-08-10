@@ -30,7 +30,7 @@ Developers and R&D meetings can be found in the [Acts indico category](https://i
 
  Acts should also provide a testbed for fruitfull algorithm R&D, and hence is closely coupled to the development of the [Open Data Detector](https://gitlab.cern.ch/acts/OpenDataDetector) which can be built as a `thirdparty` depencency as part of the Acts project, and builds the backbone of the chain demonstrators.
 
-In addition, two dedicated R&D lines are part of the `acts-project`, one for machine learning based/inspired modules [acts-machine-learning](mailto:acts-machine-learning@cern.ch), and one for massively parallel code execution [acts-parallelization](mailto:acts-parallelization@cern.ch), which mainly focusses on GPU accelerators and portability.
+In addition, two dedicated R&D lines are part of the `acts-project`, one for machine learning based/inspired modules [acts-machine-learning](mailto:acts-machine-learning@cern.ch), and one for massively parallel code execution [acts-parallelization](mailto:acts-parallelization@cern.ch), which mainly focuses on GPU accelerators and portability.
 
 Code spill-over from the R&D lines into the main Acts repository are performed on demand and depending on the maturity of the R&D projects.
 
