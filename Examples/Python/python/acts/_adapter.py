@@ -5,16 +5,12 @@ from typing import Optional, Callable, Dict, Any
 import acts
 
 
-def _unwrap(typ):
-    return typ.__wrapped__ if hasattr(typ, "__wrapped__") else typ
-
-
 def _make_config_adapter(fn):
     @functools.wraps(fn)
     def wrapped(self, *args, **kwargs):
         if len(args) > 0:
             maybe_config = args[0]
-            if isinstance(maybe_config, _unwrap(type(self).Config)):
+            if isinstance(maybe_config, inspect.unwrap(type(self).Config)):
                 # is already config, nothing to do here
                 fn(self, maybe_config, *args[1:], **kwargs)
                 return
@@ -80,7 +76,7 @@ def _patch_config(m):
 def _detector_create(cls, config_class=None):
     def create(*args, mdecorator=None, **kwargs):
         if mdecorator is not None:
-            if not isinstance(mdecorator, _unwrap(acts.IMaterialDecorator)):
+            if not isinstance(mdecorator, inspect.unwrap(acts.IMaterialDecorator)):
                 raise TypeError("Material decorator is not valid")
         if config_class is None:
             cfg = cls.Config()

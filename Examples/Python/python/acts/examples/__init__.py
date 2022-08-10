@@ -27,10 +27,6 @@ _patch_config(ActsPythonBindings._examples)
 _patch_detectors(ActsPythonBindings._examples)
 
 
-def _unwrap(typ):
-    return typ.__wrapped__ if hasattr(typ, "__wrapped__") else typ
-
-
 def _makeLayerTriplet(*args, **kwargs):
 
     if len(args) == 1:
@@ -74,7 +70,7 @@ def _makeLayerTriplet(*args, **kwargs):
             all(
                 (isinstance(v, tuple) or isinstance(v, list))
                 and isinstance(v[0], int)
-                and isinstance(v[1], _unwrap(TGeoDetector.Config.BinningType))
+                and isinstance(v[1], inspect.unwrap(TGeoDetector.Config.BinningType))
                 for v in vv
             )
             for vv in (negative, central, positive)
@@ -114,8 +110,8 @@ def _process_volume_intervals(kwargs):
     _kwargs = kwargs.copy()
 
     v = TGeoDetector.Config.Volume()
-    for name, value in inspect.getmembers(_unwrap(TGeoDetector.Config.Volume)):
-        if not isinstance(getattr(v, name), _unwrap(Interval)):
+    for name, value in inspect.getmembers(inspect.unwrap(TGeoDetector.Config.Volume)):
+        if not isinstance(getattr(v, name), inspect.unwrap(Interval)):
             continue
         if not name in _kwargs:
             continue
@@ -198,8 +194,6 @@ def dump_args(func):
 
     @wraps(func)
     def dump_args_wrapper(*args, **kwargs):
-        import inspect
-
         try:
             func_args = inspect.signature(func).bind(*args, **kwargs).arguments
             func_args_str = ", ".join(
@@ -230,26 +224,26 @@ def dump_args_calls(myLocal=None, mods=[acts, sys.modules[__name__]]):
     if not isinstance(mods, list):
         mods = [mods]
     for mod in mods:
-        for n in dir(mod):
-            if n.startswith("_"):
+        for name in dir(mod):
+            if name.startswith("_"):
                 continue
-            # if n in set(("Config", "Interval", "IMaterialDecorator"),): continue  # if we don't fix up attributes below, can skip these classes
-            f = getattr(mod, n)
+            # if name in {"Config", "Interval", "IMaterialDecorator"}: continue  # if we don't fix up attributes below and unwrap references elsewhere, skip these classes
+            obj = getattr(mod, name)
             if not (
-                isinstance(f, collections.abc.Callable)
-                and f.__module__.startswith("acts.ActsPythonBindings")
-                and not hasattr(f, "__wrapped__")
+                isinstance(obj, collections.abc.Callable)
+                and obj.__module__.startswith("acts.ActsPythonBindings")
+                and not hasattr(obj, "__wrapped__")
             ):
                 continue
-            dump_args_calls(myLocal, [f])  # wrap class's contained methods
-            w = dump_args(f)
-            for nn in dir(f):  # fix up any attributes broken by the wrapping
-                if not nn.startswith("_"):
-                    ff = getattr(f, nn)
-                    fw = getattr(w, nn, None)
-                    if type(ff) is not type(fw):
-                        setattr(w, nn, ff)
-            setattr(mod, n, w)
-            if myLocal and hasattr(myLocal, n):
-                setattr(myLocal, n, w)
+            dump_args_calls(myLocal, [obj])  # wrap class's contained methods
+            wrapped = dump_args(obj)
+            for subname in dir(obj):  # fix up any attributes broken by the wrapping
+                if not subname.startswith("_"):
+                    sub = getattr(obj, subname)
+                    subwrapped = getattr(wrapped, subname, None)
+                    if type(sub) is not type(subwrapped):
+                        setattr(wrapped, subname, sub)
+            setattr(mod, name, wrapped)
+            if myLocal and hasattr(myLocal, name):
+                setattr(myLocal, name, wrapped)
     return
