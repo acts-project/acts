@@ -28,6 +28,8 @@ class IAlgorithm {
 
   /// Execute the algorithm for one event.
   virtual ProcessCode execute(const AlgorithmContext& context) const = 0;
+  virtual ProcessCode initialize() const = 0;
+  virtual ProcessCode finalize() const = 0;
 };
 
 }  // namespace ActsExamples
