@@ -31,6 +31,6 @@ The library is structured as follows:
 
 In addition, two dedicated R&D lines are part of the `acts-project`, one for machine learning based/inspired modules [acts-machine-learning](mailto:acts-machine-learning@cern.ch), and one for massively parallel code execution [acts-parallelization](mailto:acts-parallelization@cern.ch), which mainly focusses on GPU accelerators and portability.
 
-Code spill-over fromt he R&D lines into the main Acts repository are performed on demand and depending on the maturity of the R&D projects.
+Code spill-over from the R&D lines into the main Acts repository are performed on demand and depending on the maturity of the R&D projects.
 
 
