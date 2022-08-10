@@ -14,9 +14,9 @@
 #include <stdexcept>
 #include <string>
 #include <type_traits>
-#include <typeinfo>
 #include <unordered_map>
 #include <vector>
+#include <any>
 
 namespace ActsExamples {
 
@@ -54,23 +54,8 @@ class WhiteBoard {
   bool exists(const std::string& name) const;
 
  private:
-  // type-erased value holder for move-constructible types
-  struct IHolder {
-    virtual ~IHolder() = default;
-    virtual const std::type_info& type() const = 0;
-  };
-  template <typename T,
-            typename =
-                std::enable_if_t<std::is_nothrow_move_constructible<T>::value>>
-  struct HolderT : public IHolder {
-    T value;
-
-    HolderT(T&& v) : value(std::move(v)) {}
-    const std::type_info& type() const { return typeid(T); }
-  };
-
   std::unique_ptr<const Acts::Logger> m_logger;
-  std::unordered_map<std::string, std::unique_ptr<IHolder>> m_store;
+  std::unordered_map<std::string, std::any> m_store;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
@@ -89,7 +74,7 @@ inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
   if (0 < m_store.count(name)) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
-  m_store.emplace(name, std::make_unique<HolderT<T>>(std::forward<T>(object)));
+  m_store.emplace(name, object);
   ACTS_VERBOSE("Added object '" << name << "'");
 }
 
@@ -99,12 +84,13 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
   if (it == m_store.end()) {
     throw std::out_of_range("Object '" + name + "' does not exists");
   }
-  const IHolder* holder = it->second.get();
-  if (typeid(T) != holder->type()) {
+  try {
+    const T &ret = std::any_cast<T>(it->second);
+    ACTS_VERBOSE("Retrieved object '" << name << "'");
+    return ret;
+  } catch(std::bad_any_cast &) {
     throw std::out_of_range("Type mismatch for object '" + name + "'");
   }
-  ACTS_VERBOSE("Retrieved object '" << name << "'");
-  return reinterpret_cast<const HolderT<T>*>(holder)->value;
 }
 
 inline bool ActsExamples::WhiteBoard::exists(const std::string& name) const {
