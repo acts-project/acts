@@ -31,6 +31,7 @@
 #include <iterator>
 #include <vector>
 
+#include <boost/algorithm/string.hpp>
 #include <math.h>
 
 Acts::CylinderVolumeBuilder::CylinderVolumeBuilder(
@@ -69,6 +70,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
   // now analyize the layers that are provided
   // -----------------------------------------------------
+  ACTS_DEBUG("-> Building layers");
   LayerVector negativeLayers;
   LayerVector centralLayers;
   LayerVector positiveLayers;
@@ -85,6 +87,7 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // the positive Layer
     positiveLayers = m_cfg.layerBuilder->positiveLayers(gctx);
   }
+  ACTS_DEBUG("-> Building layers complete");
 
   // Build the confined volumes
   MutableTrackingVolumeVector centralVolumes;
@@ -163,6 +166,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // negative layers are present
     ACTS_VERBOSE("Negative layers are present: rmin, rmax | zmin, zmax = "
                  << wConfig.nVolumeConfig.toString());
+    std::vector<std::string> centers;
+    std::transform(negativeLayers.begin(), negativeLayers.end(),
+                   std::back_inserter(centers), [&](const auto& layer) {
+                     return std::to_string(
+                         layer->surfaceRepresentation().center(gctx)[eZ]);
+                   });
+    ACTS_VERBOSE("-> z locations: " << boost::algorithm::join(centers, ", "));
     // add to the string output
     layerConfiguration += " Negative Endcap |";
   }
@@ -170,6 +180,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // central layers are present
     ACTS_VERBOSE("Central layers are present:  rmin, rmax | zmin, zmax = "
                  << wConfig.cVolumeConfig.toString());
+    std::vector<std::string> centers;
+    std::transform(centralLayers.begin(), centralLayers.end(),
+                   std::back_inserter(centers), [&](const auto& layer) {
+                     return std::to_string(VectorHelpers::perp(
+                         layer->surfaceRepresentation().center(gctx)));
+                   });
+    ACTS_VERBOSE("-> radii: " << boost::algorithm::join(centers, ", "));
     // add to the string output
     layerConfiguration += " Barrel |";
   }
@@ -177,6 +194,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     // positive layers are present
     ACTS_VERBOSE("Positive layers are present: rmin, rmax | zmin, zmax = "
                  << wConfig.pVolumeConfig.toString());
+    std::vector<std::string> centers;
+    std::transform(positiveLayers.begin(), positiveLayers.end(),
+                   std::back_inserter(centers), [&](const auto& layer) {
+                     return std::to_string(
+                         layer->surfaceRepresentation().center(gctx)[eZ]);
+                   });
+    ACTS_VERBOSE("-> z locations: " << boost::algorithm::join(centers, ", "));
     // add to the string output
     layerConfiguration += " Positive Endcap |";
   }

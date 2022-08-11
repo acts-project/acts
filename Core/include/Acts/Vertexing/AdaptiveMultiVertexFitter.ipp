@@ -78,9 +78,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::fitImpl(
             state.vtxInfoMap[currentVtx].constraintVertex.fitQuality());
         currentVtx->setFullCovariance(
             state.vtxInfoMap[currentVtx].constraintVertex.fullCovariance());
-      }
-
-      else if (currentVtx->fullCovariance() == SymMatrix4::Zero()) {
+      } else if (currentVtx->fullCovariance() == SymMatrix4::Zero()) {
         return VertexingError::NoCovariance;
       }
       double weight =

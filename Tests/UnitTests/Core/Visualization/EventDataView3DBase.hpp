@@ -246,7 +246,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
 
   const Surface* rSurface = &rStart.referenceSurface();
 
-  using KalmanFitter = KalmanFitter<RecoPropagator>;
+  using KalmanFitter = KalmanFitter<RecoPropagator, VectorMultiTrajectory>;
 
   KalmanFitter kFitter(rPropagator);
 
@@ -255,11 +255,15 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   Acts::GainMatrixUpdater kfUpdater;
   Acts::GainMatrixSmoother kfSmoother;
 
-  KalmanFitterExtensions extensions;
-  extensions.calibrator.connect<&Test::testSourceLinkCalibrator>();
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
-      &kfSmoother);
+  KalmanFitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&Test::testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.updater
+      .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
+          &kfUpdater);
+  extensions.smoother
+      .connect<&Acts::GainMatrixSmoother::operator()<VectorMultiTrajectory>>(
+          &kfSmoother);
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
                                 LoggerWrapper{*logger},

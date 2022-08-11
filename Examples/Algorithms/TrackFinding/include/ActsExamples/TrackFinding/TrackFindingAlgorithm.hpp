@@ -27,9 +27,10 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   /// Track finder function that takes input measurements, initial trackstate
   /// and track finder options and returns some track-finder-specific result.
   using TrackFinderOptions =
-      Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator>;
-  using TrackFinderResult =
-      std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult>>;
+      Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
+                                             Acts::VectorMultiTrajectory>;
+  using TrackFinderResult = std::vector<Acts::Result<
+      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>;
 
   /// Find function that takes the above parameters
   /// @note This is separated into a virtual interface to keep compilation units
@@ -58,6 +59,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output find trajectories collection.
     std::string outputTrajectories;
+    /// Output track parameters collection.
+    std::string outputTrackParameters;
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
@@ -84,9 +87,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
 
  private:
   template <typename source_link_accessor_container_t>
-  void computeSharedHits(
-      const source_link_accessor_container_t& sourcelinks,
-      std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult>>&) const;
+  void computeSharedHits(const source_link_accessor_container_t& sourcelinks,
+                         TrackFinderResult&) const;
 
  private:
   Config m_cfg;
@@ -95,8 +97,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
 template <typename source_link_accessor_container_t>
 void TrackFindingAlgorithm::computeSharedHits(
     const source_link_accessor_container_t& sourceLinks,
-    std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult>>& results)
-    const {
+    TrackFinderResult& results) const {
   // Compute shared hits from all the reconstructed tracks
   // Compute nSharedhits and Update ckf results
   // hit index -> list of multi traj indexes [traj, meas]
