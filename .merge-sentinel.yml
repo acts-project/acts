@@ -1,0 +1,31 @@
+rules:
+  - required_checks:
+      - Lint PR / Validate PR title
+      - WIP
+      - milestone-set
+    required_pattern:
+      - "review-required: *"
+
+  - branch_filter:
+     - "main"
+     - "develop/*"
+    paths_ignore:
+     - "docs/*" 
+
+    required_checks:
+     - codecov/project
+     - Docs / docs
+     - Analysis / build_debug
+
+    required_pattern:
+     - "Builds / *"
+     - "Checks / *"
+     - "CI Bridge / *"
+
+  - branch_filter:
+     - "main"
+     - "develop/*"
+    paths:
+     - "docs/*" 
+    required_checks:
+     - Docs / docs
