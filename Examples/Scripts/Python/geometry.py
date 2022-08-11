@@ -29,7 +29,7 @@ def runGeometry(
     outputCsv=True,
     outputJson=True,
     outputRoot=True,
-    outputSvg=True,
+    outputSvg=False,
 ):
 
     for ievt in range(events):
