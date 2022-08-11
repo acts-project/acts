@@ -319,9 +319,6 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     const auto& hitParticlesMap =
         ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
-    // @TODO: Make configurable
-    double truthMatchProbMin = 0.5;
-
     SimParticleContainer associatedTruthParticles;
 
     for (size_t i = 0; i < inputFittedTracks.size(); i++) {
@@ -340,7 +337,8 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
           traj.multiTrajectory(), tip);
 
-      if (nMajorityHits * 1. / trajState.nMeasurements < truthMatchProbMin) {
+      if (nMajorityHits * 1. / trajState.nMeasurements <
+          m_cfg.truthMatchProbMin) {
         continue;
       }
 

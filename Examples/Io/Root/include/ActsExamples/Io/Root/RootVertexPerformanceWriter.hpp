@@ -62,6 +62,9 @@ class RootVertexPerformanceWriter final
     /// Minimum fraction of tracks matched between truth
     /// and reco vertices to be matched for resolution plots
     double minTrackVtxMatchFraction = 0.5;
+    /// Minimum fraction of hits associated to particle to consider
+    /// as truth matched
+    double truthMatchProbMin = 0.5;
   };
 
   /// Constructor
