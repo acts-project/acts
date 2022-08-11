@@ -21,7 +21,7 @@
 
 namespace ActsExamples {
 
-/// Standardardized XYZ accessor
+/// Standard XYZ accessor
 ///
 struct AccessorXYZ {
   template <typename T>
@@ -40,7 +40,7 @@ struct AccessorXYZ {
   }
 };
 
-/// Standardardized XYZ accessor from a position() call
+/// Standard XYZ accessor from a position() call
 ///
 struct AccessorPositionXYZ {
   template <typename T>
@@ -85,6 +85,9 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
     Acts::ActsScalar spSize = 10.;  //!< size of the space point to be drawn
     Acts::Svg::Style spStyle =
         s_pointStyle;  //!< The style of the space point to be drawn
+
+    std::string infoBoxTitle = "";  //!< If an info box title is set, draw it
+    Acts::Svg::Style infoBoxStyle = s_infoStyle;  // The style of the info box
 
     bool projectionXY = true;  ///< xy projection
     std::array<Acts::ActsScalar, 2> zRangeXY = {
@@ -147,6 +150,7 @@ ActsExamples::ProcessCode ActsExamples::SvgPointWriter<T, Acc>::writeT(
       perEventFilepath(m_cfg.outputDir, "pointsZR.svg", context.eventNumber);
 
   Acts::Svg::TrackingGeometryProjections::Options tgpOptions;
+  tgpOptions.trackingGeometryOptions = m_cfg.trackingGeometryOptions;
   auto [xyView, zrView] = Acts::Svg::TrackingGeometryProjections::convert(
       context.geoContext, *m_cfg.trackingGeometry, tgpOptions);
 
@@ -161,11 +165,20 @@ ActsExamples::ProcessCode ActsExamples::SvgPointWriter<T, Acc>::writeT(
       auto p = Acts::Svg::EventDataConverter::pointXY(point3D, m_cfg.spSize,
                                                       m_cfg.spStyle, id);
       xyView.add_object(p);
+      // Draw a connected text box
+      if (not m_cfg.infoBoxTitle.empty()) {
+        auto xyIbox = Acts::Svg::infoBox(
+            static_cast<actsvg::scalar>(point3D.x() + 10.),
+            static_cast<actsvg::scalar>(point3D.y() - 10.), m_cfg.infoBoxTitle,
+            {"Position: " + Acts::toString(point3D)}, m_cfg.infoBoxStyle, p);
+        xyView.add_object(xyIbox);
+      }
     }
     // Draw the zy view
     if (m_cfg.projectionZR) {
       auto p = Acts::Svg::EventDataConverter::pointZR(point3D, m_cfg.spSize,
                                                       m_cfg.spStyle, id);
+
       zrView.add_object(p);
     }
     ++id;

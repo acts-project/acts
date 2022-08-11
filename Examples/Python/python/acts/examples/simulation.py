@@ -469,7 +469,8 @@ def addSimWriters(
         sc = acts.examples.SvgSimHitWriter.Config(
             writerName = 'SvgSimHitWriter',
             inputCollection=inputSimHits,
-            trackingGeometry=trackingGeometry)
+            trackingGeometry=trackingGeometry,
+            infoBoxTitle = "SimHit")
 
         s.addWriter(
             acts.examples.SvgSimHitWriter(

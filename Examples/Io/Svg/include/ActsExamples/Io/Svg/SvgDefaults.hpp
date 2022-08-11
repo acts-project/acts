@@ -15,16 +15,26 @@
 namespace {
 
 static inline Acts::Svg::Style layerStyle() {
-  Acts::Svg::Style defaultStyle;
-  defaultStyle.fillColor = {51, 153, 255};
-  defaultStyle.fillOpacity = 0.75;
-  defaultStyle.highlightColor = {255, 153, 51};
-  defaultStyle.highlights = {"mouseover", "mouseout"};
-  defaultStyle.strokeColor = {25, 25, 25};
-  defaultStyle.strokeWidth = 0.5;
-  defaultStyle.nSegments = 72u;
+  Acts::Svg::Style lStyle;
+  lStyle.fillColor = {51, 153, 255};
+  lStyle.fillOpacity = 0.75;
+  lStyle.highlightColor = {255, 153, 51};
+  lStyle.highlights = {"mouseover", "mouseout"};
+  lStyle.strokeColor = {25, 25, 25};
+  lStyle.strokeWidth = 0.5;
+  lStyle.nSegments = 72u;
 
-  return defaultStyle;
+  return lStyle;
+};
+
+
+static inline Acts::Svg::Style infoStyle() {
+  Acts::Svg::Style iStyle;
+  iStyle.fillColor = {0, 0, 180};
+  iStyle.fillOpacity = 0.8;
+  iStyle.highlights = {};
+  iStyle.fontSize = 40.;
+  return iStyle;
 };
 
 static inline Acts::Svg::Style backgroundStyle() {
@@ -97,12 +107,14 @@ backgroundGeometryOptions() {
 
 namespace ActsExamples {
 
-static Acts::Svg::Style s_defaultLayerStyle = layerStyle();
+static Acts::Svg::Style s_layerStyle = layerStyle();
 
 static Acts::Svg::Style s_pointStyle = pointStyle();
 
+static Acts::Svg::Style s_infoStyle = infoStyle();
+
 static Acts::Svg::TrackingGeometryConverter::Options
-    s_defaultTrackingGeometryOptions = trackingGeometryOptions();
+    s_trackingGeometryOptions = trackingGeometryOptions();
 
 static Acts::Svg::TrackingGeometryConverter::Options
     s_backgroundTrackingGeometryOptions = backgroundGeometryOptions();
