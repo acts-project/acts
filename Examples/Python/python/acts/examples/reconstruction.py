@@ -682,6 +682,7 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
+        outputTrackParameters="fittedTrackParameters",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
@@ -841,7 +842,7 @@ def addVertexFitting(
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
     associatedParticles: str = "particles_input",
-    trackParameters: str = "estimatedparameters",
+    trackParameters: str = "trackparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
 ):
