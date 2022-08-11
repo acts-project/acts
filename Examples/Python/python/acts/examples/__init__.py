@@ -211,39 +211,77 @@ def dump_args(func):
             print(f"{func.__module__}.{func.__qualname__} ( {func_args_str} )")
         return func(*args, **kwargs)
 
+    # fix up any attributes broken by the wrapping
+    for name in dir(func):
+        if not name.startswith("__"):
+            obj = getattr(func, name)
+            wrapped = getattr(dump_args_wrapper, name, None)
+            if type(obj) is not type(wrapped):
+                setattr(dump_args_wrapper, name, obj)
+
     return dump_args_wrapper
 
 
-def dump_args_calls(myLocal=None, mods=[acts, sys.modules[__name__]]):
+def dump_args_calls(myLocal=None, mods=None, quiet=False):
     """
-    Wrap all calls to acts and acts.examples Python bindings in dump_args.
+    Wrap all Python bindings calls to acts and its submodules in dump_args.
     Specify myLocal=locals() to include imported symbols too.
     """
     import collections
 
-    if not isinstance(mods, list):
+    def _allmods(mod, base, found):
+        import types
+
+        mods = [mod]
+        found.add(mod)
+        for name, obj in sorted(
+            vars(mod).items(),
+            key=lambda m: (2, m[0])
+            if m[0] == "ActsPythonBindings"
+            else (1, m[0])
+            if m[0].startswith("_")
+            else (0, m[0]),
+        ):
+            if (
+                not name.startswith("__")
+                and type(obj) is types.ModuleType
+                and obj.__name__.startswith(base)
+                and f"{mod.__name__}.{name}" in sys.modules
+                and obj not in found
+            ):
+                mods += _allmods(obj, base, found)
+        return mods
+
+    if mods is None:
+        mods = _allmods(acts, "acts.", set())
+    elif not isinstance(mods, list):
         mods = [mods]
+
+    donemods = []
+    alldone = 0
     for mod in mods:
+        done = 0
         for name in dir(mod):
-            if name.startswith("_"):
-                continue
-            # if name in {"Config", "Interval", "IMaterialDecorator"}: continue  # if we don't fix up attributes below and unwrap references elsewhere, skip these classes
-            obj = getattr(mod, name)
+            # if name in {"Config", "Interval", "IMaterialDecorator"}: continue  # skip here if we don't fix up attributes in dump_args and unwrap classes elsewhere
+            obj = getattr(mod, name, None)
             if not (
-                isinstance(obj, collections.abc.Callable)
+                not name.startswith("__")
+                and isinstance(obj, collections.abc.Callable)
+                and hasattr(obj, "__module__")
                 and obj.__module__.startswith("acts.ActsPythonBindings")
                 and not hasattr(obj, "__wrapped__")
             ):
                 continue
-            dump_args_calls(myLocal, [obj])  # wrap class's contained methods
+            # wrap class's contained methods
+            done += dump_args_calls(myLocal, [obj], True)
             wrapped = dump_args(obj)
-            for subname in dir(obj):  # fix up any attributes broken by the wrapping
-                if not subname.startswith("_"):
-                    sub = getattr(obj, subname)
-                    subwrapped = getattr(wrapped, subname, None)
-                    if type(sub) is not type(subwrapped):
-                        setattr(wrapped, subname, sub)
             setattr(mod, name, wrapped)
             if myLocal and hasattr(myLocal, name):
                 setattr(myLocal, name, wrapped)
-    return
+            done += 1
+        if done:
+            alldone += done
+            donemods.append(f"{mod.__name__}:{done}")
+    if not quiet and donemods:
+        print("dump_args for module functions:", ", ".join(donemods))
+    return alldone
