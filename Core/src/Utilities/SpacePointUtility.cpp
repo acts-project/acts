@@ -15,10 +15,9 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
     const Vector3& pos1, const Vector3& pos2, const Vector3& posVertex,
     const double maxDistance, const double maxAngleTheta2,
     const double maxAnglePhi2) const {
-  std::error_code error;
   // Check if measurements are close enough to each other
   if ((pos1 - pos2).norm() > maxDistance) {
-    return Result<double>::failure(error);
+    return Result<double>::failure(m_error);
   }
 
   // Calculate the angles of the vectors
@@ -29,12 +28,12 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
   // Calculate the squared difference between the theta angles
   double diffTheta2 = (theta1 - theta2) * (theta1 - theta2);
   if (diffTheta2 > maxAngleTheta2) {
-    return Result<double>::failure(error);
+    return Result<double>::failure(m_error);
   }
   // Calculate the squared difference between the phi angles
   double diffPhi2 = (phi1 - phi2) * (phi1 - phi2);
   if (diffPhi2 > maxAnglePhi2) {
-    return Result<double>::failure(error);
+    return Result<double>::failure(m_error);
   }
   // Return the squared distance between both vector
   return Result<double>::success(diffTheta2 + diffPhi2);
@@ -162,7 +161,7 @@ Vector2 SpacePointUtility::rhoZCovariance(const GeometryContext& gctx,
   return gcov;
 }
 
-bool SpacePointUtility::calculateStripSPPosition(
+Result<void> SpacePointUtility::calculateStripSPPosition(
     const std::pair<Vector3, Vector3>& stripEnds1,
     const std::pair<Vector3, Vector3>& stripEnds2, const Vector3& posVertex,
     SpacePointParameters& spParams, const double stripLengthTolerance) const {
@@ -194,6 +193,7 @@ bool SpacePointUtility::calculateStripSPPosition(
   spParams.qs = spParams.q.cross(spParams.s);
   spParams.rt = spParams.r.cross(spParams.t);
   spParams.m = -spParams.s.dot(spParams.rt) / spParams.q.dot(spParams.rt);
+  spParams.n = -spParams.t.dot(spParams.qs) / spParams.r.dot(spParams.qs);
 
   // Set the limit for the parameter
   if (spParams.limit == 1. && stripLengthTolerance != 0.) {
@@ -201,26 +201,29 @@ bool SpacePointUtility::calculateStripSPPosition(
   }
 
   // Check if m and n can be resolved in the interval (-1, 1)
-  return (fabs(spParams.m) <= spParams.limit &&
-          fabs(spParams.n = -spParams.t.dot(spParams.qs) /
-                            spParams.r.dot(spParams.qs)) <= spParams.limit);
+  if (fabs(spParams.m) <= spParams.limit && fabs(spParams.n) <= spParams.limit)
+    return Result<void>::success();
+
+  return Result<void>::failure(m_error);
 }
 
-bool SpacePointUtility::recoverSpacePoint(
+Result<void> SpacePointUtility::recoverSpacePoint(
     SpacePointParameters& spParams, double stripLengthGapTolerance) const {
   /// Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
   if (stripLengthGapTolerance <= 0.) {
-    return false;
+    return Result<void>::failure(m_error);
   }
+
   spParams.qmag = spParams.q.norm();
   // Increase the limits. This allows a check if the point is just slightly
   // outside the SDE
   spParams.limitExtended =
       spParams.limit + stripLengthGapTolerance / spParams.qmag;
+
   // Check if m is just slightly outside
   if (fabs(spParams.m) > spParams.limitExtended) {
-    return false;
+    return Result<void>::failure(m_error);
   }
   // Calculate n if not performed previously
   if (spParams.n == 0.) {
@@ -228,9 +231,8 @@ bool SpacePointUtility::recoverSpacePoint(
   }
   // Check if n is just slightly outside
   if (fabs(spParams.n) > spParams.limitExtended) {
-    return false;
+    return Result<void>::failure(m_error);
   }
-
   /// The following code considers an overshoot of m and n in the same direction
   /// of their SDE. The term "overshoot" represents the amount of m or n outside
   /// its regular interval (-1, 1).
@@ -265,8 +267,11 @@ bool SpacePointUtility::recoverSpacePoint(
     spParams.m -= biggerOvershoot;
     spParams.n -= (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
-    return fabs(spParams.m) < spParams.limit &&
-           fabs(spParams.n) < spParams.limit;
+
+    if (fabs(spParams.m) < spParams.limit && fabs(spParams.n) < spParams.limit)
+      return Result<void>::success();
+    else
+      return Result<void>::failure(m_error);
   }
   // Check if both overshoots are in the same direction
   if (spParams.m < -1. && spParams.n < -1.) {
@@ -280,14 +285,14 @@ bool SpacePointUtility::recoverSpacePoint(
     spParams.m += biggerOvershoot;
     spParams.n += (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
-    return fabs(spParams.m) < spParams.limit &&
-           fabs(spParams.n) < spParams.limit;
+    if (fabs(spParams.m) < spParams.limit && fabs(spParams.n) < spParams.limit)
+      return Result<void>::success();
   }
   // No solution could be found
-  return false;
+  return Result<void>::failure(m_error);
 }
 
-double SpacePointUtility::calcPerpendicularProjection(
+Result<double> SpacePointUtility::calcPerpendicularProjection(
     const std::pair<Vector3, Vector3>& stripEnds1,
     const std::pair<Vector3, Vector3>& stripEnds2,
     SpacePointParameters& spParams) const {
@@ -308,16 +313,15 @@ double SpacePointUtility::calcPerpendicularProjection(
   Vector3 ac = stripEnds2.first - stripEnds1.first;
   double qr = (spParams.q).dot(spParams.r);
   double denom = spParams.q.dot(spParams.q) - qr * qr;
-
   // Check for numerical stability
   if (fabs(denom) > 10e-7) {
     // Return lambda0
-    return (ac.dot(spParams.r) * qr -
-            ac.dot(spParams.q) * (spParams.r).dot(spParams.r)) /
-           denom;
+    return Result<double>::success(
+        (ac.dot(spParams.r) * qr -
+         ac.dot(spParams.q) * (spParams.r).dot(spParams.r)) /
+        denom);
   }
-  // lambda0 is in the interval [-1,0]. This return serves as error check.
-  return 1.;
+  return Result<double>::failure(m_error);
 }
 
 }  // namespace Acts

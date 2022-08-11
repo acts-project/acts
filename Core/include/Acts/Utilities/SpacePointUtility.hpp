@@ -107,12 +107,11 @@ class SpacePointUtility {
   /// @param [in] stripLengthTolerance Tolerance scaling factor on the strip
   /// detector element length
   ///
-  /// @return Boolean statement whether the space point calculation was succesful
-  bool calculateStripSPPosition(const std::pair<Vector3, Vector3>& stripEnds1,
-                                const std::pair<Vector3, Vector3>& stripEnds2,
-                                const Vector3& posVertex,
-                                SpacePointParameters& spParams,
-                                const double stripLengthTolerance) const;
+  /// @return Result whether the space point calculation was succesful
+  Result<void> calculateStripSPPosition(
+      const std::pair<Vector3, Vector3>& stripEnds1,
+      const std::pair<Vector3, Vector3>& stripEnds2, const Vector3& posVertex,
+      SpacePointParameters& spParams, const double stripLengthTolerance) const;
 
   /// @brief This function tests if a space point can be estimated by a more
   /// tolerant treatment of construction. In fact, this function indirectly
@@ -124,8 +123,8 @@ class SpacePointUtility {
   /// between strip detector elements
   ///
   /// @return indicator if the test was successful
-  bool recoverSpacePoint(SpacePointParameters& spParams,
-                         double stripLengthGapTolerance) const;
+  Result<void> recoverSpacePoint(SpacePointParameters& spParams,
+                                 double stripLengthGapTolerance) const;
 
   /// @brief Calculates (Delta theta)^2 + (Delta phi)^2 between two measurements
   ///
@@ -152,13 +151,14 @@ class SpacePointUtility {
   /// 1. if it failed
   /// @note The meaning of the parameter is explained in more detail in the
   /// function body
-  double calcPerpendicularProjection(
+  Result<double> calcPerpendicularProjection(
       const std::pair<Vector3, Vector3>& stripEnds1,
       const std::pair<Vector3, Vector3>& stripEnds2,
       SpacePointParameters& spParams) const;
 
  private:
   SpacePointBuilderConfig m_config;
+  std::error_code m_error;
 
   /// @brief Get the first component of the local covariance.
   /// @param meas The measurement

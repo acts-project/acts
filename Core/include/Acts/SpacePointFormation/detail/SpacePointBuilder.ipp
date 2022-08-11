@@ -46,29 +46,28 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
 
     if (!m_config.usePerpProj) {  // default strip SP buildeing
 
-      bool spFound = m_spUtility->calculateStripSPPosition(
+      auto spFound = m_spUtility->calculateStripSPPosition(
           ends1, ends2, m_config.vertex, spParams,
           m_config.stripLengthTolerance);
 
-      if (!spFound) {
+      if (!spFound.ok()) {
         spFound = m_spUtility->recoverSpacePoint(
             spParams, m_config.stripLengthGapTolerance);
       }
 
-      if (!spFound)
+      if (!spFound.ok())
         return;
 
       gPos = 0.5 * (ends1.first + ends1.second + spParams.m * spParams.q);
 
     } else {  // for cosmic without vertex constraint
 
-      double resultPerpProj =
+      auto resultPerpProj =
           m_spUtility->calcPerpendicularProjection(ends1, ends2, spParams);
 
-      if (resultPerpProj > 0.)
+      if (!resultPerpProj.ok())
         return;
-
-      gPos = ends1.first + resultPerpProj * spParams.q;
+      gPos = ends1.first + resultPerpProj.value() * spParams.q;
     }
 
     double theta = acos(spParams.q.dot(spParams.r) /
@@ -121,8 +120,6 @@ void SpacePointBuilder<spacepoint_t>::makeMeasurementPairs(
       auto [gposBack, gcovBack] = m_spUtility->globalCoords(
           gctx, *(measurementsBack[iMeasurementsBack]));
 
-      // currentDiff = m_spUtility->differenceOfMeasurementsChecked(      auto
-      // diff_res =
       auto res = m_spUtility->differenceOfMeasurementsChecked(
           gposFront, gposBack, m_config.vertex, m_config.diffDist,
           m_config.diffPhi2, m_config.diffTheta2);
