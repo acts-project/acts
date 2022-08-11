@@ -1228,3 +1228,25 @@ def test_full_chain_odd_example(tmp_path):
         env=env,
         stderr=subprocess.STDOUT,
     )
+
+
+def test_bfield_writing(tmp_path, seq, assert_root_hash):
+    from bfield_writing import runBFieldWriting
+
+    root_files = [
+        ("solenoid.root", "solenoid", 100),
+        ("solenoid2.root", "solenoid", 100),
+    ]
+
+    for fn, _, _ in root_files:
+        fp = tmp_path / fn
+        assert not fp.exists()
+
+    runBFieldWriting(outputDir=tmp_path, rewrites=1)
+
+    for fn, tn, ee in root_files:
+        fp = tmp_path / fn
+        assert fp.exists()
+        assert fp.stat().st_size > 2**10 * 2
+        assert_entries(fp, tn, ee)
+        assert_root_hash(fn, fp)

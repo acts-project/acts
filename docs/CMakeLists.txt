@@ -24,9 +24,11 @@ file(
   ../Fatras/include/*.hpp
   ../Plugins/include/*.hpp)
 
+set(sphinx_build ${CMAKE_CURRENT_SOURCE_DIR}/_build)
 set(doxygen_index ${CMAKE_CURRENT_SOURCE_DIR}/_build/doxygen-xml/index.xml)
 set(sphinx_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
 set(sphinx_html ${CMAKE_CURRENT_SOURCE_DIR}/_build/html)
+set(sphinx_api ${CMAKE_CURRENT_SOURCE_DIR}/api)
 
 add_custom_command(
   OUTPUT ${doxygen_index}
@@ -65,6 +67,14 @@ add_custom_target(
   DEPENDS ${doxygen_index}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Build full documentation")
+
+add_custom_target(
+  docs-clean
+  COMMAND find ${sphinx_api} -mindepth 1 -type f -and -not -name "api.rst" -delete
+  COMMAND find ${sphinx_api} -mindepth 1 -type d -delete
+  COMMAND rm -rf ${sphinx_build}
+  COMMENT "Cleaning documentation artifacts"
+)
 
 install(
   DIRECTORY ${sphinx_html}/
