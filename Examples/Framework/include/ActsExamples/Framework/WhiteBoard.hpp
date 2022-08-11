@@ -102,15 +102,9 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
   const IHolder* holder = it->second.get();
 
   const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);
-<<<<<<< HEAD
   if (castedHolder == nullptr) {
     throw std::out_of_range("Type mismatch for object '" + name + "'");
   }
-=======
-  if (castedHolder == nullptr){
-      throw std::out_of_range("Type mismatch for object '" + name + "'");
-    }
->>>>>>> fea493157 (adding event data converter)
 
   ACTS_VERBOSE("Retrieved object '" << name << "'");
   return castedHolder->value;

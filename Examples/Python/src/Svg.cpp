@@ -132,6 +132,7 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(writerName);
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(inputCollection);
+    ACTS_PYTHON_MEMBER(infoBoxTitle);
     ACTS_PYTHON_MEMBER(outputDir);
     ACTS_PYTHON_STRUCT_END();
   }
@@ -152,6 +153,7 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_MEMBER(writerName);
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(inputCollection);
+    ACTS_PYTHON_MEMBER(infoBoxTitle);
     ACTS_PYTHON_MEMBER(outputDir);
     ACTS_PYTHON_STRUCT_END();
   }

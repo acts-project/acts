@@ -14,8 +14,8 @@
 #include <array>
 #include <fstream>
 #include <string>
-#include <vector>
 #include <tuple>
+#include <vector>
 
 namespace Acts {
 
@@ -33,6 +33,8 @@ struct Style {
   ActsScalar strokeWidth = 0.5;
   std::array<int, 3> strokeColor = {0, 0, 0};
 
+  ActsScalar fontSize = 14;
+
   unsigned int nSegments = 72u;
 
   /// Conversion to fill and stroke object from the base library
@@ -48,9 +50,8 @@ struct Style {
     str._sc._rgb = strokeColor;
     str._width = strokeWidth;
 
-    return std::tie(fll,str);
+    return std::tie(fll, str);
   }
-
 };
 
 /// Create a group
@@ -110,13 +111,45 @@ inline static actsvg::svg::object measure(ActsScalar xStart, ActsScalar yStart,
 /// @param yMin the minimum y value
 /// @param yMax the maximum y value
 ///
-/// @retrun an svg object
+/// @return an svg object
 inline static actsvg::svg::object axesXY(ActsScalar xMin, ActsScalar xMax,
                                          ActsScalar yMin, ActsScalar yMax) {
   return actsvg::draw::x_y_axes(
       "x_y_axis",
       {static_cast<actsvg::scalar>(xMin), static_cast<actsvg::scalar>(xMax)},
       {static_cast<actsvg::scalar>(yMin), static_cast<actsvg::scalar>(yMax)});
+}
+
+// Helper method to draw axes
+///
+/// @param xPos the minimum x value
+/// @param yPos the maximum x value
+/// @param title the title of the info box
+/// @param info the text of the info box
+/// @param infoBoxStyle the style of the info box
+/// @param object the connected object
+///
+/// @return an svg object
+inline static actsvg::svg::object infoBox(ActsScalar xPos, ActsScalar yPos,
+                                          const std::string& title,
+                                          const std::vector<std::string>& info,
+                                          const Style& infoBoxStyle,
+                                          const actsvg::svg::object& object) {
+  auto [fill, stroke] = infoBoxStyle.fillAndStroke();
+
+  actsvg::style::font titleFont;
+  titleFont._fc = actsvg::style::color{{255, 255, 255}};
+  titleFont._size = infoBoxStyle.fontSize;
+
+  actsvg::style::fill infoFill = fill;
+  infoFill._fc._opacity = 0.4;
+  actsvg::style::font infoFont;
+  infoFont._size = infoBoxStyle.fontSize;
+
+  return actsvg::draw::connected_info_box(
+      object._id + "_infoBox",
+      {static_cast<actsvg::scalar>(xPos), static_cast<actsvg::scalar>(yPos)},
+      title, fill, titleFont, info, infoFill, infoFont, stroke, object);
 }
 
 /// Helper method to write to file
