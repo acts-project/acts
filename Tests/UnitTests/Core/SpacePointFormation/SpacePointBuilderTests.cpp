@@ -286,7 +286,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     spBuilderConfig_badStrips.trackingGeometry = geometry;
     spBuilderConfig_badStrips.vertex = vertex;
     spBuilderConfig_badStrips.stripLengthTolerance = 0.0001;
-    spBuilderConfig_badStrips.stripLengthGapTolerance = 5.;
+    spBuilderConfig_badStrips.stripLengthGapTolerance = 50.;
     auto spBuilder_badStrips = Acts::SpacePointBuilder<TestSpacePoint>(
         spBuilderConfig_badStrips, spConstructor);
     // sp building with the recovery method
