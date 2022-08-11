@@ -38,6 +38,8 @@ from acts.examples.reconstruction import (
     TrackParamsEstimationConfig,
     addCKFTracks,
     CKFPerformanceConfig,
+    addVertexFitting,
+    VertexFinder,
 )
 
 
@@ -111,12 +113,18 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
 
         rnd = acts.examples.RandomNumbers(seed=42)
 
+        vtxGen = acts.examples.GaussianVertexGenerator(
+            stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
+            mean=acts.Vector4(0, 0, 0, 0),
+        )
+
         s = addParticleGun(
             s,
             EtaConfig(-4.0, 4.0),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
-            multiplicity=2,
+            vtxGen=vtxGen,
+            multiplicity=201,
             rnd=rnd,
         )
 
@@ -175,12 +183,33 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             outputDirCsv=None,
         )
 
+        s.addAlgorithm(
+            acts.examples.TrackSelector(
+                level=acts.logging.INFO,
+                inputTrackParameters="fittedTrackParameters",
+                outputTrackParameters="trackparameters",
+                outputTrackIndices="outputTrackIndices",
+                removeNeutral=True,
+                absEtaMax=2.5,
+                loc0Max=4.0 * u.mm,  # rho max
+                ptMin=500 * u.MeV,
+            )
+        )
+
+        s = addVertexFitting(
+            s,
+            field,
+            vertexFinder=VertexFinder.Iterative,
+            outputDirRoot=tp,
+        )
+
         s.run()
         del s
 
-        perf_file = tp / "performance_ckf.root"
-        assert perf_file.exists(), "Performance file not found"
-        shutil.copy(perf_file, outdir / f"performance_ckf_tracks_{label}.root")
+        for stem in "performance_ckf", "performance_vertexing":
+            perf_file = tp / f"{stem}.root"
+            assert perf_file.exists(), "Performance file not found"
+            shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
 
         if not truthSmearedSeeded and not truthEstimatedSeeded:
             residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"

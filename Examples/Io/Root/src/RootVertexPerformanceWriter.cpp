@@ -326,7 +326,6 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
 
     for (size_t i = 0; i < inputFittedTracks.size(); i++) {
       // ACTS_VERBOSE("i=" << i);
-      const auto& fittedTrack = inputFittedTracks[i];
       auto fittedTrackIndex = trackIndices[i];
       // ACTS_VERBOSE("fittedTrackIndex=" << fittedTrackIndex);
       auto& [iTraj, tip] = allTracksTips[fittedTrackIndex];
