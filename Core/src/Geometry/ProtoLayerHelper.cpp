@@ -29,7 +29,7 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   /// @return the referece of the SurfaceCluster for insertion
   auto findCluster = [&](const Extent& extent) -> SurfaceCluster& {
     for (auto& cluster : clusteredSurfaces) {
-      if (cluster.first.intersects(extent, sorting.first, sorting.second)) {
+      if (cluster.first.intersects(extent)) {
         return cluster;
       }
     }
@@ -41,6 +41,8 @@ std::vector<Acts::ProtoLayer> Acts::ProtoLayerHelper::protoLayers(
   // Loop over surfaces and sort into clusters
   for (auto& sf : surfaces) {
     auto sfExtent = sf->polyhedronRepresentation(gctx, 1).extent();
+    // @todo add sorting.first, sorting.second
+    sfExtent.envelope()[sorting.first] = {sorting.second, sorting.second};
     auto& sfCluster = findCluster(sfExtent);
     sfCluster.first.extend(sfExtent);
     sfCluster.second.push_back(sf);

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,7 +23,7 @@ using namespace UnitLiterals;
 
 namespace Test {
 
-BOOST_AUTO_TEST_SUITE(Geometry)
+BOOST_AUTO_TEST_SUITE(Core)
 
 /// Unit tests for Polyderon construction & operator +=
 BOOST_AUTO_TEST_CASE(ExtentTest) {
@@ -32,10 +32,10 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
       Vector3(15_mm, 3_mm, -10_mm),  Vector3(15_mm, -3_mm, 10_mm),
       Vector3(18_mm, 0_mm, 10_mm),   Vector3(15_mm, 3_mm, 10_mm)};
 
-  // Create an Extent
+  // Create an Extent / without envelope
   Extent gExt;
   for (const auto& v : vertices) {
-    gExt.check(v);
+    gExt.extend(v);
   }
 
   double phiMin = std::atan2(-3_mm, 15_mm);
@@ -53,48 +53,89 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   CHECK_CLOSE_ABS(gExt.min(binPhi), phiMin, 1e-6);
   CHECK_CLOSE_ABS(gExt.max(binPhi), phiMax, 1e-6);
 
+  // Call with histogram filling
+  Extent gExtHist;
+  for (const auto& v : vertices) {
+    gExtHist.extend(v, {binX}, false, true);
+  }
+  const auto& vHist = gExtHist.valueHistograms();
+  auto xVals = vHist[binX];
+
+  BOOST_CHECK(xVals.size() == 6u);
+  std::vector<ActsScalar> reference = {15_mm, 18_mm, 15_mm,
+                                       15_mm, 18_mm, 15_mm};
+  BOOST_CHECK(xVals == reference);
+
+  // Call with ieterator range
+  Extent gExtItr;
+  gExtItr.extend(vertices.begin(), vertices.end());
+  CHECK_CLOSE_ABS(gExtItr.min(binX), 15_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtItr.max(binX), 18_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtItr.min(binY), -3_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtItr.max(binY), 3_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtItr.min(binZ), -10_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtItr.max(binZ), 10_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtItr.min(binR), rMin, 1e-6);
+  CHECK_CLOSE_ABS(gExtItr.max(binR), 18_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtItr.min(binPhi), phiMin, 1e-6);
+  CHECK_CLOSE_ABS(gExtItr.max(binPhi), phiMax, 1e-6);
+
   // Create a second Extent
-  Extent otherExt;
-  otherExt.extend(gExt);
+  Extent gExtCopy;
+  gExtCopy.extend(gExt);
 
-  CHECK_CLOSE_ABS(otherExt.min(binX), 15_mm, 1e-6);
-  CHECK_CLOSE_ABS(otherExt.max(binX), 18_mm, 1e-6);
-  CHECK_CLOSE_ABS(otherExt.min(binY), -3_mm, 1e-6);
-  CHECK_CLOSE_ABS(otherExt.max(binY), 3_mm, 1e-6);
-  CHECK_CLOSE_ABS(otherExt.min(binZ), -10_mm, 1e-6);
-  CHECK_CLOSE_ABS(otherExt.max(binZ), 10_mm, 1e-6);
-  CHECK_CLOSE_ABS(otherExt.min(binR), rMin, 1e-6);
-  CHECK_CLOSE_ABS(otherExt.max(binR), 18_mm, 1e-6);
-  CHECK_CLOSE_ABS(otherExt.min(binPhi), phiMin, 1e-6);
-  CHECK_CLOSE_ABS(otherExt.max(binPhi), phiMax, 1e-6);
-}
+  CHECK_CLOSE_ABS(gExtCopy.min(binX), 15_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtCopy.max(binX), 18_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtCopy.min(binY), -3_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtCopy.max(binY), 3_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtCopy.min(binZ), -10_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtCopy.max(binZ), 10_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtCopy.min(binR), rMin, 1e-6);
+  CHECK_CLOSE_ABS(gExtCopy.max(binR), 18_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtCopy.min(binPhi), phiMin, 1e-6);
+  CHECK_CLOSE_ABS(gExtCopy.max(binPhi), phiMax, 1e-6);
 
-BOOST_AUTO_TEST_CASE(ExtentTestIntersects) {
-  Extent aExtent;
-  aExtent.ranges = {{1, 2},    {2, 3},   {4, 5},   {2., sqrt(5.)}, {-0.1, 1.4},
-                    {-4., 4.}, {0., 0.}, {1., 2.}, {0., sqrt(9.)}};
+  // Check containment
+  Extent unbound;
+  BOOST_CHECK(unbound.contains(gExt));
+  BOOST_CHECK(unbound.contains(gExtCopy));
 
-  Extent bExtent;
-  bExtent.ranges = {{-2, -1},        {1, 2.5},    {6, 8},
-                    {0., sqrt(12.)}, {-0.1, 1.4}, {-2., 2.},
-                    {0., 0.},        {-2., 0.},   {0., sqrt(9.)}};
+  // Check application of an envelope on it
+  ExtentEnvelope xEnvelopes = zeroEnvelopes;
+  xEnvelopes[binX] = {1., 2.};
 
-  // They certainly intersect
-  BOOST_CHECK(aExtent.intersects(bExtent));
-  // They do not intersect in x
-  BOOST_CHECK(!aExtent.intersects(bExtent, binX));
-  // They do with a large tolerance though in x
-  BOOST_CHECK(aExtent.intersects(bExtent, binX, 3.));
-  // They do intersect in y
-  BOOST_CHECK(aExtent.intersects(bExtent, binY));
-  // They do not intersect in z
-  BOOST_CHECK(!aExtent.intersects(bExtent, binZ));
-  // They do intersect in r
-  BOOST_CHECK(aExtent.intersects(bExtent, binR));
-  // They do not intersect in eta
-  BOOST_CHECK(!aExtent.intersects(bExtent, binEta));
-  // They do intersect with tolerance in eta
-  BOOST_CHECK(aExtent.intersects(bExtent, binEta, 3.));
+  // Take the extent and extend by an envelope
+  Extent envelope(xEnvelopes);
+  gExt.extend(envelope);
+  // Changed ones
+  CHECK_CLOSE_ABS(gExt.min(binX), 14_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExt.max(binX), 20_mm, 1e-6);
+  // Unchanged ones
+  CHECK_CLOSE_ABS(gExt.min(binY), -3_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExt.max(binY), 3_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExt.min(binZ), -10_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExt.max(binZ), 10_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExt.min(binR), rMin, 1e-6);
+  CHECK_CLOSE_ABS(gExt.max(binR), 18_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExt.min(binPhi), phiMin, 1e-6);
+  CHECK_CLOSE_ABS(gExt.max(binPhi), phiMax, 1e-6);
+
+  // Fill it with envelope
+  Extent gExtEnv(envelope);
+  gExtEnv.extend(vertices.begin(), vertices.end());
+  // Changed ones
+  CHECK_CLOSE_ABS(gExtEnv.min(binX), 14_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExtEnv.max(binX), 20_mm, 1e-6);
+
+  // Check the set method
+  gExt.set(binX, 2_mm, 8_mm);
+  CHECK_CLOSE_ABS(gExt.min(binX), 2_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExt.max(binX), 8_mm, 1e-6);
+
+  // Radius can not go below 0
+  gExt.set(binR, -2_mm, 18_mm);
+  CHECK_CLOSE_ABS(gExt.min(binR), 0_mm, 1e-6);
+  CHECK_CLOSE_ABS(gExt.max(binR), 18_mm, 1e-6);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
