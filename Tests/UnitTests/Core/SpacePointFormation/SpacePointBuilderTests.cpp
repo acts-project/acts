@@ -77,7 +77,8 @@ const Vector2 getLocalPos(const TestMeasurement* meas) {
 
 std::pair<Vector3, Vector3> stripEnds(
     const std::shared_ptr<const TrackingGeometry> geo,
-    const GeometryContext& gctx, const TestMeasurement* meas) {
+    const GeometryContext& gctx, const TestMeasurement* meas,
+    const double stripFrac = 0.4) {
   const auto lpos = getLocalPos(meas);
   Vector3 globalFakeMom(1, 1, 1);
   const SourceLink* slink =
@@ -85,18 +86,17 @@ std::pair<Vector3, Vector3> stripEnds(
   const auto geoId = slink->geometryId();
   const Surface* surface = geo->findSurface(geoId);
 
-  const double theta = 0.02;
-  const double stripLength = 40;
-  double frac = 0.4;
-  double end1x = lpos[0] + stripLength * frac * cos(theta);
-  double end1y = lpos[1] + stripLength * frac * sin(theta);
-  double end2x = lpos[0] - stripLength * frac * cos(theta);
-  double end2y = lpos[1] - stripLength * frac * sin(theta);
-  Vector2 lpos1(end1x, end1y);
-  Vector2 lpos2(end2x, end2y);
+  const double stripLength = 40.;
+  const double end1x = lpos[0] + stripLength * stripFrac;
+  const double end1y = lpos[1];
+  const double end2x = lpos[0] - stripLength * (1 - stripFrac);
+  const double end2y = lpos[1];
+  const Vector2 lpos1(end1x, end1y);
+  const Vector2 lpos2(end2x, end2y);
 
   auto gPos1 = surface->localToGlobal(gctx, lpos1, globalFakeMom);
   auto gPos2 = surface->localToGlobal(gctx, lpos2, globalFakeMom);
+
   return std::make_pair(gPos1, gPos2);
 }
 
@@ -236,7 +236,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     spBuilder.buildSpacePoint(geoCtx, measVect, spOpt,
                               std::back_inserter(spacePoints));
   }
-
+  BOOST_CHECK_EQUAL(spacePoints.size(), 2);
   std::vector<std::pair<const TestMeasurement*, const TestMeasurement*>>
       measPairs;
 
@@ -253,7 +253,6 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
 
     const std::pair<Vector3, Vector3> end1 = stripEnds(geometry, geoCtx, meas1);
     const std::pair<Vector3, Vector3> end2 = stripEnds(geometry, geoCtx, meas2);
-
     std::shared_ptr<const TestSpacePoint> spacePoint = nullptr;
     std::pair<const std::pair<Vector3, Vector3>,
               const std::pair<Vector3, Vector3>>
@@ -263,12 +262,41 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     measVect.emplace_back(meas2);
 
     SpacePointOptions spOpt{strippair};
-
+    // nominal strip sp building
     spBuilder.buildSpacePoint(geoCtx, measVect, spOpt,
                               std::back_inserter(spacePoints));
 
+    // sp building without vertex constraint
     spBuilder_perp.buildSpacePoint(geoCtx, measVect, spOpt,
                                    std::back_inserter(spacePoints));
+
+    // put measurements slightly outside strips to test recovery
+    const std::pair<Vector3, Vector3> end3 =
+        stripEnds(geometry, geoCtx, meas1, 1.01);
+    const std::pair<Vector3, Vector3> end4 =
+        stripEnds(geometry, geoCtx, meas2, 1.02);
+    // the other side of the strips
+    const std::pair<Vector3, Vector3> end5 =
+        stripEnds(geometry, geoCtx, meas1, -0.01);
+    const std::pair<Vector3, Vector3> end6 =
+        stripEnds(geometry, geoCtx, meas2, -0.02);
+
+    auto spBuilderConfig_badStrips = SpacePointBuilderConfig();
+
+    spBuilderConfig_badStrips.trackingGeometry = geometry;
+    spBuilderConfig_badStrips.vertex = vertex;
+    spBuilderConfig_badStrips.stripLengthTolerance = 0.0001;
+    spBuilderConfig_badStrips.stripLengthGapTolerance = 5.;
+    auto spBuilder_badStrips = Acts::SpacePointBuilder<TestSpacePoint>(
+        spBuilderConfig_badStrips, spConstructor);
+    // sp building with the recovery method
+    SpacePointOptions spOpt_badStrips1{std::make_pair(end3, end4)};
+    spBuilder_badStrips.buildSpacePoint(geoCtx, measVect, spOpt_badStrips1,
+                                        std::back_inserter(spacePoints));
+
+    SpacePointOptions spOpt_badStrips2{std::make_pair(end5, end6)};
+    spBuilder_badStrips.buildSpacePoint(geoCtx, measVect, spOpt_badStrips2,
+                                        std::back_inserter(spacePoints));
   }
 
   for (auto& sp : spacePoints) {
@@ -277,7 +305,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
               << std::endl;
   }
 
-  BOOST_CHECK_EQUAL(spacePoints.size(), 6);
+  BOOST_CHECK_EQUAL(spacePoints.size(), 10);
 }
 
 }  // end of namespace Test
