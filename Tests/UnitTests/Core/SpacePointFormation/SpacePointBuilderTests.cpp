@@ -227,6 +227,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
       spBuilderConfig_perp, spConstructor);
 
   TestSpacePointContainer spacePoints;
+  TestSpacePointContainer spacePoints_extra;
 
   for (auto& meas : singleHitMeasurements) {
     std::vector<const TestMeasurement*> measVect;
@@ -292,11 +293,11 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     // sp building with the recovery method
     SpacePointOptions spOpt_badStrips1{std::make_pair(end3, end4)};
     spBuilder_badStrips.buildSpacePoint(geoCtx, measVect, spOpt_badStrips1,
-                                        std::back_inserter(spacePoints));
+                                        std::back_inserter(spacePoints_extra));
 
     SpacePointOptions spOpt_badStrips2{std::make_pair(end5, end6)};
     spBuilder_badStrips.buildSpacePoint(geoCtx, measVect, spOpt_badStrips2,
-                                        std::back_inserter(spacePoints));
+                                        std::back_inserter(spacePoints_extra));
   }
 
   for (auto& sp : spacePoints) {
@@ -304,8 +305,14 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
               << ") var (r,z): " << sp.varianceR() << " " << sp.varianceZ()
               << std::endl;
   }
+  std::cout << "space points produced with bad strips:" << std::endl;
+  for (auto& sp : spacePoints_extra) {
+    std::cout << "space point (" << sp.x() << " " << sp.y() << " " << sp.z()
+              << ") var (r,z): " << sp.varianceR() << " " << sp.varianceZ()
+              << std::endl;
+  }
 
-  BOOST_CHECK_EQUAL(spacePoints.size(), 10);
+  BOOST_CHECK_EQUAL(spacePoints.size(), 6);
 }
 
 }  // end of namespace Test
