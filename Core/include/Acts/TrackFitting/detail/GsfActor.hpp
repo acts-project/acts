@@ -429,7 +429,7 @@ struct GsfActor {
 
     // We must differ between surface types, since there can be different
     // local coordinates
-    detail::angleDescriptionSwitch(surface, [&](const auto &desc){
+    detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
       detail::reduceWithKLDistance(cmps, final_cmp_number, proj, desc);
     });
   }

@@ -12,8 +12,8 @@
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
-#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
 
 #include <random>
@@ -240,8 +240,8 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   const auto mean_data = mean(samples);
   const auto boundCov_data = boundCov(samples, mean_data);
 
-  const auto [mean_test, boundCov_test] = detail::combineGaussianMixture(
-      cmps, Identity{}, std::tuple<>{});
+  const auto [mean_test, boundCov_test] =
+      detail::combineGaussianMixture(cmps, Identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
@@ -328,13 +328,12 @@ BOOST_AUTO_TEST_CASE(test_disc_surface) {
 BOOST_AUTO_TEST_CASE(test_perigee_surface) {
   const auto desc = detail::AngleDescription<Surface::Plane>::Desc{};
 
-  const auto surface =
-      Surface::makeShared<PerigeeSurface>(Vector3{0,0,0});
+  const auto surface = Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0});
 
   const auto z = 5;
   const auto d = 1;
 
-  const LocPosArray p{{{d, z}, {d, -z}, {2*d, z}, {2*d, -z}}};
+  const LocPosArray p{{{d, z}, {d, -z}, {2 * d, z}, {2 * d, -z}}};
 
   // Here we expect a very bad approximation
   test_surface(*surface, desc, p, 1.);
