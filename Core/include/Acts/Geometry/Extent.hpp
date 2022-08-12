@@ -97,7 +97,7 @@ class Extent {
 
   /// (re-)Set the envelope
   ///
-  /// @param the new envelope to be set
+  /// @param envelope new envelope to be set
   void setEnvelope(const ExtentEnvelope& envelope = zeroEnvelopes);
 
   /// Return the individual 1-dimensional range
@@ -136,6 +136,8 @@ class Extent {
   const ExtentEnvelope& envelope() const;
 
   /// Return the histogram store
+  ///
+  /// The histogram stroe can be used for automated binning detection 
   const std::array<std::vector<ActsScalar>, binValues>& valueHistograms() const;
 
   /// Access the minimum parameter
@@ -170,7 +172,7 @@ class Extent {
   /// @param bValue is the binning value, if set to binValues
   ///               the check on all is done
   ///
-  /// @return true if the rhs is contained
+  /// @return true if the rhs intersects
   bool intersects(const Extent& rhs, BinningValue bVbVAlueal = binValues) const;
 
   /// Constraints check
