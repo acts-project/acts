@@ -74,7 +74,7 @@ class Extent {
   /// current range to the boundaries of the @param rhs extent,
   /// unless the current extent is already bigger.
   ///
-  /// @note the @param rhs extent can also simply set an envelope
+  /// @note the extent can also simply set an envelope
   /// which then is applied to the current one
   ///
   /// @param rhs is the other source Extent
@@ -88,7 +88,7 @@ class Extent {
               const std::vector<BinningValue>& bValues = s_binningValues,
               bool applyEnv = true);
 
-  /// Set a range
+  /// Set a range for a dedicated binning value
   ///
   /// @param bValue the binning identification
   /// @param min the minimum parameter
@@ -137,7 +137,7 @@ class Extent {
 
   /// Return the histogram store
   ///
-  /// The histogram stroe can be used for automated binning detection 
+  /// The histogram stroe can be used for automated binning detection
   const std::array<std::vector<ActsScalar>, binValues>& valueHistograms() const;
 
   /// Access the minimum parameter
