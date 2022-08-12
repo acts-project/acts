@@ -480,6 +480,93 @@ handled correctly (see [](#alignment-of-particle-sensors)).
 
 ## Clusterization
 
+The actual track reconstruction procedure itself starts with the conversion of
+raw inputs that have been read out from the detector. In case of silicon
+detectors, the readout can either be performed in a binary way, only recording
+which segments fired, or the amount of charges measured in the segment can be
+recorded, e.g. via  *time-over-threshold* readout. In all cases, the readout is
+attached to an identifier uniquely locating the segment on the corresponding
+sensor.
+
+As a next step, these raw readouts need to be *clustered*, in order to
+extract an estimate of where particles intersect with the sensor. The general
+strategy of clustering algorithms follows the Connected Component Analysis (CCA)
+approach, where subsets of segments are successively grouped into clusters.
+In case of the Pixel detector, this clustering occurs in two dimensions,
+corresponding to the segmentation of its sensors. Here, the CCA can
+either consider all eight surrounding pixels as neighboring a central one, or
+only consider the four non-diagonal ones, as shown in
+{numref}`clustering_cca`. The figure only shows the simplest possible
+cluster starting from the central pixel. In reality, the CCA will iteratively
+continue from the pixels on the cluster edges. 
+
+(clustering_cca)=
+:::{figure} /figures/tracking/cca.svg
+:align: center
+:width: 400px
+Illustration of both eight and four cell connectivity.
+:::
+
+Subsequently, the effective cluster position needs to be estimated. Multiple
+factors play a role here. First of all, the average position of the cluster
+can be calculated either using only the geometry position of the segments,
+
+$$
+  \vec r = \frac{1}{N} \sum_{i=1}^N \vec l_i,
+$$
+
+or be weighted by the charge collected in each segment:
+
+$$
+  \vec r = \frac{1}{\sum_{i=1}^N q_i} \sum_{i=1}^N q_i \vec l_i.
+$$
+
+Here, $\vec l_i$ is the local position of the $i$-th segment while
+$q_i$ is its charge. 
+
+An illustration of the clusterization can be found in {numref}`clustering_image`,
+where a pixel sensor is shown to be intersected by a charged particle,
+entering on the lower left and exiting on the top right. Three cells shown
+with a red frame receive energy from the particle, but the amount is under
+the readout threshold. Four other cells receive energy above the threshold
+and are read out. The clustering will then group these four cells into a
+cluster, and subsequently estimate the cluster position based on the energy
+deposited in the cells. In case no charge information is not available 
+for a given detector, the calculation is purely geometric.
+
+
+(clustering_image)=
+:::{figure} /figures/tracking/clustering.svg
+:align: center
+:width: 400px
+Illustration of the clustering of multiple pixels into a cluster,
+in a three-dimensional view on the left and a projection onto the
+$xy$-plane on the right. A particle enters the center in the lower left,
+crosses several segments before exiting the sensor on the top right. The
+cell colors indicate how far along the trajectory they are encountered.
+:::
+
+Another factor that needs to be accounted for is the drift direction of the
+created charges. In addition to the collection field of the sensor itself,
+the surrounding magnetic field modifies the drift direction by the
+*Lorentz-angle* $\theta_\text{L}$. Depending on the field strength, this
+additional angle can cause segments to be activated that would otherwise not
+be geometrically within reach of the charges. Other effects, such as the fact
+that the modules are not perfectly flat, as the geometry description assumes,
+or cross-talk between readout channels, also play a role at this stage.
+
+In the presence of high event activity, particle intersections on single
+sensors can be close enough to one another to result in clusters that are not
+clearly separated from each other. This circumstance can be somewhat
+mitigated by allowing tracks to share clusters with other particles, which
+comes at the price of allowing duplicated tracks to some extent.
+Additionally, merged clusters typically feature worse position resolution,
+which manifests itself since it negatively affects the final fit of the
+track. In ATLAS, the neural-network clustering algorithm determines if
+clusters are likely to be the result of such a merging. It then attempts to
+split the clusters, enabling the subsequent steps of the reconstruction to
+treat them as independent measurements.
+
 ## Spacepoint formation and seeding
 
 ## Track finding and track fitting
