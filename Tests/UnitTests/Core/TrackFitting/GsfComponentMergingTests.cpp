@@ -227,12 +227,12 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   std::vector<DummyComponent<2>> cmps(2);
 
   cmps[0].boundPars << 1.0, 1.0;
-  cmps[0].boundCov = BoundSymMatrix<2>::Zero();
+  cmps[0].boundCov = ActsSymMatrix<2>::Zero();
   *cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
   cmps[0].weight = 0.5;
 
   cmps[1].boundPars << -2.0, -2.0;
-  cmps[1].boundCov = BoundSymMatrix<2>::Zero();
+  cmps[1].boundCov = ActsSymMatrix<2>::Zero();
   *cmps[1].boundCov << 1.0, 1.0, 1.0, 2.0;
   cmps[1].weight = 0.5;
 
@@ -252,12 +252,12 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   std::vector<DummyComponent<2>> cmps(2);
 
   cmps[0].boundPars << 175_degree, 5_degree;
-  cmps[0].boundCov = BoundSymMatrix<2>::Zero();
+  cmps[0].boundCov = ActsSymMatrix<2>::Zero();
   *cmps[0].boundCov << 20_degree, 0.0, 0.0, 20_degree;
   cmps[0].weight = 0.5;
 
   cmps[1].boundPars << -175_degree, -5_degree;
-  cmps[1].boundCov = BoundSymMatrix<2>::Zero();
+  cmps[1].boundCov = ActsSymMatrix<2>::Zero();
   *cmps[1].boundCov << 20_degree, 20_degree, 20_degree, 40_degree;
   cmps[1].weight = 0.5;
 
