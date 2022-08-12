@@ -161,7 +161,7 @@ class Extent {
   /// @param bValue is the binning value, if set to binValues
   ///               the check on all is done
   ///
-  /// @return true if the @param rhs is contained
+  /// @return true if the rhs is contained
   bool contains(const Extent& rhs, BinningValue bValue = binValues) const;
 
   /// Intersection checks
@@ -170,7 +170,7 @@ class Extent {
   /// @param bValue is the binning value, if set to binValues
   ///               the check on all is done
   ///
-  /// @return true if the @param rhs is contained
+  /// @return true if the rhs is contained
   bool intersects(const Extent& rhs, BinningValue bVbVAlueal = binValues) const;
 
   /// Constraints check
