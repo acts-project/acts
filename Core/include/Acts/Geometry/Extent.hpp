@@ -19,6 +19,7 @@
 #include <array>
 #include <ostream>
 #include <vector>
+#include <bitset>
 
 namespace Acts {
 
