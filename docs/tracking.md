@@ -569,6 +569,105 @@ treat them as independent measurements.
 
 ## Spacepoint formation and seeding
 
+Seeding is the process of identifying combinations of measurements that are
+likely to belong to a track. The basic input to this algorithm are space
+points, which need to be assembled from the raw measurements. To this end,
+the raw measurements are combined with information provided by the geometry
+description, such as the location and rotation of the sensors. In this way,
+the locations, which are restricted to be local to the sensor surfaces
+intrinsically, can be converted into three dimensional points in space.
+{numref}`sensor` shows an illustration of the information that is consumed
+for a pixel measurement. Shown are three clusters on a sensor, which are
+caused by three tracks intersecting it. The corresponding cluster positions
+are indicated as well, and can be converted to global positions using the
+inverse of the global-to-local transformation matrix, that is provided by the
+geometry description.
+
+(sensor)=
+:::{figure} /figures/tracking/sp_l2g.svg
+:align: center
+:width: 400px
+Illustration of a pixel sensor and its local coordinate system in
+relation to the global laboratory frame. A transformation allows conversion
+between the two systems. Shown are three tracks intersecting the sensor,
+alongside clusters that they produce.
+:::
+
+In strip detectors, on the other hand, only a single
+dimension is segmented, and an individual measurement is therefore only
+constrained in one direction on the surface. However, usually the
+strip modules are mounted in pairs, with a stereo angle rotation
+between the pairs. To form global space points, measurements from both
+sensors of a pair need to be combined.
+Due to the stereo angle, a two dimensional
+location on the orthogonal projection plane relative to the two parallel
+pairs can be found. Using the global transformations of the pair, the
+combined measurement location can be converted to global coordinates. If
+multiple measurements are located on a stereo pair of strip sensors, there
+exists an ambiguity on how to combine strips to form space points, which has to be resolved.
+
+The next step after space point formation is pattern
+recognition, which be implemented in various ways. Global methods exist which
+attempt to cluster space points, such as conformal mapping. In this approach,
+the space points are transformed into a feature parameter space that reveals
+patterns for hits belonging to the same track. In the specific example of a
+Hough transform, a parameter space $\left(\phi,
+q/p_\mathrm{T}\right)$ is used. As a result, each space point is effectively
+transformed into a line, as a series of combinations of these parameters
+would lead to the same space point. The lines from a set of space points of a
+single track will intersect in one common area. Such an intersection can be
+used to identify which space points originate from the same track. However,
+this task grows in complexity as detector activity increases and is
+susceptible to material effects. 
+
+Another group of approaches is the one of seeding and track following. These
+algorithms differ from the global ones in that they evaluate individual
+combinations of space points, and successively explore the events. One
+algorithm from this group is the cellular automaton that iteratively forms
+chains of space points going from one layer to the next.
+
+The main approach in ACTS is an algorithm that operates on coarse
+subdivisions of the detector is used. This seeding algorithm attempts to find
+triplets of space points from increasing radii which are likely to belong to
+the same track. It achieves this by iterating the combinatorial triplets and
+successively filtering them. Filtering is performed based on the momentum and
+impact parameters, which the algorithm attempts to estimate for each triplet.
+
+Under the assumption of a homogeneous magnetic field along the $z$-axis,
+charged particles should follow helical trajectories. In the transverse plane,
+the motion is circular, while it is a straight line in the $rz$-plane.  The
+transverse impact parameter and momentum can be estimated from the radius of
+the circle in the transverse plane like
+
+$$
+  d_0 = \sqrt{c_x^2 + c_y^2} - \rho,
+$$
+
+with the circle center $(c_x, c_y)$ and radius $\rho$. The
+transverse momentum can be related to available quantities like
+
+$$
+  p_\mathrm{T} \propto \cdot q B \rho
+$$
+
+with the charge $q$ and the magnetic field $B$. An intersection
+between the straight line in the $rz$-plane with the $z$-axis gives an
+estimate of the longitudinal impact parameter. 
+An illustration of seeds in the transverse plane is found in
+{numref}`seeding`. Note that seeds can incorporate hits spread across all of
+the layers shown, although this can be a configuration parameter.
+
+
+(seeding)=
+:::{figure} /figures/tracking/seeding.svg
+:width: 300px
+:align: center
+Sketch of seeds in the transverse plane for a number of tracks on
+four layers. Seeds can combine hits on any three of these layers. The shown
+seeds appear compatible with having originated in the center of the
+detector, which is also drawn.
+:::
+
 ## Track finding and track fitting
 
 ## Ambiguity resolution
