@@ -571,10 +571,7 @@ mitigated by allowing tracks to share clusters with other particles, which
 comes at the price of allowing duplicated tracks to some extent.
 Additionally, merged clusters typically feature worse position resolution,
 which manifests itself since it negatively affects the final fit of the
-track. In ATLAS, the neural-network clustering algorithm determines if
-clusters are likely to be the result of such a merging. It then attempts to
-split the clusters, enabling the subsequent steps of the reconstruction to
-treat them as independent measurements.
+track. 
 
 ## Spacepoint formation and seeding
 
@@ -705,7 +702,7 @@ that relies on the individual propagation of a set of trajectories, instead of
 a single one, to model these biased uncertainties by a sum of Gaussian
 components. This Gaussian Sum Filter (GSF) achieves better results when
 fitting particles such as electrons, likely to undergo bremsstrahlung, and is
-deployed in the ATLAS tracking chain.
+deployed in e.g. the ATLAS tracking chain.
 
 :::{attention}
 TODO: Add GSF link
@@ -936,10 +933,126 @@ circular *real* trajectory.
 
 ## Ambiguity resolution
 
+:::{note}
+There is currently no general-purpose ambiguity resolution implemented in ACST.
+:::
+
+Due to the combinatorial nature of track finding, and to achieve high
+efficiencies, this set of candidates is often large, and contains a
+non-negligible fraction of *fake* candidates. These fake candidates are either
+completely combinatorial, or arise from real particle measurements with
+combinatorial additions. Track candidates coming from a single seed necessarily
+share a common stem of measurements. Measurements can potentially also be
+shared between candidates from different seeds.
+
+One possibility to resolve this (as is done in e.g. ATLAS tracking) is an
+ambiguity resolution algorithm, that attempts to filter out as many undesirable
+tracks as possible. This is implemented by means of a scoring function, that
+combines properties of the track parameters. Higher scores are correlated with
+a larger probability to be a desirable track candidate. A larger number of hits
+results in an increase in the score, as longer compatible hit chains are less
+likely to be random combinations. On the other hand, missing hits in sensors
+where a hit was expected negatively impact the score.  Experiment specific
+scoring of hits from different subsystems is also implemented.  The overall
+$\chi^2$ value computed for the track candidate also plays a role. Candidates
+that share hits with other candidates are penalized. Another quantity is the
+measured particle $p_\mathrm{Y}$, which enters the score, to give preference to
+tracks with large momenta. For tracks containing measurements with a
+substantial local $\chi^2_+$ at the start or end of the trajectory, the
+ambiguity resolution stap can also attempt to remove these hits, and determine
+whether a refit without them yields a more favorable global $\chi^2$.
+
+Finally, the output of the ambiguity resolution step is a set of track candidates
+that contain an enhanced fraction of tracks from actual particles, while fake
+tracks are suppressed. They are passed into the final precision fit outlined
+in [](#track-finding-and-track-fitting), to extract the parameter estimate, and used
+for further aspects of reconstruction.
+
 ## Vertex reconstruction
+
+:::{attention}
+A dedicated description of the vertexing as implemented in ACTS, and the 
+various components that exist will be added shortly.
+:::
+
+One very immediate use case for tracks is the reconstruction of interaction
+vertices in the event. These are needed for many aspects of higher-level
+reconstruction algorithms. Vertices are used in different ways. As shown in
+{numref}`vertexing`, a single event can have a primary vertex, usually
+associated with the hard-scatter event, as well as a number of secondary
+vertices. Typically, the primary vertex will be located in the luminous
+region. The reconstruction of secondary vertices can help with the
+identification of particles, for instance in the form of *$b$-tagging*
+jets originating from $b$-quarks. Here, a characteristic displaced vertex
+located inside a jet is a sign for a $b$-hadron decay. Additionally, pile-up
+interactions can produce vertices that are not associated with the
+interaction of interest. Signatures from pile-up interactions can be
+rejected, if they can be associated to a pile-up vertex.
+
+
+(vertexing)=
+:::{figure} /figures/tracking/vertexing.svg
+:width: 400px
+:align: center
+
+Illustration of a set of three vertices in a proton-proton
+collision. A primary vertex and a secondary vertex are shown in addition to
+a pile-up vertex.
+:::
+
+Vertex reconstruction can be divided into two stages: vertex finding and
+vertex fitting, in close analogy to the reconstruction of tracks themselves.
+Reconstruction begins with a seeding stage. Vertex seeding can be performed
+in a number of ways. Algorithms differ for primary and secondary vertex
+reconstruction. For primary vertex seeding, one option is an algorithm, which
+uses a histogram approach to cluster tracks in the $z$-axis. This is based on
+the assumption that primary vertices will align with the beam spot. Other
+approaches include the use of a Gaussian track density to identify regions
+with high track multiplicity as vertex seeds. For secondary vertexing,
+seeds are formed from pairs of reconstructed tracks, as the constraint to the
+beam spot does not apply.
+
+With a set of vertex seeds determined, tracks compatible with the vertex are
+selected. Using a linearized approximation of the helical trajectories in the
+vicinity of the vertex , a fitting procedure based on the Kalman formalism can
+estimate the vertex parameters.
+
+One issue with an approach like this is the fact that the assignment of tracks
+to vertices is not unambiguous. Improvements exist, where tracks that turn out
+to be a bad fit with the vertex in question are weighted down, avoiding
+degradation in the obtained result. On the other hand, multi-vertex fit methods
+can reassign such outlier tracks to a more compatible vertex, yielding improved
+results for both vertices.
 
 ## Alignment of particle sensors
 
+The geometry description introduced in [](#geometry-and-material-modelling) models
+each sensor at an idealized position according to the detector design. In
+reality, construction has certain margins of error, and during operation,
+the geometry can move. This can occur due to external factors including the magnet
+system being toggled on and off, or changes in temperatures.
+
+If the sensor locations assumed by the track reconstruction are not correct
+with respect to the physical location of the hardware, such
+*misalignments* manifest themselves in the extracted track parameters.
+Both the impact parameter and the momentum resolution are affected, and can
+also introduce biases. Since the spatial resolution greatly influences many
+uses of track information, such as the identification of $b$-quarks, the
+degradation due to alignment is not acceptable.
+
+In order to counteract the effects of the various misalignments, they first
+need to be measured precisely. This is done e.g. by using
+a procedure that attempts to minimize an overall $\chi^2$ value, assembled
+from the residuals of tracks in an event with respect to their constituent
+measurements. The minimization modifies the sensor locations and rotations
+according to their degrees of freedom. Care has to be taken to use external
+constraints to suppress biases from alignment modifications that leave the
+$\chi^2$ value invariant.
+
+:::{note}
+There currently only exists a preliminary version of an alignment calculation
+algorithm that works event-by-event, and leverages the Kalman Filter formalism.
+:::
 
 [^phd_paul]: Gessinger-Befurt, Paul, 30.04.2021. Development and improvement of track reconstruction software and search for disappearing tracks with the ATLAS experiment. [10.25358/openscience-5901](https://doi.org/10.25358/openscience-5901)
-[^Fruhwirth:1987fm]: F. Frühwirth, 1987, Application of Kalman filtering to track and vertex fitting, , [10.1016/0168-9002(87)90887-4](https://doi.org/10.1016/0168-9002(87)90887-4)
+[^Fruhwirth:1987fm]: F. Frühwirth, 1987, Application of Kalman filtering to track and vertex fitting, , [11.1016/0168-9002(87)90887-4](https://doi.org/10.1016/0168-9002(87)90887-4)
