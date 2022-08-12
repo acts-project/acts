@@ -125,6 +125,10 @@ around the momentum vector $\vec p$, respectively.
 
 ## Particle propagation
 
+:::{tip}
+A dedicated description of the ACTS implementation of particle propagation can be found [here](propagation_impl).
+:::
+
 A central for track reconstruction is the ability to calculate the trajectory
 of a charged particle, given its properties at a given point. This process,
 called *particle propagation* or *extrapolation*, is used to predict a
@@ -330,6 +334,10 @@ propagation through volumes of dense material, where the discretization of the
 material distribution will not work as well.
 
 ## Geometry and material modelling
+
+:::{tip}
+A dedicated description of the ACTS implementation of the tracking geometry model can be found [here](geomeytry_impl).
+:::
 
 A detailed model of the geometry of an experiment is required for tracking. In
 many cases, external information is needed to associate a sensitive element
@@ -570,6 +578,11 @@ treat them as independent measurements.
 
 ## Spacepoint formation and seeding
 
+:::{attention}
+A dedicated description of the ACTS implementation for SP formation and seeding
+will be added shortly.
+:::
+
 Seeding is the process of identifying combinations of measurements that are
 likely to belong to a track. The basic input to this algorithm are space
 points, which need to be assembled from the raw measurements. To this end,
@@ -690,11 +703,19 @@ for Gaussian uncertainties. This assumption breaks down when effects like
 bremsstrahlung come into play. An extension of the Kalman Filter (KF) exists
 that relies on the individual propagation of a set of trajectories, instead of
 a single one, to model these biased uncertainties by a sum of Gaussian
-components.  This Gaussian Sum Filter (GSF) achieves better results when
+components. This Gaussian Sum Filter (GSF) achieves better results when
 fitting particles such as electrons, likely to undergo bremsstrahlung, and is
 deployed in the ATLAS tracking chain.
 
-### Kalman formalism
+:::{attention}
+TODO: Add GSF link
+:::
+
+### Kalman formalism and Kalman track fitter
+
+:::{attention}
+A dedicated description of the ACTS implementation of the KF will be added shortly.
+:::
 
 The basis of the Kalman formalism is a state vector, that can be identified
 with the set of track parameters $\vec x$. Note that the concrete
@@ -852,6 +873,66 @@ integration is executed again in an inverse fashion, propagating from the
 subsequent step to the current one.
 
 ### Combinatorial Kalman Filter
+
+:::{attention}
+A dedicated description of the ACTS implementation of the CKF will be added shortly.
+:::
+
+As mentioned above, the Kalman formalism can be used for track finding. In
+this case, the smoothing step can be dropped, as the resulting track
+candidates are likely to be refit regardless, therefore saving some time. The
+CKF explores the event starting from an initial track seed. It does this
+by considering not only a single sequence of measurements, but allowing the
+branching of the fit at each sensitive surface that is encountered. To this
+end, all or a subset of measurements that are found on each surface are
+considered. Measurements are selected based on their compatibility with the
+current state estimate, by using their residuals. A predicted residual
+
+$$
+  \vec r_k^{k-1} = \vec m_k - \mathbf H_k \vec x_k^{k-1},
+$$
+
+and a filtered residual
+
+$$
+  \vec r_k = \vec m_k - \mathbf H_k \vec x_k 
+  %= \left( \mathbb 1 - \mathbf H_k \mathbf K_k \right) r_k^{k-1}
+  ,
+$$
+
+can be defined, depending on which state estimate is compared with
+the measurement $\vec m_k$. Using the filtered residual, an effective
+$\chi^2$ increment
+
+$$
+  \chi^2_+ = \vec r_k^\mathrm{T} 
+  % \mathbf R_k^{-1} 
+  \left[ \left( \mathbb 1 - \mathbf H_k  \mathbf K_k \right)  \mathbf V_k \right]^{-1}
+  \vec r_k
+$$
+
+can be calculated. The global $\chi^2$ of the track candidate can
+be calculated as the sum of all $\chi^2_+$ across the steps. Measurements
+with a large $\chi^2_+$ are considered as outliers, which have low
+compatibility with the trajectory. By branching out for measurements below a
+certain $\chi^2_+$, and following the branches, a tree-like structure of
+compatible track candidates originating from a track seed is assembled. This
+feature is shown in {numref}`tracking_ckf`, which displays a circular
+trajectory, and a set of iteratively assembled track candidates. Basic
+quality criteria can be applied at this stage, to remove bad candidates. A
+dedicated [](#ambiguity-resolution).
+selects the candidates most likely to belong to real particle tracks.
+
+(tracking_ckf)=
+:::{figure} /figures/tracking/finding.svg
+:width: 300px
+:align: center
+
+Illustration of the way the CKF iteratively explores
+measurements from a seed outwards. Measurements are added successively, and
+can be shared between the resulting track candidates. Shown in green is a
+circular *real* trajectory.
+:::
 
 ## Ambiguity resolution
 
