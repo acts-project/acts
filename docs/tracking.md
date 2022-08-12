@@ -336,7 +336,7 @@ material distribution will not work as well.
 ## Geometry and material modelling
 
 :::{tip}
-A dedicated description of the ACTS implementation of the tracking geometry model can be found [here](geomeytry_impl).
+A dedicated description of the ACTS implementation of the tracking geometry model can be found [here](geometry_impl).
 :::
 
 A detailed model of the geometry of an experiment is required for tracking. In
@@ -978,7 +978,7 @@ various components that exist will be added shortly.
 One very immediate use case for tracks is the reconstruction of interaction
 vertices in the event. These are needed for many aspects of higher-level
 reconstruction algorithms. Vertices are used in different ways. As shown in
-{numref}`vertexing`, a single event can have a primary vertex, usually
+{numref}`vertexing_illust`, a single event can have a primary vertex, usually
 associated with the hard-scatter event, as well as a number of secondary
 vertices. Typically, the primary vertex will be located in the luminous
 region. The reconstruction of secondary vertices can help with the
@@ -990,7 +990,7 @@ interaction of interest. Signatures from pile-up interactions can be
 rejected, if they can be associated to a pile-up vertex.
 
 
-(vertexing)=
+(vertexing_illust)=
 :::{figure} /figures/tracking/vertexing.svg
 :width: 400px
 :align: center
