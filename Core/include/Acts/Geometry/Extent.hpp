@@ -71,7 +71,7 @@ class Extent {
   }
 
   /// Extend with another geometric extent, usually pushes the
-  /// current range to the boundaries of the @param rhs extent,
+  /// current range to the boundaries of the rhs extent,
   /// unless the current extent is already bigger.
   ///
   /// @note the extent can also simply set an envelope
