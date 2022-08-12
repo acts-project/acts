@@ -311,12 +311,12 @@ def addPythia8(
 def addParticleSelection(
     s: acts.examples.Sequencer,
     preselectParticles: ParticleSelectorConfig,
-    inputParticles = "particles_input",
-    outputParticles = "particles_selected",
+    inputParticles="particles_input",
+    outputParticles="particles_selected",
 ) -> acts.examples.Sequencer:
     """
     This function steers the particle selection.
-    
+
     Parameters
     ----------
     s: Sequencer
