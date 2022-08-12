@@ -70,8 +70,6 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     }
   }
 
-  G4Random::setTheSeed(m_cfg.seed);
-
   // Set the detector construction
   m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
 
@@ -125,6 +123,9 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Ensure exclusive access to the Geant4 run manager
   std::lock_guard<std::mutex> guard(m_runManagerLock);
+
+  // Set the seed new per event, so that we get reproducible results
+  G4Random::setTheSeed(m_cfg.randomNumbers->generateSeed(ctx));
 
   // Get and reset event registry state
   auto& eventData = EventStoreRegistry::eventData();
