@@ -128,7 +128,7 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
-    truthSeedRanges: TruthSeedRanges = TruthSeedRanges(),
+    truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
     seedfinderConfigArg: SeedfinderConfigArg = SeedfinderConfigArg(),
@@ -155,6 +155,7 @@ def addSeeding(
     truthSeedRanges : TruthSeedRanges(rho, z, phi, eta, absEta, pt, nHits)
         TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
+        If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles_initial"))
     particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
@@ -270,7 +271,7 @@ def addSeeding(
             truthTrackFinder = acts.examples.TruthTrackFinder(
                 level=customLogLevel(),
                 inputParticles=selectedParticles,
-                inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                inputMeasurementParticlesMap="measurement_particles_map",
                 outputProtoTracks="prototracks",
             )
             s.addAlgorithm(truthTrackFinder)
@@ -506,7 +507,7 @@ def addSeeding(
                     level=customLogLevel(),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,  # the original selected particles after digitization
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(outputDirRoot / "performance_seeding_trees.root"),
                 )
             )
@@ -516,7 +517,7 @@ def addSeeding(
                     level=customLogLevel(acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(outputDirRoot / "performance_seeding_hists.root"),
                 )
             )
@@ -528,7 +529,7 @@ def addSeeding(
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
                     inputParticles=inputParticles,
                     inputSimHits="simhits",
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap="measurement_particles_map",
                     inputMeasurementSimHitsMap="measurement_simhits_map",
                     filePath=str(outputDirRoot / "estimatedparams.root"),
                     treeName="estimatedparams",
