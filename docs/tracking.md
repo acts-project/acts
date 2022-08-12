@@ -416,13 +416,14 @@ mounting position in $z$. The layers are indicated in different colors.
 During particle propagation, the navigation makes use of this layer
 system. Each layer contains a binned structure, which maps a bin to a set
 of sensitive surfaces that overlap with the bin area. This is illustrated in
-\cref{fig:geo_binning}, where the left picture shows the sensitive surface
+{numref}`geo_binning`, where the left picture shows the sensitive surface
 structure of an exemplary endcap disk. The picture on the right overlays the
 binning structure that can be used to enable fast retrieval of compatible
 sensitive surfaces. By performing a simple bin lookup, the navigation can
 ascertain which sensors it needs to attempt propagation to.
 
 
+(geo_binning)=
 :::{figure} /figures/tracking/surface_array.svg
 :width: 400px
 :align: center
@@ -451,7 +452,7 @@ initially discarded with non-sensitive elements. For the material effects to
 be correctly taken into account during particle propagation, the material is
 projected onto dedicated material surfaces. These material surfaces are
 spread across the detector geometry. Each layer is created with two
-\emph{approach surfaces} on either side. Their distance can be interpreted as
+*approach surfaces* on either side. Their distance can be interpreted as
 the thickness of the layer in question. Examples of these approach surfaces
 can be found in {numref}`geometry_detail`, at the inner and outer radius.
 Approach surfaces, and the boundary surfaces between volumes mentioned before,
@@ -670,6 +671,188 @@ detector, which is also drawn.
 
 ## Track finding and track fitting
 
+In the track seeding and following approach, track candidates are built from
+the initial seeds. One method implemented in ACTS, the [Combinatorial Kalman
+Filter](#combinatorial-kalman-filter) (CKF), uses the *Kalman formalism*.
+Originally developed for monitoring and steering mechanical systems, it can
+also be used to iteratively calculate a track estimate. After a set of track
+candidates has been assembled and filtered (see [](#ambiguity-resolution)), an
+additional track fit is usually performed to extract the best estimate of the
+track. The Kalman formalism can also be used for this, with the addition of a
+smoothing step that has certain benefits.  Other fit strategies exist, such as
+a global $\chi^2$ fit that minimizes the distances between track-sensor
+intersections and measurements on all sensors at the same time. One drawback of
+this method is the necessity to invert very large matrices, which is
+computationally expensive.
+
+In a track fit, the Kalman formalism can be shown to yield optimal estimates
+for Gaussian uncertainties. This assumption breaks down when effects like
+bremsstrahlung come into play. An extension of the Kalman Filter (KF) exists
+that relies on the individual propagation of a set of trajectories, instead of
+a single one, to model these biased uncertainties by a sum of Gaussian
+components.  This Gaussian Sum Filter (GSF) achieves better results when
+fitting particles such as electrons, likely to undergo bremsstrahlung, and is
+deployed in the ATLAS tracking chain.
+
+### Kalman formalism
+
+The basis of the Kalman formalism is a state vector, that can be identified
+with the set of track parameters $\vec x$. Note that the concrete
+parametrization plays a subordinate role in this context. Rather than building
+an estimate of the state of a system in real time, a Kalman track fit can be
+understood as estimating the parameters iteratively in steps. In the track
+fitting application, each step is defined by a measurement to be included.
+The evolution of the state vector is described by
+
+$$
+  \vec x_k = \mathbf F_{k-1} \vec x_{k-1} + \vec w_{k-1},
+$$
+
+where the linear function $\mathbf F_{k-1}$ transports the state vector at
+step $k-1$ to step $k$. $\vec w_{k-1}$ is additional so-called process noise
+that affects the transport additively. Each step has an associated
+measurement, with the fixed relationship between the measurement and the state vector
+
+$$
+  \vec m_k = \mathbf H_k \vec x_k + \epsilon_k.
+$$
+
+Here, $\mathbf H_k$ is the *measurement mapping function*, which
+transforms the state vector into the measurement space. In the ideal case,
+this purpose can be achieved by a simple projection matrix, which extracts a
+subspace of the state vector. Additionally, $\epsilon_k$ represents the
+measurement uncertainty.
+
+The Kalman fit process is divided into different phases:
+
+1. **Prediction** of the state vector at the next step $k+1$ based on the information at the current step $k$.
+2. **Filtering** of the prediction by incorporating the measurement associated to the step
+3. **Smoothing** of the state vector by walking back the steps and using information for the subsequent step $k+1$ to improve the estimate at the current step $k$.
+
+An illustration of these concepts is found in {numref}`kalman_filter`. Here,
+a series of three sensors is shown with measurements on them. The KF
+then predicts the track parameters at an intersection, shown in blue.
+Subsequently, a filtered set of parameters is calculated as a mixture between
+the measurement and the prediction. Not shown in this picture is the
+smoothing step.
+
+(kalman_filter)=
+
+:::{figure} /figures/tracking/kalman.svg
+:width: 400px
+:align: center
+
+Illustration of the KF. Two of the three stages, the prediction and the
+filtering are shown. The filtering updates the prediction with information from
+the measurement.
+:::
+
+
+In many cases, the first two phases run in tandem, with prediction and
+filtering happening alternatingly at each step. The smoothing phase is
+launched once the last measurement has been encountered.
+Starting from a state $k$, first, a prediction of the state vector at the
+next measurement location is obtained via
+
+(kf_pred)=
+$$
+  \vec x_k^{k-1} = \mathbf F_{k-1} \vec x_{k-1},
+$$
+
+with the linear transport function from above. $\vec x_k^{k-1}$ is
+the prediction of the state vector at step $k$ based on step $k-1$. The next
+stage is the filtering. Here, the state vector is refined by taking into
+account the measurement at the current step. Following one of two variants of
+filtering from [^Fruhwirth:1987fm], the gain matrix formalism, the state
+vector is updated like
+
+$$
+  \vec x_k = \vec x_k^{k-1} + \mathbf K_k \left( \vec m_k - \mathbf H_k \vec x_k^{k-1} \right),
+$$
+
+with the *Kalman gain matrix*
+
+$$
+  \mathbf K_k = \mathbf C_k^{k-1} \mathbf H_k^\mathrm{T}
+    \left(
+      \mathbf V_k + \mathbf H_k \mathbf C_k^{k-1} \mathbf H_k^\mathrm{T}
+    \right)^{-1}
+    %= \mathbf C_k \mathbf H_k^\mathrm{T} \mathbf G_k
+    .
+$$
+
+Note that $\vec x_k$ is the filtered state vector at step $k$,
+based on information from previous steps and step $k$ itself. This is in
+contrast to $\vec x_k^{k-1}$, which is the prediction of the state vector at
+step $k$ based on $k-1$, and is used to calculate the filtered state vector.
+One input to these equations is the covariance matrix prediction $\mathbf
+C_k^{k-1}$ at step $k$ based on step $k-1$, which can be written as
+
+$$
+  \mathbf C_k^{k-1}  = \mathbf F_{k-1} \mathbf C_{k-1} \mathbf F_{k-1}^\mathrm{T} + \mathbf Q_{k-1}
+$$
+
+in the linear version from [^Fruhwirth:1987fm], with the
+covariance $\mathbf C_{k-1}$ at step $k-1$, and the covariance $\mathbf
+Q_{k-1}$ associated with $\vec w_{k-1}$ from above. Also needed is $\mathbf
+V_k$, which is the covariance associated with $\epsilon_k$, effectively
+representing the measurement uncertainty.
+
+Similar to the state vector itself, the corresponding covariance matrix is
+also filtered using
+
+(kf_cov_pred)=
+$$
+  \mathbf C_k = \left( \mathbb 1 - \mathbf K_k \mathbf H_k \right) \mathbf C_k^{k-1}.
+$$
+
+In the smoothing phase, the state vector at step $k$ is improved using the
+information from the subsequent step $k+1$ using
+
+$$
+  \vec x_k^n = \vec x_k + \mathbf A_k \left( \vec x_{k+1}^n - \vec x_{k+1}^k \right).
+$$
+
+Here, $\vec x_{k+1}^n$ is the smoothed state vector and $\vec
+x_{k+1}^k$ the predicted state vector at the subsequent step $k+1$. Also
+needed is the *smoother gain matrix*
+
+$$
+  \mathbf A_k = \mathbf C_k \mathbf F_k^\mathrm{T} \left( \mathbf C^k_{k+1} \right)^{-1},
+$$
+
+with the predicted covariance at step $k+1$, $\mathbf C_k^{k+1}$.
+Finally, the covariance at the current step $k$ can also be smoothed with
+
+$$
+  \mathbf C_k^n = \mathbf C_k + \mathbf A_k \left(\mathbf C_{k+1}^n - \mathbf C_{k+1}^k \right) \mathbf A_k^\mathrm{T}.
+$$
+
+After smoothing, the parameter estimate at the first step contains information
+from all other measurement states. As mentioned above, in case the
+uncertainties entering the Kalman fit are Gaussian distributions without
+biases, the KF can be shown to be the optimal solution minimizing mean
+square estimation error. However, certain caveats exist. The KF assumes
+that a linear transport function $\mathbf F$ exists that can propagate the
+state vector. In the presence of inhomogeneous magnetic fields this is not
+the case. Instead of explicitly applying $\mathbf F$ to the state vector for
+the prediction, the ACTS KF turns to the numerical integration,
+discussed in [](#numerical-integration). With it, the prediction from
+[this equation](kf_pred) is simply the intersection of the extrapolated trajectory
+with the next sensitive surface. Aside from this, $\mathbf F$ is also used to
+transport the covariance between steps (see [here](kf_cov_pred)). Here, the
+semi-analytical method for covariance transport in the numerical integration
+can be used. $\mathbf F$ can then be identified with the transport
+Jacobian accumulated between surfaces.
+
+For smoothing, two possibilities exist to obtain the needed covariances from
+subsequent measurement steps. Either, the inverse transport Jacobian is used
+and applied, in a way similar to [this equation](kf_cov_pred), or the numerical
+integration is executed again in an inverse fashion, propagating from the
+subsequent step to the current one.
+
+### Combinatorial Kalman Filter
+
 ## Ambiguity resolution
 
 ## Vertex reconstruction
@@ -678,3 +861,4 @@ detector, which is also drawn.
 
 
 [^phd_paul]: Gessinger-Befurt, Paul, 30.04.2021. Development and improvement of track reconstruction software and search for disappearing tracks with the ATLAS experiment. [10.25358/openscience-5901](https://doi.org/10.25358/openscience-5901)
+[^Fruhwirth:1987fm]: F. Frühwirth, 1987, Application of Kalman filtering to track and vertex fitting, , [10.1016/0168-9002(87)90887-4](https://doi.org/10.1016/0168-9002(87)90887-4)
