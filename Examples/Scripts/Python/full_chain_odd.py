@@ -5,6 +5,7 @@ import acts.examples.dd4hep
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
+# acts.examples.dump_args_calls(locals())  # show python binding calls
 
 u = acts.UnitConstants
 outputDir = pathlib.Path.cwd() / "odd_output"
