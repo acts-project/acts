@@ -173,7 +173,7 @@ class Extent {
   ///               the check on all is done
   ///
   /// @return true if the rhs intersects
-  bool intersects(const Extent& rhs, BinningValue bVbVAlueal = binValues) const;
+  bool intersects(const Extent& rhs, BinningValue bValue = binValues) const;
 
   /// Constraints check
   ///
