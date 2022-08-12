@@ -17,9 +17,9 @@
 #include "Acts/Utilities/RangeXD.hpp"
 
 #include <array>
+#include <bitset>
 #include <ostream>
 #include <vector>
-#include <bitset>
 
 namespace Acts {
 
