@@ -102,10 +102,11 @@ if on_readthedocs or tags.has("run_apidoc"):
     print("Executing breathe apidoc in", cwd)
     subprocess.check_call(
         [sys.executable, "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
-        stdout=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
         cwd=cwd,
         env=env,
     )
+    print("breathe apidoc completed")
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 
