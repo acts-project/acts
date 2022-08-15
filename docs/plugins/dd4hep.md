@@ -5,7 +5,7 @@ The DD4hepPlugin allows building of a {class}`Acts::TrackingGeometry` from
 
 :::{note}
 Previous versions of ACTS (prior to `v20.0.0`) used a different integration
-mechanism. Please refer to [](dd4hep_old) for more information.
+mechanism. Please refer to the documentation of prior versions for more information.
 :::
 
 ## General

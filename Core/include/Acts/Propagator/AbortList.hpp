@@ -21,6 +21,8 @@ namespace hana = boost::hana;
 
 namespace Acts {
 
+/// @cond
+
 /// @brief AbortList object to be used in the propagation
 ///
 /// The abort list is a list of structs or classes that
@@ -114,5 +116,7 @@ struct AbortList : public detail::Extendable<aborters_t...> {
                                                          stepper);
   }
 };
+
+/// @endcond
 
 }  // namespace Acts
