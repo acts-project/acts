@@ -16,7 +16,9 @@ namespace Acts {
 
 class VectorMultiTrajectory final
     : public MultiTrajectory<VectorMultiTrajectory> {
+#ifndef DOXYGEN
   friend MultiTrajectory<VectorMultiTrajectory>;
+#endif
 
   struct IndexData {
     IndexType iprevious = kInvalid;

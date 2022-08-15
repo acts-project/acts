@@ -205,5 +205,5 @@ Shared magnetic field
 :class:`Acts::SharedBField` wraps another one of the magnetic field types from above.
 Internally, it holds a ``std::shared_ptr<...>``, so the same field provider can be reused. This is useful in case of a larger map, for example.
 
-.. doxygenfunction:: Acts::SharedBField::SharedBField
+.. doxygenfunction:: Acts::SharedBField::SharedBField(std::shared_ptr<const BField>)
 
