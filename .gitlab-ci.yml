@@ -30,16 +30,39 @@ clang_tidy:
         -DACTS_RUN_CLANG_TIDY=on
 
     - mkdir clang-tidy
-    - CI/clang_tidy/run_clang_tidy.sh build > clang-tidy/clang-tidy.log
-    - pip install -r CI/clang_tidy/requirements.txt
 
-    - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy.log clang-tidy/clang-tidy-build.json --exclude "*thirdparty*"
+    # Main clang-tidy run during cmake compilation
+    - CI/clang_tidy/run_clang_tidy.sh build > clang-tidy/clang-tidy.log
+
+    # Execute clang-tidy on headers
     - CI/clang_tidy/run_clang_tidy_headers.sh > clang-tidy/clang-tidy-headers.log
 
-    - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy-headers.log clang-tidy/clang-tidy-headers.json --exclude "*thirdparty*" --ignore clang-diagnostic-error --filter "$PWD/*"
+    # Install dependencies for processing scripts
+    - pip install -r CI/clang_tidy/requirements.txt
+
+    # Parse the main clang-tidy run
+    - >
+        CI/clang_tidy/parse_clang_tidy.py 
+        clang-tidy/clang-tidy.log 
+        clang-tidy/clang-tidy-build.json 
+        --exclude "*thirdparty*"
+
+    # Parse clang-tidy header run. Some invocations will fail, so we need to strip out clang-diagnostics-errors
+    - >
+        CI/clang_tidy/parse_clang_tidy.py 
+        clang-tidy/clang-tidy-headers.log 
+        clang-tidy/clang-tidy-headers.json 
+        --exclude "*thirdparty*" 
+        --ignore clang-diagnostic-error 
+        --filter "$PWD/*"
+
+    # Combine and deduplicate the two clang-tidy runs
     - CI/clang_tidy/merge.py clang-tidy-build.json clang-tidy-headers.json --output clang-tidy.json
 
+    # Check the combined report against the defined limits
     - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
+
+    # Generate an html report
     - codereport clang-tidy/clang-tidy.json clang-tidy/html
 
 build:
