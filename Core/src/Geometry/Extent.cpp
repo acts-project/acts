@@ -25,7 +25,7 @@ Acts::Extent::Extent(
 void Acts::Extent::extend(const Vector3& vtx,
                           const std::vector<BinningValue>& bValues,
                           bool applyEnv, bool fillHistograms) {
-  auto adapt = [&](BinningValue bValue) {
+  for (auto bValue : bValues) {
     // Get the casted value given the binnin value description
     ActsScalar cValue = VectorHelpers::cast(vtx, bValue);
     if (fillHistograms) {
@@ -45,10 +45,6 @@ void Acts::Extent::extend(const Vector3& vtx,
       m_range[bValue].shrink(mValue, cValue + hEnv);
     }
     m_constrains.set(bValue);
-  };
-
-  for (auto bValue : bValues) {
-    adapt(bValue);
   }
 }
 

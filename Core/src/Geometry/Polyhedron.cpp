@@ -89,7 +89,7 @@ Acts::Extent Acts::Polyhedron::extent(const Transform3& transform) const {
       for (size_t iv = 1; iv < vtxs.size() + 1; ++iv) {
         size_t fpoint = iv < vtxs.size() ? iv : 0;
         double testR = radialDistance(vtxs[fpoint], vtxs[iv - 1]);
-        extent.range(binR).setMin(std::min(extent.range(binR).min(), testR));
+        extent.range(binR).expandMin(testR);
       }
     }
   }

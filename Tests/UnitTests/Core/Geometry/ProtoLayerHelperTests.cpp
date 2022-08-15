@@ -70,7 +70,6 @@ BOOST_AUTO_TEST_CASE(ProtoLayerHelperTests) {
   auto radialLayers = plHelper.protoLayers(
       tgContext, cylinderSurfaces, ProtoLayerHelper::SortingConfig(binR, 5.));
 
-  std::cout << "Found " << radialLayers.size() << " layers." << std::endl;
   BOOST_CHECK(radialLayers.size() == 4);
 
   std::vector<ColorRGB> sortedColors = {{102, 204, 255},

@@ -459,7 +459,7 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS((extent.range(binX).min() -rMaxX, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binX).max() rMaxX, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binY).min() -rMaxY, 1e-6);
-    CHECK_CLOSE_ABS((extent.range(binY).min() -rMaxY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() rMaxY, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binR).max() rMaxY, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
@@ -478,7 +478,8 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     CHECK_CLOSE_ABS((extent.range(binX).min() -rMaxX, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binX).max() rMaxX, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binY).min() -rMaxY, 1e-6);
-    CHECK_CLOSE_ABS((extent.range(binY).min() rMinX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() rMaxY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() rMinX, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binR).max() rMaxY, 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
     CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);

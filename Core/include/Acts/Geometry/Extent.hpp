@@ -26,10 +26,10 @@ namespace Acts {
 using Envelope = std::array<ActsScalar, 2>;
 using ExtentEnvelope = std::array<std::array<ActsScalar, 2>, binValues>;
 
-static Envelope zeroEnvelope = {0., 0};
-static ExtentEnvelope zeroEnvelopes = {zeroEnvelope, zeroEnvelope, zeroEnvelope,
-                                       zeroEnvelope, zeroEnvelope, zeroEnvelope,
-                                       zeroEnvelope, zeroEnvelope};
+constexpr Envelope zeroEnvelope = {0., 0};
+constexpr ExtentEnvelope zeroEnvelopes = {
+    zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope,
+    zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope};
 
 /// A class representing the geometric extent of an object in its possbile
 /// dimensions, these can be all dimensions that are described as BinningValues
