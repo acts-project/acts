@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import argparse
 import pathlib, acts, acts.examples
 import acts.examples.dd4hep
 from common import getOpenDataDetectorDirectory
