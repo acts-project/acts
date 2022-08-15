@@ -959,6 +959,8 @@ class Navigator {
       // Set the begin iterator
       state.navigation.navBoundaryIter = state.navigation.navBoundaries.begin();
       if (not state.navigation.navBoundaries.empty()) {
+        const auto& bSurfaceRep = state.navigation.navBoundaryIter->object->surfaceRepresentation();
+        std::cout << std::tie(bSurfaceRep, state.geoContext) << std::endl;
         // Set to the first and return to the stepper
         stepper.updateStepSize(state.stepping,
                                *state.navigation.navBoundaryIter, true);

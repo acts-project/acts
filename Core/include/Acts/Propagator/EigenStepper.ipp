@@ -9,6 +9,8 @@
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Propagator/detail/CovarianceEngine.hpp"
 
+#include <csignal>
+
 template <typename E, typename A>
 Acts::EigenStepper<E, A>::EigenStepper(
     std::shared_ptr<const MagneticFieldProvider> bField)
@@ -116,6 +118,10 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     propagator_state_t& state) const {
   using namespace UnitLiterals;
 
+  std::cout << "EigenStepper: step " << state.stepping.stepSize << "\n";
+  std::cout << "from " << position(state.stepping).transpose() << "\n";
+  std::cout << "direction " << direction(state.stepping).transpose() << "\n";
+
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
   double error_estimate = 0.;
@@ -222,6 +228,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     // appropriate
     if (nStepTrials > state.options.maxRungeKuttaStepTrials) {
       // Too many trials, have to abort
+      //std::raise(SIGINT);
       return EigenStepperError::StepSizeAdjustmentFailed;
     }
     nStepTrials++;
