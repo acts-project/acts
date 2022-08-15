@@ -43,9 +43,9 @@ s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INF
 
 addParticleGun(
     s,
-    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-3.0, 3.0, True),
-    ParticleConfig(2, acts.PdgParticle.eMuon, True),
+    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+    EtaConfig(-3.0, 3.0, uniform=True),
+    ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
     rnd=rnd,
 )
 addFatras(
