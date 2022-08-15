@@ -63,6 +63,7 @@ struct PropagatorState {
     NavigationDirection navDir = forward;
     // adaptive sep size of the runge-kutta integration
     ConstrainedStep stepSize;
+    double previousStepSize;
   };
 
   /// emulate the options template
