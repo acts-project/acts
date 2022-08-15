@@ -115,7 +115,7 @@ int main(int argc, char* argv[]) {
   // - This variation of the first benchmark uses a fixed position again, but
   //   uses the cache infrastructure to evaluate how much of an impact it has on
   //   performance in this scenario. We expect this to improve performance as
-  //   the the cache will always be valid for the fixed point.
+  //   the cache will always be valid for the fixed point.
   {
     std::cout << "Benchmarking cached interpolated field lookup: "
               << std::flush;

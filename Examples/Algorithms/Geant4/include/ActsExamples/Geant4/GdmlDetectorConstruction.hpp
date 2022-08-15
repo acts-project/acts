@@ -28,7 +28,7 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
   /// Path to the Gdml file
   std::string m_path;
   /// Cached worled volume
-  G4VPhysicalVolume* m_world;
+  G4VPhysicalVolume* m_world = nullptr;
 };
 
 }  // namespace ActsExamples
