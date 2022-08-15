@@ -106,11 +106,12 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   auto result = finder.find(inputTrackPointers, finderOpts, state);
   auto t2 = std::chrono::high_resolution_clock::now();
 
-  if (not result.ok()) {
+  std::vector<Acts::Vertex<Acts::BoundTrackParameters>> vertices;
+  if (result.ok()) {
+    vertices = std::move(result.value());
+  } else {
     ACTS_ERROR("Error in vertex finder: " << result.error().message());
-    return ProcessCode::ABORT;
   }
-  auto vertices = *result;
 
   // show some debug output
   ACTS_INFO("Found " << vertices.size() << " vertices in event");
