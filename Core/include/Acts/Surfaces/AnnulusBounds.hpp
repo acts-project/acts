@@ -139,7 +139,7 @@ class AnnulusBounds : public DiscBounds {
   ///  which may slightly alter the number of segments returned
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg) const;
+  std::vector<Vector2> vertices(unsigned int lseg) const override;
 
   /// This method returns inner radius
   double rMin() const final;

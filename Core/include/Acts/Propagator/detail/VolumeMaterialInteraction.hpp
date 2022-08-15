@@ -85,8 +85,9 @@ struct VolumeMaterialInteraction {
       slab = MaterialSlab(
           state.navigation.currentVolume->volumeMaterial()->material(pos),
           1);  // state.stepping.StepSize
-    } else
+    } else {
       slab = MaterialSlab();
+    }
     return slab;
   }
 };
