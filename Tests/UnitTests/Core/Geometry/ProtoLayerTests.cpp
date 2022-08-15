@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   auto pLayerSf = createProtoLayer(Transform3::Identity());
   auto pLayerSfShared = createProtoLayer(Transform3::Identity());
 
-  BOOST_CHECK(pLayerSf.extent.ranges == pLayerSfShared.extent.ranges);
+  BOOST_CHECK(pLayerSf.extent.range() == pLayerSfShared.extent.range());
   BOOST_CHECK(pLayerSf.envelope == pLayerSfShared.envelope);
 
   // CHECK That you have 4 surfaces
@@ -95,7 +95,7 @@ BOOST_AUTO_TEST_CASE(ProtoLayerTests) {
   BOOST_CHECK(pLayerSf.surfaces().size() == 5);
 
   // That should invalidate the ranges
-  BOOST_CHECK(pLayerSf.extent.ranges != pLayerSfShared.extent.ranges);
+  BOOST_CHECK(!(pLayerSf.extent.range() == pLayerSfShared.extent.range()));
 
   // Test 1 - identity transform
   auto protoLayer = createProtoLayer(Transform3::Identity());
