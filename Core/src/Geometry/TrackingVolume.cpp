@@ -557,7 +557,8 @@ Acts::TrackingVolume::compatibleBoundaries(
     // sign function would be nice but ...
     if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
       return a < b;
-    } else if (a > 0) {
+    }
+    if (a > 0) {  // b < 0
       return true;
     }
     return false;
@@ -565,13 +566,17 @@ Acts::TrackingVolume::compatibleBoundaries(
 
   // Sort them accordingly to the navigation direction
   if (options.navDir == NavigationDirection::Forward) {
-    std::sort(bIntersections.begin(), bIntersections.end(), [](const auto& a, const auto& b) {
-      return comparator(a.intersection.pathLength, b.intersection.pathLength);
-    });
+    std::sort(bIntersections.begin(), bIntersections.end(),
+              [&](const auto& a, const auto& b) {
+                return comparator(a.intersection.pathLength,
+                                  b.intersection.pathLength);
+              });
   } else {
-    std::sort(bIntersections.begin(), bIntersections.end(), [](const auto& a, const auto& b) {
-      return comparator(-a.intersection.pathLength, -b.intersection.pathLength);
-    });
+    std::sort(bIntersections.begin(), bIntersections.end(),
+              [&](const auto& a, const auto& b) {
+                return comparator(-a.intersection.pathLength,
+                                  -b.intersection.pathLength);
+              });
   }
   return bIntersections;
 }
