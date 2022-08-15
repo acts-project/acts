@@ -27,7 +27,7 @@ def runGeant4(
         rnd=rnd,
     )
     outputDir = Path(outputDir)
-    return addGeant4(
+    addGeant4(
         s,
         geometryService,
         trackingGeometry,
@@ -36,6 +36,7 @@ def runGeant4(
         outputDirRoot=outputDir,
         seed=seed,
     )
+    return s
 
 
 if "__main__" == __name__:

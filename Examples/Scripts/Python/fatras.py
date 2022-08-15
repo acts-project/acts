@@ -18,7 +18,7 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
         rnd=rnd,
     )
     outputDir = Path(outputDir)
-    return addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
@@ -26,6 +26,7 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
         outputDirRoot=outputDir,
         rnd=rnd,
     )
+    return s
 
 
 if "__main__" == __name__:
