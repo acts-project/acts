@@ -11,7 +11,7 @@ on:
 jobs:
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2204:v29
+    container: ghcr.io/acts-project/ubuntu2004:v29
     env:
         DOXYGEN_WARN_AS_ERROR: YES
     steps:
