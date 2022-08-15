@@ -14,8 +14,6 @@
 
 #include <Pythia8/Pythia.h>
 
-#include <csignal>
-
 namespace {
 struct FrameworkRndmEngine : public Pythia8::RndmEngine {
   ActsExamples::RandomEngine& rng;
