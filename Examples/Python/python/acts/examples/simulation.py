@@ -183,8 +183,6 @@ def addPythia8(
 ) -> acts.examples.EventGenerator:
     """This function steers the particle generation using Pythia8
 
-    NB. this is a reimplementation of common.addPythia8, which is maintained for now for compatibility.
-
     Parameters
     ----------
     s: Sequencer
@@ -297,8 +295,6 @@ def addPythia8(
                 filePath=str(outputDirRoot / "pythia8_particles.root"),
             )
         )
-
-    return evGen
 
 
 @acts.examples.NamedTypeArgs(
