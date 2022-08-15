@@ -8,7 +8,7 @@
 
 #pragma once
 
-/// Set the Calibration Context PLUGIN
+// Set the Calibration Context PLUGIN
 #ifdef ACTS_CORE_CALIBRATIONCONTEXT_PLUGIN
 #include ACTS_CORE_CALIBRATIONCONTEXT_PLUGIN
 #else
