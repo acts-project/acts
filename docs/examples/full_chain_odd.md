@@ -45,9 +45,9 @@ Relativistic muons are hardly deflected in the detector and will keep most of th
 ```python
 addParticleGun(
     s,
-    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-3.0, 3.0, True),
-    ParticleConfig(1, acts.PdgParticle.eMuon, True),
+    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+    EtaConfig(-3.0, 3.0, uniform=True),
+    ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
     rnd=rnd,
 )
 ```
