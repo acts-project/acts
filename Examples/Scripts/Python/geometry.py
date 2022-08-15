@@ -9,7 +9,6 @@ from acts.examples import (
     ProcessCode,
     CsvTrackingGeometryWriter,
     ObjTrackingGeometryWriter,
-    SvgTrackingGeometryWriter,
     JsonSurfacesWriter,
     JsonMaterialWriter,
     JsonFormat,
@@ -29,7 +28,6 @@ def runGeometry(
     outputCsv=True,
     outputJson=True,
     outputRoot=True,
-    outputSvg=False,
 ):
 
     for ievt in range(events):
@@ -64,16 +62,6 @@ def runGeometry(
                 level=acts.logging.INFO, outputDir=outputDirObj
             )
             writer.write(context, trackingGeometry)
-
-        if outputSvg:
-            outputDirSvg = os.path.join(outputDir, "svg")
-            if not os.path.exists(outputDirSvg):
-                os.makedirs(outputDirSvg)
-            svgWriterCfg = SvgTrackingGeometryWriter.Config(outputDir=outputDirSvg)
-            svgWriter = SvgTrackingGeometryWriter(
-                level=acts.logging.INFO, config=svgWriterCfg
-            )
-            svgWriter.write(context, trackingGeometry)
 
         if outputJson:
             outputDirJson = os.path.join(outputDir, "json")
