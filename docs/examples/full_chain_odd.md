@@ -38,7 +38,7 @@ s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INF
 
 Our first simulation step is the particle gun. It spawns particles and their initial parameters, like position and momentum, inside our detecor.
 
-In our simple example we generate a single muon with random charge (e.g. muon or anti-muon) with 1-10 GeV with uniform pseudorapidity from -3 to 3.
+In our simple example we generate a single muon with random charge (i.e. muon or anti-muon) with 1-10 GeV with uniform pseudorapidity from -3 to 3.
 
 Relativistic muons are hardly deflected in the detector and will keep most of their energy which makes them almost ideal for track reconstruction.
 
