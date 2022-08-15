@@ -1,10 +1,10 @@
 # Walkthrough of the OpenDataDetector full chain example
 
-The OpenDataDatector (ODD) is fictious Silicon detector which resides in its own repository on [GitLab](https://gitlab.cern.ch/acts/OpenDataDetector). It is used for testing and as a performance baseline in Acts.
+The OpenDataDatector (ODD) is fictitious silicon detector which resides in its own repository on [GitLab](https://gitlab.cern.ch/acts/OpenDataDetector). It is used for testing and as a performance baseline in Acts.
 
 Our full chain ODD example is written in Python and can be found [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/full_chain_odd.py).
 
-The first step is to load the ODD detector description and to construct the detector. `getOpenDataDetectorDirectory` gives us the ODD folder within the `thirdparty` directory in Acts. We load our favorite material map and provide it to the detector construction `getOpenDataDetector`.
+The first step is to load the ODD detector description and to construct the detector. `getOpenDataDetectorDirectory` gives us the ODD folder within the `thirdparty` directory in Acts. We load our prefered material map and provide it to the detector construction `getOpenDataDetector`.
 
 ```python
 oddDir = getOpenDataDetectorDirectory()
@@ -18,21 +18,21 @@ detector, trackingGeometry, decorators = getOpenDataDetector(
 )
 ```
 
-In our simple example we assume a homogenous magnetic field along the beam axis with 2 T. Which is then passed to all the different algorithms in our simulation and reconstruction pipeline.
+In our simple example we assume a homogenous magnetic field along the beam axis with 2 T. The magnetic field is passed to all the different algorithms in our simulation and the reconstruction pipeline.
 
-```
+```python
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 ```
 
-The simulation step involves random processes and in order to get the same results across different executions we provide our favorite random number generator with an arbitraty seed.
+The simulation step involves random processes and in order to get the same results across different executions we provide our prefered random number generator with an arbitrary seed.
 
-```
+```python
 rnd = acts.examples.RandomNumbers(seed=42)
 ```
 
-All simulation and reconstruction pipelines in Acts begin with a `Sequencer`. It constrols the execution of the different algorithms in the chain. We provide the number of events, the threads we want to utilize (-1 means all) and the desired log leve.
+All simulation and reconstruction pipelines in Acts begin with a `Sequencer`. It controls the execution of the different algorithms in the chain. We provide the number of events, the threads we want to utilize (-1 means all) and the desired log level.
 
-```
+```python
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 ```
 
@@ -42,7 +42,7 @@ In our simple example we generate a single muon with random charge (e.g. muon or
 
 Relativistic muons are hardly deflected in the detector and will keep most of their energy which makes them almost ideal for track reconstruction.
 
-```
+```python
 addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
@@ -56,7 +56,7 @@ These newly created particles now need to be propagated through our detector. Fa
 
 Learn more about Fatras [here](/fatras/fatras).
 
-```
+```python
 addFatras(
     s,
     trackingGeometry,
@@ -70,7 +70,7 @@ The last step in the simulation is the digitization. Here we simulate the readou
 
 In the simplest case we use a gaussian smearing of the true hit and displace it slightly.
 
-```
+```python
 oddDigiConfig = oddDir / "config/odd-digi-smearing-config.json"
 
 addDigitization(
@@ -87,7 +87,7 @@ With the last step we completed the simulation and switch the focus to the actua
 
 The first step in our reconstruction is the track seeding. Here we try to find tracks and estimate their parameters.
 
-```
+```python
 oddSeedingSel = oddDir / "config/odd-seeding-config.json"
 
 addSeeding(
@@ -101,7 +101,7 @@ addSeeding(
 
 The Combinatorial Kalman Filter (CKF) will use the seeds to propagate the trajectory forward and backward in time with the idea to find more measurements along the way. It combines (i.e. smoothes) these measurements and outputs reconstructed tracks which include smoothed track parameters for each measurement.
 
-```
+```python
 addCKFTracks(
     s,
     trackingGeometry,
@@ -113,7 +113,7 @@ addCKFTracks(
 
 Our very last step in the reconstruction is the vertexing. In this step we try to find the origin of our tracks which are usually in the beam pipe at center of our detector.
 
-```
+```python
 addVertexFitting(
     s,
     field,

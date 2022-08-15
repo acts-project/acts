@@ -25,7 +25,7 @@ Key features:
 
    getting_started
    tracking
-   acts
+   acts_project
    core/core
    fatras/fatras
    plugins/plugins
