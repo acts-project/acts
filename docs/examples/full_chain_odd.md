@@ -54,7 +54,7 @@ addParticleGun(
 
 These newly created particles now need to be propagated through our detector. Fatras will do this for us if we provide it the detector geometry and the magnetic field.
 
-Learn more about Fatras [here](TODO-link-me).
+Learn more about Fatras [here](/fatras/fatras).
 
 ```
 addFatras(
@@ -86,8 +86,6 @@ addDigitization(
 With the last step we completed the simulation and switch the focus to the actual topic: reconstruction.
 
 The first step in our reconstruction is the track seeding. Here we try to find tracks and estimate their parameters.
-
-TODO why do we need a config here?
 
 ```
 oddSeedingSel = oddDir / "config/odd-seeding-config.json"
