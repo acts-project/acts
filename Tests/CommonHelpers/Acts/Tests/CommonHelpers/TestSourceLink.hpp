@@ -75,16 +75,39 @@ std::ostream& operator<<(std::ostream& os, const TestSourceLink& sourceLink);
 /// @param gctx Unused
 /// @param trackState TrackState to calibrated
 /// @return The measurement used
+template <typename trajectory_t>
 Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
     const GeometryContext& /*gctx*/,
-    MultiTrajectory::TrackStateProxy trackState);
-
+    typename trajectory_t::TrackStateProxy trackState) {
+  const auto& sl =
+      static_cast<const Acts::Test::TestSourceLink&>(trackState.uncalibrated());
+  if ((sl.indices[0] != Acts::eBoundSize) and
+      (sl.indices[1] != Acts::eBoundSize)) {
+    auto meas = makeMeasurement(sl, sl.parameters, sl.covariance, sl.indices[0],
+                                sl.indices[1]);
+    trackState.setCalibrated(meas);
+    return meas;
+  } else if (sl.indices[0] != Acts::eBoundSize) {
+    auto meas =
+        makeMeasurement(sl, sl.parameters.head<1>(),
+                        sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
+    trackState.setCalibrated(meas);
+    return meas;
+  } else {
+    throw std::runtime_error(
+        "Tried to extract measurement from invalid TestSourceLink");
+  }
+}
 /// Extract the measurement from a TestSourceLink.
 ///
 /// @param gctx Unused
 /// @param trackState TrackState to calibrated
-void testSourceLinkCalibrator(const GeometryContext& gctx,
-                              MultiTrajectory::TrackStateProxy trackState);
+template <typename trajectory_t>
+void testSourceLinkCalibrator(
+    const GeometryContext& gctx,
+    typename trajectory_t::TrackStateProxy trackState) {
+  testSourceLinkCalibratorReturn<trajectory_t>(gctx, trackState);
+}
 
 }  // namespace Test
 }  // namespace Acts

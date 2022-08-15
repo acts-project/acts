@@ -51,6 +51,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   TrajectoriesContainer trajectories;
   trajectories.reserve(initialParameters.size());
 
+  // Prepare the output data with TrackParameters
+  TrackParametersContainer trackParametersContainer;
+
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
@@ -63,13 +66,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions extensions;
+  Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
+      extensions;
   extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+  extensions.updater.connect<
+      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.smoother.connect<
+      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
       &kfSmoother);
-  extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
-      &measSel);
+  extensions.measurementSelector
+      .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
+          &measSel);
 
   IndexSourceLinkAccessor slAccessor;
   slAccessor.container = &sourceLinks;
@@ -98,11 +106,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     auto& result = results[iseed];
     if (result.ok()) {
       // Get the track finding output object
-      const auto& trackFindingOutput = result.value();
+      auto& trackFindingOutput = result.value();
       // Create a Trajectories result struct
       trajectories.emplace_back(trackFindingOutput.fittedStates,
                                 trackFindingOutput.lastMeasurementIndices,
                                 trackFindingOutput.fittedParameters);
+
+      const auto& traj = trajectories.back();
+      for (const auto tip : traj.tips()) {
+        if (traj.hasTrackParameters(tip)) {
+          trackParametersContainer.push_back(traj.trackParameters(tip));
+        }
+      }
     } else {
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());
@@ -116,5 +131,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                                              << " track candidates.");
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  ctx.eventStore.add(m_cfg.outputTrackParameters,
+                     std::move(trackParametersContainer));
   return ActsExamples::ProcessCode::SUCCESS;
 }

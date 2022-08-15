@@ -57,7 +57,7 @@ For convenience, it is possible to build the required boost and eigen3 dependenc
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
 
-[Profiling](howto/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
+[Profiling](contribution/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
 
 ## Building Acts
 
@@ -326,18 +326,18 @@ The following environment variables might be useful.
 
 ## The OpenDataDetector
 
-Acts comes packaged with a detector modeled using DD4Hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map. 
-It is available via the git submodule feature by performing the following steps (git lfs need to be installed on your machine) :
+Acts comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map. 
+It is available via the git submodule feature by performing the following steps (git lfs need to be installed on your machine):
 
-.. code-block:: console
-  
-  git submodule init
-  git submodule update
+```console
+$ git submodule init
+$ git submodule update
+```
 
-To use it, you will then need to build acts with the ACTS_BUILD_ODD option and then point either LD_LIBRARY_PATH on Linux or  
-DYLD_LIBRARY_PATH and DD4HEP_LIBRARY_PATH on MacOs to the install path of the ODD factory (for example : build/thirdparty/OpenDataDetector/factory).
+To use it, you will then need to build acts with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or 
+`DYLD_LIBRARY_PATH` and `DD4HEP_LIBRARY_PATH` on MacOs to the install path of the ODD factory (for example: `build/thirdparty/OpenDataDetector/factory`).
 
-You can now use the ODD in the python binding by using : 
+You can now use the ODD in the python binding by using:
 
 ```python
 oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
