@@ -445,6 +445,7 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(treeName);
     ACTS_PYTHON_MEMBER(fileMode);
     ACTS_PYTHON_MEMBER(minTrackVtxMatchFraction);
+    ACTS_PYTHON_MEMBER(truthMatchProbMin);
     ACTS_PYTHON_STRUCT_END();
   }
 
