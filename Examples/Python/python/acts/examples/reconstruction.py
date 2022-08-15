@@ -140,7 +140,7 @@ def addSeeding(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the seeding
     Parameters
     ----------
@@ -535,8 +535,6 @@ def addSeeding(
                 )
             )
 
-    return s
-
 
 def addKalmanTracks(
     s: acts.examples.Sequencer,
@@ -544,7 +542,7 @@ def addKalmanTracks(
     field: acts.MagneticFieldProvider,
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
-):
+) -> None:
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
         inputParticles="truth_seeds_selected",
@@ -592,14 +590,12 @@ def addKalmanTracks(
     )
     s.addAlgorithm(fitAlg)
 
-    return s
-
 
 def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-):
+) -> None:
     gsfOptions = {
         "maxComponents": 12,
         "abortOnError": False,
@@ -623,8 +619,6 @@ def addTruthTrackingGsf(
 
     s.addAlgorithm(gsfAlg)
 
-    return s
-
 
 CKFPerformanceConfig = namedtuple(
     "CKFPerformanceConfig",
@@ -644,7 +638,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the seeding
 
     Parameters
@@ -751,8 +745,6 @@ def addCKFTracks(
         )
         s.addWriter(csvMTJWriter)
 
-    return s
-
 
 def addExaTrkx(
     s: acts.examples.Sequencer,
@@ -760,7 +752,7 @@ def addExaTrkx(
     geometrySelection: Union[Path, str],
     onnxModelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-) -> acts.examples.Sequencer:
+) -> None:
 
     # Run the particle selection
     # The pre-selection will select truth particles satisfying provided criteria
@@ -824,8 +816,6 @@ def addExaTrkx(
             )
         )
 
-    return s
-
 
 class VertexFinder(Enum):
     Truth = (1,)
@@ -841,7 +831,7 @@ def addVertexFitting(
     trackParameters: str = "estimatedparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
-):
+) -> None:
     """This function steers the vertex fitting
 
     Parameters
@@ -941,5 +931,3 @@ def addVertexFitting(
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
             )
         )
-
-    return s

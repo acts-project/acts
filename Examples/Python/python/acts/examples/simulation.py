@@ -6,7 +6,6 @@ from collections.abc import Iterable
 
 import acts
 from acts.examples import (
-    Sequencer,
     RandomNumbers,
     EventGenerator,
     FixedMultiplicityGenerator,
@@ -55,7 +54,7 @@ ParticleSelectorConfig = namedtuple(
     particleConfig=ParticleConfig,
 )
 def addParticleGun(
-    s: Sequencer,
+    s: acts.examples.Sequencer,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     momentumConfig: MomentumConfig = MomentumConfig(),
@@ -66,7 +65,7 @@ def addParticleGun(
     vtxGen: Optional[EventGenerator.VertexGenerator] = None,
     printParticles: bool = False,
     rnd: Optional[RandomNumbers] = None,
-) -> Sequencer:
+) -> None:
     """This function steers the particle generation using the particle gun
 
     Parameters
@@ -165,8 +164,6 @@ def addParticleGun(
             )
         )
 
-    return s
-
 
 def addPythia8(
     s: acts.examples.Sequencer,
@@ -183,8 +180,7 @@ def addPythia8(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
-    returnEvGen: bool = False,
-) -> Union[acts.examples.Sequencer, acts.examples.EventGenerator]:
+) -> acts.examples.EventGenerator:
     """This function steers the particle generation using Pythia8
 
     NB. this is a reimplementation of common.addPythia8, which is maintained for now for compatibility.
@@ -211,9 +207,6 @@ def addPythia8(
         the output folder for the Root output, None triggers no output
     printParticles : bool, False
         print generated particles
-    returnEvGen: bool, False
-        returns EventGenerator instead of Sequencer.
-        This option  is included for compatibility and will be removed when common.addPythia8 is removed.
     """
 
     if int(s.config.logLevel) <= int(acts.logging.DEBUG):
@@ -305,7 +298,7 @@ def addPythia8(
             )
         )
 
-    return evGen if returnEvGen else s
+    return evGen
 
 
 @acts.examples.NamedTypeArgs(
@@ -319,7 +312,7 @@ def addFatras(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the detector simulation using Fatras
 
     Parameters
@@ -396,15 +389,13 @@ def addFatras(
     # Output
     addSimWriters(s, alg.config.outputSimHits, outputDirCsv, outputDirRoot)
 
-    return s
-
 
 def addSimWriters(
     s: acts.examples.Sequencer,
     inputSimHits: Optional[str] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-) -> acts.examples.Sequencer:
+) -> None:
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
         if not outputDirCsv.exists():
@@ -468,8 +459,6 @@ def addSimWriters(
             )
         )
 
-    return s
-
 
 def addGeant4(
     s: acts.examples.Sequencer,
@@ -480,7 +469,7 @@ def addGeant4(
     outputDirRoot: Optional[Union[Path, str]] = None,
     seed: Optional[int] = None,
     preselectParticles: bool = True,
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the detector simulation using Geant4
 
     Parameters
@@ -540,8 +529,6 @@ def addGeant4(
 
     # Output
     addSimWriters(s, g4conf.outputSimHits, outputDirCsv, outputDirRoot)
-
-    return s
 
 
 def addDigitization(
@@ -625,5 +612,3 @@ def addDigitization(
                 outputDir=str(outputDirCsv),
             )
         )
-
-    return s

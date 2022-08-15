@@ -21,7 +21,7 @@ def runGeant4(
     s.config.logLevel = acts.logging.INFO
     rnd = acts.examples.RandomNumbers()
     seed = 42
-    s = addParticleGun(
+    addParticleGun(
         s,
         EtaConfig(-2.0, 2.0),
         rnd=rnd,
