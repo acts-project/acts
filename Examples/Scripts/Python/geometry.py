@@ -42,35 +42,25 @@ def runGeometry(
                 raise RuntimeError("Failed to decorate event context")
 
         if outputCsv:
-            csvOutputDir = os.path.join(outputDir, "csv")
-            if not os.path.exists(csvOutputDir):
-                os.makedirs(csvOutputDir)
             writer = CsvTrackingGeometryWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
-                outputDir=csvOutputDir,
+                outputDir=os.path.join(outputDir, "csv"),
                 writePerEvent=True,
             )
-
             writer.write(context)
 
         if outputObj:
-            outputDirObj = os.path.join(outputDir, "obj")
-            if not os.path.exists(outputDirObj):
-                os.makedirs(outputDirObj)
             writer = ObjTrackingGeometryWriter(
-                level=acts.logging.INFO, outputDir=outputDirObj
+                level=acts.logging.INFO, outputDir=os.path.join(outputDir, "obj")
             )
             writer.write(context, trackingGeometry)
 
         if outputJson:
-            outputDirJson = os.path.join(outputDir, "json")
-            if not os.path.exists(outputDirJson):
-                os.makedirs(outputDirJson)
             writer = JsonSurfacesWriter(
                 level=acts.logging.INFO,
                 trackingGeometry=trackingGeometry,
-                outputDir=outputDirJson,
+                outputDir=os.path.join(outputDir, "json"),
                 writePerEvent=True,
                 writeSensitive=True,
             )
@@ -88,7 +78,7 @@ def runGeometry(
             jmw = JsonMaterialWriter(
                 level=acts.logging.VERBOSE,
                 converterCfg=jmConverterCfg,
-                fileName=os.path.join(outputDirJson, "geometry-map"),
+                fileName=os.path.join(outputDir, "geometry-map"),
                 writeFormat=JsonFormat.Json,
             )
 
@@ -96,8 +86,8 @@ def runGeometry(
 
 
 if "__main__" == __name__:
-    # detector, trackingGeometry, decorators = AlignedDetector.create()
-    detector, trackingGeometry, decorators = GenericDetector.create()
+    detector, trackingGeometry, decorators = AlignedDetector.create()
+    # detector, trackingGeometry, decorators = GenericDetector.create()
     # detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory() )
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())
