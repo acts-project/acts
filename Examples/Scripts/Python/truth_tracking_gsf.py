@@ -45,7 +45,7 @@ def runTruthTrackingGsf(
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
-        s = addParticleGun(
+        addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
@@ -67,14 +67,14 @@ def runTruthTrackingGsf(
             )
         )
 
-    s = addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
     )
 
-    s = addDigitization(
+    addDigitization(
         s,
         trackingGeometry,
         field,
@@ -82,7 +82,7 @@ def runTruthTrackingGsf(
         rnd=rnd,
     )
 
-    s = addSeeding(
+    addSeeding(
         s,
         trackingGeometry,
         field,
@@ -98,7 +98,7 @@ def runTruthTrackingGsf(
 
     s.addAlgorithm(truthTrkFndAlg)
 
-    s = addTruthTrackingGsf(s, trackingGeometry, field)
+    addTruthTrackingGsf(s, trackingGeometry, field)
 
     # Output
     s.addWriter(
