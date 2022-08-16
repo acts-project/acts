@@ -314,6 +314,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
     ACTS_PYTHON_MEMBER(outputTrajectories);
+    ACTS_PYTHON_MEMBER(outputTrackParameters);
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_STRUCT_END();
