@@ -91,14 +91,14 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
     // Check the extent in space
     double r = hzpos * std::tan(alpha);
     auto extent = oneConePh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, 0_mm, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0_mm, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, hzpos, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).min() -r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() 0_mm, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0_mm, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() hzpos, 1e-6);
 
     /// The full cone on one side
     auto conePiece = std::make_shared<ConeBounds>(alpha, hzpmin, hzpos);
@@ -109,14 +109,14 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
     // Check the extent in space
     double rmin = hzpmin * std::tan(alpha);
     extent = oneConePiecePh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, rmin, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, hzpmin, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, hzpos, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).min() -r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() rmin, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() hzpmin, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() hzpos, 1e-6);
 
     // The full cone on both sides
     auto coneBoth = std::make_shared<ConeBounds>(alpha, hzneg, hzpos);
@@ -126,14 +126,14 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
     BOOST_CHECK_EQUAL(twoConesPh.faces.size(), expectedFaces);
     BOOST_CHECK_EQUAL(twoConesPh.vertices.size(), expectedFaces + 1);
     extent = twoConesPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, 0_mm, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, hzneg, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, hzpos, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).min() -r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() 0_mm, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() hzneg, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() hzpos, 1e-6);
 
     // A centered sectoral cone on both sides
     auto sectoralBoth =
@@ -143,11 +143,11 @@ BOOST_AUTO_TEST_CASE(ConeSurfacePolyhedrons) {
     auto sectoralConesPh =
         sectoralCones->polyhedronRepresentation(tgContext, segments);
     extent = sectoralConesPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, 0_mm, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, hzneg, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, hzpos, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() 0_mm, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() hzneg, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() hzpos, 1e-6);
   }
 }
 
@@ -178,14 +178,14 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
     BOOST_CHECK_EQUAL(fullCylinderPh.vertices.size(), expectedVertices);
     // Check the extent in space
     auto extent = fullCylinderPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, -hZ, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, hZ, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).min() -r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() -hZ, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() hZ, 1e-6);
 
     /// The full cone on one side
     auto sectorCentered = std::make_shared<CylinderBounds>(r, phiSector, hZ);
@@ -196,14 +196,14 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
 
     // Check the extent in space
     extent = centerSectoredCylinderPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, r * std::cos(phiSector), 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -r * std::sin(phiSector), 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, r * std::sin(phiSector), 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, -hZ, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, hZ, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).min() r * std::cos(phiSector), 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -r * std::sin(phiSector), 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() r * std::sin(phiSector), 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() -hZ, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() hZ, 1e-6);
 
     /// The full cone on one side
     auto sectorShifted =
@@ -215,10 +215,10 @@ BOOST_AUTO_TEST_CASE(CylinderSurfacePolyhedrons) {
 
     // Check the extent in space
     extent = shiftedSectoredCylinderPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, r, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, -hZ, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, hZ, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() r, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() -hZ, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() hZ, 1e-6);
   }
 }
 
@@ -262,44 +262,44 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
     BOOST_CHECK_EQUAL(fullDiscPh.vertices.size(), expectedVertices);
 
     auto extent = fullDiscPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).min() -outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
 
     // Ring disc
     auto radial = std::make_shared<RadialBounds>(innerR, outerR);
     auto radialDisc = Surface::makeShared<DiscSurface>(transform, radial);
     auto radialPh = radialDisc->polyhedronRepresentation(tgContext, segments);
     extent = radialPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, innerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).min() -outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() innerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
 
     // Sectoral disc - around 0.
     auto sector = std::make_shared<RadialBounds>(0., outerR, phiSector);
     auto sectorDisc = Surface::makeShared<DiscSurface>(transform, sector);
     auto sectorPh = sectorDisc->polyhedronRepresentation(tgContext, segments);
     extent = sectorPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -outerR * std::sin(phiSector),
+    CHECK_CLOSE_ABS((extent.range(binX).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -outerR * std::sin(phiSector),
                     1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, outerR * std::sin(phiSector),
+    CHECK_CLOSE_ABS((extent.range(binY).max() outerR * std::sin(phiSector),
                     1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
 
     // Sectoral ring - around 0.
     auto sectorRing = std::make_shared<RadialBounds>(innerR, outerR, phiSector);
@@ -308,17 +308,17 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
     auto sectorRingDiscPh =
         sectorRingDisc->polyhedronRepresentation(tgContext, segments);
     extent = sectorRingDiscPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, innerR * std::cos(phiSector),
+    CHECK_CLOSE_ABS((extent.range(binX).min() innerR * std::cos(phiSector),
                     1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -outerR * std::sin(phiSector),
+    CHECK_CLOSE_ABS((extent.range(binX).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -outerR * std::sin(phiSector),
                     1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, outerR * std::sin(phiSector),
+    CHECK_CLOSE_ABS((extent.range(binY).max() outerR * std::sin(phiSector),
                     1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, innerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() innerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
 
     // Sectoral disc - shifted
     auto sectorRingShifted =
@@ -328,10 +328,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
     auto sectorRingDiscShiftedPh =
         sectorRingDiscShifted->polyhedronRepresentation(tgContext, segments);
     extent = sectorRingDiscShiftedPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, innerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() innerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
 
     // Trapezoid for a disc
     double halfXmin = 10_mm;
@@ -343,10 +343,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
     auto trapezoidDiscSfPh =
         trapezoidDiscSf->polyhedronRepresentation(tgContext, segments);
     extent = trapezoidDiscSfPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, innerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() innerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
 
     auto trapezoidDiscShifted = std::make_shared<DiscTrapezoidBounds>(
         halfXmin, halfXmax, innerR, outerR, averagePhi);
@@ -355,10 +355,10 @@ BOOST_AUTO_TEST_CASE(DiscSurfacePolyhedrons) {
     auto trapezoidDiscShiftedSfPh =
         trapezoidDiscShiftedSf->polyhedronRepresentation(tgContext, segments);
     extent = trapezoidDiscShiftedSfPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, innerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, outerR, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() innerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() outerR, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
 
     double minRadius = 7.;
     double maxRadius = 12.;
@@ -391,10 +391,10 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
   auto shiftedPh = shiftedPlane->polyhedronRepresentation(tgContext, 1);
   auto shiftedExtent = shiftedPh.extent();
   // Let's check the extent
-  CHECK_CLOSE_ABS(shiftedExtent.ranges[binX].first, -rhX, 1e-6);
-  CHECK_CLOSE_ABS(shiftedExtent.ranges[binX].second, rhX, 1e-6);
-  CHECK_CLOSE_ABS(shiftedExtent.ranges[binY].first, -rhY + shiftY, 1e-6);
-  CHECK_CLOSE_ABS(shiftedExtent.ranges[binY].second, rhY + shiftY, 1e-6);
+  CHECK_CLOSE_ABS(shifted(extent.range(binX).min() -rhX, 1e-6);
+  CHECK_CLOSE_ABS(shifted(extent.range(binX).max() rhX, 1e-6);
+  CHECK_CLOSE_ABS(shifted(extent.range(binY).min() -rhY + shiftY, 1e-6);
+  CHECK_CLOSE_ABS(shifted(extent.range(binY).max() rhY + shiftY, 1e-6);
 
   for (const auto& mode : testModes) {
     unsigned int segments = std::get<unsigned int>(mode);
@@ -407,15 +407,15 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     auto rectangularPh =
         rectangularPlane->polyhedronRepresentation(tgContext, segments);
     auto extent = rectangularPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -rhX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, rhX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -rhY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, rhY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second,
+    CHECK_CLOSE_ABS((extent.range(binX).min() -rhX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() rhX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -rhY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() rhY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max()
                     std::sqrt(rhX * rhX + rhY * rhY), 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
     BOOST_CHECK(rectangularPh.vertices.size() == 4);
     BOOST_CHECK(rectangularPh.faces.size() == 1);
     std::vector<size_t> expectedRect = {0, 1, 2, 3};
@@ -434,15 +434,15 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     extent = trapezoidalPh.extent();
 
     double thX = std::max(thX1, thX2);
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -thX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, thX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -thY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, thY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second,
+    CHECK_CLOSE_ABS((extent.range(binX).min() -thX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() thX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -thY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() thY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max()
                     std::sqrt(thX * thX + thY * thY), 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
     BOOST_CHECK(trapezoidalPh.vertices.size() == 4);
     BOOST_CHECK(trapezoidalPh.faces.size() == 1);
     std::vector<size_t> expectedTra = {0, 1, 2, 3};
@@ -456,14 +456,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     auto ellispoidPh =
         ellipsoidPlane->polyhedronRepresentation(tgContext, segments);
     extent = ellispoidPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -rMaxX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, rMaxX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -rMaxY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -rMaxY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, rMaxY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).min() -rMaxX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() rMaxX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -rMaxY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() rMaxY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() rMaxY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
 
     double rMinX = 10_mm;
     double rMinY = 20_mm;
@@ -475,13 +475,14 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
         ellipsoidRingPlane->polyhedronRepresentation(tgContext, segments);
 
     extent = ellispoidPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -rMaxX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, rMaxX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -rMaxY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, rMinX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second, rMaxY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).min() -rMaxX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() rMaxX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -rMaxY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() rMaxY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() rMinX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max() rMaxY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
 
     /// ConvextPolygonBounds test
     std::vector<Vector2> vtxs = {
@@ -508,15 +509,15 @@ BOOST_AUTO_TEST_CASE(PlaneSurfacePolyhedrons) {
     BOOST_CHECK(diamondPh.vertices.size() == 6);
     BOOST_CHECK(diamondPh.faces.size() == 1);
     extent = diamondPh.extent();
-    CHECK_CLOSE_ABS(extent.ranges[binX].first, -hMedX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binX].second, hMedX, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].first, -hMinY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binY].second, hMaxY, 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binR].second,
+    CHECK_CLOSE_ABS((extent.range(binX).min() -hMedX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binX).max() hMedX, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).min() -hMinY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binY).max() hMaxY, 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binR).max()
                     std::sqrt(hMaxX * hMaxX + hMaxY * hMaxY), 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].first, 0., 1e-6);
-    CHECK_CLOSE_ABS(extent.ranges[binZ].second, 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).min() 0., 1e-6);
+    CHECK_CLOSE_ABS((extent.range(binZ).max() 0., 1e-6);
   }
 }
 
