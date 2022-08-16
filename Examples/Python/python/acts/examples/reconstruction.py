@@ -509,11 +509,7 @@ def addSeeding(
                     level=customLogLevel(),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,  # the original selected particles after digitization
-<<<<<<< HEAD
                     inputMeasurementParticlesMap=inputMeasurementParticlesMap,
-=======
-                    inputMeasurementParticlesMap="measurement_particles_map",
->>>>>>> origin/main
                     filePath=str(outputDirRoot / "performance_seeding_trees.root"),
                 )
             )
@@ -523,11 +519,7 @@ def addSeeding(
                     level=customLogLevel(acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,
-<<<<<<< HEAD
                     inputMeasurementParticlesMap=inputMeasurementParticlesMap,
-=======
-                    inputMeasurementParticlesMap="measurement_particles_map",
->>>>>>> origin/main
                     filePath=str(outputDirRoot / "performance_seeding_hists.root"),
                 )
             )
@@ -539,11 +531,7 @@ def addSeeding(
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
                     inputParticles=inputParticles,
                     inputSimHits="simhits",
-<<<<<<< HEAD
                     inputMeasurementParticlesMap=inputMeasurementParticlesMap,
-=======
-                    inputMeasurementParticlesMap="measurement_particles_map",
->>>>>>> origin/main
                     inputMeasurementSimHitsMap="measurement_simhits_map",
                     filePath=str(outputDirRoot / "estimatedparams.root"),
                     treeName="estimatedparams",
