@@ -35,9 +35,9 @@ from acts.examples.itk import itkSeedingAlgConfig
 s = acts.examples.Sequencer(events=100, numThreads=-1)
 addParticleGun(
     s,
-    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-4.0, 4.0, True),
-    ParticleConfig(1, acts.PdgParticle.eMuon, True),
+    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+    EtaConfig(-4.0, 4.0, uniform=True),
+    ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
     rnd=rnd,
 )
 # # Uncomment addPythia8 and ParticleSelectorConfig, instead of addParticleGun, to generate ttbar with mu=200 pile-up.
