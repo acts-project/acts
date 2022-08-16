@@ -42,9 +42,11 @@ class AdaptiveMultiVertexFinder {
   template <typename T, typename = int>
   struct NeedsRemovedTracks : std::false_type {};
 
+#ifndef DOXYGEN
   template <typename T>
   struct NeedsRemovedTracks<T, decltype((void)T::tracksToRemove, 0)>
       : std::true_type {};
+#endif
 
  public:
   /// Configuration struct

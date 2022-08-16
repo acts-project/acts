@@ -2,6 +2,7 @@
 # dependencies in the component list.
 # independent plugins
 add_component_if(Autodiff PluginAutodiff ACTS_BUILD_PLUGIN_AUTODIFF)
+add_component_if(ActSVG PluginActSVG ACTS_BUILD_PLUGIN_ACTSVG)
 add_component_if(Cuda PluginCuda ACTS_BUILD_PLUGIN_CUDA)
 add_component_if(Identification PluginIdentification ACTS_BUILD_PLUGIN_IDENTIFICATION)
 add_component_if(Json PluginJson ACTS_BUILD_PLUGIN_JSON)

@@ -31,7 +31,9 @@ namespace Acts {
 /// @image html CylinderSurface.png
 
 class CylinderSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from DetectorElementBase: Element proxy

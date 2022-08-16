@@ -41,7 +41,9 @@ class DetectorElementBase;
 /// @image html DiscSurface.png
 ///
 class DiscSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max} \f$

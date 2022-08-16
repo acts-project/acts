@@ -128,7 +128,7 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
-    truthSeedRanges: TruthSeedRanges = TruthSeedRanges(),
+    truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
     seedfinderConfigArg: SeedfinderConfigArg = SeedfinderConfigArg(),
@@ -140,7 +140,7 @@ def addSeeding(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the seeding
     Parameters
     ----------
@@ -155,6 +155,7 @@ def addSeeding(
     truthSeedRanges : TruthSeedRanges(rho, z, phi, eta, absEta, pt, nHits)
         TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
+        If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles_initial"))
     particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
@@ -508,7 +509,11 @@ def addSeeding(
                     level=customLogLevel(),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,  # the original selected particles after digitization
+<<<<<<< HEAD
                     inputMeasurementParticlesMap=inputMeasurementParticlesMap,
+=======
+                    inputMeasurementParticlesMap="measurement_particles_map",
+>>>>>>> origin/main
                     filePath=str(outputDirRoot / "performance_seeding_trees.root"),
                 )
             )
@@ -518,7 +523,11 @@ def addSeeding(
                     level=customLogLevel(acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,
+<<<<<<< HEAD
                     inputMeasurementParticlesMap=inputMeasurementParticlesMap,
+=======
+                    inputMeasurementParticlesMap="measurement_particles_map",
+>>>>>>> origin/main
                     filePath=str(outputDirRoot / "performance_seeding_hists.root"),
                 )
             )
@@ -530,7 +539,11 @@ def addSeeding(
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
                     inputParticles=inputParticles,
                     inputSimHits="simhits",
+<<<<<<< HEAD
                     inputMeasurementParticlesMap=inputMeasurementParticlesMap,
+=======
+                    inputMeasurementParticlesMap="measurement_particles_map",
+>>>>>>> origin/main
                     inputMeasurementSimHitsMap="measurement_simhits_map",
                     filePath=str(outputDirRoot / "estimatedparams.root"),
                     treeName="estimatedparams",
@@ -546,7 +559,7 @@ def addKalmanTracks(
     field: acts.MagneticFieldProvider,
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
-):
+) -> None:
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
         inputParticles="truth_seeds_selected",
@@ -601,7 +614,7 @@ def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-):
+) -> None:
     gsfOptions = {
         "maxComponents": 12,
         "abortOnError": False,
@@ -646,7 +659,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the seeding
 
     Parameters
@@ -764,7 +777,7 @@ def addExaTrkx(
     geometrySelection: Union[Path, str],
     onnxModelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-) -> acts.examples.Sequencer:
+) -> None:
 
     # Run the particle selection
     # The pre-selection will select truth particles satisfying provided criteria
@@ -845,7 +858,7 @@ def addVertexFitting(
     trackParameters: str = "trackparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
-):
+) -> None:
     """This function steers the vertex fitting
 
     Parameters
