@@ -26,7 +26,6 @@ rnd = acts.examples.RandomNumbers(seed=42)
 
 from acts.examples.simulation import (
     addParticleGun,
-    addPythia8,
     MomentumConfig,
     EtaConfig,
     ParticleConfig,
@@ -41,23 +40,14 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
-"""
-s = acts.examples.Sequencer(events=100, skip=1, numThreads=1, logLevel=acts.logging.INFO)
-s = addPythia8(
+s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
+
+s = addParticleGun(
     s,
-    npileup=200,
+    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
+    EtaConfig(-3.0, 3.0, True),
+    ParticleConfig(2, acts.PdgParticle.eMuon, True),
     rnd=rnd,
-    outputDirCsv=outputDir,
-)
-"""
-s = acts.examples.Sequencer(events=1, numThreads=1, logLevel=acts.logging.VERBOSE)
-s.addReader(
-    acts.examples.CsvParticleReader(
-        level=acts.logging.INFO,
-        inputDir=str(outputDir),
-        inputStem="myparticles",
-        outputParticles="particles_input",
-    )
 )
 s = addFatras(
     s,
@@ -66,7 +56,6 @@ s = addFatras(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-"""
 s = addDigitization(
     s,
     trackingGeometry,
@@ -89,6 +78,23 @@ s = addCKFTracks(
     CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
-"""
+s.addAlgorithm(
+    acts.examples.TrackSelector(
+        level=acts.logging.INFO,
+        inputTrackParameters="fittedTrackParameters",
+        outputTrackParameters="trackparameters",
+        outputTrackIndices="outputTrackIndices",
+        removeNeutral=True,
+        absEtaMax=2.5,
+        loc0Max=4.0 * u.mm,  # rho max
+        ptMin=500 * u.MeV,
+    )
+)
+s = addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
+)
 
 s.run()
