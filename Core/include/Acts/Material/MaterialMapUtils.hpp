@@ -18,9 +18,9 @@
 #include <functional>
 #include <vector>
 
-/// Convenience functions to ease creation of and Acts::InterpolatedMaterialMap
-/// and to avoid code duplication. Currently implemented for the two most common
-/// formats: rz and xyz.
+// Convenience functions to ease creation of and Acts::InterpolatedMaterialMap
+// and to avoid code duplication. Currently implemented for the two most common
+// formats: rz and xyz.
 
 namespace Acts {
 

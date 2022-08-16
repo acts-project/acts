@@ -163,7 +163,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
       // store x,y,z values in extent
-      rRangeSPExtent.check({spacePoint.x(), spacePoint.y(), spacePoint.z()});
+      rRangeSPExtent.extend({spacePoint.x(), spacePoint.y(), spacePoint.z()});
     }
   }
 

@@ -57,7 +57,7 @@ For convenience, it is possible to build the required boost and eigen3 dependenc
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
 
-[Profiling](howto/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
+[Profiling](contribution/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
 
 ## Building Acts
 
