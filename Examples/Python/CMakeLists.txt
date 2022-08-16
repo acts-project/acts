@@ -70,6 +70,14 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/JsonStub.cpp)
 endif()
 
+if(ACTS_BUILD_PLUGIN_ACTSVG)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoSvg)
+  target_sources(ActsPythonBindings PRIVATE src/Svg.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
+endif()
+
+
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
   pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
   target_link_libraries(ActsPythonBindingsDD4hep PUBLIC 
