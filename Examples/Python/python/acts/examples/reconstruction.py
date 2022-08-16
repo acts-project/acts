@@ -536,6 +536,8 @@ def addSeeding(
                 )
             )
 
+    return s
+
 
 def addKalmanTracks(
     s: acts.examples.Sequencer,
@@ -591,6 +593,8 @@ def addKalmanTracks(
     )
     s.addAlgorithm(fitAlg)
 
+    return s
+
 
 def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
@@ -619,6 +623,8 @@ def addTruthTrackingGsf(
     )
 
     s.addAlgorithm(gsfAlg)
+
+    return s
 
 
 CKFPerformanceConfig = namedtuple(
@@ -747,6 +753,8 @@ def addCKFTracks(
         )
         s.addWriter(csvMTJWriter)
 
+    return s
+
 
 def addExaTrkx(
     s: acts.examples.Sequencer,
@@ -817,6 +825,8 @@ def addExaTrkx(
                 filePath=str(Path(outputDirRoot) / "performance_seeding_trees.root"),
             )
         )
+
+    return s
 
 
 class VertexFinder(Enum):
@@ -933,3 +943,5 @@ def addVertexFitting(
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
             )
         )
+
+    return s

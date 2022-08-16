@@ -3,7 +3,6 @@ from pathlib import Path
 from collections import namedtuple
 from collections.abc import Iterable
 
-
 import acts
 from acts.examples import (
     RandomNumbers,
@@ -164,6 +163,8 @@ def addParticleGun(
             )
         )
 
+    return s
+
 
 def addPythia8(
     s: acts.examples.Sequencer,
@@ -296,6 +297,8 @@ def addPythia8(
             )
         )
 
+    return s
+
 
 @acts.examples.NamedTypeArgs(
     preselectParticles=ParticleSelectorConfig,
@@ -385,6 +388,8 @@ def addFatras(
     # Output
     addSimWriters(s, alg.config.outputSimHits, outputDirCsv, outputDirRoot)
 
+    return s
+
 
 def addSimWriters(
     s: acts.examples.Sequencer,
@@ -454,6 +459,8 @@ def addSimWriters(
                 filePath=str(outputDirRoot / "hits.root"),
             )
         )
+
+    return s
 
 
 def addGeant4(
@@ -525,6 +532,8 @@ def addGeant4(
 
     # Output
     addSimWriters(s, g4conf.outputSimHits, outputDirCsv, outputDirRoot)
+
+    return s
 
 
 def addDigitization(
@@ -608,3 +617,5 @@ def addDigitization(
                 outputDir=str(outputDirCsv),
             )
         )
+
+    return s
