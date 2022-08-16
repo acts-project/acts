@@ -11,9 +11,11 @@
 
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 #include "ActsFatras/Physics/ElectroMagnetic/Scattering.hpp"
 
+#include <fstream>
 #include <limits>
 #include <random>
 
@@ -57,6 +59,45 @@ BOOST_DATA_TEST_CASE(GaussianMixture, Dataset::parameters, pdg, phi, lambda, p,
 BOOST_DATA_TEST_CASE(Highland, Dataset::parameters, pdg, phi, lambda, p, seed) {
   test(ActsFatras::HighlandScattering(), seed,
        Dataset::makeParticle(pdg, phi, lambda, p));
+}
+
+namespace {
+
+template <typename process_type>
+void runDist(const std::string& processName) {
+  std::ranlux48 gen(42u);
+  ActsFatras::Particle before = Dataset::makeParticle(
+      Acts::PdgParticle::eMuon, 0.25 * M_PI, 0.25 * M_PI, 1.);
+
+  unsigned int nD = 100000u;
+
+  std::ofstream dOmega;
+  dOmega.open("FatrasUnitTest_" + processName + ".csv");
+  dOmega << "dO,phi,theta" << '\n';
+
+  process_type process;
+
+  auto materialSlab = Acts::Test::makeUnitSlab();
+  for (unsigned int ip = 0; ip < nD; ++ip) {
+    ActsFatras::Particle after = before;
+    const auto outgoing = process(gen, materialSlab, after);
+    Acts::ActsScalar dPhi = Acts::VectorHelpers::phi(before.unitDirection()) -
+                            Acts::VectorHelpers::phi(after.unitDirection());
+    Acts::ActsScalar dTheta =
+        Acts::VectorHelpers::theta(before.unitDirection()) -
+        Acts::VectorHelpers::theta(after.unitDirection());
+    dOmega << std::acos(before.unitDirection().dot(after.unitDirection()))
+           << "," << dPhi << "," << dTheta << '\n';
+  }
+  dOmega.close();
+}
+
+}  // namespace
+
+BOOST_AUTO_TEST_CASE(ScatteringsDist) {
+  runDist<ActsFatras::GeneralMixtureScattering>("GeneralMixture");
+  runDist<ActsFatras::GaussianMixtureScattering>("GaussanMixture");
+  runDist<ActsFatras::HighlandScattering>("Highland");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

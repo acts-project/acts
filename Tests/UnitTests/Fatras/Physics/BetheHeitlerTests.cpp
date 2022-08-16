@@ -14,6 +14,7 @@
 #include "ActsFatras/Physics/ElectroMagnetic/BetheHeitler.hpp"
 
 #include <random>
+#include <fstream>
 
 #include "Dataset.hpp"
 
@@ -54,4 +55,29 @@ BOOST_DATA_TEST_CASE(
               p0.template segment<3>(Acts::eMom0).norm() *
                   p0.template segment<3>(Acts::eMom0).norm();
   CHECK_CLOSE_OR_SMALL(s, s0, 1e-2, 1e-2);
+}
+
+
+BOOST_AUTO_TEST_CASE(FatrasBetheHeitlerDist){
+
+  Generator gen(42u);
+  ActsFatras::Particle before = Dataset::makeParticle(Acts::PdgParticle::eElectron, 0, 0, 10.);
+
+  unsigned int nD = 100000u;
+
+  std::ofstream dEout;
+  dEout.open("FatrasUnitTest_BetheHeitler.csv");
+  dEout << "dE" << '\n';
+  
+  ActsFatras::BetheHeitler process;
+
+  auto materialSlab = Acts::Test::makeUnitSlab();
+  for (unsigned int ip = 0; ip < nD; ++ip){
+    ActsFatras::Particle after = before;
+    const auto outgoing = process(gen, materialSlab, after);
+    dEout << before.energy()-after.energy() <<'\n';
+  }
+  dEout.close();
+
+
 }

@@ -14,6 +14,7 @@
 #include "ActsFatras/Physics/ElectroMagnetic/BetheBloch.hpp"
 
 #include <random>
+#include <fstream>
 
 #include "Dataset.hpp"
 
@@ -33,3 +34,27 @@ BOOST_DATA_TEST_CASE(FatrasBetheBloch, Dataset::parameters, pdg, phi, lambda, p,
   // energy loss creates no new particles
   BOOST_CHECK(outgoing.empty());
 }
+
+BOOST_AUTO_TEST_CASE(FatrasBetheBlochDist){
+
+  Generator gen(42u);
+  ActsFatras::Particle before = Dataset::makeParticle(Acts::PdgParticle::eMuon, 0, 0, 10.);
+
+  unsigned int nD = 100000u;
+
+  std::ofstream dEout;
+  dEout.open("FatrasUnitTest_BetheBloch.csv");
+  dEout << "dE" << '\n';
+
+  ActsFatras::BetheBloch process;
+
+  auto materialSlab = Acts::Test::makeUnitSlab();
+  for (unsigned int ip = 0; ip < nD; ++ip){
+    ActsFatras::Particle after = before;
+    const auto outgoing = process(gen, materialSlab, after);
+    dEout << before.energy()-after.energy() <<'\n';
+    BOOST_CHECK(outgoing.empty());
+  }
+  dEout.close();
+}
+
