@@ -137,8 +137,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
           // manually create a proto layer
           double eiz = (z != 0.) ? z - m_cfg.defaultThickness : 0.;
           double eoz = (z != 0.) ? z + m_cfg.defaultThickness : 0.;
-          pl.extent.ranges[Acts::binZ] = {eiz, eoz};
-          pl.extent.ranges[Acts::binR] = {rMin, rMax};
+          pl.extent.range(Acts::binZ).set(eiz, eoz);
+          pl.extent.range(Acts::binR).set(rMin, rMax);
           pl.envelope[Acts::binR] = {0., 0.};
           pl.envelope[Acts::binZ] = {0., 0.};
         } else {
@@ -150,7 +150,7 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::endcapLayers(
                                      std::abs(zMax - pl.max(Acts::binZ))};
           pl.envelope[Acts::binR] = {std::abs(rMin - pl.min(Acts::binR)),
                                      std::abs(rMax - pl.max(Acts::binR))};
-          pl.extent.ranges[Acts::binR] = {rMin, rMax};
+          pl.extent.range(Acts::binR).set(rMin, rMax);
         }
       } else {
         throw std::logic_error(
@@ -294,8 +294,8 @@ const Acts::LayerVector Acts::DD4hepLayerBuilder::centralLayers(
           // manually create a proto layer
           double eir = (r != 0.) ? r - m_cfg.defaultThickness : 0.;
           double eor = (r != 0.) ? r + m_cfg.defaultThickness : 0.;
-          pl.extent.ranges[Acts::binR] = {eir, eor};
-          pl.extent.ranges[Acts::binZ] = {-dz, dz};
+          pl.extent.range(Acts::binR).set(eir, eor);
+          pl.extent.range(Acts::binZ).set(-dz, dz);
           pl.envelope[Acts::binR] = {0., 0.};
           pl.envelope[Acts::binZ] = {0., 0.};
         } else {

@@ -93,6 +93,7 @@ void addJson(Context& ctx);
 void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
+void addSvg(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -159,7 +160,17 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
           .def("execute", &BareAlgorithm::execute);
 
   py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
-      .def(py::init<>());
+      .def(py::init<>())
+      .def("setVolume", &Acts::GeometryIdentifier::setVolume)
+      .def("setLayer", &Acts::GeometryIdentifier::setLayer)
+      .def("setBoundary", &Acts::GeometryIdentifier::setBoundary)
+      .def("setApproach", &Acts::GeometryIdentifier::setApproach)
+      .def("setSensitive", &Acts::GeometryIdentifier::setSensitive)
+      .def("volume", &Acts::GeometryIdentifier::volume)
+      .def("layer", &Acts::GeometryIdentifier::layer)
+      .def("boundary", &Acts::GeometryIdentifier::boundary)
+      .def("approach", &Acts::GeometryIdentifier::approach)
+      .def("sensitive", &Acts::GeometryIdentifier::sensitive);
 
   using ActsExamples::Sequencer;
   using Config = Sequencer::Config;
@@ -234,4 +245,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
+  addSvg(ctx);
 }
