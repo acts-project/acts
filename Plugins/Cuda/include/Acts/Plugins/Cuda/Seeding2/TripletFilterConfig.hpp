@@ -17,7 +17,9 @@ namespace Cuda {
 /// Structure holding pointers to the user defined filter functions
 struct TripletFilterConfig {
   /// Type for the seed weighting functions
-  using seedWeightFunc_t = float (*)(const int &, const int &, const int &);
+  using seedWeightFunc_t = float (*)(const Details::SpacePoint &,
+                                     const Details::SpacePoint &,
+                                     const Details::SpacePoint &);
 
   /// Pointer to a function assigning weights to seed candidates
   ///
@@ -31,8 +33,9 @@ struct TripletFilterConfig {
   seedWeightFunc_t seedWeight = nullptr;
 
   /// Type for the seed filtering functions
-  using singleSeedCutFunc_t = bool (*)(float, const int &, const int &,
-                                       const int &);
+  using singleSeedCutFunc_t = bool (*)(float, const Details::SpacePoint &,
+                                       const Details::SpacePoint &,
+                                       const Details::SpacePoint &);
 
   /// Pointer to a function filtering seed candidates
   ///
