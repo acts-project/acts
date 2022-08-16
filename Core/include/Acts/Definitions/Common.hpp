@@ -14,7 +14,7 @@
 
 namespace Acts {
 
-/// Tolerance for bein numerical equal for geometry building
+/// Tolerance for being numerical equal for geometry building
 static constexpr ActsScalar s_epsilon =
     3 * std::numeric_limits<ActsScalar>::epsilon();
 
@@ -34,6 +34,11 @@ static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
 /// The navigation direciton is always with
 /// respect to a given momentum or direction
 enum NavigationDirection : int { backward = -1, forward = 1 };
+
+inline constexpr NavigationDirection directionFromStepSize(double value) {
+  assert(value != 0);
+  return value > 0 ? forward : backward;
+}
 
 ///  This is a steering enum to tell which material update stage:
 /// - preUpdate  : update on approach of a surface

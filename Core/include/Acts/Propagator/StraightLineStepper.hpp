@@ -113,7 +113,7 @@ class StraightLineStepper {
     double pathAccumulated = 0.;
 
     /// adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize;
 
     // Previous step size for overstep estimation (ignored for SL stepper)
     double previousStepSize = 0.;
@@ -241,8 +241,16 @@ class StraightLineStepper {
   /// @param stype [in] The step size type to be set
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, true);
+  }
+
+  /// Get the step size
+  ///
+  /// @param state [in] The stepping state (thread-local cache)
+  /// @param stype [in] The step size type to be returned
+  double getStepSize(const State& state, ConstrainedStep::Type stype) const {
+    return state.stepSize.value(stype);
   }
 
   /// Release the Step size
@@ -339,7 +347,7 @@ class StraightLineStepper {
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const {
     // use the adjusted step size
-    const auto h = state.stepping.stepSize;
+    const auto h = state.stepping.stepSize.value();
     const double p = momentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
