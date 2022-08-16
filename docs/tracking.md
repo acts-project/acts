@@ -869,7 +869,6 @@ and a filtered residual
 
 $$
   \vec r_k = \vec m_k - \mathbf H_k \vec x_k 
-  %= \left( \mathbb 1 - \mathbf H_k \mathbf K_k \right) r_k^{k-1}
   ,
 $$
 
@@ -879,7 +878,6 @@ $\chi^2$ increment
 
 $$
   \chi^2_+ = \vec r_k^\mathrm{T} 
-  % \mathbf R_k^{-1} 
   \left[ \left( \mathbb 1 - \mathbf H_k  \mathbf K_k \right)  \mathbf V_k \right]^{-1}
   \vec r_k
 $$
