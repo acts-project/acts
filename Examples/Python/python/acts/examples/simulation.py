@@ -181,7 +181,7 @@ def addPythia8(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
-) -> acts.examples.EventGenerator:
+) -> None:
     """This function steers the particle generation using Pythia8
 
     Parameters
