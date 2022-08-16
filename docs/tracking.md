@@ -3,7 +3,7 @@
 Track reconstruction is the process to recover the properties of a charged
 particle from a set of measurements caused by interaction with some form of
 sensitive detector. The goal is to find which measurements are likely to have
-been caused by which particle, group them accordingly, and estimate the
+been caused by which particle, to group them accordingly, and to estimate the
 associated trajectory. Such charged particle trajectories form the basic
 input to the majority of higher-level reconstruction procedures in many
 cases.
@@ -11,12 +11,11 @@ cases.
 :::{figure} /figures/tracking/tracking.svg
 :width: 400px
 :align: center
-
 Illustration of a track reconstruction chain starting from spacepoints to fully
-formed tracks
+formed tracks.
 :::
 
-This section provides a high-level view of a track reconstruction chain, and is largely based on [^phd_paul].
+This section provides a high-level view of a track reconstruction chain, and is largely based on [^phd:gessinger:2021].
 
 ## Charged particle detection
 
@@ -33,7 +32,7 @@ resulting charge into a measurable signal in various ways.
 :align: center
 :width: 400px
 
-Illustration of one-dimensional (a) and two-dimensional segmentation (b) of a silicon sensor.
+Illustration of a one-dimensional (a) and a two-dimensional segmentation (b) of a silicon sensor.
 :::
 
 A very common electronic detection approach is the use of semiconducting
@@ -48,7 +47,6 @@ usually segmented in one dimension (*strips*) or in two dimensions
 (*pixels*) (see {numref}`segmentation`).
 
 (track_parametrization)=
-
 ## Track parametrization
 
 To express the properties of a particle's trajectory, a choice of parameters
@@ -80,23 +78,19 @@ $\vec x$ using $\phi$, $\theta$ and $q/p$.
 :::{figure} /figures/tracking/parameters.svg
 :width: 500px
 :align: center
-
 Illustration of the parametrization of a particle track with respect to a
 two-dimensional surface. (a) shows the local position, global momentum and
 their corresponding uncertainties. (b) displays the angles $\phi$ and $\theta$
 in the transverse and longitudinal planes.
-
 :::
 
 (perigee)=
 :::{figure} /figures/tracking/perigee.svg
 :width: 200px
 :align: center
-
 Illustration of the perigee parametrization which uses the point of closest
 approach relative to a reference point. The impact parameter $d_0$, the
 position $l$ and the momentum vector $\vec p$ are shown.
-
 :::
 
 Aside from the nominal quantities captured in $\vec x$, the related
@@ -122,7 +116,6 @@ direction are indicated in {numref}`parameters` (a) as an ellipse and a cone
 around the momentum vector $\vec p$, respectively. 
 
 (particle_propagation)=
-
 ## Particle propagation
 
 :::{tip}
@@ -148,7 +141,7 @@ solved using numerical integration techniques.
 ### Numerical integration
 
 In ACTS, numerical integration is done using the *Runge-Kutta-Nyström* (RKN) method.
-Commonly used in the variant at fourth order, it describes how to calculate a
+Commonly used in the variant at fourth order, the RKN method describes how to calculate a
 solution to an initial value problem that can be formulated generically like
 
 $$
@@ -176,13 +169,11 @@ $$
 :::{figure} /figures/tracking/rk.svg
 :width: 400px
 :align: center
-
 Illustration of the RKN method approximating a first order
 differential equation. Shown is the calculation of an estimate $y_{n+1}$ at
 $t_{n+1} = t_n + h$, based on the current step $(t_n,y_n)$. Shown are the four
 distinct points at which function $y(t)$ is evaluated, and which are blended to
 form the estimate.
-
 :::
 
 
@@ -205,7 +196,6 @@ the step size crucially influences the accuracy of the approximation. A large
 step size weakens the approximation, especially if the magnetic field changes
 strongly. On the other hand, a too small step size will negatively affect the
 execution time of the algorithm.
-
 
 The Runge-Kutta-Nyström method from above can be adapted to handle second order
 differential equations, as is needed for the equations of motion in question,
@@ -288,16 +278,13 @@ undergo elastic and inelastic interactions with the atomic structure of the
 material, depending on the particle properties.
 
 (multiple_scattering)=
-
 :::{figure} /figures/tracking/multiple_scattering.svg
 :width: 200px
 :align: center
-
 Illustration of the effect of multiple scattering on the
 trajectory of a charged particle passing through a block of material.
 Entering from the left, it undergoes a series of scattering events,
-deflecting the trajectory statistically, before exiting on the right
-
+deflecting the trajectory statistically, before exiting on the right.
 :::
 
 In elastic interactions, the particle does not lose a significant amount of
@@ -359,14 +346,12 @@ sensors in a barrel configuration. The green rectangles represent the actual
 sensitive surfaces, while other elements include cooling, readout and other components.
 
 (geometry_detail)=
-
 :::{figure} /figures/tracking/geometry_detail.svg
 :align: center
 
 Sketch of the way a fully detailed simulation geometry (a) models passive
 elements, in addition to the sensitive elements shown in green. (b) shows a
 simplified version, where all non-sensitive elements are approximated.
-
 :::
 
 In the majority of cases in track reconstruction, this detailed
@@ -385,23 +370,21 @@ significant performance bottleneck.
 :::{figure} /figures/tracking/layer_barrel.svg
 :width: 300px
 :align: center
-
 Sketch of the way sensitive elements are grouped into layers.
 Shown is an $xy$-view of a number of sensors, arranged as in e.g. the ATLAS
 silicon detector barrels. The grouping is based on their mounting radius.
 The layers are indicated in different colors.
-
 :::
 
 As a compromise between modelling accuracy and performance, ACTS
-uses a simplified geometry model . It
+uses a simplified geometry model. It
 focusses on the sensitive elements, which are strictly needed, while passive
 elements are discarded from the explicit description and approximated.
 {numref}`geometry_detail` (b) shows such a simplified geometry. Here, the
 sensitive elements are still shown in green, and other elements are greyed
 out, indicating that they are discarded. The sensitive elements are then
 grouped into layers, as sketched in {numref}`layer_barrel`. How exactly the
-grouping occurs depends on the concrete experiment geometrym. In some cases, the layers have the shape
+grouping occurs depends on the concrete experiment geometry. In some cases, the layers have the shape
 of cylinder surfaces with increasing radii. This example is shown in the
 figure in the transverse plane at radii $r_{1,2,3}$. In the endcaps, where
 modules are arranged on disks, these are used as the layer shape. An
@@ -413,12 +396,10 @@ shown in different colors.
 :::{figure} /figures/tracking/layer_ec.svg
 :width: 400px
 :align: center
-
 Sketch of the way sensitive elements are grouped into layers.
 Shown is a view of a number of sensors, arranged as in e.g. the ATLAS
 silicon detector endcaps. They are grouped into disks based on their
 mounting position in $z$. The layers are indicated in different colors.
-
 :::
 
 During particle propagation, the navigation makes use of this layer
@@ -435,13 +416,11 @@ ascertain which sensors it needs to attempt propagation to.
 :::{figure} /figures/tracking/surface_array.svg
 :width: 400px
 :align: center
-
 Illustration of the binning structure that is used to subdivide
 layer surfaces. (a) shows two sensor rings of
 different radii grouped into one disk layer. (b)
 overlays the binning structure that the navigation queries for compatible
 surfaces.
-
 :::
 
 Furthermore, layers are grouped into volumes. Each volume loosely corresponds
@@ -493,7 +472,7 @@ The actual track reconstruction procedure itself starts with the conversion of
 raw inputs that have been read out from the detector. In case of silicon
 detectors, the readout can either be performed in a binary way, only recording
 which segments fired, or the amount of charges measured in the segment can be
-recorded, e.g. via  *time-over-threshold* readout. In all cases, the readout is
+recorded, e.g. via *time-over-threshold* readout. In all cases, the readout is
 attached to an identifier uniquely locating the segment on the corresponding
 sensor.
 
@@ -755,11 +734,9 @@ the measurement and the prediction. Not shown in this picture is the
 smoothing step.
 
 (kalman_filter)=
-
 :::{figure} /figures/tracking/kalman.svg
 :width: 400px
 :align: center
-
 Illustration of the KF. Two of the three stages, the prediction and the
 filtering are shown. The filtering updates the prediction with information from
 the measurement.
@@ -795,7 +772,6 @@ $$
     \left(
       \mathbf V_k + \mathbf H_k \mathbf C_k^{k-1} \mathbf H_k^\mathrm{T}
     \right)^{-1}
-    %= \mathbf C_k \mathbf H_k^\mathrm{T} \mathbf G_k
     .
 $$
 
@@ -924,7 +900,6 @@ selects the candidates most likely to belong to real particle tracks.
 :::{figure} /figures/tracking/finding.svg
 :width: 300px
 :align: center
-
 Illustration of the way the CKF iteratively explores
 measurements from a seed outwards. Measurements are added successively, and
 can be shared between the resulting track candidates. Shown in green is a
@@ -953,7 +928,7 @@ a larger probability to be a desirable track candidate. A larger number of hits
 results in an increase in the score, as longer compatible hit chains are less
 likely to be random combinations. On the other hand, missing hits in sensors
 where a hit was expected negatively impact the score.  Experiment specific
-scoring of hits from different subsystems is also implemented.  The overall
+scoring of hits from different subsystems is also implemented. The overall
 $\chi^2$ value computed for the track candidate also plays a role. Candidates
 that share hits with other candidates are penalized. Another quantity is the
 measured particle $p_\mathrm{Y}$, which enters the score, to give preference to
@@ -994,7 +969,6 @@ rejected, if they can be associated to a pile-up vertex.
 :::{figure} /figures/tracking/vertexing.svg
 :width: 400px
 :align: center
-
 Illustration of a set of three vertices in a proton-proton
 collision. A primary vertex and a secondary vertex are shown in addition to
 a pile-up vertex.
@@ -1014,7 +988,7 @@ beam spot does not apply.
 
 With a set of vertex seeds determined, tracks compatible with the vertex are
 selected. Using a linearized approximation of the helical trajectories in the
-vicinity of the vertex , a fitting procedure based on the Kalman formalism can
+vicinity of the vertex, a fitting procedure based on the Kalman formalism can
 estimate the vertex parameters.
 
 One issue with an approach like this is the fact that the assignment of tracks
@@ -1054,5 +1028,5 @@ There currently only exists a preliminary version of an alignment calculation
 algorithm that works event-by-event, and leverages the Kalman Filter formalism.
 :::
 
-[^phd_paul]: Gessinger-Befurt, Paul, 30.04.2021. Development and improvement of track reconstruction software and search for disappearing tracks with the ATLAS experiment. [10.25358/openscience-5901](https://doi.org/10.25358/openscience-5901)
+[^phd:gessinger:2021]: Gessinger-Befurt, Paul, 30.04.2021. Development and improvement of track reconstruction software and search for disappearing tracks with the ATLAS experiment. [10.25358/openscience-5901](https://doi.org/10.25358/openscience-5901)
 [^Fruhwirth:1987fm]: F. Frühwirth, 1987, Application of Kalman filtering to track and vertex fitting, , [11.1016/0168-9002(87)90887-4](https://doi.org/10.1016/0168-9002(87)90887-4)
