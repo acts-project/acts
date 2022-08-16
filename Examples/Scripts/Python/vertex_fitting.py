@@ -93,7 +93,7 @@ def runVertexFitting(
 
     logger.info("Using vertex finder: %s", vertexFinder.name)
 
-    return addVertexFitting(
+    addVertexFitting(
         s,
         field,
         outputDirRoot=outputDir if outputRoot else None,
@@ -101,6 +101,8 @@ def runVertexFitting(
         trackParameters=trackParameters,
         vertexFinder=vertexFinder,
     )
+
+    return s
 
 
 if "__main__" == __name__:

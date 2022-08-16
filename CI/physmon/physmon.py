@@ -111,7 +111,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
 
         rnd = acts.examples.RandomNumbers(seed=42)
 
-        s = addParticleGun(
+        addParticleGun(
             s,
             EtaConfig(-4.0, 4.0),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
@@ -120,14 +120,14 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             rnd=rnd,
         )
 
-        s = addFatras(
+        addFatras(
             s,
             trackingGeometry,
             field,
             rnd=rnd,
         )
 
-        s = addDigitization(
+        addDigitization(
             s,
             trackingGeometry,
             field,
@@ -135,7 +135,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             rnd=rnd,
         )
 
-        s = addSeeding(
+        addSeeding(
             s,
             trackingGeometry,
             field,
@@ -166,7 +166,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
 
-        s = addCKFTracks(
+        addCKFTracks(
             s,
             trackingGeometry,
             field,
