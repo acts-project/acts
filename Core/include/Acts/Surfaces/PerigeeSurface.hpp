@@ -21,7 +21,9 @@ namespace Acts {
 ///
 /// @image html LineSurface.png
 class PerigeeSurface : public LineSurface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from GlobalPosition
