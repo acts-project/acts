@@ -10,7 +10,7 @@ def runParticleGun(outputDir, s=None):
     s = s or Sequencer(events=10, numThreads=-1)
     s.config.logLevel = acts.logging.INFO
     outputDir = Path(outputDir)
-    return addParticleGun(
+    addParticleGun(
         s,
         EtaConfig(-4.0, 4.0),
         ParticleConfig(2),
@@ -18,6 +18,7 @@ def runParticleGun(outputDir, s=None):
         outputDirRoot=outputDir,
         printParticles=True,
     )
+    return s
 
 
 if "__main__" == __name__:

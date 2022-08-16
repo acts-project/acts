@@ -28,7 +28,9 @@ class LineBounds;
 ///
 /// @image html LineSurface.png
 class LineSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from Transform3 and bounds

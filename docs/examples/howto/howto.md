@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 (howto-examples)=
 # How-to guides
 

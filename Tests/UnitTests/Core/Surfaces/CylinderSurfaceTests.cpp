@@ -296,14 +296,14 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {
   exp = trf * exp;
 
   Vector3 bp = cylinder->binningPosition(testContext, binR);
-  BOOST_CHECK_EQUAL(bp, exp);
-  BOOST_CHECK_EQUAL(cylinder->binningPositionValue(testContext, binR),
-                    VectorHelpers::perp(exp));
+  CHECK_CLOSE_ABS(bp, exp, 1e-10);
+  CHECK_CLOSE_ABS(cylinder->binningPositionValue(testContext, binR),
+                  VectorHelpers::perp(exp), 1e-10);
 
   bp = cylinder->binningPosition(testContext, binRPhi);
-  BOOST_CHECK_EQUAL(bp, exp);
-  BOOST_CHECK_EQUAL(cylinder->binningPositionValue(testContext, binRPhi),
-                    VectorHelpers::phi(exp) * VectorHelpers::perp(exp));
+  CHECK_CLOSE_ABS(bp, exp, 1e-10);
+  CHECK_CLOSE_ABS(cylinder->binningPositionValue(testContext, binRPhi),
+                  VectorHelpers::phi(exp) * VectorHelpers::perp(exp), 1e-10);
 
   for (auto b : {binX, binY, binZ, binEta, binH, binMag}) {
     BOOST_TEST_CONTEXT("binValue: " << b) {
