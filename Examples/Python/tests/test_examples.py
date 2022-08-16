@@ -384,7 +384,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         addDigitization,
     )
 
-    seq = addParticleGun(
+    addParticleGun(
         seq,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
         EtaConfig(-4.0, 4.0, True),
@@ -394,7 +394,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         rnd=rnd,
     )
 
-    seq = addFatras(
+    addFatras(
         seq,
         trk_geo,
         field,
@@ -404,7 +404,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
-    seq = addDigitization(
+    addDigitization(
         seq,
         trk_geo,
         field,
@@ -423,7 +423,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
     )
     from acts.examples.itk import itkSeedingAlgConfig
 
-    seq = addSeeding(
+    addSeeding(
         seq,
         trk_geo,
         field,
@@ -434,7 +434,9 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
         inputParticles="particles_final",  # use this to reproduce the original root_file_hashes.txt - remove to fix
         outputDirRoot=str(tmp_path),
-    ).run()
+    )
+
+    seq.run()
 
     del seq
 
