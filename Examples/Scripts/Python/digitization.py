@@ -34,7 +34,7 @@ def configureDigitization(
     rnd = acts.examples.RandomNumbers(seed=42)
 
     if particlesInput is None:
-        s = addParticleGun(
+        addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
@@ -53,7 +53,7 @@ def configureDigitization(
         s.addReader(evGen)
 
     outputDir = Path(outputDir)
-    s = addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
@@ -61,7 +61,7 @@ def configureDigitization(
     )
     from acts.examples.simulation import addDigitization
 
-    s = addDigitization(
+    addDigitization(
         s,
         trackingGeometry,
         field,
