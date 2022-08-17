@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import argparse
 import pathlib, acts, acts.examples
 import acts.examples.dd4hep
 from common import getOpenDataDetectorDirectory
@@ -42,21 +41,21 @@ from acts.examples.reconstruction import (
 
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 
-s = addParticleGun(
+addParticleGun(
     s,
-    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-3.0, 3.0, True),
-    ParticleConfig(2, acts.PdgParticle.eMuon, True),
+    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+    EtaConfig(-3.0, 3.0, uniform=True),
+    ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
     rnd=rnd,
 )
-s = addFatras(
+addFatras(
     s,
     trackingGeometry,
     field,
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-s = addDigitization(
+addDigitization(
     s,
     trackingGeometry,
     field,
@@ -64,14 +63,14 @@ s = addDigitization(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-s = addSeeding(
+addSeeding(
     s,
     trackingGeometry,
     field,
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
 )
-s = addCKFTracks(
+addCKFTracks(
     s,
     trackingGeometry,
     field,
@@ -90,7 +89,7 @@ s.addAlgorithm(
         ptMin=500 * u.MeV,
     )
 )
-s = addVertexFitting(
+addVertexFitting(
     s,
     field,
     vertexFinder=VertexFinder.Iterative,
