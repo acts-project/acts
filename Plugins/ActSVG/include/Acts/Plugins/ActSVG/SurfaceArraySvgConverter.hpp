@@ -27,6 +27,7 @@ namespace Svg {
 using ProtoSurface = actsvg::proto::surface<std::vector<Vector3>>;
 using ProtoSurfaces = std::vector<ProtoSurface>;
 using ProtoGrid = actsvg::proto::grid;
+using ProtoAssociations = std::vector<std::vector<size_t>>;
 
 namespace SurfaceArrayConverter {
 
@@ -47,10 +48,11 @@ struct Options {
 ///
 /// @note the type of view is auto-generated from the binning information
 ///
-/// @return a collection of proto surface object and a grid with associations
-std::tuple<ProtoSurfaces, ProtoGrid> convert(const GeometryContext& gctx,
-                                             const SurfaceArray& surfaceArray,
-                                             const Options& cOptions);
+/// @return a collection of proto surface object and a grid, and associations
+std::tuple<std::vector<ProtoSurfaces>, ProtoGrid,
+           std::vector<ProtoAssociations>>
+convert(const GeometryContext& gctx, const SurfaceArray& surfaceArray,
+        const Options& cOptions);
 
 }  // namespace SurfaceArrayConverter
 

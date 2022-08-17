@@ -117,8 +117,7 @@ void addSvg(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
   {
-    using Writer =
-        ActsExamples::SvgPointWriter<ActsExamples::SimSpacePoint>;
+    using Writer = ActsExamples::SvgPointWriter<ActsExamples::SimSpacePoint>;
     auto w =
         py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
             mex, "SvgSimSpacePointWriter")

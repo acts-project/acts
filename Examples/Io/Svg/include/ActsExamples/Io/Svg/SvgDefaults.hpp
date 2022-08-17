@@ -27,7 +27,6 @@ static inline Acts::Svg::Style layerStyle() {
   return lStyle;
 };
 
-
 static inline Acts::Svg::Style infoStyle() {
   Acts::Svg::Style iStyle;
   iStyle.fillColor = {0, 0, 180};
@@ -113,8 +112,8 @@ static Acts::Svg::Style s_pointStyle = pointStyle();
 
 static Acts::Svg::Style s_infoStyle = infoStyle();
 
-static Acts::Svg::TrackingGeometryConverter::Options
-    s_trackingGeometryOptions = trackingGeometryOptions();
+static Acts::Svg::TrackingGeometryConverter::Options s_trackingGeometryOptions =
+    trackingGeometryOptions();
 
 static Acts::Svg::TrackingGeometryConverter::Options
     s_backgroundTrackingGeometryOptions = backgroundGeometryOptions();

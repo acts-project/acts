@@ -69,14 +69,12 @@ void convert(const GeometryContext& gctx, const TrackingVolume& tVolume,
 namespace TrackingGeometryProjections {
 
 struct Options {
+  std::string prefix = "";
 
-   std::string prefix = "";
+  TrackingGeometryConverter::Options trackingGeometryOptions;
 
-   TrackingGeometryConverter::Options trackingGeometryOptions;
-   
-   std::array<std::array<Acts::ActsScalar,2>, 2> rzAxes;
-   std::vector<ActsScalar> rzEtaLines;
-
+  std::array<std::array<Acts::ActsScalar, 2>, 2> rzAxes;
+  std::vector<ActsScalar> rzEtaLines;
 };
 
 /// Convert into xy and zr projections only

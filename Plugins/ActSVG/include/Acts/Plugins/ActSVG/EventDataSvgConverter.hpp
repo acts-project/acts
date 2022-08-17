@@ -53,12 +53,12 @@ template <typename view_type>
 actsvg::svg::object point(const Vector3& pos, ActsScalar size,
                           const Style& style, unsigned int idx) {
   view_type view;
-  std::vector<Vector3> ps = { pos };
+  std::vector<Vector3> ps = {pos};
   auto ppos = view(ps)[0];
   auto [fill, stroke] = style.fillAndStroke();
-  auto circle = actsvg::draw::circle("p_" + std::to_string(idx), ppos,
-                                     static_cast<actsvg::scalar>(size), fill,
-                                     stroke);
+  auto circle =
+      actsvg::draw::circle("p_" + std::to_string(idx), ppos,
+                           static_cast<actsvg::scalar>(size), fill, stroke);
   return circle;
 }
 

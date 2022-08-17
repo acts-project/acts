@@ -94,7 +94,8 @@ void Acts::Svg::TrackingGeometryConverter::convert(
   }
 }
 
-std::array<actsvg::svg::object, 2> Acts::Svg::TrackingGeometryProjections::convert(
+std::array<actsvg::svg::object, 2>
+Acts::Svg::TrackingGeometryProjections::convert(
     const GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
     const TrackingGeometryProjections::Options& cOptions) {
   // The projections
