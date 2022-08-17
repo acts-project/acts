@@ -85,27 +85,30 @@ class task_arena {
 #endif
 
  public:
-  task_arena(int nthreads = tbb::task_arena::automatic,
-             [[maybe_unused]] unsigned dedicated = 1) {
-    if (enableTBB(nthreads)) {
-#ifndef NO_TBB
-      tbb.reset(new tbb::task_arena(nthreads, dedicated));
+#ifdef NO_TBB
+  task_arena(int nthreads = tbb::task_arena::automatic, unsigned = 1){
+#else
+  task_arena(int nthreads = tbb::task_arena::automatic, unsigned res = 1) {
 #endif
-    }
-  }
+      if (enableTBB(nthreads)) {
+#ifndef NO_TBB
+        tbb.reset(new tbb::task_arena(nthreads, res));
+#endif
+}
+}  // namespace tbbWrap
 
-  template <typename F>
-  void execute(const F& f) {
+template <typename F>
+void execute(const F& f) {
 #ifndef NO_TBB
-    if (tbb) {
-      tbb->execute(f);
-    } else
+  if (tbb) {
+    tbb->execute(f);
+  } else
 #endif
-    {
-      f();
-    }
+  {
+    f();
   }
-};
+}
+};  // namespace ActsExamples
 
 class parallel_for {
  public:
@@ -150,8 +153,10 @@ class queuing_mutex {
 #endif
     }
 
-    scoped_lock([[maybe_unused]] queuing_mutex& m) {
-#ifndef NO_TBB
+#ifdef NO_TBB
+    scoped_lock(queuing_mutex&){
+#else
+    scoped_lock(queuing_mutex& m) {
       if (enableTBB()) {
         tbb.reset(new tbb::queuing_mutex::scoped_lock(*m.tbb.get()));
       }
