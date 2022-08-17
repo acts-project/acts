@@ -13,22 +13,30 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <exception>
 #include <numeric>
 
+#ifndef NO_TBB
 #include <TROOT.h>
+#endif
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
-#include <tbb/parallel_for.h>
-#include <tbb/queuing_mutex.h>
 
 ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),
       m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic
                                          : m_cfg.numThreads),
       m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
-  ROOT::EnableThreadSafety();
+  if (m_cfg.numThreads == 1) {
+    ACTS_INFO("Create Sequencer (single-threaded)");
+#ifndef NO_TBB
+  } else {
+    ROOT::EnableThreadSafety();
+    ACTS_INFO("Create Sequencer with " << m_cfg.numThreads << " threads");
+#endif
+  }
 }
 
 void ActsExamples::Sequencer::addService(std::shared_ptr<IService> service) {
@@ -233,7 +241,7 @@ int ActsExamples::Sequencer::run() {
   // per-algorithm time measures
   std::vector<std::string> names = listAlgorithmNames();
   std::vector<Duration> clocksAlgorithms(names.size(), Duration::zero());
-  tbb::queuing_mutex clocksAlgorithmsMutex;
+  tbbWrap::queuing_mutex clocksAlgorithmsMutex;
 
   // processing only works w/ a well-known number of events
   // error message is already handled by the helper function
@@ -263,7 +271,7 @@ int ActsExamples::Sequencer::run() {
   std::atomic<size_t> nProcessedEvents = 0;
   size_t nTotalEvents = eventsRange.second - eventsRange.first;
   m_taskArena.execute([&] {
-    tbb::parallel_for(
+    tbbWrap::parallel_for(
         tbb::blocked_range<size_t>(eventsRange.first, eventsRange.second),
         [&](const tbb::blocked_range<size_t>& r) {
           std::vector<Duration> localClocksAlgorithms(names.size(),
@@ -334,7 +342,7 @@ int ActsExamples::Sequencer::run() {
 
           // add timing info to global information
           {
-            tbb::queuing_mutex::scoped_lock lock(clocksAlgorithmsMutex);
+            tbbWrap::queuing_mutex::scoped_lock lock(clocksAlgorithmsMutex);
             for (size_t i = 0; i < clocksAlgorithms.size(); ++i) {
               clocksAlgorithms[i] += localClocksAlgorithms[i];
             }
