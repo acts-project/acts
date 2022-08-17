@@ -31,6 +31,8 @@ namespace ActsExamples {
 /// However, if NO_TBB is defined, then don't use tbb library at all
 /// (requires nthreads=1 or -1). This allows the ACTS Examples to be built
 /// without the tbb library (and reduces the dependency on ROOT).
+/// Based on an idea from
+///   https://stackoverflow.com/questions/59736661/how-to-completely-switch-off-threading-in-tbb-code
 
 #ifdef NO_TBB
 namespace tbb {
