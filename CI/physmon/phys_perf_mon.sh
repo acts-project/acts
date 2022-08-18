@@ -46,8 +46,8 @@ function full_chain() {
     echo $config
     
     run \
-        $outdir/performance_ckf_tracks_${suffix}.root \
-        $refdir/performance_ckf_tracks_${suffix}.root \
+        $outdir/performance_ckf_${suffix}.root \
+        $refdir/performance_ckf_${suffix}.root \
         --title "CKF ${suffix}" \
         -c $config \
         -o $outdir/ckf_${suffix}.html \
