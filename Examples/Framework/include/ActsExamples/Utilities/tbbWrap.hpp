@@ -61,6 +61,11 @@ struct blocked_range {
 #endif
 
 namespace tbbWrap {
+/// enableTBB keeps a record of whether we are multi-threaded (nthreads!=1) or
+/// not. This is set once in task_arena and stored globally.
+/// This means that enableTBB(nthreads) itself is not thread-safe. That should
+/// be fine because the task_arena is initialised before spawning any threads.
+/// If multi-threading is ever enabled, then it is not disabled.
 static bool enableTBB(int nthreads = -99) {
   static bool setting = false;
   if (nthreads != -99) {
@@ -79,6 +84,10 @@ static bool enableTBB(int nthreads = -99) {
   return setting;
 }
 
+/// Small wrapper for tbb::task_arena.
+/// Note that the tbbWrap::task_arena constructor is not thread-safe.
+/// That should be fine because the task_arena is initialised before spawning
+/// any threads.
 class task_arena {
 #ifndef ACTS_EXAMPLES_NO_TBB
   std::optional<tbb::task_arena> tbb;
@@ -107,6 +116,7 @@ class task_arena {
   }
 };
 
+/// Small wrapper for tbb::parallel_for.
 class parallel_for {
  public:
   template <typename R, typename F>
@@ -124,6 +134,7 @@ class parallel_for {
   }
 };
 
+/// Small wrapper for tbb::queuing_mutex and tbb::queuing_mutex::scoped_lock.
 class queuing_mutex {
 #ifndef ACTS_EXAMPLES_NO_TBB
   std::optional<tbb::queuing_mutex> tbb;
