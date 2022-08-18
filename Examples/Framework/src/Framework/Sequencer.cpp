@@ -18,7 +18,7 @@
 #include <exception>
 #include <numeric>
 
-#ifndef NO_TBB
+#ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
 #include <dfe/dfe_io_dsv.hpp>
@@ -31,7 +31,7 @@ ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
       m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
   if (m_cfg.numThreads == 1) {
     ACTS_INFO("Create Sequencer (single-threaded)");
-#ifndef NO_TBB
+#ifndef ACTS_EXAMPLES_NO_TBB
   } else {
     ROOT::EnableThreadSafety();
     ACTS_INFO("Create Sequencer with " << m_cfg.numThreads << " threads");
