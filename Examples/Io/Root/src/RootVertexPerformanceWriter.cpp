@@ -81,6 +81,15 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
     m_outputTree->Branch("diffx", &m_diffx);
     m_outputTree->Branch("diffy", &m_diffy);
     m_outputTree->Branch("diffz", &m_diffz);
+
+    m_outputTree->Branch("recoX", &m_recoX);
+    m_outputTree->Branch("recoY", &m_recoY);
+    m_outputTree->Branch("recoZ", &m_recoZ);
+
+    m_outputTree->Branch("truthX", &m_truthX);
+    m_outputTree->Branch("truthY", &m_truthY);
+    m_outputTree->Branch("truthZ", &m_truthZ);
+
     m_outputTree->Branch("covXX", &m_covXX);
     m_outputTree->Branch("covYY", &m_covYY);
     m_outputTree->Branch("covXY", &m_covXY);
@@ -285,6 +294,15 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
               m_diffx.push_back(vtx.position()[0] - truePos[0]);
               m_diffy.push_back(vtx.position()[1] - truePos[1]);
               m_diffz.push_back(vtx.position()[2] - truePos[2]);
+
+              m_truthX.push_back(truePos[0]);
+              m_truthY.push_back(truePos[1]);
+              m_truthZ.push_back(truePos[2]);
+
+              m_recoX.push_back(vtx.position()[0]);
+              m_recoY.push_back(vtx.position()[1]);
+              m_recoZ.push_back(vtx.position()[2]);
+
               m_covXX.push_back(vtx.covariance()(0, 0));
               m_covYY.push_back(vtx.covariance()(1, 1));
               m_covXY.push_back(vtx.covariance()(0, 1));
