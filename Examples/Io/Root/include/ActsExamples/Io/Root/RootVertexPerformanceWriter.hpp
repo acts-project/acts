@@ -99,6 +99,14 @@ class RootVertexPerformanceWriter final
   std::vector<float>
       m_diffz;  ///< Difference in z positon between reco and true vtx
 
+  std::vector<float> m_truthX;
+  std::vector<float> m_truthY;
+  std::vector<float> m_truthZ;
+
+  std::vector<float> m_recoX;
+  std::vector<float> m_recoY;
+  std::vector<float> m_recoZ;
+
   std::vector<float> m_covXX;
   std::vector<float> m_covYY;
   std::vector<float> m_covXY;

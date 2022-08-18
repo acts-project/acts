@@ -427,6 +427,15 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
             m_diffx.push_back(vtx.position()[0] - truePos[0]);
             m_diffy.push_back(vtx.position()[1] - truePos[1]);
             m_diffz.push_back(vtx.position()[2] - truePos[2]);
+
+            m_truthX.push_back(truePos[0]);
+            m_truthY.push_back(truePos[1]);
+            m_truthZ.push_back(truePos[2]);
+
+            m_recoX.push_back(vtx.position()[0]);
+            m_recoY.push_back(vtx.position()[1]);
+            m_recoZ.push_back(vtx.position()[2]);
+
             m_covXX.push_back(vtx.covariance()(0, 0));
             m_covYY.push_back(vtx.covariance()(1, 1));
             m_covXY.push_back(vtx.covariance()(0, 1));
@@ -459,6 +468,12 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   m_diffx.clear();
   m_diffy.clear();
   m_diffz.clear();
+  m_truthX.clear();
+  m_truthY.clear();
+  m_truthZ.clear();
+  m_recoX.clear();
+  m_recoY.clear();
+  m_recoZ.clear();
   m_covXX.clear();
   m_covYY.clear();
   m_covXY.clear();
