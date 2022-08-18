@@ -28,6 +28,7 @@ target_compile_definitions(
 target_compile_features(
   ActsExamplesFramework
   PUBLIC cxx_std_17)
+
 if(ACTS_USE_EXAMPLES_TBB)
   # newer DD4hep version require TBB and search interally for TBB in
   # config-only mode. to avoid mismatches we explicitely search using
@@ -45,7 +46,7 @@ if(TBB_FOUND)
     ActsExamplesFramework
     PUBLIC TBB::tbb)
 else()
-  message(STATUS "disable TBB - only single-threaded running is supported")
+  message(STATUS "disable TBB for Examples/Framework - only single-threaded running will be supported")
   target_compile_definitions(
     ActsExamplesFramework
     PUBLIC
