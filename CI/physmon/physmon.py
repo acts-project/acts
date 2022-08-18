@@ -124,7 +124,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
             vtxGen=vtxGen,
-            multiplicity=201,
+            multiplicity=50,
             rnd=rnd,
         )
 
