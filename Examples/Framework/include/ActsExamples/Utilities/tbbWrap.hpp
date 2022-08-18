@@ -9,13 +9,15 @@
 #pragma once
 
 // uncomment to remove all use of tbb library.
-// #define NO_TBB
+// #define ACTS_EXAMPLES_NO_TBB
 
-// #include <iostream>
-
-#ifdef NO_TBB
+#ifdef ACTS_EXAMPLES_NO_TBB
+#define ACTS_EXAMPLES_WITH_TBB(a)
 #include <stdexcept>
 #else
+#define ACTS_EXAMPLES_WITH_TBB(a) a
+#include <optional>
+
 #include <tbb/parallel_for.h>
 #include <tbb/queuing_mutex.h>
 #include <tbb/task_arena.h>
@@ -24,21 +26,26 @@
 namespace ActsExamples {
 
 /// Wrapper for most of the tbb functions that we use in Sequencer.
+///
 /// It disables the use of tbb if nthreads=1.
 /// Note that only a small subset of tbb functions are implemented, and
 /// tbb::blocked_range (which doesn't require any thread setup) is still taken
 /// from the tbb library.
-/// However, if NO_TBB is defined, then don't use tbb library at all
-/// (requires nthreads=1 or -1). This allows the ACTS Examples to be built
+///
+/// However, if ACTS_EXAMPLES_NO_TBB is defined, then don't use tbb library at
+/// all (requires nthreads=1 or -1). This allows the ACTS Examples to be built
 /// without the tbb library (and reduces the dependency on ROOT).
+/// In this case, we provide our own minimal implementation of
+/// tbb::blocked_range.
+///
 /// Based on an idea from
 ///   https://stackoverflow.com/questions/59736661/how-to-completely-switch-off-threading-in-tbb-code
 
-#ifdef NO_TBB
+#ifdef ACTS_EXAMPLES_NO_TBB
 namespace tbb {
-struct task_arena {
-  static const int automatic = -1;
-};
+namespace task_arena {
+constexpr int automatic = -1;
+}
 
 template <typename Value>
 struct blocked_range {
@@ -57,108 +64,98 @@ namespace tbbWrap {
 static bool enableTBB(int nthreads = -99) {
   static bool setting = false;
   if (nthreads != -99) {
-#ifdef NO_TBB
+#ifdef ACTS_EXAMPLES_NO_TBB
     if (nthreads > 1) {
       throw std::runtime_error(
-          "tbb is not supported, so can't do multi-threading.");
+          "tbb is not available, so can't do multi-threading.");
     }
 #else
     bool newSetting = (nthreads != 1);
-    if (newSetting != setting) {
-      if (newSetting) {
-        // std::cout << "Enable TBB" << std::endl;
-        setting = newSetting;
-      } else {
-        // std::cout << "Don't disable TBB, since it is already in use." <<
-        // std::endl;
-      }
+    if (!setting && newSetting) {
+      setting = newSetting;
     }
 #endif
   }
-  // std::cout << "TBB is " << (setting ? "enabled" : "disabled") << std::endl;
   return setting;
 }
 
 class task_arena {
-#ifndef NO_TBB
-  std::unique_ptr<tbb::task_arena> tbb;
+#ifndef ACTS_EXAMPLES_NO_TBB
+  std::optional<tbb::task_arena> tbb;
 #endif
 
  public:
-#ifdef NO_TBB
-  task_arena(int nthreads = tbb::task_arena::automatic, unsigned = 1){
-#else
-  task_arena(int nthreads = tbb::task_arena::automatic, unsigned res = 1) {
+  task_arena(int nthreads = tbb::task_arena::automatic,
+             unsigned ACTS_EXAMPLES_WITH_TBB(res) = 1) {
+    if (enableTBB(nthreads)) {
+#ifndef ACTS_EXAMPLES_NO_TBB
+      tbb.emplace(nthreads, res);
 #endif
-      if (enableTBB(nthreads)) {
-#ifndef NO_TBB
-        tbb.reset(new tbb::task_arena(nthreads, res));
-#endif
-}
-}  // namespace tbbWrap
-
-template <typename F>
-void execute(const F& f) {
-#ifndef NO_TBB
-  if (tbb) {
-    tbb->execute(f);
-  } else
-#endif
-  {
-    f();
+    }
   }
-}
-};  // namespace ActsExamples
+
+  template <typename F>
+  void execute(const F& f) {
+#ifndef ACTS_EXAMPLES_NO_TBB
+    if (tbb) {
+      tbb->execute(f);
+    } else
+#endif
+    {
+      f();
+    }
+  }
+};
 
 class parallel_for {
  public:
   template <typename R, typename F>
   parallel_for(const R& r, const F& f) {
-#ifndef NO_TBB
+#ifndef ACTS_EXAMPLES_NO_TBB
     if (enableTBB()) {
       tbb::parallel_for(r, f);
     } else
 #endif
     {
-      f(r);
+      for (auto i = r.begin(); i != r.end(); ++i) {  // use default grainsize=1
+        f(R(i, i + 1));
+      }
     }
   }
 };
 
 class queuing_mutex {
-#ifndef NO_TBB
-  std::unique_ptr<tbb::queuing_mutex> tbb;
+#ifndef ACTS_EXAMPLES_NO_TBB
+  std::optional<tbb::queuing_mutex> tbb;
 #endif
 
  public:
   queuing_mutex() {
-#ifndef NO_TBB
+#ifndef ACTS_EXAMPLES_NO_TBB
     if (enableTBB()) {
-      tbb.reset(new tbb::queuing_mutex());
+      tbb.emplace();
     }
 #endif
   }
 
   class scoped_lock {
-#ifndef NO_TBB
-    std::unique_ptr<tbb::queuing_mutex::scoped_lock> tbb;
+#ifndef ACTS_EXAMPLES_NO_TBB
+    std::optional<tbb::queuing_mutex::scoped_lock> tbb;
 #endif
 
    public:
     scoped_lock() {
-#ifndef NO_TBB
+#ifndef ACTS_EXAMPLES_NO_TBB
       if (enableTBB()) {
-        tbb.reset(new tbb::queuing_mutex::scoped_lock());
+        tbb.emplace();
       }
 #endif
     }
 
-#ifdef NO_TBB
-    scoped_lock(queuing_mutex&){
-#else
-    scoped_lock(queuing_mutex& m) {
+    scoped_lock(queuing_mutex& ACTS_EXAMPLES_WITH_TBB(m)) {
+#ifndef ACTS_EXAMPLES_NO_TBB
       if (enableTBB()) {
-        tbb.reset(new tbb::queuing_mutex::scoped_lock(*m.tbb.get()));
+        tbb.emplace(*m.tbb);
       }
 #endif
     }
