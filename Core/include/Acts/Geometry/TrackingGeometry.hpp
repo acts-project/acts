@@ -39,17 +39,6 @@ class TrackingGeometry {
   /// Give the GeometryBuilder friend rights
   friend class TrackingGeometryBuilder;
 
-  /// Helper function to reset the original geometry identifier during geometry
-  /// closure
-  ///
-  /// @param orig The original geometry identifier
-  /// @param srf The surface being closed
-  /// @return The modified identifier
-  static GeometryIdentifier noopGeometryIdentifierHook(GeometryIdentifier orig,
-                                                       const Surface& /*srf*/) {
-    return orig;
-  }
-
  public:
   /// Constructor
   ///
@@ -57,10 +46,9 @@ class TrackingGeometry {
   /// @param materialDecorator is a dediated decorator that can assign
   ///        surface or volume based material to the TrackingVolume
   /// @param hook Identifier hook to be applied to surfaces
-  TrackingGeometry(
-      const MutableTrackingVolumePtr& highestVolume,
-      const IMaterialDecorator* materialDecorator = nullptr,
-      const GeometryIdentifierHook& hook = noopGeometryIdentifierHook);
+  TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
+                   const IMaterialDecorator* materialDecorator = nullptr,
+                   const GeometryIdentifierHook& hook = {});
 
   /// Destructor
   ~TrackingGeometry();
