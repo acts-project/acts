@@ -21,6 +21,14 @@ histograms:
 
   "^n.*$":
     nbins: 50
+
+  "truthX|truthY|recoX|recoY":
+    min: -0.05
+    max: 0.05
+
+  "truthZ|recoZ":
+    min: -200
+    max: 200
     
 
 extra_histograms:
