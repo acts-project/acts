@@ -539,7 +539,7 @@ def addKalmanTracks(
     field: acts.MagneticFieldProvider,
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
-    logLevel: Optional[acts.logging.Level] = acts.logging.INFO,
+    logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
     customLogLevel = defaultLogging(s, logLevel, locals())
@@ -769,7 +769,7 @@ def addExaTrkx(
     geometrySelection: Union[Path, str],
     onnxModelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-    logLevel: Optional[acts.logging.Level] = acts.logging.INFO,
+    logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
     customLogLevel = defaultLogging(s, logLevel, locals())

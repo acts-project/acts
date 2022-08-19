@@ -1,5 +1,5 @@
 import sys, inspect
-from typing import Callable, Optional
+from typing import Callable, Optional, Protocol
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -289,19 +289,43 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
     return alldone
 
 
+class CustomLogLevel(Protocol):
+    def __call__(
+        self,
+        override: Optional[acts.logging.Level] = None,
+        min: acts.logging.Level = acts.logging.VERBOSE,
+        max: acts.logging.Level = acts.logging.FATAL,
+    ) -> acts.logging.Level:
+        ...
+
+
 def defaultLogging(
-    s: acts.examples.Sequencer,
+    s: acts.examples.Sequencer = None,
     logLevel: Optional[acts.logging.Level] = None,
     locals: dict[str, any] = None,
     dumpArgsLevel: acts.logging.Level = acts.logging.DEBUG,
-) -> Callable[[acts.loggin.Level], acts.loggin.Level]:
+) -> CustomLogLevel:
+    """
+    Establishes a default logging strategy for the python examples interface.
+
+    Returns a function that determines the log level in the following schema:
+    - if `overrideLevel` for `customLogLevel` is set return it
+    - if `logLevel` is set use it other wise use the log level of the sequencer `s.config.logLevel`
+    - the returned log level is bound between `min` and `max` provided to `customLogLevel`
+
+    If `customLogLevel` is below `dumpArgsLevel` and `locals` is given
+    this function will also call `dump_args_calls`.
+    """
+
     def customLogLevel(
-        custom: acts.logging.Level = acts.logging.INFO,
+        overrideLevel: Optional[acts.logging.Level] = None,
+        minLevel: acts.logging.Level = acts.logging.VERBOSE,
+        maxLevel: acts.logging.Level = acts.logging.FATAL,
     ) -> acts.logging.Level:
-        """override logging level"""
-        if logLevel is None:
-            return s.config.logLevel
-        return acts.logging.Level(max(custom.value, logLevel.value))
+        if overrideLevel is not None:
+            return overrideLevel
+        l = logLevel if logLevel is not None else s.config.logLevel
+        return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
 
     if locals is not None and int(customLogLevel()) <= int(dumpArgsLevel):
         acts.examples.dump_args_calls(locals)
