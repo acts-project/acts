@@ -1,4 +1,5 @@
 import sys, inspect
+from typing import Callable, Optional
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -285,3 +286,23 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
     if not quiet and donemods:
         print("dump_args for module functions:", ", ".join(donemods))
     return alldone
+
+
+def defaultLogging(
+    s: acts.examples.Sequencer,
+    logLevel: Optional[acts.logging.Level] = None,
+    locals: dict[str, any] = None,
+    dumpArgsLevel: acts.logging.Level = acts.logging.DEBUG,
+) -> Callable[[acts.loggin.Level], acts.loggin.Level]:
+    def customLogLevel(
+        custom: acts.logging.Level = acts.logging.INFO,
+    ) -> acts.logging.Level:
+        """override logging level"""
+        if logLevel is None:
+            return s.config.logLevel
+        return acts.logging.Level(max(custom.value, logLevel.value))
+
+    if locals is not None and int(customLogLevel()) <= int(dumpArgsLevel):
+        acts.examples.dump_args_calls(locals)
+
+    return customLogLevel
