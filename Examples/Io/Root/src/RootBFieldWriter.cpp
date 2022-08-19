@@ -35,22 +35,13 @@ void RootBFieldWriter::run(const Config& config,
   TFile* outputFile =
       TFile::Open(config.fileName.c_str(), config.fileMode.c_str());
   if (outputFile == nullptr) {
-    throw std::ios_base::failure("Could not open '" + config.fileName);
+    throw std::ios_base::failure("Could not open '" + config.fileName + "'");
   }
-  outputFile->cd();
-  TTree* outputTree =
-      new TTree(config.treeName.c_str(), config.treeName.c_str());
+  TTree* outputTree = new TTree(config.treeName.c_str(),
+                                config.treeName.c_str(), 99, outputFile);
   if (outputTree == nullptr) {
     throw std::bad_alloc();
   }
-
-  // The position values
-  double z;
-  outputTree->Branch("z", &z);
-
-  // The BField values
-  double Bz;
-  outputTree->Branch("Bz", &Bz);
 
   // Access the minima and maxima of all axes
   auto minima = config.bField->getMin();
@@ -70,27 +61,37 @@ void RootBFieldWriter::run(const Config& config,
       ss << " " << m;
     }
     ACTS_VERBOSE(ss.str());
+    ss.str("");
+    ss << "nBins:";
+    for (auto m : nBins) {
+      ss << " " << m;
+    }
+    ACTS_VERBOSE(ss.str());
   }
 
   if (config.gridType == GridType::xyz) {
     ACTS_INFO("Map will be written out in cartesian coordinates (x,y,z).");
 
     // Write out the interpolated magnetic field map
-    double stepX = 0., stepY = 0., stepZ = 0.;
     double minX = 0., minY = 0., minZ = 0.;
     double maxX = 0., maxY = 0., maxZ = 0.;
     size_t nBinsX = 0, nBinsY = 0, nBinsZ = 0;
 
-    // The position values in xy
+    // The position values in xyz
     double x;
     outputTree->Branch("x", &x);
     double y;
     outputTree->Branch("y", &y);
-    // The BField values in xy
+    double z;
+    outputTree->Branch("z", &z);
+
+    // The BField values in xyz
     double Bx;
     outputTree->Branch("Bx", &Bx);
     double By;
     outputTree->Branch("By", &By);
+    double Bz;
+    outputTree->Branch("Bz", &Bz);
 
     // check if range is user defined
     if (config.rBounds && config.zBounds) {
@@ -110,8 +111,8 @@ void RootBFieldWriter::run(const Config& config,
       nBinsZ = config.zBins;
 
     } else {
-      ACTS_INFO("No user defined ranges handed over - printing out whole map.");
-      // print out whole map
+      ACTS_INFO("No user defined ranges handed over - write out whole map.");
+      // write out whole map
 
       // check dimension of Bfieldmap
       if (minima.size() == 3 && maxima.size() == 3) {
@@ -140,27 +141,26 @@ void RootBFieldWriter::run(const Config& config,
         nBinsY = nBins.at(0);
         nBinsZ = nBins.at(1);
       } else {
-        std::ostringstream errorMsg;
-        errorMsg << "BField has wrong dimension. The dimension needs to be "
-                    "either 2 (r,z,Br,Bz) or 3(x,y,z,Bx,By,Bz) in order to be "
-                    "written out by this writer.";
-        throw std::invalid_argument(errorMsg.str());
+        throw std::invalid_argument(
+            "BField has wrong dimension. The dimension needs to be "
+            "either 2 (r,z,Br,Bz) or 3(x,y,z,Bx,By,Bz) in order to be "
+            "written out by this writer.");
       }
     }
 
-    stepX = fabs(minX - maxX) / nBinsX;
-    stepY = fabs(minY - maxY) / nBinsY;
-    stepZ = fabs(minZ - maxZ) / nBinsZ;
+    assert(maxX > minX);
+    assert(maxY > minY);
+    assert(maxZ > minZ);
 
-    nBinsX += 1;
-    nBinsY += 1;
-    nBinsZ += 1;
+    double stepX = (maxX - minX) / (nBinsX - 1);
+    double stepY = (maxY - minY) / (nBinsY - 1);
+    double stepZ = (maxZ - minZ) / (nBinsZ - 1);
 
-    for (size_t i = 0; i <= nBinsX; i++) {
+    for (size_t i = 0; i < nBinsX; i++) {
       double raw_x = minX + i * stepX;
-      for (size_t j = 0; j <= nBinsY; j++) {
+      for (size_t j = 0; j < nBinsY; j++) {
         double raw_y = minY + j * stepY;
-        for (size_t k = 0; k <= nBinsZ; k++) {
+        for (size_t k = 0; k < nBinsZ; k++) {
           double raw_z = minZ + k * stepZ;
           Acts::Vector3 position(raw_x, raw_y, raw_z);
           Vector3 bField = config.bField->getFieldUnchecked(position);
@@ -175,19 +175,24 @@ void RootBFieldWriter::run(const Config& config,
         }  // for z
       }    // for y
     }      // for x
+
   } else {
     ACTS_INFO("Map will be written out in cylinder coordinates (r,z).");
-    // The position value in r
+
+    // The position value in rz
     double r;
     outputTree->Branch("r", &r);
-    // The BField value in r
+    double z;
+    outputTree->Branch("z", &z);
+    // The BField value in rz
     double Br;
     outputTree->Branch("Br", &Br);
+    double Bz;
+    outputTree->Branch("Bz", &Bz);
 
     double minR = 0, maxR = 0;
     double minZ = 0, maxZ = 0;
-    size_t nBinsR = 0, nBinsZ = 0, nBinsPhi = 0;
-    double stepR = 0, stepZ = 0;
+    size_t nBinsR = 0, nBinsZ = 0;
 
     if (config.rBounds && config.zBounds) {
       ACTS_INFO("User defined ranges handed over.");
@@ -200,7 +205,6 @@ void RootBFieldWriter::run(const Config& config,
 
       nBinsR = config.rBins;
       nBinsZ = config.zBins;
-      nBinsPhi = config.phiBins;
     } else {
       ACTS_INFO("No user defined ranges handed over - printing out whole map.");
 
@@ -213,7 +217,6 @@ void RootBFieldWriter::run(const Config& config,
 
         nBinsR = nBins.at(0);
         nBinsZ = nBins.at(2);
-        nBinsPhi = 100.;
 
       } else if (minima.size() == 2 || maxima.size() == 2) {
         minR = minima.at(0);
@@ -224,48 +227,40 @@ void RootBFieldWriter::run(const Config& config,
 
         nBinsR = nBins.at(0);
         nBinsZ = nBins.at(1);
-        nBinsPhi = 100.;
 
       } else {
-        std::ostringstream errorMsg;
-        errorMsg << "BField has wrong dimension. The dimension needs to be "
-                    "either 2 (r,z,Br,Bz) or 3(x,y,z,Bx,By,Bz) in order to be "
-                    "written out by this writer.";
-        throw std::invalid_argument(errorMsg.str());
+        throw std::invalid_argument(
+            "BField has wrong dimension. The dimension needs to be "
+            "either 2 (r,z,Br,Bz) or 3(x,y,z,Bx,By,Bz) in order to be "
+            "written out by this writer.");
       }
     }
-    double minPhi = -M_PI;
-    stepR = fabs(minR - maxR) / nBinsR;
-    stepZ = fabs(minZ - maxZ) / nBinsZ;
 
-    nBinsR += 1;
-    nBinsZ += 1;
+    assert(maxR > minR);
+    assert(maxZ > minZ);
 
-    double stepPhi = (2 * M_PI) / nBinsPhi;
+    double stepR = (maxR - minR) / (nBinsR - 1);
+    double stepZ = (maxZ - minZ) / (nBinsZ - 1);
 
-    for (size_t i = 0; i < nBinsPhi; i++) {
-      double phi = minPhi + i * stepPhi;
-      for (size_t k = 0; k < nBinsZ; k++) {
-        double raw_z = minZ + k * stepZ;
-        for (size_t j = 0; j < nBinsR; j++) {
-          double raw_r = minR + j * stepR;
-          Acts::Vector3 position(raw_r * cos(phi), raw_r * sin(phi), raw_z);
-          ACTS_VERBOSE("Requesting position: " << position.transpose());
-          auto bField = config.bField->getFieldUnchecked(position);
-          z = raw_z / Acts::UnitConstants::mm;
-          r = raw_r / Acts::UnitConstants::mm;
-          Bz = bField.z() / Acts::UnitConstants::T;
-          Br = VectorHelpers::perp(bField) / Acts::UnitConstants::T;
-          outputTree->Fill();
-        }
-      }
-    }  // for
+    for (size_t k = 0; k < nBinsZ; k++) {
+      double raw_z = minZ + k * stepZ;
+      for (size_t j = 0; j < nBinsR; j++) {
+        double raw_r = minR + j * stepR;
+        Acts::Vector3 position(raw_r, 0.0, raw_z);  // position at phi=0
+        ACTS_VERBOSE("Requesting position: " << position.transpose());
+        auto bField = config.bField->getFieldUnchecked(position);
+        z = raw_z / Acts::UnitConstants::mm;
+        r = raw_r / Acts::UnitConstants::mm;
+        Bz = bField.z() / Acts::UnitConstants::T;
+        Br = VectorHelpers::perp(bField) / Acts::UnitConstants::T;
+        outputTree->Fill();
+      }  // for R
+    }    // for z
   }
 
   // Tear down ROOT I/O
   ACTS_INFO("Closing and Writing ROOT output File : " << config.fileName);
-  outputFile->cd();
   outputTree->Write();
-  outputFile->Close();
+  delete outputFile;
 }
 }  // namespace ActsExamples

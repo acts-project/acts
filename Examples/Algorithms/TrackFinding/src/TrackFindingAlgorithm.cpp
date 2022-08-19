@@ -51,6 +51,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   TrajectoriesContainer trajectories;
   trajectories.reserve(initialParameters.size());
 
+  // Prepare the output data with TrackParameters
+  TrackParametersContainer trackParametersContainer;
+
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
@@ -103,6 +106,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       trajectories.emplace_back(trackFindingOutput.fittedStates,
                                 trackFindingOutput.lastMeasurementIndices,
                                 trackFindingOutput.fittedParameters);
+
+      const auto& traj = trajectories.back();
+      for (const auto tip : traj.tips()) {
+        if (traj.hasTrackParameters(tip)) {
+          trackParametersContainer.push_back(traj.trackParameters(tip));
+        }
+      }
     } else {
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());
@@ -116,5 +126,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                                              << " track candidates.");
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  ctx.eventStore.add(m_cfg.outputTrackParameters,
+                     std::move(trackParametersContainer));
   return ActsExamples::ProcessCode::SUCCESS;
 }
