@@ -2,8 +2,7 @@ from pathlib import Path
 import sys, os
 
 import acts
-
-from . import defaultLogging
+from acts.examples import defaultLogging
 
 
 def getOpenDataDetector(

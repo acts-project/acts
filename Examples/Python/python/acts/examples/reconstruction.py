@@ -6,8 +6,7 @@ import warnings
 
 import acts
 import acts.examples
-
-from . import defaultLogging
+from acts.examples import defaultLogging
 
 u = acts.UnitConstants
 

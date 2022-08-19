@@ -2,7 +2,7 @@ from pathlib import Path
 import math
 
 import acts
-from acts.examples import TGeoDetector
+from acts.examples import defaultLogging, TGeoDetector
 
 from acts.examples.reconstruction import (
     SeedfinderConfigArg,
@@ -10,8 +10,6 @@ from acts.examples.reconstruction import (
     SpacePointGridConfigArg,
     SeedingAlgorithmConfigArg,
 )
-
-from . import defaultLogging
 
 u = acts.UnitConstants
 

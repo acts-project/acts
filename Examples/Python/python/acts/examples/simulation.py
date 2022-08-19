@@ -5,6 +5,7 @@ from collections.abc import Iterable
 
 import acts
 from acts.examples import (
+    defaultLogging,
     RandomNumbers,
     EventGenerator,
     FixedMultiplicityGenerator,
@@ -12,8 +13,6 @@ from acts.examples import (
     ParticlesPrinter,
     RootParticleWriter,
 )
-
-from . import defaultLogging
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
