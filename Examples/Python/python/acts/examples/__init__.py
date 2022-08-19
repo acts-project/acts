@@ -4,6 +4,7 @@ from typing import Callable, Optional
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
 import acts
+import acts.examples
 from acts._adapter import _patch_config, _patch_detectors, _patchKwargsConstructor
 
 _propagators = []
