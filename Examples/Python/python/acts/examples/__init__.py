@@ -1,10 +1,9 @@
 import sys, inspect
-from typing import Callable, Optional, Protocol
+from typing import Optional, Protocol
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
 import acts
-import acts.examples
 from acts._adapter import _patch_config, _patch_detectors, _patchKwargsConstructor
 
 _propagators = []
@@ -300,7 +299,7 @@ class CustomLogLevel(Protocol):
 
 
 def defaultLogging(
-    s: acts.examples.Sequencer = None,
+    s=None,
     logLevel: Optional[acts.logging.Level] = None,
     locals: dict[str, any] = None,
     dumpArgsLevel: acts.logging.Level = acts.logging.DEBUG,
@@ -328,6 +327,6 @@ def defaultLogging(
         return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
 
     if locals is not None and int(customLogLevel()) <= int(dumpArgsLevel):
-        acts.examples.dump_args_calls(locals)
+        dump_args_calls(locals)
 
     return customLogLevel
