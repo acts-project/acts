@@ -8,18 +8,26 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
-    const IMaterialDecorator* materialDecorator)
+    const IMaterialDecorator* materialDecorator, GeometryIdentifierHook* hook)
     : m_world(highestVolume),
       m_beam(Surface::makeShared<PerigeeSurface>(Vector3::Zero())) {
   // Close the geometry: assign geometryID and successively the material
   size_t volumeID = 0;
-  highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID);
+  GeometryIdentifierHook hookDefault =
+      [](GeometryIdentifier orig, const Surface& /*srf*/) { return orig; };
+  if (hook == nullptr) {
+    hook = &hookDefault;
+  }
+  throw_assert(hook != nullptr, "Hook should not be nullptr at this point");
+  highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID,
+                               *hook);
   m_volumesById.rehash(0);
   // fill surface lookup container
   m_world->visitSurfaces([this](const Acts::Surface* srf) {

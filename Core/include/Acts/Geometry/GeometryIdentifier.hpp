@@ -15,6 +15,8 @@
 
 namespace Acts {
 
+class Surface;
+
 /// Identifier for geometry nodes within the geometry hierarchy.
 ///
 /// An identifier can be split into the following components. They define
@@ -127,6 +129,9 @@ class GeometryIdentifier {
 };
 
 std::ostream& operator<<(std::ostream& os, GeometryIdentifier id);
+
+using GeometryIdentifierHook =
+    std::function<GeometryIdentifier(GeometryIdentifier, const Surface&)>;
 
 }  // namespace Acts
 
