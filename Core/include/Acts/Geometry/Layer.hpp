@@ -280,6 +280,7 @@ class Layer : public virtual GeometryObject {
   ///        optionally the surface material to where they belong
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
+  /// @param hook Identifier hook to be applied to surfaces
   void closeGeometry(const IMaterialDecorator* materialDecorator,
                      const GeometryIdentifier& layerID,
                      const GeometryIdentifierHook& hook);

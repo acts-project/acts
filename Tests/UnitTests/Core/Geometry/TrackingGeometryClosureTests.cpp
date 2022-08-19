@@ -24,7 +24,7 @@ namespace Test {
 // Create a test context
 GeometryContext tgContext = GeometryContext();
 
-TrackingGeometry makeTrackingGeometry(GeometryIdentifierHook& hook) {
+TrackingGeometry makeTrackingGeometry(const GeometryIdentifierHook& hook) {
   /// we test a two-level hierarchy
   /// every deeper level hierarchy is a derivate of this
   ///
@@ -85,7 +85,7 @@ TrackingGeometry makeTrackingGeometry(GeometryIdentifierHook& hook) {
 
   // creating a TrackingGeometry
   // -> close the geometry, this should set the GeometryIdentifier
-  TrackingGeometry tGeometry(volume, nullptr, hook ? &hook : nullptr);
+  TrackingGeometry tGeometry(volume, nullptr, hook);
   return tGeometry;
 }
 
