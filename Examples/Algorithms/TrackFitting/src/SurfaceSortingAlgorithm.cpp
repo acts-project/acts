@@ -36,8 +36,7 @@ ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
 
   const auto& protoTracks =
       ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& simHits =
-      ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
   const auto& simHitsMap =
       ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
 
