@@ -1,5 +1,5 @@
 import sys, inspect
-from typing import Optional, Protocol
+from typing import Optional, Protocol, Dict
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -301,7 +301,7 @@ class CustomLogLevel(Protocol):
 def defaultLogging(
     s=None,
     logLevel: Optional[acts.logging.Level] = None,
-    locals: dict[str, any] = None,
+    locals: Dict[str, any] = None,
     dumpArgsLevel: acts.logging.Level = acts.logging.DEBUG,
 ) -> CustomLogLevel:
     """
