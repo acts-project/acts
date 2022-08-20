@@ -431,6 +431,21 @@ class CombinatorialKalmanFilter {
         }
       }
 
+      if (stepper.momentum(state.stepping) <= 0) {
+        // If no more active tip, done with filtering; Otherwise, reset
+        // propagation state to track state at last tip of active tips
+        if (result.activeTips.empty()) {
+          // we are already done
+        } else if (result.activeTips.size() == 1) {
+          ACTS_VERBOSE("Kalman filtering finds "
+                       << result.lastTrackIndices.size() << " tracks");
+          result.filtered = true;
+        } else {
+          result.activeTips.erase(result.activeTips.end() - 1);
+          reset(state, stepper, result);
+        }
+      }
+
       // Post-processing after filtering phase
       if (result.filtered) {
         // Return error if filtering finds no tracks
