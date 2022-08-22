@@ -135,6 +135,7 @@ In addition to root and JSON output, one can also output the material map to a C
 
 .. note::
   You might need to run the material mapping multiple time in a row to optimise the binning for each surface, which can be time-consuming. To improve the speed of subsequent mapping one can turn the ``mat-mapping-read-surfaces`` option to true, with this option the intersection of the material track with the surfaces will be taken directly from the input root file (which would have been updated during the first mapping). This will save the time needed to compute them. This can save up to 50% of the mapping time. Please note that this can only be used if the mapping surfaces used didn't change between this execution and the last.
+
 Material Validation
 -------------------
 
