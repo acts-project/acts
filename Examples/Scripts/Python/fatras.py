@@ -12,13 +12,13 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
     s = s or acts.examples.Sequencer(events=100, numThreads=-1)
     s.config.logLevel = acts.logging.INFO
     rnd = acts.examples.RandomNumbers()
-    s = addParticleGun(
+    addParticleGun(
         s,
         EtaConfig(-2.0, 2.0),
         rnd=rnd,
     )
     outputDir = Path(outputDir)
-    return addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
@@ -26,6 +26,7 @@ def runFatras(trackingGeometry, field, outputDir, s: acts.examples.Sequencer = N
         outputDirRoot=outputDir,
         rnd=rnd,
     )
+    return s
 
 
 if "__main__" == __name__:
