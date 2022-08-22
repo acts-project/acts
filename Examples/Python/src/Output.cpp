@@ -434,6 +434,7 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Writer::Config);
     ACTS_PYTHON_MEMBER(inputAllTruthParticles);
     ACTS_PYTHON_MEMBER(inputSelectedTruthParticles);
+    ACTS_PYTHON_MEMBER(inputAssociatedTruthParticles);
     ACTS_PYTHON_MEMBER(inputFittedTracks);
     ACTS_PYTHON_MEMBER(inputFittedTracksIndices);
     ACTS_PYTHON_MEMBER(inputAllFittedTracksTips);

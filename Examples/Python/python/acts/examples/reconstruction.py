@@ -847,6 +847,7 @@ def addVertexFitting(
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
     associatedParticles: str = "particles_input",
+    trajectories: Optional[str] = None,
     trackParameters: str = "trackparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
@@ -937,6 +938,11 @@ def addVertexFitting(
                 "Using RootVertexPerformanceWriter with smeared particles is not necessarily supported. "
                 "Please get in touch with us"
             )
+        kwargs = {}
+        if trajectories is not None:
+            kwargs["inputTrajectories"] = "trajectories"
+        else:
+            kwargs["inputAssociatedTruthParticles"] = associatedParticles
         s.addWriter(
             RootVertexPerformanceWriter(
                 level=acts.logging.VERBOSE,
@@ -945,13 +951,13 @@ def addVertexFitting(
                 inputFittedTracks=trackParameters,
                 inputFittedTracksIndices="outputTrackIndices",
                 inputAllFittedTracksTips="fittedTrackParametersTips",
-                inputTrajectories="trajectories",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputVertices=outputVertices,
                 minTrackVtxMatchFraction=0.0,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
+                **kwargs,
             )
         )
 
