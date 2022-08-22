@@ -219,7 +219,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     mapInteraction(mState, mTrack);
     return;
   }
-
+}
   void Acts::SurfaceMaterialMapper::mapInteraction(
       State & mState, RecordedMaterialTrack & mTrack) const {
     // Retrieve the recorded material from the recorded material track
