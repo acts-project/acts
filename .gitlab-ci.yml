@@ -57,7 +57,7 @@ clang_tidy:
         --filter "$PWD/*"
 
     # Combine and deduplicate the two clang-tidy runs
-    - CI/clang_tidy/merge.py clang-tidy-build.json clang-tidy-headers.json --output clang-tidy.json
+    - CI/clang_tidy/merge.py clang-tidy/clang-tidy-build.json clang-tidy/clang-tidy-headers.json --output clang-tidy/clang-tidy.json
 
     # Check the combined report against the defined limits
     - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
