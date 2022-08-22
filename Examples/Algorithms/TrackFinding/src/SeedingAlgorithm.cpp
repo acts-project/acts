@@ -59,17 +59,14 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
       std::numeric_limits<
           decltype(m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
       "Value of deltaRMaxTopSP must support NaN values");
-
   static_assert(
       std::numeric_limits<
           decltype(m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
       "Value of deltaRMinTopSP must support NaN values");
-
   static_assert(
       std::numeric_limits<
           decltype(m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
       "Value of deltaRMaxBottomSP must support NaN values");
-
   static_assert(
       std::numeric_limits<
           decltype(m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
