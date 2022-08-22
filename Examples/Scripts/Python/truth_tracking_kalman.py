@@ -43,7 +43,7 @@ def runTruthTrackingKalman(
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
-        s = addParticleGun(
+        addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
             ParticleConfig(2, acts.PdgParticle.eMuon, False),
@@ -65,14 +65,14 @@ def runTruthTrackingKalman(
             )
         )
 
-    s = addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
     )
 
-    s = addDigitization(
+    addDigitization(
         s,
         trackingGeometry,
         field,
@@ -80,7 +80,7 @@ def runTruthTrackingKalman(
         rnd=rnd,
     )
 
-    s = addSeeding(
+    addSeeding(
         s,
         trackingGeometry,
         field,
@@ -92,7 +92,7 @@ def runTruthTrackingKalman(
         ),
     )
 
-    s = addKalmanTracks(
+    addKalmanTracks(
         s, trackingGeometry, field, directNavigation, reverseFilteringMomThreshold
     )
 

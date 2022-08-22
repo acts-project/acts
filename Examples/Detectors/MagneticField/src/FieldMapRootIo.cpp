@@ -30,7 +30,13 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
   std::vector<Acts::Vector2> bField;
   // [1] Read in file and fill values
   TFile* inputFile = TFile::Open(fieldMapFile.c_str());
-  TTree* tree = (TTree*)inputFile->Get(treeName.c_str());
+  if (inputFile == nullptr) {
+    throw std::runtime_error("file does not exist");
+  }
+  TTree* tree = inputFile->Get<TTree>(treeName.c_str());
+  if (tree == nullptr) {
+    throw std::runtime_error("object not found in file");
+  }
   Int_t entries = tree->GetEntries();
 
   double r, z;
@@ -53,7 +59,7 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
     zPos.push_back(z);
     bField.push_back(Acts::Vector2(Br, Bz));
   }
-  inputFile->Close();
+  delete inputFile;
   /// [2] use helper function in core
   return Acts::fieldMapRZ(localToGlobalBin, rPos, zPos, bField, lengthUnit,
                           BFieldUnit, firstQuadrant);
@@ -75,7 +81,13 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
   std::vector<Acts::Vector3> bField;
   // [1] Read in file and fill values
   TFile* inputFile = TFile::Open(fieldMapFile.c_str());
-  TTree* tree = (TTree*)inputFile->Get(treeName.c_str());
+  if (inputFile == nullptr) {
+    throw std::runtime_error("file does not exist");
+  }
+  TTree* tree = inputFile->Get<TTree>(treeName.c_str());
+  if (tree == nullptr) {
+    throw std::runtime_error("object not found in file");
+  }
   Int_t entries = tree->GetEntries();
 
   double x, y, z;
@@ -102,7 +114,7 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
     zPos.push_back(z);
     bField.push_back(Acts::Vector3(Bx, By, Bz));
   }
-  inputFile->Close();
+  delete inputFile;
 
   return Acts::fieldMapXYZ(localToGlobalBin, xPos, yPos, zPos, bField,
                            lengthUnit, BFieldUnit, firstOctant);

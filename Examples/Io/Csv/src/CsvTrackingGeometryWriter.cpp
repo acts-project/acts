@@ -129,7 +129,7 @@ void writeCylinderLayerVolume(
                           Acts::SurfaceBounds::eCylinder);
 
   auto lTranslation = transform.translation();
-  // Change volume Bound values to r min , r max , z min, z max, phi min ,
+  // Change volume Bound values to r min, r max, z min, z max, phi min,
   // phi max
   representingBoundValues = {
       representingBoundValues[0],
@@ -221,7 +221,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
 
     if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
       auto vTranslation = vTransform.translation();
-      // values to r min , r max , z min, z max, phi min, phi max
+      // values to r min, r max, z min, z max, phi min, phi max
       volumeBoundValues = {
           volumeBoundValues[0],
           volumeBoundValues[1],

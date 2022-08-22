@@ -16,7 +16,8 @@ ActsFatras::Particle::Particle(Barcode particleId, Acts::PdgParticle pdg)
 std::ostream& ActsFatras::operator<<(std::ostream& os,
                                      const ActsFatras::Particle& particle) {
   // compact format w/ only identity information but no kinematics
-  os << "id=(" << particle.particleId() << ")";
+  os << "id=" << particle.particleId().value() << "(" << particle.particleId()
+     << ")";
   os << "|pdg=" << particle.pdg();
   os << "|q=" << particle.charge();
   os << "|m=" << particle.mass();

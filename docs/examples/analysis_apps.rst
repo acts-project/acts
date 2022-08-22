@@ -14,7 +14,7 @@ a window, when specifying the `-s` option.
 Material Composition Analysis
 -----------------------------
 
-This analysis allows to to inspect the output of the ``Geant4`` based material recording, and split
+This analysis allows to inspect the output of the ``Geant4`` based material recording, and split
 the contained material by atomic number in predefined detector regions. For the moment, the detector
 regions need to be identified and constraint in the ``rz`` plane.
 
@@ -34,16 +34,24 @@ regions need to be identified and constraint in the ``rz`` plane.
     --sub-rmax arg                          Maximal radial restrictions.
     --sub-zmin arg                          Minimal z radial restrictions
     --sub-zmax arg                          Maximal z radial restrictions.
-    
+
 For the output of the material recording, of e.g. the ``OpenDateDetector``, the following command
 will create a material composition plot of the entire detector:
 
 .. code-block:: console
 
-    ./ActsAnalysisMaterialComposition -i geant4_material_tracks.root -t material-tracks -o material_composition.root --sub-names beampipe detector --sub-rmin 0.:0. --sub-rmax 30.:1100 --sub-zmin -4000.:-4000. --sub-zmax 4000.:4000.
+    $ <build>/bin/ActsAnalysisMaterialComposition \
+        -i geant4_material_tracks.root \
+        -t material-tracks \
+        -o material_composition.root \
+        --sub-names beampipe detector \
+        --sub-rmin 0.:0. \
+        --sub-rmax 30.:1100 \
+        --sub-zmin -4000.:-4000. \
+        --sub-zmax 4000.:4000.
 
 The output file ``material_composition.root`` would then contain profile histograms versus pseudorapidity
-and azimuhtal angle ``phi`` for the radiation length ``X0`` and the nuclear interaction length ``L0``,
+and azimuthal angle ``phi`` for the radiation length ``X0`` and the nuclear interaction length ``L0``,
 restricted to the given `rz` regions, in this case only for the beampipe and the entire detector.
 
 The resulting file contains the following histograms:
@@ -208,14 +216,14 @@ This application is highly configurable and produces residual and pull
 It can be run in ```eta,phi,pT``` bins, and as the different histograms in the various bins
 will require different histogram ranges, these will be automatically determined. 
 
-However, this process is relatively slow and makes coparisons between runs difficult, 
-thus the range configuration can be written out by specifying a ``--config-output`` ``json`` file,
+However, this process is relatively slow and makes comparisons between runs difficult, 
+thus the range configuration can be written out by specifying a ``--config-output`` JSON file,
 and successively re-using it with a ``--config-input`` flag in future analysis runs.
 
 For very large files, the number of entries used for range calculation (peak entries) can be set
 using the ``--peak-events`` option.
 
-Some example histograms (transverse impact parameter ```d0`` distribution or a summary plot showing
+Some example histograms (transverse impact parameter ``d0`` distribution or a summary plot showing
 the number of detector hits, are added below).
 
 .. figure:: ../figures/examples/aa_ts_d0.png  
@@ -228,3 +236,4 @@ the number of detector hits, are added below).
 
 
 The source code for these applications can be found in ``Examples/Scripts/TrackingPerformance``.
+
