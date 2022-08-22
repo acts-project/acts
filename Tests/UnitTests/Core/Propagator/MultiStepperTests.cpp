@@ -12,7 +12,7 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
-#include <Acts/Propagator/Navigator.hpp>
+#include "Acts/Propagator/Navigator.hpp"
 
 using namespace Acts;
 using namespace Acts::VectorHelpers;
@@ -40,6 +40,7 @@ struct Options {
   double stepSizeCutOff = 0.0;
   std::size_t maxRungeKuttaStepTrials = 10;
   double mass = 1.0;
+  LoggerWrapper logger = Acts::getDummyLogger();
 };
 
 struct Navigation {};
