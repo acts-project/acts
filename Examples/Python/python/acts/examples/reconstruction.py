@@ -560,8 +560,8 @@ def addKalmanTracks(
         srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
             level=acts.logging.INFO,
             inputProtoTracks="prototracks",
-            inputSimulatedHits=outputSimHits,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
             outputProtoTracks="sortedprototracks",
         )
         s.addAlgorithm(srfSortAlg)
