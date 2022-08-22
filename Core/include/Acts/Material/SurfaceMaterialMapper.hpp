@@ -175,6 +175,14 @@ class SurfaceMaterialMapper {
   /// surface
   ///
   /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
+  ///
+  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+
+  /// Loop through all the material interaction and add them to associated
+  /// surface
+  ///
+  /// @param mState The current state map
   /// @param rMaterial Vector of all the material interaction that will be mapped
   ///
   /// @note The material interaction are assumed to have an associated surface ID
