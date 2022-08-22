@@ -46,7 +46,9 @@ class BareAlgorithm : public IAlgorithm {
   virtual ProcessCode execute(
       const AlgorithmContext& context) const override = 0;
 
+  /// Initialize the algorithm
   ProcessCode initialize() const override { return ProcessCode::SUCCESS; }
+  /// Finalize the algorithm
   ProcessCode finalize() const override { return ProcessCode::SUCCESS; }
 
  protected:

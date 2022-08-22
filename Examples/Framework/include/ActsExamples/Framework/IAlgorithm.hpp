@@ -28,7 +28,9 @@ class IAlgorithm {
 
   /// Execute the algorithm for one event.
   virtual ProcessCode execute(const AlgorithmContext& context) const = 0;
+  /// Initialize the algorithm
   virtual ProcessCode initialize() const = 0;
+  /// Finalize the algorithm
   virtual ProcessCode finalize() const = 0;
 };
 
