@@ -53,10 +53,11 @@ function full_chain() {
         -o $outdir/ckf_${suffix}.html \
         -p $outdir/ckf_${suffix}_plots 
 
-    Examples/Scripts/Vertexing/vertex_performance.py \
+    Examples/Scripts/generic_plotter.py \
         $outdir/performance_vertexing_${suffix}.root \
         vertexing \
         $outdir/performance_vertexing_${suffix}_hist.root \
+        --silent \
         --config CI/physmon/vertexing_config.yml
     ec=$(($ec | $?))
 

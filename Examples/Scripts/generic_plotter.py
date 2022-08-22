@@ -42,16 +42,40 @@ class Mode(str, enum.Enum):
 
 
 def main(
-    infile: Path = typer.Argument(..., exists=True, dir_okay=False),
-    treename: str = typer.Argument(...),
-    outpath: Path = typer.Argument("outfile", dir_okay=False),
-    config_file: Optional[Path] = typer.Option(
-        None, "--config", exists=True, dir_okay=False
+    infile: Path = typer.Argument(
+        ..., exists=True, dir_okay=False, help="The input ROOT file"
     ),
-    mode: Mode = Mode.recreate,
-    plots: Optional[Path] = typer.Option(None, file_okay=False),
-    plot_format: str = "pdf",
+    treename: str = typer.Argument(..., help="The tree to look up branched from"),
+    outpath: Path = typer.Argument(
+        "outfile", dir_okay=False, help="The output ROOT file"
+    ),
+    config_file: Optional[Path] = typer.Option(
+        None,
+        "--config",
+        "-c",
+        exists=True,
+        dir_okay=False,
+        help="A config file following the input spec. By default, all branches will be plotted.",
+    ),
+    mode: Mode = typer.Option(Mode.recreate, help="Mode to open ROOT file in"),
+    plots: Optional[Path] = typer.Option(
+        None,
+        "--plots",
+        "-p",
+        file_okay=False,
+        help="If set, output plots individually to this directory",
+    ),
+    plot_format: str = typer.Option(
+        "pdf", "--plot-format", "-f", help="Format to write plots in if --plots is set"
+    ),
+    silent: bool = typer.Option(
+        False, "--silent", "-s", help="Do not print any output"
+    ),
 ):
+    """
+    Script to plot all branches in a TTree from a ROOT file, with optional configurable binning and ranges.
+    Also allows setting extra expressions to be plotted as well.
+    """
 
     rf = uproot.open(infile)
     tree = rf[treename]
@@ -66,11 +90,8 @@ def main(
 
     histograms = {}
 
-    print(config.extra_histograms)
-    #  for extra in extra_histograms:
-    #  print(extra)
-
-    #  histograms.update({ hist.Hist(hist.axis.Regular(e.nbins, e.min, e.max)) })
+    if not silent:
+        print(config.extra_histograms)
 
     for df in tree.iterate(library="ak", how=dict):
         for col in df.keys():
@@ -137,7 +158,8 @@ def main(
         plots.mkdir(parents=True, exist_ok=True)
 
     for k, h in histograms.items():
-        print(k, h.axes[0])
+        if not silent:
+            print(k, h.axes[0])
         outfile[k] = h
 
         if plots is not None:
