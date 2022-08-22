@@ -438,10 +438,12 @@ class CombinatorialKalmanFilter {
         if (result.activeTips.empty()) {
           // we are already done
         } else if (result.activeTips.size() == 1) {
+          // this was the last track - we are done
           ACTS_VERBOSE("Kalman filtering finds "
                        << result.lastTrackIndices.size() << " tracks");
           result.filtered = true;
         } else {
+          // remove the active tip and continue with the next
           result.activeTips.erase(result.activeTips.end() - 1);
           reset(state, stepper, result);
         }
