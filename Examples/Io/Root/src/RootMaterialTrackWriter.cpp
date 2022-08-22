@@ -231,16 +231,12 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       if (m_cfg.storeSurface) {
         const Acts::Surface* surface = mint.surface;
         Acts::GeometryIdentifier slayerID;
+        m_sur_id.push_back(mint.intersectionID.value());
+        m_sur_x.push_back(mint.intersection.x());
+        m_sur_y.push_back(mint.intersection.y());
+        m_sur_z.push_back(mint.intersection.z());
         if (surface != nullptr) {
-          auto sfIntersection = surface->intersect(
-              ctx.geoContext, mint.position, mint.direction, true);
-          slayerID = surface->geometryId();
-          m_sur_id.push_back(slayerID.value());
           m_sur_type.push_back(surface->type());
-          m_sur_x.push_back(sfIntersection.intersection.position.x());
-          m_sur_y.push_back(sfIntersection.intersection.position.y());
-          m_sur_z.push_back(sfIntersection.intersection.position.z());
-
           const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
           const Acts::RadialBounds* radialBounds =
               dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
@@ -260,11 +256,6 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
             m_sur_range_max.push_back(0);
           }
         } else {
-          slayerID.setVolume(0);
-          slayerID.setBoundary(0);
-          slayerID.setLayer(0);
-          slayerID.setApproach(0);
-          slayerID.setSensitive(0);
           m_sur_id.push_back(slayerID.value());
           m_sur_type.push_back(-1);
 
@@ -295,7 +286,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
 
       // the material information
       const auto& mprops = mint.materialSlab;
-      m_step_length.push_back(mprops.thickness());
+      m_step_length.push_back(mprops.thickness() / mint.pathCorrection);
       m_step_X0.push_back(mprops.material().X0());
       m_step_L0.push_back(mprops.material().L0());
       m_step_A.push_back(mprops.material().Ar());
