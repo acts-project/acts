@@ -13,6 +13,7 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsExamples/Utilities/tbbWrap.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
 #include <cstddef>
@@ -21,8 +22,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-
-#include <tbb/task_arena.h>
 
 namespace ActsExamples {
 
@@ -114,7 +113,7 @@ class Sequencer {
   std::pair<size_t, size_t> determineEventsRange() const;
 
   Config m_cfg;
-  tbb::task_arena m_taskArena;
+  tbbWrap::task_arena m_taskArena;
   std::vector<std::shared_ptr<IService>> m_services;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;

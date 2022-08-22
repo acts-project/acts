@@ -19,7 +19,7 @@ ActsExamples::SurfaceSortingAlgorithm::SurfaceSortingAlgorithm(
   if (m_cfg.inputProtoTracks.empty()) {
     throw std::invalid_argument("Missing input proto track collection");
   }
-  if (m_cfg.inputSimulatedHits.empty()) {
+  if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing input simulated hits collection");
   }
   if (m_cfg.inputMeasurementSimHitsMap.empty()) {
@@ -36,8 +36,7 @@ ActsExamples::ProcessCode ActsExamples::SurfaceSortingAlgorithm::execute(
 
   const auto& protoTracks =
       ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& simHits =
-      ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimulatedHits);
+  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
   const auto& simHitsMap =
       ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
 
