@@ -226,7 +226,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
         BOOST_CHECK_EQUAL(geoid, lay_vol_id);
         // test the layer approach surfaces
         if (lay->approachDescriptor() != nullptr) {
-          // approach surfacesare counted from 1 - n
+          // approach surfaces are counted from 1 - n
           GeometryIdentifier::Value asurface_id = 0;
           for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
             // check the approach volume id, approach layer id, approach

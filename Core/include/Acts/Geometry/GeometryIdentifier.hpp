@@ -56,6 +56,8 @@ class GeometryIdentifier {
   /// Return the sensitive identifier.
   constexpr Value sensitive() const { return getBits(kSensitiveMask); }
   /// Return the extra identifier
+  /// Usage can be experiment-specific, like tagging which kind of detector a
+  /// surface object corresponds to, or which subsystem it belongs to
   constexpr Value extra() const { return getBits(kExtraMask); }
 
   /// Set the volume identifier.
@@ -89,8 +91,8 @@ class GeometryIdentifier {
   static constexpr Value kBoundaryMask  = 0x00ff000000000000; // (2^8)-1 = 255 boundaries
   static constexpr Value kLayerMask     = 0x0000fff000000000; // (2^12)-1 = 4096 layers
   static constexpr Value kApproachMask  = 0x0000000ff0000000; // (2^8)-1 = 255 approach surfaces
-  static constexpr Value kSensitiveMask = 0x000000000fffff00; // (2^20)-1 sensitive surfaces
-  static constexpr Value kExtraMask     = 0x00000000000000ff; // (2^8)-1 extra values
+  static constexpr Value kSensitiveMask = 0x000000000fffff00; // (2^20)-1 = 1048575 sensitive surfaces
+  static constexpr Value kExtraMask     = 0x00000000000000ff; // (2^8)-1 = 255 extra values
   // clang-format on
 
   Value m_value = 0;
