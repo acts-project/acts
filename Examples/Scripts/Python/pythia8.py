@@ -13,7 +13,7 @@ u = acts.UnitConstants
 def runPythia8(
     outputDir,
     outputRoot: bool = True,
-    outputCsv: bool = False,
+    outputCsv: bool = True,
     s: acts.examples.Sequencer = None,
 ):
     # Preliminaries
