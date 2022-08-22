@@ -269,15 +269,6 @@ int ActsExamples::Sequencer::run() {
     service->startRun();
   }
 
-  ACTS_VERBOSE("Initialize algorithms");
-  for (auto& alg : m_algorithms) {
-    ACTS_VERBOSE("Initialize algorithm: " << alg->name());
-    if (alg->initialize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to initialize algorithm: " << alg->name());
-      throw std::runtime_error("Failed to process event data");
-    }
-  }
-
   // execute the parallel event loop
   std::atomic<size_t> nProcessedEvents = 0;
   size_t nTotalEvents = eventsRange.second - eventsRange.first;
@@ -360,15 +351,6 @@ int ActsExamples::Sequencer::run() {
           }
         });
   });
-
-  ACTS_VERBOSE("Finalize algorithms");
-  for (auto& alg : m_algorithms) {
-    ACTS_VERBOSE("Finalize algorithm: " << alg->name());
-    if (alg->initialize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to Finalize algorithm: " << alg->name());
-      throw std::runtime_error("Failed to process event data");
-    }
-  }
 
   // run end-of-run hooks
   for (auto& wrt : m_writers) {
