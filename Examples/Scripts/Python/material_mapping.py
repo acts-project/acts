@@ -36,6 +36,7 @@ def runMaterialMapping(
     mapName="material-map",
     mapSurface=True,
     mapVolume=True,
+    readSurface=False,
     s=None,
 ):
     s = s or Sequencer(numThreads=1)
@@ -56,6 +57,7 @@ def runMaterialMapping(
             level=acts.logging.INFO,
             collection="material-tracks",
             fileList=[os.path.join(inputDir, "geant4_material_tracks.root")],
+            readSurface=readSurface,
         )
     )
 
