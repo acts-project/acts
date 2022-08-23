@@ -186,14 +186,22 @@ Result<void> SpacePointUtility::calculateStripSPPosition(
   /// The same calculation can be repeated for y. Its corresponding
   /// parameter will be named n.
 
-  spParams.q = stripEnds1.first - stripEnds1.second;
-  spParams.r = stripEnds2.first - stripEnds2.second;
-  spParams.s = stripEnds1.first + stripEnds1.second - 2 * posVertex;
-  spParams.t = stripEnds2.first + stripEnds2.second - 2 * posVertex;
-  spParams.qs = spParams.q.cross(spParams.s);
-  spParams.rt = spParams.r.cross(spParams.t);
-  spParams.m = -spParams.s.dot(spParams.rt) / spParams.q.dot(spParams.rt);
-  spParams.n = -spParams.t.dot(spParams.qs) / spParams.r.dot(spParams.qs);
+  spParams.firstBtmToTop = stripEnds1.first - stripEnds1.second;
+  spParams.secondBtmToTop = stripEnds2.first - stripEnds2.second;
+  spParams.vtxToFirstMid2 =
+      stripEnds1.first + stripEnds1.second - 2 * posVertex;
+  spParams.vtxToSecondMid2 =
+      stripEnds2.first + stripEnds2.second - 2 * posVertex;
+  spParams.firstBtmToTopXvtxToFirstMid2 =
+      spParams.firstBtmToTop.cross(spParams.vtxToFirstMid2);
+  spParams.secondBtmToTopXvtxToSecondMid2 =
+      spParams.secondBtmToTop.cross(spParams.vtxToSecondMid2);
+  spParams.m =
+      -spParams.vtxToFirstMid2.dot(spParams.secondBtmToTopXvtxToSecondMid2) /
+      spParams.firstBtmToTop.dot(spParams.secondBtmToTopXvtxToSecondMid2);
+  spParams.n =
+      -spParams.vtxToSecondMid2.dot(spParams.firstBtmToTopXvtxToFirstMid2) /
+      spParams.secondBtmToTop.dot(spParams.firstBtmToTopXvtxToFirstMid2);
 
   // Set the limit for the parameter
   if (spParams.limit == 1. && stripLengthTolerance != 0.) {
@@ -215,11 +223,11 @@ Result<void> SpacePointUtility::recoverSpacePoint(
     return Result<void>::failure(m_error);
   }
 
-  spParams.qmag = spParams.q.norm();
+  spParams.mag_firstBtmToTop = spParams.firstBtmToTop.norm();
   // Increase the limits. This allows a check if the point is just slightly
   // outside the SDE
   spParams.limitExtended =
-      spParams.limit + stripLengthGapTolerance / spParams.qmag;
+      spParams.limit + stripLengthGapTolerance / spParams.mag_firstBtmToTop;
 
   // Check if m is just slightly outside
   if (fabs(spParams.m) > spParams.limitExtended) {
@@ -227,7 +235,9 @@ Result<void> SpacePointUtility::recoverSpacePoint(
   }
   // Calculate n if not performed previously
   if (spParams.n == 0.) {
-    spParams.n = -spParams.t.dot(spParams.qs) / spParams.r.dot(spParams.qs);
+    spParams.n =
+        -spParams.vtxToSecondMid2.dot(spParams.firstBtmToTopXvtxToFirstMid2) /
+        spParams.secondBtmToTop.dot(spParams.firstBtmToTopXvtxToFirstMid2);
   }
   // Check if n is just slightly outside
   if (fabs(spParams.n) > spParams.limitExtended) {
@@ -254,7 +264,8 @@ Result<void> SpacePointUtility::recoverSpacePoint(
   // Calculate the scaling factor to project lengths of the second SDE on the
   // first SDE
   double secOnFirstScale =
-      spParams.q.dot(spParams.r) / (spParams.qmag * spParams.qmag);
+      spParams.firstBtmToTop.dot(spParams.secondBtmToTop) /
+      (spParams.mag_firstBtmToTop * spParams.mag_firstBtmToTop);
   // Check if both overshoots are in the same direction
   if (spParams.m > 1. && spParams.n > 1.) {
     // Calculate the overshoots
@@ -307,18 +318,19 @@ Result<double> SpacePointUtility::calcPerpendicularProjection(
   /// x get resolved by resolving lambda0 from the condition that |x-y| is  the
   /// shortest distance between two skew lines.
 
-  spParams.q = stripEnds1.first - stripEnds1.second;
-  spParams.r = stripEnds2.first - stripEnds2.second;
+  spParams.firstBtmToTop = stripEnds1.first - stripEnds1.second;
+  spParams.secondBtmToTop = stripEnds2.first - stripEnds2.second;
 
   Vector3 ac = stripEnds2.first - stripEnds1.first;
-  double qr = (spParams.q).dot(spParams.r);
-  double denom = spParams.q.dot(spParams.q) - qr * qr;
+  double qr = (spParams.firstBtmToTop).dot(spParams.secondBtmToTop);
+  double denom = spParams.firstBtmToTop.dot(spParams.firstBtmToTop) - qr * qr;
   // Check for numerical stability
   if (fabs(denom) > 10e-7) {
     // Return lambda0
     return Result<double>::success(
-        (ac.dot(spParams.r) * qr -
-         ac.dot(spParams.q) * (spParams.r).dot(spParams.r)) /
+        (ac.dot(spParams.secondBtmToTop) * qr -
+         ac.dot(spParams.firstBtmToTop) *
+             (spParams.secondBtmToTop).dot(spParams.secondBtmToTop)) /
         denom);
   }
   return Result<double>::failure(m_error);

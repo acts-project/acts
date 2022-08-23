@@ -27,21 +27,19 @@ namespace Acts {
 /// points
 struct SpacePointParameters {
   /// Vector pointing from bottom to top end of first SDE
-  Vector3 q;
+  Vector3 firstBtmToTop;
   /// Vector pointing from bottom to top end of second SDE
-  Vector3 r;
+  Vector3 secondBtmToTop;
   /// Twice the vector pointing from vertex to to midpoint of first SDE
-  Vector3 s;
+  Vector3 vtxToFirstMid2;
   /// Twice the vector pointing from vertex to to midpoint of second SDE
-  Vector3 t;
-  /// Cross product between SpacePointParameters::q and
-  /// SpacePointParameters::s
-  Vector3 qs;
-  /// Cross product between SpacePointParameters::r and
-  /// SpacePointParameters::t
-  Vector3 rt;
-  /// Magnitude of SpacePointParameters::q
-  double qmag = 0.;
+  Vector3 vtxToSecondMid2;
+  /// Cross product between firstBtmToTop and vtxToFirstMid2
+  Vector3 firstBtmToTopXvtxToFirstMid2;
+  /// Cross product between secondBtmToTop and vtxToSecondMid2
+  Vector3 secondBtmToTopXvtxToSecondMid2;
+  /// Magnitude of SpacePointParameters::firstBtmToTop
+  double mag_firstBtmToTop = 0.;
   /// Parameter that determines the hit position on the first SDE
   double m = 0.;
   /// Parameter that determines the hit position on the second SDE

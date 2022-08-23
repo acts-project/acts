@@ -39,8 +39,8 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
 
   } else if (num_meas == 2) {  // strip SP formation
 
-    const auto& ends1 = opt.StripEndsPair.first;
-    const auto& ends2 = opt.StripEndsPair.second;
+    const auto& ends1 = opt.stripEndsPair.first;
+    const auto& ends2 = opt.stripEndsPair.second;
 
     Acts::SpacePointParameters spParams;
 
@@ -58,7 +58,8 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
       if (!spFound.ok())
         return;
 
-      gPos = 0.5 * (ends1.first + ends1.second + spParams.m * spParams.q);
+      gPos = 0.5 *
+             (ends1.first + ends1.second + spParams.m * spParams.firstBtmToTop);
 
     } else {  // for cosmic without vertex constraint
 
@@ -67,11 +68,12 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
 
       if (!resultPerpProj.ok())
         return;
-      gPos = ends1.first + resultPerpProj.value() * spParams.q;
+      gPos = ends1.first + resultPerpProj.value() * spParams.firstBtmToTop;
     }
 
-    double theta = acos(spParams.q.dot(spParams.r) /
-                        (spParams.q.norm() * spParams.r.norm()));
+    double theta =
+        acos(spParams.firstBtmToTop.dot(spParams.secondBtmToTop) /
+             (spParams.firstBtmToTop.norm() * spParams.secondBtmToTop.norm()));
 
     gCov = m_spUtility->calcRhoZVars(gctx, *(measurements.at(0)),
                                      *(measurements.at(1)), gPos, theta);
