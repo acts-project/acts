@@ -5,7 +5,6 @@ from collections.abc import Iterable
 
 import acts
 from acts.examples import (
-    defaultLogging,
     RandomNumbers,
     EventGenerator,
     FixedMultiplicityGenerator,
@@ -95,7 +94,9 @@ def addParticleGun(
         random number generator
     """
 
-    customLogLevel = defaultLogging(s, logLevel, locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
 
     # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
@@ -211,7 +212,9 @@ def addPythia8(
         print generated particles
     """
 
-    customLogLevel = defaultLogging(s, logLevel, locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
@@ -336,7 +339,9 @@ def addFatras(
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
-    customLogLevel = defaultLogging(s, logLevel, locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
@@ -408,7 +413,7 @@ def addSimWriters(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
-    customLogLevel = defaultLogging(s, logLevel, locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
@@ -506,7 +511,9 @@ def addGeant4(
     from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
     from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 
-    customLogLevel = defaultLogging(s, logLevel, locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
 
     # Selector
     if preselectParticles:
@@ -584,7 +591,9 @@ def addDigitization(
         random number generator
     """
 
-    customLogLevel = defaultLogging(s, logLevel, locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
+        acts.examples.dump_args_calls(locals())
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()

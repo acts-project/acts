@@ -21,7 +21,7 @@ def buildITkGeometry(
     logLevel=acts.logging.WARNING,
 ):
 
-    customLogLevel = defaultLogging(logLevel=logLevel, locals=locals())
+    customLogLevel = defaultLogging(logLevel=logLevel)
     logger = acts.logging.getLogger("buildITkGeometry")
 
     matDeco = None

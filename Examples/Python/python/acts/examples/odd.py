@@ -13,7 +13,7 @@ def getOpenDataDetector(
 
     import acts.examples.dd4hep
 
-    customLogLevel = defaultLogging(logLevel=logLevel, locals=locals())
+    customLogLevel = defaultLogging(logLevel=logLevel)
 
     odd_xml = odd_dir / "xml" / "OpenDataDetector.xml"
     if not odd_xml.exists():

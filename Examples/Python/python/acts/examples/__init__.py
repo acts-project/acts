@@ -301,8 +301,6 @@ class CustomLogLevel(Protocol):
 def defaultLogging(
     s=None,
     logLevel: Optional[acts.logging.Level] = None,
-    locals: Dict[str, any] = None,
-    dumpArgsLevel: acts.logging.Level = acts.logging.DEBUG,
 ) -> CustomLogLevel:
     """
     Establishes a default logging strategy for the python examples interface.
@@ -311,9 +309,6 @@ def defaultLogging(
     - if `overrideLevel` for `customLogLevel` is set return it
     - if `logLevel` is set use it other wise use the log level of the sequencer `s.config.logLevel`
     - the returned log level is bound between `min` and `max` provided to `customLogLevel`
-
-    If `customLogLevel` is below `dumpArgsLevel` and `locals` is given
-    this function will also call `dump_args_calls`.
     """
 
     def customLogLevel(
@@ -325,8 +320,5 @@ def defaultLogging(
             return overrideLevel
         l = logLevel if logLevel is not None else s.config.logLevel
         return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
-
-    if locals is not None and int(customLogLevel()) <= int(dumpArgsLevel):
-        dump_args_calls(locals)
 
     return customLogLevel
