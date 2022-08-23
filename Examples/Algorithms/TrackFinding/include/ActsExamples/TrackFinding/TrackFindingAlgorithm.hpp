@@ -15,8 +15,10 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
+#include <atomic>
 #include <functional>
 #include <vector>
 
@@ -90,8 +92,13 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
       const source_link_accessor_container_t& sourcelinks,
       std::vector<Acts::Result<Acts::CombinatorialKalmanFilterResult>>&) const;
 
+  ActsExamples::ProcessCode finalize() const override;
+
  private:
   Config m_cfg;
+
+  mutable std::atomic<size_t> m_nTotalSeeds;
+  mutable std::atomic<size_t> m_nFailedSeeds;
 };
 
 template <typename source_link_accessor_container_t>
