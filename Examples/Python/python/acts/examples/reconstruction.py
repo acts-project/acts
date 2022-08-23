@@ -6,7 +6,6 @@ import warnings
 
 import acts
 import acts.examples
-from acts.examples import defaultLogging
 
 u = acts.UnitConstants
 
@@ -185,7 +184,7 @@ def addSeeding(
         random number generator. Only used by SeedingAlgorithm.TruthSmeared.
     """
 
-    customLogLevel = defaultLogging(s, logLevel)
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
     if int(customLogLevel()) <= int(acts.logging.DEBUG):
         acts.examples.dump_args_calls(locals())
     logger = acts.logging.getLogger("addSeeding")
@@ -543,7 +542,7 @@ def addKalmanTracks(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
-    customLogLevel = defaultLogging(s, logLevel)
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=customLogLevel(),
@@ -602,7 +601,7 @@ def addTruthTrackingGsf(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
-    customLogLevel = defaultLogging(s, logLevel)
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     gsfOptions = {
         "maxComponents": 12,
@@ -672,7 +671,7 @@ def addCKFTracks(
         write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.
     """
 
-    customLogLevel = defaultLogging(s, logLevel)
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
     if int(s.config.logLevel) <= int(acts.logging.DEBUG):
         acts.examples.dump_args_calls(locals())
     logger = acts.logging.getLogger("addCKFTracks")
@@ -775,7 +774,7 @@ def addExaTrkx(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
-    customLogLevel = defaultLogging(s, logLevel)
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Run the particle selection
     # The pre-selection will select truth particles satisfying provided criteria
@@ -881,7 +880,7 @@ def addVertexFitting(
         RootVertexPerformanceWriter,
     )
 
-    customLogLevel = defaultLogging(s, logLevel)
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
     if int(customLogLevel()) <= int(acts.logging.DEBUG):
         acts.examples.dump_args_calls(locals())
 

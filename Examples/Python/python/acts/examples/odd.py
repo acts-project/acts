@@ -2,7 +2,7 @@ from pathlib import Path
 import sys, os
 
 import acts
-from acts.examples import defaultLogging
+import acts.examples
 
 
 def getOpenDataDetector(
@@ -13,7 +13,7 @@ def getOpenDataDetector(
 
     import acts.examples.dd4hep
 
-    customLogLevel = defaultLogging(logLevel=logLevel)
+    customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
 
     odd_xml = odd_dir / "xml" / "OpenDataDetector.xml"
     if not odd_xml.exists():

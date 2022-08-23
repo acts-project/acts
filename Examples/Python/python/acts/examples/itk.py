@@ -2,7 +2,8 @@ from pathlib import Path
 import math
 
 import acts
-from acts.examples import defaultLogging, TGeoDetector
+import acts.examples
+from acts.examples import TGeoDetector
 
 from acts.examples.reconstruction import (
     SeedfinderConfigArg,
@@ -21,7 +22,7 @@ def buildITkGeometry(
     logLevel=acts.logging.WARNING,
 ):
 
-    customLogLevel = defaultLogging(logLevel=logLevel)
+    customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
     logger = acts.logging.getLogger("buildITkGeometry")
 
     matDeco = None
