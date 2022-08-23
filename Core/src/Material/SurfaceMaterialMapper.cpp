@@ -390,7 +390,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, currentPathCorrection);
-    if (!touchedMapBins.count(&(currentAccMaterial->second))) {
+    if (touchedMapBins.count(&(currentAccMaterial->second)) == 0) {
       touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     }
     if (m_cfg.computeVariance) {
@@ -473,7 +473,7 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, 1.0);
-    if (!touchedMapBins.count(&(currentAccMaterial->second))) {
+    if (touchedMapBins.count(&(currentAccMaterial->second)) == 0) {
       touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     }
     if (m_cfg.computeVariance) {
