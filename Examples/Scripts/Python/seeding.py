@@ -66,7 +66,7 @@ def runSeeding(
     rnd = acts.examples.RandomNumbers(seed=42)
     outputDir = Path(outputDir)
 
-    s = addParticleGun(
+    addParticleGun(
         s,
         EtaConfig(-2.0, 2.0),
         ParticleConfig(4, acts.PdgParticle.eMuon, True),
@@ -77,7 +77,7 @@ def runSeeding(
         rnd=rnd,
     )
 
-    s = addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
@@ -88,7 +88,7 @@ def runSeeding(
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
-    s = addDigitization(
+    addDigitization(
         s,
         trackingGeometry,
         field,
@@ -103,7 +103,7 @@ def runSeeding(
         SeedfinderConfigArg,
     )
 
-    s = addSeeding(
+    addSeeding(
         s,
         trackingGeometry,
         field,

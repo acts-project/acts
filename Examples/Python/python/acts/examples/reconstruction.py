@@ -128,7 +128,7 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
-    truthSeedRanges: TruthSeedRanges = TruthSeedRanges(),
+    truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
     seedfinderConfigArg: SeedfinderConfigArg = SeedfinderConfigArg(),
@@ -140,7 +140,7 @@ def addSeeding(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the seeding
     Parameters
     ----------
@@ -155,6 +155,7 @@ def addSeeding(
     truthSeedRanges : TruthSeedRanges(rho, z, phi, eta, absEta, pt, nHits)
         TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
+        If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles_initial"))
     particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
@@ -270,7 +271,7 @@ def addSeeding(
             truthTrackFinder = acts.examples.TruthTrackFinder(
                 level=customLogLevel(),
                 inputParticles=selectedParticles,
-                inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                inputMeasurementParticlesMap="measurement_particles_map",
                 outputProtoTracks="prototracks",
             )
             s.addAlgorithm(truthTrackFinder)
@@ -506,7 +507,7 @@ def addSeeding(
                     level=customLogLevel(),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,  # the original selected particles after digitization
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(outputDirRoot / "performance_seeding_trees.root"),
                 )
             )
@@ -516,7 +517,7 @@ def addSeeding(
                     level=customLogLevel(acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(outputDirRoot / "performance_seeding_hists.root"),
                 )
             )
@@ -528,7 +529,7 @@ def addSeeding(
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
                     inputParticles=inputParticles,
                     inputSimHits="simhits",
-                    inputMeasurementParticlesMap=selAlg.config.inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap="measurement_particles_map",
                     inputMeasurementSimHitsMap="measurement_simhits_map",
                     filePath=str(outputDirRoot / "estimatedparams.root"),
                     treeName="estimatedparams",
@@ -544,7 +545,7 @@ def addKalmanTracks(
     field: acts.MagneticFieldProvider,
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
-):
+) -> None:
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
         inputParticles="truth_seeds_selected",
@@ -557,8 +558,8 @@ def addKalmanTracks(
         srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
             level=acts.logging.INFO,
             inputProtoTracks="prototracks",
-            inputSimulatedHits=outputSimHits,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
             outputProtoTracks="sortedprototracks",
         )
         s.addAlgorithm(srfSortAlg)
@@ -599,7 +600,7 @@ def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-):
+) -> None:
     gsfOptions = {
         "maxComponents": 12,
         "abortOnError": False,
@@ -644,7 +645,8 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
-) -> acts.examples.Sequencer:
+    writeTrajectories: bool = True,
+) -> None:
     """This function steers the seeding
 
     Parameters
@@ -662,6 +664,8 @@ def addCKFTracks(
         the output folder for the Root output, None triggers no output
     selectedParticles : str, "truth_seeds_selected"
         CKFPerformanceWriter truth input
+    writeTrajectories : bool, True
+        write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.
     """
 
     if int(s.config.logLevel) <= int(acts.logging.DEBUG):
@@ -691,37 +695,38 @@ def addCKFTracks(
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
 
-        # write track states from CKF
-        trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputSimHits="simhits",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            inputMeasurementSimHitsMap="measurement_simhits_map",
-            filePath=str(outputDirRoot / "trackstates_ckf.root"),
-            treeName="trackstates",
-        )
-        s.addWriter(trackStatesWriter)
+        if writeTrajectories:
+            # write track states from CKF
+            trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
+                level=s.config.logLevel,
+                inputTrajectories=trackFinder.config.outputTrajectories,
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection. This could be avoided when a seperate track
+                # selection algorithm is used.
+                inputParticles="particles_selected",
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                filePath=str(outputDirRoot / "trackstates_ckf.root"),
+                treeName="trackstates",
+            )
+            s.addWriter(trackStatesWriter)
 
-        # write track summary from CKF
-        trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "tracksummary_ckf.root"),
-            treeName="tracksummary",
-        )
-        s.addWriter(trackSummaryWriter)
+            # write track summary from CKF
+            trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
+                level=s.config.logLevel,
+                inputTrajectories=trackFinder.config.outputTrajectories,
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection. This could be avoided when a seperate track
+                # selection algorithm is used.
+                inputParticles="particles_selected",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                filePath=str(outputDirRoot / "tracksummary_ckf.root"),
+                treeName="tracksummary",
+            )
+            s.addWriter(trackSummaryWriter)
 
         # Write CKF performance data
         ckfPerfWriter = acts.examples.CKFPerformanceWriter(
@@ -761,7 +766,7 @@ def addExaTrkx(
     geometrySelection: Union[Path, str],
     onnxModelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-) -> acts.examples.Sequencer:
+) -> None:
 
     # Run the particle selection
     # The pre-selection will select truth particles satisfying provided criteria
@@ -842,7 +847,7 @@ def addVertexFitting(
     trackParameters: str = "trackparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
-):
+) -> None:
     """This function steers the vertex fitting
 
     Parameters
