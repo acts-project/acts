@@ -185,8 +185,6 @@ def addSeeding(
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    if int(customLogLevel()) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
     logger = acts.logging.getLogger("addSeeding")
 
     if truthSeedRanges is not None:
@@ -672,8 +670,6 @@ def addCKFTracks(
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
     logger = acts.logging.getLogger("addCKFTracks")
 
     # Setup the track finding algorithm with CKF
@@ -881,8 +877,6 @@ def addVertexFitting(
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    if int(customLogLevel()) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
 
     inputParticles = "particles_input"
     outputVertices = "fittedVertices"

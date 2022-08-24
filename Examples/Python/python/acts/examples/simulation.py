@@ -95,8 +95,6 @@ def addParticleGun(
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
 
     # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
@@ -213,8 +211,6 @@ def addPythia8(
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
@@ -340,8 +336,6 @@ def addFatras(
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
@@ -512,8 +506,6 @@ def addGeant4(
     from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
 
     # Selector
     if preselectParticles:
@@ -592,8 +584,6 @@ def addDigitization(
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
