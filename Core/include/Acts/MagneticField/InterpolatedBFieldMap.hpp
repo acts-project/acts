@@ -194,12 +194,8 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
     // loop through all corner points
     constexpr size_t nCorners = 1 << DIM_POS;
-    std::array<Vector3, nCorners> neighbors{Vector3{0.0, 0.0, 0.0}};
+    std::array<Vector3, nCorners> neighbors;
     const auto& cornerIndices = m_cfg.grid.closestPointsIndices(gridPosition);
-
-    if (!isInsideLocal(gridPosition)) {
-      return MagneticFieldError::OutOfBounds;
-    }
 
     size_t i = 0;
     for (size_t index : cornerIndices) {
