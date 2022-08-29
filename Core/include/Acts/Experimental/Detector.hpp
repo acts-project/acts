@@ -14,6 +14,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
@@ -23,26 +24,36 @@ namespace Acts {
 
 namespace Experimental {
 
+class Detector;
+
 /// @brief  Definition of a volume finder, this can be set and optimised at construction
 ///
 /// @param gctx the geometry context of this call
+/// @param detector is the detector in which the volume should be found
 /// @param position the search position for this associated volume
 ///
 using DetectorVolumeFinder = Delegate<const DetectorVolume*(
-    const GeometryContext& gctx, const Vector3& position)>;
+    const GeometryContext& gctx, const Detector& detector,
+    const Vector3& position)>;
 using DetectorVolumeFinderStore = std::shared_ptr<void>;
 
 class Detector : public std::enable_shared_from_this<Detector> {
  protected:
   /// Create a detector from volumes
   ///
-  /// @param volumes
-  /// @param volumeFinder is a Delegate to find the assocaited volume
   /// @param name the detecor name
+  /// @param volumes the objets contained by this detector
+  /// @param volumeFinder is a Delegate to find the assocaited volume
+  /// @param volumeFinderStore is the store for the delegate struct
   ///
-  Detector(const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-           const DetectorVolumeFinder& volumeFinder,
-           const std::string& name = "Unnamed") noexcept(false);
+  /// @note will throw an exception if volumes vector is empty
+  /// @note will throw an exception if duplicate volume names exist
+  /// @note will throw an exception if the delegate is not connected
+  Detector(
+      const std::string& name,
+      const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+      const DetectorVolumeFinder& volumeFinder,
+      DetectorVolumeFinderStore volumeFinderStore = nullptr) noexcept(false);
 
  public:
   /// Factory for producing memory managed instances of Detector.
@@ -87,15 +98,37 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
 
+  /// Find a volume from a position
+  ///
+  /// @param gctx is the Geometry context of the call
+  /// @param position is the position of the call
+  ///
+  /// @return the volume pointer or nullptr (if outside)
+  const DetectorVolume* findVolume(const GeometryContext& gctx,
+                                   const Vector3& position) const;
+
+  /// Find a volume by name
+  ///
+  /// @param name
+  ///
+  /// @return the volume pointer or nullptr (if not found)
+  const DetectorVolume* findVolume(const std::string& name) const;
+
  private:
+  /// Name of the detector
+  std::string m_name = "Unnamed";
+
   /// Volume store (internal/external)
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
   /// A volume finder delegate
   DetectorVolumeFinder m_volumeFinder;
 
-  /// Name of the volume
-  std::string m_name = "Unnamed";
+  /// And a store for the delegate
+  DetectorVolumeFinderStore m_volumeFinderStore = nullptr;
+
+  /// Name/index map
+  std::map<std::string, size_t> m_volumeNameIndex;
 };
 
 }  // namespace Experimental

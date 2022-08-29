@@ -16,8 +16,43 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 Acts::Experimental::Detector::Detector(
+    const std::string& name,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    const DetectorVolumeFinder& volumeFinder, const std::string& name) {}
+    const DetectorVolumeFinder& volumeFinder,
+    const DetectorVolumeFinderStore volumeFinderStore)
+    : m_name(name),
+      m_volumeFinder(volumeFinder),
+      m_volumeFinderStore(volumeFinderStore) {
+  if (volumes.empty()) {
+    throw std::invalid_argument("Detector: no volumes were given.");
+  }
+  if (not volumeFinder.connected()) {
+    throw std::invalid_argument(
+        "Detector: volume finder delegate is not connected.");
+  }
+  // Fill and make unique
+  std::vector<std::shared_ptr<DetectorVolume>> uniqueVolumes = volumes;
+  for (auto v : volumes) {
+    for (auto vv : v->volumePtrs()) {
+      uniqueVolumes.push_back(vv);
+    }
+  }
+  // Only keep the unique ones & fill the volume store
+  auto last = std::unique(uniqueVolumes.begin(), uniqueVolumes.end());
+  uniqueVolumes.erase(last, uniqueVolumes.end());
+  m_volumes = DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>>(
+      uniqueVolumes);
+
+  // Check for unique names and fill the volume name / index map
+  for (auto [iv, v] : enumerate(m_volumes.external)) {
+    const std::string vName = v->name();
+    if (m_volumeNameIndex.find(vName) != m_volumeNameIndex.end()) {
+      throw std::invalid_argument("Detector: duplicate volume name " + vName +
+                                  " detected.");
+    }
+    m_volumeNameIndex[vName] = iv;
+  }
+}
 
 std::shared_ptr<Acts::Experimental::Detector>
 Acts::Experimental::Detector::getSharedPtr() {
@@ -27,4 +62,19 @@ Acts::Experimental::Detector::getSharedPtr() {
 std::shared_ptr<const Acts::Experimental::Detector>
 Acts::Experimental::Detector::getSharedPtr() const {
   return shared_from_this();
+}
+
+const Acts::Experimental::DetectorVolume*
+Acts::Experimental::Detector::findVolume(const GeometryContext& gctx,
+                                         const Vector3& position) const {
+  return m_volumeFinder(gctx, *this, position);
+}
+
+const Acts::Experimental::DetectorVolume*
+Acts::Experimental::Detector::findVolume(const std::string& name) const {
+  auto vCandidate = m_volumeNameIndex.find(name);
+  if (vCandidate != m_volumeNameIndex.end()) {
+    return m_volumes.external[vCandidate->second];
+  }
+  return nullptr;
 }
