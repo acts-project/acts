@@ -30,6 +30,7 @@ namespace Experimental {
 ///
 using DetectorVolumeFinder = Delegate<const DetectorVolume*(
     const GeometryContext& gctx, const Vector3& position)>;
+using DetectorVolumeFinderStore = std::shared_ptr<void>;
 
 class Detector : public std::enable_shared_from_this<Detector> {
  protected:
@@ -89,6 +90,9 @@ class Detector : public std::enable_shared_from_this<Detector> {
  private:
   /// Volume store (internal/external)
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
+
+  /// A volume finder delegate
+  DetectorVolumeFinder m_volumeFinder;
 
   /// Name of the volume
   std::string m_name = "Unnamed";
