@@ -67,7 +67,7 @@ struct AccessorPositionXYZ {
 ///
 /// This writes one file per event into the configured output directory. By
 /// default it writes to the current working directory. Files are named
-/// using the following schema
+/// using the following schema:
 ///
 ///     event000000001-spacepoints.svg
 ///     event000000002-spacepoints.svg
@@ -76,11 +76,10 @@ template <typename T, typename Acc = AccessorXYZ>
 class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
  public:
   struct Config {
-    std::string writerName =
-        "PointWriter";  ///< the name of the writer (for basee initialization)
-    std::string inputCollection;  ///< which collection to write
-    std::string outputDir;        ///< where to place output files
-    size_t outputPrecision = 6;   ///< floating point precision
+    std::string writerName = "PointWriter";  ///< the name of the writer
+    std::string inputCollection;             ///< which collection to write
+    std::string outputDir;                   ///< where to place output files
+    size_t outputPrecision = 6;              ///< floating point precision
 
     Acts::ActsScalar spSize = 10.;  //!< size of the space point to be drawn
     Acts::Svg::Style spStyle =

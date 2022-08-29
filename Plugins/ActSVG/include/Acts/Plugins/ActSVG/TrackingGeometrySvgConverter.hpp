@@ -83,8 +83,8 @@ struct Options {
 /// @param tVolume the tracking volume
 /// @param cOptions the conversion options
 ///
-/// @note best performant if stuffen wirh the right options
-/// that omits the module info and grid info
+/// @note best performant if configured with options
+/// that omit the module info and grid info
 ///
 std::array<actsvg::svg::object, 2> convert(
     const GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
