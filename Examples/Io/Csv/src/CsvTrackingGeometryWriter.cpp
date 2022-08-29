@@ -39,7 +39,7 @@ CsvTrackingGeometryWriter::CsvTrackingGeometryWriter(
     throw std::invalid_argument("Missing tracking geometry");
   }
   m_world = m_cfg.trackingGeometry->highestTrackingVolume();
-  if (not m_world) {
+  if (m_world == nullptr) {
     throw std::invalid_argument("Could not identify the world volume");
   }
 }
@@ -151,7 +151,7 @@ void writeCylinderLayerVolume(
                           Acts::SurfaceBounds::eCylinder);
 
   auto lTranslation = transform.translation();
-  // Change volume Bound values to r min , r max , z min, z max, phi min ,
+  // Change volume Bound values to r min, r max, z min, z max, phi min,
   // phi max
   representingBoundValues = {
       representingBoundValues[0],
@@ -233,7 +233,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
                  bool writeBoundary, bool writeSurfaceGrid,
                  bool writeLayerVolume, const Acts::GeometryContext& geoCtx) {
   // process all layers that are directly stored within this volume
-  if (volume.confinedLayers()) {
+  if (volume.confinedLayers() != nullptr) {
     const auto& vTransform = volume.transform();
 
     // Get the values of the volume boundaries
@@ -243,7 +243,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
 
     if (volume.volumeBounds().type() == Acts::VolumeBounds::eCylinder) {
       auto vTranslation = vTransform.translation();
-      // values to r min , r max , z min, z max, phi min, phi max
+      // values to r min, r max, z min, z max, phi min, phi max
       volumeBoundValues = {
           volumeBoundValues[0],
           volumeBoundValues[1],
@@ -338,7 +338,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
           // Write the sensitive surface if configured
           if (writeSensitive) {
             for (auto surface : sfArray->surfaces()) {
-              if (surface) {
+              if (surface != nullptr) {
                 writeSurface(sfWriter, *surface, geoCtx);
               }
             }

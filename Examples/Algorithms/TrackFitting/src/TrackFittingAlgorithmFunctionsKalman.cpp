@@ -26,15 +26,17 @@ using Updater = Acts::GainMatrixUpdater;
 using Smoother = Acts::GainMatrixSmoother;
 using Stepper = Acts::EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using Fitter = Acts::KalmanFitter<Propagator>;
+using Fitter = Acts::KalmanFitter<Propagator, Acts::VectorMultiTrajectory>;
 using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
-using DirectFitter = Acts::KalmanFitter<DirectPropagator>;
+using DirectFitter =
+    Acts::KalmanFitter<DirectPropagator, Acts::VectorMultiTrajectory>;
 
 struct SimpleReverseFilteringLogic {
   double momentumThreshold;
 
   bool doBackwardFiltering(
-      Acts::MultiTrajectory::ConstTrackStateProxy trackState) const {
+      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::ConstTrackStateProxy
+          trackState) const {
     auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
     return (momentum <= momentumThreshold);
   }
@@ -44,16 +46,18 @@ template <typename TrackFitterFunktion>
 auto makeKfOptions(
     const TrackFitterFunktion& f,
     ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions options) {
-  Acts::KalmanFitterExtensions extensions;
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(
+  Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
+  extensions.updater.connect<
+      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &f.kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+  extensions.smoother.connect<
+      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
       &f.kfSmoother);
   extensions.reverseFilteringLogic
       .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
           &f.reverseFilteringLogic);
 
-  Acts::KalmanFitterOptions kfOptions(
+  Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
       options.geoContext, options.magFieldContext, options.calibrationContext,
       extensions, options.logger, options.propOptions,
       &(*options.referenceSurface));
@@ -163,7 +167,7 @@ ActsExamples::TrackFittingAlgorithm::makeKalmanFitterFunction(
   // construct all components for the fitter
   Stepper stepper(std::move(magneticField));
   Acts::DirectNavigator navigator;
-  DirectPropagator propagator(std::move(stepper), std::move(navigator));
+  DirectPropagator propagator(std::move(stepper), navigator);
   DirectFitter fitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.

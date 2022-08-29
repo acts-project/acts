@@ -40,8 +40,8 @@ struct HitSurfaceSelector {
   /// Check if the surface should be used.
   bool operator()(const Acts::Surface &surface) const {
     // sensitive/material are not mutually exclusive
-    bool isSensitive = surface.associatedDetectorElement();
-    bool isMaterial = surface.surfaceMaterial();
+    bool isSensitive = surface.associatedDetectorElement() != nullptr;
+    bool isMaterial = surface.surfaceMaterial() != nullptr;
     // passive should be an orthogonal category
     bool isPassive = not(isSensitive or isMaterial);
     return (isSensitive and sensitive) or (isMaterial and material) or
@@ -141,7 +141,7 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
     simulation.charged.selectHitSurface.material = cfg.generateHitsOnMaterial;
     simulation.charged.selectHitSurface.passive = cfg.generateHitsOnPassive;
   }
-  ~FatrasSimulationT() final override = default;
+  ~FatrasSimulationT() final = default;
 
   Acts::Result<std::vector<ActsFatras::FailedParticle>> simulate(
       const Acts::GeometryContext &geoCtx,
@@ -151,8 +151,7 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
           &simulatedParticlesInitial,
       ActsExamples::SimParticleContainer::sequence_type
           &simulatedParticlesFinal,
-      ActsExamples::SimHitContainer::sequence_type &simHits)
-      const final override {
+      ActsExamples::SimHitContainer::sequence_type &simHits) const final {
     return simulation.simulate(geoCtx, magCtx, rng, inputParticles,
                                simulatedParticlesInitial,
                                simulatedParticlesFinal, simHits);
@@ -189,7 +188,7 @@ ActsExamples::FatrasSimulation::FatrasSimulation(Config cfg,
 }
 
 // explicit destructor needed for the PIMPL implementation to work
-ActsExamples::FatrasSimulation::~FatrasSimulation() {}
+ActsExamples::FatrasSimulation::~FatrasSimulation() = default;
 
 ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
     const AlgorithmContext &ctx) const {

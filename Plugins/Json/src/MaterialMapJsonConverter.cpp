@@ -178,7 +178,7 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
 Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
     const Acts::MaterialMapJsonConverter::Config& config,
     Acts::Logging::Level level)
-    : m_cfg(std::move(config)),
+    : m_cfg(config),
       m_logger{getDefaultLogger("MaterialMapJsonConverter", level)},
       m_volumeMaterialConverter(m_volumeName),
       m_volumeConverter(m_volumeName),

@@ -109,10 +109,10 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// Return local to global transform associated with this identifier
   ///
   /// @param gctx The current geometry context object, e.g. alignment
-  const Transform3& transform(const GeometryContext& gctx) const final;
+  const Transform3& transform(const GeometryContext& gctx) const override;
 
   /// Return surface associated with this identifier, which should come from the
-  const Surface& surface() const final;
+  const Surface& surface() const override;
 
   /// Retrieve the DigitizationModule
   const std::shared_ptr<const DigitizationModule> digitizationModule()
@@ -121,7 +121,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   };
 
   /// Returns the thickness of the module
-  double thickness() const final;
+  double thickness() const override;
 
   /// Return the TGeoNode for back navigation
   const TGeoNode& tgeoNode() const { return *m_detElement; }

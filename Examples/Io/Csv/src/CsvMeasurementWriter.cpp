@@ -44,7 +44,7 @@ ActsExamples::CsvMeasurementWriter::CsvMeasurementWriter(
   }
 }
 
-ActsExamples::CsvMeasurementWriter::~CsvMeasurementWriter() {}
+ActsExamples::CsvMeasurementWriter::~CsvMeasurementWriter() = default;
 
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::endRun() {
   // Write the tree

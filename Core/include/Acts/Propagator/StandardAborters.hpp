@@ -63,7 +63,7 @@ struct PathLimitReached {
     double tolerance = state.options.targetTolerance;
     stepper.setStepSize(state.stepping, distance, ConstrainedStep::aborter,
                         false);
-    bool limitReached = (distance * distance < tolerance * tolerance);
+    bool limitReached = (std::abs(distance) < std::abs(tolerance));
     if (limitReached) {
       ACTS_VERBOSE("Target: x | "
                    << "Path limit reached at distance " << distance);
@@ -179,6 +179,27 @@ struct EndOfWorldReached {
   bool operator()(propagator_state_t& state,
                   const stepper_t& /*unused*/) const {
     if (state.navigation.currentVolume != nullptr) {
+      return false;
+    }
+    state.navigation.targetReached = true;
+    return true;
+  }
+};
+
+/// If the particle stopped (p=0) abort the propagation
+struct ParticleStopped {
+  ParticleStopped() = default;
+
+  /// boolean operator for abort condition without using the result
+  ///
+  /// @tparam propagator_state_t Type of the propagator state
+  /// @tparam stepper_t Type of the stepper
+  ///
+  /// @param [in,out] state The propagation state object
+  /// @param [in] stepper The stepper object
+  template <typename propagator_state_t, typename stepper_t>
+  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
+    if (stepper.momentum(state.stepping) > 0) {
       return false;
     }
     state.navigation.targetReached = true;

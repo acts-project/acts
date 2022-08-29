@@ -988,19 +988,13 @@ class Navigator {
                      << stepper.outputStepSize(state.stepping));
         return true;
       } else {
-        if (logger().doPrint(Logging::VERBOSE)) {
-          std::ostringstream os;
-          os << "Boundary ";
-          os << std::distance(state.navigation.navBoundaryIter,
-                              state.navigation.navBoundaries.end());
-          os << " out of " << state.navigation.navBoundaries.size();
-          os << " not reachable anymore, switching to next.";
-          logger.log(Logging::VERBOSE, os.str());
-          os.str("");
-          os << "Targeted boundary surface was: \n";
-          boundarySurface->toStream(state.geoContext, os);
-          logger.log(Logging::VERBOSE, os.str());
-        }
+        ACTS_VERBOSE("Boundary "
+                     << std::distance(state.navigation.navBoundaryIter,
+                                      state.navigation.navBoundaries.end())
+                     << " out of " << state.navigation.navBoundaries.size()
+                     << " not reachable anymore, switching to next.");
+        ACTS_VERBOSE("Targeted boundary surface was: \n"
+                     << std::tie(*boundarySurface, state.geoContext));
       }
       // Increase the iterator to the next one
       ++state.navigation.navBoundaryIter;

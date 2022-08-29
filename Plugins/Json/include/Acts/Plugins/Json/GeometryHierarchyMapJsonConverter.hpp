@@ -61,8 +61,8 @@ class GeometryHierarchyMapJsonConverter {
   Container fromJson(const nlohmann::json& encoded) const;
 
  private:
-  static constexpr const char* const kHeaderKey = "acts-geometry-hierarchy-map";
-  static constexpr const char* const kEntriesKey = "entries";
+  static constexpr const char* kHeaderKey = "acts-geometry-hierarchy-map";
+  static constexpr const char* kEntriesKey = "entries";
   /// The version of the encoded Json container format. This must be increased
   /// manually everytime the container format changes.
   static constexpr int kFormatVersion = 0;
@@ -107,10 +107,9 @@ nlohmann::json GeometryHierarchyMapJsonConverter<value_t>::toJson(
     const Container& container) const {
   // encode header
   nlohmann::json encoded = nlohmann::json::object();
-  encoded[kHeaderKey] = {
-      {"format-version", kFormatVersion},
-      {"value-identifier", m_valueIdentifier},
-  };
+  encoded[kHeaderKey] = nlohmann::json::object();
+  encoded[kHeaderKey]["format-version"] = kFormatVersion;
+  encoded[kHeaderKey]["value-identifier"] = m_valueIdentifier;
   // encode entries
   nlohmann::json entries = nlohmann::json::array();
   for (std::size_t i = 0; i < container.size(); ++i) {

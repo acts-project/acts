@@ -49,24 +49,27 @@ void ActsFatras::DummyDetectorConstruction::dummyDetector() {
 
   // G4 material: vacuum setup
   G4Material* g4vacuum = G4Material::GetMaterial("Vacuum", false);
-  if (!g4vacuum)
+  if (g4vacuum == nullptr) {
     g4vacuum =
         new G4Material("FatrasDummyVacuum", 1., 1.01 * CLHEP::g / CLHEP::mole,
                        CLHEP::universe_mean_density, kStateGas,
                        0.1 * CLHEP::kelvin, 1.e-19 * CLHEP::pascal);
+  }
 
   // Build the logical and physical volume
-  m_worldLog =
-      m_worldLog
-          ? new (m_worldLog)
-                G4LogicalVolume(worldBox, g4vacuum, "WorldLogical", 0, 0, 0)
-          : new G4LogicalVolume(worldBox, g4vacuum, "WorldLogical", 0, 0, 0);
+  m_worldLog = m_worldLog != nullptr
+                   ? new (m_worldLog)
+                         G4LogicalVolume(worldBox, g4vacuum, "WorldLogical",
+                                         nullptr, nullptr, nullptr)
+                   : new G4LogicalVolume(worldBox, g4vacuum, "WorldLogical",
+                                         nullptr, nullptr, nullptr);
   m_worldPhys =
-      m_worldPhys ? new (m_worldPhys)
-                        G4PVPlacement(0, G4ThreeVector(0., 0., 0),
-                                      "WorldPhysical", m_worldLog, 0, false, 0)
-                  : new G4PVPlacement(0, materialPosition, "WorldPhysical",
-                                      m_worldLog, 0, false, 0);
+      m_worldPhys != nullptr
+          ? new (m_worldPhys)
+                G4PVPlacement(nullptr, G4ThreeVector(0., 0., 0),
+                              "WorldPhysical", m_worldLog, nullptr, false, 0)
+          : new G4PVPlacement(nullptr, materialPosition, "WorldPhysical",
+                              m_worldLog, nullptr, false, 0);
 }
 
 G4VPhysicalVolume* ActsFatras::DummyDetectorConstruction::Construct() {

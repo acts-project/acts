@@ -76,9 +76,14 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
 }
 
 ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
+  delete m_inputChain;
+
   delete m_step_x;
   delete m_step_y;
   delete m_step_z;
+  delete m_step_dx;
+  delete m_step_dy;
+  delete m_step_dz;
   delete m_step_length;
   delete m_step_X0;
   delete m_step_L0;
@@ -100,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     const ActsExamples::AlgorithmContext& context) {
   ACTS_DEBUG("Trying to read recorded material from tracks.");
   // read in the material track
-  if (m_inputChain && context.eventNumber < m_events) {
+  if (m_inputChain != nullptr && context.eventNumber < m_events) {
     // lock the mutex
     std::lock_guard<std::mutex> lock(m_read_mutex);
     // now read

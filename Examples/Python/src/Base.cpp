@@ -95,14 +95,26 @@ class PythonLogger {
 void addLogging(Acts::Python::Context& ctx) {
   auto& m = ctx.get("main");
   auto logging = m.def_submodule("logging", "");
-  py::enum_<Acts::Logging::Level>(logging, "Level")
-      .value("VERBOSE", Acts::Logging::VERBOSE)
-      .value("DEBUG", Acts::Logging::DEBUG)
-      .value("INFO", Acts::Logging::INFO)
-      .value("WARNING", Acts::Logging::WARNING)
-      .value("ERROR", Acts::Logging::ERROR)
-      .value("FATAL", Acts::Logging::FATAL)
-      .export_values();
+
+  auto levelEnum = py::enum_<Acts::Logging::Level>(logging, "Level")
+                       .value("VERBOSE", Acts::Logging::VERBOSE)
+                       .value("DEBUG", Acts::Logging::DEBUG)
+                       .value("INFO", Acts::Logging::INFO)
+                       .value("WARNING", Acts::Logging::WARNING)
+                       .value("ERROR", Acts::Logging::ERROR)
+                       .value("FATAL", Acts::Logging::FATAL)
+                       .export_values();
+
+  levelEnum
+      .def("__lt__", [](Acts::Logging::Level self,
+                        Acts::Logging::Level other) { return self < other; })
+      .def("__gt__", [](Acts::Logging::Level self,
+                        Acts::Logging::Level other) { return self > other; })
+      .def("__le__", [](Acts::Logging::Level self,
+                        Acts::Logging::Level other) { return self <= other; })
+      .def("__ge__", [](Acts::Logging::Level self, Acts::Logging::Level other) {
+        return self >= other;
+      });
 
   auto makeLogFunction = [](Acts::Logging::Level level) {
     return
@@ -166,6 +178,26 @@ void addLogging(Acts::Python::Context& ctx) {
       pythonLoggers.at("root")->log(level, message);
     };
   };
+
+  logging.def("setFailureThreshold", &Logging::setFailureThreshold);
+  logging.def("getFailureThreshold", &Logging::getFailureThreshold);
+
+  static py::exception<Logging::ThresholdFailure> exc(
+      logging, "ThresholdFailure", PyExc_RuntimeError);
+  py::register_exception_translator([](std::exception_ptr p) {
+    try {
+      if (p) {
+        std::rethrow_exception(p);
+      }
+    } catch (const std::exception& e) {
+      std::string what = e.what();
+      if (what.find("ACTS_LOG_FAILURE_THRESHOLD") != std::string::npos) {
+        exc(e.what());
+      } else {
+        std::rethrow_exception(p);
+      }
+    }
+  });
 
   logging.def("verbose", makeModuleLogFunction(Acts::Logging::VERBOSE));
   logging.def("debug", makeModuleLogFunction(Acts::Logging::DEBUG));

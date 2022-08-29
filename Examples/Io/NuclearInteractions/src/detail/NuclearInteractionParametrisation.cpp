@@ -45,7 +45,7 @@ float gaussianValue(TH1F const* histo, const float mom) {
 /// @param [in] fourVector1 The one four vector
 /// @param [in] fourVector2 The other four vector
 ///
-/// @return The invarian mass
+/// @return The invariant mass
 float invariantMass(const ActsExamples::SimParticle::Vector4& fourVector1,
                     const ActsExamples::SimParticle::Vector4& fourVector2) {
   ActsExamples::SimParticle::Vector4 sum = fourVector1 + fourVector2;
@@ -60,17 +60,22 @@ std::pair<Vector, Matrix> calculateMeanAndCovariance(
     unsigned int multiplicity, const EventProperties& events) {
   // Calculate the mean
   Vector mean = Vector::Zero(multiplicity);
-  for (const std::vector<float>& event : events)
-    for (unsigned int j = 0; j < multiplicity; j++)
+  for (const std::vector<float>& event : events) {
+    for (unsigned int j = 0; j < multiplicity; j++) {
       mean[j] += event[j];
+    }
+  }
   mean /= (float)events.size();
 
   // Calculate the covariance matrix
   Matrix covariance = Matrix::Zero(multiplicity, multiplicity);
-  for (unsigned int i = 0; i < multiplicity; i++)
-    for (unsigned int j = 0; j < multiplicity; j++)
-      for (unsigned int k = 0; k < events.size(); k++)
+  for (unsigned int i = 0; i < multiplicity; i++) {
+    for (unsigned int j = 0; j < multiplicity; j++) {
+      for (unsigned int k = 0; k < events.size(); k++) {
         covariance(i, j) += (events[k][i] - mean[i]) * (events[k][j] - mean[j]);
+      }
+    }
+  }
   covariance /= (float)events.size();
 
   return std::make_pair(mean, covariance);
@@ -93,8 +98,9 @@ Parametrisation buildMomentumParameters(const EventCollection& events,
                                         unsigned int nBins) {
   // Strip off data
   auto momenta = prepareMomenta(events, multiplicity, soft);
-  if (momenta.empty())
+  if (momenta.empty()) {
     return Parametrisation();
+  }
 
   // Build histos
   ProbabilityDistributions histos = buildMomPerMult(momenta, nBins);
@@ -106,7 +112,7 @@ Parametrisation buildMomentumParameters(const EventCollection& events,
   // Calculate the transformation into the eigenspace of the covariance matrix
   EigenspaceComponents eigenspaceElements =
       calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
-  // Calculate the the cumulative distributions
+  // Calculate the cumulative distributions
   return std::make_pair(eigenspaceElements, histos);
 }
 
@@ -139,24 +145,27 @@ EventProperties prepareMomenta(const EventCollection& events,
 ProbabilityDistributions buildMomPerMult(const EventProperties& events,
                                          unsigned int nBins) {
   // Fast exit
-  if (events.empty())
+  if (events.empty()) {
     return {};
+  }
   const unsigned int multMax = events[0].size();
 
   // Find the range of each histogram
   std::vector<float> min(multMax, std::numeric_limits<float>::max());
   std::vector<float> max(multMax, 0);
-  for (const std::vector<float>& event : events)
+  for (const std::vector<float>& event : events) {
     for (unsigned int i = 0; i < multMax; i++) {
       min[i] = std::min(event[i], min[i]);
       max[i] = std::max(event[i], max[i]);
     }
+  }
 
   // Evaluate the range of the histograms
   // This is used to avoid entries in over-/underflow bins
   std::vector<float> diff(multMax);
-  for (unsigned int i = 0; i < multMax; i++)
+  for (unsigned int i = 0; i < multMax; i++) {
     diff[i] = (max[i] - min[i]) * 0.1;
+  }
 
   // Build the histograms
   ProbabilityDistributions histos(multMax);
@@ -176,8 +185,9 @@ ProbabilityDistributions buildMomPerMult(const EventProperties& events,
 EventProperties convertEventToGaussian(const ProbabilityDistributions& histos,
                                        const EventProperties& events) {
   // Fast exit
-  if (events.empty())
+  if (events.empty()) {
     return {};
+  }
   const unsigned int multMax = events[0].size();
 
   // Loop over the events
@@ -220,8 +230,9 @@ Parametrisation buildInvariantMassParameters(const EventCollection& events,
                                              bool soft, unsigned int nBins) {
   // Strip off data
   auto invariantMasses = prepareInvariantMasses(events, multiplicity, soft);
-  if (invariantMasses.empty())
+  if (invariantMasses.empty()) {
     return Parametrisation();
+  }
 
   // Build histos
   ProbabilityDistributions histos = buildMomPerMult(invariantMasses, nBins);
@@ -234,7 +245,7 @@ Parametrisation buildInvariantMassParameters(const EventCollection& events,
   // Calculate the transformation into the eigenspace of the covariance matrix
   EigenspaceComponents eigenspaceElements =
       calculateEigenspace(meanAndCovariance.first, meanAndCovariance.second);
-  // Calculate the the cumulative distributions
+  // Calculate the cumulative distributions
   return std::make_pair(eigenspaceElements, histos);
 }
 
@@ -244,8 +255,9 @@ cumulativePDGprobability(const EventCollection& events) {
 
   // Count how many and which particles were created by which particle
   for (const EventFraction& event : events) {
-    if (event.finalParticles.empty())
+    if (event.finalParticles.empty()) {
       continue;
+    }
     if (!event.soft) {
       counter[event.initialParticle.pdg()][event.finalParticles[0].pdg()]++;
     }
@@ -312,10 +324,11 @@ cumulativeMultiplicityProbability(const EventCollection& events,
                minHard, std::min(maxHard, multiplicityMax) + 1);
   for (const EventFraction& event : events) {
     if (event.multiplicity <= multiplicityMax) {
-      if (event.soft)
+      if (event.soft) {
         softHisto->Fill(event.multiplicity);
-      else
+      } else {
         hardHisto->Fill(event.multiplicity);
+      }
     }
   }
 
@@ -325,9 +338,11 @@ cumulativeMultiplicityProbability(const EventCollection& events,
 TVectorF softProbability(const EventCollection& events) {
   float counter = 0.;
   // Count the soft events
-  for (const EventFraction& event : events)
-    if (event.soft)
+  for (const EventFraction& event : events) {
+    if (event.soft) {
       counter++;
+    }
+  }
 
   TVectorF result(1);
   result[0] = counter / (float)events.size();

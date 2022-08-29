@@ -44,7 +44,7 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
   // same file from multiple threads are unsafe.
   // must always be opened internally
   m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
-  if (not m_outputFile) {
+  if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + m_cfg.filePath + "'");
   }
 
@@ -60,39 +60,13 @@ ActsExamples::CKFPerformanceWriter::~CKFPerformanceWriter() {
   m_fakeRatePlotTool.clear(m_fakeRatePlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
-  float eff = float(m_nTotalMatchedTracks)/m_nTotalTracks;
-  float fakeRate = float(m_nTotalFakeTracks)/m_nTotalTracks;
-  float duplicationRate = float(m_nTotalDuplicateTracks)/m_nTotalTracks;
-
-  float eff_particle = float(m_nTotalMatchedParticles)/m_nTotalParticles;
-  float fakeRate_particle = float(m_nTotalFakeParticles)/m_nTotalParticles;
-  float duplicationRate_particle = float(m_nTotalDuplicateParticles)/m_nTotalParticles;
-
-  ACTS_DEBUG("nTotalTracks                = " << m_nTotalTracks);
-  ACTS_DEBUG("nTotalMatchedTracks         = " << m_nTotalMatchedTracks);
-  ACTS_DEBUG("nTotalDuplicateTracks       = " << m_nTotalDuplicateTracks);
-  ACTS_DEBUG("nTotalFakeTracks            = " << m_nTotalFakeTracks);
-
-  ACTS_INFO("Efficiency with tracks (nMatchedTracks/ nAllTracks) = " << eff);
-  ACTS_INFO("Fake rate with tracks (nFakeTracks/nAllTracks) = " << fakeRate);
-  ACTS_INFO("Duplicate rate with tracks (nDuplicateTracks/nAllTracks) = " << duplicationRate);
-  ACTS_INFO("Efficiency with particles (nMatchedParticles/nTrueParticles) = " << eff_particle);
-  ACTS_INFO("Fake rate with particles (nFakeParticles/nTrueParticles) = " << fakeRate_particle);
-  ACTS_INFO("Duplicate rate with particles (nDuplicateParticles/nTrueParticles) = " << duplicationRate_particle);
-  
-  auto write_float = [&](float f, const char *name) {
-    TVectorF v(1);
-    v[0] = f;
-    m_outputFile->WriteObject(&v, name);
-  };
-  
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
     m_fakeRatePlotTool.write(m_fakeRatePlotCache);

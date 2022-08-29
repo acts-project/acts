@@ -56,10 +56,10 @@ void addDigitization(Context& ctx) {
     ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
     ACTS_PYTHON_MEMBER(trackingGeometry);
     ACTS_PYTHON_MEMBER(randomNumbers);
+    ACTS_PYTHON_MEMBER(doMerge);
     ACTS_PYTHON_MEMBER(digitizationConfigs);
     ACTS_PYTHON_STRUCT_END();
 
-    c.def_readonly("doMerge", &Config::doMerge);
     c.def_readonly("mergeNsigma", &Config::mergeNsigma);
     c.def_readonly("mergeCommonCorner", &Config::mergeCommonCorner);
 

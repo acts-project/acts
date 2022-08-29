@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(SurfaceView3DObj) {
   std::cout << "Sufaces Obj Test    : " << objTest.size()
             << " characters written with " << objErrors.size() << " errors."
             << std::endl;
-  BOOST_CHECK(objErrors.size() == 0);
+  BOOST_CHECK(objErrors.empty());
   for (auto objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(SurfaceView3DObj) {
   std::cout << "Sufaces Obj Test 3M : " << objTest3M.size()
             << " characters written with " << objErrors3M.size() << " errors."
             << std::endl;
-  BOOST_CHECK(objErrors3M.size() == 0);
+  BOOST_CHECK(objErrors3M.empty());
   for (auto objerr : objErrors3M) {
     std::cout << objerr << std::endl;
   }
@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(SurfaceView3DPly) {
   std::cout << "Sufaces Ply Test    : " << plyTest.size()
             << " characters written with " << plyErrors.size() << " errors."
             << std::endl;
-  BOOST_CHECK(plyErrors.size() == 0);
+  BOOST_CHECK(plyErrors.empty());
   for (auto plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
@@ -72,7 +72,7 @@ BOOST_AUTO_TEST_CASE(SurfaceView3DPly) {
   std::cout << "Sufaces Ply Test 3M : " << plyTest3M.size()
             << " characters written with " << plyErrors3M.size() << " errors."
             << std::endl;
-  BOOST_CHECK(plyErrors3M.size() == 0);
+  BOOST_CHECK(plyErrors3M.empty());
   for (auto plyerr : plyErrors3M) {
     std::cout << plyerr << std::endl;
   }

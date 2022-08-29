@@ -6,11 +6,12 @@ on:
     branches:
       - main
       - 'release/**'
+      - 'develop/**'
 
 jobs:
   format:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/format10:v22
+    container: ghcr.io/acts-project/format10:v29
     steps:
       - uses: actions/checkout@v3
       - name: Check

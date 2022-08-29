@@ -23,7 +23,7 @@ Acts::TrackingGeometry::TrackingGeometry(
   m_volumesById.rehash(0);
   // fill surface lookup container
   m_world->visitSurfaces([this](const Acts::Surface* srf) {
-    if (srf) {
+    if (srf != nullptr) {
       m_surfacesById[srf->geometryId()] = srf;
     }
   });

@@ -164,7 +164,7 @@ Acts::Grid2D Acts::createGrid2D(
     pos = transfo * pos;
     return {coord1(pos), coord2(pos)};
   };
-  return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
+  return (Acts::createGrid(gridAxis1, gridAxis2));
 }
 
 Acts::Grid3D Acts::createGrid3D(
@@ -216,8 +216,7 @@ Acts::Grid3D Acts::createGrid3D(
     pos = transfo * pos;
     return {coord1(pos), coord2(pos), coord3(pos)};
   };
-  return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2),
-                           std::move(gridAxis3)));
+  return (Acts::createGrid(gridAxis1, gridAxis2, gridAxis3));
 }
 
 Acts::MaterialGrid2D Acts::mapMaterialPoints(Acts::Grid2D& grid) {

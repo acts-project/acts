@@ -15,6 +15,9 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
    material
    propagation
    seeding
+   track_fitting
+   track_finding
+   vertexing
    utilities/grid_axis
-   utilities/logging
+   logging
    visualization/visualization
