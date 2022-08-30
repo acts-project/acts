@@ -140,7 +140,7 @@ def addSeeding(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the seeding
     Parameters
     ----------
@@ -545,7 +545,7 @@ def addKalmanTracks(
     field: acts.MagneticFieldProvider,
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
-):
+) -> None:
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
         inputParticles="truth_seeds_selected",
@@ -558,8 +558,8 @@ def addKalmanTracks(
         srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
             level=acts.logging.INFO,
             inputProtoTracks="prototracks",
-            inputSimulatedHits=outputSimHits,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
             outputProtoTracks="sortedprototracks",
         )
         s.addAlgorithm(srfSortAlg)
@@ -600,7 +600,7 @@ def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-):
+) -> None:
     gsfOptions = {
         "maxComponents": 12,
         "abortOnError": False,
@@ -645,7 +645,8 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
-) -> acts.examples.Sequencer:
+    writeTrajectories: bool = True,
+) -> None:
     """This function steers the seeding
 
     Parameters
@@ -663,6 +664,8 @@ def addCKFTracks(
         the output folder for the Root output, None triggers no output
     selectedParticles : str, "truth_seeds_selected"
         CKFPerformanceWriter truth input
+    writeTrajectories : bool, True
+        write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.
     """
 
     if int(s.config.logLevel) <= int(acts.logging.DEBUG):
@@ -692,37 +695,38 @@ def addCKFTracks(
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
 
-        # write track states from CKF
-        trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputSimHits="simhits",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            inputMeasurementSimHitsMap="measurement_simhits_map",
-            filePath=str(outputDirRoot / "trackstates_ckf.root"),
-            treeName="trackstates",
-        )
-        s.addWriter(trackStatesWriter)
+        if writeTrajectories:
+            # write track states from CKF
+            trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
+                level=s.config.logLevel,
+                inputTrajectories=trackFinder.config.outputTrajectories,
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection. This could be avoided when a seperate track
+                # selection algorithm is used.
+                inputParticles="particles_selected",
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                filePath=str(outputDirRoot / "trackstates_ckf.root"),
+                treeName="trackstates",
+            )
+            s.addWriter(trackStatesWriter)
 
-        # write track summary from CKF
-        trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "tracksummary_ckf.root"),
-            treeName="tracksummary",
-        )
-        s.addWriter(trackSummaryWriter)
+            # write track summary from CKF
+            trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
+                level=s.config.logLevel,
+                inputTrajectories=trackFinder.config.outputTrajectories,
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection. This could be avoided when a seperate track
+                # selection algorithm is used.
+                inputParticles="particles_selected",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                filePath=str(outputDirRoot / "tracksummary_ckf.root"),
+                treeName="tracksummary",
+            )
+            s.addWriter(trackSummaryWriter)
 
         # Write CKF performance data
         ckfPerfWriter = acts.examples.CKFPerformanceWriter(
@@ -762,7 +766,7 @@ def addExaTrkx(
     geometrySelection: Union[Path, str],
     onnxModelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-) -> acts.examples.Sequencer:
+) -> None:
 
     # Run the particle selection
     # The pre-selection will select truth particles satisfying provided criteria
@@ -843,7 +847,7 @@ def addVertexFitting(
     trackParameters: str = "trackparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
-):
+) -> None:
     """This function steers the vertex fitting
 
     Parameters
