@@ -18,6 +18,7 @@
 
 #include <memory>
 #include <optional>
+#include <unordered_set>
 
 namespace Acts {
 
@@ -78,7 +79,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   virtual ~Portal() = default;
 
   /// Access to the surface representation
-  const Surface& surfaceRepresentation() const;
+  const Surface& surface() const;
 
   /// Update switching to next volume on this portal
   ///
@@ -118,6 +119,19 @@ class Portal : public std::enable_shared_from_this<Portal> {
                         DetectorVolumeLinkStore dVolumeLinkStore = nullptr,
                         bool creationVolume = false);
 
+  /// Assign an outside volume link, i.e. the none-creation volume
+  ///
+  /// @param dVolumeLink is the link delegate
+  /// @param dVolumeLinkStore is the link implementation store
+  /// @param overwrite steers whether any existing link should
+  ///        be overwritten
+  ///
+  /// @note this relies on the m_creationVolumedir optional to be set
+  void updateOutsideVolumeLink(
+      const DetectorVolumeLink& dVolumeLink,
+      DetectorVolumeLinkStore dVolumeLinkStore = nullptr,
+      bool overwrite = false);
+
  private:
   /// The surface representation of this portal
   std::shared_ptr<Surface> m_surface;
@@ -133,10 +147,10 @@ class Portal : public std::enable_shared_from_this<Portal> {
   DetectorVolumeLink m_backwardLink;
 
   /// The store for potential lifetime control of the links
-  std::vector<DetectorVolumeLinkStore> m_linkStore;
+  std::unordered_set<DetectorVolumeLinkStore> m_linkStore;
 };
 
-inline const Surface& Portal::surfaceRepresentation() const {
+inline const Surface& Portal::surface() const {
   return *(m_surface.get());
 }
 

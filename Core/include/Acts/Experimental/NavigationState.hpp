@@ -33,24 +33,14 @@ class DetectorVolume;
 /// @brief A navigation state holding the current information
 /// about volume, surfaces, and portals
 struct NavigationState {
-  /// The status of the environment
-  enum class Status {
-    eUninitialized = 0,
-    eTowardsSurface = 1,
-    eOnSurface = 2,
-    eTowardsPortal = 3,
-    eOnPortal = 4,
-    eVolumeExited = 5
-  };
-
   /// @brief  A surface candidate and its intersection
   struct SurfaceCandidate {
     /// A candidate intersection, in Surface view
     ObjectIntersection<Surface> objectIntersection;
     /// A candidate is either a detector Surface
-    const Surface* dSurface = nullptr;
+    const Surface* surface = nullptr;
     /// Or a portal
-    const Portal* vPortal = nullptr;
+    const Portal* portal = nullptr;
     /// The boundary check used for these
     BoundaryCheck bCheck = true;
   };
@@ -65,11 +55,14 @@ struct NavigationState {
   const Surface* currentSurface = nullptr;
 
   /// That are the candidate surfaces to process
-  SurfaceCandidates surfaces = {};
-  SurfaceCandidates::iterator surfaceCandidate = surfaces.end();
+  SurfaceCandidates surfaceCandidates = {};
+  SurfaceCandidates::iterator surfaceCandidate = surfaceCandidates.end();
 
-  /// Indicate the status of this environment
-  Status status = Status::eUninitialized;
+  /// Boundary directives for surfaces
+  BoundaryCheck surfaceBoundaryCheck = true;
+
+  /// An overstep tolerance
+  ActsScalar overstepTolerance = -0.1;
 
   /// Auxilliary attached information
   std::any auxilliary;
@@ -82,16 +75,19 @@ struct NavigationState {
 /// the given environment.
 ///
 /// @param nState is the navigation state to be updated
+/// @param volume is the volume for which this should be called
 /// @param gctx is the current geometry context
 /// @param position is the position at the query
 /// @param direction is the direction at the query
 /// @param absMomentum is the absolute momentum at query
 /// @param charge is the charge to be used for the intersection
 ///
-using NavigationStateUpdator =
-    Delegate<void(NavigationState& nState, const GeometryContext& gctx,
-                  const Vector3& position, const Vector3& direction,
-                  ActsScalar absMomentum, ActsScalar charge)>;
+using NavigationStateUpdator = Delegate<void(
+    NavigationState& nState, const DetectorVolume& volume,
+    const GeometryContext& gctx, const Vector3& position,
+    const Vector3& direction, ActsScalar absMomentum, ActsScalar charge)>;
+
+using NavigationStateUpdatorStore = std::shared_ptr<void>;
 
 /// Declare a Detctor Volume Switching delegate
 ///

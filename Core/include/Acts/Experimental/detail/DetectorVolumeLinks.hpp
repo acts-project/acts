@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Experimental/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -80,6 +81,22 @@ struct MultiLinkCast1DImpl {
     return dVolumes[b];
   }
 };
+
+/// Helper method to set the outside volume to the internal volumes
+///
+/// @param volume is the volume to be set
+inline static void setOutsideVolumeLink(DetectorVolume& volume) {
+  // Set the this volume as outside volume of the inserted one
+  for (auto& v : volume.volumePtrs()) {
+    for (auto& p : v->portalPtrs()) {
+      auto singleLinkStored =
+          std::make_shared<SingleLinkImpl>(SingleLinkImpl{&volume});
+      DetectorVolumeLink singleLink;
+      singleLink.connect<&SingleLinkImpl::targetVolume>(singleLinkStored.get());
+      p->updateOutsideVolumeLink(singleLink, singleLinkStored);
+    }
+  }
+}
 
 }  // namespace detail
 }  // namespace Experimental

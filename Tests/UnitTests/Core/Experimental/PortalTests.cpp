@@ -22,6 +22,18 @@ class DetectorVolume {};
 }  // namespace Experimental
 }  // namespace Acts
 
+/// Unpack to shared - simply to test the getSharedPtr mechanism
+///
+/// @tparam referenced_type is the type of the referenced object
+///
+/// @param rt is the referenced object
+///
+/// @returns a shared pointer
+template <typename referenced_type>
+std::shared_ptr<referenced_type> unpackToShared(referenced_type& rt) {
+  return rt.getSharedPtr();
+}
+
 using namespace Acts::Experimental;
 
 // A test context
@@ -42,7 +54,10 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   // Create a portal out of it
   auto portal = Portal::makeShared(surface);
 
-  BOOST_TEST(&(portal->surfaceRepresentation()), surface.get());
+  BOOST_TEST(&(portal->surface()), surface.get());
+
+  BOOST_CHECK(portal == unpackToShared<Portal>(*portal));
+  BOOST_CHECK(portal == unpackToShared<const Portal>(*portal));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -1,4 +1,6 @@
+add_unittest(Detector DetectorTests.cpp)
 add_unittest(DetectorVolume DetectorVolumeTests.cpp)
 add_unittest(DetectorVolumeLinks DetectorVolumeLinksTests.cpp)
+add_unittest(NavigationStateUpdator NavigationStateUpdatorTests.cpp)
 add_unittest(PortalGenerators PortalGeneratorsTests.cpp)
 add_unittest(Portal PortalTests.cpp)

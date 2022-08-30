@@ -15,17 +15,66 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <assert.h>
+
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const GeometryContext& gctx, const Transform3& transform,
-    std::unique_ptr<VolumeBounds> bounds,
-    const PortalGenerator& portalGenerator, const std::string& name)
-    : m_transform(transform),
+    const std::string& name, const GeometryContext& gctx,
+    const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+    const std::vector<std::shared_ptr<Surface>>& surfaces,
+    const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    const PortalGenerator& portalGenerator,
+    const NavigationStateUpdator& navStateUpdator,
+    NavigationStateUpdatorStore navStateUpdatorStore)
+    : m_name(name),
+      m_transform(transform),
       m_bounds(std::move(bounds)),
-      m_volumeMaterial(nullptr),
-      m_name(name) {
+      m_navigationStateUpdator(navStateUpdator),
+      m_navigationStateUpdatorStore(navStateUpdatorStore),
+      m_volumeMaterial(nullptr) {
   if (m_bounds == nullptr) {
     throw std::invalid_argument(
-        "DetectorVolume: construction with nullptr bounds");
+        "DetectorVolume: construction with nullptr bounds.");
+  }
+  if (not portalGenerator.connected()) {
+    throw std::invalid_argument(
+        "DetectorVolume: portal generator delegate is not connected.");
+  }
+  if (not navStateUpdator.connected()) {
+    throw std::invalid_argument(
+        "DetectorVolume: navigation state updator delegate is not connected.");
+  }
+
+  m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
+  m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
+
+  // Contruct the portals
+  construct(gctx, portalGenerator);
+  assert(checkContainment(gctx) and "Objects are not contained by volume.");
+}
+
+Acts::Experimental::DetectorVolume::DetectorVolume(
+    const std::string& name, const GeometryContext& gctx,
+    const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+    const PortalGenerator& portalGenerator,
+    const NavigationStateUpdator& navStateUpdator,
+    NavigationStateUpdatorStore navStateUpdatorStore)
+    : m_name(name),
+      m_transform(transform),
+      m_bounds(std::move(bounds)),
+      m_navigationStateUpdator(navStateUpdator),
+      m_navigationStateUpdatorStore(navStateUpdatorStore),
+      m_volumeMaterial(nullptr) {
+  if (m_bounds == nullptr) {
+    throw std::invalid_argument(
+        "DetectorVolume: construction with nullptr bounds.");
+  }
+  if (not portalGenerator.connected()) {
+    throw std::invalid_argument(
+        "DetectorVolume: portal generator delegate is not connected.");
+  }
+  if (not navStateUpdator.connected()) {
+    throw std::invalid_argument(
+        "DetectorVolume: navigation state updator delegate is not connected.");
   }
 
   // Contruct the portals
@@ -52,17 +101,43 @@ Acts::Experimental::DetectorVolume::getSharedPtr() const {
 
 bool Acts::Experimental::DetectorVolume::inside(const GeometryContext& gctx,
                                                 const Vector3& position,
-                                                ActsScalar tolerance) const {
+                                                bool excludeInserts) const {
   Vector3 posInVolFrame((transform(gctx).inverse()) * position);
-  return (volumeBounds()).inside(posInVolFrame, tolerance);
+  if (not volumeBounds().inside(posInVolFrame)) {
+    return false;
+  }
+  if (not excludeInserts or m_volumes.external.empty()) {
+    return true;
+  }
+  // Check exclusion through subvolume
+  for (const auto v : volumes()) {
+    if (v->inside(gctx, position)) {
+      return false;
+    }
+  }
+  return true;
 }
 
 void Acts::Experimental::DetectorVolume::updateNavigationStatus(
     NavigationState& nState, const GeometryContext& gctx,
     const Vector3& position, const Vector3& direction, ActsScalar absMomentum,
     ActsScalar charge) const {
-  m_navigationStateUpdator(nState, gctx, position, direction, absMomentum,
-                           charge);
+  // This should not happen too often as the external volume
+  // finders should direct into the subvolumes already
+  if (m_volumes.external.size()) {
+    for (const auto v : volumes()) {
+      if (v->inside(gctx, position)) {
+        v->updateNavigationStatus(nState, gctx, position, direction,
+                                  absMomentum, charge);
+        return;
+      }
+    }
+  }
+  // The state updator of the volume itself
+  m_navigationStateUpdator(nState, *this, gctx, position, direction,
+                           absMomentum, charge);
+  nState.currentVolume = this;
+  nState.surfaceCandidate = nState.surfaceCandidates.begin();
   return;
 }
 
@@ -75,6 +150,39 @@ void Acts::Experimental::DetectorVolume::resize(
   }
   m_bounds = std::move(rBounds);
   construct(gctx, portalGenerator);
+  assert(checkContainment() and "Objects are not contained by volume.");
+}
+
+Acts::Extent Acts::Experimental::DetectorVolume::extent(
+    const GeometryContext& gctx, size_t nseg) const {
+  Extent volumeExtent;
+  for (const auto* p : portals()) {
+    volumeExtent.extend(
+        p->surface().polyhedronRepresentation(gctx, nseg).extent());
+  }
+  return volumeExtent;
+}
+
+bool Acts::Experimental::DetectorVolume::checkContainment(
+    const GeometryContext& gctx, size_t nseg) const {
+  // Create the volume extent
+  auto volumeExtent = extent(gctx, nseg);
+  // Check surfaces
+  for (const auto* s : surfaces()) {
+    auto sExtent = s->polyhedronRepresentation(gctx, nseg).extent();
+    if (not volumeExtent.contains(sExtent)) {
+      return false;
+    }
+  }
+  // Check volumes
+  for (const auto* v : volumes()) {
+    auto vExtent = v->extent(gctx, nseg);
+    if (not volumeExtent.contains(vExtent)) {
+      return false;
+    }
+  }
+  // All contained
+  return true;
 }
 
 void Acts::Experimental::DetectorVolume::lock(

@@ -40,7 +40,7 @@ void Acts::Experimental::Portal::updateVolumeLink(
     m_creationVolumeDir = nDir;
   }
   if (dVolumeLinkStore != nullptr) {
-    m_linkStore.push_back(dVolumeLinkStore);
+    m_linkStore.insert(dVolumeLinkStore);
   }
   if (nDir == NavigationDirection::Forward) {
     m_forwardLink = dVolumeLink;
@@ -49,11 +49,27 @@ void Acts::Experimental::Portal::updateVolumeLink(
   m_backwardLink = dVolumeLink;
 }
 
+void Acts::Experimental::Portal::updateOutsideVolumeLink(
+    const DetectorVolumeLink& dVolumeLink,
+    DetectorVolumeLinkStore dVolumeLinkStore, bool overwrite) {
+  if (m_creationVolumeDir.has_value()) {
+    if (m_creationVolumeDir.value() == NavigationDirection::Forward and
+        (not m_backwardLink.connected() or overwrite)) {
+      m_backwardLink = dVolumeLink;
+    } else if (not m_forwardLink.connected() or overwrite) {
+      m_forwardLink = dVolumeLink;
+    }
+    if (dVolumeLinkStore != nullptr) {
+      m_linkStore.insert(dVolumeLinkStore);
+    }
+  }
+}
+
 const Acts::Experimental::DetectorVolume*
 Acts::Experimental::Portal::nextVolume(const GeometryContext& gctx,
                                        const Vector3& position,
                                        const Vector3& direction) const {
-  const Vector3 normal = surfaceRepresentation().normal(gctx, position);
+  const Vector3 normal = surface().normal(gctx, position);
   if (normal.dot(direction) > 0.) {
     return m_forwardLink(gctx, position, direction);
   }

@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Experimental/NavigationState.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Material/IVolumeMaterial.hpp"
@@ -80,19 +81,51 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   };
 
  protected:
+  /// Create a detector volume - with surfaces and/or inserted volumes
+  ///
+  /// @param gctx the geometry context while building
+  /// @param transform the transform defining the volume position
+  /// @param bounds the volume bounds
+  /// @param surfaces are the contained surfaces of this volume
+  /// @param volumes are the containes volumes of this volume
+  /// @param portalGenerator the volume portal generator
+  /// @param navStateUpdator the navigation state update
+  /// @param navStateUpdatorStore the
+  /// @param name the volume name
+  ///
+  /// @note throws exception if misconfigured: no bounds
+  /// @note throws exception if ghe portal general or navigation
+  ///       state updator delegates are not connected
+  DetectorVolume(const std::string& name, const GeometryContext& gctx,
+                 const Transform3& transform,
+                 std::unique_ptr<VolumeBounds> bounds,
+                 const std::vector<std::shared_ptr<Surface>>& surfaces,
+                 const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+                 const PortalGenerator& portalGenerator,
+                 const NavigationStateUpdator& navStateUpdator,
+                 NavigationStateUpdatorStore navStateUpdatorStore =
+                     nullptr) noexcept(false);
+
   /// Create a detector volume - empty/gap volume constructor
   ///
   /// @param gctx the geometry context while building
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
   /// @param portalGenerator the volume portal generator
+  /// @param navStateUpdator the navigation state update
+  /// @param navStateUpdatorStore the
   /// @param name the volume name
   ///
-  /// @note throws exception if misconfigured (i.e. no bounds)
-  DetectorVolume(const GeometryContext& gctx, const Transform3& transform,
+  /// @note throws exception if misconfigured: no bounds
+  /// @note throws exception if ghe portal general or navigation
+  ///       state updator delegates are not connected
+  DetectorVolume(const std::string& name, const GeometryContext& gctx,
+                 const Transform3& transform,
                  std::unique_ptr<VolumeBounds> bounds,
                  const PortalGenerator& portalGenerator,
-                 const std::string& name = "Unnamed") noexcept(false);
+                 const NavigationStateUpdator& navStateUpdator,
+                 NavigationStateUpdatorStore navStateUpdatorStore =
+                     nullptr) noexcept(false);
 
  public:
   /// Factory for producing memory managed instances of DetectorVolume.
@@ -159,13 +192,19 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
 
   /// Inside/outside method
   ///
-  /// @param gctx the geometry contect
+  /// @param gctx the geometry context
   /// @param position the position for the inside check
-  /// @param tolerance is the tolerance parameter
+  /// @param excludeInserts steers whether inserted volumes overwrite this
   ///
   /// @return a bool to indicate inside/outside
   bool inside(const GeometryContext& gctx, const Vector3& position,
-              ActsScalar tolerance = 0.) const;
+              bool excludeInserts = true) const;
+
+  /// The Extent for this volume
+  ///
+  /// @param gctx is the geometry context
+  /// @param nseg is the number of segements to approximate
+  Extent extent(const GeometryContext& gctx, size_t nseg = 1) const;
 
   /// Initialize/update the navigation status in this environment
   ///
@@ -190,17 +229,17 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// Non-const access to the portals
   ///
   /// @return the portal shared pointer store
-  const std::vector<std::shared_ptr<Portal>>& portalPtrs();
+  std::vector<std::shared_ptr<Portal>>& portalPtrs();
 
   /// Non-const access to the surfaces
   ///
   /// @return the surfaces shared pointer store
-  const std::vector<std::shared_ptr<Surface>>& surfacePtrs();
+  std::vector<std::shared_ptr<Surface>>& surfacePtrs();
 
   /// Non-const access to the volumes
   ///
   /// @return the volumes shared pointer store
-  const std::vector<std::shared_ptr<DetectorVolume>>& volumePtrs();
+  std::vector<std::shared_ptr<DetectorVolume>>& volumePtrs();
 
   /// Const access to the detector portals
   ///
@@ -268,6 +307,15 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   void construct(const GeometryContext& gctx,
                  const PortalGenerator& portalGenerator) noexcept(false);
 
+  // Check containment - only in debug mode
+  ///
+  /// @param gctx the current geometry context object, e.g. alignment
+  /// @param nseg is the number of segements to approximate
+  bool checkContainment(const GeometryContext& gctx, size_t nseg = 1) const;
+
+  /// Name of the volume
+  std::string m_name = "Unnamed";
+
   /// Transform to place the bolume
   Transform3 m_transform = Transform3::Identity();
 
@@ -283,17 +331,17 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// Volume store (internal/external)
   ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
-  /// The enavigation state updatpr
+  /// The navigation state updator
   NavigationStateUpdator m_navigationStateUpdator;
+
+  /// The navigation state updator store
+  NavigationStateUpdatorStore m_navigationStateUpdatorStore;
 
   /// Volume material (optional)
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial = nullptr;
 
   /// GeometryIdentifier of this volume
   GeometryIdentifier m_geometryId{0};
-
-  /// Name of the volume
-  std::string m_name = "Unnamed";
 };
 
 inline const Transform3& DetectorVolume::transform(
@@ -305,17 +353,15 @@ inline const VolumeBounds& DetectorVolume::volumeBounds() const {
   return (*m_bounds.get());
 }
 
-inline const std::vector<std::shared_ptr<Portal>>&
-DetectorVolume::portalPtrs() {
+inline std::vector<std::shared_ptr<Portal>>& DetectorVolume::portalPtrs() {
   return m_portals.internal;
 }
 
-inline const std::vector<std::shared_ptr<Surface>>&
-DetectorVolume::surfacePtrs() {
+inline std::vector<std::shared_ptr<Surface>>& DetectorVolume::surfacePtrs() {
   return m_surfaces.internal;
 }
 
-inline const std::vector<std::shared_ptr<DetectorVolume>>&
+inline std::vector<std::shared_ptr<DetectorVolume>>&
 DetectorVolume::volumePtrs() {
   return m_volumes.internal;
 }
