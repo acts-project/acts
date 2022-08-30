@@ -16,7 +16,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
-#include "Acts/SpacePointFormation/SpacePointBuilderOption.h"
+#include "Acts/SpacePointFormation/SpacePointBuilderOptions.h"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/SpacePointUtility.hpp"
@@ -61,7 +61,7 @@ class SpacePointBuilder {
   void buildSpacePoint(
       const GeometryContext& gctx,
       const std::vector<const Measurement*>& measurements,
-      const SpacePointOptions& opt,
+      const SpacePointBuilderOptions& opt,
       std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const;
 
   /// @brief Searches possible combinations of two measurements on different

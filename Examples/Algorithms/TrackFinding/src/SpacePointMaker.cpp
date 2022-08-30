@@ -105,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
 
   // TODO Support strip measurements
-  Acts::SpacePointOptions spOpt;
+  Acts::SpacePointBuilderOptions spOpt;
   SimSpacePointContainer spacePoints;
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id

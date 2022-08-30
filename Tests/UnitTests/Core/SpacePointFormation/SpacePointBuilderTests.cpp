@@ -20,7 +20,7 @@
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
-#include "Acts/SpacePointFormation/SpacePointBuilderOption.h"
+#include "Acts/SpacePointFormation/SpacePointBuilderOptions.h"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/GenerateParameters.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
@@ -233,7 +233,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     std::vector<const TestMeasurement*> measVect;
     measVect.emplace_back(meas);
 
-    SpacePointOptions spOpt;
+    SpacePointBuilderOptions spOpt;
     spBuilder.buildSpacePoint(geoCtx, measVect, spOpt,
                               std::back_inserter(spacePoints));
   }
@@ -262,7 +262,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     measVect.emplace_back(meas1);
     measVect.emplace_back(meas2);
 
-    SpacePointOptions spOpt{strippair};
+    SpacePointBuilderOptions spOpt{strippair};
     // nominal strip sp building
     spBuilder.buildSpacePoint(geoCtx, measVect, spOpt,
                               std::back_inserter(spacePoints));
@@ -291,11 +291,11 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     auto spBuilder_badStrips = Acts::SpacePointBuilder<TestSpacePoint>(
         spBuilderConfig_badStrips, spConstructor);
     // sp building with the recovery method
-    SpacePointOptions spOpt_badStrips1{std::make_pair(end3, end4)};
+    SpacePointBuilderOptions spOpt_badStrips1{std::make_pair(end3, end4)};
     spBuilder_badStrips.buildSpacePoint(geoCtx, measVect, spOpt_badStrips1,
                                         std::back_inserter(spacePoints_extra));
 
-    SpacePointOptions spOpt_badStrips2{std::make_pair(end5, end6)};
+    SpacePointBuilderOptions spOpt_badStrips2{std::make_pair(end5, end6)};
     spBuilder_badStrips.buildSpacePoint(geoCtx, measVect, spOpt_badStrips2,
                                         std::back_inserter(spacePoints_extra));
   }

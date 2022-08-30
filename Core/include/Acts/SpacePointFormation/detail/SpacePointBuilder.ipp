@@ -24,7 +24,7 @@ template <template <typename...> typename container_t>
 void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
     const GeometryContext& gctx,
     const std::vector<const Measurement*>& measurements,
-    const SpacePointOptions& opt,
+    const SpacePointBuilderOptions& opt,
     std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const {
   const unsigned int num_meas = measurements.size();
 
