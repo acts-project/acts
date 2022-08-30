@@ -186,7 +186,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
     if (bottomSP->sourceLinks().size() == 0) {
-      ACTS_WARNING("Missing sourcelink in the space point")
+      ACTS_WARNING("Missing source link in the space point")
       continue;
     }
     const auto sourceLink = bottomSP->sourceLinks()[0];
