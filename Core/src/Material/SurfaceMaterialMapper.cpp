@@ -204,18 +204,18 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
                             << " recorded material steps to map.")
 
-  // Check if the material interaction are associated with a surface. If yes we
+  // Check if the material interactions are associated with a surface. If yes we
   // simply need to loop over them and accumulate the material
   if (rMaterial.begin()->intersectionID != GeometryIdentifier()) {
     ACTS_VERBOSE(
         "Material surfaces are associated with the material interaction. The "
-        "association interaction/surfaces won't be performed again");
+        "association interaction/surfaces won't be performed again.");
     mapSurfaceInteraction(mState, rMaterial);
     return;
   } else {
     ACTS_VERBOSE(
         "Material interaction need to be associated with surfaces. Collecting "
-        "all surface on the trajectory");
+        "all surfaces on the trajectory.");
     mapInteraction(mState, mTrack);
     return;
   }
@@ -462,10 +462,10 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
       touchedMaterialBin;
 
-  // Looping over all the material interaction
+  // Looping over all the material interactions
   auto rmIter = rMaterial.begin();
   while (rmIter != rMaterial.end()) {
-    // get the current interaction informations
+    // get the current interaction information
     GeometryIdentifier currentID = rmIter->intersectionID;
     Vector3 currentPos = rmIter->intersection;
     auto currentAccMaterial = mState.accumulatedMaterial.find(currentID);

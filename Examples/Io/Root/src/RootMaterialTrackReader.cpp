@@ -72,9 +72,9 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   m_batch = nentries / m_events;
   ACTS_DEBUG("The full chain has "
              << nentries << " entries for " << m_events
-             << " events this correspond to a batch size of : " << m_batch);
+             << " events this corresponds to a batch size of: " << m_batch);
   std::cout << "The full chain has " << nentries << " entries for " << m_events
-            << " events this correspond to a batch size of : " << m_batch
+            << " events this corresponds to a batch size of: " << m_batch
             << std::endl;
 
   // If the events are not in order, get the entry numbers for ordered events
@@ -172,7 +172,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
                                             (*m_step_Z)[is], (*m_step_rho)[is]),
             s);
         if (m_cfg.readSurface) {
-          // add the surface information to to the interaction this allows the
+          // add the surface information to the interaction this allows the
           // mapping to be speed up
           mInteraction.intersectionID =
               Acts::GeometryIdentifier((*m_sur_id)[is]);
