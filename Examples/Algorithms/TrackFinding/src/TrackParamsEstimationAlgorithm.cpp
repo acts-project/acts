@@ -81,7 +81,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
 
   for (const SimSpacePoint& sp : spacePoints) {
     if (sp.sourceLinks().size() == 0) {
-      ACTS_WARNING("Missing soucelink in space point");
+      ACTS_WARNING("Missing source link in space point");
       continue;
     }
     for (const auto& slink : sp.sourceLinks()) {
