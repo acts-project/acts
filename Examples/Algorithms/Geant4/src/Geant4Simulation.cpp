@@ -57,6 +57,9 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
   if (!m_cfg.runManager) {
     throw std::invalid_argument("Missing G4 RunManager object");
   }
+  if (!m_cfg.randomNumbers) {
+    throw std::invalid_argument("Missing random numbers tool");
+  }
 
   if (m_cfg.sensitiveSurfaceMapper) {
     if (m_cfg.outputSimHits.empty()) {
