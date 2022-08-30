@@ -225,7 +225,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       track.reserve(3);
       for (const auto& sp : seed.sp()) {
         if (sp->sourceLinks().size() == 0) {
-          ACTS_WARNING("Missing sourceLinks in the space point")
+          ACTS_WARNING("Missing source link in the space point")
           continue;
         }
         const auto slink =
