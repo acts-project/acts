@@ -28,17 +28,15 @@ using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
 
-using KalmanUpdater = Acts::GainMatrixUpdater;
-using KalmanSmoother = Acts::GainMatrixSmoother;
+Acts::GainMatrixUpdater kfUpdater;
 
-KalmanUpdater kfUpdater;
-KalmanSmoother kfSmoother;
-
-KalmanFitterExtensions getExtensions() {
-  KalmanFitterExtensions extensions;
-  extensions.calibrator.connect<&testSourceLinkCalibrator>();
-  extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
+GsfExtensions<VectorMultiTrajectory> getExtensions() {
+  GsfExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.updater
+      .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
+          &kfUpdater);
   return extensions;
 }
 
@@ -51,14 +49,15 @@ using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 
 auto gsfZeroPropagator =
     makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T);
-const GaussianSumFitter<Propagator> gsfZero(std::move(gsfZeroPropagator));
+const GaussianSumFitter<Propagator, VectorMultiTrajectory> gsfZero(
+    std::move(gsfZeroPropagator));
 
 std::default_random_engine rng(42);
 
 auto makeDefaultGsfOptions() {
-  return GsfOptions{tester.geoCtx,          tester.magCtx,
-                    tester.calCtx,          getExtensions(),
-                    LoggerWrapper{*logger}, PropagatorPlainOptions()};
+  return GsfOptions<VectorMultiTrajectory>{
+      tester.geoCtx,   tester.magCtx,          tester.calCtx,
+      getExtensions(), LoggerWrapper{*logger}, PropagatorPlainOptions()};
 }
 
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into
@@ -172,8 +171,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
   // default outlier distance in the `MeasurementsCreator`
   TestOutlierFinder tof{5_mm};
   auto options = makeDefaultGsfOptions();
-  options.extensions.outlierFinder.connect<&TestOutlierFinder::operator()>(
-      &tof);
+  options.extensions.outlierFinder
+      .connect<&TestOutlierFinder::operator()<VectorMultiTrajectory>>(&tof);
 
   auto multi_pars = makeParameters();
 

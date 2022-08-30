@@ -32,6 +32,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     auto c = py::class_<Config>(s, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_MEMBER(dd4hepLogLevel);
     ACTS_PYTHON_MEMBER(xmlFileNames);
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(bTypePhi);
@@ -46,13 +47,17 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    auto gd = py::class_<DD4hepDetector, std::shared_ptr<DD4hepDetector>>(
-                  m, "DD4hepDetector")
-                  .def(py::init<>())
-                  .def("finalize",
-                       py::overload_cast<
-                           DD4hep::DD4hepGeometryService::Config,
-                           std::shared_ptr<const Acts::IMaterialDecorator>>(
-                           &DD4hepDetector::finalize));
+    auto gd =
+        py::class_<DD4hep::DD4hepDetector,
+                   std::shared_ptr<DD4hep::DD4hepDetector>>(m, "DD4hepDetector")
+            .def(py::init<>())
+            .def("finalize",
+                 py::overload_cast<
+                     DD4hep::DD4hepGeometryService::Config,
+                     std::shared_ptr<const Acts::IMaterialDecorator>>(
+                     &DD4hep::DD4hepDetector::finalize));
+    ACTS_PYTHON_STRUCT_BEGIN(gd, DD4hep::DD4hepDetector);
+    ACTS_PYTHON_MEMBER(geometryService);
+    ACTS_PYTHON_STRUCT_END();
   }
 }

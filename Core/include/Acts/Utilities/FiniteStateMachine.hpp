@@ -128,7 +128,7 @@ class FiniteStateMachine {
   /// @param state Initial state for the FSM.
   FiniteStateMachine(StateVariant state) : m_state(std::move(state)){};
 
-  /// Get the current state of of the FSM (as a variant).
+  /// Get the current state of the FSM (as a variant).
   /// @return StateVariant The current state of the FSM.
   const StateVariant& getState() const noexcept { return m_state; }
 

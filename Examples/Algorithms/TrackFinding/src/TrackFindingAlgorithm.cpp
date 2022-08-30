@@ -14,6 +14,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
@@ -51,6 +52,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   TrajectoriesContainer trajectories;
   trajectories.reserve(initialParameters.size());
 
+  // Prepare the output data with TrackParameters
+  TrackParametersContainer trackParametersContainer;
+
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
@@ -63,13 +67,18 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   Acts::GainMatrixSmoother kfSmoother;
   Acts::MeasurementSelector measSel{m_cfg.measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions extensions;
+  Acts::CombinatorialKalmanFilterExtensions<Acts::VectorMultiTrajectory>
+      extensions;
   extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
+  extensions.updater.connect<
+      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.smoother.connect<
+      &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
       &kfSmoother);
-  extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
-      &measSel);
+  extensions.measurementSelector
+      .connect<&Acts::MeasurementSelector::select<Acts::VectorMultiTrajectory>>(
+          &measSel);
 
   IndexSourceLinkAccessor slAccessor;
   slAccessor.container = &sourceLinks;
@@ -94,19 +103,27 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    m_nTotalSeeds++;
     // The result for this seed
     auto& result = results[iseed];
     if (result.ok()) {
       // Get the track finding output object
-      const auto& trackFindingOutput = result.value();
+      auto& trackFindingOutput = result.value();
       // Create a Trajectories result struct
-      trajectories.emplace_back(
-          std::move(trackFindingOutput.fittedStates),
-          std::move(trackFindingOutput.lastMeasurementIndices),
-          std::move(trackFindingOutput.fittedParameters));
+      trajectories.emplace_back(trackFindingOutput.fittedStates,
+                                trackFindingOutput.lastMeasurementIndices,
+                                trackFindingOutput.fittedParameters);
+
+      const auto& traj = trajectories.back();
+      for (const auto tip : traj.tips()) {
+        if (traj.hasTrackParameters(tip)) {
+          trackParametersContainer.push_back(traj.trackParameters(tip));
+        }
+      }
     } else {
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());
+      m_nFailedSeeds++;
       // Track finding failed. Add an empty result so the output container has
       // the same number of entries as the input.
       trajectories.push_back(Trajectories());
@@ -117,5 +134,17 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                                              << " track candidates.");
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  ctx.eventStore.add(m_cfg.outputTrackParameters,
+                     std::move(trackParametersContainer));
   return ActsExamples::ProcessCode::SUCCESS;
+}
+
+ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize()
+    const {
+  ACTS_INFO("TrackFindingAlgorithm statistics:");
+  ACTS_INFO("- total seeds: " << m_nTotalSeeds);
+  ACTS_INFO("- failed seeds: " << m_nFailedSeeds);
+  ACTS_INFO("- failure ratio: " << static_cast<double>(m_nFailedSeeds) /
+                                       m_nTotalSeeds);
+  return ProcessCode::SUCCESS;
 }

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
@@ -31,7 +32,7 @@ const Acts::GeometryContext tgContext;
 BOOST_AUTO_TEST_SUITE(TrackFittingGainMatrixSmoother)
 
 BOOST_AUTO_TEST_CASE(Smooth) {
-  MultiTrajectory traj;
+  VectorMultiTrajectory traj;
   size_t ts_idx = traj.addTrackState(TrackStatePropMask::All);
   auto ts = traj.getTrackState(ts_idx);
 

@@ -16,6 +16,9 @@
 
 #include <boost/program_options.hpp>
 
+namespace ActsExamples {
+namespace DD4hep {
+
 void DD4hepDetector::addOptions(
     boost::program_options::options_description& opt) const {
   ActsExamples::Options::addDD4hepOptions(opt);
@@ -37,12 +40,19 @@ auto DD4hepDetector::finalize(
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext dd4HepContext;
   config.matDecorator = mdecorator;
-  auto geometrySvc =
+  geometryService =
       std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
   TrackingGeometryPtr dd4tGeometry =
-      geometrySvc->trackingGeometry(dd4HepContext);
+      geometryService->trackingGeometry(dd4HepContext);
+  if (!dd4tGeometry) {
+    throw std::runtime_error{
+        "Did not receive tracking geometry from DD4hep geometry service"};
+  }
   ContextDecorators dd4ContextDeocrators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
       std::move(dd4tGeometry), std::move(dd4ContextDeocrators));
 }
+
+}  // namespace DD4hep
+}  // namespace ActsExamples

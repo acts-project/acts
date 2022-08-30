@@ -62,8 +62,7 @@ EigenStepper estepper(bField);
 EigenPropagator epropagator(std::move(estepper), std::move(navigatorES));
 
 StraightLineStepper slstepper;
-StraightLinePropagator slpropagator(std::move(slstepper),
-                                    std::move(navigatorSL));
+StraightLinePropagator slpropagator(slstepper, std::move(navigatorSL));
 const int ntests = 500;
 const int skip = 0;
 bool debugModeFwd = false;

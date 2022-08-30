@@ -103,7 +103,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
   } else {
     // Store the leftovers if it dies
     for (const HepMC3::ConstGenParticlePtr& procPartOut :
-         endVertex->particles_out())
+         endVertex->particles_out()) {
       if (procPartOut->attribute<HepMC3::IntAttribute>("TrackID")->value() ==
               trackID &&
           procPartOut->end_vertex()) {
@@ -113,6 +113,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
               ActsExamples::HepMC3Particle::particle(dyingPartOut));
         }
       }
+    }
   }
 
   // Record the particles produced in this process
@@ -174,7 +175,7 @@ void filterAndSort(
 }
 }  // namespace
 
-ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() {}
+ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() = default;
 
 ActsExamples::HepMCProcessExtractor::HepMCProcessExtractor(
     ActsExamples::HepMCProcessExtractor::Config cfg, Acts::Logging::Level level)

@@ -27,7 +27,7 @@ namespace ActsExamples {
 /// track efficiency, fake rate etc.
 /// @TODO: add duplication plots
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.

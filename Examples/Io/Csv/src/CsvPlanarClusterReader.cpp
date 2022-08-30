@@ -225,7 +225,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
 
     // identify hit surface
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
-    if (not surface) {
+    if (surface == nullptr) {
       ACTS_FATAL("Could not retrieve the surface for hit " << hit);
       return ProcessCode::ABORT;
     }

@@ -28,7 +28,7 @@ class SurfaceSortingAlgorithm final : public BareAlgorithm {
     /// Input proto track collection
     std::string inputProtoTracks;
     /// Input simulated hit collection
-    std::string inputSimulatedHits;
+    std::string inputSimHits;
     /// Input measurement to simulated hit map for truth position
     std::string inputMeasurementSimHitsMap;
     /// Output proto track collection

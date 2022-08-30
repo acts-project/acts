@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -49,13 +49,15 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
 }
 
 template <typename E, typename A>
-auto Acts::EigenStepper<E, A>::boundState(State& state, const Surface& surface,
-                                          bool transportCov) const
+auto Acts::EigenStepper<E, A>::boundState(
+    State& state, const Surface& surface, bool transportCov,
+    const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
   return detail::boundState(
       state.geoContext, state.cov, state.jacobian, state.jacTransport,
       state.derivative, state.jacToGlobal, state.pars,
-      state.covTransport && transportCov, state.pathAccumulated, surface);
+      state.covTransport && transportCov, state.pathAccumulated, surface,
+      freeToBoundCorrection);
 }
 
 template <typename E, typename A>
@@ -100,10 +102,12 @@ void Acts::EigenStepper<E, A>::transportCovarianceToCurvilinear(
 
 template <typename E, typename A>
 void Acts::EigenStepper<E, A>::transportCovarianceToBound(
-    State& state, const Surface& surface) const {
+    State& state, const Surface& surface,
+    const FreeToBoundCorrection& freeToBoundCorrection) const {
   detail::transportCovarianceToBound(
       state.geoContext.get(), state.cov, state.jacobian, state.jacTransport,
-      state.derivative, state.jacToGlobal, state.pars, surface);
+      state.derivative, state.jacToGlobal, state.pars, surface,
+      freeToBoundCorrection);
 }
 
 template <typename E, typename A>
@@ -135,11 +139,13 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // size, going up to the point where it can return an estimate of the local
   // integration error. The results are stated in the local variables above,
   // allowing integration to continue once the error is deemed satisfactory
-  const auto tryRungeKuttaStep = [&](const ConstrainedStep& h) -> Result<bool> {
+  const auto tryRungeKuttaStep =
+      [&](const ConstrainedStep& step) -> Result<bool> {
     // helpers because bool and std::error_code are ambiguous
     constexpr auto success = &Result<bool>::success;
     constexpr auto failure = &Result<bool>::failure;
 
+    const double h = step.value();
     // State the square and half of the step size
     h2 = h * h;
     half_h = h * 0.5;
@@ -176,10 +182,10 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
 
     // Compute and check the local integration error estimate
-    error_estimate = std::max(
+    error_estimate =
         h2 * ((sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>() +
-              std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3])),
-        1e-20);
+              std::abs(sd.kQoP[0] - sd.kQoP[1] - sd.kQoP[2] + sd.kQoP[3]));
+    error_estimate = std::max(error_estimate, 1e-20);
 
     return success(error_estimate <= state.options.tolerance);
   };
@@ -202,12 +208,11 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
                                      state.options.tolerance /
                                      std::abs(2. * error_estimate))))),
                  4.0f);
-
-    state.stepping.stepSize = state.stepping.stepSize * stepSizeScaling;
+    state.stepping.stepSize.scale(stepSizeScaling);
 
     // If step size becomes too small the particle remains at the initial
     // place
-    if (std::abs(state.stepping.stepSize) <
+    if (std::abs(state.stepping.stepSize.value()) <
         std::abs(state.options.stepSizeCutOff)) {
       // Not moving due to too low momentum needs an aborter
       return EigenStepperError::StepSizeStalled;
@@ -223,7 +228,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   }
 
   // use the adjusted step size
-  const double h = state.stepping.stepSize;
+  const double h = state.stepping.stepSize.value();
 
   // When doing error propagation, update the associated Jacobian matrix
   if (state.stepping.covTransport) {
@@ -256,14 +261,16 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   state.stepping.pathAccumulated += h;
   if (state.stepping.stepSize.currentType() ==
       ConstrainedStep::Type::accuracy) {
-    state.stepping.stepSize =
-        state.stepping.stepSize *
-        std::min(
-            std::max(0.25f,
-                     std::sqrt(std::sqrt(static_cast<float>(
-                         state.options.tolerance / std::abs(error_estimate))))),
-            4.0f);
+    stepSizeScaling = std::min(
+        std::max(0.25f,
+                 std::sqrt(std::sqrt(static_cast<float>(
+                     state.options.tolerance / std::abs(error_estimate))))),
+        4.0f);
+    state.stepping.stepSize.scale(stepSizeScaling);
   }
+
+  state.stepping.stepSize.nStepTrials = nStepTrials;
+
   return h;
 }
 

@@ -168,7 +168,7 @@ BOOST_AUTO_TEST_CASE(Kalman_Vertex_Updater) {
     // newly given track, but does NOT add the track to the
     // TrackAtVertex list. Has to be done manually after calling
     // the update method.
-    BOOST_CHECK(vtx.tracks().size() == 0);
+    BOOST_CHECK(vtx.tracks().empty());
 
   }  // end for loop
 

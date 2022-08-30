@@ -47,7 +47,7 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
   // must always be opened internally
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
-  if (not m_outputFile) {
+  if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }
   // initialize the plot tools
@@ -58,7 +58,7 @@ ActsExamples::SeedingPerformanceWriter::SeedingPerformanceWriter(
 ActsExamples::SeedingPerformanceWriter::~SeedingPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
   m_duplicationPlotTool.clear(m_duplicationPlotCache);
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
@@ -87,7 +87,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
       "/ nMatchedParticles) = "
       << aveNDuplicatedSeeds);
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_effPlotTool.write(m_effPlotCache);
     m_duplicationPlotTool.write(m_duplicationPlotCache);

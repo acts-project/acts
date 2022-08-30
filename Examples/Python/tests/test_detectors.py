@@ -3,7 +3,9 @@ from pathlib import Path
 import pytest
 
 from helpers import dd4hepEnabled
+
 from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 import acts.examples
 
@@ -32,21 +34,16 @@ def test_generic_geometry():
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd():
-    from acts.examples.dd4hep import DD4hepGeometryService, DD4hepDetector
-
-    dd4hepConfig = DD4hepGeometryService.Config(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
-    )
-    detector = DD4hepDetector()
-
     config = acts.MaterialMapJsonConverter.Config()
     matDeco = acts.JsonMaterialDecorator(
         rConfig=config,
-        jFileName="thirdparty/OpenDataDetector/config/odd-material-mapping-config.json",
+        jFileName=str(
+            getOpenDataDetectorDirectory() / "config/odd-material-mapping-config.json"
+        ),
         level=acts.logging.WARNING,
     )
 
-    geo, _ = detector.finalize(dd4hepConfig, matDeco)
+    detector, geo, _ = getOpenDataDetector(getOpenDataDetectorDirectory(), matDeco)
 
     assert count_surfaces(geo) == 18824
 

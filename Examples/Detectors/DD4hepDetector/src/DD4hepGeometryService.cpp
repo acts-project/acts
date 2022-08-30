@@ -30,13 +30,14 @@ ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService(
 }
 
 ActsExamples::DD4hep::DD4hepGeometryService::~DD4hepGeometryService() {
-  if (m_lcdd)
+  if (m_lcdd != nullptr) {
     m_lcdd->destroyInstance();
+  }
 }
 
 ActsExamples::ProcessCode
 ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
-  switch (m_cfg.logLevel) {
+  switch (m_cfg.dd4hepLogLevel) {
     case Acts::Logging::Level::VERBOSE:
       dd4hep::setPrintLevel(dd4hep::PrintLevel::VERBOSE);
       break;
@@ -64,7 +65,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
     m_lcdd->fromCompact(file.c_str());
   }
   m_lcdd->volumeManager();
-  m_lcdd->apply("DD4hepVolumeManager", 0, 0);
+  m_lcdd->apply("DD4hepVolumeManager", 0, nullptr);
   m_dd4hepGeometry = m_lcdd->world();
 
   return ActsExamples::ProcessCode::SUCCESS;
@@ -72,21 +73,24 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildDD4hepGeometry() {
 
 dd4hep::DetElement
 ActsExamples::DD4hep::DD4hepGeometryService::dd4hepGeometry() {
-  if (!m_dd4hepGeometry)
+  if (!m_dd4hepGeometry) {
     buildDD4hepGeometry();
+  }
   return m_dd4hepGeometry;
 }
 
 dd4hep::Detector*
 ActsExamples::DD4hep::DD4hepGeometryService::DD4hepGeometryService::lcdd() {
-  if (!m_lcdd)
+  if (m_lcdd == nullptr) {
     buildDD4hepGeometry();
+  }
   return m_lcdd;
 }
 
 TGeoNode* ActsExamples::DD4hep::DD4hepGeometryService::tgeoGeometry() {
-  if (!m_dd4hepGeometry)
+  if (!m_dd4hepGeometry) {
     buildDD4hepGeometry();
+  }
   return m_dd4hepGeometry.placement().ptr();
 }
 
@@ -119,14 +123,15 @@ void ActsExamples::DD4hep::sortFCChhDetElements(
   std::vector<dd4hep::DetElement> muon;
   for (auto& detElement : det) {
     std::string detName = detElement.name();
-    if (detName.find("Muon") != std::string::npos)
+    if (detName.find("Muon") != std::string::npos) {
       muon.push_back(detElement);
-    else if (detName.find("ECal") != std::string::npos)
+    } else if (detName.find("ECal") != std::string::npos) {
       eCal.push_back(detElement);
-    else if (detName.find("HCal") != std::string::npos)
+    } else if (detName.find("HCal") != std::string::npos) {
       hCal.push_back(detElement);
-    else
+    } else {
       tracker.push_back(detElement);
+    }
   }
   sort(muon.begin(), muon.end(),
        [](const dd4hep::DetElement& a, const dd4hep::DetElement& b) {

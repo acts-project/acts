@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -66,7 +66,7 @@ class EigenStepper {
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] fieldCacheIn is the cache object for the magnetic field
     /// @param [in] par The track parameters at start
-    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
     ///
@@ -130,7 +130,7 @@ class EigenStepper {
     double pathAccumulated = 0.;
 
     /// Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize{std::numeric_limits<double>::max()};
+    ConstrainedStep stepSize;
 
     /// Last performed step (for overstep limit calculation)
     double previousStepSize = 0.;
@@ -271,7 +271,7 @@ class EigenStepper {
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor,
                    bool release = true) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
 
@@ -313,13 +313,16 @@ class EigenStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const;
+  Result<BoundState> boundState(
+      State& state, const Surface& surface, bool transportCov = true,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -372,19 +375,20 @@ class EigenStepper {
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded to
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(State& state, const Surface& surface) const;
+  void transportCovarianceToBound(
+      State& state, const Surface& surface,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param [in,out] state is the propagation state associated with the track
-  /// parameters that are being propagated.
-  ///
-  ///                      the state contains the desired step size.
-  ///                      It can be negative during backwards track
-  ///                      propagation,
-  ///                      and since we're using an adaptive algorithm, it can
-  ///                      be modified by the stepper class during propagation.
+  /// @param [in,out] state is the propagation
+  /// @note The state contains the desired step size.  It can be negative during
+  ///       backwards track propagation, and since we're using an adaptive
+  ///       algorithm, it can be modified by the stepper class during
+  ///       propagation.
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const;
 

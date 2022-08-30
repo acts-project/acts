@@ -49,7 +49,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
 
   // Setup ROOT I/O
   m_inputFile = TFile::Open(m_cfg.fileName.c_str());
-  if (!m_inputFile) {
+  if (m_inputFile == nullptr) {
     throw std::ios_base::failure("Could not open '" + m_cfg.fileName);
   }
 
@@ -131,9 +131,11 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       TH2F* Z = dynamic_cast<TH2F*>(m_inputFile->Get(zName.c_str()));
       TH2F* rho = dynamic_cast<TH2F*>(m_inputFile->Get(rhoName.c_str()));
 
+      std::vector<const TH1*> hists{n, v, o, min, max, t, x0, l0, A, Z, rho};
+
       // Only go on when you have all histograms
-      if (n and v and o and min and max and t and x0 and l0 and A and Z and
-          rho) {
+      if (std::all_of(hists.begin(), hists.end(),
+                      [](const auto* hist) { return hist != nullptr; })) {
         // Get the number of bins
         int nbins0 = t->GetNbinsX();
         int nbins1 = t->GetNbinsY();
@@ -236,12 +238,14 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
       TH1F* rho = dynamic_cast<TH1F*>(m_inputFile->Get(rhoName.c_str()));
 
       // Only go on when you have all the material histograms
-      if (x0 and l0 and A and Z and rho) {
+      if ((x0 != nullptr) and (l0 != nullptr) and (A != nullptr) and
+          (Z != nullptr) and (rho != nullptr)) {
         // Get the number of grid points
         int points = x0->GetNbinsX();
-        // If the bin information histograms are present the material is either
-        // a 2D or a 3D grid
-        if (n and v and o and min and max) {
+        // If the bin information histograms are present the material is
+        // either a 2D or a 3D grid
+        if ((n != nullptr) and (v != nullptr) and (o != nullptr) and
+            (min != nullptr) and (max != nullptr)) {
           // Dimension of the grid
           int dim = n->GetNbinsX();
           // Now reconstruct the bin untilities
@@ -348,5 +352,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
 }
 
 ActsExamples::RootMaterialDecorator::~RootMaterialDecorator() {
-  m_inputFile->Close();
+  if (m_inputFile != nullptr) {
+    m_inputFile->Close();
+  }
 }

@@ -22,6 +22,61 @@ void LoggerWrapper::log(const Logging::Level& lvl,
 
 namespace Logging {
 
+#if defined(ACTS_ENABLE_LOG_FAILURE_THRESHOLD) and \
+    not defined(ACTS_LOG_FAILURE_THRESHOLD)
+namespace {
+Level& getFailureThresholdMutable() {
+  static Level _level = []() {
+    Level level = Level::MAX;
+
+    const char* envvar = std::getenv("ACTS_LOG_FAILURE_THRESHOLD");
+    if (envvar == nullptr) {
+      return level;
+    }
+    std::string slevel = envvar;
+    if (slevel == "VERBOSE") {
+      level = std::min(level, Level::VERBOSE);
+    } else if (slevel == "DEBUG") {
+      level = std::min(level, Level::DEBUG);
+    } else if (slevel == "INFO") {
+      level = std::min(level, Level::INFO);
+    } else if (slevel == "WARNING") {
+      level = std::min(level, Level::WARNING);
+    } else if (slevel == "ERROR") {
+      level = std::min(level, Level::ERROR);
+    } else if (slevel == "FATAL") {
+      level = std::min(level, Level::FATAL);
+    } else {
+      std::cerr << "ACTS_LOG_FAILURE_THRESHOLD environment variable is set to "
+                   "unknown value: "
+                << slevel << std::endl;
+    }
+    return level;
+  }();
+
+  return _level;
+}
+}  // namespace
+
+Level getFailureThreshold() {
+  return getFailureThresholdMutable();
+}
+
+void setFailureThreshold(Level level) {
+  getFailureThresholdMutable() = level;
+}
+
+#else
+
+void setFailureThreshold(Level) {
+  throw std::logic_error{
+      "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
+      "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
+      "override"};
+}
+
+#endif
+
 namespace {
 class NeverFilterPolicy final : public OutputFilterPolicy {
  public:

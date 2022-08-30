@@ -9,9 +9,9 @@ following commands will clone the repository, configure, and build the core
 library:
 
 ```console
-$ git clone --recursive https://github.com/acts-project/acts <source-dir>
-$ cmake -B <build-dir> -S <source-dir>
-$ cmake --build <build-dir>
+$ git clone --recursive https://github.com/acts-project/acts <source>
+$ cmake -B <build> -S <source>
+$ cmake --build <build>
 ```
 
 For a full list of dependencies, including specific versions, see the
@@ -32,13 +32,13 @@ The following dependencies are optional and are needed to build additional
 components:
 
 -   [CUDA](https://developer.nvidia.com/cuda-zone) for the CUDA plugin and the Exa.TrkX plugin and its examples
--   [DD4Hep](http://dd4hep.cern.ch) >= 1.11 for the DD4Hep plugin and some examples
+-   [DD4hep](http://dd4hep.cern.ch) >= 1.11 for the DD4hep plugin and some examples
 -   [Doxygen](http://doxygen.org) >= 1.8.15 for the documentation
 -   [Geant4](http://geant4.org/) for some examples
 -   [HepMC](https://gitlab.cern.ch/hepmc/HepMC3) >= 3.2.1 for some examples
 -   [Intel Threading Building Blocks](https://01.org/tbb) >= 2020.1 for the examples
 -   [ONNX Runtime](https://onnxruntime.ai/) for the ONNX plugin, the Exa.TrkX plugin and some examples
--   [Pythia8](http://home.thep.lu.se/~torbjorn/Pythia.html) for some examples
+-   [Pythia8](https://pythia.org) for some examples
 -   [ROOT](https://root.cern.ch) >= 6.20 for the TGeo plugin and the examples
 -   [Sphinx](https://www.sphinx-doc.org) >= 2.0 with [Breathe](https://breathe.readthedocs.io/en/latest/), [Exhale](https://exhale.readthedocs.io/en/latest/), and [recommonmark](https://recommonmark.readthedocs.io/en/latest/index.html) extensions for the documentation
 -   [SYCL](https://www.khronos.org/sycl/) for the SYCL plugin
@@ -56,6 +56,8 @@ releases](http://lcginfo.cern.ch/) starting from [LCG 97apython3](http://lcginfo
 For convenience, it is possible to build the required boost and eigen3 dependencies using the ACTS build system; see [Build options](#build-options).
 Other options are also
 available and are discussed in the [Building Acts](#building-acts) section.
+
+[Profiling](contribution/profiling.md) details the prerequisites for profiling the ACTS project with gperftools.
 
 ## Building Acts
 
@@ -191,7 +193,7 @@ package manager. [Sphinx][sphinx] and its extensions can be installed using the
 Python package manager via
 
 ```console
-$ cd <path/to/repository>
+$ cd <source>
 # --user installs to a user-specific directory instead of the system
 $ pip install --user -r docs/requirements.txt
 ```
@@ -199,16 +201,16 @@ $ pip install --user -r docs/requirements.txt
 To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
 
 ```console
-$ cmake -B <build-dir> -S <path/to/repository> -DACTS_BUILD_DOCS=on
+$ cmake -B <build> -S <source> -DACTS_BUILD_DOCS=on
 ```
 
 Then the documentation can be build with either of the following two build
 targets
 
 ```console
-$ cmake --build <build-dir> docs # default fast option
+$ cmake --build <build> --target docs # default fast option
 # or
-$ cmake --build <build-dir> docs-with-api # full documentation
+$ cmake --build <build> --target docs-with-api # full documentation
 ```
 
 The default option includes the Doxygen, Sphinx, and the Breathe extension, i.e.
@@ -230,7 +232,7 @@ CMake options can be set by adding `-D<OPTION>=<VALUE>` to the configuration
 command. The following command would e.g. enable the unit tests
 
 ```console
-$ cmake -B <build-dir> -S <source-dir> -DACTS_BUILD_UNITTESTS=ON
+$ cmake -B <build> -S <source> -DACTS_BUILD_UNITTESTS=ON
 ```
 
 Multiple options can be given. `cmake` caches the options so that only changed
@@ -238,41 +240,56 @@ options must be specified in subsequent calls to configure the project. The
 following options are available to configure the project and enable optional
 components.
 
-| Option                              | Description                                                                                           |
-| ----------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| ACTS_BUILD_EVERYTHING               | Build with most options enabled (except HepMC3 and documentation)                                     |
-| ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin                                                                                     |
-| ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep geometry plugin                                                                          |
-| ACTS_BUILD_PLUGIN_EXATRKX           | Build Exa.TrkX plugin                                                                             |
-| ACTS_BUILD_PLUGIN_IDENTIFICATION    | Build Identification plugin                                                                           |
-| ACTS_BUILD_PLUGIN_JSON              | Build Json plugin                                                                                     |
-| ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin                                                                                   |
-| ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin                                                                                     |
-| ACTS_SETUP_VECMEM                   | Setup the vecmem library targets as part of this build                                                |
-| ACTS_BUILD_PLUGIN_SYCL              | Build SYCL plugin                                                                                     |
-| ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin                                                                                     |
-| ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package                                                                |
-| ACTS_BUILD_EXAMPLES                 | Build standalone examples                                                                             |
-| ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples                                                               |
-| ACTS_BUILD_EXAMPLES_EXATRKX         | Build some examples based on the Exa.TrkX track finding module                                        |
-| ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples                                                               |
-| ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples                                                               |
-| ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples                                                              |
-| ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples                                                                |
-| ACTS_BUILD_BENCHMARKS               | Build benchmarks                                                                                      |
-| ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests                                                                               |
-| ACTS_BUILD_UNITTESTS                | Build unit tests                                                                                      |
-| ACTS_BUILD_DOCS                     | Build documentation                                                                                   |
-| ACTS_BUILD_ANALYSIS_APPS            | Build root based stand-alone analysis applications (defaults is OFF)                                  |
-| ACTS_LOG_FAILURE_THRESHOLD          | Automatically fail when a log above the specified debug level is emitted (useful for automated tests) |
-| ACTS_FORCE_ASSERTIONS               | Try to force keeping `assert` even in Release builds. (useful for automated tests)                    |
-| ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter definitions header                                                  |
-| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system instead of building it                                            |
-| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the system instead of building it                                      |
-| ACTS_USE_SYSTEM_BOOST               | Use the system boost libraries (defaults to ON)                                                       |
-| ACTS_USE_SYSTEM_EIGEN3              | Use the system eigen3 libraries (defaults to ON)                                                      |
-| ACTS_USE_SYSTEM_VECMEM              | Use system provided vecmem installation                                                               |
-| ACTS_USE_SYSTEM_PYBIND11            | Use pybind11 installed in the system                                                                  |
+| Option                              | Description                                                                                                                                                                                                                        |
+|-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| ACTS_BUILD_EVERYTHING               | Build with most options enabled (except<br>HepMC3 and documentation)<br> type: `bool`, default: `OFF`                                                                                                                              |
+| ACTS_PARAMETER_DEFINITIONS_HEADER   | Use a different (track) parameter<br>definitions header<br> type: `filepath`, default: `""`                                                                                                                                        |
+| ACTS_FORCE_ASSERTIONS               | Force assertions regardless of build<br>type<br> type: `bool`, default: `OFF`                                                                                                                                                      |
+| ACTS_BUILD_PLUGIN_AUTODIFF          | Build the autodiff plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
+| ACTS_USE_SYSTEM_AUTODIFF            | Use autodiff provided by the system<br>instead of the bundled version<br> type: `bool`, default: `OFF`                                                                                                                             |
+| ACTS_BUILD_PLUGIN_CUDA              | Build CUDA plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_BUILD_PLUGIN_DD4HEP            | Build DD4hep plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
+| ACTS_BUILD_PLUGIN_EXATRKX           | Build the Exa.TrkX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
+| ACTS_USE_SYSTEM_ACTSDD4HEP          | Use the ActsDD4hep glue library provided<br>by the system instead of building it<br> type: `bool`, default: `OFF`                                                                                                                  |
+| ACTS_BUILD_PLUGIN_IDENTIFICATION    | Build Identification plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
+| ACTS_BUILD_PLUGIN_JSON              | Build json plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_USE_SYSTEM_NLOHMANN_JSON       | Use nlohmann::json provided by the<br>system instead of the bundled version<br> type: `bool`, default: `OFF`                                                                                                                       |
+| ACTS_BUILD_PLUGIN_LEGACY            | Build legacy plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
+| ACTS_BUILD_PLUGIN_ONNX              | Build ONNX plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_SETUP_VECMEM                   | Explicitly set up vecmem for the project<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_USE_SYSTEM_VECMEM              | Use a system-provided vecmem<br>installation<br> type: `bool`, default: `OFF`                                                                                                                                                      |
+| ACTS_BUILD_PLUGIN_SYCL              | Build SYCL plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_BUILD_PLUGIN_TGEO              | Build TGeo plugin<br> type: `bool`, default: `OFF`                                                                                                                                                                                 |
+| ACTS_BUILD_FATRAS                   | Build FAst TRAcking Simulation package<br> type: `bool`, default: `OFF`                                                                                                                                                            |
+| ACTS_BUILD_FATRAS_GEANT4            | Build Geant4 Fatras package<br> type: `bool`, default: `OFF`                                                                                                                                                                       |
+| ACTS_BUILD_ALIGNMENT                | Build Alignment package<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
+| ACTS_BUILD_EXAMPLES                 | Build standalone examples<br> type: `bool`, default: `OFF`                                                                                                                                                                         |
+| ACTS_BUILD_EXAMPLES_DD4HEP          | Build DD4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
+| ACTS_BUILD_EXAMPLES_EDM4HEP         | Build EDM4hep-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_BUILD_EXAMPLES_EXATRKX         | Build the Exa.TrkX example code<br> type: `bool`, default: `OFF`                                                                                                                                                                   |
+| ACTS_BUILD_EXAMPLES_GEANT4          | Build Geant4-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
+| ACTS_BUILD_EXAMPLES_HEPMC3          | Build HepMC3-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                           |
+| ACTS_BUILD_EXAMPLES_PYTHIA8         | Build Pythia8-based code in the examples<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS | Build python bindings for the examples<br> type: `bool`, default: `OFF`                                                                                                                                                            |
+| ACTS_USE_SYSTEM_PYBIND11            | Use a system installation of pybind11<br> type: `bool`, default: `OFF`                                                                                                                                                             |
+| ACTS_USE_EXAMPLES_TBB               | Use Threading Building Blocks library in the examples<br> type: `bool`, default: `ON`                                                                                                                                              |
+| ACTS_BUILD_ANALYSIS_APPS            | Build Analysis applications in the<br>examples<br> type: `bool`, default: `OFF`                                                                                                                                                    |
+| ACTS_BUILD_BENCHMARKS               | Build benchmarks<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
+| ACTS_BUILD_INTEGRATIONTESTS         | Build integration tests<br> type: `bool`, default: `OFF`                                                                                                                                                                           |
+| ACTS_BUILD_UNITTESTS                | Build unit tests<br> type: `bool`, default: `OFF`                                                                                                                                                                                  |
+| ACTS_RUN_CLANG_TIDY                 | Run clang-tidy static analysis<br> type: `bool`, default: `OFF`                                                                                                                                                                    |
+| ACTS_BUILD_DOCS                     | Build documentation<br> type: `bool`, default: `OFF`                                                                                                                                                                               |
+| ACTS_SETUP_BOOST                    | Explicitly set up Boost for the project<br> type: `bool`, default: `ON`                                                                                                                                                            |
+| ACTS_USE_SYSTEM_BOOST               | Use a system-provided boost<br> type: `bool`, default: `ON`                                                                                                                                                                        |
+| ACTS_SETUP_EIGEN3                   | Explicitly set up Eigen3 for the project<br> type: `bool`, default: `ON`                                                                                                                                                           |
+| ACTS_USE_SYSTEM_EIGEN3              | Use a system-provided eigen3<br> type: `bool`, default: `ON`                                                                                                                                                                       |
+| ACTS_BUILD_ODD                      | Build the OpenDataDetector<br> type: `bool`, default: `OFF`                                                                                                                                                                        |
+| ACTS_ENABLE_CPU_PROFILING           | Enable CPU profiling using gperftools<br> type: `bool`, default: `OFF`                                                                                                                                                             |
+| ACTS_ENABLE_MEMORY_PROFILING        | Enable memory profiling using gperftools<br> type: `bool`, default: `OFF`                                                                                                                                                          |
+| ACTS_GPERF_INSTALL_DIR              | Hint to help find gperf if profiling is<br>enabled<br> type: `string`, default: `""`                                                                                                                                               |
+| ACTS_ENABLE_LOG_FAILURE_THRESHOLD   | Enable failing on log messages with<br>level above certain threshold<br> type: `bool`, default: `OFF`                                                                                                                              |
+| ACTS_LOG_FAILURE_THRESHOLD          | Log level above which an exception<br>should be automatically thrown. If<br>ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set<br>and this is unset, this will enable a<br>runtime check of the log level.<br> type: `string`, default: `""` |
+
 
 All Acts-specific options are disabled or empty by default and must be
 specifically requested. Some of the options have interdependencies that are
@@ -297,7 +314,7 @@ documentation](https://cmake.org/documentation/).
 The build is also affected by some environment variables. They can be set by prepending them to the configuration call:
 
 ```console
-$ DD4hep_DIR=<path/to/dd4hep> cmake -B <build-dir> -S <source-dir>
+$ DD4hep_DIR=<path/to/dd4hep> cmake -B <build> -S <source>
 ```
 
 The following environment variables might be useful.
@@ -307,6 +324,27 @@ The following environment variables might be useful.
 | DD4hep_DIR           | Search path for the DD4hep installation  |
 | HepMC3_DIR           | Search path for the HepMC3 installation  |
 | Pythia8_DIR          | Search path for the Pythia8 installation |
+
+## The OpenDataDetector
+
+Acts comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map. 
+It is available via the git submodule feature by performing the following steps (git lfs need to be installed on your machine):
+
+```console
+$ git submodule init
+$ git submodule update
+```
+
+To use it, you will then need to build acts with the `ACTS_BUILD_ODD` option and then point either `LD_LIBRARY_PATH` on Linux or 
+`DYLD_LIBRARY_PATH` and `DD4HEP_LIBRARY_PATH` on MacOs to the install path of the ODD factory (for example: `build/thirdparty/OpenDataDetector/factory`).
+
+You can now use the ODD in the python binding by using:
+
+```python
+oddMaterialDeco = acts.IMaterialDecorator.fromFile("PATH_TO_Acts/thirdparty/OpenDataDetector/data/odd-material-maps.root")
+detector, trackingGeometry, decorators = getOpenDataDetector(odd_dir, oddMaterialDeco)
+```
+
 
 ## Using Acts
 

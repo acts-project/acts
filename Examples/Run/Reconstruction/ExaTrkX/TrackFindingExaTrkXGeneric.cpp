@@ -198,7 +198,7 @@ int main(int argc, char** argv) {
   SurfaceSortingAlgorithm::Config sorterCfg;
   // Setup the surface sorter if running direct navigator
   sorterCfg.inputProtoTracks = trkFinderCfg.outputProtoTracks;
-  sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
+  sorterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
   sorterCfg.outputProtoTracks = "sortedprototracks";
   if (dirNav) {
@@ -249,9 +249,9 @@ int main(int argc, char** argv) {
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
   fitter.trackingGeometry = tGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
+  fitter.dFit = TrackFittingAlgorithm::makeKalmanFitterFunction(magneticField);
   fitter.fit =
-      TrackFittingAlgorithm::makeTrackFitterFunction(tGeometry, magneticField);
+      TrackFittingAlgorithm::makeKalmanFitterFunction(tGeometry, magneticField);
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 

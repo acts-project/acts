@@ -80,7 +80,7 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
 
   std::ofstream out;
 
-  // Test in in one dimension
+  // Test in one dimension
   nlohmann::json joneDimOut;
   to_json(joneDimOut, reference);
   out.open("BinUtility_1D.json");

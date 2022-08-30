@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
         auto alignContext =
             gctx.get<ActsExamples::Contextual::
                          InternallyAlignedDetectorElement::ContextType>();
-        if (alignedDetElement) {
+        if (alignedDetElement != nullptr) {
           alignedDetElement->addAlignedTransform(aTransform, alignContext.iov);
           return true;
         }

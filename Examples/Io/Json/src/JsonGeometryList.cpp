@@ -22,16 +22,21 @@ void ActsExamples::from_json(const nlohmann::json& data,
 
 void ActsExamples::to_json(nlohmann::json& data,
                            const Acts::GeometryIdentifier& geoId) {
-  if (geoId.volume())
+  if (geoId.volume() != 0u) {
     data["volume"] = geoId.volume();
-  if (geoId.boundary())
+  }
+  if (geoId.boundary() != 0u) {
     data["boundary"] = geoId.boundary();
-  if (geoId.layer())
+  }
+  if (geoId.layer() != 0u) {
     data["layer"] = geoId.layer();
-  if (geoId.approach())
+  }
+  if (geoId.approach() != 0u) {
     data["approach"] = geoId.approach();
-  if (geoId.sensitive())
+  }
+  if (geoId.sensitive() != 0u) {
     data["sensitive"] = geoId.sensitive();
+  }
 }
 
 void ActsExamples::from_json(const nlohmann::json& data,

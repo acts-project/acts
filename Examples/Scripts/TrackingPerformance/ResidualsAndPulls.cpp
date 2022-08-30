@@ -45,9 +45,9 @@ int main(int argc, char** argv) {
     store(command_line_parser(argc, argv).options(description).run(), vm);
     notify(vm);
 
-    if (vm.count("help")) {
+    if (vm.count("help") != 0u) {
       std::cout << description;
-      return 1;
+      return 0;
     }
 
     // Parse the parameters
@@ -56,9 +56,10 @@ int main(int argc, char** argv) {
     auto oFile = vm["output"].as<std::string>();
     auto saveAs = vm["save"].as<std::string>();
 
-    TApplication* tApp = vm["silent"].as<bool>()
-                             ? nullptr
-                             : new TApplication("ResidualAndPulls", 0, 0);
+    TApplication* tApp =
+        vm["silent"].as<bool>()
+            ? nullptr
+            : new TApplication("ResidualAndPulls", nullptr, nullptr);
 
     // Run the actual resolution estimation
     switch (boundParamResolution(
@@ -68,10 +69,12 @@ int main(int argc, char** argv) {
       case -1: {
         std::cout << "*** Input file could not be opened, check name/path."
                   << std::endl;
+        return -1;
       } break;
       case -2: {
         std::cout << "*** Input tree could not be found, check name."
                   << std::endl;
+        return -2;
       } break;
       default: {
         std::cout << "*** Successful run." << std::endl;
@@ -87,5 +90,5 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "*** Done." << std::endl;
-  return 1;
+  return 0;
 }

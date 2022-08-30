@@ -13,6 +13,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/MagneticField/NullBField.hpp"
@@ -53,7 +54,7 @@ class StraightLineStepper {
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
-    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
     ///
@@ -114,7 +115,7 @@ class StraightLineStepper {
     double pathAccumulated = 0.;
 
     /// adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize;
 
     // Previous step size for overstep estimation (ignored for SL stepper)
     double previousStepSize = 0.;
@@ -249,7 +250,7 @@ class StraightLineStepper {
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor,
                    bool release = true) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
 
@@ -283,13 +284,16 @@ class StraightLineStepper {
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const;
+  Result<BoundState> boundState(
+      State& state, const Surface& surface, bool transportCov = true,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -343,8 +347,12 @@ class StraightLineStepper {
   /// @param [in] surface is the surface to which the covariance is
   ///        forwarded to
   /// @note no check is done if the position is actually on the surface
+  /// @param [in] freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
   ///
-  void transportCovarianceToBound(State& state, const Surface& surface) const;
+  void transportCovarianceToBound(
+      State& state, const Surface& surface,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Perform a straight line propagation step
   ///
@@ -359,7 +367,7 @@ class StraightLineStepper {
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const {
     // use the adjusted step size
-    const auto h = state.stepping.stepSize;
+    const auto h = state.stepping.stepSize.value();
     const double p = momentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);
