@@ -10,7 +10,7 @@
 
 namespace Acts {
 
-struct SpacePointOptions{
+struct SpacePointBuilderOptions{
 
    std::pair<
     const std::pair<Vector3, Vector3>,
