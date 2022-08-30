@@ -44,7 +44,7 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
 
     Acts::SpacePointParameters spParams;
 
-    if (!m_config.usePerpProj) {  // default strip SP buildeing
+    if (!m_config.usePerpProj) {  // default strip SP building
 
       auto spFound = m_spUtility->calculateStripSPPosition(
           ends1, ends2, m_config.vertex, spParams,
