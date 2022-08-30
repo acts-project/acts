@@ -73,7 +73,7 @@ std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
   //         rho = sqrt(x² + y²)
   // drho/d{x,y} = (1 / sqrt(x² + y²)) * 2 * {x,y}
   //             = 2 * {x,y} / r
-  //       dz/dz = 1 (duuh!)
+  //       dz/dz = 1
   //
   auto x = globalPos[ePos0];
   auto y = globalPos[ePos1];
