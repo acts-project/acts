@@ -45,8 +45,8 @@ class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
     float rMax = 200.;
     float deltaRMinTopSP = 1.;
     float deltaRMaxTopSP = 60.;
-		float deltaRMinBottomSP = 1.;
-		float deltaRMaxBottomSP = 60.;
+    float deltaRMinBottomSP = 1.;
+    float deltaRMaxBottomSP = 60.;
     float collisionRegionMin = -250;
     float collisionRegionMax = 250.;
     float zMin = -2000.;
