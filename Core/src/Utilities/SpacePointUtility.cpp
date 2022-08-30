@@ -217,7 +217,7 @@ Result<void> SpacePointUtility::calculateStripSPPosition(
 
 Result<void> SpacePointUtility::recoverSpacePoint(
     SpacePointParameters& spParams, double stripLengthGapTolerance) const {
-  /// Consider some cases that would allow an easy exit
+  // Consider some cases that would allow an easy exit
   // Check if the limits are allowed to be increased
   if (stripLengthGapTolerance <= 0.) {
     return Result<void>::failure(m_error);
