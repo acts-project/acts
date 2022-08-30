@@ -410,8 +410,26 @@ def addSeeding(
                 **acts.examples.defaultKWArgs(
                     rMin=seedfinderConfigArg.r[0],
                     rMax=seedfinderConfigArg.r[1],
-                    deltaRMin=seedfinderConfigArg.deltaR[0],
-                    deltaRMax=seedfinderConfigArg.deltaR[1],
+                    deltaRMinTopSP=(
+                        seedfinderConfigArg.deltaR[0]
+                        if seedfinderConfigArg.deltaRTopSP[0] is None
+                        else seedfinderConfigArg.deltaRTopSP[0]
+                    ),
+                    deltaRMaxTopSP=(
+                        seedfinderConfigArg.deltaR[1]
+                        if seedfinderConfigArg.deltaRTopSP[1] is None
+                        else seedfinderConfigArg.deltaRTopSP[1]
+                    ),
+                    deltaRMinBottomSP=(
+                        seedfinderConfigArg.deltaR[0]
+                        if seedfinderConfigArg.deltaRBottomSP[0] is None
+                        else seedfinderConfigArg.deltaRBottomSP[0]
+                    ),
+                    deltaRMaxBottomSP=(
+                        seedfinderConfigArg.deltaR[1]
+                        if seedfinderConfigArg.deltaRBottomSP[1] is None
+                        else seedfinderConfigArg.deltaRBottomSP[1]
+                    ),
                     deltaRMiddleMinSPRange=seedfinderConfigArg.deltaRMiddleSPRange[0],
                     deltaRMiddleMaxSPRange=seedfinderConfigArg.deltaRMiddleSPRange[1],
                     collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
