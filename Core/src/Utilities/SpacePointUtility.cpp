@@ -325,7 +325,7 @@ Result<double> SpacePointUtility::calcPerpendicularProjection(
   double qr = (spParams.firstBtmToTop).dot(spParams.secondBtmToTop);
   double denom = spParams.firstBtmToTop.dot(spParams.firstBtmToTop) - qr * qr;
   // Check for numerical stability
-  if (fabs(denom) > 10e-7) {
+  if (fabs(denom) > 1e-6) {
     // Return lambda0
     return Result<double>::success(
         (ac.dot(spParams.secondBtmToTop) * qr -
