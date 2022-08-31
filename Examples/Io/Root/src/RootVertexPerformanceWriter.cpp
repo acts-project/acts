@@ -13,6 +13,7 @@
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/AverageSimHits.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -228,12 +229,24 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     // Matching tracks at vertex to fitted tracks that are in turn matched
     // to truth particles. Match reco and true vtx if >50% of tracks match
 
-    if (associatedTruthParticles.size() != inputFittedTracks.size()) {
-      ACTS_ERROR(
-          "Number of fitted tracks and associated truth particles do not "
-          "match. "
-          "Not able to match fitted tracks at reconstructed vertex to truth "
-          "vertex.");
+    auto mismatchMsg = [&](auto level, const auto& extra) {
+      ACTS_LOG(level,
+               "Number of fitted tracks and associated truth particles do not "
+               "match. ("
+                   << inputFittedTracks.size()
+                   << " != " << associatedTruthParticles.size()
+                   << ") Not able to match fitted tracks at reconstructed "
+                      "vertex to "
+                      "truth "
+                      "vertex."
+                   << extra);
+    };
+
+    if (associatedTruthParticles.size() < inputFittedTracks.size()) {
+      mismatchMsg(Acts::Logging::ERROR, " Switch to hit based truth matching.");
+    } else if (associatedTruthParticles.size() > inputFittedTracks.size()) {
+      mismatchMsg(Acts::Logging::INFO,
+                  " This is likely due to track efficiency < 1");
     } else {
       // Loop over all reco vertices and find associated truth particles
       std::vector<SimParticleContainer> truthParticlesAtVtxContainer;
