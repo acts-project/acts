@@ -13,13 +13,15 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Surfaces/SurfaceBounds.hpp"
 
-std::tuple<Acts::Svg::ProtoSurfaces, Acts::Svg::ProtoGrid>
+std::tuple<std::vector<Acts::Svg::ProtoSurfaces>, Acts::Svg::ProtoGrid,
+           std::vector<Acts::Svg::ProtoAssociations> >
 Acts::Svg::SurfaceArrayConverter::convert(
     const GeometryContext& gctx, const SurfaceArray& surfaceArray,
     const SurfaceArrayConverter::Options& cOptions) {
   // Prepare the return objects
   ProtoSurfaces pSurfaces;
   ProtoGrid pGrid;
+  ProtoAssociations pAssociations;
 
   const auto& surfaces = surfaceArray.surfaces();
 
@@ -200,9 +202,11 @@ Acts::Svg::SurfaceArrayConverter::convert(
           binnAssoc.push_back(std::distance(surfaces.begin(), candidate));
         }
       }
-      pGrid._associations.push_back(binnAssoc);
+      pAssociations.push_back(binnAssoc);
     }
   }
   // Return the surfaces and the grid
-  return std::tie(pSurfaces, pGrid);
+  std::vector<ProtoSurfaces> pSurfaceBatches = {pSurfaces};
+  std::vector<ProtoAssociations> pAssociationBatchs = {pAssociations};
+  return std::tie(pSurfaceBatches, pGrid, pAssociationBatchs);
 }
