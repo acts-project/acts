@@ -369,7 +369,7 @@ class Chi2Fitter {
         const auto& proj = trackStateProxy.effectiveProjector();
         // simple projection matrix H_is, composed of 1 and 0, 2x6 or 1x6
 
-        const auto& Hi = proj * result.jacobianFromStart;  // 2x6 or 1x6
+        const auto Hi = (proj * result.jacobianFromStart).eval();  // 2x6 or 1x6
         const auto& localMeasurements =
             trackStateProxy.effectiveCalibrated();  // 2x1 or 1x1
 
@@ -377,7 +377,7 @@ class Chi2Fitter {
             trackStateProxy
                 .effectiveCalibratedCovariance();  // 2x2 or 1x1. Should be
                                                    // diagonal.
-        const auto& covInv = covariance.inverse();
+        const auto covInv = covariance.inverse();
 
         auto residualsFull =
             trackStateProxy.calibrated() -
@@ -385,8 +385,8 @@ class Chi2Fitter {
         auto residuals = trackStateProxy.effectiveProjector() * residualsFull;
         // TODO: use detail::calculateResiduals? Theta/Phi?
 
-        const auto& deriv1 = -2 * Hi.transpose() * covInv * residuals;
-        const auto& deriv2 = 2 * Hi.transpose() * covInv * Hi;
+        const auto deriv1 = (-2 * Hi.transpose() * covInv * residuals).eval();
+        const auto deriv2 = (2 * Hi.transpose() * covInv * Hi).eval();
 
         result.collectorDeriv1Sum += deriv1;
         result.collectorDeriv2Sum += deriv2;
