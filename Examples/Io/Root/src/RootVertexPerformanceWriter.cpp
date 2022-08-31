@@ -260,16 +260,16 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         }  // end loop tracks
 
         // Now find true vtx with most matching tracks at reco vtx
-        // and check if it contributes more than 50 of all tracks
+        // and check if it contributes more than 50% of all tracks
         std::map<int, int> fmap;
         for (int priVtxId : contributingTruthVertices) {
           fmap[priVtxId]++;
         }
         int maxOccurrenceId = -1;
-        int maxOccurence = -1;
+        int maxOccurrence = -1;
         for (auto it : fmap) {
           if (it.second > maxOccurence) {
-            maxOccurence = it.second;
+            maxOccurrence = it.second;
             maxOccurrenceId = it.first;
           }
         }
@@ -315,9 +315,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         }
       }  // end loop vertices
     }
-  } else if (!m_cfg.inputFittedTracksIndices.empty() &&
-             !m_cfg.inputAllFittedTracksTips.empty() &&
-             !m_cfg.inputTrajectories.empty()) {
+  } else {
     // get active tips
     const auto& trajectories =
         ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
