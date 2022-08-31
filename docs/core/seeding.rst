@@ -58,6 +58,14 @@ The seeding implementation in Core/include/Acts/Seeding/ is based on the ATLAS t
    the code calculated in :math:`cot \theta` for speed), e.g. to test if two
    combinations (SP bottom, SP middle) and (SP middle, SP top) have similar
    pseudorapidity and are therefore compatible with the same particle track.
+   
+The search for SPs is performed for each `(\phi, z)` bin of a fully configurable
+grid of the detector containing the SPs. The central SP is taken from the
+`(\phi, z)` region, then the top and bottom SP are searched in neighboring bins
+at the top and bottom layers of the detector, respectively. The number of
+neighboring bins used in the SP search for each `(\phi, z)` bin can be defined
+in the `z` direction with the vectors `zBinNeighborsTop` and `zBinNeighborsBottom`
+separately for bottom and top SPs, and in the `\phi` direction with `numPhiNeighbors`.
 
 Three iterators over SP need to be passed to the public createSeedsForGroup
 function in the Seedfinder class. The seedfinder will then attempt to create
