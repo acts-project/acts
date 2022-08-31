@@ -1,5 +1,4 @@
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
-
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTiming.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXUtils.hpp"
 
@@ -17,28 +16,26 @@
 using namespace torch::indexing;
 
 namespace {
-void print_current_cuda_meminfo() {
-#if 0
-    constexpr int kb = 1024;
-    constexpr int mb = kb * kb;
-    
-    int device;
-    std::size_t free, total;
-    //c10::cuda::CUDACachingAllocator::emptyCache();
-    cudaMemGetInfo( &free, &total );
-    cudaGetDevice( &device );
-    
-    std::cout << "Current CUDA device - used / total [in MB]: " << (total - free) / mb << " / " << total / mb << std::endl;
-  }
-#endif
+void print_current_cuda_meminfo(Acts::LoggerWrapper& logger) {
+  constexpr int kb = 1024;
+  constexpr int mb = kb * kb;
+
+  int device;
+  std::size_t free, total;
+  cudaMemGetInfo(&free, &total);
+  cudaGetDevice(&device);
+
+  ACTS_VERBOSE("Current CUDA device: " << device);
+  ACTS_VERBOSE("Memory (used / total) [in MB]: " << (total - free) / mb << " / "
+                                                 << total / mb);
 }
 }  // namespace
 
 namespace Acts {
 
-ExaTrkXTrackFinding::ExaTrkXTrackFinding(
-    const ExaTrkXTrackFinding::Config& config)
-    : ExaTrkXTrackFindingBase("ExaTrkXTrackFinding", config.verbose),
+ExaTrkXTrackFindingTorch::ExaTrkXTrackFindingTorch(
+    const ExaTrkXTrackFindingTorch::Config& config)
+    : ExaTrkXTrackFindingBase("ExaTrkXTrackFindingTorch"),
       m_cfg(config) {
   const std::string l_embedModelPath(m_cfg.modelDir + "/torchscript/embed.pt");
   const std::string l_filterModelPath(m_cfg.modelDir +
@@ -63,12 +60,10 @@ ExaTrkXTrackFinding::ExaTrkXTrackFinding(
   }
 }
 
-// The main function that runs the Exa.TrkX ExaTrkXTrackFindingence pipeline
-// Be care of sharpe corners.
-void ExaTrkXTrackFinding::getTracks(
+void ExaTrkXTrackFindingTorch::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates,
-    ExaTrkXTime& timeInfo) const {
+    std::vector<std::vector<int> >& trackCandidates, ExaTrkXTime& timeInfo,
+    LoggerWrapper logger) const {
   ExaTrkXTimer tot_timer;
   tot_timer.start();
   // hardcoded debugging information
@@ -81,19 +76,16 @@ void ExaTrkXTrackFinding::getTracks(
   auto g_model = m_gnnModel->clone();
 
   // printout the r,phi,z of the first spacepoint
-  if (m_cfg.verbose) {
-    std::cout << "First spacepoint information: ";
-    std::copy(inputValues.begin(), inputValues.begin() + 3,
-              std::ostream_iterator<float>(std::cout, " "));
-    std::cout << std::endl;
-    std::cout << "Max and min spacepoint:"
-              << *std::max_element(inputValues.begin(), inputValues.end())
-              << " "
-              << *std::min_element(inputValues.begin(), inputValues.end())
-              << "\n";
-    print_current_cuda_meminfo();
-  }
+  ACTS_VERBOSE("First spacepoint information [r, phi, z]: "
+               << inputValues[0] << ", " << inputValues[1] << ", "
+               << inputValues[2]);
+  ACTS_VERBOSE("Max and min spacepoint: "
+               << *std::max_element(inputValues.begin(), inputValues.end())
+               << ", "
+               << *std::min_element(inputValues.begin(), inputValues.end()))
+  print_current_cuda_meminfo(logger);
 
+  // Setup timer
   ExaTrkXTimer timer;
 
   // **********
@@ -114,11 +106,9 @@ void ExaTrkXTrackFinding::getTracks(
       e_model.forward(eInputTensorJit).toTensor();
   eInputTensorJit.clear();
 
-  if (m_cfg.verbose) {
-    std::cout << "Embedding space of libtorch the first SP: \n";
-    std::cout << eOutput->slice(/*dim=*/0, /*start=*/0, /*end=*/1) << std::endl;
-    print_current_cuda_meminfo();
-  }
+  ACTS_VERBOSE("Embedding space of the first SP:\n"
+                << eOutput->slice(/*dim=*/0, /*start=*/0, /*end=*/1));
+  print_current_cuda_meminfo(logger);
 
   timeInfo.embedding = timer.stopAndGetElapsedTime();
 
@@ -135,18 +125,10 @@ void ExaTrkXTrackFinding::getTracks(
   //   eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal,
   //   m_cfg.knnVal);
 
-  if (m_cfg.verbose) {
-    std::cout << "Built " << edgeList->size(1) << " edges. "
-              << edgeList->size(0) << std::endl;
-    std::cout << edgeList->slice(1, 0, 5) << std::endl;
-    print_current_cuda_meminfo();
-
-    // std::ofstream file("reconstruction/edges_after_embedding.csv");
-    // file << "e0,e1\n";
-    // for(int i=0; i<edgeList.size(1); ++i) {
-    //     file << edgeList[0][i].item<float>() << "," << edgeList[1][i].item<float>() << "\n";
-    // }
-  }
+  ACTS_VERBOSE("Shape of built edges: (" << edgeList->size(0) << ", "
+                                         << edgeList->size(1));
+  ACTS_VERBOSE("Slice of edgelist:\n" << edgeList->slice(1, 0, 5));
+  print_current_cuda_meminfo(logger);
 
   timeInfo.building = timer.stopAndGetElapsedTime();
 
@@ -172,29 +154,19 @@ void ExaTrkXTrackFinding::getTracks(
   auto fOutput = torch::cat(results);
   results.clear();
 
-  if (m_cfg.verbose) {
-    std::cout << "After filtering network: " << fOutput.size(0) << std::endl;
-    std::cout << fOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/9) << std::endl;
-    print_current_cuda_meminfo();
-  }
+  ACTS_VERBOSE("Size after filtering network: " << fOutput.size(0));
+  ACTS_VERBOSE("Slice of filtered output:\n"
+               << fOutput.slice(/*dim=*/0, /*start=*/0, /*end=*/9));
+  print_current_cuda_meminfo(logger);
 
   torch::Tensor filterMask = fOutput > m_cfg.filterCut;
   torch::Tensor edgesAfterF = edgeList->index({Slice(), filterMask});
   edgeList.reset();
   edgesAfterF = edgesAfterF.to(torch::kInt64);
-  int64_t numEdgesAfterF = edgesAfterF.size(1);
+  const int64_t numEdgesAfterF = edgesAfterF.size(1);
 
-  if (m_cfg.verbose) {
-    std::cout << "After filter cut: " << numEdgesAfterF << " edges."
-              << std::endl;
-
-    // std::ofstream file("reconstruction/edges_after_filter.csv");
-    // file << "e0,e1\n";
-    // for(int i=0; i<edgesAfterF.size(1); ++i) {
-    //     file << edgesAfterF[0][i].item<float>() << "," << edgesAfterF[1][i].item<float>() << "\n";
-    // }
-    print_current_cuda_meminfo();
-  }
+  ACTS_VERBOSE("Size after filter cut: " << numEdgesAfterF)
+  print_current_cuda_meminfo(logger);
 
   timeInfo.filtering = timer.stopAndGetElapsedTime();
 
@@ -206,11 +178,10 @@ void ExaTrkXTrackFinding::getTracks(
 
   auto bidirEdgesAfterF = torch::cat({edgesAfterF, edgesAfterF.flip(0)}, 1);
 
-  if (m_cfg.verbose) {
-    std::cout << "bidir edges shape " << bidirEdgesAfterF.size(0) << ", "
-              << bidirEdgesAfterF.size(1) << "\n";
-    print_current_cuda_meminfo();
-  }
+  ACTS_VERBOSE("Bi-directional edges shape: ("
+               << bidirEdgesAfterF.size(0) << ", " << bidirEdgesAfterF.size(1)
+               << ")")
+  print_current_cuda_meminfo(logger);
 
   std::vector<torch::jit::IValue> gInputTensorJit;
   // auto g_opts = torch::TensorOptions().dtype(torch::kInt64);
@@ -226,17 +197,10 @@ void ExaTrkXTrackFinding::getTracks(
 
   timeInfo.gnn = timer.stopAndGetElapsedTime();
 
-  if (m_cfg.verbose) {
-    std::cout << "GNN scores for " << gOutput.size(0) << " edges." << std::endl;
-    std::cout << "(Bidir scores size: " << gOutputBidir.size(0) << std::endl;
-    std::cout << gOutput.slice(0, 0, 5) << std::endl;
-    // std::ofstream file("reconstruction/gnn_scores.csv");
-    // file << "score\n";
-    // for(int i=0; i<edgesAfterF.size(1); ++i) {
-    //     file << gOutput[i].item<float>() << "\n";
-    // }
-    print_current_cuda_meminfo();
-  }
+  ACTS_VERBOSE("GNN scores size: " << gOutput.size(0) << " (bidir: "
+                                   << gOutputBidir.size(0) << ")");
+  ACTS_VERBOSE("Score output slice:\n" << gOutput.slice(0, 0, 5));
+  print_current_cuda_meminfo(logger);
 
   // ***************
   // Track Labeling
@@ -266,14 +230,14 @@ void ExaTrkXTrackFinding::getTracks(
   // weakly_connected_components<int32_t,int32_t,float>(
   //     rowIndices, colIndices, edgeWeights, trackLabels);
 
-  if (m_cfg.verbose) {
-    std::cout << "size of components: " << trackLabels.size() << std::endl;
+  ACTS_VERBOSE("Number of track labels: " << trackLabels.size());
+  ACTS_VERBOSE("NUmber of unique track labels: " << [&]() {
     std::vector<vertex_t> sorted(trackLabels);
     std::sort(sorted.begin(), sorted.end());
     sorted.erase(std::unique(sorted.begin(), sorted.end()), sorted.end());
-    std::cout << "unique components: " << sorted.size() << std::endl;
-    print_current_cuda_meminfo();
-  }
+    return sorted.size();
+  }());
+  print_current_cuda_meminfo(logger);
 
   if (trackLabels.size() == 0)
     return;
@@ -301,6 +265,7 @@ void ExaTrkXTrackFinding::getTracks(
       existTrkIdx++;
     }
   }
+
   timeInfo.labeling = timer.stopAndGetElapsedTime();
   timeInfo.total = tot_timer.stopAndGetElapsedTime();
   c10::cuda::CUDACachingAllocator::emptyCache();

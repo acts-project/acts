@@ -1,12 +1,12 @@
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
+
 #include <chrono>
-#include <ctime>
+#include <fstream>
 #include <numeric>
 #include <string>
 #include <vector>
-
-#include <stdio.h>
 
 namespace Acts {
 
@@ -17,13 +17,14 @@ struct ExaTrkXTime {
   float gnn = 0.0;
   float labeling = 0.0;
   float total = 0.0;
-  void summary() {
-    printf("1) embedding:  %.4f\n", embedding);
-    printf("2) building:   %.4f\n", building);
-    printf("3) filtering:  %.4f\n", filtering);
-    printf("4) gnn:        %.4f\n", gnn);
-    printf("5) labeling:   %.4f\n", labeling);
-    printf("6) total:      %.4f\n", total);
+
+  void summary(LoggerWrapper& logger) const {
+    ACTS_VERBOSE("1) embedding: " << embedding);
+    ACTS_VERBOSE("2) building: " << building);
+    ACTS_VERBOSE("3) filtering: " << filtering);
+    ACTS_VERBOSE("4) gnn: " << gnn);
+    ACTS_VERBOSE("5) labeling: " << labeling);
+    ACTS_VERBOSE("6) total: " << total);
   }
 };
 
@@ -46,19 +47,17 @@ struct ExaTrkXTimeList {
 
   ExaTrkXTime get(size_t evtid) {
     if (evtid >= embedding.size()) {
-      printf("Error: event id %ld is out of range.\n", evtid);
-      return ExaTrkXTime();
+      throw std::runtime_error("Error: event id is out of range.");
     }
     ExaTrkXTime timing{embedding[evtid], building[evtid], filtering[evtid],
                        gnn[evtid],       labeling[evtid], total[evtid]};
     return timing;
   }
 
-  void summary(size_t start = 0) {
+  void summary(Acts::LoggerWrapper logger, size_t start = 0) {
     size_t num = embedding.size();
     if (num <= start) {
-      printf("Not enough data. %ld total and %ld skipped\n", num, start);
-      return;
+      throw std::runtime_error("Not enough data events");
     }
     num -= start;
     float tot_embedding = 0;
@@ -67,6 +66,7 @@ struct ExaTrkXTimeList {
     float tot_gnn = 0;
     float tot_labeling = 0;
     float tot_total = 0;
+
     if (num > 0) {
       tot_embedding =
           std::accumulate(embedding.begin() + start, embedding.end(), 0.0f);
@@ -80,30 +80,30 @@ struct ExaTrkXTimeList {
       tot_total = std::accumulate(total.begin() + start, total.end(), 0.0f);
     }
 
-    printf("1) embedding: %.4f\n", tot_embedding / num);
-    printf("2) building:  %.4f\n", tot_building / num);
-    printf("3) filtering: %.4f\n", tot_filtering / num);
-    printf("4) gnn:       %.4f\n", tot_gnn / num);
-    printf("5) labeling:  %.4f\n", tot_labeling / num);
-    printf("6) total:     %.4f\n", tot_total / num);
+    ACTS_VERBOSE("1) embedding: " << tot_embedding / num);
+    ACTS_VERBOSE("2) building: " << tot_building / num);
+    ACTS_VERBOSE("3) filtering: " << tot_filtering / num);
+    ACTS_VERBOSE("4) gnn: " << tot_gnn / num);
+    ACTS_VERBOSE("5) labeling: " << tot_labeling / num);
+    ACTS_VERBOSE("6) total: " << tot_total / num);
   }
 
-  void summaryOneEvent(int evtid) { get(evtid).summary(); }
+  void summaryOneEvent(Acts::LoggerWrapper logger, int evtid) { get(evtid).summary(logger); }
 
-  int numEvts() { return (int)embedding.size(); }
+  std::size_t numEvts() { return embedding.size(); }
 
   void save(const std::string& filename) {
-    FILE* fp = fopen(filename.c_str(), "w");
-    if (fp == NULL) {
-      printf("Error: cannot open file %s\n", filename.c_str());
-      return;
+    std::ofstream file(filename);
+    if (not file.is_open()) {
+      throw std::runtime_error("Cannot write to file " + filename);
     }
-    fprintf(fp, "embedding,building,filtering,gnn,labeling,total\n");
+
+    file << "embedding,building,filtering,gnn,labeling,total\n";
+
     for (auto i = 0ul; i < embedding.size(); i++) {
-      fprintf(fp, "%.4f,%.4f,%.4f,%.4f,%.4f,%.4f\n", embedding[i], building[i],
-              filtering[i], gnn[i], labeling[i], total[i]);
+      file << embedding[i] << building[i] << filtering[i] << gnn[i]
+           << labeling[i] << total[i];
     }
-    fclose(fp);
   }
 };
 

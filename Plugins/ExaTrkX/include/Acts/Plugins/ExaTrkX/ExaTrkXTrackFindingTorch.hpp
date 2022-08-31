@@ -12,11 +12,10 @@ class Module;
 
 namespace Acts {
 
-class ExaTrkXTrackFinding final : public ExaTrkXTrackFindingBase {
+class ExaTrkXTrackFindingTorch final : public ExaTrkXTrackFindingBase {
  public:
   struct Config {
     std::string modelDir;
-    bool verbose = false;
 
     // hyperparameters in the pipeline.
     int64_t spacepointFeatures = 3;
@@ -28,13 +27,14 @@ class ExaTrkXTrackFinding final : public ExaTrkXTrackFindingBase {
     float edgeCut = 0.5;
   };
 
-  ExaTrkXTrackFinding(const Config& config);
-  virtual ~ExaTrkXTrackFinding() {}
+  ExaTrkXTrackFindingTorch(const Config& config);
+  virtual ~ExaTrkXTrackFindingTorch() {}
 
   void getTracks(std::vector<float>& inputValues,
                  std::vector<int>& spacepointIDs,
                  std::vector<std::vector<int> >& trackCandidates,
-                 ExaTrkXTime& timeInfo) const;
+                 ExaTrkXTime& timeInfo,
+                 LoggerWrapper logger = getDummyLogger()) const;
 
   const Config& config() const { return m_cfg; }
 

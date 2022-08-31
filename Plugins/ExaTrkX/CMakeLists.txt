@@ -3,7 +3,8 @@
 add_library(
   ActsPluginExaTrkX SHARED
   src/ExaTrkXUtils.cpp
-  src/ExaTrkXTrackFinding.cpp
+  src/ExaTrkXTrackFindingBase.cpp
+  src/ExaTrkXTrackFindingTorch.cpp
 )
 
 set_target_properties(ActsPluginExaTrkX
@@ -30,12 +31,6 @@ target_include_directories(
   PUBLIC 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
-)
-
-target_include_directories(
-  ActsPluginExaTrkX
-  PUBLIC
-     #/workspace/install/include
 )
 
 target_link_libraries(

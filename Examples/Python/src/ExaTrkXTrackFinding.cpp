@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -37,12 +37,12 @@ void addExaTrkXTrackFinding(Context& ctx) {
   }
 
   {
-    using Alg = Acts::ExaTrkXTrackFinding;
+    using Alg = Acts::ExaTrkXTrackFindingTorch;
     using Config = Acts::ExaTrkXTrackFinding::Config;
 
     auto alg =
         py::class_<Alg, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Alg>>(
-            mex, "ExaTrkXTrackFinding")
+            mex, "ExaTrkXTrackFindingTorch")
             .def(py::init<const Config&>(), py::arg("config"))
             .def_property_readonly("config", &Alg::config);
 

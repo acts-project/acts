@@ -32,7 +32,7 @@ std::pair<int, int> cantor_pair_inverse(int a) {
 
   return {x, y};
 }
-}
+}  // namespace
 
 void test_random_graph(int emb_dim, int n_nodes, float r, int knn) {
   // Create a random point cloud
