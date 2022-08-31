@@ -1199,6 +1199,31 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     os << ply << std::flush;
     os.close();
   }
+
+  BOOST_TEST_CONTEXT("3D - 4 Sides - Big box") {
+    using Frustum = Frustum<BoundingBoxScalar, 3, 4>;
+    using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
+    using vec3 = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
+
+    Object o;
+
+    PlyVisualization3D<BoundingBoxScalar> ply;
+
+    vec3 pos = {0, 0, 0};
+    vec3 dir = {0, 0, 1};
+    Frustum fr(pos, dir, 0.972419);
+    fr.draw(ply, 10);
+
+    Box::Size size(vec3(100, 100, 2));
+    Box bb(&o, pos + dir * 10, size);
+    bb.draw(ply);
+
+    BOOST_CHECK(bb.intersect(fr));
+
+    std::ofstream os("frust3d-4s-bigbox.ply");
+    os << ply << std::flush;
+    os.close();
+  }
 }
 
 BOOST_AUTO_TEST_CASE(ostream_operator) {
