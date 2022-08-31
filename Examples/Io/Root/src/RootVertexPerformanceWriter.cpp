@@ -278,7 +278,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         // Match reco to truth vertex if at least 50% of tracks match
         double trackVtxMatchFraction =
             (double)fmap[maxOccurrenceId] / tracks.size();
-        if (trackVtxMatchFraction >= m_cfg.minTrackVtxMatchFraction) {
+        if (trackVtxMatchFraction > m_cfg.minTrackVtxMatchFraction) {
           for (const auto& particle : associatedTruthParticles) {
             int priVtxId = particle.particleId().vertexPrimary();
             int secVtxId = particle.particleId().vertexSecondary();
@@ -424,7 +424,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       // Match reco to truth vertex if at least 50% of tracks match
       double trackVtxMatchFraction =
           (double)fmap[maxOccurrenceId] / tracks.size();
-      if (trackVtxMatchFraction >= m_cfg.minTrackVtxMatchFraction) {
+      if (trackVtxMatchFraction > m_cfg.minTrackVtxMatchFraction) {
         for (const auto& particle : associatedTruthParticles) {
           int priVtxId = particle.particleId().vertexPrimary();
           int secVtxId = particle.particleId().vertexSecondary();

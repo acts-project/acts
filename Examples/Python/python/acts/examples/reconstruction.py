@@ -950,7 +950,7 @@ def addVertexFitting(
                 if trajectories is not None
                 else associatedParticles,
                 inputVertices=outputVertices,
-                minTrackVtxMatchFraction=0.0,
+                minTrackVtxMatchFraction=0.0 if trajectories is not None else 0.5,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
