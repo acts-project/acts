@@ -8,6 +8,8 @@
 
 #include <stdio.h>
 
+namespace Acts {
+
 struct ExaTrkXTime {
   float embedding = 0.0;
   float building = 0.0;
@@ -135,3 +137,5 @@ class ExaTrkXTimer {
   std::chrono::time_point<std::chrono::high_resolution_clock> m_end;
   bool m_running = false;
 };
+
+}  // namespace Acts

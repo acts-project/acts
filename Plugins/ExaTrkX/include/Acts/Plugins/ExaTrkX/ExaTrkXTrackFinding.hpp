@@ -6,13 +6,13 @@
 #include <string>
 #include <vector>
 
-#include <torch/script.h>
-#include <torch/torch.h>
-using namespace torch::indexing;
+namespace torch::jit {
+class Module;
+}
 
 namespace Acts {
 
-class ExaTrkXTrackFinding : public ExaTrkXTrackFindingBase {
+class ExaTrkXTrackFinding final : public ExaTrkXTrackFindingBase {
  public:
   struct Config {
     std::string modelDir;
@@ -34,18 +34,16 @@ class ExaTrkXTrackFinding : public ExaTrkXTrackFindingBase {
   void getTracks(std::vector<float>& inputValues,
                  std::vector<int>& spacepointIDs,
                  std::vector<std::vector<int> >& trackCandidates,
-                 ExaTrkXTime& timeInfo) const final;
+                 ExaTrkXTime& timeInfo) const;
 
   const Config& config() const { return m_cfg; }
 
  private:
-  void initTrainedModels();
-
- private:
   Config m_cfg;
-  torch::jit::script::Module m_embeddingModel;
-  torch::jit::script::Module m_filterModel;
-  torch::jit::script::Module m_gnnModel;
+
+  std::unique_ptr<torch::jit::Module> m_embeddingModel;
+  std::unique_ptr<torch::jit::Module> m_filterModel;
+  std::unique_ptr<torch::jit::Module> m_gnnModel;
 };
 
 }  // namespace Acts

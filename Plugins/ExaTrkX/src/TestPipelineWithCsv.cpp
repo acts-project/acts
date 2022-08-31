@@ -1,6 +1,4 @@
-#ifdef NDEBUG
-#undef NDEBUG
-#endif
+// not sure where to put this
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
 
@@ -58,7 +56,7 @@ int main(int argc, char** argv) {
   std::cout << "\n\n";
 
   Acts::ExaTrkXTrackFinding::Config cfg;
-  cfg.verbose = (std::find(args.begin(), args.end(), "--v") != args.end());
+  cfg.verbose = (std::find(args.begin(), args.end(), "-v") != args.end());
   cfg.modelDir = args.at(2);
   cfg.spacepointFeatures = 3;
   cfg.embeddingDim = 8;

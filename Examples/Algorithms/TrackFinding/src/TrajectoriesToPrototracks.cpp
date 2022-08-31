@@ -6,7 +6,7 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 namespace ActsExamples {
-  
+
 ProcessCode TrajectoriesToPrototracks::execute(
     const AlgorithmContext& ctx) const {
   const auto trajectories =

@@ -320,11 +320,11 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_STRUCT_END();
   }
-  
+
   {
     using Alg = ActsExamples::TrajectoriesToPrototracks;
     using Config = Alg::Config;
-    
+
     auto alg =
         py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
             mex, "TrajectoriesToPrototracks")

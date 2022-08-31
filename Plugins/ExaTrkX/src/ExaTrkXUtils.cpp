@@ -1,6 +1,17 @@
 #include "Acts/Plugins/ExaTrkX/ExaTrkXUtils.hpp"
 
-#include <tbb/parallel_for_each.h>
+#include <grid/counting_sort.h>
+#include <grid/find_nbrs.h>
+#include <grid/grid.h>
+#include <grid/insert_points.h>
+#include <grid/prefix_sum.h>
+#include <torch/script.h>
+#include <torch/torch.h>
+
+#include "cuda.h"
+#include "cuda_runtime_api.h"
+
+using namespace torch::indexing;
 
 torch::Tensor buildEdges(at::Tensor &embedFeatures, int64_t numSpacepoints,
                          int dim, float rVal, int kVal) {
@@ -144,7 +155,8 @@ torch::Tensor buildEdges(at::Tensor &embedFeatures, int64_t numSpacepoints,
   // std::cout << "copy edges to std::vector" << std::endl;
 }
 
-/*
+#if 0
+
 void buildEdges(
     std::vector<float>& embedFeatures,
     std::vector<int64_t>& edgeList,
@@ -295,7 +307,11 @@ void buildEdges(
             stackedEdges.data_ptr<int64_t>() + stackedEdges.numel(),
             std::back_inserter(edgeList));
 }
-*/
+#endif
+
+#if 0
+
+#include <tbb/parallel_for_each.h>
 
 torch::Tensor buildEdgesBruteForce(at::Tensor &embedFeatures,
                                    int64_t numSpacepoints, int dim, float rVal,
@@ -452,3 +468,5 @@ torch::Tensor buildEdgesBruteForce(at::Tensor &embedFeatures,
 
   return edge_index;
 }
+
+#endif

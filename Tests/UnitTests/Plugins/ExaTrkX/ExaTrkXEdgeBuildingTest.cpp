@@ -1,3 +1,5 @@
+#include <boost/test/unit_test.hpp>
+
 #include "Acts/Plugins/ExaTrkX/ExaTrkXUtils.hpp"
 
 #include <cassert>
@@ -7,6 +9,7 @@
 #include <Eigen/Core>
 #include <torch/torch.h>
 
+namespace {
 float distance(const at::Tensor &a, const at::Tensor &b) {
   assert(a.sizes() == b.sizes());
   assert(a.sizes().size() == 1);
@@ -28,6 +31,7 @@ std::pair<int, int> cantor_pair_inverse(int a) {
   auto x = q(a) - y;
 
   return {x, y};
+}
 }
 
 void test_random_graph(int emb_dim, int n_nodes, float r, int knn) {
@@ -111,50 +115,22 @@ void test_random_graph(int emb_dim, int n_nodes, float r, int knn) {
   std::cout << "OK!" << std::endl;
 }
 
-int main(int argc, char **argv) {
+BOOST_AUTO_TEST_CASE(test_cantor_pair_functions) {
   int a = 345;
   int b = 23;
-  auto [aa, bb] = cantor_pair_inverse(cantor_pair(a, b));
-  assert(a == aa);
-  assert(b == bb);
+  const auto [aa, bb] = cantor_pair_inverse(cantor_pair(a, b));
+  BOOST_CHECK(a == aa);
+  BOOST_CHECK(b == bb);
+}
 
-  if (a != aa || b != bb) {
-    throw;
-  }
-
-  std::vector<std::string> args(argv, argv + argc);
-
-  int emb_dim = 3;
-  int n_nodes = 20;
-  float r = 1.5;
-  int knn = 50;
-  int seed = std::rand();
-
-  try {
-    if (argc > 1) {
-      emb_dim = std::stoi(args.at(1));
-      n_nodes = std::stoi(args.at(2));
-      r = std::stof(args.at(3));
-      knn = std::stoi(args.at(4));
-    }
-
-    if (argc == 6) {
-      seed = std::stoi(args.at(5));
-    }
-  } catch (...) {
-    std::cout << "Usage: " << argv[0]
-              << " <emb_dim> <n_nodes> <r> <knn> (<seed>)\n";
-    return 1;
-  }
+BOOST_AUTO_TEST_CASE(test_random_graph_edge_building) {
+  const int emb_dim = 3;
+  const int n_nodes = 20;
+  const float r = 1.5;
+  const int knn = 50;
+  const int seed = 42;
 
   torch::manual_seed(seed);
-
-  std::cout << "Parameters:\n";
-  std::cout << "emb_dim: " << emb_dim << "\n";
-  std::cout << "n_nodes: " << n_nodes << "\n";
-  std::cout << "r:       " << r << "\n";
-  std::cout << "knn:     " << knn << "\n";
-  std::cout << "seed:    " << seed << "\n";
 
   test_random_graph(emb_dim, n_nodes, r, knn);
 }

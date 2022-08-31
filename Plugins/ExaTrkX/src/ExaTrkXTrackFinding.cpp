@@ -1,24 +1,24 @@
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
 
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTiming.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXUtils.hpp"
 
-#include <torch/script.h>
-#include <torch/torch.h>
-using namespace torch::indexing;
-
+#include <cuda.h>
+#include <cuda_runtime.h>
+#include <cuda_runtime_api.h>
 #include <grid/counting_sort.h>
 #include <grid/find_nbrs.h>
 #include <grid/grid.h>
 #include <grid/insert_points.h>
 #include <grid/prefix_sum.h>
+#include <torch/script.h>
+#include <torch/torch.h>
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cuda_runtime_api.h>
-// #include "mmio_read.h"
+using namespace torch::indexing;
 
 namespace {
-  void print_current_cuda_meminfo() {
+void print_current_cuda_meminfo() {
+#if 0
     constexpr int kb = 1024;
     constexpr int mb = kb * kb;
     
@@ -30,7 +30,9 @@ namespace {
     
     std::cout << "Current CUDA device - used / total [in MB]: " << (total - free) / mb << " / " << total / mb << std::endl;
   }
+#endif
 }
+}  // namespace
 
 namespace Acts {
 
@@ -38,21 +40,24 @@ ExaTrkXTrackFinding::ExaTrkXTrackFinding(
     const ExaTrkXTrackFinding::Config& config)
     : ExaTrkXTrackFindingBase("ExaTrkXTrackFinding", config.verbose),
       m_cfg(config) {
-  initTrainedModels();
-}
-
-void ExaTrkXTrackFinding::initTrainedModels() {
-  std::string l_embedModelPath(m_cfg.modelDir + "/torchscript/embed.pt");
-  std::string l_filterModelPath(m_cfg.modelDir + "/torchscript/filter.pt");
-  std::string l_gnnModelPath(m_cfg.modelDir + "/torchscript/gnn.pt");
+  const std::string l_embedModelPath(m_cfg.modelDir + "/torchscript/embed.pt");
+  const std::string l_filterModelPath(m_cfg.modelDir +
+                                      "/torchscript/filter.pt");
+  const std::string l_gnnModelPath(m_cfg.modelDir + "/torchscript/gnn.pt");
   c10::InferenceMode guard(true);
+
   try {
-    m_embeddingModel = torch::jit::load(l_embedModelPath.c_str());
-    m_embeddingModel.eval();
-    m_filterModel = torch::jit::load(l_filterModelPath.c_str());
-    m_filterModel.eval();
-    m_gnnModel = torch::jit::load(l_gnnModelPath.c_str());
-    m_gnnModel.eval();
+    m_embeddingModel = std::make_unique<torch::jit::Module>();
+    *m_embeddingModel = torch::jit::load(l_embedModelPath.c_str());
+    m_embeddingModel->eval();
+
+    m_filterModel = std::make_unique<torch::jit::Module>();
+    *m_filterModel = torch::jit::load(l_filterModelPath.c_str());
+    m_filterModel->eval();
+
+    m_filterModel = std::make_unique<torch::jit::Module>();
+    *m_gnnModel = torch::jit::load(l_gnnModelPath.c_str());
+    m_gnnModel->eval();
   } catch (const c10::Error& e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
   }
@@ -69,11 +74,11 @@ void ExaTrkXTrackFinding::getTracks(
   // hardcoded debugging information
   c10::InferenceMode guard(true);
   torch::Device device(torch::kCUDA);
-  
+
   // Clone models (solve memory leak? members can be const...)
-  auto e_model = m_embeddingModel.clone();
-  auto f_model = m_filterModel.clone();
-  auto g_model = m_gnnModel.clone();
+  auto e_model = m_embeddingModel->clone();
+  auto f_model = m_filterModel->clone();
+  auto g_model = m_gnnModel->clone();
 
   // printout the r,phi,z of the first spacepoint
   if (m_cfg.verbose) {
@@ -90,7 +95,7 @@ void ExaTrkXTrackFinding::getTracks(
   }
 
   ExaTrkXTimer timer;
-  
+
   // **********
   // Embedding
   // **********
@@ -105,7 +110,8 @@ void ExaTrkXTrackFinding::getTracks(
           .to(torch::kFloat32);
 
   eInputTensorJit.push_back(eLibInputTensor.to(device));
-  std::optional<at::Tensor> eOutput = e_model.forward(eInputTensorJit).toTensor();
+  std::optional<at::Tensor> eOutput =
+      e_model.forward(eInputTensorJit).toTensor();
   eInputTensorJit.clear();
 
   if (m_cfg.verbose) {
@@ -119,9 +125,9 @@ void ExaTrkXTrackFinding::getTracks(
   // ****************
   // Building Edges
   // ****************
-  
+
   timer.start();
-  
+
   std::optional<torch::Tensor> edgeList = buildEdges(
       *eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
   eOutput.reset();
@@ -130,8 +136,8 @@ void ExaTrkXTrackFinding::getTracks(
   //   m_cfg.knnVal);
 
   if (m_cfg.verbose) {
-    std::cout << "Built " << edgeList->size(1) << " edges. " << edgeList->size(0)
-              << std::endl;
+    std::cout << "Built " << edgeList->size(1) << " edges. "
+              << edgeList->size(0) << std::endl;
     std::cout << edgeList->slice(1, 0, 5) << std::endl;
     print_current_cuda_meminfo();
 
@@ -147,22 +153,22 @@ void ExaTrkXTrackFinding::getTracks(
   // **********
   // Filtering
   // **********
-  
+
   timer.start();
-  
+
   const auto chunks = at::chunk(at::arange(edgeList->size(1)), m_cfg.n_chunks);
   std::vector<at::Tensor> results;
-  
-  for(const auto &chunk : chunks) {
+
+  for (const auto& chunk : chunks) {
     std::vector<torch::jit::IValue> fInputTensorJit;
     fInputTensorJit.push_back(eLibInputTensor.to(device));
     fInputTensorJit.push_back(edgeList->index({Slice(), chunk}).to(device));
-  
+
     results.push_back(f_model.forward(fInputTensorJit).toTensor());
     results.back().squeeze_();
     results.back().sigmoid_();
   }
-  
+
   auto fOutput = torch::cat(results);
   results.clear();
 
@@ -195,7 +201,7 @@ void ExaTrkXTrackFinding::getTracks(
   // ****
   // GNN
   // ****
-  
+
   timer.start();
 
   auto bidirEdgesAfterF = torch::cat({edgesAfterF, edgesAfterF.flip(0)}, 1);
@@ -235,7 +241,7 @@ void ExaTrkXTrackFinding::getTracks(
   // ***************
   // Track Labeling
   // ***************
-  
+
   timer.start();
 
   using vertex_t = int32_t;

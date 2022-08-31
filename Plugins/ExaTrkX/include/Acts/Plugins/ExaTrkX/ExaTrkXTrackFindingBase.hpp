@@ -3,9 +3,9 @@
 #include <string>
 #include <vector>
 
-#include "ExaTrkXTiming.hpp"
-
 namespace Acts {
+
+struct ExaTrkXTime;
 
 class ExaTrkXTrackFindingBase {
  public:

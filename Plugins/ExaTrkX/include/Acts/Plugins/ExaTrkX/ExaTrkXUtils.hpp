@@ -1,19 +1,11 @@
 #pragma once
 
-#include <torch/script.h>
-#include <torch/torch.h>
-using namespace torch::indexing;
-
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
-#include <grid/counting_sort.h>
-#include <grid/find_nbrs.h>
-#include <grid/grid.h>
-#include <grid/insert_points.h>
-#include <grid/prefix_sum.h>
+#include <torch/script.h>
+#include <torch/torch.h>
 
-#include "cuda.h"
-#include "cuda_runtime_api.h"
+namespace Acts {
 
 torch::Tensor buildEdges(at::Tensor& embedFeatures, int64_t numSpacepoints,
                          int dim, float rVal, int kVal);
@@ -21,17 +13,6 @@ torch::Tensor buildEdges(at::Tensor& embedFeatures, int64_t numSpacepoints,
 torch::Tensor buildEdgesBruteForce(at::Tensor& embedFeatures,
                                    int64_t numSpacepoints, int dim, float rVal,
                                    int kVal);
-
-/*
-void buildEdges(
-    std::vector<float>& embedFeatures,
-    std::vector<int64_t>& edgeList,
-    int64_t numSpacepoints,
-    int embeddingDim,    // dimension of embedding space
-    float rVal, // radius of the ball
-    int kVal    // number of nearest neighbors
-);
-*/
 
 template <typename vertex_t, typename edge_t, typename weight_t>
 void weaklyConnectedComponents(vertex_t numNodes,
@@ -59,6 +40,9 @@ void weaklyConnectedComponents(vertex_t numNodes,
       boost::add_edge(rowIndices[idx], colIndices[idx], edgeWeights[idx], g);
     }
   }
+
   [[maybe_unused]] size_t num_components =
       boost::connected_components(g, &trackLabels[0]);
 }
+
+}  // namespace Acts
