@@ -79,31 +79,14 @@ struct GeometricConfig {
   }
 };
 
-/// Structure that allows (in principal) arbitrary surface dependent constraints
-struct DigiConstraint {
-  std::optional<std::pair<double, double>> rRange;
-
-  bool operator()(const Acts::Surface &s,
-                  const Acts::GeometryContext &g) const {
-    const auto r = std::hypot(s.center(g)[0], s.center(g)[1]);
-    if (rRange && (r < rRange->first || r > rRange->second)) {
-      return false;
-    }
-
-    return true;
-  }
-};
-
 /// Configuration struct for the Digitization algorithm
 ///
 /// It contains:
 /// - optional GeometricConfig
 /// - optional SmearingConfig
-/// - optional Surface-dependent constraint
 struct DigiComponentsConfig {
   GeometricConfig geometricDigiConfig;
   SmearingConfig smearingDigiConfig = {};
-  DigiConstraint constraint;
 
   /// Equality operator to check if a digitization configuration
   /// can be reused from @param other
@@ -119,15 +102,14 @@ class DigitizationConfig {
  public:
   DigitizationConfig(const Options::Variables &vars)
       : DigitizationConfig(
-            vars,
-            Acts::GeometryHierarchyMap<std::vector<DigiComponentsConfig>>()){};
+            vars, Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
 
   DigitizationConfig(
       const Options::Variables &vars,
-      Acts::GeometryHierarchyMap<std::vector<DigiComponentsConfig>> &&digiCfgs);
+      Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   DigitizationConfig(
-      Acts::GeometryHierarchyMap<std::vector<DigiComponentsConfig>> &&digiCfgs);
+      Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   /// Input collection of simulated hits.
   std::string inputSimHits = "simhits";
@@ -152,8 +134,7 @@ class DigitizationConfig {
   /// Consider clusters that share a corner as merged (8-cell connectivity)
   const bool mergeCommonCorner;
   /// The digitizers per GeometryIdentifiers
-  Acts::GeometryHierarchyMap<std::vector<DigiComponentsConfig>>
-      digitizationConfigs;
+  Acts::GeometryHierarchyMap<DigiComponentsConfig> digitizationConfigs;
 
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>

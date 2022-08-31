@@ -58,64 +58,55 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
   }
 
   // Create the digitizers from the configuration
-  std::vector<std::pair<Acts::GeometryIdentifier, std::vector<Digitizer>>>
-      digitizerInput;
+  std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
 
   for (size_t i = 0; i < m_cfg.digitizationConfigs.size(); ++i) {
     GeometricConfig geoCfg;
     Acts::GeometryIdentifier geoId = m_cfg.digitizationConfigs.idAt(i);
 
-    const auto& digiCfgVector = m_cfg.digitizationConfigs.valueAt(i);
+    const auto& digiCfg = m_cfg.digitizationConfigs.valueAt(i);
+    geoCfg = digiCfg.geometricDigiConfig;
+    // Copy so we can sort in-place
+    SmearingConfig smCfg = digiCfg.smearingDigiConfig;
 
-    std::vector<Digitizer> digitizers;
-    digitizers.reserve(digiCfgVector.size());
+    std::vector<Acts::BoundIndices> indices;
+    for (auto& gcf : smCfg) {
+      indices.push_back(gcf.index);
+    }
+    indices.insert(indices.begin(), geoCfg.indices.begin(),
+                   geoCfg.indices.end());
 
-    for (const auto& digiCfg : digiCfgVector) {
-      geoCfg = digiCfg.geometricDigiConfig;
-      // Copy so we can sort in-place
-      SmearingConfig smCfg = digiCfg.smearingDigiConfig;
+    // Make sure the configured input parameter indices are sorted and unique
+    std::sort(indices.begin(), indices.end());
 
-      std::vector<Acts::BoundIndices> indices;
-      for (auto& gcf : smCfg) {
-        indices.push_back(gcf.index);
-      }
-      indices.insert(indices.begin(), geoCfg.indices.begin(),
-                     geoCfg.indices.end());
-
-      // Make sure the configured input parameter indices are sorted and unique
-      std::sort(indices.begin(), indices.end());
-
-      auto dup = std::adjacent_find(indices.begin(), indices.end());
-      if (dup != indices.end()) {
-        std::invalid_argument(
-            "Digitization configuration contains duplicate parameter indices");
-      }
-
-      switch (smCfg.size()) {
-        case 0u:
-          digitizers.emplace_back(makeDigitizer<0u>(digiCfg));
-          break;
-        case 1u:
-          digitizers.emplace_back(makeDigitizer<1u>(digiCfg));
-          break;
-        case 2u:
-          digitizers.emplace_back(makeDigitizer<2u>(digiCfg));
-          break;
-        case 3u:
-          digitizers.emplace_back(makeDigitizer<3u>(digiCfg));
-          break;
-        case 4u:
-          digitizers.emplace_back(makeDigitizer<4u>(digiCfg));
-          break;
-        default:
-          throw std::invalid_argument("Unsupported smearer size");
-      }
+    auto dup = std::adjacent_find(indices.begin(), indices.end());
+    if (dup != indices.end()) {
+      std::invalid_argument(
+          "Digitization configuration contains duplicate parameter indices");
     }
 
-    digitizerInput.emplace_back(geoId, std::move(digitizers));
+    switch (smCfg.size()) {
+      case 0u:
+        digitizerInput.emplace_back(geoId, makeDigitizer<0u>(digiCfg));
+        break;
+      case 1u:
+        digitizerInput.emplace_back(geoId, makeDigitizer<1u>(digiCfg));
+        break;
+      case 2u:
+        digitizerInput.emplace_back(geoId, makeDigitizer<2u>(digiCfg));
+        break;
+      case 3u:
+        digitizerInput.emplace_back(geoId, makeDigitizer<3u>(digiCfg));
+        break;
+      case 4u:
+        digitizerInput.emplace_back(geoId, makeDigitizer<4u>(digiCfg));
+        break;
+      default:
+        throw std::invalid_argument("Unsupported smearer size");
+    }
   }
 
-  m_digitizers = decltype(m_digitizers)(digitizerInput);
+  m_digitizers = Acts::GeometryHierarchyMap<Digitizer>(digitizerInput);
 }
 
 ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
@@ -160,128 +151,103 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
       return ProcessCode::ABORT;
     }
 
-    auto digitizerVectorItr = m_digitizers.find(moduleGeoId);
-    if (digitizerVectorItr == m_digitizers.end()) {
+    auto digitizerItr = m_digitizers.find(moduleGeoId);
+    if (digitizerItr == m_digitizers.end()) {
       ACTS_DEBUG("No digitizer present for module " << moduleGeoId);
       continue;
     } else {
       ACTS_DEBUG("Digitizer found for module " << moduleGeoId);
     }
 
-    for (const auto& [digitizerVariant, constraint] : *digitizerVectorItr) {
-      if (constraint.rRange) {
-        ACTS_DEBUG("Radius constraint: " << constraint.rRange->first
-                                         << " < r < "
-                                         << constraint.rRange->second);
-      }
+    // Run the digitizer. Iterate over the hits for this surface inside the
+    // visitor so we do not need to lookup the variant object per-hit.
+    std::visit(
+        [&](const auto& digitizer) {
+          ModuleClusters moduleClusters(
+              digitizer.geometric.segmentation, digitizer.geometric.indices,
+              m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner);
 
-      // Check if there are constraints to the digitizer or not
-      if (not constraint(*surfacePtr, ctx.geoContext)) {
-        ACTS_DEBUG("Not valid because of constraint");
-        continue;
-      }
+          for (auto h = moduleSimHits.begin(); h != moduleSimHits.end(); ++h) {
+            const auto& simHit = *h;
+            const auto simHitIdx = simHits.index_of(h);
 
-      if (constraint.rRange) {
-        ACTS_DEBUG("constraint matched!");
-      }
+            DigitizedParameters dParameters;
 
-      // Run the digitizer. Iterate over the hits for this surface inside the
-      // visitor so we do not need to lookup the variant object per-hit.
-      std::visit(
-          [&](const auto& digitizer) {
-            ModuleClusters moduleClusters(
-                digitizer.geometric.segmentation, digitizer.geometric.indices,
-                m_cfg.doMerge, m_cfg.mergeNsigma, m_cfg.mergeCommonCorner);
-
-            for (auto h = moduleSimHits.begin(); h != moduleSimHits.end();
-                 ++h) {
-              const auto& simHit = *h;
-              const auto simHitIdx = simHits.index_of(h);
-
-              DigitizedParameters dParameters;
-
-              // Geometric part - 0, 1, 2 local parameters are possible
-              if (not digitizer.geometric.indices.empty()) {
-                ACTS_VERBOSE("Configured to geometric digitize "
-                             << digitizer.geometric.indices.size()
-                             << " parameters.");
-                auto channels = channelizing(digitizer.geometric, simHit,
-                                             *surfacePtr, ctx.geoContext, rng);
-                if (channels.empty()) {
-                  ACTS_DEBUG(
-                      "Geometric channelization did not work, skipping this "
-                      "hit.")
-                  continue;
-                }
-                ACTS_VERBOSE("Activated " << channels.size()
-                                          << " channels for this hit.");
-                dParameters =
-                    localParameters(digitizer.geometric, channels, rng);
-              }
-
-              // Smearing part - (optionally) rest
-              if (not digitizer.smearing.indices.empty()) {
-                ACTS_VERBOSE("Configured to smear "
-                             << digitizer.smearing.indices.size()
-                             << " parameters.");
-                auto res = digitizer.smearing(rng, simHit, *surfacePtr,
-                                              ctx.geoContext);
-                if (not res.ok()) {
-                  ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
-                  continue;
-                }
-                const auto& [par, cov] = res.value();
-                for (Eigen::Index ip = 0; ip < par.rows(); ++ip) {
-                  dParameters.indices.push_back(digitizer.smearing.indices[ip]);
-                  dParameters.values.push_back(par[ip]);
-                  dParameters.variances.push_back(cov(ip, ip));
-                }
-              }
-
-              // Check on success - threshold could have eliminated all channels
-              if (dParameters.values.empty()) {
-                ACTS_VERBOSE(
-                    "Parameter digitization did not yield a measurement.")
+            // Geometric part - 0, 1, 2 local parameters are possible
+            if (not digitizer.geometric.indices.empty()) {
+              ACTS_VERBOSE("Configured to geometric digitize "
+                           << digitizer.geometric.indices.size()
+                           << " parameters.");
+              auto channels = channelizing(digitizer.geometric, simHit,
+                                           *surfacePtr, ctx.geoContext, rng);
+              if (channels.empty()) {
+                ACTS_DEBUG(
+                    "Geometric channelization did not work, skipping this hit.")
                 continue;
               }
-
-              moduleClusters.add(std::move(dParameters), simHitIdx);
+              ACTS_VERBOSE("Activated " << channels.size()
+                                        << " channels for this hit.");
+              dParameters = localParameters(digitizer.geometric, channels, rng);
             }
 
-            for (auto& [dParameters, simhits] :
-                 moduleClusters.digitizedParameters()) {
-              // The measurement container is unordered and the index under
-              // which the measurement will be stored is known before adding it.
-              Index measurementIdx = measurements.size();
-              sourceLinkStorage.emplace_back(moduleGeoId, measurementIdx);
-              IndexSourceLink& sourceLink = sourceLinkStorage.back();
-
-              // Add to output containers:
-              // index map and source link container are geometry-ordered.
-              // since the input is also geometry-ordered, new items can
-              // be added at the end.
-              sourceLinks.insert(sourceLinks.end(), sourceLink);
-
-              measurements.emplace_back(
-                  createMeasurement(dParameters, sourceLink));
-              clusters.emplace_back(std::move(dParameters.cluster));
-              // this digitization does hit merging so there can be more than
-              // one mapping entry for each digitized hit.
-              for (auto simHitIdx : simhits) {
-                measurementParticlesMap.emplace_hint(
-                    measurementParticlesMap.end(), measurementIdx,
-                    simHits.nth(simHitIdx)->particleId());
-                measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
-                                                   measurementIdx, simHitIdx);
+            // Smearing part - (optionally) rest
+            if (not digitizer.smearing.indices.empty()) {
+              ACTS_VERBOSE("Configured to smear "
+                           << digitizer.smearing.indices.size()
+                           << " parameters.");
+              auto res =
+                  digitizer.smearing(rng, simHit, *surfacePtr, ctx.geoContext);
+              if (not res.ok()) {
+                ACTS_DEBUG("Problem in hit smearing, skipping this hit.")
+                continue;
+              }
+              const auto& [par, cov] = res.value();
+              for (Eigen::Index ip = 0; ip < par.rows(); ++ip) {
+                dParameters.indices.push_back(digitizer.smearing.indices[ip]);
+                dParameters.values.push_back(par[ip]);
+                dParameters.variances.push_back(cov(ip, ip));
               }
             }
-          },
-          digitizerVariant);
 
-      // Break for-loop in case this constraint was valid to avoid
-      // double-counting on misconfiguration
-      break;
-    }
+            // Check on success - threshold could have eliminated all channels
+            if (dParameters.values.empty()) {
+              ACTS_VERBOSE(
+                  "Parameter digitization did not yield a measurement.")
+              continue;
+            }
+
+            moduleClusters.add(std::move(dParameters), simHitIdx);
+          }
+
+          for (auto& [dParameters, simhits] :
+               moduleClusters.digitizedParameters()) {
+            // The measurement container is unordered and the index under which
+            // the measurement will be stored is known before adding it.
+            Index measurementIdx = measurements.size();
+            sourceLinkStorage.emplace_back(moduleGeoId, measurementIdx);
+            IndexSourceLink& sourceLink = sourceLinkStorage.back();
+
+            // Add to output containers:
+            // index map and source link container are geometry-ordered.
+            // since the input is also geometry-ordered, new items can
+            // be added at the end.
+            sourceLinks.insert(sourceLinks.end(), sourceLink);
+
+            measurements.emplace_back(
+                createMeasurement(dParameters, sourceLink));
+            clusters.emplace_back(std::move(dParameters.cluster));
+            // this digitization does hit merging so there can be more than one
+            // mapping entry for each digitized hit.
+            for (auto simHitIdx : simhits) {
+              measurementParticlesMap.emplace_hint(
+                  measurementParticlesMap.end(), measurementIdx,
+                  simHits.nth(simHitIdx)->particleId());
+              measurementSimHitsMap.emplace_hint(measurementSimHitsMap.end(),
+                                                 measurementIdx, simHitIdx);
+            }
+          }
+        },
+        *digitizerItr);
   }
 
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));

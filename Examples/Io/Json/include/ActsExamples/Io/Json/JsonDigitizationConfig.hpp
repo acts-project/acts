@@ -28,16 +28,17 @@ void from_json(const nlohmann::json& j, SmearingConfig& sdc);
 
 void to_json(nlohmann::json& j, const DigiComponentsConfig& dc);
 
-void from_json(const nlohmann::json& j, std::vector<DigiComponentsConfig>& dc);
+void from_json(const nlohmann::json& j, DigiComponentsConfig& dc);
 
-using DigiConfigContainer =
-    Acts::GeometryHierarchyMap<std::vector<DigiComponentsConfig>>;
+Acts::GeometryHierarchyMap<DigiComponentsConfig> readDigiConfigFromJson(
+    const std::string& path);
+
+void writeDigiConfigToJson(
+    const Acts::GeometryHierarchyMap<DigiComponentsConfig>& cfg,
+    const std::string& path);
+
+using DigiConfigContainer = Acts::GeometryHierarchyMap<DigiComponentsConfig>;
 using DigiConfigConverter =
-    Acts::GeometryHierarchyMapJsonConverter<std::vector<DigiComponentsConfig>>;
-
-DigiConfigContainer readDigiConfigFromJson(const std::string& path);
-
-void writeDigiConfigToJson(const DigiConfigContainer& cfg,
-                           const std::string& path);
+    Acts::GeometryHierarchyMapJsonConverter<DigiComponentsConfig>;
 
 }  // namespace ActsExamples

@@ -130,9 +130,6 @@ void ActsExamples::from_json(const nlohmann::json& j,
 
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::DigiComponentsConfig& dc) {
-  if (dc.constraint.rRange) {
-    j["constraint"]["r-range"] = *dc.constraint.rRange;
-  }
   if (not dc.geometricDigiConfig.indices.empty()) {
     j["geometric"] = nlohmann::json(dc.geometricDigiConfig);
   }
@@ -142,39 +139,22 @@ void ActsExamples::to_json(nlohmann::json& j,
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
-                             std::vector<DigiComponentsConfig>& dc) {
-  auto append = [&dc](const nlohmann::json& jj) {
-    dc.push_back({});
-
-    if (jj.find("geometric") != jj.end()) {
-      nlohmann::json jgdc = jj["geometric"];
-      from_json(jgdc, dc.back().geometricDigiConfig);
-    } else if (jj.find("smearing") != jj.end()) {
-      nlohmann::json jsdc = jj["smearing"];
-      from_json(jsdc, dc.back().smearingDigiConfig);
-    } else {
-      throw std::runtime_error("need either 'geometric' or 'smearing'");
-    }
-
-    if (jj.find("constraint") != jj.end()) {
-      dc.back().constraint.rRange = jj["constraint"]["r-range"];
-    }
-  };
-
-  if (j.is_array()) {
-    for (const auto& jj : j) {
-      append(jj);
-    }
-  } else {
-    append(j);
+                             ActsExamples::DigiComponentsConfig& dc) {
+  if (j.find("geometric") != j.end()) {
+    nlohmann::json jgdc = j["geometric"];
+    from_json(jgdc, dc.geometricDigiConfig);
+  }
+  if (j.find("smearing") != j.end()) {
+    nlohmann::json jsdc = j["smearing"];
+    from_json(jsdc, dc.smearingDigiConfig);
   }
 }
 
-ActsExamples::DigiConfigContainer ActsExamples::readDigiConfigFromJson(
-    const std::string& path) {
+Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>
+ActsExamples::readDigiConfigFromJson(const std::string& path) {
   nlohmann::json djson;
   if (path.empty()) {
-    return DigiConfigContainer();
+    return Acts::GeometryHierarchyMap<ActsExamples::DigiComponentsConfig>();
   }
   std::ifstream infile(path, std::ifstream::in | std::ifstream::binary);
   // rely on exception for error handling
@@ -184,7 +164,8 @@ ActsExamples::DigiConfigContainer ActsExamples::readDigiConfigFromJson(
 }
 
 void ActsExamples::writeDigiConfigToJson(
-    const ActsExamples::DigiConfigContainer& cfg, const std::string& path) {
+    const Acts::GeometryHierarchyMap<DigiComponentsConfig>& cfg,
+    const std::string& path) {
   std::ofstream outfile(path, std::ofstream::out | std::ofstream::binary);
   // rely on exception for error handling
   outfile.exceptions(std::ofstream::failbit | std::ofstream::badbit);
