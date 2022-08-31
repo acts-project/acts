@@ -228,7 +228,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     // to truth particles. Match reco and true vtx if >50% of tracks match
 
     if (associatedTruthParticles.size() != inputFittedTracks.size()) {
-      ACTS_INFO(
+      ACTS_ERROR(
           "Number of fitted tracks and associated truth particles do not "
           "match. "
           "Not able to match fitted tracks at reconstructed vertex to truth "
@@ -268,7 +268,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         int maxOccurrenceId = -1;
         int maxOccurrence = -1;
         for (auto it : fmap) {
-          if (it.second > maxOccurence) {
+          if (it.second > maxOccurrence) {
             maxOccurrence = it.second;
             maxOccurrenceId = it.first;
           }
@@ -338,11 +338,8 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     SimParticleContainer associatedTruthParticles;
 
     for (size_t i = 0; i < inputFittedTracks.size(); i++) {
-      // ACTS_VERBOSE("i=" << i);
       auto fittedTrackIndex = trackIndices[i];
-      // ACTS_VERBOSE("fittedTrackIndex=" << fittedTrackIndex);
       auto& [iTraj, tip] = allTracksTips[fittedTrackIndex];
-      // ACTS_VERBOSE("iTraj=" << iTraj << " tip=" << tip);
       const auto& traj = trajectories[iTraj];
       identifyContributingParticles(hitParticlesMap, traj, tip,
                                     particleHitCounts);
@@ -463,9 +460,6 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         }
       }
     }  // end loop vertices
-
-  } else {
-    throw std::invalid_argument{"Invalid truth input configuration"};
   }
 
   // Retrieve and set reconstruction time
@@ -475,8 +469,6 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   } else {
     m_timeMS = -1;
   }
-
-  ACTS_INFO("m_diffx.size() = " << m_diffx.size());
 
   // fill the variables
   m_outputTree->Fill();

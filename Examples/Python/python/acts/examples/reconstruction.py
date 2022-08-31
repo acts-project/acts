@@ -936,26 +936,24 @@ def addVertexFitting(
                 "Using RootVertexPerformanceWriter with smeared particles is not necessarily supported. "
                 "Please get in touch with us"
             )
-        kwargs = {}
-        if trajectories is not None:
-            kwargs["inputTrajectories"] = "trajectories"
-        else:
-            kwargs["inputAssociatedTruthParticles"] = associatedParticles
         s.addWriter(
             RootVertexPerformanceWriter(
-                level=acts.logging.VERBOSE,
+                level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
                 inputFittedTracks=trackParameters,
                 inputFittedTracksIndices="outputTrackIndices",
                 inputAllFittedTracksTips="fittedTrackParametersTips",
                 inputMeasurementParticlesMap="measurement_particles_map",
+                inputTrajectories="trajectories" if trajectories is not None else "",
+                inputAssociatedTruthParticles=""
+                if trajectories is not None
+                else associatedParticles,
                 inputVertices=outputVertices,
                 minTrackVtxMatchFraction=0.0,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
-                **kwargs,
             )
         )
 
