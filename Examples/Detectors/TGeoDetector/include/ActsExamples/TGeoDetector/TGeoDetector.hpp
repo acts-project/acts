@@ -51,6 +51,10 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
     Acts::TGeoLayerBuilder::ElementFactory elementFactory =
         Acts::TGeoLayerBuilder::defaultElementFactory;
 
+    /// Optional geometry identfier hook to be used during closure
+    /// @note Will be @b copied when calling the geometry building
+    Acts::GeometryIdentifierHook geometryIdentifierHook;
+
     enum SubVolume : size_t { Negative = 0, Central, Positive };
 
     template <typename T>
