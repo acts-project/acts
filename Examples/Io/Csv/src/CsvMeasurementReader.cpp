@@ -158,7 +158,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementReader::read(
     DigitizedParameters dParameters;
     for (unsigned int ipar = 0;
          ipar < static_cast<unsigned int>(Acts::eBoundSize); ++ipar) {
-      if ((m.local_key) & (1 << (ipar + 1))) {
+      if (((m.local_key) & (1 << (ipar + 1))) != 0) {
         dParameters.indices.push_back(static_cast<Acts::BoundIndices>(ipar));
         switch (ipar) {
           case static_cast<unsigned int>(Acts::eBoundLoc0): {

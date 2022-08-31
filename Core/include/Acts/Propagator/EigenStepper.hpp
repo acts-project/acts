@@ -130,7 +130,7 @@ class EigenStepper {
     double pathAccumulated = 0.;
 
     /// Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize{std::numeric_limits<double>::max()};
+    ConstrainedStep stepSize;
 
     /// Last performed step (for overstep limit calculation)
     double previousStepSize = 0.;
@@ -271,7 +271,7 @@ class EigenStepper {
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor,
                    bool release = true) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
 
@@ -384,14 +384,11 @@ class EigenStepper {
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param [in,out] state is the propagation state associated with the track
-  /// parameters that are being propagated.
-  ///
-  ///                      the state contains the desired step size.
-  ///                      It can be negative during backwards track
-  ///                      propagation,
-  ///                      and since we're using an adaptive algorithm, it can
-  ///                      be modified by the stepper class during propagation.
+  /// @param [in,out] state is the propagation
+  /// @note The state contains the desired step size.  It can be negative during
+  ///       backwards track propagation, and since we're using an adaptive
+  ///       algorithm, it can be modified by the stepper class during
+  ///       propagation.
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const;
 

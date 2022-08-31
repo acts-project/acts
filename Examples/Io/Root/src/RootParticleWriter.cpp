@@ -65,17 +65,21 @@ ActsExamples::RootParticleWriter::RootParticleWriter(
   m_outputTree->Branch("sub_particle", &m_subParticle);
 }
 
-ActsExamples::RootParticleWriter::~RootParticleWriter() {}
+ActsExamples::RootParticleWriter::~RootParticleWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_INFO("Wrote particles to tree '" << m_cfg.treeName << "' in '"
                                           << m_cfg.filePath << "'");
   }
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 
@@ -84,7 +88,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     const AlgorithmContext& ctx, const SimParticleContainer& particles) {
-  if (not m_outputFile) {
+  if (m_outputFile == nullptr) {
     ACTS_ERROR("Missing output file");
     return ProcessCode::ABORT;
   }

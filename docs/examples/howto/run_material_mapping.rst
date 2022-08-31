@@ -1,10 +1,12 @@
 ACTS Material Mapping Tutorial
 ==============================
+
 When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps: 
 
 - first, a JSON geometry file is created, it will be used to configure which surface the material is mapped onto and with which binning.
 - second, a Geant4 simulation is used to collect the material inside the detector from the detailed geometry.
 - third, all the steps are projected onto the closest surfaces (or volume in case of volume mapping) and averaged out over many events to create a map.
+
 This page will explain how to perform the material mapping with the ACTS Examples. For this example we will use the Open Data Detector (ODD) the last paragraph will explain what needs to be changed if you want to perform the material mapping with another detector.
 
 Prerequisites
@@ -42,7 +44,7 @@ Four types of surfaces exist:
 - representing which correspond to the surface representation of a layer (often positioned at the middle of the 2 approaches)
 - sensitives which correspond to the active part of the detector (sensors)
 
-By default, all the surfaces will be written but one can turn a specific type off (for example the sensitive) by using the appropriate option : ``mat-output-XXX false``
+By default, all the surfaces will be written but one can turn a specific type off (for example the sensitive) by using the appropriate option: ``mat-output-XXX false``
 
 The JSON file can now be edited to select which surfaces and volumes you want to have material mapped on. The JSON file is comprise of two parts, the first one contain a list of surfaces and the second a list of volumes. Information of the surface and volumes such as their type, range, id and position are available. To add one surface to the material mapping, one simply needs to switch the ``mapMaterial`` variable to ``true``. The binning can then be changed by changing the number associated to ``bins``, the type of bin can also be changed. For the volume, the same method can be applied, except that up to 3 bins can be associated.
 As a rule of thumb volume material should only be used for large homogeneous detector (like calorimeters and gaseous detectors), for the material mapping a good first try would be to use the representing surfaces of the layers with sensors. The binning depends heavily on the geometry and could be of the order of 100 (the more bins are used the more events need to be simulated to populate the bins).
@@ -50,12 +52,12 @@ As a rule of thumb volume material should only be used for large homogeneous det
 .. warning::
   When mapping onto a surface, the material inside volumes with material (or ``ProtoMaterial``) will be ignored, you should thus avoid mapping material onto surfaces within material volumes. When mapping onto a volume, only the material within that volume will be used. If you have a large gap between the last material surface and the volume you might then want to also map material onto the boundary of the material volume.
 
-In addition to this, the mapping type can be changed for surface mapping by changing the ``mappingType`` variable. Four different types of mapping are available : 
+In addition to this, the mapping type can be changed for surface mapping by changing the ``mappingType`` variable. Four different types of mapping are available:
 
-- ``PreMapping`` : Only map material from before the surface.
-- ``Default`` : Map material from both before and after the surface
-- ``PostMapping`` : Only map material from after the surface.
-- ``Sensor`` : Only map the last material hits before the surface. Used to map only the sensor material onto the sensors.
+- ``PreMapping``: Only map material from before the surface.
+- ``Default``: Map material from both before and after the surface
+- ``PostMapping``: Only map material from after the surface.
+- ``Sensor``: Only map the last material hits before the surface. Used to map only the sensor material onto the sensors.
 
 In case two different sufaces would receive a material hit (Default followed by Default or PreMapping for example), the material hit is associated with the closest surface.
 
@@ -83,7 +85,7 @@ Then edit the config-map.json file
 Geantino scan
 -------------
 
-The next step is to do a geantino scan of our detector. For this we will use the ``MaterialRecording`` application :
+The next step is to do a geantino scan of our detector. For this we will use the ``MaterialRecording`` application:
 
 .. code-block:: console
 
@@ -97,7 +99,7 @@ The result of the geantino scan will be a root file containing material tracks. 
 Material Mapping
 ----------------
 
-With the surfaces map and the material track we can finally do the material mapping using the ``MaterialMapping`` application :
+With the surfaces map and the material track we can finally do the material mapping using the ``MaterialMapping`` application:
 
 .. code-block:: console
 
@@ -120,9 +122,9 @@ Note that technically when using DD4hep (in particular for the ODD) using the op
 As an output you will obtain the material map as a root and JSON file and a new material track collection in a root file. This new collection adds to each material interaction the associated surface during the mapping. This can be used for the control plots.
 Depending on what you want to do there are three options you can change:
 
-- ``mat-mapping-surfaces`` : determine if material is mapped onto surfaces
-- ``mat-mapping-volumes`` : determine if material is mapped onto volumes
-- ``mat-mapping-volume-stepsize`` : determine the step size used in the sampling of the volume. This should be small compared to the bin size.
+- ``mat-mapping-surfaces``: determine if material is mapped onto surfaces
+- ``mat-mapping-volumes``: determine if material is mapped onto volumes
+- ``mat-mapping-volume-stepsize``: determine the step size used in the sampling of the volume. This should be small compared to the bin size.
 
 
 In addition to root and JSON output, one can also output the material map to a Cbor file (Concise Binary Object Representation). Doing so results in a file about 10 time smaller than the JSON one, but that file is no longer human-readable. This should be done once the map has been optimised and you want to export it. 
@@ -170,16 +172,16 @@ To do the validation, five root macros are available in ``scripts/MaterialMappin
   mkdir Surfaces/dist_plot
   mkdir Surfaces/1D_plot
 
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root","geometry-map.json",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_ratio.C'("propagation-material.root","material-maps_tracks.root",100000,"Surfaces/ratio_plot","Surfaces/prop_plot","Surfaces/map_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root","geometry-map.json",-1,"Surfaces/dist_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_dist.C'("material-maps_tracks.root",-1,"Surfaces/dist_plot")'
   .q
-  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root","geometry-map.json",100000,"Surfaces/1D_plot")'
+  root -l -b <source>/Examples/Scripts/MaterialMapping/Mat_map_surface_plot_1D.C'("material-maps_tracks.root",100000,"Surfaces/1D_plot")'
   .q
 
 Using the validation plots you can then adapt the binning and the mapped surface to improve the mapping.
 
-On top of those plots : 
+On top of those plots:
 
 .. code-block:: console
 
@@ -188,9 +190,6 @@ On top of those plots :
 
 Can be use with X,Y,Z is a list of volumes, this will plot the material ratio between the map and the Geantino scan for the given volumes.
 
-
-.. warning::
-  Depending on your root version those macros might not work. They have been tested with version 6.18.04 so you can always revert to that version in case of problems.
 
 Using a different detector
 --------------------------

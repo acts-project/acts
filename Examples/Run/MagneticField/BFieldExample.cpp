@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
   writerConfig.fileName = vm["bf-file-out"].template as<std::string>();
   writerConfig.bField = bField;
   std::cout << "setting rBounds" << std::endl;
-  if (vm.count("bf-rRange") && vm.count("bf-zRange")) {
+  if (vm.count("bf-rRange") != 0u && vm.count("bf-zRange") != 0u) {
     auto rBounds =
         vm["bf-rRange"].template as<ActsExamples::Options::Reals<2>>();
     auto zBounds =

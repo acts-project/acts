@@ -1,5 +1,9 @@
 # Event data
 
+:::{attention}
+This section is largely **outdated** and will be replaced in the future.
+:::
+
 ## Track parametrization
 
 A trajectory in a magnetic field is generally parameterized by a set of at least

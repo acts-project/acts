@@ -55,6 +55,38 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config deltaRMax");
   }
 
+  static_assert(std::numeric_limits<decltype(
+                    m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
+                "Value of deltaRMaxTopSP must support NaN values");
+
+  static_assert(std::numeric_limits<decltype(
+                    m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
+                "Value of deltaRMinTopSP must support NaN values");
+
+  static_assert(std::numeric_limits<decltype(
+                    m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
+                "Value of deltaRMaxBottomSP must support NaN values");
+
+  static_assert(std::numeric_limits<decltype(
+                    m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
+                "Value of deltaRMinBottomSP must support NaN values");
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxTopSP)) {
+    m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.seedFinderConfig.deltaRMax;
+  }
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMinTopSP)) {
+    m_cfg.seedFinderConfig.deltaRMinTopSP = m_cfg.seedFinderConfig.deltaRMin;
+  }
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxBottomSP)) {
+    m_cfg.seedFinderConfig.deltaRMaxBottomSP = m_cfg.seedFinderConfig.deltaRMax;
+  }
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMinBottomSP)) {
+    m_cfg.seedFinderConfig.deltaRMinBottomSP = m_cfg.seedFinderConfig.deltaRMin;
+  }
+
   if (m_cfg.gridConfig.zMin != m_cfg.seedFinderConfig.zMin) {
     throw std::invalid_argument("Inconsistent config zMin");
   }
@@ -91,7 +123,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config zBinNeighborsBottom");
   }
 
-  if (m_cfg.seedFinderConfig.zBinsCustomLooping.size() != 0) {
+  if (!m_cfg.seedFinderConfig.zBinsCustomLooping.empty()) {
     // check if zBinsCustomLooping contains numbers from 1 to the total number
     // of bin in zBinEdges
     for (size_t i = 1; i != m_cfg.gridConfig.zBinEdges.size(); i++) {
@@ -163,7 +195,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
       // store x,y,z values in extent
-      rRangeSPExtent.check({spacePoint.x(), spacePoint.y(), spacePoint.z()});
+      rRangeSPExtent.extend({spacePoint.x(), spacePoint.y(), spacePoint.z()});
     }
   }
 

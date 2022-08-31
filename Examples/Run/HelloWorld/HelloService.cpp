@@ -25,7 +25,9 @@ void HelloService::prepare(AlgorithmContext& ctx) {
   // integer division should round down
   std::size_t blockIndex = ctx.eventNumber / m_cfg.eventsPerBlock;
   // add block index to the event store
-  ctx.eventStore.add(m_cfg.blockIndexName, std::move(blockIndex));
+  ctx.eventStore.add(
+      m_cfg.blockIndexName,
+      std::move(blockIndex));  // NOLINT(performance-move-const-arg)
 }
 
 }  // namespace ActsExamples

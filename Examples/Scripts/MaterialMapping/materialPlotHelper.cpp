@@ -12,10 +12,6 @@
 #include <ostream>
 #include <string>
 
-#include "../../../thirdparty/nlohmann_json/single_include/nlohmann/json.hpp"
-
-using json = nlohmann::json;
-
 /// Information on a given surface.
 
 struct sinfo {
@@ -35,53 +31,6 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   os << " | " << std::setw(3) << id.approach();
   os << " | " << std::setw(4) << id.sensitive() << " ]";
   return os;
-}
-
-/// Parse the surface map json file to associate the surface name to each id
-
-void Parse_Json(const json& Det,
-                std::map<std::string, std::string>& surface_name) {
-  std::string name;
-  for (auto& [key, value] : Det.items()) {
-    // Check if this the volume key
-    if (key == "volumes") {
-      // Get the volume json
-      auto volj = value;
-      for (auto& [vkey, vvalue] : volj.items()) {
-        // Get the volume name
-        name = vvalue["Name"];
-        // If boundaries associate the vol name to their id
-        if (!vvalue["boundaries"].empty()) {
-          for (auto& [bkey, bvalue] : vvalue["boundaries"].items()) {
-            surface_name[bvalue["SGeoid"]] = name;
-          }
-        }
-        // If layer associate the vol name to their id
-        if (!vvalue["layers"].empty()) {
-          for (auto& [lkey, lvalue] : vvalue["layers"].items()) {
-            surface_name[lvalue["Geoid"]] = name;
-            // Finally loop over layer components
-            for (auto& [lckey, lcvalue] : lvalue.items()) {
-              if (lckey == "representing" && !lcvalue.empty()) {
-                surface_name[lcvalue["SGeoid"]] = name;
-              } else if (lckey == "approach" && !lcvalue.empty()) {
-                // Loop over approach surfaces
-                for (auto& [askey, asvalue] : lcvalue.items()) {
-                  surface_name[asvalue["SGeoid"]] = name;
-                }
-              } else if (lckey == "sensitive" && !lcvalue.empty()) {
-                // Loop over sensitive surfaces
-                for (auto& [sskey, ssvalue] : lcvalue.items()) {
-                  surface_name[ssvalue["SGeoid"]] = name;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-  return;
 }
 
 /// Initialise the information on each surface.

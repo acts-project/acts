@@ -101,7 +101,7 @@ class CylinderBounds : public SurfaceBounds {
               const BoundaryCheck& bcheck) const final;
 
   /// Specialized method for CylinderBounds that checks if a global position
-  /// is within the the cylinder cover
+  /// is within the cylinder cover
   ///
   /// @param position is the position in the cylinder frame
   /// @param bcheck is the boundary check directive

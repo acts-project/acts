@@ -1,16 +1,15 @@
-limits: {}
+limits:
   # "readability-inconsistent-declaration-parameter-name": 0
   # "readability-named-parameter": 0
-  # "readability-container-size-empty": 0
-  # "modernize-use-using": 0
-  #"readability-braces-around-statements": 0
-  # "modernize-use-override": 0
-  # "modernize-use-equals-default" : 0
-  # "readability-implicit-bool-cast": 0
+  "readability-container-size-empty": 0
+  "modernize-use-using": 0
+  "readability-braces-around-statements": 0
+  "modernize-use-override": 0
+  "modernize-use-equals-default" : 0
+  "readability-implicit-bool-cast": 0
+  "readability-implicit-bool-conversion": 0
   # "modernize-use-default-member-init": 0
   # "performance-unnecessary-value-param": 0
   # "modernize-use-equals-default": 0
-  # "modernize-use-nullptr": 0
-
-ignore:
-  - cppcoreguidelines-pro-type-vararg
+  "modernize-use-nullptr": 0
+  "performance-move-const-arg": 0

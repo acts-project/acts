@@ -30,7 +30,7 @@ SteppingAction* SteppingAction::instance() {
 SteppingAction::SteppingAction(std::vector<std::string> eventRejectionProcess)
     : G4UserSteppingAction(),
       m_eventRejectionProcess(std::move(eventRejectionProcess)) {
-  if (s_instance) {
+  if (s_instance != nullptr) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
     s_instance = this;
@@ -97,7 +97,7 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
       event.add_vertex(vertex);
       vertex->set_status(1);
       vertex->add_attribute("NextProcessOf" + trackId, process);
-    } else
+    } else {
       // Search for an existing vertex
       for (const auto& vertex : event.vertices()) {
         if (vertex->position() == prePos) {
@@ -114,11 +114,13 @@ void SteppingAction::UserSteppingAction(const G4Step* step) {
           vertex->add_attribute("InitialParametersOf-" + trackId, preMom4);
         }
       }
-    if (track->GetCreatorProcess())
+    }
+    if (track->GetCreatorProcess() != nullptr) {
       postParticle->add_attribute(
           "CreatorProcessOf-" + trackId,
           std::make_shared<::HepMC3::StringAttribute>(
               track->GetCreatorProcess()->GetProcessName()));
+    }
   } else {
     // Add particle from same track to vertex
     m_previousVertex->add_particle_out(postParticle);

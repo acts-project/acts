@@ -136,13 +136,53 @@ class ScopedGsfInfoPrinterAndChecker {
   }
 };
 
+ActsScalar calculateDeterminant(
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     true>::Measurement fullCalibrated,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     true>::MeasurementCovariance fullCalibratedCovariance,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     true>::Covariance predictedCovariance,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
+        projector,
+    unsigned int calibratedSize);
+
 /// Reweight the components according to `R. Frühwirth, "Track fitting
 /// with non-Gaussian noise"`. See also the implementation in Athena at
 /// PosteriorWeightsCalculator.cxx
 /// @note The weights are not renormalized!
-void computePosteriorWeights(const MultiTrajectory &mt,
-                             const std::vector<std::size_t> &tips,
-                             std::map<std::size_t, double> &weights);
+template <typename D>
+void computePosteriorWeights(
+    const MultiTrajectory<D> &mt,
+    const std::vector<MultiTrajectoryTraits::IndexType> &tips,
+    std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
+  // Helper Function to compute detR
+
+  // Find minChi2, this can be used to factor some things later in the
+  // exponentiation
+  const auto minChi2 =
+      mt.getTrackState(*std::min_element(tips.begin(), tips.end(),
+                                         [&](const auto &a, const auto &b) {
+                                           return mt.getTrackState(a).chi2() <
+                                                  mt.getTrackState(b).chi2();
+                                         }))
+          .chi2();
+
+  // Loop over the tips and compute new weights
+  for (auto tip : tips) {
+    const auto state = mt.getTrackState(tip);
+    const double chi2 = state.chi2() - minChi2;
+    const double detR = calculateDeterminant(
+        state.calibrated(), state.calibratedCovariance(),
+        state.predictedCovariance(), state.projector(), state.calibratedSize());
+
+    // If something is not finite here, just leave the weight as it is
+    if (std::isfinite(chi2) && std::isfinite(detR)) {
+      const auto factor = std::sqrt(1. / detR) * std::exp(-0.5 * chi2);
+      weights.at(tip) *= factor;
+    }
+  }
+}
 
 /// Enumeration type used in extractMultiComponentStates(...)
 enum class StatesType { ePredicted, eFiltered, eSmoothed };
@@ -154,12 +194,50 @@ inline std::ostream &operator<<(std::ostream &os, StatesType type) {
 }
 
 /// @brief Extracts a MultiComponentState from a MultiTrajectory and a given list of indices
-auto extractMultiComponentState(const MultiTrajectory &traj,
-                                const std::vector<size_t> &tips,
-                                const std::map<size_t, ActsScalar> &weights,
-                                StatesType type)
-    -> MultiComponentBoundTrackParameters<SinglyCharged>;
+template <typename D>
+auto extractMultiComponentState(
+    const MultiTrajectory<D> &traj,
+    const std::vector<MultiTrajectoryTraits::IndexType> &tips,
+    const std::map<MultiTrajectoryTraits::IndexType, ActsScalar> &weights,
+    StatesType type) -> MultiComponentBoundTrackParameters<SinglyCharged> {
+  throw_assert(
+      !tips.empty(),
+      "need at least one component to extract trajectory of type " << type);
 
+  std::vector<std::tuple<double, BoundVector, BoundSymMatrix>> cmps;
+  std::shared_ptr<const Surface> surface;
+
+  for (auto &tip : tips) {
+    const auto proxy = traj.getTrackState(tip);
+
+    throw_assert(weights.find(tip) != weights.end(),
+                 "Could not find weight for idx " << tip);
+
+    switch (type) {
+      case StatesType::ePredicted:
+        cmps.push_back(
+            {weights.at(tip), proxy.predicted(), proxy.predictedCovariance()});
+        break;
+      case StatesType::eFiltered:
+        cmps.push_back(
+            {weights.at(tip), proxy.filtered(), proxy.filteredCovariance()});
+        break;
+      case StatesType::eSmoothed:
+        cmps.push_back(
+            {weights.at(tip), proxy.smoothed(), proxy.smoothedCovariance()});
+    }
+
+    if (!surface) {
+      surface = proxy.referenceSurface().getSharedPtr();
+    } else {
+      throw_assert(
+          surface->geometryId() == proxy.referenceSurface().geometryId(),
+          "surface mismatch");
+    }
+  }
+
+  return MultiComponentBoundTrackParameters<SinglyCharged>(surface, cmps);
+}
 }  // namespace detail
 
 }  // namespace Acts

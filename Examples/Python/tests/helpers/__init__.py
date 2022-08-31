@@ -1,5 +1,6 @@
 import os
 from typing import List, Union
+import contextlib
 
 import acts
 from acts.examples import BareAlgorithm
@@ -26,7 +27,6 @@ except ImportError:
         )
 
 dd4hepEnabled = "DD4hep_DIR" in os.environ
-
 if dd4hepEnabled:
     try:
         import acts.examples.dd4hep
@@ -39,6 +39,13 @@ try:
     hepmc3Enabled = True
 except ImportError:
     hepmc3Enabled = False
+
+try:
+    import acts.examples.edm4hep
+
+    edm4hepEnabled = True
+except ImportError:
+    edm4hepEnabled = False
 
 isCI = os.environ.get("CI", "false") == "true"
 
@@ -69,3 +76,25 @@ class AssertCollectionExistsAlg(BareAlgorithm):
 
 
 doHashChecks = os.environ.get("ROOT_HASH_CHECKS", "") != "" or "CI" in os.environ
+
+
+@contextlib.contextmanager
+def failure_threshold(level: acts.logging.Level, enabled: bool = True):
+    prev = acts.logging.getFailureThreshold()
+    if enabled and prev != level:
+        try:
+            acts.logging.setFailureThreshold(level)
+        except RuntimeError:
+            # Repackage with different error string
+            raise RuntimeError(
+                "Runtime log failure threshold could not be set. "
+                "Compile-time value is probably set via CMake, i.e. "
+                f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
+                "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
+                "The pytest test-suite will not work in this configuration."
+            )
+
+        yield
+        acts.logging.setFailureThreshold(prev)
+    else:
+        yield

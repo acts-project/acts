@@ -96,10 +96,13 @@ const Acts::TrackingVolume* Acts::TrackingVolume::lowestTrackingVolume(
   }
 
   // search for dense volumes
-  if (!m_confinedDenseVolumes.empty())
-    for (auto& denseVolume : m_confinedDenseVolumes)
-      if (denseVolume->inside(position, tol))
+  if (!m_confinedDenseVolumes.empty()) {
+    for (auto& denseVolume : m_confinedDenseVolumes) {
+      if (denseVolume->inside(position, tol)) {
         return denseVolume.get();
+      }
+    }
+  }
 
   // there is no lower sub structure
   return this;
@@ -372,7 +375,8 @@ void Acts::TrackingVolume::closeGeometry(
   if (materialDecorator != nullptr) {
     materialDecorator->decorate(*thisVolume);
   }
-  if (thisVolume->volumeMaterial() == nullptr && thisVolume->motherVolume() &&
+  if (thisVolume->volumeMaterial() == nullptr &&
+      thisVolume->motherVolume() != nullptr &&
       thisVolume->motherVolume()->volumeMaterial() != nullptr) {
     auto protoMaterial = dynamic_cast<const Acts::ProtoVolumeMaterial*>(
         thisVolume->motherVolume()->volumeMaterial());
@@ -512,12 +516,9 @@ Acts::TrackingVolume::compatibleBoundaries(
     for (auto& bsIter : bSurfaces) {
       // Get the boundary surface pointer
       const auto& bSurfaceRep = bsIter->surfaceRepresentation();
-      if (logger().doPrint(Logging::VERBOSE)) {
-        std::ostringstream os;
-        os << "Consider boundary surface " << &bSurfaceRep << " :\n";
-        bSurfaceRep.toStream(gctx, os);
-        logger().log(Logging::VERBOSE, os.str());
-      }
+      ACTS_VERBOSE("Consider boundary surface " << bSurfaceRep.geometryId()
+                                                << " :\n"
+                                                << std::tie(bSurfaceRep, gctx));
 
       // Exclude the boundary where you are on
       if (excludeObject != &bSurfaceRep) {
@@ -552,11 +553,30 @@ Acts::TrackingVolume::compatibleBoundaries(
     processBoundaries(bSurfacesConfined);
   }
 
+  auto comparator = [](double a, double b) {
+    // sign function would be nice but ...
+    if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
+      return a < b;
+    }
+    if (a > 0) {  // b < 0
+      return true;
+    }
+    return false;
+  };
+
   // Sort them accordingly to the navigation direction
   if (options.navDir == NavigationDirection::Forward) {
-    std::sort(bIntersections.begin(), bIntersections.end());
+    std::sort(bIntersections.begin(), bIntersections.end(),
+              [&](const auto& a, const auto& b) {
+                return comparator(a.intersection.pathLength,
+                                  b.intersection.pathLength);
+              });
   } else {
-    std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
+    std::sort(bIntersections.begin(), bIntersections.end(),
+              [&](const auto& a, const auto& b) {
+                return comparator(-a.intersection.pathLength,
+                                  -b.intersection.pathLength);
+              });
   }
   return bIntersections;
 }

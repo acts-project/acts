@@ -501,4 +501,15 @@ class Surface : public virtual GeometryObject,
       const GeometryContext& gctx, const FreeVector& parameters) const;
 };
 
+/// Print surface information to the provided stream. Internally invokes the
+/// `surface.toStream(...)`-method. This can be easily used e.g. like `std::cout
+/// << std::tie(surface, geometryContext);`
+inline std::ostream& operator<<(
+    std::ostream& os,
+    const std::tuple<const Surface&, const GeometryContext&>& tup) {
+  const auto [surface, gctx] = tup;
+  surface.toStream(gctx, os);
+  return os;
+}
+
 }  // namespace Acts

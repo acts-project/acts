@@ -1,0 +1,1 @@
+# Howto produce digitizer config

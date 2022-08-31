@@ -45,8 +45,9 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
 
   m_outputTree = new TTree(m_cfg.treeName.c_str(),
                            "TTree from RootPropagationStepsWriter");
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_nr", &m_eventNr);
@@ -70,7 +71,11 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("nStepTrials", &m_nStepTrials);
 }
 
-ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {}
+ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
   // Write the tree
@@ -138,7 +143,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
         }
       }
       // a current volume overwrites the surface tagged one
-      if (step.volume) {
+      if (step.volume != nullptr) {
         volumeID = step.volume->geometryId().volume();
       }
       // now fill
