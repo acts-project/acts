@@ -127,36 +127,35 @@ int runHoughExample(int argc, char* argv[],
   houghCfg.inputSourceLinks = digiCfg.outputSourceLinks;
   houghCfg.geometrySelection = {Acts::GeometryIdentifier().setVolume(0)};
 
-  houghCfg.m_subRegions = {0, 1};
-  houghCfg.m_traceHits = true;
+  houghCfg.subRegions = {0, 1};
 
-  houghCfg.m_xMin = -0.05;  // minphi
-  houghCfg.m_xMax = 0.25;   // maxphi
-  houghCfg.m_yMin = -1.25;  // min q/pt, -1/0.8 GeV  for extension
-  houghCfg.m_yMax = 1.25;   // max q/pt, -1/0.8 GeV  for extension
+  houghCfg.xMin = -0.05;  // minphi
+  houghCfg.xMax = 0.25;   // maxphi
+  houghCfg.yMin = -1.25;  // min q/pt, -1/0.8 GeV  for extension
+  houghCfg.yMax = 1.25;   // max q/pt, -1/0.8 GeV  for extension
 
-  houghCfg.m_imageSize_x = 216;
-  houghCfg.m_imageSize_y = 216;  // i.e. number of bins in q/pT
+  houghCfg.houghHistSize_x = 216;
+  houghCfg.houghHistSize_y = 216;  // i.e. number of bins in q/pT
 
-  houghCfg.m_hitExtend_x = {
+  houghCfg.hitExtend_x = {
       2, 1, 0, 0, 0,
       0, 0, 0, 0, 0};  // Hit lines will fill extra bins in x by this amount on
                        // each side, size == nLayers
-  houghCfg.m_nLayers = 10;
+  houghCfg.nLayers = 10;
 
-  houghCfg.m_threshold = {9};  // Minimum point value post-convolution to accept
+  houghCfg.threshold = {9};  // Minimum point value post-convolution to accept
                                // as a road (inclusive)
 
-  houghCfg.m_localMaxWindowSize =
+  houghCfg.localMaxWindowSize =
       0;  // Only create roads from a local maximum, requires traceHits
   houghCfg.kA = 0.0003;  // Assume B = 2T constant.
 
-  houghCfg.fieldCorrection = &fieldCorrectionDefault;
-  houghCfg.findLayerIDSP = &findLayerIDSPDefault;
-  houghCfg.findLayerIDMeasurement = &findLayerIDMeasurementDefault;
 
-  houghCfg.inSliceSP = &inSliceSPDefault;
-  houghCfg.inSliceMeasurement = &inSliceMeasurementDefault;
+  houghCfg.fieldCorrector.connect<&fieldCorrectionDefault>();
+  houghCfg.layerIDSPFinder.connect<&findLayerIDSPDefault>();
+  houghCfg.layerIDMeasurementFinder.connect<&findLayerIDMeasurementDefault>();
+  houghCfg.sliceSPTester.connect<&inSliceSPDefault>();
+  houghCfg.sliceMeasurementTester.connect<&inSliceMeasurementDefault>();
 
   sequencer.addAlgorithm(
       std::make_shared<HoughTransformSeeder>(houghCfg, logLevel));

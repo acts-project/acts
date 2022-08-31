@@ -6,145 +6,165 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Result.hpp"
+
 #pragma once
 
-double fieldCorrectionDefault(unsigned region, double y, double r) {
+using ResultDouble = Acts::Result<double>;
+using ResultBool = Acts::Result<bool>;
+using ResultUnsigned = Acts::Result<unsigned>;
+
+enum class HoughError {
+   Failure = 1,
+   SomethingElse,
+};
+
+std::error_code make_error_code(HoughError e) {
+   return {static_cast<int>(e), std::generic_category()};
+}
+
+namespace std {
+// register with STL
+   template <>
+   struct is_error_code_enum<HoughError> : std::true_type {};
+}  // namespace std
+
+ResultDouble fieldCorrectionDefault(unsigned region, double y, double r) {
   if (region == 999)
-    return y + r;  //
-  return 0.0;
+    return y + r;  // this should not be found, for now this is a dummy to show what one *could* do
+  return ResultDouble::success(0.0);
 }
 
-double findLayerIDSPDefault(double r) {
+ResultUnsigned findLayerIDSPDefault(double r) {
   if (r < 50)
-    return 0;
+    return ResultUnsigned::success(0);
   else if (r < 100)
-    return 1;
+     return ResultUnsigned::success(1);
   else if (r < 150)
-    return 2;
+     return ResultUnsigned::success(2);
   else if (r < 200)
-    return 3;
-  return 9999;  /// for now pixel only, so these won't be used
+     return ResultUnsigned::success(3);
+  return ResultUnsigned::failure(HoughError::Failure);  /// for now pixel only, so these won't be used
 }
 
-double findLayerIDMeasurementDefault(double r) {
+ResultUnsigned findLayerIDMeasurementDefault(double r) {
   if (r < 200)
-    return 9999;  // this is a pixel, ignore beacuse it will be a SP, this won't
-                  // be used
+     return ResultUnsigned::failure(HoughError::Failure);  // this is a pixel, ignore beacuse it will be a SP, this won't be used
   else if (r < 300)
-    return 4;
+     return ResultUnsigned::success(4);
   else if (r < 400)
-    return 5;
+     return ResultUnsigned::success(5);
   else if (r < 550)
-    return 6;
+     return ResultUnsigned::success(6);
   else if (r < 700)
-    return 7;
+     return ResultUnsigned::success(7);
   else if (r < 900)
-    return 8;
+     return ResultUnsigned::success(8);  
   else if (r < 1100)
-    return 9;
-  return 9999;  /// shouldn't be here, this won't be used
+     return ResultUnsigned::success(9);
+  return ResultUnsigned::failure(HoughError::Failure);  /// shouldn't be here, this won't be used
 }
 
 // default with two slices, one for negative and one for positive z, counting
 // some small overlaps, and -1 means "just take everything"
-bool inSliceSPDefault(double z, unsigned layer, int slice) {
+ResultBool inSliceSPDefault(double z, unsigned layer, int slice) {
   if (slice == -1)
-    return true;
+     return ResultBool::success(true);
 
   double absz = abs(z);
   if (slice == 0 && z > 50)
-    return false;
+    return ResultBool::success(false);
   else if (slice == 1 && z < -50)
-    return false;
+    return ResultBool::success(false);
   else {
     if (layer <= 3) {
       if (absz < 200)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 4) {
       if (absz < 300)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 5) {
       if (absz < 400)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 6) {
       if (absz < 600)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 7) {
       if (absz < 700)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 8) {
       if (absz < 800)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 9) {
       if (absz < 1100)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else
-      return false;
+      return ResultBool::success(false);
   }
 }
 
 // default with two slices, one for negative and one for positive z, counting
 // some small overlaps, and -1 means "just take everything"
-bool inSliceMeasurementDefault(double z, unsigned layer, int slice) {
+ResultBool inSliceMeasurementDefault(double z, unsigned layer, int slice) {
   if (slice == -1)
-    return true;
+    return ResultBool::success(true);
 
   double absz = abs(z);
   if (slice == 0 && z > 50)
-    return false;
+    return ResultBool::success(false);
   else if (slice == 1 && z < -50)
-    return false;
+    return ResultBool::success(false);
   else {
     if (layer <= 3) {
       if (absz < 200)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 4) {
       if (absz < 300)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 5) {
       if (absz < 400)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 6) {
       if (absz < 600)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 7) {
       if (absz < 700)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 8) {
       if (absz < 800)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else if (layer == 9) {
       if (absz < 1100)
-        return true;
+        return ResultBool::success(true);
       else
-        return false;
+        return ResultBool::success(false);
     } else
-      return false;
+      return ResultBool::success(false);
   }
 }

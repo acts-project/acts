@@ -22,22 +22,27 @@
 //      r   : cylindrical radius of the hit from the beamline
 //      phi : in radians
 //
-// Here, q/pT and phi_track are unknown. This equation forms a line in q/pT vs
-// phi_track space. Each hit will have its own line based on its phi and r.
+// Here, q/pT and phi_track (ie at phi at perigee) are unknown. This equation forms a line in q/pT vs
+// phi_track spac since the sin function above can be approximated with sin(x) ~ x. 
+// Each hit will have its own line based on its position (phi and r).
 // However, note that hits belonging to the same track will have lines that
 // intersect at the track's q/pT and phi. In this manner, we can conduct pattern
 // -matching by looking for intersections of these pT-phi lines.
 //
+// In other words, given some assumed q/pT for the track one can take the phi and r for a hit and convert that to 
+// what the phi(perigee) for a track must have been. We loop over the q/pT bins, and at the true value all the hits should line
+// up in the same bin
+//
 // To easily find intersections, we first pixelate (equivalently, we make a 2d
 // histogram from) the graph of all the hit's lines in q/pT vs phi_track space.
 // We then apply a convolution (i.e. a scanning window) to pick out points with
-// multiple lines going through them. These points become our roads.
+// multiple lines going through them. These points become our seed.
 //
 // In principle the Hough transform can be used for an entire region (i.e. .2
 // phi x .2 eta) or larger. However this can lead to an excessive number of
-// hits/lines in the transform image, leading to spurious intersections.
+// hits/lines in the transform houghHist, leading to spurious intersections.
 // Instead, we can use multiple transforms that each cover a slice in z0, and
-// simply combine all the roads found.
+// simply combine all the seeds found. These are the subregions
 //
 // References:
 //      Martensson Thesis:
@@ -45,9 +50,9 @@
 //
 
 // We adopt the following nomenclature within this class:
-//      image: The 'graph' in q/pT vs phi_track space, filled with a line
+//      houghHist: The 'graph' in q/pT vs phi_track space, filled with a line
 //      calculated as above for each hit. point: A specific q/pT and phi_track
-//      bin in the above image; i.e. what is normally called a pixel
+//      bin in the above houghHist; i.e. what is normally called a pixel
 //             but I don't want to confuse this with the detector type. A
 //             point's value is the number of lines that go through it.
 //
@@ -55,16 +60,18 @@
 // although this should remain flexible. These are set via the variables m_par_x
 // and m_par_y.
 //
-// NOTE: We store the image in graph sense and not computer-science sense. That
-// is, the row-index is y. The y-axis still points downwards, so that y=0
-// represents the lowest bin.
-//      image[y=0][x=0]      : lowest q/pT and lowest phi_track bin
-//      image[y=size-1][x=0] : highest q/pT and lowest phi_track bin
+// NOTE: y=0 represents the lowest q/pT bin, x=0 represents the lowest phi(perigee) bin
+//      houghHist[y=0][x=0]      : lowest q/pT and lowest phi_track bin
+//      houghHist[y=size-1][x=0] : highest q/pT and lowest phi_track bin
 //
 
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Logger.hpp"
+
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
@@ -75,25 +82,39 @@
 #include <utility>
 #include <vector>
 
-/// An image is a 2d array of points, where each point has a value.
-/// The value starts as the number of hit layers, but can change with effects
-/// like a convolution. Also stored are indices of all hits that contributed to
-/// each bin. Size m_imageSize_y * m_imageSize_x. (NOTE y is row coordinate) For
-/// now, what is stored is actually the index of the object in the vectors, so
-/// we can get the Index layer
+using ResultDouble = Acts::Result<double>;
+using ResultBool = Acts::Result<bool>;
+using ResultUnsigned = Acts::Result<unsigned>;
+
+using FieldCorrector = Acts::Delegate<ResultDouble(unsigned, double, double)>; // (unsigned region, double y, double r)
+using LayerIDSPFinder = Acts::Delegate<ResultUnsigned(double)>; // (double r) this function will map the r of a SP to a layer.
+using LayerIDMeasurementFinder = Acts::Delegate<ResultUnsigned(double)>; // (double r) this function will map the r of a measurement to a layer.
+using SliceSPTester = Acts::Delegate<ResultBool(double, unsigned, int)>; // (double z,unsigned layer, int slice) 
+using SliceMeasurementTester = Acts::Delegate<ResultBool(double, unsigned, int)>; // (double z,unsigned layer, int slice) 
+
 
 namespace Acts {
 class TrackingGeometry;
 }
 
 namespace ActsExamples {
-/// Used in multiple places. The 2d vector refers to the 2d image. For a single
-/// layer, the int refers to the number of hits in the bin of the image
-//// For the total image, the int counts the number of layers with one or more
+/// Used in multiple places. The 2d vector refers to the 2d houghHist. For a single
+/// layer, the int refers to the number of hits in the bin of the houghHist
+//// For the total houghHist, the int counts the number of layers with one or more
 /// hit in that bin
 // The unsigned is a counter that will point to a spacepoint or to a measurement
 // object
-typedef vector2D<std::pair<int, std::unordered_set<unsigned>>> Image;
+
+/// An houghHist is a 2d array of points, where each point has a value.
+/// The value starts as the number of hit layers, but can change with effects
+/// like a convolution. Also stored are indices of all hits that contributed to
+/// each bin. Size m_houghHistSize_y * m_houghHistSize_x. (NOTE y is row coordinate) For
+/// now, what is stored is actually the index of the object in the vectors, so
+/// we can get the Index layer
+
+ 
+
+typedef vector2D<std::pair<int, std::unordered_set<unsigned>>> HoughHist;
 
 /// Construct track seeds from space points.
 class HoughTransformSeeder final : public BareAlgorithm {
@@ -126,65 +147,55 @@ class HoughTransformSeeder final : public BareAlgorithm {
     /// Input measurements collection.
     std::string inputMeasurements;
 
-    std::vector<int> m_subRegions = {
+    // Subregions are ways to divide up hits for the Hough Transform. Just as one simple example, one may consider that hits 
+    // with z < 50 mm belong to one subregion, and hits with z > -50 mm belong to a second subregion. Note that hits even in this
+    // toy example belong to more than one subregions. But since not all hits are considered this provides a way to reduce potential
+    // combinatorics
+
+    std::vector<int> subRegions = {
         -1};  // -1 for entire region (no slicing), but this can be more than
               // one region if data are sliced
 
-    unsigned m_nLayers = 10;  // total number of layers
+    unsigned nLayers = 10;  // total number of layers
 
-    /// Trace each hit that goes in a bin
-    /// Disabling this will save memory/time since each bin doesn't have to
-    /// store all its hits but the roads created won't have hits from
-    /// convolution, etc.
-    bool m_traceHits = true;
+    float xMin = 0;            // minphi
+    float xMax = 2 * 3.14159;  // maxphi
+    float yMin = -1.0;         // min q/pt, -1/1 GeV
+    float yMax = 1.0;          // max q/pt, +1/1 GeV
 
-    float m_xMin = 0;            // minphi
-    float m_xMax = 2 * 3.14159;  // maxphi
-    float m_yMin = -1.0;         // min q/pt, -1/1 GeV
-    float m_yMax = 1.0;          // max q/pt, +1/1 GeV
+    /// Size of the houghHists. One obvious concern with this being too big is that it will take up more memory
+    /// But the bins of the houghHist are looped over in two places as well, so there are CPU performance issues, too
+    /// The first is just when finding the bins and hits that provide candidates, so the loop is over x*y bins.
+    /// The other is when filling the bins. The loop is over y bins, and for each y bin we find the min and max x for each hit
 
-    unsigned m_imageSize_x = 7000;  // i.e. number of bins in phi_track
-    unsigned m_imageSize_y = 216;   // i.e. number of bins in q/pT
+    unsigned houghHistSize_x = 7000;  // i.e. number of bins in phi_track
+    unsigned houghHistSize_y = 216;   // i.e. number of bins in q/pT
 
-    std::vector<unsigned> m_hitExtend_x = {
+    /// For each assumed q/pT (y) we find the appropriate phi (x) bin for a hit. But if extend = 2 (for example)
+    /// We then fill in addition 2 bins to the right, and 2 bins to the left, so 5 bins and not just 1
+    std::vector<unsigned> hitExtend_x = {
         1, 1, 0, 0, 0, 0,
         0, 0, 0, 0};  // Hit lines will fill extra bins in x by this amount on
                       // each side, size == nLayers
 
     /// === Seeds for Hough ==
-    std::vector<int> m_threshold = {9};  // Minimum point value post-convolution
-                                         // to accept as a road (inclusive)
-    int m_localMaxWindowSize =
-        0;  // Only create candidates from a local maximum, requires traceHits
+    std::vector<int> threshold = {9};  // Minimum number of measurements per bin to accept as a prototrack/seed. Right now this is a single number, can be expanded in the future if we want to be more clever
+
+    int localMaxWindowSize =
+        0;  // Only create candidates from a local maximum
+
     double kA = 0.0003;  // Assume B = 2T constant. Can apply corrections to
                          // this with fieldCorrection function
+                         // This 3e-4 comes from the 2T field when converted to units of GeV / (c*mm*e) 
 
-    /// Function to apply correction due to B field not being constant
-    /// everywhere. The returned correction should be ADDED to phi_track
-    double (*fieldCorrection)(unsigned, double,
-                              double);  // (unsigned region, double y, double r)
+  // it's up to the user to connect these to the functions they want to use
+  FieldCorrector fieldCorrector;
+  LayerIDSPFinder layerIDSPFinder;
+  LayerIDMeasurementFinder layerIDMeasurementFinder;
+  SliceSPTester sliceSPTester;
+  SliceMeasurementTester sliceMeasurementTester;
 
-    /// these two functions are also used to remove SP and measurement
-    /// duplicates (by returning unused layers where SP/measurements shouldn't
-    /// be used)
-    double (*findLayerIDSP)(
-        double);  // (double r) this function will map the r of a SP to a layer.
-                  // Note that this may need to be changed for more complex
-                  // geometries and eta ranges
-    double (*findLayerIDMeasurement)(
-        double);  // (double r) this function will map the r of a SP to a layer.
-                  // Note that this may need to be changed for more complex
-                  // geometries and eta ranges
 
-    bool (*inSliceSP)(double, unsigned,
-                      int);  // (double z,unsigned layer, int slice) // given z,
-                             // layer and slice, returns a bool indicating
-                             // whether a SP is in a given slice
-    bool (*inSliceMeasurement)(
-        double, unsigned,
-        int);  // (double z,unsigned layer, int slice) // given z, layer and
-               // slice, returns a bool indicating whether a measurement is in a
-               // given slice
   };
 
   /// Construct the seeding algorithm.
@@ -202,29 +213,31 @@ class HoughTransformSeeder final : public BareAlgorithm {
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
-  double getMinX() const { return m_cfg.m_xMin; }
-  double getMaxX() const { return m_cfg.m_xMax; }
-  double getMinY() const { return m_cfg.m_yMin; }
-  double getMaxY() const { return m_cfg.m_yMax; }
+  double getMinX() const { return m_cfg.xMin; }
+  double getMaxX() const { return m_cfg.xMax; }
+  double getMinY() const { return m_cfg.yMin; }
+  double getMaxY() const { return m_cfg.yMax; }
   unsigned getThreshold() const {
-    return m_cfg.m_threshold[m_cfg.m_threshold.size() / 2];
+     return m_cfg.threshold[0]; 
   }
-  std::vector<int> getSubRegions() const { return m_cfg.m_subRegions; }
+  std::vector<int> getSubRegions() const { return m_cfg.subRegions; }
 
-  double yToX(double y, double r, double phi) const;
+  double yToX(double y, double r, double phi) const; // calculate the hough equation
 
  private:
   Config m_cfg;
+  std::unique_ptr<const Acts::Logger> m_logger;
+  const Acts::Logger& logger() const { return *m_logger; }
 
   ////////////////////////////////////////////////////////////////////////
   /// Convenience
 
-  double m_step_x = 0;  // step size of the bin boundaries in x
-  double m_step_y = 0;  // step size of the bin boundaries in y
+  double m_step_x;  // step size of the bin boundaries in x
+  double m_step_y;  // step size of the bin boundaries in y
   /// Bin boundaries, where m_bins_x[i] is the lower bound of bin i.
   /// These are calculated from m_xMin/m_xMax
-  std::vector<double> m_bins_x;  // size == m_imageSize_x + 1.
-  std::vector<double> m_bins_y;  // size == m_imageSize_y + 1
+  std::vector<double> m_bins_x;  // size == m_houghHistSize_x + 1.
+  std::vector<double> m_bins_y;  // size == m_houghHistSize_y + 1
 
   /// The measurements are ugly to use, this is a convenience struct that
   /// contains the needed information
@@ -241,11 +254,11 @@ class HoughTransformSeeder final : public BareAlgorithm {
   ///////////////////////////////////////////////////////////////////////
   // Core functions , they take both measurements and spacepoints, the second
   // one calls the first one per layer
-  Image createLayerImage(
+  HoughHist createLayerHoughHist(
       unsigned layer, std::vector<const SimSpacePoint*>& spacepoints,
       std::vector<std::shared_ptr<const MeasurementStruct>>& meas,
       int subregion) const;
-  Image createImage(std::vector<const SimSpacePoint*>& spacepoints,
+  HoughHist createHoughHist(std::vector<const SimSpacePoint*>& spacepoints,
                     std::vector<std::shared_ptr<const MeasurementStruct>>& meas,
                     int subregion) const;
 
@@ -253,15 +266,20 @@ class HoughTransformSeeder final : public BareAlgorithm {
   // Helpers
   std::pair<unsigned, unsigned> yToXBins(
       size_t yBin_min, size_t yBin_max, double r, double phi,
-      unsigned layer) const;  // given y, return x bins passed
+      unsigned layer) const;  // given y bins, return x bins passed that need to be filled in the HoughHist, including extensions
+
   unsigned getExtension(unsigned y, unsigned layer) const;  // return extensions
-  bool passThreshold(Image const& image, unsigned x,
+  bool passThreshold(HoughHist const& houghHist, unsigned x,
                      unsigned y) const;  // did we pass extensions?
-  void drawImage(Image const& image,
+  void drawHoughHist(HoughHist const& houghHist,
                  std::string const& name);  // for making pretty plots
   std::vector<std::vector<int>> getComboIndices(std::vector<size_t>& sizes)
       const;  // useful to find all candidates from given bins that pass
               // (looping over hit combinatorics)
 };
 
+   float multiply(float a, float b) {
+      return a * b;
+   }
+   
 }  // namespace ActsExamples

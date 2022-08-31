@@ -27,62 +27,44 @@ static inline std::string to_string(std::vector<T> v);
 ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
     ActsExamples::HoughTransformSeeder::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("HoughTransformSeeder", lvl),
-      m_cfg(std::move(cfg)) {
-  if (m_cfg.inputSpacePoints.empty()) {
-    throw std::invalid_argument("Missing space point input collections");
-  }
-
-  // require spacepoints or input measurements (or both), but at least one kind
-  // of input
-  bool foundInput = false;
-  for (const auto& i : m_cfg.inputSpacePoints) {
-    if (!(i.empty())) {
-      foundInput = true;
-      if (m_cfg.findLayerIDSP == nullptr)
-        throw std::invalid_argument(
-            "We are using some spacepoints but don't have a function pointer "
-            "to find the layer ID");
-      if (m_cfg.inSliceSP == nullptr)
-        throw std::invalid_argument(
-            "We are using some spacepoints but don't have a function pointer "
-            "to check the slice number");
-    }
-  }
-  if (!(m_cfg.inputMeasurements.empty())) {
+      m_cfg(std::move(cfg)),
+      m_logger(Acts::getDefaultLogger("HoughTransformSeeder",lvl))
+{   
+   // require spacepoints or input measurements (or both), but at least one kind
+   // of input
+   bool foundInput = false;
+   for (const auto& i : m_cfg.inputSpacePoints) {
+      if (!(i.empty())) {
+         foundInput = true;
+      }
+   }
+   if (!(m_cfg.inputMeasurements.empty())) {
     foundInput = true;
-    if (m_cfg.findLayerIDMeasurement == nullptr)
-      throw std::invalid_argument(
-          "We are using some input measurements but don't have a function "
-          "pointer to find the ID");
-    if (m_cfg.inSliceMeasurement == nullptr)
-      throw std::invalid_argument(
-          "We are using some input measurements but don't have a function "
-          "pointer to check the slice number");
-  }
+   }
 
   if (!foundInput) {
-    throw std::invalid_argument("Missing some kind of input");
+     ACTS_ERROR("Missing some kind of input");
   }
 
   if (m_cfg.outputProtoTracks.empty()) {
-    throw std::invalid_argument("Missing hough tracks output collection");
+    ACTS_ERROR("Missing hough tracks output collection");
   }
   if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument("Missing source link input collection");
+    ACTS_ERROR("Missing source link input collection");
   }
 
   if (not m_cfg.trackingGeometry) {
-    throw std::invalid_argument("Missing tracking geometry");
+    ACTS_ERROR("Missing tracking geometry");
   }
 
   if (m_cfg.geometrySelection.empty()) {
-    throw std::invalid_argument("Missing geometry selection");
+    ACTS_ERROR("Missing geometry selection");
   }
   // ensure geometry selection contains only valid inputs
   for (const auto& geoId : m_cfg.geometrySelection) {
     if ((geoId.approach() != 0u) or (geoId.boundary() != 0u) or
         (geoId.sensitive() != 0u)) {
-      throw std::invalid_argument(
+      ACTS_ERROR(
           "Invalid geometry selection: only volume and layer are allowed to be "
           "set");
     }
@@ -112,8 +94,8 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   std::sort(geoSelBeg, geoSelEnd);
   auto geoSelLastUnique = std::unique(geoSelBeg, geoSelEnd, isDuplicate);
   if (geoSelLastUnique != geoSelEnd) {
-    ACTS_WARNING("Removed " << std::distance(geoSelLastUnique, geoSelEnd)
-                            << " geometry selection duplicates");
+     ACTS_WARNING("Removed " << std::distance(geoSelLastUnique, geoSelEnd)
+                             << " geometry selection duplicates");
     m_cfg.geometrySelection.erase(geoSelLastUnique, geoSelEnd);
   }
   ACTS_INFO("Hough geometry selection:");
@@ -122,14 +104,14 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   }
 
   // Fill convenience variables
-  m_step_x = (m_cfg.m_xMax - m_cfg.m_xMin) / m_cfg.m_imageSize_x;
-  m_step_y = (m_cfg.m_yMax - m_cfg.m_yMin) / m_cfg.m_imageSize_y;
-  for (unsigned i = 0; i <= m_cfg.m_imageSize_x; i++)
+  m_step_x = (m_cfg.xMax - m_cfg.xMin) / m_cfg.houghHistSize_x;
+  m_step_y = (m_cfg.yMax - m_cfg.yMin) / m_cfg.houghHistSize_y;
+  for (unsigned i = 0; i <= m_cfg.houghHistSize_x; i++)
     m_bins_x.push_back(
-        unquant(m_cfg.m_xMin, m_cfg.m_xMax, m_cfg.m_imageSize_x, i));
-  for (unsigned i = 0; i <= m_cfg.m_imageSize_y; i++)
+        unquant(m_cfg.xMin, m_cfg.xMax, m_cfg.houghHistSize_x, i));
+  for (unsigned i = 0; i <= m_cfg.houghHistSize_y; i++)
     m_bins_y.push_back(
-        unquant(m_cfg.m_yMin, m_cfg.m_yMax, m_cfg.m_imageSize_y, i));
+        unquant(m_cfg.yMin, m_cfg.yMax, m_cfg.houghHistSize_y, i));
 }
 
 ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
@@ -202,42 +184,45 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
         Acts::Vector3 globalFakeMom(1, 1, 1);
         Acts::Vector3 globalPos =
             surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
-        double r = sqrt(globalPos[Acts::ePos0] * globalPos[Acts::ePos0] +
-                        globalPos[Acts::ePos1] * globalPos[Acts::ePos1]);
-        double phi = atan2(globalPos[Acts::ePos1], globalPos[Acts::ePos0]);
+        double r = std::hypot(globalPos[Acts::ePos0], globalPos[Acts::ePos1]);
+        double phi = std::atan2(globalPos[Acts::ePos1], globalPos[Acts::ePos0]);
         double z = globalPos[Acts::ePos2];
-        unsigned hitlayer = (*(m_cfg.findLayerIDMeasurement))(r);
-        std::shared_ptr<const MeasurementStruct> meas =
-            std::shared_ptr<const MeasurementStruct>(new MeasurementStruct(
-                hitlayer, phi, r, z, sourceLink.get().index()));
-        measurementStructs.push_back(meas);
+        ResultUnsigned hitlayer = m_cfg.layerIDMeasurementFinder(r);
+        if (hitlayer.ok()) {
+           std::shared_ptr<const MeasurementStruct> meas =
+              std::shared_ptr<const MeasurementStruct>(new MeasurementStruct(
+                                                          hitlayer.value(), phi, r, z, sourceLink.get().index()));
+           measurementStructs.push_back(meas);
+        }
       }
     }
   }
-
+  
   static thread_local ProtoTrackContainer protoTracks;
   protoTracks.clear();
 
-  for (auto subregion : m_cfg.m_subRegions) {
-    ActsExamples::Image m_image =
-        createImage(spacePointPtrs, measurementStructs, subregion);
+  for (auto subregion : m_cfg.subRegions) {
+    ActsExamples::HoughHist m_houghHist =
+        createHoughHist(spacePointPtrs, measurementStructs, subregion);
 
-    for (unsigned y = 0; y < m_cfg.m_imageSize_y; y++)
-      for (unsigned x = 0; x < m_cfg.m_imageSize_x; x++)
-        if (passThreshold(m_image, x, y)) {
+    for (unsigned y = 0; y < m_cfg.houghHistSize_y; y++)
+      for (unsigned x = 0; x < m_cfg.houghHistSize_x; x++)
+        if (passThreshold(m_houghHist, x, y)) {
           /* now we need to unpack the hits; there should be multiple track
              candidates if we have multiple hits in a given layer So the first
              thing is to unpack the indices (which is what we need) by layer */
           std::vector<std::vector<Index>> hitIndicesAll(
-              m_cfg.m_nLayers);  // [layer,Index]
-          std::vector<size_t> nHitsPerLayer(m_cfg.m_nLayers);
-          for (auto index : m_image(y, x).second) {
+              m_cfg.nLayers);  // [layer,Index]
+          std::vector<size_t> nHitsPerLayer(m_cfg.nLayers);
+          for (auto index : m_houghHist(y, x).second) {
             if (index < spacePointPtrs.size()) {  // is a spacepoint
               const SimSpacePoint* sp = spacePointPtrs[index];
-              double r = sqrt(sp->x() * sp->x() + sp->y() * sp->y());
-              unsigned layer = (*(m_cfg.findLayerIDSP))(r);
-              hitIndicesAll[layer].push_back(sp->measurementIndex());
-              nHitsPerLayer[layer]++;
+              double r = std::hypot(sp->x(), sp->y());
+              ResultUnsigned layer = m_cfg.layerIDSPFinder(r);
+              if (layer.ok()) {
+                 hitIndicesAll[layer.value()].push_back(sp->measurementIndex());
+                 nHitsPerLayer[layer.value()]++;
+              }
             } else {  // we store SP first, this must not be a sp, updated the
                       // index appropriately
               std::shared_ptr<const MeasurementStruct> meas =
@@ -255,7 +240,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
             ProtoTrack protoTrack;
             std::vector<int> const& hit_indices =
                 combs[icomb];  // one index per layer
-            for (unsigned layer = 0; layer < m_cfg.m_nLayers; layer++) {
+            for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
               if (hit_indices[layer] >= 0) {
                 protoTrack.push_back(hitIndicesAll[layer][hit_indices[layer]]);
               }
@@ -265,43 +250,42 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
         }
   }
   ACTS_DEBUG("Created " << protoTracks.size() << " track seeds from "
-                        << spacePointPtrs.size() << " space points");
+                         << spacePointPtrs.size() << " space points");
 
   ctx.eventStore.add(m_cfg.outputProtoTracks, ProtoTrackContainer{protoTracks});
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(
+ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createLayerHoughHist(
     unsigned layer, std::vector<const SimSpacePoint*>& spacepoints,
     std::vector<std::shared_ptr<const MeasurementStruct>>& meass,
     int subregion) const {
-  ActsExamples::Image image(m_cfg.m_imageSize_y, m_cfg.m_imageSize_x);
+  ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y, m_cfg.houghHistSize_x);
 
   for (unsigned index = 0; index < spacepoints.size(); index++) {
     const SimSpacePoint* sp = spacepoints[index];
-    double r = sqrt(sp->x() * sp->x() + sp->y() * sp->y());
+    double r = std::hypot(sp->x(), sp->y());
     double z = sp->z();
-    unsigned hitlayer = (*(m_cfg.findLayerIDSP))(r);
+    unsigned hitlayer = (m_cfg.layerIDSPFinder(r)).value();
     if (hitlayer != layer)
       continue;
-    if (!((*(m_cfg.inSliceSP))(z, hitlayer, subregion)))
+    if (!(m_cfg.sliceSPTester(z, hitlayer, subregion).value()))
       continue;
-    float phi = atan2(sp->y(), sp->x());
+    float phi = std::atan2(sp->y(), sp->x());
 
     // This scans over y (pT) because that is more efficient in memory, in C.
-    // Unknown if firmware will want to scan over x instead.
-    for (unsigned y_ = 0; y_ < m_cfg.m_imageSize_y; y_++) {
+    for (unsigned y_ = 0; y_ < m_cfg.houghHistSize_y; y_++) {
       unsigned y_bin_min = y_;
       unsigned y_bin_max = (y_ + 1);
 
       // Find the min/max x bins
       auto xBins = yToXBins(y_bin_min, y_bin_max, r, phi, hitlayer);
-      // Update the image
+      // Update the houghHist
       for (unsigned y = y_bin_min; y < y_bin_max; y++)
         for (unsigned x = xBins.first; x < xBins.second; x++) {
-          image(y, x).first++;
-          image(y, x).second.insert(index);
+          houghHist(y, x).first++;
+          houghHist(y, x).second.insert(index);
         }
     }
   }
@@ -310,23 +294,22 @@ ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(
     std::shared_ptr<const MeasurementStruct> meas = meass[index];
     if (meas->layer != layer)
       continue;
-    if (!((*(m_cfg.inSliceMeasurement))(meas->z, meas->layer, subregion)))
+    if (!(m_cfg.sliceMeasurementTester(meas->z, meas->layer, subregion)).value())
       continue;
 
-    // This scans over y (pT) because that is more efficient in memory, in C.
-    // Unknown if firmware will want to scan over x instead.
-    for (unsigned y_ = 0; y_ < m_cfg.m_imageSize_y; y_++) {
+    // This scans over y (pT) because that is more efficient in memory
+    for (unsigned y_ = 0; y_ < m_cfg.houghHistSize_y; y_++) {
       unsigned y_bin_min = y_;
       unsigned y_bin_max = (y_ + 1);
 
       // Find the min/max x bins
       auto xBins =
           yToXBins(y_bin_min, y_bin_max, meas->radius, meas->phi, meas->layer);
-      // Update the image
+      // Update the houghHist
       for (unsigned y = y_bin_min; y < y_bin_max; y++)
         for (unsigned x = xBins.first; x < xBins.second; x++) {
-          image(y, x).first++;
-          image(y, x).second.insert(
+          houghHist(y, x).first++;
+          houghHist(y, x).second.insert(
               index +
               spacepoints
                   .size());  // add spacepoints size to differentiate them
@@ -334,57 +317,57 @@ ActsExamples::Image ActsExamples::HoughTransformSeeder::createLayerImage(
     }
   }
 
-  return image;
+  return houghHist;
 }
 
-ActsExamples::Image ActsExamples::HoughTransformSeeder::createImage(
+ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
     std::vector<const SimSpacePoint*>& spacepoints,
     std::vector<std::shared_ptr<const MeasurementStruct>>& meas,
     int subregion) const {
-  ActsExamples::Image image(m_cfg.m_imageSize_y, m_cfg.m_imageSize_x);
+  ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y, m_cfg.houghHistSize_x);
 
-  for (unsigned i = 0; i < m_cfg.m_nLayers; i++) {
-    Image layerImage = createLayerImage(i, spacepoints, meas, subregion);
-    for (unsigned x = 0; x < m_cfg.m_imageSize_x; ++x)
-      for (unsigned y = 0; y < m_cfg.m_imageSize_y; ++y)
-        if (layerImage(y, x).first > 0) {
-          image(y, x).first++;
-          image(y, x).second.insert(layerImage(y, x).second.begin(),
-                                    layerImage(y, x).second.end());
+  for (unsigned i = 0; i < m_cfg.nLayers; i++) {
+    HoughHist layerHoughHist = createLayerHoughHist(i, spacepoints, meas, subregion);
+    for (unsigned x = 0; x < m_cfg.houghHistSize_x; ++x)
+      for (unsigned y = 0; y < m_cfg.houghHistSize_y; ++y)
+        if (layerHoughHist(y, x).first > 0) {
+          houghHist(y, x).first++;
+          houghHist(y, x).second.insert(layerHoughHist(y, x).second.begin(),
+                                    layerHoughHist(y, x).second.end());
         }
   }
 
-  return image;
+  return houghHist;
 }
 
-bool ActsExamples::HoughTransformSeeder::passThreshold(Image const& image,
+bool ActsExamples::HoughTransformSeeder::passThreshold(HoughHist const& houghHist,
                                                        unsigned x,
                                                        unsigned y) const {
   // Pass window threshold
-  unsigned width = m_cfg.m_threshold.size() / 2;
-  if (x < width || (image.size(1) - x) < width)
+  unsigned width = m_cfg.threshold.size() / 2;
+  if (x < width || (houghHist.size(1) - x) < width)
     return false;
-  for (unsigned i = 0; i < m_cfg.m_threshold.size(); i++) {
-    if (image(y, x - width + i).first < m_cfg.m_threshold[i])
+  for (unsigned i = 0; i < m_cfg.threshold.size(); i++) {
+    if (houghHist(y, x - width + i).first < m_cfg.threshold[i])
       return false;
   }
 
   // Pass local-maximum check, if used
-  if (m_cfg.m_localMaxWindowSize)
-    for (int j = -m_cfg.m_localMaxWindowSize; j <= m_cfg.m_localMaxWindowSize;
+  if (m_cfg.localMaxWindowSize)
+    for (int j = -m_cfg.localMaxWindowSize; j <= m_cfg.localMaxWindowSize;
          j++)
-      for (int i = -m_cfg.m_localMaxWindowSize; i <= m_cfg.m_localMaxWindowSize;
+      for (int i = -m_cfg.localMaxWindowSize; i <= m_cfg.localMaxWindowSize;
            i++) {
         if (i == 0 && j == 0)
           continue;
-        if (y + j < image.size(0) && x + i < image.size(1)) {
-          if (image(y + j, x + i).first > image(y, x).first)
+        if (y + j < houghHist.size(0) && x + i < houghHist.size(1)) {
+          if (houghHist(y + j, x + i).first > houghHist(y, x).first)
             return false;
-          if (image(y + j, x + i).first == image(y, x).first) {
-            if (image(y + j, x + i).second.size() > image(y, x).second.size())
+          if (houghHist(y + j, x + i).first == houghHist(y, x).first) {
+            if (houghHist(y + j, x + i).second.size() > houghHist(y, x).second.size())
               return false;
-            if (image(y + j, x + i).second.size() ==
-                    image(y, x).second.size() &&
+            if (houghHist(y + j, x + i).second.size() ==
+                    houghHist(y, x).second.size() &&
                 j <= 0 && i <= 0)
               return false;  // favor bottom-left (low phi, low neg q/pt)
           }
@@ -427,8 +410,8 @@ double ActsExamples::HoughTransformSeeder::yToX(double y, double r,
   double x =
       asin(r * ActsExamples::HoughTransformSeeder::m_cfg.kA * y - d0 / r) + phi;
 
-  if (m_cfg.fieldCorrection)
-    x += (*(m_cfg.fieldCorrection))(0, y, r);
+  if (m_cfg.fieldCorrector.connected())
+     x += (m_cfg.fieldCorrector(0, y, r)).value();
 
   return x;
 }
@@ -443,13 +426,13 @@ std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(
   double x_max = yToX(m_bins_y[yBin_max], r, phi);
   if (x_min > x_max)
     std::swap(x_min, x_max);
-  if (x_max < m_cfg.m_xMin || x_min > m_cfg.m_xMax)
+  if (x_max < m_cfg.xMin || x_min > m_cfg.xMax)
     return {0, 0};  // out of bounds
 
   // Get bins
-  int x_bin_min = quant(m_cfg.m_xMin, m_cfg.m_xMax, m_cfg.m_imageSize_x, x_min);
+  int x_bin_min = quant(m_cfg.xMin, m_cfg.xMax, m_cfg.houghHistSize_x, x_min);
   int x_bin_max =
-      quant(m_cfg.m_xMin, m_cfg.m_xMax, m_cfg.m_imageSize_x, x_max) +
+      quant(m_cfg.xMin, m_cfg.xMax, m_cfg.houghHistSize_x, x_max) +
       1;  // exclusive
 
   // Extend bins
@@ -460,8 +443,8 @@ std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(
   // Clamp bins
   if (x_bin_min < 0)
     x_bin_min = 0;
-  if (x_bin_max > static_cast<int>(m_cfg.m_imageSize_x))
-    x_bin_max = m_cfg.m_imageSize_x;
+  if (x_bin_max > static_cast<int>(m_cfg.houghHistSize_x))
+    x_bin_max = m_cfg.houghHistSize_x;
 
   return {x_bin_min, x_bin_max};
 }
@@ -470,15 +453,15 @@ std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(
 // below.
 unsigned ActsExamples::HoughTransformSeeder::getExtension(
     unsigned y, unsigned layer) const {
-  if (m_cfg.m_hitExtend_x.size() == m_cfg.m_nLayers)
-    return m_cfg.m_hitExtend_x[layer];
-  if (m_cfg.m_hitExtend_x.size() == m_cfg.m_nLayers * 2) {
+  if (m_cfg.hitExtend_x.size() == m_cfg.nLayers)
+    return m_cfg.hitExtend_x[layer];
+  if (m_cfg.hitExtend_x.size() == m_cfg.nLayers * 2) {
     // different extension for low pt vs high pt, split in half but irrespective
     // of sign first nLayers entries of m_hitExtend_x is for low pt half, rest
     // are for high pt half
-    if (y < m_cfg.m_imageSize_y / 4 || y > 3 * m_cfg.m_imageSize_y / 4)
-      return m_cfg.m_hitExtend_x[layer];
-    return m_cfg.m_hitExtend_x[m_cfg.m_nLayers + layer];
+    if (y < m_cfg.houghHistSize_y / 4 || y > 3 * m_cfg.houghHistSize_y / 4)
+      return m_cfg.hitExtend_x[layer];
+    return m_cfg.hitExtend_x[m_cfg.nLayers + layer];
   }
   return 0;
 }
