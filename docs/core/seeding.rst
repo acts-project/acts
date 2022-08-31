@@ -11,7 +11,7 @@ find all measurements belonging to a single particle in this direction in order
 to reconstruct the track. This means, if no seed exists for a particle, this
 particle will not be reconstructed. On the other hand, finding too many seeds
 which either correspond to a particle for which another seed already exists or
-which does not correspond to a particle at all increases the time needed for
+which do not correspond to a particle at all increases the time needed for
 tracking.
 
 A good seeding algorithm therefore has the following properties:
@@ -26,7 +26,6 @@ Acts Implementation
 -------------------
 
 The seeding implementation in Core/include/Acts/Seeding/ is based on the ATLAS track seeding. It was rewritten with a focus on parallelism and maintainability and as detector agnostic as possible, only assuming a (near) homogeneous magnetic field with particles originating from the central detector region. Cuts are configurable and can be plugged in as algorithm which is called by the seeding. The seeding works on measurements or “SpacePoints” (SP), which need to provide x,y,z coordinates with the z axis being along the magnetic field, and x and y. The interaction region must be close to :math:`x=y=0`, such that the interaction region has a smaller detector radius :math:`r = \sqrt{x^2+y^2}` than the measurements closest to the interaction region, see also :numref:`3dim`.
-
 
 .. figure:: ../figures/seeding/3Dcoordinates.svg
    :name: 3dim
@@ -82,8 +81,9 @@ iterators.
 The createSeedsForGroup function then iterates over middle SP, and within this
 loop separately iterates once over bottom SP and once over top SP. Within each
 of the nested loops, bottom SP - middle SP respectively middle SP - top SP are
-tested for compatibility by applying cuts that can be tested with two SP only
-(pseudorapidity, origin along z-axis, distance in r between SP).
+tested for compatibility by applying configurable cuts that can be tested with
+two SP only (pseudorapidity, origin along z-axis, distance in r between SP,
+compatibility with interaction point).
 
 If both compatible bottom and top SP have been found, test each bottom SP,
 middle SP, top SP triplet combination in a triple nested loop. A major part of
@@ -93,77 +93,103 @@ only once, the circle calculation is spread out over the three loops.
 
 .. code-block:: cpp
 
-   for (auto spM : middleSPs) {
+	for (auto spM : middleSPs) {
+   
+		... // compatibility cuts between SP duplets
 
-     // contains parameters required to calculate circle with linear equation
-     // ...for bottom-middle
-     std::vector<LinCircle> linCircleBottom;
-     // ...for middle-top
-     std::vector<LinCircle> linCircleTop;
-     transformCoordinates(compatBottomSP, *spM, true, linCircleBottom);
-     transformCoordinates(compatTopSP, *spM, false, linCircleTop);
+		state.linCircleBottom.clear();
+    state.linCircleTop.clear();
 
-     // create vectors here to avoid reallocation in each loop
-     std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
-     std::vector<float> curvatures;
-     std::vector<float> impactParameters;
+		// transform a vector of spacepoints to u-v space circles with respect to a given middle spacepoint
+    transformCoordinates(state.compatBottomSP, *spM, true,
+                         state.linCircleBottom);
+    transformCoordinates(state.compatTopSP, *spM, false, state.linCircleTop);
 
-     std::vector<std::pair<
-         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-         seedsPerSpM;
-     size_t numBotSP = compatBottomSP.size();
-     size_t numTopSP = compatTopSP.size();
+    state.topSpVec.clear();
+    state.curvatures.clear();
+    state.impactParameters.clear();
+    state.seedsPerSpM.clear();
 
-     for (size_t b = 0; b < numBotSP; b++) {
-       auto lb = linCircleBottom[b];
-       float Zob = lb.Zo;
-       float cotThetaB = lb.cotTheta;
-       float Vb = lb.V;
-       float Ub = lb.U;
-       float ErB = lb.Er;
-       float iDeltaRB = lb.iDeltaR;
+    size_t numBotSP = state.compatBottomSP.size();
+    size_t numTopSP = state.compatTopSP.size();
 
-       // 1+(cot^2(theta)) = 1/sin^2(theta)
-       float iSinTheta2 = (1. + cotThetaB * cotThetaB);
-       // calculate max scattering for min momentum at the seed's theta angle
-       // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
-       // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
-       // scattering
-       // but to avoid trig functions we approximate cot by scaling by
-       // 1/sin^4(theta)
-       // resolving with pT to p scaling --> only divide by sin^2(theta)
-       // max approximation error for allowed scattering angles of 0.04 rad at
-       // eta=infinity: ~8.5%
-       float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
-       // multiply the squared sigma onto the squared scattering
-       scatteringInRegion2 *=
-           m_config.sigmaScattering * m_config.sigmaScattering;
+    int numQualitySeeds = 0;
+    int numSeeds = 0;
 
-       // clear all vectors used in each inner for loop
-       topSpVec.clear();
-       curvatures.clear();
-       impactParameters.clear();
-       for (size_t t = 0; t < numTopSP; t++) {
-         auto lt = linCircleTop[t];
+    size_t t0 = 0;
 
-         // protects against division by 0
-         float dU = lt.U - Ub;
-         if (dU == 0.) {
-           continue;
-         }
-         // A and B are evaluated as a function of the circumference parameters
-         // x_0 and y_0
-         float A = (lt.V - Vb) / dU;
-         float S2 = 1. + A * A;
-         float B = Vb - A * Ub;
-         float B2 = B * B;
-         // sqrt(S2)/B = 2 * helixradius
-         // calculated radius must not be smaller than minimum radius
-         if (S2 < B2 * m_config.minHelixDiameter2) {
-           continue;
-         }
-         // 1/helixradius: (B/sqrt(S2))/2 (we leave everything squared)
-         float iHelixDiameter2 = B2 / S2;
+    for (size_t b = 0; b < numBotSP; b++) {
+      auto lb = state.linCircleBottom[b];
+      float Zob = lb.Zo;
+      float cotThetaB = lb.cotTheta;
+      float Vb = lb.V;
+      float Ub = lb.U;
+      float ErB = lb.Er;
+      float iDeltaRB = lb.iDeltaR;
+
+      // 1+(cot^2(theta)) = 1/sin^2(theta)
+      float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+      // calculate max scattering for min momentum at the seed's theta angle
+      // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
+      // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
+      // scattering
+      // but to avoid trig functions we approximate cot by scaling by
+      // 1/sin^4(theta)
+      // resolving with pT to p scaling --> only divide by sin^2(theta)
+      // max approximation error for allowed scattering angles of 0.04 rad at
+      // eta=infinity: ~8.5%
+      float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
+      // multiply the squared sigma onto the squared scattering
+      scatteringInRegion2 *=
+          m_config.sigmaScattering * m_config.sigmaScattering;
+
+      float sinTheta = 1 / std::sqrt(iSinTheta2);
+      float cosTheta = cotThetaB * sinTheta;
+
+      // clear all vectors used in each inner for loop
+      state.topSpVec.clear();
+      state.curvatures.clear();
+      state.impactParameters.clear();
+      for (size_t t = t0; t < numTopSP; t++) {
+        auto lt = state.linCircleTop[t];
+
+				...	\\ more code
+				
+				float dU;
+        float A;
+        float S2;
+        float B;
+        float B2;
+
+        if (m_config.useDetailedDoubleMeasurementInfo) {
+          dU = ut - ub;
+          // protects against division by 0
+          if (dU == 0.) {
+            continue;
+          }
+          A = (vt - vb) / dU;
+          S2 = 1. + A * A;
+          B = vb - A * ub;
+          B2 = B * B;
+        } else {
+          dU = lt.U - Ub;
+          // protects against division by 0
+          if (dU == 0.) {
+            continue;
+          }
+          // A and B are evaluated as a function of the circumference parameters
+          // x_0 and y_0
+          A = (lt.V - Vb) / dU;
+          S2 = 1. + A * A;
+          B = Vb - A * Ub;
+          B2 = B * B;
+        }
+
+        // sqrt(S2)/B = 2 * helixradius
+        // calculated radius must not be smaller than minimum radius
+        if (S2 < B2 * m_config.minHelixDiameter2) {
+          continue;
+        }
 
 To calculate the helix circle in the x-y plane, the x,y coordinates are
 transformed into a U/V plane in order to calculate the circle with a linear
@@ -173,7 +199,7 @@ energy and impact parameters can be estimated.
 The scattering calculation is also spread over the nested loops to avoid
 redoing calculations. First, the maximum allowed scattering at the configured
 minimum transverse momentum (pT) cut is calculated and scaled by the
-pseudorapidity of the bottomSP-middleSP dupletto get the minimum momentum of
+pseudorapidity of the bottomSP-middleSP duplet to get the minimum momentum of
 the duplet. This duplet's pseudorapidity is used for later calculation of the
 scattering for the triplet as well.
 
@@ -194,6 +220,12 @@ scattering for the triplet as well.
    // multiply the squared sigma onto the squared scattering
    scatteringInRegion2 *=
        m_config.sigmaScattering * m_config.sigmaScattering;
+       
+The minimum scattering term ('scatteringInRegion2') is calculated from
+'sigmaScattering', the configurable number of sigmas of scattering angle
+to be considered, and 'maxScatteringAngle2', which is evaluated from the
+Lynch & Dahl correction of the Highland equation assuming the lowest
+allowed pT. The parameters of the Highland equation are fully configurable.
 
 The following code block calculates if the triplet forms a nearly straight line
 in the r/z plane (see :numref:`rz`) as the particle path in the r/z plane is
@@ -201,39 +233,42 @@ unaffected by the magnetic field [#f1]_. This is split in two (may be revised
 in the future); the first test occurs before the calculation of the helix
 circle. Therefore, the deviation from a straight line is compared to the
 maximum allowed scattering at minimum pT scaled by the forward angle (as
-calculated above). Both the check against min pT as the check against the
+calculated above). Both the check against min pT and the check against the
 calculated pT (discussed further below) take the correlated measurement
 uncertainty into account.
 
 .. code-block:: cpp
 
-   // add errors of spB-spM and spM-spT pairs and add the correlation term
-   // for errors on spM
-   float error2 = lt.Er + ErB +
-                  2 * (cotThetaB * lt.cotTheta * varianceRM + varianceZM) *
-                      iDeltaRB * lt.iDeltaR;
+	// add errors of spB-spM and spM-spT pairs and add the correlation term
+	// for errors on spM
+	float error2 = lt.Er + ErB +
+								 2 * (cotThetaAvg2 * varianceRM + varianceZM) * iDeltaRB *
+										 lt.iDeltaR;
 
-   float deltaCotTheta = cotThetaB - lt.cotTheta;
-   float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
-   float error;
-   float dCotThetaMinusError2;
-   // if the error is larger than the difference in theta, no need to
-   // compare with scattering
-   if (deltaCotTheta2 - error2 > 0) {
-     deltaCotTheta = std::abs(deltaCotTheta);
-     // if deltaTheta larger than the scattering for the lower pT cut, skip
-     error = std::sqrt(error2);
-     dCotThetaMinusError2 =
-         deltaCotTheta2 + error2 - 2 * deltaCotTheta * error;
-     // avoid taking root of scatteringInRegion
-     // if left side of ">" is positive, both sides of unequality can be
-     // squared
-     // (scattering is always positive)
-
-     if (dCotThetaMinusError2 > scatteringInRegion2) {
-       continue;
-     }
-   }
+	float deltaCotTheta = cotThetaB - cotThetaT;
+	float deltaCotTheta2 = deltaCotTheta * deltaCotTheta;
+	// Apply a cut on the compatibility between the r-z slope of the two
+	// seed segments. This is done by comparing the squared difference
+	// between slopes, and comparing to the squared uncertainty in this
+	// difference - we keep a seed if the difference is compatible within
+	// the assumed uncertainties. The uncertainties get contribution from
+	// the  space-point-related squared error (error2) and a scattering term
+	// calculated assuming the minimum pt we expect to reconstruct
+	// (scatteringInRegion2). This assumes gaussian error propagation which
+	// allows just adding the two errors if they are uncorrelated (which is
+	// fair for scattering and measurement uncertainties)
+	if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
+		// additional cut to skip top SPs when producing triplets
+		if (m_config.skipPreviousTopSP) {
+			// break if cotTheta from bottom SP < cotTheta from top SP because
+			// the SP are sorted by cotTheta
+			if (cotThetaB - cotThetaT < 0) {
+				break;
+			}
+			t0 = t + 1;
+		}
+		continue;
+	}
 
 Now the check for scattering with calculated particle momentum. Momentum is
 calculated from the pT and the pseudorapidity. This must be :math:`\geq` the
@@ -242,19 +277,34 @@ previous check, as the scattering decreases linearly with particle energy
 
 .. code-block:: cpp
 
-   // calculate scattering for p(T) calculated from seed curvature
-   float pT2scatter = 4 * iHelixDiameter2 * m_config.pT2perRadius;
-   // TODO: include upper pT limit for scatter calc
-   // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
-   // from rad to deltaCotTheta
-   float p2scatter = pT2scatter * iSinTheta2;
-   // if deltaTheta larger than allowed scattering for calculated pT, skip
-   if ((deltaCotTheta2 - error2 > 0) &&
-       (dCotThetaMinusError2 >
-        p2scatter * m_config.sigmaScattering * m_config.sigmaScattering)) {
-     continue;
-   }
-
+	// refinement of the cut on the compatibility between the r-z slope of
+	// the two seed segments using a scattering term scaled by the actual
+	// measured pT (p2scatterSigma)
+	float iHelixDiameter2 = B2 / S2;
+	// calculate scattering for p(T) calculated from seed curvature
+	float pT2scatterSigma = iHelixDiameter2 * m_config.sigmapT2perRadius;
+	// if pT > maxPtScattering, calculate allowed scattering angle using
+	// maxPtScattering instead of pt.
+	float pT = m_config.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+	if (pT > m_config.maxPtScattering) {
+		float pTscatterSigma =
+				(m_config.highland / m_config.maxPtScattering) *
+				m_config.sigmaScattering;
+		pT2scatterSigma = pTscatterSigma * pTscatterSigma;
+	}
+	// convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
+	// from rad to deltaCotTheta
+	float p2scatterSigma = pT2scatterSigma * iSinTheta2;
+	// if deltaTheta larger than allowed scattering for calculated pT, skip
+	if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
+		if (m_config.skipPreviousTopSP) {
+			if (cotThetaB - cotThetaT < 0) {
+				break;
+			}
+			t0 = t;
+		}
+		continue;
+	}
 
 The last cut applied in this function is on the so-called impact parameters,
 which is the distance of the perigee of a track from the interaction region in
@@ -263,18 +313,30 @@ compatible with both the current middle SP and current bottom SP.
 
 .. code-block:: cpp
 
-   // A and B allow calculation of impact params in U/V plane with linear
-   // function
-   // (in contrast to having to solve a quadratic function in x/y plane)
-   float Im = std::abs((A - B * rM) * rM);
+	// A and B allow calculation of impact params in U/V plane with linear
+	// function
+	// (in contrast to having to solve a quadratic function in x/y plane)
+	float Im;
+	if (m_config.useDetailedDoubleMeasurementInfo == false) {
+		Im = std::abs((A - B * rM) * rM);
+	} else {
+		Im = std::abs((A - B * rMxy) * rMxy);
+	}
 
-   if (Im <= m_config.impactMax) {
-     topSpVec.push_back(compatTopSP[t]);
-     // inverse diameter is signed depending if the curvature is
-     // positive/negative in phi
-     curvatures.push_back(B / std::sqrt(S2));
-     impactParameters.push_back(Im);
-   }
+	if (Im <= m_config.impactMax) {
+		state.topSpVec.push_back(state.compatTopSP[t]);
+		// inverse diameter is signed depending if the curvature is
+		// positive/negative in phi
+		state.curvatures.push_back(B / std::sqrt(S2));
+		state.impactParameters.push_back(Im);
+
+		// evaluate eta and pT of the seed
+		float cotThetaAvg = std::sqrt(cotThetaAvg2);
+		float theta = std::atan(1. / cotThetaAvg);
+		float eta = -std::log(std::tan(0.5 * theta));
+		state.etaVec.push_back(eta);
+		state.ptVec.push_back(pT);
+	}
 
 The bottom SP and middle SP as well as the collection of top SP is passed to
 SeedFilter::filterSeeds_2SpFixed, whose collected output for the current middle
@@ -288,19 +350,20 @@ This function assigns a weight (which should correspond to the likelihood that
 a seed is good) to all seeds and calls the detector specific cuts to apply a
 hard cut or modify the weight. The weight is a “soft cut”, in that it is only
 used to discard tracks if many seeds are created for the same middle SP in
-SeedFilter::filterSeeds_1SpFixed
+SeedFilter::filterSeeds_1SpFixed. This process is important to improving computational
+performance and the quality of the final track collections by rejecting lower-quality seeds.
 
-The weight is influenced by:
+The weight can be influenced by:
 
-#. The impact parameter (the higher the distance the worse)
-#. The number of seeds which may belong to the same particle track
+#. The transverse (`d_{0}`) and longitudinal (`z_{0}`) impact parameters (the higher the distance the worse)
+#. The number of seeds which may belong to the same particle track (`N_{t}`)
 #. Optional detector specific cuts.
 
-
-The impact parameter is multiplied by the configured factor and subtracted from
+The transverse impact parameter is multiplied by the configured factor and subtracted from
 the weight, as seeds with higher impact parameters are assumed to be less
 likely to stem from a particle than another seed using the same middle SP with
-smaller impact parameters.
+smaller impact parameters. The longitudinal impact parameter is subtracted from
+the weight if configured.
 
 The number of seeds only differing in top SP which have similar helix radius
 and the same sign (i.e. the same charge) is used to increase the weight, as it
@@ -313,6 +376,36 @@ configured factor and added to the weight.
 The optional detector specific cuts can use the weight from 1. and 2. and the
 three SP to apply a hard cut or change the weight of a seed.
 
+This function also includes a fully configurable seed confirmation step that, when enabled
+('seedConfirmation=True'), classifies higher quality seeds as "quality confined" seeds if
+they fall within a predefined range of parameters (`d_{0}`, `z_{0}` and `N_{t}`) that also
+depends on the region of the detector (i.e., forward or central region). If the seed is not
+classified as "quality confined" seed, it will only be accepted if its weight is greater
+than a certain threshold and no other high quality seed has been found.
+
+.. code-block:: cpp
+
+    int deltaSeedConf;
+    if (m_cfg.seedConfirmation) {
+      // seed confirmation cuts - keep seeds if they have specific values of
+      // impact parameter, z-origin and number of compatible seeds inside a
+      // pre-defined range that also depends on the region of the detector (i.e.
+      // forward or central region) defined by SeedConfirmationRange
+      deltaSeedConf = compatibleSeedR.size() + 1 - nTopSeedConf;
+      if (deltaSeedConf < 0 || (numQualitySeeds and deltaSeedConf == 0)) {
+        continue;
+      }
+      bool seedRangeCuts = bottomSP.radius() < m_cfg.seedConfMinBottomRadius ||
+                           std::abs(zOrigin) > m_cfg.seedConfMaxZOrigin;
+      if (seedRangeCuts and deltaSeedConf == 0 and
+          impact > m_cfg.minImpactSeedConf) {
+        continue;
+      }
+
+The seed confirmation also sets a limit on the number of seeds produced for each middle SP,
+which retains only the higher quality seeds. If this limit is exceeded, the algorithm
+checks if there is any low-quality seed in the seed container of this middle SP that can be removed.
+
 SeedFilter::filterSeeds_1SpFixed
 --------------------------------
 
@@ -323,6 +416,12 @@ well-defined ordering in the rare case weights are equal, sorts them by
 location. The ordering by location is only done to make sure reimplementations
 (such as the GPU code) are comparable and return the bitwise exactly same
 result.
+
+When a seed is accepted and seed confirmation is enabled, the weight of that seed
+is assigned to each of its SPs. Each SP will hold the weight of the best seed that
+includes that SP. This information is used in the selection of the next seeds:
+The seed is kept only if its weight is greater than the weight of at least one of
+its SP components.
 
 
 Footnotes
