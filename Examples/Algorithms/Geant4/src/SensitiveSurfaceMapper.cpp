@@ -61,7 +61,7 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
       // Prepare the mapped surface
       const Acts::Surface* mappedSurface = nullptr;
 
-      if (actsLayer and actsLayer->surfaceArray()) {
+      if (actsLayer != nullptr and actsLayer->surfaceArray() != nullptr) {
         auto actsSurfaces = actsLayer->surfaceArray()->at(g4AbsPosition);
         if (not actsSurfaces.empty()) {
           // Fast matching: search

@@ -1,6 +1,6 @@
 # Geometry module
 
-The Acts geometry model is strongly based on the ATLAS Tracking geometry. Its
+The ACTS geometry model is strongly based on the ATLAS Tracking geometry. Its
 core is built on a surface-based description that make up all geometry objects
 of higher complexity. This design has been chosen as the surface objects can be
 used together with the track propagation module and thus all geometry objects
@@ -10,67 +10,61 @@ become natively integrated into the tracking software.
 
 All geometry objects in Acts inherit from a virtual `GeometryObject` base class
 
-    /// @class GeometryObject
-    ///
-    /// Base class to provide GeometryIdentifier interface:
-    /// - simple set and get
-    ///
-    /// It also provides the binningPosition method for
-    /// Geometry geometrical object to be binned in BinnedArrays
-    ///
-    class GeometryObject
-    {
-    public:
-     /// default constructor
-     GeometryObject() : m_geometryId(0) {}
+```cpp
+class GeometryObject {
+ public:
+  /// Defaulted construrctor
+  GeometryObject() = default;
 
-     /// constructor from a ready-made value
-     ///
-     /// @param geometryId the geometry identifier of the object
-     GeometryObject(const GeometryIdentifier& geometryId) : m_geometryId(geometryId) {}
+  /// Defaulted copy constructor
+  GeometryObject(const GeometryObject&) = default;
 
-     /// assignment operator
-     ///
-     /// @param geometryId the source geometryId
-     GeometryObject&
-     operator=(const GeometryObject& geometryId)
-     {
-       if (&geometryId != this) {
-         m_geometryId = geometryId.m_geometryId;
-       }
-       return *this;
-     }
+  /// Constructor from a value
+  ///
+  /// @param geometryId the geometry identifier of the object
+  GeometryObject(const GeometryIdentifier& geometryId)
+      : m_geometryId(geometryId) {}
 
-     /// Return the value
-     /// @return the geometry id by reference
-     const GeometryIdentifier&
-     geometryId() const;
+  /// Assignment operator
+  ///
+  /// @param geometryId the source geometryId
+  GeometryObject& operator=(const GeometryObject& geometryId) {
+    if (&geometryId != this) {
+      m_geometryId = geometryId.m_geometryId;
+    }
+    return *this;
+  }
 
-     /// Force a binning position method
-     ///
-     /// @param bValue is the value in which you want to bin
-     ///
-     /// @return vector 3D used for the binning schema
-     virtual Vector3
-     binningPosition(BinningValue bValue) const = 0;
+  /// @return the geometry id by reference
+  const GeometryIdentifier& geometryId() const;
 
-     /// Implement the binningValue
-     ///
-     /// @param bValue is the dobule in which you want to bin
-     ///
-     /// @return float to be used for the binning schema
-     double
-     binningPositionValue(BinningValue bValue) const;
+  /// Force a binning position method
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param bValue is the value in which you want to bin
+  ///
+  /// @return vector 3D used for the binning schema
+  virtual Vector3 binningPosition(const GeometryContext& gctx,
+                                  BinningValue bValue) const = 0;
 
-     /// Set the value
-     ///
-     /// @param geometryId the geometry identifier to be assigned
-     void
-     assignGeometryId(const GeometryIdentifier& geometryId);
+  /// Implement the binningValue
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  /// @param bValue is the dobule in which you want to bin
+  ///
+  /// @return float to be used for the binning schema
+  virtual double binningPositionValue(const GeometryContext& gctx,
+                                      BinningValue bValue) const;
 
-    protected:
-     GeometryIdentifier m_geometryId;
-    };
+  /// Set the value
+  ///
+  /// @param geometryId the geometry identifier to be assigned
+  void assignGeometryId(const GeometryIdentifier& geometryId);
+
+ protected:
+  GeometryIdentifier m_geometryId;
+};
+```
 
 This class ensures that a unique `GeometryIdentifier` is assigned to every geometry
 object. The `GeometryIdentifier` is mainly used for fast identification of the type of
@@ -84,30 +78,31 @@ It is used for Acts internal applications, such as material mapping, but not for
 `EventData` and `Geometry` identification in an experiment setup, for this the
 `Identifier` class is to be used and/or defined.
 
-    typedef uint64_t geo_id_value;
+```cpp
+typedef uint64_t geo_id_value;
 
-    namespace Acts {
+namespace Acts {
 
-    /// @class GeometryIdentifier
-    ///
-    ///  Identifier for Geometry nodes - packing the
-    ///  - (Sensitive) Surfaces    - uses counting through sensitive surfaces
-    ///  - (Approach)  Surfaces    - uses counting approach surfaces
-    ///  - (Layer)     Surfaces    - uses counting confined layers
-    ///  - (Boundary)  Surfaces    - uses counting through boundary surfaces
-    ///  - Volumes                 - uses counting given by TrackingGeometry
-    class GeometryIdentifier
-    {
-    public:
-      const static geo_id_value volume_mask    = 0xff00000000000000;
-      const static geo_id_value boundary_mask  = 0x00ff000000000000;
-      const static geo_id_value layer_mask     = 0x0000ff0000000000;
-      const static geo_id_value approach_mask  = 0x000000f000000000;
-      const static geo_id_value sensitive_mask = 0x0000000ffff00000;
-      const static geo_id_value channel_mask   = 0x00000000000fffff;
-      ...
-    };
-
+/// @class GeometryIdentifier
+///
+///  Identifier for Geometry nodes - packing the
+///  - (Sensitive) Surfaces    - uses counting through sensitive surfaces
+///  - (Approach)  Surfaces    - uses counting approach surfaces
+///  - (Layer)     Surfaces    - uses counting confined layers
+///  - (Boundary)  Surfaces    - uses counting through boundary surfaces
+///  - Volumes                 - uses counting given by TrackingGeometry
+class GeometryIdentifier
+{
+public:
+  const static geo_id_value volume_mask    = 0xff00000000000000;
+  const static geo_id_value boundary_mask  = 0x00ff000000000000;
+  const static geo_id_value layer_mask     = 0x0000ff0000000000;
+  const static geo_id_value approach_mask  = 0x000000f000000000;
+  const static geo_id_value sensitive_mask = 0x0000000ffff00000;
+  const static geo_id_value channel_mask   = 0x00000000000fffff;
+  ...
+};
+```
 
 ## Surface classes
 
@@ -124,7 +119,7 @@ surfaces, a special `InfiniteBounds` class is available.
 | `ConeSurface`         | [rphi, z]         | `ConeBounds`                                                                                |
 | `CylinderSurface`     | [r, phi]          | `CylinderBounds`                                                                            |
 | `DiscSurface`         | [r, phi]          | `RadialBounds`, `DiscTrapezoidalBounds`                                                     |
-| `PlaneSurface`        | [x, y]            | `RectangleBounds`, `TrapezoidalBounds`, `TriangleBounds`, `InfiniteBounds`, `EllipseBounds` |
+| `PlaneSurface`        | [x, y]            | `RectangleBounds`, `TrapezoidalBounds`, `TriangleBounds`,<br> `InfiniteBounds`, `EllipseBounds` |
 | `PerigeeSurface`, `StrawSurface` | [d, z] | `CylinderBounds`                                                                            |
 
 ![CylinderBounds](/figures/geometry/CylinderBounds.png)
@@ -245,8 +240,8 @@ proxy mechanism that connects the detection elements (conveniently called
 Very simple helper methods for 3D libraries exist, they are certainly not
 optimised, but used for templating:
 
-* `TGeoDetectorElement` connects a TGeo volume to a `Surface`
-* `DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a `Surface`
+* `TGeoDetectorElement` connects a TGeo volume to a `Surface` (see [](TGeo plugin))
+* `DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a `Surface` (see [](DD4hep plugin))
 
 ## Layer building
 

@@ -143,7 +143,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     const Acts::Surface* surfacePtr =
         m_cfg.trackingGeometry->findSurface(moduleGeoId);
 
-    if (not surfacePtr) {
+    if (surfacePtr == nullptr) {
       // this is either an invalid geometry id or a misconfigured smearer
       // setup; both cases can not be handled and should be fatal.
       ACTS_ERROR("Could not find surface " << moduleGeoId

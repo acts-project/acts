@@ -24,11 +24,13 @@ project(Acts VERSION ${_acts_version} LANGUAGES CXX)
 option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and documentation)" OFF)
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
-set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
 # plugins related options
 option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
 option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" OFF)
+option(ACTS_SETUP_ACTSVG "Build ActSVG display plugin" OFF)
+option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" OFF)
+option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
@@ -50,12 +52,14 @@ option(ACTS_BUILD_ALIGNMENT "Build Alignment package" OFF)
 # examples related options
 option(ACTS_BUILD_EXAMPLES "Build standalone examples" OFF)
 option(ACTS_BUILD_EXAMPLES_DD4HEP "Build DD4hep-based code in the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_EDM4HEP "Build EDM4hep-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_EXATRKX "Build the Exa.TrkX example code" OFF)
 option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" OFF )
+option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in examples" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
@@ -72,6 +76,10 @@ option(ACTS_BUILD_ODD "Build the OpenDataDetector" OFF)
 # profiling related optios
 option(ACTS_ENABLE_CPU_PROFILING "Enable CPU profiling using gperftools" OFF)
 option(ACTS_ENABLE_MEMORY_PROFILING "Enable memory profiling using gperftools" OFF)
+set(ACTS_GPERF_INSTALL_DIR "" CACHE STRING "Hint to help find gperf if profiling is enabled")
+
+option(ACTS_ENABLE_LOG_FAILURE_THRESHOLD "Enable failing on log messages with level above certain threshold" OFF)
+set(ACTS_LOG_FAILURE_THRESHOLD "" CACHE STRING "Log level above which an exception should be automatically thrown. If ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set and this is unset, this will enable a runtime check of the log level.")
 
 # handle option inter-dependencies and the everything flag
 # NOTE: ordering is important here. dependencies must come before dependees
@@ -87,11 +95,14 @@ set_option_if(ACTS_BUILD_EXAMPLES_PYTHIA8 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS_GEANT4 ACTS_BUILD_EVERYTHING)
 set_option_if(ACTS_BUILD_FATRAS ACTS_BUILD_FATRAS_GEANT4)
 set_option_if(ACTS_BUILD_ALIGNMENT ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_EXAMPLES_EDM4HEP ACTS_BUILD_EVERYTHING)
+set_option_if(ACTS_BUILD_ANALYSIS_APPS ACTS_BUILD_EVERYTHING)
 
 # any examples component activates the general examples option
 set_option_if(
   ACTS_BUILD_EXAMPLES
   ACTS_BUILD_EXAMPLES_DD4HEP
+  OR ACTS_BUILD_EXAMPLES_EDM4HEP
   OR ACTS_BUILD_EXAMPLES_GEANT4
   OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
@@ -100,7 +111,8 @@ set_option_if(
 # core plugins might be required by examples or depend on each other
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
-  ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING)
+  ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
+  ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
   ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
@@ -152,9 +164,10 @@ endif()
 # dependency is included via `add_subdirectory(...)`.
 set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
-set(_acts_dd4hep_version 1.11)
+set(_acts_dd4hep_version 1.21)
 set(_acts_actsdd4hep_version 1.0.0)
-set(_acts_doxygen_version 1.8.15)
+set(_acts_edm4hep_version v00-04-01)
+set(_acts_doxygen_version 1.9.4)
 set(_acts_eigen3_version 3.3.7)
 set(_acts_hepmc3_version 3.2.1)
 set(_acts_nlohmanjson_version 3.2.0)
@@ -162,7 +175,6 @@ set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
 # required packages
-
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
     # NOTE we use boost::filesystem instead of std::filesystem since the later
@@ -229,6 +241,14 @@ if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
     add_subdirectory(thirdparty/pybind11)
   endif()
 endif()
+if (ACTS_BUILD_PLUGIN_ACTSVG)
+  if(ACTS_USE_SYSTEM_ACTSVGN)
+    message(STATUS "Using system installation of actsvg")
+    find_package(actsvg ${_acts_nlohmanjson_version} REQUIRED CONFIG)
+  else()
+    add_subdirectory(thirdparty/actsvg)
+  endif()
+endif()
 if(ACTS_BUILD_PLUGIN_AUTODIFF)
   if(ACTS_USE_SYSTEM_AUTODIFF)
     find_package(autodiff ${_acts_autodiff_version} CONFIG REQUIRED)
@@ -242,12 +262,6 @@ if(ACTS_BUILD_PLUGIN_CUDA)
 endif()
 if(ACTS_BUILD_PLUGIN_DD4HEP)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
-  if(ACTS_USE_SYSTEM_ACTSDD4HEP)
-    find_package(ActsDD4hep ${_acts_actsdd4hep_version} CONFIG REQUIRED)
-  else()
-    add_subdirectory(thirdparty/actsdd4hep)
-  endif()
-
 endif()
 if(ACTS_BUILD_PLUGIN_JSON)
   if(ACTS_USE_SYSTEM_NLOHMANN_JSON)
@@ -267,6 +281,10 @@ if(ACTS_BUILD_PLUGIN_TGEO)
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)
   check_root_compatibility()
 endif()
+if(ACTS_BUILD_ANALYSIS_APPS)
+  find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Geom)
+  check_root_compatibility()
+endif()
 if(ACTS_BUILD_PLUGIN_EXATRKX)
   enable_cuda()
   find_package(CUDAToolkit REQUIRED)
@@ -283,20 +301,15 @@ if(ACTS_BUILD_EXAMPLES)
   # for simplicity always request all potentially required components.
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
   check_root_compatibility()
-  # newer DD4hep version require TBB and search interally for TBB in
-  # config-only mode. to avoid mismatches we explicitely search using
-  # config-only mode first to be sure that we find the same version.
-  find_package(TBB ${_acts_tbb_version} CONFIG)
-  if(NOT TBB_FOUND)
-    # no version check possible when using the find module
-    find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
-  endif()
   add_subdirectory(thirdparty/dfelibs)
 endif()
 if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDG4 DDDetectors)
 elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
+endif()
+if(ACTS_BUILD_EXAMPLES_EDM4HEP)
+  find_package(EDM4HEP REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)

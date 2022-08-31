@@ -11,5 +11,6 @@
 #include "Fatras.hpp"
 
 int main(int argc, char* argv[]) {
-  return runFatras(argc, argv, std::make_shared<DD4hepDetector>());
+  return runFatras(argc, argv,
+                   std::make_shared<ActsExamples::DD4hep::DD4hepDetector>());
 }

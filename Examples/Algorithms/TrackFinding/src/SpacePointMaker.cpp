@@ -104,7 +104,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
       // find corresponding surface
       const Acts::Surface* surface =
           m_cfg.trackingGeometry->findSurface(moduleGeoId);
-      if (not surface) {
+      if (surface == nullptr) {
         ACTS_ERROR("Could not find surface " << moduleGeoId);
         return ProcessCode::ABORT;
       }

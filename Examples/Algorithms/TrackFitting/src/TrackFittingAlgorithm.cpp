@@ -86,7 +86,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
-    if (m_cfg.pickTrack > 0 and m_cfg.pickTrack != static_cast<int>(itrack)) {
+    if (m_cfg.pickTrack > -1 and m_cfg.pickTrack != static_cast<int>(itrack)) {
       continue;
     }
 
@@ -130,9 +130,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     if (result.ok()) {
       // Get the fit output object
-      const auto& fitOutput = result.value();
+      auto& fitOutput = result.value();
       // The track entry indices container. One element here.
-      std::vector<size_t> trackTips;
+      std::vector<Acts::MultiTrajectoryTraits::IndexType> trackTips;
       trackTips.reserve(1);
       trackTips.emplace_back(fitOutput.lastMeasurementIndex);
       // The fitted parameters container. One element (at most) here.
@@ -142,14 +142,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
         ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
         ACTS_VERBOSE("  " << params.parameters().transpose());
         // Push the fitted parameters to the container
-        indexedParams.emplace(fitOutput.lastMeasurementIndex,
-                              std::move(params));
+        indexedParams.emplace(fitOutput.lastMeasurementIndex, params);
       } else {
         ACTS_DEBUG("No fitted paramemeters for track " << itrack);
       }
       // store the result
-      trajectories.emplace_back(std::move(fitOutput.fittedStates),
-                                std::move(trackTips), std::move(indexedParams));
+      trajectories.emplace_back(fitOutput.fittedStates, std::move(trackTips),
+                                std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track "
                    << itrack << " with error: " << result.error() << ", "

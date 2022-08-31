@@ -193,10 +193,7 @@ Result<void> reinitializeJacobians(const GeometryContext& geoContext,
   const Vector3 direction = freeParameters.segment<3>(eFreeDir0);
   auto lpResult = surface.globalToLocal(geoContext, position, direction);
   if (not lpResult.ok()) {
-    ACTS_LOCAL_LOGGER(
-        Acts::getDefaultLogger("CovarianceEngine", Logging::INFO));
-    ACTS_FATAL(
-        "Inconsistency in global to local transformation during propagation.")
+    return lpResult.error();
   }
   // Transform from free to bound parameters
   Result<BoundVector> boundParameters = detail::transformFreeToBoundParameters(

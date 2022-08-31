@@ -31,6 +31,8 @@ class MultiStepperErrorCategory : public std::error_category {
         return "Stepping error occured in all components";
       case MultiStepperError::AllComponentsConversionToBoundFailed:
         return "The conversion to the bound state failed for all components";
+      case MultiStepperError::SomeComponentsConversionToBoundFailed:
+        return "The conversion to the bound state failed for some components";
       default:
         return "unknown";
     }

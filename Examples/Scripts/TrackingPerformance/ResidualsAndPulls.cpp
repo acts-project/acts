@@ -45,7 +45,7 @@ int main(int argc, char** argv) {
     store(command_line_parser(argc, argv).options(description).run(), vm);
     notify(vm);
 
-    if (vm.count("help")) {
+    if (vm.count("help") != 0u) {
       std::cout << description;
       return 0;
     }
@@ -56,9 +56,10 @@ int main(int argc, char** argv) {
     auto oFile = vm["output"].as<std::string>();
     auto saveAs = vm["save"].as<std::string>();
 
-    TApplication* tApp = vm["silent"].as<bool>()
-                             ? nullptr
-                             : new TApplication("ResidualAndPulls", 0, 0);
+    TApplication* tApp =
+        vm["silent"].as<bool>()
+            ? nullptr
+            : new TApplication("ResidualAndPulls", nullptr, nullptr);
 
     // Run the actual resolution estimation
     switch (boundParamResolution(

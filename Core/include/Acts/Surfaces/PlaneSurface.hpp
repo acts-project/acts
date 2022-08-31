@@ -31,7 +31,9 @@ class DetectorElementBase;
 /// @image html PlaneSurface.png
 ///
 class PlaneSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Copy Constructor

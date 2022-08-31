@@ -26,7 +26,7 @@ using Updater = Acts::GainMatrixUpdater;
 using Smoother = Acts::GainMatrixSmoother;
 using Stepper = Acts::EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using Fitter = Acts::KalmanFitter<Propagator>;
+using Fitter = Acts::KalmanFitter<Propagator, Acts::VectorMultiTrajectory>;
 using Alignment = ActsAlignment::Alignment<Fitter>;
 
 struct AlignmentFunctionImpl
@@ -41,7 +41,7 @@ struct AlignmentFunctionImpl
       const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsAlignment::AlignmentOptions<
           ActsExamples::AlignmentAlgorithm::TrackFitterOptions>& options)
-      const {
+      const override {
     return align.align(sourceLinks, initialParameters, options);
   };
 };

@@ -107,29 +107,35 @@ void ActsExamples::Options::addOutputOptions(
   opt.add_options()("output-dir", value<std::string>()->default_value(""),
                     "Output directory location.");
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Root))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Root)) {
     opt.add_options()("output-root", bool_switch(),
                       "Switch on to write '.root' output file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Csv))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Csv)) {
     opt.add_options()("output-csv", bool_switch(),
                       "Switch on to write '.csv' output file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Obj))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Obj)) {
     opt.add_options()("output-obj", bool_switch(),
                       "Switch on to write '.obj' ouput file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Json))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Json)) {
     opt.add_options()("output-json", bool_switch(),
                       "Switch on to write '.json' ouput file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Cbor))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Cbor)) {
     opt.add_options()("output-cbor", bool_switch(),
                       "Switch on to write '.cbor' ouput file(s).");
+  }
 
-  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Txt))
+  if (ACTS_CHECK_BIT(formatFlags, OutputFormat::Txt)) {
     opt.add_options()("output-txt", bool_switch(),
                       "Switch on to write '.txt' ouput file(s).");
+  }
 }
 
 void ActsExamples::Options::addInputOptions(
@@ -158,7 +164,7 @@ boost::program_options::variables_map ActsExamples::Options::parse(
   store(command_line_parser(argc, argv).options(opt).run(), vm);
   notify(vm);
 
-  if (vm.count("response-file") and
+  if (vm.count("response-file") != 0u and
       not vm["response-file"].template as<std::string>().empty()) {
     // Load the file and tokenize it
     std::ifstream ifs(vm["response-file"].as<std::string>().c_str());
@@ -185,7 +191,7 @@ boost::program_options::variables_map ActsExamples::Options::parse(
   }
 
   // Automatically handle help
-  if (vm.count("help")) {
+  if (vm.count("help") != 0u) {
     std::cout << opt << std::endl;
     vm.clear();
   }

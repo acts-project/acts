@@ -26,7 +26,9 @@ struct Polyhedron;
 /// @image html LineSurface.png
 ///
 class StrawSurface : public LineSurface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from Transform3 and bounds

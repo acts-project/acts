@@ -99,6 +99,23 @@ class AccumulatedSurfaceMaterial {
   std::array<size_t, 3> accumulate(const Vector3& gp, const MaterialSlab& mp,
                                    double pathCorrection = 1.);
 
+  /// Use the accumulated material to update the material variance
+  ///
+  /// @param trackBins The bins that were touched by this event
+  /// @param emptyHit indicator if this is an empty assignment
+  /// @param slabReference reference slab (from the map) used to compute the variance
+  /// If none is given, the average runs over all bins in the surface map
+  void trackVariance(const std::vector<std::array<size_t, 3>>& trackBins,
+                     MaterialSlab slabReference, bool emptyHit = false);
+
+  /// Use the accumulated material to update the material variance
+  ///
+  /// @param gp global position for the bin assignment
+  /// @param emptyHit indicator if this is an empty assignment
+  /// @param slabReference indicator if this is an empty assignment
+  void trackVariance(const Vector3& gp, MaterialSlab slabReference,
+                     bool emptyHit = false);
+
   /// Average the information accumulated from one mapped track
   ///
   /// @param trackBins The bins that were touched by this event

@@ -30,7 +30,7 @@ ActsExamples::ProcessCode ActsExamples::ObjTrackingGeometryWriter::write(
   ACTS_DEBUG(">>Obj: Writer for TrackingGeometry object called.");
 
   auto world = tGeometry.highestTrackingVolume();
-  if (world) {
+  if (world != nullptr) {
     write(context, *world);
   }
   return ActsExamples::ProcessCode::SUCCESS;

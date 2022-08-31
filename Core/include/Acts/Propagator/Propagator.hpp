@@ -311,6 +311,7 @@ class Propagator final {
     using type = typename action_list_t::template result_type<this_result_type>;
   };
 
+ public:
   /// @brief Short-hand type definition for propagation result derived from
   ///        an action list
   ///
@@ -321,6 +322,7 @@ class Propagator final {
   using action_list_t_result_t =
       typename result_type_helper<parameters_t, action_list_t>::type;
 
+ private:
   /// @brief Propagate track parameters
   /// Private method with propagator and stepper state
   ///
@@ -332,13 +334,15 @@ class Propagator final {
   /// @note Does not (yet) convert into  the return_type of the propagation
   ///
   /// @tparam result_t Type of the result object for this propagation
-  /// @tparam propagator_state_t Type of of propagator state with options
+  /// @tparam propagator_state_t Type of the propagator state with options
   ///
   /// @param [in,out] state the propagator state object
+  /// @param [in,out] result an existing result object to start from
   ///
   /// @return Propagation result
   template <typename result_t, typename propagator_state_t>
-  Result<result_t> propagate_impl(propagator_state_t& state) const;
+  Result<void> propagate_impl(propagator_state_t& state,
+                              result_t& result) const;
 
  public:
   /// @brief Propagate track parameters
@@ -349,9 +353,8 @@ class Propagator final {
   /// propagation options is reached.
   ///
   /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam action_list_t Type list of actions, type ActionList<>
-  /// @tparam aborter_list_t Type list of abort conditions, type AbortList<>
   /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in] start initial track parameters to propagate
   /// @param [in] options Propagation options, type Options<,>
@@ -367,6 +370,35 @@ class Propagator final {
   propagate(const parameters_t& start,
             const propagator_options_t& options) const;
 
+  /// @brief Propagate track parameters
+  ///
+  /// This function performs the propagation of the track parameters using the
+  /// internal stepper implementation, until at least one abort condition is
+  /// fulfilled or the maximum number of steps/path length provided in the
+  /// propagation options is reached.
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam path_aborter_t The path aborter type to be added
+  ///
+  /// @param [in] start initial track parameters to propagate
+  /// @param [in] options Propagation options, type Options<,>
+  /// @param [in] inputResult an existing result object to start from
+  ///
+  /// @return Propagation result containing the propagation status, final
+  ///         track parameters, and output of actions (if they produce any)
+  ///
+  template <typename parameters_t, typename propagator_options_t,
+            typename path_aborter_t = PathLimitReached>
+  Result<
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>>
+  propagate(
+      const parameters_t& start, const propagator_options_t& options,
+      action_list_t_result_t<CurvilinearTrackParameters,
+                             typename propagator_options_t::action_list_type>&&
+          inputResult) const;
+
   /// @brief Propagate track parameters - User method
   ///
   /// This function performs the propagation of the track parameters according
@@ -375,10 +407,9 @@ class Propagator final {
   /// steps/path length as given in the propagation options is reached.
   ///
   /// @tparam parameters_t Type of initial track parameters to propagate
-  /// @tparam surface_t Type of target surface
-  /// @tparam action_list_t Type list of actions
-  /// @tparam aborter_list_t Type list of abort conditions
   /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam target_aborter_t The target aborter type to be added
+  /// @tparam path_aborter_t The path aborter type to be added
   ///
   /// @param [in] start Initial track parameters to propagate
   /// @param [in] target Target surface of to propagate to
@@ -393,6 +424,37 @@ class Propagator final {
       BoundTrackParameters, typename propagator_options_t::action_list_type>>
   propagate(const parameters_t& start, const Surface& target,
             const propagator_options_t& options) const;
+
+  /// @brief Propagate track parameters - User method
+  ///
+  /// This function performs the propagation of the track parameters according
+  /// to the internal implementation object until at least one abort condition
+  /// is fulfilled, the destination surface is hit or the maximum number of
+  /// steps/path length as given in the propagation options is reached.
+  ///
+  /// @tparam parameters_t Type of initial track parameters to propagate
+  /// @tparam propagator_options_t Type of the propagator options
+  /// @tparam target_aborter_t The target aborter type to be added
+  /// @tparam path_aborter_t The path aborter type to be added
+  ///
+  /// @param [in] start Initial track parameters to propagate
+  /// @param [in] target Target surface of to propagate to
+  /// @param [in] options Propagation options
+  /// @param [in] inputResult an existing result object to start from
+  ///
+  /// @return Propagation result containing the propagation status, final
+  ///         track parameters, and output of actions (if they produce any)
+  template <typename parameters_t, typename propagator_options_t,
+            typename target_aborter_t = SurfaceReached,
+            typename path_aborter_t = PathLimitReached>
+  Result<action_list_t_result_t<
+      BoundTrackParameters, typename propagator_options_t::action_list_type>>
+  propagate(
+      const parameters_t& start, const Surface& target,
+      const propagator_options_t& options,
+      action_list_t_result_t<BoundTrackParameters,
+                             typename propagator_options_t::action_list_type>
+          inputResult) const;
 
  private:
   /// Implementation of propagation algorithm

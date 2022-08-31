@@ -315,7 +315,7 @@ void Acts::VolumeMaterialMapper::finalizeMaps(State& mState) const {
       ACTS_DEBUG("Homogeneous material volume");
       Acts::Material mat = mState.homogeneousGrid[matBin.first].average();
       mState.volumeMaterial[matBin.first] =
-          std::make_unique<HomogeneousVolumeMaterial>(std::move(mat));
+          std::make_unique<HomogeneousVolumeMaterial>(mat);
     } else if (matBin.second.dimensions() == 2) {
       // Average the material in the 2D grid then create an
       // InterpolatedMaterialMap

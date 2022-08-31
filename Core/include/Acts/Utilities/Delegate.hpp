@@ -35,13 +35,17 @@ class Delegate<R(Args...)> {
   /// Alias of the return type
   using return_type = R;
   /// Alias to the function pointer type this class will store
-  using function_type = return_type (*)(const void*, Args...);
+  using function_type = return_type (*)(const void *, Args...);
 
   using function_ptr_type = return_type (*)(Args...);
 
   template <typename T, typename C>
   using isSignatureCompatible =
-      decltype(std::declval<T&>() = std::declval<C>());
+      decltype(std::declval<T &>() = std::declval<C>());
+
+  template <typename T>
+  using isNoFunPtr = std::enable_if_t<
+      not std::is_convertible_v<std::decay_t<T>, function_type>>;
 
  public:
   Delegate() = default;
@@ -53,12 +57,42 @@ class Delegate<R(Args...)> {
   ///       signature has to be `void(const void*, int)`.
   Delegate(function_type callable) { connect(callable); }
 
+  /// Constructor with a possibly stateful function object.
+  /// @tparam Callable Type of the callable
+  /// @param callable The callable (function object or lambda)
+  /// @note @c Delegate does not assume owner ship over @p callable. You need to ensure
+  ///       it's lifetime is longer than that of @c Delegate.
+  template <typename Callable, typename = isNoFunPtr<Callable>>
+  Delegate(Callable &callable) {
+    connect(callable);
+  }
+
+  /// Constructor from rvalue reference is deleted, should catch construction
+  /// with temporary objects and thus invalid pointers
+  template <typename Callable, typename = isNoFunPtr<Callable>>
+  Delegate(Callable &&) = delete;
+
   /// Assignment operator with an explicit runtime callable
   /// @param callable The runtime value of the callable
   /// @note The function signature requires the first argument of the callable is `const void*`.
   ///       i.e. if the signature of the delegate is `void(int)`, the callable's
   ///       signature has to be `void(const void*, int)`.
   void operator=(function_type callable) { connect(callable); }
+
+  /// Assignment operator with possibly stateful function object.
+  /// @tparam Callable Type of the callable
+  /// @param callable The callable (function object or lambda)
+  /// @note @c Delegate does not assume owner ship over @p callable. You need to ensure
+  ///       it's lifetime is longer than that of @c Delegate.
+  template <typename Callable, typename = isNoFunPtr<Callable>>
+  void operator=(Callable &callable) {
+    connect(callable);
+  }
+
+  /// Assignment operator from rvalue reference is deleted, should catch
+  /// assignment from temporary objects and thus invalid pointers
+  template <typename Callable, typename = isNoFunPtr<Callable>>
+  void operator=(Callable &&) = delete;
 
   /// Connect a free function pointer.
   /// @note The function pointer must be ``constexpr`` for @c Delegate to accept it
@@ -73,10 +107,25 @@ class Delegate<R(Args...)> {
         "Callable given does not correspond exactly to required call "
         "signature");
 
-    m_function = [](const void* /*payload*/, Args... args) -> return_type {
+    m_function = [](const void * /*payload*/, Args... args) -> return_type {
       return std::invoke(Callable, std::forward<Args>(args)...);
     };
   }
+
+  /// Assignment operator with possibly stateful function object.
+  /// @tparam Callable Type of the callable
+  /// @param callable The callable (function object or lambda)
+  /// @note @c Delegate does not assume owner ship over @p callable. You need to ensure
+  ///       it's lifetime is longer than that of @c Delegate.
+  template <typename Callable, typename = isNoFunPtr<Callable>>
+  void connect(Callable &callable) {
+    connect<&Callable::operator(), Callable>(&callable);
+  }
+
+  /// Connection with rvalue reference is deleted, should catch assignment from
+  /// temporary objects and thus invalid pointers
+  template <typename Callable, typename = isNoFunPtr<Callable>>
+  void connect(Callable &&) = delete;
 
   /// Connect anything that is assignable to the function pointer
   /// @param callable The runtime value of the callable
@@ -95,7 +144,7 @@ class Delegate<R(Args...)> {
   /// @note @c Delegate does not assume owner ship over @p instance. You need to ensure
   ///       it's lifetime is longer than that of @c Delegate.
   template <auto Callable, typename Type>
-  void connect(const Type* instance) {
+  void connect(const Type *instance) {
     using member_ptr_type = return_type (Type::*)(Args...) const;
 
     static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
@@ -104,9 +153,9 @@ class Delegate<R(Args...)> {
                   "signature");
 
     m_payload = instance;
-    m_function = [](const void* payload, Args... args) -> return_type {
+    m_function = [](const void *payload, Args... args) -> return_type {
       assert(payload != nullptr && "Payload is required, but not set");
-      const auto* concretePayload = static_cast<const Type*>(payload);
+      const auto *concretePayload = static_cast<const Type *>(payload);
       return std::invoke(Callable, concretePayload,
                          std::forward<Args>(args)...);
     };
@@ -136,7 +185,7 @@ class Delegate<R(Args...)> {
 
  private:
   /// Stores the instance pointer
-  const void* m_payload{nullptr};
+  const void *m_payload{nullptr};
   /// Stores the function pointer wrapping the compile time function pointer given in @c connect().
   function_type m_function{nullptr};
 };

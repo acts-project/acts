@@ -45,8 +45,9 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   m_outputFile->cd();
   m_outputTree =
       new TTree(m_cfg.treeName.c_str(), "TTree from RootMaterialTrackWriter");
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_id", &m_eventId);
@@ -95,7 +96,11 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   }
 }
 
-ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {}
+ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
   // write the tree and close the file
@@ -226,7 +231,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       if (m_cfg.storeSurface) {
         const Acts::Surface* surface = mint.surface;
         Acts::GeometryIdentifier slayerID;
-        if (surface) {
+        if (surface != nullptr) {
           auto sfIntersection = surface->intersect(
               ctx.geoContext, mint.position, mint.direction, true);
           slayerID = surface->geometryId();
@@ -242,10 +247,10 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
           const Acts::CylinderBounds* cylinderBounds =
               dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
 
-          if (radialBounds) {
+          if (radialBounds != nullptr) {
             m_sur_range_min.push_back(radialBounds->rMin());
             m_sur_range_max.push_back(radialBounds->rMax());
-          } else if (cylinderBounds) {
+          } else if (cylinderBounds != nullptr) {
             m_sur_range_min.push_back(
                 -cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ));
             m_sur_range_max.push_back(
@@ -275,7 +280,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       if (m_cfg.storeVolume) {
         const Acts::Volume* volume = mint.volume;
         Acts::GeometryIdentifier vlayerID;
-        if (volume) {
+        if (volume != nullptr) {
           vlayerID = volume->geometryId();
           m_vol_id.push_back(vlayerID.value());
         } else {
