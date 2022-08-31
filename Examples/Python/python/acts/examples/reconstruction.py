@@ -378,7 +378,7 @@ def addSeeding(
             )
 
             seedingAlg = acts.examples.SeedingAlgorithm(
-                level=customLogLevel(acts.logging.VERBOSE),
+                level=customLogLevel(),
                 inputSpacePoints=[spAlg.config.outputSpacePoints],
                 outputSeeds="seeds",
                 outputProtoTracks="prototracks",
@@ -459,7 +459,7 @@ def addSeeding(
             )
 
             seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
-                level=customLogLevel(acts.logging.VERBOSE),
+                level=customLogLevel(),
                 inputSpacePoints=[spAlg.config.outputSpacePoints],
                 outputSeeds="seeds",
                 outputProtoTracks="prototracks",
@@ -473,7 +473,7 @@ def addSeeding(
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
 
         parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
-            level=customLogLevel(acts.logging.VERBOSE),
+            level=customLogLevel(),
             inputSeeds=inputSeeds,
             inputProtoTracks=inputProtoTracks,
             inputSpacePoints=[spAlg.config.outputSpacePoints],
@@ -506,7 +506,7 @@ def addSeeding(
 
             s.addWriter(
                 acts.examples.SeedingPerformanceWriter(
-                    level=customLogLevel(acts.logging.DEBUG),
+                    level=customLogLevel(minLevel=acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,
                     inputMeasurementParticlesMap="measurement_particles_map",
@@ -516,7 +516,7 @@ def addSeeding(
 
             s.addWriter(
                 acts.examples.RootTrackParameterWriter(
-                    level=customLogLevel(acts.logging.VERBOSE),
+                    level=customLogLevel(),
                     inputTrackParameters=parEstimateAlg.config.outputTrackParameters,
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
                     inputParticles=inputParticles,
@@ -885,14 +885,14 @@ def addVertexFitting(
     outputTime = ""
     if vertexFinder == VertexFinder.Truth:
         findVertices = TruthVertexFinder(
-            level=customLogLevel(acts.logging.VERBOSE),
+            level=customLogLevel(),
             inputParticles=selectedParticles,
             outputProtoVertices="protovertices",
             excludeSecondaries=True,
         )
         s.addAlgorithm(findVertices)
         fitVertices = VertexFitterAlgorithm(
-            level=customLogLevel(acts.logging.VERBOSE),
+            level=customLogLevel(),
             bField=field,
             inputTrackParameters=trackParameters,
             inputProtoVertices=findVertices.config.outputProtoVertices,

@@ -306,18 +306,22 @@ def defaultLogging(
     Establishes a default logging strategy for the python examples interface.
 
     Returns a function that determines the log level in the following schema:
-    - if `overrideLevel` for `customLogLevel` is set return it
     - if `logLevel` is set use it other wise use the log level of the sequencer `s.config.logLevel`
-    - the returned log level is bound between `min` and `max` provided to `customLogLevel`
+    - the returned log level is bound between `minLevel` and `maxLevel` provided to `customLogLevel`
+
+    Examples:
+    - `customLogLevel(minLevel=acts.logging.INFO)` to get a log level that is INFO or higher
+      (depending on the sequencer and `logLevel` param) which is useful to suppress a component which
+      produces a bunch of logs below INFO and you are actually more interested in another component
+    - `customLogLevel(maxLevel=acts.logging.INFO)` to get a log level that is INFO or lower
+      (depending on the sequencer and `logLevel` param) which is useful to get more details from a
+      component that will produce logs of interest below the default level
     """
 
     def customLogLevel(
-        overrideLevel: Optional[acts.logging.Level] = None,
         minLevel: acts.logging.Level = acts.logging.VERBOSE,
         maxLevel: acts.logging.Level = acts.logging.FATAL,
     ) -> acts.logging.Level:
-        if overrideLevel is not None:
-            return overrideLevel
         l = logLevel if logLevel is not None else s.config.logLevel
         return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
 
