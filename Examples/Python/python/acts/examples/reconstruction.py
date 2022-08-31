@@ -75,8 +75,9 @@ SeedFilterConfigArg = namedtuple(
         "maxSeedsPerSpMConf",
         "maxQualitySeedsPerSpMConf",
         "useDeltaRorTopRadius",
+        "deltaRMin",
     ],
-    defaults=[None] * 10,
+    defaults=[None] * 11,
 )
 
 SpacePointGridConfigArg = namedtuple(
@@ -86,9 +87,10 @@ SpacePointGridConfigArg = namedtuple(
         "zBinEdges",
         "phiBinDeflectionCoverage",
         "impactMax",
+        "deltaRMax",
         "phi",  # (min,max)
     ],
-    defaults=[None] * 4 + [(None, None)] * 1,
+    defaults=[None] * 5 + [(None, None)] * 1,
 )
 
 SeedingAlgorithmConfigArg = namedtuple(
@@ -348,7 +350,11 @@ def addSeeding(
             seedFilterConfig = acts.SeedFilterConfig(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-                    deltaRMin=seedFinderConfig.deltaRMin,
+                    deltaRMin=(
+                        seedfinderConfigArg.deltaR[0]
+                        if seedFilterConfigArg.deltaRMin is None
+                        else seedFilterConfigArg.deltaRMin
+                    ),
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
                     compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
@@ -375,7 +381,11 @@ def addSeeding(
                     ),
                     zMax=seedFinderConfig.zMax,
                     zMin=seedFinderConfig.zMin,
-                    deltaRMax=seedFinderConfig.deltaRMax,
+                    deltaRMax=(
+                        seedfinderConfigArg.deltaR[1]
+                        if spacePointGridConfigArg.deltaRMax is None
+                        else spacePointGridConfigArg.deltaRMax
+                    ),
                     cotThetaMax=seedFinderConfig.cotThetaMax,
                     phiMin=spacePointGridConfigArg.phi[0],
                     phiMax=spacePointGridConfigArg.phi[1],
@@ -470,7 +480,11 @@ def addSeeding(
             seedFilterConfig = acts.SeedFilterConfig(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-                    deltaRMin=seedFinderConfig.deltaRMin,
+                    deltaRMin=(
+                        seedfinderConfigArg.deltaR[0]
+                        if seedFilterConfigArg.deltaRMin is None
+                        else seedFilterConfigArg.deltaRMin
+                    ),
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
                     compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
