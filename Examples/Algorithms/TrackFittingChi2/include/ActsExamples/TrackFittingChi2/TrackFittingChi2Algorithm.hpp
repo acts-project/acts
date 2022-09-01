@@ -105,7 +105,7 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
       const std::vector<std::reference_wrapper<
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const Acts::Chi2FitterOptions& options,
+      const Acts::Chi2FitterOptions<Acts::VectorMultiTrajectory>& options,
       const std::vector<const Acts::Surface*>& surfSequence) const;
 
   Config m_cfg;
@@ -116,7 +116,7 @@ ActsExamples::TrackFittingChi2Algorithm::fitTrack(
     const std::vector<std::reference_wrapper<
         const ActsExamples::IndexSourceLink>>& sourceLinks,
     const ActsExamples::TrackParameters& initialParameters,
-    const Acts::Chi2FitterOptions& options,
+    const Acts::Chi2FitterOptions<Acts::VectorMultiTrajectory>& options,
     const std::vector<const Acts::Surface*>& surfSequence) const {
   (void)surfSequence;  // TODO: silence unused parameter warning
   //   if (m_cfg.directNavigation) {
