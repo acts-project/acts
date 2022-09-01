@@ -9,8 +9,16 @@ from acts import UnitConstants as u
 
 if "__main__" == __name__:
     import os
+    import sys
     from digitization import configureDigitization
-    from acts.examples.reconstruction import addExaTrkX
+    from acts.examples.reconstruction import addExaTrkX, ExaTrkXBackend
+    
+    backend = ExaTrkXBackend.Torch
+    
+    if "onnx" in sys.argv:
+        backend = ExaTrkXBackend.Onnx
+    if "torch" in sys.argv:
+        backend = ExaTrkXBackend.Torch
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -29,13 +37,19 @@ if "__main__" == __name__:
     )
     assert geometrySelection.exists()
 
-    modelDir = Path.cwd() / "torchscript_models"
-    assert (modelDir / "embed.pt").exists()
-    assert (modelDir / "filter.pt").exists()
-    assert (modelDir / "gnn.pt").exists()
+    if backend == ExaTrkXBackend.Torch:
+        modelDir = Path.cwd() / "torchscript_models"
+        assert (modelDir / "embed.pt").exists()
+        assert (modelDir / "filter.pt").exists()
+        assert (modelDir / "gnn.pt").exists()
+    else:
+        modelDir = Path.cwd() / "onnx_models"
+        assert (modelDir / "embedding.onnx").exists()
+        assert (modelDir / "filtering.onnx").exists()
+        assert (modelDir / "gnn.onnx").exists()
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
-    s.config.logLevel = acts.logging.INFO
+    s.config.logLevel = acts.logging.VERBOSE
 
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(os.getcwd())
@@ -50,6 +64,13 @@ if "__main__" == __name__:
         s=s,
     )
 
-    addExaTrkX(s, trackingGeometry, geometrySelection, modelDir, outputDir)
+    addExaTrkX(
+        s,
+        trackingGeometry,
+        geometrySelection,
+        modelDir,
+        outputDir,
+        backend=backend,
+    )
 
     s.run()

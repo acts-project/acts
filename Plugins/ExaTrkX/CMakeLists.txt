@@ -1,10 +1,23 @@
-#add_subdirectory(libFRNN)
+set(SOURCES 
+  src/ExaTrkXTrackFindingBase.cpp
+  src/buildEdges.cpp
+)
+
+if(ACTS_EXATRKX_ENABLE_ONNX)
+  list(APPEND SOURCES 
+    src/ExaTrkXTrackFindingOnnx.cpp
+  )
+endif()
+
+if(ACTS_EXATRKX_ENABLE_TORCH)
+  list(APPEND SOURCES 
+    src/ExaTrkXTrackFindingTorch.cpp
+  )
+endif()
 
 add_library(
   ActsPluginExaTrkX SHARED
-  src/ExaTrkXUtils.cpp
-  src/ExaTrkXTrackFindingBase.cpp
-  src/ExaTrkXTrackFindingTorch.cpp
+  ${SOURCES}
 )
 
 set_target_properties(ActsPluginExaTrkX
@@ -37,16 +50,6 @@ target_link_libraries(
   ActsPluginExaTrkX
   PUBLIC
     ActsCore
-    ${TORCH_LIBRARIES}
-    TorchScatter::TorchScatter
-    Boost::boost
-)
-
-# Should not discard TorchScatter even if its not needed at this point since we need the scatter_max operation in the torch script later
-target_link_options(
-  ActsPluginExaTrkX
-  PUBLIC
-    "-Wl,-no-as-needed"
 )
 
 target_link_libraries(
@@ -54,7 +57,38 @@ target_link_libraries(
   PRIVATE
     frnn  
     Boost::boost
+    ${TORCH_LIBRARIES}
 )
+
+if(ACTS_EXATRKX_ENABLE_ONNX)
+  target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_TORCH_BACKEND)
+  
+  target_link_libraries(
+    ActsPluginExaTrkX
+    PRIVATE
+      OnnxRuntime
+      cugraph::cugraph
+  )
+endif()
+
+if(ACTS_EXATRKX_ENABLE_TORCH)
+  target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_ONNX_BACKEND)
+  
+  target_link_libraries(
+    ActsPluginExaTrkX
+    PRIVATE
+      TorchScatter::TorchScatter
+  )
+  
+  # Should not discard TorchScatter even if its not needed at this point 
+  # since we need the scatter_max operation in the torch script later
+  target_link_options(
+    ActsPluginExaTrkX
+    PUBLIC
+      "-Wl,-no-as-needed"
+  )
+endif()
+
 
 install(
   TARGETS ActsPluginExaTrkX

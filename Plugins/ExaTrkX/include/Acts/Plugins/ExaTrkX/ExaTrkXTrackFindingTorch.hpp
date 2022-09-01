@@ -34,7 +34,7 @@ class ExaTrkXTrackFindingTorch final : public ExaTrkXTrackFindingBase {
                  std::vector<int>& spacepointIDs,
                  std::vector<std::vector<int> >& trackCandidates,
                  ExaTrkXTime& timeInfo,
-                 LoggerWrapper logger = getDummyLogger()) const;
+                 LoggerWrapper logger = getDummyLogger()) const override;
 
   const Config& config() const { return m_cfg; }
 

@@ -6,37 +6,35 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingOnnx.hpp"
 
 #include <core/session/onnxruntime_cxx_api.h>
-#include <counting_sort.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
-#include <find_nbrs.h>
-#include <grid.h>
-#include <insert_points.h>
-#include <prefix_sum.h>
 #include <torch/script.h>
 #include <torch/torch.h>
+#include <boost/filesystem.hpp>
 
-#include "weaklyConnectedComponents.hpp"
+#include "weaklyConnectedComponentsCugraph.hpp"
+#include "buildEdges.hpp"
 
 using namespace torch::indexing;
 
-Acts::ExaTrkXTrackFinding::ExaTrkXTrackFinding(const Config& config)
-    : m_cfg(config) {
-  std::cout << "Model input directory: " << m_cfg.inputMLModuleDir << "\n";
+Acts::ExaTrkXTrackFindingOnnx::ExaTrkXTrackFindingOnnx(const Config& config)
+    : Acts::ExaTrkXTrackFindingBase("ExaTrkXOnnx"), m_cfg(config) {
+  std::cout << "Model input directory: " << m_cfg.modelDir << "\n";
   std::cout << "Spacepoint features: " << m_cfg.spacepointFeatures << "\n";
   std::cout << "Embedding Dimension: " << m_cfg.embeddingDim << "\n";
   std::cout << "radius value       : " << m_cfg.rVal << "\n";
   std::cout << "k-nearest neigbour : " << m_cfg.knnVal << "\n";
   std::cout << "filtering cut      : " << m_cfg.filterCut << "\n";
-
+  
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
-  std::string embedModelPath{m_cfg.inputMLModuleDir + "/embedding.onnx"};
-  std::string filterModelPath(m_cfg.inputMLModuleDir + "/filtering.onnx");
-  std::string gnnModelPath(m_cfg.inputMLModuleDir + "/gnn.onnx");
-  // <TODO: improve the call to avoid calling copying construtors >
+  
+  using Path = boost::filesystem::path;
+  const Path embedModelPath = Path(m_cfg.modelDir) / "embedding.onnx";
+  const Path filterModelPath = Path(m_cfg.modelDir) / "filtering.onnx";
+  const Path gnnModelPath = Path(m_cfg.modelDir) / "gnn.onnx";
 
   Ort::SessionOptions session_options;
   session_options.SetIntraOpNumThreads(1);
@@ -45,15 +43,17 @@ Acts::ExaTrkXTrackFinding::ExaTrkXTrackFinding(const Config& config)
   session_options.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
-  e_sess = std::make_unique<Ort::Session>(*m_env, embedModelPath.c_str(),
+  m_embeddingSession = std::make_unique<Ort::Session>(*m_env, embedModelPath.c_str(),
                                           session_options);
-  f_sess = std::make_unique<Ort::Session>(*m_env, filterModelPath.c_str(),
+  m_filterSession = std::make_unique<Ort::Session>(*m_env, filterModelPath.c_str(),
                                           session_options);
-  g_sess = std::make_unique<Ort::Session>(*m_env, gnnModelPath.c_str(),
+  m_gnnSession = std::make_unique<Ort::Session>(*m_env, gnnModelPath.c_str(),
                                           session_options);
 }
 
-void Acts::ExaTrkXTrackFinding::runSessionWithIoBinding(
+Acts::ExaTrkXTrackFindingOnnx::~ExaTrkXTrackFindingOnnx() {}
+
+void Acts::ExaTrkXTrackFindingOnnx::runSessionWithIoBinding(
     Ort::Session& sess, std::vector<const char*>& inputNames,
     std::vector<Ort::Value>& inputData, std::vector<const char*>& outputNames,
     std::vector<Ort::Value>& outputData) const {
@@ -61,7 +61,9 @@ void Acts::ExaTrkXTrackFinding::runSessionWithIoBinding(
   if (inputNames.size() < 1) {
     throw std::runtime_error("Onnxruntime input data maping cannot be empty");
   }
-  assert(inputNames.size() == inputData.size());
+  if(inputNames.size() != inputData.size()) {
+    throw std::runtime_error("inputData size mismatch");
+  }
 
   Ort::IoBinding iobinding(sess);
   for (size_t idx = 0; idx < inputNames.size(); ++idx) {
@@ -75,156 +77,19 @@ void Acts::ExaTrkXTrackFinding::runSessionWithIoBinding(
   sess.Run(Ort::RunOptions{nullptr}, iobinding);
 }
 
-void Acts::ExaTrkXTrackFinding::buildEdges(std::vector<float>& embedFeatures,
+void Acts::ExaTrkXTrackFindingOnnx::buildEdges(std::vector<float>& embedFeatures,
                                            std::vector<int64_t>& edgeList,
                                            int64_t numSpacepoints) const {
   torch::Device device(torch::kCUDA);
   auto options =
       torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
 
-  int grid_params_size;
-  int grid_delta_idx;
-  int grid_total_idx;
-  int grid_max_res;
-  int grid_dim;
-  int dim = m_cfg.embeddingDim;
-  if (dim >= 3) {
-    grid_params_size = 8;
-    grid_delta_idx = 3;
-    grid_total_idx = 7;
-    grid_max_res = 128;
-    grid_dim = 3;
-  } else {
-    throw std::runtime_error("DIM < 3 is not supported for now.\n");
-  }
-
-  float cell_size;
-  float radius_cell_ratio = 2.0;
-  int G = -1;
-  int batch_size = 1;
-  float rVal = m_cfg.rVal;  // radius of nearest neighours
-  int kVal = m_cfg.knnVal;  // maximum number of nearest neighbours.
-
-  // Set up grid properties
-  torch::Tensor grid_min;
-  torch::Tensor grid_max;
-  torch::Tensor grid_size;
-
   torch::Tensor embedTensor =
       torch::tensor(embedFeatures, options)
           .reshape({1, numSpacepoints, m_cfg.embeddingDim});
-  torch::Tensor gridParamsCuda =
-      torch::zeros({batch_size, grid_params_size}, device).to(torch::kFloat32);
-  torch::Tensor r_tensor = torch::full({batch_size}, rVal, device);
-  torch::Tensor lengths = torch::full({batch_size}, numSpacepoints, device);
-
-  // build the grid
-  for (int i = 0; i < batch_size; i++) {
-    torch::Tensor allPoints =
-        embedTensor.index({i, Slice(None, lengths.index({i}).item().to<long>()),
-                           Slice(None, grid_dim)});
-    grid_min = std::get<0>(allPoints.min(0));
-    grid_max = std::get<0>(allPoints.max(0));
-    gridParamsCuda.index_put_({i, Slice(None, grid_delta_idx)}, grid_min);
-
-    grid_size = grid_max - grid_min;
-
-    cell_size = r_tensor.index({i}).item().to<float>() / radius_cell_ratio;
-
-    if (cell_size < (grid_size.min().item().to<float>() / grid_max_res)) {
-      cell_size = grid_size.min().item().to<float>() / grid_max_res;
-    }
-
-    gridParamsCuda.index_put_({i, grid_delta_idx}, 1 / cell_size);
-
-    gridParamsCuda.index_put_({i, Slice(1 + grid_delta_idx, grid_total_idx)},
-                              floor(grid_size / cell_size) + 1);
-
-    gridParamsCuda.index_put_(
-        {i, grid_total_idx},
-        gridParamsCuda.index({i, Slice(1 + grid_delta_idx, grid_total_idx)})
-            .prod());
-
-    if (G < gridParamsCuda.index({i, grid_total_idx}).item().to<int>()) {
-      G = gridParamsCuda.index({i, grid_total_idx}).item().to<int>();
-    }
-  }
-
-  torch::Tensor pc_grid_cnt =
-      torch::zeros({batch_size, G}, device).to(torch::kInt32);
-  torch::Tensor pc_grid_cell =
-      torch::full({batch_size, numSpacepoints}, -1, device).to(torch::kInt32);
-  torch::Tensor pc_grid_idx =
-      torch::full({batch_size, numSpacepoints}, -1, device).to(torch::kInt32);
-
-  std::cout << "Inserting points" << std::endl;
-
-  // put spacepoints into the grid
-  InsertPointsCUDA(embedTensor, lengths.to(torch::kInt64), gridParamsCuda,
-                   pc_grid_cnt, pc_grid_cell, pc_grid_idx, G);
-
-  torch::Tensor pc_grid_off =
-      torch::full({batch_size, G}, 0, device).to(torch::kInt32);
-  torch::Tensor grid_params = gridParamsCuda.to(torch::kCPU);
-
-  std::cout << "Prefix Sum" << std::endl;
-
-  for (int i = 0; i < batch_size; i++) {
-    PrefixSumCUDA(pc_grid_cnt.index({i}),
-                  grid_params.index({i, grid_total_idx}).item().to<int>(),
-                  pc_grid_off.index({i}));
-  }
-
-  torch::Tensor sorted_points =
-      torch::zeros({batch_size, numSpacepoints, dim}, device)
-          .to(torch::kFloat32);
-  torch::Tensor sorted_points_idxs =
-      torch::full({batch_size, numSpacepoints}, -1, device).to(torch::kInt32);
-
-  CountingSortCUDA(embedTensor, lengths.to(torch::kInt64), pc_grid_cell,
-                   pc_grid_idx, pc_grid_off, sorted_points, sorted_points_idxs);
-
-  std::cout << "Counting sorted" << std::endl;
-
-  // torch::Tensor K_tensor = torch::full({batch_size}, kVal, device);
-
-  std::tuple<at::Tensor, at::Tensor> nbr_output = FindNbrsCUDA(
-      sorted_points, sorted_points, lengths.to(torch::kInt64),
-      lengths.to(torch::kInt64), pc_grid_off.to(torch::kInt32),
-      sorted_points_idxs, sorted_points_idxs,
-      gridParamsCuda.to(torch::kFloat32), kVal, r_tensor, r_tensor * r_tensor);
-
-  std::cout << "Neigbours to Edges" << std::endl;
-  torch::Tensor positiveIndices = std::get<0>(nbr_output) >= 0;
-
-  torch::Tensor repeatRange = torch::arange(positiveIndices.size(1), device)
-                                  .repeat({1, positiveIndices.size(2), 1})
-                                  .transpose(1, 2);
-
-  torch::Tensor stackedEdges =
-      torch::stack({repeatRange.index({positiveIndices}),
-                    std::get<0>(nbr_output).index({positiveIndices})});
-
-  //  Remove self-loops:
-
-  torch::Tensor selfLoopMask =
-      stackedEdges.index({0}) != stackedEdges.index({1});
-  stackedEdges = stackedEdges.index({Slice(), selfLoopMask});
-
-  // Perform any other post-processing here. E.g. Can remove half of edge list
-  // with:
-
-  torch::Tensor duplicate_mask =
-      stackedEdges.index({0}) > stackedEdges.index({1});
-  stackedEdges = stackedEdges.index({Slice(), duplicate_mask});
-
-  // And randomly flip direction with:
-  // torch::Tensor random_cut_keep = torch::randint(2, {stackedEdges.size(1)});
-  // torch::Tensor random_cut_flip = 1-random_cut_keep;
-  // torch::Tensor keep_edges = stackedEdges.index({Slice(),
-  // random_cut_keep.to(torch::kBool)}); torch::Tensor flip_edges =
-  // stackedEdges.index({Slice(), random_cut_flip.to(torch::kBool)}).flip({0});
-  // stackedEdges = torch::cat({keep_edges, flip_edges}, 1);
+  
+  auto stackedEdges = Acts::buildEdges(embedTensor, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
+          
   stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
 
   std::cout << "copy edges to std::vector" << std::endl;
@@ -233,9 +98,11 @@ void Acts::ExaTrkXTrackFinding::buildEdges(std::vector<float>& embedFeatures,
             std::back_inserter(edgeList));
 }
 
-void Acts::ExaTrkXTrackFinding::getTracks(
-    std::vector<float>& inputValues, std::vector<uint32_t>& spacepointIDs,
-    std::vector<std::vector<uint32_t> >& trackCandidates) const {
+void Acts::ExaTrkXTrackFindingOnnx::getTracks(
+    std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
+    std::vector<std::vector<int> >& trackCandidates,
+                 ExaTrkXTime&,
+                 LoggerWrapper) const {
   // hardcoded debugging information
   bool debug = true;
   const std::string embedding_outname = "debug_embedding_outputs.txt";
@@ -272,7 +139,7 @@ void Acts::ExaTrkXTrackFinding::getTracks(
   eOutputTensor.push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, eOutputData.data(), eOutputData.size(), eOutputShape.data(),
       eOutputShape.size()));
-  runSessionWithIoBinding(*e_sess, eInputNames, eInputTensor, eOutputNames,
+  runSessionWithIoBinding(*m_embeddingSession, eInputNames, eInputTensor, eOutputNames,
                           eOutputTensor);
 
   std::cout << "Embedding space of the first SP: ";
@@ -333,7 +200,7 @@ void Acts::ExaTrkXTrackFinding::getTracks(
   fOutputTensor.push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, fOutputData.data(), fOutputData.size(), fOutputShape.data(),
       fOutputShape.size()));
-  runSessionWithIoBinding(*f_sess, fInputNames, fInputTensor, fOutputNames,
+  runSessionWithIoBinding(*m_filterSession, fInputNames, fInputTensor, fOutputNames,
                           fOutputTensor);
 
   std::cout << "Get scores for " << numEdges << " edges." << std::endl;
@@ -387,7 +254,7 @@ void Acts::ExaTrkXTrackFinding::getTracks(
       gOutputShape.size()));
 
   std::cout << "run ONNX session\n";
-  runSessionWithIoBinding(*g_sess, gInputNames, gInputTensor, gOutputNames,
+  runSessionWithIoBinding(*m_gnnSession, gInputNames, gInputTensor, gOutputNames,
                           gOutputTensor);
   std::cout << "done with ONNX session\n";
 
@@ -421,15 +288,15 @@ void Acts::ExaTrkXTrackFinding::getTracks(
 
   trackCandidates.clear();
 
-  uint32_t existTrkIdx = 0;
+  int existTrkIdx = 0;
   // map labeling from MCC to customized track id.
-  std::map<uint32_t, uint32_t> trackLableToIds;
+  std::map<int, int> trackLableToIds;
 
-  for (uint32_t idx = 0; idx < numSpacepoints; ++idx) {
-    uint32_t trackLabel = trackLabels[idx];
+  for (int idx = 0; idx < numSpacepoints; ++idx) {
+    int trackLabel = trackLabels[idx];
     int spacepointID = spacepointIDs[idx];
 
-    uint32_t trkId;
+    int trkId;
     if (trackLableToIds.find(trackLabel) != trackLableToIds.end()) {
       trkId = trackLableToIds[trackLabel];
       trackCandidates[trkId].push_back(spacepointID);
@@ -437,7 +304,7 @@ void Acts::ExaTrkXTrackFinding::getTracks(
       // a new track, assign the track id
       // and create a vector
       trkId = existTrkIdx;
-      trackCandidates.push_back(std::vector<uint32_t>{trkId});
+      trackCandidates.push_back(std::vector<int>{trkId});
       trackLableToIds[trackLabel] = trkId;
       existTrkIdx++;
     }

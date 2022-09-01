@@ -760,12 +760,17 @@ def addCKFTracks(
     return s
 
 
+ExaTrkXBackend = Enum(
+    "ExaTrkXBackend", "Torch Onnx"
+)
+
 def addExaTrkX(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     geometrySelection: Union[Path, str],
     modelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
+    backend: Optional[ExaTrkXBackend] = ExaTrkXBackend.Torch,
 ) -> None:
 
     # Run the particle selection
@@ -774,7 +779,7 @@ def addExaTrkX(
     # has no impact on the truth hits themselves
     s.addAlgorithm(
         acts.examples.TruthSeedSelector(
-            level=acts.logging.INFO,
+            level=s.config.logLevel,
             ptMin=500 * u.MeV,
             nHitsMin=9,
             inputParticles="particles_initial",
@@ -786,7 +791,7 @@ def addExaTrkX(
     # Create space points
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
-            level=acts.logging.INFO,
+            level=s.config.logLevel,
             inputSourceLinks="sourcelinks",
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
@@ -797,10 +802,10 @@ def addExaTrkX(
         )
     )
 
-    # Setup the track finding algorithm with ExaTrkX
-    # It takes all the source links created from truth hit smearing, seeds from
-    # truth particle smearing and source link selection config
-    exaTrkxFinding = acts.examples.ExaTrkXTrackFindingTorch(
+    # For now we don't configure only the common options so this works
+    exaTrkxModule = acts.examples.ExaTrkXTrackFindingTorch if backend == ExaTrkXBackend.Torch else acts.examples.ExaTrkXTrackFindingOnnx
+    
+    exaTrkxFinding = exaTrkxModule(
         modelDir=str(modelDir),
         spacepointFeatures=3,
         embeddingDim=8,
@@ -811,7 +816,7 @@ def addExaTrkX(
 
     s.addAlgorithm(
         acts.examples.TrackFindingAlgorithmExaTrkX(
-            level=acts.logging.INFO,
+            level=s.config.logLevel,
             inputSpacePoints="spacepoints",
             outputProtoTracks="protoTracks",
             trackFinderML=exaTrkxFinding,
@@ -822,7 +827,7 @@ def addExaTrkX(
     if outputDirRoot is not None:
         s.addWriter(
             acts.examples.TrackFinderPerformanceWriter(
-                level=acts.logging.INFO,
+                level=s.config.logLevel,
                 inputProtoTracks="protoTracks",
                 inputParticles="particles_initial",  # the original selected particles after digitization
                 inputMeasurementParticlesMap="measurement_particles_map",

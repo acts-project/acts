@@ -2,17 +2,8 @@
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
-#include <torch/script.h>
-#include <torch/torch.h>
 
 namespace Acts {
-
-torch::Tensor buildEdges(at::Tensor& embedFeatures, int64_t numSpacepoints,
-                         int dim, float rVal, int kVal);
-
-torch::Tensor buildEdgesBruteForce(at::Tensor& embedFeatures,
-                                   int64_t numSpacepoints, int dim, float rVal,
-                                   int kVal);
 
 template <typename vertex_t, typename edge_t, typename weight_t>
 void weaklyConnectedComponents(vertex_t numNodes,
@@ -41,3 +32,4 @@ void weaklyConnectedComponents(vertex_t numNodes,
 }
 
 }  // namespace Acts
+ 

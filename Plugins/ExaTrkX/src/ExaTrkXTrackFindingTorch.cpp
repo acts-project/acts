@@ -1,7 +1,13 @@
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
+// This file is part of the Acts project.
+//
+// Copyright (C) 2022 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTiming.hpp"
-#include "Acts/Plugins/ExaTrkX/ExaTrkXUtils.hpp"
 
 #include <boost/filesystem.hpp>
 #include <cuda.h>
@@ -14,6 +20,9 @@
 #include <grid/prefix_sum.h>
 #include <torch/script.h>
 #include <torch/torch.h>
+
+#include "buildEdges.hpp"
+#include "weaklyConnectedComponentsBoost.hpp"
 
 using namespace torch::indexing;
 
@@ -37,7 +46,7 @@ namespace Acts {
 
 ExaTrkXTrackFindingTorch::ExaTrkXTrackFindingTorch(
     const ExaTrkXTrackFindingTorch::Config& config)
-    : ExaTrkXTrackFindingBase("ExaTrkXTrackFindingTorch"), m_cfg(config) {
+    : ExaTrkXTrackFindingBase("ExaTrkXTorch"), m_cfg(config) {
   using Path = boost::filesystem::path;
 
   const Path embedModelPath = Path(m_cfg.modelDir) / "embed.pt";
