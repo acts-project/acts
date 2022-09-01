@@ -18,6 +18,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
@@ -44,10 +45,12 @@
 namespace Acts {
 
 /// Extension struct which holds delegates to customize the GX2F behavior
+template <typename traj_t>
 struct Chi2FitterExtensions {
-  using TrackStateProxy = MultiTrajectory::TrackStateProxy;
-  using ConstTrackStateProxy = MultiTrajectory::ConstTrackStateProxy;
-  using Parameters = TrackStateProxy::Parameters;
+  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
+  using ConstTrackStateProxy =
+      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
+  using Parameters = typename TrackStateProxy::Parameters;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
@@ -63,12 +66,14 @@ struct Chi2FitterExtensions {
 
   /// Default constructor which connects the default void components
   Chi2FitterExtensions() {
-    calibrator.connect<&voidChi2Calibrator>();
-    outlierFinder.connect<&voidChi2OutlierFinder>();
+    calibrator.template connect<&voidChi2Calibrator<traj_t>>();
+    outlierFinder.template connect<&voidChi2OutlierFinder<traj_t>>();
   }
 };
 
 /// Combined options for the GX2F fitter.
+/// @tparam traj_t The trajectory type
+template <typename traj_t>
 struct Chi2FitterOptions {
   /// PropagatorOptions with context.
   ///
@@ -88,7 +93,8 @@ struct Chi2FitterOptions {
   Chi2FitterOptions(const GeometryContext& gctx,
                     const MagneticFieldContext& mctx,
                     std::reference_wrapper<const CalibrationContext> cctx,
-                    Chi2FitterExtensions extensions_, LoggerWrapper logger_,
+                    Chi2FitterExtensions<traj_t> extensions_,
+                    LoggerWrapper logger_,
                     const PropagatorPlainOptions& pOptions,
                     bool mScattering = false, bool eLoss = false, int nIter = 1,
                     bool calcFinalChi2_ = true,
@@ -115,7 +121,7 @@ struct Chi2FitterOptions {
   /// context object for the calibration
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
-  Chi2FitterExtensions extensions;
+  Chi2FitterExtensions<traj_t> extensions;
 
   /// The trivial propagator options
   PropagatorPlainOptions propagatorPlainOptions;
@@ -141,9 +147,10 @@ struct Chi2FitterOptions {
   LoggerWrapper logger;
 };
 
+template <typename traj_t>
 struct Chi2FitterResult {
   // Fitted states that the actor has handled.
-  MultiTrajectory fittedStates;
+  traj_t fittedStates;
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
@@ -201,7 +208,7 @@ struct Chi2FitterResult {
 /// Chi2 fitter implementation.
 ///
 /// @tparam propagator_t Type of the propagation class
-template <typename propagator_t>
+template <typename propagator_t, typename traj_t>
 class Chi2Fitter {
   using Chi2Navigator = typename propagator_t::Navigator;
 
@@ -222,7 +229,7 @@ class Chi2Fitter {
   class Actor {
    public:
     /// Broadcast the result_type
-    using result_type = Chi2FitterResult;
+    using result_type = Chi2FitterResult<traj_t>;
 
     /// Allows retrieving measurements for a surface
     const std::map<GeometryIdentifier,
@@ -240,7 +247,7 @@ class Chi2Fitter {
     FreeToBoundCorrection freeToBoundCorrection;
 
     /// Extension struct
-    Chi2FitterExtensions extensions;
+    Chi2FitterExtensions<traj_t> extensions;
 
     /// @brief Chi square actor operation
     ///
@@ -434,8 +441,7 @@ class Chi2Fitter {
           // TrackState entry multi trajectory. No storage allocation for
           // uncalibrated/calibrated measurement and filtered parameter
           result.lastTrackIndex = result.fittedStates.addTrackState(
-              ~(TrackStatePropMask::Uncalibrated |
-                TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered |
+              ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered |
                 TrackStatePropMask::Smoothed),
               result.lastTrackIndex);
 
@@ -584,10 +590,10 @@ class Chi2Fitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters>
-  Result<Chi2FitterResult> fit(
+  Result<Chi2FitterResult<traj_t>> fit(
       source_link_iterator_t it, source_link_iterator_t end,
       const start_parameters_t& sParameters,
-      const Chi2FitterOptions& chi2FitterOptions) const {
+      const Chi2FitterOptions<traj_t>& chi2FitterOptions) const {
     const auto& logger = chi2FitterOptions.logger;
 
     // To be able to find measurements later, we put them into a map

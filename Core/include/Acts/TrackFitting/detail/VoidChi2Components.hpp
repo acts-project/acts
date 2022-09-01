@@ -14,14 +14,16 @@
 
 namespace Acts {
 
-inline void voidChi2Calibrator(
+template <typename traj_t>
+void voidChi2Calibrator(
     const GeometryContext& /*gctx*/,
-    MultiTrajectory::TrackStateProxy /*trackState*/) {
+    typename MultiTrajectory<traj_t>::TrackStateProxy /*trackState*/) {
   throw std::runtime_error{"VoidChi2Calibrator should not ever execute"};
 }
 
-inline bool voidChi2OutlierFinder(
-    MultiTrajectory::ConstTrackStateProxy /*trackState*/) {
+template <typename traj_t>
+bool voidChi2OutlierFinder(
+    typename MultiTrajectory<traj_t>::ConstTrackStateProxy /*trackState*/) {
   return false;
 }
 

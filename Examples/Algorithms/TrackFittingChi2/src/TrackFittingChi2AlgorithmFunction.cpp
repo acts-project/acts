@@ -25,7 +25,7 @@ namespace {
 
 using Stepper = Acts::EigenStepper<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using Fitter = Acts::Chi2Fitter<Propagator>;
+using Fitter = Acts::Chi2Fitter<Propagator, Acts::VectorMultiTrajectory>;
 
 struct TrackFitterChi2FunctionImpl
     : public ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Function {

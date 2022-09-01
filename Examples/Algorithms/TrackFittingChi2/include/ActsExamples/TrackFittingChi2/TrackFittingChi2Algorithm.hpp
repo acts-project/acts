@@ -30,8 +30,11 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
  public:
   /// Track fitter function that takes input measurements, initial trackstate
   /// and fitter options and returns some track-fitter-specific result.
-  using TrackFitterChi2Options = Acts::Chi2FitterOptions;
-  using TrackFitterChi2Result = Acts::Result<Acts::Chi2FitterResult>;
+  using TrackFitterChi2Options =
+      Acts::Chi2FitterOptions<Acts::VectorMultiTrajectory>;
+
+  using TrackFitterChi2Result =
+      Acts::Result<Acts::Chi2FitterResult<Acts::VectorMultiTrajectory>>;
 
   /// Fit function that takes the above parameters and runs a fit
   /// @note This is separated into a virtual interface to keep compilation units
