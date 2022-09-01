@@ -13,7 +13,7 @@ u = acts.UnitConstants
 def runPythia8(
     outputDir,
     outputRoot: bool = True,
-    outputCsv: bool = False,
+    outputCsv: bool = True,
     s: acts.examples.Sequencer = None,
 ):
     # Preliminaries
@@ -22,7 +22,7 @@ def runPythia8(
 
     # Sequencer
     s = s or acts.examples.Sequencer(
-        events=1000, numThreads=-1, logLevel=acts.logging.INFO
+        events=10, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     addPythia8(

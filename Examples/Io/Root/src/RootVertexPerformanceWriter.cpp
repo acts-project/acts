@@ -433,7 +433,6 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         }
       }
 
-      // ACTS_INFO((double)fmap[maxOccurrenceId] / tracks.size());
       // Match reco to truth vertex if at least 50% of tracks match
       double trackVtxMatchFraction =
           (double)fmap[maxOccurrenceId] / tracks.size();

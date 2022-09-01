@@ -195,8 +195,6 @@ def addSeeding(
         acts.examples.dump_args_calls(locals())
     logger = acts.logging.getLogger("addSeeding")
 
-    inputMeasurementParticlesMap = "measurement_particles_map"
-
     if truthSeedRanges is not None:
         selAlg = acts.examples.TruthSeedSelector(
             **acts.examples.defaultKWArgs(
@@ -217,7 +215,7 @@ def addSeeding(
             ),
             level=customLogLevel(),
             inputParticles=inputParticles,
-            inputMeasurementParticlesMap=inputMeasurementParticlesMap,
+            inputMeasurementParticlesMap="measurement_particles_map",
             outputParticles="truth_seeds_selected",
         )
         s.addAlgorithm(selAlg)
@@ -273,7 +271,7 @@ def addSeeding(
             truthTrackFinder = acts.examples.TruthTrackFinder(
                 level=customLogLevel(),
                 inputParticles=selectedParticles,
-                inputMeasurementParticlesMap=inputMeasurementParticlesMap,
+                inputMeasurementParticlesMap="measurement_particles_map",
                 outputProtoTracks="prototracks",
             )
             s.addAlgorithm(truthTrackFinder)
@@ -509,7 +507,7 @@ def addSeeding(
                     level=customLogLevel(),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,  # the original selected particles after digitization
-                    inputMeasurementParticlesMap=inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(outputDirRoot / "performance_seeding_trees.root"),
                 )
             )
@@ -519,7 +517,7 @@ def addSeeding(
                     level=customLogLevel(acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
                     inputParticles=selectedParticles,
-                    inputMeasurementParticlesMap=inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(outputDirRoot / "performance_seeding_hists.root"),
                 )
             )
@@ -531,7 +529,7 @@ def addSeeding(
                     inputProtoTracks=parEstimateAlg.config.outputProtoTracks,
                     inputParticles=inputParticles,
                     inputSimHits="simhits",
-                    inputMeasurementParticlesMap=inputMeasurementParticlesMap,
+                    inputMeasurementParticlesMap="measurement_particles_map",
                     inputMeasurementSimHitsMap="measurement_simhits_map",
                     filePath=str(outputDirRoot / "estimatedparams.root"),
                     treeName="estimatedparams",

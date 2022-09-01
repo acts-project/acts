@@ -214,8 +214,7 @@ def addPythia8(
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
     vtxGen = vtxGen or acts.examples.GaussianVertexGenerator(
-        stddev=acts.Vector4(0, 0, 0, 0),
-        mean=acts.Vector4(0, 0, 0, 0),
+        stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
     )
     if not isinstance(beam, Iterable):
         beam = (beam, beam)
