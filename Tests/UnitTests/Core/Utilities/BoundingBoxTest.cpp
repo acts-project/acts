@@ -1215,7 +1215,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     fr.draw(ply, 10);
 
     Box::Size size(vec3(100, 100, 2));
-    Box bb(&o, pos + dir * 10, size);
+    Box bb(&o, pos + dir * 7, size);
     bb.draw(ply);
 
     BOOST_CHECK(bb.intersect(fr));
