@@ -6,9 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
-
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -38,7 +37,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
 
   {
     using Alg = Acts::ExaTrkXTrackFindingTorch;
-    using Config = Acts::ExaTrkXTrackFinding::Config;
+    using Config = Alg::Config;
 
     auto alg =
         py::class_<Alg, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Alg>>(
@@ -49,7 +48,6 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelDir);
-    ACTS_PYTHON_MEMBER(verbose);
     ACTS_PYTHON_MEMBER(spacepointFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);

@@ -11,9 +11,8 @@ struct ExaTrkXTime;
 
 class ExaTrkXTrackFindingBase {
  public:
-  ExaTrkXTrackFindingBase(const std::string &name)
-      : m_name(name) {}
-      
+  ExaTrkXTrackFindingBase(const std::string& name) : m_name(name) {}
+
   virtual ~ExaTrkXTrackFindingBase() {}
 
   ExaTrkXTrackFindingBase() = delete;
@@ -31,7 +30,7 @@ class ExaTrkXTrackFindingBase {
       std::vector<std::vector<int> >& trackCandidates, ExaTrkXTime& timeInfo,
       Acts::LoggerWrapper logger = Acts::getDummyLogger()) const = 0;
 
-  const std::string &name() const { return m_name; }
+  const std::string& name() const { return m_name; }
 
  protected:
   std::string m_name;

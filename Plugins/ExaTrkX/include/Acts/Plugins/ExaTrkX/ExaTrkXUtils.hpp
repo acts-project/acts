@@ -21,16 +21,11 @@ void weaklyConnectedComponents(vertex_t numNodes,
                                std::vector<weight_t>& edgeWeights,
                                std::vector<vertex_t>& trackLabels,
                                float edge_cut) {
-  typedef boost::adjacency_list<boost::vecS  // edge list
-                                ,
-                                boost::vecS  // vertex list
-                                ,
-                                boost::undirectedS  // directedness
-                                ,
-                                boost::no_property  // property associated with
-                                                    // vertices
-                                ,
-                                float  // property associated with edges
+  typedef boost::adjacency_list<boost::vecS,         // edge list
+                                boost::vecS,         // vertex list
+                                boost::undirectedS,  // directedness
+                                boost::no_property,  // property of vertices
+                                float                // property of edges
                                 >
       Graph;
 

@@ -13,8 +13,9 @@
 
 using namespace torch::indexing;
 
-torch::Tensor buildEdges(at::Tensor &embedFeatures, int64_t numSpacepoints,
-                         int dim, float rVal, int kVal) {
+torch::Tensor Acts::buildEdges(at::Tensor &embedFeatures,
+                               int64_t numSpacepoints, int dim, float rVal,
+                               int kVal) {
   torch::Device device(torch::kCUDA);
   // auto options =
   // torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);

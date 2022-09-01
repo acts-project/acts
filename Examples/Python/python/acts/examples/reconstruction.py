@@ -760,11 +760,11 @@ def addCKFTracks(
     return s
 
 
-def addExaTrkx(
+def addExaTrkX(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     geometrySelection: Union[Path, str],
-    onnxModelDir: Union[Path, str],
+    modelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
 ) -> None:
 
@@ -800,8 +800,8 @@ def addExaTrkx(
     # Setup the track finding algorithm with ExaTrkX
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
-    exaTrkxFinding = acts.examples.ExaTrkXTrackFinding(
-        inputMLModuleDir=str(onnxModelDir),
+    exaTrkxFinding = acts.examples.ExaTrkXTrackFindingTorch(
+        modelDir=str(modelDir),
         spacepointFeatures=3,
         embeddingDim=8,
         rVal=1.6,

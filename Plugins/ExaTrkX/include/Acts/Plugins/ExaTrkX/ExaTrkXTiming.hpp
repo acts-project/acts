@@ -88,7 +88,9 @@ struct ExaTrkXTimeList {
     ACTS_VERBOSE("6) total: " << tot_total / num);
   }
 
-  void summaryOneEvent(Acts::LoggerWrapper logger, int evtid) { get(evtid).summary(logger); }
+  void summaryOneEvent(Acts::LoggerWrapper logger, int evtid) {
+    get(evtid).summary(logger);
+  }
 
   std::size_t numEvts() { return embedding.size(); }
 

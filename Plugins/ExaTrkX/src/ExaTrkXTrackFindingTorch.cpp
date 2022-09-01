@@ -1,7 +1,9 @@
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
+
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTiming.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXUtils.hpp"
 
+#include <boost/filesystem.hpp>
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>
@@ -35,30 +37,32 @@ namespace Acts {
 
 ExaTrkXTrackFindingTorch::ExaTrkXTrackFindingTorch(
     const ExaTrkXTrackFindingTorch::Config& config)
-    : ExaTrkXTrackFindingBase("ExaTrkXTrackFindingTorch"),
-      m_cfg(config) {
-  const std::string l_embedModelPath(m_cfg.modelDir + "/torchscript/embed.pt");
-  const std::string l_filterModelPath(m_cfg.modelDir +
-                                      "/torchscript/filter.pt");
-  const std::string l_gnnModelPath(m_cfg.modelDir + "/torchscript/gnn.pt");
+    : ExaTrkXTrackFindingBase("ExaTrkXTrackFindingTorch"), m_cfg(config) {
+  using Path = boost::filesystem::path;
+
+  const Path embedModelPath = Path(m_cfg.modelDir) / "embed.pt";
+  const Path filterModelPath = Path(m_cfg.modelDir) / "filter.pt";
+  const Path gnnModelPath = Path(m_cfg.modelDir) / "gnn.pt";
   c10::InferenceMode guard(true);
 
   try {
     m_embeddingModel = std::make_unique<torch::jit::Module>();
-    *m_embeddingModel = torch::jit::load(l_embedModelPath.c_str());
+    *m_embeddingModel = torch::jit::load(embedModelPath.c_str());
     m_embeddingModel->eval();
 
     m_filterModel = std::make_unique<torch::jit::Module>();
-    *m_filterModel = torch::jit::load(l_filterModelPath.c_str());
+    *m_filterModel = torch::jit::load(filterModelPath.c_str());
     m_filterModel->eval();
 
-    m_filterModel = std::make_unique<torch::jit::Module>();
-    *m_gnnModel = torch::jit::load(l_gnnModelPath.c_str());
+    m_gnnModel = std::make_unique<torch::jit::Module>();
+    *m_gnnModel = torch::jit::load(gnnModelPath.c_str());
     m_gnnModel->eval();
   } catch (const c10::Error& e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
   }
 }
+
+ExaTrkXTrackFindingTorch::~ExaTrkXTrackFindingTorch() {}
 
 void ExaTrkXTrackFindingTorch::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
@@ -107,7 +111,7 @@ void ExaTrkXTrackFindingTorch::getTracks(
   eInputTensorJit.clear();
 
   ACTS_VERBOSE("Embedding space of the first SP:\n"
-                << eOutput->slice(/*dim=*/0, /*start=*/0, /*end=*/1));
+               << eOutput->slice(/*dim=*/0, /*start=*/0, /*end=*/1));
   print_current_cuda_meminfo(logger);
 
   timeInfo.embedding = timer.stopAndGetElapsedTime();

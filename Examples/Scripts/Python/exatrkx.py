@@ -10,7 +10,7 @@ from acts import UnitConstants as u
 if "__main__" == __name__:
     import os
     from digitization import configureDigitization
-    from acts.examples.reconstruction import addExaTrkx
+    from acts.examples.reconstruction import addExaTrkX
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -29,14 +29,12 @@ if "__main__" == __name__:
     )
     assert geometrySelection.exists()
 
-    onnxdir = Path(cwd=os.getcwd()) / "onnx_models"
-    assert (
-        (onnxdir / "embedding.onnx").exists()
-        and (onnxdir / "filtering.onnx").exists()
-        and (onnxdir / "gnn.onnx").exists()
-    )
+    modelDir = Path.cwd() / "torchscript_models"
+    assert (modelDir / "embed.pt").exists()
+    assert (modelDir / "filter.pt").exists()
+    assert (modelDir / "gnn.pt").exists()
 
-    s = acts.examples.Sequencer(events=2, numThreads=-1)
+    s = acts.examples.Sequencer(events=2, numThreads=1)
     s.config.logLevel = acts.logging.INFO
 
     rnd = acts.examples.RandomNumbers()
@@ -52,6 +50,6 @@ if "__main__" == __name__:
         s=s,
     )
 
-    addExaTrkx(s, trackingGeometry, geometrySelection, onnxdir, outputDir)
+    addExaTrkX(s, trackingGeometry, geometrySelection, modelDir, outputDir)
 
     s.run()

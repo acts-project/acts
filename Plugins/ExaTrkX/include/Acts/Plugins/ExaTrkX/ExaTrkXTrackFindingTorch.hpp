@@ -28,7 +28,7 @@ class ExaTrkXTrackFindingTorch final : public ExaTrkXTrackFindingBase {
   };
 
   ExaTrkXTrackFindingTorch(const Config& config);
-  virtual ~ExaTrkXTrackFindingTorch() {}
+  virtual ~ExaTrkXTrackFindingTorch();
 
   void getTracks(std::vector<float>& inputValues,
                  std::vector<int>& spacepointIDs,
