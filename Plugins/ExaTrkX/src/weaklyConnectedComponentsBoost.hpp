@@ -32,4 +32,3 @@ void weaklyConnectedComponents(vertex_t numNodes,
 }
 
 }  // namespace Acts
- 

@@ -6,6 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "buildEdges.hpp"
+
+#include <cuda.h>
+#include <cuda_runtime_api.h>
 #include <grid/counting_sort.h>
 #include <grid/find_nbrs.h>
 #include <grid/grid.h>
@@ -14,16 +18,11 @@
 #include <torch/script.h>
 #include <torch/torch.h>
 
-#include <cuda.h>
-#include <cuda_runtime_api.h>
-
-#include "buildEdges.hpp"
-
 torch::Tensor Acts::buildEdges(at::Tensor &embedFeatures,
                                int64_t numSpacepoints, int dim, float rVal,
                                int kVal) {
   using namespace torch::indexing;
-  
+
   torch::Device device(torch::kCUDA);
   // auto options =
   // torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
@@ -34,7 +33,7 @@ torch::Tensor Acts::buildEdges(at::Tensor &embedFeatures,
   const int grid_total_idx = 7;
   const int grid_max_res = 128;
   const int grid_dim = 3;
-  
+
   if (dim < 3) {
     throw std::runtime_error("DIM < 3 is not supported for now.\n");
   }
@@ -65,7 +64,8 @@ torch::Tensor Acts::buildEdges(at::Tensor &embedFeatures,
 
     grid_size = grid_max - grid_min;
 
-    float cell_size = r_tensor.index({i}).item().to<float>() / radius_cell_ratio;
+    float cell_size =
+        r_tensor.index({i}).item().to<float>() / radius_cell_ratio;
 
     if (cell_size < (grid_size.min().item().to<float>() / grid_max_res)) {
       cell_size = grid_size.min().item().to<float>() / grid_max_res;

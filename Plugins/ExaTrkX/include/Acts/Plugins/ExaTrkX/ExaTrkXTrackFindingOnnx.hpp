@@ -15,16 +15,16 @@
 #include <vector>
 
 namespace Ort {
-  class Env;
-  class Session;
-  class Value;
-}
+class Env;
+class Session;
+class Value;
+}  // namespace Ort
 
 namespace Acts {
 
 /// Class implementing the Exa.TrkX track finding algorithm.
 /// It holds the required ONNX objects.
-class ExaTrkXTrackFindingOnnx final : public ExaTrkXTrackFindingBase  {
+class ExaTrkXTrackFindingOnnx final : public ExaTrkXTrackFindingBase {
  public:
   /// Configuration struct for the track finding.
   struct Config {

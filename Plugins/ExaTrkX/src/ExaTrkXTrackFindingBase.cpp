@@ -1,4 +1,5 @@
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
+
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTiming.hpp"
 
 namespace Acts {

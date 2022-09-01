@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
+
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTiming.hpp"
 
 #include <boost/filesystem.hpp>

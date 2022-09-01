@@ -12,9 +12,9 @@ if "__main__" == __name__:
     import sys
     from digitization import configureDigitization
     from acts.examples.reconstruction import addExaTrkX, ExaTrkXBackend
-    
+
     backend = ExaTrkXBackend.Torch
-    
+
     if "onnx" in sys.argv:
         backend = ExaTrkXBackend.Onnx
     if "torch" in sys.argv:
