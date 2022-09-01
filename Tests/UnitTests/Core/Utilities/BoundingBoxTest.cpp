@@ -293,7 +293,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     PlyVisualization3D<BoundingBoxScalar> ply;
 
     ray3.draw(ply);
-    std::ofstream os(tmp("ray3d.ply"));
+    auto os = tmp("ray3d.ply");
     os << ply << std::flush;
     os.close();
   }
@@ -456,7 +456,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("2D") {
     auto make_svg = [](std::string fname, size_t w, size_t h) {
-      std::ofstream os(tmp(fname));
+      auto os = tmp(fname);
       os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
       os << "<svg width=\"" << w << "\" height=\"" << h
          << "\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n";
@@ -667,7 +667,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     //}
     // os.close();
 
-    // os = std::ofstream(tmp("frust3D_angle.ply"));
+    // os = tmp("frust3D_angle.ply");
     // helper.clear();
     // n_vtx             = 1;
     // Eigen::Affine3f rot;
@@ -857,7 +857,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       std::stringstream ss;
       ss << "frust3d-3s_test_" << l << ".ply";
 
-      os = std::ofstream(tmp(ss.str()));
+      os = tmp(ss.str());
 
       helper.clear();
 
@@ -916,7 +916,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // size_t n_vtx    = 1;
 
     // helper.clear();
-    // os = std::ofstream(tmp("frust3d-4s_dir.ply"));
+    // os = tmp("frust3d-4s_dir.ply");
 
     // double angle = M_PI / 4.;
     // for (size_t i = 0; i <= s; i++) {
@@ -942,7 +942,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     // os << helper << std::flush;
     // os.close();
-    // os = std::ofstream(tmp("frust3d-4s_angle.ply"));
+    // os = tmp("frust3d-4s_angle.ply");
     // helper.clear();
 
     // n_vtx    = 1;
@@ -1121,7 +1121,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       std::stringstream ss;
       ss << "frust3d-4s_test_" << l << ".ply";
 
-      os = std::ofstream(tmp(ss.str()));
+      os = tmp(ss.str());
 
       helper.clear();
 
@@ -1183,7 +1183,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     BOOST_CHECK(bb.intersect(fr));
 
-    std::ofstream os(tmp("frust3d-5s.ply"));
+    auto os = tmp("frust3d-5s.ply");
     os << ply << std::flush;
     os.close();
   }
@@ -1209,7 +1209,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     BOOST_CHECK(bb.intersect(fr));
 
-    std::ofstream os(tmp("frust3d-10s.ply"));
+    auto os = tmp("frust3d-10s.ply");
     os << ply << std::flush;
     os.close();
   }
@@ -1234,7 +1234,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     BOOST_CHECK(bb.intersect(fr));
 
-    std::ofstream os(tmp("frust3d-4s-bigbox.ply"));
+    auto os = tmp("frust3d-4s-bigbox.ply");
     os << ply << std::flush;
     os.close();
   }
