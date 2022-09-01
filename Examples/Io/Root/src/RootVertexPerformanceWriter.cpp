@@ -197,10 +197,10 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   // Get number of detector-accepted true primary vertices
   m_nVtxDetAcceptance = getNumberOfTruePriVertices(selectedTruthParticles);
 
-  ACTS_INFO("Total number of selected truth particles in event : "
-            << selectedTruthParticles.size());
-  ACTS_INFO("Total number of detector-accepted truth primary vertices : "
-            << m_nVtxDetAcceptance);
+  ACTS_VERBOSE("Total number of selected truth particles in event : "
+               << selectedTruthParticles.size());
+  ACTS_VERBOSE("Total number of detector-accepted truth primary vertices : "
+               << m_nVtxDetAcceptance);
 
   const auto& inputFittedTracks =
       ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
@@ -218,11 +218,12 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     m_nVtxReconstructable =
         getNumberOfReconstructableVertices(associatedTruthParticles);
 
-    ACTS_INFO(
+    ACTS_VERBOSE(
         "Total number of reco track-associated truth particles in event : "
         << associatedTruthParticles.size());
-    ACTS_INFO("Total number of reco track-associated truth primary vertices : "
-              << m_nVtxReconstructable);
+    ACTS_VERBOSE(
+        "Total number of reco track-associated truth primary vertices : "
+        << m_nVtxReconstructable);
 
     /*****************  Start x,y,z resolution plots here *****************/
     // Matching tracks at vertex to fitted tracks that are in turn matched
@@ -482,8 +483,6 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   } else {
     m_timeMS = -1;
   }
-
-  ACTS_INFO("m_diffx.size() = " << m_diffx.size());
 
   // fill the variables
   m_outputTree->Fill();
