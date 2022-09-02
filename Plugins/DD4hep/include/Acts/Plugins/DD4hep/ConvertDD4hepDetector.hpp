@@ -77,6 +77,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 ///                              ascending. The default is sorting by ID.
 /// @param gctx The geometry context to use
 /// @param matDecorator is the material decorator that loads material maps
+/// @param geometryIdentifierHook Hook to apply to surfaces during geometry closure.
 ///
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full TrackingGeometry
@@ -97,7 +98,8 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors = sortDetElementsByID,
     const GeometryContext& gctx = GeometryContext(),
-    std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr);
+    std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr,
+    GeometryIdentifierHook geometryIdentifierHook = {});
 
 /// @brief Method internally used to create an Acts::CylinderVolumeBuilder
 ///
