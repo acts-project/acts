@@ -51,7 +51,8 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors,
     const Acts::GeometryContext& gctx,
-    std::shared_ptr<const IMaterialDecorator> matDecorator) {
+    std::shared_ptr<const IMaterialDecorator> matDecorator,
+    GeometryIdentifierHook geometryIdentifierHook) {
   // create local logger for conversion
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("DD4hepConversion", loggingLevel));
   ACTS_INFO("Translating DD4hep geometry into Acts geometry");
@@ -134,6 +135,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
   tgbConfig.trackingVolumeHelper = volumeHelper;
   tgbConfig.materialDecorator = std::move(matDecorator);
   tgbConfig.trackingVolumeBuilders = std::move(volumeFactories);
+  tgbConfig.geometryIdentifierHook = std::move(geometryIdentifierHook);
   auto trackingGeometryBuilder =
       std::make_shared<const Acts::TrackingGeometryBuilder>(tgbConfig);
   return (trackingGeometryBuilder->trackingGeometry(gctx));

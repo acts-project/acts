@@ -102,7 +102,7 @@ ActsExamples::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
       dd4hepGeometry(), m_cfg.logLevel, m_cfg.bTypePhi, m_cfg.bTypeR,
       m_cfg.bTypeZ, m_cfg.envelopeR, m_cfg.envelopeZ,
       m_cfg.defaultLayerThickness, m_cfg.sortDetectors, gctx,
-      m_cfg.matDecorator);
+      m_cfg.matDecorator, m_cfg.geometryIdentifierHook);
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

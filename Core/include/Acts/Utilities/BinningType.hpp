@@ -46,7 +46,7 @@ enum BinningValue : int {
 };
 
 /// @brief static list of all binning values
-static std::vector<BinningValue> s_binningValues = {
+static const std::vector<BinningValue> s_binningValues = {
     binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta, binMag};
 
 /// @brief screen output option
