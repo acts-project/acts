@@ -106,7 +106,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     ProtoTrack protoTrack;
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
-      if (spacePointPtr->sourceLinks().size() == 0) {
+      if (spacePointPtr->sourceLinks().empty()) {
         ACTS_WARNING("Missing sourcelink in space point");
         continue;
       }

@@ -133,7 +133,7 @@ static StraightPropagator makeStraightPropagator(
   cfg.resolveSensitive = true;
   Acts::Navigator navigator{cfg};
   Acts::StraightLineStepper stepper;
-  return StraightPropagator(std::move(stepper), std::move(navigator));
+  return StraightPropagator(stepper, std::move(navigator));
 }
 
 // simulation propagator

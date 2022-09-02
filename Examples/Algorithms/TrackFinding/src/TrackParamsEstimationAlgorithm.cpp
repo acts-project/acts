@@ -80,7 +80,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
   std::unordered_map<Index, const SimSpacePoint*> spMap;
 
   for (const SimSpacePoint& sp : spacePoints) {
-    if (sp.sourceLinks().size() == 0) {
+    if (sp.sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in space point");
       continue;
     }
@@ -185,7 +185,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
-    if (bottomSP->sourceLinks().size() == 0) {
+    if (bottomSP->sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point")
       continue;
     }
@@ -224,7 +224,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       ProtoTrack track;
       track.reserve(3);
       for (const auto& sp : seed.sp()) {
-        if (sp->sourceLinks().size() == 0) {
+        if (sp->sourceLinks().empty()) {
           ACTS_WARNING("Missing source link in the space point")
           continue;
         }

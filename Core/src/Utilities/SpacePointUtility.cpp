@@ -209,9 +209,10 @@ Result<void> SpacePointUtility::calculateStripSPPosition(
   }
 
   // Check if m and n can be resolved in the interval (-1, 1)
-  if (fabs(spParams.m) <= spParams.limit && fabs(spParams.n) <= spParams.limit)
+  if (fabs(spParams.m) <= spParams.limit &&
+      fabs(spParams.n) <= spParams.limit) {
     return Result<void>::success();
-
+  }
   return Result<void>::failure(m_error);
 }
 
@@ -279,10 +280,12 @@ Result<void> SpacePointUtility::recoverSpacePoint(
     spParams.n -= (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
 
-    if (fabs(spParams.m) < spParams.limit && fabs(spParams.n) < spParams.limit)
+    if (fabs(spParams.m) < spParams.limit &&
+        fabs(spParams.n) < spParams.limit) {
       return Result<void>::success();
-    else
+    } else {
       return Result<void>::failure(m_error);
+    }
   }
   // Check if both overshoots are in the same direction
   if (spParams.m < -1. && spParams.n < -1.) {
@@ -296,8 +299,10 @@ Result<void> SpacePointUtility::recoverSpacePoint(
     spParams.m += biggerOvershoot;
     spParams.n += (biggerOvershoot / secOnFirstScale);
     // Check if this recovered the space point
-    if (fabs(spParams.m) < spParams.limit && fabs(spParams.n) < spParams.limit)
+    if (fabs(spParams.m) < spParams.limit &&
+        fabs(spParams.n) < spParams.limit) {
       return Result<void>::success();
+    }
   }
   // No solution could be found
   return Result<void>::failure(m_error);
