@@ -53,11 +53,12 @@ using ConstantFieldPropagator =
 // using KalmanSmoother = Acts::GainMatrixSmoother;
 // using KalmanFitter =  Acts::KalmanFitter<ConstantFieldPropagator,
 // KalmanUpdater, KalmanSmoother>;
-using Chi2Fitter = Acts::Chi2Fitter<ConstantFieldPropagator>;
+using Chi2Fitter = Acts::Chi2Fitter<ConstantFieldPropagator, Acts::VectorMultiTrajectory>;
 
-Chi2FitterExtensions getExtensions() {
-  Chi2FitterExtensions extensions;
-  extensions.calibrator.connect<&testSourceLinkCalibrator>();
+Chi2FitterExtensions<VectorMultiTrajectory> getExtensions() {
+  Chi2FitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
   return extensions;
 }
 
@@ -76,7 +77,7 @@ struct TestOutlierFinder {
   /// @param state The track state to classify
   /// @retval False if the measurement is not an outlier
   /// @retval True if the measurement is an outlier
-  bool operator()(MultiTrajectory::ConstTrackStateProxy state) const {
+  bool operator()(VectorMultiTrajectory::ConstTrackStateProxy state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
     if (not state.hasCalibrated() or not state.hasPredicted()) {
       return false;
