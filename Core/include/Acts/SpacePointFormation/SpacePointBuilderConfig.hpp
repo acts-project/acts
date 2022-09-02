@@ -12,9 +12,9 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
 namespace Acts {
-struct SpacePointBuilderConfig{
-   /// Tracking geometry
-   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
+struct SpacePointBuilderConfig {
+  /// Tracking geometry
+  std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   /// vertex position
   Vector3 vertex = {0., 0., 0.};
   /// Accepted squared difference in theta for two clusters
@@ -29,8 +29,8 @@ struct SpacePointBuilderConfig{
   double stripLengthGapTolerance = 0.01;
   /// Perform the perpendicular projection for space point finding
   bool usePerpProj = false;
-  
-   SpacePointBuilderConfig()=default;
+
+  SpacePointBuilderConfig() = default;
 };
 
-}
+}  // namespace Acts

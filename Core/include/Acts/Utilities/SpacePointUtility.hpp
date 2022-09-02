@@ -12,7 +12,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
+#include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/Utilities/Result.hpp"
 
 #include <array>

@@ -10,12 +10,10 @@
 
 namespace Acts {
 
-struct SpacePointBuilderOptions{
-
-   std::pair<
-    const std::pair<Vector3, Vector3>,
-    const std::pair<Vector3, Vector3>> stripEndsPair;
-  
+struct SpacePointBuilderOptions {
+  std::pair<const std::pair<Vector3, Vector3>,
+            const std::pair<Vector3, Vector3>>
+      stripEndsPair;
 };
 
-}
+}  // namespace Acts

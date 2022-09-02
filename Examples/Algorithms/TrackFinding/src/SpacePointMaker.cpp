@@ -9,7 +9,7 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/SpacePointFormation/SpacePointBuilderConfig.h"
+#include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
