@@ -45,7 +45,7 @@ from acts.examples.reconstruction import (
 
 parser = argparse.ArgumentParser()
 parser.add_argument("outdir")
-parser.add_argument("--events", type=int, default=1000)
+parser.add_argument("--events", type=int, default=500)
 parser.add_argument("--skip", type=int, default=0)
 
 args = parser.parse_args()
