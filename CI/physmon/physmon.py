@@ -45,8 +45,6 @@ from acts.examples.reconstruction import (
 
 parser = argparse.ArgumentParser()
 parser.add_argument("outdir")
-parser.add_argument("--events", type=int, default=500)
-parser.add_argument("--skip", type=int, default=0)
 
 args = parser.parse_args()
 
@@ -72,9 +70,7 @@ geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 
 field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-s = acts.examples.Sequencer(
-    events=args.events, numThreads=-1, logLevel=acts.logging.INFO, skip=0
-)
+s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
 
 with tempfile.TemporaryDirectory() as temp:
     tp = Path(temp)
@@ -101,9 +97,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
     (False, True, "truth_estimated"),
     (False, False, "seeded"),
 ]:
-    s = acts.examples.Sequencer(
-        events=args.events, numThreads=1, logLevel=acts.logging.INFO, skip=args.skip
-    )
+    s = acts.examples.Sequencer(events=500, numThreads=1, logLevel=acts.logging.INFO)
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
