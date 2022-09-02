@@ -200,6 +200,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             s,
             field,
             vertexFinder=VertexFinder.Iterative,
+            trajectories="trajectories",
             outputDirRoot=tp,
         )
 
