@@ -11,13 +11,13 @@ histograms:
 
   "covXX|covYY":
     nbins: 100
-    min: -0.00001
-    max: 0.00001
+    min: -0.0005
+    max: 0.0005
 
   "covXY|covYX":
     nbins: 100
-    min: -0.00001
-    max: 0.00001
+    min: -0.0001
+    max: 0.0001
 
   "^n.*$":
     nbins: 50
