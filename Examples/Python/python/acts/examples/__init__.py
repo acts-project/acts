@@ -306,7 +306,7 @@ def defaultLogging(
     Establishes a default logging strategy for the python examples interface.
 
     Returns a function that determines the log level in the following schema:
-    - if `logLevel` is set use it other wise use the log level of the sequencer `s.config.logLevel`
+    - if `logLevel` is set use it otherwise use the log level of the sequencer `s.config.logLevel`
     - the returned log level is bound between `minLevel` and `maxLevel` provided to `customLogLevel`
 
     Examples:
