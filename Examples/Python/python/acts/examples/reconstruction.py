@@ -351,7 +351,7 @@ def addSeeding(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
                     deltaRMin=(
-                        seedfinderConfigArg.deltaR[0]
+                        seedFinderConfig.deltaRMin
                         if seedFilterConfigArg.deltaRMin is None
                         else seedFilterConfigArg.deltaRMin
                     ),
@@ -382,7 +382,7 @@ def addSeeding(
                     zMax=seedFinderConfig.zMax,
                     zMin=seedFinderConfig.zMin,
                     deltaRMax=(
-                        seedfinderConfigArg.deltaR[1]
+                        seedFinderConfig.deltaRMax
                         if spacePointGridConfigArg.deltaRMax is None
                         else spacePointGridConfigArg.deltaRMax
                     ),
