@@ -10,7 +10,7 @@ on:
 
 jobs:
   docs:
-    if: "!contains(github.event.pull_request.labels.*.name, 'WIP')"
+    if: "!contains(github.event.pull_request.labels.*.name, ':construction: WIP')"
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v29
     env:
