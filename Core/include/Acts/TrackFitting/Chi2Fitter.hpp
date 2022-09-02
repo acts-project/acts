@@ -658,7 +658,8 @@ class Chi2Fitter {
         return result.error();
       }
 
-      Chi2Result c2rCurrent = result.value().template get<Chi2Result>();
+      Chi2Result c2rCurrent =
+          std::move(result.value().template get<Chi2Result>());
 
       /// It could happen that the fit ends in zero measurement states.
       /// The result gets meaningless so such case is regarded as fit failure.
@@ -700,7 +701,7 @@ class Chi2Fitter {
       c2rCurrent.chisquares.push_back(c2rCurrent.chisquare);
       // TODO: is there a more elegant/optimal way to do this?
 
-      c2r = c2rCurrent;
+      c2r = std::move(c2rCurrent);
 
       if (i == chi2FitterOptions.nUpdates) {
         // don't update parameters in last iteration
