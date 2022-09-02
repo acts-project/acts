@@ -75,6 +75,14 @@ full_chain truth_estimated
 full_chain seeded
 
 run \
+    $outdir/performance_truth_tracking.root \
+    $refdir/performance_truth_tracking.root \
+    --title "Truth tracking" \
+    -c CI/physmon/truth_tracking.yml \
+    -o $outdir/truth_tracking.html \
+    -p $outdir/truth_tracking_plots
+
+run \
     $outdir/acts_analysis_residuals_and_pulls.root \
     $refdir/acts_analysis_residuals_and_pulls.root \
     --title "analysis_residuals_and_pulls" \
