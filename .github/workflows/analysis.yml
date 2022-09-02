@@ -23,6 +23,7 @@ env:
 #      all unit tests should be reactivated.
 jobs:
   build_debug:
+    if: "!contains(github.event.pull_request.labels.*.name, 'WIP')"
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v29
     steps:
