@@ -1,10 +1,10 @@
 #include <tuple>
 
-#include "counting_sort.h"
-#include "grid.h"
-#include "mink.cuh"
+#include "grid/counting_sort.h"
+#include "grid/grid.h"
+#include "utils/mink.cuh"
 // customized dispatch utils for our function type
-#include "dispatch.h"
+#include "utils/dispatch.h"
 
 // TODO: add docs
 std::tuple<at::Tensor, at::Tensor> FindNbrsCUDA(

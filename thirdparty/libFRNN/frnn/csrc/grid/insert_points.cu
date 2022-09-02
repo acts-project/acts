@@ -1,4 +1,4 @@
-#include "insert_points.h"
+#include "grid/insert_points.h"
 
 __global__ void InsertPoints2DKernel(const float *__restrict__ points,
                                      const long *__restrict__ lengths,
@@ -149,7 +149,6 @@ void InsertPointsCUDA(const at::Tensor points,   // (N, P, D)
   int blocks = 256;
 
   int D = points.size(2);
-  // TORCH_CHECK(D == 2 || D == 3, "for now only 2D and 3D are supported");
   if (D == 2) {
     InsertPoints2DKernel<<<blocks, threads, 0, stream>>>(
         points.contiguous().data_ptr<float>(),
@@ -169,7 +168,7 @@ void InsertPointsCUDA(const at::Tensor points,   // (N, P, D)
     //       grid_idx.contiguous().data_ptr<int>(), points.size(0),
     //       points.size(1), G);
   } else {
-    DispatchKernel1D<InsertPointsNDKernelFunctor, MIN_D, MAX_D>(
+    DispatchKernel1D<InsertPointsNDKernelFunctor, V0_MIN_D, V0_MAX_D>(
         D, blocks, threads, points.contiguous().data_ptr<float>(),
         lengths.contiguous().data_ptr<long>(),
         params.contiguous().data_ptr<float>(),

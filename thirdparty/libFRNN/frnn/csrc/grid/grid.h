@@ -12,7 +12,7 @@
 #define GRID_3D_RES_Z 6
 #define GRID_3D_TOTAL 7
 #define GRID_3D_PARAMS_SIZE 8
-#define GRID_3D_MAX_RES 128
+#define GRID_3D_MAX_RES 64
 
 #define GRID_2D_MIN_X 0
 #define GRID_2D_MIN_Y 1
@@ -21,20 +21,16 @@
 #define GRID_2D_RES_Y 4
 #define GRID_2D_TOTAL 5
 #define GRID_2D_PARAMS_SIZE 6
-#define GRID_2D_MAX_RES 1024
-
-// TODO: figure out a suitable dimension of grid?
-constexpr int MIN_D = 2;
-constexpr int MAX_D = 8;
+#define GRID_2D_MAX_RES 512
 
 // TODO: Optimize for large K
-constexpr int MIN_K = 1;
-constexpr int MAX_K = 64;
+constexpr int V0_MIN_D = 2;
+constexpr int V0_MAX_D = 1024;
 
-constexpr int V1_MIN_D = 1;
+constexpr int V1_MIN_D = 2;
 constexpr int V1_MAX_D = 32;
 
-constexpr int V2_MIN_D = 1;
+constexpr int V2_MIN_D = 2;
 constexpr int V2_MAX_D = 8;
 constexpr int V2_MIN_K = 1;
 constexpr int V2_MAX_K = 32;

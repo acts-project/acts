@@ -1,6 +1,5 @@
 // code based on pytorch3d's dispatch.cuh
 #pragma once
-
 #include <iostream>
 
 namespace {
