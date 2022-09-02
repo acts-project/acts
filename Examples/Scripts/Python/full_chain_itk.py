@@ -33,15 +33,15 @@ from acts.examples.reconstruction import (
 from acts.examples.itk import itkSeedingAlgConfig
 
 s = acts.examples.Sequencer(events=100, numThreads=-1)
-s = addParticleGun(
+addParticleGun(
     s,
-    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-4.0, 4.0, True),
-    ParticleConfig(1, acts.PdgParticle.eMuon, True),
+    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+    EtaConfig(-4.0, 4.0, uniform=True),
+    ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
     rnd=rnd,
 )
 # # Uncomment addPythia8 and ParticleSelectorConfig, instead of addParticleGun, to generate ttbar with mu=200 pile-up.
-# s = addPythia8(
+# addPythia8(
 #     s,
 #     hardProcess=["Top:qqbar2ttbar=on"],
 #     vtxGen=acts.examples.GaussianVertexGenerator(
@@ -51,7 +51,7 @@ s = addParticleGun(
 #     rnd=rnd,
 #     outputDirRoot=outputDir,
 # )
-s = addFatras(
+addFatras(
     s,
     trackingGeometry,
     field,
@@ -59,7 +59,7 @@ s = addFatras(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-s = addDigitization(
+addDigitization(
     s,
     trackingGeometry,
     field,
@@ -67,7 +67,7 @@ s = addDigitization(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-s = addSeeding(
+addSeeding(
     s,
     trackingGeometry,
     field,
@@ -78,7 +78,7 @@ s = addSeeding(
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
-s = addCKFTracks(
+addCKFTracks(
     s,
     trackingGeometry,
     field,

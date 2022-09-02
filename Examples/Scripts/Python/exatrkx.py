@@ -52,6 +52,6 @@ if "__main__" == __name__:
         s=s,
     )
 
-    s = addExaTrkx(s, trackingGeometry, geometrySelection, onnxdir, outputDir)
+    addExaTrkx(s, trackingGeometry, geometrySelection, onnxdir, outputDir)
 
     s.run()
