@@ -30,7 +30,8 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_construct_encoded) {
   BOOST_CHECK_EQUAL(id.boundary(), 0xb0u);
   BOOST_CHECK_EQUAL(id.layer(), 0x0c0u);
   BOOST_CHECK_EQUAL(id.approach(), 0x0du);
-  BOOST_CHECK_EQUAL(id.sensitive(), 0x00affe0u);
+  BOOST_CHECK_EQUAL(id.sensitive(), 0x00affu);
+  BOOST_CHECK_EQUAL(id.extra(), 0xe0u);
 }
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_max_values) {
@@ -39,7 +40,8 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_max_values) {
   constexpr GeometryIdentifier::Value boundaryMax = (1u << 8) - 1;
   constexpr GeometryIdentifier::Value layerMax = (1u << 12) - 1;
   constexpr GeometryIdentifier::Value approachMax = (1u << 8) - 1;
-  constexpr GeometryIdentifier::Value sensitiveMax = (1u << 28) - 1;
+  constexpr GeometryIdentifier::Value sensitiveMax = (1u << 20) - 1;
+  constexpr GeometryIdentifier::Value extraMax = (1u << 8) - 1;
   // reference values non-zero values everywhere
   constexpr GeometryIdentifier ref = 0xdeadaffe01234567;
   // values above the maximum are truncated
@@ -54,16 +56,27 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_max_values) {
                     GeometryIdentifier(ref).setApproach(0u));
   BOOST_CHECK_EQUAL(GeometryIdentifier(ref).setSensitive(sensitiveMax + 1),
                     GeometryIdentifier(ref).setSensitive(0u));
+  BOOST_CHECK_EQUAL(GeometryIdentifier(ref).setExtra(extraMax + 1),
+                    GeometryIdentifier(ref).setExtra(0u));
 }
 
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_order) {
-  auto vol1 = GeometryIdentifier().setVolume(1u).setLayer(14u).setSensitive(5u);
-  auto vol2 = GeometryIdentifier().setVolume(2u).setLayer(13u).setSensitive(3u);
+  auto vol1 = GeometryIdentifier()
+                  .setVolume(1u)
+                  .setLayer(14u)
+                  .setSensitive(5u)
+                  .setExtra(42u);
+  auto vol2 = GeometryIdentifier()
+                  .setVolume(2u)
+                  .setLayer(13u)
+                  .setSensitive(3u)
+                  .setExtra(43u);
   // order uses volume first even if other components are larger
   BOOST_CHECK_LT(vol1, vol2);
   BOOST_CHECK_LT(GeometryIdentifier(vol1).setBoundary(64u), vol2);
   BOOST_CHECK_LT(GeometryIdentifier(vol1).setLayer(64u), vol2);
   BOOST_CHECK_LT(GeometryIdentifier(vol1).setApproach(64u), vol2);
+  BOOST_CHECK_LT(GeometryIdentifier(vol1).setSensitive(64u), vol2);
   BOOST_CHECK_LT(GeometryIdentifier(vol1).setSensitive(64u), vol2);
   BOOST_CHECK_LT(vol2, GeometryIdentifier(vol1).setVolume(3u));
   // other components are hierachical
@@ -75,6 +88,8 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_order) {
                  GeometryIdentifier(vol1).setLayer(2u).setApproach(1u));
   BOOST_CHECK_LT(GeometryIdentifier(vol1).setApproach(1u).setSensitive(2u),
                  GeometryIdentifier(vol1).setApproach(2u).setSensitive(1u));
+  BOOST_CHECK_LT(GeometryIdentifier(vol1).setSensitive(1u).setExtra(2u),
+                 GeometryIdentifier(vol1).setSensitive(2u).setExtra(1u));
 }
 
 }  // namespace Test

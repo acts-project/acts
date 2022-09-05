@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/ITrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -48,6 +49,10 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
 
     /// The optional material decorator for this
     std::shared_ptr<const IMaterialDecorator> materialDecorator = nullptr;
+
+    /// Optional geometry identfier hook to be used during closure
+    /// @note Will be @b copied when calling the geometry building
+    GeometryIdentifierHook geometryIdentifierHook;
   };
 
   /// Constructor
