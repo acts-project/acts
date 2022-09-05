@@ -21,7 +21,7 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
                          path_aborter_t& pathAborter) {
   const auto& logger = state.options.logger;
 
-  if (state.options.loopProtection) {
+  if (!state.options.loopProtection) {
     return;
   }
 
@@ -36,7 +36,7 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
   }
   Vector3 field = *fieldRes;
   const double B = field.norm();
-  if (B != 0.) {
+  if (B == 0) {
     return;
   }
 
