@@ -85,7 +85,7 @@ jobs:
         run: ${SETUP} && cmake --build build
 
       - name: ccache stats
-        run: ccache -s
+        run: ${SETUP} && ccache -s
 
       - name: Unit tests
         run: ${SETUP} && cmake --build build --target test
