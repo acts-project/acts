@@ -155,7 +155,7 @@ auto Acts::Propagator<S, N>::propagate(
   // Apply the loop protection - it resets the internal path limit
   detail::setupLoopProtection(
       state, m_stepper,
-      state.options.abortList.template get<path_arborter_t>());
+      state.options.abortList.template get<path_aborter_t>());
   // Perform the actual propagation & check its outcome
   auto result = propagate_impl<ResultType>(state, inputResult);
   if (result.ok()) {
@@ -246,7 +246,7 @@ auto Acts::Propagator<S, N>::propagate(
   // Apply the loop protection, it resets the interal path limit
   detail::setupLoopProtection(
       state, m_stepper,
-      state.options.abortList.template get<path_arborter_t>());
+      state.options.abortList.template get<path_aborter_t>());
 
   // Perform the actual propagation
   auto result = propagate_impl<ResultType>(state, inputResult);

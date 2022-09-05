@@ -18,7 +18,9 @@ namespace detail {
 template <typename path_aborter_t, typename propagator_state_t,
           typename stepper_t>
 void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
-                         const path_aborter_t& pathAborter) {
+                         path_aborter_t& pathAborter) {
+  const auto& logger = state.options.logger;
+
   if (state.options.loopProtection) {
     return;
   }
