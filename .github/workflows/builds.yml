@@ -417,7 +417,7 @@ jobs:
         run: ${SETUP} && ( cmake --build build || cmake --build build )
       # The above line is required as a sort of retry mechanism. Without it,
       # the build fails for technical reasons.
-      - name: ccache stats
+      - name: ${SETUP} && ccache stats
         run: ccache -s
       - name: Unit tests
         run: ${SETUP} && ${PRELOAD} && cmake --build build --target test
