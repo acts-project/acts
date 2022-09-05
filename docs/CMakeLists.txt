@@ -46,7 +46,6 @@ set(api_index ${api_dir}/api.rst)
 # standard target to build the documentation without automatic API generation
 add_custom_target(
   docs
-  COMMAND ${CMAKE_COMMAND} -E copy ${api_dir}/api_stub.rst ${api_index} 
   COMMAND
     ${Sphinx_EXECUTABLE}
       -b html
@@ -62,7 +61,6 @@ add_custom_target(
 # extended target to build the full documentation with automatic API generation
 add_custom_target(
   docs-with-api
-  COMMAND ${CMAKE_COMMAND} -E copy ${api_dir}/api_index.rst ${api_index} 
   COMMAND
     ${Sphinx_EXECUTABLE}
       -b html
