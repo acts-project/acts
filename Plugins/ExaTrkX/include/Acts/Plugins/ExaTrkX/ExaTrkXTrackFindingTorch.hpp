@@ -20,8 +20,12 @@ class Module;
 
 namespace Acts {
 
+/// @class ExaTrkXTrackFindingTorch
+///
+/// Class implementing the Exa.TrkX track finding algorithm based on libtorch
 class ExaTrkXTrackFindingTorch final : public ExaTrkXTrackFindingBase {
  public:
+  /// Configuration struct for the track finding
   struct Config {
     std::string modelDir;
 
@@ -35,15 +39,29 @@ class ExaTrkXTrackFindingTorch final : public ExaTrkXTrackFindingBase {
     float edgeCut = 0.5;
   };
 
+  /// Constructor of the track finding module
+  ///
+  /// @param config is the config struct to configure the module
   ExaTrkXTrackFindingTorch(const Config& config);
-  virtual ~ExaTrkXTrackFindingTorch();
 
-  void getTracks(std::vector<float>& inputValues,
-                 std::vector<int>& spacepointIDs,
-                 std::vector<std::vector<int> >& trackCandidates,
-                 ExaTrkXTime& timeInfo,
-                 LoggerWrapper logger = getDummyLogger()) const override;
+  /// Destructor
+  ~ExaTrkXTrackFindingTorch();
 
+  /// Run the inference
+  ///
+  /// @param inputValues tPacked spacepoints in the form
+  /// [ r1, phi1, z1, r2, phi2, z2, ... ]
+  /// @param spacepointIDs The corresponding spacepoint spacepoint spacepointIDs
+  /// @param trackCandidates This vector is filled with the tracks as vectors of spacepoint spacepoint IDs
+  /// @param logger If provided, logging is enabled
+  /// @note The input values are not const, because the ONNX API
+  /// takes only non-const pointers.
+  ExaTrkXTime getTracks(std::vector<float>& inputValues,
+                        std::vector<int>& spacepointIDs,
+                        std::vector<std::vector<int> >& trackCandidates,
+                        LoggerWrapper logger = getDummyLogger()) const override;
+
+  /// Access the config struct
   const Config& config() const { return m_cfg; }
 
  private:

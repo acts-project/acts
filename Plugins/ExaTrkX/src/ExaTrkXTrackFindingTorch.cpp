@@ -8,8 +8,6 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTiming.hpp"
-
 #include <boost/filesystem.hpp>
 #include <cuda.h>
 #include <cuda_runtime.h>
@@ -74,10 +72,11 @@ ExaTrkXTrackFindingTorch::ExaTrkXTrackFindingTorch(
 
 ExaTrkXTrackFindingTorch::~ExaTrkXTrackFindingTorch() {}
 
-void ExaTrkXTrackFindingTorch::getTracks(
+ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates, ExaTrkXTime& timeInfo,
+    std::vector<std::vector<int> >& trackCandidates,
     LoggerWrapper logger) const {
+  ExaTrkXTime timeInfo;
   ExaTrkXTimer tot_timer;
   tot_timer.start();
   // hardcoded debugging information
@@ -254,7 +253,7 @@ void ExaTrkXTrackFindingTorch::getTracks(
   print_current_cuda_meminfo(logger);
 
   if (trackLabels.size() == 0)
-    return;
+    return timeInfo;
 
   trackCandidates.clear();
 
@@ -283,6 +282,8 @@ void ExaTrkXTrackFindingTorch::getTracks(
   timeInfo.labeling = timer.stopAndGetElapsedTime();
   timeInfo.total = tot_timer.stopAndGetElapsedTime();
   c10::cuda::CUDACachingAllocator::emptyCache();
+
+  return timeInfo;
 }
 
 }  // namespace Acts

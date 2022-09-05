@@ -18,6 +18,9 @@
 
 namespace Acts {
 
+/// @struct ExaTrkXTime
+///
+/// @brief Collection of timing information of the Exa.TrkX algorithm
 struct ExaTrkXTime {
   float embedding = 0.0;
   float building = 0.0;
@@ -36,6 +39,9 @@ struct ExaTrkXTime {
   }
 };
 
+/// @struct ExaTrkXTimeList
+///
+/// @brief Represents a series of Exa.TrkX timing information
 struct ExaTrkXTimeList {
   std::vector<float> embedding;
   std::vector<float> building;
@@ -117,6 +123,9 @@ struct ExaTrkXTimeList {
   }
 };
 
+/// @class ExaTrkXTimer
+///
+/// A timer
 class ExaTrkXTimer {
  public:
   void start() {

@@ -1,5 +1,4 @@
 set(SOURCES 
-  src/ExaTrkXTrackFindingBase.cpp
   src/buildEdges.cpp
 )
 
