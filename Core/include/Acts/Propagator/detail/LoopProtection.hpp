@@ -15,8 +15,10 @@ namespace Acts {
 namespace detail {
 
 /// Estimate the loop protection limit
-template <typename path_aborter_t, typename propagator_state_t, typename stepper_t>
-void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper, const path_aborter_t &pathAborter) {
+template <typename path_aborter_t, typename propagator_state_t,
+          typename stepper_t>
+void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper,
+                         const path_aborter_t& pathAborter) {
   if (state.options.loopProtection) {
     return;
   }
@@ -27,8 +29,7 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper, co
   if (!fieldRes.ok()) {
     // there's no great way to return the error here, so resort to warning
     // and not applying the loop protection in this case
-    ACTS_WARNING(
-        "Field lookup was unsuccessful, this is very likely an error");
+    ACTS_WARNING("Field lookup was unsuccessful, this is very likely an error");
     return;
   }
   Vector3 field = *fieldRes;
@@ -48,7 +49,7 @@ void setupLoopProtection(propagator_state_t& state, const stepper_t& stepper, co
     pathAborter.internalLimit = loopLimit;
 
     ACTS_VERBOSE("Path aborter limit set to "
-                  << loopLimit << " (full helix =  " << helixPath << ")");
+                 << loopLimit << " (full helix =  " << helixPath << ")");
   }
 }
 
