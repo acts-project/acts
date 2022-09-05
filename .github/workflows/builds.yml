@@ -84,7 +84,7 @@ jobs:
       - name: Build
         run: ${SETUP} && cmake --build build
 
-      - name: ccache stats:
+      - name: ccache stats
         run: ccache -s
 
       - name: Unit tests
@@ -165,7 +165,7 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: ccache stats:
+      - name: ccache stats
         run: ccache -s
 
       - name: Unit tests
@@ -335,7 +335,7 @@ jobs:
       - name: Build
         run: cmake --build build
 
-      - name: ccache stats:
+      - name: ccache stats
         run: ccache -s
 
       - name: Unit tests
@@ -417,7 +417,7 @@ jobs:
         run: ${SETUP} && ( cmake --build build || cmake --build build )
       # The above line is required as a sort of retry mechanism. Without it,
       # the build fails for technical reasons.
-      - name: ccache stats:
+      - name: ccache stats
         run: ccache -s
       - name: Unit tests
         run: ${SETUP} && ${PRELOAD} && cmake --build build --target test
@@ -510,7 +510,7 @@ jobs:
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
       - name: Build
         run: cmake --build build
-      - name: ccache stats:
+      - name: ccache stats
         run: ccache -s
       - name: Unit tests
         run: cmake --build build --target test
@@ -562,7 +562,7 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
         run: cmake --build build
-      - name: ccache stats:
+      - name: ccache stats
         run: ccache -s
 
   exatrkx:
@@ -592,7 +592,7 @@ jobs:
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
         run: cmake --build build
-      - name: ccache stats:
+      - name: ccache stats
         run: ccache -s
 
   sycl:
@@ -629,6 +629,6 @@ jobs:
         run: >
           source /opt/intel/oneapi/setvars.sh
           && cmake --build build
-      - name: ccache stats:
+      - name: ccache stats
         run: ccache -s
 

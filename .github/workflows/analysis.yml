@@ -48,7 +48,7 @@ jobs:
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: cmake --build build
-      - name: ccache stats:
+      - name: ccache stats
         run: ccache -s
       - name: Unit tests
         run: cmake --build build --target test
