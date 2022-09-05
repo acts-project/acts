@@ -399,6 +399,7 @@ jobs:
 
       - name: Configure
         run: >
+          ${SETUP} && 
           ccache -z &&
           cmake -B build -S .
           -GNinja
