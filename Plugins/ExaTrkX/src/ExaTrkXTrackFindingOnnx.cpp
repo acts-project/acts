@@ -8,15 +8,15 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingOnnx.hpp"
 
+#include <boost/filesystem.hpp>
 #include <core/session/onnxruntime_cxx_api.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
 #include <torch/script.h>
 #include <torch/torch.h>
-#include <boost/filesystem.hpp>
 
-#include "weaklyConnectedComponentsCugraph.hpp"
 #include "buildEdges.hpp"
+#include "weaklyConnectedComponentsCugraph.hpp"
 
 using namespace torch::indexing;
 
@@ -28,9 +28,9 @@ Acts::ExaTrkXTrackFindingOnnx::ExaTrkXTrackFindingOnnx(const Config& config)
   std::cout << "radius value       : " << m_cfg.rVal << "\n";
   std::cout << "k-nearest neigbour : " << m_cfg.knnVal << "\n";
   std::cout << "filtering cut      : " << m_cfg.filterCut << "\n";
-  
+
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
-  
+
   using Path = boost::filesystem::path;
   const Path embedModelPath = Path(m_cfg.modelDir) / "embedding.onnx";
   const Path filterModelPath = Path(m_cfg.modelDir) / "filtering.onnx";
@@ -43,12 +43,12 @@ Acts::ExaTrkXTrackFindingOnnx::ExaTrkXTrackFindingOnnx(const Config& config)
   session_options.SetGraphOptimizationLevel(
       GraphOptimizationLevel::ORT_ENABLE_EXTENDED);
 
-  m_embeddingSession = std::make_unique<Ort::Session>(*m_env, embedModelPath.c_str(),
-                                          session_options);
-  m_filterSession = std::make_unique<Ort::Session>(*m_env, filterModelPath.c_str(),
-                                          session_options);
+  m_embeddingSession = std::make_unique<Ort::Session>(
+      *m_env, embedModelPath.c_str(), session_options);
+  m_filterSession = std::make_unique<Ort::Session>(
+      *m_env, filterModelPath.c_str(), session_options);
   m_gnnSession = std::make_unique<Ort::Session>(*m_env, gnnModelPath.c_str(),
-                                          session_options);
+                                                session_options);
 }
 
 Acts::ExaTrkXTrackFindingOnnx::~ExaTrkXTrackFindingOnnx() {}
@@ -61,7 +61,7 @@ void Acts::ExaTrkXTrackFindingOnnx::runSessionWithIoBinding(
   if (inputNames.size() < 1) {
     throw std::runtime_error("Onnxruntime input data maping cannot be empty");
   }
-  if(inputNames.size() != inputData.size()) {
+  if (inputNames.size() != inputData.size()) {
     throw std::runtime_error("inputData size mismatch");
   }
 
@@ -77,9 +77,9 @@ void Acts::ExaTrkXTrackFindingOnnx::runSessionWithIoBinding(
   sess.Run(Ort::RunOptions{nullptr}, iobinding);
 }
 
-void Acts::ExaTrkXTrackFindingOnnx::buildEdges(std::vector<float>& embedFeatures,
-                                           std::vector<int64_t>& edgeList,
-                                           int64_t numSpacepoints) const {
+void Acts::ExaTrkXTrackFindingOnnx::buildEdges(
+    std::vector<float>& embedFeatures, std::vector<int64_t>& edgeList,
+    int64_t numSpacepoints) const {
   torch::Device device(torch::kCUDA);
   auto options =
       torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
@@ -87,9 +87,11 @@ void Acts::ExaTrkXTrackFindingOnnx::buildEdges(std::vector<float>& embedFeatures
   torch::Tensor embedTensor =
       torch::tensor(embedFeatures, options)
           .reshape({1, numSpacepoints, m_cfg.embeddingDim});
-  
-  auto stackedEdges = Acts::buildEdges(embedTensor, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
-          
+
+  auto stackedEdges =
+      Acts::buildEdges(embedTensor, numSpacepoints, m_cfg.embeddingDim,
+                       m_cfg.rVal, m_cfg.knnVal);
+
   stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
 
   std::cout << "copy edges to std::vector" << std::endl;
@@ -100,9 +102,8 @@ void Acts::ExaTrkXTrackFindingOnnx::buildEdges(std::vector<float>& embedFeatures
 
 void Acts::ExaTrkXTrackFindingOnnx::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates,
-                 ExaTrkXTime&,
-                 LoggerWrapper) const {
+    std::vector<std::vector<int> >& trackCandidates, ExaTrkXTime&,
+    LoggerWrapper) const {
   // hardcoded debugging information
   bool debug = true;
   const std::string embedding_outname = "debug_embedding_outputs.txt";
@@ -139,8 +140,8 @@ void Acts::ExaTrkXTrackFindingOnnx::getTracks(
   eOutputTensor.push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, eOutputData.data(), eOutputData.size(), eOutputShape.data(),
       eOutputShape.size()));
-  runSessionWithIoBinding(*m_embeddingSession, eInputNames, eInputTensor, eOutputNames,
-                          eOutputTensor);
+  runSessionWithIoBinding(*m_embeddingSession, eInputNames, eInputTensor,
+                          eOutputNames, eOutputTensor);
 
   std::cout << "Embedding space of the first SP: ";
   std::copy(eOutputData.begin(), eOutputData.begin() + m_cfg.embeddingDim,
@@ -200,8 +201,8 @@ void Acts::ExaTrkXTrackFindingOnnx::getTracks(
   fOutputTensor.push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, fOutputData.data(), fOutputData.size(), fOutputShape.data(),
       fOutputShape.size()));
-  runSessionWithIoBinding(*m_filterSession, fInputNames, fInputTensor, fOutputNames,
-                          fOutputTensor);
+  runSessionWithIoBinding(*m_filterSession, fInputNames, fInputTensor,
+                          fOutputNames, fOutputTensor);
 
   std::cout << "Get scores for " << numEdges << " edges." << std::endl;
   // However, I have to convert those numbers to a score by applying sigmoid!
@@ -254,8 +255,8 @@ void Acts::ExaTrkXTrackFindingOnnx::getTracks(
       gOutputShape.size()));
 
   std::cout << "run ONNX session\n";
-  runSessionWithIoBinding(*m_gnnSession, gInputNames, gInputTensor, gOutputNames,
-                          gOutputTensor);
+  runSessionWithIoBinding(*m_gnnSession, gInputNames, gInputTensor,
+                          gOutputNames, gOutputTensor);
   std::cout << "done with ONNX session\n";
 
   torch::Tensor gOutputCTen = torch::tensor(gOutputData, {torch::kFloat32});

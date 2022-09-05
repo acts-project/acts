@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingOnnx.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"

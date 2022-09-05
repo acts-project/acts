@@ -12,9 +12,9 @@ if "__main__" == __name__:
     import sys
     from digitization import configureDigitization
     from acts.examples.reconstruction import addExaTrkX, ExaTrkXBackend
-    
+
     backend = ExaTrkXBackend.Torch
-    
+
     if "onnx" in sys.argv:
         backend = ExaTrkXBackend.Onnx
     if "torch" in sys.argv:
@@ -49,7 +49,7 @@ if "__main__" == __name__:
         assert (modelDir / "gnn.onnx").exists()
 
     s = acts.examples.Sequencer(events=2, numThreads=1)
-    s.config.logLevel = acts.logging.VERBOSE
+    s.config.logLevel = acts.logging.INFO
 
     rnd = acts.examples.RandomNumbers()
     outputDir = Path(os.getcwd())

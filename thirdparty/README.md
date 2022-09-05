@@ -44,5 +44,4 @@ CMake instructions to build [Pybind11](https://github.com/pybind/pybind11), whic
 
 ## libFRNN
 
-These source files are copied from https://github.com/murnanedaniel/FRNN
-and https://github.com/lxxue/prefix_sum and used for the Exa.Trkx Plugin
+Commit hash 1758637017b12b410f83d2caa7554fd6235258b2 from [FRNN](https://github.com/lxxue/FRNN) with tests etc. removed. Used for the Exa.TrkX plugin.

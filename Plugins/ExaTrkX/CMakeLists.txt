@@ -54,29 +54,29 @@ target_link_libraries(
 
 target_link_libraries(
   ActsPluginExaTrkX
-  PRIVATE
+  PUBLIC
     frnn  
     Boost::boost
     ${TORCH_LIBRARIES}
 )
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
-  target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_TORCH_BACKEND)
+  target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_ONNX_BACKEND)
   
   target_link_libraries(
     ActsPluginExaTrkX
-    PRIVATE
+    PUBLIC
       OnnxRuntime
       cugraph::cugraph
   )
 endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
-  target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_ONNX_BACKEND)
+  target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_TORCH_BACKEND)
   
   target_link_libraries(
     ActsPluginExaTrkX
-    PRIVATE
+    PUBLIC
       TorchScatter::TorchScatter
   )
   
