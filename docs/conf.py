@@ -115,7 +115,8 @@ if on_readthedocs or tags.has("run_apidoc"):
         cwd=cwd,
         env=env,
     )
-    shutil.copyfile(cwd / "api/api_index.rst", cwd / "api/api.rst")
+    if not api_index_target.exists():
+        shutil.copyfile(cwd / "api/api_index.rst", cwd / "api/api.rst")
     print("breathe apidoc completed")
 else:
     if not api_index_target.exists():
