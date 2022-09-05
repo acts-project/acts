@@ -45,8 +45,10 @@ class TrackingGeometry {
   /// @param highestVolume is the world volume
   /// @param materialDecorator is a dediated decorator that can assign
   ///        surface or volume based material to the TrackingVolume
+  /// @param hook Identifier hook to be applied to surfaces
   TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
-                   const IMaterialDecorator* materialDecorator = nullptr);
+                   const IMaterialDecorator* materialDecorator = nullptr,
+                   const GeometryIdentifierHook& hook = {});
 
   /// Destructor
   ~TrackingGeometry();
