@@ -35,7 +35,7 @@ ResultDouble fieldCorrectionDefault(unsigned region, double y, double r) {
   return ResultDouble::success(0.0);
 }
 
-ResultUnsigned findLayerIDSPDefault(double r) {
+ResultUnsigned findLayerIDDefault(double r) {
   if (r < 50)
     return ResultUnsigned::success(0);
   else if (r < 100)
@@ -44,12 +44,6 @@ ResultUnsigned findLayerIDSPDefault(double r) {
      return ResultUnsigned::success(2);
   else if (r < 200)
      return ResultUnsigned::success(3);
-  return ResultUnsigned::failure(HoughError::Failure);  /// for now pixel only, so these won't be used
-}
-
-ResultUnsigned findLayerIDMeasurementDefault(double r) {
-  if (r < 200)
-     return ResultUnsigned::failure(HoughError::Failure);  // this is a pixel, ignore beacuse it will be a SP, this won't be used
   else if (r < 300)
      return ResultUnsigned::success(4);
   else if (r < 400)
@@ -67,7 +61,7 @@ ResultUnsigned findLayerIDMeasurementDefault(double r) {
 
 // default with two slices, one for negative and one for positive z, counting
 // some small overlaps, and -1 means "just take everything"
-ResultBool inSliceSPDefault(double z, unsigned layer, int slice) {
+ResultBool inSliceDefault(double z, unsigned layer, int slice) {
   if (slice == -1)
      return ResultBool::success(true);
 
@@ -117,54 +111,3 @@ ResultBool inSliceSPDefault(double z, unsigned layer, int slice) {
   }
 }
 
-// default with two slices, one for negative and one for positive z, counting
-// some small overlaps, and -1 means "just take everything"
-ResultBool inSliceMeasurementDefault(double z, unsigned layer, int slice) {
-  if (slice == -1)
-    return ResultBool::success(true);
-
-  double absz = abs(z);
-  if (slice == 0 && z > 50)
-    return ResultBool::success(false);
-  else if (slice == 1 && z < -50)
-    return ResultBool::success(false);
-  else {
-    if (layer <= 3) {
-      if (absz < 200)
-        return ResultBool::success(true);
-      else
-        return ResultBool::success(false);
-    } else if (layer == 4) {
-      if (absz < 300)
-        return ResultBool::success(true);
-      else
-        return ResultBool::success(false);
-    } else if (layer == 5) {
-      if (absz < 400)
-        return ResultBool::success(true);
-      else
-        return ResultBool::success(false);
-    } else if (layer == 6) {
-      if (absz < 600)
-        return ResultBool::success(true);
-      else
-        return ResultBool::success(false);
-    } else if (layer == 7) {
-      if (absz < 700)
-        return ResultBool::success(true);
-      else
-        return ResultBool::success(false);
-    } else if (layer == 8) {
-      if (absz < 800)
-        return ResultBool::success(true);
-      else
-        return ResultBool::success(false);
-    } else if (layer == 9) {
-      if (absz < 1100)
-        return ResultBool::success(true);
-      else
-        return ResultBool::success(false);
-    } else
-      return ResultBool::success(false);
-  }
-}

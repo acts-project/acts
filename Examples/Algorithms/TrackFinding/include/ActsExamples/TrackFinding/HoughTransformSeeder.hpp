@@ -87,10 +87,8 @@ using ResultBool = Acts::Result<bool>;
 using ResultUnsigned = Acts::Result<unsigned>;
 
 using FieldCorrector = Acts::Delegate<ResultDouble(unsigned, double, double)>; // (unsigned region, double y, double r)
-using LayerIDSPFinder = Acts::Delegate<ResultUnsigned(double)>; // (double r) this function will map the r of a SP to a layer.
-using LayerIDMeasurementFinder = Acts::Delegate<ResultUnsigned(double)>; // (double r) this function will map the r of a measurement to a layer.
-using SliceSPTester = Acts::Delegate<ResultBool(double, unsigned, int)>; // (double z,unsigned layer, int slice) 
-using SliceMeasurementTester = Acts::Delegate<ResultBool(double, unsigned, int)>; // (double z,unsigned layer, int slice) 
+using LayerIDFinder = Acts::Delegate<ResultUnsigned(double)>; // (double r) this function will map the r of a measurement to a layer.
+using SliceTester = Acts::Delegate<ResultBool(double, unsigned, int)>; // (double z,unsigned layer, int slice) 
 
 
 namespace Acts {
@@ -111,10 +109,25 @@ namespace ActsExamples {
 /// each bin. Size m_houghHistSize_y * m_houghHistSize_x. (NOTE y is row coordinate) For
 /// now, what is stored is actually the index of the object in the vectors, so
 /// we can get the Index layer
-
- 
-
 typedef vector2D<std::pair<int, std::unordered_set<unsigned>>> HoughHist;
+
+enum HoughHitType{SP=0, MEASUREMENT=1};
+
+/// The measurements and SP are ugly to use, this is a convenience struct that
+/// contains the needed information
+struct HoughMeasurementStruct {
+   unsigned layer;
+   double phi;
+   double radius;
+   double z;
+   Index index;
+   HoughHitType type;
+   HoughMeasurementStruct(unsigned l, double p, double r, double thez, Index i, HoughHitType t)
+      : layer(l), phi(p), radius(r), z(thez), index(i), type(t) {}
+};
+
+thread_local std::vector<std::shared_ptr< HoughMeasurementStruct> > houghMeasurementStructs;
+   
 
 /// Construct track seeds from space points.
 class HoughTransformSeeder final : public BareAlgorithm {
@@ -190,11 +203,8 @@ class HoughTransformSeeder final : public BareAlgorithm {
 
   // it's up to the user to connect these to the functions they want to use
   FieldCorrector fieldCorrector;
-  LayerIDSPFinder layerIDSPFinder;
-  LayerIDMeasurementFinder layerIDMeasurementFinder;
-  SliceSPTester sliceSPTester;
-  SliceMeasurementTester sliceMeasurementTester;
-
+  LayerIDFinder layerIDFinder;
+  SliceTester sliceTester;
 
   };
 
@@ -218,7 +228,7 @@ class HoughTransformSeeder final : public BareAlgorithm {
   double getMinY() const { return m_cfg.yMin; }
   double getMaxY() const { return m_cfg.yMax; }
   unsigned getThreshold() const {
-     return m_cfg.threshold[0]; 
+     return m_cfg.threshold[0];  // for now this is just one number in the vector, can be more in the future
   }
   std::vector<int> getSubRegions() const { return m_cfg.subRegions; }
 
@@ -239,28 +249,11 @@ class HoughTransformSeeder final : public BareAlgorithm {
   std::vector<double> m_bins_x;  // size == m_houghHistSize_x + 1.
   std::vector<double> m_bins_y;  // size == m_houghHistSize_y + 1
 
-  /// The measurements are ugly to use, this is a convenience struct that
-  /// contains the needed information
-  struct MeasurementStruct {
-    unsigned layer;
-    double phi;
-    double radius;
-    double z;
-    Index index;
-    MeasurementStruct(unsigned l, double p, double r, double thez, Index i)
-        : layer(l), phi(p), radius(r), z(thez), index(i) {}
-  };
-
   ///////////////////////////////////////////////////////////////////////
-  // Core functions , they take both measurements and spacepoints, the second
-  // one calls the first one per layer
+  // Core functions, the second/ one calls the first one per layer
   HoughHist createLayerHoughHist(
-      unsigned layer, std::vector<const SimSpacePoint*>& spacepoints,
-      std::vector<std::shared_ptr<const MeasurementStruct>>& meas,
-      int subregion) const;
-  HoughHist createHoughHist(std::vector<const SimSpacePoint*>& spacepoints,
-                    std::vector<std::shared_ptr<const MeasurementStruct>>& meas,
-                    int subregion) const;
+      unsigned layer, int subregion) const;
+  HoughHist createHoughHist(int subregion) const;
 
   ///////////////////////////////////////////////////////////////////////
   // Helpers
@@ -276,10 +269,11 @@ class HoughTransformSeeder final : public BareAlgorithm {
   std::vector<std::vector<int>> getComboIndices(std::vector<size_t>& sizes)
       const;  // useful to find all candidates from given bins that pass
               // (looping over hit combinatorics)
+
+  // functions to clean up the code and convert SPs and measurements to the HoughMeasurement format
+  void AddMeasurements(const AlgorithmContext& ctx) const;
+  void AddSPs(const AlgorithmContext& ctx) const;
+
 };
 
-   float multiply(float a, float b) {
-      return a * b;
-   }
-   
 }  // namespace ActsExamples

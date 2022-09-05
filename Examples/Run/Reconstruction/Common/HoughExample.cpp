@@ -131,8 +131,8 @@ int runHoughExample(int argc, char* argv[],
 
   houghCfg.xMin = -0.05;  // minphi
   houghCfg.xMax = 0.25;   // maxphi
-  houghCfg.yMin = -1.25;  // min q/pt, -1/0.8 GeV  for extension
-  houghCfg.yMax = 1.25;   // max q/pt, -1/0.8 GeV  for extension
+  houghCfg.yMin = -1.25;  // min q/pt, -1/0.8 GeV
+  houghCfg.yMax = 1.25;   // max q/pt, +1/0.8 GeV
 
   houghCfg.houghHistSize_x = 216;
   houghCfg.houghHistSize_y = 216;  // i.e. number of bins in q/pT
@@ -152,10 +152,8 @@ int runHoughExample(int argc, char* argv[],
 
 
   houghCfg.fieldCorrector.connect<&fieldCorrectionDefault>();
-  houghCfg.layerIDSPFinder.connect<&findLayerIDSPDefault>();
-  houghCfg.layerIDMeasurementFinder.connect<&findLayerIDMeasurementDefault>();
-  houghCfg.sliceSPTester.connect<&inSliceSPDefault>();
-  houghCfg.sliceMeasurementTester.connect<&inSliceMeasurementDefault>();
+  houghCfg.layerIDFinder.connect<&findLayerIDDefault>();
+  houghCfg.sliceTester.connect<&inSliceDefault>();
 
   sequencer.addAlgorithm(
       std::make_shared<HoughTransformSeeder>(houghCfg, logLevel));
