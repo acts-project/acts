@@ -106,7 +106,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     ProtoTrack protoTrack;
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
-      protoTrack.push_back(spacePointPtr->measurementIndex());
+      if (spacePointPtr->sourceLinks().empty()) {
+        ACTS_WARNING("Missing sourcelink in space point");
+        continue;
+      }
+      const auto slink = static_cast<const IndexSourceLink &>(
+          *(spacePointPtr->sourceLinks()[0]));
+      protoTrack.push_back(slink.index());
     }
     protoTracks.push_back(std::move(protoTrack));
   }
