@@ -100,10 +100,10 @@ void Acts::ExaTrkXTrackFindingOnnx::buildEdges(
             std::back_inserter(edgeList));
 }
 
-void Acts::ExaTrkXTrackFindingOnnx::getTracks(
+Acts::ExaTrkXTime Acts::ExaTrkXTrackFindingOnnx::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates, ExaTrkXTime&,
-    LoggerWrapper) const {
+    std::vector<std::vector<int> >& trackCandidates, LoggerWrapper) const {
+  ExaTrkXTime timeInfo;
   // hardcoded debugging information
   bool debug = true;
   const std::string embedding_outname = "debug_embedding_outputs.txt";
@@ -285,7 +285,7 @@ void Acts::ExaTrkXTrackFindingOnnx::getTracks(
 
   std::cout << "size of components: " << trackLabels.size() << std::endl;
   if (trackLabels.size() == 0)
-    return;
+    return timeInfo;
 
   trackCandidates.clear();
 
@@ -310,4 +310,6 @@ void Acts::ExaTrkXTrackFindingOnnx::getTracks(
       existTrkIdx++;
     }
   }
+
+  return timeInfo;
 }
