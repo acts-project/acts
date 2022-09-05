@@ -387,7 +387,7 @@ jobs:
           # Install tbb-devel also to build the examples
         run: >
           dnf -y install ninja-build tbb-devel ccache
-          && ln -s $(find / -type f -name 'ccache') /usr/local/bin/cache
+          && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
       - name: Cache build
         uses: actions/cache@v3
@@ -399,10 +399,10 @@ jobs:
 
       - name: Configure
         run: >
-          /usr/local/bin/ccache -z &&
+          ccache -z &&
           cmake -B build -S .
           -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=/usr/local/bin/ccache
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
@@ -418,7 +418,7 @@ jobs:
       # The above line is required as a sort of retry mechanism. Without it,
       # the build fails for technical reasons.
       - name: ccache stats
-        run: /usr/local/bin/ccache -s
+        run: ccache -s
       - name: Unit tests
         run: ${SETUP} && ${PRELOAD} && cmake --build build --target test
       - name: Integration tests
