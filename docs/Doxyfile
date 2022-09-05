@@ -168,7 +168,8 @@ STRIP_FROM_INC_PATH    = ../Core/include \
                          ../Plugins/Identification/include \
                          ../Plugins/Json/include \
                          ../Plugins/Legacy/include \
-                         ../Plugins/TGeo/include
+                         ../Plugins/TGeo/include \
+                         ../Plugins/ExaTrkX/include
 
 # If the SHORT_NAMES tag is set to YES, doxygen will generate much shorter (but
 # less readable) file names. This can be useful is your file systems doesn't
@@ -780,7 +781,8 @@ INPUT                  = ../Core/include \
                          ../Plugins/Json/include \
                          ../Plugins/Legacy/include \
                          ../Plugins/Onnx/include \
-                         ../Plugins/TGeo/include
+                         ../Plugins/TGeo/include \
+                         ../Plugins/ExaTrkX/include \
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
