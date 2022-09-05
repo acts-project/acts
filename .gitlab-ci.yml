@@ -1,6 +1,7 @@
 clang_tidy:
   stage: build
   image: ghcr.io/acts-project/ubuntu2204:v29
+  entrypoint: [ '/bin/sh', '-c' ] #https://gitlab.com/gitlab-org/gitlab-runner/-/issues/27614
   artifacts:
     paths:
       - src/clang-tidy/
