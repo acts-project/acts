@@ -19,6 +19,7 @@
 #include <string>
 #include <vector>
 
+#include <boost/container/static_vector.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 
 #include "CsvOutputData.hpp"
@@ -65,6 +66,9 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
 
     if (m_cfg.inputCollection == "pixel" || m_cfg.inputCollection == "strip" ||
         m_cfg.inputCollection == "overlap") {
+      boost::container::static_vector<const Acts::SourceLink*, 2> sLinks;
+      // auto sp = SimSpacePoint(globalPos, data.sp_covr, data.sp_covz, sLinks);
+
       if (m_cfg.extendCollection) {
         Acts::Vector3 topStripDirection(data.sp_topStripDirection[0],
                                         data.sp_topStripDirection[1],
@@ -79,14 +83,13 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
                                              data.sp_topStripCenterPosition[1],
                                              data.sp_topStripCenterPosition[2]);
 
-        spacePoints.emplace_back(
-            globalPos, data.sp_covr, data.sp_covz, data.measurement_id,
-            data.sp_topHalfStripLength, data.sp_bottomHalfStripLength,
-            topStripDirection, bottomStripDirection, stripCenterDistance,
-            topStripCenterPosition);
+        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz, sLinks,
+                                 data.sp_topHalfStripLength,
+                                 data.sp_bottomHalfStripLength,
+                                 topStripDirection, bottomStripDirection,
+                                 stripCenterDistance, topStripCenterPosition);
       } else {
-        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz,
-                                 data.measurement_id);
+        spacePoints.emplace_back(globalPos, data.sp_covr, data.sp_covz, sLinks);
       }
     } else {
       ACTS_ERROR("Invalid space point type " << m_cfg.inputStem);
