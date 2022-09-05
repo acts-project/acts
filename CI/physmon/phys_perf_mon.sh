@@ -66,7 +66,7 @@ function full_chain() {
         $refdir/performance_vertexing_${suffix}_hist.root \
         --title "IVF ${suffix}" \
         -o $outdir/ivf_${suffix}.html \
-        -p $outdir/ivf_${suffix}_plots 
+        -p $outdir/ivf_${suffix}_plots
 
 }
 
