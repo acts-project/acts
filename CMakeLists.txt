@@ -291,7 +291,7 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
   enable_cuda()
   find_package(CUDAToolkit REQUIRED)
   find_package(Torch REQUIRED)
-  add_subdirectory(thirdparty/libFRNN)
+  add_subdirectory(thirdparty/FRNN)
   if(NOT (ACTS_EXATRKX_ENABLE_ONNX OR ACTS_EXATRKX_ENABLE_TORCH))
     message(FATAL_ERROR 
       "When building the Exa.TrkX plugin, at least one of ACTS_EXATRKX_ENABLE_ONNX \

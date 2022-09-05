@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -49,11 +50,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     float z = sp.z();
     float r = sp.r();
     float phi = std::atan2(y, x);
+    
     inputValues.push_back(r / m_cfg.rScale);
     inputValues.push_back(phi / m_cfg.phiScale);
     inputValues.push_back(z / m_cfg.zScale);
-
-    spacepointIDs.push_back(sp.measurementIndex());
+    
+    // For now just take the first index since the model
+    const auto islink = static_cast<const IndexSourceLink&>(*sp.sourceLinks().front())
+    spacepointIDs.push_back(islink.index());
   }
 
   // ProtoTrackContainer protoTracks;

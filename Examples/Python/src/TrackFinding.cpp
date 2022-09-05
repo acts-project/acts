@@ -156,9 +156,10 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
     ACTS_PYTHON_MEMBER(cotThetaMax);
-    ACTS_PYTHON_MEMBER(deltaRMin);
-    ACTS_PYTHON_MEMBER(deltaRMax);
-
+    ACTS_PYTHON_MEMBER(deltaRMinBottomSP);
+    ACTS_PYTHON_MEMBER(deltaRMaxBottomSP);
+    ACTS_PYTHON_MEMBER(deltaRMinTopSP);
+    ACTS_PYTHON_MEMBER(deltaRMaxTopSP);
     ACTS_PYTHON_MEMBER(impactMax);
     ACTS_PYTHON_MEMBER(sigmaScattering);
     ACTS_PYTHON_MEMBER(maxPtScattering);

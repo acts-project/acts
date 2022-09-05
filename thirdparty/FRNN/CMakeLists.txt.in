@@ -1,6 +1,3 @@
-find_package (Python3 COMPONENTS Interpreter Development)
-find_package(Torch REQUIRED)
-
 set(FRNN_CXX_FLAGS "${TORCH_CXX_FLAGS}")
 
 if(CMAKE_COMPILER_IS_GNUCXX)
@@ -23,25 +20,26 @@ if(CMAKE_BUILD_TYPE MATCHES Debug)
     list(APPEND FRNN_CUDA_FLAGS -G -Xcompiler=-rdynamic)
 endif(CMAKE_BUILD_TYPE MATCHES Debug)
 
-file(GLOB_RECURSE SrcFiles *.cu)
-add_library(frnn SHARED ${SrcFiles})
+add_library(frnn SHARED
+    frnn/csrc/grid/counting_sort.cu
+    frnn/csrc/grid/find_nbrs.cu
+    frnn/csrc/grid/insert_points.cu
+    frnn/csrc/grid/prefix_sum.cu
+)
 
 target_include_directories(frnn
     SYSTEM PUBLIC
-        ${Python3_INCLUDE_DIRS}
         ${TORCH_INCLUDE_DIRS}
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/frnn/csrc>
         $<INSTALL_INTERFACE:include>
 )
 
-target_link_libraries(frnn PRIVATE "${TORCH_LIBRARIES}" ${Python3_LIBRARIES})
+target_link_libraries(frnn PRIVATE ${TORCH_LIBRARIES})
 
-set_property(TARGET frnn PROPERTY CXX_STANDARD 14)
+set_property(TARGET frnn PROPERTY CXX_STANDARD 17)
 set_property(TARGET frnn PROPERTY POSITION_INDEPENDENT_CODE ON)
 set_property(TARGET frnn PROPERTY CUDA_SEPARABLE_COMPILATION ON)
-set_property(TARGET frnn PROPERTY CUDA_STANDARD 14)
-#
-#set_target_properties(frnn PROPERTIES CUDA_ARCHITECTURES "70;75;80;86")
+set_property(TARGET frnn PROPERTY CUDA_STANDARD 17)
 
 target_compile_options(frnn
     PUBLIC  "$<$<COMPILE_LANGUAGE:CXX>:${FRNN_CXX_FLAGS}>"
