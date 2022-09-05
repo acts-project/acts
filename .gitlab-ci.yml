@@ -1,9 +1,6 @@
 clang_tidy:
   stage: build
-  image: 
-    name: ghcr.io/acts-project/ubuntu2204:v29
-    # https://gitlab.com/gitlab-org/gitlab-runner/-/issues/27614
-    entrypoint: [ '/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0'  ]
+  image: ghcr.io/acts-project/ubuntu2004:v29
   artifacts:
     paths:
       - src/clang-tidy/
@@ -15,12 +12,12 @@ clang_tidy:
     - git checkout $HEAD_SHA
     - >
         apt-get update
-        && apt-get install -y clang-14 clang-tidy-14 g++-10 libstdc++-10-dev parallel
-        && ln -s /usr/bin/clang++-14 /usr/bin/clang++
-        && ln -s /usr/bin/clang-14 /usr/bin/clang
-        && ln -s /usr/bin/clang-tidy-14 /usr/bin/clang-tidy
+        && apt-get install -y clang-12 clang-tidy-12 g++-8 libstdc++-8-dev parallel
+        && ln -s /usr/bin/clang++-12 /usr/bin/clang++
+        && ln -s /usr/bin/clang-12 /usr/bin/clang
+        && ln -s /usr/bin/clang-tidy-12 /usr/bin/clang-tidy
         && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
-        && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/ /opt/lib/gcc/x86_64-linux-gnu/ 
+        && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/ 
         && clang++ --gcc-toolchain=/opt -v
     - >
         cmake -B build -S .
