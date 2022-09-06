@@ -275,7 +275,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
   GeometryIdentifier lastID = GeometryIdentifier();
   GeometryIdentifier currentID = GeometryIdentifier();
   Vector3 currentPos(0., 0., 0);
-  float currentPathCorrection = 0.;
+  float currentPathCorrection = 1.;
   auto currentAccMaterial = mState.accumulatedMaterial.end();
 
   // To remember the bins of this event
