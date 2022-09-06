@@ -315,6 +315,7 @@ def defaultLogging(
     - `customLogLevel(maxLevel=acts.logging.INFO)` to get a log level that is INFO or lower
       (depending on the sequencer and `logLevel` param) which is useful to get more details from a
       component that will produce logs of interest below the default level
+    - in summary `minLevel` defines the maximum amount of logging and `maxLevel` defines the minimum amount of logging
     """
 
     def customLogLevel(
