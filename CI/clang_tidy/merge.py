@@ -31,7 +31,7 @@ def main():
     items = list(items)
 
     print("Write to", args.output)
-    with open(args.output, "w+") as jf:
+    with open(args.output, "w") as jf:
         jf.write(ItemCollection(__root__=items).json(indent=2))
 
 
