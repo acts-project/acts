@@ -311,8 +311,8 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
     # x represent X or phi depending on the type of surface
     # y represent Y, R or Z depending on the type of surface
     space = {
-        "x": "uniform(1, 120, discrete=True)",
-        "y": "uniform(1, 120, discrete=True)",
+        "x": "uniform(1, 240, discrete=True)",
+        "y": "uniform(1, 240, discrete=True)",
     }
     # Build the experiment
     experiments = build_experiment(
@@ -323,6 +323,11 @@ def surfaceExperiment(key, nbJobs, pathDB, pathResult, pipeBin, pipeResult, doPl
         storage=storage,
         max_idle_time=2400,
     )
+    # Clean trial that haven't been completed
+    store = get_storage()
+    store.delete_trials(uid=experiments.id, where={"status": {"$ne": "completed"}})
+    store.release_algorithm_lock(uid=experiments.id)
+
     trials = dict()
     binMap = dict()
     # Suggest one binning per job and then send them via the pipe
