@@ -966,8 +966,8 @@ class MultiTrajectory {
   /// @param jacIdx Index into the jacobian column
   /// @return Mutable proxy
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr typename TrackStateProxy::Covariance jacobian(IndexType covIdx) {
-    return self().jacobian_impl(covIdx);
+  constexpr typename TrackStateProxy::Covariance jacobian(IndexType jacIdx) {
+    return self().jacobian_impl(jacIdx);
   }
 
   /// Retrieve a jacobian proxy instance for a jacobian at a given index
