@@ -45,7 +45,7 @@ void addMaterialMappingOptions(aopt_t& opt) {
       po::value<bool>()->default_value(po::value<bool>()->default_value(false)),
       "Read the surface associated with each material hit, can be used to "
       "speed up the mapping. "
-      "The mapping need to have been performed at least once for the surface "
+      "The mapping needs to have been performed at least once for the surface "
       "information to be there.");
 }
 
