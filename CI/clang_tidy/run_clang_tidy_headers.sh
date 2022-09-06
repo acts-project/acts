@@ -1,7 +1,7 @@
 #!/bin/bash
 
 function execute() {
-    clang-tidy "$@" || true
+    clang-tidy --config .clang-tidy-headers "$@" || true
 }
 
 export -f execute
