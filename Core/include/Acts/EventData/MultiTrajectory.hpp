@@ -936,7 +936,7 @@ class MultiTrajectory {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr typename TrackStateProxy::Parameters parameters(IndexType parIdx) {
     return self().parameters_impl(parIdx);
-  };
+  }
 
   /// Retrieve a parameter proxy instance for parameters at a given index
   /// @param parIdx Index into the parameter column
@@ -1087,7 +1087,7 @@ class MultiTrajectory {
  private:
   friend class detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, true>;
   friend class detail_lt::TrackStateProxy<Derived, MeasurementSizeMax, false>;
-};  // namespace Acts
+};
 
 }  // namespace Acts
 
