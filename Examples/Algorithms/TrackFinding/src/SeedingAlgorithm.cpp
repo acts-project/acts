@@ -55,6 +55,38 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config deltaRMax");
   }
 
+  static_assert(std::numeric_limits<decltype(
+                    m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
+                "Value of deltaRMaxTopSP must support NaN values");
+
+  static_assert(std::numeric_limits<decltype(
+                    m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
+                "Value of deltaRMinTopSP must support NaN values");
+
+  static_assert(std::numeric_limits<decltype(
+                    m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
+                "Value of deltaRMaxBottomSP must support NaN values");
+
+  static_assert(std::numeric_limits<decltype(
+                    m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
+                "Value of deltaRMinBottomSP must support NaN values");
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxTopSP)) {
+    m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.seedFinderConfig.deltaRMax;
+  }
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMinTopSP)) {
+    m_cfg.seedFinderConfig.deltaRMinTopSP = m_cfg.seedFinderConfig.deltaRMin;
+  }
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxBottomSP)) {
+    m_cfg.seedFinderConfig.deltaRMaxBottomSP = m_cfg.seedFinderConfig.deltaRMax;
+  }
+
+  if (std::isnan(m_cfg.seedFinderConfig.deltaRMinBottomSP)) {
+    m_cfg.seedFinderConfig.deltaRMinBottomSP = m_cfg.seedFinderConfig.deltaRMin;
+  }
+
   if (m_cfg.gridConfig.zMin != m_cfg.seedFinderConfig.zMin) {
     throw std::invalid_argument("Inconsistent config zMin");
   }
@@ -212,7 +244,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     ProtoTrack& protoTrack = protoTracks.emplace_back();
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
-      protoTrack.push_back(spacePointPtr->measurementIndex());
+      for (const auto slink : spacePointPtr->sourceLinks()) {
+        const auto islink = static_cast<const IndexSourceLink&>(*slink);
+        protoTrack.emplace_back(islink.index());
+      }
     }
   }
 

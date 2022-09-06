@@ -17,11 +17,11 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   }
 
   static const char* const names[] = {
-      "vol=", "bnd=", "lay=", "apr=", "sen=",
+      "vol=", "bnd=", "lay=", "apr=", "sen=", "ext=",
   };
-  const GeometryIdentifier::Value levels[] = {
-      id.volume(), id.boundary(), id.layer(), id.approach(), id.sensitive(),
-  };
+  const GeometryIdentifier::Value levels[] = {id.volume(),    id.boundary(),
+                                              id.layer(),     id.approach(),
+                                              id.sensitive(), id.extra()};
 
   bool writeSeparator = false;
   for (auto i = 0u; i < 5u; ++i) {
