@@ -291,9 +291,8 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
 class CustomLogLevel(Protocol):
     def __call__(
         self,
-        override: Optional[acts.logging.Level] = None,
-        min: acts.logging.Level = acts.logging.VERBOSE,
-        max: acts.logging.Level = acts.logging.FATAL,
+        minLevel: acts.logging.Level = acts.logging.VERBOSE,
+        maxLevel: acts.logging.Level = acts.logging.FATAL,
     ) -> acts.logging.Level:
         ...
 
