@@ -54,6 +54,8 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     m_inputChain->SetBranchAddress("sur_x", &m_sur_x);
     m_inputChain->SetBranchAddress("sur_y", &m_sur_y);
     m_inputChain->SetBranchAddress("sur_z", &m_sur_z);
+    m_inputChain->SetBranchAddress("m_sur_pathCorrection",
+                                   &m_sur_pathCorrection);
   }
   if (m_cfg.fileList.empty()) {
     throw std::invalid_argument{"No input files given"};
@@ -107,6 +109,7 @@ ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
   delete m_sur_x;
   delete m_sur_y;
   delete m_sur_z;
+  delete m_sur_pathCorrection;
 }
 
 std::string ActsExamples::RootMaterialTrackReader::name() const {
@@ -157,10 +160,8 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
         double mX0 = (*m_step_X0)[is];
         double mL0 = (*m_step_L0)[is];
         double s = (*m_step_length)[is];
-
         rmTrack.second.materialInX0 += s / mX0;
         rmTrack.second.materialInL0 += s / mL0;
-
         /// Fill the position & the material
         Acts::MaterialInteraction mInteraction;
         mInteraction.position =
@@ -172,12 +173,11 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
                                             (*m_step_Z)[is], (*m_step_rho)[is]),
             s);
         if (m_cfg.readSurface) {
-          // add the surface information to to the interaction this allows the
-          // mapping to be speed up
           mInteraction.intersectionID =
               Acts::GeometryIdentifier((*m_sur_id)[is]);
           mInteraction.intersection =
               Acts::Vector3((*m_sur_x)[is], (*m_sur_y)[is], (*m_sur_z)[is]);
+          mInteraction.pathCorrection = (*m_sur_pathCorrection)[is];
         } else {
           mInteraction.intersectionID = Acts::GeometryIdentifier();
           mInteraction.intersection = Acts::Vector3(0, 0, 0);
@@ -186,7 +186,6 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
       }
       mtrackCollection[ib] = (std::move(rmTrack));
     }
-
     // Write to the collection to the EventStore
     context.eventStore.add(m_cfg.collection, std::move(mtrackCollection));
   }
