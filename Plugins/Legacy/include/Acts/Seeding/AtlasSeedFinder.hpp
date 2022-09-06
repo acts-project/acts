@@ -234,7 +234,7 @@ inline const Seed<SpacePoint>* AtlasSeedFinder<SpacePoint>::next() {
     if (i_seed == i_seede) {
       findNext();
       if (i_seed == i_seede) {
-        return 0;
+        return nullptr;
       }
     }
     ++i_seed;
