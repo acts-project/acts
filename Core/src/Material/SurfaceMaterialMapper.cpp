@@ -199,8 +199,11 @@ void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
 
 void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
+  using VectorHelpers::makeVector4;
+
   // Retrieve the recorded material from the recorded material track
   auto& rMaterial = mTrack.second.materialInteractions;
+  std::map<GeometryIdentifier, unsigned int> assignedMaterial;
   ACTS_VERBOSE("Retrieved " << rMaterial.size()
                             << " recorded material steps to map.")
 
@@ -212,20 +215,12 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
         "association interaction/surfaces won't be performed again");
     mapSurfaceInteraction(mState, rMaterial);
     return;
-  } else {
-    ACTS_VERBOSE(
-        "Material interaction need to be associated with surfaces. Collecting "
-        "all surface on the trajectory");
-    mapInteraction(mState, mTrack);
-    return;
   }
-}
-void Acts::SurfaceMaterialMapper::mapInteraction(
-    State& mState, RecordedMaterialTrack& mTrack) const {
-  // Retrieve the recorded material from the recorded material track
-  auto& rMaterial = mTrack.second.materialInteractions;
-  std::map<GeometryIdentifier, unsigned int> assignedMaterial;
-  using VectorHelpers::makeVector4;
+
+  ACTS_VERBOSE(
+      "Material interaction need to be associated with surfaces. Collecting "
+      "all surface on the trajectory");
+
   // Neutral curvilinear parameters
   NeutralCurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
                                           mTrack.first.second,
@@ -390,7 +385,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, currentPathCorrection);
-    if (touchedMapBins.count(&(currentAccMaterial->second)) == 0) {
+    if (!touchedMapBins.count(&(currentAccMaterial->second))) {
       touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     }
     if (m_cfg.computeVariance) {
@@ -472,8 +467,8 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
 
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
-        currentPos, rmIter->materialSlab, 1.0);
-    if (touchedMapBins.count(&(currentAccMaterial->second)) == 0) {
+        currentPos, rmIter->materialSlab, rmIter->pathCorrection);
+    if (!touchedMapBins.count(&(currentAccMaterial->second))) {
       touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     }
     if (m_cfg.computeVariance) {

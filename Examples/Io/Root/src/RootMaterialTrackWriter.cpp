@@ -247,6 +247,12 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
           m_sur_x.push_back(sfIntersection.intersection.position.x());
           m_sur_y.push_back(sfIntersection.intersection.position.y());
           m_sur_z.push_back(sfIntersection.intersection.position.z());
+        } else {
+          m_sur_id.push_back(Acts::GeometryIdentifier().value());
+          m_sur_x.push_back(0);
+          m_sur_y.push_back(0);
+          m_sur_z.push_back(0);
+          m_sur_pathCorrection.push_back(1.0);
         }
         if (surface != nullptr) {
           m_sur_type.push_back(surface->type());
@@ -255,7 +261,6 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
               dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
           const Acts::CylinderBounds* cylinderBounds =
               dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
-
           if (radialBounds != nullptr) {
             m_sur_range_min.push_back(radialBounds->rMin());
             m_sur_range_max.push_back(radialBounds->rMax());
@@ -269,13 +274,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
             m_sur_range_max.push_back(0);
           }
         } else {
-          m_sur_id.push_back(Acts::GeometryIdentifier().value());
           m_sur_type.push_back(-1);
-          m_sur_pathCorrection.push_back(1.0);
-
-          m_sur_x.push_back(0);
-          m_sur_y.push_back(0);
-          m_sur_z.push_back(0);
           m_sur_range_min.push_back(0);
           m_sur_range_max.push_back(0);
         }
