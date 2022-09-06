@@ -299,7 +299,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
 
       // the material information
       const auto& mprops = mint.materialSlab;
-      m_step_length.push_back(mprops.thickness() / mint.pathCorrection);
+      m_step_length.push_back(mprops.thickness());
       m_step_X0.push_back(mprops.material().X0());
       m_step_L0.push_back(mprops.material().L0());
       m_step_A.push_back(mprops.material().Ar());

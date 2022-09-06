@@ -30,7 +30,7 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
 
     rnd = RandomNumbers(seed=228)
 
-    s = s or acts.examples.Sequencer(events=2, numThreads=1)
+    s = s or acts.examples.Sequencer(events=1000, numThreads=1)
 
     evGen = EventGenerator(
         level=acts.logging.INFO,
@@ -90,4 +90,4 @@ if "__main__" == __name__:
     )
     g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(dd4hepSvc)
 
-    runMaterialRecording(g4geo=g4geo, tracksPerEvent=10, outputDir=os.getcwd()).run()
+    runMaterialRecording(g4geo=g4geo, tracksPerEvent=100, outputDir=os.getcwd()).run()
