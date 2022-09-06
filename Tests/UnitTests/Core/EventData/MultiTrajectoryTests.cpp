@@ -198,11 +198,14 @@ BOOST_AUTO_TEST_CASE(AsReadOnly) {
 
   {
     VectorMultiTrajectory::TrackStateProxy tsp = t.getTrackState(i0);
+    static_cast<void>(tsp);
     VectorMultiTrajectory::ConstTrackStateProxy ctsp = t.getTrackState(i0);
+    static_cast<void>(ctsp);
   }
 
   ConstVectorMultiTrajectory ct = t;
-  // static_assert(ConstVectorMultiTrajectory::ReadOnly, "Const is read only");
+
+  ConstVectorMultiTrajectory ctm{std::move(t)};
 
   {
     static_assert(
@@ -211,11 +214,13 @@ BOOST_AUTO_TEST_CASE(AsReadOnly) {
         "Got mutable track state proxy");
     ConstVectorMultiTrajectory::ConstTrackStateProxy ctsp =
         ct.getTrackState(i0);
+    static_cast<void>(ctsp);
 
+    // doesn't compile:
     // ctsp.predictedCovariance().setIdentity();
   }
 
-  // don't compile:
+  // doesn't compile:
   // ct.clear();
   // ct.addTrackState();
 }
