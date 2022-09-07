@@ -54,8 +54,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     m_inputChain->SetBranchAddress("sur_x", &m_sur_x);
     m_inputChain->SetBranchAddress("sur_y", &m_sur_y);
     m_inputChain->SetBranchAddress("sur_z", &m_sur_z);
-    m_inputChain->SetBranchAddress("m_sur_pathCorrection",
-                                   &m_sur_pathCorrection);
+    m_inputChain->SetBranchAddress("sur_pathCorrection", &m_sur_pathCorrection);
   }
   if (m_cfg.fileList.empty()) {
     throw std::invalid_argument{"No input files given"};

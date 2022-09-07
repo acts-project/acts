@@ -131,9 +131,9 @@ class RootMaterialTrackReader : public IReader {
   std::vector<float>* m_sur_z =
       new std::vector<float>;  ///< z position of the center of the suface
                                ///< associated with the step
-  std::vector<float>*
-      m_sur_pathCorrection;  ///< path correction when associating
-                             ///< material to the given surface
+  std::vector<float>* m_sur_pathCorrection =
+      new std::vector<float>;  ///< path correction when associating
+                               ///< material to the given surface
 };
 
 }  // namespace ActsExamples

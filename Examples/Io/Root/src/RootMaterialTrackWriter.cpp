@@ -88,7 +88,7 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
     m_outputTree->Branch("sur_x", &m_sur_x);
     m_outputTree->Branch("sur_y", &m_sur_y);
     m_outputTree->Branch("sur_z", &m_sur_z);
-    m_outputTree->Branch("m_sur_pathCorrection", &m_sur_pathCorrection);
+    m_outputTree->Branch("sur_pathCorrection", &m_sur_pathCorrection);
     m_outputTree->Branch("sur_range_min", &m_sur_range_min);
     m_outputTree->Branch("sur_range_max", &m_sur_range_max);
   }
