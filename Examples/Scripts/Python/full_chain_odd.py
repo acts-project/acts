@@ -94,6 +94,7 @@ addVertexFitting(
     field,
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
+    trajectories="trajectories",
 )
 
 s.run()

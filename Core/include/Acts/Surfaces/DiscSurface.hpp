@@ -38,7 +38,7 @@ class DetectorElementBase;
 /// to happen to transfer the local coordinates onto the
 /// cartesian reference frame coordinates.
 ///
-/// @image html DiscSurface.png
+/// @image html figures/DiscSurface.png
 ///
 class DiscSurface : public Surface {
 #ifndef DOXYGEN

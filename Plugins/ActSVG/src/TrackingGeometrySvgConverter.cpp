@@ -93,3 +93,29 @@ void Acts::Svg::TrackingGeometryConverter::convert(
     }
   }
 }
+
+std::array<actsvg::svg::object, 2>
+Acts::Svg::TrackingGeometryProjections::convert(
+    const GeometryContext& gctx, const Acts::TrackingGeometry& tGeometry,
+    const TrackingGeometryProjections::Options& cOptions) {
+  // The projections
+  actsvg::svg::object xyView;
+  actsvg::svg::object zrView;
+
+  // Get the world volume
+  const Acts::TrackingVolume* world = tGeometry.highestTrackingVolume();
+  if (world != nullptr) {
+    // Initiate the cache
+    Acts::Svg::TrackingGeometryConverter::State cState;
+
+    // Run the conversion recursively
+    Acts::Svg::TrackingGeometryConverter::convert(
+        gctx, *world, cOptions.trackingGeometryOptions, cState);
+
+    xyView = Acts::Svg::group(cState.xyCrossSection,
+                              cOptions.prefix + "projection_xy");
+    zrView = Acts::Svg::group(cState.zrCrossSection,
+                              cOptions.prefix + "projection_zr");
+  }
+  return {xyView, zrView};
+}
