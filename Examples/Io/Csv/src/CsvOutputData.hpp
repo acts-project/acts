@@ -174,11 +174,15 @@ struct SurfaceData {
   float bound_param5 = -1.f;
   float bound_param6 = -1.f;
 
+  float module_t = -1.f;
+  float pitch_u = -1.f;
+  float pitch_v = -1.f;
+
   DFE_NAMEDTUPLE(SurfaceData, geometry_id, volume_id, boundary_id, layer_id,
                  module_id, cx, cy, cz, rot_xu, rot_xv, rot_xw, rot_yu, rot_yv,
                  rot_yw, rot_zu, rot_zv, rot_zw, bounds_type, bound_param0,
                  bound_param1, bound_param2, bound_param3, bound_param4,
-                 bound_param5, bound_param6);
+                 bound_param5, bound_param6, module_t, pitch_u, pitch_v);
 };
 
 struct LayerVolumeData {
@@ -250,11 +254,9 @@ struct SurfaceGridData {
 
 struct SpacepointData {
   uint64_t measurement_id;
-  uint64_t geometry_id;
   float x, y, z;
   float var_r, var_z;
-  DFE_NAMEDTUPLE(SpacepointData, measurement_id, geometry_id, x, y, z, var_r,
-                 var_z);
+  DFE_NAMEDTUPLE(SpacepointData, measurement_id, x, y, z, var_r, var_z);
 };
 
 }  // namespace ActsExamples
