@@ -212,7 +212,7 @@ struct CombinatorialKalmanFilterOptions {
 template <typename traj_t>
 struct CombinatorialKalmanFilterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<traj_t> fittedStates{std::make_shared<traj_t>()};
+  std::shared_ptr<traj_t> fittedStates;
 
   // These is used internally to store candidate trackstates
   traj_t stateBuffer;
@@ -334,6 +334,7 @@ class CombinatorialKalmanFilter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
+      assert(result.fittedStates && "No MultiTrajectory set");
       const auto& logger = state.options.logger;
 
       if (result.finished) {
@@ -1273,9 +1274,23 @@ class CombinatorialKalmanFilter {
     ckfResults.reserve(initialParameters.size());
     // Loop over all initial track parameters. Return the results for all
     // initial track parameters including those failed ones.
+
+    auto mtj = std::make_shared<traj_t>();
+
     for (size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
       const auto& sParameters = initialParameters[iseed];
-      auto result = m_propagator.template propagate(sParameters, propOptions);
+
+      typename propagator_t::template action_list_t_result_t<
+          CurvilinearTrackParameters, Actors>
+          inputResult;
+
+      auto& r =
+          inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>();
+
+      r.fittedStates = mtj;
+
+      auto result = m_propagator.template propagate(sParameters, propOptions,
+                                                    std::move(inputResult));
 
       if (!result.ok()) {
         ACTS_ERROR("Propapation failed: "

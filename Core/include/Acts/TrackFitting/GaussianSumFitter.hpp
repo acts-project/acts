@@ -77,7 +77,8 @@ struct GaussianSumFitter {
   Acts::Result<Acts::KalmanFitterResult<traj_t>> fit(
       source_link_it_t begin, source_link_it_t end,
       const start_parameters_t& sParameters, const GsfOptions<traj_t>& options,
-      const std::vector<const Surface*>& sSequence) const {
+      const std::vector<const Surface*>& sSequence,
+      std::shared_ptr<traj_t> trajectory = {}) const {
     // Check if we have the correct navigator
     static_assert(
         std::is_same_v<DirectNavigator, typename propagator_t::Navigator>);
@@ -132,8 +133,8 @@ struct GaussianSumFitter {
   template <typename source_link_it_t, typename start_parameters_t>
   Acts::Result<Acts::KalmanFitterResult<traj_t>> fit(
       source_link_it_t begin, source_link_it_t end,
-      const start_parameters_t& sParameters,
-      const GsfOptions<traj_t>& options) const {
+      const start_parameters_t& sParameters, const GsfOptions<traj_t>& options,
+      std::shared_ptr<traj_t> trajectory = {}) const {
     // Check if we have the correct navigator
     static_assert(std::is_same_v<Navigator, typename propagator_t::Navigator>);
 

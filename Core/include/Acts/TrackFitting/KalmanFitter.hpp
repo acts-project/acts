@@ -181,7 +181,7 @@ struct KalmanFitterOptions {
 template <typename traj_t>
 struct KalmanFitterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<traj_t> fittedStates{std::make_shared<traj_t>()};
+  std::shared_ptr<traj_t> fittedStates;
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
@@ -318,6 +318,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
+      assert(result.fittedStates && "No MultiTrajectory set");
       const auto& logger = state.options.logger;
 
       if (result.finished) {
@@ -993,6 +994,7 @@ class KalmanFitter {
   /// @param end End iterator for the fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param kfOptions KalmanOptions steering the fit
+  /// @param trajectory Input trajectory storage to append into
   /// @note The input measurements are given in the form of @c SourceLink s.
   /// It's the calibrators job to turn them into calibrated measurements used in
   /// the fit.
@@ -1003,7 +1005,8 @@ class KalmanFitter {
             bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
-           const KalmanFitterOptions<traj_t>& kfOptions) const
+           const KalmanFitterOptions<traj_t>& kfOptions,
+           std::shared_ptr<traj_t> trajectory = {}) const
       -> std::enable_if_t<!_isdn, Result<KalmanFitterResult<traj_t>>> {
     const auto& logger = kfOptions.logger;
 
@@ -1047,8 +1050,21 @@ class KalmanFitter {
         std::move(kfOptions.freeToBoundCorrection);
     kalmanActor.extensions = std::move(kfOptions.extensions);
 
+    typename propagator_t::template action_list_t_result_t<
+        CurvilinearTrackParameters, Actors>
+        inputResult;
+
+    auto& r = inputResult.template get<KalmanFitterResult<traj_t>>();
+
+    if (trajectory) {
+      r.fittedStates = std::move(trajectory);
+    } else {
+      r.fittedStates = std::make_shared<traj_t>();
+    }
+
     // Run the fitter
-    auto result = m_propagator.template propagate(sParameters, kalmanOptions);
+    auto result = m_propagator.template propagate(sParameters, kalmanOptions,
+                                                  std::move(inputResult));
 
     if (!result.ok()) {
       ACTS_ERROR("Propapation failed: " << result.error());
@@ -1101,7 +1117,8 @@ class KalmanFitter {
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<traj_t>& kfOptions,
-           const std::vector<const Surface*>& sSequence) const
+           const std::vector<const Surface*>& sSequence,
+           std::shared_ptr<traj_t> trajectory = {}) const
       -> std::enable_if_t<_isdn, Result<KalmanFitterResult<traj_t>>> {
     const auto& logger = kfOptions.logger;
 
@@ -1147,8 +1164,21 @@ class KalmanFitter {
         kalmanOptions.actionList.template get<DirectNavigator::Initializer>();
     dInitializer.navSurfaces = sSequence;
 
+    typename propagator_t::template action_list_t_result_t<
+        CurvilinearTrackParameters, Actors>
+        inputResult;
+
+    auto& r = inputResult.template get<KalmanFitterResult<traj_t>>();
+
+    if (trajectory) {
+      r.fittedStates = std::move(trajectory);
+    } else {
+      r.fittedStates = std::make_shared<traj_t>();
+    }
+
     // Run the fitter
-    auto result = m_propagator.template propagate(sParameters, kalmanOptions);
+    auto result = m_propagator.template propagate(sParameters, kalmanOptions,
+                                                  std::move(inputResult));
 
     if (!result.ok()) {
       ACTS_ERROR("Propapation failed: " << result.error());
