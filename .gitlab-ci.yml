@@ -24,7 +24,6 @@ build:
     - mkdir build
     - >
       cmake -B build -S src 
-      -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
       -GNinja 
       -DCMAKE_BUILD_TYPE=Release 
       -DCMAKE_CXX_FLAGS=-w 
