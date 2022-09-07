@@ -126,7 +126,7 @@ struct GaussianSumFitter {
     };
 
     return fit_impl(begin, end, sParameters, options, fwdPropInitializer,
-                    bwdPropInitializer);
+                    bwdPropInitializer, std::move(trajectory));
   }
 
   /// @brief The fit function for the standard navigator
@@ -169,7 +169,7 @@ struct GaussianSumFitter {
     };
 
     return fit_impl(begin, end, sParameters, options, fwdPropInitializer,
-                    bwdPropInitializer);
+                    bwdPropInitializer, std::move(trajectory));
   }
 
   /// The generic implementation of the fit function.
@@ -181,7 +181,8 @@ struct GaussianSumFitter {
       source_link_it_t begin, source_link_it_t end,
       const start_parameters_t& sParameters, const GsfOptions<traj_t>& options,
       const fwd_prop_initializer_t& fwdPropInitializer,
-      const bwd_prop_initializer_t& bwdPropInitializer) const {
+      const bwd_prop_initializer_t& bwdPropInitializer,
+      std::shared_ptr<traj_t> trajectory = {}) const {
     // return or abort utility
     auto return_error_or_abort = [&](auto error) {
       if (options.abortOnError) {
@@ -253,6 +254,18 @@ struct GaussianSumFitter {
       using IsMultiParameters =
           detail::IsMultiComponentBoundParameters<start_parameters_t>;
 
+      typename propagator_t::template action_list_t_result_t<
+          CurvilinearTrackParameters, decltype(fwdPropOptions.actionList)>
+          inputResult;
+
+      auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
+
+      if (trajectory) {
+        r.fittedStates = trajectory;
+      } else {
+        r.fittedStates = std::make_shared<traj_t>();
+      }
+
       if constexpr (not IsMultiParameters::value) {
         using Charge = typename IsMultiParameters::Charge;
 
@@ -260,9 +273,11 @@ struct GaussianSumFitter {
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), sParameters.covariance());
 
-        return m_propagator.propagate(params, fwdPropOptions);
+        return m_propagator.propagate(params, fwdPropOptions,
+                                      std::move(inputResult));
       } else {
-        return m_propagator.propagate(sParameters, fwdPropOptions);
+        return m_propagator.propagate(sParameters, fwdPropOptions,
+                                      std::move(inputResult));
       }
     }();
 
@@ -295,7 +310,7 @@ struct GaussianSumFitter {
     auto bwdResult = [&]() {
       // Use last forward state as start parameters for backward propagation
       const auto params = detail::extractMultiComponentState(
-          fwdGsfResult.fittedStates, fwdGsfResult.lastMeasurementTips,
+          *fwdGsfResult.fittedStates, fwdGsfResult.lastMeasurementTips,
           fwdGsfResult.weightsOfStates, detail::StatesType::eFiltered);
 
       auto bwdPropOptions = bwdPropInitializer(options, logger);
@@ -324,11 +339,11 @@ struct GaussianSumFitter {
 
         for (const auto idx : fwdGsfResult.lastMeasurementTips) {
           result.currentTips.push_back(
-              result.fittedStates.addTrackState(TrackStatePropMask::All));
+              result.fittedStates->addTrackState(TrackStatePropMask::All));
 
           auto proxy =
-              result.fittedStates.getTrackState(result.currentTips.back());
-          proxy.copyFrom(fwdGsfResult.fittedStates.getTrackState(idx));
+              result.fittedStates->getTrackState(result.currentTips.back());
+          proxy.copyFrom(fwdGsfResult.fittedStates->getTrackState(idx));
           result.weightsOfStates[result.currentTips.back()] =
               fwdGsfResult.weightsOfStates.at(idx);
 
@@ -386,8 +401,8 @@ struct GaussianSumFitter {
                                               << bwdGsfResult.measurementHoles);
 
     auto smoothResult = detail::smoothAndCombineTrajectories<traj_t, true>(
-        fwdGsfResult.fittedStates, fwdGsfResult.currentTips,
-        fwdGsfResult.weightsOfStates, bwdGsfResult.fittedStates,
+        *fwdGsfResult.fittedStates, fwdGsfResult.currentTips,
+        fwdGsfResult.weightsOfStates, *bwdGsfResult.fittedStates,
         bwdGsfResult.currentTips, bwdGsfResult.weightsOfStates, logger);
 
     // Cannot use structured binding since they cannot be captured in lambda
