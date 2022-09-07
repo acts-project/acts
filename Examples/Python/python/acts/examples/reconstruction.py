@@ -140,7 +140,7 @@ def addSeeding(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the seeding
     Parameters
     ----------
@@ -545,7 +545,7 @@ def addKalmanTracks(
     field: acts.MagneticFieldProvider,
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
-):
+) -> None:
     truthTrkFndAlg = acts.examples.TruthTrackFinder(
         level=acts.logging.INFO,
         inputParticles="truth_seeds_selected",
@@ -558,8 +558,8 @@ def addKalmanTracks(
         srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
             level=acts.logging.INFO,
             inputProtoTracks="prototracks",
-            inputSimulatedHits=outputSimHits,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
+            inputSimHits="simhits",
+            inputMeasurementSimHitsMap="measurement_simhits_map",
             outputProtoTracks="sortedprototracks",
         )
         s.addAlgorithm(srfSortAlg)
@@ -600,7 +600,7 @@ def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-):
+) -> None:
     gsfOptions = {
         "maxComponents": 12,
         "abortOnError": False,
@@ -645,7 +645,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
-) -> acts.examples.Sequencer:
+) -> None:
     """This function steers the seeding
 
     Parameters
@@ -680,6 +680,8 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
+        outputTrackParameters="fittedTrackParameters",
+        outputTrackParametersTips="fittedTrackParametersTips",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
@@ -761,7 +763,7 @@ def addExaTrkx(
     geometrySelection: Union[Path, str],
     onnxModelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-) -> acts.examples.Sequencer:
+) -> None:
 
     # Run the particle selection
     # The pre-selection will select truth particles satisfying provided criteria
@@ -839,10 +841,11 @@ def addVertexFitting(
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
     associatedParticles: str = "particles_input",
-    trackParameters: str = "estimatedparameters",
+    trajectories: Optional[str] = None,
+    trackParameters: str = "trackparameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
-):
+) -> None:
     """This function steers the vertex fitting
 
     Parameters
@@ -934,9 +937,16 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                inputAssociatedTruthParticles=associatedParticles,
                 inputFittedTracks=trackParameters,
+                inputFittedTracksIndices="outputTrackIndices",
+                inputAllFittedTracksTips="fittedTrackParametersTips",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputTrajectories="trajectories" if trajectories is not None else "",
+                inputAssociatedTruthParticles=""
+                if trajectories is not None
+                else associatedParticles,
                 inputVertices=outputVertices,
+                minTrackVtxMatchFraction=0.0 if trajectories is not None else 0.5,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
