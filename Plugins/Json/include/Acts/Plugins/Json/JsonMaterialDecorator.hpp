@@ -50,7 +50,8 @@ class JsonMaterialDecorator : public IMaterialDecorator {
     ACTS_VERBOSE("Reading JSON material description from: " << jFileName);
     std::ifstream ifj(jFileName.c_str());
     if (!ifj.good()) {
-      throw std::runtime_error{"Unable to open input JSON material file"};
+      throw std::runtime_error{"Unable to open input JSON material file: " +
+                               jFileName};
     }
     nlohmann::json jin;
 
