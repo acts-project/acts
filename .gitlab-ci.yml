@@ -109,9 +109,11 @@ train:
     - docker-gpu-nvidia
   script:
     - apt-get update -y
-    - python3 -m pip install -r src/Plugins/ExaTrkX/training/requirements.txt
+    - ls /
+    - ls /src/Plugins/ExaTrkX/training
+    - python3 -m pip install -r /src/Plugins/ExaTrkX/training/requirements.txt
     - source build/python/setup.sh
-    - cd src/CI/exatrkx
+    - cd /src/CI/exatrkx
     - python3 datagen.py data 10
     - cp configs/processing.yaml src/Plugins/ExaTrkX/training/LightningModules/Processing
     - cp configs/embedding.yaml src/Plugins/ExaTrkX/training/LightningModules/Embedding
