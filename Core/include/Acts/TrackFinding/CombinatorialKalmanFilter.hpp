@@ -562,7 +562,8 @@ class CombinatorialKalmanFilter {
       // to consider the material effects here
       materialInteractor(state.navigation.currentSurface, state, stepper);
 
-      detail::setupLoopProtection(state, stepper, result.abortList.template get<PathLimitReached>());
+      detail::setupLoopProtection(
+          state, stepper, result.abortList.template get<PathLimitReached>());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation :
