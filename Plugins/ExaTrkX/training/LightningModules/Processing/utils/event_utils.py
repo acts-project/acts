@@ -17,7 +17,6 @@ from functools import partial
 import yaml
 import numpy as np
 import pandas as pd
-import trackml.dataset
 
 import torch
 from torch_geometric.data import Data
@@ -27,7 +26,6 @@ import itertools
 
 # Locals
 from .cell_utils import get_one_event
-from .odd_tools import load_hits_and_truth_as_trackml
 
 
 def get_cell_information(

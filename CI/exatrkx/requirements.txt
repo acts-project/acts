@@ -1,1 +1,9 @@
+--extra-index-url https://download.pytorch.org/whl/cu113
+torch
 traintrack
+--find-links https://data.pyg.org/whl/torch-1.12.0+cu113.html
+torch-scatter 
+torch-sparse 
+torch-cluster 
+torch-spline-conv 
+torch-geometric

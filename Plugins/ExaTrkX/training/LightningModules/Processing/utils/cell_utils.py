@@ -3,11 +3,6 @@ import numpy as np
 import pandas as pd
 import logging
 
-import trackml.dataset
-
-from .odd_tools import load_hits_and_truth_as_trackml
-
-
 #####################################################
 #                   UTILD PANDAS                    #
 #####################################################
@@ -227,10 +222,11 @@ def get_cell_stats(cells):
 
 def get_one_event(event_path, detector_orig, detector_proc):
 
-    logging.info("Loading ODD data")
+    # TODO update when necessary
+    #logging.info("Loading ODD data")
     
-    hits, _ = load_hits_and_truth_as_trackml(event_path, detector_orig, mask_simhits=True)
-    cells = pd.read_csv(event_path + "-cells.csv")
+    #hits, _ = load_hits_and_truth_as_trackml(event_path, detector_orig, mask_simhits=True)
+    #cells = pd.read_csv(event_path + "-cells.csv")
 
     logging.info("Hits and cells retrieved")
 

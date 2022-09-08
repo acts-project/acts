@@ -7,8 +7,6 @@ import numpy as np
 import pandas as pd
 import functools
 
-import trackml.dataset
-
 
 #############################################
 #               DETECTOR UTILS              #
