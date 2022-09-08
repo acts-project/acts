@@ -803,11 +803,7 @@ def addExaTrkX(
     geometrySelection: Union[Path, str],
     modelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-<<<<<<< HEAD
     backend: Optional[ExaTrkXBackend] = ExaTrkXBackend.Torch,
-=======
-    logLevel: Optional[acts.logging.Level] = None,
->>>>>>> feature/more-surface-info-tracking-geo
 ) -> None:
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -818,11 +814,7 @@ def addExaTrkX(
     # has no impact on the truth hits themselves
     s.addAlgorithm(
         acts.examples.TruthSeedSelector(
-<<<<<<< HEAD
-            level=s.config.logLevel,
-=======
             level=customLogLevel(),
->>>>>>> feature/more-surface-info-tracking-geo
             ptMin=500 * u.MeV,
             nHitsMin=9,
             inputParticles="particles_initial",
@@ -834,11 +826,7 @@ def addExaTrkX(
     # Create space points
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
-<<<<<<< HEAD
-            level=s.config.logLevel,
-=======
             level=customLogLevel(),
->>>>>>> feature/more-surface-info-tracking-geo
             inputSourceLinks="sourcelinks",
             inputMeasurements="measurements",
             outputSpacePoints="spacepoints",
@@ -867,11 +855,7 @@ def addExaTrkX(
 
     s.addAlgorithm(
         acts.examples.TrackFindingAlgorithmExaTrkX(
-<<<<<<< HEAD
-            level=s.config.logLevel,
-=======
             level=customLogLevel(),
->>>>>>> feature/more-surface-info-tracking-geo
             inputSpacePoints="spacepoints",
             outputProtoTracks="protoTracks",
             trackFinderML=exaTrkxFinding,

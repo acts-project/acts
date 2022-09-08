@@ -18,17 +18,17 @@ set(ACTS_FRNN_GIT_TAG "3e370d8d9073d4e130363faf87d2370598b5fbf2"
     
 mark_as_advanced(ACTS_FRNN_GIT_REPOSITORY ACTS_FRNN_GIT_TAG)
 
-FetchContent_Declare(frnn
+FetchContent_Declare(frnncontent
     GIT_REPOSITORY "${ACTS_FRNN_GIT_REPOSITORY}"
     GIT_TAG "${ACTS_FRNN_GIT_TAG}" )
 
 # FRNN does not provide a CMakeLists.txt, so we use a custom one. Because of this,
 # we have to implement the populate step manually
-FetchContent_GetProperties(frnn)
-if(NOT frnn_POPULATED)
-  FetchContent_Populate(frnn)
-  configure_file(CMakeLists.txt.in "${frnn_SOURCE_DIR}/CMakeLists.txt" COPYONLY)
-  add_subdirectory(${frnn_SOURCE_DIR} ${frnn_BINARY_DIR})
+FetchContent_GetProperties(frnncontent)
+if(NOT frnncontent_POPULATED)
+  FetchContent_Populate(frnncontent)
+  configure_file(CMakeLists.txt.in "${frnncontent_SOURCE_DIR}/CMakeLists.txt" COPYONLY)
+  add_subdirectory(${frnncontent_SOURCE_DIR} ${frnncontent_BINARY_DIR})
 endif()
 
 
