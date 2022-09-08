@@ -71,15 +71,15 @@ build:
     - cd ..
     - mkdir build
     - >
-      cmake -B build -S src 
+      cmake -B build -S src
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -GNinja 
-      -DCMAKE_BUILD_TYPE=Release 
-      -DCMAKE_CXX_FLAGS=-w 
-      -DCMAKE_CUDA_FLAGS=-w 
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-w
+      -DCMAKE_CUDA_FLAGS=-w
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
-      -DACTS_BUILD_PLUGIN_EXATRKX=ON 
-      -DACTS_BUILD_EXAMPLES_EXATRKX=ON 
+      -DACTS_BUILD_PLUGIN_EXATRKX=ON
+      -DACTS_BUILD_EXAMPLES_EXATRKX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
     - cmake --build build --
 
@@ -101,7 +101,7 @@ build:
 
 
 train:
-  stage: train
+  stage: test
   needs:
   - build
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
