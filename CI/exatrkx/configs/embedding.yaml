@@ -1,0 +1,37 @@
+# Input/output configuration
+input_dir: ${PROCESSING_OUTPUT}
+output_dir: ${EMBEDDING_OUTPUT}
+project: ${PROJECT_NAME}-embedding
+overwrite: True
+
+# Dataset parameters
+pt_signal_cut: 1.0
+pt_background_cut: 1.0
+train_split: [[8,1,1]] # Number of [training, validation, testing] examples
+true_edges: modulewise_true_edges
+noise: False
+
+# Model parameters
+spatial_channels: 3
+cell_channels: 0
+emb_hidden: 1024
+nb_layer: 4
+emb_dim: 8
+weight: 2
+activation: Tanh
+randomisation: 4
+points_per_batch: 130000
+r_train: 0.2
+r_val: 0.2
+r_test: 0.2
+knn: 50
+warmup: 4
+margin: 0.1
+lr: 0.0003
+factor: 0.58
+patience: 19
+regime: [[rp, hnm, norm]] #ci
+max_epochs: 2
+
+# Postprocessing
+callbacks: [[EmbeddingTelemetry, EmbeddingBuilder]]

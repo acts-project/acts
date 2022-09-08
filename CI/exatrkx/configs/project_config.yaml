@@ -1,0 +1,19 @@
+# Location of libraries
+libraries:
+    model_library: LightningModules
+    artifact_library: tmp
+
+# The lines you would like/need in a batch script before the call to pipeline.py
+#custom_batch_setup:
+#    - eval "$(conda shell.bash hook)"
+#    - conda activate exatrkx-gpu
+
+# If you need to set up some environment before a batch is submitted, define it here in order of commands to run
+#command_line_setup:
+#    - ls
+
+# If you need to run jobs serially, set to true
+serial: False
+
+# Which logger to use - options are Weights & Biases [wandb], TensorBoard [tb], or [None]
+logger: None

@@ -1,0 +1,38 @@
+# Input/output configuration
+input_dir: ${EMBEDDING_OUTPUT}
+output_dir: ${FILTER_OUTPUT}
+project: ${PROJECT_NAME}-filtering
+filter_cut: 0.1
+overwrite: True
+
+# Dataset parameters
+pt_background_min: 1.0
+pt_signal_min: 1.0
+datatype_names: [[train, val, test]] # Which directory prefixes to use, assuming at least a train dataset 
+datatype_split: [[8,1,1]] # Number of [training, validation, testing] examples
+noise: False
+true_edges: modulewise_true_edges
+
+
+# Model parameters
+n_chunks: 12
+in_channels: 3
+hidden: 512
+nb_layer: 4
+emb_channels: 0
+layernorm: True
+batchnorm: False
+edges_per_batch: 300000
+ratio: 2
+weight: 1
+val_subset: 0.1
+warmup: 800
+lr: 0.001
+factor: 0.4
+patience: 9
+regime: [[]] #[[pid]] #[[weighting, ci]]
+max_epochs: 2
+
+# Post-processing
+callbacks: [[FilterTelemetry, FilterBuilder, GraphSizeMonitor]]
+

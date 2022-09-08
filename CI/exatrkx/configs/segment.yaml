@@ -1,0 +1,8 @@
+input_dir: ${GNN_OUTPUT}
+output_dir: ${SEGMENTING_OUTPUT}
+datatype_names: [[train, val, test]]
+edge_cut: 0.5
+
+n_files: 10
+n_workers: 1
+#n_tasks: 1

@@ -1,0 +1,6 @@
+stage_list:
+    - {set: Processing, name: TrackMLFeatureStore, config: processing.yaml}
+    - {set: Embedding, name: LayerlessEmbedding, config: embedding.yaml}
+    - {set: Filter, name: VanillaFilter, config: filter.yaml}
+    - {set: GNN, name: InteractionGNN, config: gnn.yaml}
+#    - {set: Segmenting, name: TrackMLSegment, config: segment.yaml}

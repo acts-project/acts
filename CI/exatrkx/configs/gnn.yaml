@@ -1,0 +1,37 @@
+# Input/output configuration
+input_dir: ${FILTER_OUTPUT}
+output_dir: ${GNN_OUTPUT}
+project: ${PROJECT_NAME}-gnn
+edge_cut: 0.5
+overwrite: True
+
+# Dataset parameters
+pt_signal_cut: 1.5
+pt_background_cut: 1.5
+mask_background: False
+datatype_names: [[train, val, test]] # Which directory prefixes to use, assuming at least a train dataset 
+datatype_split: [[8,1,1]] # Number of [training, validation, testing] examples
+noise: False
+truth_key: y
+
+# Model parameters
+spatial_channels: 3
+cell_channels: 0 #8
+emb_channels: 0
+hidden: 16
+n_graph_iters: 2
+nb_node_layer: 2
+nb_edge_layer: 2
+layernorm: True
+aggregation: sum_max
+hidden_activation: ReLU
+weight: 2
+warmup: 200
+lr: 0.001
+factor: 0.3
+patience: 10
+regime: [[]]
+max_epochs: 2
+
+# Post-processing
+callbacks: [[GNNTelemetry, GNNBuilder, GraphSizeMonitor]]
