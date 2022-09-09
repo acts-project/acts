@@ -10,6 +10,7 @@ The prerequisites are the same as for the material mapping, we will need the ACT
 We will also need an optimisation library. The material mapping auto-tuning has been implemented using Orion (https://orion.readthedocs.io/en/stable/), it can be easily installed using the following pip command :
 
 .. code-block:: console
+
    $ pip install orion
 
 Configuration
