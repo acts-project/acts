@@ -109,7 +109,10 @@ train:
     - docker-gpu-nvidia
   script:
     - apt-get update -y
-    - ls
+    - ls src
+    - ls src/Plugins
+    - ls src/Plugins/ExaTrkX
+    - ls src/Plugins/ExaTrkX/training
     - python3 -m pip install -r src/Plugins/ExaTrkX/training/requirements.txt
     - source build/python/setup.sh
     - cd src/CI/exatrkx
