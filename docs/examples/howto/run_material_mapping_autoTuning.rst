@@ -8,6 +8,7 @@ Prerequisites
 The prerequisites are the same as for the material mapping, we will need the ACTS Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``). Depending on the type of detector we want to map, you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_TGEO`` are needed. The auto-tuning is implemented as part of the Acts python bindings, we will thus also need to have them installed (``ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS``).
 
 We will also need an optimisation library. The material mapping auto-tuning has been implemented using Orion (https://orion.readthedocs.io/en/stable/), it can be easily installed using the following pip command :
+
 .. code-block:: console
    $ pip install orion
 
