@@ -65,7 +65,7 @@ def assert_entries(root_file, tree_name, exp):
 
 
 @pytest.mark.slow
-def test_pythia8(tmp_path, seq):
+def test_pythia8(tmp_path, seq, assert_root_hash):
     from pythia8 import runPythia8
 
     (tmp_path / "csv").mkdir()
@@ -75,7 +75,7 @@ def test_pythia8(tmp_path, seq):
 
     events = seq.config.events
 
-    runPythia8(str(tmp_path), s=seq).run()
+    runPythia8(str(tmp_path), outputRoot=True, outputCsv=True, s=seq).run()
 
     del seq
 
@@ -83,6 +83,7 @@ def test_pythia8(tmp_path, seq):
     assert fp.exists()
     assert fp.stat().st_size > 2**10 * 50
     assert_entries(fp, "particles", events)
+    assert_root_hash(fp.name, fp)
 
     assert len(list((tmp_path / "csv").iterdir())) > 0
     assert_csv_output(tmp_path / "csv", "particles")
