@@ -1,12 +1,12 @@
---extra-index-url https://download.pytorch.org/whl/cu113
-torch
-traintrack
---find-links https://data.pyg.org/whl/torch-1.12.0+cu113.html
+--extra-index-url https://download.pytorch.org/whl/cu115
+torch==1.12.1
+traintrack==0.1.5
+--find-links https://data.pyg.org/whl/torch-1.12.1+cu115.html
 torch-scatter 
 torch-sparse 
 torch-cluster 
 torch-spline-conv 
 torch-geometric
-cupy
+cupy==11.1.0
+faiss-gpu==1.7.2
 git+https://github.com/lxxue/FRNN@3e370d8#egg=FRNN
-faiss-gpu
