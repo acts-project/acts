@@ -7,9 +7,6 @@ from torch import nn
 import scipy as sp
 import numpy as np
 
-from alive_progress import alive_bar
-
-
 """
 Ideally, we would be using FRNN and the GPU. But in the case of a user not having a GPU, or not having FRNN, we import FAISS as the 
 nearest neighbor library
@@ -49,17 +46,13 @@ def load_dataset(
         all_events = sorted([os.path.join(input_dir, event) for event in all_events])
         loaded_events = []
 
-        disable_bar = not ("ALIVE_BAR" in os.environ and bool(os.environ["ALIVE_BAR"]))
-        with alive_bar(num, disable=disable_bar, title="Loading") as bar:
-            for event in all_events[:num]:
-                try:
-                    loaded_event = torch.load(event, map_location=torch.device("cpu"))
-                    loaded_event.event_file = event
-                    loaded_events.append(loaded_event)
-                except:
-                    logging.info("Corrupted event file: {}".format(event))
-
-                bar()
+        for event in all_events[:num]:
+            try:
+                loaded_event = torch.load(event, map_location=torch.device("cpu"))
+                loaded_event.event_file = event
+                loaded_events.append(loaded_event)
+            except:
+                logging.info("Corrupted event file: {}".format(event))
 
         loaded_events = select_data(
             loaded_events,
@@ -126,45 +119,38 @@ def select_data(
 
     # NOTE: Cutting background by pT BY DEFINITION removes noise
     if pt_background_cut > 0 or not noise:
-        disable_bar = not ("ALIVE_BAR" in os.environ and bool(os.environ["ALIVE_BAR"]))
-        with alive_bar(len(events), disable=disable_bar, title="Processing I") as bar:
-            for event in events:
-
-                pt_mask = (event.pt > pt_background_cut) & (event.pid == event.pid) & (event.pid != 0)
-                pt_where = torch.where(pt_mask)[0]
-
-                inverse_mask = torch.zeros(pt_where.max() + 1).long()
-                inverse_mask[pt_where] = torch.arange(len(pt_where))
-
-                event[true_edges], edge_mask = get_edge_subset(
-                    event[true_edges], pt_where, inverse_mask
-                )
-
-                node_features = ["cell_data", "x", "hid", "pid", "pt", "nhits", "primary"]
-                for feature in node_features:
-                    if feature in event.keys:
-                        event[feature] = event[feature][pt_mask]
-
-                bar()
-
-    disable_bar = not ("ALIVE_BAR" in os.environ and bool(os.environ["ALIVE_BAR"]))
-    with alive_bar(len(events), disable=disable_bar, title="Processing II") as bar:
         for event in events:
-            event.signal_true_edges = event[true_edges]
-            edge_subset = torch.ones(event.signal_true_edges.shape[1]).bool()
 
-            if "pt" in event.keys:
-                edge_subset &= (event.pt[event[true_edges]] > pt_signal_cut).all(0)
+            pt_mask = (event.pt > pt_background_cut) & (event.pid == event.pid) & (event.pid != 0)
+            pt_where = torch.where(pt_mask)[0]
 
-            if "primary" in event.keys:
-                edge_subset &= (event.nhits[event[true_edges]] >= nhits_min).all(0)
+            inverse_mask = torch.zeros(pt_where.max() + 1).long()
+            inverse_mask[pt_where] = torch.arange(len(pt_where))
 
-            if "nhits" in event.keys:
-                edge_subset &= ((event.primary[event[true_edges]].bool().all(0) | (not primary_only)))
+            event[true_edges], edge_mask = get_edge_subset(
+                event[true_edges], pt_where, inverse_mask
+            )
 
-            event.signal_true_edges = event.signal_true_edges[:, edge_subset]
+            node_features = ["cell_data", "x", "hid", "pid", "pt", "nhits", "primary"]
+            for feature in node_features:
+                if feature in event.keys:
+                    event[feature] = event[feature][pt_mask]
 
-            bar()
+
+    for event in events:
+        event.signal_true_edges = event[true_edges]
+        edge_subset = torch.ones(event.signal_true_edges.shape[1]).bool()
+
+        if "pt" in event.keys:
+            edge_subset &= (event.pt[event[true_edges]] > pt_signal_cut).all(0)
+
+        if "primary" in event.keys:
+            edge_subset &= (event.nhits[event[true_edges]] >= nhits_min).all(0)
+
+        if "nhits" in event.keys:
+            edge_subset &= ((event.primary[event[true_edges]].bool().all(0) | (not primary_only)))
+
+        event.signal_true_edges = event.signal_true_edges[:, edge_subset]
 
     return events
 

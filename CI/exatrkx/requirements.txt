@@ -7,3 +7,6 @@ torch-sparse
 torch-cluster 
 torch-spline-conv 
 torch-geometric
+cupy
+git+https://github.com/lxxue/FRNN@3e370d8#egg=FRNN
+faiss-gpu

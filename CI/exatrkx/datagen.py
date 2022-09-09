@@ -63,7 +63,8 @@ s = addParticleGun(
     EtaConfig(-3.0, 3.0, True),
     ParticleConfig(10, acts.PdgParticle.eMuon, True),
     rnd=rnd,
-    multiplicity=100,
+    multiplicity=50,
+    outputDirCsv=str(outputDir/"train_all"),
 )
 
 s.addAlgorithm(

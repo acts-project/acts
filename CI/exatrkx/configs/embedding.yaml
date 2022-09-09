@@ -31,7 +31,7 @@ lr: 0.0003
 factor: 0.58
 patience: 19
 regime: [[rp, hnm, norm]] #ci
-max_epochs: 2
+max_epochs: 10
 
 # Postprocessing
 callbacks: [[EmbeddingTelemetry, EmbeddingBuilder]]

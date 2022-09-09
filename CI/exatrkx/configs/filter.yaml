@@ -31,7 +31,7 @@ lr: 0.001
 factor: 0.4
 patience: 9
 regime: [[]] #[[pid]] #[[weighting, ci]]
-max_epochs: 2
+max_epochs: 10
 
 # Post-processing
 callbacks: [[FilterTelemetry, FilterBuilder, GraphSizeMonitor]]
