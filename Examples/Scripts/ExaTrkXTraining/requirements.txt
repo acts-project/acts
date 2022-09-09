@@ -1,5 +1,5 @@
 --extra-index-url https://download.pytorch.org/whl/cu115
-torch==1.12.1
+torch==1.11.0+cu115
 traintrack==0.1.5
 --find-links https://data.pyg.org/whl/torch-1.12.1+cu115.html
 torch-scatter 
