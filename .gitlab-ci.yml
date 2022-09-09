@@ -56,8 +56,10 @@ build:
       - build/
       - src/Examples/Python
       - src/Examples/Scripts/Python
+      - src/Examples/Scripts/ExaTrkXTraining
       - src/Examples/Algorithms/TrackFinding/share
       - src/Examples/Algorithms/Digitization/share
+      - src/CI
     exclude:
       - build/**/*.o
 
@@ -109,18 +111,14 @@ train:
     - docker-gpu-nvidia
   script:
     - apt-get update -y
-    - ls src
-    - ls src/Plugins
-    - ls src/Plugins/ExaTrkX
-    - ls src/Plugins/ExaTrkX/training
-    - python3 -m pip install -r src/Plugins/ExaTrkX/training/requirements.txt
+    - python3 -m pip install -r src/Examples/Scripts/ExaTrkXTraining/requirements.txt
     - source build/python/setup.sh
     - cd src/CI/exatrkx
     - python3 datagen.py data 10
-    - cp configs/processing.yaml src/Plugins/ExaTrkX/training/LightningModules/Processing
-    - cp configs/embedding.yaml src/Plugins/ExaTrkX/training/LightningModules/Embedding
-    - cp configs/filter.yaml src/Plugins/ExaTrkX/training/LightningModules/Filter
-    - cp configs/gnn.yaml src/Plugins/ExaTrkX/training/LightningModules/GNN
+    - cp configs/processing.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Processing
+    - cp configs/embedding.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Embedding
+    - cp configs/filter.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Filter
+    - cp configs/gnn.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/GNN
     - export PYTHONWARNINGS="ignore"
     - export EXATRKX_DATA=data
     - export PROCESSING_OUTPUT=tmp/processing_output
