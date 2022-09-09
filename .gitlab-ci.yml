@@ -1,40 +1,40 @@
-clang_tidy:
-  stage: build
-  image: ghcr.io/acts-project/ubuntu2004:v29
-  artifacts:
-    paths:
-      - src/clang-tidy/
-    when: always
-    expire_in: 2 weeks
-  script:
-    - git clone $CLONE_URL src 
-    - cd src
-    - git checkout $HEAD_SHA
-    - >
-        apt-get update
-        && apt-get install -y clang-10 clang-tidy-10 g++-8 libstdc++-8-dev
-        && ln -s /usr/bin/clang++-10 /usr/bin/clang++
-        && ln -s /usr/bin/clang-10 /usr/bin/clang
-        && ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
-        && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
-        && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/ 
-        && clang++ --gcc-toolchain=/opt -v
-    - >
-        cmake -B build -S .
-        -GNinja
-        -DCMAKE_CXX_COMPILER=clang++
-        -DCMAKE_C_COMPILER=clang
-        -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_CXX_FLAGS="-Werror --gcc-toolchain=/opt"
-        -DACTS_BUILD_EVERYTHING=on
-        -DACTS_RUN_CLANG_TIDY=on
+#clang_tidy:
+  #stage: build
+  #image: ghcr.io/acts-project/ubuntu2004:v29
+  #artifacts:
+    #paths:
+      #- src/clang-tidy/
+    #when: always
+    #expire_in: 2 weeks
+  #script:
+    #- git clone $CLONE_URL src
+    #- cd src
+    #- git checkout $HEAD_SHA
+    #- >
+        #apt-get update
+        #&& apt-get install -y clang-10 clang-tidy-10 g++-8 libstdc++-8-dev
+        #&& ln -s /usr/bin/clang++-10 /usr/bin/clang++
+        #&& ln -s /usr/bin/clang-10 /usr/bin/clang
+        #&& ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
+        #&& mkdir -p /opt/lib/gcc/x86_64-linux-gnu
+        #&& ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/
+        #&& clang++ --gcc-toolchain=/opt -v
+    #- >
+        #cmake -B build -S .
+        #-GNinja
+        #-DCMAKE_CXX_COMPILER=clang++
+        #-DCMAKE_C_COMPILER=clang
+        #-DCMAKE_BUILD_TYPE=Release
+        #-DCMAKE_CXX_FLAGS="-Werror --gcc-toolchain=/opt"
+        #-DACTS_BUILD_EVERYTHING=on
+        #-DACTS_RUN_CLANG_TIDY=on
 
-    - mkdir clang-tidy
-    - CI/clang_tidy/run_clang_tidy.sh build > clang-tidy/clang-tidy.log
-    - pip install -r CI/clang_tidy/requirements.txt
-    - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy.log clang-tidy/clang-tidy.json --exclude "*thirdparty*"
-    - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
-    - codereport clang-tidy/clang-tidy.json clang-tidy/html
+    #- mkdir clang-tidy
+    #- CI/clang_tidy/run_clang_tidy.sh build > clang-tidy/clang-tidy.log
+    #- pip install -r CI/clang_tidy/requirements.txt
+    #- CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy.log clang-tidy/clang-tidy.json --exclude "*thirdparty*"
+    #- CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
+    #- codereport clang-tidy/clang-tidy.json clang-tidy/html
 
 build:
   stage: build
@@ -71,30 +71,61 @@ build:
     - cd ..
     - mkdir build
     - >
-      cmake -B build -S src 
+      cmake -B build -S src
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -GNinja 
-      -DCMAKE_BUILD_TYPE=Release 
-      -DCMAKE_CXX_FLAGS=-w 
-      -DCMAKE_CUDA_FLAGS=-w 
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-w
+      -DCMAKE_CUDA_FLAGS=-w
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
-      -DACTS_BUILD_PLUGIN_EXATRKX=ON 
-      -DACTS_BUILD_EXAMPLES_EXATRKX=ON 
+      -DACTS_BUILD_PLUGIN_EXATRKX=ON
+      -DACTS_BUILD_EXAMPLES_EXATRKX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
     - cmake --build build --
 
-test:
+#test:
+  #stage: test
+  #needs:
+    #- build
+  #image: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
+  #tags:
+    #- docker-gpu-nvidia
+  #script:
+    #- apt-get update -y
+    #- apt-get install -y python3 libxxhash0
+    #- curl https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar --output models.tar
+    #- tar -xf models.tar
+    #- source build/python/setup.sh
+    #- nvidia-smi
+    #- python3 src/Examples/Scripts/Python/exatrkx.py
+
+
+train:
   stage: test
   needs:
-    - build
+  - build
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
   tags:
     - docker-gpu-nvidia
   script:
     - apt-get update -y
-    - apt-get install -y python3 libxxhash0
-    - curl https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar --output models.tar
-    - tar -xf models.tar
+    - ls /
+    - ls /src/Plugins/ExaTrkX/training
+    - python3 -m pip install -r /src/Plugins/ExaTrkX/training/requirements.txt
     - source build/python/setup.sh
-    - nvidia-smi
-    - python3 src/Examples/Scripts/Python/exatrkx.py
+    - cd /src/CI/exatrkx
+    - python3 datagen.py data 10
+    - cp configs/processing.yaml src/Plugins/ExaTrkX/training/LightningModules/Processing
+    - cp configs/embedding.yaml src/Plugins/ExaTrkX/training/LightningModules/Embedding
+    - cp configs/filter.yaml src/Plugins/ExaTrkX/training/LightningModules/Filter
+    - cp configs/gnn.yaml src/Plugins/ExaTrkX/training/LightningModules/GNN
+    - export PYTHONWARNINGS="ignore"
+    - export EXATRKX_DATA=data
+    - export PROCESSING_OUTPUT=tmp/processing_output
+    - export EMBEDDING_OUTPUT=tmp/embedding_output
+    - export FILTER_OUTPUT=tmp/filter_output
+    - export GNN_OUTPUT=tmp/gnn_output
+    - export SEGMENTING_OUTPUT=tmp/segmenting_output
+    - export PROJECT_NAME="training-ci"
+    - ./traintrack configs/pipeline.yaml
+
