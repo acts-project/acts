@@ -1,10 +1,10 @@
 ACTS Material Mapping Auto-Tuning Tutorial
-==============================
+===========================================
 
 The material mapping can be quite a cumbersome process, especially when used on a detector with an evolving geometry. The point of the auto-tuning is to replace the person power needed to perform the optimisation by computing power and time.  This tutorial will present how to perform the auto-tuning of the material mapping process. It assumes the reader is familiar with the concepts related to the material mapping. For more information, refer yourself to the `run_material_mapping` how to guide. This page will explain how to perform the auto-tuning material mapping with the Open Data Detector (ODD) but it can be applied to any other detector (see the other how to change detector).
 
 Prerequisites
--------------
+--------------
 The prerequisites are the same as for the material mapping, we will need the ACTS Examples, Geant4 and the JSON plugin (``ACTS_BUILD_EXAMPLES``, ``ACTS_BUILD_EXAMPLES_GEANT4`` and ``ACTS_BUILD_PLUGIN_JSON``). Depending on the type of detector we want to map, you will need to use some additional packages, in our case ``ACTS_BUILD_EXAMPLES_DD4HEP`` and ``ACTS_BUILD_PLUGIN_TGEO`` are needed. The auto-tuning is implemented as part of the Acts python bindings, we will thus also need to have them installed (``ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS``).
 
 We will also need an optimisation library. The material mapping auto-tuning has been implemented using Orion (https://orion.readthedocs.io/en/stable/), it can be easily installed using the following pip command :
@@ -12,7 +12,7 @@ We will also need an optimisation library. The material mapping auto-tuning has 
    $ pip install orion
 
 Configuration
--------------------------
+--------------
 
 Similarly to the regular material mapping, we first need to configure which surfaces will be optimised in the mapping. For this we first need to extract the list of all the surfaces in our detector, to do so we will use the GeometryExample:
 
@@ -33,7 +33,7 @@ As a rule of thumb, the material can be mapped on the approach surface of your s
   When performing the auto-tuning, the list of surface the material is mapped onto must stay consistent. You want to change the surface used, you will need to restart the tuning from the start. 
 
 Geantino scan
--------------
+--------------
 
 The next step is to do a geantino scan of our detector. For this, we will use the ``MaterialRecording`` application :
 
@@ -47,7 +47,7 @@ The next step is to do a geantino scan of our detector. For this, we will use th
 The result of the geantino scan will be a root file containing material tracks. Those contain the direction and production vertex of the geantino, the total material accumulated and all the interaction points in the detector.
 
 Material Mapping Optimisation 
---------------------------------
+------------------------------
 
 Once we have our json configuration file and our geantino material track file we can start the optimisation of the material map. For this, we will use the ``material_mapping_optimisation.py`` python binding file. This script file has five options that can be changed :
 
@@ -65,13 +65,13 @@ The current python script uses a simple random search, more performant algorithm
 To simplify the use of the auto-tuning a bash script is available in ``Examples/Scripts/Python/Auto-tuning/Orion/``, performing the optimisation should be as simple as launching this script. You will only need to modify the path to your input and output directory that are called ``MaterialMappingInputDir`` and ``MaterialMappingOutputDir`` by default.
 
 Material Validation
--------------------
+--------------------
 
 Once you have run the optimisation enough time and extracted the optimised material map, you can run material map validation from the ``run_material_mapping`` to validate your map. 
 
 
 Implementation 
-----------------
+---------------
 
 This section will present in more detail how the optimisation is implemented in ``material_mapping_optimisation.py``. This information is not necessarily needed to run it, but might be useful if you want to modify the script.
 
