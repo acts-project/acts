@@ -8,6 +8,9 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 
+#include <boost/histogram.hpp>
+#include <boost/histogram/make_histogram.hpp>
+
 namespace Acts {
 
 VectorMultiTrajectory::DynamicColumnBase::~DynamicColumnBase() = default;
@@ -170,6 +173,97 @@ void VectorMultiTrajectory::clear_impl() {
   for (auto& [key, vec] : m_dynamic) {
     vec->clear();
   }
+}
+
+// VectorMultiTrajectory::~VectorMultiTrajectory() {
+// if (m_index.empty()) {
+// return;
+// }
+
+// size_t total = 0;
+// std::cout << "VMT Size:" << std::endl;
+// #define PRINT_SIZE(x)                                                   \
+  // do {                                                                  \
+    // constexpr size_t esize = sizeof(decltype(x)::value_type);           \
+    // total += esize * x.size();                                          \
+    // std::cout << #x << " size: " << esize << "b * " << x.size() << "->" \
+              // << (esize * x.size()) / 1024 / 1024 << "M" << std::endl;  \
+  // } while (0)
+
+// PRINT_SIZE(m_index);
+// PRINT_SIZE(m_previous);
+// PRINT_SIZE(m_params);
+// PRINT_SIZE(m_cov);
+// PRINT_SIZE(m_meas);
+// PRINT_SIZE(m_measCov);
+// PRINT_SIZE(m_jac);
+// PRINT_SIZE(m_sourceLinks);
+// PRINT_SIZE(m_projectors);
+
+// #undef PRINT_SIZE
+
+// std::cout << "total: " << total / 1024 / 1024 << "M" << std::endl;
+// std::cout << "---" << std::endl;
+// }
+
+auto VectorMultiTrajectory::statistics() const -> Statistics {
+  using namespace boost::histogram;
+  using cat = axis::category<std::string>;
+
+  Statistics::axes_t axes;
+  axes.emplace_back(cat({"count", "index", "params", "cov", "meas", "measCov",
+                         "jac", "sourceLinks", "projectors"}));
+
+  Statistics::hist_t h = make_histogram(std::move(axes));
+  std::cout << "rank: " << h.rank() << std::endl;
+
+#define FILL_SIZE(x)                                              \
+  do {                                                            \
+    constexpr size_t esize = sizeof(decltype(m_##x)::value_type); \
+    h(#x, weight(esize* m_##x.size()));                           \
+  } while (0)
+
+  FILL_SIZE(index);
+  FILL_SIZE(params);
+  FILL_SIZE(cov);
+  FILL_SIZE(meas);
+  FILL_SIZE(measCov);
+  FILL_SIZE(jac);
+  FILL_SIZE(sourceLinks);
+  FILL_SIZE(projectors);
+
+#undef FILL_SIZE
+
+  h("count", weight(m_index.size()));
+
+  return Statistics{h};
+}
+
+std::ostream& operator<<(std::ostream& os,
+                         const VectorMultiTrajectory::Statistics& stats) {
+  using namespace boost::histogram;
+  using cat = axis::category<std::string>;
+
+  auto& h = stats.hist;
+
+  auto column_axis = axis::get<cat>(h.axis(0));
+
+  double total = 0;
+
+  auto p = [&](const auto& key, const double v) {
+    os << std::setw(20) << key << ": ";
+    os << std::fixed << std::setw(8) << std::setprecision(2)
+       << (v / 1024 / 1024) << "M" << std::endl;
+  };
+
+  for (auto&& x : indexed(h)) {
+    p(column_axis.bin(x.index(0)), *x);
+    total += *x;
+  }
+
+  p("total", total);
+
+  return os;
 }
 
 }  // namespace Acts

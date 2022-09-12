@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -17,7 +18,10 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <memory>
 #include <stdexcept>
+
+#include <boost/histogram.hpp>
 
 ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
@@ -111,6 +115,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     computeSharedHits(sourceLinks, results);
   }
 
+  // Acts::VectorMultiTrajectory::Statistics::hist_t stats;
+
+  std::shared_ptr<Acts::VectorMultiTrajectory> mtj;
+
   // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     m_nTotalSeeds++;
@@ -119,6 +127,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     if (result.ok()) {
       // Get the track finding output object
       auto& trackFindingOutput = result.value();
+      if (iseed == 0) {
+        mtj = std::dynamic_pointer_cast<Acts::VectorMultiTrajectory>(
+            trackFindingOutput.fittedStates);
+      }
       // Create a Trajectories result struct
       trajectories.emplace_back(trackFindingOutput.fittedStates,
                                 trackFindingOutput.lastMeasurementIndices,
@@ -143,6 +155,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   ACTS_DEBUG("Finalized track finding with " << trajectories.size()
                                              << " track candidates.");
+
+  auto stats = mtj->statistics();
+
+  ACTS_INFO("Track State memoery statistics:\n" << stats);
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   ctx.eventStore.add(m_cfg.outputTrackParameters,

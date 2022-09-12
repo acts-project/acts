@@ -12,6 +12,8 @@
 
 #include <unordered_map>
 
+#include <boost/histogram.hpp>
+
 namespace Acts {
 
 class VectorMultiTrajectory final
@@ -60,6 +62,18 @@ class VectorMultiTrajectory final
   VectorMultiTrajectory(VectorMultiTrajectory&&) = default;
   VectorMultiTrajectory& operator=(const VectorMultiTrajectory&) = default;
   VectorMultiTrajectory& operator=(VectorMultiTrajectory&&) = default;
+
+  struct Statistics {
+    using axis_t = boost::histogram::axis::variant<
+        boost::histogram::axis::category<std::string>>;
+
+    using axes_t = std::vector<axis_t>;
+    using hist_t = boost::histogram::histogram<axes_t>;
+
+    hist_t hist;
+  };
+
+  Statistics statistics() const;
 
  private:
   // BEGIN INTERFACE
@@ -324,6 +338,9 @@ class VectorMultiTrajectory final
 
   std::unordered_map<HashedString, std::unique_ptr<DynamicColumnBase>>
       m_dynamic;
-};  // namespace Acts
+};
+
+std::ostream& operator<<(std::ostream& os,
+                         const VectorMultiTrajectory::Statistics& stats);
 
 }  // namespace Acts
