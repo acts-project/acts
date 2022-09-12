@@ -68,7 +68,8 @@ class VectorMultiTrajectory final
 
   struct Statistics {
     using axis_t = boost::histogram::axis::variant<
-        boost::histogram::axis::category<std::string>>;
+        boost::histogram::axis::category<std::string>,
+        boost::histogram::axis::category<>>;
 
     using axes_t = std::vector<axis_t>;
     using hist_t = boost::histogram::histogram<axes_t>;

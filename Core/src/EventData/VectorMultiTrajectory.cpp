@@ -13,9 +13,11 @@
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <cstdint>
 #include <type_traits>
 
 #include <boost/histogram.hpp>
+#include <boost/histogram/axis/category.hpp>
 #include <boost/histogram/make_histogram.hpp>
 
 namespace Acts {
@@ -184,75 +186,40 @@ void VectorMultiTrajectory::clear_impl() {
   }
 }
 
-// VectorMultiTrajectory::~VectorMultiTrajectory() {
-// if (m_index.empty()) {
-// return;
-// }
-
-// size_t total = 0;
-// std::cout << "VMT Size:" << std::endl;
-// #define PRINT_SIZE(x)                                                   \
-  // do {                                                                  \
-    // constexpr size_t esize = sizeof(decltype(x)::value_type);           \
-    // total += esize * x.size();                                          \
-    // std::cout << #x << " size: " << esize << "b * " << x.size() << "->" \
-              // << (esize * x.size()) / 1024 / 1024 << "M" << std::endl;  \
-  // } while (0)
-
-// PRINT_SIZE(m_index);
-// PRINT_SIZE(m_previous);
-// PRINT_SIZE(m_params);
-// PRINT_SIZE(m_cov);
-// PRINT_SIZE(m_meas);
-// PRINT_SIZE(m_measCov);
-// PRINT_SIZE(m_jac);
-// PRINT_SIZE(m_sourceLinks);
-// PRINT_SIZE(m_projectors);
-
-// #undef PRINT_SIZE
-
-// std::cout << "total: " << total / 1024 / 1024 << "M" << std::endl;
-// std::cout << "---" << std::endl;
-// }
-
 auto VectorMultiTrajectory::statistics() const -> Statistics {
   using namespace boost::histogram;
   using cat = axis::category<std::string>;
 
   Statistics::axes_t axes;
-  axes.emplace_back(cat({"count", "index", "params", "cov", "meas", "measCov",
-                         "jac", "sourceLinks", "projectors"}));
+  axes.emplace_back(cat({
+      "count",
+      "index",
+      "parPred",
+      "covPred",
+      "parFilt",
+      "covFilt",
+      "parSmth",
+      "covSmth",
+      "meas",
+      "measCov",
+      "jac",
+      "sourceLinks",
+      "projectors",
+  }));
+
+  axes.emplace_back(axis::category<>({0, 1}));
 
   Statistics::hist_t h = make_histogram(std::move(axes));
-  std::cout << "rank: " << h.rank() << std::endl;
-
-#define FILL_SIZE(x)                                              \
-  do {                                                            \
-    constexpr size_t esize = sizeof(decltype(m_##x)::value_type); \
-    h(#x, weight(esize* m_##x.size()));                           \
-  } while (0)
-
-  // FILL_SIZE(index);
-  // FILL_SIZE(params);
-  // FILL_SIZE(cov);
-  // FILL_SIZE(meas);
-  // FILL_SIZE(measCov);
-  // FILL_SIZE(jac);
-  // FILL_SIZE(sourceLinks);
-  // FILL_SIZE(projectors);
-
-#undef FILL_SIZE
-
-  // h("count", weight(m_index.size()));
 
   for (IndexType i = 0; i < size(); i++) {
     auto ts = getTrackState(i);
-    h("count");
 
-    h("index", weight(sizeof(IndexData)));
+    bool isMeas = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
 
-    size_t params = 0;
-    size_t cov = 0;
+    h("count", isMeas);
+
+    h("index", isMeas, weight(sizeof(IndexData)));
+
     using scalar = decltype(ts.predicted())::Scalar;
     size_t par_size = eBoundSize * sizeof(scalar);
     size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
@@ -260,38 +227,35 @@ auto VectorMultiTrajectory::statistics() const -> Statistics {
     const IndexData& p = m_index[i];
     if (ts.hasPredicted() &&
         ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Predicted)) {
-      params += par_size;
-      cov += cov_size;
+      h("parPred", isMeas, weight(par_size));
+      h("covPred", isMeas, weight(cov_size));
     }
     if (ts.hasFiltered() &&
         ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Filtered)) {
-      params += par_size;
-      cov += cov_size;
+      h("parFilt", isMeas, weight(par_size));
+      h("covFilt", isMeas, weight(cov_size));
     }
     if (ts.hasSmoothed() &&
         ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Smoothed)) {
-      params += par_size;
-      cov += cov_size;
+      h("parSmth", isMeas, weight(par_size));
+      h("covSmth", isMeas, weight(cov_size));
     }
-
-    h("params", weight(params));
-    h("cov", weight(cov));
 
     size_t meas_size = eBoundSize * sizeof(scalar);
     size_t meas_cov_size = eBoundSize * eBoundSize * sizeof(scalar);
 
-    h("sourceLinks", weight(sizeof(const SourceLink*)));
+    h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
     if (ts.hasCalibrated() &&
         ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Calibrated)) {
-      h("meas", weight(meas_size));
-      h("measCov", weight(meas_cov_size));
-      h("sourceLinks", weight(sizeof(const SourceLink*)));
-      h("projectors", weight(sizeof(ProjectorBitset)));
+      h("meas", isMeas, weight(meas_size));
+      h("measCov", isMeas, weight(meas_cov_size));
+      h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+      h("projectors", isMeas, weight(sizeof(ProjectorBitset)));
     }
 
     if (ts.hasJacobian() &&
         ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Jacobian)) {
-      h("jac", weight(cov_size));
+      h("jac", isMeas, weight(cov_size));
     }
   }
 
@@ -306,8 +270,7 @@ std::ostream& operator<<(std::ostream& os,
   auto& h = stats.hist;
 
   auto column_axis = axis::get<cat>(h.axis(0));
-
-  double total = 0;
+  auto type_axis = axis::get<axis::category<>>(h.axis(1));
 
   auto p = [&](const auto& key, const auto v, const std::string suffix = "") {
     os << std::setw(20) << key << ": ";
@@ -319,17 +282,21 @@ std::ostream& operator<<(std::ostream& os,
     os << std::endl;
   };
 
-  for (auto&& x : indexed(h)) {
-    std::string key = column_axis.bin(x.index(0));
-    if (key == "count") {
-      p(key, static_cast<size_t>(*x));
-      continue;
+  for (int t = 0; t < type_axis.size(); t++) {
+    os << (type_axis.bin(t) == 1 ? "meas" : "other") << ":" << std::endl;
+    double total = 0;
+    for (int c = 0; c < column_axis.size(); c++) {
+      std::string key = column_axis.bin(c);
+      auto v = h.at(c, t);
+      if (key == "count") {
+        p(key, static_cast<size_t>(v));
+        continue;
+      }
+      p(key, v / 1024 / 1024, "M");
+      total += v;
     }
-    p(key, *x / 1024 / 1024, "M");
-    total += *x;
+    p("total", total / 1024 / 1024, "M");
   }
-
-  p("total", total / 1024 / 1024, "M");
 
   return os;
 }
