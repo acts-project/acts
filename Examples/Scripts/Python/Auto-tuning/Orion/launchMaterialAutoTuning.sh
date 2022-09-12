@@ -11,7 +11,7 @@ mv MaterialMappingOutputDir/optimised-material-map_tracks.root MaterialMappingIn
 for j in {0..4}
 do
     # Create a back up of the database
-    if [ -d "Mapping/Database-backup-$j"]; then
+    if [ -d "Mapping/Database-backup-$j" ]; then
         rm -rf Mapping/Database-backup-$j
     fi
     mkdir Mapping/Database-backup-$j
