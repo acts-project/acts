@@ -608,7 +608,6 @@ if "__main__" == __name__:
             mapName="optimised-material-map",
             format=JsonFormat.Json,
             mapVolume=False,
-            readSurface=args.readSurface,
             s=rMap,
         )
         rMap.run()
