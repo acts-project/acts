@@ -14,6 +14,8 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/SourceLinkSelectorAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/ParameterFromTrajectoryAlgorithm.hpp"
 
 #include <memory>
 
@@ -102,6 +104,65 @@ void addExaTrkXTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rScale);
     ACTS_PYTHON_MEMBER(phiScale);
     ACTS_PYTHON_MEMBER(zScale);
+    ACTS_PYTHON_STRUCT_END();
+  }
+  
+  {
+    using Alg = ActsExamples::SourceLinkSelectorAlgorithm;
+    using Config = Alg::Config;
+    auto alg =
+        py::class_<Alg, ActsExamples::BareAlgorithm,
+                   std::shared_ptr<Alg>>(
+            mex, "SpacePointMaker")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputSourceLinks);
+    ACTS_PYTHON_MEMBER(outputSourceLinks);
+    ACTS_PYTHON_MEMBER(geometrySelection);
+    ACTS_PYTHON_STRUCT_END();
+  }
+  
+  {
+    using Alg = ActsExamples::SourceLinkSelectorAlgorithm;
+    using Config = Alg::Config;
+    auto alg =
+        py::class_<Alg, ActsExamples::BareAlgorithm,
+                   std::shared_ptr<Alg>>(
+            mex, "SpacePointMaker")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputSourceLinks);
+    ACTS_PYTHON_MEMBER(outputSourceLinks);
+    ACTS_PYTHON_MEMBER(geometrySelection);
+    ACTS_PYTHON_STRUCT_END();
+  }
+  
+  {
+    using Alg = ActsExamples::ParameterFromTrajectoryAlgorithm;
+    using Config = Alg::Config;
+    auto alg =
+        py::class_<Alg, ActsExamples::BareAlgorithm,
+                   std::shared_ptr<Alg>>(
+            mex, "SpacePointMaker")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputTrajectories);
+    ACTS_PYTHON_MEMBER(outputParamters);
     ACTS_PYTHON_STRUCT_END();
   }
 }
