@@ -23,9 +23,17 @@ ActsScalar calculateDeterminant(
     TrackStateTraits::Projector projector, unsigned int calibratedSize) {
   return visit_measurement(
       fullCalibrated, fullCalibratedCovariance, calibratedSize,
-      [&](const auto calibrated, const auto calibratedCovariance) {
+      [&](const auto _calibrated, const auto _calibratedCovariance) {
         constexpr size_t kMeasurementSize =
-            decltype(calibrated)::RowsAtCompileTime;
+            decltype(_calibrated)::RowsAtCompileTime;
+
+        typename Acts::TrackStateTraits<kMeasurementSize, true>::Measurement
+            calibrated{_calibrated.data()};
+
+        typename Acts::TrackStateTraits<
+            kMeasurementSize, true>::MeasurementCovariance calibratedCovariance{
+            _calibratedCovariance.data()};
+
         const auto H =
             projector.template topLeftCorner<kMeasurementSize, eBoundSize>()
                 .eval();

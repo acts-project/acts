@@ -58,6 +58,9 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   m_sourceLinks.push_back(nullptr);
   p.iuncalibrated = m_sourceLinks.size() - 1;
 
+  m_measOffset.push_back(kInvalid);
+  m_measCovOffset.push_back(kInvalid);
+
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
     // m_meas.emplace_back();
     // m_measCov.emplace_back();
@@ -150,7 +153,8 @@ void VectorMultiTrajectory::unset_impl(TrackStatePropMask target,
       m_index[istate].ijacobian = kInvalid;
       break;
     case PM::Calibrated:
-      m_index[istate].icalibrated = kInvalid;
+      m_measOffset[istate] = kInvalid;
+      m_measCovOffset[istate] = kInvalid;
       break;
     default:
       throw std::domain_error{"Unable to unset this component"};
@@ -170,6 +174,39 @@ void VectorMultiTrajectory::clear_impl() {
   for (auto& [key, vec] : m_dynamic) {
     vec->clear();
   }
+}
+
+VectorMultiTrajectory::~VectorMultiTrajectory() {
+  if (m_index.empty()) {
+    return;
+  }
+
+  size_t total = 0;
+  std::cout << "VMT Size:" << std::endl;
+#define PRINT_SIZE(x)                                                   \
+  do {                                                                  \
+    constexpr size_t esize = sizeof(decltype(x)::value_type);           \
+    total += esize * x.size();                                          \
+    std::cout << #x << " size: " << esize << "b * " << x.size() << "->" \
+              << (esize * x.size()) / 1024 / 1024 << "M" << std::endl;  \
+  } while (0)
+
+  PRINT_SIZE(m_index);
+  PRINT_SIZE(m_previous);
+  PRINT_SIZE(m_params);
+  PRINT_SIZE(m_cov);
+  PRINT_SIZE(m_meas);
+  PRINT_SIZE(m_measOffset);
+  PRINT_SIZE(m_measCov);
+  PRINT_SIZE(m_measCovOffset);
+  PRINT_SIZE(m_jac);
+  PRINT_SIZE(m_sourceLinks);
+  PRINT_SIZE(m_projectors);
+
+#undef PRINT_SIZE
+
+  std::cout << "total: " << total / 1024 / 1024 << "M" << std::endl;
+  std::cout << "---" << std::endl;
 }
 
 }  // namespace Acts

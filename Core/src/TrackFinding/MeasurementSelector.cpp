@@ -24,9 +24,15 @@ double MeasurementSelector::calculateChi2(
     unsigned int calibratedSize) const {
   return visit_measurement(
       fullCalibrated, fullCalibratedCovariance, calibratedSize,
-      [&](const auto calibrated, const auto calibratedCovariance) -> double {
+      [&](const auto _calibrated, const auto _calibratedCovariance) -> double {
         constexpr size_t kMeasurementSize =
-            decltype(calibrated)::RowsAtCompileTime;
+            decltype(_calibrated)::RowsAtCompileTime;
+
+        typename TrackStateTraits<kMeasurementSize, true>::Measurement
+            calibrated{_calibrated.data()};
+
+        typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
+            calibratedCovariance{_calibratedCovariance.data()};
 
         using ParametersVector = ActsVector<kMeasurementSize>;
 

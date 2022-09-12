@@ -173,7 +173,9 @@ void computePosteriorWeights(
     const auto state = mt.getTrackState(tip);
     const double chi2 = state.chi2() - minChi2;
     const double detR = calculateDeterminant(
-        state.calibrated(), state.calibratedCovariance(),
+        state.template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>(),
+        state.template calibratedCovariance<
+            MultiTrajectoryTraits::MeasurementSizeMax>(),
         state.predictedCovariance(), state.projector(), state.calibratedSize());
 
     // If something is not finite here, just leave the weight as it is

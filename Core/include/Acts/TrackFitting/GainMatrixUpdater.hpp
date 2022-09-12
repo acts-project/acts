@@ -81,8 +81,13 @@ class GainMatrixUpdater {
             trackState.predictedCovariance(),
             trackState.filtered(),
             trackState.filteredCovariance(),
-            trackState.calibrated(),
-            trackState.calibratedCovariance(),
+            // These are incorrect, but we work around it
+            // @TODO: Reconsider / improve
+            trackState.template calibrated<
+                MultiTrajectoryTraits::MeasurementSizeMax>(),
+            trackState.template calibratedCovariance<
+                MultiTrajectoryTraits::MeasurementSizeMax>(),
+
             trackState.projector(),
             trackState.calibratedSize(),
         },

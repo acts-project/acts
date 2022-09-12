@@ -115,7 +115,10 @@ class MeasurementSelector {
       // const auto predictedCovariance = trackState.predictedCovariance();
 
       double chi2 = calculateChi2(
-          trackState.calibrated(), trackState.calibratedCovariance(),
+          trackState
+              .template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>(),
+          trackState.template calibratedCovariance<
+              MultiTrajectoryTraits::MeasurementSizeMax>(),
           trackState.predicted(), trackState.predictedCovariance(),
           trackState.projector(), trackState.calibratedSize());
 

@@ -19,11 +19,17 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
   visit_measurement(
       trackState.calibrated, trackState.calibratedCovariance,
       trackState.calibratedSize,
-      [&](const auto calibrated, const auto calibratedCovariance) {
+      [&](const auto _calibrated, const auto _calibratedCovariance) {
         constexpr size_t kMeasurementSize =
-            decltype(calibrated)::RowsAtCompileTime;
+            decltype(_calibrated)::RowsAtCompileTime;
         using ParametersVector = ActsVector<kMeasurementSize>;
         using CovarianceMatrix = ActsSymMatrix<kMeasurementSize>;
+
+        typename TrackStateTraits<kMeasurementSize, true>::Measurement
+            calibrated{_calibrated.data()};
+
+        typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
+            calibratedCovariance{_calibratedCovariance.data()};
 
         ACTS_VERBOSE("Measurement dimension: " << kMeasurementSize);
         ACTS_VERBOSE("Calibrated measurement: " << calibrated.transpose());

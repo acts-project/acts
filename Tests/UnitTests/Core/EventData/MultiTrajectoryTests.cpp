@@ -9,7 +9,9 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
@@ -331,10 +333,12 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(ts.hasPredicted());
   BOOST_CHECK(ts.hasFiltered());
   BOOST_CHECK(ts.hasSmoothed());
-  BOOST_CHECK(ts.hasCalibrated());
+  BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
   BOOST_CHECK(ts.hasJacobian());
   alwaysPresent(ts);
+  ts.allocateCalibrated(5);
+  BOOST_CHECK(ts.hasCalibrated());
 
   ts = t.getTrackState(t.addTrackState(PM::None));
   BOOST_CHECK(!ts.hasPredicted());
@@ -376,9 +380,11 @@ BOOST_AUTO_TEST_CASE(AddTrackStateWithBitMask) {
   BOOST_CHECK(!ts.hasPredicted());
   BOOST_CHECK(!ts.hasFiltered());
   BOOST_CHECK(!ts.hasSmoothed());
-  BOOST_CHECK(ts.hasCalibrated());
+  BOOST_CHECK(!ts.hasCalibrated());
   BOOST_CHECK(ts.hasProjector());
   BOOST_CHECK(!ts.hasJacobian());
+  ts.allocateCalibrated(5);
+  BOOST_CHECK(ts.hasCalibrated());
 
   ts = t.getTrackState(t.addTrackState(PM::Jacobian));
   BOOST_CHECK(!ts.hasPredicted());
@@ -444,12 +450,13 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
   {
     // reset measurements w/ full parameters
     auto [measPar, measCov] = generateBoundParametersCovariance(rng);
-    tsb.calibrated() = measPar;
-    tsb.calibratedCovariance() = measCov;
-    BOOST_CHECK_EQUAL(tsa.calibrated(), measPar);
-    BOOST_CHECK_EQUAL(tsa.calibratedCovariance(), measCov);
-    BOOST_CHECK_EQUAL(tsb.calibrated(), measPar);
-    BOOST_CHECK_EQUAL(tsb.calibratedCovariance(), measCov);
+    tsb.allocateCalibrated(eBoundSize);
+    tsb.calibrated<eBoundSize>() = measPar;
+    tsb.calibratedCovariance<eBoundSize>() = measCov;
+    BOOST_CHECK_EQUAL(tsa.calibrated<eBoundSize>(), measPar);
+    BOOST_CHECK_EQUAL(tsa.calibratedCovariance<eBoundSize>(), measCov);
+    BOOST_CHECK_EQUAL(tsb.calibrated<eBoundSize>(), measPar);
+    BOOST_CHECK_EQUAL(tsb.calibratedCovariance<eBoundSize>(), measCov);
   }
   {
     // reset only the effective measurements
@@ -457,6 +464,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
     size_t nMeasurements = tsb.effectiveCalibrated().rows();
     auto effPar = measPar.head(nMeasurements);
     auto effCov = measCov.topLeftCorner(nMeasurements, nMeasurements);
+    tsb.allocateCalibrated(eBoundSize);
     tsb.effectiveCalibrated() = effPar;
     tsb.effectiveCalibratedCovariance() = effCov;
     BOOST_CHECK_EQUAL(tsa.effectiveCalibrated(), effPar);
@@ -511,16 +519,16 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
   BOOST_CHECK_EQUAL(ts.effectiveProjector(), m2.projector());
 
   // check that the overallocated parts are zeroed
-  ParametersVector mParFull = ParametersVector::Zero();
-  CovarianceMatrix mCovFull = CovarianceMatrix::Zero();
-  ActsMatrix<VectorMultiTrajectory::MeasurementSizeMax, eBoundSize> projFull;
-  mParFull.head<2>() = ts.effectiveCalibrated();
-  mCovFull.topLeftCorner<2, 2>() = ts.effectiveCalibratedCovariance();
-  projFull.setZero();
-  projFull.topLeftCorner<2, eBoundSize>() = ts.effectiveProjector();
-  BOOST_CHECK_EQUAL(ts.calibrated(), mParFull);
-  BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
-  BOOST_CHECK_EQUAL(ts.projector(), projFull);
+  // ParametersVector mParFull = ParametersVector::Zero();
+  // CovarianceMatrix mCovFull = CovarianceMatrix::Zero();
+  // ActsMatrix<VectorMultiTrajectory::MeasurementSizeMax, eBoundSize> projFull;
+  // mParFull.head<2>() = ts.effectiveCalibrated();
+  // mCovFull.topLeftCorner<2, 2>() = ts.effectiveCalibratedCovariance();
+  // projFull.setZero();
+  // projFull.topLeftCorner<2, eBoundSize>() = ts.effectiveProjector();
+  // BOOST_CHECK_EQUAL(ts.calibrated(), mParFull);
+  // BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
+  // BOOST_CHECK_EQUAL(ts.projector(), projFull);
 }
 
 BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
@@ -576,8 +584,15 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
     mParFull.head(nMeasurements) = pc.sourceLink.parameters.head(nMeasurements);
     mCovFull.topLeftCorner(nMeasurements, nMeasurements) =
         pc.sourceLink.covariance.topLeftCorner(nMeasurements, nMeasurements);
-    BOOST_CHECK_EQUAL(ts.calibrated(), mParFull);
-    BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
+
+    // BOOST_CHECK_EQUAL(ts.calibrated(), mParFull);
+    // BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
+
+    visit_measurement(ts, ts.calibratedSize(), [&](auto meas, auto cov) {
+      BOOST_CHECK_EQUAL(meas, pc.sourceLink.parameters.head(nMeasurements));
+      BOOST_CHECK_EQUAL(cov, pc.sourceLink.covariance.topLeftCorner(
+                                 nMeasurements, nMeasurements));
+    });
   }
 
   BOOST_CHECK(ts.hasProjector());
@@ -639,6 +654,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   BOOST_CHECK(tsall.has<"filtered"_hash>());
   BOOST_CHECK(tsall.has<"smoothed"_hash>());
   BOOST_CHECK(tsall.has<"jacobian"_hash>());
+  BOOST_CHECK(!tsall.has<"calibrated"_hash>());
+  tsall.allocateCalibrated(5);
   BOOST_CHECK(tsall.has<"calibrated"_hash>());
   BOOST_CHECK(tsall.has<"projector"_hash>());
   BOOST_CHECK(!tsall.has<"uncalibrated"_hash>());  // separate optional
@@ -673,11 +690,17 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
   VectorMultiTrajectory mj;
   {
     auto ts = mj.getTrackState(mj.addTrackState(PM::All));
-    BOOST_CHECK(ts.getMask() == all);
+    // Calibrated is ignored because we haven't allocated yet
+    BOOST_CHECK_EQUAL(ts.getMask(), (all & ~PM::Calibrated));
+    ts.allocateCalibrated(4);
+    BOOST_CHECK_EQUAL(ts.getMask(), all);
   }
   {
     auto ts = mj.getTrackState(mj.addTrackState(PM::Filtered | PM::Calibrated));
-    BOOST_CHECK(ts.getMask() == (PM::Filtered | PM::Calibrated));
+    // Calibrated is ignored because we haven't allocated yet
+    BOOST_CHECK_EQUAL(ts.getMask(), PM::Filtered);
+    ts.allocateCalibrated(4);
+    BOOST_CHECK_EQUAL(ts.getMask(), (PM::Filtered | PM::Calibrated));
   }
   {
     auto ts = mj.getTrackState(
@@ -687,7 +710,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
   {
     for (PM mask : values) {
       auto ts = mj.getTrackState(mj.addTrackState(mask));
-      BOOST_CHECK(ts.getMask() == mask);
+      // Calibrated is ignored because we haven't allocated yet
+      BOOST_CHECK_EQUAL(ts.getMask(), (mask & ~PM::Calibrated));
     }
   }
 }
@@ -699,7 +723,13 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
                            PM::Jacobian, PM::Calibrated};
 
   VectorMultiTrajectory mj;
-  auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
+  auto mkts = [&](PM mask) {
+    auto r = mj.getTrackState(mj.addTrackState(mask));
+    if (ACTS_CHECK_BIT(mask, PM::Calibrated)) {
+      r.allocateCalibrated(3);
+    }
+    return r;
+  };
 
   // orthogonal ones
   for (PM a : values) {
@@ -707,6 +737,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
       auto tsa = mkts(a);
       auto tsb = mkts(b);
       // doesn't work
+      // std::cout << tsa.getMask() << "\n->\n" << tsb.getMask() << std::endl;
       if (a != b) {
         BOOST_CHECK_THROW(tsa.copyFrom(tsb), std::runtime_error);
         BOOST_CHECK_THROW(tsb.copyFrom(tsa), std::runtime_error);
@@ -767,8 +798,17 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_NE(&ts1.uncalibrated(), &ts2.uncalibrated());
 
   BOOST_CHECK_NE(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
-  BOOST_CHECK_NE(ts1.calibrated(), ts2.calibrated());
-  BOOST_CHECK_NE(ts1.calibratedCovariance(), ts2.calibratedCovariance());
+
+  visit_measurement(ts1, ts1.calibratedSize(), [&ts2](auto meas, auto cov) {
+    constexpr int measdim =
+        Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
+
+    BOOST_CHECK_NE(ts2.calibrated<measdim>(), meas);
+    BOOST_CHECK_NE(ts2.calibratedCovariance<measdim>(), cov);
+  });
+  // BOOST_CHECK_NE(ts1.calibrated(), ts2.calibrated());
+  // BOOST_CHECK_NE(ts1.calibratedCovariance(), ts2.calibratedCovariance());
+
   BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_NE(ts1.projector(), ts2.projector());
 
@@ -789,8 +829,18 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_EQUAL(&ts1.uncalibrated(), &ts2.uncalibrated());
 
   BOOST_CHECK_EQUAL(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
-  BOOST_CHECK_EQUAL(ts1.calibrated(), ts2.calibrated());
-  BOOST_CHECK_EQUAL(ts1.calibratedCovariance(), ts2.calibratedCovariance());
+
+  visit_measurement(ts1, ts1.calibratedSize(), [&ts2](auto meas, auto cov) {
+    constexpr int measdim =
+        Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
+
+    BOOST_CHECK_EQUAL(ts2.calibrated<measdim>(), meas);
+    BOOST_CHECK_EQUAL(ts2.calibratedCovariance<measdim>(), cov);
+  });
+
+  // BOOST_CHECK_EQUAL(ts1.calibrated(), ts2.calibrated());
+  // BOOST_CHECK_EQUAL(ts1.calibratedCovariance(), ts2.calibratedCovariance());
+
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
 
@@ -809,8 +859,17 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
 
   BOOST_CHECK_NE(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
-  BOOST_CHECK_NE(ts1.calibrated(), ts2.calibrated());
-  BOOST_CHECK_NE(ts1.calibratedCovariance(), ts2.calibratedCovariance());
+
+  visit_measurement(ts1, ts1.calibratedSize(), [&ts2](auto meas, auto cov) {
+    constexpr int measdim =
+        Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
+
+    BOOST_CHECK_NE(ts2.calibrated<measdim>(), meas);
+    BOOST_CHECK_NE(ts2.calibratedCovariance<measdim>(), cov);
+  });
+  // BOOST_CHECK_NE(ts1.calibrated(), ts2.calibrated());
+  // BOOST_CHECK_NE(ts1.calibratedCovariance(), ts2.calibratedCovariance());
+
   BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_NE(ts1.projector(), ts2.projector());
 
@@ -826,8 +885,18 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_EQUAL(ts1.predictedCovariance(), ts2.predictedCovariance());
 
   BOOST_CHECK_EQUAL(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
-  BOOST_CHECK_EQUAL(ts1.calibrated(), ts2.calibrated());
-  BOOST_CHECK_EQUAL(ts1.calibratedCovariance(), ts2.calibratedCovariance());
+
+  visit_measurement(ts1, ts1.calibratedSize(), [&ts2](auto meas, auto cov) {
+    constexpr int measdim =
+        Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
+
+    BOOST_CHECK_EQUAL(ts2.calibrated<measdim>(), meas);
+    BOOST_CHECK_EQUAL(ts2.calibratedCovariance<measdim>(), cov);
+  });
+
+  // BOOST_CHECK_EQUAL(ts1.calibrated(), ts2.calibrated());
+  // BOOST_CHECK_EQUAL(ts1.calibratedCovariance(), ts2.calibratedCovariance());
+
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
 
@@ -846,9 +915,21 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
 
   VectorMultiTrajectory mj;
   VectorMultiTrajectory mj2;
-  auto mkts = [&](PM mask) { return mj.getTrackState(mj.addTrackState(mask)); };
+  auto mkts = [&](PM mask) {
+    auto r = mj.getTrackState(mj.addTrackState(mask));
+
+    if (mask == PM::Calibrated) {
+      r.allocateCalibrated(3);
+    }
+    return r;
+  };
   auto mkts2 = [&](PM mask) {
-    return mj2.getTrackState(mj2.addTrackState(mask));
+    auto r = mj2.getTrackState(mj2.addTrackState(mask));
+
+    if (mask == PM::Calibrated) {
+      r.allocateCalibrated(3);
+    }
+    return r;
   };
 
   // orthogonal ones

@@ -36,6 +36,15 @@ struct visit_measurement_callable {
     return lambda(param.template head<I>(), cov.template topLeftCorner<I, I>());
   }
 };
+
+template <size_t I>
+struct visit_measurement_callable_ts {
+  template <typename track_state_t, typename L>
+  auto static constexpr invoke(track_state_t ts, L&& lambda) {
+    return lambda(ts.template calibrated<I>(),
+                  ts.template calibratedCovariance<I>());
+  }
+};
 }  // namespace detail
 
 /// Dispatch a lambda call on an overallocated parameter vector and covariance
@@ -55,6 +64,12 @@ template <typename L, typename A, typename B>
 auto visit_measurement(A&& param, B&& cov, size_t dim, L&& lambda) {
   return template_switch<detail::visit_measurement_callable, 1, eBoundSize>(
       dim, param, cov, lambda);
+}
+
+template <typename L, typename track_state_t>
+auto visit_measurement(track_state_t ts, size_t dim, L&& lambda) {
+  return template_switch<detail::visit_measurement_callable_ts, 1, eBoundSize>(
+      dim, std::move(ts), lambda);
 }
 
 }  // namespace Acts

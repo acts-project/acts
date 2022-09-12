@@ -138,9 +138,11 @@ inline auto TrackStateProxy<D, M, ReadOnly>::uncalibrated() const
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::calibrated() const -> Measurement {
+template <size_t measdim>
+inline auto TrackStateProxy<D, M, ReadOnly>::calibrated() const
+    -> Measurement<measdim> {
   assert(has<hashString("calibrated")>());
-  return m_traj->self().measurement(
+  return m_traj->self().template measurement<measdim>(
       component<IndexType, hashString("calibrated")>());
 }
 
@@ -156,11 +158,12 @@ inline auto TrackStateProxy<D, M, ReadOnly>::calibratedSourceLink() const
 }
 
 template <typename D, size_t M, bool ReadOnly>
+template <size_t measdim>
 inline auto TrackStateProxy<D, M, ReadOnly>::calibratedCovariance() const
-    -> MeasurementCovariance {
-  assert(has<hashString("calibrated")>());
-  return m_traj->self().measurementCovariance(
-      component<IndexType, hashString("calibrated")>());
+    -> MeasurementCovariance<measdim> {
+  assert(has<hashString("calibratedCov")>());
+  return m_traj->self().template measurementCovariance<measdim>(
+      component<IndexType, hashString("calibratedCov")>());
 }
 
 }  // namespace detail_lt
