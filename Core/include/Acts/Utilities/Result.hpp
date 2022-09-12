@@ -141,6 +141,13 @@ class Result {
    * @return Reference to value stored in the variant.
    */
   T& operator*() noexcept { return std::get<T>(m_var); }
+    
+   /**
+   * Allows to access members of the stored object with `res->foo` similar to `std::optional`.
+   * @note If `!res.ok()`, this method will abort (noexcept)
+   * @return Pointer to value stored in the variant.
+   */
+  T* operator->() noexcept { return &std::get<T>(m_var); }
 
   /**
    * Returns a reference to the error stored in the result.

@@ -293,6 +293,7 @@ class CombinatorialKalmanFilter {
   /// The propgator for the transport and material update
   propagator_t m_propagator;
 
+ public:
   /// @brief Propagator Actor plugin for the CombinatorialKalmanFilter
   ///
   /// @tparam source_link_accessor_t The type of source link accessor

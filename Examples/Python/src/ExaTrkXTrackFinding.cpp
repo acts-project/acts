@@ -13,9 +13,10 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/SourceLinkSelectorAlgorithm.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/ParameterFromTrajectoryAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/SourceLinkSelectorAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
 
 #include <memory>
 
@@ -39,16 +40,16 @@ void addExaTrkXTrackFinding(Context& ctx) {
 
 #ifdef ACTS_EXATRKX_TORCH_BACKEND
   {
-    using Alg = Acts::ExaTrkXTrackFindingTorch;
-    using Config = Alg::Config;
+    using Backend = Acts::ExaTrkXTrackFindingTorch;
+    using Config = Backend::Config;
 
-    auto alg =
-        py::class_<Alg, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Alg>>(
+    auto backend =
+        py::class_<Backend, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Backend>>(
             mex, "ExaTrkXTrackFindingTorch")
             .def(py::init<const Config&>(), py::arg("config"))
-            .def_property_readonly("config", &Alg::config);
+            .def_property_readonly("config", &Backend::config);
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    auto c = py::class_<Config>(backend, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelDir);
     ACTS_PYTHON_MEMBER(spacepointFeatures);
@@ -64,16 +65,16 @@ void addExaTrkXTrackFinding(Context& ctx) {
 
 #ifdef ACTS_EXATRKX_ONNX_BACKEND
   {
-    using Alg = Acts::ExaTrkXTrackFindingOnnx;
-    using Config = Alg::Config;
+    using Backend = Acts::ExaTrkXTrackFindingOnnx;
+    using Config = Backend::Config;
 
-    auto alg =
-        py::class_<Alg, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Alg>>(
+    auto  =
+        py::class_<Backend, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Backend>>(
             mex, "ExaTrkXTrackFindingOnnx")
             .def(py::init<const Config&>(), py::arg("config"))
-            .def_property_readonly("config", &Alg::config);
+            .def_property_readonly("config", &Backend::config);
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    auto c = py::class_<Config>(, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelDir);
     ACTS_PYTHON_MEMBER(spacepointFeatures);
@@ -85,86 +86,24 @@ void addExaTrkXTrackFinding(Context& ctx) {
   }
 #endif
 
-  {
-    using Alg = ActsExamples::TrackFindingAlgorithmExaTrkX;
-    using Config = Alg::Config;
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX,
+                                "TrackFindingAlgorithmExaTrkX",
+                                inputSpacePoints, outputProtoTracks,
+                                trackFinderML, rScale, phiScale, zScale)
 
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackFindingAlgorithmExaTrkX")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SourceLinkSelectorAlgorithm,
+                                "SourceLinkSelectorAlgorithm", inputSourceLinks,
+                                outputSourceLinks, geometrySelection);
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputSpacePoints);
-    ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_MEMBER(trackFinderML);
-    ACTS_PYTHON_MEMBER(rScale);
-    ACTS_PYTHON_MEMBER(phiScale);
-    ACTS_PYTHON_MEMBER(zScale);
-    ACTS_PYTHON_STRUCT_END();
-  }
-  
-  {
-    using Alg = ActsExamples::SourceLinkSelectorAlgorithm;
-    using Config = Alg::Config;
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm,
-                   std::shared_ptr<Alg>>(
-            mex, "SpacePointMaker")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParameterFromTrajectoryAlgorithm,
+                                "ParameterFromTrajectoryAlgorithm",
+                                inputTrajectories, outputParamters)
 
-    auto c = py::class_<Config>(alg, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputSourceLinks);
-    ACTS_PYTHON_MEMBER(outputSourceLinks);
-    ACTS_PYTHON_MEMBER(geometrySelection);
-    ACTS_PYTHON_STRUCT_END();
-  }
-  
-  {
-    using Alg = ActsExamples::SourceLinkSelectorAlgorithm;
-    using Config = Alg::Config;
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm,
-                   std::shared_ptr<Alg>>(
-            mex, "SpacePointMaker")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputSourceLinks);
-    ACTS_PYTHON_MEMBER(outputSourceLinks);
-    ACTS_PYTHON_MEMBER(geometrySelection);
-    ACTS_PYTHON_STRUCT_END();
-  }
-  
-  {
-    using Alg = ActsExamples::ParameterFromTrajectoryAlgorithm;
-    using Config = Alg::Config;
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm,
-                   std::shared_ptr<Alg>>(
-            mex, "SpacePointMaker")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTrajectories);
-    ACTS_PYTHON_MEMBER(outputParamters);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackFindingFromPrototrackAlgorithm,
+      "TrackFindingFromPrototrackAlgorithm", inputTracks, inputMeasurements,
+      inputSourceLinks, inputInitialTrackParameters, outputTrajectories,
+      measurementSelectorCfg, trackingGeometry, magneticField)
 }
 
 }  // namespace Acts::Python

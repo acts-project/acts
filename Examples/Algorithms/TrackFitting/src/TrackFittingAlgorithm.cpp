@@ -146,6 +146,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       } else {
         ACTS_DEBUG("No fitted paramemeters for track " << itrack);
       }
+      
       // store the result
       trajectories.emplace_back(fitOutput.fittedStates, std::move(trackTips),
                                 std::move(indexedParams));
