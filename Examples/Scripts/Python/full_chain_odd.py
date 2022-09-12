@@ -9,7 +9,6 @@ from acts.examples.odd import getOpenDataDetector
 u = acts.UnitConstants
 outputDir = pathlib.Path.cwd() / "odd_output"
 outputDir.mkdir(exist_ok=True)
-outputDir = None
 
 oddDir = getOpenDataDetectorDirectory()
 
@@ -31,7 +30,6 @@ from acts.examples.simulation import (
     ParticleConfig,
     addFatras,
     addDigitization,
-    addPythia8,
 )
 from acts.examples.reconstruction import (
     addSeeding,
@@ -41,27 +39,15 @@ from acts.examples.reconstruction import (
     VertexFinder,
 )
 
-s = acts.examples.Sequencer(events=1, numThreads=1, logLevel=acts.logging.INFO)
+s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
 
 addParticleGun(
     s,
     MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
     EtaConfig(-3.0, 3.0, uniform=True),
     ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
-    multiplicity=201,
     rnd=rnd,
 )
-
-#  s = addPythia8(
-#  s,
-#  rnd=rnd,
-#  nhard=1,
-#  npileup=200,
-#  hardProcess=["Top:qqbar2ttbar=on"],
-#  #  outputDirRoot="data/gen/ttbar_mu200_root_py",
-#  #  outputDirCsv="data/gen/ttbar_mu200_root_py/csv",
-#  )
-
 addFatras(
     s,
     trackingGeometry,
@@ -91,24 +77,24 @@ addCKFTracks(
     CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
-#  s.addAlgorithm(
-#  acts.examples.TrackSelector(
-#  level=acts.logging.INFO,
-#  inputTrackParameters="fittedTrackParameters",
-#  outputTrackParameters="trackparameters",
-#  outputTrackIndices="outputTrackIndices",
-#  removeNeutral=True,
-#  absEtaMax=2.5,
-#  loc0Max=4.0 * u.mm,  # rho max
-#  ptMin=500 * u.MeV,
-#  )
-#  )
-#  addVertexFitting(
-#  s,
-#  field,
-#  vertexFinder=VertexFinder.Iterative,
-#  outputDirRoot=outputDir,
-#  trajectories="trajectories",
-#  )
+s.addAlgorithm(
+    acts.examples.TrackSelector(
+        level=acts.logging.INFO,
+        inputTrackParameters="fittedTrackParameters",
+        outputTrackParameters="trackparameters",
+        outputTrackIndices="outputTrackIndices",
+        removeNeutral=True,
+        absEtaMax=2.5,
+        loc0Max=4.0 * u.mm,  # rho max
+        ptMin=500 * u.MeV,
+    )
+)
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
+    trajectories="trajectories",
+)
 
 s.run()
