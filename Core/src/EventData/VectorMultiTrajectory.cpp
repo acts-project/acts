@@ -59,9 +59,9 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   p.iuncalibrated = m_sourceLinks.size() - 1;
 
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
-    m_meas.emplace_back();
-    m_measCov.emplace_back();
-    p.icalibrated = m_meas.size() - 1;
+    // m_meas.emplace_back();
+    // m_measCov.emplace_back();
+    // p.icalibrated = m_meas.size() - 1;
 
     m_sourceLinks.push_back(nullptr);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;

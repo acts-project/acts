@@ -652,6 +652,10 @@ class TrackStateProxy {
     setProjector(meas.projector());
   }
 
+  void allocateCalibrated(size_t measdim) {
+    m_traj->allocateCalibrated(m_istate, measdim);
+  }
+
   /// Getter/setter for chi2 value associated with the track state
   /// This overload returns a mutable reference, which allows setting a new
   /// value directly into the backing store.
@@ -1030,6 +1034,10 @@ class MultiTrajectory {
   constexpr const T& component(HashedString key, IndexType istate) const {
     assert(checkOptional(key, istate));
     return *std::any_cast<const T*>(self().component_impl(key, istate));
+  }
+
+  constexpr void allocateCalibrated(IndexType istate, size_t measdim) {
+    self().allocateCalibrated_impl(istate, measdim);
   }
 
  private:

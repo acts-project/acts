@@ -264,6 +264,20 @@ class VectorMultiTrajectory final
     }
   }
 
+  constexpr void allocateCalibrated_impl(IndexType istate, size_t measdim) {
+    (void)measdim;
+    IndexData& p = m_index[istate];
+    m_meas.emplace_back();
+    m_measCov.emplace_back();
+    p.icalibrated = m_meas.size() - 1;
+
+    // m_sourceLinks.push_back(nullptr);
+    // p.icalibratedsourcelink = m_sourceLinks.size() - 1;
+
+    // m_projectors.emplace_back();
+    // p.iprojector = m_projectors.size() - 1;
+  }
+
   // END INTERFACE
 
   struct DynamicColumnBase {
@@ -324,6 +338,6 @@ class VectorMultiTrajectory final
 
   std::unordered_map<HashedString, std::unique_ptr<DynamicColumnBase>>
       m_dynamic;
-};  // namespace Acts
+};
 
 }  // namespace Acts
