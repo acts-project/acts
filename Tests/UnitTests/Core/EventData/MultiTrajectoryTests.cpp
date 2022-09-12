@@ -588,10 +588,13 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
     // BOOST_CHECK_EQUAL(ts.calibrated(), mParFull);
     // BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
 
+    auto expMeas = pc.sourceLink.parameters.head(nMeasurements);
+    auto expCov =
+        pc.sourceLink.covariance.topLeftCorner(nMeasurements, nMeasurements);
+
     visit_measurement(ts, ts.calibratedSize(), [&](auto meas, auto cov) {
-      BOOST_CHECK_EQUAL(meas, pc.sourceLink.parameters.head(nMeasurements));
-      BOOST_CHECK_EQUAL(cov, pc.sourceLink.covariance.topLeftCorner(
-                                 nMeasurements, nMeasurements));
+      BOOST_CHECK_EQUAL(meas, expMeas);
+      BOOST_CHECK_EQUAL(cov, expCov);
     });
   }
 
