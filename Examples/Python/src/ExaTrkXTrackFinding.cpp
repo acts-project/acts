@@ -49,24 +49,10 @@ void addExaTrkXTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-  {
-    using Alg = ActsExamples::TrackFindingAlgorithmExaTrkX;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackFindingAlgorithmExaTrkX")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputSpacePoints);
-    ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_MEMBER(trackFinderML);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX,
+                                "TrackFindingAlgorithmExaTrkX",
+                                inputSpacePoints, outputProtoTracks,
+                                trackFinderML);
 }
 
 }  // namespace Acts::Python

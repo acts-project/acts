@@ -13,6 +13,9 @@
 
 #include <pybind11/pybind11.h>
 
+#include <boost/preprocessor/variadic/to_seq.hpp>
+#include <boost/preprocessor/seq/for_each.hpp> 
+
 namespace Acts::Python {
 
 struct Context {
@@ -50,6 +53,8 @@ void patchKwargsConstructor(T& c) {
   pybind11::module::import("acts._adapter").attr("_patchKwargsConstructor")(c);
 }
 
+}  // namespace Acts::Python
+
 #define ACTS_PYTHON_MEMBER(name) \
   _binding_instance.def_readwrite(#name, &_struct_type::name)
 
@@ -64,5 +69,26 @@ void patchKwargsConstructor(T& c) {
   }                              \
   do {                           \
   } while (0)
+  
 
-}  // namespace Acts::Python
+/// This macro is needed to use the BOOST_PP_SEQ_FOR_EACH loop macro
+#define ACTS_PYTHON_MEMBER_LOOP(r, data, elem) ACTS_PYTHON_MEMBER(elem);
+
+/// A macro that uses Boost.Preprocessor to create the python binding for and algorithm and the additional config struct.
+#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, name, ...)                 \
+  {                                                                         \
+    using Alg = algorithm;                                                  \
+    using Config = Alg::Config;                                             \
+    auto alg =                                                              \
+        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>( \
+            mex, name)                                                      \
+            .def(py::init<const Config&, Acts::Logging::Level>(),           \
+                 py::arg("config"), py::arg("level"))                       \
+            .def_property_readonly("config", &Alg::config);                 \
+                                                                            \
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());           \
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
+    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                       \
+                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))            \
+    ACTS_PYTHON_STRUCT_END();                                               \
+  }
