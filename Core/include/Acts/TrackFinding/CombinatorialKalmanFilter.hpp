@@ -215,7 +215,7 @@ struct CombinatorialKalmanFilterResult {
   std::shared_ptr<traj_t> fittedStates;
 
   // These is used internally to store candidate trackstates
-  traj_t stateBuffer;
+  std::shared_ptr<traj_t> stateBuffer;
   std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>
       trackStateCandidates;
 
@@ -776,7 +776,7 @@ class CombinatorialKalmanFilter {
         result.trackStateCandidates.reserve(std::distance(slBegin, slEnd));
       }
 
-      result.stateBuffer.clear();
+      result.stateBuffer->clear();
 
       using PM = TrackStatePropMask;
 
@@ -794,11 +794,11 @@ class CombinatorialKalmanFilter {
           mask = PM::Calibrated;
         }
 
-        size_t tsi = result.stateBuffer.addTrackState(mask, prevTip);
+        size_t tsi = result.stateBuffer->addTrackState(mask, prevTip);
         // CAREFUL! This trackstate has a previous index that is not in this
         // MultiTrajectory Visiting brackwards from this track state will
         // fail!
-        auto ts = result.stateBuffer.getTrackState(tsi);
+        auto ts = result.stateBuffer->getTrackState(tsi);
 
         if (it == slBegin) {
           // only set these for first
@@ -1276,6 +1276,7 @@ class CombinatorialKalmanFilter {
     // initial track parameters including those failed ones.
 
     auto mtj = std::make_shared<traj_t>();
+    auto stateBuffer = std::make_shared<traj_t>();
 
     for (size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
       const auto& sParameters = initialParameters[iseed];
@@ -1288,6 +1289,8 @@ class CombinatorialKalmanFilter {
           inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>();
 
       r.fittedStates = mtj;
+      r.stateBuffer = stateBuffer;
+      r.stateBuffer->clear();
 
       auto result = m_propagator.template propagate(sParameters, propOptions,
                                                     std::move(inputResult));
