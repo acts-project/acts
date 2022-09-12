@@ -369,10 +369,22 @@ struct GaussianSumFitter {
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
 
+      typename propagator_t::template action_list_t_result_t<
+          BoundTrackParameters, decltype(bwdPropOptions.actionList)>
+          inputResult;
+
+      auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
+
+      if (trajectory) {
+        r.fittedStates = trajectory;
+      } else {
+        r.fittedStates = std::make_shared<traj_t>();
+      }
+
       return m_propagator
           .template propagate<decltype(params), decltype(bwdPropOptions),
-                              MultiStepperSurfaceReached>(params, target,
-                                                          bwdPropOptions);
+                              MultiStepperSurfaceReached>(
+              params, target, bwdPropOptions, std::move(inputResult));
     }();
 
     if (!bwdResult.ok()) {
@@ -468,11 +480,24 @@ struct GaussianSumFitter {
 
         lastPropOptions.direction = gsfBackward;
 
+        typename propagator_t::template action_list_t_result_t<
+            BoundTrackParameters, decltype(lastPropOptions.actionList)>
+            inputResult;
+
+        auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
+
+        if (trajectory) {
+          r.fittedStates = trajectory;
+        } else {
+          r.fittedStates = std::make_shared<traj_t>();
+        }
+
         auto result =
             m_propagator
                 .template propagate<decltype(params), decltype(lastPropOptions),
                                     MultiStepperSurfaceReached>(
-                    params, *options.referenceSurface, lastPropOptions);
+                    params, *options.referenceSurface, lastPropOptions,
+                    std::move(inputResult));
 
         if (!result.ok()) {
           return result.error();

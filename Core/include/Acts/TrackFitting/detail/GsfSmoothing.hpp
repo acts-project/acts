@@ -148,7 +148,7 @@ auto smoothAndCombineTrajectories(
   sortUniqueValidateBwdTips();
 
   KalmanFitterResult<traj_t> result;
-  // result.fittedStates = std::make_shared<traj_t>();
+  result.fittedStates = std::make_shared<traj_t>();
 
   while (!bwdTips.empty()) {
     // Ensure that we update the bwd tips whenever we go to the next iteration
