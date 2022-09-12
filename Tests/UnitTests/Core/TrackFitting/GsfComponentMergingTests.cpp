@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   *cmps[1].boundCov << 20_degree, 20_degree, 20_degree, 40_degree;
   cmps[1].weight = 0.5;
 
-  const auto samples = sampleFromMultivariate(cmps, 10000, gen);
+  const auto samples = sampleFromMultivariate(cmps, 50000, gen);
   const auto mean_data = circularMean(samples);
   const auto boundCov_data = boundCov(samples, mean_data, [](auto a, auto b) {
     Vector2 res = Vector2::Zero();
