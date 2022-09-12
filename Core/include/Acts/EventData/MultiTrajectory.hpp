@@ -1092,7 +1092,7 @@ class MultiTrajectory {
     return *std::any_cast<const T*>(self().component_impl(key, istate));
   }
 
-  constexpr void allocateCalibrated(IndexType istate, size_t measdim) {
+  void allocateCalibrated(IndexType istate, size_t measdim) {
     self().allocateCalibrated_impl(istate, measdim);
   }
 

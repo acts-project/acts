@@ -278,7 +278,7 @@ class VectorMultiTrajectory final
     }
   }
 
-  constexpr void allocateCalibrated_impl(IndexType istate, size_t measdim) {
+  void allocateCalibrated_impl(IndexType istate, size_t measdim) {
     // IndexData& p = m_index[istate];
     // m_meas.emplace_back();
 
