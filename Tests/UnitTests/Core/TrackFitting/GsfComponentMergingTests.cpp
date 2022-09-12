@@ -265,8 +265,9 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   const auto mean_data = circularMean(samples);
   const auto boundCov_data = boundCov(samples, mean_data, [](auto a, auto b) {
     Vector2 res = Vector2::Zero();
-    for (int i = 0; i < 2; ++i)
+    for (int i = 0; i < 2; ++i) {
       res[i] = detail::difference_periodic(a[i], b[i], 2 * M_PI);
+    }
     return res;
   });
 
