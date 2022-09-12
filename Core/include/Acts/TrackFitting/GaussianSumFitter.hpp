@@ -125,6 +125,10 @@ struct GaussianSumFitter {
       return propOptions;
     };
 
+    if (!trajectory) {
+      trajectory = std::make_shared<traj_t>();
+    }
+
     return fit_impl(begin, end, sParameters, options, fwdPropInitializer,
                     bwdPropInitializer, std::move(trajectory));
   }
@@ -168,6 +172,9 @@ struct GaussianSumFitter {
       return propOptions;
     };
 
+    if (!trajectory) {
+      trajectory = std::make_shared<traj_t>();
+    }
     return fit_impl(begin, end, sParameters, options, fwdPropInitializer,
                     bwdPropInitializer, std::move(trajectory));
   }
@@ -182,7 +189,7 @@ struct GaussianSumFitter {
       const start_parameters_t& sParameters, const GsfOptions<traj_t>& options,
       const fwd_prop_initializer_t& fwdPropInitializer,
       const bwd_prop_initializer_t& bwdPropInitializer,
-      std::shared_ptr<traj_t> trajectory = {}) const {
+      std::shared_ptr<traj_t> trajectory) const {
     // return or abort utility
     auto return_error_or_abort = [&](auto error) {
       if (options.abortOnError) {
@@ -260,11 +267,7 @@ struct GaussianSumFitter {
 
       auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
 
-      if (trajectory) {
-        r.fittedStates = trajectory;
-      } else {
-        r.fittedStates = std::make_shared<traj_t>();
-      }
+      r.fittedStates = trajectory;
 
       if constexpr (not IsMultiParameters::value) {
         using Charge = typename IsMultiParameters::Charge;
@@ -375,11 +378,7 @@ struct GaussianSumFitter {
 
       auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
 
-      if (trajectory) {
-        r.fittedStates = trajectory;
-      } else {
-        r.fittedStates = std::make_shared<traj_t>();
-      }
+      r.fittedStates = trajectory;
 
       return m_propagator
           .template propagate<decltype(params), decltype(bwdPropOptions),
@@ -486,11 +485,7 @@ struct GaussianSumFitter {
 
         auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
 
-        if (trajectory) {
-          r.fittedStates = trajectory;
-        } else {
-          r.fittedStates = std::make_shared<traj_t>();
-        }
+        r.fittedStates = trajectory;
 
         auto result =
             m_propagator
