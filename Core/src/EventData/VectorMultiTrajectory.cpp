@@ -8,6 +8,13 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <type_traits>
+
 #include <boost/histogram.hpp>
 #include <boost/histogram/make_histogram.hpp>
 
@@ -23,6 +30,8 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   m_index.emplace_back();
   IndexData& p = m_index.back();
   size_t index = m_index.size() - 1;
+
+  p.allocMask = mask;
 
   if (iprevious != kInvalid) {
     p.iprevious = iprevious;
@@ -223,18 +232,68 @@ auto VectorMultiTrajectory::statistics() const -> Statistics {
     h(#x, weight(esize* m_##x.size()));                           \
   } while (0)
 
-  FILL_SIZE(index);
-  FILL_SIZE(params);
-  FILL_SIZE(cov);
-  FILL_SIZE(meas);
-  FILL_SIZE(measCov);
-  FILL_SIZE(jac);
-  FILL_SIZE(sourceLinks);
-  FILL_SIZE(projectors);
+  // FILL_SIZE(index);
+  // FILL_SIZE(params);
+  // FILL_SIZE(cov);
+  // FILL_SIZE(meas);
+  // FILL_SIZE(measCov);
+  // FILL_SIZE(jac);
+  // FILL_SIZE(sourceLinks);
+  // FILL_SIZE(projectors);
 
 #undef FILL_SIZE
 
-  h("count", weight(m_index.size()));
+  // h("count", weight(m_index.size()));
+
+  for (IndexType i = 0; i < size(); i++) {
+    auto ts = getTrackState(i);
+    h("count");
+
+    h("index", weight(sizeof(IndexData)));
+
+    size_t params = 0;
+    size_t cov = 0;
+    using scalar = decltype(ts.predicted())::Scalar;
+    size_t par_size = eBoundSize * sizeof(scalar);
+    size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
+
+    const IndexData& p = m_index[i];
+    if (ts.hasPredicted() &&
+        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Predicted)) {
+      params += par_size;
+      cov += cov_size;
+    }
+    if (ts.hasFiltered() &&
+        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Filtered)) {
+      params += par_size;
+      cov += cov_size;
+    }
+    if (ts.hasSmoothed() &&
+        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Smoothed)) {
+      params += par_size;
+      cov += cov_size;
+    }
+
+    h("params", weight(params));
+    h("cov", weight(cov));
+
+    size_t meas_size = eBoundSize * sizeof(scalar);
+    size_t meas_cov_size = eBoundSize * eBoundSize * sizeof(scalar);
+
+    h("sourceLinks", weight(sizeof(const SourceLink*)));
+    if (ts.hasCalibrated() &&
+        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Calibrated)) {
+      h("meas", weight(meas_size));
+      h("measCov", weight(meas_cov_size));
+      h("sourceLinks", weight(sizeof(const SourceLink*)));
+      h("projectors", weight(sizeof(ProjectorBitset)));
+    }
+
+    if (ts.hasJacobian() &&
+        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Jacobian)) {
+      h("jac", weight(cov_size));
+    }
+  }
 
   return Statistics{h};
 }
@@ -250,18 +309,27 @@ std::ostream& operator<<(std::ostream& os,
 
   double total = 0;
 
-  auto p = [&](const auto& key, const double v) {
+  auto p = [&](const auto& key, const auto v, const std::string suffix = "") {
     os << std::setw(20) << key << ": ";
-    os << std::fixed << std::setw(8) << std::setprecision(2)
-       << (v / 1024 / 1024) << "M" << std::endl;
+    if constexpr (std::is_same_v<std::decay_t<decltype(v)>, double>) {
+      os << std::fixed << std::setw(8) << std::setprecision(2) << v << suffix;
+    } else {
+      os << std::fixed << std::setw(8) << v << suffix;
+    }
+    os << std::endl;
   };
 
   for (auto&& x : indexed(h)) {
-    p(column_axis.bin(x.index(0)), *x);
+    std::string key = column_axis.bin(x.index(0));
+    if (key == "count") {
+      p(key, static_cast<size_t>(*x));
+      continue;
+    }
+    p(key, *x / 1024 / 1024, "M");
     total += *x;
   }
 
-  p("total", total);
+  p("total", total / 1024 / 1024, "M");
 
   return os;
 }

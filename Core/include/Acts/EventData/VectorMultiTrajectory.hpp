@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 
 #include <unordered_map>
 
@@ -38,6 +39,8 @@ class VectorMultiTrajectory final
     IndexType icalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
     IndexType measdim = 0;
+
+    TrackStatePropMask allocMask;
   };
 
  public:

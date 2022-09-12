@@ -158,7 +158,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   auto stats = mtj->statistics();
 
-  ACTS_INFO("Track State memoery statistics:\n" << stats);
+  ACTS_INFO("Track State memory statistics:\n" << stats);
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   ctx.eventStore.add(m_cfg.outputTrackParameters,
