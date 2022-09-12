@@ -130,7 +130,7 @@ class EigenStepper {
     double pathAccumulated = 0.;
 
     /// Adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize{std::numeric_limits<double>::max()};
+    ConstrainedStep stepSize;
 
     /// Last performed step (for overstep limit calculation)
     double previousStepSize = 0.;
@@ -271,7 +271,7 @@ class EigenStepper {
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor,
                    bool release = true) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
 
