@@ -250,9 +250,11 @@ struct SurfaceGridData {
 
 struct SpacepointData {
   uint64_t measurement_id;
+  uint64_t geometry_id;
   float x, y, z;
   float var_r, var_z;
-  DFE_NAMEDTUPLE(SpacepointData, measurement_id, x, y, z, var_r, var_z);
+  DFE_NAMEDTUPLE(SpacepointData, measurement_id, geometry_id, x, y, z, var_r,
+                 var_z);
 };
 
 }  // namespace ActsExamples

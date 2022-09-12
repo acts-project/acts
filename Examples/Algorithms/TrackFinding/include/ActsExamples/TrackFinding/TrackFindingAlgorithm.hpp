@@ -15,8 +15,10 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
+#include <atomic>
 #include <functional>
 #include <vector>
 
@@ -59,6 +61,10 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output find trajectories collection.
     std::string outputTrajectories;
+    /// Output track parameters collection.
+    std::string outputTrackParameters;
+    /// Output track parameters tips w.r.t outputTrajectories.
+    std::string outputTrackParametersTips;
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
     /// CKF measurement selector config
@@ -88,8 +94,13 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   void computeSharedHits(const source_link_accessor_container_t& sourcelinks,
                          TrackFinderResult&) const;
 
+  ActsExamples::ProcessCode finalize() const override;
+
  private:
   Config m_cfg;
+
+  mutable std::atomic<size_t> m_nTotalSeeds;
+  mutable std::atomic<size_t> m_nFailedSeeds;
 };
 
 template <typename source_link_accessor_container_t>

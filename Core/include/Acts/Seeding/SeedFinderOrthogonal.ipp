@@ -51,8 +51,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
    * Cut: Ensure that we search only in Δr_min ≤ r - r_L ≤ Δr_max, as defined
    * by the seeding configuration and the given lower spacepoint.
    */
-  res[DimR].shrinkMin(rL + m_config.deltaRMin);
-  res[DimR].shrinkMax(rL + m_config.deltaRMax);
+  res[DimR].shrinkMin(rL + m_config.deltaRMinTopSP);
+  res[DimR].shrinkMax(rL + m_config.deltaRMaxTopSP);
 
   /*
    * Cut: Now that we have constrained r, we can use that new r range to
@@ -117,8 +117,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
    * Cut: Ensure that we search only in Δr_min ≤ r_H - r ≤ Δr_max, as defined
    * by the seeding configuration and the given higher spacepoint.
    */
-  res[DimR].shrinkMin(rM - m_config.deltaRMax);
-  res[DimR].shrinkMax(rM - m_config.deltaRMin);
+  res[DimR].shrinkMin(rM - m_config.deltaRMaxBottomSP);
+  res[DimR].shrinkMax(rM - m_config.deltaRMinBottomSP);
 
   /*
    * Cut: Now that we have constrained r, we can use that new r range to

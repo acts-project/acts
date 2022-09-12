@@ -19,9 +19,11 @@ namespace Acts {
 /// The Surface axis is fixed to be the z-axis of the Tracking frame.
 /// It inherits from StraingLineSurface.
 ///
-/// @image html LineSurface.png
+/// @image html figures/LineSurface.png
 class PerigeeSurface : public LineSurface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from GlobalPosition

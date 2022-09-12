@@ -24,9 +24,11 @@ file(
   ../Fatras/include/*.hpp
   ../Plugins/include/*.hpp)
 
+set(sphinx_build ${CMAKE_CURRENT_SOURCE_DIR}/_build)
 set(doxygen_index ${CMAKE_CURRENT_SOURCE_DIR}/_build/doxygen-xml/index.xml)
 set(sphinx_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
 set(sphinx_html ${CMAKE_CURRENT_SOURCE_DIR}/_build/html)
+set(sphinx_api ${CMAKE_CURRENT_SOURCE_DIR}/api)
 
 add_custom_command(
   OUTPUT ${doxygen_index}
@@ -38,6 +40,9 @@ add_custom_command(
 # this is a debug target to diagnose issues with the Doxygen configuration
 add_custom_target(run-doxygen DEPENDS ${doxygen_index})
 
+set(api_dir ${CMAKE_CURRENT_SOURCE_DIR}/api)
+set(api_index ${api_dir}/api.rst)
+
 # standard target to build the documentation without automatic API generation
 add_custom_target(
   docs
@@ -46,6 +51,8 @@ add_custom_target(
       -b html
       -d ${sphinx_doctrees}
       -j auto
+      -W
+      --keep-going
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${sphinx_html}
   DEPENDS ${doxygen_index}
@@ -60,11 +67,21 @@ add_custom_target(
       -d ${sphinx_doctrees}
       -j auto
       -t run_apidoc
+      -W
+      --keep-going
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${sphinx_html}
   DEPENDS ${doxygen_index}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Build full documentation")
+
+add_custom_target(
+  docs-clean
+  COMMAND find ${sphinx_api} -mindepth 1 -type f -and -not -name "api_stub.rst" -and -not -name "api_index.rst" -delete
+  COMMAND find ${sphinx_api} -mindepth 1 -type d -delete
+  COMMAND rm -rf ${sphinx_build}
+  COMMENT "Cleaning documentation artifacts"
+)
 
 install(
   DIRECTORY ${sphinx_html}/

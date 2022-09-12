@@ -298,6 +298,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   Acts::TrackingGeometryBuilder::Config tgConfig;
   // Add the builders
   tgConfig.materialDecorator = mdecorator;
+  tgConfig.geometryIdentifierHook = config.geometryIdentifierHook;
 
   for (auto& vb : volumeBuilders) {
     tgConfig.trackingVolumeBuilders.push_back(
