@@ -277,9 +277,6 @@ class VectorMultiTrajectory final
   }
 
   void allocateCalibrated_impl(IndexType istate, size_t measdim) {
-    // IndexData& p = m_index[istate];
-    // m_meas.emplace_back();
-
     if (m_measOffset[istate] != kInvalid &&
         m_measCovOffset[istate] != kInvalid &&
         m_index[istate].measdim == measdim) {
@@ -291,15 +288,6 @@ class VectorMultiTrajectory final
 
     m_measCovOffset[istate] = static_cast<IndexType>(m_measCov.size());
     m_measCov.resize(m_measCov.size() + measdim * measdim);
-
-    // m_measCov.emplace_back();
-    // p.icalibrated = m_meas.size() - 1;
-
-    // m_sourceLinks.push_back(nullptr);
-    // p.icalibratedsourcelink = m_sourceLinks.size() - 1;
-
-    // m_projectors.emplace_back();
-    // p.iprojector = m_projectors.size() - 1;
   }
 
   // END INTERFACE
@@ -346,12 +334,8 @@ class VectorMultiTrajectory final
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
 
-  // std::vector<typename detail_lt::Types<MeasurementSizeMax>::Coefficients>
-  // m_meas;
   std::vector<double> m_meas;
   std::vector<MultiTrajectoryTraits::IndexType> m_measOffset;
-  // std::vector<typename detail_lt::Types<MeasurementSizeMax>::Covariance>
-  // m_measCov;
   std::vector<double> m_measCov;
   std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
 

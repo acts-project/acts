@@ -518,18 +518,6 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
   BOOST_CHECK_EQUAL(ts.effectiveCalibrated(), m2.parameters());
   BOOST_CHECK_EQUAL(ts.effectiveCalibratedCovariance(), m2.covariance());
   BOOST_CHECK_EQUAL(ts.effectiveProjector(), m2.projector());
-
-  // check that the overallocated parts are zeroed
-  // ParametersVector mParFull = ParametersVector::Zero();
-  // CovarianceMatrix mCovFull = CovarianceMatrix::Zero();
-  // ActsMatrix<VectorMultiTrajectory::MeasurementSizeMax, eBoundSize> projFull;
-  // mParFull.head<2>() = ts.effectiveCalibrated();
-  // mCovFull.topLeftCorner<2, 2>() = ts.effectiveCalibratedCovariance();
-  // projFull.setZero();
-  // projFull.topLeftCorner<2, eBoundSize>() = ts.effectiveProjector();
-  // BOOST_CHECK_EQUAL(ts.calibrated(), mParFull);
-  // BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
-  // BOOST_CHECK_EQUAL(ts.projector(), projFull);
 }
 
 BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
@@ -585,9 +573,6 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
     mParFull.head(nMeasurements) = pc.sourceLink.parameters.head(nMeasurements);
     mCovFull.topLeftCorner(nMeasurements, nMeasurements) =
         pc.sourceLink.covariance.topLeftCorner(nMeasurements, nMeasurements);
-
-    // BOOST_CHECK_EQUAL(ts.calibrated(), mParFull);
-    // BOOST_CHECK_EQUAL(ts.calibratedCovariance(), mCovFull);
 
     auto expMeas = pc.sourceLink.parameters.head(nMeasurements);
     auto expCov =
@@ -858,9 +843,6 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
     BOOST_CHECK_EQUAL(ts2.calibratedCovariance<measdim>(), cov);
   });
 
-  // BOOST_CHECK_EQUAL(ts1.calibrated(), ts2.calibrated());
-  // BOOST_CHECK_EQUAL(ts1.calibratedCovariance(), ts2.calibratedCovariance());
-
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
 
@@ -887,8 +869,6 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
     BOOST_CHECK_NE(ts2.calibrated<measdim>(), meas);
     BOOST_CHECK_NE(ts2.calibratedCovariance<measdim>(), cov);
   });
-  // BOOST_CHECK_NE(ts1.calibrated(), ts2.calibrated());
-  // BOOST_CHECK_NE(ts1.calibratedCovariance(), ts2.calibratedCovariance());
 
   BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_NE(ts1.projector(), ts2.projector());
@@ -913,9 +893,6 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
     BOOST_CHECK_EQUAL(ts2.calibrated<measdim>(), meas);
     BOOST_CHECK_EQUAL(ts2.calibratedCovariance<measdim>(), cov);
   });
-
-  // BOOST_CHECK_EQUAL(ts1.calibrated(), ts2.calibrated());
-  // BOOST_CHECK_EQUAL(ts1.calibratedCovariance(), ts2.calibratedCovariance());
 
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_EQUAL(ts1.projector(), ts2.projector());
