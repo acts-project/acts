@@ -299,7 +299,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
-    BOOST_CHECK_EQUAL(val.fittedStates.size(), f.detector.numMeasurements);
+    BOOST_CHECK_EQUAL(val.fittedStates->size(),
+                      f.detector.numMeasurements * f.startParameters.size());
 
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
@@ -308,7 +309,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    val.fittedStates.visitBackwards(
+    val.fittedStates->visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
           const auto& sl =
@@ -355,7 +356,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
-    BOOST_CHECK_EQUAL(val.fittedStates.size(), f.detector.numMeasurements);
+    BOOST_CHECK_EQUAL(val.fittedStates->size(),
+                      f.detector.numMeasurements * f.endParameters.size());
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.lastMeasurementIndices.size(), 1u);
@@ -363,7 +365,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    val.fittedStates.visitBackwards(
+    val.fittedStates->visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
           nummismatchedHits += (trackId != static_cast<const TestSourceLink&>(
