@@ -46,7 +46,7 @@ void addEDM4hep(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMeasurementWriter, edm4hep,
                              "EDM4hepMeasurementWriter",
-                             inputMeasurements inputClusters, inputSimHits,
+                             inputMeasurements, inputClusters, inputSimHits,
                              inputMeasurementSimHitsMap, outputPath);
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepParticleReader, edm4hep,
