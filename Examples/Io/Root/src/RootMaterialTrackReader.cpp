@@ -49,7 +49,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   m_inputChain->SetBranchAddress("mat_A", &m_step_A);
   m_inputChain->SetBranchAddress("mat_Z", &m_step_Z);
   m_inputChain->SetBranchAddress("mat_rho", &m_step_rho);
-  if (m_cfg.readSurface) {
+  if (m_cfg.readCachedSurfaceInformation) {
     m_inputChain->SetBranchAddress("sur_id", &m_sur_id);
     m_inputChain->SetBranchAddress("sur_x", &m_sur_x);
     m_inputChain->SetBranchAddress("sur_y", &m_sur_y);
@@ -70,12 +70,12 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
 
   m_events = m_inputChain->GetMaximum("event_id") + 1;
   size_t nentries = m_inputChain->GetEntries();
-  m_batch = nentries / m_events;
+  m_batchSize = nentries / m_events;
   ACTS_DEBUG("The full chain has "
              << nentries << " entries for " << m_events
-             << " events this corresponds to a batch size of: " << m_batch);
+             << " events this corresponds to a batch size of: " << m_batchSize);
   std::cout << "The full chain has " << nentries << " entries for " << m_events
-            << " events this corresponds to a batch size of: " << m_batch
+            << " events this corresponds to a batch size of: " << m_batchSize
             << std::endl;
 
   // If the events are not in order, get the entry numbers for ordered events
@@ -133,9 +133,9 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     std::unordered_map<size_t, Acts::RecordedMaterialTrack> mtrackCollection;
 
     // Loop over the entries for this event
-    for (size_t ib = 0; ib < m_batch; ++ib) {
+    for (size_t ib = 0; ib < m_batchSize; ++ib) {
       // Read the correct entry: startEntry + ib
-      auto entry = m_batch * context.eventNumber + ib;
+      auto entry = m_batchSize * context.eventNumber + ib;
       if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
         entry = m_entryNumbers[entry];
       }
@@ -171,7 +171,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
             Acts::Material::fromMassDensity(mX0, mL0, (*m_step_A)[is],
                                             (*m_step_Z)[is], (*m_step_rho)[is]),
             s);
-        if (m_cfg.readSurface) {
+        if (m_cfg.readCachedSurfaceInformation) {
           // add the surface information to the interaction this allows the
           // mapping to be speed up
           mInteraction.intersectionID =

@@ -39,7 +39,7 @@ class RootMaterialTrackReader : public IReader {
     /// Whether the events are ordered or not
     bool orderedEvents = true;
     // Read surface information for the root file
-    bool readSurface = false;
+    bool readCachedSurfaceInformation = false;
   };
 
   /// Constructor
@@ -82,7 +82,7 @@ class RootMaterialTrackReader : public IReader {
   size_t m_events = 0;
 
   /// The batch size (number of track per events)
-  size_t m_batch = 0;
+  size_t m_batchSize = 0;
 
   /// The input tree name
   TChain* m_inputChain = nullptr;
