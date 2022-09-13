@@ -138,5 +138,4 @@ if "__main__" == __name__:
         decorators,
         outputDir=os.getcwd(),
         inputDir=os.getcwd(),
-        readCachedSurfaceInformation=False,
     ).run()
