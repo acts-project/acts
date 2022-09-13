@@ -474,7 +474,7 @@ void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, rmIter->pathCorrection);
-    if (touchedMapBins.find(&(currentAccMaterial->second)) == ==
+    if (touchedMapBins.find(&(currentAccMaterial->second)) ==
         touchedMapBins.end()) {
       touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
     }
