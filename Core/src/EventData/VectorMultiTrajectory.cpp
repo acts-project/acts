@@ -176,37 +176,4 @@ void VectorMultiTrajectory::clear_impl() {
   }
 }
 
-VectorMultiTrajectory::~VectorMultiTrajectory() {
-  if (m_index.empty()) {
-    return;
-  }
-
-  size_t total = 0;
-  std::cout << "VMT Size:" << std::endl;
-#define PRINT_SIZE(x)                                                   \
-  do {                                                                  \
-    constexpr size_t esize = sizeof(decltype(x)::value_type);           \
-    total += esize * x.size();                                          \
-    std::cout << #x << " size: " << esize << "b * " << x.size() << "->" \
-              << (esize * x.size()) / 1024 / 1024 << "M" << std::endl;  \
-  } while (0)
-
-  PRINT_SIZE(m_index);
-  PRINT_SIZE(m_previous);
-  PRINT_SIZE(m_params);
-  PRINT_SIZE(m_cov);
-  PRINT_SIZE(m_meas);
-  PRINT_SIZE(m_measOffset);
-  PRINT_SIZE(m_measCov);
-  PRINT_SIZE(m_measCovOffset);
-  PRINT_SIZE(m_jac);
-  PRINT_SIZE(m_sourceLinks);
-  PRINT_SIZE(m_projectors);
-
-#undef PRINT_SIZE
-
-  std::cout << "total: " << total / 1024 / 1024 << "M" << std::endl;
-  std::cout << "---" << std::endl;
-}
-
 }  // namespace Acts

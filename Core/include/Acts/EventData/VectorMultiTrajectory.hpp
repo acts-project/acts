@@ -61,8 +61,6 @@ class VectorMultiTrajectory final
   VectorMultiTrajectory& operator=(const VectorMultiTrajectory&) = default;
   VectorMultiTrajectory& operator=(VectorMultiTrajectory&&) = default;
 
-  ~VectorMultiTrajectory();
-
  private:
   // BEGIN INTERFACE
   TrackStateProxy::Parameters parameters_impl(IndexType parIdx) {
