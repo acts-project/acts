@@ -38,6 +38,7 @@ jobs:
 
       - name: Configure
         run: >
+          ccache -z &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -47,6 +48,8 @@ jobs:
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: cmake --build build
+      - name: ccache stats
+        run: ccache -s
       - name: Unit tests
         run: cmake --build build --target test
       - name: Remove .o files
