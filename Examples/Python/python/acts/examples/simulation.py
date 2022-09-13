@@ -307,6 +307,7 @@ def addParticleSelection(
     preselectParticles: ParticleSelectorConfig,
     inputParticles="particles_input",
     outputParticles="particles_selected",
+    logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
     This function steers the particle selection.
@@ -322,6 +323,8 @@ def addParticleSelection(
     outputParticles: str
         the identifier for the final selected particle collection
     """
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+    
     s.addAlgorithm(
         acts.examples.ParticleSelector(
             **acts.examples.defaultKWArgs(
