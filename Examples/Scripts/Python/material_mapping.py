@@ -36,6 +36,7 @@ def runMaterialMapping(
     mapName="material-map",
     mapSurface=True,
     mapVolume=True,
+    readCachedSurfaceInformation=False,
     s=None,
 ):
     s = s or Sequencer(numThreads=1)
@@ -58,9 +59,12 @@ def runMaterialMapping(
             fileList=[
                 os.path.join(
                     inputDir,
-                    "geant4_material_tracks.root",
+                    mapName + "_tracks.root"
+                    if readCachedSurfaceInformation
+                    else "geant4_material_tracks.root",
                 )
             ],
+            readCachedSurfaceInformation=readCachedSurfaceInformation,
         )
     )
 
@@ -138,4 +142,5 @@ if "__main__" == __name__:
         decorators,
         outputDir=os.getcwd(),
         inputDir=os.getcwd(),
+        readCachedSurfaceInformation=False,
     ).run()
