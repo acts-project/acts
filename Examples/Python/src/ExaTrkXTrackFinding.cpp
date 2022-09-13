@@ -49,7 +49,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX,
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
                                 "TrackFindingAlgorithmExaTrkX",
                                 inputSpacePoints, outputProtoTracks,
                                 trackFinderML);

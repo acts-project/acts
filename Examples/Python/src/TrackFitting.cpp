@@ -26,6 +26,10 @@ namespace Acts::Python {
 void addTrackFitting(Context& ctx) {
   auto mex = ctx.get("examples");
 
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SurfaceSortingAlgorithm, mex,
+                                "SurfaceSortingAlgorithm", inputProtoTracks,
+                                inputSimHits, inputMeasurementSimHitsMap,
+                                outputProtoTracks);
   {
     using Alg = ActsExamples::SurfaceSortingAlgorithm;
     using Config = Alg::Config;
@@ -39,10 +43,7 @@ void addTrackFitting(Context& ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputProtoTracks);
-    ACTS_PYTHON_MEMBER(inputSimHits);
-    ACTS_PYTHON_MEMBER(inputMeasurementSimHitsMap);
-    ACTS_PYTHON_MEMBER(outputProtoTracks);
+
     ACTS_PYTHON_STRUCT_END();
   }
 

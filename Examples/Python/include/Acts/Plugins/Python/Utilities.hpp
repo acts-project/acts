@@ -56,11 +56,11 @@ void patchKwargsConstructor(T& c) {
 #define ACTS_PYTHON_MEMBER(name) \
   _binding_instance.def_readwrite(#name, &_struct_type::name)
 
-#define ACTS_PYTHON_STRUCT_BEGIN(obj, cls) \
-  {                                        \
-    auto& _binding_instance = obj;         \
-    using _struct_type = cls;              \
-    do {                                   \
+#define ACTS_PYTHON_STRUCT_BEGIN(obj, cls)          \
+  {                                                 \
+    [[maybe_unused]] auto& _binding_instance = obj; \
+    using _struct_type = cls;                       \
+    do {                                            \
     } while (0)
 
 #define ACTS_PYTHON_STRUCT_END() \
@@ -73,18 +73,54 @@ void patchKwargsConstructor(T& c) {
 
 /// A macro that uses Boost.Preprocessor to create the python binding for and
 /// algorithm and the additional config struct.
-#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, name, ...)                 \
+#define ACTS_PYTHON_DECLARE_ALGORITHM(algorithm, mod, name, ...)            \
   do {                                                                      \
     using Alg = algorithm;                                                  \
     using Config = Alg::Config;                                             \
     auto alg =                                                              \
         py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>( \
-            mex, name)                                                      \
+            mod, name)                                                      \
             .def(py::init<const Config&, Acts::Logging::Level>(),           \
                  py::arg("config"), py::arg("level"))                       \
             .def_property_readonly("config", &Alg::config);                 \
                                                                             \
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());           \
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
+    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                       \
+                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))            \
+    ACTS_PYTHON_STRUCT_END();                                               \
+  } while (0)
+
+/// Similar as above for writers
+#define ACTS_PYTHON_DECLARE_WRITER(writer, mod, name, ...)                  \
+  do {                                                                      \
+    using Writer = writer;                                                  \
+    using Config = Writer::Config;                                          \
+    auto w =                                                                \
+        py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>( \
+            mod, name)                                                      \
+            .def(py::init<const Config&, Acts::Logging::Level>(),           \
+                 py::arg("config"), py::arg("level"));                      \
+                                                                            \
+    auto c = py::class_<Config>(w, "Config").def(py::init<>());             \
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
+    BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                       \
+                          BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))            \
+    ACTS_PYTHON_STRUCT_END();                                               \
+  } while (0)
+
+/// Similar as above for readers
+#define ACTS_PYTHON_DECLARE_READER(reader, mod, name, ...)                  \
+  do {                                                                      \
+    using Reader = reader;                                                  \
+    using Config = Reader::Config;                                          \
+    auto r =                                                                \
+        py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>( \
+            mod, name)                                                      \
+            .def(py::init<const Config&, Acts::Logging::Level>(),           \
+                 py::arg("config"), py::arg("level"));                      \
+                                                                            \
+    auto c = py::class_<Config>(r, "Config").def(py::init<>());             \
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
     BOOST_PP_SEQ_FOR_EACH(ACTS_PYTHON_MEMBER_LOOP, _,                       \
                           BOOST_PP_VARIADIC_TO_SEQ(__VA_ARGS__))            \
