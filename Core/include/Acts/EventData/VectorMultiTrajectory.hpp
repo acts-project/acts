@@ -58,6 +58,8 @@ class VectorMultiTrajectoryBase {
     }
   };
 
+  VectorMultiTrajectoryBase(VectorMultiTrajectoryBase&& other) = default;
+
   struct DynamicColumnBase {
     virtual ~DynamicColumnBase() = 0;
 
@@ -246,9 +248,8 @@ class VectorMultiTrajectory final
   VectorMultiTrajectory(const VectorMultiTrajectory& other)
       : VectorMultiTrajectoryBase{other} {}
 
-  VectorMultiTrajectory(VectorMultiTrajectory&&) = default;
-  VectorMultiTrajectory& operator=(const VectorMultiTrajectory&) = default;
-  VectorMultiTrajectory& operator=(VectorMultiTrajectory&&) = default;
+  VectorMultiTrajectory(VectorMultiTrajectory&& other)
+      : VectorMultiTrajectoryBase{std::move(other)} {}
 
  private:
   // BEGIN INTERFACE
@@ -356,10 +357,10 @@ class ConstVectorMultiTrajectory final
   ConstVectorMultiTrajectory(const VectorMultiTrajectory& other)
       : VectorMultiTrajectoryBase{other} {}
 
+  ConstVectorMultiTrajectory(VectorMultiTrajectory&& other)
+      : VectorMultiTrajectoryBase{std::move(other)} {}
+
   ConstVectorMultiTrajectory(ConstVectorMultiTrajectory&&) = default;
-  ConstVectorMultiTrajectory& operator=(const ConstVectorMultiTrajectory&) =
-      default;
-  ConstVectorMultiTrajectory& operator=(ConstVectorMultiTrajectory&&) = default;
 
  private:
   // BEGIN INTERFACE
