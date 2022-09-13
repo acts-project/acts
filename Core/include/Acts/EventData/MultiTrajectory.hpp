@@ -235,9 +235,17 @@ class TrackStateProxy {
       auto dest = getMask();
       auto src = other.getMask() &
                  mask;  // combine what we have with what we want to copy
-      if (static_cast<std::underlying_type_t<TrackStatePropMask>>((src ^ dest) &
-                                                                  src) != 0 ||
-          dest == TrackStatePropMask::None || src == TrackStatePropMask::None) {
+
+      if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
+        // on-demand allocate calibrated
+        dest |= PM::Calibrated;
+      }
+
+      if ((static_cast<std::underlying_type_t<TrackStatePropMask>>(
+               (src ^ dest) & src) != 0 ||
+           dest == TrackStatePropMask::None ||
+           src == TrackStatePropMask::None) &&
+          mask != TrackStatePropMask::None) {
         throw std::runtime_error(
             "Attempt track state copy with incompatible allocations");
       }

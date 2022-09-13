@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/tools/context.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/TrackParametrization.hpp"
@@ -722,15 +723,12 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyGetMask) {
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   using PM = TrackStatePropMask;
 
-  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
-                           PM::Jacobian, PM::Calibrated};
+  std::array<PM, 4> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian};
 
   VectorMultiTrajectory mj;
   auto mkts = [&](PM mask) {
     auto r = mj.getTrackState(mj.addTrackState(mask));
-    if (ACTS_CHECK_BIT(mask, PM::Calibrated)) {
-      r.allocateCalibrated(3);
-    }
     return r;
   };
 
@@ -740,7 +738,6 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
       auto tsa = mkts(a);
       auto tsb = mkts(b);
       // doesn't work
-      // std::cout << tsa.getMask() << "\n->\n" << tsb.getMask() << std::endl;
       if (a != b) {
         BOOST_CHECK_THROW(tsa.copyFrom(tsb), std::runtime_error);
         BOOST_CHECK_THROW(tsb.copyFrom(tsa), std::runtime_error);
@@ -749,6 +746,26 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
         tsb.copyFrom(tsa);
       }
     }
+  }
+
+  {
+    BOOST_TEST_CHECKPOINT("Calib auto alloc");
+    auto tsa = mkts(PM::All);
+    auto tsb = mkts(PM::All);
+    tsb.allocateCalibrated(5);
+    tsb.calibrated<5>().setRandom();
+    tsb.calibratedCovariance<5>().setRandom();
+    tsa.copyFrom(tsb, PM::All);
+    BOOST_CHECK_EQUAL(tsa.calibrated<5>(), tsb.calibrated<5>());
+    BOOST_CHECK_EQUAL(tsa.calibratedCovariance<5>(),
+                      tsb.calibratedCovariance<5>());
+  }
+
+  {
+    BOOST_TEST_CHECKPOINT("Copy none");
+    auto tsa = mkts(PM::All);
+    auto tsb = mkts(PM::All);
+    tsa.copyFrom(tsb, PM::None);
   }
 
   auto ts1 = mkts(PM::Filtered | PM::Predicted);  // this has both
@@ -913,25 +930,17 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
 BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   using PM = TrackStatePropMask;
 
-  std::array<PM, 5> values{PM::Predicted, PM::Filtered, PM::Smoothed,
-                           PM::Jacobian, PM::Calibrated};
+  std::array<PM, 4> values{PM::Predicted, PM::Filtered, PM::Smoothed,
+                           PM::Jacobian};
 
   VectorMultiTrajectory mj;
   VectorMultiTrajectory mj2;
   auto mkts = [&](PM mask) {
     auto r = mj.getTrackState(mj.addTrackState(mask));
-
-    if (mask == PM::Calibrated) {
-      r.allocateCalibrated(3);
-    }
     return r;
   };
   auto mkts2 = [&](PM mask) {
     auto r = mj2.getTrackState(mj2.addTrackState(mask));
-
-    if (mask == PM::Calibrated) {
-      r.allocateCalibrated(3);
-    }
     return r;
   };
 
@@ -979,6 +988,26 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopyDiffMTJ) {
   ts1.copyFrom(ts2);
   BOOST_CHECK(ts1.predicted() == ts2.predicted());
   BOOST_CHECK(ts1.predictedCovariance() == ts2.predictedCovariance());
+
+  {
+    BOOST_TEST_CHECKPOINT("Calib auto alloc");
+    auto tsa = mkts(PM::All);
+    auto tsb = mkts(PM::All);
+    tsb.allocateCalibrated(5);
+    tsb.calibrated<5>().setRandom();
+    tsb.calibratedCovariance<5>().setRandom();
+    tsa.copyFrom(tsb, PM::All);
+    BOOST_CHECK_EQUAL(tsa.calibrated<5>(), tsb.calibrated<5>());
+    BOOST_CHECK_EQUAL(tsa.calibratedCovariance<5>(),
+                      tsb.calibratedCovariance<5>());
+  }
+
+  {
+    BOOST_TEST_CHECKPOINT("Copy none");
+    auto tsa = mkts(PM::All);
+    auto tsb = mkts(PM::All);
+    tsa.copyFrom(tsb, PM::None);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(ProxyAssignment) {
