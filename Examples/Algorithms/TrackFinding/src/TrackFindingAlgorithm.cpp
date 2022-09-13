@@ -108,7 +108,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
-  auto results = (*m_cfg.findTracks)(initialParameters, options);
+
+  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+  auto results = (*m_cfg.findTracks)(initialParameters, options, mtj);
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {
@@ -116,8 +118,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   }
 
   // Acts::VectorMultiTrajectory::Statistics::hist_t stats;
-
-  std::shared_ptr<Acts::VectorMultiTrajectory> mtj;
 
   // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
@@ -127,10 +127,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     if (result.ok()) {
       // Get the track finding output object
       auto& trackFindingOutput = result.value();
-      if (iseed == 0) {
-        mtj = std::dynamic_pointer_cast<Acts::VectorMultiTrajectory>(
-            trackFindingOutput.fittedStates);
-      }
       // Create a Trajectories result struct
       trajectories.emplace_back(trackFindingOutput.fittedStates,
                                 trackFindingOutput.lastMeasurementIndices,
@@ -156,9 +152,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   ACTS_DEBUG("Finalized track finding with " << trajectories.size()
                                              << " track candidates.");
 
-  auto stats = mtj->statistics();
-
-  ACTS_INFO("Track State memory statistics:\n" << stats);
+  m_memoryStatistics.local().hist += mtj->statistics().hist;
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   ctx.eventStore.add(m_cfg.outputTrackParameters,
@@ -175,5 +169,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize()
   ACTS_INFO("- failed seeds: " << m_nFailedSeeds);
   ACTS_INFO("- failure ratio: " << static_cast<double>(m_nFailedSeeds) /
                                        m_nTotalSeeds);
+
+  auto memoryStatistics =
+      m_memoryStatistics.combine([](const auto& a, const auto& b) {
+        Acts::VectorMultiTrajectory::Statistics c;
+        c.hist = a.hist + b.hist;
+        return c;
+      });
+  std::stringstream ss;
+  memoryStatistics.toStream(ss);
+  ACTS_INFO("Track State memory statistics (averaged):\n" << ss.str());
   return ProcessCode::SUCCESS;
 }

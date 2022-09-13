@@ -75,6 +75,8 @@ class VectorMultiTrajectory final
     using hist_t = boost::histogram::histogram<axes_t>;
 
     hist_t hist;
+
+    void toStream(std::ostream& os, size_t n = 1);
   };
 
   Statistics statistics() const;
@@ -343,8 +345,5 @@ class VectorMultiTrajectory final
   std::unordered_map<HashedString, std::unique_ptr<DynamicColumnBase>>
       m_dynamic;
 };
-
-std::ostream& operator<<(std::ostream& os,
-                         const VectorMultiTrajectory::Statistics& stats);
 
 }  // namespace Acts

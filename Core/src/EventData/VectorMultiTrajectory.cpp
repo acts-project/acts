@@ -209,7 +209,7 @@ auto VectorMultiTrajectory::statistics() const -> Statistics {
 
   axes.emplace_back(axis::category<>({0, 1}));
 
-  Statistics::hist_t h = make_histogram(std::move(axes));
+  auto h = make_histogram(axes);
 
   for (IndexType i = 0; i < size(); i++) {
     auto ts = getTrackState(i);
@@ -224,19 +224,19 @@ auto VectorMultiTrajectory::statistics() const -> Statistics {
     size_t par_size = eBoundSize * sizeof(scalar);
     size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
 
-    const IndexData& p = m_index[i];
+    const IndexData& index = m_index[i];
     if (ts.hasPredicted() &&
-        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Predicted)) {
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Predicted)) {
       h("parPred", isMeas, weight(par_size));
       h("covPred", isMeas, weight(cov_size));
     }
     if (ts.hasFiltered() &&
-        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Filtered)) {
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Filtered)) {
       h("parFilt", isMeas, weight(par_size));
       h("covFilt", isMeas, weight(cov_size));
     }
     if (ts.hasSmoothed() &&
-        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Smoothed)) {
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Smoothed)) {
       h("parSmth", isMeas, weight(par_size));
       h("covSmth", isMeas, weight(cov_size));
     }
@@ -246,7 +246,7 @@ auto VectorMultiTrajectory::statistics() const -> Statistics {
 
     h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
     if (ts.hasCalibrated() &&
-        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Calibrated)) {
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Calibrated)) {
       h("meas", isMeas, weight(meas_size));
       h("measCov", isMeas, weight(meas_cov_size));
       h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
@@ -254,7 +254,7 @@ auto VectorMultiTrajectory::statistics() const -> Statistics {
     }
 
     if (ts.hasJacobian() &&
-        ACTS_CHECK_BIT(p.allocMask, TrackStatePropMask::Jacobian)) {
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Jacobian)) {
       h("jac", isMeas, weight(cov_size));
     }
   }
@@ -262,12 +262,11 @@ auto VectorMultiTrajectory::statistics() const -> Statistics {
   return Statistics{h};
 }
 
-std::ostream& operator<<(std::ostream& os,
-                         const VectorMultiTrajectory::Statistics& stats) {
+void VectorMultiTrajectory::Statistics::toStream(std::ostream& os, size_t n) {
   using namespace boost::histogram;
   using cat = axis::category<std::string>;
 
-  auto& h = stats.hist;
+  auto& h = hist;
 
   auto column_axis = axis::get<cat>(h.axis(0));
   auto type_axis = axis::get<axis::category<>>(h.axis(1));
@@ -275,9 +274,10 @@ std::ostream& operator<<(std::ostream& os,
   auto p = [&](const auto& key, const auto v, const std::string suffix = "") {
     os << std::setw(20) << key << ": ";
     if constexpr (std::is_same_v<std::decay_t<decltype(v)>, double>) {
-      os << std::fixed << std::setw(8) << std::setprecision(2) << v << suffix;
+      os << std::fixed << std::setw(8) << std::setprecision(2) << v / n
+         << suffix;
     } else {
-      os << std::fixed << std::setw(8) << v << suffix;
+      os << std::fixed << std::setw(8) << double(v) / n << suffix;
     }
     os << std::endl;
   };
@@ -297,8 +297,6 @@ std::ostream& operator<<(std::ostream& os,
     }
     p("total", total / 1024 / 1024, "M");
   }
-
-  return os;
 }
 
 }  // namespace Acts
