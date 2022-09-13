@@ -261,7 +261,7 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   *cmps[1].boundCov << 20_degree, 20_degree, 20_degree, 40_degree;
   cmps[1].weight = 0.5;
 
-  const auto samples = sampleFromMultivariate(cmps, 50000, gen);
+  const auto samples = sampleFromMultivariate(cmps, 10000, gen);
   const auto mean_data = circularMean(samples);
   const auto boundCov_data = boundCov(samples, mean_data, [](auto a, auto b) {
     Vector2 res = Vector2::Zero();
@@ -276,7 +276,10 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   const auto [mean_test, boundCov_test] =
       detail::combineGaussianMixture(cmps, Identity{}, d);
 
-  CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
+  BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[0], mean_test[0],
+                                                   2 * M_PI)) < 1.e-1);
+  BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[1], mean_test[1],
+                                                   2 * M_PI)) < 1.e-1);
   CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
 }
 
