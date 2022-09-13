@@ -214,7 +214,7 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     return;
   } else {
     ACTS_VERBOSE(
-        "Material interaction need to be associated with surfaces. Collecting "
+        "Material interactions need to be associated with surfaces. Collecting "
         "all surfaces on the trajectory.");
     mapInteraction(mState, mTrack);
     return;
@@ -444,7 +444,7 @@ void Acts::SurfaceMaterialMapper::mapInteraction(
         }
         missedMaterial->second.trackAverage(mSurface.position, true);
 
-        // Add an empty material hit for futur material mapping iteration
+        // Add an empty material hit for future material mapping iteration
         Acts::MaterialInteraction noMaterial;
         noMaterial.surface = mSurface.surface;
         noMaterial.intersection = mSurface.position;
