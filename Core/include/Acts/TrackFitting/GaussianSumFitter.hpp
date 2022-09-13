@@ -288,7 +288,7 @@ struct GaussianSumFitter {
       return return_error_or_abort(fwdResult.error());
     }
 
-    auto& fwdGsfResult = (*fwdResult).template get<detail::GsfResult<traj_t>>();
+    auto& fwdGsfResult = fwdResult->template get<detail::GsfResult<traj_t>>();
 
     if (!fwdGsfResult.result.ok()) {
       return return_error_or_abort(fwdGsfResult.result.error());
@@ -390,7 +390,7 @@ struct GaussianSumFitter {
       return return_error_or_abort(bwdResult.error());
     }
 
-    auto& bwdGsfResult = (*bwdResult).template get<detail::GsfResult<traj_t>>();
+    auto& bwdGsfResult = bwdResult->template get<detail::GsfResult<traj_t>>();
 
     if (!bwdGsfResult.result.ok()) {
       return return_error_or_abort(bwdGsfResult.result.error());
@@ -497,7 +497,7 @@ struct GaussianSumFitter {
         if (!result.ok()) {
           return result.error();
         } else {
-          return std::move((*result).endParameters);
+          return std::move(result->endParameters);
         }
       }();
 
