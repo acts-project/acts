@@ -324,7 +324,7 @@ def addParticleSelection(
         the identifier for the final selected particle collection
     """
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    
+
     s.addAlgorithm(
         acts.examples.ParticleSelector(
             **acts.examples.defaultKWArgs(
