@@ -15,8 +15,9 @@ All magnetic field implementations inherit and implement the interface {class}`A
 
 
 It provides a generic interface over different implementations. To speed up
-magnetic field lookup, each implementation can have a *cache* object, which the
-client is expected to pass into lookup calls:
+magnetic field lookup, each implementation can have a *cache* object. The cache
+object can for example be used to store a local interpolation domain, to speed
+up nearby field lookups. The client is expected to pass into lookup calls:
 
 :::{doxygentypedef} Acts::MagneticFieldProvider::Cache
 :::
@@ -34,14 +35,14 @@ The main lookup method of {class}`Acts::MagneticFieldProvider` is
 :outline:
 :::
 
-Aside from the lookup position
-as a global vector, it accepts an instance of the opaque cache object mentioned
-before. The return value is a {class}`Acts::Result` object. It either contains
-the field value at the requested location, or an
-{enum}`Acts::MagneticFieldError` in case of a lookup failure, like an
-out-of-bounds lookup position.
+Aside from the lookup position as a global position vector, it accepts an
+instance of the opaque cache object mentioned before. The return value is a
+{class}`Acts::Result` object. It either contains the field value at the
+requested location, or an {enum}`Acts::MagneticFieldError` in case of a lookup
+failure, like an out-of-bounds lookup position.
 
-Below is an example of how a client can interact with an instance of {class}`Acts::MagneticFieldProvider`.
+Below is an example of how a client can interact with an instance of
+{class}`Acts::MagneticFieldProvider`.
 
 ```cpp
 // in event context
@@ -72,9 +73,8 @@ through the call-chain to the field implementation. An experiment specific
 field implementation is then expected to performa cast to the concrete type,
 and use the contents. 
 
-An example of this is a conditions database handle that is derived from the
-event context, and is used by the magnetic field instance to retrieve the
-correct field values.
+An example use case of the context could be to look up conditions data /
+records for the value of the magnetic field at the time of the event.
 
 ## Field provider implementations in Core
 
@@ -82,13 +82,17 @@ There are a number of field provider implemenations found in core which serve di
 
 ### Constant magnetic field
 
-The simplest implementation is a constant field, which returns the same field values at every queried location. It is implemented in the {class}`Acts::ConstantBField` class.
+The simplest implementation is a constant field, which returns the same field
+values at every queried location. It is implemented in the
+{class}`Acts::ConstantBField` class.
 
 :::{doxygenclass} Acts::ConstantBField
 :members: ConstantBField
 :::
 
-As seen above, the class is constructed from a three-dimensional field vector, which is returned unmodified to every call to {func}`Acts::ConstantBField::getField`.
+As seen above, the class is constructed from a three-dimensional field vector,
+which is returned unmodified to every call to
+{func}`Acts::ConstantBField::getField`.
 
 ### Interpolated magnetic field
 
@@ -103,10 +107,14 @@ likely to not cross the field cell boundary, the field cell can be cached.
 :::{figure} ../figures/bfield/field_cell.svg
 :width: 300
 :align: center
-Illustration of the field cell concept. Subsequent steps are clustered in the same field cell. The field cell only needs to be refetched when the propagation crosses into the next grid region.
+Illustration of the field cell concept. Subsequent steps are clustered in the
+same field cell. The field cell only needs to be refetched when the propagation
+crosses into the next grid region.
 :::
 
-{class}`Acts::InterpolatedMagneticField` extends the {class}`Acts::MagneticFieldProvider` interface to add a number of additional methods:
+{class}`Acts::InterpolatedMagneticField` extends the
+{class}`Acts::MagneticFieldProvider` interface to add a number of additional
+methods:
 
 :::{doxygenclass} Acts::InterpolatedMagneticField
 :::
@@ -152,12 +160,15 @@ The analytical solenoid field is **slow**. See {func}`Acts::solenoidFieldMap`
 to speed it up.
 :::
 
-ACTS also provides a field provider that calculates the field vectors analytically for a [solenoid](https://en.wikipedia.org/wiki/Solenoid) field. 
+ACTS also provides a field provider that calculates the field vectors
+analytically for a [solenoid](https://en.wikipedia.org/wiki/Solenoid) field. 
 
 :::{figure} ../figures/bfield/quiver.png
 :width: 600
 :align: center
-Picture of a solenoid field in rz, with arrows indicating the direction of the field, and their size denoting the strength. The field is almost homogeneous in the center.
+Picture of a solenoid field in rz, with arrows indicating the direction of the
+field, and their size denoting the strength. The field is almost homogeneous in
+the center.
 :::
 
 The implementation has configurable solenoid parameters:
@@ -211,7 +222,9 @@ $$
 B_z(r,z) = \frac{\mu_0 I}{4\pi} \frac{k}{\sqrt{Rr}} \left[ \left( \frac{(R+r)k^2-2r}{2r(1-k^2)} \right ) E_2(k^2) + E_1(k^2) \right ]
 $$
 
-In the implementation the factor of $(\mu_0\cdot I)$ is defined to be a scaling factor. It is evaluated and defined as the magnetic field in the center of the coil, i.e. the scale set in {any}`Acts::SolenoidBField::Config::bMagCenter`.
+In the implementation the factor of $(\mu_0\cdot I)$ is defined to be a scaling
+factor. It is evaluated and defined as the magnetic field in the center of the
+coil, i.e. the scale set in {any}`Acts::SolenoidBField::Config::bMagCenter`.
 
 As the evaluation of $E_1(k^2)$ and $E_2(k^2)$ is **slow**. The
 {class}`Acts::InterpolatedBFieldMap` easily outperforms
