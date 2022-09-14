@@ -22,8 +22,8 @@ FetchContent_Declare(frnn
     GIT_REPOSITORY "${ACTS_FRNN_GIT_REPOSITORY}"
     GIT_TAG "${ACTS_FRNN_GIT_TAG}" )
 
-# FRNN does not provide a CMakeLists.txt, so we have to implement 
-# the populate step manually
+# FRNN does not provide a CMakeLists.txt, so we use a custom one. Because of this,
+# we have to implement the populate step manually
 FetchContent_GetProperties(frnn)
 if(NOT frnn_POPULATED)
   FetchContent_Populate(frnn)
