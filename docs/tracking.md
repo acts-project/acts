@@ -468,7 +468,7 @@ executed. In case material is supposed to be integrated in a continuous way
 effective volumetric material composition, which is queried by the numerical
 integration when needed. As the actual physical location of the detection
 hardware can vary over time, possible misalignment of the sensors needs to be
-handled correctly (see [](#alignment-of-particle-sensors)).
+handled correctly.
 
 ## Clustering
 
