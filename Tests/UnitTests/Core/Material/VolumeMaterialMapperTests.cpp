@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   /// We need a Navigator, Stepper to build a Propagator
   Navigator navigator({tGeometry});
   StraightLineStepper stepper;
-  VolumeMaterialMapper::StraightLinePropagator propagator(std::move(stepper),
+  VolumeMaterialMapper::StraightLinePropagator propagator(stepper,
                                                           std::move(navigator));
 
   /// The config object

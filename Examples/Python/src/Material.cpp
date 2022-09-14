@@ -6,11 +6,13 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Io/Root/RootMaterialDecorator.hpp"
+#include "ActsExamples/MaterialMapping/MappingMaterialDecorator.hpp"
 #include "ActsExamples/MaterialMapping/MaterialMapping.hpp"
 
 #include <memory>
@@ -66,6 +68,19 @@ void addMaterial(Context& ctx) {
   }
 
   {
+    py::class_<MappingMaterialDecorator, Acts::IMaterialDecorator,
+               std::shared_ptr<MappingMaterialDecorator>>(
+        m, "MappingMaterialDecorator")
+        .def(py::init<const Acts::TrackingGeometry&, Acts::Logging::Level, bool,
+                      bool>(),
+             py::arg("tGeometry"), py::arg("level"),
+             py::arg("clearSurfaceMaterial") = true,
+             py::arg("clearVolumeMaterial") = true)
+        .def("binningMap", &MappingMaterialDecorator::binningMap)
+        .def("setBinningMap", &MappingMaterialDecorator::setBinningMap);
+  }
+
+  {
     using Alg = ActsExamples::MaterialMapping;
 
     auto alg =
@@ -73,6 +88,7 @@ void addMaterial(Context& ctx) {
             mex, "MaterialMapping")
             .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))
+            .def("scoringParameters", &Alg::scoringParameters)
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Alg::Config>(alg, "Config")
@@ -111,6 +127,7 @@ void addMaterial(Context& ctx) {
     ACTS_PYTHON_MEMBER(etaRange);
     ACTS_PYTHON_MEMBER(emptyBinCorrection);
     ACTS_PYTHON_MEMBER(mapperDebugOutput);
+    ACTS_PYTHON_MEMBER(computeVariance);
     ACTS_PYTHON_STRUCT_END();
   }
 

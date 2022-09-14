@@ -3,6 +3,8 @@
 import os
 import sys
 import subprocess
+from pathlib import Path
+import shutil
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
@@ -17,39 +19,40 @@ copyright = "2014–2022 CERN for the benefit of the Acts project"
 
 # -- General ------------------------------------------------------------------
 
+sys.path.insert(0, str(Path(__file__).parent / "_extensions"))
+
 extensions = [
     "breathe",
     "myst_parser",
     "sphinx.ext.mathjax",
-    "sphinx_markdown_tables",
+    "warnings_filter",
 ]
+
+warnings_filter_config = str(Path(__file__).parent / "known-warnings.txt")
+warnings_filter_silent = True
+
 source_suffix = {
     ".rst": "restructuredtext",
     ".md": "markdown",
 }
 master_doc = "index"
 # ensure the in-source build directory is ignored
-exclude_patterns = [
-    "_build",
-]
+exclude_patterns = ["_build", "api/api_stub.rst", "api/api_index.rst"]
 # cpp as default language
 primary_domain = "cpp"
 highlight_language = "cpp"
 smartquotes = True
 numfig = True
 
-myst_enable_extensions = ["dollarmath"]
+myst_enable_extensions = ["dollarmath", "colon_fence"]
+myst_heading_anchors = 3
 
 # -- Options for HTML output --------------------------------------------------
 
 # ensure we use the RTD them when building locally
 if not on_readthedocs:
-    import sphinx_rtd_theme
-
     html_theme = "sphinx_rtd_theme"
-    html_theme_path = [
-        sphinx_rtd_theme.get_html_theme_path(),
-    ]
+    extensions.append("sphinx_rtd_theme")
 
 html_theme_options = {
     "collapse_navigation": False,
@@ -88,7 +91,7 @@ breathe_default_members = (
 
 env = os.environ.copy()
 env["DOXYGEN_WARN_AS_ERROR"] = "NO"
-cwd = os.path.dirname(__file__)
+cwd = Path(__file__).parent
 
 if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
@@ -102,14 +105,22 @@ if on_readthedocs or tags.has("run_doxygen"):
         ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
     )
 
+api_index_target = cwd / "api/api.rst"
+
 if on_readthedocs or tags.has("run_apidoc"):
     print("Executing breathe apidoc in", cwd)
     subprocess.check_call(
         [sys.executable, "-m", "breathe.apidoc", "_build/doxygen-xml", "-o", "api"],
-        stdout=subprocess.PIPE,
+        stdout=subprocess.DEVNULL,
         cwd=cwd,
         env=env,
     )
+    if not api_index_target.exists():
+        shutil.copyfile(cwd / "api/api_index.rst", api_index_target)
+    print("breathe apidoc completed")
+else:
+    if not api_index_target.exists():
+        shutil.copyfile(cwd / "api/api_stub.rst", api_index_target)
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 

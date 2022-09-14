@@ -18,6 +18,24 @@ void Acts::AccumulatedMaterialSlab::accumulate(MaterialSlab slab,
   m_trackAverage = detail::combineSlabs(m_trackAverage, slab);
 }
 
+void Acts::AccumulatedMaterialSlab::trackVariance(MaterialSlab slabReference,
+                                                  bool useEmptyTrack) {
+  // Only use real tracks or if empty tracks are allowed.
+  if (useEmptyTrack or (0 < m_trackAverage.thickness())) {
+    float variance = ((1 / m_trackAverage.material().X0()) -
+                      (1 / slabReference.material().X0())) *
+                     ((1 / m_trackAverage.material().X0()) -
+                      (1 / slabReference.material().X0()));
+    if (m_totalCount == 0u) {
+      m_totalVariance = variance;
+    } else {
+      double weightTotal = m_totalCount / (m_totalCount + 1.0);
+      double weightTrack = 1 / (m_totalCount + 1.0);
+      m_totalVariance = weightTotal * m_totalVariance + weightTrack * variance;
+    }
+  }
+}
+
 void Acts::AccumulatedMaterialSlab::trackAverage(bool useEmptyTrack) {
   // average only real tracks or if empty tracks are allowed.
   if (useEmptyTrack or (0 < m_trackAverage.thickness())) {
@@ -42,4 +60,9 @@ void Acts::AccumulatedMaterialSlab::trackAverage(bool useEmptyTrack) {
 std::pair<Acts::MaterialSlab, unsigned int>
 Acts::AccumulatedMaterialSlab::totalAverage() const {
   return {m_totalAverage, m_totalCount};
+}
+
+std::pair<float, unsigned int> Acts::AccumulatedMaterialSlab::totalVariance()
+    const {
+  return {m_totalVariance, m_totalCount};
 }

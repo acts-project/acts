@@ -58,9 +58,10 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
 
     if (geoShape != nullptr) {
       TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-      if (tube == nullptr)
+      if (tube == nullptr) {
         ACTS_ERROR(
             "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
+      }
 
       // Extract the boundaries
       rMin = tube->GetRmin() * UnitConstants::cm;

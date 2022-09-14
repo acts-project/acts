@@ -43,8 +43,10 @@ class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
     Acts::SeedFinderOrthogonalConfig<SimSpacePoint> seedFinderConfig;
 
     float rMax = 200.;
-    float deltaRMin = 1.;
-    float deltaRMax = 60.;
+    float deltaRMinTopSP = 1.;
+    float deltaRMaxTopSP = 60.;
+    float deltaRMinBottomSP = 1.;
+    float deltaRMaxBottomSP = 60.;
     float collisionRegionMin = -250;
     float collisionRegionMax = 250.;
     float zMin = -2000.;

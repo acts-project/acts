@@ -19,25 +19,32 @@ import acts.examples
 acts.logging.setFailureThreshold(acts.logging.FATAL)
 
 from truth_tracking_kalman import runTruthTrackingKalman
-from ckf_tracks import addCKFTracks, CKFPerformanceConfig
-from fatras import addFatras
-from digitization import addDigitization
-from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
-from seeding import (
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
+from acts.examples.simulation import (
+    addParticleGun,
+    EtaConfig,
+    PhiConfig,
+    ParticleConfig,
+    addFatras,
+    addDigitization,
+)
+from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
     ParticleSmearingSigmas,
     SeedfinderConfigArg,
     SeedingAlgorithm,
     TrackParamsEstimationConfig,
+    addCKFTracks,
+    CKFPerformanceConfig,
+    addVertexFitting,
+    VertexFinder,
 )
 
-from common import getOpenDataDetector
 
 parser = argparse.ArgumentParser()
 parser.add_argument("outdir")
-parser.add_argument("--events", type=int, default=10000)
-parser.add_argument("--skip", type=int, default=0)
 
 args = parser.parse_args()
 
@@ -54,16 +61,16 @@ matDeco = acts.IMaterialDecorator.fromFile(
     srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
     level=acts.logging.INFO,
 )
-detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(
+    getOpenDataDetectorDirectory(), matDeco
+)
 digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
 geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 
 
 field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-s = acts.examples.Sequencer(
-    events=args.events, numThreads=-1, logLevel=acts.logging.INFO, skip=0
-)
+s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
 
 with tempfile.TemporaryDirectory() as temp:
     tp = Path(temp)
@@ -90,9 +97,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
     (False, True, "truth_estimated"),
     (False, False, "seeded"),
 ]:
-    s = acts.examples.Sequencer(
-        events=args.events, numThreads=1, logLevel=acts.logging.INFO, skip=args.skip
-    )
+    s = acts.examples.Sequencer(events=500, numThreads=1, logLevel=acts.logging.INFO)
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
@@ -102,23 +107,29 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
 
         rnd = acts.examples.RandomNumbers(seed=42)
 
-        s = addParticleGun(
+        vtxGen = acts.examples.GaussianVertexGenerator(
+            stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
+            mean=acts.Vector4(0, 0, 0, 0),
+        )
+
+        addParticleGun(
             s,
             EtaConfig(-4.0, 4.0),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
-            multiplicity=2,
+            vtxGen=vtxGen,
+            multiplicity=50,
             rnd=rnd,
         )
 
-        s = addFatras(
+        addFatras(
             s,
             trackingGeometry,
             field,
             rnd=rnd,
         )
 
-        s = addDigitization(
+        addDigitization(
             s,
             trackingGeometry,
             field,
@@ -126,7 +137,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             rnd=rnd,
         )
 
-        s = addSeeding(
+        addSeeding(
             s,
             trackingGeometry,
             field,
@@ -157,7 +168,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
 
-        s = addCKFTracks(
+        addCKFTracks(
             s,
             trackingGeometry,
             field,
@@ -166,12 +177,34 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             outputDirCsv=None,
         )
 
+        s.addAlgorithm(
+            acts.examples.TrackSelector(
+                level=acts.logging.INFO,
+                inputTrackParameters="fittedTrackParameters",
+                outputTrackParameters="trackparameters",
+                outputTrackIndices="outputTrackIndices",
+                removeNeutral=True,
+                absEtaMax=2.5,
+                loc0Max=4.0 * u.mm,  # rho max
+                ptMin=500 * u.MeV,
+            )
+        )
+
+        s = addVertexFitting(
+            s,
+            field,
+            vertexFinder=VertexFinder.Iterative,
+            trajectories="trajectories",
+            outputDirRoot=tp,
+        )
+
         s.run()
         del s
 
-        perf_file = tp / "performance_ckf.root"
-        assert perf_file.exists(), "Performance file not found"
-        shutil.copy(perf_file, outdir / f"performance_ckf_tracks_{label}.root")
+        for stem in "performance_ckf", "performance_vertexing":
+            perf_file = tp / f"{stem}.root"
+            assert perf_file.exists(), "Performance file not found"
+            shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
 
         if not truthSmearedSeeded and not truthEstimatedSeeded:
             residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"

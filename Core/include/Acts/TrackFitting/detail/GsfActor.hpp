@@ -32,27 +32,28 @@
 namespace Acts {
 namespace detail {
 
+template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
-  MultiTrajectory fittedStates;
+  std::shared_ptr<traj_t> fittedStates;
 
   /// This provides the weights for the states in the MultiTrajectory. Each
   /// entry maps to one track state. TODO This is a workaround until the
   /// MultiTrajectory can handle weights
-  std::map<size_t, ActsScalar> weightsOfStates;
+  std::map<MultiTrajectoryTraits::IndexType, ActsScalar> weightsOfStates;
 
   /// The current indexes for the newest components in the multi trajectory
   /// (this includes material, hole and outlier states)
-  std::vector<std::size_t> currentTips;
+  std::vector<MultiTrajectoryTraits::IndexType> currentTips;
 
   /// The last tips referring to a measuerement state so we do not need so
   /// search them recursively later
-  std::vector<std::size_t> lastMeasurementTips;
+  std::vector<MultiTrajectoryTraits::IndexType> lastMeasurementTips;
 
   /// We must capture the parent tips to ensure that we can keep track of the
   /// last states in the multitrajectory after the component convolution and
   /// reduction
-  std::vector<std::size_t> parentTips;
+  std::vector<MultiTrajectoryTraits::IndexType> parentTips;
 
   /// Some counting
   std::size_t measurementStates = 0;
@@ -69,13 +70,13 @@ struct GsfResult {
 };
 
 /// The actor carrying out the GSF algorithm
-template <typename bethe_heitler_approx_t>
+template <typename bethe_heitler_approx_t, typename traj_t>
 struct GsfActor {
   /// Enforce default construction
   GsfActor() = default;
 
   /// Broadcast the result_type
-  using result_type = GsfResult;
+  using result_type = GsfResult<traj_t>;
 
   // Actor configuration
   struct Config {
@@ -109,13 +110,13 @@ struct GsfActor {
     bool abortOnError = false;
 
     /// The extensions
-    GsfExtensions extensions;
+    GsfExtensions<traj_t> extensions;
   } m_cfg;
 
   /// Stores meta information about the components
   struct MetaCache {
     /// Where to find the parent component in the MultiTrajectory
-    std::size_t parentIndex;
+    MultiTrajectoryTraits::IndexType parentIndex;
 
     /// Other quantities TODO are they really needed here? seems they are
     /// reinitialized to Identity etc.
@@ -149,6 +150,7 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result) const {
+    assert(result.fittedStates && "No MultiTrajectory set");
     const auto& logger = state.options.logger;
 
     // Prints some VERBOSE things and performs some asserts. Can be removed
@@ -193,7 +195,7 @@ struct GsfActor {
     // Initialize the tips if they are empty (should only happen at first pass)
     if (result.parentTips.empty()) {
       result.parentTips.resize(stepper.numberComponents(state.stepping),
-                               SIZE_MAX);
+                               MultiTrajectoryTraits::kInvalid);
     }
 
     if (result.parentTips.size() != stepper.numberComponents(state.stepping)) {
@@ -315,7 +317,7 @@ struct GsfActor {
                            std::vector<ComponentCache>& componentCache) const {
     auto cmps = stepper.componentIterable(state.stepping);
     for (auto [idx, cmp] : zip(result.currentTips, cmps)) {
-      auto proxy = result.fittedStates.getTrackState(idx);
+      auto proxy = result.fittedStates->getTrackState(idx);
 
       MetaCache mcache;
       mcache.parentIndex = idx;
@@ -448,10 +450,10 @@ struct GsfActor {
   /// Removes the components which are missed and update the list of parent tips
   /// for the MultiTrajectory
   template <typename propagator_state_t, typename stepper_t>
-  void removeMissedComponents(propagator_state_t& state,
-                              const stepper_t& stepper,
-                              std::vector<std::size_t>& tips) const {
-    std::vector<std::size_t> new_tips;
+  void removeMissedComponents(
+      propagator_state_t& state, const stepper_t& stepper,
+      std::vector<MultiTrajectoryTraits::IndexType>& tips) const {
+    std::vector<MultiTrajectoryTraits::IndexType> new_tips;
     auto components = stepper.componentIterable(state.stepping);
     double sum_w = 0.0;
 
@@ -498,10 +500,10 @@ struct GsfActor {
 
   /// Function that updates the stepper from the MultiTrajectory
   template <typename propagator_state_t, typename stepper_t>
-  std::vector<size_t> updateStepper(propagator_state_t& state,
-                                    const stepper_t& stepper,
-                                    const result_type& result) const {
-    std::vector<std::size_t> newTips;
+  std::vector<MultiTrajectoryTraits::IndexType> updateStepper(
+      propagator_state_t& state, const stepper_t& stepper,
+      const result_type& result) const {
+    std::vector<MultiTrajectoryTraits::IndexType> newTips;
 
     auto cmps = stepper.componentIterable(state.stepping);
 
@@ -513,7 +515,7 @@ struct GsfActor {
         continue;
       }
 
-      auto proxy = result.fittedStates.getTrackState(idx);
+      auto proxy = result.fittedStates->getTrackState(idx);
 
       cmp.pars() =
           MultiTrajectoryHelpers::freeFiltered(state.options.geoContext, proxy);
@@ -535,14 +537,14 @@ struct GsfActor {
 
   /// Function that updates the stepper from the ComponentCache
   template <typename propagator_state_t, typename stepper_t>
-  std::vector<size_t> updateStepper(
+  std::vector<MultiTrajectoryTraits::IndexType> updateStepper(
       propagator_state_t& state, const stepper_t& stepper,
       const std::vector<ComponentCache>& componentCache) const {
     const auto& surface = *state.navigation.currentSurface;
     const auto& logger = state.options.logger;
 
     // We collect new tips in the loop
-    std::vector<size_t> new_parent_tips;
+    std::vector<MultiTrajectoryTraits::IndexType> new_parent_tips;
 
     // Clear components before adding new ones
     stepper.clearComponents(state.stepping);
@@ -599,7 +601,7 @@ struct GsfActor {
 
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           singleState, singleStepper, m_cfg.extensions, surface, source_link,
-          result.fittedStates, idx, false);
+          *result.fittedStates, idx, false);
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -618,7 +620,7 @@ struct GsfActor {
       result.weightsOfStates[result.currentTips.back()] = cmp.weight();
     }
 
-    computePosteriorWeights(result.fittedStates, result.currentTips,
+    computePosteriorWeights(*result.fittedStates, result.currentTips,
                             result.weightsOfStates);
 
     detail::normalizeWeights(result.currentTips, [&](auto idx) -> double& {
@@ -663,7 +665,7 @@ struct GsfActor {
       // There is some redundant checking inside this function, but do this for
       // now until we measure this is significant
       auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
-          singleState, singleStepper, surface, result.fittedStates, idx,
+          singleState, singleStepper, surface, *result.fittedStates, idx,
           doCovTransport);
 
       if (!trackStateProxyRes.ok()) {

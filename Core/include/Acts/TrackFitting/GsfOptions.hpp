@@ -20,9 +20,11 @@
 namespace Acts {
 
 /// The extensions needed for the GSF
+template <typename traj_t>
 struct GsfExtensions {
-  using TrackStateProxy = MultiTrajectory::TrackStateProxy;
-  using ConstTrackStateProxy = MultiTrajectory::ConstTrackStateProxy;
+  using TrackStateProxy = typename MultiTrajectory<traj_t>::TrackStateProxy;
+  using ConstTrackStateProxy =
+      typename MultiTrajectory<traj_t>::ConstTrackStateProxy;
 
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
@@ -45,18 +47,19 @@ struct GsfExtensions {
 
   /// Default constructor which connects the default void components
   GsfExtensions() {
-    calibrator.connect<&voidKalmanCalibrator>();
-    updater.connect<&voidKalmanUpdater>();
-    outlierFinder.connect<&voidOutlierFinder>();
+    calibrator.template connect<&voidKalmanCalibrator<traj_t>>();
+    updater.template connect<&voidKalmanUpdater<traj_t>>();
+    outlierFinder.template connect<&voidOutlierFinder<traj_t>>();
   }
 };
 
+template <typename traj_t>
 struct GsfOptions {
   std::reference_wrapper<const GeometryContext> geoContext;
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
   std::reference_wrapper<const CalibrationContext> calibrationContext;
 
-  GsfExtensions extensions;
+  GsfExtensions<traj_t> extensions;
 
   LoggerWrapper logger;
 

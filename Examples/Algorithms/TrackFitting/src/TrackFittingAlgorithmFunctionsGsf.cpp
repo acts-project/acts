@@ -28,19 +28,22 @@ template <typename FitterFunction>
 auto makeGsfOptions(
     const FitterFunction& f,
     const TrackFittingAlgorithm::GeneralFitterOptions& options) {
-  Acts::GsfExtensions extensions;
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&f.updater);
+  Acts::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
+  extensions.updater.connect<
+      &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+      &f.updater);
 
-  Acts::GsfOptions gsfOptions{options.geoContext,
-                              options.magFieldContext,
-                              options.calibrationContext,
-                              extensions,
-                              options.logger,
-                              options.propOptions,
-                              &(*options.referenceSurface),
-                              f.maxComponents,
-                              f.abortOnError,
-                              f.disableAllMaterialHandling};
+  Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
+      options.geoContext,
+      options.magFieldContext,
+      options.calibrationContext,
+      extensions,
+      options.logger,
+      options.propOptions,
+      &(*options.referenceSurface),
+      f.maxComponents,
+      f.abortOnError,
+      f.disableAllMaterialHandling};
 
   return gsfOptions;
 }
@@ -61,15 +64,15 @@ struct GsfFitterFunctionImpl
       const std::vector<std::reference_wrapper<
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
-      const override {
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
     auto gsfOptions = makeGsfOptions(*this, options);
     gsfOptions.extensions.calibrator
         .template connect<&ActsExamples::MeasurementCalibrator::calibrate>(
             &options.calibrator.get());
 
     return trackFitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                           initialParameters, gsfOptions);
+                           initialParameters, gsfOptions, trajectory);
   }
 };
 
@@ -90,14 +93,16 @@ struct DirectedFitterFunctionImpl
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      const std::vector<const Acts::Surface*>& sSequence) const override {
+      const std::vector<const Acts::Surface*>& sSequence,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
     auto gsfOptions = makeGsfOptions(*this, options);
     gsfOptions.extensions.calibrator
         .template connect<&ActsExamples::MeasurementCalibrator::calibrate>(
             &options.calibrator.get());
 
     return trackFitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                           initialParameters, gsfOptions, sSequence);
+                           initialParameters, gsfOptions, sSequence,
+                           trajectory);
   }
 };
 }  // namespace
@@ -115,8 +120,8 @@ TrackFittingAlgorithm::makeGsfFitterFunction(
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg);
   Acts::Propagator propagator(std::move(stepper), std::move(navigator));
-  Acts::GaussianSumFitter<decltype(propagator)> trackFitter(
-      std::move(propagator));
+  Acts::GaussianSumFitter<decltype(propagator), Acts::VectorMultiTrajectory>
+      trackFitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.
   auto fitterFunction =
@@ -136,9 +141,9 @@ TrackFittingAlgorithm::makeGsfFitterFunction(
     bool disableAllMaterialHandling) {
   Acts::MultiEigenStepperLoop stepper(std::move(magneticField));
   Acts::DirectNavigator navigator;
-  Acts::Propagator propagator(std::move(stepper), std::move(navigator));
-  Acts::GaussianSumFitter<decltype(propagator)> trackFitter(
-      std::move(propagator));
+  Acts::Propagator propagator(std::move(stepper), navigator);
+  Acts::GaussianSumFitter<decltype(propagator), Acts::VectorMultiTrajectory>
+      trackFitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.
   auto fitterFunction =

@@ -45,8 +45,9 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   m_outputFile->cd();
   m_outputTree =
       new TTree(m_cfg.treeName.c_str(), "TTree from RootMaterialTrackWriter");
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_id", &m_eventId);
@@ -95,7 +96,11 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   }
 }
 
-ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() = default;
+ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
   // write the tree and close the file
