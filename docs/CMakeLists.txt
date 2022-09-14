@@ -43,6 +43,12 @@ add_custom_target(run-doxygen DEPENDS ${doxygen_index})
 set(api_dir ${CMAKE_CURRENT_SOURCE_DIR}/api)
 set(api_index ${api_dir}/api.rst)
 
+if(DEFINED ENV{CI})
+  set(extra_args "-b linkcheck")
+else()
+  set(extra_args "")
+endif()
+
 # standard target to build the documentation without automatic API generation
 add_custom_target(
   docs
@@ -53,6 +59,7 @@ add_custom_target(
       -j auto
       -W
       --keep-going
+      ${extra_args}
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${sphinx_html}
   DEPENDS ${doxygen_index}
@@ -69,6 +76,7 @@ add_custom_target(
       -t run_apidoc
       -W
       --keep-going
+      ${extra_args}
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${sphinx_html}
   DEPENDS ${doxygen_index}
