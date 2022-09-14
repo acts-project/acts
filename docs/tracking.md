@@ -310,7 +310,7 @@ losses only fluctuates to a small degree for thin layers of material, they can
 usually be accounted for by reducing the trajectory energy correspondingly. For
 bremsstrahlung, where fluctuations are much larger and the effect cannot be
 modelled adequately with a Gaussian distribution, dedicated techniques are
-needed (see [](gsf)).
+needed (see [](gsf_core)).
 
 Two main approaches are implemented in ACTS. The first approximates the
 material interaction by using a description that averages the real material
@@ -684,15 +684,16 @@ for Gaussian uncertainties. This assumption breaks down when effects like
 bremsstrahlung come into play. An extension of the Kalman Filter (KF) exists
 that relies on the individual propagation of a set of trajectories, instead of
 a single one, to model these biased uncertainties by a sum of Gaussian
-components. This [Gaussian Sum Filter](gsf) (GSF) achieves better results when
+components. This [Gaussian Sum Filter](gsf_core) (GSF) achieves better results when
 fitting particles such as electrons, likely to undergo bremsstrahlung, and is
 deployed in e.g. the ATLAS tracking chain.
 
 
 ### Kalman formalism and Kalman track fitter
 
-:::{attention}
-A dedicated description of the ACTS implementation of the KF will be added shortly.
+:::{tip}
+See [](kf_core) for a description of the implementation of the Kalman Filter in
+the core library.
 :::
 
 The basis of the Kalman formalism is a state vector, that can be identified
@@ -849,19 +850,20 @@ subsequent step to the current one.
 
 ### Combinatorial Kalman Filter
 
-:::{attention}
-A dedicated description of the ACTS implementation of the CKF will be added shortly.
+:::{tip}
+See [](ckf_core) for information on the CKF implementation found in the core
+library.
 :::
 
-As mentioned above, the Kalman formalism can be used for track finding. In
-this case, the smoothing step can be dropped, as the resulting track
-candidates are likely to be refit regardless, therefore saving some time. The
-CKF explores the event starting from an initial track seed. It does this
-by considering not only a single sequence of measurements, but allowing the
-branching of the fit at each sensitive surface that is encountered. To this
-end, all or a subset of measurements that are found on each surface are
-considered. Measurements are selected based on their compatibility with the
-current state estimate, by using their residuals. A predicted residual
+As mentioned above, the Kalman formalism can be used for track finding. In this
+case, the smoothing step can be dropped, as the resulting track candidates are
+likely to be refit regardless, therefore saving some time. The CKF explores the
+event starting from an initial track seed. It does this by considering not only
+a single sequence of measurements, but allowing the branching of the fit at
+each sensitive surface that is encountered. To this end, all or a subset of
+measurements that are found on each surface are considered. Measurements are
+selected based on their compatibility with the current state estimate, by using
+their residuals. A predicted residual
 
 $$
   \vec r_k^{k-1} = \vec m_k - \mathbf H_k \vec x_k^{k-1},
@@ -909,7 +911,7 @@ circular *real* trajectory.
 ## Ambiguity resolution
 
 :::{note}
-There is currently no general-purpose ambiguity resolution implemented in ACST.
+There is currently no general-purpose ambiguity resolution implemented in ACTS.
 :::
 
 Due to the combinatorial nature of track finding, and to achieve high
@@ -945,9 +947,9 @@ for further aspects of reconstruction.
 
 ## Vertex reconstruction
 
-:::{attention}
-A dedicated description of the vertexing as implemented in ACTS, and the 
-various components that exist will be added shortly.
+:::{tip}
+See [](vertexing_core) for a dedicated description of the vertexing as
+implemented in ACTS.
 :::
 
 One very immediate use case for tracks is the reconstruction of interaction
