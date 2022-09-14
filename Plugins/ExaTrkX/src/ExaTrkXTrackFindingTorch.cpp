@@ -131,12 +131,10 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
 
   timer.start();
 
+  // At this point, buildEdgesBruteForce could be used instead
   std::optional<torch::Tensor> edgeList = buildEdges(
       *eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
   eOutput.reset();
-  // torch::Tensor edgeList = buildEdgesBruteForce(
-  //   eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal,
-  //   m_cfg.knnVal);
 
   ACTS_VERBOSE("Shape of built edges: (" << edgeList->size(0) << ", "
                                          << edgeList->size(1));
@@ -197,7 +195,6 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
   print_current_cuda_meminfo(logger);
 
   std::vector<torch::jit::IValue> gInputTensorJit;
-  // auto g_opts = torch::TensorOptions().dtype(torch::kInt64);
   gInputTensorJit.push_back(eLibInputTensor.to(device));
   gInputTensorJit.push_back(bidirEdgesAfterF.to(device));
 
