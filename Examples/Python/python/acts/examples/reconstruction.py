@@ -804,6 +804,7 @@ def addExaTrkX(
     modelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
     backend: Optional[ExaTrkXBackend] = ExaTrkXBackend.Torch,
+    logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)

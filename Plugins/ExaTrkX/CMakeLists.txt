@@ -49,22 +49,18 @@ target_link_libraries(
   ActsPluginExaTrkX
   PUBLIC
     ActsCore
-)
-
-target_link_libraries(
-  ActsPluginExaTrkX
-  PUBLIC
-    frnn  
     Boost::boost
+  PRIVATE
     ${TORCH_LIBRARIES}
+    frnn
 )
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
   target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_ONNX_BACKEND)
-  
+
   target_link_libraries(
     ActsPluginExaTrkX
-    PUBLIC
+    PRIVATE
       OnnxRuntime
       cugraph::cugraph
   )
@@ -72,13 +68,13 @@ endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
   target_compile_definitions(ActsPluginExaTrkX PUBLIC ACTS_EXATRKX_TORCH_BACKEND)
-  
+
   target_link_libraries(
     ActsPluginExaTrkX
-    PUBLIC
+    PRIVATE
       TorchScatter::TorchScatter
   )
-  
+
   # Should not discard TorchScatter even if its not needed at this point 
   # since we need the scatter_max operation in the torch script later
   target_link_options(
