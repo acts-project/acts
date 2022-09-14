@@ -472,14 +472,18 @@ handled correctly (see [](#alignment-of-particle-sensors)).
 
 ## Clustering
 
+:::{tip}
+See [](clustering_core) for information of the implementation of clustering in
+the core library.
+:::
+
 The actual track reconstruction procedure itself starts with the conversion of
 raw inputs that have been read out from the detector. In case of silicon
 detectors, the readout can either be performed in a binary way, only recording
 which segments fired, or the amount of charges measured in the segment can be
 recorded, e.g. via *time-over-threshold* readout. In all cases, the readout is
 attached to an identifier uniquely locating the segment on the corresponding
-sensor. See [](clustering_core) for information of the implementation of
-clustering in the core library.
+sensor. 
 
 As a next step, these raw readouts need to be *clustered*, in order to
 extract an estimate of where particles intersect with the sensor. The general
