@@ -38,7 +38,7 @@ clang_tidy:
 
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:sha-0f1a141c
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v30
   tags:
     - docker
   variables:
@@ -89,7 +89,7 @@ test:
   stage: test
   needs:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:sha-0f1a141c
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v30
   tags:
     - docker-gpu-nvidia
   script:

@@ -55,7 +55,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     inputValues.push_back(phi / m_cfg.phiScale);
     inputValues.push_back(z / m_cfg.zScale);
 
-    // For now just take the first index since the model
+    // For now just take the first index since does require one single index per
+    // spacepoint
     const auto islink =
         static_cast<const IndexSourceLink&>(*sp.sourceLinks().front());
     spacepointIDs.push_back(islink.index());
