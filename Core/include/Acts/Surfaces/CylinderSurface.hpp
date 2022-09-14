@@ -28,10 +28,12 @@ namespace Acts {
 /// since it builds the surfaces of all TrackingVolumes at container level
 /// for a cylindrical tracking geometry.
 ///
-/// @image html CylinderSurface.png
+/// @image html figures/CylinderSurface.png
 
 class CylinderSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from DetectorElementBase: Element proxy

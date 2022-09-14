@@ -21,13 +21,13 @@ def runGeant4(
     s.config.logLevel = acts.logging.INFO
     rnd = acts.examples.RandomNumbers()
     seed = 42
-    s = addParticleGun(
+    addParticleGun(
         s,
         EtaConfig(-2.0, 2.0),
         rnd=rnd,
     )
     outputDir = Path(outputDir)
-    return addGeant4(
+    addGeant4(
         s,
         geometryService,
         trackingGeometry,
@@ -36,6 +36,7 @@ def runGeant4(
         outputDirRoot=outputDir,
         seed=seed,
     )
+    return s
 
 
 if "__main__" == __name__:

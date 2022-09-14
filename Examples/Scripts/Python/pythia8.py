@@ -25,12 +25,14 @@ def runPythia8(
         events=10, numThreads=-1, logLevel=acts.logging.INFO
     )
 
-    return addPythia8(
+    addPythia8(
         s,
         rnd=rnd,
         outputDirCsv=outputDir / "csv" if outputCsv else None,
         outputDirRoot=outputDir if outputRoot else None,
     )
+
+    return s
 
 
 if "__main__" == __name__:

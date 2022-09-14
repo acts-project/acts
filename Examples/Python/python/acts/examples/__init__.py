@@ -1,4 +1,5 @@
 import sys, inspect
+from typing import Optional, Protocol, Dict
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -70,7 +71,7 @@ def _makeLayerTriplet(*args, **kwargs):
             all(
                 (isinstance(v, tuple) or isinstance(v, list))
                 and isinstance(v[0], int)
-                and isinstance(v[1], TGeoDetector.Config.BinningType)
+                and isinstance(v[1], inspect.unwrap(TGeoDetector.Config.BinningType))
                 for v in vv
             )
             for vv in (negative, central, positive)
@@ -110,8 +111,8 @@ def _process_volume_intervals(kwargs):
     _kwargs = kwargs.copy()
 
     v = TGeoDetector.Config.Volume()
-    for name, value in inspect.getmembers(TGeoDetector.Config.Volume):
-        if not isinstance(getattr(v, name), Interval):
+    for name, value in inspect.getmembers(inspect.unwrap(TGeoDetector.Config.Volume)):
+        if not isinstance(getattr(v, name), inspect.unwrap(Interval)):
             continue
         if not name in _kwargs:
             continue
@@ -194,8 +195,6 @@ def dump_args(func):
 
     @wraps(func)
     def dump_args_wrapper(*args, **kwargs):
-        import inspect
-
         try:
             func_args = inspect.signature(func).bind(*args, **kwargs).arguments
             func_args_str = ", ".join(
@@ -206,34 +205,124 @@ def dump_args(func):
                 list(map("{0!r}".format, args))
                 + list(map("{0[0]} = {0[1]!r}".format, kwargs.items()))
             )
-        print(f"{func.__module__}.{func.__qualname__} ( {func_args_str} )")
+        if not (
+            func_args_str == ""
+            and any([a == "Config" for a in func.__qualname__.split(".")])
+        ):
+            print(f"{func.__module__}.{func.__qualname__} ( {func_args_str} )")
         return func(*args, **kwargs)
+
+    # fix up any attributes broken by the wrapping
+    for name in dir(func):
+        if not name.startswith("__"):
+            obj = getattr(func, name)
+            wrapped = getattr(dump_args_wrapper, name, None)
+            if type(obj) is not type(wrapped):
+                setattr(dump_args_wrapper, name, obj)
 
     return dump_args_wrapper
 
 
-def dump_args_calls(
-    myLocal=None,
-    mod=sys.modules[__name__],
-):
+def dump_args_calls(myLocal=None, mods=None, quiet=False):
     """
-    Wrap all calls to acts.examples Python bindings in dump_args.
+    Wrap all Python bindings calls to acts and its submodules in dump_args.
     Specify myLocal=locals() to include imported symbols too.
     """
     import collections
 
-    for n in dir(mod):
-        if n.startswith("_") or n == "Config" or n == "Interval":
-            continue
-        f = getattr(mod, n)
-        if not (
-            isinstance(f, collections.abc.Callable)
-            and f.__module__.startswith("acts.ActsPythonBindings")
-            and not hasattr(f, "__wrapped__")
+    def _allmods(mod, base, found):
+        import types
+
+        mods = [mod]
+        found.add(mod)
+        for name, obj in sorted(
+            vars(mod).items(),
+            key=lambda m: (2, m[0])
+            if m[0] == "ActsPythonBindings"
+            else (1, m[0])
+            if m[0].startswith("_")
+            else (0, m[0]),
         ):
-            continue
-        dump_args_calls(myLocal, f)  # wrap class's contained methods
-        w = dump_args(f)
-        setattr(mod, n, w)
-        if myLocal and hasattr(myLocal, n):
-            setattr(myLocal, n, w)
+            if (
+                not name.startswith("__")
+                and type(obj) is types.ModuleType
+                and obj.__name__.startswith(base)
+                and f"{mod.__name__}.{name}" in sys.modules
+                and obj not in found
+            ):
+                mods += _allmods(obj, base, found)
+        return mods
+
+    if mods is None:
+        mods = _allmods(acts, "acts.", set())
+    elif not isinstance(mods, list):
+        mods = [mods]
+
+    donemods = []
+    alldone = 0
+    for mod in mods:
+        done = 0
+        for name in dir(mod):
+            # if name in {"Config", "Interval", "IMaterialDecorator"}: continue  # skip here if we don't fix up attributes in dump_args and unwrap classes elsewhere
+            obj = getattr(mod, name, None)
+            if not (
+                not name.startswith("__")
+                and isinstance(obj, collections.abc.Callable)
+                and hasattr(obj, "__module__")
+                and obj.__module__.startswith("acts.ActsPythonBindings")
+                and not hasattr(obj, "__wrapped__")
+            ):
+                continue
+            # wrap class's contained methods
+            done += dump_args_calls(myLocal, [obj], True)
+            wrapped = dump_args(obj)
+            setattr(mod, name, wrapped)
+            if myLocal and hasattr(myLocal, name):
+                setattr(myLocal, name, wrapped)
+            done += 1
+        if done:
+            alldone += done
+            donemods.append(f"{mod.__name__}:{done}")
+    if not quiet and donemods:
+        print("dump_args for module functions:", ", ".join(donemods))
+    return alldone
+
+
+class CustomLogLevel(Protocol):
+    def __call__(
+        self,
+        minLevel: acts.logging.Level = acts.logging.VERBOSE,
+        maxLevel: acts.logging.Level = acts.logging.FATAL,
+    ) -> acts.logging.Level:
+        ...
+
+
+def defaultLogging(
+    s=None,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> CustomLogLevel:
+    """
+    Establishes a default logging strategy for the python examples interface.
+
+    Returns a function that determines the log level in the following schema:
+    - if `logLevel` is set use it otherwise use the log level of the sequencer `s.config.logLevel`
+    - the returned log level is bound between `minLevel` and `maxLevel` provided to `customLogLevel`
+
+    Examples:
+    - `customLogLevel(minLevel=acts.logging.INFO)` to get a log level that is INFO or higher
+      (depending on the sequencer and `logLevel` param) which is useful to suppress a component which
+      produces a bunch of logs below INFO and you are actually more interested in another component
+    - `customLogLevel(maxLevel=acts.logging.INFO)` to get a log level that is INFO or lower
+      (depending on the sequencer and `logLevel` param) which is useful to get more details from a
+      component that will produce logs of interest below the default level
+    - in summary `minLevel` defines the maximum amount of logging and `maxLevel` defines the minimum amount of logging
+    """
+
+    def customLogLevel(
+        minLevel: acts.logging.Level = acts.logging.VERBOSE,
+        maxLevel: acts.logging.Level = acts.logging.FATAL,
+    ) -> acts.logging.Level:
+        l = logLevel if logLevel is not None else s.config.logLevel
+        return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
+
+    return customLogLevel

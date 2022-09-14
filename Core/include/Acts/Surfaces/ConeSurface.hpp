@@ -30,7 +30,9 @@ namespace Acts {
 /// curvilinear coordinates.
 
 class ConeSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor form HepTransform and an opening angle
