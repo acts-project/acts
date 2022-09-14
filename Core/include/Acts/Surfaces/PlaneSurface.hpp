@@ -28,10 +28,12 @@ class DetectorElementBase;
 /// The PlaneSurface extends the Surface class with the possibility to
 /// convert local to global positions (vice versa).
 ///
-/// @image html PlaneSurface.png
+/// @image html figures/PlaneSurface.png
 ///
 class PlaneSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Copy Constructor

@@ -12,7 +12,7 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/DataContainers.hpp"
+#include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 

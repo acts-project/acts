@@ -53,7 +53,7 @@ def runCKFTracks(
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
-        s = addParticleGun(
+        addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
@@ -75,14 +75,14 @@ def runCKFTracks(
             )
         )
 
-    s = addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
     )
 
-    s = addDigitization(
+    addDigitization(
         s,
         trackingGeometry,
         field,
@@ -90,7 +90,7 @@ def runCKFTracks(
         rnd=rnd,
     )
 
-    s = addSeeding(
+    addSeeding(
         s,
         trackingGeometry,
         field,
@@ -119,7 +119,7 @@ def runCKFTracks(
         rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
     )
 
-    s = addCKFTracks(
+    addCKFTracks(
         s,
         trackingGeometry,
         field,

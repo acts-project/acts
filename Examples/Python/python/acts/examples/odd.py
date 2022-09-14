@@ -1,8 +1,19 @@
 from pathlib import Path
 import sys, os
 
+import acts
+import acts.examples
 
-def getOpenDataDetector(odd_dir, mdecorator=None):
+
+def getOpenDataDetector(
+    odd_dir: Path,
+    mdecorator=None,
+    logLevel=acts.logging.INFO,
+):
+
+    import acts.examples.dd4hep
+
+    customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
 
     odd_xml = odd_dir / "xml" / "OpenDataDetector.xml"
     if not odd_xml.exists():
@@ -33,12 +44,10 @@ def getOpenDataDetector(odd_dir, mdecorator=None):
             )
             raise RuntimeError(msg)
 
-    import acts.examples.dd4hep
-
     dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
         xmlFileNames=[str(odd_xml)],
-        logLevel=acts.logging.INFO,
-        dd4hepLogLevel=acts.logging.INFO,
+        logLevel=customLogLevel(),
+        dd4hepLogLevel=customLogLevel(),
     )
     detector = acts.examples.dd4hep.DD4hepDetector()
 
@@ -47,7 +56,7 @@ def getOpenDataDetector(odd_dir, mdecorator=None):
         mdecorator = acts.JsonMaterialDecorator(
             rConfig=config,
             jFileName=str(odd_dir / "config/odd-material-mapping-config.json"),
-            level=acts.logging.WARNING,
+            level=customLogLevel(minLevel=acts.logging.WARNING),
         )
 
     trackingGeometry, deco = detector.finalize(dd4hepConfig, mdecorator)

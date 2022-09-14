@@ -22,6 +22,8 @@ namespace hana = boost::hana;
 
 namespace Acts {
 
+/// @cond
+
 /// @brief ActionList implementation to be used with the propagator
 ///
 /// This is the ActionList struct that is used in the propagator
@@ -83,7 +85,7 @@ struct ActionList : public detail::Extendable<actors_t...> {
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_t& result) const {
     // clang-format off
-    static_assert(detail::all_of_v<detail::action_signature_check_v<actors_t, 
+    static_assert(detail::all_of_v<detail::action_signature_check_v<actors_t,
                                       propagator_state_t, stepper_t>...>,
                   "not all actors support the method signature");
     // clang-format on
@@ -92,5 +94,7 @@ struct ActionList : public detail::Extendable<actors_t...> {
     impl::action(tuple(), state, stepper, result);
   }
 };
+
+/// @endcond
 
 }  // namespace Acts

@@ -123,7 +123,7 @@ int runRecTruthTracks(int argc, char* argv[],
   SurfaceSortingAlgorithm::Config sorterCfg;
   // Setup the surface sorter if running direct navigator
   sorterCfg.inputProtoTracks = trackFinderCfg.outputProtoTracks;
-  sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
+  sorterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
   sorterCfg.outputProtoTracks = "sortedprototracks";
   if (dirNav) {

@@ -35,8 +35,9 @@ class Surface;
 
 template <class volume_t>
 class BoundarySurfaceT {
-  /// declare the TrackingVolume as friend
+#ifndef DOXYGEN
   friend volume_t;
+#endif
 
   using VolumePtr = std::shared_ptr<const volume_t>;
   using VolumeArray = BinnedArray<VolumePtr>;
