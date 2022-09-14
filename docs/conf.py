@@ -4,6 +4,7 @@ import os
 import sys
 import subprocess
 from pathlib import Path
+import shutil
 
 # check if we are running on readthedocs.org
 on_readthedocs = os.environ.get("READTHEDOCS", None) == "True"
@@ -90,7 +91,7 @@ breathe_default_members = (
 
 env = os.environ.copy()
 env["DOXYGEN_WARN_AS_ERROR"] = "NO"
-cwd = os.path.dirname(__file__)
+cwd = Path(__file__).parent
 
 if on_readthedocs or tags.has("run_doxygen"):
     # if we are running on RTD Doxygen must be run as part of the build
@@ -104,6 +105,8 @@ if on_readthedocs or tags.has("run_doxygen"):
         ["doxygen", "Doxyfile"], stdout=subprocess.PIPE, cwd=cwd, env=env
     )
 
+api_index_target = cwd / "api/api.rst"
+
 if on_readthedocs or tags.has("run_apidoc"):
     print("Executing breathe apidoc in", cwd)
     subprocess.check_call(
@@ -112,7 +115,12 @@ if on_readthedocs or tags.has("run_apidoc"):
         cwd=cwd,
         env=env,
     )
+    if not api_index_target.exists():
+        shutil.copyfile(cwd / "api/api_index.rst", api_index_target)
     print("breathe apidoc completed")
+else:
+    if not api_index_target.exists():
+        shutil.copyfile(cwd / "api/api_stub.rst", api_index_target)
 
 # -- Markdown bridge setup hook (must come last, not sure why) ----------------
 

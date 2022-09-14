@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -52,8 +53,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     inputValues.push_back(r);
     inputValues.push_back(phi);
     inputValues.push_back(z);
-
-    spacepointIDs.push_back(sp.measurementIndex());
+    for (const auto slink : sp.sourceLinks()) {
+      const auto islink = static_cast<const IndexSourceLink&>(*slink);
+      spacepointIDs.push_back(islink.index());
+    }
   }
 
   // ProtoTrackContainer protoTracks;
