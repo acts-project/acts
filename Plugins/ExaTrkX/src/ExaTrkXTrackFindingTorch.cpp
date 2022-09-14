@@ -237,9 +237,6 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
       numSpacepoints, rowIndices, colIndices, edgeWeights, trackLabels,
       m_cfg.edgeCut);
 
-  // weakly_connected_components<int32_t,int32_t,float>(
-  //     rowIndices, colIndices, edgeWeights, trackLabels);
-
   ACTS_VERBOSE("Number of track labels: " << trackLabels.size());
   ACTS_VERBOSE("NUmber of unique track labels: " << [&]() {
     std::vector<vertex_t> sorted(trackLabels);
