@@ -1,12 +1,11 @@
 # Tracking in a nutshell
 
 Track reconstruction is the process to recover the properties of a charged
-particle from a set of measurements caused by interaction with some form of
+particle from a set of measurements caused by the interaction with some form of
 sensitive detector. The goal is to find which measurements are likely to have
 been caused by which particle, to group them accordingly, and to estimate the
-associated trajectory. Such charged particle trajectories form the basic
-input to the majority of higher-level reconstruction procedures in many
-cases.
+associated trajectory. Such charged particle trajectories form the basic input
+to the majority of higher-level reconstruction procedures in many cases.
 
 :::{figure} /figures/tracking/tracking.svg
 :width: 400px
@@ -15,7 +14,10 @@ Illustration of a track reconstruction chain starting from spacepoints to fully
 formed tracks.
 :::
 
-This section provides a high-level view of a track reconstruction chain, and is largely based on [^phd:gessinger:2021].
+This section provides a high-level view of a track reconstruction chain, and is
+largely based on [^phd:gessinger:2021]. It gives an overview of the basic
+building blocks conceptually, and also connects these building blocks with the
+concrete implementations in the core ACTS library, where available.
 
 ## Charged particle detection
 
@@ -122,7 +124,7 @@ around the momentum vector $\vec p$, respectively.
 A dedicated description of the ACTS implementation of particle propagation can be found [here](propagation_impl).
 :::
 
-A central for track reconstruction is the ability to calculate the trajectory
+A central part of track reconstruction is the ability to calculate the trajectory
 of a charged particle, given its properties at a given point. This process,
 called *particle propagation* or *extrapolation*, is used to predict a
 particle's properties after it has travelled a certain distance. In many cases,
@@ -249,15 +251,15 @@ between initial and final parameters $\vec x^i$ and $\vec x^f$. The
 task therefore becomes calculating the necessary Jacobians to achieve correct
 transformation.
 
-One part is the transformation between different
-coordinate systems, but at the same location along the trajectory. For this
-purpose, generic Jacobians can be calculated between each coordinate system
-type, and a common coordinate system. The common coordinate system used for
-this purpose is the curvilinear frame, which consists of the global direction
-angles, and a plane surface located at the track location, with its normal
-aligned with the track momentum. By using Jacobians to the curvilinear frame
-and the corresponding inverse matrices, conversions between any two
-coordinate systems can be performed.
+One part is the transformation between different coordinate systems, but at the
+same location along the trajectory. For this purpose, generic Jacobians can be
+calculated between each coordinate system type, and a common coordinate system.
+The common coordinate system used for this purpose is the curvilinear frame,
+which consists of the global direction angles, and a plane surface located at
+the track location, with the normal of the plane surface aligned with the track
+momentum. By using Jacobians to the curvilinear frame and the corresponding
+inverse matrices, conversions between any two coordinate systems can be
+performed.
 
 The second part is the calculation of the evolution of the covariance matrix
 during the propagation between surfaces. To this end, a semi-analytical
@@ -298,16 +300,17 @@ numerical particle propagation, this can be accounted for by simply increasing
 the uncertainties associated with the direction, depending on the amount of
 material encountered.
 
-On the other hand, there are interactions during which the particle loses
-some of its energy. Relevant processes here are ionization, as well as
+On the other hand, there are interactions during which the particle loses some
+of its energy. Relevant processes here are ionization, as well as
 bremsstrahlung for light particles like electrons. For hadronic particles,
 hadronic interactions with the nuclei of surrounding material is another
-process of interest. In such hadronic interactions, the incoming particle
-often disintegrates, and does not propagate further. Since the size of
-ionization losses only fluctuates to a small degree for thin layers of
-material, they can usually be accounted for by reducing the trajectory energy
-correspondingly. For bremsstrahlung, where fluctuations are much larger,
-dedicated techniques are needed (see [](gsf)).
+process of interest. In such hadronic interactions, the incoming particle often
+disintegrates, and does not propagate further. Since the size of ionization
+losses only fluctuates to a small degree for thin layers of material, they can
+usually be accounted for by reducing the trajectory energy correspondingly. For
+bremsstrahlung, where fluctuations are much larger and the effect cannot be
+modelled adequately with a Gaussian distribution, dedicated techniques are
+needed (see [](gsf)).
 
 Two main approaches are implemented in ACTS. The first approximates the
 material interaction by using a description that averages the real material
@@ -387,7 +390,7 @@ grouped into layers, as sketched in {numref}`layer_barrel`. How exactly the
 grouping occurs depends on the concrete experiment geometry. In some cases, the layers have the shape
 of cylinder surfaces with increasing radii. This example is shown in the
 figure in the transverse plane at radii $r_{1,2,3}$. In the endcaps, where
-modules are arranged on disks, these are used as the layer shape. An
+modules are often arranged on disks, these are used as the layer shape. An
 illustration of endcap disk layers can be found in {numref}`layer_ec`, where
 six disks are located at six distinct positions in $\pm z_{1,2,3}$, and
 shown in different colors.
@@ -447,14 +450,15 @@ are candidates to receive a projection of the surrounding material.
 Additional artificial material layers can also be inserted to receive
 projected material.
 
-The projection procedure works by extrapolating test particles using the
-fully detailed simulation geometry. During the extrapolation, the material
-properties of the geometry are sampled in small intervals. Subsequently, the
-same test particle is extrapolated through the tracking geometry. All
-material samples are then assigned and projected onto the closest material
-surface. Finally, the projection is averaged. The exact number and placement
-of the material surfaces has to be optimized to yield a sufficiently accurate
-representation of the inactive material in the detector.
+The projection procedure (see [](material_core) and [](material_howto_core)) works
+by extrapolating test particles using the fully detailed simulation geometry.
+During the extrapolation, the material properties of the geometry are sampled
+in small intervals. Subsequently, the same test particle is extrapolated
+through the tracking geometry. All material samples are then assigned and
+projected onto the closest material surface. Finally, the projection is
+averaged. The exact number and placement of the material surfaces has to be
+optimized to yield a sufficiently accurate representation of the inactive
+material in the detector.
 
 The numerical integration uses these projected material surfaces. Whenever
 such a surface is encountered in the propagation, the material properties are
@@ -466,7 +470,7 @@ integration when needed. As the actual physical location of the detection
 hardware can vary over time, possible misalignment of the sensors needs to be
 handled correctly (see [](#alignment-of-particle-sensors)).
 
-## Clusterization
+## Clustering
 
 The actual track reconstruction procedure itself starts with the conversion of
 raw inputs that have been read out from the detector. In case of silicon
@@ -474,7 +478,8 @@ detectors, the readout can either be performed in a binary way, only recording
 which segments fired, or the amount of charges measured in the segment can be
 recorded, e.g. via *time-over-threshold* readout. In all cases, the readout is
 attached to an identifier uniquely locating the segment on the corresponding
-sensor.
+sensor. See [](clustering_core) for information of the implementation of
+clustering in the core library.
 
 As a next step, these raw readouts need to be *clustered*, in order to
 extract an estimate of where particles intersect with the sensor. The general
@@ -552,26 +557,23 @@ Additionally, merged clusters typically feature worse position resolution,
 which manifests itself since it negatively affects the final fit of the
 track. 
 
-## Spacepoint formation and seeding
+## Spacepoint formation
 
-:::{attention}
-A dedicated description of the ACTS implementation for SP formation and seeding
-will be added shortly.
-:::
+The basic input to most forms of pattern recognition algorithms for tracking
+are space points, which need to be assembled from the raw measurements. To this
+end, the raw measurements are combined with information provided by the
+geometry description, such as the location and rotation of the sensors. In this
+way, the locations, which are restricted to be local to the sensor surfaces
+intrinsically, can be converted into three dimensional points in space.  See
+[](spacepoint_formation_core) for a description of the implementation of
+spacepoint formation in the core library.
 
-Seeding is the process of identifying combinations of measurements that are
-likely to belong to a track. The basic input to this algorithm are space
-points, which need to be assembled from the raw measurements. To this end,
-the raw measurements are combined with information provided by the geometry
-description, such as the location and rotation of the sensors. In this way,
-the locations, which are restricted to be local to the sensor surfaces
-intrinsically, can be converted into three dimensional points in space.
-{numref}`sensor` shows an illustration of the information that is consumed
-for a pixel measurement. Shown are three clusters on a sensor, which are
-caused by three tracks intersecting it. The corresponding cluster positions
-are indicated as well, and can be converted to global positions using the
-inverse of the global-to-local transformation matrix, that is provided by the
-geometry description.
+{numref}`sensor` shows an illustration of the information that is consumed for
+a pixel measurement. Shown are three clusters on a sensor, which are caused by
+three tracks intersecting it. The corresponding cluster positions are indicated
+as well, and can be converted to global positions using the inverse of the
+global-to-local transformation matrix, that is provided by the geometry
+description.
 
 (sensor)=
 :::{figure} /figures/tracking/sp_l2g.svg
@@ -596,19 +598,22 @@ combined measurement location can be converted to global coordinates. If
 multiple measurements are located on a stereo pair of strip sensors, there
 exists an ambiguity on how to combine strips to form space points, which has to be resolved.
 
-The next step after space point formation is pattern
-recognition, which be implemented in various ways. Global methods exist which
-attempt to cluster space points, such as conformal mapping. In this approach,
-the space points are transformed into a feature parameter space that reveals
-patterns for hits belonging to the same track. In the specific example of a
-Hough transform, a parameter space $\left(\phi,
-q/p_\mathrm{T}\right)$ is used. As a result, each space point is effectively
-transformed into a line, as a series of combinations of these parameters
-would lead to the same space point. The lines from a set of space points of a
-single track will intersect in one common area. Such an intersection can be
-used to identify which space points originate from the same track. However,
-this task grows in complexity as detector activity increases and is
-susceptible to material effects. 
+
+## Seeding
+
+The next step after space point formation is pattern recognition, which be
+implemented in various ways.  Global methods exist which attempt to cluster
+space points, such as conformal mapping. In this approach, the space points are
+transformed into a feature parameter space that reveals patterns for hits
+belonging to the same track. In the specific example of a Hough transform, a
+parameter space $\left(\phi, q/p_\mathrm{T}\right)$ is used. As a result, each
+space point is effectively transformed into a line, as a series of combinations
+of these parameters would lead to the same space point. The lines from a set of
+space points of a single track will intersect in one common area. Such an
+intersection can be used to identify which space points originate from the same
+track. However, this task grows in complexity as detector activity increases
+and is susceptible to material effects. See [](seeding_core) for a description
+of the seeding implemenation in the core library.
 
 Another group of approaches is the one of seeding and track following. These
 algorithms differ from the global ones in that they evaluate individual
@@ -644,11 +649,11 @@ with the charge $q$ and the magnetic field $B$. An intersection
 between the straight line in the $rz$-plane with the $z$-axis gives an
 estimate of the longitudinal impact parameter. 
 An illustration of seeds in the transverse plane is found in
-{numref}`seeding`. Note that seeds can incorporate hits spread across all of
+{numref}`seeding_figure`. Note that seeds can incorporate hits spread across all of
 the layers shown, although this can be a configuration parameter.
 
 
-(seeding)=
+(seeding_figure)=
 :::{figure} /figures/tracking/seeding.svg
 :width: 300px
 :align: center
@@ -679,13 +684,10 @@ for Gaussian uncertainties. This assumption breaks down when effects like
 bremsstrahlung come into play. An extension of the Kalman Filter (KF) exists
 that relies on the individual propagation of a set of trajectories, instead of
 a single one, to model these biased uncertainties by a sum of Gaussian
-components. This Gaussian Sum Filter (GSF) achieves better results when
+components. This [Gaussian Sum Filter](gsf) (GSF) achieves better results when
 fitting particles such as electrons, likely to undergo bremsstrahlung, and is
 deployed in e.g. the ATLAS tracking chain.
 
-:::{attention}
-TODO: Add GSF link
-:::
 
 ### Kalman formalism and Kalman track fitter
 
@@ -995,36 +997,6 @@ to be a bad fit with the vertex in question are weighted down, avoiding
 degradation in the obtained result. On the other hand, multi-vertex fit methods
 can reassign such outlier tracks to a more compatible vertex, yielding improved
 results for both vertices.
-
-## Alignment of particle sensors
-
-The geometry description introduced in [](#geometry-and-material-modelling) models
-each sensor at an idealized position according to the detector design. In
-reality, construction has certain margins of error, and during operation,
-the geometry can move. This can occur due to external factors including the magnet
-system being toggled on and off, or changes in temperatures.
-
-If the sensor locations assumed by the track reconstruction are not correct
-with respect to the physical location of the hardware, such
-*misalignments* manifest themselves in the extracted track parameters.
-Both the impact parameter and the momentum resolution are affected, and can
-also introduce biases. Since the spatial resolution greatly influences many
-uses of track information, such as the identification of $b$-quarks, the
-degradation due to alignment is not acceptable.
-
-In order to counteract the effects of the various misalignments, they first
-need to be measured precisely. This is done e.g. by using
-a procedure that attempts to minimize an overall $\chi^2$ value, assembled
-from the residuals of tracks in an event with respect to their constituent
-measurements. The minimization modifies the sensor locations and rotations
-according to their degrees of freedom. Care has to be taken to use external
-constraints to suppress biases from alignment modifications that leave the
-$\chi^2$ value invariant.
-
-:::{note}
-There currently only exists a preliminary version of an alignment calculation
-algorithm that works event-by-event, and leverages the Kalman Filter formalism.
-:::
 
 [^phd:gessinger:2021]: Gessinger-Befurt, Paul, 30.04.2021. Development and improvement of track reconstruction software and search for disappearing tracks with the ATLAS experiment. [10.25358/openscience-5901](https://doi.org/10.25358/openscience-5901)
 [^Fruhwirth:1987fm]: F. Frühwirth, 1987, Application of Kalman filtering to track and vertex fitting, , [11.1016/0168-9002(87)90887-4](https://doi.org/10.1016/0168-9002(87)90887-4)
