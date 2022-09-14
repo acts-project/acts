@@ -113,7 +113,7 @@ Illustration of the field cell concept. Subsequent steps are clustered in the sa
 
 This intermediate interface is again implemented by
 {class}`Acts::InterpolatedBFieldMap`, which is a template class that depends on
-an instance of {class}`Acts::Grid`. Varying configurations are possible,
+an instance of {class}`Acts::detail::Grid`. Varying configurations are possible,
 like a 2D field map that exploits $rz$ symmetry, or a plain 3D grid.
 
 :::{doxygenclass} Acts::InterpolatedBFieldMap
@@ -135,12 +135,8 @@ such a field cell are provided, but field cell creation is automatically
 handled by {func}`Acts::InterpolatedBFieldMap::makeCache`, opaque to the
 client.
 
-One implementation {struct}`Acts::InterpolatedBFieldMapper` is provided, but
-since the mapper type is a template parameter, this implementation can also be
-switched out. The default implementation uses {class}`Acts::detail::Grid` as
-the underlying data storage. It is generic over the number of dimensions.
-
-Helpers to construct mappers from text and root file inputs are provided:
+Helpers to construct an interpolated field map from text and ROOT file inputs
+are provided:
 
 :::{doxygenfunction} Acts::fieldMapRZ
 :::
