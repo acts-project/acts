@@ -49,6 +49,7 @@ jobs:
         # versions 
         run: >
           ${SETUP} &&
+          ccache -z &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -82,6 +83,9 @@ jobs:
 
       - name: Build
         run: ${SETUP} && cmake --build build
+
+      - name: ccache stats
+        run: ${SETUP} && ccache -s
 
       - name: Unit tests
         run: ${SETUP} && cmake --build build --target test
@@ -142,6 +146,7 @@ jobs:
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions 
         run: >
+          ccache -z &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -159,6 +164,9 @@ jobs:
 
       - name: Build
         run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
 
       - name: Unit tests
         run: cmake --build build --target test
@@ -258,6 +266,7 @@ jobs:
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
           && pip3 install histcmp==0.4.4
+          && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
@@ -308,6 +317,7 @@ jobs:
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions 
         run: >
+          ccache -z &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -325,6 +335,9 @@ jobs:
 
       - name: Build
         run: cmake --build build
+
+      - name: ccache stats
+        run: ccache -s
 
       - name: Unit tests
         run: cmake --build build --target test
@@ -375,6 +388,7 @@ jobs:
           # Install tbb-devel also to build the examples
         run: >
           dnf -y install ninja-build tbb-devel ccache
+          && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
       - name: Cache build
         uses: actions/cache@v3
@@ -386,9 +400,10 @@ jobs:
 
       - name: Configure
         run: >
+          ccache -z &&
           cmake -B build -S .
           -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=$(find / -type f -name "ccache")
+          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
@@ -403,6 +418,8 @@ jobs:
         run: ${SETUP} && ( cmake --build build || cmake --build build )
       # The above line is required as a sort of retry mechanism. Without it,
       # the build fails for technical reasons.
+      - name: ccache stats
+        run: ccache -s
       - name: Unit tests
         run: ${SETUP} && ${PRELOAD} && cmake --build build --target test
       - name: Integration tests
@@ -462,7 +479,7 @@ jobs:
           brew install cmake eigen ninja ccache
           && sudo mkdir /usr/local/acts
           && sudo chown $USER /usr/local/acts
-          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.f2b4e25.tar.gz
+          && wget --verbose --progress=dot:giga --continue --retry-connrefused --tries=5 --timeout=2 -O deps.tar.gz https://acts.web.cern.ch/ci/macOS/deps.1e4136f.tar.gz
           && tar -xf deps.tar.gz -C /usr/local/acts
 
       - name: Cache build
@@ -478,6 +495,7 @@ jobs:
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions such as the one installed via homebrew
         run: >
+          ccache -z &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -493,6 +511,8 @@ jobs:
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
       - name: Build
         run: cmake --build build
+      - name: ccache stats
+        run: ccache -s
       - name: Unit tests
         run: cmake --build build --target test
       - name: Integration tests
@@ -532,6 +552,7 @@ jobs:
 
       - name: Configure
         run: >
+          ccache -z &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -542,6 +563,8 @@ jobs:
           -DACTS_BUILD_UNITTESTS=ON
       - name: Build
         run: cmake --build build
+      - name: ccache stats
+        run: ccache -s
 
   exatrkx:
     runs-on: ubuntu-latest
@@ -559,6 +582,7 @@ jobs:
 
       - name: Configure
         run: >
+          ccache -z &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -569,6 +593,8 @@ jobs:
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
         run: cmake --build build
+      - name: ccache stats
+        run: ccache -s
 
   sycl:
     runs-on: ubuntu-latest
@@ -590,6 +616,7 @@ jobs:
       - name: Configure
         run: >
           source /opt/intel/oneapi/setvars.sh
+          && ccache -z
           && cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -603,4 +630,6 @@ jobs:
         run: >
           source /opt/intel/oneapi/setvars.sh
           && cmake --build build
+      - name: ccache stats
+        run: ccache -s
 

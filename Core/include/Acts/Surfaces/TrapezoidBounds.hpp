@@ -20,7 +20,7 @@ namespace Acts {
 ///
 /// Bounds for a trapezoidal, planar Surface.
 ///
-/// @image html TrapezoidBounds.gif
+/// @image html figures/TrapezoidBounds.gif
 ///
 /// @todo can be speed optimized by calculating kappa/delta and caching it
 

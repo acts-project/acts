@@ -40,6 +40,9 @@ add_custom_command(
 # this is a debug target to diagnose issues with the Doxygen configuration
 add_custom_target(run-doxygen DEPENDS ${doxygen_index})
 
+set(api_dir ${CMAKE_CURRENT_SOURCE_DIR}/api)
+set(api_index ${api_dir}/api.rst)
+
 # standard target to build the documentation without automatic API generation
 add_custom_target(
   docs
@@ -48,6 +51,8 @@ add_custom_target(
       -b html
       -d ${sphinx_doctrees}
       -j auto
+      -W
+      --keep-going
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${sphinx_html}
   DEPENDS ${doxygen_index}
@@ -62,6 +67,8 @@ add_custom_target(
       -d ${sphinx_doctrees}
       -j auto
       -t run_apidoc
+      -W
+      --keep-going
       ${CMAKE_CURRENT_SOURCE_DIR}
       ${sphinx_html}
   DEPENDS ${doxygen_index}
@@ -70,7 +77,7 @@ add_custom_target(
 
 add_custom_target(
   docs-clean
-  COMMAND find ${sphinx_api} -mindepth 1 -type f -and -not -name "api.rst" -delete
+  COMMAND find ${sphinx_api} -mindepth 1 -type f -and -not -name "api_stub.rst" -and -not -name "api_index.rst" -delete
   COMMAND find ${sphinx_api} -mindepth 1 -type d -delete
   COMMAND rm -rf ${sphinx_build}
   COMMENT "Cleaning documentation artifacts"

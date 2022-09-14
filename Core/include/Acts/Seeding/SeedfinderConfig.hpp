@@ -36,13 +36,13 @@ struct SeedfinderConfig {
   // maximum distance in r between two measurements within one seed
   float deltaRMax = 270 * Acts::UnitConstants::mm;
   // minimum distance in r between middle and top SP
-  float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
+  float deltaRMinTopSP = std::numeric_limits<float>::quiet_NaN();
   // maximum distance in r between middle and top SP
-  float deltaRMaxTopSP = 270 * Acts::UnitConstants::mm;
+  float deltaRMaxTopSP = std::numeric_limits<float>::quiet_NaN();
   // minimum distance in r between middle and bottom SP
-  float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
+  float deltaRMinBottomSP = std::numeric_limits<float>::quiet_NaN();
   // maximum distance in r between middle and bottom SP
-  float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
+  float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
   // force sorting in R in space point grid bins

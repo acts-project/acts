@@ -110,4 +110,6 @@ class Seedfinder {
 
 }  // namespace Acts
 
+#ifndef DOXYGEN
 #include "Acts/Seeding/Seedfinder.ipp"
+#endif
