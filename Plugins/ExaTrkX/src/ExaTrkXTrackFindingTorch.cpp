@@ -72,14 +72,15 @@ ExaTrkXTrackFindingTorch::ExaTrkXTrackFindingTorch(
 
 ExaTrkXTrackFindingTorch::~ExaTrkXTrackFindingTorch() {}
 
-ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
+std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates,
-    LoggerWrapper logger) const {
+    std::vector<std::vector<int> >& trackCandidates, LoggerWrapper logger,
+    bool recordTiming) const {
   ExaTrkXTime timeInfo;
-  ExaTrkXTimer tot_timer;
-  tot_timer.start();
-  // hardcoded debugging information
+
+  ExaTrkXTimer totalTimer(not recordTiming);
+  totalTimer.start();
+
   c10::InferenceMode guard(true);
   torch::Device device(torch::kCUDA);
 
@@ -98,8 +99,7 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
                << *std::min_element(inputValues.begin(), inputValues.end()))
   print_current_cuda_meminfo(logger);
 
-  // Setup timer
-  ExaTrkXTimer timer;
+  ExaTrkXTimer timer(not recordTiming);
 
   // **********
   // Embedding
@@ -246,8 +246,13 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
   }());
   print_current_cuda_meminfo(logger);
 
-  if (trackLabels.size() == 0)
-    return timeInfo;
+  if (trackLabels.size() == 0) {
+    if (recordTiming) {
+      return timeInfo;
+    } else {
+      return std::nullopt;
+    }
+  }
 
   trackCandidates.clear();
 
@@ -274,10 +279,14 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
   }
 
   timeInfo.labeling = timer.stopAndGetElapsedTime();
-  timeInfo.total = tot_timer.stopAndGetElapsedTime();
+  timeInfo.total = totalTimer.stopAndGetElapsedTime();
   c10::cuda::CUDACachingAllocator::emptyCache();
 
-  return timeInfo;
+  if (recordTiming) {
+    return timeInfo;
+  } else {
+    return std::nullopt;
+  }
 }
 
 }  // namespace Acts

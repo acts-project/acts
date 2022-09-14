@@ -41,29 +41,39 @@ struct ExaTrkXTime {
 
 /// @class ExaTrkXTimer
 ///
-/// A timer to allow easy timing 
+/// A timer to allow easy timing
 class ExaTrkXTimer {
  public:
+  ExaTrkXTimer(bool disabled = false) : m_disabled(disabled) {}
+
   void start() {
-    m_start = std::chrono::high_resolution_clock::now();
-    m_running = true;
+    if (not m_disabled) {
+      m_start = std::chrono::high_resolution_clock::now();
+      m_running = true;
+    }
   }
   void stop() {
-    m_end = std::chrono::high_resolution_clock::now();
-    m_running = false;
+    if (not m_disabled) {
+      m_end = std::chrono::high_resolution_clock::now();
+      m_running = false;
+    }
   }
   double stopAndGetElapsedTime() {
     stop();
     return elapsedSeconds();
   }
   double elapsed() {
-    std::chrono::time_point<std::chrono::high_resolution_clock> end;
-    if (m_running) {
-      end = std::chrono::high_resolution_clock::now();
+    if (not m_disabled) {
+      std::chrono::time_point<std::chrono::high_resolution_clock> end;
+      if (m_running) {
+        end = std::chrono::high_resolution_clock::now();
+      } else {
+        end = m_end;
+      }
+      return std::chrono::duration<double, std::milli>(end - m_start).count();
     } else {
-      end = m_end;
+      return 0.0;
     }
-    return std::chrono::duration<double, std::milli>(end - m_start).count();
   }
   double elapsedSeconds() { return elapsed() / 1000.0; }
 
@@ -71,6 +81,7 @@ class ExaTrkXTimer {
   std::chrono::time_point<std::chrono::high_resolution_clock> m_start;
   std::chrono::time_point<std::chrono::high_resolution_clock> m_end;
   bool m_running = false;
+  bool m_disabled;
 };
 
 }  // namespace Acts
