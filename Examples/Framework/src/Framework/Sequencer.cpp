@@ -364,8 +364,8 @@ int ActsExamples::Sequencer::run() {
   ACTS_VERBOSE("Finalize algorithms");
   for (auto& alg : m_algorithms) {
     ACTS_VERBOSE("Finalize algorithm: " << alg->name());
-    if (alg->initialize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to Finalize algorithm: " << alg->name());
+    if (alg->finalize() != ProcessCode::SUCCESS) {
+      ACTS_FATAL("Failed to finalize algorithm: " << alg->name());
       throw std::runtime_error("Failed to process event data");
     }
   }
