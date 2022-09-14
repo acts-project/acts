@@ -129,7 +129,7 @@ like a 2D field map that exploits $rz$ symmetry, or a plain 3D grid.
 :::
 
 
-The class constructor accepts a single object of type configuration struct that
+The class constructor accepts a single configuration struct that
 contains the grid instance, a scale factor and optional conversion function for
 the lookup positions and the returned field values.
 
