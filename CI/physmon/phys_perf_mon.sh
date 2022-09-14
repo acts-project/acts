@@ -35,27 +35,44 @@ function run() {
 }
 
 
-run \
-    $outdir/performance_ckf_tracks_truth_smeared.root \
-    $refdir/performance_ckf_tracks_truth_smeared.root \
-    --title "CKF truth smeared" \
-    -c CI/physmon/ckf_truth_smeared.yml \
-    -o $outdir/ckf_truth_smeared.html \
-    -p $outdir/ckf_truth_smeared_plots \
+function full_chain() {
+    suffix=$1
 
-run \
-    $outdir/performance_ckf_tracks_truth_estimated.root \
-    $refdir/performance_ckf_tracks_truth_estimated.root \
-    --title "CKF truth estimated" \
-    -o $outdir/ckf_truth_estimated.html \
-    -p $outdir/ckf_truth_estimated_plots \
+    config="CI/physmon/ckf_${suffix}.yml"
 
-run \
-    $outdir/performance_ckf_tracks_seeded.root \
-    $refdir/performance_ckf_tracks_seeded.root \
-    --title "CKF seeded" \
-    -o $outdir/ckf_seeded.html \
-    -p $outdir/ckf_seeded_plots \
+    if [ ! -f "$config" ]; then
+        config="CI/physmon/default.yml"
+    fi
+    echo $config
+    
+    run \
+        $outdir/performance_ckf_${suffix}.root \
+        $refdir/performance_ckf_${suffix}.root \
+        --title "CKF ${suffix}" \
+        -c $config \
+        -o $outdir/ckf_${suffix}.html \
+        -p $outdir/ckf_${suffix}_plots 
+
+    Examples/Scripts/generic_plotter.py \
+        $outdir/performance_vertexing_${suffix}.root \
+        vertexing \
+        $outdir/performance_vertexing_${suffix}_hist.root \
+        --silent \
+        --config CI/physmon/vertexing_config.yml
+    ec=$(($ec | $?))
+
+    run \
+        $outdir/performance_vertexing_${suffix}_hist.root \
+        $refdir/performance_vertexing_${suffix}_hist.root \
+        --title "IVF ${suffix}" \
+        -o $outdir/ivf_${suffix}.html \
+        -p $outdir/ivf_${suffix}_plots
+
+}
+
+full_chain truth_smeared
+full_chain truth_estimated
+full_chain seeded
 
 run \
     $outdir/performance_truth_tracking.root \
@@ -63,8 +80,7 @@ run \
     --title "Truth tracking" \
     -c CI/physmon/truth_tracking.yml \
     -o $outdir/truth_tracking.html \
-    -p $outdir/truth_tracking_plots \
-
+    -p $outdir/truth_tracking_plots
 
 run \
     $outdir/acts_analysis_residuals_and_pulls.root \
