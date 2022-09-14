@@ -8,7 +8,8 @@ $$
 p(\vec{x}) = \sum_i w_i \varphi(\vec{x}; \mu_i, \Sigma_i), \quad \sum_i w_i = 1
 $$
 
-In particular this is used in Acts for electron refitting. The energy-loss of Brehmsstrahlung for electrons in matter are highly non-gaussian, and thus are not modeled accurately by the default material interactions in the Kalman Filter. Instead, the Brehmsstrahlung is modeled as a Bethe-Heitler distribution, which is approximated as a gaussian mixture.
+A common use case of this is electron fitting. The energy-loss of Brehmsstrahlung for electrons in matter are highly non-gaussian, and thus are not modeled accurately by the default material interactions in the Kalman Filter. Instead, the Brehmsstrahlung is modeled as a Bethe-Heitler distribution, which is approximated as a gaussian mixture.
+
 ### Implementation
 
 To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`. On a surface with material, the Bethe-Heitler energy-loss distribution is approximated with a fixed number of gaussians for each component. Since the number of components would grow exponentially with each material interaction, components that are close in terms of their *Kullback–Leibler divergence* are merged to limit the computational cost. The kalman update mechanism is based on the code for the {class}`Acts::KalmanFitter`.
