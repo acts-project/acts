@@ -132,7 +132,7 @@ surfaces, a special `InfiniteBounds` class is available.
 ![PlaneBounds](/figures/geometry/PlaneBounds.png)
 
 ```{tip}
-The coordinate systems define - in an ideal setup - also the readout measurement directions. In such a case, a track prediction from the propgation, e.g. will already be in the correct frame of the measurement and residual or compatibility checks will not need additional coordinate transformations.
+The coordinate systems define - in an ideal setup - also the readout measurement directions. In such a case, a track prediction from the propagation, e.g. will already be in the correct frame of the measurement and residual or compatibility checks will not need additional coordinate transformations.
 ```
 
 ## Layer classes
@@ -193,7 +193,7 @@ at creation.
 ![VolumeBounds](/figures/geometry/VolumeBounds.png)
 ![CylinderVolumeBounds](/figures/geometry/CylinderVolumeBounds.png)
 
-## Detector Material description
+## Detector material description
 
 Two types of material description exist, one for a surface based material, one
 for a volume based material. They will be dealt with differently in the
@@ -207,7 +207,7 @@ The basic information for any material is:
 This information is confined together in the `Material` class.
 
 ```{note}
-In track reconstruction, only an effective material description is needed, i.e. non-physical values in regards of atomic number, elementary charge or even density are allowed, as long as the effective relative radiation length and `A/Z x rho` ratio can be retrieved.
+In track reconstruction, only an effective material description is needed, i.e. non-physical values in regards of the atomic number, the elementary charge or even the density are allowed, as long as the effective relative radiation length and `A/Z x rho` ratio can be retrieved.
 This enables compatictification of the material description, as the element composition record does not have to be kept.
 ```
 
@@ -225,7 +225,7 @@ Possible extensions are:
     corresponding `BinUtility` object
 
 In addition, a dedicated extension exists to allow configuration of the material
-mapping process, that is in further descibed below.
+mapping process, that is in further described below.
 
  * `ProtoSurfaceMaterial`, only binning description (without material) to be
    used in the material mapping process
@@ -241,7 +241,7 @@ geometry,
 Usually, a 3D detector model geometry exists, which is either native to the full
 detector simulation (Geant4) or is translated into it. This model, however, is
 in general too detailed for track reconstruction: navigating through the
-detailed detector geometry is generally costy and one can profit greatly from a simplication mechanism.
+detailed detector geometry is generally costly and one can profit greatly from a simplication mechanism.
 
 For most part of the track reconstruction, only a surface based description of
 the detector is needed, in order to allow (surface based) material integration
