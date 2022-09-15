@@ -436,12 +436,17 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSelectedTruthParticles);
     ACTS_PYTHON_MEMBER(inputAssociatedTruthParticles);
     ACTS_PYTHON_MEMBER(inputFittedTracks);
+    ACTS_PYTHON_MEMBER(inputFittedTracksIndices);
+    ACTS_PYTHON_MEMBER(inputAllFittedTracksTips);
+    ACTS_PYTHON_MEMBER(inputTrajectories);
+    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
     ACTS_PYTHON_MEMBER(inputVertices);
     ACTS_PYTHON_MEMBER(inputTime);
     ACTS_PYTHON_MEMBER(filePath);
     ACTS_PYTHON_MEMBER(treeName);
     ACTS_PYTHON_MEMBER(fileMode);
     ACTS_PYTHON_MEMBER(minTrackVtxMatchFraction);
+    ACTS_PYTHON_MEMBER(truthMatchProbMin);
     ACTS_PYTHON_STRUCT_END();
   }
 
