@@ -102,7 +102,7 @@ def runCKFTracks(
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
             maxSeedsPerSpM=1,
-            sigmaScattering=50,
+            sigmaScattering=5,
             radLengthPerSeed=0.1,
             minPt=500 * u.MeV,
             bFieldInZ=1.99724 * u.T,
