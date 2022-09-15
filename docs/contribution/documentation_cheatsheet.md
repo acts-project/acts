@@ -67,19 +67,22 @@ members: center
 (cheatsheetlabels)=
 ## Cross referencing and labels
 
-* Setting a label:
+* Setting a label (should be in front of a heading or something like that):
 
 ```text
+## Cross referencing and labels
 (cheatsheetlabels)=
 ```
 
-* Referencing a label:
+* Referencing a label (with empty `[]` the text of the heading is used):
 
 ```text
 Click [here](cheatsheetlabels) to come to the label.
+Automatic label text: [](cheatsheetlabels).
 ```
 
 Click [here](cheatsheetlabels) to come to the label.
+Automatic label text: [](cheatsheetlabels).
 
 ## Info boxes
 
