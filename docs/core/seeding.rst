@@ -1,9 +1,6 @@
 Track Seeding
 ==============
 
-.. attention::
-   This section is largely **outdated** and will be replaced in the future.
-
 To reduce the time needed to reconstruct particle tracks, a track seed
 (henceforth: seed) is created which serves as initial direction for the track
 reconstruction algorithm (henceforth: the tracking). The tracking then tries to
@@ -59,25 +56,19 @@ The seeding implementation in Core/include/Acts/Seeding/ is based on the ATLAS t
    combinations (SP bottom, SP middle) and (SP middle, SP top) have similar
    pseudorapidity and are therefore compatible with the same particle track.
    
-The search for SPs is performed for each `(\phi, z)` bin of a fully configurable
-grid of the detector containing the SPs. The central SP is taken from the
-`(\phi, z)` region, then the top and bottom SP are searched in neighboring bins
-at the top and bottom layers of the detector, respectively. The number of
-neighboring bins used in the SP search for each `(\phi, z)` bin can be defined
+The SPs in each detector layer are projected on a rectangular grid of configurable
+granularity. The search for seed starts from selecting SP in the middle detector 
+layer. Then matching SPs are searched in the inner an outer layers. Grouping of 
+the UPs in the aforementioned grid allows to limit the search to neighbouring grid 
+cells thus improving significantly algorithm performance. The number of neighboring 
+bins used in the SP search for each `(\phi, z)` bin can be defined
 in the `z` direction with the vectors `zBinNeighborsTop` and `zBinNeighborsBottom`
 separately for bottom and top SPs, and in the `\phi` direction with `numPhiNeighbors`.
 
-Three iterators over SP need to be passed to the public createSeedsForGroup
-function in the Seedfinder class. The seedfinder will then attempt to create
-seeds, with each seed containing exactly one SP returned by each of the three
-iterators. 
-
-- SPs from the first iterator are always used as measurement of a seed with the
-  smallest detector radius r, 
-- SPs from the second iterator are only used as measurement of a seed with r
-  between the r of the first and the third iterator
-- SPs from the third iterator are always used as measurement with the largest r
-  in a seed.
+The method to create the seed is `createSeedsForGroup`. It receives three iterators 
+over SPs constructed from detector layers of increasing radii. The seedfinder will 
+then attempt to create seeds, with each seed containing exactly one SP returned by 
+each of the three iterators. 
 
 .. warning::
    Note that the seeding algorithm breaks down for particles with a particle
@@ -86,12 +77,10 @@ iterators.
    locations as well as due to approximations which become inaccurate for
    lower energy particles.
 
-The createSeedsForGroup function then iterates over middle SP, and within this
-loop separately iterates once over bottom SP and once over top SP. Within each
-of the nested loops, bottom SP - middle SP respectively middle SP - top SP are
-tested for compatibility by applying configurable cuts that can be tested with
-two SP only (pseudorapidity, origin along z-axis, distance in r between SP,
-compatibility with interaction point).
+The `createSeedsForGroup function then iterates over SPs in the middle layer 
+(2nd iterator), and within this loop separately iterates once over bottom SP 
+and once over top SP. Within each of the nested loops, SP pairs are tested for compatibility by applying a set of configurable cuts that can be tested with two SP only (pseudorapidity, origin 
+along z-axis, distance in r between SP, compatibility with interaction point).
 
 If both compatible bottom and top SP have been found, test each bottom SP,
 middle SP, top SP triplet combination in a triple nested loop. A major part of
