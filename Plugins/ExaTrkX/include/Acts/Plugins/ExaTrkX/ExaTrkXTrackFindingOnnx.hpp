@@ -55,12 +55,14 @@ class ExaTrkXTrackFindingOnnx final : public ExaTrkXTrackFindingBase {
   /// @param spacepointIDs The corresponding spacepoint spacepoint spacepointIDs
   /// @param trackCandidates This vector is filled with the tracks as vectors of spacepoint spacepoint IDs
   /// @param logger If provided, logging is enabled
+  /// @param recordTiming If enabled, returns a @class ExaTrkXTime object with measured timings
   /// @note The input values are not const, because the ONNX API
   /// takes only non-const pointers.
-  ExaTrkXTime getTracks(std::vector<float>& inputValues,
-                        std::vector<int>& spacepointIDs,
-                        std::vector<std::vector<int> >& trackCandidates,
-                        LoggerWrapper logger = getDummyLogger()) const override;
+  std::optional<ExaTrkXTime> getTracks(
+      std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
+      std::vector<std::vector<int> >& trackCandidates,
+      LoggerWrapper logger = getDummyLogger(),
+      bool recordTiming = false) const override;
 
   /// Return the configuration object of the track finding module
   const Config& config() const { return m_cfg; }

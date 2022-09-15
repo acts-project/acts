@@ -100,9 +100,10 @@ void Acts::ExaTrkXTrackFindingOnnx::buildEdges(
             std::back_inserter(edgeList));
 }
 
-Acts::ExaTrkXTime Acts::ExaTrkXTrackFindingOnnx::getTracks(
+std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates, LoggerWrapper) const {
+    std::vector<std::vector<int> >& trackCandidates, LoggerWrapper,
+    bool recordTiming) const {
   ExaTrkXTime timeInfo;
   // hardcoded debugging information
   bool debug = true;
