@@ -1,5 +1,6 @@
 # Track Fitting
 
+(gsf_core)=
 ## Gaussian Sum Filter
 
 The GSF is an extension of the Kalman-Filter that allows to handle non-gaussian errors by modelling the track state as a gaussian mixture:
@@ -33,3 +34,10 @@ For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-compo
 ### Further reading
 * *Thomas Atkinson*, Electron reconstruction with the ATLAS inner detector, 2006, see [here](https://cds.cern.ch/record/1448253)
 * *R Frühwirth*, Track fitting with non-Gaussian noise, 1997, see [here](https://doi.org/10.1016/S0010-4655(96)00155-5)
+
+(kf_core)=
+## Kalman Filter
+
+:::{note}
+This is a stub!
+:::
