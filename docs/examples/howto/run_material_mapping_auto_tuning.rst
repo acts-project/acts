@@ -58,7 +58,7 @@ Once we have our json configuration file and our geantino material track file we
 - ``inputPath`` the path to the input directory
 - ``outputPath`` the path to the output directory
 - ``doPloting`` if added at the end of the optimisation script, the optimal material will be computed and result plots will be created. (Should be used at the end of the optimisation).
-- ``readSurface`` if added the material-surface association will be taken from the input material track file (doesn't work with geantino file, you need to use the material track file obtained from running the material mapping).
+- ``readCachedSurfaceInformation`` if added the material-surface association will be taken from the input material track file (doesn't work with geantino file, you need to use the material track file obtained from running the material mapping).
 
 When using Orion our optimisation algorithm can easily be parallelised. Orion uses a Database system that stores all the mapping configuration tested so far, before starting a new trial the database is checked that the parameters have not been used before. Each time you run ``material_mapping_optimisation.py`` a batch of ``numberOfJobs`` trials will be performed and added to the database. Once you have run it enough time, you can extract the result by running with the ``--doPloting`` option.
 
@@ -83,6 +83,6 @@ After creating the trials process wait until it has received one binning per tri
 
 Each of the mapping process will need to perform the material mapping twice, once to determine the average material in each bin and a second time to compute the variance. For each surface, a score is then computed using the variance and the number of hits in each bin. This score is then piped to the main process.
 
-After receiving the scores, the main process pipes them back to the trial processes which will store them in the database. The script then ends when this has been done for all the jobs. If the ``--doPloting`` option was used, each trial process will also return some plot related to the optimisation performance so far. They will also pipe their best binning to the main process. One last mapping job is then performed in the main process, this will return the optimised material map and a material track file where the material is already associated to the surfaces. This last file can be used for validation and as an input to futur mapping jobs to speed them by up to 50% (using the ``--readSurface`` option).
+After receiving the scores, the main process pipes them back to the trial processes which will store them in the database. The script then ends when this has been done for all the jobs. If the ``--doPloting`` option was used, each trial process will also return some plot related to the optimisation performance so far. They will also pipe their best binning to the main process. One last mapping job is then performed in the main process, this will return the optimised material map and a material track file where the material is already associated to the surfaces. This last file can be used for validation and as an input to futur mapping jobs to speed them by up to 50% (using the ``--readCachedSurfaceInformation`` option).
 
 ![Diagramme of the material mapping auto-tuning](/figures/materialMapping/ActsMaterialMappingAutoTuning.png)

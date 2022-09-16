@@ -19,7 +19,7 @@ do
     for i in {0..9}
     do
         # Run a batch of optimisation jobs
-        python3 ../Examples/Scripts/Python/material_mapping_optimisation.py  --numberOfJobs 40 --topNumberOfEvents 10000 --inputPath "/data/atlas/callaire/Acts/Material-Mapping-ODD" --outputPath "." --readSurface  2>&1 | tee log/opti_log_${j}_${i}.txt
+        python3 ../Examples/Scripts/Python/material_mapping_optimisation.py  --numberOfJobs 40 --topNumberOfEvents 10000 --inputPath "/data/atlas/callaire/Acts/Material-Mapping-ODD" --outputPath "." --readCachedSurfaceInformation  2>&1 | tee log/opti_log_${j}_${i}.txt
         rm Mapping/Database/*.lock
         rm Mapping/Database/*.tmp
     done

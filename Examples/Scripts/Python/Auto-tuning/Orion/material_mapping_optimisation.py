@@ -46,7 +46,7 @@ def runMaterialMappingNoTrack(
     mapSurface=True,
     mapVolume=True,
     format=JsonFormat.Json,
-    readSurface=False,
+    readCachedSurfaceInformation=False,
     s=None,
 ):
     """
@@ -61,7 +61,7 @@ def runMaterialMappingNoTrack(
     mapSurface : Is material being mapped onto surfaces ?
     mapVolume : Is material being mapped onto volumes ?
     format : Json format used to write the material map (json, cbor, ...)
-    readSurface : If set to true it will be assumed that the surface has already been associated with each material interaction in the input file.
+    readCachedSurfaceInformation : If set to true it will be assumed that the surface has already been associated with each material interaction in the input file.
     """
 
     s = s or Sequencer(numThreads=1)
@@ -81,11 +81,11 @@ def runMaterialMappingNoTrack(
                 os.path.join(
                     inputDir,
                     "optimised-material-map_tracks.root"
-                    if readSurface
+                    if readCachedSurfaceInformation
                     else "geant4_material_tracks.root",
                 )
             ],
-            readSurface=readSurface,
+            readCachedSurfaceInformation=readCachedSurfaceInformation,
         )
     )
 
@@ -139,7 +139,13 @@ def runMaterialMappingNoTrack(
 
 
 def runMaterialMappingVariance(
-    binMap, events, job, inputPath, pathExp, pipeResult, readSurface=False
+    binMap,
+    events,
+    job,
+    inputPath,
+    pathExp,
+    pipeResult,
+    readCachedSurfaceInformation=False,
 ):
     """
     Run the material mapping and compute the variance for each bin of each surfaces
@@ -152,7 +158,7 @@ def runMaterialMappingVariance(
     inputPath : Directory containing the input geantino track and the json geometry
     pathExp : Material mapping optimisation path
     pipeResult : Pipe to send back the score to the main python instance
-    readSurface : Are surface information stored in the material track. Switch to true if the mapping was already performed to improve the speed.
+    readCachedSurfaceInformation : Are surface information stored in the material track. Switch to true if the mapping was already performed to improve the speed.
     """
     print(
         datetime.now().strftime("%H:%M:%S") + "    Start mapping for job " + str(job),
@@ -198,7 +204,7 @@ def runMaterialMappingVariance(
         mapName=mapName,
         format=JsonFormat.Cbor,
         mapVolume=mapVolume,
-        readSurface=readSurface,
+        readCachedSurfaceInformation=readCachedSurfaceInformation,
         s=sMap,
     )
     sMap.run()
@@ -237,11 +243,11 @@ def runMaterialMappingVariance(
             os.path.join(
                 inputPath,
                 "optimised-material-map_tracks.root"
-                if readSurface
+                if readCachedSurfaceInformation
                 else "geant4_material_tracks.root",
             )
         ],
-        readSurface=readSurface,
+        readCachedSurfaceInformation=readCachedSurfaceInformation,
     )
     s.addReader(reader)
     stepper = StraightLineStepper()
@@ -459,10 +465,10 @@ if "__main__" == __name__:
         "--doPloting", action="store_true"
     )  # Return the optimisation plot and create the optimal material map
     parser.add_argument(
-        "--readSurface", action="store_true"
+        "--readCachedSurfaceInformation", action="store_true"
     )  # Use surface information from the material track
     parser.set_defaults(doPloting=False)
-    parser.set_defaults(readSurface=False)
+    parser.set_defaults(readCachedSurfaceInformation=False)
     args = parser.parse_args()
 
     # Define the useful path and create them if they do not exist
@@ -549,7 +555,7 @@ if "__main__" == __name__:
                 args.inputPath,
                 pathExp,
                 resultPipes_child[job],
-                args.readSurface,
+                args.readCachedSurfaceInformation,
             ),
         )
         OptiJob[job].start()
