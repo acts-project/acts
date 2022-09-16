@@ -28,7 +28,7 @@ The following parameters for the seed finding are set in ``/acts/Examples/Run/Se
   seedingCfg.zMax = 2000.;
   seedingCfg.maxSeedsPerSpM = 1;
   seedingCfg.cotThetaMax = 7.40627;  // 2.7 eta
-  seedingCfg.sigmaScattering = 50;
+  seedingCfg.sigmaScattering = 5;
   seedingCfg.radLengthPerSeed = 0.1;
   seedingCfg.minPt = 500.;
   seedingCfg.bFieldInZ = 0.00199724;
