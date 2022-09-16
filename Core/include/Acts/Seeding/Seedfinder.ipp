@@ -87,6 +87,8 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
     state.compatTopSP.clear();
+		
+		std::cout << "TEST" << std::endl;
 
     for (auto topSP : topSPs) {
       float rT = topSP->radius();
