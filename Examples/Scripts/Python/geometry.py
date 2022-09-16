@@ -72,6 +72,7 @@ def runGeometry(
                 processRepresenting=True,
                 processBoundaries=True,
                 processVolumes=True,
+                processNonMaterial=True,
                 context=context.geoContext,
             )
 
