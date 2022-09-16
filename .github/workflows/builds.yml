@@ -566,36 +566,6 @@ jobs:
       - name: ccache stats
         run: ccache -s
 
-  exatrkx:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Cache build
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-exatrkx_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-exatrkx_${{ env.CCACHE_KEY_SUFFIX }}_
-
-      - name: Configure
-        run: >
-          ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_BUILD_PLUGIN_EXATRKX=ON
-          -DACTS_BUILD_EXAMPLES_EXATRKX=ON
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
-      - name: Build
-        run: cmake --build build
-      - name: ccache stats
-        run: ccache -s
-
   sycl:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004_oneapi:v29
