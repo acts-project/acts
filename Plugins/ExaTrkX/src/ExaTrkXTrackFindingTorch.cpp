@@ -72,14 +72,15 @@ ExaTrkXTrackFindingTorch::ExaTrkXTrackFindingTorch(
 
 ExaTrkXTrackFindingTorch::~ExaTrkXTrackFindingTorch() {}
 
-ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
+std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates,
-    LoggerWrapper logger) const {
+    std::vector<std::vector<int> >& trackCandidates, LoggerWrapper logger,
+    bool recordTiming) const {
   ExaTrkXTime timeInfo;
-  ExaTrkXTimer tot_timer;
-  tot_timer.start();
-  // hardcoded debugging information
+
+  ExaTrkXTimer totalTimer(not recordTiming);
+  totalTimer.start();
+
   c10::InferenceMode guard(true);
   torch::Device device(torch::kCUDA);
 
@@ -98,8 +99,7 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
                << *std::min_element(inputValues.begin(), inputValues.end()))
   print_current_cuda_meminfo(logger);
 
-  // Setup timer
-  ExaTrkXTimer timer;
+  ExaTrkXTimer timer(not recordTiming);
 
   // **********
   // Embedding
@@ -131,12 +131,10 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
 
   timer.start();
 
+  // At this point, buildEdgesBruteForce could be used instead
   std::optional<torch::Tensor> edgeList = buildEdges(
       *eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
   eOutput.reset();
-  // torch::Tensor edgeList = buildEdgesBruteForce(
-  //   eOutput, numSpacepoints, m_cfg.embeddingDim, m_cfg.rVal,
-  //   m_cfg.knnVal);
 
   ACTS_VERBOSE("Shape of built edges: (" << edgeList->size(0) << ", "
                                          << edgeList->size(1));
@@ -197,7 +195,6 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
   print_current_cuda_meminfo(logger);
 
   std::vector<torch::jit::IValue> gInputTensorJit;
-  // auto g_opts = torch::TensorOptions().dtype(torch::kInt64);
   gInputTensorJit.push_back(eLibInputTensor.to(device));
   gInputTensorJit.push_back(bidirEdgesAfterF.to(device));
 
@@ -240,9 +237,6 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
       numSpacepoints, rowIndices, colIndices, edgeWeights, trackLabels,
       m_cfg.edgeCut);
 
-  // weakly_connected_components<int32_t,int32_t,float>(
-  //     rowIndices, colIndices, edgeWeights, trackLabels);
-
   ACTS_VERBOSE("Number of track labels: " << trackLabels.size());
   ACTS_VERBOSE("NUmber of unique track labels: " << [&]() {
     std::vector<vertex_t> sorted(trackLabels);
@@ -252,8 +246,13 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
   }());
   print_current_cuda_meminfo(logger);
 
-  if (trackLabels.size() == 0)
-    return timeInfo;
+  if (trackLabels.size() == 0) {
+    if (recordTiming) {
+      return timeInfo;
+    } else {
+      return std::nullopt;
+    }
+  }
 
   trackCandidates.clear();
 
@@ -280,10 +279,14 @@ ExaTrkXTime ExaTrkXTrackFindingTorch::getTracks(
   }
 
   timeInfo.labeling = timer.stopAndGetElapsedTime();
-  timeInfo.total = tot_timer.stopAndGetElapsedTime();
+  timeInfo.total = totalTimer.stopAndGetElapsedTime();
   c10::cuda::CUDACachingAllocator::emptyCache();
 
-  return timeInfo;
+  if (recordTiming) {
+    return timeInfo;
+  } else {
+    return std::nullopt;
+  }
 }
 
 }  // namespace Acts

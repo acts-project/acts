@@ -44,10 +44,11 @@ class ExaTrkXTrackFindingBase {
   /// @param logger If provided, logging is enabled
   /// @note The input values are not const, because the ONNX API
   /// takes only non-const pointers.
-  virtual ExaTrkXTime getTracks(
+  virtual std::optional<ExaTrkXTime> getTracks(
       std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
       std::vector<std::vector<int> >& trackCandidates,
-      Acts::LoggerWrapper logger = Acts::getDummyLogger()) const = 0;
+      Acts::LoggerWrapper logger = Acts::getDummyLogger(),
+      bool recordTiming = false) const = 0;
 
   /// Returns the name of the algorithm
   const std::string& name() const { return m_name; }

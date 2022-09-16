@@ -16,7 +16,7 @@ cmake -B <build> -S <source> \
   -D CMAKE_PREFIX_PATH=<path-to-installed-dependencies-if-not-in-default-paths>
 ```
 
-This plugin is known to build without erros with (as of Februrary 2022)
+This plugin is known to build without erros with (as of September 2022)
 
 - [GCC](https://gcc.gnu.org) versions 8 and 9
 - [CUDA](https://developer.nvidia.com/cuda-zone) v11.5.1
