@@ -28,33 +28,22 @@ The seeding implementation in Core/include/Acts/Seeding/ is based on the ATLAS t
    :name: 3dim
    :align: center
    :width: 600
-
-   Example detector with x,y,z coordinate system. While x and y coordinates must
-   be 0 close to the interaction region, z can be arbitrary. The magnetic field
-   must be along the z-axis such that charged particles are deflected in \phi
-   around the z-axis.
+   
+   Sketch of the detector with 3 layers. The interaction region is supposed to be located along the z axis and have size significantly smaller than the radius of the innermost detector layer.
 
 .. figure:: ../figures/seeding/x-yCoordinates.svg
    :name: xy
    :align: center
    :width: 500
-
-   The same detector as above but in x/y coordinate system. Helices show up as
-   circles in this projection, as shown by the purple particle path. Three
-   measurements define a circle, which is used to calculate radius
-   (corresponding to the particle energy), curvature direction in :math:`\phi`
-   corresponding to the particle charge, and impact parameters.
+   
+   The x-y projection of the detector with the charged particle helical track originating from the centre of the detector. Signals left by passage of the track through the detector layers are marked with green crosses.
 
 .. figure:: ../figures/seeding/r-zCoordinates.svg
    :name: rz
    :align: center
    :width: 500
-
-   The same detector as above but mapped onto an r/z coordinate system. This
-   projection is used to calculate the pseudorapidity :math:`\eta` of a seed (in
-   the code calculated in :math:`cot \theta` for speed), e.g. to test if two
-   combinations (SP bottom, SP middle) and (SP middle, SP top) have similar
-   pseudorapidity and are therefore compatible with the same particle track.
+   
+   The r-z projection of the detector with the same charged particle track. The track is depicted with the same colours as on previous figure.
    
 The SPs in each detector layer are projected on a rectangular grid of configurable
 granularity. The search for seed starts from selecting SP in the middle detector 
@@ -77,10 +66,12 @@ each of the three iterators.
    locations as well as due to approximations which become inaccurate for
    lower energy particles.
 
-The `createSeedsForGroup function then iterates over SPs in the middle layer 
+The `createSeedsForGroup` function then iterates over SPs in the middle layer
 (2nd iterator), and within this loop separately iterates once over bottom SP 
-and once over top SP. Within each of the nested loops, SP pairs are tested for compatibility by applying a set of configurable cuts that can be tested with two SP only (pseudorapidity, origin 
-along z-axis, distance in r between SP, compatibility with interaction point).
+and once over top SP. Within each of the nested loops, SP pairs are tested for
+compatibility by applying a set of configurable cuts that can be tested with
+two SP only (pseudorapidity, origin along z-axis, distance in r between SP,
+compatibility with interaction point).
 
 If both compatible bottom and top SP have been found, test each bottom SP,
 middle SP, top SP triplet combination in a triple nested loop. A major part of
@@ -92,7 +83,7 @@ only once, the circle calculation is spread out over the three loops.
 
 	for (auto spM : middleSPs) {
    
-		... // compatibility cuts between SP duplets
+		// ... // compatibility cuts between SP duplets
 
 		state.linCircleBottom.clear();
     state.linCircleTop.clear();
@@ -150,7 +141,7 @@ only once, the circle calculation is spread out over the three loops.
       for (size_t t = t0; t < numTopSP; t++) {
         auto lt = state.linCircleTop[t];
 
-				...	\\ more code
+				// ...	\\ more code
 				
 				float dU;
         float A;
@@ -188,15 +179,22 @@ only once, the circle calculation is spread out over the three loops.
           continue;
         }
 
-To calculate the helix circle in the x-y plane, the x,y coordinates are
-transformed into a U/V plane in order to calculate the circle with a linear
-instead of a quadratic equation for speed. From the helix circle, particle
-energy and impact parameters can be estimated.
+From the helix circle, particle energy and impact parameters can be estimated.
+To calculate the helix circle in the :math:`x/y` plane, the x,y coordinates are
+transformed into a :math:`u/v` plane in order to calculate the circle with a linear equation
+instead of a quadratic equation for speed. The conformal transformation is given by:
+
+$$
+u = \\frac{x}{x^2+y^2}, \\quad \\quad v = \\frac{y}{x^2+y^2}
+$$
+
+Where the circle containing the three SPs are transformed into a line with equation :math:`v = Au + B`
+
 
 The scattering calculation is also spread over the nested loops to avoid
 redoing calculations. First, the maximum allowed scattering at the configured
-minimum transverse momentum (pT) cut is calculated and scaled by the
-pseudorapidity of the bottomSP-middleSP duplet to get the minimum momentum of
+minimum transverse momentum (:math:`p_{T}`) cut is calculated and scaled by the
+pseudorapidity of the duplet formed by one SP from bottom layer and one SP from middle layer to get the minimum momentum of
 the duplet. This duplet's pseudorapidity is used for later calculation of the
 scattering for the triplet as well.
 
@@ -218,20 +216,20 @@ scattering for the triplet as well.
    scatteringInRegion2 *=
        m_config.sigmaScattering * m_config.sigmaScattering;
        
-The minimum scattering term ('scatteringInRegion2') is calculated from
-'sigmaScattering', the configurable number of sigmas of scattering angle
-to be considered, and 'maxScatteringAngle2', which is evaluated from the
+The minimum scattering term (`scatteringInRegion2`) is calculated from
+`sigmaScattering`, the configurable number of sigmas of scattering angle
+to be considered, and `maxScatteringAngle2`, which is evaluated from the
 Lynch & Dahl correction of the Highland equation assuming the lowest
-allowed pT. The parameters of the Highland equation are fully configurable.
+allowed :math:`p_{T}`. The parameters of the Highland equation are fully configurable.
 
-The following code block calculates if the triplet forms a nearly straight line
-in the r/z plane (see :numref:`rz`) as the particle path in the r/z plane is
-unaffected by the magnetic field [#f1]_. This is split in two (may be revised
+The following code block checks if the triplet forms a nearly straight line
+in the :math:`r/z` plane (see :numref:`rz`) as the particle path in the :math:`r/z` plane is
+unaffected by the magnetic field [#f1]_. This is split in two parts (may be revised
 in the future); the first test occurs before the calculation of the helix
 circle. Therefore, the deviation from a straight line is compared to the
-maximum allowed scattering at minimum pT scaled by the forward angle (as
-calculated above). Both the check against min pT and the check against the
-calculated pT (discussed further below) take the correlated measurement
+maximum allowed scattering at minimum :math:`p_{T}` scaled by the forward angle (as
+calculated above). Both the check against min :math:`p_{T}` and the check against the
+calculated :math:`p_{T}` (discussed further below) take the correlated measurement
 uncertainty into account.
 
 .. code-block:: cpp
@@ -267,10 +265,9 @@ uncertainty into account.
 		continue;
 	}
 
-Now the check for scattering with calculated particle momentum. Momentum is
-calculated from the pT and the pseudorapidity. This must be :math:`\geq` the
-lower pT cut, and therefore allows :math:`\leq` scattering compared to the
-previous check, as the scattering decreases linearly with particle energy
+Following check takes into account estimate particle momentum (smaller scattering
+angle is permitted for higher momentum) and pseudorapidity (larger scattering
+takes into account amount of the material crosses that takes depends on the angle).
 
 .. code-block:: cpp
 
@@ -303,57 +300,36 @@ previous check, as the scattering decreases linearly with particle energy
 		continue;
 	}
 
-The last cut applied in this function is on the so-called impact parameters,
-which is the distance of the perigee of a track from the interaction region in
-mm of detector radius. It is calculated and cut on before storing all top SP
-compatible with both the current middle SP and current bottom SP.
+The last cut applied in this function is on the transverse impact parameter (or DCA -
+distance of closest approach), which is the distance of the perigee of a track from
+the interaction region in :math:`mm` of detector radius. It is calculated and cut on
+before storing all top SP compatible with both the current middle SP and current
+bottom SP. The cut is calculated in the :math:`u/v` plane using the coefficients
+:math:`A` and :math:`B`, and the radius of the SP in the middle layer:
 
-.. code-block:: cpp
-
-	// A and B allow calculation of impact params in U/V plane with linear
-	// function
-	// (in contrast to having to solve a quadratic function in x/y plane)
-	float Im;
-	if (m_config.useDetailedDoubleMeasurementInfo == false) {
-		Im = std::abs((A - B * rM) * rM);
-	} else {
-		Im = std::abs((A - B * rMxy) * rMxy);
-	}
-
-	if (Im <= m_config.impactMax) {
-		state.topSpVec.push_back(state.compatTopSP[t]);
-		// inverse diameter is signed depending if the curvature is
-		// positive/negative in phi
-		state.curvatures.push_back(B / std::sqrt(S2));
-		state.impactParameters.push_back(Im);
-
-		// evaluate eta and pT of the seed
-		float cotThetaAvg = std::sqrt(cotThetaAvg2);
-		float theta = std::atan(1. / cotThetaAvg);
-		float eta = -std::log(std::tan(0.5 * theta));
-		state.etaVec.push_back(eta);
-		state.ptVec.push_back(pT);
-	}
+$$
+d_0 \\leq \\left| \\left( A - B \\cdot r_M \\right) \\cdot r_M \\right|
+$$
 
 The bottom SP and middle SP as well as the collection of top SP is passed to
-SeedFilter::filterSeeds_2SpFixed, whose collected output for the current middle
+`SeedFilter::filterSeeds_2SpFixed`, whose collected output for the current middle
 SP with all compatible bottom SP and top SP is then passed to
-SeedFilter::filterSeeds_1SpFixed.
+`SeedFilter::filterSeeds_1SpFixed`.
 
 SeedFilter::filterSeeds_2SpFixed
 --------------------------------
 
 This function assigns a weight (which should correspond to the likelihood that
-a seed is good) to all seeds and calls the detector specific cuts to apply a
-hard cut or modify the weight. The weight is a “soft cut”, in that it is only
+a seed is good) to all seeds and applies detector specific section of seeds based on weights.
+The weight is a “soft cut”, in that it is only
 used to discard tracks if many seeds are created for the same middle SP in
-SeedFilter::filterSeeds_1SpFixed. This process is important to improving computational
+`SeedFilter::filterSeeds_1SpFixed`. This process is important to improving computational
 performance and the quality of the final track collections by rejecting lower-quality seeds.
 
 The weight can be influenced by:
 
-#. The transverse (`d_{0}`) and longitudinal (`z_{0}`) impact parameters (the higher the distance the worse)
-#. The number of seeds which may belong to the same particle track (`N_{t}`)
+#. The transverse (:math:`d_{0}`) and longitudinal (:math:`z_{0}`) impact parameters (the higher the distance the smaller the weight)
+#. The number of seeds which may belong to the same particle track (:math:`N_{t}`)
 #. Optional detector specific cuts.
 
 The transverse impact parameter is multiplied by the configured factor and subtracted from
@@ -364,40 +340,21 @@ the weight if configured.
 
 The number of seeds only differing in top SP which have similar helix radius
 and the same sign (i.e. the same charge) is used to increase the weight, as it
-means that more than three measurements that may be from the same particle have
-been found. The measurements must have a minimum distance in detector radius,
-such that measurements from the same layer cannot be counted towards the
+means that more than three SPs that may be from the same particle have
+been found. The SPs must have a minimum distance in detector radius,
+such that SPs from the same layer cannot be counted towards the
 increased weight. The number of found compatible seeds is multiplied by a
 configured factor and added to the weight.
 
-The optional detector specific cuts can use the weight from 1. and 2. and the
+The optional detector specific cuts can use the weight and the
 three SP to apply a hard cut or change the weight of a seed.
 
-This function also includes a fully configurable seed confirmation step that, when enabled
-('seedConfirmation=True'), classifies higher quality seeds as "quality confined" seeds if
-they fall within a predefined range of parameters (`d_{0}`, `z_{0}` and `N_{t}`) that also
+The `filterSeeds_2SpFixed` function also includes a fully configurable seed confirmation step that, when enabled
+(`seedConfirmation=True`), classifies higher quality seeds as "quality confined" seeds if
+they fall within a predefined range of parameters (:math:`d_{0}`, :math:`z_{0}` and :math:`N_{t}`) that also
 depends on the region of the detector (i.e., forward or central region). If the seed is not
 classified as "quality confined" seed, it will only be accepted if its weight is greater
 than a certain threshold and no other high quality seed has been found.
-
-.. code-block:: cpp
-
-    int deltaSeedConf;
-    if (m_cfg.seedConfirmation) {
-      // seed confirmation cuts - keep seeds if they have specific values of
-      // impact parameter, z-origin and number of compatible seeds inside a
-      // pre-defined range that also depends on the region of the detector (i.e.
-      // forward or central region) defined by SeedConfirmationRange
-      deltaSeedConf = compatibleSeedR.size() + 1 - nTopSeedConf;
-      if (deltaSeedConf < 0 || (numQualitySeeds and deltaSeedConf == 0)) {
-        continue;
-      }
-      bool seedRangeCuts = bottomSP.radius() < m_cfg.seedConfMinBottomRadius ||
-                           std::abs(zOrigin) > m_cfg.seedConfMaxZOrigin;
-      if (seedRangeCuts and deltaSeedConf == 0 and
-          impact > m_cfg.minImpactSeedConf) {
-        continue;
-      }
 
 The seed confirmation also sets a limit on the number of seeds produced for each middle SP,
 which retains only the higher quality seeds. If this limit is exceeded, the algorithm
@@ -417,7 +374,7 @@ result.
 When a seed is accepted and seed confirmation is enabled, the weight of that seed
 is assigned to each of its SPs. Each SP will hold the weight of the best seed that
 includes that SP. This information is used in the selection of the next seeds:
-The seed is kept only if its weight is greater than the weight of at least one of
+The seed is kept only if its weight is greater or equal than the weight of at least one of
 its SP components.
 
 
