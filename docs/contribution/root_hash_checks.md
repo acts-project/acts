@@ -1,3 +1,3 @@
 # What are ROOT hash checks?
 
-See [](root_hash_checks)
+See {ref}`root_hash_checks`
