@@ -17,6 +17,7 @@
 #include "ActsExamples/TrackFindingExaTrkX/SourceLinkSelectorAlgorithm.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 #include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/MeasurementMapSelectorAlgorithm.hpp"
 
 #include <memory>
 
@@ -138,6 +139,11 @@ void addExaTrkXTrackFinding(Context& ctx) {
       "TrackFindingFromPrototrackAlgorithm", inputTracks, inputMeasurements,
       inputSourceLinks, inputInitialTrackParameters, outputTrajectories,
       measurementSelectorCfg, trackingGeometry, magneticField)
+  
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::MeasurementMapSelectorAlgorithm,
+      "MeasurementMapSelectorAlgorithm", inputMeasurementParticleMap, inputSourceLinks,
+      outputMeasurementParticleMap, geometrySelection)
 }
 
 }  // namespace Acts::Python

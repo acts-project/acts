@@ -8,25 +8,30 @@
 
 #pragma once
 
+#include "ActsFatras/EventData/Barcode.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
   
-class SourceLinkSelectorAlgorithm final : public BareAlgorithm {
+class MeasurementMapSelectorAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
     /// Input spacepoints collection.
+    std::string inputMeasurementParticleMap;
+    
+    /// Input source links
     std::string inputSourceLinks;
 
     /// Output protoTracks collection.
-    std::string outputSourceLinks;
+    std::string outputMeasurementParticleMap;
 
     /// What spacepoints to keep
     std::vector<Acts::GeometryIdentifier> geometrySelection;
@@ -36,10 +41,10 @@ class SourceLinkSelectorAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  SourceLinkSelectorAlgorithm(Config cfg, Acts::Logging::Level lvl) :
+  MeasurementMapSelectorAlgorithm(Config cfg, Acts::Logging::Level lvl) :
     BareAlgorithm("SourceLinkSelection", lvl), m_cfg(cfg) {}
 
-  virtual ~SourceLinkSelectorAlgorithm() {}
+  virtual ~MeasurementMapSelectorAlgorithm() {}
 
   /// Filter the measurements
   ///
@@ -47,23 +52,27 @@ class SourceLinkSelectorAlgorithm final : public BareAlgorithm {
   /// @return a process code to steer the algorithm flow
   ActsExamples::ProcessCode execute(
       const ActsExamples::AlgorithmContext& ctx) const final {
-    const auto& inputSourceLinks =
-        ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
+    using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+    const auto& inputSourceLinks = ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
+    const auto& inputMap =
+        ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticleMap);
         
-    IndexSourceLinkContainer outputSourceLinks;
+    HitParticlesMap outputMap;
     
     for (const auto geoId : m_cfg.geometrySelection) {
       auto range = selectLowestNonZeroGeometryObject(inputSourceLinks, geoId);
       auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
 
-      for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
-        for (auto& sourceLink : moduleSourceLinks) {
-          outputSourceLinks.insert(sourceLink);
+      for (const auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
+        for (const auto& sourceLink : moduleSourceLinks) {
+          const auto [begin, end] = inputMap.equal_range(sourceLink.get().index());
+          
+          outputMap.insert(begin, end);
         }
       }
-    }    
+    }
     
-    ctx.eventStore.add<IndexSourceLinkContainer>(m_cfg.outputSourceLinks, std::move(outputSourceLinks));
+    ctx.eventStore.add(m_cfg.outputMeasurementParticleMap, std::move(outputMap));
     
     return ProcessCode::SUCCESS;
   }
@@ -77,3 +86,4 @@ class SourceLinkSelectorAlgorithm final : public BareAlgorithm {
 
 }  // namespace ActsExamples
  
+

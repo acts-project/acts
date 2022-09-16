@@ -48,7 +48,7 @@ class ParameterFromTrajectoryAlgorithm final : public BareAlgorithm {
         
     TrackParametersContainer trackParameters;
     
-    for (const auto traj : trajs) {
+    for (const auto &traj : trajs) {
         const auto i = traj.tips().front();
         const auto state = traj.multiTrajectory().getTrackState(i);
         
