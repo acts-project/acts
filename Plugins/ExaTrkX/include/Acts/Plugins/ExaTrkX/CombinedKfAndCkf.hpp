@@ -88,7 +88,7 @@ struct CombinedKfAndCkf {
 
     // Prepare the start parameters
     const auto state =
-        kfResult->fittedStates.getTrackState(kfResult->lastMeasurementIndex);
+        kfResult->fittedStates->getTrackState(kfResult->lastMeasurementIndex);
 
     BoundTrackParameters ckfStartParameters(
         state.referenceSurface().getSharedPtr(), state.filtered(),
