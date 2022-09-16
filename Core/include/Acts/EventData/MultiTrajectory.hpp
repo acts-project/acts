@@ -282,13 +282,16 @@ class TrackStateProxy {
                                      hashString("calibratedSourceLink")>();
         allocateCalibrated(other.calibratedSize());
 
+        // workaround for gcc8 bug:
+        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+        auto* self = this;
         visit_measurement(
             other, other.calibratedSize(), [&](auto meas, auto cov) {
               constexpr int measdim =
                   Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
 
-              calibrated<measdim>() = meas;
-              calibratedCovariance<measdim>() = cov;
+              self->template calibrated<measdim>() = meas;
+              self->template calibratedCovariance<measdim>() = cov;
             });
 
         setProjectorBitset(other.projectorBitset());
@@ -335,13 +338,16 @@ class TrackStateProxy {
 
         allocateCalibrated(other.calibratedSize());
 
+        // workaround for gcc8 bug:
+        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+        auto* self = this;
         visit_measurement(
             other, other.calibratedSize(), [&](auto meas, auto cov) {
               constexpr int measdim =
                   Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
 
-              calibrated<measdim>() = meas;
-              calibratedCovariance<measdim>() = cov;
+              self->template calibrated<measdim>() = meas;
+              self->template calibratedCovariance<measdim>() = cov;
             });
 
         setProjectorBitset(other.projectorBitset());
