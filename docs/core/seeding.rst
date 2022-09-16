@@ -1,3 +1,5 @@
+.. _seeding_core:
+
 Track Seeding
 ==============
 

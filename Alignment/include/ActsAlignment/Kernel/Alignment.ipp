@@ -29,10 +29,10 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   // Calculate the global track parameters covariance with the fitted track
   const auto& globalTrackParamsCov =
       Acts::detail::globalTrackParametersCovariance(
-          fitOutput.fittedStates, fitOutput.lastMeasurementIndex);
+          *fitOutput.fittedStates, fitOutput.lastMeasurementIndex);
   // Calculate the alignment state
   const auto alignState = detail::trackAlignmentState(
-      gctx, fitOutput.fittedStates, fitOutput.lastMeasurementIndex,
+      gctx, *fitOutput.fittedStates, fitOutput.lastMeasurementIndex,
       globalTrackParamsCov, idxedAlignSurfaces, alignMask);
   if (alignState.alignmentDof == 0) {
     ACTS_VERBOSE("No alignment dof on track!");
