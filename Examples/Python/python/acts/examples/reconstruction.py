@@ -75,8 +75,9 @@ SeedFilterConfigArg = namedtuple(
         "maxSeedsPerSpMConf",
         "maxQualitySeedsPerSpMConf",
         "useDeltaRorTopRadius",
+        "deltaRMin",
     ],
-    defaults=[None] * 10,
+    defaults=[None] * 11,
 )
 
 SpacePointGridConfigArg = namedtuple(
@@ -86,9 +87,10 @@ SpacePointGridConfigArg = namedtuple(
         "zBinEdges",
         "phiBinDeflectionCoverage",
         "impactMax",
+        "deltaRMax",
         "phi",  # (min,max)
     ],
-    defaults=[None] * 4 + [(None, None)] * 1,
+    defaults=[None] * 5 + [(None, None)] * 1,
 )
 
 SeedingAlgorithmConfigArg = namedtuple(
@@ -348,7 +350,11 @@ def addSeeding(
             seedFilterConfig = acts.SeedFilterConfig(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-                    deltaRMin=seedFinderConfig.deltaRMin,
+                    deltaRMin=(
+                        seedFinderConfig.deltaRMin
+                        if seedFilterConfigArg.deltaRMin is None
+                        else seedFilterConfigArg.deltaRMin
+                    ),
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
                     compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
@@ -375,7 +381,11 @@ def addSeeding(
                     ),
                     zMax=seedFinderConfig.zMax,
                     zMin=seedFinderConfig.zMin,
-                    deltaRMax=seedFinderConfig.deltaRMax,
+                    deltaRMax=(
+                        seedFinderConfig.deltaRMax
+                        if spacePointGridConfigArg.deltaRMax is None
+                        else spacePointGridConfigArg.deltaRMax
+                    ),
                     cotThetaMax=seedFinderConfig.cotThetaMax,
                     phiMin=spacePointGridConfigArg.phi[0],
                     phiMax=spacePointGridConfigArg.phi[1],
@@ -410,8 +420,26 @@ def addSeeding(
                 **acts.examples.defaultKWArgs(
                     rMin=seedfinderConfigArg.r[0],
                     rMax=seedfinderConfigArg.r[1],
-                    deltaRMin=seedfinderConfigArg.deltaR[0],
-                    deltaRMax=seedfinderConfigArg.deltaR[1],
+                    deltaRMinTopSP=(
+                        seedfinderConfigArg.deltaR[0]
+                        if seedfinderConfigArg.deltaRTopSP[0] is None
+                        else seedfinderConfigArg.deltaRTopSP[0]
+                    ),
+                    deltaRMaxTopSP=(
+                        seedfinderConfigArg.deltaR[1]
+                        if seedfinderConfigArg.deltaRTopSP[1] is None
+                        else seedfinderConfigArg.deltaRTopSP[1]
+                    ),
+                    deltaRMinBottomSP=(
+                        seedfinderConfigArg.deltaR[0]
+                        if seedfinderConfigArg.deltaRBottomSP[0] is None
+                        else seedfinderConfigArg.deltaRBottomSP[0]
+                    ),
+                    deltaRMaxBottomSP=(
+                        seedfinderConfigArg.deltaR[1]
+                        if seedfinderConfigArg.deltaRBottomSP[1] is None
+                        else seedfinderConfigArg.deltaRBottomSP[1]
+                    ),
                     deltaRMiddleMinSPRange=seedfinderConfigArg.deltaRMiddleSPRange[0],
                     deltaRMiddleMaxSPRange=seedfinderConfigArg.deltaRMiddleSPRange[1],
                     collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
@@ -452,7 +480,11 @@ def addSeeding(
             seedFilterConfig = acts.SeedFilterConfig(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-                    deltaRMin=seedFinderConfig.deltaRMin,
+                    deltaRMin=(
+                        seedfinderConfigArg.deltaR[0]
+                        if seedFilterConfigArg.deltaRMin is None
+                        else seedFilterConfigArg.deltaRMin
+                    ),
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
                     compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
@@ -645,6 +677,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
+    writeTrajectories: bool = True,
 ) -> None:
     """This function steers the seeding
 
@@ -663,6 +696,8 @@ def addCKFTracks(
         the output folder for the Root output, None triggers no output
     selectedParticles : str, "truth_seeds_selected"
         CKFPerformanceWriter truth input
+    writeTrajectories : bool, True
+        write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.
     """
 
     if int(s.config.logLevel) <= int(acts.logging.DEBUG):
@@ -693,37 +728,38 @@ def addCKFTracks(
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
 
-        # write track states from CKF
-        trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputSimHits="simhits",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            inputMeasurementSimHitsMap="measurement_simhits_map",
-            filePath=str(outputDirRoot / "trackstates_ckf.root"),
-            treeName="trackstates",
-        )
-        s.addWriter(trackStatesWriter)
+        if writeTrajectories:
+            # write track states from CKF
+            trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
+                level=s.config.logLevel,
+                inputTrajectories=trackFinder.config.outputTrajectories,
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection. This could be avoided when a seperate track
+                # selection algorithm is used.
+                inputParticles="particles_selected",
+                inputSimHits="simhits",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputMeasurementSimHitsMap="measurement_simhits_map",
+                filePath=str(outputDirRoot / "trackstates_ckf.root"),
+                treeName="trackstates",
+            )
+            s.addWriter(trackStatesWriter)
 
-        # write track summary from CKF
-        trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
-            level=s.config.logLevel,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            # @note The full particles collection is used here to avoid lots of warnings
-            # since the unselected CKF track might have a majority particle not in the
-            # filtered particle collection. This could be avoided when a seperate track
-            # selection algorithm is used.
-            inputParticles="particles_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "tracksummary_ckf.root"),
-            treeName="tracksummary",
-        )
-        s.addWriter(trackSummaryWriter)
+            # write track summary from CKF
+            trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
+                level=s.config.logLevel,
+                inputTrajectories=trackFinder.config.outputTrajectories,
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection. This could be avoided when a seperate track
+                # selection algorithm is used.
+                inputParticles="particles_selected",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                filePath=str(outputDirRoot / "tracksummary_ckf.root"),
+                treeName="tracksummary",
+            )
+            s.addWriter(trackSummaryWriter)
 
         # Write CKF performance data
         ckfPerfWriter = acts.examples.CKFPerformanceWriter(
