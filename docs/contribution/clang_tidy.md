@@ -2,11 +2,11 @@
 
 [`clang-tidy`](https://clang.llvm.org/extra/clang-tidy/) is a static analysis
 tool using the LLVM / clang tooling. It can detect a number of issues with C++
-code, like common reasability problems, performance or memory safety issues.
+code, like common readability problems, performance or memory safety issues.
 
 The ACTS CI automatically runs `clang-tidy` on all compilation units to detect
 as many problems as possible, and requires developers to resolve them. It is
-configured with a file located at `.clang-tidy` in the repository root. Many
+configured with a file `.clang-tidy` located in the repository root. Many
 editors / IDEs support `clang-tidy` and will automatically pick up this
 configuration file.
 

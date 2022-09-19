@@ -227,11 +227,11 @@ $ cmake --build <build> --target docs-with-api # full documentation
 ```
 
 The default option includes the Doxygen, Sphinx, and the Breathe extension,
-i.e.  the source code information can be used in the manually written
+i.e. the source code information can be used in the manually written
 documentation but the full API documentation is not generated. The second
 target builds the full documentation to automatically generate full API
-listings.  This is equivalent to the public [Read the Docs][rtd_acts]
-documentation, but the build takes while to finish.
+listings. This is equivalent to the public [Read the Docs][rtd_acts]
+documentation, but the build takes a while to finish.
 
 [doxygen]: https://doxygen.nl/
 [sphinx]: https://www.sphinx-doc.org

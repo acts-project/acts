@@ -17,7 +17,7 @@ this on a pull request.
 
 ## How do I investigate a physmon failure?
 
-The physmon CI job attaches it's results as an artifact to the CI run (also for successful runs)
+The physmon CI job attaches its results as an artifact to the CI run (also for successful runs)
 From your pull request, you need to click on the *Checks* tab at the top:
 
 :::{figure} ../figures/physmon/physmon_checks.png
@@ -90,6 +90,6 @@ If you get a physmon job failure on your pull request, please investigate the
 failing report(s), and try to understand if the change causing the
 discrepancies is expected.
 
-In case the conclusion is that the chanegs are indeed expected, the reference
+In case the conclusion is that the changes are indeed expected, the reference
 files used to generate the comparisons are located in `CI/physmon/reference/`,
 and can be updated to the output files found in the artifact zip archive.
