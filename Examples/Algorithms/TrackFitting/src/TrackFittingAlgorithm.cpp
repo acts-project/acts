@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -125,8 +126,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     }
 
     ACTS_DEBUG("Invoke fitter");
+    auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
     auto result =
-        fitTrack(trackSourceLinks, initialParams, options, surfSequence);
+        fitTrack(trackSourceLinks, initialParams, options, surfSequence, mtj);
 
     if (result.ok()) {
       // Get the fit output object
@@ -139,12 +141,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       Trajectories::IndexedParameters indexedParams;
       if (fitOutput.fittedParameters) {
         const auto& params = fitOutput.fittedParameters.value();
-        ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
+        ACTS_VERBOSE("Fitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << params.parameters().transpose());
         // Push the fitted parameters to the container
         indexedParams.emplace(fitOutput.lastMeasurementIndex, params);
       } else {
-        ACTS_DEBUG("No fitted paramemeters for track " << itrack);
+        ACTS_DEBUG("No fitted parameters for track " << itrack);
       }
       // store the result
       trajectories.emplace_back(fitOutput.fittedStates, std::move(trackTips),
