@@ -50,6 +50,11 @@ void addTrackFitting(Context& ctx) {
     using Alg = ActsExamples::TrackFittingAlgorithm;
     using Config = Alg::Config;
 
+    py::enum_<Acts::FinalReductionMethod>(mex, "FinalReductionMethod")
+        .value("mean", Acts::FinalReductionMethod::eMean)
+        .value("mode", Acts::FinalReductionMethod::eMode)
+        .value("maxWeight", Acts::FinalReductionMethod::eMaxWeight);
+
     auto alg =
         py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
             mex, "TrackFittingAlgorithm")
@@ -80,17 +85,21 @@ void addTrackFitting(Context& ctx) {
                 py::overload_cast<
                     std::shared_ptr<const Acts::TrackingGeometry>,
                     std::shared_ptr<const Acts::MagneticFieldProvider>,
-                    std::size_t, bool, bool, bool>(&Alg::makeGsfFitterFunction),
+                    std::size_t, bool, bool, Acts::FinalReductionMethod>(
+                    &Alg::makeGsfFitterFunction),
                 py::arg("trackingGeometry"), py::arg("magneticField"),
                 py::arg("maxComponents"), py::arg("abortOnError"),
-                py::arg("disableAllMaterialHandling"), py::arg("useMode"))
+                py::arg("disableAllMaterialHandling"),
+                py::arg("finalReductionMethod"))
             .def_static(
                 "makeGsfFitterFunction",
                 py::overload_cast<
                     std::shared_ptr<const Acts::MagneticFieldProvider>,
-                    std::size_t, bool, bool, bool>(&Alg::makeGsfFitterFunction),
+                    std::size_t, bool, bool, Acts::FinalReductionMethod>(
+                    &Alg::makeGsfFitterFunction),
                 py::arg("magneticField"), py::arg("maxComponents"),
-                py::arg("abortOnError"), py::arg("disableAllMaterialHandling"), py::arg("useMode"));
+                py::arg("abortOnError"), py::arg("disableAllMaterialHandling"),
+                py::arg("finalReductionMethod"));
 
     py::class_<TrackFittingAlgorithm::TrackFitterFunction,
                std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>>(

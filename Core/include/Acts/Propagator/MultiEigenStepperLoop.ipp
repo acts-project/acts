@@ -16,7 +16,14 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
   if (numberComponents(state) == 1) {
     return SingleStepper::boundState(state.components.front().state, surface,
                                      transportCov, freeToBoundCorrection);
-  } else {  // Do the combinatio
+  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
+    auto cmpIt = std::max_element(
+        state.components.begin(), state.components.end(),
+        [](const auto& a, const auto& b) { return a.weight < b.weight; });
+
+    return SingleStepper::boundState(cmpIt->state, surface, transportCov,
+                                     freeToBoundCorrection);
+  } else {
     SmallVector<std::pair<double, BoundTrackParameters>> states;
     double accumulatedPathLength = 0.0;
     int failedBoundTransforms = 0;
@@ -54,14 +61,16 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
         });
 
     // Mode covariance estimation not yet done
-    if( m_useMode ) {
+    if (m_finalReductionMethod == FinalReductionMethod::eMode) {
       const auto mode =
-        detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-          return detail::computeModeOfMixture(states, proj, desc);
-        });
-      if( mode ) {
+          detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
+            return detail::computeModeOfMixture(states, proj, desc);
+          });
+      if (mode) {
         params = *mode;
         std::cout << "INFO: Mode found\n";
+      } else {
+        std::cout << "INFO: No mode found\n";
       }
     }
 
@@ -77,6 +86,12 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
   if (numberComponents(state) == 1) {
     return SingleStepper::curvilinearState(state.components.front().state,
                                            transportCov);
+  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
+    auto cmpIt = std::max_element(
+        state.components.begin(), state.components.end(),
+        [](const auto& a, const auto& b) { return a.weight < b.weight; });
+
+    return SingleStepper::curvilinearState(cmpIt->state, transportCov);
   } else {
     Vector4 pos4 = Vector4::Zero();
     Vector3 dir = Vector3::Zero();

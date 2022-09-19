@@ -159,6 +159,14 @@ struct MaxMomentumReducerLoop {
   }
 };
 
+
+
+/// @enum FinalReductionMethod 
+///
+/// Available methods for the reduction in the @class MultiEigenStepperLoop .boundState() and
+/// .curvilinearState()
+enum class FinalReductionMethod { eMean, eMode, eMaxWeight };
+
 /// @brief Stepper based on the EigenStepper, but handles Multi-Component Tracks
 /// (e.g., for the GSF). Internally, this only manages a vector of
 /// EigenStepper::States. This simplifies implementation, but has several
@@ -181,8 +189,9 @@ class MultiEigenStepperLoop
   /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
 
-  /// Boolean flag if the Stepper should use mean or mode for component combination
-  bool m_useMode = false;
+  /// How to extract a single component state when calling .boundState() or
+  /// .curvilinearState()
+  FinalReductionMethod m_finalReductionMethod = FinalReductionMethod::eMean;
 
   /// Small vector type for speeding up some computations where we need to
   /// accumulate stuff of components. We think 16 is a reasonable amount here.
@@ -209,8 +218,11 @@ class MultiEigenStepperLoop
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
   /// Constructor from a magnetic field and a optionally provided Logger
-  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField, bool useMode = false)
-      : EigenStepper<extensionlist_t, auctioneer_t>(bField), m_useMode(useMode) {}
+  MultiEigenStepperLoop(
+      std::shared_ptr<const MagneticFieldProvider> bField,
+      FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean)
+      : EigenStepper<extensionlist_t, auctioneer_t>(bField),
+        m_finalReductionMethod(finalReductionMethod) {}
 
   struct State {
     /// The struct that stores the individual components

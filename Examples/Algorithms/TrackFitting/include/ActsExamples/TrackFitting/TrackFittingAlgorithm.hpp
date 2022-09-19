@@ -12,6 +12,7 @@
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
+#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -142,12 +143,16 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       std::size_t maxComponents = 4, bool abortOnError = true,
-      bool disableAllMaterialHandling = false, bool useMode = false);
+      bool disableAllMaterialHandling = false,
+      Acts::FinalReductionMethod finalReductionMethod =
+          Acts::FinalReductionMethod::eMean);
 
   static std::shared_ptr<DirectedTrackFitterFunction> makeGsfFitterFunction(
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
       std::size_t maxComponents = 4, bool abortOnError = true,
-      bool disableAllMaterialHandling = false, bool useMode = false);
+      bool disableAllMaterialHandling = false,
+      Acts::FinalReductionMethod finalReductionMethod =
+          Acts::FinalReductionMethod::eMean);
 
  private:
   /// Helper function to call correct FitterFunction
