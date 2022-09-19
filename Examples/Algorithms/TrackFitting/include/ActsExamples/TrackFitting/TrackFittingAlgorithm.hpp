@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -57,7 +58,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     virtual ~TrackFitterFunction() = default;
     virtual TrackFitterResult operator()(
         const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const GeneralFitterOptions&) const = 0;
+        const TrackParameters&, const GeneralFitterOptions&,
+        std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
   };
 
   /// Fit function that takes the above parameters plus a sorted surface
@@ -70,7 +72,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     virtual TrackFitterResult operator()(
         const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
         const TrackParameters&, const GeneralFitterOptions&,
-        const std::vector<const Acts::Surface*>&) const = 0;
+        const std::vector<const Acts::Surface*>&,
+        std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
   };
 
   struct Config {
@@ -153,7 +156,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const GeneralFitterOptions& options,
-      const std::vector<const Acts::Surface*>& surfSequence) const;
+      const std::vector<const Acts::Surface*>& surfSequence,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const;
 
   Config m_cfg;
 };
@@ -164,12 +168,14 @@ ActsExamples::TrackFittingAlgorithm::fitTrack(
         const ActsExamples::IndexSourceLink>>& sourceLinks,
     const ActsExamples::TrackParameters& initialParameters,
     const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-    const std::vector<const Acts::Surface*>& surfSequence) const {
+    const std::vector<const Acts::Surface*>& surfSequence,
+    std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const {
   if (m_cfg.directNavigation) {
-    return (*m_cfg.dFit)(sourceLinks, initialParameters, options, surfSequence);
+    return (*m_cfg.dFit)(sourceLinks, initialParameters, options, surfSequence,
+                         trajectory);
   }
 
-  return (*m_cfg.fit)(sourceLinks, initialParameters, options);
+  return (*m_cfg.fit)(sourceLinks, initialParameters, options, trajectory);
 }
 
 }  // namespace ActsExamples

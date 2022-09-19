@@ -40,7 +40,7 @@ void addTrackFitting(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputProtoTracks);
-    ACTS_PYTHON_MEMBER(inputSimulatedHits);
+    ACTS_PYTHON_MEMBER(inputSimHits);
     ACTS_PYTHON_MEMBER(inputMeasurementSimHitsMap);
     ACTS_PYTHON_MEMBER(outputProtoTracks);
     ACTS_PYTHON_STRUCT_END();

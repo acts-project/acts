@@ -361,7 +361,7 @@ void Acts::TrackingVolume::interlinkLayers() {
 void Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-    size_t& vol) {
+    size_t& vol, const GeometryIdentifierHook& hook) {
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
@@ -415,7 +415,7 @@ void Acts::TrackingVolume::closeGeometry(
         auto layerID = GeometryIdentifier(volumeID).setLayer(++ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
-        mutableLayerPtr->closeGeometry(materialDecorator, layerID);
+        mutableLayerPtr->closeGeometry(materialDecorator, layerID, hook);
       }
     } else if (m_bvhTop != nullptr) {
       GeometryIdentifier::Value isurface = 0;
@@ -441,7 +441,8 @@ void Acts::TrackingVolume::closeGeometry(
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->setMotherVolume(this);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol,
+                                        hook);
     }
   }
 
@@ -450,7 +451,8 @@ void Acts::TrackingVolume::closeGeometry(
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->setMotherVolume(this);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol,
+                                        hook);
     }
   }
 }
@@ -553,11 +555,30 @@ Acts::TrackingVolume::compatibleBoundaries(
     processBoundaries(bSurfacesConfined);
   }
 
+  auto comparator = [](double a, double b) {
+    // sign function would be nice but ...
+    if ((a > 0 && b > 0) || (a < 0 && b < 0)) {
+      return a < b;
+    }
+    if (a > 0) {  // b < 0
+      return true;
+    }
+    return false;
+  };
+
   // Sort them accordingly to the navigation direction
   if (options.navDir == NavigationDirection::Forward) {
-    std::sort(bIntersections.begin(), bIntersections.end());
+    std::sort(bIntersections.begin(), bIntersections.end(),
+              [&](const auto& a, const auto& b) {
+                return comparator(a.intersection.pathLength,
+                                  b.intersection.pathLength);
+              });
   } else {
-    std::sort(bIntersections.begin(), bIntersections.end(), std::greater<>());
+    std::sort(bIntersections.begin(), bIntersections.end(),
+              [&](const auto& a, const auto& b) {
+                return comparator(-a.intersection.pathLength,
+                                  -b.intersection.pathLength);
+              });
   }
   return bIntersections;
 }

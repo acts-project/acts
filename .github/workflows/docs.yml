@@ -13,12 +13,13 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v29
     env:
-        DOXYGEN_WARN_AS_ERROR: YES
+        DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
     steps:
       - uses: actions/checkout@v2
       - name: Install dependencies
         run: >
-          apt-get install -y doxygen
+          curl -SL https://www.doxygen.nl/files/doxygen-1.9.4.linux.bin.tar.gz | tar -xzC .
+          && mv doxygen-1.9.4/bin/doxygen /usr/local/bin/doxygen
           && pip3 install --upgrade pip
           && pip install -r docs/requirements.txt
       - name: Configure

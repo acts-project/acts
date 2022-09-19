@@ -72,7 +72,9 @@ void setFailureThreshold(Level) {
   throw std::logic_error{
       "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
       "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
-      "override"};
+      "override. See "
+      "https://acts.readthedocs.io/en/latest/core/"
+      "logging.html#logging-thresholds"};
 }
 
 #endif

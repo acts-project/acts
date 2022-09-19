@@ -70,6 +70,10 @@ class DD4hepGeometryService final : public BareService {
         sortDetectors = sortFCChhDetElements;
     /// Material decorator
     std::shared_ptr<const Acts::IMaterialDecorator> matDecorator = nullptr;
+
+    /// Optional geometry identfier hook to be used during closure
+    /// @note Will be @b copied when calling the geometry building
+    Acts::GeometryIdentifierHook geometryIdentifierHook;
   };
 
   DD4hepGeometryService(const Config& cfg);

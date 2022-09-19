@@ -6,6 +6,7 @@
 guide
 run_formatting
 documentation_build
+documentation_cheatsheet
 clang_tidy
 physmon
 root_hash_checks
