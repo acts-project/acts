@@ -28,10 +28,14 @@ struct SeedFinderOrthogonalConfig {
   // cot of maximum theta angle
   // equivalent to 2.7 eta (pseudorapidity)
   float cotThetaMax = 7.40627;
-  // minimum distance in r between two measurements within one seed
-  float deltaRMin = 5 * Acts::UnitConstants::mm;
-  // maximum distance in r between two measurements within one seed
-  float deltaRMax = 270 * Acts::UnitConstants::mm;
+  // minimum distance in r between middle and top SP in one seed
+  float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and top SP in one seed
+  float deltaRMaxTopSP = 270 * Acts::UnitConstants::mm;
+  // minimum distance in r between middle and bottom SP in one seed
+  float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and bottom SP in one seed
+  float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
 
   // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
@@ -88,8 +92,10 @@ struct SeedFinderOrthogonalConfig {
     using namespace Acts::UnitLiterals;
     SeedFinderOrthogonalConfig config = *this;
     config.minPt /= 1_MeV;
-    config.deltaRMin /= 1_mm;
-    config.deltaRMax /= 1_mm;
+    config.deltaRMinTopSP /= 1_mm;
+    config.deltaRMaxTopSP /= 1_mm;
+    config.deltaRMinBottomSP /= 1_mm;
+    config.deltaRMaxBottomSP /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;
     config.collisionRegionMin /= 1_mm;
