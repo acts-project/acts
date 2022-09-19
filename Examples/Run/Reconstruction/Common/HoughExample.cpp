@@ -151,9 +151,9 @@ int runHoughExample(int argc, char* argv[],
   houghCfg.kA = 0.0003;  // Assume B = 2T constant.
 
 
-  houghCfg.fieldCorrector.connect<&fieldCorrectionDefault>();
-  houghCfg.layerIDFinder.connect<&findLayerIDDefault>();
-  houghCfg.sliceTester.connect<&inSliceDefault>();
+  houghCfg.fieldCorrector.connect<&ActsExamples::DefaultHoughFunctions::fieldCorrectionDefault>();
+  houghCfg.layerIDFinder.connect<&ActsExamples::DefaultHoughFunctions::findLayerIDDefault>();
+  houghCfg.sliceTester.connect<&ActsExamples::DefaultHoughFunctions::inSliceDefault>();
 
   sequencer.addAlgorithm(
       std::make_shared<HoughTransformSeeder>(houghCfg, logLevel));
