@@ -97,8 +97,6 @@ class FullBilloirVertexFitter {
   /// input_track_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other input_track_t
   /// objects.
-  ///
-  /// @param params input_track_t object to extract track parameters from
   std::function<BoundTrackParameters(input_track_t)> extractParameters;
 };
 
