@@ -60,6 +60,7 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
         detector=g4geo,
         inputParticles=evGen.config.outputParticles,
         outputMaterialTracks="material_tracks",
+        randomNumbers=rnd,
     )
 
     g4AlgCfg.detectorConstruction = g4geo
