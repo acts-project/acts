@@ -90,9 +90,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.compatTopSP.clear();
 
-    std::cout << rM << " MIDDLE" << std::endl;
+    // std::cout << rM << " MIDDLE" << std::endl;
 
-    std::cout << "TEST TOP" << std::endl;
+    // std::cout << "TEST TOP" << std::endl;
 
     for (auto topSP : topSPs) {
       float rT = topSP->radius();
@@ -108,6 +108,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (deltaR > m_config.deltaRMaxTopSP) {
         // if SPs are sorted in radius we break out of the loop
         if (m_config.forceRadialSorting) {
+					std::cout << "BREAK" << std::endl;
           break;
         }
         continue;
@@ -178,7 +179,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.compatBottomSP.clear();
 
-    std::cout << "TEST BOT" << std::endl;
+    // std::cout << "TEST BOT" << std::endl;
 
     for (auto bottomSP : bottomSPs) {
       float rB = bottomSP->radius();
@@ -193,6 +194,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (deltaR < m_config.deltaRMinBottomSP) {
         // if SPs are sorted in radius we break out of the loop
         if (m_config.forceRadialSorting) {
+					std::cout << "BREAK" << std::endl;
           break;
         }
         continue;
