@@ -530,5 +530,7 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
   createSeedsForGroup(state, std::back_inserter(ret), bottomSPs, middleSPs,
                       topSPs, extent);
+
+  return ret;
 }
 }  // namespace Acts
