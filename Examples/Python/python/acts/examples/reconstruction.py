@@ -638,7 +638,7 @@ def addTruthTrackingGsf(
         "maxComponents": 12,
         "abortOnError": False,
         "disableAllMaterialHandling": False,
-        "FinalReductionMethod": acts.examples.FinalReductionMethod.eMean,
+        "finalReductionMethod": acts.examples.FinalReductionMethod.mean,
     }
 
     gsfAlg = acts.examples.TrackFittingAlgorithm(
