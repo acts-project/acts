@@ -90,9 +90,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.compatTopSP.clear();
 
-    // std::cout << rM << " MIDDLE" << std::endl;
+    std::cout << rM << " MIDDLE" << std::endl;
 
-    // std::cout << "TEST TOP" << std::endl;
+    std::cout << "TEST TOP" << std::endl;
 
     for (auto topSP : topSPs) {
       float rT = topSP->radius();
@@ -178,7 +178,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.compatBottomSP.clear();
 
-    // std::cout << "TEST BOT" << std::endl;
+    std::cout << "TEST BOT" << std::endl;
 
     for (auto bottomSP : bottomSPs) {
       float rB = bottomSP->radius();
