@@ -47,7 +47,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     Extent rRangeSPExtent) const {
   for (auto spM : middleSPs) {
 		
+		std::cout << "TEST 1" << std::endl;
+		
 		break;
+		
+		std::cout << "TEST 2" << std::endl;
 		
     float rM = spM->radius();
     float zM = spM->z();
