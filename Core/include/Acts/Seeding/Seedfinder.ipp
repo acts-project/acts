@@ -13,6 +13,7 @@
 #include <type_traits>
 
 #include <chrono>
+#include <iostream>
 
 //#include<iostream>
 
@@ -47,7 +48,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     Extent rRangeSPExtent) const {
-  
+	
+	return;
+	
 	auto t_c_start = std::chrono::high_resolution_clock::now();
 	
 	for (auto spM : middleSPs) {
