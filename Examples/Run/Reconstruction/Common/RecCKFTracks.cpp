@@ -27,7 +27,6 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/SeedingAlgorithmOptions.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMakerOptions.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
@@ -79,8 +78,6 @@ int runRecCKFTracks(int argc, char* argv[],
   Options::addDigitizationOptions(desc);
   Options::addParticleSmearingOptions(desc);
   Options::addSpacePointMakerOptions(desc);
-  Options::addSeedingAlgorithmOptions(desc);
-  Options::addMLOutputOptions(desc);
   Options::addCsvWriterOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
@@ -99,8 +96,6 @@ int runRecCKFTracks(int argc, char* argv[],
   bool truthSmearedSeeded = vm["ckf-truth-smeared-seeds"].template as<bool>();
   bool truthEstimatedSeeded =
       vm["ckf-truth-estimated-seeds"].template as<bool>();
-
-  bool outputIsML = Options::readMLOutputConfig(vm);
 
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
@@ -171,41 +166,49 @@ int runRecCKFTracks(int argc, char* argv[],
       inputProtoTracks = trackFinderCfg.outputProtoTracks;
     } else {
       // Seeding algorithm
-      SeedingAlgorithm::Config seedingCfg = Options::readSeedingAlgorithmConfig(vm);
-
+      SeedingAlgorithm::Config seedingCfg;
       seedingCfg.inputSpacePoints = {
-	spCfg.outputSpacePoints,
+          spCfg.outputSpacePoints,
       };
       seedingCfg.outputSeeds = "seeds";
       seedingCfg.outputProtoTracks = "prototracks";
 
-      seedingCfg.gridConfig.cotThetaMax = 7.40627; // 2.7 eta
-      seedingCfg.seedFinderConfig.cotThetaMax = seedingCfg.gridConfig.cotThetaMax;
-
-      seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
-      seedingCfg.seedFinderConfig.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
-
-      seedingCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
+      seedingCfg.gridConfig.rMax = 200._mm;
+      seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
 
       seedingCfg.seedFilterConfig.deltaRMin = 1_mm;
       seedingCfg.seedFinderConfig.deltaRMin =
           seedingCfg.seedFilterConfig.deltaRMin;
 
+      seedingCfg.gridConfig.deltaRMax = 60._mm;
+      seedingCfg.seedFinderConfig.deltaRMax = seedingCfg.gridConfig.deltaRMax;
 
       seedingCfg.seedFinderConfig.collisionRegionMin = -250_mm;
       seedingCfg.seedFinderConfig.collisionRegionMax = 250._mm;
 
       seedingCfg.gridConfig.zMin = -2000._mm;
       seedingCfg.gridConfig.zMax = 2000._mm;
+      seedingCfg.seedFinderConfig.zMin = seedingCfg.gridConfig.zMin;
+      seedingCfg.seedFinderConfig.zMax = seedingCfg.gridConfig.zMax;
 
       seedingCfg.seedFilterConfig.maxSeedsPerSpM = 1;
+      seedingCfg.seedFinderConfig.maxSeedsPerSpM =
+          seedingCfg.seedFilterConfig.maxSeedsPerSpM;
+
+      seedingCfg.gridConfig.cotThetaMax = 7.40627;  // 2.7 eta
+      seedingCfg.seedFinderConfig.cotThetaMax =
+          seedingCfg.gridConfig.cotThetaMax;
 
       seedingCfg.seedFinderConfig.sigmaScattering = 50;
       seedingCfg.seedFinderConfig.radLengthPerSeed = 0.1;
 
       seedingCfg.gridConfig.minPt = 500._MeV;
+      seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
 
+      seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
+      seedingCfg.seedFinderConfig.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
 
+      seedingCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
 
       seedingCfg.seedFinderConfig.impactMax = 3._mm;
 
@@ -312,7 +315,6 @@ int runRecCKFTracks(int argc, char* argv[],
   // The bottom seed could be the first, second or third hits on the truth track
   perfWriterCfg.nMeasurementsMin = particleSelectorCfg.nHitsMin - 3;
   perfWriterCfg.ptMin = 0.4_GeV;
-  perfWriterCfg.outputIsML = outputIsML; 
   perfWriterCfg.filePath = outputDir + "/performance_ckf.root";
 #ifdef ACTS_PLUGIN_ONNX
   // Onnx plugin related options

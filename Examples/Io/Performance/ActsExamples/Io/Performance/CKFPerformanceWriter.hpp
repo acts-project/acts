@@ -54,20 +54,9 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     /// Min number of measurements
     size_t nMeasurementsMin = 9;
     /// Min transverse momentum
-    float ptMin = 1 * Acts::UnitConstants::GeV;
-    // Max transverse momentum
-    // Should probably initialize this to a boolean or something to see if you even
-    // want to use it
-    // Need to initialize these to better values, currently this is not implemented
-    float ptMax = std::numeric_limits<float>::max() * Acts::UnitConstants::GeV;
-    float etaMin = std::numeric_limits<float>::lowest();
-    float etaMax = std::numeric_limits<float>::max();
+    double ptMin = 1 * Acts::UnitConstants::GeV;
     /// function to check if neural network predicted track label is duplicate
     std::function<bool(std::vector<float>&)> duplicatedPredictor = nullptr;
-    // boolean for if we want ML output or not
-    bool outputIsML = false;
-    // Tag for whether a line is ML output
-    std::string mlTag = "mlTag";
   };
 
   /// Construct from configuration and log level.
@@ -97,7 +86,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
-  
+
   // Adding numbers for efficiency, fake, duplicate calculations
   size_t m_nTotalTracks = 0;
   size_t m_nTotalMatchedTracks = 0;
@@ -107,6 +96,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   size_t m_nTotalMatchedParticles = 0;
   size_t m_nTotalDuplicateParticles = 0;
   size_t m_nTotalFakeParticles = 0;
+
 };
 
 }  // namespace ActsExamples

@@ -676,6 +676,7 @@ def addCKFTracks(
     CKFPerformanceConfigArg: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputFileRoot: str = "performance_ckf.root",
     selectedParticles: str = "truth_seeds_selected",
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
@@ -774,7 +775,7 @@ def addCKFTracks(
                 ptMin=CKFPerformanceConfigArg.ptMin,
                 truthMatchProbMin=CKFPerformanceConfigArg.truthMatchProbMin,
             ),
-            filePath=str(outputDirRoot / "performance_ckf.root"),
+            filePath=str(outputDirRoot / outputFileRoot),
         )
         s.addWriter(ckfPerfWriter)
 

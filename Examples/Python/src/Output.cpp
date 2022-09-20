@@ -581,9 +581,6 @@ void addOutput(Context& ctx) {
     ACTS_PYTHON_MEMBER(truthMatchProbMin);
     ACTS_PYTHON_MEMBER(nMeasurementsMin);
     ACTS_PYTHON_MEMBER(ptMin);
-    ACTS_PYTHON_MEMBER(ptMax);
-    ACTS_PYTHON_MEMBER(etaMin);
-    ACTS_PYTHON_MEMBER(etaMax);
     ACTS_PYTHON_MEMBER(duplicatedPredictor);
     ACTS_PYTHON_STRUCT_END();
   }
