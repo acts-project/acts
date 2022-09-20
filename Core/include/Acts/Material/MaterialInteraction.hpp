@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 
 namespace Acts {
@@ -34,6 +35,10 @@ struct MaterialInteraction {
   double sigmaTheta2 = 0.0;
   /// Expected q/p variance due to the interactions.
   double sigmaQoP2 = 0.0;
+  /// The position where the interaction occured.
+  Vector3 intersection = Vector3(0., 0., 0);
+  /// The ID where the interaction occured.
+  GeometryIdentifier intersectionID;
   /// The surface where the interaction occured.
   const Surface* surface = nullptr;
   /// The volume where the interaction occured.
