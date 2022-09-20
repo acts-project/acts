@@ -45,7 +45,7 @@ if not ttbar_pu200:
     addParticleGun(
         s,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
-        EtaConfig(-4.0, 4.0, uniform=True),
+        EtaConfig(-3.0, 3.0, uniform=True),
         ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
         rnd=rnd,
     )
@@ -66,7 +66,7 @@ addFatras(
     s,
     trackingGeometry,
     field,
-    ParticleSelectorConfig(eta=(-4.0, 4.0), pt=(150 * u.MeV, None), removeNeutral=True)
+    ParticleSelectorConfig(eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True)
     if ttbar_pu200
     else ParticleSelectorConfig(),
     outputDirRoot=outputDir,
@@ -86,7 +86,7 @@ addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
+    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
     if ttbar_pu200
     else TruthSeedRanges(),
     geoSelectionConfigFile=oddSeedingSel,
