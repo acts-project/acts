@@ -141,5 +141,5 @@ train:
     - export GNN_OUTPUT=tmp/gnn_output
     - export SEGMENTING_OUTPUT=tmp/segmenting_output
     - export PROJECT_NAME="training-ci"
-    - ./traintrack configs/pipeline.yaml
+    - traintrack configs/pipeline.yaml
 
