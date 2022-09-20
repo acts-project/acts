@@ -21,9 +21,9 @@ weight: 2
 activation: Tanh
 randomisation: 4
 points_per_batch: 130000
-r_train: 0.2
-r_val: 0.2
-r_test: 0.2
+r_train: 0.1
+r_val: 0.1
+r_test: 0.1
 knn: 50
 warmup: 4
 margin: 0.1
