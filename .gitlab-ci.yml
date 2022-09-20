@@ -129,10 +129,10 @@ train:
   script:
     - apt-get update -y
     - cd src/CI/exatrkx
-    - cp -v configs/processing.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Processing
-    - cp -v configs/embedding.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Embedding
-    - cp -v configs/filter.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Filter
-    - cp -v configs/gnn.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/GNN
+    - cp -v configs/processing.yaml ../../Examples/Scripts/ExaTrkXTraining/LightningModules/Processing
+    - cp -v configs/embedding.yaml ../../Examples/Scripts/ExaTrkXTraining/LightningModules/Embedding
+    - cp -v configs/filter.yaml ../../Examples/Scripts/ExaTrkXTraining/LightningModules/Filter
+    - cp -v configs/gnn.yaml ../../Examples/Scripts/ExaTrkXTraining/LightningModules/GNN
     - export PYTHONWARNINGS="ignore"
     - export EXATRKX_DATA=./data
     - export PROCESSING_OUTPUT=tmp/processing_output
