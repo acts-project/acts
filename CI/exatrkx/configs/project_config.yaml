@@ -1,6 +1,6 @@
 # Location of libraries
 libraries:
-    model_library: ../../Plugins/ExaTrkX/training/LightningModules
+    model_library: ../../Examples/Scripts/ExaTrkXTraining/LightningModules
     artifact_library: tmp
 
 # The lines you would like/need in a batch script before the call to pipeline.py
