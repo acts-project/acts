@@ -12,6 +12,8 @@
 #include <numeric>
 #include <type_traits>
 
+#include <chrono>
+
 //#include<iostream>
 
 namespace Acts {
@@ -45,14 +47,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     Extent rRangeSPExtent) const {
-  for (auto spM : middleSPs) {
-		
-		std::cout << "TEST 1" << std::endl;
-		
-		break;
-		
-		std::cout << "TEST 2" << std::endl;
-		
+  
+	auto t_c_start = std::chrono::high_resolution_clock::now();
+	
+	for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
@@ -548,6 +546,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
                                               numQualitySeeds, outIt);
   }
+	
+	auto t_c_end = std::chrono::high_resolution_clock::now();
+	double time_elapsed_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t_c_end - t_c_start).count();
+	std::cout << "|TIMER ACTS| in ACTS time: " << time_elapsed_ns << " ns" << std::endl;
+	
 }
 
 template <typename external_spacepoint_t, typename platform_t>
