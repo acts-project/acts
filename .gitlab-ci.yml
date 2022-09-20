@@ -101,27 +101,40 @@ build:
     #- nvidia-smi
     #- python3 src/Examples/Scripts/Python/exatrkx.py
 
-
-train:
+makedata:
   stage: test
   needs:
   - build
   image: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
   tags:
     - docker-gpu-nvidia
+  artifacts:
+    paths:
+      - data
+      - src/Examples/Scripts/ExaTrkXTraining
+      - src/CI
   script:
     - apt-get update -y
-    - python3 -m pip install torch==1.11.0+cu115 --index-url https://download.pytorch.org/whl/cu115
-    - python3 -m pip install -r src/Examples/Scripts/ExaTrkXTraining/requirements.txt
     - source build/python/setup.sh
+    - python3 src/CI/exatrkx/datagen.py src/CI/exatrkx/data 10
+    - ls src/CI/exatrkx/data
+
+train:
+  stage: test
+  needs:
+  - makedata
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx_training:sha-2a2c7aa2
+  tags:
+    - docker-gpu-nvidia
+  script:
+    - apt-get update -y
     - cd src/CI/exatrkx
-    - python3 datagen.py data 10
-    - cp configs/processing.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Processing
-    - cp configs/embedding.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Embedding
-    - cp configs/filter.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Filter
-    - cp configs/gnn.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/GNN
+    - cp -v configs/processing.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Processing
+    - cp -v configs/embedding.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Embedding
+    - cp -v configs/filter.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/Filter
+    - cp -v configs/gnn.yaml src/Examples/Scripts/ExaTrkXTraining/LightningModules/GNN
     - export PYTHONWARNINGS="ignore"
-    - export EXATRKX_DATA=data
+    - export EXATRKX_DATA=./data
     - export PROCESSING_OUTPUT=tmp/processing_output
     - export EMBEDDING_OUTPUT=tmp/embedding_output
     - export FILTER_OUTPUT=tmp/filter_output
