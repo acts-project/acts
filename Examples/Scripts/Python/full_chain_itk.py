@@ -23,7 +23,6 @@ ttbar_pu200 = False
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
 outputDir = pathlib.Path.cwd() / "itk_output"
-outputDir.mkdir(exist_ok=True)
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
 detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
@@ -101,7 +100,6 @@ s.addAlgorithm(
         outputTrackIndices="outputTrackIndices",
         removeNeutral=True,
         absEtaMax=4.0,
-        loc0Max=4.0 * u.mm,  # rho max
         ptMin=1.0 * u.GeV,
     )
 )

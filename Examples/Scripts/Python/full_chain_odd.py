@@ -25,7 +25,6 @@ ttbar_pu200 = False
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
-outputDir.mkdir(exist_ok=True)
 # acts.examples.dump_args_calls(locals())  # show python binding calls
 
 oddMaterialMap = geoDir / "data/odd-material-maps.root"
@@ -108,8 +107,7 @@ s.addAlgorithm(
         outputTrackParameters="trackparameters",
         outputTrackIndices="outputTrackIndices",
         removeNeutral=True,
-        absEtaMax=2.5,
-        loc0Max=4.0 * u.mm,  # rho max
+        absEtaMax=3.0,
         ptMin=500 * u.MeV,
     )
 )
