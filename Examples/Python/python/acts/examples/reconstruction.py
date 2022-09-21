@@ -676,6 +676,7 @@ def addCKFTracks(
     CKFPerformanceConfigArg: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputFileRoot: str = "performance_ckf.root",
     selectedParticles: str = "truth_seeds_selected",
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
@@ -774,7 +775,7 @@ def addCKFTracks(
                 ptMin=CKFPerformanceConfigArg.ptMin,
                 truthMatchProbMin=CKFPerformanceConfigArg.truthMatchProbMin,
             ),
-            filePath=str(outputDirRoot / "performance_ckf.root"),
+            filePath=str(outputDirRoot / outputFileRoot),
         )
         s.addWriter(ckfPerfWriter)
 
@@ -794,16 +795,12 @@ def addCKFTracks(
     return s
 
 
-ExaTrkXBackend = Enum("ExaTrkXBackend", "Torch Onnx")
-
-
-def addExaTrkX(
+def addExaTrkx(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     geometrySelection: Union[Path, str],
-    modelDir: Union[Path, str],
+    onnxModelDir: Union[Path, str],
     outputDirRoot: Optional[Union[Path, str]] = None,
-    backend: Optional[ExaTrkXBackend] = ExaTrkXBackend.Torch,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
@@ -838,15 +835,11 @@ def addExaTrkX(
         )
     )
 
-    # For now we don't configure only the common options so this works
-    exaTrkxModule = (
-        acts.examples.ExaTrkXTrackFindingTorch
-        if backend == ExaTrkXBackend.Torch
-        else acts.examples.ExaTrkXTrackFindingOnnx
-    )
-
-    exaTrkxFinding = exaTrkxModule(
-        modelDir=str(modelDir),
+    # Setup the track finding algorithm with ExaTrkX
+    # It takes all the source links created from truth hit smearing, seeds from
+    # truth particle smearing and source link selection config
+    exaTrkxFinding = acts.examples.ExaTrkXTrackFinding(
+        inputMLModuleDir=str(onnxModelDir),
         spacepointFeatures=3,
         embeddingDim=8,
         rVal=1.6,
