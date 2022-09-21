@@ -111,6 +111,12 @@ TrackParamsEstimationConfig = namedtuple(
     defaults=[(None, None)],
 )
 
+TrackSelectorConfig = namedtuple(
+    "TrackSelectorConfig",
+    ["absEtaMax", "ptMin"],
+    defaults=[2.5, 500 * u.MeV],
+)
+
 
 @acts.examples.NamedTypeArgs(
     seedingAlgorithm=SeedingAlgorithm,
@@ -890,8 +896,9 @@ def addVertexFitting(
     outputDirRoot: Optional[Union[Path, str]] = None,
     associatedParticles: str = "particles_input",
     trajectories: Optional[str] = None,
-    trackParameters: str = "trackparameters",
+    trackParameters: str = "fittedTrackParameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
+    trackSelectorConfig: Optional[TrackSelectorConfig] = TrackSelectorConfig(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
@@ -920,6 +927,23 @@ def addVertexFitting(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
+    selectedTrackParameters = "trackparameters"
+    trackIndices = "outputTrackIndices"
+
+    if trackSelectorConfig is not None:
+        trackSelector = acts.examples.TrackSelector(
+            level=customLogLevel(),
+            inputTrackParameters=trackParameters,
+            outputTrackParameters=selectedTrackParameters,
+            outputTrackIndices=trackIndices,
+            removeNeutral=True,
+            absEtaMax=trackSelectorConfig.absEtaMax,
+            ptMin=trackSelectorConfig.ptMin,
+        )
+        s.addAlgorithm(trackSelector)
+    else:
+        selectedTrackParameters = trackParameters
+
     inputParticles = "particles_input"
     outputVertices = "fittedVertices"
     selectedParticles = "particles_selected"
@@ -936,7 +960,7 @@ def addVertexFitting(
         fitVertices = VertexFitterAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=trackParameters,
+            inputTrackParameters=selectedTrackParameters,
             inputProtoVertices=findVertices.config.outputProtoVertices,
             outputVertices=outputVertices,
         )
@@ -945,7 +969,7 @@ def addVertexFitting(
         findVertices = IterativeVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=trackParameters,
+            inputTrackParameters=selectedTrackParameters,
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
         )
@@ -955,7 +979,7 @@ def addVertexFitting(
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=trackParameters,
+            inputTrackParameters=selectedTrackParameters,
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
             outputTime=outputTime,
@@ -978,8 +1002,8 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                inputFittedTracks=trackParameters,
-                inputFittedTracksIndices="outputTrackIndices",
+                inputFittedTracks=selectedTrackParameters,
+                inputFittedTracksIndices=trackIndices,
                 inputAllFittedTracksTips="fittedTrackParametersTips",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputTrajectories="trajectories" if trajectories is not None else "",
