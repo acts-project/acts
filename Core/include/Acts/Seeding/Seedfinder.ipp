@@ -51,7 +51,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 	
 	return;
 	
-	auto t_c_start = std::chrono::high_resolution_clock::now();
+	//auto t_c_start = std::chrono::high_resolution_clock::now();
 	
 	for (auto spM : middleSPs) {
     float rM = spM->radius();
@@ -98,15 +98,15 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.compatTopSP.clear();
 
-    // std::cout << rM << " MIDDLE" << std::endl;
+//    std::cout << "======= MIDDLE " << rM << " =======" << std::endl;
 
-    // std::cout << "TEST TOP" << std::endl;
+//    std::cout << "TEST TOP" << std::endl;
 
     for (auto topSP : topSPs) {
       float rT = topSP->radius();
       float deltaR = rT - rM;
 
-      // std::cout << rT << " " << deltaR << std::endl;
+//      std::cout << "rT " << rT << " " << deltaR << std::endl;
 
       // if r-distance is too small, try next SP in bin
       if (deltaR < m_config.deltaRMinTopSP) {
@@ -117,7 +117,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // if SPs are sorted in radius we break out of the loop
         if (m_config.forceRadialSorting) {
 //					std::cout << "BREAK" << std::endl;
-          break;
+//          break;
         }
         continue;
       }
@@ -187,13 +187,13 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.compatBottomSP.clear();
 
-    // std::cout << "TEST BOT" << std::endl;
+//    std::cout << "TEST BOT" << std::endl;
 
     for (auto bottomSP : bottomSPs) {
       float rB = bottomSP->radius();
       float deltaR = rM - rB;
 
-      // std::cout << rB << " " << deltaR << std::endl;
+//      std::cout << "rB "  << rB << " " << deltaR << std::endl;
 
       // this condition is the opposite of the condition for top SP
       if (deltaR > m_config.deltaRMaxBottomSP) {
@@ -203,7 +203,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // if SPs are sorted in radius we break out of the loop
         if (m_config.forceRadialSorting) {
 //					std::cout << "BREAK" << std::endl;
-          break;
+//          break;
         }
         continue;
       }
@@ -550,9 +550,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
                                               numQualitySeeds, outIt);
   }
 	
-	auto t_c_end = std::chrono::high_resolution_clock::now();
-	double time_elapsed_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t_c_end - t_c_start).count();
-	std::cout << "|TIMER ACTS| in ACTS time: " << time_elapsed_ns << " ns" << std::endl;
+//	auto t_c_end = std::chrono::high_resolution_clock::now();
+//	double time_elapsed_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t_c_end - t_c_start).count();
+	//std::cout << "|TIMER ACTS| in ACTS time: " << time_elapsed_ns << " ns" << std::endl;
 	
 }
 
