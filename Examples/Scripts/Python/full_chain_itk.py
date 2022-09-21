@@ -100,9 +100,9 @@ s.addAlgorithm(
         outputTrackParameters="trackparameters",
         outputTrackIndices="outputTrackIndices",
         removeNeutral=True,
-        absEtaMax=2.5,
+        absEtaMax=4.0,
         loc0Max=4.0 * u.mm,  # rho max
-        ptMin=500 * u.MeV,
+        ptMin=1.0 * u.GeV,
     )
 )
 
