@@ -2,21 +2,21 @@
 import pathlib, acts, acts.examples
 from acts.examples.simulation import (
     addParticleGun,
-    addPythia8,
     MomentumConfig,
     EtaConfig,
     ParticleConfig,
+    addPythia8,
     addFatras,
-    addDigitization,
     ParticleSelectorConfig,
+    addDigitization,
 )
 from acts.examples.reconstruction import (
     addSeeding,
+    TruthSeedRanges,
     addCKFTracks,
     CKFPerformanceConfig,
     addVertexFitting,
     VertexFinder,
-    TruthSeedRanges,
 )
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector

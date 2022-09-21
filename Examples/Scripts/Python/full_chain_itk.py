@@ -15,6 +15,8 @@ from acts.examples.reconstruction import (
     TruthSeedRanges,
     addCKFTracks,
     CKFPerformanceConfig,
+    addVertexFitting,
+    VertexFinder,
 )
 
 ttbar_pu200 = False
@@ -35,7 +37,7 @@ if not ttbar_pu200:
         s,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
         EtaConfig(-4.0, 4.0, uniform=True),
-        ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
+        ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
         rnd=rnd,
     )
 else:
@@ -89,6 +91,27 @@ addCKFTracks(
     field,
     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
     outputDirRoot=outputDir,
+)
+
+s.addAlgorithm(
+    acts.examples.TrackSelector(
+        level=acts.logging.INFO,
+        inputTrackParameters="fittedTrackParameters",
+        outputTrackParameters="trackparameters",
+        outputTrackIndices="outputTrackIndices",
+        removeNeutral=True,
+        absEtaMax=2.5,
+        loc0Max=4.0 * u.mm,  # rho max
+        ptMin=500 * u.MeV,
+    )
+)
+
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
+    trajectories="trajectories",
 )
 
 s.run()
