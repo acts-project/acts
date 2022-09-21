@@ -48,11 +48,6 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     Extent rRangeSPExtent) const {
-	
-	return;
-	
-	//auto t_c_start = std::chrono::high_resolution_clock::now();
-	
 	for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -115,10 +110,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       // if r-distance is too big, try next SP in bin
       if (deltaR > m_config.deltaRMaxTopSP) {
         // if SPs are sorted in radius we break out of the loop
-        if (m_config.forceRadialSorting) {
+//        if (m_config.forceRadialSorting) {
 //					std::cout << "BREAK" << std::endl;
 //          break;
-        }
+//        }
         continue;
       }
       float deltaZ = topSP->z() - zM;
@@ -201,10 +196,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
       if (deltaR < m_config.deltaRMinBottomSP) {
         // if SPs are sorted in radius we break out of the loop
-        if (m_config.forceRadialSorting) {
+//        if (m_config.forceRadialSorting) {
 //					std::cout << "BREAK" << std::endl;
 //          break;
-        }
+//        }
         continue;
       }
       float deltaZ = zM - bottomSP->z();
@@ -549,11 +544,6 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
                                               numQualitySeeds, outIt);
   }
-	
-//	auto t_c_end = std::chrono::high_resolution_clock::now();
-//	double time_elapsed_ns = std::chrono::duration_cast<std::chrono::nanoseconds>(t_c_end - t_c_start).count();
-	//std::cout << "|TIMER ACTS| in ACTS time: " << time_elapsed_ns << " ns" << std::endl;
-	
 }
 
 template <typename external_spacepoint_t, typename platform_t>
