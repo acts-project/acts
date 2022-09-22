@@ -941,10 +941,10 @@ def addVertexFitting(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    selectedTrackParameters = "trackparameters"
-    trackIndices = "outputTrackIndices"
-
     if trackSelectorRanges is not None:
+        selectedTrackParameters = "trackparameters"
+        trackIndices = "outputTrackIndices"
+
         trackSelector = acts.examples.TrackSelector(
             level=customLogLevel(),
             inputTrackParameters=trackParameters,
@@ -972,6 +972,7 @@ def addVertexFitting(
         s.addAlgorithm(trackSelector)
     else:
         selectedTrackParameters = trackParameters
+        trackIndices = ""
 
     inputParticles = "particles_input"
     outputVertices = "fittedVertices"
