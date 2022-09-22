@@ -9,7 +9,7 @@ following commands will clone the repository, configure, and build the core
 library:
 
 ```console
-$ git clone --recursive https://github.com/acts-project/acts <source>
+$ git clone https://github.com/acts-project/acts <source>
 $ cmake -B <build> -S <source>
 $ cmake --build <build>
 ```
@@ -183,20 +183,33 @@ However, if you have the necessary prerequisites installed it is possible to use
 it locally. Acts developers regularly use different Linux distributions
 and macOS to build and develop Acts.
 
+(build_docs)=
 ## Building the documentation
 
 The documentation uses [Doxygen][doxygen] to extract the source code
-documentation and [Sphinx][sphinx] with the [Breathe][breathe] and
-[Exhale][exhale] extensions to generate the documentation website. To build the
-documentation locally, you need to have [Doxygen][doxygen] installed from your
-package manager. [Sphinx][sphinx] and its extensions can be installed using the
-Python package manager via
+documentation and [Sphinx][sphinx] with the [Breathe][breathe] extension to
+generate the documentation website. To build the documentation locally, you
+need to have [Doxygen][doxygen] version `1.9.5` or newer installed.
+[Sphinx][sphinx] and a few other depencencies can be installed using the Python
+package manager `pip`:
 
 ```console
 $ cd <source>
-# --user installs to a user-specific directory instead of the system
-$ pip install --user -r docs/requirements.txt
+$ pip install -r docs/requirements.txt
 ```
+
+:::{tip}
+It is **strongly recommended** to use a [virtual
+environment](https://realpython.com/python-virtual-environments-a-primer/) for
+this purpose! For example, run 
+
+```console
+$ python -m venv docvenv
+$ source docvenv/bin/activate
+```
+
+to create a local virtual environment, and then run the `pip` command above.
+:::
 
 To activate the documentation build targets, the `ACTS_BUILD_DOCS` option has to be set
 
@@ -213,18 +226,24 @@ $ cmake --build <build> --target docs # default fast option
 $ cmake --build <build> --target docs-with-api # full documentation
 ```
 
-The default option includes the Doxygen, Sphinx, and the Breathe extension, i.e.
-the source code information can be used in the manually written documentation
-but the full API documentation is not generated. The second target builds the
-full documentation using Exhale to automatically generate the API documentation.
-This is equivalent to the public [Read the Docs][rtd_acts] documentation, but
-the build takes around ten minutes to finish.
+The default option includes the Doxygen, Sphinx, and the Breathe extension,
+i.e. the source code information can be used in the manually written
+documentation but the full API documentation is not generated. The second
+target builds the full documentation to automatically generate full API
+listings. This is equivalent to the public [Read the Docs][rtd_acts]
+documentation, but the build takes a while to finish.
 
 [doxygen]: https://doxygen.nl/
 [sphinx]: https://www.sphinx-doc.org
 [breathe]: https://breathe.readthedocs.io
 [exhale]: https://exhale.readthedocs.io
 [rtd_acts]: https://acts.readthedocs.io
+
+A special phony target exists to clean the documentation output files:
+
+```console
+$ cmake --build <build> --target clean-docs
+```
 
 ## Build options
 
@@ -328,7 +347,7 @@ The following environment variables might be useful.
 ## The OpenDataDetector
 
 Acts comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map. 
-It is available via the git submodule feature by performing the following steps (git lfs need to be installed on your machine):
+It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.github.com/) need to be installed on your machine):
 
 ```console
 $ git submodule init
