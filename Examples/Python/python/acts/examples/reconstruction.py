@@ -113,8 +113,18 @@ TrackParamsEstimationConfig = namedtuple(
 
 TrackSelectorRanges = namedtuple(
     "TrackSelectorRanges",
-    ["removeNeutral", "absEta", "pt"],
-    defaults=[None] * 1 + [(None, None)] * 2,
+    [
+        "loc0",
+        "loc1",
+        "time",
+        "eta",
+        "absEta",
+        "pt",
+        "phi",
+        "removeNeutral",
+        "removeCharged",
+    ],
+    defaults=[(None, None)] * 7 + [None] * 2,
 )
 
 
@@ -899,7 +909,7 @@ def addVertexFitting(
     trajectories: Optional[str] = None,
     trackParameters: str = "fittedTrackParameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
-    trackSelectorRanges: Optional[TrackSelectorRanges] = TrackSelectorRanges(),
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
@@ -941,11 +951,22 @@ def addVertexFitting(
             outputTrackParameters=selectedTrackParameters,
             outputTrackIndices=trackIndices,
             **acts.examples.defaultKWArgs(
-                removeNeutral=trackSelectorRanges.removeNeutral,
+                loc0Min=trackSelectorRanges.loc0[0],
+                loc0Max=trackSelectorRanges.loc0[1],
+                loc1Min=trackSelectorRanges.loc1[0],
+                loc1Max=trackSelectorRanges.loc1[1],
+                timeMin=trackSelectorRanges.time[0],
+                timeMax=trackSelectorRanges.time[1],
+                phiMin=trackSelectorRanges.phi[0],
+                phiMax=trackSelectorRanges.phi[1],
+                etaMin=trackSelectorRanges.eta[0],
+                etaMax=trackSelectorRanges.eta[1],
                 absEtaMin=trackSelectorRanges.absEta[0],
                 absEtaMax=trackSelectorRanges.absEta[1],
                 ptMin=trackSelectorRanges.pt[0],
                 ptMax=trackSelectorRanges.pt[1],
+                removeCharged=trackSelectorRanges.removeCharged,
+                removeNeutral=trackSelectorRanges.removeNeutral,
             ),
         )
         s.addAlgorithm(trackSelector)

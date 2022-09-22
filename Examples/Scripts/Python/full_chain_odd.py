@@ -81,7 +81,9 @@ addCKFTracks(
 addVertexFitting(
     s,
     field,
-    TrackSelectorRanges(pt=(400.0 * u.MeV, None), absEta=(None, 2.5), removeNeutral=True),
+    TrackSelectorRanges(
+        pt=(400.0 * u.MeV, None), absEta=(None, 3.0), removeNeutral=True
+    ),
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
     trajectories="trajectories",
