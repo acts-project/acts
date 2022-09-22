@@ -890,9 +890,7 @@ class VertexFinder(Enum):
     Iterative = (3,)
 
 
-@acts.examples.NamedTypeArgs(
-    trackSelectorRanges=TrackSelectorRanges
-)
+@acts.examples.NamedTypeArgs(trackSelectorRanges=TrackSelectorRanges)
 def addVertexFitting(
     s,
     field,
@@ -943,9 +941,9 @@ def addVertexFitting(
             outputTrackParameters=selectedTrackParameters,
             outputTrackIndices=trackIndices,
             **acts.examples.defaultKWArgs(
-               removeNeutral=trackSelectorRanges.removeNeutral,
-               absEtaMax=trackSelectorRanges.absEta[1],
-               ptMin=trackSelectorRanges.pt[0],
+                removeNeutral=trackSelectorRanges.removeNeutral,
+                absEtaMax=trackSelectorRanges.absEta[1],
+                ptMin=trackSelectorRanges.pt[0],
             ),
         )
         s.addAlgorithm(trackSelector)
