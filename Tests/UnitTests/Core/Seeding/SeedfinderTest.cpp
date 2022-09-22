@@ -140,7 +140,7 @@ int main(int argc, char** argv) {
   config.impactMax = 10._mm;
 
   config.useVariableMiddleSPRange = false;
-  Acts::Vector2 rMiddleSPRange;
+  const Acts::Vector2 rMiddleSPRange;
 
   int numPhiNeighbors = 1;
 
