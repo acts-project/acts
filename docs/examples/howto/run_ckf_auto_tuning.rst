@@ -4,7 +4,7 @@ The tracking algorithms require a number of pre-initialized parameters that are 
 
 Prerequisites
 -------------
-Since Optuna and Orion are independent frameworks, these need to be installed separately. The following setup works on LXPLUS that requires creating a virtual python environment:
+Since Optuna and Orion are independent frameworks, these need to be installed separately. The following setup works on any machine with cvmfs access that requires creating a virtual python environment:
 
 .. code-block:: console
 
