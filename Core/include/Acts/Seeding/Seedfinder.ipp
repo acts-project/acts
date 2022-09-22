@@ -110,10 +110,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       // if r-distance is too big, try next SP in bin
       if (deltaR > m_config.deltaRMaxTopSP) {
         // if SPs are sorted in radius we break out of the loop
-//        if (m_config.forceRadialSorting) {
+        if (m_config.forceRadialSorting) {
 //					std::cout << "BREAK" << std::endl;
-//          break;
-//        }
+          break;
+        }
         continue;
       }
       float deltaZ = topSP->z() - zM;
@@ -196,10 +196,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
       if (deltaR < m_config.deltaRMinBottomSP) {
         // if SPs are sorted in radius we break out of the loop
-//        if (m_config.forceRadialSorting) {
+        if (m_config.forceRadialSorting) {
 //					std::cout << "BREAK" << std::endl;
-//          break;
-//        }
+          break;
+        }
         continue;
       }
       float deltaZ = zM - bottomSP->z();
