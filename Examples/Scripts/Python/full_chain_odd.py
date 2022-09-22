@@ -37,6 +37,7 @@ from acts.examples.reconstruction import (
     CKFPerformanceConfig,
     addVertexFitting,
     VertexFinder,
+    TrackSelectorRanges,
 )
 
 s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
@@ -80,6 +81,7 @@ addCKFTracks(
 addVertexFitting(
     s,
     field,
+    TrackSelectorRanges(pt=(400.0 * u.MeV, None)),
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
     trajectories="trajectories",
