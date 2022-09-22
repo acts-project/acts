@@ -898,7 +898,7 @@ def addVertexFitting(
     trajectories: Optional[str] = None,
     trackParameters: str = "fittedTrackParameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
-    trackSelectorConfig: Optional[TrackSelectorConfig] = TrackSelectorConfig(),
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
