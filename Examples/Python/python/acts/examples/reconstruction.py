@@ -942,8 +942,10 @@ def addVertexFitting(
             outputTrackIndices=trackIndices,
             **acts.examples.defaultKWArgs(
                 removeNeutral=trackSelectorRanges.removeNeutral,
+                absEtaMin=trackSelectorRanges.absEta[0],
                 absEtaMax=trackSelectorRanges.absEta[1],
                 ptMin=trackSelectorRanges.pt[0],
+                ptMax=trackSelectorRanges.pt[1],
             ),
         )
         s.addAlgorithm(trackSelector)
