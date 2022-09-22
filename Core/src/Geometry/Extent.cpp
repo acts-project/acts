@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,20 +8,148 @@
 
 #include "Acts/Geometry/Extent.hpp"
 
-#include <iomanip>
-#include <ostream>
+#include "Acts/Utilities/Helpers.hpp"
+
+Acts::Extent::Extent(
+    const std::array<std::array<ActsScalar, 2>, binValues>& envelope)
+    : m_constrains(0), m_envelope(envelope) {
+  m_range[binR] =
+      Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
+  m_range[binPhi] = Range1D<ActsScalar>(-M_PI, M_PI);
+  m_range[binRPhi] =
+      Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
+  m_range[binMag] =
+      Range1D<ActsScalar>(0., std::numeric_limits<ActsScalar>::max());
+}
+
+void Acts::Extent::extend(const Vector3& vtx,
+                          const std::vector<BinningValue>& bValues,
+                          bool applyEnv, bool fillHistograms) {
+  for (auto bValue : bValues) {
+    // Get the casted value given the binnin value description
+    ActsScalar cValue = VectorHelpers::cast(vtx, bValue);
+    if (fillHistograms) {
+      m_valueHistograms[bValue].push_back(cValue);
+    }
+    // Apply envelope as suggested
+    ActsScalar lEnv = applyEnv ? m_envelope[bValue][0] : 0.;
+    ActsScalar hEnv = applyEnv ? m_envelope[bValue][1] : 0.;
+    ActsScalar mValue = cValue - lEnv;
+    // Special protection for radial value
+    if (bValue == binR and mValue < 0.) {
+      mValue = std::max(mValue, 0.);
+    }
+    if (constrains(bValue)) {
+      m_range[bValue].expand(mValue, cValue + hEnv);
+    } else {
+      m_range[bValue].shrink(mValue, cValue + hEnv);
+    }
+    m_constrains.set(bValue);
+  }
+}
+
+void Acts::Extent::extend(const Extent& rhs,
+                          const std::vector<BinningValue>& bValues,
+                          bool applyEnv) {
+  for (auto bValue : bValues) {
+    // The value is constraint, envelope can be optional
+    if (rhs.constrains(bValue)) {
+      ActsScalar lEnv = applyEnv ? m_envelope[bValue][0] : 0.;
+      ActsScalar hEnv = applyEnv ? m_envelope[bValue][1] : 0.;
+      if (constrains(bValue)) {
+        m_range[bValue].expand(rhs.range()[bValue].min() - lEnv,
+                               rhs.range()[bValue].max() + hEnv);
+      } else {
+        m_range[bValue].shrink(rhs.range()[bValue].min() - lEnv,
+                               rhs.range()[bValue].max() + hEnv);
+      }
+      m_constrains.set(bValue);
+    } else if (rhs.envelope()[bValue] != zeroEnvelope) {
+      // Only an envelope given, but value is not contraint -> apply envelope
+      m_range[bValue].expand(m_range[bValue].min() - rhs.envelope()[bValue][0],
+                             m_range[bValue].max() + rhs.envelope()[bValue][1]);
+      m_constrains.set(bValue);
+    }
+  }
+}
+
+void Acts::Extent::set(BinningValue bValue, ActsScalar min, ActsScalar max) {
+  ActsScalar minval = min;
+  if (bValue == binR and minval < 0.) {
+    minval = 0.;
+  }
+  m_range[bValue] = Range1D{minval, max};
+  m_constrains.set(bValue);
+}
+
+void Acts::Extent::setEnvelope(const ExtentEnvelope& envelope) {
+  m_envelope = envelope;
+}
+
+bool Acts::Extent::contains(const Extent& rhs, BinningValue bValue) const {
+  // Helper to check including a constraint bit set check
+  auto checkContainment = [&](BinningValue bvc) -> bool {
+    if (not constrains(bvc)) {
+      return true;
+    }
+    return (rhs.range()[bvc] <= m_range[bvc]);
+  };
+
+  // Check all
+  if (bValue == binValues) {
+    for (int ibv = 0; ibv < (int)binValues; ++ibv) {
+      if (not checkContainment((BinningValue)ibv)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  // Check specific
+  return checkContainment(bValue);
+}
+
+bool Acts::Extent::intersects(const Extent& rhs, BinningValue bValue) const {
+  // Helper to check including a constraint bit set check
+  auto checkIntersect = [&](BinningValue bvc) -> bool {
+    if (not constrains(bvc) or not rhs.constrains(bvc)) {
+      return false;
+    }
+    return (m_range[bvc] && rhs.range()[bvc]);
+  };
+
+  // Check all
+  if (bValue == binValues) {
+    for (int ibv = 0; ibv < (int)binValues; ++ibv) {
+      if (checkIntersect((BinningValue)ibv)) {
+        return true;
+      }
+    }
+    return false;
+  }
+  // Check specific
+  return checkIntersect(bValue);
+}
+
+bool Acts::Extent::constrains(BinningValue bValue) const {
+  if (bValue == binValues) {
+    return (m_constrains.count() > 0);
+  }
+  return m_constrains.test(size_t(bValue));
+}
 
 std::ostream& Acts::Extent::toStream(std::ostream& sl) const {
   sl << "Extent in space : " << std::endl;
   for (size_t ib = 0; ib < static_cast<size_t>(binValues); ++ib) {
-    sl << "  - value :" << std::setw(10) << binningValueNames()[ib]
-       << " | range = [" << ranges[ib].first << ", " << ranges[ib].second << "]"
-       << std::endl;
+    if (constrains((BinningValue)ib)) {
+      sl << "  - value :" << std::setw(10) << binningValueNames()[ib]
+         << " | range = [" << m_range[ib].min() << ", " << m_range[ib].max()
+         << "]" << std::endl;
+    }
   }
   return sl;
 }
 
 // Overload of << operator for std::ostream for debug output
-std::ostream& Acts::operator<<(std::ostream& sl, const Extent& ext) {
-  return ext.toStream(sl);
+std::ostream& Acts::operator<<(std::ostream& sl, const Extent& rhs) {
+  return rhs.toStream(sl);
 }
