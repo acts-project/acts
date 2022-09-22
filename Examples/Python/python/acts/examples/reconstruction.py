@@ -890,6 +890,9 @@ class VertexFinder(Enum):
     Iterative = (3,)
 
 
+@acts.examples.NamedTypeArgs(
+    trackSelectorRanges=TrackSelectorRanges
+)
 def addVertexFitting(
     s,
     field,
@@ -898,7 +901,7 @@ def addVertexFitting(
     trajectories: Optional[str] = None,
     trackParameters: str = "fittedTrackParameters",
     vertexFinder: VertexFinder = VertexFinder.Truth,
-    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
+    trackSelectorRanges: Optional[TrackSelectorRanges] = TrackSelectorRanges(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
@@ -914,6 +917,9 @@ def addVertexFitting(
         RootVertexPerformanceWriter.inputAssociatedTruthParticles
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
+    trackSelectorRanges : TrackSelectorRanges(absEta, pt)
+        TrackSelector configuration. Each range is specified as a tuple of (min,max).
+        Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     """
@@ -930,7 +936,7 @@ def addVertexFitting(
     selectedTrackParameters = "trackparameters"
     trackIndices = "outputTrackIndices"
 
-    if trackSelectorConfig is not None:
+    if trackSelectorRanges is not None:
         trackSelector = acts.examples.TrackSelector(
             level=customLogLevel(),
             inputTrackParameters=trackParameters,
