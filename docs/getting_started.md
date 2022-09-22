@@ -9,7 +9,7 @@ following commands will clone the repository, configure, and build the core
 library:
 
 ```console
-$ git clone --recursive https://github.com/acts-project/acts <source>
+$ git clone https://github.com/acts-project/acts <source>
 $ cmake -B <build> -S <source>
 $ cmake --build <build>
 ```
@@ -347,7 +347,7 @@ The following environment variables might be useful.
 ## The OpenDataDetector
 
 Acts comes packaged with a detector modeled using DD4hep that can be used to test your algorithms. It comes equipped with a magnetic field file as well as an already built material map. 
-It is available via the git submodule feature by performing the following steps (git lfs need to be installed on your machine):
+It is available via the git submodule feature by performing the following steps ([`git lfs`](https://git-lfs.github.com/) need to be installed on your machine):
 
 ```console
 $ git submodule init
