@@ -3,6 +3,7 @@ import os
 import argparse
 import string
 import math
+import time
 from types import FunctionType
 
 from orion.client import build_experiment
@@ -624,8 +625,13 @@ if "__main__" == __name__:
         + "    Waiting for all the score to have been stored",
         flush=True,
     )
+
+    # Create a timer that will be used to terminate the Process
+    deadline = time.time() + 600
+
     for key in binDict:
-        expJob[key].join(timeout=300)
+        timeout = max(deadline - time.time(), 0)
+        expJob[key].join(timeout=timeout)
         expJob[key].terminate()
         print(
             datetime.now().strftime("%H:%M:%S")
