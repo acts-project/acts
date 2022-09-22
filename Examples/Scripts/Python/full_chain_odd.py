@@ -108,7 +108,7 @@ s.addAlgorithm(
         outputTrackIndices="outputTrackIndices",
         removeNeutral=True,
         absEtaMax=3.0,
-        ptMin=500 * u.MeV,
+        ptMin=1.0 * u.GeV,
     )
 )
 
