@@ -111,10 +111,10 @@ TrackParamsEstimationConfig = namedtuple(
     defaults=[(None, None)],
 )
 
-TrackSelectorConfig = namedtuple(
-    "TrackSelectorConfig",
-    ["absEtaMax", "ptMin"],
-    defaults=[2.5, 500 * u.MeV],
+TrackSelectorRanges = namedtuple(
+    "TrackSelectorRanges",
+    ["absEta", "pt"],
+    defaults=[(None, None)] * 2,
 )
 
 
