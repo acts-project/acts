@@ -42,7 +42,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     State& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
-    Acts::Vector2 rMiddleSPRange) const {
+    const Acts::Vector2 rMiddleSPRange) const {
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
