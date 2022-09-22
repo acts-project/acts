@@ -49,7 +49,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     Extent rRangeSPExtent) const {
 	
-	return;
+//	return;
 	
 	for (auto spM : middleSPs) {
     float rM = spM->radius();
@@ -115,7 +115,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // if SPs are sorted in radius we break out of the loop
         if (m_config.forceRadialSorting) {
 //					std::cout << "BREAK" << std::endl;
-//          break;
+          break;
         }
         continue;
       }
@@ -201,7 +201,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // if SPs are sorted in radius we break out of the loop
         if (m_config.forceRadialSorting) {
 //					std::cout << "BREAK" << std::endl;
-//          break;
+          break;
         }
         continue;
       }
