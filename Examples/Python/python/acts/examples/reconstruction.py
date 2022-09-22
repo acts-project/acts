@@ -113,8 +113,8 @@ TrackParamsEstimationConfig = namedtuple(
 
 TrackSelectorRanges = namedtuple(
     "TrackSelectorRanges",
-    ["absEta", "pt"],
-    defaults=[(None, None)] * 2,
+    ["removeNeutral", "absEta", "pt"],
+    defaults=[None] * 1 + [(None, None)] * 2,
 )
 
 
