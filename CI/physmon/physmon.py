@@ -40,6 +40,7 @@ from acts.examples.reconstruction import (
     CKFPerformanceConfig,
     addVertexFitting,
     VertexFinder,
+    TrackSelectorRanges,
 )
 
 
@@ -177,9 +178,15 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             outputDirCsv=None,
         )
 
-        s = addVertexFitting(
+        addVertexFitting(
             s,
             field,
+            TrackSelectorRanges(
+                removeNeutral=True,
+                absEta=(2.5, None),
+                loc0=(None, 4.0 * u.mm),
+                pt=(500 * u.MeV, None),
+            ),
             vertexFinder=VertexFinder.Iterative,
             trajectories="trajectories",
             outputDirRoot=tp,
