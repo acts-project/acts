@@ -99,7 +99,6 @@ def runVertexFitting(
         outputDirRoot=outputDir if outputRoot else None,
         associatedParticles=associatedParticles,
         trackParameters=trackParameters,
-        trackSelectorRanges=None,
         vertexFinder=vertexFinder,
     )
 
