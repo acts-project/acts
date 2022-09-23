@@ -69,6 +69,8 @@ def runVertexFitting(
         )
         s.addAlgorithm(ptclSmearing)
         associatedParticles = selectedParticles
+
+        trackSelectorRanges = None
     else:
         logger.info("Reading track summary from %s", inputTrackSummary.resolve())
         assert inputTrackSummary.exists()
