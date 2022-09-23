@@ -57,8 +57,7 @@ def runVertexFitting(
     )
     s.addAlgorithm(ptclSelector)
 
-    trackParameters = "trackparameters"
-    trackSelectorRanges = TrackSelectorRanges()
+    trackParameters = "fittedTrackParameters"
     if inputTrackSummary is None or inputParticlePath is None:
         logger.info("Using smeared particles")
 
@@ -70,13 +69,15 @@ def runVertexFitting(
         )
         s.addAlgorithm(ptclSmearing)
         associatedParticles = selectedParticles
+
+        trackSelectorRanges = TrackSelectorRanges()
     else:
         logger.info("Reading track summary from %s", inputTrackSummary.resolve())
         assert inputTrackSummary.exists()
         associatedParticles = "associatedTruthParticles"
         trackSummaryReader = acts.examples.RootTrajectorySummaryReader(
             level=acts.logging.VERBOSE,
-            outputTracks="fittedTrackParameters",
+            outputTracks=trackParameters,
             outputParticles=associatedParticles,
             filePath=str(inputTrackSummary.resolve()),
             orderedEvents=False,
