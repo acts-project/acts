@@ -35,6 +35,7 @@ namespace Acts {
 class IVolumeMaterial;
 class ISurfaceMaterial;
 class TrackingGeometry;
+struct MaterialInteraction;
 
 /// @brief selector for finding surface
 struct MaterialSurface {
@@ -169,6 +170,24 @@ class SurfaceMaterialMapper {
   /// @note the RecordedMaterialSlab of the track are assumed
   /// to be ordered from the starting position along the starting direction
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
+
+  /// Loop through all the material interactions and add them to the
+  /// associated surface
+  ///
+  /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
+  ///
+  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+
+  /// Loop through all the material interactions and add them to the
+  /// associated surface
+  ///
+  /// @param mState The current state map
+  /// @param rMaterial Vector of all the material interactions that will be mapped
+  ///
+  /// @note The material interactions are assumed to have an associated surface ID
+  void mapSurfaceInteraction(State& mState,
+                             std::vector<MaterialInteraction>& rMaterial) const;
 
  private:
   /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume

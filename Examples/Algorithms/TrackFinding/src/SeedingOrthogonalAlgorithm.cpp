@@ -43,8 +43,10 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
           Acts::SeedFilter<SimSpacePoint>(filterCfg));
 
   m_cfg.seedFinderConfig.rMax = m_cfg.rMax;
-  m_cfg.seedFinderConfig.deltaRMin = m_cfg.deltaRMin;
-  m_cfg.seedFinderConfig.deltaRMax = m_cfg.deltaRMax;
+  m_cfg.seedFinderConfig.deltaRMinTopSP = m_cfg.deltaRMinTopSP;
+  m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.deltaRMaxTopSP;
+  m_cfg.seedFinderConfig.deltaRMinBottomSP = m_cfg.deltaRMinBottomSP;
+  m_cfg.seedFinderConfig.deltaRMaxBottomSP = m_cfg.deltaRMaxBottomSP;
   m_cfg.seedFinderConfig.collisionRegionMin = m_cfg.collisionRegionMin;
   m_cfg.seedFinderConfig.collisionRegionMax = m_cfg.collisionRegionMax;
   m_cfg.seedFinderConfig.zMin = m_cfg.zMin;
@@ -106,7 +108,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     ProtoTrack protoTrack;
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
-      protoTrack.push_back(spacePointPtr->measurementIndex());
+      if (spacePointPtr->sourceLinks().empty()) {
+        ACTS_WARNING("Missing sourcelink in space point");
+        continue;
+      }
+      const auto slink = static_cast<const IndexSourceLink &>(
+          *(spacePointPtr->sourceLinks()[0]));
+      protoTrack.push_back(slink.index());
     }
     protoTracks.push_back(std::move(protoTrack));
   }

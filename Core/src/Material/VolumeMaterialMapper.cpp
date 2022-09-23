@@ -494,6 +494,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
         }
       }
       rmIter->volume = volIter->volume;
+      rmIter->intersectionID = currentID;
+      rmIter->intersection = rmIter->position;
     }
     ++rmIter;
   }

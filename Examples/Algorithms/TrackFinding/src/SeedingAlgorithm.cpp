@@ -195,7 +195,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
       // store x,y,z values in extent
-      rRangeSPExtent.check({spacePoint.x(), spacePoint.y(), spacePoint.z()});
+      rRangeSPExtent.extend({spacePoint.x(), spacePoint.y(), spacePoint.z()});
     }
   }
 
@@ -244,7 +244,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     ProtoTrack& protoTrack = protoTracks.emplace_back();
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
-      protoTrack.push_back(spacePointPtr->measurementIndex());
+      for (const auto slink : spacePointPtr->sourceLinks()) {
+        const auto islink = static_cast<const IndexSourceLink&>(*slink);
+        protoTrack.emplace_back(islink.index());
+      }
     }
   }
 

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,124 +8,220 @@
 
 #pragma once
 
+/// @note This file is foreseen for the `Geometry` module to replace `Extent`
+
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-#include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Range1D.hpp"
+#include "Acts/Utilities/RangeXD.hpp"
 
-#include <algorithm>
-#include <cmath>
-#include <iosfwd>
-#include <limits>
-#include <utility>
+#include <array>
+#include <bitset>
+#include <ostream>
 #include <vector>
 
 namespace Acts {
 
-using Range = std::pair<double, double>;
+using Envelope = std::array<ActsScalar, 2>;
+using ExtentEnvelope = std::array<std::array<ActsScalar, 2>, binValues>;
 
-// @brief Extent in space
+constexpr Envelope zeroEnvelope = {0., 0};
+constexpr ExtentEnvelope zeroEnvelopes = {
+    zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope,
+    zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope};
+
+/// A class representing the geometric extent of an object in its possbile
+/// dimensions, these can be all dimensions that are described as BinningValues
 ///
-/// This is a nested struct to the GeometryObject representation
-/// which can be retrieved and used for surface parsing and will
-/// give you the maximal extent in 3D space/
-struct Extent {
-  /// Possible maximal value
-  static constexpr double maxval = std::numeric_limits<double>::max();
+/// The extent object can have an optional envelope in all of those values
+/// @note that the consistency of the different envelopes is not checked
+///
+class Extent {
+ public:
+  /// Constructor with (optional) @param envelope
+  Extent(const ExtentEnvelope& envelope = zeroEnvelopes);
 
-  /// Start value
-  static constexpr Range maxrange = {maxval, -maxval};
+  /// Extend with a position vertex
+  ///
+  /// @param vtx the vertex to be used for extending
+  /// @param bValues the binning values
+  /// @param applyEnv boolean to steer if envelope should be applied
+  /// @param fillHistograms is a boolean flag to steer whether the values
+  ///        to fill this extent should be stored
+  void extend(const Vector3& vtx,
+              const std::vector<BinningValue>& bValues = s_binningValues,
+              bool applyEnv = true, bool fillHistograms = false);
 
-  // The different ranges
-  std::vector<Range> ranges{(int)binValues, maxrange};
-
-  // Constructor
-  Extent() = default;
-
-  /// Check if it intersects
-  /// @param other The source Extent
-  /// @param bVal The binning value for the check (binValues for all)
-  /// @param tolerance An additional tolerance for the intersection check
-  bool intersects(const Extent& other, BinningValue bVal = binValues,
-                  double tolerance = s_epsilon) {
-    // Helper to check
-    auto checkRange = [&](BinningValue bvc) -> bool {
-      auto& a = ranges[bvc];
-      auto& b = other.ranges[bvc];
-      return (a.second + tolerance > b.first and
-              a.first - tolerance < b.second);
-    };
-
-    // Check all
-    if (bVal == binValues) {
-      for (int ibv = 0; ibv < (int)binValues; ++ibv) {
-        if (checkRange((BinningValue)ibv)) {
-          return true;
-        }
-      }
-      return false;
-    }
-    // Check specific
-    return checkRange(bVal);
-  }
-
-  /// Extend with another extent
-  /// @param other is the source Extent
-  void extend(const Extent& other) {
-    for (std::size_t ir = 0; ir < other.ranges.size(); ++ir) {
-      ranges[ir].first = std::min(ranges[ir].first, other.ranges[ir].first);
-      ranges[ir].second = std::max(ranges[ir].second, other.ranges[ir].second);
+  /// Extend with a set of vectors by iterators
+  ///
+  /// @param start the start iterator of the loop
+  /// @param end the end iterator of the loop
+  /// @param bValues the binning values
+  /// @param applyEnv boolean to steer if envelope should be applied
+  /// @param fillHistograms is a boolean flag to steer whether the values
+  ///        to fill this extent should be stored
+  template <typename vector_iterator_t>
+  void extend(const vector_iterator_t& start, const vector_iterator_t& end,
+              const std::vector<BinningValue>& bValues = s_binningValues,
+              bool applyEnv = true, bool fillHistograms = false) {
+    for (vector_iterator_t vIt = start; vIt < end; ++vIt) {
+      extend(*vIt, bValues, applyEnv, fillHistograms);
     }
   }
+
+  /// Extend with another geometric extent, usually pushes the
+  /// current range to the boundaries of the rhs extent,
+  /// unless the current extent is already bigger.
+  ///
+  /// @note the extent can also simply set an envelope
+  /// which then is applied to the current one
+  ///
+  /// @param rhs is the other source Extent
+  /// @param bValues the binning values
+  /// @param applyEnv boolean to steer if envelope should be applied
+  ///        on the constraint values, if only an envelope is given
+  ///        but the value not constraint, then it is always applied
+  ///
+  /// @note that the histogram values can not be filled in this call
+  void extend(const Extent& rhs,
+              const std::vector<BinningValue>& bValues = s_binningValues,
+              bool applyEnv = true);
+
+  /// Set a range for a dedicated binning value
+  ///
+  /// @param bValue the binning identification
+  /// @param min the minimum parameter
+  /// @param max the maximum parameter
+  void set(BinningValue bValue, ActsScalar min, ActsScalar max);
+
+  /// (re-)Set the envelope
+  ///
+  /// @param envelope new envelope to be set
+  void setEnvelope(const ExtentEnvelope& envelope = zeroEnvelopes);
+
+  /// Return the individual 1-dimensional range
+  ///
+  /// @param bValue is the binning value to be returned
+  ///
+  /// @return a one dimensional arrange
+  Range1D<ActsScalar>& range(BinningValue bValue);
+
+  /// Return the individual 1-dimensional range
+  ///
+  /// @param bValue is the binning value to be returned
+  ///
+  /// @return a one dimensional arrange
+  const Range1D<ActsScalar>& range(BinningValue bValue) const;
+
+  /// Return the N-dimension range
+  const RangeXD<binValues, ActsScalar> range() const;
+
+  /// Return an D-dimensional sub range according to the
+  /// the given @param binValues
+  template <unsigned int kSUBDIM>
+  RangeXD<kSUBDIM, ActsScalar> range(
+      const std::array<BinningValue, kSUBDIM>& binValues) const {
+    RangeXD<kSUBDIM, ActsScalar> rRange;
+    for (auto [i, v] : enumerate(binValues)) {
+      rRange[i] = range(v);
+    }
+    return rRange;
+  }
+
+  /// Return the envelope - non-const access
+  ExtentEnvelope& envelope();
+
+  /// Return the envelope - const access
+  const ExtentEnvelope& envelope() const;
+
+  /// Return the histogram store
+  ///
+  /// The histogram stroe can be used for automated binning detection
+  const std::array<std::vector<ActsScalar>, binValues>& valueHistograms() const;
+
+  /// Access the minimum parameter
+  ///
+  /// @param bValue the binning identification
+  ActsScalar min(BinningValue bValue) const { return m_range[bValue].min(); }
+
+  /// Access the maximum parameter
+  ///
+  /// @param bValue the binning identification
+  ActsScalar max(BinningValue bValue) const { return m_range[bValue].max(); }
+
+  /// Access the maximum parameter
+  ///
+  /// @param bValue the binning identification
+  ActsScalar medium(BinningValue bValue) const {
+    return 0.5 * (m_range[bValue].min() + m_range[bValue].max());
+  }
+
+  /// Contains check
+  ///
+  /// @param rhs the extent that is check if it is contained
+  /// @param bValue is the binning value, if set to binValues
+  ///               the check on all is done
+  ///
+  /// @return true if the rhs is contained
+  bool contains(const Extent& rhs, BinningValue bValue = binValues) const;
+
+  /// Intersection checks
+  ///
+  /// @param rhs the extent that is check for intersection
+  /// @param bValue is the binning value, if set to binValues
+  ///               the check on all is done
+  ///
+  /// @return true if the rhs intersects
+  bool intersects(const Extent& rhs, BinningValue bValue = binValues) const;
+
+  /// Constraints check
+  ///
+  /// @param bValue is the binning value, if all the check on all is done
+  bool constrains(BinningValue bValue = binValues) const;
 
   /// Convert to output stream for screen output
   /// @param sl [in,out] The output stream
   std::ostream& toStream(std::ostream& sl) const;
 
-  /// Access the minimum parameter
-  /// @param bval the binning identification
-  double& min(BinningValue bval) { return ranges[bval].first; }
-
-  /// Access the minimum parameter
-  /// @param bval the binning identification
-  double min(BinningValue bval) const { return ranges[bval].first; }
-
-  /// Access the max parameter
-  /// @param bval the binning identification
-  double& max(BinningValue bval) { return ranges[bval].second; }
-
-  /// Access the max parameter
-  /// @param bval the binning identification
-  double max(BinningValue bval) const { return ranges[bval].second; }
-
-  /// Access the medium parameter
-  /// @param bval the binning identification
-  double medium(BinningValue bval) const {
-    return 0.5 * (ranges[bval].first + ranges[bval].second);
-  }
-
-  /// Access the range - always positive
-  /// @param bval the binning identification
-  double range(BinningValue bval) const {
-    return std::abs(ranges[bval].second - ranges[bval].first);
-  }
-
-  /// Check the vertex
-  /// @param vtx the Vertex to be checked
-  void check(const Vector3& vtx) {
-    // min/max value check
-    auto minMax = [&](BinningValue bval, double value) -> void {
-      ranges[bval].first = std::min(value, ranges[bval].first);
-      ranges[bval].second = std::max(value, ranges[bval].second);
-    };
-    // Walk through the binning parameters
-    for (int bval = 0; bval < binValues; ++bval) {
-      BinningValue bValue = static_cast<BinningValue>(bval);
-      minMax(bValue, VectorHelpers::cast(vtx, bValue));
-    }
-  }
+ private:
+  /// A bitset that remembers the constraint values
+  std::bitset<binValues> m_constrains{0};
+  /// The actual range store
+  RangeXD<binValues, ActsScalar> m_range;
+  /// A potential envenelope
+  ExtentEnvelope m_envelope = zeroEnvelopes;
+  /// (Optional) Value histograms for bin detection
+  std::array<std::vector<ActsScalar>, binValues> m_valueHistograms;
 };
 
+inline Range1D<ActsScalar>& Acts::Extent::range(BinningValue bValue) {
+  return m_range[bValue];
+}
+
+inline const Range1D<ActsScalar>& Acts::Extent::range(
+    BinningValue bValue) const {
+  return m_range[bValue];
+}
+
+inline const RangeXD<binValues, ActsScalar> Extent::range() const {
+  return m_range;
+}
+
+inline ExtentEnvelope& Extent::envelope() {
+  return m_envelope;
+}
+
+inline const ExtentEnvelope& Extent::envelope() const {
+  return m_envelope;
+}
+
+inline const std::array<std::vector<ActsScalar>, binValues>&
+Extent::valueHistograms() const {
+  return m_valueHistograms;
+}
+
 /// Overload of << operator for std::ostream for debug output
-std::ostream& operator<<(std::ostream& sl, const Extent& ext);
+std::ostream& operator<<(std::ostream& sl, const Extent& rhs);
 
 }  // namespace Acts
