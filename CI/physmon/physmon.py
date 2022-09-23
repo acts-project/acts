@@ -183,7 +183,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             field,
             TrackSelectorRanges(
                 removeNeutral=True,
-                absEta=(2.5, None),
+                absEta=(None, 2.5),
                 loc0=(None, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
             ),
