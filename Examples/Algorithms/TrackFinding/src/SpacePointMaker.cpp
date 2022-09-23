@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/SpacePointFormation/SpacePointBuilderConfig.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -81,6 +82,19 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   for (const auto& geoId : m_cfg.geometrySelection) {
     ACTS_INFO("  " << geoId);
   }
+  auto spBuilderConfig = Acts::SpacePointBuilderConfig();
+  spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
+
+  std::function<SimSpacePoint(
+      Acts::Vector3, Acts::Vector2,
+      boost::container::static_vector<const Acts::SourceLink*, 2>)>
+      spConstructor =
+          [](Acts::Vector3 pos, Acts::Vector2 cov,
+             boost::container::static_vector<const Acts::SourceLink*, 2> slinks)
+      -> SimSpacePoint { return SimSpacePoint(pos, cov[0], cov[1], slinks); };
+  m_spacePointBuilder = Acts::SpacePointBuilder<SimSpacePoint>(
+      spBuilderConfig, spConstructor,
+      Acts::getDefaultLogger("SpacePointBuilder", lvl));
 }
 
 ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
@@ -90,9 +104,9 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   const auto& measurements =
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
 
+  // TODO Support strip measurements
+  Acts::SpacePointBuilderOptions spOpt;
   SimSpacePointContainer spacePoints;
-  spacePoints.reserve(sourceLinks.size());
-
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
     auto range = selectLowestNonZeroGeometryObject(sourceLinks, geoId);
@@ -101,74 +115,15 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     auto groupedByModule = makeGroupBy(range, detail::GeometryIdGetter());
 
     for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
-      // find corresponding surface
-      const Acts::Surface* surface =
-          m_cfg.trackingGeometry->findSurface(moduleGeoId);
-      if (surface == nullptr) {
-        ACTS_ERROR("Could not find surface " << moduleGeoId);
-        return ProcessCode::ABORT;
-      }
-
       for (auto& sourceLink : moduleSourceLinks) {
-        // extract a local position/covariance independent from the concrecte
-        // measurement content. since we do not know if and where the local
-        // parameters are contained in the measurement parameters vector, they
-        // are transformed to the bound space where we do know their location.
-        // if the local parameters are not measured, this results in a
-        // zero location, which is a reasonable default fall-back.
-        auto [localPos, localCov] = std::visit(
-            [](const auto& meas) {
-              auto expander = meas.expander();
-              Acts::BoundVector par = expander * meas.parameters();
-              Acts::BoundSymMatrix cov =
-                  expander * meas.covariance() * expander.transpose();
-              // extract local position
-              Acts::Vector2 lpar(par[Acts::eBoundLoc0], par[Acts::eBoundLoc1]);
-              // extract local position covariance.
-              Acts::SymMatrix2 lcov =
-                  cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
-              return std::make_pair(lpar, lcov);
-            },
-            measurements[sourceLink.get().index()]);
+        const auto& meas = measurements[sourceLink.get().index()];
 
-        // transform local position to global coordinates
-        Acts::Vector3 globalFakeMom(1, 1, 1);
-        Acts::Vector3 globalPos =
-            surface->localToGlobal(ctx.geoContext, localPos, globalFakeMom);
-        Acts::RotationMatrix3 rotLocalToGlobal =
-            surface->referenceFrame(ctx.geoContext, globalPos, globalFakeMom);
-
-        // the space point requires only the variance of the transverse and
-        // longitudinal position. reduce computations by transforming the
-        // covariance directly from local to rho/z.
-        //
-        // compute Jacobian from global coordinates to rho/z
-        //
-        //         rho = sqrt(x² + y²)
-        // drho/d{x,y} = (1 / sqrt(x² + y²)) * 2 * {x,y}
-        //             = 2 * {x,y} / r
-        //       dz/dz = 1 (duuh!)
-        //
-        auto x = globalPos[Acts::ePos0];
-        auto y = globalPos[Acts::ePos1];
-        auto scale = 2 / std::hypot(x, y);
-        Acts::ActsMatrix<2, 3> jacXyzToRhoZ = Acts::ActsMatrix<2, 3>::Zero();
-        jacXyzToRhoZ(0, Acts::ePos0) = scale * x;
-        jacXyzToRhoZ(0, Acts::ePos1) = scale * y;
-        jacXyzToRhoZ(1, Acts::ePos2) = 1;
-        // compute Jacobian from local coordinates to rho/z
-        Acts::ActsMatrix<2, 2> jac =
-            jacXyzToRhoZ *
-            rotLocalToGlobal.block<3, 2>(Acts::ePos0, Acts::ePos0);
-        // compute rho/z variance
-        Acts::ActsVector<2> var = (jac * localCov * jac.transpose()).diagonal();
-
-        // construct space point in global coordinates
-        spacePoints.emplace_back(globalPos, var[0], var[1],
-                                 sourceLink.get().index());
+        m_spacePointBuilder.buildSpacePoint(ctx.geoContext, {&meas}, spOpt,
+                                            std::back_inserter(spacePoints));
       }
     }
   }
+
   spacePoints.shrink_to_fit();
 
   ACTS_DEBUG("Created " << spacePoints.size() << " space points");

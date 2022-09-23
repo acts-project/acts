@@ -1,3 +1,4 @@
+(propagation_impl)=
 # Propagation and extrapolation
 
 The track propagation is an essential part of track reconstruction. This section describes the high-level classes and concepts used for this task in Acts.

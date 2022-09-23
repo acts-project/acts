@@ -69,6 +69,7 @@ void addInput(Context& ctx) {
     ACTS_PYTHON_MEMBER(treeName);
     ACTS_PYTHON_MEMBER(fileList);
     ACTS_PYTHON_MEMBER(orderedEvents);
+    ACTS_PYTHON_MEMBER(readCachedSurfaceInformation);
     ACTS_PYTHON_STRUCT_END();
   }
 
