@@ -100,8 +100,8 @@ then simply run ``pytest`` from the repository root.
 
    .. code-block:: console
 
-      $ python -m venv docvenv
-      $ source docvenv/bin/activate
+      $ python -m venv venv
+      $ source venv/bin/activate
 
    to create a local virtual environment, and then run the `pip` command above.
 
