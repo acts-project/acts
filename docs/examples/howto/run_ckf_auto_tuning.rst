@@ -62,6 +62,7 @@ The Optuna auto-tuning script can be run directly by invoking:
 This creates a new optuna study for a given number of trials defined within the script. The direction is set to maximize which means that the framework will try to maximize the score. 
 
 .. code-block:: console
+
    $ study = optuna.create_study(study_name=study_name,
 		storage="sqlite:///{}.db".format(study_name),
 		direction='maximize',
