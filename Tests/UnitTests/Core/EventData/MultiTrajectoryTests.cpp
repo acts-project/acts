@@ -578,9 +578,10 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
     auto expCov =
         pc.sourceLink.covariance.topLeftCorner(nMeasurements, nMeasurements);
 
-    visit_measurement(ts, ts.calibratedSize(), [&](auto meas, auto cov) {
-      BOOST_CHECK_EQUAL(meas, expMeas);
-      BOOST_CHECK_EQUAL(cov, expCov);
+    visit_measurement(ts.calibratedSize(), [&](auto N) {
+      constexpr size_t measdim = decltype(N)::value;
+      BOOST_CHECK_EQUAL(ts.calibrated<measdim>(), expMeas);
+      BOOST_CHECK_EQUAL(ts.calibratedCovariance<measdim>(), expCov);
     });
   }
 
@@ -804,15 +805,12 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
 
   BOOST_CHECK_NE(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
 
-  visit_measurement(ts1, ts1.calibratedSize(), [&ts2](auto meas, auto cov) {
-    constexpr int measdim =
-        Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
-
-    BOOST_CHECK_NE(ts2.calibrated<measdim>(), meas);
-    BOOST_CHECK_NE(ts2.calibratedCovariance<measdim>(), cov);
+  visit_measurement(ts1.calibratedSize(), [&](auto N) {
+    constexpr size_t measdim = decltype(N)::value;
+    BOOST_CHECK_NE(ts1.calibrated<measdim>(), ts2.calibrated<measdim>());
+    BOOST_CHECK_NE(ts1.calibratedCovariance<measdim>(),
+                   ts2.calibratedCovariance<measdim>());
   });
-  // BOOST_CHECK_NE(ts1.calibrated(), ts2.calibrated());
-  // BOOST_CHECK_NE(ts1.calibratedCovariance(), ts2.calibratedCovariance());
 
   BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
   BOOST_CHECK_NE(ts1.projector(), ts2.projector());
@@ -835,12 +833,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
 
   BOOST_CHECK_EQUAL(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
 
-  visit_measurement(ts1, ts1.calibratedSize(), [&ts2](auto meas, auto cov) {
-    constexpr int measdim =
-        Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
-
-    BOOST_CHECK_EQUAL(ts2.calibrated<measdim>(), meas);
-    BOOST_CHECK_EQUAL(ts2.calibratedCovariance<measdim>(), cov);
+  visit_measurement(ts1.calibratedSize(), [&](auto N) {
+    constexpr size_t measdim = decltype(N)::value;
+    BOOST_CHECK_EQUAL(ts1.calibrated<measdim>(), ts2.calibrated<measdim>());
+    BOOST_CHECK_EQUAL(ts1.calibratedCovariance<measdim>(),
+                      ts2.calibratedCovariance<measdim>());
   });
 
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());
@@ -862,12 +859,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
 
   BOOST_CHECK_NE(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
 
-  visit_measurement(ts1, ts1.calibratedSize(), [&ts2](auto meas, auto cov) {
-    constexpr int measdim =
-        Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
-
-    BOOST_CHECK_NE(ts2.calibrated<measdim>(), meas);
-    BOOST_CHECK_NE(ts2.calibratedCovariance<measdim>(), cov);
+  visit_measurement(ts1.calibratedSize(), [&](auto N) {
+    constexpr size_t measdim = decltype(N)::value;
+    BOOST_CHECK_NE(ts1.calibrated<measdim>(), ts2.calibrated<measdim>());
+    BOOST_CHECK_NE(ts1.calibratedCovariance<measdim>(),
+                   ts2.calibratedCovariance<measdim>());
   });
 
   BOOST_CHECK_NE(ts1.calibratedSize(), ts2.calibratedSize());
@@ -886,12 +882,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
 
   BOOST_CHECK_EQUAL(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
 
-  visit_measurement(ts1, ts1.calibratedSize(), [&ts2](auto meas, auto cov) {
-    constexpr int measdim =
-        Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
-
-    BOOST_CHECK_EQUAL(ts2.calibrated<measdim>(), meas);
-    BOOST_CHECK_EQUAL(ts2.calibratedCovariance<measdim>(), cov);
+  visit_measurement(ts1.calibratedSize(), [&](auto N) {
+    constexpr size_t measdim = decltype(N)::value;
+    BOOST_CHECK_EQUAL(ts1.calibrated<measdim>(), ts2.calibrated<measdim>());
+    BOOST_CHECK_EQUAL(ts1.calibratedCovariance<measdim>(),
+                      ts2.calibratedCovariance<measdim>());
   });
 
   BOOST_CHECK_EQUAL(ts1.calibratedSize(), ts2.calibratedSize());

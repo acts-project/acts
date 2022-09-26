@@ -11,10 +11,7 @@
 namespace Acts {
 
 double MeasurementSelector::calculateChi2(
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::Measurement fullCalibrated,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     false>::MeasurementCovariance fullCalibratedCovariance,
+    double* fullCalibrated, double* fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Parameters predicted,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
@@ -22,37 +19,32 @@ double MeasurementSelector::calculateChi2(
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      false>::Projector projector,
     unsigned int calibratedSize) const {
-  return visit_measurement(
-      fullCalibrated, fullCalibratedCovariance, calibratedSize,
-      [&](const auto _calibrated, const auto _calibratedCovariance) -> double {
-        constexpr size_t kMeasurementSize =
-            decltype(_calibrated)::RowsAtCompileTime;
+  return visit_measurement(calibratedSize, [&](auto N) -> double {
+    constexpr size_t kMeasurementSize = decltype(N)::value;
 
-        typename TrackStateTraits<kMeasurementSize, true>::Measurement
-            calibrated{_calibrated.data()};
+    typename TrackStateTraits<kMeasurementSize, true>::Measurement calibrated{
+        fullCalibrated};
 
-        typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
-            calibratedCovariance{_calibratedCovariance.data()};
+    typename TrackStateTraits<kMeasurementSize, true>::MeasurementCovariance
+        calibratedCovariance{fullCalibratedCovariance};
 
-        using ParametersVector = ActsVector<kMeasurementSize>;
+    using ParametersVector = ActsVector<kMeasurementSize>;
 
-        // Take the projector (measurement mapping function)
-        const auto H =
-            projector.template topLeftCorner<kMeasurementSize, eBoundSize>()
-                .eval();
+    // Take the projector (measurement mapping function)
+    const auto H =
+        projector.template topLeftCorner<kMeasurementSize, eBoundSize>().eval();
 
-        // Get the residuals
-        ParametersVector res;
-        res = calibrated - H * predicted;
+    // Get the residuals
+    ParametersVector res;
+    res = calibrated - H * predicted;
 
-        // Get the chi2
-        return (res.transpose() *
-                ((calibratedCovariance +
-                  H * predictedCovariance * H.transpose()))
-                    .inverse() *
-                res)
-            .eval()(0, 0);
-      });
+    // Get the chi2
+    return (res.transpose() *
+            ((calibratedCovariance + H * predictedCovariance * H.transpose()))
+                .inverse() *
+            res)
+        .eval()(0, 0);
+  });
 }
 
 }  // namespace Acts

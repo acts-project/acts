@@ -285,14 +285,22 @@ class TrackStateProxy {
         // workaround for gcc8 bug:
         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
         auto* self = this;
-        visit_measurement(
-            other, other.calibratedSize(), [&](auto meas, auto cov) {
-              constexpr int measdim =
-                  Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
+        visit_measurement(other.calibratedSize(), [&](auto N) {
+          constexpr int measdim = decltype(N)::value;
+          self->template calibrated<measdim>() =
+              other.template calibrated<measdim>();
+          self->template calibratedCovariance<measdim>() =
+              other.template calibratedCovariance<measdim>();
+        });
 
-              self->template calibrated<measdim>() = meas;
-              self->template calibratedCovariance<measdim>() = cov;
-            });
+        // visit_measurement(
+        // other, other.calibratedSize(), [&](auto meas, auto cov) {
+        // constexpr int measdim =
+        // Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
+
+        // self->template calibrated<measdim>() = meas;
+        // self->template calibratedCovariance<measdim>() = cov;
+        // });
 
         setProjectorBitset(other.projectorBitset());
       }
@@ -341,14 +349,21 @@ class TrackStateProxy {
         // workaround for gcc8 bug:
         // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
         auto* self = this;
-        visit_measurement(
-            other, other.calibratedSize(), [&](auto meas, auto cov) {
-              constexpr int measdim =
-                  Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
+        visit_measurement(other.calibratedSize(), [&](auto N) {
+          constexpr int measdim = decltype(N)::value;
+          self->template calibrated<measdim>() =
+              other.template calibrated<measdim>();
+          self->template calibratedCovariance<measdim>() =
+              other.template calibratedCovariance<measdim>();
+        });
+        // visit_measurement(
+        // other, other.calibratedSize(), [&](auto meas, auto cov) {
+        // constexpr int measdim =
+        // Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
 
-              self->template calibrated<measdim>() = meas;
-              self->template calibratedCovariance<measdim>() = cov;
-            });
+        // self->template calibrated<measdim>() = meas;
+        // self->template calibratedCovariance<measdim>() = cov;
+        // });
 
         setProjectorBitset(other.projectorBitset());
       }
@@ -634,29 +649,24 @@ class TrackStateProxy {
   /// Dynamic measurement vector with only the valid dimensions.
   /// @return The effective calibrated measurement vector
   auto effectiveCalibrated() const {
-    double* data{nullptr};
-
-    visit_measurement(*this, calibratedSize(), [&](auto meas, auto cov) {
-      (void)cov;
-      data = const_cast<double*>(meas.data());
+    // repackage the data pointer to a dynamic map type
+    return visit_measurement(calibratedSize(), [&](auto N) {
+      constexpr int kMeasurementSize = decltype(N)::value;
+      return typename Types<M, ReadOnly>::DynamicCoefficientsMap{
+          calibrated<kMeasurementSize>().data(), kMeasurementSize};
     });
-
-    return typename Types<M, ReadOnly>::DynamicCoefficientsMap{
-        data, calibratedSize()};
   }
 
   /// Dynamic measurement covariance matrix with only the valid dimensions.
   /// @return The effective calibrated covariance matrix
   auto effectiveCalibratedCovariance() const {
-    double* data{nullptr};
-
-    visit_measurement(*this, calibratedSize(), [&](auto meas, auto cov) {
-      (void)meas;
-      data = const_cast<double*>(cov.data());
+    // repackage the data pointer to a dynamic map type
+    return visit_measurement(calibratedSize(), [&](auto N) {
+      constexpr int kMeasurementSize = decltype(N)::value;
+      return typename Types<M, ReadOnly>::DynamicCovarianceMap{
+          calibratedCovariance<kMeasurementSize>().data(), kMeasurementSize,
+          kMeasurementSize};
     });
-
-    return typename Types<M, ReadOnly>::DynamicCovarianceMap{
-        data, calibratedSize(), calibratedSize()};
   }
 
   /// Return the (dynamic) number of dimensions stored for this measurement.
