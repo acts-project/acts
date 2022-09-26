@@ -21,7 +21,6 @@ run_seeding
 run_sycl_seed_finding
 run_truth_tracking
 run_ckf_tracking
-run_ckf_auto_tuning
 setup_and_run_vertexing
 run_alignment
 smearing_digitization_config.md
