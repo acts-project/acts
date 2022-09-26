@@ -15,26 +15,29 @@ from acts.examples.reconstruction import (
     TruthSeedRanges,
     addCKFTracks,
     CKFPerformanceConfig,
+    addVertexFitting,
+    VertexFinder,
+    TrackSelectorRanges,
 )
 
 ttbar_pu200 = False
 u = acts.UnitConstants
 geo_dir = pathlib.Path("acts-itk")
-outputDir = pathlib.Path.cwd()
+outputDir = pathlib.Path.cwd() / "itk_output"
 # acts.examples.dump_args_calls(locals())  # show acts.examples python binding calls
 
 detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=100, numThreads=-1)
+s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
         s,
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
         EtaConfig(-4.0, 4.0, uniform=True),
-        ParticleConfig(1, acts.PdgParticle.eMuon, randomizeCharge=True),
+        ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
         rnd=rnd,
     )
 else:
@@ -88,6 +91,15 @@ addCKFTracks(
     field,
     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
     outputDirRoot=outputDir,
+)
+
+addVertexFitting(
+    s,
+    field,
+    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0), removeNeutral=True),
+    vertexFinder=VertexFinder.Iterative,
+    outputDirRoot=outputDir,
+    trajectories="trajectories",
 )
 
 s.run()
