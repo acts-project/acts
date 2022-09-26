@@ -96,7 +96,6 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   size_t m_nTotalMatchedParticles = 0;
   size_t m_nTotalDuplicateParticles = 0;
   size_t m_nTotalFakeParticles = 0;
-
 };
 
 }  // namespace ActsExamples
