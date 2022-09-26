@@ -36,15 +36,6 @@ struct visit_measurement_callable {
     return lambda(param.template head<I>(), cov.template topLeftCorner<I, I>());
   }
 };
-
-template <size_t I>
-struct visit_measurement_callable_ts {
-  template <typename track_state_t, typename L>
-  auto static constexpr invoke(track_state_t ts, L&& lambda) {
-    return lambda(ts.template calibrated<I>(),
-                  ts.template calibratedCovariance<I>());
-  }
-};
 }  // namespace detail
 
 /// Dispatch a lambda call on an overallocated parameter vector and covariance
