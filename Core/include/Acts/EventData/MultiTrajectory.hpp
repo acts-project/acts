@@ -293,15 +293,6 @@ class TrackStateProxy {
               other.template calibratedCovariance<measdim>();
         });
 
-        // visit_measurement(
-        // other, other.calibratedSize(), [&](auto meas, auto cov) {
-        // constexpr int measdim =
-        // Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
-
-        // self->template calibrated<measdim>() = meas;
-        // self->template calibratedCovariance<measdim>() = cov;
-        // });
-
         setProjectorBitset(other.projectorBitset());
       }
     } else {
@@ -356,14 +347,6 @@ class TrackStateProxy {
           self->template calibratedCovariance<measdim>() =
               other.template calibratedCovariance<measdim>();
         });
-        // visit_measurement(
-        // other, other.calibratedSize(), [&](auto meas, auto cov) {
-        // constexpr int measdim =
-        // Eigen::MatrixBase<decltype(meas)>::RowsAtCompileTime;
-
-        // self->template calibrated<measdim>() = meas;
-        // self->template calibratedCovariance<measdim>() = cov;
-        // });
 
         setProjectorBitset(other.projectorBitset());
       }
@@ -650,10 +633,14 @@ class TrackStateProxy {
   /// @return The effective calibrated measurement vector
   auto effectiveCalibrated() const {
     // repackage the data pointer to a dynamic map type
+    // workaround for gcc8 bug:
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+    auto* self = this;
     return visit_measurement(calibratedSize(), [&](auto N) {
       constexpr int kMeasurementSize = decltype(N)::value;
       return typename Types<M, ReadOnly>::DynamicCoefficientsMap{
-          calibrated<kMeasurementSize>().data(), kMeasurementSize};
+          self->template calibrated<kMeasurementSize>().data(),
+          kMeasurementSize};
     });
   }
 
@@ -661,11 +648,14 @@ class TrackStateProxy {
   /// @return The effective calibrated covariance matrix
   auto effectiveCalibratedCovariance() const {
     // repackage the data pointer to a dynamic map type
+    // workaround for gcc8 bug:
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+    auto* self = this;
     return visit_measurement(calibratedSize(), [&](auto N) {
       constexpr int kMeasurementSize = decltype(N)::value;
       return typename Types<M, ReadOnly>::DynamicCovarianceMap{
-          calibratedCovariance<kMeasurementSize>().data(), kMeasurementSize,
-          kMeasurementSize};
+          self->template calibratedCovariance<kMeasurementSize>().data(),
+          kMeasurementSize, kMeasurementSize};
     });
   }
 
