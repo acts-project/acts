@@ -157,17 +157,37 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
       "OuterBox", tContext, nominal, std::move(bigBoxBounds), surfaces, volumes,
       portalGenerator, nStateUpdator, nStateUpdatorStore);
   // And connect it to the mother
-  detail::setOutsideVolumeLink(*outerBox.get());
+  detail::setOutsideVolumeLink<DetectorVolume>(*outerBox.get());
 
   // Check if inside/outside is right: inside big box
   BOOST_CHECK(outerBox->inside(tContext, Acts::Vector3(15., 15., 0.)) == true);
   BOOST_CHECK(outerBox->inside(tContext, Acts::Vector3(5., 5., 0.)) == false);
 
+  // Should sit us just above the internal box
   NavigationState nState;
   outerBox->updateNavigationStatus(nState, tContext, Acts::Vector3(15., 0., 0.),
                                    Acts::Vector3(1., 0., 0), 100., 1.);
 
+  // This should have portals of the outer and inner 
   BOOST_TEST(nState.surfaceCandidates.size(), 12u);
+  // Current volume is set to outer box
+  BOOST_TEST(nState.currentVolume, outerBox.get());
+
+  BOOST_CHECK(nState.surfaceCandidate->objectIntersection.intersection.status ==
+              Acts::Intersection3D::Status::reachable);
+  CHECK_CLOSE_ABS(
+      nState.surfaceCandidate->objectIntersection.intersection.position,
+      Acts::Vector3(100, 0, 0), 1e-4);
+
+  // No inside the small box
+  nState = NavigationState{};
+  outerBox->updateNavigationStatus(nState, tContext, Acts::Vector3(1., 0., 0.),
+                                   Acts::Vector3(1., 0., 0), 100., 1.);
+  // This has portals only of the inner
+  BOOST_TEST(nState.surfaceCandidates.size(), 6u);
+  // Current volume is set to inner box
+  BOOST_TEST(nState.currentVolume, innerBox.get());
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

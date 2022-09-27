@@ -10,15 +10,16 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Experimental/NavigationDelegates.hpp"
 #include "Acts/Experimental/NavigationState.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <map>
 #include <memory>
 #include <optional>
-#include <unordered_set>
 
 namespace Acts {
 
@@ -42,6 +43,8 @@ class Portal : public std::enable_shared_from_this<Portal> {
   Portal(std::shared_ptr<Surface> surface);
 
  public:
+  using VolumeLinks = std::array<ManagedDetectorVolumeLink, 2>;
+
   /// Declare the DetectorVolume friend for portal setting
   friend class DetectorVolume;
 
@@ -105,53 +108,46 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// @param geometryId the geometry identifier to be assigned
   void assignGeometryId(const GeometryIdentifier& geometryId);
 
+  /// Fuse with another portal, this one is kept
+  ///
+  /// @param other is the portal that will be fused
+  /// 
+  /// @note this will move the portqal links from the other
+  /// into this volume, it will throw an exception if the 
+  /// portals are not fusable 
+  void fuse(Portal& other) noexcept(false);
+
   /// Update the volume link
   ///
   /// @param nDir the navigation direction for the link
-  /// @param dVolumeLink is the link delegate
-  /// @param dVolumeLinkStore is the link implementation store
-  /// @param crationVolume is a boolean to flag if this was the
-  /// creation volume
+  /// @param dVolumeLink is the mangaged link delegate
   ///
   /// @note this overwrites the existing link
   void updateVolumeLink(NavigationDirection nDir,
-                        const DetectorVolumeLink& dVolumeLink,
-                        DetectorVolumeLinkStore dVolumeLinkStore = nullptr,
-                        bool creationVolume = false);
+                        ManagedDetectorVolumeLink&& dVolumeLink);
 
-  /// Assign an outside volume link, i.e. the none-creation volume
-  ///
-  /// @param dVolumeLink is the link delegate
-  /// @param dVolumeLinkStore is the link implementation store
-  /// @param overwrite steers whether any existing link should
-  ///        be overwritten
-  ///
-  /// @note this relies on the m_creationVolumedir optional to be set
-  void updateOutsideVolumeLink(
-      const DetectorVolumeLink& dVolumeLink,
-      DetectorVolumeLinkStore dVolumeLinkStore = nullptr,
-      bool overwrite = false);
+  // Access to the portal targets
+  const VolumeLinks& volumeLinks() const;
 
  private:
   /// The surface representation of this portal
   std::shared_ptr<Surface> m_surface;
 
-  /// Navigation direction of the creation volume (optionally set)
-  /// this can  help with the glueing process
-  std::optional<NavigationDirection> m_creationVolumeDir = std::nullopt;
+  /// The portal targets along/opposite the normal vector
+  std::array<ManagedDetectorVolumeLink, 2> m_volumeLinks;
 
-  /// The environment updators - along normal direction
-  DetectorVolumeLink m_forwardLink;
-
-  /// The environment updators - opposite normal direction
-  DetectorVolumeLink m_backwardLink;
-
-  /// The store for potential lifetime control of the links
-  std::unordered_set<DetectorVolumeLinkStore> m_linkStore;
+  /// Convert navigation dir to index
+  size_t ndir_to_index(NavigationDirection nDir) const {
+    return static_cast<size_t>((static_cast<int>(nDir) + 1) / 2);
+  }
 };
 
 inline const Surface& Portal::surface() const {
   return *(m_surface.get());
+}
+
+inline const Portal::VolumeLinks& Portal::volumeLinks() const {
+  return m_volumeLinks;
 }
 
 }  // namespace Experimental

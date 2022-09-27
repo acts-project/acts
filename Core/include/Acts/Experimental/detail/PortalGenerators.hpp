@@ -15,6 +15,10 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <memory>
+#include <tuple>
+#include <vector>
+
 namespace Acts {
 namespace Experimental {
 namespace detail {
@@ -39,21 +43,25 @@ inline static std::vector<std::shared_ptr<Portal>> portals(
     // Create a portal from the surface
     auto portal = Portal::makeShared(oSurface.first);
     // Create a shared link instance & delegate
-    auto singleLinkStored =
-        std::make_shared<SingleLinkImpl>(SingleLinkImpl{&dVolume});
+    auto singleLinkStored = std::make_shared<SingleLinkImpl>(dVolume);
     DetectorVolumeLink singleLink;
     singleLink.connect<&SingleLinkImpl::targetVolume>(singleLinkStored.get());
     // Update the volume link and the store
-    Acts::NavigationDirection insideDir = oSurface.second;
-    portal->updateVolumeLink(insideDir, singleLink, singleLinkStored, true);
+    NavigationDirection insideDir = oSurface.second;
+    ManagedDetectorVolumeLink managedLink{std::move(singleLink), std::move(singleLinkStored)};
+    portal->updateVolumeLink(insideDir, std::move(managedLink));
+
     // Create a null link
     DetectorVolumeLink nullLink;
     nullLink.connect<&nullVolumeLink>();
-    Acts::NavigationDirection outsideDir =
+
+    NavigationDirection outsideDir =
         (insideDir == Acts::NavigationDirection::Forward)
             ? Acts::NavigationDirection::Backward
             : Acts::NavigationDirection::Forward;
-    portal->updateVolumeLink(outsideDir, nullLink);
+    ManagedDetectorVolumeLink managedNullLink{std::move(nullLink), nullptr};
+    portal->updateVolumeLink(outsideDir, std::move(managedNullLink));
+
     // Portal is prepared
     portals.push_back(portal);
   }

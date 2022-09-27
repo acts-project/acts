@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Experimental/NavigationState.hpp"
+#include "Acts/Experimental/NavigationDelegates.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -267,6 +268,15 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
+
+  /// Update a portal
+  ///
+  /// @param portal the portal to be updated
+  /// @param pIndex the portal index
+  ///
+  /// @note throws exception if portal index out of bounds
+  void updatePortal(std::shared_ptr<Portal> portal,
+                    unsigned int pIndex) noexcept(false);
 
   /// Assign the volume material description
   ///

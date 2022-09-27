@@ -39,11 +39,11 @@ struct Options {
 ///
 /// @param gtcx is the geometry context of the conversion call
 /// @param surface is the surface to convert
-/// @param cOption is the conversion options struct
+/// @param surfaceOptions is the conversion options struct
 ///
 /// @return a proto surface object
 ProtoSurface convert(const GeometryContext& gctx, const Surface& surface,
-                     const SurfaceConverter::Options& cOptions);
+                     const SurfaceConverter::Options& surfaceOptions);
 
 }  // namespace SurfaceConverter
 

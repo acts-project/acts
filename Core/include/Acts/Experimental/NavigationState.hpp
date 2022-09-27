@@ -68,40 +68,5 @@ struct NavigationState {
   std::any auxilliary;
 };
 
-/// Declare a navigation state updator
-///
-/// This delegate dispatches the local navigation action
-/// to a dedicated struct or function that is optimised for
-/// the given environment.
-///
-/// @param nState is the navigation state to be updated
-/// @param volume is the volume for which this should be called
-/// @param gctx is the current geometry context
-/// @param position is the position at the query
-/// @param direction is the direction at the query
-/// @param absMomentum is the absolute momentum at query
-/// @param charge is the charge to be used for the intersection
-///
-using NavigationStateUpdator = Delegate<void(
-    NavigationState& nState, const DetectorVolume& volume,
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction, ActsScalar absMomentum, ActsScalar charge)>;
-
-using NavigationStateUpdatorStore = std::shared_ptr<void>;
-
-/// Declare a Detctor Volume Switching delegate
-///
-/// @param gctx is the current geometry context
-/// @param position is the position at the query
-/// @param direction is the direction at the query
-///
-/// @return the new DetectorVolume into which one changes at this switch
-using DetectorVolumeLink = Delegate<const DetectorVolume*(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction)>;
-
-/// @brief Definition of the link store for ownership control
-using DetectorVolumeLinkStore = std::shared_ptr<void>;
-
 }  // namespace Experimental
 }  // namespace Acts

@@ -8,6 +8,7 @@
 
 #include "Acts/Experimental/Portal.hpp"
 
+#include "Acts/Experimental/detail/DetectorVolumeLinks.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 Acts::Experimental::Portal::Portal(std::shared_ptr<Surface> surface)
@@ -33,36 +34,35 @@ void Acts::Experimental::Portal::assignGeometryId(
   m_surface->assignGeometryId(geometryId);
 }
 
-void Acts::Experimental::Portal::updateVolumeLink(
-    NavigationDirection nDir, const DetectorVolumeLink& dVolumeLink,
-    DetectorVolumeLinkStore dVolumeLinkStore, bool creationVolume) {
-  if (creationVolume) {
-    m_creationVolumeDir = nDir;
+void Acts::Experimental::Portal::fuse(Portal& other) {
+  // Determine this directioon
+  NavigationDirection tDir =
+      (m_volumeLinks[ndir_to_index(NavigationDirection::Backward)]
+           .implementation == nullptr)
+          ? NavigationDirection::Forward
+          : NavigationDirection::Backward;
+
+  if (m_volumeLinks[ndir_to_index(tDir)].implementation == nullptr) {
+    throw std::invalid_argument(
+        "Portal: trying to fuse portal (keep) with no links.");
   }
-  if (dVolumeLinkStore != nullptr) {
-    m_linkStore.insert(dVolumeLinkStore);
+  // And now check other direction
+  NavigationDirection oDir = (tDir == NavigationDirection::Forward)
+                                 ? NavigationDirection::Backward
+                                 : NavigationDirection::Forward;
+
+  if (other.m_volumeLinks[ndir_to_index(oDir)].implementation == nullptr) {
+    throw std::invalid_argument(
+        "Portal: trying to fuse portal (waste) with no links.");
   }
-  if (nDir == NavigationDirection::Forward) {
-    m_forwardLink = dVolumeLink;
-    return;
-  }
-  m_backwardLink = dVolumeLink;
+
+  m_volumeLinks[ndir_to_index(oDir)] =
+      std::move(other.m_volumeLinks[ndir_to_index(oDir)]);
 }
 
-void Acts::Experimental::Portal::updateOutsideVolumeLink(
-    const DetectorVolumeLink& dVolumeLink,
-    DetectorVolumeLinkStore dVolumeLinkStore, bool overwrite) {
-  if (m_creationVolumeDir.has_value()) {
-    if (m_creationVolumeDir.value() == NavigationDirection::Forward and
-        (not m_backwardLink.connected() or overwrite)) {
-      m_backwardLink = dVolumeLink;
-    } else if (not m_forwardLink.connected() or overwrite) {
-      m_forwardLink = dVolumeLink;
-    }
-    if (dVolumeLinkStore != nullptr) {
-      m_linkStore.insert(dVolumeLinkStore);
-    }
-  }
+void Acts::Experimental::Portal::updateVolumeLink(
+    NavigationDirection nDir, ManagedDetectorVolumeLink&& dVolumeLink) {
+  m_volumeLinks[ndir_to_index(nDir)] = std::move(dVolumeLink);
 }
 
 const Acts::Experimental::DetectorVolume*
@@ -70,8 +70,12 @@ Acts::Experimental::Portal::nextVolume(const GeometryContext& gctx,
                                        const Vector3& position,
                                        const Vector3& direction) const {
   const Vector3 normal = surface().normal(gctx, position);
-  if (normal.dot(direction) > 0.) {
-    return m_forwardLink(gctx, position, direction);
+  NavigationDirection nDir = (normal.dot(direction) < 0.)
+                                 ? NavigationDirection::Backward
+                                 : NavigationDirection::Forward;
+  const auto& dLink = m_volumeLinks[ndir_to_index(nDir)].delegate;
+  if (dLink.connected()) {
+    return dLink(gctx, position, direction);
   }
-  return m_backwardLink(gctx, position, direction);
+  return nullptr;
 }

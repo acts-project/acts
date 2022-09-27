@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "actsvg/meta.hpp"
 
 #include <array>
@@ -21,17 +22,37 @@ namespace Acts {
 
 namespace Svg {
 
+namespace View {
+
+static inline actsvg::point2 xy(const Vector3& position) {
+  return {static_cast<actsvg::scalar>(position.x()),
+          static_cast<actsvg::scalar>(position.y())};
+}
+
+static inline actsvg::point2 zr(const Vector3& position) {
+  return {static_cast<actsvg::scalar>(position.z()),
+          static_cast<actsvg::scalar>(VectorHelpers::perp(position))};
+}
+
+}  // namespace View
+
 struct Style {
   // Fill parameters
   std::array<int, 3> fillColor = {0, 0, 0};
   ActsScalar fillOpacity = 1.;
 
-  // Highlight parameters
+  // Fill Highlight parameters
   std::array<int, 3> highlightColor = {0, 0, 0};
   std::vector<std::string> highlights = {};
 
+  /// Stroke parameters
   ActsScalar strokeWidth = 0.5;
   std::array<int, 3> strokeColor = {0, 0, 0};
+
+  /// Stroke Highlight parameters
+  std::vector<std::string> strokeHighlights = {};
+  ActsScalar strokeHighlightWidth = 0.5;
+  std::array<int, 3> strokeHighlightColor = {0, 0, 0};
 
   ActsScalar fontSize = 14;
 
@@ -49,6 +70,8 @@ struct Style {
     actsvg::style::stroke str;
     str._sc._rgb = strokeColor;
     str._width = strokeWidth;
+    str._hl_width = strokeHighlightWidth;
+    str._sc._hl_rgb = strokeHighlightColor;
 
     return std::tie(fll, str);
   }

@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 
 BOOST_AUTO_TEST_CASE(SingleVolumeLink) {
   auto dVolume = std::make_unique<DetectorVolume>();
-  detail::SingleLinkImpl singleLink{dVolume.get()};
+  detail::SingleLinkImpl singleLink(*dVolume);
 
   // Plain test
   BOOST_CHECK(dVolume.get() == singleLink.dVolume);
@@ -41,6 +41,14 @@ BOOST_AUTO_TEST_CASE(SingleVolumeLink) {
   // Test as a delegate
   DetectorVolumeLink singleLinkDel;
   singleLinkDel.connect<&detail::SingleLinkImpl::targetVolume>(&singleLink);
+
+  BOOST_CHECK(dVolume.get() == singleLinkDel(tContext, Acts::Vector3(0., 0., 0.),
+                                      Acts::Vector3(0., 0., 0.)));
+
+  // Copy assigned of the delegate 
+  DetectorVolumeLink singleLinkDelCopy = singleLinkDel;
+  BOOST_CHECK(dVolume.get() == singleLinkDelCopy(tContext, Acts::Vector3(0., 0., 0.),
+                                      Acts::Vector3(0., 0., 0.)));
 }
 
 BOOST_AUTO_TEST_CASE(MultiVolumeLink1DCast) {
@@ -52,7 +60,7 @@ BOOST_AUTO_TEST_CASE(MultiVolumeLink1DCast) {
   std::vector<const DetectorVolume*> dVolumes = {aVolume.get(), bVolume.get(),
                                                  cVolume.get()};
   std::vector<Acts::ActsScalar> zValues = {-10., 0., 100., 200.};
-  detail::MultiLinkCast1DImpl zLinks{dVolumes, zValues, Acts::binZ};
+  detail::MultiLink1DImpl zLinks(dVolumes, zValues, Acts::binZ);
 
   // Check if you get the right volumes back
   Acts::Vector3 getA(1., 2., -5.);

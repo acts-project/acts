@@ -81,6 +81,16 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
   construct(gctx, portalGenerator);
 }
 
+void Acts::Experimental::DetectorVolume::updatePortal(
+    std::shared_ptr<Portal> portal, unsigned int pIndex) {
+  if (pIndex >= m_portals.internal.size()) {
+    throw std::invalid_argument(
+        "DetectorVolume: trying to update a portal that does not exist.");
+  }
+  m_portals.internal[pIndex] = portal;
+  m_portals = ObjectStore<std::shared_ptr<Portal>>(m_portals.internal);
+}
+
 void Acts::Experimental::DetectorVolume::construct(
     const GeometryContext& gctx, const PortalGenerator& portalGenerator) {
   // Create portals with the given generator
@@ -150,7 +160,8 @@ void Acts::Experimental::DetectorVolume::resize(
   }
   m_bounds = std::move(rBounds);
   construct(gctx, portalGenerator);
-  assert(checkContainment() and "Objects are not contained by volume.");
+  assert(checkContainment(gctx, 72u) and
+         "Objects are not contained by volume.");
 }
 
 Acts::Extent Acts::Experimental::DetectorVolume::extent(

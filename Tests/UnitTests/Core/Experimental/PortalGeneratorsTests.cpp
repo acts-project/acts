@@ -49,7 +49,9 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
 
   // Filled Cylinder
   Acts::CylinderVolumeBounds cBar(0., 100, 200.);
+
   auto cBarPortals = detail::portals(dTransform, cBar, dVolume);
+  
   BOOST_CHECK(cBarPortals.size() == 3u);
   // Check they are not nullptrs
   for (const auto& p : cBarPortals) {
