@@ -222,6 +222,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       bottomBinFinder, topBinFinder, std::move(grid), m_cfg.seedFinderConfig);
   auto finder = Acts::Seedfinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 
+  /// variable middle SP radial region of interest
+  const Acts::Vector2 rMiddleSPRange = {
+      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+          m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
+      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
+          m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange};
+
   // run the seeding
   static thread_local SimSeedContainer seeds;
   seeds.clear();
@@ -231,7 +238,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto groupEnd = spacePointsGrouping.end();
   for (; !(group == groupEnd); ++group) {
     finder.createSeedsForGroup(state, std::back_inserter(seeds), group.bottom(),
-                               group.middle(), group.top(), rRangeSPExtent);
+                               group.middle(), group.top(), rMiddleSPRange);
   }
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
