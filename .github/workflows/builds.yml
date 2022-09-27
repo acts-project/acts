@@ -265,7 +265,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.4.4
+          && pip3 install histcmp==0.5.1
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/thisroot.sh
