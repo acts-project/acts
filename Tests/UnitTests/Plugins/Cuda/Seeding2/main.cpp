@@ -161,7 +161,7 @@ int main(int argc, char* argv[]) {
   // Create the result object.
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_host;
 
-	const Acts::Vector2 rMiddleSPRange;
+  const Acts::Vector2 rMiddleSPRange;
 
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {

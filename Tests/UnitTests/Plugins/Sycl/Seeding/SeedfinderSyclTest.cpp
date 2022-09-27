@@ -201,7 +201,7 @@ auto main(int argc, char** argv) -> int {
   auto start_cpu = std::chrono::system_clock::now();
   uint group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-	const Acts::Vector2 rMiddleSPRange;
+  const Acts::Vector2 rMiddleSPRange;
 
   if (!cmdlTool.onlyGpu) {
     decltype(normalSeedfinder)::State state;

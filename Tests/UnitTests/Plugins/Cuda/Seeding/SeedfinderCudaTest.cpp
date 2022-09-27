@@ -258,7 +258,7 @@ int main(int argc, char** argv) {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   groupIt = spGroup.begin();
-	const Acts::Vector2 rMiddleSPRange;
+  const Acts::Vector2 rMiddleSPRange;
 
   if (do_cpu) {
     decltype(seedfinder_cpu)::State state;
