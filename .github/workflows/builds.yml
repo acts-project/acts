@@ -265,7 +265,7 @@ jobs:
         run: >
           echo "::group::Dependencies"
           && git config --global safe.directory "$GITHUB_WORKSPACE"
-          && pip3 install histcmp==0.4.4
+          && pip3 install histcmp==0.5.1
           && pip3 install -r Examples/Scripts/requirements.txt
           && /usr/local/bin/download_geant4_data.sh
           && source /usr/local/bin/thisroot.sh
@@ -561,36 +561,6 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DACTS_BUILD_PLUGIN_CUDA=ON
           -DACTS_BUILD_UNITTESTS=ON
-      - name: Build
-        run: cmake --build build
-      - name: ccache stats
-        run: ccache -s
-
-  exatrkx:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Cache build
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-exatrkx_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-exatrkx_${{ env.CCACHE_KEY_SUFFIX }}_
-
-      - name: Configure
-        run: >
-          ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_BUILD_PLUGIN_EXATRKX=ON
-          -DACTS_BUILD_EXAMPLES_EXATRKX=ON
-          -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
       - name: Build
         run: cmake --build build
       - name: ccache stats

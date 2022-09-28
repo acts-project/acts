@@ -38,7 +38,7 @@ clang_tidy:
 
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v30
   tags:
     - docker
   variables:
@@ -71,15 +71,17 @@ build:
     - cd ..
     - mkdir build
     - >
-      cmake -B build -S src 
+      cmake -B build -S src
       -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-      -GNinja 
-      -DCMAKE_BUILD_TYPE=Release 
-      -DCMAKE_CXX_FLAGS=-w 
-      -DCMAKE_CUDA_FLAGS=-w 
+      -GNinja
+      -DCMAKE_BUILD_TYPE=Release
+      -DCMAKE_CXX_FLAGS=-w
+      -DCMAKE_CUDA_FLAGS=-w
       -DCMAKE_CUDA_ARCHITECTURES="75;86"
-      -DACTS_BUILD_PLUGIN_EXATRKX=ON 
-      -DACTS_BUILD_EXAMPLES_EXATRKX=ON 
+      -DACTS_BUILD_PLUGIN_EXATRKX=ON
+      -DACTS_BUILD_EXAMPLES_EXATRKX=ON
+      -DACTS_EXATRKX_ENABLE_TORCH=ON
+      -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
     - cmake --build build --
 
@@ -87,14 +89,17 @@ test:
   stage: test
   needs:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v29
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v30
   tags:
     - docker-gpu-nvidia
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
-    - curl https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar --output models.tar
-    - tar -xf models.tar
+    - curl https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar --output onnx_models.tar
+    - curl https://bhuth.webo.family/index.php/s/oyFg8WF2cDPrJYz/download --output torchscript_models.tar
+    - tar -xf onnx_models.tar
+    - tar -xf torchscript_models.tar
     - source build/python/setup.sh
     - nvidia-smi
-    - python3 src/Examples/Scripts/Python/exatrkx.py
+    - python3 src/Examples/Scripts/Python/exatrkx.py onnx
+    - python3 src/Examples/Scripts/Python/exatrkx.py torch
