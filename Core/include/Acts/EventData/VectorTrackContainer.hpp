@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/Track.hpp"
 
 #include <unordered_map>
@@ -17,11 +16,13 @@ namespace Acts {
 
 namespace detail_vtc {
 
-using MultiTrajectoryTraits::IndexType;
-constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
-constexpr auto MeasurementSizeMax = MultiTrajectoryTraits::MeasurementSizeMax;
-
 class VectorTrackContainerBase {
+ public:
+  using IndexType = MultiTrajectoryTraits::IndexType;
+  static constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
+  static constexpr auto MeasurementSizeMax =
+      MultiTrajectoryTraits::MeasurementSizeMax;
+
  protected:
   VectorTrackContainerBase() = default;
 
@@ -71,13 +72,17 @@ class VectorTrackContainerBase {
 
   template <bool EnsureConst, typename T>
   static std::any component_impl(T& instance, HashedString key,
-                                 IndexType istate) {
+                                 IndexType itrack) {
+    using namespace Acts::HashedStringLiteral;
     if constexpr (EnsureConst) {
       static_assert(std::is_const_v<std::remove_reference_t<T>>,
                     "Is not const");
     }
+
     using namespace Acts::HashedStringLiteral;
     switch (key) {
+      case "tipIndex"_hash:
+        return instance.m_tipIndex[itrack];
       default:
         auto it = instance.m_dynamic.find(key);
         if (it == instance.m_dynamic.end()) {
@@ -85,7 +90,7 @@ class VectorTrackContainerBase {
         }
         auto& col = it->second;
         assert(col && "Dynamic column is null");
-        return col->get(istate);
+        return col->get(itrack);
     }
   }
 
@@ -111,13 +116,7 @@ class VectorTrackContainer;
 template <>
 struct isReadOnlyTrackContainer<VectorTrackContainer> : std::false_type {};
 
-class VectorTrackContainer final
-    : public detail_vtc::VectorTrackContainerBase,
-      public TrackContainerBackend<VectorTrackContainer> {
-#ifndef DOXYGEN
-  friend TrackContainerBackend<VectorTrackContainer>;
-#endif
-
+class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
  public:
   VectorTrackContainer() = default;
   VectorTrackContainer(const VectorTrackContainer& other)
@@ -127,8 +126,23 @@ class VectorTrackContainer final
   VectorTrackContainer& operator=(const VectorTrackContainer&) = default;
   VectorTrackContainer& operator=(VectorTrackContainer&&) = default;
 
- private:
+ public:
   // BEGIN INTERFACE
+
+  std::any component_impl(HashedString key, IndexType itrack) {
+    return detail_vtc::VectorTrackContainerBase::component_impl<false>(
+        *this, key, itrack);
+  }
+
+  std::any component_impl(HashedString key, IndexType itrack) const {
+    return detail_vtc::VectorTrackContainerBase::component_impl<true>(
+        *this, key, itrack);
+  }
+
+  IndexType addTrack_impl() {
+    m_tipIndex.emplace_back();
+    return m_tipIndex.size() - 1;
+  }
 
   // END INTERFACE
 };
@@ -138,12 +152,7 @@ template <>
 struct isReadOnlyTrackContainer<ConstVectorTrackContainer> : std::true_type {};
 
 class ConstVectorTrackContainer final
-    : public detail_vtc::VectorTrackContainerBase,
-      public TrackContainerBackend<ConstVectorTrackContainer> {
-#ifndef DOXYGEN
-  friend TrackContainerBackend<ConstVectorTrackContainer>;
-#endif
-
+    : public detail_vtc::VectorTrackContainerBase {
  public:
   ConstVectorTrackContainer() = default;
 
@@ -158,8 +167,13 @@ class ConstVectorTrackContainer final
       default;
   ConstVectorTrackContainer& operator=(ConstVectorTrackContainer&&) = default;
 
- private:
+ public:
   // BEGIN INTERFACE
+
+  std::any component_impl(HashedString key, IndexType itrack) const {
+    return detail_vtc::VectorTrackContainerBase::component_impl<true>(
+        *this, key, itrack);
+  }
 
   // END INTERFACE
 };

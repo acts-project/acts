@@ -9,16 +9,29 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+
 namespace {
 
 using namespace Acts;
-using namespace Acts::UnitLiterals;
-using namespace Acts::Test;
+using namespace Acts::HashedStringLiteral;
+// using namespace Acts::UnitLiterals;
+// using namespace Acts::Test;
+using MultiTrajectoryTraits::IndexType;
 namespace bd = boost::unit_test::data;
 }  // namespace
 
 BOOST_AUTO_TEST_SUITE(EventDataTrack)
 
-BOOST_AUTO_TEST_CASE(Build) {}
+BOOST_AUTO_TEST_CASE(Build) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = tc.getTrack(tc.addTrack());
+  t.component<IndexType, "tipIndex"_hash>() = 5;
+
+  BOOST_CHECK_EQUAL((t.component<IndexType, "tipIndex"_hash>()), 5);
+}
 
 BOOST_AUTO_TEST_SUITE_END()
