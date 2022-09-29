@@ -23,6 +23,16 @@ class VectorTrackContainerBase {
   static constexpr auto MeasurementSizeMax =
       MultiTrajectoryTraits::MeasurementSizeMax;
 
+  using Parameters =
+      typename detail_lt::Types<eBoundSize, false>::CoefficientsMap;
+  using Covariance =
+      typename detail_lt::Types<eBoundSize, false>::CovarianceMap;
+
+  using ConstParameters =
+      typename detail_lt::Types<eBoundSize, true>::CoefficientsMap;
+  using ConstCovariance =
+      typename detail_lt::Types<eBoundSize, true>::CovarianceMap;
+
  protected:
   VectorTrackContainerBase() = default;
 
@@ -82,7 +92,11 @@ class VectorTrackContainerBase {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "tipIndex"_hash:
-        return instance.m_tipIndex[itrack];
+        return &instance.m_tipIndex[itrack];
+      case "params"_hash:
+        return &instance.m_params[itrack];
+      case "cov"_hash:
+        return &instance.m_cov[itrack];
       default:
         auto it = instance.m_dynamic.find(key);
         if (it == instance.m_dynamic.end()) {
@@ -94,17 +108,19 @@ class VectorTrackContainerBase {
     }
   }
 
-  template <typename T>
-  static constexpr bool hasColumn_impl(T& instance, HashedString key) {
+ public:
+  constexpr bool hasColumn_impl(HashedString key) const {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       default:
-        return instance.m_dynamic.find(key) != instance.m_dynamic.end();
+        return m_dynamic.find(key) != m_dynamic.end();
     }
   }
   // END INTERFACE HELPER
 
   std::vector<IndexType> m_tipIndex;
+  std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
+  std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
 
   std::unordered_map<HashedString, std::unique_ptr<DynamicColumnBase>>
       m_dynamic;
@@ -141,7 +157,37 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
   IndexType addTrack_impl() {
     m_tipIndex.emplace_back();
+
+    m_params.emplace_back();
+    m_cov.emplace_back();
+
+    // dynamic columns
+    for (auto& [key, vec] : m_dynamic) {
+      vec->add();
+    }
+
     return m_tipIndex.size() - 1;
+  }
+
+  template <typename T>
+  constexpr void addColumn_impl(const std::string& key) {
+    m_dynamic.insert({hashString(key), std::make_unique<DynamicColumn<T>>()});
+  }
+
+  Parameters parameters(IndexType itrack) {
+    return Parameters{m_params[itrack].data()};
+  }
+
+  ConstParameters parameters(IndexType itrack) const {
+    return ConstParameters{m_params[itrack].data()};
+  }
+
+  Covariance covariance(IndexType itrack) {
+    return Covariance{m_cov[itrack].data()};
+  }
+
+  ConstCovariance covariance(IndexType itrack) const {
+    return ConstCovariance{m_cov[itrack].data()};
   }
 
   // END INTERFACE
@@ -175,7 +221,14 @@ class ConstVectorTrackContainer final
         *this, key, itrack);
   }
 
+  ConstParameters parameters(IndexType itrack) const {
+    return ConstParameters{m_params[itrack].data()};
+  }
+
   // END INTERFACE
 };
+
+inline detail_vtc::VectorTrackContainerBase::DynamicColumnBase::
+    ~DynamicColumnBase() = default;
 
 }  // namespace Acts

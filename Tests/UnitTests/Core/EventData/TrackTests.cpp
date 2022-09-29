@@ -32,6 +32,27 @@ BOOST_AUTO_TEST_CASE(Build) {
   t.component<IndexType, "tipIndex"_hash>() = 5;
 
   BOOST_CHECK_EQUAL((t.component<IndexType, "tipIndex"_hash>()), 5);
+
+  BoundVector pars;
+  pars.setRandom();
+  t.parameters() = pars;
+  BOOST_CHECK_EQUAL(t.parameters(), pars);
+
+  BoundMatrix cov;
+  cov.setRandom();
+  t.covariance() = cov;
+  BOOST_CHECK_EQUAL(t.covariance(), cov);
+}
+
+BOOST_AUTO_TEST_CASE(DynamicColumns) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  BOOST_CHECK(!tc.hasColumn("col_a"_hash));
+  tc.addColumn<float>("col_a");
+  BOOST_CHECK(tc.hasColumn("col_a"_hash));
+
+  auto t = tc.getTrack(tc.addTrack());
+  t.component<float>("col_a") = 5.6f;
+  BOOST_CHECK_EQUAL((t.component<float, "col_a"_hash>()), 5.6f);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

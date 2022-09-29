@@ -32,6 +32,11 @@ class TrackProxy {
   using TrackStateProxy = typename Trajectory::TrackStateProxy;
   using ConstTrackStateProxy = typename Trajectory::ConstTrackStateProxy;
 
+  using Parameters =
+      typename detail_lt::Types<eBoundSize, ReadOnly>::CoefficientsMap;
+  using Covariance =
+      typename detail_lt::Types<eBoundSize, ReadOnly>::CovarianceMap;
+
   using IndexType = typename Container::IndexType;
   static constexpr IndexType kInvalid = Container::kInvalid;
 
@@ -92,6 +97,14 @@ class TrackProxy {
   template <typename T>
   constexpr const T& component(std::string_view key) const {
     return m_container->template component<T>(hashString(key), m_index);
+  }
+
+  constexpr Parameters parameters() const {
+    return m_container->parameters(m_index);
+  }
+
+  constexpr Covariance covariance() const {
+    return m_container->covariance(m_index);
   }
 
  private:
@@ -194,6 +207,29 @@ class TrackContainer {
   template <typename T>
   constexpr const T& component(HashedString key, IndexType itrack) const {
     return *std::any_cast<const T*>(m_container.component_impl(key, itrack));
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
+    return m_container.parameters(itrack);
+  }
+
+  constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
+    return m_container.parameters(itrack);
+  }
+
+  constexpr typename ConstTrackProxy::Parameters parameters(
+      IndexType itrack) const {
+    return m_container.parameters(itrack);
+  }
+
+  constexpr typename TrackProxy::Covariance covariance(IndexType itrack) {
+    return m_container.covariance(itrack);
+  }
+
+  constexpr typename ConstTrackProxy::Covariance covariance(
+      IndexType itrack) const {
+    return m_container.covariance(itrack);
   }
 
  private:

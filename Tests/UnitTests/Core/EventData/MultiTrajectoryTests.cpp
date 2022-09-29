@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(Build) {
                                 predicteds.begin(), predicteds.end());
 }
 
-BOOST_AUTO_TEST_CASE(AsReadOnly) {
+BOOST_AUTO_TEST_CASE(ConstCorrectness) {
   // make mutable
   VectorMultiTrajectory t;
   auto i0 = t.addTrackState();
@@ -233,6 +233,12 @@ BOOST_AUTO_TEST_CASE(AsReadOnly) {
     static_cast<void>(tsp);
     VectorMultiTrajectory::ConstTrackStateProxy ctsp = t.getTrackState(i0);
     static_cast<void>(ctsp);
+
+    tsp.predicted().setRandom();
+    const auto& tsp_const = tsp;
+    // tsp_const.predicted().setRandom();
+
+    // ctsp.predicted().setRandom();
   }
 
   ConstVectorMultiTrajectory ct = t;
