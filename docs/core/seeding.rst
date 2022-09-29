@@ -29,7 +29,7 @@ The seeding implementation in Core/include/Acts/Seeding/ is based on the ATLAS t
 .. figure:: ../figures/seeding/3Dcoordinates.svg
    :name: 3dim
    :align: center
-   :width: 600
+   :width: 550
    
    Sketch of the detector with 3 layers. The interaction region is supposed to be located along the z axis and have size significantly smaller than the radius of the innermost detector layer.
 
@@ -69,7 +69,7 @@ only once, the circle calculation is spread out over the three loops.
 .. figure:: ../figures/seeding/x-yCoordinates.svg
    :name: xy
    :align: center
-   :width: 500
+   :width: 400
    
    The x-y projection of the detector with the charged particle helical track originating from the centre of the detector. Signals left by passage of the track through the detector layers are marked with green crosses.
 
@@ -102,47 +102,43 @@ $$
 $$
 where :math:`B_z` is the magnetic field.
 
-
-The scattering calculation is also spread over the nested loops to avoid
-redoing calculations. First, the maximum allowed scattering at the configured
-minimum transverse momentum (:math:`p_{T}`) cut is calculated and scaled by the
-pseudorapidity of the duplet formed by one SP from bottom layer and one SP from middle layer to get the minimum momentum of
-the duplet. This duplet's pseudorapidity is used for later calculation of the
-scattering for the triplet as well.
-       
-The minimum scattering term (`scatteringInRegion2`) is calculated from
-`sigmaScattering`, the configurable number of sigmas of scattering angle
-to be considered, and `maxScatteringAngle2`, which is evaluated from the
-Lynch & Dahl correction of the Highland equation assuming the lowest
-allowed :math:`p_{T}`. The parameters of the Highland equation are fully configurable.
-
 .. figure:: ../figures/seeding/r-zCoordinates.svg
    :name: rz
    :align: center
    :width: 500
    
    The r-z projection of the detector with the same charged particle track. The track is depicted with the same colours as on previous figure.
-
-The following code block checks if the triplet forms a nearly straight line
+       
+The next cuts check if the triplet forms a nearly straight line
 in the :math:`r/z` plane (see :numref:`rz`) as the particle path in the :math:`r/z` plane is
 unaffected by the magnetic field [#f1]_. This is split in two parts; the first test occurs before the calculation of the helix
 circle. Therefore, the deviation from a straight line is compared to the
-maximum allowed scattering at minimum :math:`p_{T}` scaled by the forward angle.
-Both the check against min :math:`p_{T}` and the check against the
-calculated :math:`p_{T}` take the correlated measurement
-uncertainty into account.
+maximum allowed scattering at minimum :math:`p_{T}` scaled by the forward angle:
 
 $$
 \\left ( \\frac{1}{\\tan \\theta_b} - \\frac{1}{\\tan \\theta_t} \\right )^2 < \\sigma^2_{p_T^{min}} + \\sigma_f^2,
 $$
 
+The scattering term (`scatteringInRegion2` :math:`\equiv \sigma^2_{p_T^{min}}`) is calculated from
+`sigmaScattering`, the configurable number of sigmas of scattering angle
+to be considered, and `maxScatteringAngle2`, which is evaluated from the
+Lynch & Dahl correction of the Highland equation assuming the lowest
+allowed :math:`p_{T}`. The parameters of the Highland equation are fully configurable.
+The calculation is also spread over the nested loops to avoid redoing calculations.
+
 Following check takes into account estimate particle momentum (smaller scattering
 angle is permitted for higher momentum) and pseudorapidity (larger scattering
-takes into account amount of the material crosses that takes depends on the angle).
+takes into account amount of the material crosses that takes depends on the angle):
 
 $$
 \\left ( \\frac{1}{\\tan \\theta_b} - \\frac{1}{\\tan \\theta_t} \\right ) ^2 < \\sigma^2_{p_T^{estimated}} + \\sigma_f^2,
 $$
+
+Both the check against min :math:`p_{T}` and the check against the
+calculated :math:`p_{T}` take into account the squared uncertainty in
+the difference between slopes (`error2` :math:`\equiv \sigma_f^2`).
+By assuming Gaussian error propagation, we can add the two errors
+if they are uncorrelated (which is fair for scattering and measurement uncertainties).
 
 The last cut applied in this function is on the transverse impact parameter (or DCA -
 distance of closest approach), which is the distance of the perigee of a track from
@@ -172,8 +168,8 @@ performance and the quality of the final track collections by rejecting lower-qu
 
 The weight can be influenced by:
 
-#. The transverse (:math:`d_{0}`) and longitudinal (:math:`z_{0}`) impact parameters (the higher the distance the smaller the weight)
-#. The number of seeds which may belong to the same particle track (:math:`N_{t}`)
+#. The transverse (:math:`d_{0}`) and longitudinal (:math:`z_{0}`) impact parameters (the higher the distance the smaller the weight).
+#. The number of seeds which may belong to the same particle track (:math:`N_{t}`).
 #. Optional detector specific cuts.
 
 The transverse impact parameter is multiplied by the configured factor and subtracted from
