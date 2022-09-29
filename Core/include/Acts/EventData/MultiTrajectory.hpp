@@ -271,7 +271,7 @@ class TrackStateProxy {
   ///       not allocated in the source track state proxy.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if_t<!RO>>
-  void copyFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
+  void copyFrom(TrackStateProxy<Trajectory, M, ReadOnlyOther> other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {
     using PM = TrackStatePropMask;
