@@ -243,14 +243,14 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     const auto& allTracksTips =
         ctx.eventStore.get<std::vector<std::pair<size_t, size_t>>>(
             m_cfg.inputAllFittedTracksTips);
-    std::optional<const std::vector<uint32_t>&> trackIndices;
+    const std::vector<uint32_t>* trackIndices = nullptr;
 
     if (ctx.eventStore.exists(m_cfg.inputFittedTracksIndices)) {
-      trackIndices = ctx.eventStore.get<std::vector<uint32_t>>(
+      trackIndices = &ctx.eventStore.get<std::vector<uint32_t>>(
           m_cfg.inputFittedTracksIndices);
 
       throw_assert(
-          trackIndices.size() == inputFittedTracks.size(),
+          trackIndices->size() == inputFittedTracks.size(),
           "Selected track indices count does not match fitted tracks count");
     }
 
@@ -261,7 +261,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
     for (size_t i = 0; i < inputFittedTracks.size(); i++) {
-      auto fittedTrackIndex = trackIndices ? trackIndices[i] : i;
+      auto fittedTrackIndex = trackIndices ? (*trackIndices)[i] : i;
       auto& [iTraj, tip] = allTracksTips[fittedTrackIndex];
       const auto& traj = trajectories[iTraj];
       identifyContributingParticles(hitParticlesMap, traj, tip,
