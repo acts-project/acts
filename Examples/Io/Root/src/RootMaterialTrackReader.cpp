@@ -49,7 +49,13 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   m_inputChain->SetBranchAddress("mat_A", &m_step_A);
   m_inputChain->SetBranchAddress("mat_Z", &m_step_Z);
   m_inputChain->SetBranchAddress("mat_rho", &m_step_rho);
-
+  if (m_cfg.readCachedSurfaceInformation) {
+    m_inputChain->SetBranchAddress("sur_id", &m_sur_id);
+    m_inputChain->SetBranchAddress("sur_x", &m_sur_x);
+    m_inputChain->SetBranchAddress("sur_y", &m_sur_y);
+    m_inputChain->SetBranchAddress("sur_z", &m_sur_z);
+    m_inputChain->SetBranchAddress("sur_pathCorrection", &m_sur_pathCorrection);
+  }
   if (m_cfg.fileList.empty()) {
     throw std::invalid_argument{"No input files given"};
   }
@@ -63,11 +69,18 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   }
 
   m_events = m_inputChain->GetMaximum("event_id") + 1;
-  ACTS_DEBUG("The full chain has " << m_events << " entries.");
+  size_t nentries = m_inputChain->GetEntries();
+  m_batchSize = nentries / m_events;
+  ACTS_DEBUG("The full chain has "
+             << nentries << " entries for " << m_events
+             << " events this corresponds to a batch size of: " << m_batchSize);
+  std::cout << "The full chain has " << nentries << " entries for " << m_events
+            << " events this corresponds to a batch size of: " << m_batchSize
+            << std::endl;
 
   // If the events are not in order, get the entry numbers for ordered events
   if (not m_cfg.orderedEvents) {
-    m_entryNumbers.resize(m_events);
+    m_entryNumbers.resize(nentries);
     m_inputChain->Draw("event_id", "", "goff");
     // Sort to get the entry numbers of the ordered events
     TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
@@ -90,6 +103,12 @@ ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
   delete m_step_A;
   delete m_step_Z;
   delete m_step_rho;
+
+  delete m_sur_id;
+  delete m_sur_x;
+  delete m_sur_y;
+  delete m_sur_z;
+  delete m_sur_pathCorrection;
 }
 
 std::string ActsExamples::RootMaterialTrackReader::name() const {
@@ -113,20 +132,10 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
     // The collection to be written
     std::unordered_map<size_t, Acts::RecordedMaterialTrack> mtrackCollection;
 
-    // Find the start entry and the batch size for this event
-    std::string eventNumberStr = std::to_string(context.eventNumber);
-    std::string findStartEntry = "event_id<" + eventNumberStr;
-    std::string findBatchSize = "event_id==" + eventNumberStr;
-    size_t startEntry = m_inputChain->GetEntries(findStartEntry.c_str());
-    size_t batchSize = m_inputChain->GetEntries(findBatchSize.c_str());
-    ACTS_VERBOSE("The event has " << batchSize
-                                  << " entries with the start entry "
-                                  << startEntry);
-
     // Loop over the entries for this event
-    for (size_t ib = 0; ib < batchSize; ++ib) {
+    for (size_t ib = 0; ib < m_batchSize; ++ib) {
       // Read the correct entry: startEntry + ib
-      auto entry = startEntry + ib;
+      auto entry = m_batchSize * context.eventNumber + ib;
       if (not m_cfg.orderedEvents and entry < m_entryNumbers.size()) {
         entry = m_entryNumbers[entry];
       }
@@ -150,10 +159,8 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
         double mX0 = (*m_step_X0)[is];
         double mL0 = (*m_step_L0)[is];
         double s = (*m_step_length)[is];
-
         rmTrack.second.materialInX0 += s / mX0;
         rmTrack.second.materialInL0 += s / mL0;
-
         /// Fill the position & the material
         Acts::MaterialInteraction mInteraction;
         mInteraction.position =
@@ -164,11 +171,22 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
             Acts::Material::fromMassDensity(mX0, mL0, (*m_step_A)[is],
                                             (*m_step_Z)[is], (*m_step_rho)[is]),
             s);
+        if (m_cfg.readCachedSurfaceInformation) {
+          // add the surface information to the interaction this allows the
+          // mapping to be speed up
+          mInteraction.intersectionID =
+              Acts::GeometryIdentifier((*m_sur_id)[is]);
+          mInteraction.intersection =
+              Acts::Vector3((*m_sur_x)[is], (*m_sur_y)[is], (*m_sur_z)[is]);
+          mInteraction.pathCorrection = (*m_sur_pathCorrection)[is];
+        } else {
+          mInteraction.intersectionID = Acts::GeometryIdentifier();
+          mInteraction.intersection = Acts::Vector3(0, 0, 0);
+        }
         rmTrack.second.materialInteractions.push_back(std::move(mInteraction));
       }
       mtrackCollection[ib] = (std::move(rmTrack));
     }
-
     // Write to the collection to the EventStore
     context.eventStore.add(m_cfg.collection, std::move(mtrackCollection));
   }

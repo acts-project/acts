@@ -1,4 +1,6 @@
-ROOT based analysis applications
+.. _analysis_apps:
+
+Analysis applications
 ================================
 
 The ACTS examples come with a certain variety of ROOT based validation and performance writers, 

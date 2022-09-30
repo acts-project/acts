@@ -1,5 +1,10 @@
+(material_howto_core)=
+# Howto run the material mapping and validation
+
 ACTS Material Mapping Tutorial
 ==============================
+
+(This how to uses **deprecated** executables and will be uptaded soon)
 
 When performing track reconstruction, the proper amount of material crossed by the particle needs to be accounted for. This material is originally available in the detector simulation with a lot of details, which would make it expensive to directly use. To circumvent this issue, the material is mapped onto different surfaces in the tracking geometry. This process will be performed in 3 steps: 
 
@@ -115,6 +120,7 @@ With the surfaces map and the material track we can finally do the material mapp
        --mat-mapping-surfaces true \
        --mat-mapping-volumes true \
        --mat-mapping-volume-stepsize 1 \
+       --mat-mapping-read-surfaces false \
        --dd4hep-input <source>/thirdparty/OpenDataDetector/xml/OpenDataDetector.xml
 
 Note that technically when using DD4hep (in particular for the ODD) using the option ``--mat-input-type`` is not strictly necessary as the DD4hep geometry can hold the information of which surface to map onto with which binning. We will ignore this option, since the goal of this guide is to explain how to make a material map regardless of the detector.
@@ -131,6 +137,9 @@ In addition to root and JSON output, one can also output the material map to a C
 
 .. note::
   You can map onto surfaces and volumes separately (for example if you want to optimise first one then the other). In that case after mapping one of those you will need to use the resulting JSON material map as an input to the ``mat-input-file``.
+
+.. note::
+  You might need to run the material mapping multiple times in a row to optimise the binning for each surface, which can be time-consuming. To improve the speed of subsequent mapping one can turn the ``mat-mapping-read-surfaces`` option to true, with this option the intersection of the material track with the surfaces will be taken directly from the input root file (which would have been updated during the first mapping). This will save the time needed to compute them. This can save up to 50% of the mapping time. Please note that this can only be used if the mapping surfaces used didn't change between this execution and the last.
 
 Material Validation
 -------------------
