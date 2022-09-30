@@ -1,7 +1,7 @@
 # Track Seeding
 
 To reduce the time needed to reconstruct particle tracks, a track seed
-(henceforth: seed) is created which serves as initial direction for the track
+(henceforth: seed) is created which serves as the initial direction for the track
 reconstruction algorithm (henceforth: the tracking). The tracking then tries to
 find all measurements belonging to a single particle in this direction in order
 to reconstruct the track. This means, if no seed exists for a particle, this
@@ -10,22 +10,22 @@ which either correspond to a particle for which another seed already exists or
 which do not correspond to a particle at all increases the time needed for
 tracking.
 
-A good seeding algorithm therefore has the following properties:
+A good seeding algorithm, therefore, has the following properties:
 
 * It finds at least one seed for each particle that should be found
 * It doesn’t find many seeds which do NOT correspond to particles
 * It doesn’t find many seeds per particle
 
-The most typical way to create seeds is to combine measurements. In a homogeneous magnetic field, 3 measurements perfectly describe the helical path of a charged particle. One such triplet of measurements would then constitute a seed and define in close bounds where the tracking needs to look for additional measurements to create a track spanning the whole detector. The difficulty is in choosing the correct measurements, as a helix can be fitted through any 3 measurements in a collision event with potentially tens of thousands of measurements. Therefore, a number of constraints or “cuts” are defined to reduce the number of candidates. Cuts may define where particles originate or the range of energy of particles to be found or otherwise restrict the combination of measurements for seed creation.
+The most typical way to create seeds is to combine measurements. In a homogeneous magnetic field, 3 measurements perfectly describe the helical path of a charged particle. One such triplet of measurements would then constitute a seed and defines, in close bounds, where the tracking needs to look for additional measurements to create a track spanning the whole detector. The difficulty is in choosing the correct measurements, as a helix can be fitted through any 3 measurements in a collision event with potentially tens of thousands of measurements. Therefore, many constraints or “cuts” are defined to reduce the number of candidates. Cuts may define where particles originate or the range of energy of particles to be found or otherwise restrict the combination of measurements for seed creation.
 
 ## Acts Implementation
 
-The seeding implementation in `Core/include/Acts/Seeding/` was written with a focus on parallelism and maintainability and as detector agnostic as possible, only assuming a (near) homogeneous magnetic field with particles originating from the central detector region. Cuts are configurable and can be plugged in as algorithm which is called by the seeding. The seeding works on measurements or “SpacePoints” (SP), which need to provide $(x,y,z)$ coordinates with the $z$ axis being along the magnetic field, and $x$ and $y$. For the seeding algorithm to function the particle point of origin has to have radius smaller compared to the radius of the detector layer closest to the interaction region. In other words, this seeding algorithm is not suitable for secondary particles originating far from interaction region.
+The seeding implementation in `Core/include/Acts/Seeding/` was written with a focus on parallelism and maintainability and as detector agnostic as possible, only assuming a (near) homogeneous magnetic field with particles originating from the central detector region. Cuts are configurable and can be plugged in as algorithm which is called by the seeding. The seeding works on measurements or “SpacePoints” (SP), which need to provide $(x,y,z)$ coordinates with the $z$ axis being along the magnetic field, and $x$ and $y$. For the seeding algorithm to function the particle point of origin has to have a radius smaller than the radius of the detector layer closest to the interaction region. In other words, this seeding algorithm is not suitable for secondary particles originating far from the interaction region.
 
 :::{figure} ../figures/seeding/3Dcoordinates.svg
 :width: 550px
 :align: center
-Sketch of the detector with 3 layers. The interaction region is supposed to be located along the z axis and have size significantly smaller than the radius of the innermost detector layer.
+Sketch of the detector with 3 layers. The interaction region is supposed to be located along the $z$-axis and has a size significantly smaller than the radius of the innermost detector layer.
 :::
 
 :::{attention}
@@ -39,11 +39,11 @@ lower energy particles.
 ### SP Grid and Groups Formation
 
 The SPs in each detector layer are projected on a rectangular grid of configurable
-granularity. The search for seed starts from selecting SP in the middle detector 
-layer. Then matching SPs are searched in the inner an outer layers. Grouping of 
+granularity. The search for seed starts by selecting SP in the middle detector 
+layer. Then matching SPs are searched in the inner and outer layers. Grouping of 
 the SPs in the aforementioned grid allows to limit the search to neighbouring grid
 cells thus improving significantly algorithm performance (see {numref}`tripletsFormation`). The number of neighboring 
-bins used in the SP search can be defined separately for bottom and top layer SPs
+bins used in the SP search can be defined separately for the bottom and top layer SPs
 in the $z$ and $\phi$ directions.
 
 (tripletsFormation)=
@@ -59,13 +59,13 @@ The The {class}`SeedFilter::createSeedsForGroup` function receives three iterato
 over SPs constructed from detector layers of increasing radii. The seedfinder will 
 then attempt to create seeds, with each seed containing exactly one SP returned by 
 each of the three iterators. It starts by iterating over SPs in the middle layer
-(2nd iterator), and within this loop separately iterates once over bottom SP 
-and once over top SP. Within each of the nested loops, SP pairs are tested for
+(2nd iterator), and within this loop separately iterates once over the bottom SP 
+and once over the top SP. Within each of the nested loops, SP pairs are tested for
 compatibility by applying a set of configurable cuts that can be tested with
 two SP only (pseudorapidity, origin along $z$-axis, distance in $r$ between SP,
 compatibility with interaction point).
 
-For all pairs passing the selection the triplets of bottom - middle - top SPs are formed.
+For all pairs passing the selection the triplets of bottom-middle-top SPs are formed.
 Each triplet is then confronted with the helix hypothesis. In order to perform calculations
 only once, the circle calculation is spread out over the three loops.
 
@@ -73,12 +73,12 @@ only once, the circle calculation is spread out over the three loops.
 :::{figure} ../figures/seeding/x-yCoordinates.svg
 :width: 400px
 :align: center
-The x-y projection of the detector with the charged particle helical track originating from the centre of the detector. Signals left by passage of the track through the detector layers are marked with green crosses.
+The x-y projection of the detector with the charged particle helical track originating from the centre of the detector. Signals left by the passage of the track through the detector layers are marked with green crosses.
 :::
 
 From the helix circle (see {numref}`x-yCoordinates`), particle energy and impact parameters can be estimated.
 To calculate the helix circle in the $x/y$ plane, the $x,y$ coordinates are
-transformed into a $u/v$ plane in order to calculate the circle with a linear equation
+transformed into a $u/v$ plane to calculate the circle with a linear equation
 instead of a quadratic equation for speed. The conformal transformation is given by:
 
 \begin{equation*}
@@ -103,7 +103,7 @@ Inserting the coefficients in the circle equation and assuming that the circle g
 (2R)^2 = \frac{A^2+1}{B^2} .
 \end{equation*}
 
-Now we can we can apply a cut on the estimate of the minimum helix diameter `minHelixDiameter2` without the extra overhead of conversions or computationally complex calculations. The seed is accepted if
+Now we can apply a cut on the estimate of the minimum helix diameter `minHelixDiameter2` without the extra overhead of conversions or computationally complex calculations. The seed is accepted if
 
 \begin{equation*}
 \frac{A^2+1}{B^2} > (2 R^{min})^2 = \left ( \frac{2 \cdot p_T^{min}}{300 \cdot B_z} \right)^2 \equiv \textnormal{minHelixDiameter2} ,
@@ -115,14 +115,14 @@ where $B_z$ is the magnetic field.
 :::{figure} ../figures/seeding/r-zCoordinates.svg
 :width: 500px
 :align: center
-The r-z projection of the detector with the same charged particle track. The track is depicted with the same colours as on previous figure.
+The r-z projection of the detector with the same charged particle track. The track is depicted with the same colours as in the previous figure.
 :::
        
 The track is not an ideal helix. At each detector layer (or any other material)
 scattering may occur making the helix approximate. 
 The algorithm will check if the triplet forms a nearly straight line
 in the $r/z$ plane (see {numref}`r-zCoordinates`) as the particle path in the $r/z$ plane is
-unaffected by the magnetic field. This is split in two parts; the first test occurs before the calculation of the helix
+unaffected by the magnetic field. This is split into two parts; the first test occurs before the calculation of the helix
 circle. Therefore, the deviation from a straight line is compared to the
 maximum allowed scattering at minimum $p_T$ scaled by the forward angle:
 
@@ -142,8 +142,7 @@ allowed $p_T$:
 \end{equation*}
 
 The second part check against the multiple scattering term `p2scatterSigma` ($\sigma^2_{p_T^{estimated}}$) assuming the seed $p_T$ estimation, instead of the minimum allowed $p_T$.
-This term is inversely proportinal to the momentum; smaller scattering angle is permitted for higher momentum, while larger scattering
-takes into account amount of the curvature of the seed:
+This term is inversely proportional to the momentum and accounts for the curvature of the seed; smaller scattering angle is permitted for higher momentum.
 
 \begin{equation*}
 \left (\cot \theta_b - \cot \theta_t \right ) ^2 < \sigma^2_{p_T^{estimated}} + \sigma_f^2,
@@ -163,13 +162,13 @@ oi
 :::
 
 Assuming the middle layer SP in the origin of the $x/y$ frame, as in {numref}`impactParameter`. 
-The distance between the center of the helix and interaction point (IP) is given by
+The distance between the center of the helix and the interaction point (IP) is given by
 \begin{equation*}
 (x_0 + r_m)^2 + y_0^2 = (R + d_0)^2 \quad  \xrightarrow{R^2 = x_0^2 + y_0^2} \quad \frac{d_0^2}{R^2} + 2 \frac{d_0}{R} = \frac{2 x_0 r_m + r_m^2}{R^2} .
 \end{equation*}
 
 Considering that $d_0 << R$ (we can neglect the term proportional to $d_0^2$) and using the $u/v$ line equation calculated previously, 
-the cut can now be estimated using a linear function in the $u/v$ plane instead of a quatic function:
+the cut can now be estimated using a linear function in the $u/v$ plane instead of a quartic function:
 
 \begin{equation*}
 d_0 \leq \left| \left( A - B \cdot r_M \right) \cdot r_M \right|
@@ -177,49 +176,44 @@ d_0 \leq \left| \left( A - B \cdot r_M \right) \cdot r_M \right|
 
 ### The Seed Filter
 
-The bottom SP and middle SP as well as the collection of top SP is passed to
-{class}`SeedFilter::filterSeeds_2SpFixed`, whose collected output for the current middle
-SP with all compatible bottom SP and top SP is then passed to
-{class}`SeedFilter::filterSeeds_1SpFixed`.
+After creating the potential seeds we apply a seed filter procedure that compares the seeds with other SPs compatible with the seed curvature.
+This process ranks the potential seeds based on certain quality criteria and selects the ones that are more likely to produce high-quality tracks 
+The filter is divided into two functions {class}`SeedFilter::filterSeeds_2SpFixed` and {class}`SeedFilter::filterSeeds_1SpFixed`.
+
+The first function compares the middle and bottom layer SPs of the seeds to other top layer SPs; seeds only differing in top SP are 
+compatible if they have similar helix radius with the same sign (i.e. the same charge). The SPs must have a minimum distance in 
+detector radius, such that SPs from the same layer cannot be considered compatible. The second function iterates over the seeds with 
+only a common middle layer SP and selects the higher quality combinations.
 
 #### SeedFilter::filterSeeds_2SpFixed
 
 This function assigns a weight (which should correspond to the likelihood that
-a seed is good) to all seeds and applies detector specific section of seeds based on weights.
+a seed is good) to all seeds and applies detector-specific selection of seeds based on weights. 
 The weight is a “soft cut”, which means that it is only
-used to discard tracks if many seeds are created for the same middle SP in
-{class}`SeedFilter::filterSeeds_1SpFixed`. This process is important to improving computational
+used to discard tracks if many seeds are created for the same middle SP.
+This process is important to improving computational
 performance and the quality of the final track collections by rejecting lower-quality seeds.
 
-The weight can be influenced by:
+The weight is calculated by:
+\begin{equation*}
+w = (c_1 \cdot N_{t} - c_2 \cdot d_0 - c_3 |z_0| ) + \textnormal{detector specific cuts}.
+\end{equation*}
 
-* The transverse ($d_0$) and longitudinal ($z_0$) impact parameters (the higher the distance the smaller the weight).
-* The number of seeds which may belong to the same particle track ($N_t$).
-* Optional detector specific cuts.
-
-The transverse impact parameter is multiplied by the configured factor and subtracted from
+The  transverse ($d_0$) and longitudinal ($z_0$) impact parameters are multiplied by a configured factor and subtracted from
 the weight, as seeds with higher impact parameters are assumed to be less
 likely to stem from a particle than another seed using the same middle SP with
-smaller impact parameters. The longitudinal impact parameter is subtracted from
-the weight if configured.
+smaller impact parameters. The number of compatible seeds ($N_t$) is used to increase the weight, as a higher number of measurements 
+will lead to higher quality tracks.  Finally, the weight can also be affected by optional detector-specific cuts.
 
-The number of seeds only differing in top SP which have similar helix radius
-and the same sign (i.e. the same charge) is used to increase the weight, as it
-means that more than three SPs that may be from the same particle have
-been found. The SPs must have a minimum distance in detector radius,
-such that SPs from the same layer cannot be counted towards the
-increased weight. The number of found compatible seeds is multiplied by a
-configured factor and added to the weight.
+:::{note} 
+The $z_0$ term in the weight is not yet fully configurable, but this will change soon.
+:::
 
-The optional detector specific cuts can use the weight and the
-three SP to apply a hard cut or change the weight of a seed.
-
-The {class}`SeedFilter::filterSeeds_2SpFixed` function also includes a fully configurable seed confirmation step that, when enabled,
-classifies higher quality seeds as "quality confined" seeds if
-they fall within a predefined range of parameters ($d_0$, $z_0$ and $N_t$) that also
+The {class}`SeedFilter::filterSeeds_2SpFixed` function also includes a configurable `Acts::SeedConfirmationRangeConfig` seed confirmation step that, when enabled,
+classifies higher quality seeds as "quality confined" seeds if they fall within a predefined range of parameters ($d_0$, $z_0$ and $N_t$) that also
 depends on the region of the detector (i.e., forward or central region). If the seed is not
 classified as "quality confined" seed, it will only be accepted if its weight is greater
-than a certain threshold and no other high quality seed has been found.
+then a certain threshold and no other high-quality seed has been found.
 
 The seed confirmation also sets a limit on the number of seeds produced for each middle SP,
 which retains only the higher quality seeds. If this limit is exceeded, the algorithm
@@ -227,20 +221,13 @@ checks if there is any low-quality seed in the seed container of this middle SP 
 
 #### SeedFilter::filterSeeds_1SpFixed
 
-This function allows the detector specific cuts to filter on the basis of all
+This function allows the detector-specific cuts to filter based on all
 seeds with a common middle SP and limits the number of seeds per middle SP to
 the configured limit. It sorts the seeds by weight and, to achieve a
 well-defined ordering in the rare case weights are equal, sorts them by
 location. The ordering by location is only done to make sure reimplementations
-(such as the GPU code) are comparable and return the bitwise exactly same
+(such as the GPU code) are comparable and return the bitwise exactly the same
 result.
-
-When a seed is accepted and seed confirmation is enabled, the weight of that seed
-is assigned to each of its SPs. Each SP will hold the weight of the best seed that
-includes that SP. This information is used in the selection of the next seeds:
-The seed is kept only if its weight is greater or equal than the weight of at least one of
-its SP components.
-
 
 [^Tanabashi:2018]: M. Tanabashi et al. (Particle Data Group), Passage of Particles Through Matter, Phys. Rev. D 98 0300001 (2018) 2.
 
