@@ -41,10 +41,11 @@ class RootVertexPerformanceWriter final
     std::string inputAssociatedTruthParticles;
     /// Selected fitted tracks
     std::string inputFittedTracks;
-    /// Selected fitted tracks indices (points from `inputSelectedFittedTracks` to `inputAllFittedTracks`).
-    /// If empty all we assume selected == all.
+    /// Selected fitted tracks indices (points from `inputSelectedFittedTracks`
+    /// to `inputAllFittedTracks`). If empty all we assume selected == all.
     std::string inputFittedTracksIndices;
-    /// All event fitted tracks tips (points from `inputAllFittedTracks` to `inputTrajectories`)
+    /// All event fitted tracks tips (points from `inputAllFittedTracks` to
+    /// `inputTrajectories`)
     std::string inputAllFittedTracksTips;
     /// Trajectories object from track finidng
     std::string inputTrajectories;

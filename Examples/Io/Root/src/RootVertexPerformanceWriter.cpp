@@ -212,9 +212,8 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
 
   if (!m_cfg.inputAssociatedTruthParticles.empty()) {
     // Read track-associated truth particle input collection
-    associatedTruthParticles =
-        ctx.eventStore.get<SimParticleContainer>(
-            m_cfg.inputAssociatedTruthParticles);
+    associatedTruthParticles = ctx.eventStore.get<SimParticleContainer>(
+        m_cfg.inputAssociatedTruthParticles);
 
     /*****************  Start x,y,z resolution plots here *****************/
     // Matching tracks at vertex to fitted tracks that are in turn matched
@@ -244,14 +243,15 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     const auto& allTracksTips =
         ctx.eventStore.get<std::vector<std::pair<size_t, size_t>>>(
             m_cfg.inputAllFittedTracksTips);
-    std::optional<const std::vector<uint32_t> &> trackIndices;
+    std::optional<const std::vector<uint32_t>&> trackIndices;
 
     if (ctx.eventStore.exists(m_cfg.inputFittedTracksIndices)) {
-      trackIndices = ctx.eventStore.get<std::vector<uint32_t>>(m_cfg.inputFittedTracksIndices);
+      trackIndices = ctx.eventStore.get<std::vector<uint32_t>>(
+          m_cfg.inputFittedTracksIndices);
 
       throw_assert(
-        trackIndices.size() == inputFittedTracks.size(),
-        "Selected track indices count does not match fitted tracks count");
+          trackIndices.size() == inputFittedTracks.size(),
+          "Selected track indices count does not match fitted tracks count");
     }
 
     std::vector<ParticleHitCount> particleHitCounts;
@@ -297,9 +297,8 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   m_nVtxReconstructable =
       getNumberOfReconstructableVertices(associatedTruthParticles);
 
-  ACTS_INFO(
-      "Total number of reco track-associated truth particles in event : "
-      << associatedTruthParticles.size());
+  ACTS_INFO("Total number of reco track-associated truth particles in event : "
+            << associatedTruthParticles.size());
   ACTS_INFO("Total number of reco track-associated truth primary vertices : "
             << m_nVtxReconstructable);
 
