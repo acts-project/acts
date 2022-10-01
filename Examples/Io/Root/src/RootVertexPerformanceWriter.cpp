@@ -261,7 +261,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
         ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
 
     for (size_t i = 0; i < inputFittedTracks.size(); i++) {
-      auto fittedTrackIndex = trackIndices ? (*trackIndices)[i] : i;
+      auto fittedTrackIndex = trackIndices != nullptr ? (*trackIndices)[i] : i;
       auto& [iTraj, tip] = allTracksTips[fittedTrackIndex];
       const auto& traj = trajectories[iTraj];
       identifyContributingParticles(hitParticlesMap, traj, tip,
