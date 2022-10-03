@@ -180,7 +180,7 @@ d_0 \leq \left| \left( A - B \cdot r_M \right) \cdot r_M \right|
 
 After creating the potential seeds we apply a seed filter procedure that compares the seeds with other SPs compatible with the seed curvature.
 This process ranks the potential seeds based on certain quality criteria and selects the ones that are more likely to produce high-quality tracks 
-The filter is divided into two functions {class}`SeedFilter::filterSeeds_2SpFixed` and {class}`SeedFilter::filterSeeds_1SpFixed`.
+The filter is divided into two functions {func}`SeedFilter::filterSeeds_2SpFixed` and {func}`SeedFilter::filterSeeds_1SpFixed`.
 
 The first function compares the middle and bottom layer SPs of the seeds to other top layer SPs; seeds only differing in top SP are 
 compatible if they have similar helix radius with the same sign (i.e. the same charge). The SPs must have a minimum distance in 
