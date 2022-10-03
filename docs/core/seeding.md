@@ -187,7 +187,9 @@ compatible if they have similar helix radius with the same sign (i.e. the same c
 detector radius, such that SPs from the same layer cannot be considered compatible. The second function iterates over the seeds with 
 only a common middle layer SP and selects the higher quality combinations.
 
-#### SeedFilter::filterSeeds_2SpFixed
+:::{doxygenfunction} SeedFilter::filterSeeds_2SpFixed
+:outline:
+:::
 
 This function assigns a weight (which should correspond to the likelihood that
 a seed is good) to all seeds and applies detector-specific selection of seeds based on weights. 
