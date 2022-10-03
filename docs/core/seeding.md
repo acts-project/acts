@@ -211,7 +211,7 @@ will lead to higher quality tracks.  Finally, the weight can also be affected by
 The $z_0$ term in the weight is not yet fully configurable, but this will change soon.
 :::
 
-The {class}`SeedFilter::filterSeeds_2SpFixed` function also includes a configurable `Acts::SeedConfirmationRangeConfig` seed confirmation step that, when enabled,
+The {func}`SeedFilter::filterSeeds_2SpFixed` function also includes a configurable {class}`Acts::SeedConfirmationRangeConfig` seed confirmation step that, when enabled,
 classifies higher quality seeds as "quality confined" seeds if they fall within a predefined range of parameters ($d_0$, $z_0$ and $N_t$) that also
 depends on the region of the detector (i.e., forward or central region). If the seed is not
 classified as "quality confined" seed, it will only be accepted if its weight is greater
