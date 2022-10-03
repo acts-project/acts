@@ -17,8 +17,8 @@
 #include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
 #include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
 
-#include <memory>
 #include <filesystem>
+#include <memory>
 
 #include <pybind11/pybind11.h>
 

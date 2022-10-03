@@ -19,10 +19,10 @@
 #include "ActsExamples/MagneticField/ScalableBFieldService.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string>
-#include <filesystem>
 
 #include <boost/program_options.hpp>
 

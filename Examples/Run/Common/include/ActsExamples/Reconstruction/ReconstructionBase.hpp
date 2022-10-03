@@ -20,9 +20,9 @@
 #include "ActsExamples/TruthTracking/ParticleSmearingOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <filesystem>
 #include <memory>
 #include <string>
-#include <filesystem>
 
 /// Setup sim hit csv reader
 ///
