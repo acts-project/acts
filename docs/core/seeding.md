@@ -1,3 +1,5 @@
+(seeding_core)=
+
 # Track Seeding
 
 To reduce the time needed to reconstruct particle tracks, a track seed
