@@ -258,7 +258,8 @@ int main(int argc, char** argv) {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   groupIt = spGroup.begin();
-  const Acts::Vector2 rMiddleSPRange;
+	const float rMiddleMinSPRange;
+	const float rMiddleMaxSPRange;
 
   if (do_cpu) {
     decltype(seedfinder_cpu)::State state;
@@ -267,7 +268,7 @@ int main(int argc, char** argv) {
     for (; !(groupIt == spGroup.end()); ++groupIt) {
       seedfinder_cpu.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleMinSPRange, rMiddleMaxSPRange);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)

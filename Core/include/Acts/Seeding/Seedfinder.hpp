@@ -81,7 +81,7 @@ class Seedfinder {
       State& state,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
-      const Acts::Vector2 rMiddleSPRange) const;
+      const float rMiddleMinSPRange, const float rMiddleMaxSPRange) const;
 
   /// @brief Compatibility method for the new-style seed finding API.
   ///

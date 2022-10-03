@@ -140,7 +140,8 @@ int main(int argc, char** argv) {
   config.impactMax = 10._mm;
 
   config.useVariableMiddleSPRange = false;
-  const Acts::Vector2 rMiddleSPRange;
+	const float rMiddleMinSPRange;
+	const float rMiddleMaxSPRange;
 
   int numPhiNeighbors = 1;
 
@@ -189,7 +190,7 @@ int main(int argc, char** argv) {
   for (; !(groupIt == endOfGroups); ++groupIt) {
     auto& v = seedVector.emplace_back();
     a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
-                          groupIt.middle(), groupIt.top(), rMiddleSPRange);
+                          groupIt.middle(), groupIt.top(), rMiddleMinSPRange, rMiddleMaxSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
