@@ -7,7 +7,8 @@ add_library(
   src/TrackFindingAlgorithm.cpp
   src/TrackFindingAlgorithmFunction.cpp
   src/TrackFindingOptions.cpp
-  src/TrackParamsEstimationAlgorithm.cpp)
+  src/TrackParamsEstimationAlgorithm.cpp
+  src/TrajectoriesToPrototracks.cpp)
 target_include_directories(
   ActsExamplesTrackFinding
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

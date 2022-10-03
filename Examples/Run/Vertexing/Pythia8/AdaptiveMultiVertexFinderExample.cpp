@@ -14,6 +14,7 @@
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/ParticleSmearingOptions.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
 #include "ActsExamples/Vertexing/VertexingOptions.hpp"
 
@@ -32,6 +33,7 @@ int main(int argc, char* argv[]) {
   Options::addVertexingOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
+  Options::addParticleSmearingOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;

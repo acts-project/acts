@@ -46,6 +46,11 @@ class InterpolatedMagneticField : public MagneticFieldProvider {
   ///         otherwise @c false
   virtual bool isInside(const Vector3& position) const = 0;
 
+  /// Get a field value without checking if the lookup position is within the
+  /// interpolation domain.
+  ///
+  /// @param position The lookup position in 3D
+  /// @return The field value at @p position
   virtual Vector3 getFieldUnchecked(const Vector3& position) const = 0;
 };
 
@@ -212,7 +217,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @brief get the number of bins for all axes of the field map
   ///
   /// @return vector returning number of bins for all field map axes
-  std::vector<size_t> getNBins() const override {
+  std::vector<size_t> getNBins() const final {
     auto nBinsArray = m_cfg.grid.numLocalBins();
     return std::vector<size_t>(nBinsArray.begin(), nBinsArray.end());
   }
@@ -220,14 +225,14 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @brief get the minimum value of all axes of the field map
   ///
   /// @return vector returning the minima of all field map axes
-  std::vector<double> getMin() const override {
+  std::vector<double> getMin() const final {
     return std::vector<double>(m_lowerLeft.begin(), m_lowerLeft.end());
   }
 
   /// @brief get the maximum value of all axes of the field map
   ///
   /// @return vector returning the maxima of all field map axes
-  std::vector<double> getMax() const override {
+  std::vector<double> getMax() const final {
     return std::vector<double>(m_upperRight.begin(), m_upperRight.end());
   }
 
@@ -236,7 +241,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @param [in] position global 3D position
   /// @return @c true if position is inside the defined look-up grid,
   ///         otherwise @c false
-  bool isInside(const Vector3& position) const override {
+  bool isInside(const Vector3& position) const final {
     return isInsideLocal(m_cfg.transformPos(position));
   }
 
@@ -262,7 +267,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
   /// @copydoc MagneticFieldProvider::makeCache(const MagneticFieldContext&) const
   MagneticFieldProvider::Cache makeCache(
-      const MagneticFieldContext& mctx) const override {
+      const MagneticFieldContext& mctx) const final {
     return MagneticFieldProvider::Cache::make<Cache>(mctx);
   }
 
@@ -283,7 +288,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
         m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition), position));
   }
 
-  Vector3 getFieldUnchecked(const Vector3& position) const override {
+  Vector3 getFieldUnchecked(const Vector3& position) const final {
     const auto gridPosition = m_cfg.transformPos(position);
     return m_cfg.transformBField(m_cfg.grid.interpolate(gridPosition),
                                  position);
@@ -291,7 +296,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
 
   /// @copydoc MagneticFieldProvider::getField(const Vector3&,MagneticFieldProvider::Cache&) const
   Result<Vector3> getField(const Vector3& position,
-                           MagneticFieldProvider::Cache& cache) const override {
+                           MagneticFieldProvider::Cache& cache) const final {
     Cache& lcache = cache.get<Cache>();
     const auto gridPosition = m_cfg.transformPos(position);
     if (!lcache.fieldCell || !(*lcache.fieldCell).isInside(gridPosition)) {
@@ -311,7 +316,7 @@ class InterpolatedBFieldMap : public InterpolatedMagneticField {
   /// @todo return derivative
   Result<Vector3> getFieldGradient(
       const Vector3& position, ActsMatrix<3, 3>& derivative,
-      MagneticFieldProvider::Cache& cache) const override {
+      MagneticFieldProvider::Cache& cache) const final {
     (void)derivative;
     return getField(position, cache);
   }

@@ -28,8 +28,8 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
     std::back_insert_iterator<container_t<spacepoint_t>> spacePointIt) const {
   const unsigned int num_meas = measurements.size();
 
-  Acts::Vector3 gPos;
-  Acts::Vector2 gCov;
+  Acts::Vector3 gPos = Acts::Vector3::Zero();
+  Acts::Vector2 gCov = Acts::Vector2::Zero();
 
   if (num_meas == 1) {  // pixel SP formation
 
