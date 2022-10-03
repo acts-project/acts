@@ -43,12 +43,13 @@ int main(int argc, char** argv) {
     // Set up the variables map
     variables_map vm;
     store(command_line_parser(argc, argv).options(description).run(), vm);
-    notify(vm);
 
     if (vm.count("help") != 0u) {
       std::cout << description;
-      return 0;
+      return 1;
     }
+
+    notify(vm);
 
     // Parse the parameters
     auto iFile = vm["input"].as<std::string>();
