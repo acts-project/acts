@@ -534,8 +534,8 @@ std::vector<Seed<external_spacepoint_t>>
 Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   State state;
-  const float rMiddleMinSPRange = 0;
-  const float rMiddleMaxSPRange = 0;
+  const float rMiddleMinSPRange = std::numeric_limits<int>::max();
+  const float rMiddleMaxSPRange = std::numeric_limits<int>::min();
   std::vector<Seed<external_spacepoint_t>> ret;
 
   createSeedsForGroup(state, std::back_inserter(ret), bottomSPs, middleSPs,

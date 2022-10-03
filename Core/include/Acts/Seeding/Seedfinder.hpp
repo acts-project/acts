@@ -73,7 +73,8 @@ class Seedfinder {
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
   /// @param topSPs group of space points to be used as outermost SP in a seed.
-  /// @param rMiddleSPRange vector containing min and max r variable range for middle SP.
+  /// @param rMiddleMinSPRange min r variable range for middle SP.
+  /// @param rMiddleMaxSPRange max r variable range for middle SP.
   /// @note Ranges must return pointers.
   /// @note Ranges must be separate objects for each parallel call.
   template <template <typename...> typename container_t, typename sp_range_t>
