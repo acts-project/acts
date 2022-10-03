@@ -1,6 +1,8 @@
 (howto_format)=
 
-# How do I run the formatting?
+# Source code formatting
+
+## C++ formatting: `clang-format`
 
 Code formatting is handled by
 [`clang-format`](https://clang.llvm.org/docs/ClangFormat.html). A configuration
@@ -29,5 +31,29 @@ are to use your package manager (e.g. Ubuntu distributions usually offer a set o
 versions to install), or to use statically linked binaries from
 [here](https://github.com/muttleyxd/clang-tools-static-binaries)[^1].
 
+## Python formatting
+
+Formatting of the Python source code uses the library
+[`black`](https://github.com/psf/black). To run it, you can locally install the
+`black` package. You can use `pip` to install it:
+
+```console
+$ pip install black
+$ black <source> 
+```
+
+:::{tip}
+It is **strongly recommended** to use a [virtual
+environment](https://realpython.com/python-virtual-environments-a-primer/) for
+this purpose! For example, run 
+
+```console
+$ python -m venv venv
+$ source venv/bin/activate
+```
+
+and then install and use black. You can also use a tool like
+[`pipx`](https://github.com/pypa/pipx) to simplify this.
+:::
 
 [^1]: This repository is external to the ACTS project, so proceed with caution!
