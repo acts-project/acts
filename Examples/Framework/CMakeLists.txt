@@ -20,7 +20,7 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras Boost::boost ROOT::Core ROOT::Hist
-  PRIVATE dfelibs)
+  PRIVATE dfelibs stdc++fs)
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
