@@ -42,7 +42,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     State& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
-    const Acts::Vector2 rMiddleSPRange) const {
+    const float rMiddleMinSPRange, const float rMiddleMaxSPRange) const {
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -51,10 +51,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     /// check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
-      if (rM < rMiddleSPRange[0]) {
+      if (rM < rMiddleMinSPRange) {
         continue;
       }
-      if (rM > rMiddleSPRange[1]) {
+      if (rM > rMiddleMaxSPRange) {
         // break if SP are sorted in r
         if (m_config.forceRadialSorting) {
           break;
@@ -534,11 +534,12 @@ std::vector<Seed<external_spacepoint_t>>
 Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   State state;
-  Extent extent;
+  const float rMiddleMinSPRange = 0;
+  const float rMiddleMaxSPRange = 0;
   std::vector<Seed<external_spacepoint_t>> ret;
 
   createSeedsForGroup(state, std::back_inserter(ret), bottomSPs, middleSPs,
-                      topSPs, extent);
+                      topSPs, rMiddleMinSPRange, rMiddleMaxSPRange);
 
   return ret;
 }

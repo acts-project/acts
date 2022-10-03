@@ -201,8 +201,8 @@ auto main(int argc, char** argv) -> int {
   auto start_cpu = std::chrono::system_clock::now();
   uint group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-	const float rMiddleMinSPRange;
-	const float rMiddleMaxSPRange;
+  const float rMiddleMinSPRange;
+  const float rMiddleMaxSPRange;
 
   if (!cmdlTool.onlyGpu) {
     decltype(normalSeedfinder)::State state;
@@ -210,7 +210,8 @@ auto main(int argc, char** argv) -> int {
          ++groupIt) {
       normalSeedfinder.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleMinSPRange, rMiddleMaxSPRange);
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleMinSPRange,
+          rMiddleMaxSPRange);
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
         break;
