@@ -187,7 +187,7 @@ compatible if they have similar helix radius with the same sign (i.e. the same c
 detector radius, such that SPs from the same layer cannot be considered compatible. The second function iterates over the seeds with 
 only a common middle layer SP and selects the higher quality combinations.
 
-:::{doxygenfunction} SeedFilter::filterSeeds_2SpFixed
+:::{doxygenfunction} Acts::SeedFilter::filterSeeds_2SpFixed
 :outline:
 :::
 
@@ -223,7 +223,7 @@ The seed confirmation also sets a limit on the number of seeds produced for each
 which retains only the higher quality seeds. If this limit is exceeded, the algorithm
 checks if there is any low-quality seed in the seed container of this middle SP that can be removed.
 
-:::{doxygenfunction} SeedFilter::filterSeeds_1SpFixed
+:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed
 :outline:
 :::
 
