@@ -221,7 +221,9 @@ The seed confirmation also sets a limit on the number of seeds produced for each
 which retains only the higher quality seeds. If this limit is exceeded, the algorithm
 checks if there is any low-quality seed in the seed container of this middle SP that can be removed.
 
-#### SeedFilter::filterSeeds_1SpFixed
+:::{doxygenfunction} SeedFilter::filterSeeds_1SpFixed
+:outline:
+:::
 
 This function allows the detector-specific cuts to filter based on all
 seeds with a common middle SP and limits the number of seeds per middle SP to
