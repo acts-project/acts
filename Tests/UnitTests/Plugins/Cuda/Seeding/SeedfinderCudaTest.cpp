@@ -258,8 +258,8 @@ int main(int argc, char** argv) {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   groupIt = spGroup.begin();
-	const float rMiddleMinSPRange = std::numeric_limits<int>::max();
-	const float rMiddleMaxSPRange = std::numeric_limits<int>::min();
+  const float rMiddleMinSPRange = std::numeric_limits<int>::max();
+  const float rMiddleMaxSPRange = std::numeric_limits<int>::min();
 
   if (do_cpu) {
     decltype(seedfinder_cpu)::State state;

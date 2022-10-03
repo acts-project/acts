@@ -161,8 +161,8 @@ int main(int argc, char* argv[]) {
   // Create the result object.
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_host;
 
-	const float rMiddleMinSPRange = std::numeric_limits<int>::max();
-	const float rMiddleMaxSPRange = std::numeric_limits<int>::min();
+  const float rMiddleMinSPRange = std::numeric_limits<int>::max();
+  const float rMiddleMaxSPRange = std::numeric_limits<int>::min();
 
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
