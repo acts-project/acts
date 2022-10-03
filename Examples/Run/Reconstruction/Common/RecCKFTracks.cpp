@@ -41,11 +41,11 @@
 
 #include <memory>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using namespace std::placeholders;
 
 void addRecCKFOptions(ActsExamples::Options::Description& desc) {

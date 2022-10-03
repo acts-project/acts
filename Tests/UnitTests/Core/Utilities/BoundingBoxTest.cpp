@@ -24,7 +24,7 @@
 #include <random>
 #include <set>
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 namespace Acts {
 namespace Test {
@@ -39,10 +39,10 @@ using Vector2F = Eigen::Matrix<BoundingBoxScalar, 2, 1>;
 using Vector3F = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
 using AngleAxis3F = Eigen::AngleAxis<BoundingBoxScalar>;
 
-boost::filesystem::path tmp_path = []() {
-  auto p = boost::filesystem::temp_directory_path() /
-           boost::filesystem::unique_path();
-  boost::filesystem::create_directory(p);
+std::filesystem::path tmp_path = []() {
+  auto p = std::filesystem::temp_directory_path() /
+           std::filesystem::unique_path();
+  std::filesystem::create_directory(p);
   std::cout << "Writing test output to: " << p << std::endl;
   return p;
 }();

@@ -31,7 +31,7 @@ Acts::ExaTrkXTrackFindingOnnx::ExaTrkXTrackFindingOnnx(const Config& config)
 
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
 
-  using Path = boost::filesystem::path;
+  using Path = std::filesystem::path;
   const Path embedModelPath = Path(m_cfg.modelDir) / "embedding.onnx";
   const Path filterModelPath = Path(m_cfg.modelDir) / "filtering.onnx";
   const Path gnnModelPath = Path(m_cfg.modelDir) / "gnn.onnx";
