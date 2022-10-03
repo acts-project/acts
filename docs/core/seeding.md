@@ -57,7 +57,7 @@ Representation of the search for triplet combinations in the $(r, z)$ plane. The
 
 ### The Seed Finder
 
-The The {class}`SeedFilter::createSeedsForGroup` function receives three iterators 
+The {func}`SeedFilter::createSeedsForGroup` function receives three iterators 
 over SPs constructed from detector layers of increasing radii. The seedfinder will 
 then attempt to create seeds, with each seed containing exactly one SP returned by 
 each of the three iterators. It starts by iterating over SPs in the middle layer
