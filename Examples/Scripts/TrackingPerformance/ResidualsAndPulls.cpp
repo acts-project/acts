@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     auto ao = description.add_options();
     ao("help,h", "Display this help message");
     ao("silent,s", bool_switch(), "Silent mode (without X-window/display).");
-    ao("input,i", value<std::string>()->default_value(""),
+    ao("input,i", value<std::string>()->required(),
        "Input ROOT file containing the input TTree.");
     ao("tree,t", value<std::string>()->default_value("trackstates"),
        "Input TTree name.");
