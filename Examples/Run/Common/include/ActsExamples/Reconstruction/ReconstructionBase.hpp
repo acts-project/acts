@@ -22,8 +22,7 @@
 
 #include <memory>
 #include <string>
-
-#include <boost/filesystem.hpp>
+#include <filesystem>
 
 /// Setup sim hit csv reader
 ///

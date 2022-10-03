@@ -12,11 +12,10 @@
 
 #include <charconv>
 #include <cstdio>
+#include <filesystem>
 #include <regex>
 #include <sstream>
 #include <stdexcept>
-
-#include <filesystem>
 
 std::string ActsExamples::ensureWritableDirectory(const std::string& dir) {
   using std::filesystem::current_path;

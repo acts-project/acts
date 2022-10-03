@@ -32,8 +32,8 @@
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
-#include <memory>
 #include <filesystem>
+#include <memory>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;

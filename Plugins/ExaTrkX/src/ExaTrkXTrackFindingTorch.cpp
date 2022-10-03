@@ -8,7 +8,8 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
+
 #include <cuda.h>
 #include <cuda_runtime.h>
 #include <cuda_runtime_api.h>

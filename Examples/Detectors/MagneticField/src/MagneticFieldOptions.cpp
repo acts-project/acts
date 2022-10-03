@@ -22,8 +22,8 @@
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <filesystem>
 
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {

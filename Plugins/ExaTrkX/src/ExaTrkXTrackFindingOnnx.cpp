@@ -8,7 +8,8 @@
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingOnnx.hpp"
 
-#include <boost/filesystem.hpp>
+#include <filesystem>
+
 #include <core/session/onnxruntime_cxx_api.h>
 #include <cuda.h>
 #include <cuda_runtime_api.h>
