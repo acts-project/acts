@@ -140,8 +140,8 @@ int main(int argc, char** argv) {
   config.impactMax = 10._mm;
 
   config.useVariableMiddleSPRange = false;
-  const float rMiddleMinSPRange = std::numeric_limits<int>::max();
-  const float rMiddleMaxSPRange = std::numeric_limits<int>::min();
+  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
+  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
 
   int numPhiNeighbors = 1;
 

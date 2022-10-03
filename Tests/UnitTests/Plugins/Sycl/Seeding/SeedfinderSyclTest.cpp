@@ -201,8 +201,8 @@ auto main(int argc, char** argv) -> int {
   auto start_cpu = std::chrono::system_clock::now();
   uint group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-  const float rMiddleMinSPRange = std::numeric_limits<int>::max();
-  const float rMiddleMaxSPRange = std::numeric_limits<int>::min();
+  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
+  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
 
   if (!cmdlTool.onlyGpu) {
     decltype(normalSeedfinder)::State state;
