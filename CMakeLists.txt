@@ -339,6 +339,8 @@ if(ACTS_BUILD_DOCS)
   find_package(Sphinx REQUIRED)
 endif()
 
+find_package(Filesystem REQUIRED)
+
 if(ACTS_CUSTOM_SCALARTYPE)
     message(STATUS "Building Acts with custom scalar type: ${ACTS_CUSTOM_SCALARTYPE}")
 endif()
