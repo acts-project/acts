@@ -40,7 +40,7 @@ using Vector3F = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
 using AngleAxis3F = Eigen::AngleAxis<BoundingBoxScalar>;
 
 std::filesystem::path tmp_path = []() {
-  auto p = std::filesystem::temp_directory_path() / std::tmpnam(nullptr);
+  auto p = std::filesystem::temp_directory_path() / "acts_unit_tests";
   std::filesystem::create_directory(p);
   std::cout << "Writing test output to: " << p << std::endl;
   return p;
