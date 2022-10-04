@@ -6,3 +6,4 @@ merge.message.cut_body_before = "--- BEGIN COMMIT MESSAGE ---"
 merge.message.cut_body_and_text = true
 merge.method = "squash"
 merge.message.include_coauthors = true
+merge.priority_merge_label = "automerge priority"
