@@ -259,6 +259,7 @@ options must be specified in subsequent calls to configure the project. The
 following options are available to configure the project and enable optional
 components.
 
+<!-- CMAKE_OPTS_BEGIN -->
 | Option                              | Description                                                                                                                                                                                                                        |
 |-------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | ACTS_BUILD_EVERYTHING               | Build with most options enabled (except<br>HepMC3 and documentation)<br> type: `bool`, default: `OFF`                                                                                                                              |
@@ -308,6 +309,7 @@ components.
 | ACTS_GPERF_INSTALL_DIR              | Hint to help find gperf if profiling is<br>enabled<br> type: `string`, default: `""`                                                                                                                                               |
 | ACTS_ENABLE_LOG_FAILURE_THRESHOLD   | Enable failing on log messages with<br>level above certain threshold<br> type: `bool`, default: `OFF`                                                                                                                              |
 | ACTS_LOG_FAILURE_THRESHOLD          | Log level above which an exception<br>should be automatically thrown. If<br>ACTS_ENABLE_LOG_FAILURE_THRESHOLD is set<br>and this is unset, this will enable a<br>runtime check of the log level.<br> type: `string`, default: `""` |
+<!-- CMAKE_OPTS_END -->
 
 
 All Acts-specific options are disabled or empty by default and must be
