@@ -8,7 +8,6 @@ markdown table to stdout
 import argparse
 from pathlib import Path
 import re
-from tabulate import tabulate
 import textwrap
 import sys
 import difflib
