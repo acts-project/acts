@@ -1,5 +1,3 @@
-find_package(Filesystem REQUIRED)
-
 add_subdirectory(Algorithms)
 add_subdirectory(Detectors)
 add_subdirectory(Framework)

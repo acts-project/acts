@@ -1,5 +1,3 @@
-find_package(Filesystem REQUIRED)
-
 # helpers shared between all tests
 add_subdirectory(CommonHelpers)
 

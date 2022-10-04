@@ -1,5 +1,3 @@
-find_package(Filesystem REQUIRED)
-
 set(SOURCES 
   src/buildEdges.cpp
 )

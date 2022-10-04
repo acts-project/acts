@@ -204,6 +204,8 @@ if (ACTS_SETUP_VECMEM)
   endif()
 endif()
 
+find_package(Filesystem REQUIRED)
+
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
 # only local scope, i.e. they are not accessible her for dependencies added
 # via `add_subdirectory`. this overrides the `project(...)` funcion for
