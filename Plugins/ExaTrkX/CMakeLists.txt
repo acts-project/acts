@@ -1,3 +1,5 @@
+find_package(Filesystem REQUIRED)
+
 set(SOURCES 
   src/buildEdges.cpp
 )
@@ -53,6 +55,7 @@ target_link_libraries(
   PRIVATE
     ${TORCH_LIBRARIES}
     frnn
+    std::filesystem
 )
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
