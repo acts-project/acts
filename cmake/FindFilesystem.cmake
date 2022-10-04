@@ -50,7 +50,6 @@ macro(_check_filesystem)
             return EXIT_SUCCESS;
         }
     ]] _code @ONLY)
-    message("code ${_code}")
 
     set(prev_libraries ${CMAKE_REQUIRED_LIBRARIES})
 
