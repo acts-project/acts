@@ -20,7 +20,7 @@
 
 // SYCL plugin include(s)
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
-#include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
+#include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 
 namespace Acts::Sycl {
 template <typename external_spacepoint_t>

@@ -10,7 +10,7 @@
 
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 
 namespace Acts {
 /// @brief A partial description of a circle in u-v space.

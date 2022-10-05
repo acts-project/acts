@@ -14,7 +14,7 @@
 // Acts include(s).
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 // System include(s).
@@ -32,7 +32,7 @@ class SeedFinder {
  public:
   /// Create a CUDA backed seed finder object
   ///
-  /// @param commonConfig Configuration shared with @c Acts::Seedfinder
+  /// @param commonConfig Configuration shared with @c Acts::SeedFinder
   /// @param seedFilterConfig Configuration shared with @c Acts::SeedFilter
   /// @param tripletFilterConfig Configuration for the GPU based triplet
   ///        filtering

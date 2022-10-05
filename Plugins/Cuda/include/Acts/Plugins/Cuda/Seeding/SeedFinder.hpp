@@ -13,8 +13,8 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 
 #include <array>
 #include <list>
@@ -63,4 +63,4 @@ class SeedFinder<external_spacepoint_t, Acts::Cuda> {
 
 }  // namespace Acts
 
-#include "Acts/Plugins/Cuda/Seeding/Seedfinder.ipp"
+#include "Acts/Plugins/Cuda/Seeding/SeedFinder.ipp"

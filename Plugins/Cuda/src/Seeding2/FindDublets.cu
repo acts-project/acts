@@ -94,7 +94,7 @@ __device__ float getCotTheta<TopSP>(float middleZ, float topZ, float deltaR) {
 /// @param[in] otherSPs Properties of all of the other (bottom or top)
 ///            spacepoints
 /// @param[in] deltaRMin Configuration parameter from @c Acts::SeedFinderConfig
-/// @param[in] deltaRMax Configuration parameter from @c Acts::SeedfinderConfig
+/// @param[in] deltaRMax Configuration parameter from @c Acts::SeedFinderConfig
 /// @param[in] cotThetaMax Configuration parameter from
 ///            @c Acts::SeedFinderConfig
 /// @param[in] collisionRegionMin Configuration parameter from

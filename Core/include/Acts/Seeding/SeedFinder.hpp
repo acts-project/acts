@@ -12,7 +12,7 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 
 #include <array>
 #include <list>
@@ -111,5 +111,5 @@ class SeedFinder {
 }  // namespace Acts
 
 #ifndef DOXYGEN
-#include "Acts/Seeding/Seedfinder.ipp"
+#include "Acts/Seeding/SeedFinder.ipp"
 #endif

@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Seeding/AtlasSeedfinder.hpp"
+#include "Acts/Seeding/AtlasSeedFinder.hpp"
 
 #include <algorithm>
 

@@ -10,7 +10,7 @@
 
 // Acts include(s).
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 
 // SYCL plugin include(s).
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
