@@ -63,7 +63,7 @@ The seeding implementation in Core/include/Acts/Seeding/ is based on the ATLAS t
    pseudorapidity and are therefore compatible with the same particle track.
 
 Three iterators over SP need to be passed to the public createSeedsForGroup
-function in the Seedfinder class. The seedfinder will then attempt to create
+function in the SeedFinder class. The seedfinder will then attempt to create
 seeds, with each seed containing exactly one SP returned by each of the three
 iterators. 
 

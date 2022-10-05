@@ -220,7 +220,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), m_cfg.seedFinderConfig);
-  auto finder = Acts::Seedfinder<SimSpacePoint>(m_cfg.seedFinderConfig);
+  auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 
   // run the seeding
   static thread_local SimSeedContainer seeds;

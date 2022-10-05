@@ -66,7 +66,7 @@ int main(int argc, char* argv[]) {
       zBinNeighborsTop, numPhiNeighbors);
 
   // Set up the seedfinder configuration.
-  Acts::SeedfinderConfig<TestSpacePoint> sfConfig;
+  Acts::SeedFinderConfig<TestSpacePoint> sfConfig;
   // silicon detector max
   sfConfig.rMax = 160._mm;
   sfConfig.deltaRMin = 5._mm;
@@ -148,7 +148,7 @@ int main(int argc, char* argv[]) {
   auto deviceCuts = testDeviceCuts();
 
   // Set up the seedfinder objects.
-  Acts::Seedfinder<TestSpacePoint> seedfinder_host(sfConfig);
+  Acts::SeedFinder<TestSpacePoint> seedfinder_host(sfConfig);
   Acts::Cuda::SeedFinder<TestSpacePoint> seedfinder_device(
       sfConfig, filterConfig, deviceCuts, cmdl.cudaDevice);
 

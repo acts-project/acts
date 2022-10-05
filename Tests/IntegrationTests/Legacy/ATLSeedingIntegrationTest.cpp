@@ -33,7 +33,7 @@ struct SpacePoint {
 // call to next() overwrites the previous seed object
 std::vector<Acts::Legacy::Seed<SpacePoint>> runSeeding(
     std::vector<SpacePoint*> spVec) {
-  Acts::Legacy::AtlasSeedfinder<SpacePoint> seedMaker;
+  Acts::Legacy::AtlasSeedFinder<SpacePoint> seedMaker;
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
   const Acts::Legacy::Seed<SpacePoint>* seed = seedMaker.next();

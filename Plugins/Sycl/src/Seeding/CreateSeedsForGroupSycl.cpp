@@ -47,7 +47,7 @@ class filter_2sp_fixed_kernel;
 void createSeedsForGroupSycl(
     QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource,
-    const detail::DeviceSeedfinderConfig& seedfinderConfig,
+    const detail::DeviceSeedFinderConfig& seedfinderConfig,
     const DeviceExperimentCuts& deviceCuts,
     vecmem::vector<detail::DeviceSpacePoint>& bottomSPs,
     vecmem::vector<detail::DeviceSpacePoint>& middleSPs,

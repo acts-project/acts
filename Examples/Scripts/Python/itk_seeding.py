@@ -10,7 +10,7 @@ import acts.examples
 from acts.examples import CsvSpacePointReader
 from collections import namedtuple
 from acts.examples.reconstruction import (
-    SeedfinderConfigArg,
+    SeedFinderConfigArg,
     SeedFilterConfigArg,
     SpacePointGridConfigArg,
     SeedingAlgorithmConfigArg,
@@ -24,13 +24,13 @@ u = acts.UnitConstants
 def addITkSeedingCsv(
     s,
     inputSPs,
-    seedfinderConfigArg: SeedfinderConfigArg = SeedfinderConfigArg(),
+    seedfinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
 ):
 
-    seedFinderConfig = acts.SeedfinderConfig(
+    seedFinderConfig = acts.SeedFinderConfig(
         **acts.examples.defaultKWArgs(
             rMin=seedfinderConfigArg.r[0],
             rMax=seedfinderConfigArg.r[1],
@@ -176,7 +176,7 @@ def runITkSeedingFromCsv():
 
         s.addReader(evReader)
 
-        print(SeedfinderConfigArg, SeedFilterConfigArg)
+        print(SeedFinderConfigArg, SeedFilterConfigArg)
 
         # run seeding
         addITkSeedingCsv(

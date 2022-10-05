@@ -39,7 +39,7 @@ class SeedFinder {
   /// @param device The identifier of the CUDA device to run on
   /// @param logger A @c Logger instance
   ///
-  SeedFinder(SeedfinderConfig<external_spacepoint_t> commonConfig,
+  SeedFinder(SeedFinderConfig<external_spacepoint_t> commonConfig,
              const SeedFilterConfig& seedFilterConfig,
              const TripletFilterConfig& tripletFilterConfig, int device = 0,
              std::unique_ptr<const Logger> logger =
@@ -69,7 +69,7 @@ class SeedFinder {
   const Logger& logger() const { return *m_logger; }
 
   /// Configuration for the seed finder
-  SeedfinderConfig<external_spacepoint_t> m_commonConfig;
+  SeedFinderConfig<external_spacepoint_t> m_commonConfig;
   /// Configuration for the (host) seed filter
   SeedFilterConfig m_seedFilterConfig;
   /// Configuration for the (device) triplet filter

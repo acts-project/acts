@@ -33,7 +33,7 @@ from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
     ParticleSmearingSigmas,
-    SeedfinderConfigArg,
+    SeedFinderConfigArg,
     SeedingAlgorithm,
     TrackParamsEstimationConfig,
     addCKFTracks,
@@ -146,7 +146,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             ParticleSmearingSigmas(
                 pRel=0.01
             ),  # only used by SeedingAlgorithm.TruthSmeared
-            SeedfinderConfigArg(
+            SeedFinderConfigArg(
                 r=(None, 200 * u.mm),  # rMin=default, 33mm
                 deltaR=(1 * u.mm, 60 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
