@@ -20,4 +20,4 @@ target_include_directories(
 target_link_libraries(
   ActsTestsCommonHelpers
   PUBLIC ActsCore
-  PRIVATE Boost::filesystem)
+  PRIVATE std::filesystem)

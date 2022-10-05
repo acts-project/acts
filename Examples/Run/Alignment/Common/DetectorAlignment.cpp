@@ -32,11 +32,12 @@
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include <filesystem>
 #include <memory>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 void addAlignmentOptions(ActsExamples::Options::Description& desc) {
   using boost::program_options::value;
