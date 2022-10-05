@@ -86,7 +86,7 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
   }
 
   try {
-    const T& ret = std::any_cast<T>(it->second);
+    const T& ret = *std::any_cast<T*>(&it->second);
     ACTS_VERBOSE("Retrieved object '" << name << "'");
     return ret;
   } catch (std::bad_any_cast&) {
