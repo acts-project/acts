@@ -400,7 +400,7 @@ jobs:
       - name: Build
         run: ${SETUP} && ( cmake --build build -- || cmake --build build -- )
       - name: Unit tests
-        run: ${SETUP} && ${PRELOAD} && cmake --build build -- test
+        run: ${SETUP} && cmake --build build -- test
       - name: Integration tests
         run: ${SETUP} && cmake --build build -- integrationtests
       - name: Install
