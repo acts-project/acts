@@ -10,13 +10,13 @@
 
 #include <Acts/Utilities/Logger.hpp>
 
+#include <any>
 #include <memory>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 #include <unordered_map>
 #include <vector>
-#include <any>
 
 namespace ActsExamples {
 
@@ -84,12 +84,12 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
   if (it == m_store.end()) {
     throw std::out_of_range("Object '" + name + "' does not exists");
   }
-  
+
   try {
-    const T &ret = std::any_cast<T>(it->second);
+    const T& ret = std::any_cast<T>(it->second);
     ACTS_VERBOSE("Retrieved object '" << name << "'");
     return ret;
-  } catch(std::bad_any_cast &) {
+  } catch (std::bad_any_cast&) {
     throw std::runtime_error("Type mismatch for object '" + name + "'");
   }
 }
