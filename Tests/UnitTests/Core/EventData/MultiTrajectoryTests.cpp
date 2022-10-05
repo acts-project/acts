@@ -1104,7 +1104,6 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
     for (int c = 0; c < column_axis.size(); c++) {
       std::string key = column_axis.bin(c);
       BOOST_TEST_CONTEXT("column: " << key) {
-        // BOOST_CHECK_NE(h.at(c, t), 0);
         if (t == 0) {
           BOOST_CHECK_NE((h.at(c, t)), 0);
         } else {

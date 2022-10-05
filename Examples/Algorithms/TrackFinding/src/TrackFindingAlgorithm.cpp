@@ -117,8 +117,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     computeSharedHits(sourceLinks, results);
   }
 
-  // Acts::VectorMultiTrajectory::Statistics::hist_t stats;
-
   // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     m_nTotalSeeds++;
