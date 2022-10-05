@@ -38,13 +38,14 @@ from acts.examples.reconstruction import (
     TrackParamsEstimationConfig,
     addCKFTracks,
     CKFPerformanceConfig,
+    addVertexFitting,
+    VertexFinder,
+    TrackSelectorRanges,
 )
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("outdir")
-parser.add_argument("--events", type=int, default=10000)
-parser.add_argument("--skip", type=int, default=0)
 
 args = parser.parse_args()
 
@@ -70,9 +71,7 @@ geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 
 field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-s = acts.examples.Sequencer(
-    events=args.events, numThreads=-1, logLevel=acts.logging.INFO, skip=0
-)
+s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
 
 with tempfile.TemporaryDirectory() as temp:
     tp = Path(temp)
@@ -99,9 +98,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
     (False, True, "truth_estimated"),
     (False, False, "seeded"),
 ]:
-    s = acts.examples.Sequencer(
-        events=args.events, numThreads=1, logLevel=acts.logging.INFO, skip=args.skip
-    )
+    s = acts.examples.Sequencer(events=500, numThreads=1, logLevel=acts.logging.INFO)
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
@@ -111,23 +108,29 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
 
         rnd = acts.examples.RandomNumbers(seed=42)
 
-        s = addParticleGun(
+        vtxGen = acts.examples.GaussianVertexGenerator(
+            stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
+            mean=acts.Vector4(0, 0, 0, 0),
+        )
+
+        addParticleGun(
             s,
             EtaConfig(-4.0, 4.0),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
-            multiplicity=2,
+            vtxGen=vtxGen,
+            multiplicity=50,
             rnd=rnd,
         )
 
-        s = addFatras(
+        addFatras(
             s,
             trackingGeometry,
             field,
             rnd=rnd,
         )
 
-        s = addDigitization(
+        addDigitization(
             s,
             trackingGeometry,
             field,
@@ -135,7 +138,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             rnd=rnd,
         )
 
-        s = addSeeding(
+        addSeeding(
             s,
             trackingGeometry,
             field,
@@ -149,7 +152,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
                 z=(-2000 * u.mm, 2000 * u.mm),
                 maxSeedsPerSpM=1,
-                sigmaScattering=50,
+                sigmaScattering=5,
                 radLengthPerSeed=0.1,
                 minPt=500 * u.MeV,
                 bFieldInZ=1.99724 * u.T,
@@ -166,7 +169,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
         )
 
-        s = addCKFTracks(
+        addCKFTracks(
             s,
             trackingGeometry,
             field,
@@ -175,12 +178,27 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             outputDirCsv=None,
         )
 
+        addVertexFitting(
+            s,
+            field,
+            TrackSelectorRanges(
+                removeNeutral=True,
+                absEta=(None, 2.5),
+                loc0=(None, 4.0 * u.mm),
+                pt=(500 * u.MeV, None),
+            ),
+            vertexFinder=VertexFinder.Iterative,
+            trajectories="trajectories",
+            outputDirRoot=tp,
+        )
+
         s.run()
         del s
 
-        perf_file = tp / "performance_ckf.root"
-        assert perf_file.exists(), "Performance file not found"
-        shutil.copy(perf_file, outdir / f"performance_ckf_tracks_{label}.root")
+        for stem in "performance_ckf", "performance_vertexing":
+            perf_file = tp / f"{stem}.root"
+            assert perf_file.exists(), "Performance file not found"
+            shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
 
         if not truthSmearedSeeded and not truthEstimatedSeeded:
             residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"

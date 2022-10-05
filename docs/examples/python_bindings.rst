@@ -88,12 +88,27 @@ repository. They are located under ``$REPO_ROOT/Examples/Python/tests``, and
 intend to cover the public API of the python bindings. A set of tests also
 executed the standalone example scripts.
 
-To run these python based tests, ``pytest`` and a few other dependencies need to be installed. They can be
-installed via ``pip install -r Examples/Python/tests/requirements.txt`` from the repository root. It is recommended to install these packages
-in `virtual environment`_. You can then simply run ``pytest`` from the
-repository root.
+To run these python based tests, ``pytest`` and a few other dependencies need
+to be installed. They can be installed via ``pip install -r
+Examples/Python/tests/requirements.txt`` from the repository root.  You can
+then simply run ``pytest`` from the repository root.
+
+.. tip::
+
+   It is **strongly recommended** to use a `virtual environment`_ for
+   this purpose! For example, run 
+
+   .. code-block:: console
+
+      $ python -m venv venv
+      $ source venv/bin/activate
+
+   to create a local virtual environment, and then run the `pip` command above.
+
 
 .. _virtual environment: https://realpython.com/python-virtual-environments-a-primer/
+
+.. _root_hash_checks:
 
 ROOT file hash regression checks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

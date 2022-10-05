@@ -84,12 +84,13 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
   if (it == m_store.end()) {
     throw std::out_of_range("Object '" + name + "' does not exists");
   }
+  
   try {
     const T &ret = std::any_cast<T>(it->second);
     ACTS_VERBOSE("Retrieved object '" << name << "'");
     return ret;
   } catch(std::bad_any_cast &) {
-    throw std::out_of_range("Type mismatch for object '" + name + "'");
+    throw std::runtime_error("Type mismatch for object '" + name + "'");
   }
 }
 

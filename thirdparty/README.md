@@ -42,7 +42,6 @@ the minimum required version of [Eigen](https://eigen.tuxfamily.org)
 
 CMake instructions to build [Pybind11](https://github.com/pybind/pybind11), which is used to create python bindings for the examples.
 
-## libFRNN
+## FRNN
 
-These source files are copied from https://github.com/murnanedaniel/FRNN
-and https://github.com/lxxue/prefix_sum and used for the Exa.Trkx Plugin
+CMake instructions to build [FRNN](https://github.com/lxxue/FRNN), which is used by the Exa.TrkX plugin.

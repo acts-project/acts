@@ -1,127 +1,122 @@
+(propagation_impl)=
 # Propagation and extrapolation
 
-:::{attention}
-This section is largely **outdated** and will be replaced in the future.
-:::
+The track propagation is an essential part of track reconstruction. This section describes the high-level classes and concepts used for this task in Acts.
 
-The track propagation is an essential part of track reconstruction. The Acts
-propagation code is based on the ATLAS `RungeKuttaPropagator`, against which
-newer developments where validated. It has since been removed from the
-code base.
+## Overview: Steppers, Navigators and Actors
 
-## Steppers and Propagator
+The propagation through a geometry is based on the interaction of two different components:
 
-The Acts propagator allows for different `Stepper` implementations provided as a
-class template. Following the general Acts design, each stepper has a nested
-cache `struct`, which is used for caching the field cell and the update the
-jacobian for covariance propagation.
+* The **Stepper** provides the implementation of the the solution of the equation of motion (either by analytical means or through numerical integration).
+* The **Navigator** keeps track of the current position in the geometry and adjusts the step size so that the stepper does not step through a surface.
 
-### AtlasStepper
+Following the general Acts design, these classes do not manage their internal state via member variables, but provide an internal `State` struct which contains all relevant data and is managed by the propagator.
 
-The `AtlasStepper` is a pure transcript from the ATLAS `RungeKuttaPropagator`
-and `RungeKuttaUtils`, and operators with an internal structure of `double[]`.
-This example shows a code snippet from the numerical integration.
+The interaction of these two components is handled by the {class}`Acts::Propagator` class template that takes the stepper and the navigator as template parameters:
 
-```cpp
-while (h != 0.) {
-  double S3 = (1. / 3.) * h, S4 = .25 * h, PS2 = Pi * h;
+```c++
+Propagator<Navigator, Stepper>
+```
 
-  // First point
-  //
-  double H0[3] = {f0[0] * PS2, f0[1] * PS2, f0[2] * PS2};
-  double A0    = A[1] * H0[2] - A[2] * H0[1];
-  double B0    = A[2] * H0[0] - A[0] * H0[2];
-  double C0    = A[0] * H0[1] - A[1] * H0[0];
-  double A2    = A0 + A[0];
-  double B2    = B0 + A[1];
-  double C2    = C0 + A[2];
-  double A1    = A2 + A[0];
-  double B1    = B2 + A[1];
-  double C1    = C2 + A[2];
+Additional to these mandatory components, the propagator can be equipped with **Actors** and **Aborters** to allow for custom behaviour. These are function objects that are hooked in the propagation loop. Actors just perform some action on the propagator state (e.g. the {class}`Acts::KalmanFitter` is an actor), aborts can abort propagation (e.g., the {class}`Acts::PathLimitReached`).
 
-  // Second point
-  //
-  if (!Helix) {
-    const Vector3 pos(R[0] + A1 * S4, R[1] + B1 * S4, R[2] + C1 * S4);
-    f = getField(cache, pos);
-  } else {
-    f = f0;
-  }
+The propagator exposes its state to the actors and aborters as arguments to `operator()`. Actors must define a default-constructable `result_type`, which can be modified in each call:
 
-  double H1[3] = {f[0] * PS2, f[1] * PS2, f[2] * PS2};
-  double A3    = (A[0] + B2 * H1[2]) - C2 * H1[1];
-  double B3    = (A[1] + C2 * H1[0]) - A2 * H1[2];
-  double C3    = (A[2] + A2 * H1[1]) - B2 * H1[0];
-  double A4    = (A[0] + B3 * H1[2]) - C3 * H1[1];
-  double B4    = (A[1] + C3 * H1[0]) - A3 * H1[2];
-  double C4    = (A[2] + A3 * H1[1]) - B3 * H1[0];
-  double A5    = 2. * A4 - A[0];
-  double B5    = 2. * B4 - A[1];
-  double C5    = 2. * C4 - A[2];
+```c++
 
-  // Last point
-  //
-  if (!Helix) {
-    const Vector3 pos(R[0] + h * A4, R[1] + h * B4, R[2] + h * C4);
-    f = getField(cache, pos);
-  } else {
-    f = f0;
-  }
-
-  double H2[3] = {f[0] * PS2, f[1] * PS2, f[2] * PS2};
-  double A6    = B5 * H2[2] - C5 * H2[1];
-  double B6    = C5 * H2[0] - A5 * H2[2];
-  double C6    = A5 * H2[1] - B5 * H2[0];
+template<typename propagator_state_t, typename stepper_t>
+auto operator(propagator_state_t &state, const stepper_t &stepper, result_type &result) const {
+  const auto &navigatorState = state.navigation;
+  const auto &stepperState = state.stepping;
+  const auto &options = state.options;
 }
 ```
 
-### EigenStepper
+The result of a propagation consists of the track parameters at the endpoint of the propagation as well as the results of all actors.
 
-The `EigenStepper` implements the same functionality as the ATLAS stepper,
-however, the stepping code is rewritten with using `Eigen` primitives. The
-following code snippet shows the Runge-Kutta stepping code.
+## Initialization and running
 
-```cpp
-// The following functor starts to perform a Runge-Kutta step of a certain
-// size, going up to the point where it can return an estimate of the local
-// integration error. The results are stated in the local variables above,
-// allowing integration to continue once the error is deemed satisfactory
-const auto tryRungeKuttaStep = [&](const double h) -> bool {
+The {class}`Acts::Propagator` is initialized with the helper class {class}`Acts::PropagatorOptions`, which is templated on the list of actors and aborters. This is done with the classes {class}`Acts::ActionList` and {class}`Acts::AbortList` (which are in fact small wrappers around `std::tuple`):
 
-  // State the square and half of the step size
-  h2     = h * h;
-  half_h = h * 0.5;
-
-  // Second Runge-Kutta point
-  const Vector3 pos1 = state.stepping.pos + half_h * state.stepping.dir
-      + h2 * 0.125 * sd.k1;
-  sd.B_middle = getField(state.stepping, pos1);
-  if (!state.stepping.extension.k2(
-          state, sd.k2, sd.B_middle, half_h, sd.k1)) {
-    return false;
-  }
-
-  // Third Runge-Kutta point
-  if (!state.stepping.extension.k3(
-          state, sd.k3, sd.B_middle, half_h, sd.k2)) {
-    return false;
-  }
-
-  // Last Runge-Kutta point
-  const Vector3 pos2
-      = state.stepping.pos + h * state.stepping.dir + h2 * 0.5 * sd.k3;
-  sd.B_last = getField(state.stepping, pos2);
-  if (!state.stepping.extension.k4(state, sd.k4, sd.B_last, h, sd.k3)) {
-    return false;
-  }
-
-  // Return an estimate of the local integration error
-  error_estimate = std::max(
-      h2 * (sd.k1 - sd.k2 - sd.k3 + sd.k4).template lpNorm<1>(), 1e-20);
-  return true;
-};
+```c++
+using MyOptions = Acts::PropagatorOptions<
+                    Acts::ActionList<MyActor1, MyActor2>,
+                    Acts::AbortList<MyAborter1, MyAborter2>
+                  >;
 ```
 
-The code includes the extension mechanism, which allows extending the numerical
-integration. This is implemented for the custom logic required to integrate
-through a volume with dense material.
+The actors and aborters are instantiated with the options and can be accessed with the `get`-method that expects the corresponding actor type as template parameter. Besides this, the {class}`Acts::PropagatorOptions` also contains a lot of general options like the `maxStepSize`:
+
+```c++
+auto options = MyOptions();
+options.actionList.get<MyActor1>().foo = bar;
+options.maxStepSize = 100;
+```
+
+All available options can be found in the {struct}`Acts::PropagatorPlainOptions`, from which {class}`Acts::PropagatorOptions` inherits.
+
+:::{tip}
+The propagator also contains a loop-protection mechanism. It estimates a circle perimeter from the momentum and the magnetic field, and aborts the propagation when a certain fraction (default: 0.5) of the circle has been propagated. This behaviour can be changed in the {class}`Acts::PropagatorOptions` via the boolean `loopProtection` and the float `loopFraction`.
+:::
+
+To run the propagation, we must call the member function `propagate(...)` with the initial track parameters and the propagator options. There are several overloads to the `propagate(...)` function, which allow further customization:
+* With/without a target surface: The overload with a target surface automatically adds an aborter for the passed `Surface` to the `AbortList`.
+* With/without a prepared result object: Without a result object, a suitable result object is default-constructed internally.
+
+The result is an instance of {class}`Acts::Result`. It contains the actual result, or an error code in case something went wrong. In the actual result, the results of the different actors can again be accessed via a `get` method:
+
+```c++
+auto res = propagator.propagate(myParams, options);
+
+if( res.ok() ) {
+  res.value().get<MyActor1::result_type>();
+}
+```
+
+## Navigators
+
+Acts comes with two navigators: The standard navigator {class}`Acts::Navigator` that performs the full navigation in the volume/layer/surface hierarchy, and the {class}`Acts::DirectNavigator` that takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {class}`Acts::DirectNavigator::Initializer`.
+
+The navigators provide information about the current position inside the geometry in their state variable ({struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
+
+## Steppers
+
+Acts also provides a variety of stepper implementations. Since these in general can work very differently internally, the state itself is not the main interface to the steppers. Instead all steppers provide a common API, to that we can pass instances of the stepper state. This allows a generic and template-based design even for very different steppers:
+
+```c++
+template<typename propagator_state_t, typename stepper_t>
+auto operator(propagator_state_t &state, const stepper_t &stepper) const {
+  stepper.foo(state.stepping);
+}
+```
+
+### AtlasStepper
+
+The {class}`Acts::AtlasStepper` is a pure transcript from the ATLAS `RungeKuttaPropagator` and `RungeKuttaUtils`.
+
+### StraightLineStepper
+
+The {class}`Acts::StraightLineStepper` is a very stripped down stepper that just performs a linear propagation without magnetic field. It can be used for debugging, validation or other simple tasks.
+
+### EigenStepper
+
+The {class}`Acts::EigenStepper` implements the same functionality as the ATLAS stepper, however, the stepping code is rewritten by using `Eigen` primitives. Thus, it also uses a 4th-order Runge-Kutta algorithm for the integration of the EOM. Additionally, the {class}`Acts::EigenStepper` allows to customize the concrete integration step via **extensions**.
+
+The extensions encapsulate the relevant equations for different environments. There exists a {type}`Acts::DefaultExtension` that is suited for propagation in a vacuum, and the {type}`Acts::DenseEnvironmentExtension`, that contains additional code to handle the propagation inside materials. Which extension is used is selected by a bidding-system.
+
+The extension can be configured via the {class}`Acts::StepperExtensionList`:
+
+```c++
+using Stepper = Acts::EigenStepper<
+                  Acts::StepperExtensionList<
+                    Acts::DefaultExtension,
+                    Acts::DenseEnvironmentExtension
+                  >
+                >;
+```
+
+By default, the {class}`Acts::EigenStepper` only uses the {type}`Acts::DefaultExtension`.
+
+### MultiEigenStepperLoop
+
+The {class}`Acts::MultiEigenStepper` is an extension of the {class}`Acts::EigenStepper` and is designed to internally handle a multi-component state, while interfacing as a single component to the navigator. It is mainly used for the {class}`Acts::GaussianSumFitter`.

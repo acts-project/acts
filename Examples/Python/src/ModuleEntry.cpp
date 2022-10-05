@@ -24,27 +24,37 @@ namespace py = pybind11;
 using namespace ActsExamples;
 
 namespace {
+#if defined(__clang__)
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
+#endif
 class PyIAlgorithm : public IAlgorithm {
  public:
   using IAlgorithm::IAlgorithm;
 
   std::string name() const override {
     py::gil_scoped_acquire acquire{};
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
-#endif
     PYBIND11_OVERRIDE_PURE(std::string, IAlgorithm, name);
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
   }
 
   ProcessCode execute(const AlgorithmContext& ctx) const override {
     py::gil_scoped_acquire acquire{};
     PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
   }
+
+  ProcessCode initialize() const override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, initialize);
+  }
+
+  ProcessCode finalize() const override {
+    py::gil_scoped_acquire acquire{};
+    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, finalize);
+  }
 };
+#if defined(__clang__)
+#pragma clang diagnostic pop
+#endif
 
 class PyBareAlgorithm : public BareAlgorithm {
  public:
@@ -93,6 +103,7 @@ void addJson(Context& ctx);
 void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
+void addSvg(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -159,7 +170,17 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
           .def("execute", &BareAlgorithm::execute);
 
   py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
-      .def(py::init<>());
+      .def(py::init<>())
+      .def("setVolume", &Acts::GeometryIdentifier::setVolume)
+      .def("setLayer", &Acts::GeometryIdentifier::setLayer)
+      .def("setBoundary", &Acts::GeometryIdentifier::setBoundary)
+      .def("setApproach", &Acts::GeometryIdentifier::setApproach)
+      .def("setSensitive", &Acts::GeometryIdentifier::setSensitive)
+      .def("volume", &Acts::GeometryIdentifier::volume)
+      .def("layer", &Acts::GeometryIdentifier::layer)
+      .def("boundary", &Acts::GeometryIdentifier::boundary)
+      .def("approach", &Acts::GeometryIdentifier::approach)
+      .def("sensitive", &Acts::GeometryIdentifier::sensitive);
 
   using ActsExamples::Sequencer;
   using Config = Sequencer::Config;
@@ -234,4 +255,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addHepMC3(ctx);
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
+  addSvg(ctx);
 }

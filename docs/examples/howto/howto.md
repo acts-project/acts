@@ -1,3 +1,7 @@
+---
+orphan: true
+---
+
 (howto-examples)=
 # How-to guides
 
@@ -11,7 +15,6 @@ to run example workflows (see [](python-bindings)).
 :maxdepth: 1
 
 run_fatras
-run_material_mapping
 run_seeding
 run_sycl_seed_finding
 run_truth_tracking

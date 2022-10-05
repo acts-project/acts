@@ -9,7 +9,6 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
@@ -87,14 +86,14 @@ struct TrackFitterFunctionImpl
       const std::vector<std::reference_wrapper<
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
-      const override {
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
     auto kfOptions = makeKfOptions(*this, options);
     kfOptions.extensions.calibrator
         .connect<&ActsExamples::MeasurementCalibrator::calibrate>(
             &options.calibrator.get());
     return trackFitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                           initialParameters, kfOptions);
+                           initialParameters, kfOptions, trajectory);
   };
 };
 
@@ -117,13 +116,14 @@ struct DirectedFitterFunctionImpl
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      const std::vector<const Acts::Surface*>& sSequence) const override {
+      const std::vector<const Acts::Surface*>& sSequence,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
     auto kfOptions = makeKfOptions(*this, options);
     kfOptions.extensions.calibrator
         .connect<&ActsExamples::MeasurementCalibrator::calibrate>(
             &options.calibrator.get());
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
-                      kfOptions, sSequence);
+                      kfOptions, sSequence, trajectory);
   };
 };
 

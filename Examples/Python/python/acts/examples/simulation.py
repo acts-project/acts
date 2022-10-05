@@ -3,10 +3,8 @@ from pathlib import Path
 from collections import namedtuple
 from collections.abc import Iterable
 
-
 import acts
 from acts.examples import (
-    Sequencer,
     RandomNumbers,
     EventGenerator,
     FixedMultiplicityGenerator,
@@ -55,7 +53,7 @@ ParticleSelectorConfig = namedtuple(
     particleConfig=ParticleConfig,
 )
 def addParticleGun(
-    s: Sequencer,
+    s: acts.examples.Sequencer,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     momentumConfig: MomentumConfig = MomentumConfig(),
@@ -66,7 +64,8 @@ def addParticleGun(
     vtxGen: Optional[EventGenerator.VertexGenerator] = None,
     printParticles: bool = False,
     rnd: Optional[RandomNumbers] = None,
-) -> Sequencer:
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
     """This function steers the particle generation using the particle gun
 
     Parameters
@@ -95,15 +94,14 @@ def addParticleGun(
         random number generator
     """
 
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Preliminaries
     rnd = rnd or RandomNumbers(seed=228)
 
     # Input
     evGen = EventGenerator(
-        level=s.config.logLevel,
+        level=customLogLevel(),
         generators=[
             EventGenerator.Generator(
                 multiplicity=FixedMultiplicityGenerator(n=multiplicity),
@@ -134,7 +132,8 @@ def addParticleGun(
     if printParticles:
         s.addAlgorithm(
             ParticlesPrinter(
-                level=s.config.logLevel, inputParticles=evGen.config.outputParticles
+                level=customLogLevel(),
+                inputParticles=evGen.config.outputParticles,
             )
         )
 
@@ -145,7 +144,7 @@ def addParticleGun(
 
         s.addWriter(
             CsvParticleWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputParticles=evGen.config.outputParticles,
                 outputDir=str(outputDirCsv),
                 outputStem="particles",
@@ -159,7 +158,7 @@ def addParticleGun(
 
         s.addWriter(
             RootParticleWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputParticles=evGen.config.outputParticles,
                 filePath=str(outputDirRoot / "particles.root"),
             )
@@ -183,11 +182,9 @@ def addPythia8(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     printParticles: bool = False,
-    returnEvGen: bool = False,
-) -> Union[acts.examples.Sequencer, acts.examples.EventGenerator]:
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
     """This function steers the particle generation using Pythia8
-
-    NB. this is a reimplementation of common.addPythia8, which is maintained for now for compatibility.
 
     Parameters
     ----------
@@ -211,13 +208,9 @@ def addPythia8(
         the output folder for the Root output, None triggers no output
     printParticles : bool, False
         print generated particles
-    returnEvGen: bool, False
-        returns EventGenerator instead of Sequencer.
-        This option  is included for compatibility and will be removed when common.addPythia8 is removed.
     """
 
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
@@ -234,7 +227,7 @@ def addPythia8(
                 multiplicity=acts.examples.FixedMultiplicityGenerator(n=nhard),
                 vertex=vtxGen,
                 particles=acts.examples.pythia8.Pythia8Generator(
-                    level=s.config.logLevel,
+                    level=customLogLevel(),
                     **acts.examples.defaultKWArgs(
                         pdgBeam0=beam[0],
                         pdgBeam1=beam[1],
@@ -250,7 +243,7 @@ def addPythia8(
                 multiplicity=acts.examples.FixedMultiplicityGenerator(n=npileup),
                 vertex=vtxGen,
                 particles=acts.examples.pythia8.Pythia8Generator(
-                    level=s.config.logLevel,
+                    level=customLogLevel(),
                     **acts.examples.defaultKWArgs(
                         pdgBeam0=beam[0],
                         pdgBeam1=beam[1],
@@ -263,7 +256,7 @@ def addPythia8(
 
     # Input
     evGen = acts.examples.EventGenerator(
-        level=s.config.logLevel,
+        level=customLogLevel(),
         generators=generators,
         outputParticles="particles_input",
         randomNumbers=rnd,
@@ -274,7 +267,8 @@ def addPythia8(
     if printParticles:
         s.addAlgorithm(
             acts.examples.ParticlesPrinter(
-                level=s.config.logLevel, inputParticles=evGen.config.outputParticles
+                level=customLogLevel(),
+                inputParticles=evGen.config.outputParticles,
             )
         )
 
@@ -285,7 +279,7 @@ def addPythia8(
 
         s.addWriter(
             acts.examples.CsvParticleWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputParticles=evGen.config.outputParticles,
                 outputDir=str(outputDirCsv),
                 outputStem="particles",
@@ -299,13 +293,63 @@ def addPythia8(
 
         s.addWriter(
             acts.examples.RootParticleWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputParticles=evGen.config.outputParticles,
                 filePath=str(outputDirRoot / "pythia8_particles.root"),
             )
         )
 
-    return evGen if returnEvGen else s
+    return s
+
+
+def addParticleSelection(
+    s: acts.examples.Sequencer,
+    preselectParticles: ParticleSelectorConfig,
+    inputParticles="particles_input",
+    outputParticles="particles_selected",
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+    """
+    This function steers the particle selection.
+
+    Parameters
+    ----------
+    s: Sequencer
+        the sequencer module to which we add the ParticleSelector
+    preselectedParticles: ParticleSelectorConfig
+        the particle selection configuration
+    inputParticles: str
+        the identifier for the input particles to be selected
+    outputParticles: str
+        the identifier for the final selected particle collection
+    """
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    s.addAlgorithm(
+        acts.examples.ParticleSelector(
+            **acts.examples.defaultKWArgs(
+                rhoMin=preselectParticles.rho[0],
+                rhoMax=preselectParticles.rho[1],
+                absZMin=preselectParticles.absZ[0],
+                absZMax=preselectParticles.absZ[1],
+                timeMin=preselectParticles.time[0],
+                timeMax=preselectParticles.time[1],
+                phiMin=preselectParticles.phi[0],
+                phiMax=preselectParticles.phi[1],
+                etaMin=preselectParticles.eta[0],
+                etaMax=preselectParticles.eta[1],
+                absEtaMin=preselectParticles.absEta[0],
+                absEtaMax=preselectParticles.absEta[1],
+                ptMin=preselectParticles.pt[0],
+                ptMax=preselectParticles.pt[1],
+                removeCharged=preselectParticles.removeCharged,
+                removeNeutral=preselectParticles.removeNeutral,
+            ),
+            level=customLogLevel(),
+            inputParticles=inputParticles,
+            outputParticles=outputParticles,
+        )
+    )
 
 
 @acts.examples.NamedTypeArgs(
@@ -319,7 +363,8 @@ def addFatras(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
-) -> acts.examples.Sequencer:
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
     """This function steers the detector simulation using Fatras
 
     Parameters
@@ -340,8 +385,7 @@ def addFatras(
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
@@ -349,37 +393,18 @@ def addFatras(
     # Selector
     if preselectParticles is not None:
         particles_selected = "particles_selected"
-        s.addAlgorithm(
-            acts.examples.ParticleSelector(
-                **acts.examples.defaultKWArgs(
-                    rhoMin=preselectParticles.rho[0],
-                    rhoMax=preselectParticles.rho[1],
-                    absZMin=preselectParticles.absZ[0],
-                    absZMax=preselectParticles.absZ[1],
-                    timeMin=preselectParticles.time[0],
-                    timeMax=preselectParticles.time[1],
-                    phiMin=preselectParticles.phi[0],
-                    phiMax=preselectParticles.phi[1],
-                    etaMin=preselectParticles.eta[0],
-                    etaMax=preselectParticles.eta[1],
-                    absEtaMin=preselectParticles.absEta[0],
-                    absEtaMax=preselectParticles.absEta[1],
-                    ptMin=preselectParticles.pt[0],
-                    ptMax=preselectParticles.pt[1],
-                    removeCharged=preselectParticles.removeCharged,
-                    removeNeutral=preselectParticles.removeNeutral,
-                ),
-                level=s.config.logLevel,
-                inputParticles="particles_input",
-                outputParticles=particles_selected,
-            )
+        addParticleSelection(
+            s,
+            preselectParticles,
+            inputParticles="particles_input",
+            outputParticles=particles_selected,
         )
     else:
         particles_selected = "particles_input"
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
-        level=s.config.logLevel,
+        level=customLogLevel(),
         inputParticles=particles_selected,
         outputParticlesInitial="particles_initial",
         outputParticlesFinal="particles_final",
@@ -394,7 +419,13 @@ def addFatras(
     s.addAlgorithm(alg)
 
     # Output
-    addSimWriters(s, alg.config.outputSimHits, outputDirCsv, outputDirRoot)
+    addSimWriters(
+        s,
+        alg.config.outputSimHits,
+        outputDirCsv,
+        outputDirRoot,
+        logLevel=logLevel,
+    )
 
     return s
 
@@ -404,14 +435,18 @@ def addSimWriters(
     inputSimHits: Optional[str] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-) -> acts.examples.Sequencer:
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
         if not outputDirCsv.exists():
             outputDirCsv.mkdir()
         s.addWriter(
             acts.examples.CsvParticleWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 outputDir=str(outputDirCsv),
                 inputParticles="particles_final",
                 outputStem="particles_final",
@@ -424,7 +459,7 @@ def addSimWriters(
             outputDirRoot.mkdir()
         s.addWriter(
             acts.examples.RootParticleWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputParticles="particles_final",
                 filePath=str(outputDirRoot / "fatras_particles_final.root"),
             )
@@ -433,7 +468,7 @@ def addSimWriters(
     if outputDirCsv is not None:
         s.addWriter(
             acts.examples.CsvParticleWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 outputDir=str(outputDirCsv),
                 inputParticles="particles_initial",
                 outputStem="particles_initial",
@@ -443,7 +478,7 @@ def addSimWriters(
     if outputDirRoot is not None:
         s.addWriter(
             acts.examples.RootParticleWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputParticles="particles_initial",
                 filePath=str(outputDirRoot / "fatras_particles_initial.root"),
             )
@@ -452,7 +487,7 @@ def addSimWriters(
     if outputDirCsv is not None:
         s.addWriter(
             acts.examples.CsvSimHitWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputSimHits=inputSimHits,
                 outputDir=str(outputDirCsv),
                 outputStem="hits",
@@ -462,7 +497,7 @@ def addSimWriters(
     if outputDirRoot is not None:
         s.addWriter(
             acts.examples.RootSimHitWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputSimHits=inputSimHits,
                 filePath=str(outputDirRoot / "hits.root"),
             )
@@ -476,11 +511,13 @@ def addGeant4(
     geometryService: Any,  # acts.examples.dd4hep.DD4hepGeometryService
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
+    rnd: acts.examples.RandomNumbers,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     seed: Optional[int] = None,
-    preselectParticles: bool = True,
-) -> acts.examples.Sequencer:
+    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
     """This function steers the detector simulation using Geant4
 
     Parameters
@@ -489,36 +526,38 @@ def addGeant4(
         the sequencer module to which we add the Geant4 steps (returned from addGeant4)
     trackingGeometry : tracking geometry
     field : magnetic field
+    rnd : RandomNumbers, None
+        random number generator
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    seed : int, None
-        random number generator seed
+    preselectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
+        ParticleSelector configuration to select particles as input to Fatras. Each range is specified as a tuple of (min,max).
+        Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
+        Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
     from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
     from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Selector
-    if preselectParticles:
+    if preselectParticles is not None:
         particles_selected = "particles_selected"
-        s.addAlgorithm(
-            acts.examples.ParticleSelector(
-                level=s.config.logLevel,
-                inputParticles="particles_input",
-                outputParticles=particles_selected,
-            )
+        addParticleSelection(
+            s,
+            preselectParticles,
+            inputParticles="particles_input",
+            outputParticles=particles_selected,
         )
     else:
         particles_selected = "particles_input"
 
     g4detector = DDG4DetectorConstruction(geometryService)
     g4conf = geant4SimulationConfig(
-        level=s.config.logLevel,
+        level=customLogLevel(),
         detector=g4detector,
         inputParticles="particles_input",
         trackingGeometry=trackingGeometry,
@@ -527,11 +566,11 @@ def addGeant4(
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
     g4conf.outputParticlesFinal = "particles_final"
-    g4conf.seed = seed
+    g4conf.randomNumbers = rnd
 
     # Simulation
     alg = Geant4Simulation(
-        level=s.config.logLevel,
+        level=customLogLevel(),
         config=g4conf,
     )
 
@@ -539,7 +578,13 @@ def addGeant4(
     s.addAlgorithm(alg)
 
     # Output
-    addSimWriters(s, g4conf.outputSimHits, outputDirCsv, outputDirRoot)
+    addSimWriters(
+        s,
+        g4conf.outputSimHits,
+        outputDirCsv,
+        outputDirRoot,
+        logLevel=logLevel,
+    )
 
     return s
 
@@ -553,6 +598,7 @@ def addDigitization(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     doMerge: Optional[bool] = None,
+    logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
 
@@ -572,8 +618,7 @@ def addDigitization(
         random number generator
     """
 
-    if int(s.config.logLevel) <= int(acts.logging.DEBUG):
-        acts.examples.dump_args_calls(locals())
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Preliminaries
     rnd = rnd or acts.examples.RandomNumbers()
@@ -592,7 +637,7 @@ def addDigitization(
         outputMeasurementSimHitsMap="measurement_simhits_map",
         doMerge=doMerge,
     )
-    digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, s.config.logLevel)
+    digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, customLogLevel())
 
     s.addAlgorithm(digiAlg)
 
@@ -609,7 +654,7 @@ def addDigitization(
             trackingGeometry=trackingGeometry,
         )
         rmwConfig.addBoundIndicesFromDigiConfig(digiAlg.config)
-        s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, s.config.logLevel))
+        s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, customLogLevel()))
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
@@ -617,7 +662,7 @@ def addDigitization(
             outputDirCsv.mkdir()
         s.addWriter(
             acts.examples.CsvMeasurementWriter(
-                level=s.config.logLevel,
+                level=customLogLevel(),
                 inputMeasurements=digiAlg.config.outputMeasurements,
                 inputClusters=digiAlg.config.outputClusters,
                 inputSimHits=digiAlg.config.inputSimHits,

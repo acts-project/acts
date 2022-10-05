@@ -42,9 +42,11 @@ class AdaptiveMultiVertexFinder {
   template <typename T, typename = int>
   struct NeedsRemovedTracks : std::false_type {};
 
+#ifndef DOXYGEN
   template <typename T>
   struct NeedsRemovedTracks<T, decltype((void)T::tracksToRemove, 0)>
       : std::true_type {};
+#endif
 
  public:
   /// Configuration struct
@@ -215,8 +217,6 @@ class AdaptiveMultiVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance

@@ -199,8 +199,33 @@ void Acts::SurfaceMaterialMapper::finalizeMaps(State& mState) const {
 
 void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     State& mState, RecordedMaterialTrack& mTrack) const {
-  using VectorHelpers::makeVector4;
+  // Retrieve the recorded material from the recorded material track
+  auto& rMaterial = mTrack.second.materialInteractions;
+  ACTS_VERBOSE("Retrieved " << rMaterial.size()
+                            << " recorded material steps to map.")
 
+  // Check if the material interactions are associated with a surface. If yes we
+  // simply need to loop over them and accumulate the material
+  if (rMaterial.begin()->intersectionID != GeometryIdentifier()) {
+    ACTS_VERBOSE(
+        "Material surfaces are associated with the material interaction. The "
+        "association interaction/surfaces won't be performed again.");
+    mapSurfaceInteraction(mState, rMaterial);
+    return;
+  } else {
+    ACTS_VERBOSE(
+        "Material interactions need to be associated with surfaces. Collecting "
+        "all surfaces on the trajectory.");
+    mapInteraction(mState, mTrack);
+    return;
+  }
+}
+void Acts::SurfaceMaterialMapper::mapInteraction(
+    State& mState, RecordedMaterialTrack& mTrack) const {
+  // Retrieve the recorded material from the recorded material track
+  auto& rMaterial = mTrack.second.materialInteractions;
+  std::map<GeometryIdentifier, unsigned int> assignedMaterial;
+  using VectorHelpers::makeVector4;
   // Neutral curvilinear parameters
   NeutralCurvilinearTrackParameters start(makeVector4(mTrack.first.first, 0),
                                           mTrack.first.second,
@@ -224,12 +249,6 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
 
   auto mappingSurfaces = mcResult.collected;
   auto mappingVolumes = mvcResult.collected;
-
-  // Retrieve the recorded material from the recorded material track
-  auto& rMaterial = mTrack.second.materialInteractions;
-  std::map<GeometryIdentifier, unsigned int> assignedMaterial;
-  ACTS_VERBOSE("Retrieved " << rMaterial.size()
-                            << " recorded material steps to map.")
 
   // These should be mapped onto the mapping surfaces found
   ACTS_VERBOSE("Found     " << mappingSurfaces.size()
@@ -256,15 +275,14 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
   GeometryIdentifier lastID = GeometryIdentifier();
   GeometryIdentifier currentID = GeometryIdentifier();
   Vector3 currentPos(0., 0., 0);
-  double currentPathCorrection = 0.;
+  float currentPathCorrection = 1.;
   auto currentAccMaterial = mState.accumulatedMaterial.end();
 
   // To remember the bins of this event
   using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<size_t, 3>>;
   using MaterialBin = std::pair<AccumulatedSurfaceMaterial*,
                                 std::shared_ptr<const ISurfaceMaterial>>;
-  std::multimap<AccumulatedSurfaceMaterial*, std::array<size_t, 3>>
-      touchedMapBins;
+  std::map<AccumulatedSurfaceMaterial*, std::array<size_t, 3>> touchedMapBins;
   std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
       touchedMaterialBin;
   if (sfIter != mappingSurfaces.end() &&
@@ -372,14 +390,21 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
     // Now assign the material for the accumulation process
     auto tBin = currentAccMaterial->second.accumulate(
         currentPos, rmIter->materialSlab, currentPathCorrection);
-    auto itBin =
-        touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
+    if (touchedMapBins.find(&(currentAccMaterial->second)) ==
+        touchedMapBins.end()) {
+      touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
+    }
     if (m_cfg.computeVariance) {
-      touchedMaterialBin[itBin->first] = mState.inputSurfaceMaterial[currentID];
+      touchedMaterialBin[&(currentAccMaterial->second)] =
+          mState.inputSurfaceMaterial[currentID];
     }
     ++assignedMaterial[currentID];
-    // Update the material interaction with the associated surface
+    // Update the material interaction with the associated surface and
+    // intersection
     rmIter->surface = sfIter->surface;
+    rmIter->intersection = sfIter->position;
+    rmIter->intersectionID = currentID;
+    rmIter->pathCorrection = currentPathCorrection;
     // Switch to next material
     ++rmIter;
   }
@@ -415,10 +440,63 @@ void Acts::SurfaceMaterialMapper::mapMaterialTrack(
           missedMaterial->second.trackVariance(
               mSurface.position,
               mState.inputSurfaceMaterial[currentID]->materialSlab(
-                  mSurface.position));
+                  mSurface.position),
+              true);
         }
         missedMaterial->second.trackAverage(mSurface.position, true);
+
+        // Add an empty material hit for future material mapping iteration
+        Acts::MaterialInteraction noMaterial;
+        noMaterial.surface = mSurface.surface;
+        noMaterial.intersection = mSurface.position;
+        noMaterial.intersectionID = mgID;
+        rMaterial.push_back(noMaterial);
       }
     }
+  }
+}
+
+void Acts::SurfaceMaterialMapper::mapSurfaceInteraction(
+    State& mState, std::vector<MaterialInteraction>& rMaterial) const {
+  using MapBin = std::pair<AccumulatedSurfaceMaterial*, std::array<size_t, 3>>;
+  std::map<AccumulatedSurfaceMaterial*, std::array<size_t, 3>> touchedMapBins;
+  std::map<AccumulatedSurfaceMaterial*, std::shared_ptr<const ISurfaceMaterial>>
+      touchedMaterialBin;
+
+  // Looping over all the material interactions
+  auto rmIter = rMaterial.begin();
+  while (rmIter != rMaterial.end()) {
+    // get the current interaction information
+    GeometryIdentifier currentID = rmIter->intersectionID;
+    Vector3 currentPos = rmIter->intersection;
+    auto currentAccMaterial = mState.accumulatedMaterial.find(currentID);
+
+    // Now assign the material for the accumulation process
+    auto tBin = currentAccMaterial->second.accumulate(
+        currentPos, rmIter->materialSlab, rmIter->pathCorrection);
+    if (touchedMapBins.find(&(currentAccMaterial->second)) ==
+        touchedMapBins.end()) {
+      touchedMapBins.insert(MapBin(&(currentAccMaterial->second), tBin));
+    }
+    if (m_cfg.computeVariance) {
+      touchedMaterialBin[&(currentAccMaterial->second)] =
+          mState.inputSurfaceMaterial[currentID];
+    }
+    ++rmIter;
+  }
+
+  // After mapping this track, average the touched bins
+  for (auto tmapBin : touchedMapBins) {
+    std::vector<std::array<size_t, 3>> trackBins = {tmapBin.second};
+    if (m_cfg.computeVariance) {
+      tmapBin.first->trackVariance(
+          trackBins,
+          touchedMaterialBin[tmapBin.first]->materialSlab(trackBins[0][0],
+                                                          trackBins[0][1]),
+          true);
+    }
+    // No need to do an extra pass for untouched surfaces they would have been
+    // added to the material interaction in the initial mapping
+    tmapBin.first->trackAverage(trackBins, true);
   }
 }
