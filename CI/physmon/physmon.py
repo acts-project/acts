@@ -38,6 +38,7 @@ from acts.examples.reconstruction import (
     TrackParamsEstimationConfig,
     addCKFTracks,
     CKFPerformanceConfig,
+    addAmbiguityResolution,
     addVertexFitting,
     VertexFinder,
     TrackSelectorRanges,
@@ -178,17 +179,14 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             outputDirCsv=None,
         )
 
+        addAmbiguityResolution(
+            s,
+        )
+
         addVertexFitting(
             s,
             field,
-            TrackSelectorRanges(
-                removeNeutral=True,
-                absEta=(None, 2.5),
-                loc0=(None, 4.0 * u.mm),
-                pt=(500 * u.MeV, None),
-            ),
             vertexFinder=VertexFinder.Iterative,
-            trajectories="trajectories",
             outputDirRoot=tp,
         )
 

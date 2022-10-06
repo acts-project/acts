@@ -69,8 +69,6 @@ def runVertexFitting(
         )
         s.addAlgorithm(ptclSmearing)
         associatedParticles = selectedParticles
-
-        trackSelectorRanges = None
     else:
         logger.info("Reading track summary from %s", inputTrackSummary.resolve())
         assert inputTrackSummary.exists()
@@ -84,21 +82,14 @@ def runVertexFitting(
         )
         s.addReader(trackSummaryReader)
 
-        trackSelectorRanges = TrackSelectorRanges(
-            removeNeutral=True,
-            absEta=(None, 2.5),
-            loc0=(None, 4.0 * u.mm),  # rho max
-            pt=(500 * u.MeV, None),
-        )
-
     logger.info("Using vertex finder: %s", vertexFinder.name)
 
     addVertexFitting(
         s,
         field,
-        trackSelectorRanges=trackSelectorRanges,
         outputDirRoot=outputDir if outputRoot else None,
         associatedParticles=associatedParticles,
+        trajectories=None,
         trackParameters=trackParameters,
         vertexFinder=vertexFinder,
     )
