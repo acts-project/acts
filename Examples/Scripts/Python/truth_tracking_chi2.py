@@ -28,7 +28,7 @@ def addChi2Tracks(
     chi2Options = {
         "nUpdates": nUpdates,
         "multipleScattering": multipleScattering,
-        "energyLoss": energyLoss
+        "energyLoss": energyLoss,
     }
 
     # fitAlg = acts.examples.TrackFittingChi2Algorithm(
