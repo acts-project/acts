@@ -53,7 +53,8 @@ using ConstantFieldPropagator =
 // using KalmanSmoother = Acts::GainMatrixSmoother;
 // using KalmanFitter =  Acts::KalmanFitter<ConstantFieldPropagator,
 // KalmanUpdater, KalmanSmoother>;
-using Chi2Fitter = Acts::Chi2Fitter<ConstantFieldPropagator, Acts::VectorMultiTrajectory>;
+using Chi2Fitter =
+    Acts::Chi2Fitter<ConstantFieldPropagator, Acts::VectorMultiTrajectory>;
 
 Chi2FitterExtensions<VectorMultiTrajectory> getExtensions() {
   Chi2FitterExtensions<VectorMultiTrajectory> extensions;

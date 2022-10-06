@@ -389,7 +389,8 @@ class Chi2Fitter {
             trackStateProxy.calibrated() -
             trackStateProxy.projector() * trackStateProxy.predicted();  // 6x1
 
-        auto residuals = (trackStateProxy.effectiveProjector() * residualsFull).eval();
+        auto residuals =
+            (trackStateProxy.effectiveProjector() * residualsFull).eval();
 
         // TODO: use detail::calculateResiduals? Theta/Phi?
         const auto deriv1 = (-2 * Hi.transpose() * covInv * residuals).eval();
