@@ -684,7 +684,7 @@ CKFPerformanceConfig = namedtuple(
 
 @acts.examples.NamedTypeArgs(
     CKFPerformanceConfigArg=CKFPerformanceConfig,
-    trackSelectorRanges=TrackSelectorRanges
+    trackSelectorRanges=TrackSelectorRanges,
 )
 def addCKFTracks(
     s: acts.examples.Sequencer,
@@ -739,7 +739,9 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
-        outputTrackParameters=outputTrackParameters if trackSelectorRanges is None else "fittedTrackParametersTmp",
+        outputTrackParameters=outputTrackParameters
+        if trackSelectorRanges is None
+        else "fittedTrackParametersTmp",
         outputTrackParametersTips="fittedTrackParametersTips",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
@@ -932,8 +934,7 @@ def addAmbiguityResolution(
     s,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    """
-    """
+    """ """
     from acts.examples import (
         AmbiguityResolutionAlgorithm,
     )
@@ -1056,7 +1057,9 @@ def addVertexFitting(
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
                 inputFittedTracks=trackParameters,
-                inputFittedTracksIndices=trackIndices if trackIndices is not None else "",
+                inputFittedTracksIndices=trackIndices
+                if trackIndices is not None
+                else "",
                 inputAllFittedTracksTips="fittedTrackParametersTips",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputTrajectories=trajectories if trajectories is not None else "",
