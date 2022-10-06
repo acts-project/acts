@@ -15,6 +15,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrajectoriesToPrototracks.hpp"
+#include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 
 #include <memory>
 
@@ -373,6 +374,29 @@ void addTrackFinding(Context& ctx) {
             .def(py::init<std::vector<
                      std::pair<GeometryIdentifier, MeasurementSelectorCuts>>>())
             .def(py::init(constructor));
+  }
+
+  {
+    using Alg = ActsExamples::AmbiguityResolutionAlgorithm;
+    using Config = Alg::Config;
+
+    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "AmbiguityResolutionAlgorithm")
+                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputSourceLinks);
+    ACTS_PYTHON_MEMBER(inputTrajectories);
+    ACTS_PYTHON_MEMBER(inputTrackParameters);
+    ACTS_PYTHON_MEMBER(inputTrackParametersTips);
+    ACTS_PYTHON_MEMBER(outputTrackParameters);
+    ACTS_PYTHON_MEMBER(outputTrackIndices);
+    ACTS_PYTHON_MEMBER(maximumSharedHits);
+    ACTS_PYTHON_STRUCT_END();
   }
 }
 

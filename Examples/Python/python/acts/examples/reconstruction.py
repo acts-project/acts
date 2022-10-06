@@ -684,6 +684,7 @@ CKFPerformanceConfig = namedtuple(
 
 @acts.examples.NamedTypeArgs(
     CKFPerformanceConfigArg=CKFPerformanceConfig,
+    trackSelectorRanges=TrackSelectorRanges
 )
 def addCKFTracks(
     s: acts.examples.Sequencer,
@@ -693,6 +694,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
+    trackSelectorRanges: TrackSelectorRanges = TrackSelectorRanges(),
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -713,12 +715,17 @@ def addCKFTracks(
         the output folder for the Root output, None triggers no output
     selectedParticles : str, "truth_seeds_selected"
         CKFPerformanceWriter truth input
+    trackSelectorRanges : TrackSelectorRanges(loc0, loc1, time, eta, absEta, pt, phi, removeNeutral, removeCharged)
+        TrackSelector configuration. Each range is specified as a tuple of (min,max).
+        Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
     writeTrajectories : bool, True
         write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
     logger = acts.logging.getLogger("addCKFTracks")
+
+    outputTrackParameters = "fittedTrackParameters"
 
     # Setup the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
@@ -732,13 +739,40 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
-        outputTrackParameters="fittedTrackParameters",
+        outputTrackParameters=outputTrackParameters if trackSelectorRanges is None else "fittedTrackParametersTmp",
         outputTrackParametersTips="fittedTrackParametersTips",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
     )
     s.addAlgorithm(trackFinder)
+
+    if trackSelectorRanges is not None:
+        trackSelector = acts.examples.TrackSelector(
+            level=customLogLevel(),
+            inputTrackParameters=trackFinder.config.outputTrackParameters,
+            outputTrackParameters=outputTrackParameters,
+            outputTrackIndices="fittedTrackIndices",
+            **acts.examples.defaultKWArgs(
+                loc0Min=trackSelectorRanges.loc0[0],
+                loc0Max=trackSelectorRanges.loc0[1],
+                loc1Min=trackSelectorRanges.loc1[0],
+                loc1Max=trackSelectorRanges.loc1[1],
+                timeMin=trackSelectorRanges.time[0],
+                timeMax=trackSelectorRanges.time[1],
+                phiMin=trackSelectorRanges.phi[0],
+                phiMax=trackSelectorRanges.phi[1],
+                etaMin=trackSelectorRanges.eta[0],
+                etaMax=trackSelectorRanges.eta[1],
+                absEtaMin=trackSelectorRanges.absEta[0],
+                absEtaMax=trackSelectorRanges.absEta[1],
+                ptMin=trackSelectorRanges.pt[0],
+                ptMax=trackSelectorRanges.pt[1],
+                removeCharged=trackSelectorRanges.removeCharged,
+                removeNeutral=trackSelectorRanges.removeNeutral,
+            ),
+        )
+        s.addAlgorithm(trackSelector)
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
@@ -894,22 +928,47 @@ def addExaTrkX(
     return s
 
 
+def addAmbiguityResolution(
+    s,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+    """
+    """
+    from acts.examples import (
+        AmbiguityResolutionAlgorithm,
+    )
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    alg = AmbiguityResolutionAlgorithm(
+        level=customLogLevel(),
+        inputSourceLinks="sourcelinks",
+        inputTrajectories="trajectories",
+        inputTrackParameters="fittedTrackParameters",
+        inputTrackParametersTips="fittedTrackParametersTips",
+        outputTrackParameters="filteredTrackParameters",
+        outputTrackIndices="filteredTrackIndices",
+    )
+    s.addAlgorithm(alg)
+
+    return s
+
+
 class VertexFinder(Enum):
     Truth = (1,)
     AMVF = (2,)
     Iterative = (3,)
 
 
-@acts.examples.NamedTypeArgs(trackSelectorRanges=TrackSelectorRanges)
 def addVertexFitting(
     s,
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
     associatedParticles: str = "particles_input",
-    trajectories: Optional[str] = None,
-    trackParameters: str = "fittedTrackParameters",
+    trajectories: Optional[str] = "trajectories",
+    trackParameters: str = "filteredTrackParameters",
+    trackIndices: Optional[str] = "filteredTrackIndices",
     vertexFinder: VertexFinder = VertexFinder.Truth,
-    trackSelectorRanges: TrackSelectorRanges = TrackSelectorRanges(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
@@ -925,9 +984,6 @@ def addVertexFitting(
         RootVertexPerformanceWriter.inputAssociatedTruthParticles
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
-    trackSelectorRanges : TrackSelectorRanges(loc0, loc1, time, eta, absEta, pt, phi, removeNeutral, removeCharged)
-        TrackSelector configuration. Each range is specified as a tuple of (min,max).
-        Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     """
@@ -940,39 +996,6 @@ def addVertexFitting(
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-
-    if trackSelectorRanges is not None:
-        selectedTrackParameters = "trackparameters"
-        trackIndices = "outputTrackIndices"
-
-        trackSelector = acts.examples.TrackSelector(
-            level=customLogLevel(),
-            inputTrackParameters=trackParameters,
-            outputTrackParameters=selectedTrackParameters,
-            outputTrackIndices=trackIndices,
-            **acts.examples.defaultKWArgs(
-                loc0Min=trackSelectorRanges.loc0[0],
-                loc0Max=trackSelectorRanges.loc0[1],
-                loc1Min=trackSelectorRanges.loc1[0],
-                loc1Max=trackSelectorRanges.loc1[1],
-                timeMin=trackSelectorRanges.time[0],
-                timeMax=trackSelectorRanges.time[1],
-                phiMin=trackSelectorRanges.phi[0],
-                phiMax=trackSelectorRanges.phi[1],
-                etaMin=trackSelectorRanges.eta[0],
-                etaMax=trackSelectorRanges.eta[1],
-                absEtaMin=trackSelectorRanges.absEta[0],
-                absEtaMax=trackSelectorRanges.absEta[1],
-                ptMin=trackSelectorRanges.pt[0],
-                ptMax=trackSelectorRanges.pt[1],
-                removeCharged=trackSelectorRanges.removeCharged,
-                removeNeutral=trackSelectorRanges.removeNeutral,
-            ),
-        )
-        s.addAlgorithm(trackSelector)
-    else:
-        selectedTrackParameters = trackParameters
-        trackIndices = ""
 
     inputParticles = "particles_input"
     outputVertices = "fittedVertices"
@@ -990,7 +1013,7 @@ def addVertexFitting(
         fitVertices = VertexFitterAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=selectedTrackParameters,
+            inputTrackParameters=trackParameters,
             inputProtoVertices=findVertices.config.outputProtoVertices,
             outputVertices=outputVertices,
         )
@@ -999,7 +1022,7 @@ def addVertexFitting(
         findVertices = IterativeVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=selectedTrackParameters,
+            inputTrackParameters=trackParameters,
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
         )
@@ -1009,7 +1032,7 @@ def addVertexFitting(
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=selectedTrackParameters,
+            inputTrackParameters=trackParameters,
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
             outputTime=outputTime,
@@ -1032,11 +1055,11 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                inputFittedTracks=selectedTrackParameters,
-                inputFittedTracksIndices=trackIndices,
+                inputFittedTracks=trackParameters,
+                inputFittedTracksIndices=trackIndices if trackIndices is not None else "",
                 inputAllFittedTracksTips="fittedTrackParametersTips",
                 inputMeasurementParticlesMap="measurement_particles_map",
-                inputTrajectories="trajectories" if trajectories is not None else "",
+                inputTrajectories=trajectories if trajectories is not None else "",
                 inputAssociatedTruthParticles=""
                 if trajectories is not None
                 else associatedParticles,

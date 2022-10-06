@@ -15,6 +15,7 @@ from acts.examples.reconstruction import (
     TruthSeedRanges,
     addCKFTracks,
     CKFPerformanceConfig,
+    addAmbiguityResolution,
     addVertexFitting,
     VertexFinder,
     TrackSelectorRanges,
@@ -39,7 +40,7 @@ detector, trackingGeometry, decorators = getOpenDataDetector(
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
+s = acts.examples.Sequencer(events=100, numThreads=0, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
@@ -98,16 +99,19 @@ addCKFTracks(
     trackingGeometry,
     field,
     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+    #TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 3.0), removeNeutral=True),
     outputDirRoot=outputDir,
+)
+
+addAmbiguityResolution(
+    s,
 )
 
 addVertexFitting(
     s,
     field,
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 3.0), removeNeutral=True),
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
-    trajectories="trajectories",
 )
 
 s.run()
