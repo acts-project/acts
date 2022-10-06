@@ -150,7 +150,7 @@ struct Chi2FitterOptions {
 template <typename traj_t>
 struct Chi2FitterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<traj_t> fittedStates;
+  traj_t fittedStates;
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
@@ -260,7 +260,10 @@ class Chi2Fitter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
+<<<<<<< HEAD
       //assert(result.fittedStates && "No MultiTrajectory set");
+=======
+>>>>>>> parent of 875e9b68c (update shared traj_t)
       const auto& logger = state.options.logger;
 
       if (result.finished) {
@@ -350,13 +353,13 @@ class Chi2Fitter {
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
-        result.lastTrackIndex = result.fittedStates->addTrackState(
+        result.lastTrackIndex = result.fittedStates.addTrackState(
             ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
             result.lastTrackIndex);
 
         // now get track state proxy back
         auto trackStateProxy =
-            result.fittedStates->getTrackState(result.lastTrackIndex);
+            result.fittedStates.getTrackState(result.lastTrackIndex);
 
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
@@ -441,14 +444,14 @@ class Chi2Fitter {
           // No source links on surface, add either hole or passive material
           // TrackState entry multi trajectory. No storage allocation for
           // uncalibrated/calibrated measurement and filtered parameter
-          result.lastTrackIndex = result.fittedStates->addTrackState(
+          result.lastTrackIndex = result.fittedStates.addTrackState(
               ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered |
                 TrackStatePropMask::Smoothed),
               result.lastTrackIndex);
 
           // now get track state proxy back
           auto trackStateProxy =
-              result.fittedStates->getTrackState(result.lastTrackIndex);
+              result.fittedStates.getTrackState(result.lastTrackIndex);
 
           // Set the surface
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
