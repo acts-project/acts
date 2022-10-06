@@ -462,7 +462,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         useDeltaRorTopRadius = False
 
     # fill namedtuples
-    seedfinderConfigArg = SeedFinderConfigArg(
+    seedFinderConfigArg = SeedFinderConfigArg(
         maxSeedsPerSpM=maxSeedsPerSpM,
         cotThetaMax=cotThetaMax,
         sigmaScattering=sigmaScattering,
@@ -520,7 +520,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     )
 
     return (
-        seedfinderConfigArg,
+        seedFinderConfigArg,
         seedFilterConfigArg,
         spacePointGridConfigArg,
         seedingAlgorithmConfigArg,

@@ -65,7 +65,7 @@ int main(int argc, char* argv[]) {
   auto topBinFinder = std::make_shared<Acts::BinFinder<TestSpacePoint>>(
       zBinNeighborsTop, numPhiNeighbors);
 
-  // Set up the seedfinder configuration.
+  // Set up the seedFinder configuration.
   Acts::SeedFinderConfig<TestSpacePoint> sfConfig;
   // silicon detector max
   sfConfig.rMax = 160._mm;
@@ -140,16 +140,16 @@ int main(int argc, char* argv[]) {
   Acts::Cuda::MemoryManager::instance().setMemorySize(deviceMemoryAllocation,
                                                       cmdl.cudaDevice);
 
-  // Set up the seedfinder configuration objects.
+  // Set up the seedFinder configuration objects.
   TestHostCuts hostCuts;
   Acts::SeedFilterConfig filterConfig;
   sfConfig.seedFilter = std::make_unique<Acts::SeedFilter<TestSpacePoint>>(
       filterConfig, &hostCuts);
   auto deviceCuts = testDeviceCuts();
 
-  // Set up the seedfinder objects.
-  Acts::SeedFinder<TestSpacePoint> seedfinder_host(sfConfig);
-  Acts::Cuda::SeedFinder<TestSpacePoint> seedfinder_device(
+  // Set up the seedFinder objects.
+  Acts::SeedFinder<TestSpacePoint> seedFinder_host(sfConfig);
+  Acts::Cuda::SeedFinder<TestSpacePoint> seedFinder_device(
       sfConfig, filterConfig, deviceCuts, cmdl.cudaDevice);
 
   //
@@ -166,12 +166,12 @@ int main(int argc, char* argv[]) {
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
     auto spGroup_itr = spGroup.begin();
-    decltype(seedfinder_host)::State state;
+    decltype(seedFinder_host)::State state;
     for (std::size_t i = 0;
          spGroup_itr != spGroup_end && i < cmdl.groupsToIterate;
          ++i, ++spGroup_itr) {
       auto& group = seeds_host.emplace_back();
-      seedfinder_host.createSeedsForGroup(
+      seedFinder_host.createSeedsForGroup(
           state, std::back_inserter(group), spGroup_itr.bottom(),
           spGroup_itr.middle(), spGroup_itr.top(), rRangeSPExtent);
     }
@@ -201,7 +201,7 @@ int main(int argc, char* argv[]) {
   for (std::size_t i = 0;
        spGroup_itr != spGroup_end && i < cmdl.groupsToIterate;
        ++i, ++spGroup_itr) {
-    seeds_device.push_back(seedfinder_device.createSeedsForGroup(
+    seeds_device.push_back(seedFinder_device.createSeedsForGroup(
         spGroup_itr.bottom(), spGroup_itr.middle(), spGroup_itr.top()));
   }
 

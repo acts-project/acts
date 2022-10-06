@@ -213,8 +213,8 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::SeedFinder<SpacePoint> seedfinder_cpu(config);
-  Acts::SeedFinder<SpacePoint, Acts::Cuda> seedfinder_cuda(config);
+  Acts::SeedFinder<SpacePoint> seedFinder_cpu(config);
+  Acts::SeedFinder<SpacePoint, Acts::Cuda> seedFinder_cuda(config);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,
@@ -261,11 +261,11 @@ int main(int argc, char** argv) {
   Acts::Extent rRangeSPExtent;
 
   if (do_cpu) {
-    decltype(seedfinder_cpu)::State state;
+    decltype(seedFinder_cpu)::State state;
     for (int i_s = 0; i_s < skip; i_s++)
       ++groupIt;
     for (; !(groupIt == spGroup.end()); ++groupIt) {
-      seedfinder_cpu.createSeedsForGroup(
+      seedFinder_cpu.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
           groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent);
       group_count++;
@@ -274,7 +274,7 @@ int main(int argc, char** argv) {
           break;
       }
     }
-    // auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
+    // auto timeMetric_cpu = seedFinder_cpu.getTimeMetric();
     std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
   }
 
@@ -294,7 +294,7 @@ int main(int argc, char** argv) {
   for (int i_s = 0; i_s < skip; i_s++)
     ++groupIt;
   for (; !(groupIt == spGroup.end()); ++groupIt) {
-    seedVector_cuda.push_back(seedfinder_cuda.createSeedsForGroup(
+    seedVector_cuda.push_back(seedFinder_cuda.createSeedsForGroup(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
     if (allgroup == false) {
