@@ -376,7 +376,7 @@ class Chi2Fitter {
         const auto& proj = trackStateProxy.effectiveProjector();
         // simple projection matrix H_is, composed of 1 and 0, 2x6 or 1x6
 
-        const auto& Hi = proj * result.jacobianFromStart;  // 2x6 or 1x6
+        const auto Hi = (proj * result.jacobianFromStart).eval();  // 2x6 or 1x6
         const auto& localMeasurements =
             trackStateProxy.effectiveCalibrated();  // 2x1 or 1x1
 
@@ -384,20 +384,21 @@ class Chi2Fitter {
             trackStateProxy
                 .effectiveCalibratedCovariance();  // 2x2 or 1x1. Should be
                                                    // diagonal.
-        const auto& covInv = covariance.inverse();
-
+        const auto covInv = covariance.inverse();
         auto residualsFull =
             trackStateProxy.calibrated() -
             trackStateProxy.projector() * trackStateProxy.predicted();  // 6x1
-        auto residuals = trackStateProxy.effectiveProjector() * residualsFull;
+
+        auto residuals = (trackStateProxy.effectiveProjector() * residualsFull).eval();
+
         // TODO: use detail::calculateResiduals? Theta/Phi?
-
-        const auto& deriv1 = -2 * Hi.transpose() * covInv * residuals;
-        const auto& deriv2 = 2 * Hi.transpose() * covInv * Hi;
-
-        result.collectorDeriv1Sum += deriv1;
+        const auto deriv1 = (-2 * Hi.transpose() * covInv * residuals).eval();
+        const auto deriv2 = (2 * Hi.transpose() * covInv * Hi).eval();
         result.collectorDeriv2Sum += deriv2;
+        result.collectorDeriv1Sum += deriv1;
 
+//        result.collectorDeriv1Sum = (-2 * Hi.transpose() * covInv * residuals).eval();
+//        result.collectorDeriv2Sum = (2 * Hi.transpose() * covInv * Hi).eval();
         for (int i = 0; i < localMeasurements.rows(); ++i) {
           result.collectorMeasurements.push_back(localMeasurements(i));
           result.collectorResiduals.push_back(residuals(i));
@@ -683,6 +684,7 @@ class Chi2Fitter {
       // when the "data" object is out of scope will result in a segmentation
       // fault (or memory access violation)."
 
+std::printf("l.685");
       ActsDynamicVector variance =
           Eigen::Map<ActsDynamicVector>(c2rCurrent.collectorCovariance.data(),
                                         c2rCurrent.collectorCovariance.size());
