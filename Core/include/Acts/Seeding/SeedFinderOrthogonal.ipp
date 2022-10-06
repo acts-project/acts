@@ -242,6 +242,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
                                top[t]->z() - middle.z()));
   }
 
+  // TODO: add seed confirmation
+  size_t nTopSeedConf = 0;
   int numSeeds = 0;
 
   for (size_t b = 0; b < numBotSP; b++) {
@@ -351,7 +353,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     if (!top_valid.empty()) {
       m_config.seedFilter->filterSeeds_2SpFixed(
           *bottom[b], middle, top_valid, curvatures, impactParameters, Zob,
-          numQualitySeeds, numSeeds, cont);
+          nTopSeedConf, numQualitySeeds, numSeeds, cont);
     }
   }
 }

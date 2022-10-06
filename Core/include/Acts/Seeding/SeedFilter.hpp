@@ -39,6 +39,7 @@ class SeedFilter {
   /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
   /// @param impactParametersVec vector containing the impact parameters
   /// @param zOrigin on the z axis as defined by bottom and middle space point
+  /// @param nTopSeedConf number of maximum top SPs in seed confirmation
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param numSeeds number of seeds that did not pass the quality confirmation but were still accepted, if quality confirmation is not used this is the total number of seeds
   /// @param outCont Output container for the seeds
@@ -48,7 +49,7 @@ class SeedFilter {
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, float zOrigin,
-      int& numQualitySeeds, int& numSeeds,
+      size_t& nTopSeedConf, int& numQualitySeeds, int& numSeeds,
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
           outCont) const;
