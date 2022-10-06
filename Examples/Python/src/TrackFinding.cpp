@@ -9,13 +9,13 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
+#include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrajectoriesToPrototracks.hpp"
-#include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 
 #include <memory>
 

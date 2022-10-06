@@ -36,13 +36,13 @@ class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
     std::uint32_t maximumSharedHits = 1;
   };
 
-  /// 
+  ///
   AmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
-  /// 
+  ///
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
-  /// 
+  ///
   const Config& config() const { return m_cfg; }
 
  private:
