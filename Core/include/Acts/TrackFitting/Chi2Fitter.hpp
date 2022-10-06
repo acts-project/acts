@@ -394,11 +394,9 @@ class Chi2Fitter {
         // TODO: use detail::calculateResiduals? Theta/Phi?
         const auto deriv1 = (-2 * Hi.transpose() * covInv * residuals).eval();
         const auto deriv2 = (2 * Hi.transpose() * covInv * Hi).eval();
-        result.collectorDeriv2Sum += deriv2;
         result.collectorDeriv1Sum += deriv1;
+        result.collectorDeriv2Sum += deriv2;
 
-//        result.collectorDeriv1Sum = (-2 * Hi.transpose() * covInv * residuals).eval();
-//        result.collectorDeriv2Sum = (2 * Hi.transpose() * covInv * Hi).eval();
         for (int i = 0; i < localMeasurements.rows(); ++i) {
           result.collectorMeasurements.push_back(localMeasurements(i));
           result.collectorResiduals.push_back(residuals(i));
@@ -684,7 +682,6 @@ class Chi2Fitter {
       // when the "data" object is out of scope will result in a segmentation
       // fault (or memory access violation)."
 
-std::printf("l.685");
       ActsDynamicVector variance =
           Eigen::Map<ActsDynamicVector>(c2rCurrent.collectorCovariance.data(),
                                         c2rCurrent.collectorCovariance.size());
