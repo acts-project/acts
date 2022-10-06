@@ -260,7 +260,7 @@ class Chi2Fitter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
-      assert(result.fittedStates && "No MultiTrajectory set");
+      //assert(result.fittedStates && "No MultiTrajectory set");
       const auto& logger = state.options.logger;
 
       if (result.finished) {
