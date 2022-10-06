@@ -148,7 +148,7 @@ auto smoothAndCombineTrajectories(
   sortUniqueValidateBwdTips();
 
   KalmanFitterResult<traj_t> result;
-  // result.fittedStates = std::make_shared<traj_t>();
+  result.fittedStates = std::make_shared<traj_t>();
 
   while (!bwdTips.empty()) {
     // Ensure that we update the bwd tips whenever we go to the next iteration
@@ -188,11 +188,11 @@ auto smoothAndCombineTrajectories(
     fwdTips.erase(std::unique(fwdTips.begin(), fwdTips.end()), fwdTips.end());
 
     // Add state to MultiTrajectory
-    result.lastTrackIndex = result.fittedStates.addTrackState(
+    result.lastTrackIndex = result.fittedStates->addTrackState(
         TrackStatePropMask::All, result.lastTrackIndex);
     result.processedStates++;
 
-    auto proxy = result.fittedStates.getTrackState(result.lastTrackIndex);
+    auto proxy = result.fittedStates->getTrackState(result.lastTrackIndex);
 
     // This way we copy all relevant flags and the calibrated field. However
     // this assumes that the relevant flags do not differ between components
@@ -215,8 +215,11 @@ auto smoothAndCombineTrajectories(
     // If we have a hole or an outlier, just take the combination of filtered
     // and predicted and no smoothed state
     if (not proxy.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-      const auto [mean, cov] = combineBoundGaussianMixture(
-          bwdTips.begin(), bwdTips.end(), FiltProjector{bwd, bwdWeights});
+      const auto [mean, cov] =
+          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
+            return combineGaussianMixture(bwdTips,
+                                          FiltProjector{bwd, bwdWeights}, desc);
+          });
 
       proxy.predicted() = mean;
       proxy.predictedCovariance() = cov.value();
@@ -229,14 +232,20 @@ auto smoothAndCombineTrajectories(
       result.measurementStates++;
 
       // The predicted state is the forward pass
-      const auto [fwdMeanPred, fwdCovPred] = combineBoundGaussianMixture(
-          fwdTips.begin(), fwdTips.end(), PredProjector{fwd, fwdWeights});
+      const auto [fwdMeanPred, fwdCovPred] =
+          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
+            return combineGaussianMixture(fwdTips,
+                                          PredProjector{fwd, fwdWeights}, desc);
+          });
       proxy.predicted() = fwdMeanPred;
       proxy.predictedCovariance() = fwdCovPred.value();
 
       // The filtered state is the backward pass
-      const auto [bwdMeanFilt, bwdCovFilt] = combineBoundGaussianMixture(
-          bwdTips.begin(), bwdTips.end(), FiltProjector{bwd, bwdWeights});
+      const auto [bwdMeanFilt, bwdCovFilt] =
+          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
+            return combineGaussianMixture(bwdTips,
+                                          FiltProjector{bwd, bwdWeights}, desc);
+          });
       proxy.filtered() = bwdMeanFilt;
       proxy.filteredCovariance() = bwdCovFilt.value();
 
@@ -257,8 +266,10 @@ auto smoothAndCombineTrajectories(
       }
 
       // The smoothed state is a combination
-      const auto [smoothedMean, smoothedCov] = combineBoundGaussianMixture(
-          smoothedState.begin(), smoothedState.end());
+      const auto [smoothedMean, smoothedCov] =
+          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
+            return combineGaussianMixture(smoothedState, Identity{}, desc);
+          });
       proxy.smoothed() = smoothedMean;
       proxy.smoothedCovariance() = smoothedCov.value();
       ACTS_VERBOSE("Added smoothed state to MultiTrajectory");

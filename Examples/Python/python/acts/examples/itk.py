@@ -1,8 +1,9 @@
-#!/usr/bin/env python3
-import acts
-from acts.examples import TGeoDetector
 from pathlib import Path
 import math
+
+import acts
+import acts.examples
+from acts.examples import TGeoDetector
 
 from acts.examples.reconstruction import (
     SeedfinderConfigArg,
@@ -21,6 +22,7 @@ def buildITkGeometry(
     logLevel=acts.logging.WARNING,
 ):
 
+    customLogLevel = acts.examples.defaultLogging(logLevel=logLevel)
     logger = acts.logging.getLogger("buildITkGeometry")
 
     matDeco = None
@@ -29,7 +31,7 @@ def buildITkGeometry(
         logger.info("Adding material from %s", file.absolute())
         matDeco = acts.IMaterialDecorator.fromFile(
             file,
-            level=acts.logging.Level(min(acts.logging.INFO.value, logLevel.value)),
+            level=customLogLevel(maxLevel=acts.logging.INFO),
         )
 
     tgeo_fileName = geo_dir / "itk-hgtd/ATLAS-ITk-HGTD.tgeo.root"
@@ -40,9 +42,9 @@ def buildITkGeometry(
         return TGeoDetector.create(
             jsonFile=str(jsonFile),
             fileName=str(tgeo_fileName),
-            surfaceLogLevel=logLevel,
-            layerLogLevel=logLevel,
-            volumeLogLevel=logLevel,
+            surfaceLogLevel=customLogLevel(),
+            layerLogLevel=customLogLevel(),
+            volumeLogLevel=customLogLevel(),
             mdecorator=matDeco,
         )
 
@@ -59,9 +61,9 @@ def buildITkGeometry(
         beamPipeRadius=23.934 * u.mm,
         beamPipeHalflengthZ=3000.0 * u.mm,
         beamPipeLayerThickness=0.8 * u.mm,
-        surfaceLogLevel=logLevel,
-        layerLogLevel=logLevel,
-        volumeLogLevel=logLevel,
+        surfaceLogLevel=customLogLevel(),
+        layerLogLevel=customLogLevel(),
+        volumeLogLevel=customLogLevel(),
         volumes=[
             Volume(
                 name="InnerPixels",

@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"

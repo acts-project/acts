@@ -17,6 +17,8 @@
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
+#include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -36,6 +38,17 @@ using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
 using Vector2F = Eigen::Matrix<BoundingBoxScalar, 2, 1>;
 using Vector3F = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
 using AngleAxis3F = Eigen::AngleAxis<BoundingBoxScalar>;
+
+std::filesystem::path tmp_path = []() {
+  auto p = std::filesystem::temp_directory_path() / "acts_unit_tests";
+  std::filesystem::create_directory(p);
+  std::cout << "Writing test output to: " << p << std::endl;
+  return p;
+}();
+
+std::ofstream tmp(const std::string& path) {
+  return std::ofstream{(tmp_path / path).string()};
+}
 
 BOOST_AUTO_TEST_CASE(box_construction) {
   BOOST_TEST_CONTEXT("2D") {
@@ -279,7 +292,7 @@ BOOST_AUTO_TEST_CASE(intersect_rays) {
     PlyVisualization3D<BoundingBoxScalar> ply;
 
     ray3.draw(ply);
-    std::ofstream os("ray3d.ply");
+    auto os = tmp("ray3d.ply");
     os << ply << std::flush;
     os.close();
   }
@@ -442,7 +455,7 @@ BOOST_AUTO_TEST_CASE(ray_obb_intersect) {
 BOOST_AUTO_TEST_CASE(frustum_intersect) {
   BOOST_TEST_CONTEXT("2D") {
     auto make_svg = [](std::string fname, size_t w, size_t h) {
-      std::ofstream os(fname);
+      auto os = tmp(fname);
       os << "<?xml version=\"1.0\" standalone=\"no\"?>\n";
       os << "<svg width=\"" << w << "\" height=\"" << h
          << "\" version=\"1.1\" xmlns=\"http://www.w3.org/2000/svg\">\n";
@@ -653,7 +666,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     //}
     // os.close();
 
-    // os = std::ofstream("frust3D_angle.ply");
+    // os = tmp("frust3D_angle.ply");
     // helper.clear();
     // n_vtx             = 1;
     // Eigen::Affine3f rot;
@@ -843,7 +856,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       std::stringstream ss;
       ss << "frust3d-3s_test_" << l << ".ply";
 
-      os = std::ofstream(ss.str());
+      os = tmp(ss.str());
 
       helper.clear();
 
@@ -902,7 +915,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
     // size_t n_vtx    = 1;
 
     // helper.clear();
-    // os = std::ofstream("frust3d-4s_dir.ply");
+    // os = tmp("frust3d-4s_dir.ply");
 
     // double angle = M_PI / 4.;
     // for (size_t i = 0; i <= s; i++) {
@@ -928,7 +941,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     // os << helper << std::flush;
     // os.close();
-    // os = std::ofstream("frust3d-4s_angle.ply");
+    // os = tmp("frust3d-4s_angle.ply");
     // helper.clear();
 
     // n_vtx    = 1;
@@ -1107,7 +1120,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
       std::stringstream ss;
       ss << "frust3d-4s_test_" << l << ".ply";
 
-      os = std::ofstream(ss.str());
+      os = tmp(ss.str());
 
       helper.clear();
 
@@ -1169,7 +1182,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     BOOST_CHECK(bb.intersect(fr));
 
-    std::ofstream os("frust3d-5s.ply");
+    auto os = tmp("frust3d-5s.ply");
     os << ply << std::flush;
     os.close();
   }
@@ -1195,7 +1208,32 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     BOOST_CHECK(bb.intersect(fr));
 
-    std::ofstream os("frust3d-10s.ply");
+    auto os = tmp("frust3d-10s.ply");
+    os << ply << std::flush;
+    os.close();
+  }
+
+  BOOST_TEST_CONTEXT("3D - 4 Sides - Big box") {
+    using Frustum = Frustum<BoundingBoxScalar, 3, 4>;
+    using Box = AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
+    using vec3 = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
+
+    Object o;
+
+    PlyVisualization3D<BoundingBoxScalar> ply;
+
+    vec3 pos = {0, 0, 0};
+    vec3 dir = {0, 0, 1};
+    Frustum fr(pos, dir, 0.972419);
+    fr.draw(ply, 10);
+
+    Box::Size size(vec3(100, 100, 2));
+    Box bb(&o, pos + dir * 7, size);
+    bb.draw(ply);
+
+    BOOST_CHECK(bb.intersect(fr));
+
+    auto os = tmp("frust3d-4s-bigbox.ply");
     os << ply << std::flush;
     os.close();
   }

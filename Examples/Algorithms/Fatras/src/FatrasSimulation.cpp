@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
