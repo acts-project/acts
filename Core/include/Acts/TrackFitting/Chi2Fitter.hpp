@@ -150,7 +150,7 @@ struct Chi2FitterOptions {
 template <typename traj_t>
 struct Chi2FitterResult {
   // Fitted states that the actor has handled.
-  traj_t fittedStates;
+  std::shared_ptr<traj_t> fittedStates;
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
@@ -350,13 +350,13 @@ class Chi2Fitter {
 
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
-        result.lastTrackIndex = result.fittedStates.addTrackState(
+        result.lastTrackIndex = result.fittedStates->addTrackState(
             ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
             result.lastTrackIndex);
 
         // now get track state proxy back
         auto trackStateProxy =
-            result.fittedStates.getTrackState(result.lastTrackIndex);
+            result.fittedStates->getTrackState(result.lastTrackIndex);
 
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
@@ -441,14 +441,14 @@ class Chi2Fitter {
           // No source links on surface, add either hole or passive material
           // TrackState entry multi trajectory. No storage allocation for
           // uncalibrated/calibrated measurement and filtered parameter
-          result.lastTrackIndex = result.fittedStates.addTrackState(
+          result.lastTrackIndex = result.fittedStates->addTrackState(
               ~(TrackStatePropMask::Calibrated | TrackStatePropMask::Filtered |
                 TrackStatePropMask::Smoothed),
               result.lastTrackIndex);
 
           // now get track state proxy back
           auto trackStateProxy =
-              result.fittedStates.getTrackState(result.lastTrackIndex);
+              result.fittedStates->getTrackState(result.lastTrackIndex);
 
           // Set the surface
           trackStateProxy.setReferenceSurface(surface->getSharedPtr());
@@ -594,7 +594,8 @@ class Chi2Fitter {
   Result<Chi2FitterResult<traj_t>> fit(
       source_link_iterator_t it, source_link_iterator_t end,
       const start_parameters_t& sParameters,
-      const Chi2FitterOptions<traj_t>& chi2FitterOptions) const {
+      const Chi2FitterOptions<traj_t>& chi2FitterOptions,
+      std::shared_ptr<traj_t> trajectory = {}) const {
     const auto& logger = chi2FitterOptions.logger;
 
     // To be able to find measurements later, we put them into a map
@@ -615,6 +616,7 @@ class Chi2Fitter {
     // Create the ActionList and AbortList
     using Chi2Aborter = Aborter<parameters_t>;
     using Chi2Actor = Actor<parameters_t>;
+
     using Chi2Result = typename Chi2Actor::result_type;
     using Actors = ActionList<Chi2Actor>;
     using Aborters = AbortList<Chi2Aborter>;
@@ -636,6 +638,18 @@ class Chi2Fitter {
         std::move(chi2FitterOptions.freeToBoundCorrection);
     chi2Actor.extensions = std::move(chi2FitterOptions.extensions);
 
+    typename propagator_t::template action_list_t_result_t<
+        CurvilinearTrackParameters, Actors>
+        inputResult;
+
+    auto& r = inputResult.template get<Chi2FitterResult<traj_t>>();
+
+    if (trajectory) {
+      r.fittedStates = std::move(trajectory);
+    } else {
+      r.fittedStates = std::make_shared<traj_t>();
+    }
+
     using paramType = typename std::conditional<
         std::is_same<start_parameters_t, parameters_t>::value,
         std::variant<start_parameters_t>,
@@ -647,12 +661,13 @@ class Chi2Fitter {
     // the result object which will be returned. Overridden every iteration.
 
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
-      auto result = std::visit(
-          [mprop = m_propagator, propOptions](auto&& arg) {
-            return mprop.template propagate(arg, propOptions);
-          },
-          vParams);
-
+//      auto result = std::visit(
+//          [mprop = m_propagator, propOptions](auto&& arg) {
+//            return mprop.template propagate(arg, propOptions);
+//          },
+//          vParams);
+    auto result = m_propagator.template propagate(sParameters, chi2FitterOptions,
+                                                  std::move(inputResult));
       if (!result.ok()) {
         ACTS_ERROR("chi2 | it=" << i
                                 << " | propapation failed: " << result.error());

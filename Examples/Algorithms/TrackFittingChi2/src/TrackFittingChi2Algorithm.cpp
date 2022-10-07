@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -123,8 +124,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
     }
 
     ACTS_DEBUG("chi2algo | invoke fitter");
+    auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
     auto result =
-        fitTrack(trackSourceLinks, initialParams, chi2Options, surfSequence);
+        fitTrack(trackSourceLinks, initialParams, chi2Options, surfSequence, mtj);
 
     if (result.ok()) {
       ACTS_DEBUG("chi2algo | result ok");
