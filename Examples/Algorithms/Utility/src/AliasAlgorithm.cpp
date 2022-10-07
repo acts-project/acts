@@ -13,8 +13,7 @@
 ActsExamples::AliasAlgorithm::AliasAlgorithm(Config cfg,
                                              Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("AliasAlgorithm", level),
-      m_cfg(std::move(cfg)) {
-}
+      m_cfg(std::move(cfg)) {}
 
 ActsExamples::ProcessCode ActsExamples::AliasAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {

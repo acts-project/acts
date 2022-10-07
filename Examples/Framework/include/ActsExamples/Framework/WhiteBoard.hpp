@@ -103,7 +103,7 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
   if (!exists(name)) {
     throw std::out_of_range("Object '" + name + "' does not exists");
   }
-  const std::string &resolvedName = resolve(name);
+  const std::string& resolvedName = resolve(name);
   const IHolder* holder = m_store.at(resolvedName).get();
 
   const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);
