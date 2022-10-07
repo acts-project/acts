@@ -163,7 +163,7 @@ bottom SP.
 oi
 :::
 
-Assuming the middle layer SP in the origin of the $x/y$ frame, as in {numref}`impactParameter`. 
+Assuming the middle layer SP is in the origin of the $x/y$ frame, as in {numref}`impactParameter`. 
 The distance between the centre of the helix and the interaction point (IP) is given by
 \begin{equation*}
 (x_0 + r_m)^2 + y_0^2 = (R + d_0)^2 \quad  \xrightarrow{R^2 = x_0^2 + y_0^2} \quad \frac{d_0^2}{R^2} + 2 \frac{d_0}{R} = \frac{2 x_0 r_m + r_m^2}{R^2} .
