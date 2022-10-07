@@ -8,8 +8,8 @@ reconstruction algorithm (henceforth: the tracking). The tracking then tries to
 find all measurements belonging to a single particle in this direction in order
 to reconstruct the track. This means, if no seed exists for a particle, this
 particle will not be reconstructed. On the other hand, finding too many seeds
-which either correspond to a particle for which another seed already exists or
-which do not correspond to a particle at all increases the time needed for
+which either correspond to particles with already existing seeds or 
+which do not correspond to particles at all increases the time needed for
 tracking.
 
 A good seeding algorithm, therefore, has the following properties:
