@@ -421,7 +421,7 @@ jobs:
       - name: ccache stats
         run: ccache -s
       - name: Unit tests
-        run: ${SETUP} && ${PRELOAD} && cmake --build build --target test
+        run: ${SETUP} && cmake --build build --target test
       - name: Integration tests
         run: ${SETUP} && cmake --build build --target integrationtests
       - name: Install
