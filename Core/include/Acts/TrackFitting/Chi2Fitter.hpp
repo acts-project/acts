@@ -588,16 +588,14 @@ class Chi2Fitter {
   /// the fit.
   ///
   /// @return the output as an output track
-   template <typename source_link_iterator_t, typename start_parameters_t,
-             typename parameters_t = BoundTrackParameters>
-   Result<Chi2FitterResult<traj_t>> fit(
-       source_link_iterator_t it, source_link_iterator_t end,
-       const start_parameters_t& sParameters,
-       const Chi2FitterOptions<traj_t>& chi2FitterOptions,
-       std::shared_ptr<traj_t> trajectory = {}) const {
-     const auto& logger = chi2FitterOptions.logger;
-
-
+  template <typename source_link_iterator_t, typename start_parameters_t,
+            typename parameters_t = BoundTrackParameters>
+  Result<Chi2FitterResult<traj_t>> fit(
+      source_link_iterator_t it, source_link_iterator_t end,
+      const start_parameters_t& sParameters,
+      const Chi2FitterOptions<traj_t>& chi2FitterOptions,
+      std::shared_ptr<traj_t> trajectory = {}) const {
+    const auto& logger = chi2FitterOptions.logger;
 
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
