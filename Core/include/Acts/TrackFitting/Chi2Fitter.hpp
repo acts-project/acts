@@ -661,13 +661,13 @@ class Chi2Fitter {
     // the result object which will be returned. Overridden every iteration.
 
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
-//      auto result = std::visit(
-//          [mprop = m_propagator, propOptions](auto&& arg) {
-//            return mprop.template propagate(arg, propOptions);
-//          },
-//          vParams);
-    auto result = m_propagator.template propagate(sParameters, propOptions,
-                                                  std::move(inputResult));
+      //      auto result = std::visit(
+      //          [mprop = m_propagator, propOptions](auto&& arg) {
+      //            return mprop.template propagate(arg, propOptions);
+      //          },
+      //          vParams);
+      auto result = m_propagator.template propagate(sParameters, propOptions,
+                                                    std::move(inputResult));
 
       if (!result.ok()) {
         ACTS_ERROR("chi2 | it=" << i

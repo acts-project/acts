@@ -125,8 +125,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
 
     ACTS_DEBUG("chi2algo | invoke fitter");
     auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
-    auto result =
-        fitTrack(trackSourceLinks, initialParams, chi2Options, surfSequence, mtj);
+    auto result = fitTrack(trackSourceLinks, initialParams, chi2Options,
+                           surfSequence, mtj);
 
     if (result.ok()) {
       ACTS_DEBUG("chi2algo | result ok");
