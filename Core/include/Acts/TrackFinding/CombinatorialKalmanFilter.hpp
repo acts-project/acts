@@ -454,8 +454,8 @@ class CombinatorialKalmanFilter {
       if (result.filtered) {
         // Return error if filtering finds no tracks
         if (result.lastTrackIndices.empty()) {
-          result.result =
-              Result<void>(CombinatorialKalmanFilterError::NoTrackFound);
+          ACTS_WARNING("No tracks found");
+          result.finished = true;
         } else {
           if (not smoothing) {
             ACTS_VERBOSE("Finish Kalman filtering");
