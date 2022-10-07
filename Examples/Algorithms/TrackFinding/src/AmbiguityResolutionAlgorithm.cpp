@@ -15,6 +15,7 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <iterator>
 #include <numeric>
 #include <stdexcept>
 
@@ -151,7 +152,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
       break;
     }
 
-    const auto index = it - std::begin(relativeSharedHits);
+    const auto index = std::distance(std::begin(relativeSharedHits), it);
     if (sharedHits[index] < this->m_cfg.maximumSharedHits) {
       break;
     }
