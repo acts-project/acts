@@ -53,6 +53,10 @@ class WhiteBoard {
 
   bool exists(const std::string& name) const;
 
+  void setAlias(const std::string& alias, const std::string& to);
+
+  const std::string& resolve(const std::string& name) const;
+
  private:
   // type-erased value holder for move-constructible types
   struct IHolder {
@@ -71,6 +75,7 @@ class WhiteBoard {
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unordered_map<std::string, std::unique_ptr<IHolder>> m_store;
+  std::unordered_map<std::string, std::string> m_alias;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
@@ -86,7 +91,7 @@ inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
   if (name.empty()) {
     throw std::invalid_argument("Object can not have an empty name");
   }
-  if (0 < m_store.count(name)) {
+  if (exists(name)) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
   m_store.emplace(name, std::make_unique<HolderT<T>>(std::forward<T>(object)));
@@ -95,21 +100,42 @@ inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
 
 template <typename T>
 inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
-  auto it = m_store.find(name);
-  if (it == m_store.end()) {
+  if (!exists(name)) {
     throw std::out_of_range("Object '" + name + "' does not exists");
   }
-  const IHolder* holder = it->second.get();
+  const std::string &resolvedName = resolve(name);
+  const IHolder* holder = m_store.at(resolvedName).get();
 
   const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);
   if (castedHolder == nullptr) {
-    throw std::out_of_range("Type mismatch for object '" + name + "'");
+    throw std::out_of_range("Type mismatch for object '" + resolvedName + "'");
   }
 
-  ACTS_VERBOSE("Retrieved object '" << name << "'");
+  ACTS_VERBOSE("Retrieved object '" << resolvedName << "'");
   return castedHolder->value;
 }
 
 inline bool ActsExamples::WhiteBoard::exists(const std::string& name) const {
-  return m_store.find(name) != m_store.end();
+  return (m_store.find(name) != m_store.end()) ||
+         (m_alias.find(name) != m_alias.end());
+}
+
+inline void ActsExamples::WhiteBoard::setAlias(const std::string& alias,
+                                               const std::string& to) {
+  if (m_store.find(alias) != m_store.end()) {
+    throw std::invalid_argument("Object '" + alias + "' already exists");
+  }
+  if (m_store.find(to) == m_store.end()) {
+    throw std::invalid_argument("Object '" + to + "' does not exist");
+  }
+  m_alias[alias] = to;
+  ACTS_VERBOSE("Alias added from '" << alias << "' to '" << to << "'");
+}
+
+inline const std::string& ActsExamples::WhiteBoard::resolve(
+    const std::string& name) const {
+  if (auto it = m_alias.find(name); it != std::end(m_alias)) {
+    return it->second;
+  }
+  return name;
 }

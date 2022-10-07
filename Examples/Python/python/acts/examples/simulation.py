@@ -11,6 +11,7 @@ from acts.examples import (
     CsvParticleWriter,
     ParticlesPrinter,
     RootParticleWriter,
+    AliasAlgorithm,
 )
 
 # Defaults (given as `None` here) use class defaults defined in
@@ -128,6 +129,15 @@ def addParticleGun(
     )
 
     s.addReader(evGen)
+
+    s.addAlgorithm(
+        AliasAlgorithm(
+            mapping={
+                "particles_input": "particles",
+            },
+            level=customLogLevel(),
+        )
+    )
 
     if printParticles:
         s.addAlgorithm(

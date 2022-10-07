@@ -22,6 +22,7 @@ pybind11_add_module(ActsPythonBindings
   src/TruthTracking.cpp
   src/TrackFitting.cpp
   src/TrackFinding.cpp
+  src/Utility.cpp
   src/Vertexing.cpp
 )
 install(TARGETS ActsPythonBindings DESTINATION ${_python_install_dir})
@@ -51,6 +52,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesFatras
   ActsExamplesPrinters
   ActsExamplesDetectorTelescope
+  ActsExamplesUtility
 )
 
 set(py_files 
