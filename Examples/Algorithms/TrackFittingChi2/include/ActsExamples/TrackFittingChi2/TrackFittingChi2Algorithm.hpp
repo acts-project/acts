@@ -119,7 +119,8 @@ ActsExamples::TrackFittingChi2Algorithm::fitTrack(
     const std::vector<std::reference_wrapper<
         const ActsExamples::IndexSourceLink>>& sourceLinks,
     const ActsExamples::TrackParameters& initialParameters,
-    const Acts::Chi2FitterOptions<Acts::VectorMultiTrajectory>& options,
+//    const Acts::Chi2FitterOptions<Acts::VectorMultiTrajectory>& options,
+const Acts::Chi2FitterOptions& options,
     const std::vector<const Acts::Surface*>& surfSequence,
     std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const {
   (void)surfSequence;  // TODO: silence unused parameter warning

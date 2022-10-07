@@ -666,8 +666,9 @@ class Chi2Fitter {
 //            return mprop.template propagate(arg, propOptions);
 //          },
 //          vParams);
-    auto result = m_propagator.template propagate(sParameters, chi2FitterOptions,
+    auto result = m_propagator.template propagate(sParameters, propOptions,
                                                   std::move(inputResult));
+
       if (!result.ok()) {
         ACTS_ERROR("chi2 | it=" << i
                                 << " | propapation failed: " << result.error());
