@@ -582,7 +582,7 @@ class Chi2Fitter {
   /// @param end End iterator for the fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param chi2FitterOptions Chi2FitterOptions steering the fit
-  ///
+  /// @param trajectory Input trajectory storage to append into
   /// @note The input measurements are given in the form of @c SourceLink s.
   /// It's the calibrators job to turn them into calibrated measurements used in
   /// the fit.
