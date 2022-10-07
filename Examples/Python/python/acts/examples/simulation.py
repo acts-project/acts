@@ -11,8 +11,8 @@ from acts.examples import (
     CsvParticleWriter,
     ParticlesPrinter,
     RootParticleWriter,
-    AliasAlgorithm,
 )
+from .utility import addAlias
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
@@ -130,13 +130,11 @@ def addParticleGun(
 
     s.addReader(evGen)
 
-    s.addAlgorithm(
-        AliasAlgorithm(
-            mapping={
-                "particles_input": "particles",
-            },
-            level=customLogLevel(),
-        )
+    addAlias(
+        s,
+        {
+            "particles_input": "particles",
+        },
     )
 
     if printParticles:

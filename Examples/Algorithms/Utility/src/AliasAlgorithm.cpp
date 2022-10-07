@@ -17,5 +17,9 @@ ActsExamples::AliasAlgorithm::AliasAlgorithm(Config cfg,
 
 ActsExamples::ProcessCode ActsExamples::AliasAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
+  for (auto& mapping : m_cfg.mapping) {
+    ctx.eventStore.setAlias(mapping.first, mapping.second);
+  }
+
   return ActsExamples::ProcessCode::SUCCESS;
 }

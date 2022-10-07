@@ -62,6 +62,7 @@ set(py_files
   examples/reconstruction.py
   examples/itk.py
   examples/odd.py
+  examples/utility.py
   _adapter.py
 )
 
