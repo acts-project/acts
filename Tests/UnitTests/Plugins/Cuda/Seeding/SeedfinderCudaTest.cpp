@@ -260,9 +260,9 @@ int main(int argc, char** argv) {
   //----------- CPU ----------//
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-  groupIt = spGroup.begin()
+	groupIt = spGroup.begin();
 
-                if (do_cpu) {
+	if (do_cpu) {
     decltype(seedfinder_cpu)::State state;
     for (int i_s = 0; i_s < skip; i_s++)
       ++groupIt;
