@@ -260,7 +260,6 @@ class Chi2Fitter {
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result) const {
-      assert(result.fittedStates && "No MultiTrajectory set");
       const auto& logger = state.options.logger;
 
       if (result.finished) {
@@ -589,25 +588,14 @@ class Chi2Fitter {
   /// the fit.
   ///
   /// @return the output as an output track
-  template <typename source_link_iterator_t, typename start_parameters_t,
-            typename parameters_t = BoundTrackParameters,
-            bool _isdn = isDirectNavigator>
-  auto fit(source_link_iterator_t it, source_link_iterator_t end,
-           const start_parameters_t& sParameters,
-           const Chi2FitterOptions<traj_t>& chi2FitterOptions,
-           std::shared_ptr<traj_t> trajectory = {}) const
-      -> std::enable_if_t<_isdn, Result<Chi2FitterResult<traj_t>>> {
-    const auto& logger = chi2FitterOptions.logger;
-
-
-//   template <typename source_link_iterator_t, typename start_parameters_t,
-//             typename parameters_t = BoundTrackParameters>
-//   Result<Chi2FitterResult<traj_t>> fit(
-//       source_link_iterator_t it, source_link_iterator_t end,
-//       const start_parameters_t& sParameters,
-//       const Chi2FitterOptions<traj_t>& chi2FitterOptions,
-//       std::shared_ptr<traj_t> trajectory = {}) const {
-//     const auto& logger = chi2FitterOptions.logger;
+   template <typename source_link_iterator_t, typename start_parameters_t,
+             typename parameters_t = BoundTrackParameters>
+   Result<Chi2FitterResult<traj_t>> fit(
+       source_link_iterator_t it, source_link_iterator_t end,
+       const start_parameters_t& sParameters,
+       const Chi2FitterOptions<traj_t>& chi2FitterOptions,
+       std::shared_ptr<traj_t> trajectory = {}) const {
+     const auto& logger = chi2FitterOptions.logger;
 
 
 
