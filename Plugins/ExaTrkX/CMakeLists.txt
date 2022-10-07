@@ -53,6 +53,7 @@ target_link_libraries(
   PRIVATE
     ${TORCH_LIBRARIES}
     frnn
+    std::filesystem
 )
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
