@@ -908,7 +908,6 @@ def addVertexFitting(
     associatedParticles: str = "particles_input",
     trajectories: Optional[str] = None,
     trackParameters: str = "fittedTrackParameters",
-    trackIndices: str = "outputTrackIndices",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     trackSelectorRanges: TrackSelectorRanges = TrackSelectorRanges(),
     logLevel: Optional[acts.logging.Level] = None,
@@ -944,6 +943,7 @@ def addVertexFitting(
 
     if trackSelectorRanges is not None:
         selectedTrackParameters = "trackparameters"
+        trackIndices = "outputTrackIndices"
 
         trackSelector = acts.examples.TrackSelector(
             level=customLogLevel(),
@@ -972,6 +972,7 @@ def addVertexFitting(
         s.addAlgorithm(trackSelector)
     else:
         selectedTrackParameters = trackParameters
+        trackIndices = ""
 
     inputParticles = "particles_input"
     outputVertices = "fittedVertices"
