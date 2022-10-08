@@ -12,8 +12,8 @@
 
 #include <functional>
 #include <memory>
-#include <vector>
 #include <unordered_map>
+#include <vector>
 
 namespace ActsExamples {
 
