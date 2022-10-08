@@ -12,7 +12,7 @@ from acts.examples import (
     ParticlesPrinter,
     RootParticleWriter,
 )
-from .utility import addAlias
+from acts.examples.utility import addAlias
 
 # Defaults (given as `None` here) use class defaults defined in
 # Examples/Algorithms/Generators/ActsExamples/Generators/ParametricParticleGenerator.hpp
