@@ -48,11 +48,15 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
   if (nDaughters == 0) {
     std::string volumeName = g4LogicalVolume->GetName();
     std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
-    if (g4SensitiveDetector != nullptr or
-        std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
-                  volumeMaterialName) != m_cfg.materialMappings.end() or
+    const bool foundVolumeMapping =
         std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
-                  volumeName) != m_cfg.volumeMappings.end()) {
+                  volumeName) != m_cfg.volumeMappings.end();
+    const bool foundMaterialMapping =
+        std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
+                  volumeMaterialName) != m_cfg.materialMappings.end();
+
+    if (g4SensitiveDetector != nullptr or foundVolumeMapping or
+        foundMaterialMapping) {
       // Find the associated ACTS object
       Acts::Vector3 g4AbsPosition = g4RelPosition + motherPosition;
       auto actsLayer = m_cfg.trackingGeometry->associatedLayer(
@@ -88,10 +92,23 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
         ++sCounter;
         std::string mappedVolumeName = SensitiveSurfaceMapper::mappingPrefix;
         mappedVolumeName += std::to_string(mappedSurface->geometryId().value());
-        ACTS_VERBOSE("Remap sensitive volume: " << g4PhysicalVolume->GetName());
-        ACTS_VERBOSE("                    to: " << mappedVolumeName);
+        ACTS_VERBOSE("Found matching surface " << mappedSurface->geometryId()
+                                               << " at position "
+                                               << g4RelPosition.transpose());
+        ACTS_VERBOSE("Remap: " << g4PhysicalVolume->GetName() << " -> "
+                               << mappedVolumeName);
         g4PhysicalVolume->SetName(mappedVolumeName.c_str());
+      } else {
+        ACTS_VERBOSE("No mapping found for '"
+                     << volumeName << "' with material '" << volumeMaterialName
+                     << "' at position " << g4RelPosition.transpose());
       }
+    } else {
+      ACTS_VERBOSE(
+          "Did not try mapping '"
+          << g4PhysicalVolume->GetName() << "' at " << g4RelPosition.transpose()
+          << " because g4SensitiveDetector is nullptr"
+          << " and none of the provided volumes or materials were found");
     }
   } else {
     // Step down to all daughters
