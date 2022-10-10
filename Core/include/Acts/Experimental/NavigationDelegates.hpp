@@ -63,12 +63,8 @@ using NavigationStateUpdator = Delegate<void(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, ActsScalar absMomentum, ActsScalar charge)>;
 
-/// The type erased store
-using NavigationStateUpdatorStore = std::shared_ptr<void>;
-
 /// Memory  managed navigation state updator
-using ManagedNavigationStateUpdator =
-    std::tuple<NavigationStateUpdator, NavigationStateUpdatorStore>;
+using ManagedNavigationStateUpdator = ManagedDelegate<NavigationStateUpdator>;
 
 /// Declare a Detctor Volume Switching delegate
 ///

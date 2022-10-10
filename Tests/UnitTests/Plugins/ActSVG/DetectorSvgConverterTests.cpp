@@ -70,17 +70,17 @@ BOOST_AUTO_TEST_CASE(TubeSectorCylindricalDetectorVolume) {
   auto necCylinderBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(rInner, rOuter, zHalfLEC);
 
-  auto necCylinderVolume = Acts::Experimental::DetectorVolume::makeShared(
-      "NecCylinderVolume", tgContext, necTranslation,
-      std::move(necCylinderBounds), portalGenerator, navigationStateUpdator);
+  auto necCylinderVolume = Acts::Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, tgContext, "NecCylinderVolume",  necTranslation,
+      std::move(necCylinderBounds), navigationStateUpdator);
 
   auto centralCylinderBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(rInner, rOuter, zHalfL);
 
-  auto centralCylinderVolume = Acts::Experimental::DetectorVolume::makeShared(
-      "CentralCylinderVolume", tgContext, nominal,
-      std::move(centralCylinderBounds), portalGenerator,
-      navigationStateUpdator);
+  auto centralCylinderVolume =
+      Acts::Experimental::DetectorVolumeFactory::construct(
+          portalGenerator,  tgContext, "CentralCylinderVolume", nominal,
+          std::move(centralCylinderBounds), navigationStateUpdator);
 
   Acts::Transform3 pecTranslation = nominal;
   pecTranslation.pretranslate(Acts::Vector3(0., 0., zPosEC));
@@ -88,9 +88,9 @@ BOOST_AUTO_TEST_CASE(TubeSectorCylindricalDetectorVolume) {
   auto pecCylinderBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(rInner, rOuter, zHalfLEC);
 
-  auto pecCylinderVolume = Acts::Experimental::DetectorVolume::makeShared(
-      "PecCylinderVolume", tgContext, pecTranslation,
-      std::move(pecCylinderBounds), portalGenerator, navigationStateUpdator);
+  auto pecCylinderVolume = Acts::Experimental::DetectorVolumeFactory::construct(
+      portalGenerator, tgContext, "PecCylinderVolume",  pecTranslation,
+      std::move(pecCylinderBounds), navigationStateUpdator);
 
   // By hand attachment for this test
   if (false) {
@@ -106,7 +106,8 @@ BOOST_AUTO_TEST_CASE(TubeSectorCylindricalDetectorVolume) {
     cOptions.logLevel = Acts::Logging::VERBOSE;
 
     Acts::Experimental::connectCylindricalVolumes(
-        tgContext, {necCylinderVolume, centralCylinderVolume, pecCylinderVolume},
+        tgContext,
+        {necCylinderVolume, centralCylinderVolume, pecCylinderVolume},
         cOptions);
   }
 

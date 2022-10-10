@@ -56,13 +56,18 @@ void Acts::Experimental::Portal::fuse(Portal& other) {
         "Portal: trying to fuse portal (waste) with no links.");
   }
 
-  m_volumeLinks[ndir_to_index(oDir)] =
-      std::move(other.m_volumeLinks[ndir_to_index(oDir)]);
+  auto odx = ndir_to_index(oDir);
+  m_volumeLinks[odx] =
+      std::move(other.m_volumeLinks[odx]);
+  m_attachedVolumes[odx] = other.m_attachedVolumes[odx];
 }
 
 void Acts::Experimental::Portal::updateVolumeLink(
-    NavigationDirection nDir, ManagedDetectorVolumeLink&& dVolumeLink) {
-  m_volumeLinks[ndir_to_index(nDir)] = std::move(dVolumeLink);
+    NavigationDirection nDir, ManagedDetectorVolumeLink&& dVolumeLink,
+    const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
+  auto idx = ndir_to_index(nDir);
+  m_volumeLinks[idx] = std::move(dVolumeLink);
+  m_attachedVolumes[idx] = attachedVolumes;
 }
 
 const Acts::Experimental::DetectorVolume*

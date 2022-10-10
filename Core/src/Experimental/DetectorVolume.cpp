@@ -18,28 +18,21 @@
 #include <assert.h>
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const std::string& name, const GeometryContext& gctx,
+    const GeometryContext&, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    const PortalGenerator& portalGenerator,
-    const NavigationStateUpdator& navStateUpdator,
-    NavigationStateUpdatorStore navStateUpdatorStore)
+    ManagedNavigationStateUpdator&& navStateUpdator)
     : m_name(name),
       m_transform(transform),
       m_bounds(std::move(bounds)),
-      m_navigationStateUpdator(navStateUpdator),
-      m_navigationStateUpdatorStore(navStateUpdatorStore),
+      m_navigationStateUpdator(std::move(navStateUpdator)),
       m_volumeMaterial(nullptr) {
   if (m_bounds == nullptr) {
     throw std::invalid_argument(
         "DetectorVolume: construction with nullptr bounds.");
   }
-  if (not portalGenerator.connected()) {
-    throw std::invalid_argument(
-        "DetectorVolume: portal generator delegate is not connected.");
-  }
-  if (not navStateUpdator.connected()) {
+  if (not navStateUpdator.delegate.connected()) {
     throw std::invalid_argument(
         "DetectorVolume: navigation state updator delegate is not connected.");
   }
@@ -47,38 +40,26 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
   m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 
-  // Contruct the portals
-  construct(gctx, portalGenerator);
   assert(checkContainment(gctx) and "Objects are not contained by volume.");
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const std::string& name, const GeometryContext& gctx,
+    const GeometryContext&, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-    const PortalGenerator& portalGenerator,
-    const NavigationStateUpdator& navStateUpdator,
-    NavigationStateUpdatorStore navStateUpdatorStore)
+    ManagedNavigationStateUpdator&& navStateUpdator)
     : m_name(name),
       m_transform(transform),
       m_bounds(std::move(bounds)),
-      m_navigationStateUpdator(navStateUpdator),
-      m_navigationStateUpdatorStore(navStateUpdatorStore),
+      m_navigationStateUpdator(std::move(navStateUpdator)),
       m_volumeMaterial(nullptr) {
   if (m_bounds == nullptr) {
     throw std::invalid_argument(
         "DetectorVolume: construction with nullptr bounds.");
   }
-  if (not portalGenerator.connected()) {
-    throw std::invalid_argument(
-        "DetectorVolume: portal generator delegate is not connected.");
-  }
-  if (not navStateUpdator.connected()) {
+  if (not navStateUpdator.delegate.connected()) {
     throw std::invalid_argument(
         "DetectorVolume: navigation state updator delegate is not connected.");
   }
-
-  // Contruct the portals
-  construct(gctx, portalGenerator);
 }
 
 void Acts::Experimental::DetectorVolume::updatePortal(
@@ -95,7 +76,7 @@ void Acts::Experimental::DetectorVolume::construct(
     const GeometryContext& gctx, const PortalGenerator& portalGenerator) {
   // Create portals with the given generator
   auto portalSurfaces =
-      portalGenerator(transform(gctx), *(m_bounds.get()), *this);
+      portalGenerator(transform(gctx), *(m_bounds.get()), getSharedPtr());
   m_portals = ObjectStore<std::shared_ptr<Portal>>(portalSurfaces);
 }
 
@@ -144,7 +125,7 @@ void Acts::Experimental::DetectorVolume::updateNavigationStatus(
     }
   }
   // The state updator of the volume itself
-  m_navigationStateUpdator(nState, *this, gctx, position, direction,
+  m_navigationStateUpdator.delegate(nState, *this, gctx, position, direction,
                            absMomentum, charge);
   nState.currentVolume = this;
   nState.surfaceCandidate = nState.surfaceCandidates.begin();

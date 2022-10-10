@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Experimental/NavigationState.hpp"
 #include "Acts/Experimental/NavigationDelegates.hpp"
+#include "Acts/Experimental/NavigationState.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -41,7 +41,7 @@ class Portal;
 /// @param volume the detector volume for which this generator is called
 using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
     const Transform3& gctx, const VolumeBounds& bounds,
-    const DetectorVolume& volume)>;
+    std::shared_ptr<DetectorVolume> volume)>;
 
 /// A detector volume description which can be:
 ///
@@ -56,6 +56,8 @@ using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
 /// object ownership is done by shared/unique pointers.
 class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
  public:
+  friend class DetectorVolumeFactory;
+
   /// Nested object store that holds the internal (non-const),
   /// reference counted objects and provides an external
   /// (const raw pointer) access
@@ -84,51 +86,40 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
  protected:
   /// Create a detector volume - with surfaces and/or inserted volumes
   ///
-  /// @param gctx the geometry context while building
+  /// @param gctx the geometry context while building - for future contextual store
+  /// @param name the volume name
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
   /// @param surfaces are the contained surfaces of this volume
   /// @param volumes are the containes volumes of this volume
-  /// @param portalGenerator the volume portal generator
   /// @param navStateUpdator the navigation state update
-  /// @param navStateUpdatorStore the
-  /// @param name the volume name
   ///
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume(const std::string& name, const GeometryContext& gctx,
-                 const Transform3& transform,
+  DetectorVolume([[maybe_unused]] const GeometryContext& gctx,
+                 const std::string& name, const Transform3& transform,
                  std::unique_ptr<VolumeBounds> bounds,
                  const std::vector<std::shared_ptr<Surface>>& surfaces,
                  const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-                 const PortalGenerator& portalGenerator,
-                 const NavigationStateUpdator& navStateUpdator,
-                 NavigationStateUpdatorStore navStateUpdatorStore =
-                     nullptr) noexcept(false);
+                 ManagedNavigationStateUpdator&& navStateUpdator) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
-  /// @param gctx the geometry context while building
+  /// @param gctx the geometry context while building - for future contextual store
+  /// @param name the volume name
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
-  /// @param portalGenerator the volume portal generator
   /// @param navStateUpdator the navigation state update
-  /// @param navStateUpdatorStore the
-  /// @param name the volume name
   ///
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume(const std::string& name, const GeometryContext& gctx,
-                 const Transform3& transform,
+  DetectorVolume([[maybe_unused]] const GeometryContext& gctx,
+                 const std::string& name, const Transform3& transform,
                  std::unique_ptr<VolumeBounds> bounds,
-                 const PortalGenerator& portalGenerator,
-                 const NavigationStateUpdator& navStateUpdator,
-                 NavigationStateUpdatorStore navStateUpdatorStore =
-                     nullptr) noexcept(false);
+                 ManagedNavigationStateUpdator&& navStateUpdator) noexcept(false);
 
- public:
   /// Factory for producing memory managed instances of DetectorVolume.
   /// Will forward all parameters and will attempt to find a suitable
   /// constructor.
@@ -140,6 +131,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
         new DetectorVolume(std::forward<Args>(args)...));
   }
 
+ public:
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///
   /// @note Will error if this was not created through the @c makeShared factory
@@ -342,10 +334,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
   /// The navigation state updator
-  NavigationStateUpdator m_navigationStateUpdator;
-
-  /// The navigation state updator store
-  NavigationStateUpdatorStore m_navigationStateUpdatorStore;
+  ManagedNavigationStateUpdator m_navigationStateUpdator;
 
   /// Volume material (optional)
   std::shared_ptr<const IVolumeMaterial> m_volumeMaterial = nullptr;
@@ -409,6 +398,22 @@ inline void DetectorVolume::setName(const std::string& name) {
 inline const std::string& DetectorVolume::name() const {
   return m_name;
 }
+
+class DetectorVolumeFactory {
+ public:
+  /// Create a detector volume - from factory
+  /// @param portalGenerator the volume portal generator
+  /// @param gctx the geometry context for construction and potential contextual store
+  template <typename... Args>
+  static std::shared_ptr<DetectorVolume> construct(
+      const PortalGenerator& portalGenerator, const GeometryContext& gctx,
+      Args&&... args) {
+    auto dVolume =
+        DetectorVolume::makeShared(gctx, std::forward<Args>(args)...);
+    dVolume->construct(gctx, portalGenerator);
+    return dVolume;
+  }
+};
 
 }  // namespace Experimental
 }  // namespace Acts

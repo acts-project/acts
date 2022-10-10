@@ -46,9 +46,10 @@ BOOST_AUTO_TEST_CASE(TubeCylindricalDetectorVolume) {
   auto tubeCylinderBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(rInner, rOuter, zHalfL);
 
-  auto tubeCylinderVolume = Acts::Experimental::DetectorVolume::makeShared(
-      "TubeCylinderVolume", tgContext, nominal, std::move(tubeCylinderBounds),
-      portalGenerator, navigationStateUpdator);
+  auto tubeCylinderVolume =
+      Acts::Experimental::DetectorVolumeFactory::construct(
+          portalGenerator, tgContext, "TubeCylinderVolume", nominal,
+          std::move(tubeCylinderBounds), navigationStateUpdator);
 
   Acts::Svg::DetectorVolumeConverter::Options volumeOptions;
   volumeOptions.portalOptions.volumeIndices[tubeCylinderVolume.get()] = 0u;
@@ -86,10 +87,10 @@ BOOST_AUTO_TEST_CASE(TubeSectorCylindricalDetectorVolume) {
     auto sectorCylinderBounds = std::make_unique<Acts::CylinderVolumeBounds>(
         rInner, rOuter, zHalfL, phiSector, aphi);
 
-    auto sectorCylinderVolume = Acts::Experimental::DetectorVolume::makeShared(
-        "SectoralCylinderVolume", tgContext, nominal,
-        std::move(sectorCylinderBounds), portalGenerator,
-        navigationStateUpdator);
+    auto sectorCylinderVolume =
+        Acts::Experimental::DetectorVolumeFactory::construct(
+            portalGenerator, tgContext, "SectoralCylinderVolume", nominal,
+            std::move(sectorCylinderBounds), navigationStateUpdator);
 
     Acts::Svg::DetectorVolumeConverter::Options volumeOptions;
     volumeOptions.portalOptions.volumeIndices[sectorCylinderVolume.get()] = 0u;

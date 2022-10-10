@@ -43,7 +43,9 @@ class Portal : public std::enable_shared_from_this<Portal> {
   Portal(std::shared_ptr<Surface> surface);
 
  public:
-  using VolumeLinks = std::array<ManagedDetectorVolumeLink, 2>;
+  using VolumeLinks = std::array<ManagedDetectorVolumeLink, 2u>;
+
+  using AttachedVolumes = std::array<std::vector<std::shared_ptr<DetectorVolume>>, 2u>;
 
   /// Declare the DetectorVolume friend for portal setting
   friend class DetectorVolume;
@@ -61,7 +63,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// @note Will error if this was not created through the @c makeShared factory
   ///       since it needs access to the original reference. In C++14 this is
   ///       undefined behavior (but most likely implemented as a @c bad_weak_ptr
-  ///       exception), in C++17 it is defined as that exception.
+  ///       exception), in C++17 it is defined as that exception. 
   /// @note Only call this if you need shared ownership of this object.
   ///
   /// @return The shared pointer
@@ -111,30 +113,38 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// Fuse with another portal, this one is kept
   ///
   /// @param other is the portal that will be fused
-  /// 
-  /// @note this will move the portqal links from the other
-  /// into this volume, it will throw an exception if the 
-  /// portals are not fusable 
+  ///
+  /// @note this will move the portal links from the other
+  /// into this volume, it will throw an exception if the
+  /// portals are not fusable
   void fuse(Portal& other) noexcept(false);
 
   /// Update the volume link
   ///
   /// @param nDir the navigation direction for the link
   /// @param dVolumeLink is the mangaged link delegate
+  /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
-  void updateVolumeLink(NavigationDirection nDir,
-                        ManagedDetectorVolumeLink&& dVolumeLink);
+  void updateVolumeLink(
+      NavigationDirection nDir, ManagedDetectorVolumeLink&& dVolumeLink,
+      const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes);
 
   // Access to the portal targets
   const VolumeLinks& volumeLinks() const;
+
+  // Access to the attached volumes - non-const access
+  AttachedVolumes& attachedVolumes(); 
 
  private:
   /// The surface representation of this portal
   std::shared_ptr<Surface> m_surface;
 
   /// The portal targets along/opposite the normal vector
-  std::array<ManagedDetectorVolumeLink, 2> m_volumeLinks;
+  VolumeLinks m_volumeLinks;
+
+  /// The portal attaches to the following volumes
+  AttachedVolumes m_attachedVolumes;
 
   /// Convert navigation dir to index
   size_t ndir_to_index(NavigationDirection nDir) const {
@@ -149,6 +159,11 @@ inline const Surface& Portal::surface() const {
 inline const Portal::VolumeLinks& Portal::volumeLinks() const {
   return m_volumeLinks;
 }
+
+inline Portal::AttachedVolumes& Portal::attachedVolumes(){
+  return m_attachedVolumes;
+}
+
 
 }  // namespace Experimental
 }  // namespace Acts

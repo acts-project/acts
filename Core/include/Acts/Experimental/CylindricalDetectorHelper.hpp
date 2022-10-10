@@ -9,11 +9,13 @@
 #pragma once
 
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Experimental/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
 #include <memory>
+#include <tuple>
 #include <vector>
 
 namespace Acts {
@@ -21,31 +23,62 @@ namespace Acts {
 namespace Experimental {
 
 class DetectorVolume;
+class Portal;
 
-struct CylindricalDetectorHelperOptions {
-  enum class Handling { eStrict, eResize, eFill };
-  Handling handling = Handling::eStrict;
-  ActsScalar glueTolerance = std::numeric_limits<ActsScalar>::epsilon();
+using ProtoContainer = std::map<unsigned int, std::shared_ptr<Portal>>;
 
-  /// ACTS log level
-  Logging::Level logLevel = Logging::INFO;
-};
-
-/// @brief Method to attach two cylindrical detector volumes, i.e. to
-/// create a shared, pointing boundary between the volumes
+/// @brief Connect in R when having fully prepared input
 ///
-/// @param gctx the geometry context of this call
-/// @param volumes the are the detector volumes
-/// @param options is a boolean to steer whether the volumes should be resized
+/// @param gctx The geometry context
+/// @param volumes the volumes
+/// @param selectedOnly switch only selected boundaries
 ///
-/// @note throws exceptions if misconfigured
-/// @note currently relies on sorted volumes
+/// @note no checking for consistency is done at this stage
 ///
-void connectCylindricalVolumes(
+/// @returns the proto container surfaces of a Proto container
+ProtoContainer connectVolumesInR(
     const GeometryContext& gctx,
-    const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    const CylindricalDetectorHelperOptions& options) noexcept(false);
+    std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    const std::vector<unsigned int>& selectedOnly = {});
+
+/// @brief Connect in Z when having fully prepared input
+///
+/// @param gctx The geometry context
+/// @param volumes the volumes
+/// @param selectedOnly switch only selected boundaries
+///
+/// @note no checking for consistency is done at this stage
+ProtoContainer connectVolumesInZ(
+    const GeometryContext& gctx,
+    std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    const std::vector<unsigned int>& selectedOnly = {});
+
+/// @brief Connect in phi when having fully prepared input
+///
+/// @param gctx The geometry context
+/// @param volumes the volumes
+/// @param selectedOnly switch only selected boundaries
+///
+/// @note no checking for consistency is done at this stage
+ProtoContainer connectVolumesInPhi(
+    const GeometryContext& gctx,
+    std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    const std::vector<unsigned int>& selectedOnly = {});
+
+/// @brief Connect containers in R when having fully prepared input
+///
+/// @param gctx The geometry context
+/// @param containers the containers
+/// @param selectedOnly switch only selected boundaries
+///
+/// @note no checking for consistency is done at this stage
+///
+/// @returns the proto container surfaces of a Proto container
+ProtoContainer connectContainersInR(
+    const GeometryContext& gctx,
+    const std::vector<ProtoContainer>& containers,
+    const std::vector<unsigned int>& selectedOnly = {});
+
 
 }  // namespace Experimental
-
 }  // namespace Acts

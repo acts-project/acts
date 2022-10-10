@@ -28,12 +28,12 @@ namespace detail {
 ///
 /// @param dTransform the context-resolved transform of the detector volume
 /// @param dBounds the detecor volume bounds
-/// @param dVolume the reference to the detector volume
+/// @param dVolume the reference to the detector volume which generates this volume
 ///
 /// @return a vector of newly created portals with registered inside volume
 inline static std::vector<std::shared_ptr<Portal>> portals(
     const Transform3& dTransform, const VolumeBounds& dBounds,
-    const DetectorVolume& dVolume) {
+    std::shared_ptr<DetectorVolume> dVolume) {
   // Get the oriented boundary surfaces
   auto orientedSurfaces = dBounds.orientedSurfaces(dTransform);
 
@@ -43,13 +43,14 @@ inline static std::vector<std::shared_ptr<Portal>> portals(
     // Create a portal from the surface
     auto portal = Portal::makeShared(oSurface.first);
     // Create a shared link instance & delegate
-    auto singleLinkStored = std::make_shared<SingleLinkImpl>(dVolume);
+    auto singleLinkStored = std::make_shared<SingleLinkImpl>(*dVolume.get());
     DetectorVolumeLink singleLink;
     singleLink.connect<&SingleLinkImpl::targetVolume>(singleLinkStored.get());
     // Update the volume link and the store
     NavigationDirection insideDir = oSurface.second;
-    ManagedDetectorVolumeLink managedLink{std::move(singleLink), std::move(singleLinkStored)};
-    portal->updateVolumeLink(insideDir, std::move(managedLink));
+    ManagedDetectorVolumeLink managedLink{std::move(singleLink),
+                                          std::move(singleLinkStored)};
+    portal->updateVolumeLink(insideDir, std::move(managedLink), {dVolume});
 
     // Create a null link
     DetectorVolumeLink nullLink;
@@ -60,7 +61,7 @@ inline static std::vector<std::shared_ptr<Portal>> portals(
             ? Acts::NavigationDirection::Backward
             : Acts::NavigationDirection::Forward;
     ManagedDetectorVolumeLink managedNullLink{std::move(nullLink), nullptr};
-    portal->updateVolumeLink(outsideDir, std::move(managedNullLink));
+    portal->updateVolumeLink(outsideDir, std::move(managedNullLink), {});
 
     // Portal is prepared
     portals.push_back(portal);
@@ -72,10 +73,10 @@ inline static std::vector<std::shared_ptr<Portal>> portals(
 /// static method.
 ///
 inline static Delegate<std::vector<std::shared_ptr<Portal>>(
-    const Transform3&, const VolumeBounds&, const DetectorVolume&)>
+    const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>
 defaultPortalGenerator() {
   Delegate<std::vector<std::shared_ptr<Portal>>(
-      const Transform3&, const VolumeBounds&, const DetectorVolume&)>
+      const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>
       pGenerator;
   pGenerator.connect<&portals>();
   return pGenerator;

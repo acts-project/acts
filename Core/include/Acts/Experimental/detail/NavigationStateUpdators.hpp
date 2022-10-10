@@ -112,13 +112,17 @@ inline static void portalCandidates(NavigationState& nState,
 /// Generate a default portal provider
 ///
 /// @return a connected navigationstate updator
-inline static NavigationStateUpdator defaultPortalProvider() {
+inline static ManagedNavigationStateUpdator defaultPortalProvider() {
+  ManagedNavigationStateUpdator managedUpdator;
   NavigationStateUpdator nStateUpdator;
   nStateUpdator.connect<&portalCandidates>();
-  return nStateUpdator;
+  managedUpdator.delegate = std::move(nStateUpdator);
+  managedUpdator.implementation = nullptr;
+  return managedUpdator;
 }
 
-struct AllSurfacesAttacher {
+class AllSurfacesAttacher : public INavigationDelegate {
+ public:
   /// @brief An attacher of all surface candidates in a volume
   ///
   /// @param nState the navigation state to which the surfaces are attached
@@ -144,7 +148,8 @@ struct AllSurfacesAttacher {
   }
 };
 
-struct AllPortalsAttacher {
+class AllPortalsAttacher : public INavigationDelegate {
+ public:
   /// @brief An attacher of all portal surface candidates of internal volumes
   ///
   /// @param nState the navigation state to which the surfaces are attached
@@ -174,7 +179,8 @@ struct AllPortalsAttacher {
 // This struct allows to combine the portals from the volume itself
 // with  attachers
 template <typename... candidate_attachers_t>
-struct NavigationStateUpdator {
+class NavigationStateUpdator : public INavigationDelegate {
+ public:
   std::tuple<candidate_attachers_t...> m_candidateAttachers;
 
   NavigationStateUpdator(const std::tuple<candidate_attachers_t...>& attachers)

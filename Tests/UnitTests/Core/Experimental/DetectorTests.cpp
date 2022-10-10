@@ -80,23 +80,21 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   auto portalGenerator = detail::defaultPortalGenerator();
 
-  auto navigationStateUpdator = detail::defaultPortalProvider();
+  auto cyl0 = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0Bounds),
+      detail::defaultPortalProvider());
 
-  auto cyl0 = DetectorVolume::makeShared("Cyl0", tContext, nominal,
-                                         std::move(cyl0Bounds), portalGenerator,
-                                         navigationStateUpdator);
+  auto cyl0nameDup = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0BoundsCopy),
+      detail::defaultPortalProvider());
 
-  auto cyl0nameDup = DetectorVolume::makeShared(
-      "Cyl0", tContext, nominal, std::move(cyl0BoundsCopy), portalGenerator,
-      navigationStateUpdator);
+  auto cyl1 = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "Cyl1", nominal, std::move(cyl1Bounds),
+      detail::defaultPortalProvider());
 
-  auto cyl1 = DetectorVolume::makeShared("Cyl1", tContext, nominal,
-                                         std::move(cyl1Bounds), portalGenerator,
-                                         navigationStateUpdator);
-
-  auto cyl2 = DetectorVolume::makeShared("Cyl2", tContext, nominal,
-                                         std::move(cyl2Bounds), portalGenerator,
-                                         navigationStateUpdator);
+  auto cyl2 = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "Cyl2", nominal, std::move(cyl2Bounds),
+      detail::defaultPortalProvider());
 
   // A detector construction that should work
   DetectorVolumeFinder trialAndErrorFinder;

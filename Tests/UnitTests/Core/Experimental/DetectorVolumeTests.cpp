@@ -55,22 +55,24 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   auto navigationStateUpdator = detail::defaultPortalProvider();
 
   // Misconfigured - null pointer for bounds
-  BOOST_CHECK_THROW(DetectorVolume::makeShared(
-                        "MisconfiguredFullCylinderVolume", tContext, nominal,
-                        nullptr, portalGenerator, navigationStateUpdator),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      DetectorVolumeFactory::construct(
+          portalGenerator, tContext, "MisconfiguredFullCylinderVolume", nominal,
+          nullptr, detail::defaultPortalProvider()),
+      std::invalid_argument);
 
   // Misconfigured - portal generator not connected
   PortalGenerator unconnected;
-  BOOST_CHECK_THROW(DetectorVolume::makeShared(
-                        "MisconfiguredFullCylinderVolume", tContext, nominal,
-                        nullptr, unconnected, navigationStateUpdator),
-                    std::invalid_argument);
+  BOOST_CHECK_THROW(
+      DetectorVolumeFactory::construct(
+          unconnected, tContext, "MisconfiguredFullCylinderVolume", nominal,
+          nullptr, detail::defaultPortalProvider()),
+      std::invalid_argument);
 
   // A full cylinder
-  auto fullCylinderVolume = DetectorVolume::makeShared(
-      "FullCylinderVolume", tContext, nominal, std::move(fullCylinderBounds),
-      portalGenerator, navigationStateUpdator);
+  auto fullCylinderVolume = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "FullCylinderVolume", nominal,
+      std::move(fullCylinderBounds), detail::defaultPortalProvider());
 
   BOOST_CHECK(fullCylinderVolume ==
               unpackToShared<DetectorVolume>(*fullCylinderVolume));
@@ -85,9 +87,9 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   auto tubeCylinderBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(rInner, rOuter, zHalfL);
 
-  auto tubeCylinderVolume = DetectorVolume::makeShared(
-      "TubeCylinderVolume", tContext, nominal, std::move(tubeCylinderBounds),
-      portalGenerator, navigationStateUpdator);
+  auto tubeCylinderVolume = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "TubeCylinderVolume", nominal,
+      std::move(tubeCylinderBounds), detail::defaultPortalProvider());
 
   BOOST_CHECK(tubeCylinderVolume->surfaces().size() == 0u);
   BOOST_CHECK(tubeCylinderVolume->volumes().size() == 0u);
@@ -134,12 +136,11 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
       std::make_unique<Acts::CuboidVolumeBounds>(smallBox, smallBox, smallBox);
 
   auto portalGenerator = detail::defaultPortalGenerator();
-  auto portalStateUpdator = detail::defaultPortalProvider();
 
   // Create the inner box
-  auto innerBox = DetectorVolume::makeShared(
-      "InnerBox", tContext, nominal, std::move(smallBoxBounds), portalGenerator,
-      portalStateUpdator);
+  auto innerBox = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "InnerBox", nominal, std::move(smallBoxBounds),
+      detail::defaultPortalProvider());
 
   // A Portal attacher for inner and outer portals
   detail::AllPortalsAttacher ap;
@@ -150,12 +151,16 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   nStateUpdator.connect<&detail::NavigationStateUpdator<decltype(ap)>::update>(
       nStateUpdatorStore.get());
 
+  ManagedNavigationStateUpdator navStateUpdator;
+  navStateUpdator.delegate = std::move(nStateUpdator);
+  navStateUpdator.implementation = nStateUpdatorStore;
+
   // Create the outer box
   std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
   std::vector<std::shared_ptr<DetectorVolume>> volumes = {innerBox};
-  auto outerBox = DetectorVolume::makeShared(
-      "OuterBox", tContext, nominal, std::move(bigBoxBounds), surfaces, volumes,
-      portalGenerator, nStateUpdator, nStateUpdatorStore);
+  auto outerBox = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "OuterBox", nominal, std::move(bigBoxBounds),
+      surfaces, volumes, std::move(navStateUpdator));
   // And connect it to the mother
   detail::setOutsideVolumeLink<DetectorVolume>(*outerBox.get());
 
@@ -168,7 +173,7 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   outerBox->updateNavigationStatus(nState, tContext, Acts::Vector3(15., 0., 0.),
                                    Acts::Vector3(1., 0., 0), 100., 1.);
 
-  // This should have portals of the outer and inner 
+  // This should have portals of the outer and inner
   BOOST_TEST(nState.surfaceCandidates.size(), 12u);
   // Current volume is set to outer box
   BOOST_TEST(nState.currentVolume, outerBox.get());
@@ -187,7 +192,6 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   BOOST_TEST(nState.surfaceCandidates.size(), 6u);
   // Current volume is set to inner box
   BOOST_TEST(nState.currentVolume, innerBox.get());
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

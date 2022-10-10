@@ -109,10 +109,20 @@ class MultiLink1DImpl : public INavigationDelegate {
 };
 
 /// @brief A transformed multi link relation shipt
-class TransformedMulitLink1DImpl : public INavigationDelegate {
+class TransformedMultiLink1DImpl : public INavigationDelegate {
  public:
   MultiLink1DImpl multiLink;
   Transform3 transform = Transform3::Identity();
+
+  /// Convenience constructor
+  ///
+  /// @param mLink the bare multi plink
+  /// @param preTransform the transformation before casting
+  TransformedMultiLink1DImpl(
+      const MultiLink1DImpl& mLink,
+      const Transform3& preTransform)
+      : multiLink(mLink),
+        transform(preTransform) {}
 
   /// Convenience constructor
   ///
@@ -120,7 +130,7 @@ class TransformedMulitLink1DImpl : public INavigationDelegate {
   /// @param castBoundaries the boundaries inthe cast parameters
   /// @param binningValue the the binning/cast value
   /// @param preTransform the transformation before casting
-  TransformedMulitLink1DImpl(
+  TransformedMultiLink1DImpl(
       const std::vector<const DetectorVolume*>& detectorVolumes,
       const std::vector<ActsScalar>& castBoundaries, BinningValue binningValue,
       const Transform3& preTransform)
@@ -172,7 +182,7 @@ void setOutsideVolumeLink(volume_type& volume) noexcept(false) {
                                      ? NavigationDirection::Backward
                                      : NavigationDirection::Forward;
 
-      p->updateVolumeLink(oDir, std::move(managedLink));
+      p->updateVolumeLink(oDir, std::move(managedLink), {volume.getSharedPtr()});
     }
   }
 }

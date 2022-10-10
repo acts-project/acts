@@ -28,7 +28,7 @@ Acts::GeometryContext tContext;
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 
-DetectorVolume dVolume;
+auto dVolume = std::make_shared<DetectorVolume>();
 auto dTransform = Acts::Transform3::Identity();
 auto pGenerator = detail::defaultPortalGenerator();
 
@@ -59,10 +59,10 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   }
 
   // Pointing inside the volume
-  BOOST_CHECK(cBarPortals[0]->nextVolume(tContext, negPos, negDir) == &dVolume);
-  BOOST_CHECK(cBarPortals[1]->nextVolume(tContext, posPos, posDir) == &dVolume);
+  BOOST_CHECK(cBarPortals[0]->nextVolume(tContext, negPos, negDir) == dVolume.get());
+  BOOST_CHECK(cBarPortals[1]->nextVolume(tContext, posPos, posDir) == dVolume.get());
   BOOST_CHECK(cBarPortals[2]->nextVolume(tContext, outerPos, outerDir) ==
-              &dVolume);
+              dVolume.get());
   // Pointing to nowhere land
   BOOST_CHECK(cBarPortals[0]->nextVolume(tContext, negPos, -negDir) == nullptr);
   BOOST_CHECK(cBarPortals[1]->nextVolume(tContext, posPos, -posDir) == nullptr);
@@ -80,13 +80,13 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
 
   // Pointing inside the volume
   BOOST_CHECK(cTubePortals[0]->nextVolume(tContext, negPos, negDir) ==
-              &dVolume);
+              dVolume.get());
   BOOST_CHECK(cTubePortals[1]->nextVolume(tContext, posPos, posDir) ==
-              &dVolume);
+              dVolume.get());
   BOOST_CHECK(cTubePortals[2]->nextVolume(tContext, outerPos, outerDir) ==
-              &dVolume);
+              dVolume.get());
   BOOST_CHECK(cTubePortals[3]->nextVolume(tContext, innerPos, innerDir) ==
-              &dVolume);
+              dVolume.get());
 
   // Pointing to nowhere land
   BOOST_CHECK(cTubePortals[0]->nextVolume(tContext, negPos, -negDir) ==
@@ -116,17 +116,17 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   }
   // Pointing inside the volume
   BOOST_CHECK(cTubeSectorPortals[0]->nextVolume(tContext, negPos, negDir) ==
-              &dVolume);
+              dVolume.get());
   BOOST_CHECK(cTubeSectorPortals[1]->nextVolume(tContext, posPos, posDir) ==
-              &dVolume);
+              dVolume.get());
   BOOST_CHECK(cTubeSectorPortals[2]->nextVolume(tContext, outerPos, outerDir) ==
-              &dVolume);
+              dVolume.get());
   BOOST_CHECK(cTubeSectorPortals[3]->nextVolume(tContext, innerPos, innerDir) ==
-              &dVolume);
+              dVolume.get());
   BOOST_CHECK(cTubeSectorPortals[4]->nextVolume(tContext, negPhiSecPos,
-                                                negPhiSecDir) == &dVolume);
+                                                negPhiSecDir) == dVolume.get());
   BOOST_CHECK(cTubeSectorPortals[5]->nextVolume(tContext, posPhiSecPos,
-                                                posPhiSecDir) == &dVolume);
+                                                posPhiSecDir) == dVolume.get());
 
   // Pointing to nowhere land
   BOOST_CHECK(cTubeSectorPortals[0]->nextVolume(tContext, negPos, -negDir) ==
