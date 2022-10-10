@@ -48,15 +48,11 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
   if (nDaughters == 0) {
     std::string volumeName = g4LogicalVolume->GetName();
     std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
-    const bool foundVolumeMapping =
-        std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
-                  volumeName) != m_cfg.volumeMappings.end();
-    const bool foundMaterialMapping =
+    if (g4SensitiveDetector != nullptr or
         std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
-                  volumeMaterialName) != m_cfg.materialMappings.end();
-
-    if (g4SensitiveDetector != nullptr or foundVolumeMapping or
-        foundMaterialMapping) {
+                  volumeMaterialName) != m_cfg.materialMappings.end() or
+        std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
+                  volumeName) != m_cfg.volumeMappings.end()) {
       // Find the associated ACTS object
       Acts::Vector3 g4AbsPosition = g4RelPosition + motherPosition;
       auto actsLayer = m_cfg.trackingGeometry->associatedLayer(
