@@ -25,10 +25,10 @@ namespace ActsExamples {
 
 /// This Mapper takes a (non-const) Geant4 geometry and maps
 /// it such that name will be containing the mapping prefix
-/// and the Acts::GeometryIdentifier of the surface in the style of
-/// 'ActsGeoID#72057731476881664'. The mapping is by matching the
-/// position of the G4 physical volume with the center position
-/// of a Acts::Surface.
+/// and the Acts::GeometryIdentifier of the surface.
+///
+/// The mapping is done by matching the position of the G4 physical volume with
+/// the center position of a Acts::Surface.
 ///
 /// This allows to directly associate Geant4 hits to the sensitive
 /// elements of the Acts::TrackingGeoemtry w/o map lookup.
