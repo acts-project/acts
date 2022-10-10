@@ -498,12 +498,24 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInR(
   }
   protoContainer[2u] = containers[containers.size() - 1u].find(2u)->second;
 
-  auto sideVolumes = stripSideVolumes(containers, {0u, 1u, 4u, 5u}, selectedOnly);
+  auto sideVolumes =
+      stripSideVolumes(containers, {0u, 1u, 4u, 5u}, selectedOnly);
 
   for (auto [s, volumes] : sideVolumes) {
     auto pR = connectVolumesInR(gctx, volumes, {s});
     protoContainer[s] = pR.find(s)->second;
   }
+
+  // Done.
+  return protoContainer;
+}
+
+Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInZ(
+    const GeometryContext& gctx, const std::vector<ProtoContainer>& containers,
+    const std::vector<unsigned int>& selectedOnly) noexcept(false) {
+  // Return the new container
+  ProtoContainer protoContainer;
+
 
   // Done.
   return protoContainer;

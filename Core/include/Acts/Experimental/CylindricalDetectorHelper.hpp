@@ -80,5 +80,19 @@ ProtoContainer connectContainersInR(
     const std::vector<unsigned int>& selectedOnly = {});
 
 
+/// @brief Connect containers in Z when having fully prepared input
+///
+/// @param gctx The geometry context
+/// @param containers the containers
+/// @param selectedOnly switch only selected boundaries
+///
+/// @note no checking for consistency is done at this stage
+///
+/// @returns the proto container surfaces of a Proto container
+ProtoContainer connectContainersInZ(
+    const GeometryContext& gctx,
+    const std::vector<ProtoContainer>& containers,
+    const std::vector<unsigned int>& selectedOnly = {});
+
 }  // namespace Experimental
 }  // namespace Acts

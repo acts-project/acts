@@ -268,25 +268,24 @@ BOOST_AUTO_TEST_CASE(PerfectFitPhiAttachment) {
   }
 }
 
-BOOST_AUTO_TEST_CASE(ProtoContainerFitInR) {
-
-
+BOOST_AUTO_TEST_CASE(ProtoContainerRZ) {
   auto transform = Acts::Transform3::Identity();
 
   auto portalGenerator = detail::defaultPortalGenerator();
   auto navigationStateUpdator = detail::defaultPortalProvider();
-  // A container in R 
+  // A container in R
   std::vector<Acts::ActsScalar> radii = {25., 100., 200.};
   Acts::ActsScalar halfZ = 200;
 
-  // An innermost Pipe 
+  // An innermost Pipe
   auto bBounds =
-          std::make_unique<Acts::CylinderVolumeBounds>(0., radii[0u], halfZ);
+      std::make_unique<Acts::CylinderVolumeBounds>(0., radii[0u], halfZ);
 
   auto innerPipe = DetectorVolumeFactory::construct(
-          portalGenerator, tContext, "InnerPipe",
-          transform, std::move(bBounds), detail::defaultPortalProvider());
+      portalGenerator, tContext, "InnerPipe", transform, std::move(bBounds),
+      detail::defaultPortalProvider());
 
+  // Make a container representation out of it
   std::map<unsigned int, std::shared_ptr<Portal>> ipContainer;
   ipContainer[0u] = innerPipe->portalPtrs()[0u];
   ipContainer[1u] = innerPipe->portalPtrs()[1u];
@@ -307,7 +306,6 @@ BOOST_AUTO_TEST_CASE(ProtoContainerFitInR) {
 
   auto protoContainerInR = connectVolumesInR(tContext, rVolumes);
 
-  //
   std::vector<Acts::ActsScalar> zValues = {-200., -120, 10., 100., 200.};
   std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {};
   for (auto [i, z] : Acts::enumerate(zValues)) {
@@ -329,13 +327,57 @@ BOOST_AUTO_TEST_CASE(ProtoContainerFitInR) {
   // Now call the connector
   auto protoContainerInZ = connectVolumesInZ(tContext, zVolumes);
 
-  connectContainersInR(tContext, {ipContainer, protoContainerInR,protoContainerInZ});
+  auto centralContainer = connectContainersInR(
+      tContext, {ipContainer, protoContainerInR, protoContainerInZ});
+
+  // Let's make two endcaps
+  // Nec
+  auto necBounds = std::make_unique<Acts::CylinderVolumeBounds>(0., 300., 50.);
+
+  auto necTransform = Acts::Transform3::Identity();
+  necTransform.pretranslate(Acts::Vector3(0., 0., -250));
+  auto necVolume = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "Nec", necTransform, std::move(necBounds),
+      detail::defaultPortalProvider());
+
+  std::map<unsigned int, std::shared_ptr<Portal>> necContainer;
+  necContainer[0u] = necVolume->portalPtrs()[0u];
+  necContainer[1u] = necVolume->portalPtrs()[1u];
+  necContainer[2u] = necVolume->portalPtrs()[2u];
+
+  // Pec container
+  auto pecInnerBounds =
+      std::make_unique<Acts::CylinderVolumeBounds>(0., 175., 100.);
+
+  auto pecOuterBounds =
+      std::make_unique<Acts::CylinderVolumeBounds>(175., 300., 100.);
+
+  auto pecTransform = Acts::Transform3::Identity();
+  pecTransform.pretranslate(Acts::Vector3(0., 0., 300));
+  auto pecInner = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "PecInner", pecTransform,
+      std::move(pecInnerBounds), detail::defaultPortalProvider());
+  auto pecOuter = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "PecOuter", pecTransform,
+      std::move(pecOuterBounds), detail::defaultPortalProvider());
+
+  std::vector<std::shared_ptr<DetectorVolume>> pecVolumes = {pecInner,
+                                                             pecOuter};
+
+  auto pecContainer = connectVolumesInR(tContext, pecVolumes);
+
+  // Make the full connection
+  auto overallContainer = connectContainersInZ(
+      tContext, {necContainer, centralContainer, pecContainer});
 
   //  Add them togeter
   std::vector<std::shared_ptr<DetectorVolume>> dVolumes;
   dVolumes.push_back(innerPipe);
+  dVolumes.push_back(necVolume);
   dVolumes.insert(dVolumes.end(), rVolumes.begin(), rVolumes.end());
   dVolumes.insert(dVolumes.end(), zVolumes.begin(), zVolumes.end());
+  dVolumes.push_back(pecInner);
+  dVolumes.push_back(pecOuter);
 
   // A detector construction that should work
   DetectorVolumeFinder trialAndErrorFinder;
