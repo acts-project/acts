@@ -70,7 +70,6 @@ target_link_libraries(
     ActsExamplesRecTracksCommon
     ActsExamplesDetectorTelescope)
 
-
 # Seeding for Generic detector
 add_executable(
   ActsExampleSeedingGeneric

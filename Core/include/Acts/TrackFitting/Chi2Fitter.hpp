@@ -153,7 +153,7 @@ struct Chi2FitterResult {
   std::shared_ptr<traj_t> fittedStates;
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
-  // This correspond to the last measurment state in the multitrajectory.
+  // This correspond to the last measurement state in the multitrajectory.
   // Since this GX2F only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
   size_t lastMeasurementIndex = SIZE_MAX;
@@ -172,7 +172,7 @@ struct Chi2FitterResult {
 
   // Counter for measurements holes
   // A hole correspond to a surface with an associated detector element with no
-  // associated measurment. Holes are only taken into account if they are
+  // associated measurement. Holes are only taken into account if they are
   // between the first and last measurements.
   size_t measurementHoles = 0;
 
@@ -426,7 +426,7 @@ class Chi2Fitter {
         ++result.processedStates;
         // Update the number of holes only when encoutering a measurement
         result.measurementHoles = result.missedActiveSurfaces.size();
-        // Since we encountered a measurment update the lastMeasurementIndex to
+        // Since we encountered a measurement update the lastMeasurementIndex to
         // the lastTrackIndex.
         result.lastMeasurementIndex = result.lastTrackIndex;
 
@@ -660,11 +660,6 @@ class Chi2Fitter {
     // the result object which will be returned. Overridden every iteration.
 
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
-      //      auto result = std::visit(
-      //          [mprop = m_propagator, propOptions](auto&& arg) {
-      //            return mprop.template propagate(arg, propOptions);
-      //          },
-      //          vParams);
       auto result = m_propagator.template propagate(sParameters, propOptions,
                                                     std::move(inputResult));
 
