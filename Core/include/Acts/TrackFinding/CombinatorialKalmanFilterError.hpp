@@ -18,7 +18,6 @@ enum class CombinatorialKalmanFilterError {
   SmoothFailed,
   OutputConversionFailed,
   MeasurementSelectionFailed,
-  NoTrackFound,
   PropagationReachesMaxSteps,
 };
 
