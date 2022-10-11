@@ -153,10 +153,6 @@ struct GsfActor {
     assert(result.fittedStates && "No MultiTrajectory set");
     const auto& logger = state.options.logger;
 
-    // Prints some VERBOSE things and performs some asserts. Can be removed
-    // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper);
-
     // Set error or abort utility
     auto set_error_or_abort = [&](auto error) {
       if (m_cfg.abortOnError) {
@@ -185,6 +181,10 @@ struct GsfActor {
       }
       return std::make_tuple(missed, reachable);
     }();
+
+    // Prints some VERBOSE things and performs some asserts. Can be removed
+    // without change of behaviour
+    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper, missed_count);
 
     // Workaround to initialize e.g. MultiTrajectory in backward mode
     if (!result.haveInitializedResult && m_cfg.resultInitializer) {

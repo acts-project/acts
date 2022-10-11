@@ -73,6 +73,7 @@ class ScopedGsfInfoPrinterAndChecker {
   const propagator_state_t &m_state;
   const stepper_t &m_stepper;
   double m_p_initial;
+  std::size_t m_missedCount;
 
   const auto &logger() const { return m_state.options.logger(); }
 
@@ -91,22 +92,28 @@ class ScopedGsfInfoPrinterAndChecker {
 
   void checks(const std::string_view &where) const {
     const auto cmps = m_stepper.constComponentIterable(m_state.stepping);
-    throw_assert(detail::weightsAreNormalized(
-                     cmps, [](const auto &cmp) { return cmp.weight(); }),
-                 "not normalized at " << where);
 
-    throw_assert(
-        std::all_of(cmps.begin(), cmps.end(),
-                    [](auto cmp) { return std::isfinite(cmp.weight()); }),
-        "some weights are not finite at " << where);
+    // If all are missed, weights have been reset to zero, so it might not be normalized
+    if( m_stepper.numberComponents(m_state.stepping) > m_missedCount ) {
+      throw_assert(detail::weightsAreNormalized(
+                      cmps, [](const auto &cmp) { return cmp.weight(); }),
+                  "not normalized at " << where);
+
+      throw_assert(
+          std::all_of(cmps.begin(), cmps.end(),
+                      [](auto cmp) { return std::isfinite(cmp.weight()); }),
+          "some weights are not finite at " << where);
+    }
   }
 
  public:
   ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
-                                 const stepper_t &stepper)
+                                 const stepper_t &stepper,
+                                 std::size_t missedCount)
       : m_state(state),
         m_stepper(stepper),
-        m_p_initial(stepper.momentum(state.stepping)) {
+        m_p_initial(stepper.momentum(state.stepping)),
+        m_missedCount(missedCount) {
     // Some initial printing
     checks("start");
     ACTS_VERBOSE("Gsf step "
