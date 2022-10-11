@@ -184,7 +184,8 @@ struct GsfActor {
 
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper, missed_count);
+    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
+                                                         missed_count);
 
     // Workaround to initialize e.g. MultiTrajectory in backward mode
     if (!result.haveInitializedResult && m_cfg.resultInitializer) {
