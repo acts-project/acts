@@ -28,7 +28,7 @@ namespace ActsExamples {
 /// and the Acts::GeometryIdentifier of the surface.
 ///
 /// The mapping is done by matching the position of the G4 physical volume with
-/// the center position of a Acts::Surface.
+/// the center position of an Acts::Surface.
 ///
 /// This allows to directly associate Geant4 hits to the sensitive
 /// elements of the Acts::TrackingGeoemtry w/o map lookup.
