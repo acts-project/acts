@@ -39,13 +39,12 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Definitions/Units.hpp>
 
+#include <filesystem>
 #include <memory>
-
-#include <boost/filesystem.hpp>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 using namespace std::placeholders;
 
 void addRecCKFOptions(ActsExamples::Options::Description& desc) {
