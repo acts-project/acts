@@ -254,6 +254,9 @@ struct CombinatorialKalmanFilterResult {
   bool finished = false;
 
   Result<void> result{Result<void>::success()};
+
+  // TODO place into options and make them accessible?
+  AbortList<PathLimitReached, EndOfWorldReached, ParticleStopped> abortList;
 };
 
 /// Combinatorial Kalman filter to find tracks.
@@ -431,12 +434,28 @@ class CombinatorialKalmanFilter {
         }
       }
 
+      if (result.abortList(result, state, stepper)) {
+        state.navigation.targetReached = false;
+        if (result.activeTips.empty()) {
+          // we are already done
+        } else if (result.activeTips.size() == 1) {
+          // this was the last track - we are done
+          ACTS_VERBOSE("Kalman filtering finds "
+                       << result.lastTrackIndices.size() << " tracks");
+          result.filtered = true;
+        } else {
+          // remove the active tip and continue with the next
+          result.activeTips.erase(result.activeTips.end() - 1);
+          reset(state, stepper, result);
+        }
+      }
+
       // Post-processing after filtering phase
       if (result.filtered) {
         // Return error if filtering finds no tracks
         if (result.lastTrackIndices.empty()) {
-          result.result =
-              Result<void>(CombinatorialKalmanFilterError::NoTrackFound);
+          ACTS_WARNING("No tracks found");
+          result.finished = true;
         } else {
           if (not smoothing) {
             ACTS_VERBOSE("Finish Kalman filtering");
@@ -543,6 +562,9 @@ class CombinatorialKalmanFilter {
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
       materialInteractor(state.navigation.currentSurface, state, stepper);
+
+      detail::setupLoopProtection(
+          state, stepper, result.abortList.template get<PathLimitReached>());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation :
