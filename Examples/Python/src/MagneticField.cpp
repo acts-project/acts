@@ -17,9 +17,9 @@
 #include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
 #include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
 
+#include <filesystem>
 #include <memory>
 
-#include <boost/filesystem.hpp>
 #include <pybind11/pybind11.h>
 
 namespace py = pybind11;
@@ -86,7 +86,7 @@ void addMagneticField(Context& ctx) {
       "MagneticFieldMapXyz",
       [](std::string filename, std::string tree, double lengthUnit,
          double BFieldUnit, bool firstOctant) {
-        const boost::filesystem::path file = filename;
+        const std::filesystem::path file = filename;
 
         auto mapBins = [](std::array<size_t, 3> bins,
                           std::array<size_t, 3> sizes) {
@@ -119,7 +119,7 @@ void addMagneticField(Context& ctx) {
       "MagneticFieldMapRz",
       [](std::string filename, std::string tree, double lengthUnit,
          double BFieldUnit, bool firstQuadrant) {
-        const boost::filesystem::path file = filename;
+        const std::filesystem::path file = filename;
 
         auto mapBins = [](std::array<size_t, 2> bins,
                           std::array<size_t, 2> sizes) {
