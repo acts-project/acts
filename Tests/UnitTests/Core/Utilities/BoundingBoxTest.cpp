@@ -17,6 +17,8 @@
 #include "Acts/Utilities/Ray.hpp"
 #include "Acts/Visualization/PlyVisualization3D.hpp"
 
+#include <cstdio>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 #include <map>
@@ -36,6 +38,17 @@ using ObjectBBox = Acts::AxisAlignedBoundingBox<Object, BoundingBoxScalar, 3>;
 using Vector2F = Eigen::Matrix<BoundingBoxScalar, 2, 1>;
 using Vector3F = Eigen::Matrix<BoundingBoxScalar, 3, 1>;
 using AngleAxis3F = Eigen::AngleAxis<BoundingBoxScalar>;
+
+std::filesystem::path tmp_path = []() {
+  auto p = std::filesystem::temp_directory_path() / "acts_unit_tests";
+  std::filesystem::create_directory(p);
+  std::cout << "Writing test output to: " << p << std::endl;
+  return p;
+}();
+
+std::ofstream tmp(const std::string& path) {
+  return std::ofstream{(tmp_path / path).string()};
+}
 
 BOOST_AUTO_TEST_CASE(box_construction) {
   BOOST_TEST_CONTEXT("2D") {

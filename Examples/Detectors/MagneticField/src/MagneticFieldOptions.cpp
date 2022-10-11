@@ -19,11 +19,11 @@
 #include "ActsExamples/MagneticField/ScalableBFieldService.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string>
 
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
 
 void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
@@ -103,7 +103,7 @@ void ActsExamples::Options::setupMagneticFieldServices(const Variables& vars,
 std::shared_ptr<Acts::MagneticFieldProvider>
 ActsExamples::Options::readMagneticField(const Variables& vars) {
   using namespace ActsExamples::detail;
-  using boost::filesystem::path;
+  using std::filesystem::path;
 
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("MagneticField", Acts::Logging::INFO));
