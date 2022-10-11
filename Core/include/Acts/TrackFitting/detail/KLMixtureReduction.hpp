@@ -45,19 +45,19 @@ auto computeKLDistance(const component_t &a, const component_t &b,
 }
 
 template <typename component_t, typename component_projector_t,
-          typename angle_desc_t = AngleDescription::Default>
+          typename angle_desc_t>
 auto mergeComponents(const component_t &a, const component_t &b,
                      const component_projector_t &proj,
-                     const angle_desc_t &angle_desc = angle_desc_t{}) {
+                     const angle_desc_t &angle_desc) {
   throw_assert(proj(a).weight > 0.0 && proj(b).weight > 0.0, "weight error");
 
   std::array range = {std::ref(proj(a)), std::ref(proj(b))};
-  auto [mergedPars, mergedCov] = combineBoundGaussianMixture(
-      range.begin(), range.end(),
-      [](auto &c) {
-        return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
-      },
-      angle_desc);
+  const auto refProj = [](auto &c) {
+    return std::tie(c.get().weight, c.get().boundPars, c.get().boundCov);
+  };
+
+  auto [mergedPars, mergedCov] =
+      combineGaussianMixture(range, refProj, angle_desc);
 
   component_t ret = a;
   proj(ret).boundPars = mergedPars;
@@ -151,11 +151,11 @@ class SymmetricKLDistanceMatrix {
 };
 
 template <typename component_t, typename component_projector_t,
-          typename angle_desc_t = AngleDescription::Default>
+          typename angle_desc_t>
 void reduceWithKLDistance(std::vector<component_t> &cmpCache,
                           std::size_t maxCmpsAfterMerge,
                           const component_projector_t &proj,
-                          const angle_desc_t &angle_desc = angle_desc_t{}) {
+                          const angle_desc_t &angle_desc) {
   if (cmpCache.size() <= maxCmpsAfterMerge) {
     return;
   }

@@ -47,10 +47,14 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     // the mixture. At the moment, we use the mean of the mixture here, but
     // there should be done a comparison sometimes in the future. This could
     // also be configurable maybe...
-    const auto [params, cov] = detail::combineBoundGaussianMixture(
-        states.begin(), states.end(), [&](const auto& wbs) {
-          return std::tie(wbs.first, wbs.second.parameters(),
-                          wbs.second.covariance());
+    const auto proj = [&](const auto& wbs) {
+      return std::tie(wbs.first, wbs.second.parameters(),
+                      wbs.second.covariance());
+    };
+
+    const auto [params, cov] =
+        detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
+          return detail::combineGaussianMixture(states, proj, desc);
         });
 
     return BoundState{BoundTrackParameters(surface.getSharedPtr(), params, cov),
