@@ -36,6 +36,7 @@ Key features:
    versioning
    formats/formats
    api/api
+   pythonapi/pythonapi
    codeguide
    authors
    license

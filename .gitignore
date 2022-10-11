@@ -41,3 +41,8 @@ build*
 !.gitlab-ci.yml
 !.clang-tidy
 !.oclint
+
+# sphinx autosummary file
+# =======================
+
+_autosummary

@@ -21,10 +21,15 @@ copyright = "2014–2022 CERN for the benefit of the Acts project"
 
 sys.path.insert(0, str(Path(__file__).parent / "_extensions"))
 
+sys.path.insert(0, os.path.abspath('../Examples/Python/python'))
+sys.path.insert(0, os.path.abspath('../build/python'))
+
 extensions = [
     "breathe",
     "myst_parser",
     "sphinx.ext.mathjax",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
     "warnings_filter",
 ]
 
@@ -46,6 +51,9 @@ numfig = True
 
 myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
 myst_heading_anchors = 3
+
+autosummary_generate = True  # Turn on sphinx.ext.autosummary
+templates_path = ['_templates']
 
 # -- Options for HTML output --------------------------------------------------
 
