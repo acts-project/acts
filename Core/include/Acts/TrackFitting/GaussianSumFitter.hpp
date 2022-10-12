@@ -501,6 +501,8 @@ struct GaussianSumFitter {
         auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
 
         r.fittedStates = trajectory;
+        r.parentTips.resize(params.components().size(),
+                            MultiTrajectoryTraits::kInvalid);
 
         // Add the initial surface to the list of already visited surfaces, so
         // that the material effects are not applied twice
