@@ -90,4 +90,9 @@ run \
 #    -p $outdir/analysis_residuals_and_pulls \
 
 
+Examples/Scripts/vertex_mu_scan.py \
+    $outdir/performance_vertexing_*mu*.root \
+    vertexing_mu_scan.pdf
+
+
 exit $ec
