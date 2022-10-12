@@ -1,4 +1,4 @@
-# Track Fitting
+# Track Fitting main
 
 The track fitting algorithms estimate the track parameters.
 It is part of the pattern recognition/track  reconstruction/tracking.
@@ -38,9 +38,7 @@ $$
 p(\vec{x}) = \sum_i w_i \varphi(\vec{x}; \mu_i, \Sigma_i), \quad \sum_i w_i = 1
 $$
 
-A common use case of this is electron fitting. The energy-loss of Bremsstrahlung for electrons in matter are highly non-gaussia
-n, and thus are not modeled accurately by the default material interactions in the Kalman Filter. Instead, the Bremsstrahlung i
-s modeled as a Bethe-Heitler distribution, which is approximated as a gaussian mixture.
+A common use case of this is electron fitting. The energy-loss of Bremsstrahlung for electrons in matter are highly non-gaussian, and thus are not modeled accurately by the default material interactions in the Kalman Filter. Instead, the Bremsstrahlung is modeled as a Bethe-Heitler distribution, which is approximated as a gaussian mixture.
 
 ### Implementation
 
@@ -48,9 +46,7 @@ To implement the GSF, a special stepper is needed, that can handle a multi-compo
 
 ### Using the GSF
 
-The GSF is implemented in the class {class}`Acts::GaussianSumFitter`. The interface of its `fit(...)`-functions is very similar
- to the one of the {class}`Acts::KalmanFitter` (one for the standard {class}`Acts::Navigator` and one for the {class}`Acts::Dir
-ectNavigator` that takes an additional `std::vector<const Acts::Surface *>` as an argument):
+The GSF is implemented in the class {class}`Acts::GaussianSumFitter`. The interface of its `fit(...)`-functions is very similar to the one of the {class}`Acts::KalmanFitter` (one for the standard {class}`Acts::Navigator` and one for the {class}`Acts::DirectNavigator` that takes an additional `std::vector<const Acts::Surface *>` as an argument):
 
 ```{doxygenstruct} Acts::GaussianSumFitter
 ---
@@ -61,9 +57,7 @@ outline:
 
 The fit can be customized with several options, e.g., the maximum number of components. All options can be found in the {struct}`Acts::GsfOptions`.
 
-To simplify integration, the GSF returns a {class}`Acts::KalmanFitterResult` object, the same as the {class}`Acts::KalmanFitter
-`. This allows to use the same analysis tools for both fitters. Currently, the states of the individual components are not retu
-rned by the fitter.
+To simplify integration, the GSF returns a {class}`Acts::KalmanFitterResult` object, the same as the {class}`Acts::KalmanFitter`. This allows to use the same analysis tools for both fitters. Currently, the states of the individual components are not returned by the fitter.
 
 A GSF example can be found in the Acts Examples Framework [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_gsf.py).
 
@@ -76,8 +70,7 @@ This approximation of the Bethe-Heitler distribution is described in {class}`Act
 For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-component mixture or no change at all. When loading a custom parametrization, it is possible to specify different parameterizations for high and for low $x/x_0$. The thresholds are currently not configurable.
 
 ### Further reading
-* *Thomas Atkinson*, Electron reconstruction with the ATLAS inner detector, 2006, see [here](https://cds.cern.ch/record/1448253
-)
+* *Thomas Atkinson*, Electron reconstruction with the ATLAS inner detector, 2006, see [here](https://cds.cern.ch/record/1448253)
 * *R Frühwirth*, Track fitting with non-Gaussian noise, 1997, see [here](https://doi.org/10.1016/S0010-4655(96)00155-5)
 
 (kf_core)=
