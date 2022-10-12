@@ -100,7 +100,8 @@ void patchKwargsConstructor(T& c) {
         py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>( \
             mod, name)                                                      \
             .def(py::init<const Config&, Acts::Logging::Level>(),           \
-                 py::arg("config"), py::arg("level"));                      \
+                 py::arg("config"), py::arg("level"))                       \
+            .def_property_readonly("config", &Writer::config);              \
                                                                             \
     auto c = py::class_<Config>(w, "Config").def(py::init<>());             \
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
@@ -118,7 +119,8 @@ void patchKwargsConstructor(T& c) {
         py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>( \
             mod, name)                                                      \
             .def(py::init<const Config&, Acts::Logging::Level>(),           \
-                 py::arg("config"), py::arg("level"));                      \
+                 py::arg("config"), py::arg("level"))                       \
+            .def_property_readonly("config", &Reader::config);              \
                                                                             \
     auto c = py::class_<Config>(r, "Config").def(py::init<>());             \
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
