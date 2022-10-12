@@ -61,11 +61,9 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
 
       const auto new_weight = std::exp(-0.5 * exponent) * weight_a * weight_b;
 
-      if (not std::isfinite(new_weight) or new_weight < weightCutoff ) {
-        continue;
+      if (std::isfinite(new_weight) and new_weight > weightCutoff ) {
+        smoothedState.push_back({new_weight, new_pars, new_cov});
       }
-
-      smoothedState.push_back({new_weight, new_pars, new_cov});
     }
   }
 
