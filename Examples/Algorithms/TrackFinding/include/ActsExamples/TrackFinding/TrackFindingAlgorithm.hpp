@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
@@ -21,6 +22,8 @@
 #include <atomic>
 #include <functional>
 #include <vector>
+
+#include <tbb/combinable.h>
 
 namespace ActsExamples {
 
@@ -40,8 +43,9 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   class TrackFinderFunction {
    public:
     virtual ~TrackFinderFunction() = default;
-    virtual TrackFinderResult operator()(const TrackParametersContainer&,
-                                         const TrackFinderOptions&) const = 0;
+    virtual TrackFinderResult operator()(
+        const TrackParametersContainer&, const TrackFinderOptions&,
+        std::shared_ptr<Acts::VectorMultiTrajectory>) const = 0;
   };
 
   /// Create the track finder function implementation.
@@ -99,8 +103,14 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
  private:
   Config m_cfg;
 
-  mutable std::atomic<size_t> m_nTotalSeeds;
-  mutable std::atomic<size_t> m_nFailedSeeds;
+  mutable std::atomic<size_t> m_nTotalSeeds{0};
+  mutable std::atomic<size_t> m_nFailedSeeds{0};
+
+  mutable tbb::combinable<Acts::VectorMultiTrajectory::Statistics>
+      m_memoryStatistics{[]() {
+        auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+        return mtj->statistics();
+      }};
 };
 
 template <typename source_link_accessor_container_t>
@@ -125,7 +135,7 @@ void TrackFindingAlgorithm::computeSharedHits(
     auto& measIndexes = ckfResult.lastMeasurementIndices;
 
     for (auto measIndex : measIndexes) {
-      ckfResult.fittedStates.visitBackwards(measIndex, [&](const auto& state) {
+      ckfResult.fittedStates->visitBackwards(measIndex, [&](const auto& state) {
         if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag))
           return;
 
@@ -146,19 +156,19 @@ void TrackFindingAlgorithm::computeSharedHits(
         int indexFirstState = firstStateOnTheHit.at(hitIndex);
         if (not results.at(indexFirstTrack)
                     .value()
-                    .fittedStates.getTrackState(indexFirstState)
+                    .fittedStates->getTrackState(indexFirstState)
                     .typeFlags()
                     .test(Acts::TrackStateFlag::SharedHitFlag))
           results.at(indexFirstTrack)
               .value()
-              .fittedStates.getTrackState(indexFirstState)
+              .fittedStates->getTrackState(indexFirstState)
               .typeFlags()
               .set(Acts::TrackStateFlag::SharedHitFlag);
 
         // Decorate this track
         results.at(iresult)
             .value()
-            .fittedStates.getTrackState(state.index())
+            .fittedStates->getTrackState(state.index())
             .typeFlags()
             .set(Acts::TrackStateFlag::SharedHitFlag);
       });

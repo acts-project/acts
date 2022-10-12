@@ -101,13 +101,16 @@ int runMaterialMapping(int argc, char* argv[],
   // Input directory & input file handling
   std::string intputDir = vm["input-dir"].template as<std::string>();
   auto intputFiles = vm["input-files"].template as<std::vector<std::string>>();
-
+  bool readCachedSurfaceInformation =
+      vm["mat-mapping-read-surfaces"].template as<bool>();
   if (vm["input-root"].template as<bool>()) {
     // Read the material step information from a ROOT TTree
     ActsExamples::RootMaterialTrackReader::Config matTrackReaderRootConfig;
     matTrackReaderRootConfig.collection =
         ActsExamples::Simulation::kMaterialTracks;
     matTrackReaderRootConfig.fileList = intputFiles;
+    matTrackReaderRootConfig.readCachedSurfaceInformation =
+        readCachedSurfaceInformation;
     auto matTrackReaderRoot =
         std::make_shared<ActsExamples::RootMaterialTrackReader>(
             matTrackReaderRootConfig, logLevel);

@@ -4,7 +4,9 @@
 .*Duplicate ID: .*class_acts_1_1_frustum_.*
 .*Duplicate ID: .*struct_acts_1_1_surface_array_.*
 .*Duplicate ID: .*class_acts_1_1_axis_aligned_bounding_box_.*
+.*Duplicate ID: .*class_acts_1_1_magnetic_field_provider_.*
 .*Duplicate explicit target name: .*class_acts_1_1_frustum_.*
 .*Duplicate explicit target name: .*struct_acts_1_1_surface_array_.*
+.*Duplicate explicit target name: .*class_acts_1_1_magnetic_field_provider_.*
 .*doxygenfile: Found multiple matches for file \"Seedfinder.hpp.*
 .*Duplicate explicit target name: .*class_acts_1_1_axis_aligned_bounding_box_.*
