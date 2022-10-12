@@ -310,6 +310,10 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectVolumesInZ(
   // Return proto container
   ProtoContainer protoContainer;
 
+  // Connect in Z ?
+  bool connectZ = selectedOnly.empty() or
+                  std::find(selectedOnly.begin(), selectedOnly.end(), 1u) !=
+                      selectedOnly.end();
   // Reference z axis
   const auto rotation = volumes[0]->transform(gctx).rotation();
   std::vector<Vector3> zBoundaries3D = {};
@@ -331,17 +335,22 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectVolumesInZ(
   addZboundary3D(*volumes[0u].get(), -1);
   addZboundary3D(*volumes[0u].get(), 1);
   for (unsigned int iv = 1; iv < volumes.size(); ++iv) {
-    auto& keepDisc = volumes[iv - 1]->portalPtrs()[1u];
-    auto& wasteDisc = volumes[iv]->portalPtrs()[0u];
-    keepDisc->fuse(*wasteDisc.get());
-    volumes[iv]->updatePortal(keepDisc, 0u);
     // Add the z boundary
-    addZboundary3D(*volumes[iv].get(), 1);
+    addZboundary3D(*volumes[iv].get(), 1u);
+    // Do the connection
+    if (connectZ) {
+      auto& keepDisc = volumes[iv - 1]->portalPtrs()[1u];
+      auto& wasteDisc = volumes[iv]->portalPtrs()[0u];
+      keepDisc->fuse(*wasteDisc.get());
+      volumes[iv]->updatePortal(keepDisc, 0u);
+    }
   }
 
   // Register what we have from the container
-  protoContainer[0u] = volumes[0u]->portalPtrs()[0u];
-  protoContainer[1u] = volumes[volumes.size() - 1u]->portalPtrs()[1u];
+  if (connectZ) {
+    protoContainer[0u] = volumes[0u]->portalPtrs()[0u];
+    protoContainer[1u] = volumes[volumes.size() - 1u]->portalPtrs()[1u];
+  }
 
   // Centre of gravity
   Vector3 combinedCenter =
@@ -392,7 +401,7 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectVolumesInZ(
   // Prepare the cylinder replacements
   for (const auto [iu, idir] : enumerate(cylinderDirs)) {
     if (selectedOnly.empty() or
-        std::find(selectedOnly.begin(), selectedOnly.end(), iu) !=
+        std::find(selectedOnly.begin(), selectedOnly.end(), iu + 2u) !=
             selectedOnly.end()) {
       pReplacements.push_back(createCylinderReplacement(
           combinedTransform, zBoundaries, cylinderR[iu], phiSector, avgPhi,
@@ -503,7 +512,9 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInR(
 
   for (auto [s, volumes] : sideVolumes) {
     auto pR = connectVolumesInR(gctx, volumes, {s});
-    protoContainer[s] = pR.find(s)->second;
+    if (pR.find(s) != pR.end()) {
+      protoContainer[s] = pR.find(s)->second;
+    }
   }
 
   // Done.
@@ -516,6 +527,48 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInZ(
   // Return the new container
   ProtoContainer protoContainer;
 
+  for (unsigned int ic = 1; ic < containers.size(); ++ic) {
+    auto& formerContainer = containers[ic - 1];
+    auto& currentContainer = containers[ic];
+    // Check and throw exception
+    if (formerContainer.find(1u) == formerContainer.end()) {
+      throw std::invalid_argument(
+          "CylindricalDetectorHelper: proto container has no negative disc, "
+          "can "
+          "not be connected in Z");
+    }
+    if (currentContainer.find(0u) == currentContainer.end()) {
+      throw std::invalid_argument(
+          "CylindricalDetectorHelper: proto container has no positive disc, "
+          "can "
+          "not be connected in Z");
+    }
+    auto& keepDisc = formerContainer.find(1u)->second;
+    auto& wasteDisc = currentContainer.find(0u)->second;
+    keepDisc->fuse(*wasteDisc.get());
+    for (auto& av : wasteDisc->attachedVolumes()[1u]) {
+      av->updatePortal(keepDisc, 0u);
+    }
+  }
+
+  // Proto container refurbishment
+  protoContainer[0u] = containers[0u].find(0u)->second;
+  protoContainer[1u] = containers[containers.size() - 1u].find(1u)->second;
+
+  std::vector<unsigned int> nominalSides = {2u, 4u, 5u};
+  if (containers[0u].find(3u) != containers[0u].end()) {
+    nominalSides.push_back(3u);
+  }
+
+  // Set the sides
+  auto sideVolumes = stripSideVolumes(containers, nominalSides, selectedOnly);
+
+  for (auto [s, volumes] : sideVolumes) {
+    auto pR = connectVolumesInZ(gctx, volumes, {s});
+    if (pR.find(s) != pR.end()) {
+      protoContainer[s] = pR.find(s)->second;
+    }
+  }
 
   // Done.
   return protoContainer;

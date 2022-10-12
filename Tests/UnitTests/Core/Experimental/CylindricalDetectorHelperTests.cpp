@@ -271,145 +271,149 @@ BOOST_AUTO_TEST_CASE(PerfectFitPhiAttachment) {
 BOOST_AUTO_TEST_CASE(ProtoContainerRZ) {
   auto transform = Acts::Transform3::Identity();
 
-  auto portalGenerator = detail::defaultPortalGenerator();
-  auto navigationStateUpdator = detail::defaultPortalProvider();
-  // A container in R
-  std::vector<Acts::ActsScalar> radii = {25., 100., 200.};
-  Acts::ActsScalar halfZ = 200;
+  std::vector<Acts::ActsScalar> innerMostRadii = {0., 2.};
 
-  // An innermost Pipe
-  auto bBounds =
-      std::make_unique<Acts::CylinderVolumeBounds>(0., radii[0u], halfZ);
+  for (auto [ir, imr] : Acts::enumerate(innerMostRadii)) {
+    auto portalGenerator = detail::defaultPortalGenerator();
+    auto navigationStateUpdator = detail::defaultPortalProvider();
+    // A container in R
+    std::vector<Acts::ActsScalar> radii = {25., 100., 200.};
+    Acts::ActsScalar halfZ = 200;
 
-  auto innerPipe = DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "InnerPipe", transform, std::move(bBounds),
-      detail::defaultPortalProvider());
+    // An innermost Pipe
+    auto bBounds =
+        std::make_unique<Acts::CylinderVolumeBounds>(imr, radii[0u], halfZ);
 
-  // Make a container representation out of it
-  std::map<unsigned int, std::shared_ptr<Portal>> ipContainer;
-  ipContainer[0u] = innerPipe->portalPtrs()[0u];
-  ipContainer[1u] = innerPipe->portalPtrs()[1u];
-  ipContainer[2u] = innerPipe->portalPtrs()[2u];
+    auto innerPipe = DetectorVolumeFactory::construct(
+        portalGenerator, tContext, "InnerPipe", transform, std::move(bBounds),
+        detail::defaultPortalProvider());
 
-  // Create the r - sorted volumes
-  std::vector<std::shared_ptr<DetectorVolume>> rVolumes = {};
-  // Create the voluems
-  for (auto [i, r] : Acts::enumerate(radii)) {
-    if (i > 0) {
-      auto cBounds =
-          std::make_unique<Acts::CylinderVolumeBounds>(radii[i - 1u], r, halfZ);
-      rVolumes.push_back(DetectorVolumeFactory::construct(
-          portalGenerator, tContext, "Cylinder_r" + std::to_string(i),
-          transform, std::move(cBounds), detail::defaultPortalProvider()));
+    // Make a container representation out of it
+    std::map<unsigned int, std::shared_ptr<Portal>> ipContainer;
+    for (auto [ip, p] : Acts::enumerate(innerPipe->portalPtrs())) {
+      ipContainer[ip] = p;
     }
-  }
 
-  auto protoContainerInR = connectVolumesInR(tContext, rVolumes);
-
-  std::vector<Acts::ActsScalar> zValues = {-200., -120, 10., 100., 200.};
-  std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {};
-  for (auto [i, z] : Acts::enumerate(zValues)) {
-    if (i > 0) {
-      auto cBounds = std::make_unique<Acts::CylinderVolumeBounds>(
-          200., 300., 0.5 * (z - zValues[i - 1u]));
-      // z center
-      Acts::ActsScalar zCenter = 0.5 * (z + zValues[i - 1u]);
-      Acts::Transform3 ti = transform;
-      ti.pretranslate(transform.translation() +
-                      zCenter * transform.rotation().matrix().col(2));
-
-      // create the volume
-      zVolumes.push_back(DetectorVolumeFactory::construct(
-          portalGenerator, tContext, "Cylinder_z" + std::to_string(i), ti,
-          std::move(cBounds), detail::defaultPortalProvider()));
+    // Create the r - sorted volumes
+    std::vector<std::shared_ptr<DetectorVolume>> rVolumes = {};
+    // Create the voluems
+    for (auto [i, r] : Acts::enumerate(radii)) {
+      if (i > 0) {
+        auto cBounds = std::make_unique<Acts::CylinderVolumeBounds>(
+            radii[i - 1u], r, halfZ);
+        rVolumes.push_back(DetectorVolumeFactory::construct(
+            portalGenerator, tContext, "Cylinder_r" + std::to_string(i),
+            transform, std::move(cBounds), detail::defaultPortalProvider()));
+      }
     }
+
+    auto protoContainerInR = connectVolumesInR(tContext, rVolumes);
+
+    std::vector<Acts::ActsScalar> zValues = {-200., -120, 10., 100., 200.};
+    std::vector<std::shared_ptr<DetectorVolume>> zVolumes = {};
+    for (auto [i, z] : Acts::enumerate(zValues)) {
+      if (i > 0) {
+        auto cBounds = std::make_unique<Acts::CylinderVolumeBounds>(
+            200., 300., 0.5 * (z - zValues[i - 1u]));
+        // z center
+        Acts::ActsScalar zCenter = 0.5 * (z + zValues[i - 1u]);
+        Acts::Transform3 ti = transform;
+        ti.pretranslate(transform.translation() +
+                        zCenter * transform.rotation().matrix().col(2));
+
+        // create the volume
+        zVolumes.push_back(DetectorVolumeFactory::construct(
+            portalGenerator, tContext, "Cylinder_z" + std::to_string(i), ti,
+            std::move(cBounds), detail::defaultPortalProvider()));
+      }
+    }
+    // Now call the connector
+    auto protoContainerInZ = connectVolumesInZ(tContext, zVolumes);
+
+    auto centralContainer = connectContainersInR(
+        tContext, {ipContainer, protoContainerInR, protoContainerInZ});
+
+    // Let's make two endcaps
+    // Nec
+    auto necBounds =
+        std::make_unique<Acts::CylinderVolumeBounds>(imr, 300., 50.);
+
+    auto necTransform = Acts::Transform3::Identity();
+    necTransform.pretranslate(Acts::Vector3(0., 0., -250));
+    auto necVolume = DetectorVolumeFactory::construct(
+        portalGenerator, tContext, "Nec", necTransform, std::move(necBounds),
+        detail::defaultPortalProvider());
+
+    std::map<unsigned int, std::shared_ptr<Portal>> necContainer;
+    for (auto [ip, p] : Acts::enumerate(necVolume->portalPtrs())) {
+      necContainer[ip] = p;
+    }
+
+    // Pec container
+    auto pecInnerBounds =
+        std::make_unique<Acts::CylinderVolumeBounds>(imr, 175., 100.);
+
+    auto pecOuterBounds =
+        std::make_unique<Acts::CylinderVolumeBounds>(175., 300., 100.);
+
+    auto pecTransform = Acts::Transform3::Identity();
+    pecTransform.pretranslate(Acts::Vector3(0., 0., 300));
+    auto pecInner = DetectorVolumeFactory::construct(
+        portalGenerator, tContext, "PecInner", pecTransform,
+        std::move(pecInnerBounds), detail::defaultPortalProvider());
+    auto pecOuter = DetectorVolumeFactory::construct(
+        portalGenerator, tContext, "PecOuter", pecTransform,
+        std::move(pecOuterBounds), detail::defaultPortalProvider());
+
+    std::vector<std::shared_ptr<DetectorVolume>> pecVolumes = {pecInner,
+                                                               pecOuter};
+    auto pecContainer = connectVolumesInR(tContext, pecVolumes);
+
+    auto overallContainer = connectContainersInZ(
+        tContext, {necContainer, centralContainer, pecContainer});
+
+    //  Add them togeter
+    std::vector<std::shared_ptr<DetectorVolume>> dVolumes;
+    dVolumes.push_back(innerPipe);
+    dVolumes.push_back(necVolume);
+    dVolumes.insert(dVolumes.end(), rVolumes.begin(), rVolumes.end());
+    dVolumes.insert(dVolumes.end(), zVolumes.begin(), zVolumes.end());
+    dVolumes.push_back(pecInner);
+    dVolumes.push_back(pecOuter);
+
+    // A detector construction that should work
+    DetectorVolumeFinder trialAndErrorFinder;
+    trialAndErrorFinder.connect<&trialAndError>();
+
+    auto detector = Detector::makeShared("DetectorFromProtoContainer", dVolumes,
+                                         trialAndErrorFinder);
+
+    // Remove later
+    // ------------------------------------------------------------
+    Acts::Svg::Style portalStyle;
+    portalStyle.strokeHighlights = {"mouseover", "mouseout"};
+    portalStyle.strokeHighlightWidth = 3.;
+    portalStyle.strokeHighlightColor = {255, 255, 0};
+
+    Acts::Svg::DetectorConverter::Options detectorOptions;
+    detectorOptions.volumeOptions.portalOptions.surfaceOptions.style =
+        portalStyle;
+
+    auto pDetector = Acts::Svg::DetectorConverter::convert(tContext, *detector,
+                                                           detectorOptions);
+    pDetector._name = detector->name();
+
+    for (auto& c : colors) {
+      c._opacity = 0.1;
+    }
+
+    pDetector.colorize(colors);
+
+    // As zr view
+    auto dv_zr = Acts::Svg::View::zr(pDetector, pDetector._name);
+    Acts::Svg::toFile({dv_zr}, "DetectorFromProtoContainers_" +
+                                   std::to_string(ir) + "_zr.svg");
   }
-  // Now call the connector
-  auto protoContainerInZ = connectVolumesInZ(tContext, zVolumes);
-
-  auto centralContainer = connectContainersInR(
-      tContext, {ipContainer, protoContainerInR, protoContainerInZ});
-
-  // Let's make two endcaps
-  // Nec
-  auto necBounds = std::make_unique<Acts::CylinderVolumeBounds>(0., 300., 50.);
-
-  auto necTransform = Acts::Transform3::Identity();
-  necTransform.pretranslate(Acts::Vector3(0., 0., -250));
-  auto necVolume = DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "Nec", necTransform, std::move(necBounds),
-      detail::defaultPortalProvider());
-
-  std::map<unsigned int, std::shared_ptr<Portal>> necContainer;
-  necContainer[0u] = necVolume->portalPtrs()[0u];
-  necContainer[1u] = necVolume->portalPtrs()[1u];
-  necContainer[2u] = necVolume->portalPtrs()[2u];
-
-  // Pec container
-  auto pecInnerBounds =
-      std::make_unique<Acts::CylinderVolumeBounds>(0., 175., 100.);
-
-  auto pecOuterBounds =
-      std::make_unique<Acts::CylinderVolumeBounds>(175., 300., 100.);
-
-  auto pecTransform = Acts::Transform3::Identity();
-  pecTransform.pretranslate(Acts::Vector3(0., 0., 300));
-  auto pecInner = DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "PecInner", pecTransform,
-      std::move(pecInnerBounds), detail::defaultPortalProvider());
-  auto pecOuter = DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "PecOuter", pecTransform,
-      std::move(pecOuterBounds), detail::defaultPortalProvider());
-
-  std::vector<std::shared_ptr<DetectorVolume>> pecVolumes = {pecInner,
-                                                             pecOuter};
-
-  auto pecContainer = connectVolumesInR(tContext, pecVolumes);
-
-  // Make the full connection
-  auto overallContainer = connectContainersInZ(
-      tContext, {necContainer, centralContainer, pecContainer});
-
-  //  Add them togeter
-  std::vector<std::shared_ptr<DetectorVolume>> dVolumes;
-  dVolumes.push_back(innerPipe);
-  dVolumes.push_back(necVolume);
-  dVolumes.insert(dVolumes.end(), rVolumes.begin(), rVolumes.end());
-  dVolumes.insert(dVolumes.end(), zVolumes.begin(), zVolumes.end());
-  dVolumes.push_back(pecInner);
-  dVolumes.push_back(pecOuter);
-
-  // A detector construction that should work
-  DetectorVolumeFinder trialAndErrorFinder;
-  trialAndErrorFinder.connect<&trialAndError>();
-
-  auto detector = Detector::makeShared("DetectorFromProtoContainer", dVolumes,
-                                       trialAndErrorFinder);
-
-  // Remove later
-  // ------------------------------------------------------------
-  Acts::Svg::Style portalStyle;
-  portalStyle.strokeHighlights = {"mouseover", "mouseout"};
-  portalStyle.strokeHighlightWidth = 3.;
-  portalStyle.strokeHighlightColor = {255, 255, 0};
-
-  Acts::Svg::DetectorConverter::Options detectorOptions;
-  detectorOptions.volumeOptions.portalOptions.surfaceOptions.style =
-      portalStyle;
-
-  auto pDetector = Acts::Svg::DetectorConverter::convert(tContext, *detector,
-                                                         detectorOptions);
-  pDetector._name = detector->name();
-
-  for (auto& c : colors) {
-    c._opacity = 0.1;
-  }
-
-  pDetector.colorize(colors);
-
-  // As zr view
-  auto dv_zr = Acts::Svg::View::zr(pDetector, pDetector._name);
-  Acts::Svg::toFile({dv_zr}, "DetectorFromProtoContainerInR_zr.svg");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
