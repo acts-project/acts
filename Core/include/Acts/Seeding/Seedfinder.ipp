@@ -256,6 +256,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     size_t t0 = 0;
 
     for (size_t b = 0; b < numBotSP; b++) {
+      // break if we reached the last top SP
+      if (t0 == numTopSP) {
+        break;
+      }
+
       auto lb = state.linCircleBottom[b];
       float Zob = lb.Zo;
       float cotThetaB = lb.cotTheta;
@@ -530,5 +535,7 @@ Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
   createSeedsForGroup(state, std::back_inserter(ret), bottomSPs, middleSPs,
                       topSPs, extent);
+
+  return ret;
 }
 }  // namespace Acts

@@ -189,16 +189,14 @@ Developers can use the provided Docker image to format their project or
 install clang-format locally. Developers should be aware that
 clang-format will behave differently for different versions, so
 installing `the same clang version as used in the
-CI <https://github.com/acts-project/machines/blob/github-actions/check/Dockerfile.llvm8>`_
+CI <https://github.com/acts-project/machines/blob/master/format10/Dockerfile>`_
 is recommended. There are several instructions available on how to
 integrate clang-format with your favourite IDE (e.g.
 `eclipse <https://marketplace.eclipse.org/content/cppstyle>`_,
 `Xcode <https://github.com/travisjeffery/ClangFormat-Xcode>`_,
 `emacs <http://clang.llvm.org/docs/ClangFormat.html#emacs-integration>`_).
-The Acts CI system will automatically apply code reformatting using the
-provided clang-format configuration once pull requests are opened.
-However, developers are encouraged to use this code formatter also
-locally to reduce conflicts due to formatting issues.
+The Acts CI system will automatically check code formatting using the
+provided clang-format configuration and will notify incompatible formatting.
 
 In addition, some conventions are used in Acts code, details can be
 found `here <https://acts.readthedocs.io/en/latest/codeguide.html>`_.

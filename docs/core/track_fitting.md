@@ -79,4 +79,3 @@ For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-compo
 :::{note}
 This is a stub!
 :::
-

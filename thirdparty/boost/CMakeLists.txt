@@ -53,28 +53,6 @@ ExternalProject_Add(
   EXCLUDE_FROM_ALL true
 )
 
-# Target for Boost::filesystem
-
-ExternalProject_Add(
-  boost_build_filesystem
-  DOWNLOAD_COMMAND ""
-  CONFIGURE_COMMAND ""
-  BUILD_COMMAND ./b2 ${Boost_B2_FLAGS} --with-filesystem
-  INSTALL_COMMAND ""
-  DEPENDS boost_bootstrap
-  SOURCE_DIR ${Boost_SOURCE_DIR}
-  LOG_BUILD true
-  BUILD_IN_SOURCE true
-  BUILD_BYPRODUCTS ${Boost_LIBRARY_DIR}/libboost_filesystem.so.${_acts_boost_version}
-  EXCLUDE_FROM_ALL true
-)
-
-add_library(boost_filesystem SHARED IMPORTED GLOBAL)
-set_target_properties(boost_filesystem PROPERTIES IMPORTED_LOCATION ${Boost_LIBRARY_DIR}/libboost_filesystem.so.${_acts_boost_version})
-add_dependencies(boost_filesystem boost_build_filesystem)
-add_library(Boost::filesystem ALIAS boost_filesystem)
-install(FILES ${Boost_LIBRARY_DIR}/libboost_filesystem.so.${_acts_boost_version} DESTINATION ${CMAKE_INSTALL_LIBDIR} OPTIONAL)
-
 # Target for Boost::program_options
 
 ExternalProject_Add(

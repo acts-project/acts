@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFinding.hpp"
+#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 
 #include <string>
@@ -26,10 +26,12 @@ class TrackFindingAlgorithmExaTrkX final : public BareAlgorithm {
     std::string outputProtoTracks;
 
     /// ML based track finder
-    std::shared_ptr<Acts::ExaTrkXTrackFinding> trackFinderML;
+    std::shared_ptr<Acts::ExaTrkXTrackFindingBase> trackFinderML;
 
-    // NOTE the other config parameters for the Exa.TrkX class for now are just
-    // initialized as the defaults
+    /// Scaling of the input features
+    float rScale = 1.f;
+    float phiScale = 1.f;
+    float zScale = 1.f;
   };
 
   /// Constructor of the track finding algorithm
