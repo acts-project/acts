@@ -50,7 +50,7 @@ The GSF is implemented in the class {class}`Acts::GaussianSumFitter`. The interf
 
 ```{doxygenstruct} Acts::GaussianSumFitter
 ---
-members: fit 
+members: fit
 outline:
 ---
 ```
@@ -79,22 +79,4 @@ For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-compo
 :::{note}
 This is a stub!
 :::
-
-## GSF
-The GSF is technically a multi-component KF, and thus theoretically should give the same results with one component.
-Due to different material handling this won't be the case however for our implementations.
-
-
-## Global Chi-Square Fitter (GX2F) [wip]
-
-
-
-
-
-
-
-
-
-[^billoir]: 
-https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf
 
