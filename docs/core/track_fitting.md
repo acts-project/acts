@@ -27,7 +27,7 @@ The KF can give us those three interpretations as sets of track parameters:
 * filtered: Uses the "current" data (i.e. the predicted data updated with the measurement on the current surface). It is simply the weighted mean.
 * smoothed: Uses the "future" data to predict the current parameters. This can only be evaluated if the whole propagation is finished once. This can be done in to ways: one uses backwards-propagation and one does not.
 
-
+# Track Fitting
 
 (gsf_core)=
 ## Gaussian Sum Filter
