@@ -60,12 +60,16 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
 
       const auto new_weight = std::exp(-0.5 * exponent) * weight_a * weight_b;
 
-      if (new_weight == 0) {
-        return ResType(GsfError::SmoothingFailed);
+      if (new_weight < 1.e-8 or not std::isfinite(new_weight) ) {
+        continue;
       }
 
       smoothedState.push_back({new_weight, new_pars, new_cov});
     }
+  }
+
+  if( smoothedState.empty() ) {
+    return ResType(GsfError::SmoothingFailed);
   }
 
   normalizeWeights(smoothedState, [](auto &tuple) -> decltype(auto) {
