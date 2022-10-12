@@ -1,4 +1,4 @@
-# Track Fitting main
+# Track Fitting
 
 The track fitting algorithms estimate the track parameters.
 It is part of the pattern recognition/track  reconstruction/tracking.
@@ -12,8 +12,12 @@ Currently we have implementations for three different fitters:
 Even though all of them are least-squares fits, the concepts are quite different.
 Therefore, we should not expect identical results from all of them.
 
+(kf_core)=
+## Kalman Filter (KF) [wip]
 
-## Kalman Filter (KF)
+:::{note}
+This is a stub!
+:::
 
 The Kalman Filter is an iterative fitter.
 It successively combines measurements to obtain an estimate of the track parameters.
@@ -26,8 +30,6 @@ The KF can give us those three interpretations as sets of track parameters:
 * predicted: Uses "older" data (i.e. from the last surface) to make the prediction.
 * filtered: Uses the "current" data (i.e. the predicted data updated with the measurement on the current surface). It is simply the weighted mean.
 * smoothed: Uses the "future" data to predict the current parameters. This can only be evaluated if the whole propagation is finished once. This can be done in to ways: one uses backwards-propagation and one does not.
-
-# Track Fitting
 
 (gsf_core)=
 ## Gaussian Sum Filter
@@ -73,9 +75,11 @@ For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-compo
 * *Thomas Atkinson*, Electron reconstruction with the ATLAS inner detector, 2006, see [here](https://cds.cern.ch/record/1448253)
 * *R Frühwirth*, Track fitting with non-Gaussian noise, 1997, see [here](https://doi.org/10.1016/S0010-4655(96)00155-5)
 
-(kf_core)=
-## Kalman Filter
-
+(gx2f_core)=
+## Global Chi-Square Fitter (GX2F) [wip]
 :::{note}
 This is a stub!
 :::
+
+
+[^billoir]: https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf
