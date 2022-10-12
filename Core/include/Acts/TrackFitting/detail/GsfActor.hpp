@@ -440,21 +440,9 @@ struct GsfActor {
 
     // We must differ between surface types, since there can be different
     // local coordinates
-    // TODO add other surface types
-    switch (surface.type()) {
-      case Surface::Cylinder: {
-        // The cylinder coordinate is phi*R, so we need to pass R
-        detail::AngleDescription::Cylinder angle_desc;
-        std::get<0>(angle_desc).constant =
-            static_cast<const CylinderSurface&>(surface).bounds().get(
-                CylinderBounds::eR);
-
-        detail::reduceWithKLDistance(cmps, final_cmp_number, proj, angle_desc);
-      } break;
-      default: {
-        detail::reduceWithKLDistance(cmps, final_cmp_number, proj);
-      }
-    }
+    detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
+      detail::reduceWithKLDistance(cmps, final_cmp_number, proj, desc);
+    });
   }
 
   /// Removes the components which are missed and update the list of parent tips
