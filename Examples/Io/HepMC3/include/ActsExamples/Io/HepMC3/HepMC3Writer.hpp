@@ -47,7 +47,7 @@ class HepMC3AsciiWriter final : public WriterT<std::vector<HepMC3::GenEvent>> {
       const std::vector<HepMC3::GenEvent>& events) final override;
 
   /// Get readonly access to the config parameters
-  const Config& config() const;
+  const Config& config() const { return m_cfg; }
 
  private:
   /// The configuration of this writer
