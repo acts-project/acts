@@ -64,9 +64,6 @@ struct GsfResult {
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
-
-  // Used for workaround to initialize MT correctly
-  bool haveInitializedResult = false;
 };
 
 /// The actor carrying out the GSF algorithm
@@ -96,10 +93,6 @@ struct GsfActor {
 
     /// When to discard components
     double weightCutoff = 1.0e-4;
-
-    /// A not so nice workaround to get the first backward state in the
-    /// MultiTrajectory for the DirectNavigator
-    std::function<void(result_type&, const LoggerWrapper&)> resultInitializer;
 
     /// When this option is enabled, material information on all surfaces is
     /// ignored. This disables the component convolution as well as the handling
@@ -185,18 +178,6 @@ struct GsfActor {
       }
       return std::make_tuple(missed, reachable);
     }();
-
-    // Workaround to initialize e.g. MultiTrajectory in backward mode
-    if (!result.haveInitializedResult && m_cfg.resultInitializer) {
-      m_cfg.resultInitializer(result, logger);
-      result.haveInitializedResult = true;
-    }
-
-    // Initialize the tips if they are empty (should only happen at first pass)
-    if (result.parentTips.empty()) {
-      result.parentTips.resize(stepper.numberComponents(state.stepping),
-                               MultiTrajectoryTraits::kInvalid);
-    }
 
     if (result.parentTips.size() != stepper.numberComponents(state.stepping)) {
       ACTS_ERROR("component number mismatch:"
