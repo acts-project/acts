@@ -9,8 +9,11 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 
 #include <unordered_map>
+
+#include <boost/histogram.hpp>
 
 namespace Acts {
 
@@ -38,6 +41,8 @@ class VectorMultiTrajectoryBase {
     IndexType icalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
     IndexType measdim = 0;
+
+    TrackStatePropMask allocMask;
   };
 
   VectorMultiTrajectoryBase() = default;
@@ -59,6 +64,21 @@ class VectorMultiTrajectoryBase {
   };
 
   VectorMultiTrajectoryBase(VectorMultiTrajectoryBase&& other) = default;
+
+  struct Statistics {
+    using axis_t = boost::histogram::axis::variant<
+        boost::histogram::axis::category<std::string>,
+        boost::histogram::axis::category<>>;
+
+    using axes_t = std::vector<axis_t>;
+    using hist_t = boost::histogram::histogram<axes_t>;
+
+    hist_t hist;
+
+    void toStream(std::ostream& os, size_t n = 1);
+  };
+
+  Statistics statistics() const;
 
   struct DynamicColumnBase {
     virtual ~DynamicColumnBase() = 0;

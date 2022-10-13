@@ -8,6 +8,18 @@
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+
+#include <cstdint>
+#include <type_traits>
+
+#include <boost/histogram.hpp>
+#include <boost/histogram/axis/category.hpp>
+#include <boost/histogram/make_histogram.hpp>
+
 namespace Acts {
 
 detail_vmt::VectorMultiTrajectoryBase::DynamicColumnBase::~DynamicColumnBase() =
@@ -22,7 +34,11 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
   IndexData& p = m_index.back();
   IndexType index = m_index.size() - 1;
 
-  p.iprevious = iprevious;
+  p.allocMask = mask;
+
+  if (iprevious != kInvalid) {
+    p.iprevious = iprevious;
+  }
 
   // always set, but can be null
   m_referenceSurfaces.emplace_back(nullptr);
@@ -168,6 +184,119 @@ void VectorMultiTrajectory::clear_impl() {
   m_referenceSurfaces.clear();
   for (auto& [key, vec] : m_dynamic) {
     vec->clear();
+  }
+}
+
+auto VectorMultiTrajectory::statistics() const -> Statistics {
+  using namespace boost::histogram;
+  using cat = axis::category<std::string>;
+
+  Statistics::axes_t axes;
+  axes.emplace_back(cat({
+      "count",
+      "index",
+      "parPred",
+      "covPred",
+      "parFilt",
+      "covFilt",
+      "parSmth",
+      "covSmth",
+      "meas",
+      "measCov",
+      "jac",
+      "sourceLinks",
+      "projectors",
+  }));
+
+  axes.emplace_back(axis::category<>({0, 1}));
+
+  auto h = make_histogram(axes);
+
+  for (IndexType i = 0; i < size(); i++) {
+    auto ts = getTrackState(i);
+
+    bool isMeas = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
+
+    h("count", isMeas);
+
+    h("index", isMeas, weight(sizeof(IndexData)));
+
+    using scalar = decltype(ts.predicted())::Scalar;
+    size_t par_size = eBoundSize * sizeof(scalar);
+    size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
+
+    const IndexData& index = m_index[i];
+    if (ts.hasPredicted() &&
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Predicted)) {
+      h("parPred", isMeas, weight(par_size));
+      h("covPred", isMeas, weight(cov_size));
+    }
+    if (ts.hasFiltered() &&
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Filtered)) {
+      h("parFilt", isMeas, weight(par_size));
+      h("covFilt", isMeas, weight(cov_size));
+    }
+    if (ts.hasSmoothed() &&
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Smoothed)) {
+      h("parSmth", isMeas, weight(par_size));
+      h("covSmth", isMeas, weight(cov_size));
+    }
+
+    size_t meas_size = eBoundSize * sizeof(scalar);
+    size_t meas_cov_size = eBoundSize * eBoundSize * sizeof(scalar);
+
+    h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+    if (ts.hasCalibrated() &&
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Calibrated)) {
+      h("meas", isMeas, weight(meas_size));
+      h("measCov", isMeas, weight(meas_cov_size));
+      h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+      h("projectors", isMeas, weight(sizeof(ProjectorBitset)));
+    }
+
+    if (ts.hasJacobian() &&
+        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Jacobian)) {
+      h("jac", isMeas, weight(cov_size));
+    }
+  }
+
+  return Statistics{h};
+}
+
+void VectorMultiTrajectory::Statistics::toStream(std::ostream& os, size_t n) {
+  using namespace boost::histogram;
+  using cat = axis::category<std::string>;
+
+  auto& h = hist;
+
+  auto column_axis = axis::get<cat>(h.axis(0));
+  auto type_axis = axis::get<axis::category<>>(h.axis(1));
+
+  auto p = [&](const auto& key, const auto v, const std::string suffix = "") {
+    os << std::setw(20) << key << ": ";
+    if constexpr (std::is_same_v<std::decay_t<decltype(v)>, double>) {
+      os << std::fixed << std::setw(8) << std::setprecision(2) << v / n
+         << suffix;
+    } else {
+      os << std::fixed << std::setw(8) << double(v) / n << suffix;
+    }
+    os << std::endl;
+  };
+
+  for (int t = 0; t < type_axis.size(); t++) {
+    os << (type_axis.bin(t) == 1 ? "meas" : "other") << ":" << std::endl;
+    double total = 0;
+    for (int c = 0; c < column_axis.size(); c++) {
+      std::string key = column_axis.bin(c);
+      auto v = h.at(c, t);
+      if (key == "count") {
+        p(key, static_cast<size_t>(v));
+        continue;
+      }
+      p(key, v / 1024 / 1024, "M");
+      total += v;
+    }
+    p("total", total / 1024 / 1024, "M");
   }
 }
 
