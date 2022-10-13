@@ -146,10 +146,6 @@ struct GsfActor {
     assert(result.fittedStates && "No MultiTrajectory set");
     const auto& logger = state.options.logger;
 
-    // Prints some VERBOSE things and performs some asserts. Can be removed
-    // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper);
-
     // Set error or abort utility
     auto set_error_or_abort = [&](auto error) {
       if (m_cfg.abortOnError) {
@@ -178,6 +174,11 @@ struct GsfActor {
       }
       return std::make_tuple(missed, reachable);
     }();
+
+    // Prints some VERBOSE things and performs some asserts. Can be removed
+    // without change of behaviour
+    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
+                                                         missed_count);
 
     if (result.parentTips.size() != stepper.numberComponents(state.stepping)) {
       ACTS_ERROR("component number mismatch:"
