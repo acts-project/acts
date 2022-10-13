@@ -54,6 +54,11 @@ class WhiteBoard {
   bool exists(const std::string& name) const;
 
  private:
+  /// Find similar names for suggestions with levenshtein-distance
+  std::vector<std::string_view> similarNames(const std::string_view& name,
+                                             int distThreshold,
+                                             std::size_t maxNumber) const;
+
   // type-erased value holder for move-constructible types
   struct IHolder {
     virtual ~IHolder() = default;
@@ -97,7 +102,18 @@ template <typename T>
 inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
   auto it = m_store.find(name);
   if (it == m_store.end()) {
-    throw std::out_of_range("Object '" + name + "' does not exists");
+    const auto names = similarNames(name, 10, 3);
+
+    std::stringstream ss;
+    if (not names.empty()) {
+      ss << ", similar ones are: [ ";
+      for (std::size_t i = 0; i < std::min(3ul, names.size()); ++i) {
+        ss << "'" << names[i] << "' ";
+      }
+      ss << "]";
+    }
+
+    throw std::out_of_range("Object '" + name + "' does not exists" + ss.str());
   }
   const IHolder* holder = it->second.get();
 
