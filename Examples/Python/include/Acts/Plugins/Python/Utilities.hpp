@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/TypeTraits.hpp"
+
 #include <string>
 #include <unordered_map>
 
@@ -50,6 +52,8 @@ template <typename T>
 void patchKwargsConstructor(T& c) {
   pybind11::module::import("acts._adapter").attr("_patchKwargsConstructor")(c);
 }
+
+METHOD_TRAIT(write_method_trait_t, write);
 
 }  // namespace Acts::Python
 
@@ -102,6 +106,15 @@ void patchKwargsConstructor(T& c) {
             .def(py::init<const Config&, Acts::Logging::Level>(),           \
                  py::arg("config"), py::arg("level"))                       \
             .def_property_readonly("config", &Writer::config);              \
+                                                                            \
+    constexpr bool has_write_method =                                       \
+        Acts::Concepts::has_method<Writer, ActsExamples::ProcessCode,       \
+                                   Acts::Python::write_method_trait_t,      \
+                                   const ActsExamples::AlgorithmContext&>;  \
+                                                                            \
+    if constexpr (has_write_method) {                                       \
+      w.def("write", &Writer::write);                                       \
+    }                                                                       \
                                                                             \
     auto c = py::class_<Config>(w, "Config").def(py::init<>());             \
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);                                    \
