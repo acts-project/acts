@@ -92,7 +92,7 @@ run \
 
 Examples/Scripts/vertex_mu_scan.py \
     $outdir/performance_vertexing_*mu*.root \
-    vertexing_mu_scan.pdf
+    $outdir/vertexing_mu_scan.pdf
 
 
 exit $ec
