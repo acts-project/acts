@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -36,9 +37,10 @@ struct TrackFinderFunctionImpl
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
       const ActsExamples::TrackParametersContainer& initialParameters,
-      const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options)
-      const override {
-    return trackFinder.findTracks(initialParameters, options);
+      const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options,
+      std::shared_ptr<Acts::VectorMultiTrajectory> trajectory) const override {
+    return trackFinder.findTracks(initialParameters, options,
+                                  std::move(trajectory));
   };
 };
 

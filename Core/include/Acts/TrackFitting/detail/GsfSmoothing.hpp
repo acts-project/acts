@@ -80,6 +80,16 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
   return ResType(smoothedState);
 }
 
+/// Enumeration type to allow templating on the state we want to project on with
+/// a MultiTrajectory
+enum class StatesType { ePredicted, eFiltered, eSmoothed };
+
+inline std::ostream &operator<<(std::ostream &os, StatesType type) {
+  constexpr static std::array names = {"predicted", "filtered", "smoothed"};
+  os << names[static_cast<int>(type)];
+  return os;
+}
+
 /// @brief Projector type which maps a MultiTrajectory-Index to a tuple of
 /// [weight, parameters, covariance]. Therefore, it contains a MultiTrajectory
 /// and for now a std::map for the weights
