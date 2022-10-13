@@ -94,5 +94,6 @@ Examples/Scripts/vertex_mu_scan.py \
     $outdir/performance_vertexing_*mu*.root \
     $outdir/vertexing_mu_scan.pdf
 
+rm -rf $outdir/performance_vertexing_*mu*
 
 exit $ec
