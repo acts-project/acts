@@ -14,11 +14,6 @@ Therefore, we should not expect identical results from all of them.
 
 (kf_core)=
 ## Kalman Filter (KF) [wip]
-
-:::{note}
-This is a stub!
-:::
-
 The Kalman Filter is an iterative fitter.
 It successively combines measurements to obtain an estimate of the track parameters.
 The KF needs an estimate as a starting point. The procedure alternates between two methods:
@@ -27,9 +22,14 @@ The KF needs an estimate as a starting point. The procedure alternates between t
 The meaning of "this surface" and "the next surface" changes with the context.
 There are three different interpretations for this.
 The KF can give us those three interpretations as sets of track parameters:
-* predicted: Uses "older" data (i.e. from the last surface) to make the prediction.
-* filtered: Uses the "current" data (i.e. the predicted data updated with the measurement on the current surface). It is simply the weighted mean.
-* smoothed: Uses the "future" data to predict the current parameters. This can only be evaluated if the whole propagation is finished once. This can be done in to ways: one uses backwards-propagation and one does not.
+  * predicted: Uses "older" data (i.e. from the last surfaces) to make the prediction. This prediction is an extrapolation from the old data onto the current surface.
+  * filtered: Uses the "current" data (i.e. the predicted data updated with the measurement on the current surface). It is some kind of weighted mean.
+  * smoothed: Uses the "future" data to predict the current parameters. This can only be evaluated if the whole propagation is finished once. This can be done in to ways: one uses backwards-propagation and one does not.
+
+:::{note}
+This chapter will be extended in the future.
+:::
+
 
 (gsf_core)=
 ## Gaussian Sum Filter
@@ -78,8 +78,7 @@ For small $x/x_0$ the {class}`Acts::BetheHeitlerApprox` only returns a one-compo
 (gx2f_core)=
 ## Global Chi-Square Fitter (GX2F) [wip]
 :::{note}
-This is a stub!
+This chapter will be added soon.
 :::
-
 
 [^billoir]: https://twiki.cern.ch/twiki/pub/LHCb/ParametrizedKalman/paramKalmanV01.pdf
