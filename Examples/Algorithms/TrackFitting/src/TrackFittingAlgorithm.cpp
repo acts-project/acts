@@ -82,6 +82,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
                                Acts::LoggerWrapper{logger()},
                                Acts::PropagatorPlainOptions()};
 
+  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+
   // Perform the fit for each input track
   std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
@@ -126,7 +128,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     }
 
     ACTS_DEBUG("Invoke fitter");
-    auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
     auto result =
         fitTrack(trackSourceLinks, initialParams, options, surfSequence, mtj);
 
@@ -160,6 +161,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       trajectories.push_back(Trajectories());
     }
   }
+
+  std::stringstream ss;
+  mtj->statistics().toStream(ss);
+  ACTS_INFO(ss.str());
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;

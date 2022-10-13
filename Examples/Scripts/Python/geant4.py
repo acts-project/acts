@@ -20,7 +20,6 @@ def runGeant4(
     s = s or acts.examples.Sequencer(events=100, numThreads=1)
     s.config.logLevel = acts.logging.INFO
     rnd = acts.examples.RandomNumbers()
-    seed = 42
     addParticleGun(
         s,
         EtaConfig(-2.0, 2.0),
@@ -34,7 +33,7 @@ def runGeant4(
         field,
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
-        seed=seed,
+        rnd=rnd,
     )
     return s
 

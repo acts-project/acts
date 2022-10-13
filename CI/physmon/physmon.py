@@ -40,6 +40,7 @@ from acts.examples.reconstruction import (
     CKFPerformanceConfig,
     addVertexFitting,
     VertexFinder,
+    TrackSelectorRanges,
 )
 
 
@@ -151,7 +152,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
                 z=(-2000 * u.mm, 2000 * u.mm),
                 maxSeedsPerSpM=1,
-                sigmaScattering=50,
+                sigmaScattering=5,
                 radLengthPerSeed=0.1,
                 minPt=500 * u.MeV,
                 bFieldInZ=1.99724 * u.T,
@@ -177,22 +178,15 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             outputDirCsv=None,
         )
 
-        s.addAlgorithm(
-            acts.examples.TrackSelector(
-                level=acts.logging.INFO,
-                inputTrackParameters="fittedTrackParameters",
-                outputTrackParameters="trackparameters",
-                outputTrackIndices="outputTrackIndices",
-                removeNeutral=True,
-                absEtaMax=2.5,
-                loc0Max=4.0 * u.mm,  # rho max
-                ptMin=500 * u.MeV,
-            )
-        )
-
-        s = addVertexFitting(
+        addVertexFitting(
             s,
             field,
+            TrackSelectorRanges(
+                removeNeutral=True,
+                absEta=(None, 2.5),
+                loc0=(None, 4.0 * u.mm),
+                pt=(500 * u.MeV, None),
+            ),
             vertexFinder=VertexFinder.Iterative,
             trajectories="trajectories",
             outputDirRoot=tp,

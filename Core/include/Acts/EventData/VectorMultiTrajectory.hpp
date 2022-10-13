@@ -10,8 +10,11 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 
 #include <unordered_map>
+
+#include <boost/histogram.hpp>
 
 namespace Acts {
 
@@ -36,6 +39,8 @@ class VectorMultiTrajectory final
     IndexType iuncalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
     IndexType measdim = 0;
+
+    TrackStatePropMask allocMask;
   };
 
  public:
@@ -60,6 +65,21 @@ class VectorMultiTrajectory final
   VectorMultiTrajectory(VectorMultiTrajectory&&) = default;
   VectorMultiTrajectory& operator=(const VectorMultiTrajectory&) = default;
   VectorMultiTrajectory& operator=(VectorMultiTrajectory&&) = default;
+
+  struct Statistics {
+    using axis_t = boost::histogram::axis::variant<
+        boost::histogram::axis::category<std::string>,
+        boost::histogram::axis::category<>>;
+
+    using axes_t = std::vector<axis_t>;
+    using hist_t = boost::histogram::histogram<axes_t>;
+
+    hist_t hist;
+
+    void toStream(std::ostream& os, size_t n = 1);
+  };
+
+  Statistics statistics() const;
 
  private:
   // BEGIN INTERFACE

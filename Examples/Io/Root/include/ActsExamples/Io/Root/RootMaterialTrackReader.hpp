@@ -38,6 +38,8 @@ class RootMaterialTrackReader : public IReader {
 
     /// Whether the events are ordered or not
     bool orderedEvents = true;
+    // Read surface information for the root file
+    bool readCachedSurfaceInformation = false;
   };
 
   /// Constructor
@@ -79,6 +81,9 @@ class RootMaterialTrackReader : public IReader {
   /// The number of events
   size_t m_events = 0;
 
+  /// The batch size (number of track per events)
+  size_t m_batchSize = 0;
+
   /// The input tree name
   TChain* m_inputChain = nullptr;
 
@@ -113,6 +118,22 @@ class RootMaterialTrackReader : public IReader {
   std::vector<float>* m_step_Z = new std::vector<float>;   ///< step material Z
   std::vector<float>* m_step_rho =
       new std::vector<float>;  ///< step material rho
+
+  std::vector<std::uint64_t>* m_sur_id =
+      new std::vector<std::uint64_t>;  ///< ID of the suface associated with the
+                                       ///< step
+  std::vector<float>* m_sur_x =
+      new std::vector<float>;  ///< x position of the center of the suface
+                               ///< associated with the step
+  std::vector<float>* m_sur_y =
+      new std::vector<float>;  ///< y position of the center of the suface
+                               ///< associated with the step
+  std::vector<float>* m_sur_z =
+      new std::vector<float>;  ///< z position of the center of the suface
+                               ///< associated with the step
+  std::vector<float>* m_sur_pathCorrection =
+      new std::vector<float>;  ///< path correction when associating
+                               ///< material to the given surface
 };
 
 }  // namespace ActsExamples

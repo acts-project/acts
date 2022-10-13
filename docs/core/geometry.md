@@ -1,3 +1,4 @@
+(geometry_impl)=
 # Geometry module
 
 The ACTS geometry model is strongly based on the ATLAS Tracking geometry. Its
