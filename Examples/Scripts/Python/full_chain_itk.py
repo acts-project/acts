@@ -17,6 +17,7 @@ from acts.examples.reconstruction import (
     CKFPerformanceConfig,
     addVertexFitting,
     VertexFinder,
+    TrackSelectorRanges,
 )
 
 ttbar_pu200 = False
@@ -92,21 +93,10 @@ addCKFTracks(
     outputDirRoot=outputDir,
 )
 
-s.addAlgorithm(
-    acts.examples.TrackSelector(
-        level=acts.logging.INFO,
-        inputTrackParameters="fittedTrackParameters",
-        outputTrackParameters="trackparameters",
-        outputTrackIndices="outputTrackIndices",
-        removeNeutral=True,
-        absEtaMax=4.0,
-        ptMin=1.0 * u.GeV,
-    )
-)
-
 addVertexFitting(
     s,
     field,
+    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0), removeNeutral=True),
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
     trajectories="trajectories",

@@ -12,7 +12,7 @@ target_link_libraries(
   # the ROOT libraries should be private, but if we do that then the linker
   # fails with some missing ROOT symbols.
   PUBLIC ActsCore ActsExamplesFramework ROOT::Core ROOT::Tree
-  PRIVATE Boost::filesystem Boost::program_options)
+  PRIVATE Boost::program_options std::filesystem)
 
 install(
   TARGETS ActsExamplesMagneticField
