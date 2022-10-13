@@ -24,6 +24,97 @@ constexpr auto kInvalid = MultiTrajectoryTraits::kInvalid;
 constexpr auto MeasurementSizeMax = MultiTrajectoryTraits::MeasurementSizeMax;
 
 class VectorMultiTrajectoryBase {
+ public:
+  struct Statistics {
+    using axis_t = boost::histogram::axis::variant<
+        boost::histogram::axis::category<std::string>,
+        boost::histogram::axis::category<>>;
+
+    using axes_t = std::vector<axis_t>;
+    using hist_t = boost::histogram::histogram<axes_t>;
+
+    hist_t hist;
+
+    void toStream(std::ostream& os, size_t n = 1);
+  };
+
+  template <typename T>
+  Statistics statistics(T& instance) const {
+    using namespace boost::histogram;
+    using cat = axis::category<std::string>;
+
+    Statistics::axes_t axes;
+    axes.emplace_back(cat({
+        "count",
+        "index",
+        "parPred",
+        "covPred",
+        "parFilt",
+        "covFilt",
+        "parSmth",
+        "covSmth",
+        "meas",
+        "measCov",
+        "jac",
+        "sourceLinks",
+        "projectors",
+    }));
+
+    axes.emplace_back(axis::category<>({0, 1}));
+
+    auto h = make_histogram(axes);
+
+    for (IndexType i = 0; i < instance.size(); i++) {
+      auto ts = instance.getTrackState(i);
+
+      bool isMeas = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
+
+      h("count", isMeas);
+
+      h("index", isMeas, weight(sizeof(IndexData)));
+
+      using scalar = typename decltype(ts.predicted())::Scalar;
+      size_t par_size = eBoundSize * sizeof(scalar);
+      size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
+
+      const IndexData& index = m_index[i];
+      if (ts.hasPredicted() &&
+          ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Predicted)) {
+        h("parPred", isMeas, weight(par_size));
+        h("covPred", isMeas, weight(cov_size));
+      }
+      if (ts.hasFiltered() &&
+          ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Filtered)) {
+        h("parFilt", isMeas, weight(par_size));
+        h("covFilt", isMeas, weight(cov_size));
+      }
+      if (ts.hasSmoothed() &&
+          ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Smoothed)) {
+        h("parSmth", isMeas, weight(par_size));
+        h("covSmth", isMeas, weight(cov_size));
+      }
+
+      size_t meas_size = eBoundSize * sizeof(scalar);
+      size_t meas_cov_size = eBoundSize * eBoundSize * sizeof(scalar);
+
+      h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+      if (ts.hasCalibrated() &&
+          ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Calibrated)) {
+        h("meas", isMeas, weight(meas_size));
+        h("measCov", isMeas, weight(meas_cov_size));
+        h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+        h("projectors", isMeas, weight(sizeof(ProjectorBitset)));
+      }
+
+      if (ts.hasJacobian() &&
+          ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Jacobian)) {
+        h("jac", isMeas, weight(cov_size));
+      }
+    }
+
+    return Statistics{h};
+  }
+
  protected:
   struct IndexData {
     IndexType iprevious = kInvalid;
@@ -64,21 +155,6 @@ class VectorMultiTrajectoryBase {
   };
 
   VectorMultiTrajectoryBase(VectorMultiTrajectoryBase&& other) = default;
-
-  struct Statistics {
-    using axis_t = boost::histogram::axis::variant<
-        boost::histogram::axis::category<std::string>,
-        boost::histogram::axis::category<>>;
-
-    using axes_t = std::vector<axis_t>;
-    using hist_t = boost::histogram::histogram<axes_t>;
-
-    hist_t hist;
-
-    void toStream(std::ostream& os, size_t n = 1);
-  };
-
-  Statistics statistics() const;
 
   struct DynamicColumnBase {
     virtual ~DynamicColumnBase() = 0;
@@ -271,6 +347,10 @@ class VectorMultiTrajectory final
   VectorMultiTrajectory(VectorMultiTrajectory&& other)
       : VectorMultiTrajectoryBase{std::move(other)} {}
 
+  Statistics statistics() const {
+    return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
+  }
+
  private:
   // BEGIN INTERFACE
   TrackStateProxy::Parameters parameters_impl(IndexType parIdx) {
@@ -381,6 +461,10 @@ class ConstVectorMultiTrajectory final
       : VectorMultiTrajectoryBase{std::move(other)} {}
 
   ConstVectorMultiTrajectory(ConstVectorMultiTrajectory&&) = default;
+
+  Statistics statistics() const {
+    return detail_vmt::VectorMultiTrajectoryBase::statistics(*this);
+  }
 
  private:
   // BEGIN INTERFACE
