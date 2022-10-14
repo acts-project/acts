@@ -160,7 +160,7 @@ bottom SP.
 :::{figure} ../figures/seeding/impactParameter.svg
 :width: 400px
 :align: center
-oi
+Helix representation in $x/y$ reference frame with central space-point (SP$_m$) in the origin.
 :::
 
 Assuming the middle layer SP is in the origin of the $x/y$ frame, as in {numref}`impactParameter`. 
