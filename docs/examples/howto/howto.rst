@@ -4,6 +4,7 @@ How-to guides
 .. toctree::
    :maxdepth: 1
 
+   add_new_algorithm
    run_fatras
    run_material_mapping
    run_seeding
