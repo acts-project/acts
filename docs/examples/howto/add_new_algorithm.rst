@@ -4,19 +4,20 @@ Add a new algorithm
 Purpose
 -------------
 
-The main part of ACTS code is located in `Core` packages. 
-For them to be used in standalone ACTS an algorithm is needed.
-Also, new ideas need to be first developed as algorithms.
-Typically the essential parts of the code are then moved to the `Core` packages 
-and the algorithm only executes it.
+The main part of ACTS code is located in the `Core` packages. 
+For such code to be used in standalone ACTS, an algorithm is needed. 
+Before doing so, the ideas explored in Examples are typically first developed as algorithms. 
+In a second step, the essential parts of this code are then moved to the `Core` packages, 
+which the algorithm then executes.
 
 
 
 Code Organisation
 ------------------
 
-Algorithms reside in `Examples/Algorithms` are of the repository.
-The code is split into header with the algorithm class declaration 
+
+Algorithms reside in `Examples/Algorithms` of the repository. 
+The code is split into a header with the algorithm class declaration 
 and a source file containing the implementation.
 
 Assuming that you want to experiment with a new seeding algorithm the files to add would be:
@@ -27,7 +28,7 @@ and
 Algorithm Class
 ---------------
 The algorithm class has to inherit from {class}`ActsExamples::BareAlgorithm`
-and thus implement single method:
+and thus implement this single method:
 
 .. code-block:: cpp
 
@@ -40,10 +41,12 @@ and thus implement single method:
 .. important:: The constructor should ideally follow certain rules. See section on configuration below.
 
 The `execute` method will be called once for each event. 
-Obviously other methods can be also added to this class.
-It is good to remember that the algorithmic code in ACTS is typically stateless
+Other methods can also be added to your class. 
+It is good to remember that the algorithmic code in ACTS is typically stateless, 
 and if the state needs to be passed between the calls it should be done explicitly.
-For instance if the event processing is best organized with a methods:
+An algorithm is stateless if does not modify its own attributes while executing.
+This way it becomes reentrant and in consequence thread safe.
+For instance if the event processing is best organized with such methods:
 
 .. code-block:: cpp
 
@@ -61,41 +64,42 @@ that need to pass the data between each other these methods should rather look l
     void extractInfo(const SeedingBuffers& buffers);
 
 
-..  tip:: It is a common practice to put the algorithm code in ``ActsExamples`` namespace.
+..  tip:: It is common practice to put the algorithm code in the `ActsExamples` namespace.
 
 Input and Output
 ------------------
 
-The algorithm would be typically part of some processing sequence and thus consume and produce some event data.
-In hypothetical example discussed here space-points cod be the input and track seeds would be an output.
-The data can be retrieved in the algorithm using `get` method.
+The algorithm would be typically part of some processing sequence 
+and thus consume and produce some event data. 
+In the hypothetical example discussed here, 
+space-points are the input and track seeds an output. 
+The data can be retrieved in the algorithm using the `get` method:
 
 .. code-block:: cpp
 
     template<typename T>
     const T& get(const std::string& name);
 
-The data is fetched from so called "store" that is populated by preceding algorithm or by the reader.
+The data is fetched from the "store" that is populated by a preceding algorithm or by the reader.
 
-The data object (or objects) produced by an algorithm can be placed in the store using method `add`.
+The data object (or objects) produced by an algorithm can be placed in the store using an `add` method:
 
 .. code-block:: cpp
 
     template<typename T>
     void add(const std::string& name, T&& object);
 
-As the method signature suggests the ownership of the object is transferred to the store.
+The ownership of the object is transferred to the store. 
 That is, the destruction of this object at the end of event processing is taken care of.
 
 Configurability
 ----------------
 
-It is customary that an algorithm requires configuration parameters.
-For the sake of an example in hypothetical seeding algorithm it could be parameter steering
-which detector layers should be used. 
-The configuration can be provided to an algorithm through an additional class/structure.
-It can be an inner class of the algorithm or it can be external to it.
-One would use definitely external structure if it is shared among several algorithm classes.
+It is customary that an algorithm requires configuration parameters. 
+For example, in a seeding algorithm these parameters could include which detector layers should be used. 
+The configuration can be provided to an algorithm through an additional class/structure. 
+It can be an inner class of the algorithm or it can be external to it. 
+One should use an external structure if it is shared among several algorithm classes.
 
 For example that is how the configuration object could look like for `MySeedingAlgorithm`:
 
@@ -106,10 +110,10 @@ For example that is how the configuration object could look like for `MySeedingA
         float deltaZ;  // the maximum allowed deviation in r-z plane
     };
 
-.. tip:: It is customary to put the config structures in ``Acts`` namespace.
+.. tip:: It is customary to put the config structures in the ``Acts`` namespace.
 
-The algorithm constructor would take `MySeedingConfig` object during the construction in addition 
-to the argument controlling verbosity of diagnostic messages.
+The algorithm constructor would take a `MySeedingConfig` object during 
+the construction in addition to an argument controlling verbosity of diagnostic messages.
 
 .. code-block:: cpp
 
@@ -120,18 +124,20 @@ to the argument controlling verbosity of diagnostic messages.
 
 Python bindings
 ---------------
-In order to use an algorithm in standalone ACTS 
-the algorithm and the associated config structure need to be accessible from python.
-For that so called python bindings need to be created using ``pybind11`` library.
+In order to use an algorithm in standalone ACTS the algorithm 
+and the associated config structure need to be accessible from python. 
+For that, python bindings need to be created using the pybind11 library. 
 The binding is defined in C++ code in `Examples/Python/src/` directory. 
-There is one source file per category, in this particular case the file to edit would be `TrackFinding.cpp`.
+There is one source file per category, 
+in this particular case the file to edit would be `TrackFinding.cpp`.
+
 
 The configuration structure binding would be defined like this:
 
 .. code-block:: cpp
 
     using Config = Acts::MySeedingConfig;
-    auto c = py::class_<Config>(m, "MySeedingConfig").def(py::init<>()); // this defined the name know in python
+    auto c = py::class_<Config>(m, "MySeedingConfig").def(py::init<>()); // defined here name: MySeedingConfig is the class name that will be known in python
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(layers); // makes the layers field accessible in python
     ACTS_PYTHON_MEMBER(deltaZ); // makes the deltaZ accessible
@@ -151,7 +157,7 @@ The algorithm class can be made known to python via such binding definition:
                  py::arg("config"), py::arg("level")); // defines constructor arguments
         // other methods can be exposed to python (typically config accessor) 
 
-If bindings are defined correctly (and everything compiles) they can be tested in standalone python session (see section on setting up python) by typing:
+The bindings can be tested in a standalone python session:
 
 .. code-block:: python
 
@@ -163,7 +169,7 @@ An info about the class and config structure should be printed.
 
 Example empty algorithm
 -----------------------
-A complete example of an algorithm called ``UserAlgorithm`` can be found in this two branches/locations:
+A complete example of an algorithm called `UserAlgorithm` can be found in these two branches/locations:
 
 [Algorithm definition](https://github.com/asalzburger/acts/tree/ws-add-user-algorithm/Examples/Algorithms/Tutorial)
 
