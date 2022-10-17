@@ -140,7 +140,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       state.compatTopSP.push_back(topSP);
     }
     // apply cut on the number of top SP if seedConfirmation is true
-    size_t nTopSeedConf = 0;
+    SeedConfQuantitiesConfig seedConfQuantities;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
       SeedConfirmationRangeConfig seedConfRange =
@@ -150,10 +150,10 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
               : m_config.centralSeedConfirmationRange;
       // set the minimum number of top SP depending on whether the middle SP is
       // in the central or forward region
-      nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-                         ? seedConfRange.nTopForLargeR
-                         : seedConfRange.nTopForSmallR;
-      if (state.compatTopSP.size() < nTopSeedConf) {
+      seedConfQuantities.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                            ? seedConfRange.nTopForLargeR
+                                            : seedConfRange.nTopForSmallR;
+      if (state.compatTopSP.size() < seedConfQuantities.nTopSeedConf) {
         continue;
       }
     }
@@ -247,9 +247,9 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     size_t numBotSP = state.compatBottomSP.size();
     size_t numTopSP = state.compatTopSP.size();
-
-    int numQualitySeeds = 0;
-    int numSeeds = 0;
+    //
+    //		seedConfQuantities.numQualitySeeds = 0;
+    //		seedConfQuantities.numSeeds = 0;
 
     size_t t0 = 0;
 
@@ -508,12 +508,11 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-            state.impactParameters, Zob, nTopSeedConf, numQualitySeeds,
-            numSeeds, state.seedsPerSpM);
+            state.impactParameters, Zob, seedConfQuantities, state.seedsPerSpM);
       }
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
-                                              numQualitySeeds, outIt);
+    m_config.seedFilter->filterSeeds_1SpFixed(
+        state.seedsPerSpM, seedConfQuantities.numQualitySeeds, outIt);
   }
 }
 

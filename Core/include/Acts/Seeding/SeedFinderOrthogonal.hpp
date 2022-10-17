@@ -201,7 +201,8 @@ class SeedFinderOrthogonal {
   template <typename output_container_t>
   void filterCandidates(internal_sp_t &middle,
                         std::vector<internal_sp_t *> &bottom,
-                        std::vector<internal_sp_t *> &top, int numQualitySeeds,
+                        std::vector<internal_sp_t *> &top,
+                        SeedConfQuantitiesConfig seedConfQuantities,
                         output_container_t &cont) const;
 
   /**
