@@ -5,7 +5,7 @@ Purpose
 -------------
 
 The main part of ACTS code is located in the `Core` packages. 
-For such code to be used in standalone ACTS, an algorithm is needed. 
+To use this code in the ACTS examples framework, an algorithm is needed. 
 Before doing so, the ideas explored in Examples are typically first developed as algorithms. 
 In a second step, the essential parts of this code are then moved to the `Core` packages, 
 which the algorithm then executes.
@@ -23,7 +23,9 @@ and a source file containing the implementation.
 Assuming that you want to experiment with a new seeding algorithm the files to add would be:
 `Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/MySeedingAlgorithm.h`
 and 
-`Examples/Algorithms/TrackFinding/src/MySeedingAlgorithm.h`
+`Examples/Algorithms/TrackFinding/src/MySeedingAlgorithm.cpp`
+
+The `CMakeLists.txt` file needs to be updated as well.
 
 Algorithm Class
 ---------------
@@ -36,7 +38,8 @@ and thus implement this single method:
 
 .. hint:: There are other types of algorithms for reading inputs from files
     or for saving data to files. All these interfaces can be found in 
-    `Examples/Framework/include/ActsExamples/Framework`.
+    `Examples/Framework/include/ActsExamples/Framework`. 
+    In particular, there are base classes for algorithms for IO operations.
 
 .. important:: The constructor should ideally follow certain rules. See section on configuration below.
 
@@ -73,21 +76,24 @@ The algorithm would be typically part of some processing sequence
 and thus consume and produce some event data. 
 In the hypothetical example discussed here, 
 space-points are the input and track seeds an output. 
-The data can be retrieved in the algorithm using the `get` method:
+The data can be retrieved in the algorithm using the `get` method of the "store" object of such signature:
 
 .. code-block:: cpp
 
     template<typename T>
     const T& get(const std::string& name);
-
+    // example
+    ctx.eventStore.get<MyType>("A_name");
 The data is fetched from the "store" that is populated by a preceding algorithm or by the reader.
 
-The data object (or objects) produced by an algorithm can be placed in the store using an `add` method:
+The data object (or objects) produced by an algorithm can be placed in the store using "store" `add` method:
 
 .. code-block:: cpp
 
     template<typename T>
     void add(const std::string& name, T&& object);
+    // example
+    ctx.eventStore.add("A_name", std::move(mydata));
 
 The ownership of the object is transferred to the store. 
 That is, the destruction of this object at the end of event processing is taken care of.
