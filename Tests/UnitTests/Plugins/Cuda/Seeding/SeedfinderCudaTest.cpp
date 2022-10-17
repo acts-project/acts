@@ -192,6 +192,9 @@ int main(int argc, char** argv) {
 
   int numPhiNeighbors = 1;
 
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
+
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
@@ -236,9 +239,9 @@ int main(int argc, char** argv) {
   // create grid with bin sizes according to the configured geometry
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), ct,
-                                                 bottomBinFinder, topBinFinder,
-                                                 std::move(grid), config);
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
+      spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
+      std::move(grid), rRangeSPExtent, config);
 
   auto end_pre = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsec_pre = end_pre - start_pre;
@@ -258,7 +261,6 @@ int main(int argc, char** argv) {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
   groupIt = spGroup.begin();
-  Acts::Extent rRangeSPExtent;
 
   if (do_cpu) {
     decltype(seedfinder_cpu)::State state;
