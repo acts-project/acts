@@ -20,8 +20,8 @@
 
 namespace Acts {
 struct SeedConfQuantitiesConfig {
-  // number of maximum top SPs in seed confirmation
-  size_t nTopSeedConf = std::numeric_limits<int>::max();
+	// number of minimum top SPs in seed confirmation
+	size_t nTopSeedConf = 0;
   // number of high quality seeds in seed confirmation
   int numQualitySeeds = 0;
   // number of seeds that did not pass the quality confirmation but were still
