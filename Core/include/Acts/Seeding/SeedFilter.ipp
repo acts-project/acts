@@ -155,7 +155,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // new seed to outCont
         if (seedFilterState.numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
           // fill high quality seed
-          seedFilterState.numQualitySeeds = seedFilterState.numQualitySeeds + 1;
+          seedFilterState.numQualitySeeds++;
           outCont.push_back(std::make_pair(
               weight,
               std::make_unique<const InternalSeed<external_spacepoint_t>>(
