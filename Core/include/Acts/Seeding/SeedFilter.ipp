@@ -181,7 +181,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // to outCont
       if (seedConfQuantities.numSeeds < m_cfg.maxSeedsPerSpMConf) {
         // fill seed
-        seedConfQuantities.numSeeds = seedConfQuantities.numSeeds + 1;
+        seedConfQuantities.numSeeds++;
         outCont.push_back(std::make_pair(
             weight, std::make_unique<const InternalSeed<external_spacepoint_t>>(
                         bottomSP, middleSP, *topSpVec[i], zOrigin, false)));
@@ -200,7 +200,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     // outCont
     if (seedConfQuantities.numSeeds < m_cfg.maxSeedsPerSpMConf) {
       // fill seed
-      seedConfQuantities.numSeeds = seedConfQuantities.numSeeds + 1;
+      seedConfQuantities.numSeeds++;
       outCont.push_back(std::make_pair(
           weightMax,
           std::make_unique<const InternalSeed<external_spacepoint_t>>(
