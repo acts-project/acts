@@ -195,14 +195,14 @@ class SeedFinderOrthogonal {
    * @param middle The (singular) middle spacepoint.
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
-   * @param seedConfQuantities  struct  holding quantities used in seed confirmation
+   * @param SeedFilterState  holds quantities used in seed filter
    * @param cont The container to write the resulting seeds to.
    */
   template <typename output_container_t>
   void filterCandidates(internal_sp_t &middle,
                         std::vector<internal_sp_t *> &bottom,
                         std::vector<internal_sp_t *> &top,
-                        SeedConfQuantitiesConfig seedConfQuantities,
+                        SeedFilterState seedFilterState,
                         output_container_t &cont) const;
 
   /**

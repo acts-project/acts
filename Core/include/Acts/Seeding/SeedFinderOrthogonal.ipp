@@ -202,8 +202,7 @@ template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-    std::vector<internal_sp_t *> &top,
-    SeedConfQuantitiesConfig seedConfQuantities,
+    std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
     output_container_t &cont) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
@@ -245,7 +244,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
   for (size_t b = 0; b < numBotSP; b++) {
     auto lb = linCircleBottom[b];
-    float Zob = lb.Zo;
+    seedFilterState.zOrigin = lb.Zo;
     float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
     float Ub = lb.U;
@@ -350,7 +349,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     if (!top_valid.empty()) {
       m_config.seedFilter->filterSeeds_2SpFixed(*bottom[b], middle, top_valid,
                                                 curvatures, impactParameters,
-                                                Zob, seedConfQuantities, cont);
+                                                seedFilterState, cont);
     }
   }
 }
@@ -509,13 +508,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       protoseeds;
 
   // TODO: add seed confirmation
-  SeedConfQuantitiesConfig seedConfQuantities;
+  SeedFilterState seedFilterState;
 
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(middle, bottom_lh_v, top_lh_v, seedConfQuantities,
+    filterCandidates(middle, bottom_lh_v, top_lh_v, seedFilterState,
                      protoseeds);
   }
 
@@ -523,7 +522,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(middle, bottom_hl_v, top_hl_v, seedConfQuantities,
+    filterCandidates(middle, bottom_hl_v, top_hl_v, seedFilterState,
                      protoseeds);
   }
 
@@ -531,7 +530,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Run a seed filter, just like in other seeding algorithms.
    */
   m_config.seedFilter->filterSeeds_1SpFixed(protoseeds,
-                                            seedConfQuantities.numQualitySeeds,
+                                            seedFilterState.numQualitySeeds,
                                             std::back_inserter(out_cont));
 }
 

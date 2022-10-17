@@ -19,7 +19,9 @@
 #include <vector>
 
 namespace Acts {
-struct SeedConfQuantitiesConfig {
+struct SeedFilterState {
+  // longitudinal impact parameter as defined by bottom and middle space point
+  float zOrigin;
   // number of minimum top SPs in seed confirmation
   size_t nTopSeedConf = 0;
   // number of high quality seeds in seed confirmation
@@ -49,16 +51,14 @@ class SeedFilter {
   ///                 with both bottom and middle space point
   /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
   /// @param impactParametersVec vector containing the impact parameters
-  /// @param zOrigin on the z axis as defined by bottom and middle space point
-  /// @param seedConfQuantities struct  holding quantities used in seed confirmation
+  /// @param seedFilterState  holds quantities used in seed filter
   /// @param outCont Output container for the seeds
   virtual void filterSeeds_2SpFixed(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
       InternalSpacePoint<external_spacepoint_t>& middleSP,
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
-      std::vector<float>& impactParametersVec, float zOrigin,
-      SeedConfQuantitiesConfig& seedConfQuantities,
+      std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
           outCont) const;
