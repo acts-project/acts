@@ -49,6 +49,9 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   /// Finalize plots.
   ProcessCode endRun() final override;
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
                      const ProtoTrackContainer& tracks) final override;
