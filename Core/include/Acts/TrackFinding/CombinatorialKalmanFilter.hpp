@@ -254,6 +254,9 @@ struct CombinatorialKalmanFilterResult {
   bool finished = false;
 
   Result<void> result{Result<void>::success()};
+
+  // TODO place into options and make them accessible?
+  AbortList<PathLimitReached, EndOfWorldReached, ParticleStopped> abortList;
 };
 
 /// Combinatorial Kalman filter to find tracks.
@@ -431,12 +434,28 @@ class CombinatorialKalmanFilter {
         }
       }
 
+      if (result.abortList(result, state, stepper)) {
+        state.navigation.targetReached = false;
+        if (result.activeTips.empty()) {
+          // we are already done
+        } else if (result.activeTips.size() == 1) {
+          // this was the last track - we are done
+          ACTS_VERBOSE("Kalman filtering finds "
+                       << result.lastTrackIndices.size() << " tracks");
+          result.filtered = true;
+        } else {
+          // remove the active tip and continue with the next
+          result.activeTips.erase(result.activeTips.end() - 1);
+          reset(state, stepper, result);
+        }
+      }
+
       // Post-processing after filtering phase
       if (result.filtered) {
         // Return error if filtering finds no tracks
         if (result.lastTrackIndices.empty()) {
-          result.result =
-              Result<void>(CombinatorialKalmanFilterError::NoTrackFound);
+          ACTS_WARNING("No tracks found");
+          result.finished = true;
         } else {
           if (not smoothing) {
             ACTS_VERBOSE("Finish Kalman filtering");
@@ -543,6 +562,9 @@ class CombinatorialKalmanFilter {
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
       materialInteractor(state.navigation.currentSurface, state, stepper);
+
+      detail::setupLoopProtection(
+          state, stepper, result.abortList.template get<PathLimitReached>());
     }
 
     /// @brief CombinatorialKalmanFilter actor operation :
@@ -1213,18 +1235,18 @@ class CombinatorialKalmanFilter {
   ///
   /// @tparam source_link_iterator_t Type of the source link iterator
   /// @tparam start_parameters_container_t Type of the initial parameters
-  /// container
+  ///                                      container
   /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam measurement_selector_t Type of the measurement selector
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
-  /// finding
+  ///                  finding
+  /// @param trajectory Optional input track state container to use
   /// @note The input measurements are given in the form of @c SourceLinks.
-  /// It's
-  /// @c calibrator_t's job to turn them into calibrated measurements used in
-  /// the track finding.
+  ///       It's @c calibrator_t's job to turn them into calibrated measurements
+  ///       used in the track finding.
   ///
   /// @return a container of track finding result for all the initial track
   /// parameters
@@ -1234,7 +1256,8 @@ class CombinatorialKalmanFilter {
   std::vector<Result<CombinatorialKalmanFilterResult<traj_t>>> findTracks(
       const start_parameters_container_t& initialParameters,
       const CombinatorialKalmanFilterOptions<source_link_iterator_t, traj_t>&
-          tfOptions) const {
+          tfOptions,
+      std::shared_ptr<traj_t> trajectory = {}) const {
     const auto& logger = tfOptions.logger;
 
     using SourceLinkAccessor =
@@ -1275,7 +1298,9 @@ class CombinatorialKalmanFilter {
     // Loop over all initial track parameters. Return the results for all
     // initial track parameters including those failed ones.
 
-    auto mtj = std::make_shared<traj_t>();
+    if (!trajectory) {
+      trajectory = std::make_shared<traj_t>();
+    }
     auto stateBuffer = std::make_shared<traj_t>();
 
     for (size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
@@ -1288,7 +1313,7 @@ class CombinatorialKalmanFilter {
       auto& r =
           inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>();
 
-      r.fittedStates = mtj;
+      r.fittedStates = trajectory;
       r.stateBuffer = stateBuffer;
       r.stateBuffer->clear();
 
