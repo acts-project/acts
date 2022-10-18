@@ -102,6 +102,10 @@ struct GsfActor {
     /// Whether to abort immediately when an error occurs
     bool abortOnError = false;
 
+    /// We can stop the propagation if we reach this number of measuerement
+    /// states
+    std::optional<std::size_t> numberMeasurements;
+
     /// The extensions
     GsfExtensions<traj_t> extensions;
   } m_cfg;
@@ -290,6 +294,12 @@ struct GsfActor {
         applyMultipleScattering(state, stepper,
                                 MaterialUpdateStage::PostUpdate);
       }
+    }
+
+    // Break the navigation if we found all measurements
+    if (m_cfg.numberMeasurements &&
+        result.measurementStates == m_cfg.numberMeasurements) {
+      state.navigation.targetReached = true;
     }
   }
 
