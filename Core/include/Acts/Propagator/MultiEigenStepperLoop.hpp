@@ -223,7 +223,7 @@ class MultiEigenStepperLoop
     bool covTransport = false;
     NavigationDirection navDir;
     double pathAccumulated = 0.;
-    int steps = 0;
+    std::size_t steps = 0;
 
     /// geoContext
     std::reference_wrapper<const GeometryContext> geoContext;

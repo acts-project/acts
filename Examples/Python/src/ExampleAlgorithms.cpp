@@ -32,92 +32,24 @@ void addExampleAlgorithms(Context& ctx) {
 
   mex.def("readJsonGeometryList", ActsExamples::readJsonGeometryList);
 
-  {
-    using Config = ActsExamples::FatrasSimulation::Config;
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::FatrasSimulation, mex, "FatrasSimulation", inputParticles,
+      outputParticlesInitial, outputParticlesFinal, outputSimHits,
+      imputParametrisationNuclearInteraction, randomNumbers, trackingGeometry,
+      magneticField, pMin, emScattering, emEnergyLossIonisation,
+      emEnergyLossRadiation, emPhotonConversion, generateHitsOnSensitive,
+      generateHitsOnMaterial, generateHitsOnPassive, averageHitsPerParticle);
 
-    auto alg =
-        py::class_<ActsExamples::FatrasSimulation, ActsExamples::BareAlgorithm,
-                   std::shared_ptr<ActsExamples::FatrasSimulation>>(
-            mex, "FatrasSimulation")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config",
-                                   &ActsExamples::FatrasSimulation::config);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParticlesPrinter, mex,
+                                "ParticlesPrinter", inputParticles);
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::HitsPrinter, mex, "HitsPrinter", inputClusters,
+      inputMeasurementParticlesMap, inputHitIds, selectIndexStart,
+      selectIndexLength, selectVolume, selectLayer, selectModule);
 
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(outputParticlesInitial);
-    ACTS_PYTHON_MEMBER(outputParticlesFinal);
-    ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(imputParametrisationNuclearInteraction);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(magneticField);
-    ACTS_PYTHON_MEMBER(pMin);
-    ACTS_PYTHON_MEMBER(emScattering);
-    ACTS_PYTHON_MEMBER(emEnergyLossIonisation);
-    ACTS_PYTHON_MEMBER(emEnergyLossRadiation);
-    ACTS_PYTHON_MEMBER(emPhotonConversion);
-    ACTS_PYTHON_MEMBER(generateHitsOnSensitive);
-    ACTS_PYTHON_MEMBER(generateHitsOnMaterial);
-    ACTS_PYTHON_MEMBER(generateHitsOnPassive);
-    ACTS_PYTHON_MEMBER(averageHitsPerParticle);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using Alg = ActsExamples::ParticlesPrinter;
-
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "ParticlesPrinter")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
-
-    py::class_<Alg::Config>(alg, "Config")
-        .def(py::init<>())
-        .def_readwrite("inputParticles", &Alg::Config::inputParticles);
-  }
-
-  {
-    using Alg = ActsExamples::HitsPrinter;
-
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "HitsPrinter")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
-
-    auto c = py::class_<Alg::Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
-    ACTS_PYTHON_MEMBER(inputClusters);
-    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
-    ACTS_PYTHON_MEMBER(inputHitIds);
-    ACTS_PYTHON_MEMBER(selectIndexStart);
-    ACTS_PYTHON_MEMBER(selectIndexLength);
-    ACTS_PYTHON_MEMBER(selectVolume);
-    ACTS_PYTHON_MEMBER(selectLayer);
-    ACTS_PYTHON_MEMBER(selectModule);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using Alg = ActsExamples::TrackParametersPrinter;
-
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackParametersPrinter")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"));
-
-    py::class_<Alg::Config>(alg, "Config")
-        .def(py::init<>())
-        .def_readwrite("inputTrackParameters",
-                       &Alg::Config::inputTrackParameters);
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackParametersPrinter, mex,
+                                "TrackParametersPrinter", inputTrackParameters);
 }
 
 }  // namespace Acts::Python

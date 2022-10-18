@@ -48,6 +48,9 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
 
   ProcessCode endRun() final override;
 
+  /// Get readonly access to the config parameters
+  const Config& config() const;
+
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
                      const ProtoTrackContainer& tracks) final override;
