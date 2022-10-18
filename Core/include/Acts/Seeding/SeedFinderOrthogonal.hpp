@@ -195,7 +195,7 @@ class SeedFinderOrthogonal {
    * @param middle The (singular) middle spacepoint.
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
-   * @param SeedFilterState  holds quantities used in seed filter
+   * @param seedFilterState  holds quantities used in seed filter
    * @param cont The container to write the resulting seeds to.
    */
   template <typename output_container_t>
