@@ -12,6 +12,7 @@
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -121,10 +122,10 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
    houghMeasurementStructs.clear();
   
    // add SPs to the inputs
-   AddSPs(ctx); 
+   addSPs(ctx); 
 
    // add ACTS measurements
-   AddMeasurements(ctx);
+   addMeasurements(ctx);
     
    static thread_local ProtoTrackContainer protoTracks;
    protoTracks.clear();
@@ -151,11 +152,9 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
 
           std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
 
-          for (size_t icomb = 0; icomb < combs.size();
-               icomb++) {  // loop over all the combinations
+          for (auto [icomb, hit_indices] : Acts::enumerate(combs)){ // loop over all the combination
+
             ProtoTrack protoTrack;
-            std::vector<int> const& hit_indices =
-                combs[icomb];  // one index per layer
             for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
               if (hit_indices[layer] >= 0) {
                 protoTrack.push_back(hitIndicesAll[layer][hit_indices[layer]]);
@@ -236,9 +235,9 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(HoughHist const& houghHis
   }
 
   // Pass local-maximum check, if used
-  if (m_cfg.localMaxWindowSize)
+  if (m_cfg.localMaxWindowSize) {
     for (int j = -m_cfg.localMaxWindowSize; j <= m_cfg.localMaxWindowSize;
-         j++)
+         j++) {
       for (int i = -m_cfg.localMaxWindowSize; i <= m_cfg.localMaxWindowSize;
            i++) {
         if (i == 0 && j == 0)
@@ -256,6 +255,8 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(HoughHist const& houghHis
           }
         }
       }
+    }
+  }
 
   return true;
 }
@@ -398,7 +399,7 @@ ActsExamples::HoughTransformSeeder::getComboIndices(
 }
 
 
-void ActsExamples::HoughTransformSeeder::AddSPs(const AlgorithmContext& ctx) const {
+void ActsExamples::HoughTransformSeeder::addSPs(const AlgorithmContext& ctx) const {
 
   // construct the combined input container of space point pointers from all
   // configured input sources.
@@ -416,7 +417,7 @@ void ActsExamples::HoughTransformSeeder::AddSPs(const AlgorithmContext& ctx) con
   }
 }
 
-void ActsExamples::HoughTransformSeeder::AddMeasurements(const AlgorithmContext& ctx) const {
+void ActsExamples::HoughTransformSeeder::addMeasurements(const AlgorithmContext& ctx) const {
 
   const auto& measurements =
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);

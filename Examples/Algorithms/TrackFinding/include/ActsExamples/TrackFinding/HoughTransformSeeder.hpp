@@ -109,7 +109,7 @@ namespace ActsExamples {
 /// each bin. Size m_houghHistSize_y * m_houghHistSize_x. (NOTE y is row coordinate) For
 /// now, what is stored is actually the index of the object in the vectors, so
 /// we can get the Index layer
-typedef vector2D<std::pair<int, std::unordered_set<unsigned>>> HoughHist;
+using HoughHist = vector2D<std::pair<int, std::unordered_set<unsigned>>>;
 
 enum HoughHitType{SP=0, MEASUREMENT=1};
 
@@ -172,7 +172,7 @@ class HoughTransformSeeder final : public BareAlgorithm {
     unsigned nLayers = 10;  // total number of layers
 
     float xMin = 0;            // minphi
-    float xMax = 2 * 3.14159;  // maxphi
+    float xMax = 2*3.14159;   // maxphi
     float yMin = -1.0;         // min q/pt, -1/1 GeV
     float yMax = 1.0;          // max q/pt, +1/1 GeV
 
@@ -271,8 +271,8 @@ class HoughTransformSeeder final : public BareAlgorithm {
               // (looping over hit combinatorics)
 
   // functions to clean up the code and convert SPs and measurements to the HoughMeasurement format
-  void AddMeasurements(const AlgorithmContext& ctx) const;
-  void AddSPs(const AlgorithmContext& ctx) const;
+  void addMeasurements(const AlgorithmContext& ctx) const;
+  void addSPs(const AlgorithmContext& ctx) const;
 
 };
 
