@@ -210,7 +210,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
           .def("addAlias", &Sequencer::addAlias)
           .def("resolveAlias", &Sequencer::resolveAlias)
           .def("hasAlias", &Sequencer::hasAlias)
-          .def("dropAlias", &Sequencer::dropAlias)
           .def_property_readonly("config", &Sequencer::config);
 
   py::class_<Config>(sequencer, "Config")
