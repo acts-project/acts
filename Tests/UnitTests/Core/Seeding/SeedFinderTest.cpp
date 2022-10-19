@@ -140,9 +140,11 @@ int main(int argc, char** argv) {
   config.impactMax = 10._mm;
 
   config.useVariableMiddleSPRange = false;
-  Acts::Extent rRangeSPExtent;
 
   int numPhiNeighbors = 1;
+
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
@@ -177,9 +179,9 @@ int main(int argc, char** argv) {
   // create grid with bin sizes according to the configured geometry
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), ct,
-                                                 bottomBinFinder, topBinFinder,
-                                                 std::move(grid), config);
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
+      spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
+      std::move(grid), rRangeSPExtent, config);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::State state;

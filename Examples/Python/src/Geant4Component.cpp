@@ -63,35 +63,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   py::class_<SensitiveSurfaceMapper, std::shared_ptr<SensitiveSurfaceMapper>>(
       mod, "SensitiveSurfaceMapper");
 
-  {
-    using Alg = Geant4Simulation;
-
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mod, "Geant4Simulation")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Alg::Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
-    ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(outputParticlesInitial);
-    ACTS_PYTHON_MEMBER(outputParticlesFinal);
-    ACTS_PYTHON_MEMBER(outputMaterialTracks);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_MEMBER(runManager);
-    ACTS_PYTHON_MEMBER(primaryGeneratorAction);
-    ACTS_PYTHON_MEMBER(runActions);
-    ACTS_PYTHON_MEMBER(eventActions);
-    ACTS_PYTHON_MEMBER(trackingActions);
-    ACTS_PYTHON_MEMBER(steppingActions);
-    ACTS_PYTHON_MEMBER(detectorConstruction);
-    ACTS_PYTHON_MEMBER(magneticField);
-    ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      Geant4Simulation, mod, "Geant4Simulation", outputSimHits,
+      outputParticlesInitial, outputParticlesFinal, outputMaterialTracks,
+      randomNumbers, runManager, primaryGeneratorAction, runActions,
+      eventActions, trackingActions, steppingActions, detectorConstruction,
+      magneticField, sensitiveSurfaceMapper);
 
   mod.def(
       "materialRecordingConfig",

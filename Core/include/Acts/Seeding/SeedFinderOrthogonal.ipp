@@ -158,7 +158,8 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
    * which is to say the absolute value must be smaller than the max cot(θ).
    */
-  float cotTheta = (zH - zL) / deltaR;
+  float deltaZ = (zH - zL);
+  float cotTheta = deltaZ / deltaR;
   if (std::fabs(cotTheta) > m_config.cotThetaMax) {
     return false;
   }
@@ -170,6 +171,9 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   float zOrigin = zL - rL * cotTheta;
   if (zOrigin < m_config.collisionRegionMin ||
       zOrigin > m_config.collisionRegionMax) {
+    return false;
+  }
+  if (std::abs(deltaZ) > m_config.deltaZMax) {
     return false;
   }
 
