@@ -153,7 +153,7 @@ def addSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     trackParamsEstimationConfig: TrackParamsEstimationConfig = TrackParamsEstimationConfig(),
-    inputParticles: str = "particles_initial",
+    inputParticles: Optional[str] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
@@ -202,6 +202,9 @@ def addSeeding(
         random number generator. Only used by SeedingAlgorithm.TruthSmeared.
     """
 
+    if inputParticles is None:
+        inputParticles = s.resolveAlias("particles")
+
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
     logger = acts.logging.getLogger("addSeeding")
 
@@ -229,9 +232,8 @@ def addSeeding(
             outputParticles="truth_seeds_selected",
         )
         s.addAlgorithm(selAlg)
-        selectedParticles = selAlg.config.outputParticles
-    else:
-        selectedParticles = inputParticles
+        s.addAlias("particles", selAlg.config.outputParticles)
+        inputParticles = selAlg.config.outputParticles
 
     # Create starting parameters from either particle smearing or combined seed
     # finding and track parameters estimation
@@ -241,7 +243,7 @@ def addSeeding(
         # Run particle smearing
         ptclSmear = acts.examples.ParticleSmearing(
             level=customLogLevel(),
-            inputParticles=selectedParticles,
+            inputParticles=inputParticles,
             outputTrackParameters="estimatedparameters",
             randomNumbers=rnd,
             # gaussian sigmas to smear particle parameters
@@ -260,6 +262,7 @@ def addSeeding(
             ),
         )
         s.addAlgorithm(ptclSmear)
+        s.addAlias("trackParameters", ptclSmear.config.outputTrackParameters)
     else:
 
         spAlg = acts.examples.SpacePointMaker(
@@ -280,7 +283,7 @@ def addSeeding(
             # Use truth tracking
             truthTrackFinder = acts.examples.TruthTrackFinder(
                 level=customLogLevel(),
-                inputParticles=selectedParticles,
+                inputParticles=inputParticles,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 outputProtoTracks="prototracks",
             )
@@ -537,6 +540,7 @@ def addSeeding(
             ),
         )
         s.addAlgorithm(parEstimateAlg)
+        s.addAlias("trackParameters", parEstimateAlg.config.outputTrackParameters)
 
         if outputDirRoot is not None:
             outputDirRoot = Path(outputDirRoot)
@@ -546,7 +550,7 @@ def addSeeding(
                 acts.examples.TrackFinderPerformanceWriter(
                     level=customLogLevel(),
                     inputProtoTracks=inputProtoTracks,
-                    inputParticles=selectedParticles,  # the original selected particles after digitization
+                    inputParticles=inputParticles,  # the original selected particles after digitization
                     inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(outputDirRoot / "performance_seeding_trees.root"),
                 )
@@ -556,7 +560,7 @@ def addSeeding(
                 acts.examples.SeedingPerformanceWriter(
                     level=customLogLevel(minLevel=acts.logging.DEBUG),
                     inputProtoTracks=inputProtoTracks,
-                    inputParticles=selectedParticles,
+                    inputParticles=inputParticles,
                     inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(outputDirRoot / "performance_seeding_hists.root"),
                 )
@@ -740,6 +744,9 @@ def addCKFTracks(
     )
     s.addAlgorithm(trackFinder)
 
+    s.addAlias("trackParameters", trackFinder.config.outputTrackParameters)
+    s.addAlias("trackParametersTips", trackFinder.config.outputTrackParametersTips)
+
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
@@ -907,7 +914,7 @@ def addVertexFitting(
     outputDirRoot: Optional[Union[Path, str]] = None,
     associatedParticles: str = "particles_input",
     trajectories: Optional[str] = None,
-    trackParameters: str = "fittedTrackParameters",
+    trackParameters: Optional[str] = None,
     vertexFinder: VertexFinder = VertexFinder.Truth,
     trackSelectorRanges: TrackSelectorRanges = TrackSelectorRanges(),
     logLevel: Optional[acts.logging.Level] = None,
@@ -939,16 +946,18 @@ def addVertexFitting(
         RootVertexPerformanceWriter,
     )
 
+    if trackParameters is None:
+        trackParameters = s.resolveAlias("trackParameters")
+
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if trackSelectorRanges is not None:
-        selectedTrackParameters = "trackparameters"
         trackIndices = "outputTrackIndices"
 
         trackSelector = acts.examples.TrackSelector(
             level=customLogLevel(),
             inputTrackParameters=trackParameters,
-            outputTrackParameters=selectedTrackParameters,
+            outputTrackParameters="trackParameters_selected",
             outputTrackIndices=trackIndices,
             **acts.examples.defaultKWArgs(
                 loc0Min=trackSelectorRanges.loc0[0],
@@ -970,11 +979,11 @@ def addVertexFitting(
             ),
         )
         s.addAlgorithm(trackSelector)
+        s.addAlias("trackParameters", trackSelector.config.outputTrackParameters)
+        trackParameters = trackSelector.config.outputTrackParameters
     else:
-        selectedTrackParameters = trackParameters
         trackIndices = ""
 
-    inputParticles = "particles_input"
     outputVertices = "fittedVertices"
     selectedParticles = "particles_selected"
 
@@ -990,7 +999,7 @@ def addVertexFitting(
         fitVertices = VertexFitterAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=selectedTrackParameters,
+            inputTrackParameters=trackParameters,
             inputProtoVertices=findVertices.config.outputProtoVertices,
             outputVertices=outputVertices,
         )
@@ -999,7 +1008,7 @@ def addVertexFitting(
         findVertices = IterativeVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=selectedTrackParameters,
+            inputTrackParameters=trackParameters,
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
         )
@@ -1009,7 +1018,7 @@ def addVertexFitting(
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=selectedTrackParameters,
+            inputTrackParameters=trackParameters,
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
             outputTime=outputTime,
@@ -1030,9 +1039,9 @@ def addVertexFitting(
         s.addWriter(
             RootVertexPerformanceWriter(
                 level=customLogLevel(),
-                inputAllTruthParticles=inputParticles,
+                inputAllTruthParticles="particles_input",
                 inputSelectedTruthParticles=selectedParticles,
-                inputFittedTracks=selectedTrackParameters,
+                inputFittedTracks=trackParameters,
                 inputFittedTracksIndices=trackIndices,
                 inputAllFittedTracksTips="fittedTrackParametersTips",
                 inputMeasurementParticlesMap="measurement_particles_map",
