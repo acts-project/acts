@@ -55,6 +55,9 @@ class RootPropagationStepsWriter
   /// End-of-run hook
   ProcessCode endRun() final override;
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  protected:
   /// This implementation holds the actual writing method
   /// and is called by the WriterT<>::write interface

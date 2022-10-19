@@ -74,6 +74,10 @@ struct SeedFinderOrthogonalConfig {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
+  // cut to the maximum value of delta z between SPs
+  float deltaZMax =
+      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
