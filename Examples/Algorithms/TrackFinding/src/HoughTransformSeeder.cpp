@@ -122,7 +122,7 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
    houghMeasurementStructs.clear();
   
    // add SPs to the inputs
-   addSPs(ctx); 
+   addSpacePoints(ctx); 
 
    // add ACTS measurements
    addMeasurements(ctx);
@@ -399,7 +399,7 @@ ActsExamples::HoughTransformSeeder::getComboIndices(
 }
 
 
-void ActsExamples::HoughTransformSeeder::addSPs(const AlgorithmContext& ctx) const {
+void ActsExamples::HoughTransformSeeder::addSpacePoints(const AlgorithmContext& ctx) const {
 
   // construct the combined input container of space point pointers from all
   // configured input sources.

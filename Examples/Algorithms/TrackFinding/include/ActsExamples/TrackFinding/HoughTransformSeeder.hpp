@@ -272,7 +272,7 @@ class HoughTransformSeeder final : public BareAlgorithm {
 
   // functions to clean up the code and convert SPs and measurements to the HoughMeasurement format
   void addMeasurements(const AlgorithmContext& ctx) const;
-  void addSPs(const AlgorithmContext& ctx) const;
+  void addSpacePoints(const AlgorithmContext& ctx) const;
 
 };
 
