@@ -254,6 +254,7 @@ struct GaussianSumFitter {
       actor.m_cfg.abortOnError = options.abortOnError;
       actor.m_cfg.disableAllMaterialHandling =
           options.disableAllMaterialHandling;
+      actor.m_cfg.numberMeasurements = inputMeasurements.size();
 
       fwdPropOptions.direction = gsfForward;
 

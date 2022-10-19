@@ -50,6 +50,9 @@ class CsvParticleWriter final : public WriterT<SimParticleContainer> {
   /// @params lvl is the logging level
   CsvParticleWriter(const Config& cfg, Acts::Logging::Level lvl);
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  protected:
   /// Type-specific write implementation.
   ///
