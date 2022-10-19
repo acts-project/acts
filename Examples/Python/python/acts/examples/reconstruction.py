@@ -144,7 +144,7 @@ def addSeeding(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
-    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
+    seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Orthogonal,
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
@@ -448,8 +448,6 @@ def addSeeding(
                         if seedfinderConfigArg.deltaRBottomSP[1] is None
                         else seedfinderConfigArg.deltaRBottomSP[1]
                     ),
-                    deltaRMiddleMinSPRange=seedfinderConfigArg.deltaRMiddleSPRange[0],
-                    deltaRMiddleMaxSPRange=seedfinderConfigArg.deltaRMiddleSPRange[1],
                     collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
                     collisionRegionMax=seedfinderConfigArg.collisionRegion[1],
                     zMin=seedfinderConfigArg.z[0],
@@ -462,16 +460,8 @@ def addSeeding(
                     bFieldInZ=seedfinderConfigArg.bFieldInZ,
                     impactMax=seedfinderConfigArg.impactMax,
                     interactionPointCut=seedfinderConfigArg.interactionPointCut,
-                    arithmeticAverageCotTheta=seedfinderConfigArg.arithmeticAverageCotTheta,
                     deltaZMax=seedfinderConfigArg.deltaZMax,
                     maxPtScattering=seedfinderConfigArg.maxPtScattering,
-                    zBinEdges=seedfinderConfigArg.zBinEdges,
-                    skipPreviousTopSP=seedfinderConfigArg.skipPreviousTopSP,
-                    zBinsCustomLooping=seedfinderConfigArg.zBinsCustomLooping,
-                    rRangeMiddleSP=seedfinderConfigArg.rRangeMiddleSP,
-                    useVariableMiddleSPRange=seedfinderConfigArg.useVariableMiddleSPRange,
-                    binSizeR=seedfinderConfigArg.binSizeR,
-                    forceRadialSorting=seedfinderConfigArg.forceRadialSorting,
                     seedConfirmation=seedfinderConfigArg.seedConfirmation,
                     beamPos=(
                         None
