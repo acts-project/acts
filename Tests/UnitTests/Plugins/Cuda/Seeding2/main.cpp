@@ -109,13 +109,19 @@ int main(int argc, char* argv[]) {
     return std::make_pair(position, covariance);
   };
 
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
+  
+  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
+  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
+
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
   auto grid =
       Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(gridConfig);
   auto spGroup = Acts::BinnedSPGroup<TestSpacePoint>(
       spView.begin(), spView.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), sfConfig);
+      std::move(grid), rRangeSPExtent, sfConfig);
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
 
@@ -160,9 +166,6 @@ int main(int argc, char* argv[]) {
   auto start_host = std::chrono::system_clock::now();
   // Create the result object.
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_host;
-
-  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
-  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
 
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {

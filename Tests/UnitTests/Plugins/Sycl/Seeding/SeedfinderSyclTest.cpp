@@ -143,6 +143,12 @@ auto main(int argc, char** argv) -> int {
 
   int numPhiNeighbors = 1;
 
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
+  
+  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
+  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
+
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
@@ -181,7 +187,7 @@ auto main(int argc, char** argv) -> int {
 
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,
-      std::move(grid), config);
+      std::move(grid), rRangeSPExtent, config);
 
   auto end_prep = std::chrono::system_clock::now();
 
@@ -201,8 +207,6 @@ auto main(int argc, char** argv) -> int {
   auto start_cpu = std::chrono::system_clock::now();
   uint group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
-  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
 
   if (!cmdlTool.onlyGpu) {
     decltype(normalSeedfinder)::State state;

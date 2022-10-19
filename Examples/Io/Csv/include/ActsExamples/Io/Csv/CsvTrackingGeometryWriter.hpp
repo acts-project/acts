@@ -66,6 +66,9 @@ class CsvTrackingGeometryWriter : public IWriter {
   /// Write geometry using the default context.
   ProcessCode endRun() final override;
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  private:
   Config m_cfg;
   const Acts::TrackingVolume* m_world;

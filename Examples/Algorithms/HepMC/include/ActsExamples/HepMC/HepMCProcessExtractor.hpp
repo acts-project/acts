@@ -53,6 +53,9 @@ class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
   ActsExamples::ProcessCode execute(
       const AlgorithmContext& context) const final override;
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  private:
   /// The config object
   Config m_cfg;

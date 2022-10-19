@@ -63,35 +63,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   py::class_<SensitiveSurfaceMapper, std::shared_ptr<SensitiveSurfaceMapper>>(
       mod, "SensitiveSurfaceMapper");
 
-  {
-    using Alg = Geant4Simulation;
-
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mod, "Geant4Simulation")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Alg::Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Alg::Config);
-    ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(outputParticlesInitial);
-    ACTS_PYTHON_MEMBER(outputParticlesFinal);
-    ACTS_PYTHON_MEMBER(outputMaterialTracks);
-    ACTS_PYTHON_MEMBER(randomNumbers);
-    ACTS_PYTHON_MEMBER(runManager);
-    ACTS_PYTHON_MEMBER(primaryGeneratorAction);
-    ACTS_PYTHON_MEMBER(runActions);
-    ACTS_PYTHON_MEMBER(eventActions);
-    ACTS_PYTHON_MEMBER(trackingActions);
-    ACTS_PYTHON_MEMBER(steppingActions);
-    ACTS_PYTHON_MEMBER(detectorConstruction);
-    ACTS_PYTHON_MEMBER(magneticField);
-    ACTS_PYTHON_MEMBER(sensitiveSurfaceMapper);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      Geant4Simulation, mod, "Geant4Simulation", outputSimHits,
+      outputParticlesInitial, outputParticlesFinal, outputMaterialTracks,
+      randomNumbers, runManager, primaryGeneratorAction, runActions,
+      eventActions, trackingActions, steppingActions, detectorConstruction,
+      magneticField, sensitiveSurfaceMapper);
 
   mod.def(
       "materialRecordingConfig",
@@ -149,7 +126,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       [](Acts::Logging::Level& level, G4VUserDetectorConstruction* detector,
          const std::string& inputParticles,
          std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-         std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
+         std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+         const std::vector<std::string>& volumeMappings,
+         const std::vector<std::string>& materialMappings) {
         // The Geant4 actions needed
         std::vector<G4UserRunAction*> runActions = {};
         std::vector<G4UserEventAction*> eventActions = {};
@@ -203,6 +182,15 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         if (trackingGeometry) {
           SensitiveSurfaceMapper::Config ssmCfg;
           ssmCfg.trackingGeometry = trackingGeometry;
+
+          // Take the default args if nothing provided
+          if (not volumeMappings.empty()) {
+            ssmCfg.volumeMappings = volumeMappings;
+          }
+          if (not materialMappings.empty()) {
+            ssmCfg.materialMappings = materialMappings;
+          }
+
           g4Cfg.sensitiveSurfaceMapper =
               std::make_shared<const SensitiveSurfaceMapper>(
                   ssmCfg,
@@ -212,8 +200,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         return g4Cfg;
       },
       "level"_a, "detector"_a, "inputParticles"_a,
-      py::arg("trackingGeometry") = nullptr,
-      py::arg("magneticField") = nullptr);
+      py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
+      py::arg("volumeMappings") = std::vector<std::string>{},
+      py::arg("materialMappings") = std::vector<std::string>{});
 
   Acts::Python::Context ctx;
   ctx.modules["geant4"] = &mod;

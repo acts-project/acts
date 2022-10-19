@@ -183,9 +183,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
   }
 
-  // extent used to store r range for middle spacepoint
-  Acts::Extent rRangeSPExtent;
-
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
   for (const auto& isp : m_cfg.inputSpacePoints) {
@@ -194,8 +191,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       // since the event store owns the space points, their pointers should be
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
-      // store x,y,z values in extent
-      rRangeSPExtent.extend({spacePoint.x(), spacePoint.y(), spacePoint.z()});
     }
   }
 
@@ -209,6 +204,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     return std::make_pair(position, covariance);
   };
 
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
+
   auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsBottom,
                                      m_cfg.numPhiNeighbors));
@@ -219,7 +217,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
-      bottomBinFinder, topBinFinder, std::move(grid), m_cfg.seedFinderConfig);
+      bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
+      m_cfg.seedFinderConfig);
   auto finder = Acts::Seedfinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 
   /// variable middle SP radial region of interest

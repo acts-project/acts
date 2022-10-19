@@ -30,8 +30,6 @@ class CombinatorialKalmanFilterErrorCategory : public std::error_category {
         return "Kalman output conversion failed";
       case CombinatorialKalmanFilterError::MeasurementSelectionFailed:
         return "Measurement selection failed";
-      case CombinatorialKalmanFilterError::NoTrackFound:
-        return "No track is found";
       case CombinatorialKalmanFilterError::PropagationReachesMaxSteps:
         return "Propagation reaches max steps before track finding is "
                "finished";

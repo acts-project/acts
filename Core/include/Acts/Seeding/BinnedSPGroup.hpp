@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -272,6 +273,7 @@ class BinnedSPGroup {
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
+      Acts::Extent rRangeSPExtent,
       const SeedfinderConfig<external_spacepoint_t>& _config);
 
   size_t size() { return m_binnedSP->size(); }
