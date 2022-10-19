@@ -145,7 +145,7 @@ auto main(int argc, char** argv) -> int {
 
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
-  
+
   const float rMiddleMinSPRange = std::numeric_limits<float>::max();
   const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
 
