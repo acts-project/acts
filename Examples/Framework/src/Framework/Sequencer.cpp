@@ -17,6 +17,7 @@
 #include <chrono>
 #include <exception>
 #include <numeric>
+#include <stdexcept>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
@@ -81,6 +82,20 @@ void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   }
   m_writers.push_back(std::move(writer));
   ACTS_INFO("Added writer '" << m_writers.back()->name() << "'");
+}
+
+void ActsExamples::Sequencer::addAlias(const std::string& from,
+                                       const std::string& to) {
+  m_alias[from] = to;
+}
+
+const std::string& ActsExamples::Sequencer::resolveAlias(
+    const std::string& name) const {
+  return m_alias.at(name);
+}
+
+bool ActsExamples::Sequencer::hasAlias(const std::string& name) const {
+  return m_alias.find(name) != std::end(m_alias);
 }
 
 std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {

@@ -20,6 +20,7 @@
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -52,7 +53,7 @@ class Sequencer {
     IterationCallback iterationCallback = []() {};
   };
 
-  Sequencer(const Config& cfg);
+  Sequencer(const Config &cfg);
 
   /// Add a service to the set of services.
   ///
@@ -74,6 +75,15 @@ class Sequencer {
   ///
   /// @throws std::invalid_argument if the writer is NULL.
   void addWriter(std::shared_ptr<IWriter> writer);
+
+  /// Add an alias to the sequencer.
+  void addAlias(const std::string &from, const std::string &to);
+  /// Resolve an alias by the sequencer.
+  ///
+  /// @throws std::out_of_range if the alias does not exist.
+  const std::string &resolveAlias(const std::string &name) const;
+  /// Check if a given alias exsits.
+  bool hasAlias(const std::string &name) const;
 
   /// Run the event loop.
   ///
@@ -104,7 +114,7 @@ class Sequencer {
   int run();
 
   /// Get const access to the config
-  const Config& config() const { return m_cfg; }
+  const Config &config() const { return m_cfg; }
 
  private:
   /// List of all configured algorithm names.
@@ -121,7 +131,9 @@ class Sequencer {
   std::vector<std::shared_ptr<IWriter>> m_writers;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  const Acts::Logger& logger() const { return *m_logger; }
+  std::unordered_map<std::string, std::string> m_alias;
+
+  const Acts::Logger &logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples
