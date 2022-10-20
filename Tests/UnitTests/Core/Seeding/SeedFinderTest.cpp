@@ -12,7 +12,7 @@
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <chrono>
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
   std::cout << "read " << spVec.size() << " SP from file " << file << " in "
             << elapsed_read.count() << "s" << std::endl;
 
-  Acts::SeedfinderConfig<SpacePoint> config;
+  Acts::SeedFinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
@@ -157,7 +157,7 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::Seedfinder<SpacePoint> a(config);
+  Acts::SeedFinder<SpacePoint> a(config);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,

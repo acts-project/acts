@@ -15,8 +15,8 @@
 namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t>
-Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> config)
+SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
+    Acts::SeedFinderConfig<external_spacepoint_t> config)
     : m_config(config.toInternalUnits()) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
@@ -521,7 +521,7 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
-Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   SeedingState state;
   Extent extent;

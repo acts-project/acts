@@ -20,7 +20,7 @@ namespace Acts {
 struct SpacePointGridConfig {
   // magnetic field
   float bFieldInZ;
-  // minimum pT to be found by seedfinder
+  // minimum pT to be found by seedFinder
   float minPt;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
