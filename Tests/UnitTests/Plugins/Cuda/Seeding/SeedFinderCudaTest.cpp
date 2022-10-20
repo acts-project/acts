@@ -6,14 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Cuda/Seeding/Seedfinder.hpp"
+#include "Acts/Plugins/Cuda/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <chrono>
@@ -166,7 +166,7 @@ int main(int argc, char** argv) {
   std::cout << "read " << spVec.size() << " SP from file " << file << std::endl;
 
   // Set seed finder configuration
-  Acts::SeedfinderConfig<SpacePoint> config;
+  Acts::SeedFinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
@@ -218,8 +218,8 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::Seedfinder<SpacePoint> seedfinder_cpu(config);
-  Acts::Seedfinder<SpacePoint, Acts::Cuda> seedfinder_cuda(config);
+  Acts::SeedFinder<SpacePoint> seedFinder_cpu(config);
+  Acts::SeedFinder<SpacePoint, Acts::Cuda> seedFinder_cuda(config);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,
@@ -265,11 +265,11 @@ int main(int argc, char** argv) {
   groupIt = spGroup.begin();
 
   if (do_cpu) {
-    decltype(seedfinder_cpu)::State state;
+    decltype(seedFinder_cpu)::State state;
     for (int i_s = 0; i_s < skip; i_s++)
       ++groupIt;
     for (; !(groupIt == spGroup.end()); ++groupIt) {
-      seedfinder_cpu.createSeedsForGroup(
+      seedFinder_cpu.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
           groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
       group_count++;
@@ -278,7 +278,7 @@ int main(int argc, char** argv) {
           break;
       }
     }
-    // auto timeMetric_cpu = seedfinder_cpu.getTimeMetric();
+    // auto timeMetric_cpu = seedFinder_cpu.getTimeMetric();
     std::cout << "Analyzed " << group_count << " groups for CPU" << std::endl;
   }
 
@@ -298,7 +298,7 @@ int main(int argc, char** argv) {
   for (int i_s = 0; i_s < skip; i_s++)
     ++groupIt;
   for (; !(groupIt == spGroup.end()); ++groupIt) {
-    seedVector_cuda.push_back(seedfinder_cuda.createSeedsForGroup(
+    seedVector_cuda.push_back(seedFinder_cuda.createSeedsForGroup(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
     if (allgroup == false) {

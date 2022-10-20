@@ -20,12 +20,12 @@
 
 // SYCL plugin include(s)
 #include "Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp"
-#include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
+#include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 
 namespace Acts::Sycl {
 template <typename external_spacepoint_t>
-Seedfinder<external_spacepoint_t>::Seedfinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> config,
+SeedFinder<external_spacepoint_t>::SeedFinder(
+    Acts::SeedFinderConfig<external_spacepoint_t> config,
     const Acts::Sycl::DeviceExperimentCuts& cuts,
     Acts::Sycl::QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource)
@@ -48,7 +48,7 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
   auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
 
   // init m_deviceConfig
-  m_deviceConfig = Acts::Sycl::detail::DeviceSeedfinderConfig{
+  m_deviceConfig = Acts::Sycl::detail::DeviceSeedFinderConfig{
       m_config.deltaRMin,
       m_config.deltaRMax,
       m_config.cotThetaMax,
@@ -70,7 +70,7 @@ Seedfinder<external_spacepoint_t>::Seedfinder(
 template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Acts::Seed<external_spacepoint_t>>
-Seedfinder<external_spacepoint_t>::createSeedsForGroup(
+SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
