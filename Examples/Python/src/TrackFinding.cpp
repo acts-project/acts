@@ -159,6 +159,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(bFieldInZ);
     ACTS_PYTHON_MEMBER(beamPos);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
+    ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(rMinMiddle);
     ACTS_PYTHON_MEMBER(rMaxMiddle);
     ACTS_PYTHON_MEMBER(deltaPhiMax);

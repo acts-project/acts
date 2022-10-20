@@ -177,6 +177,44 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     return false;
   }
 
+  // cut on the max curvature calculated from dublets
+  // first transform the space point coordinates into a frame such that the
+  // central space point SPm is in the origin of the frame and the x axis
+  // points away from the interaction point in addition to a translation
+  // transformation we also perform a rotation in order to keep the
+  // curvature of the circle tangent to the x axis
+  if (m_config.interactionPointCut) {
+    float xVal = (high.x() - low.x()) * (low.x() / rL) +
+                 (high.y() - low.y()) * (low.y() / rL);
+    float yVal = (high.y() - low.y()) * (low.x() / rL) -
+                 (high.x() - low.x()) * (low.y() / rL);
+    if (std::abs(rL * yVal) > m_config.impactMax * xVal) {
+      // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
+      // circle into straight lines in the u/v plane the line equation can
+      // be described in terms of aCoef and bCoef, where v = aCoef * u +
+      // bCoef
+      float uT = xVal / (xVal * xVal + yVal * yVal);
+      float vT = yVal / (xVal * xVal + yVal * yVal);
+      // in the rotated frame the interaction point is positioned at x = -rM
+      // and y ~= impactParam
+      float uIP = -1. / rL;
+      float vIP = m_config.impactMax / (rL * rL);
+      if (yVal > 0.)
+        vIP = -vIP;
+      // we can obtain aCoef as the slope dv/du of the linear function,
+      // estimated using du and dv between the two SP bCoef is obtained by
+      // inserting aCoef into the linear equation
+      float aCoef = (vT - vIP) / (uT - uIP);
+      float bCoef = vIP - aCoef * uIP;
+      // the distance of the straight line from the origin (radius of the
+      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+      if ((bCoef * bCoef) > (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
+        return false;
+      }
+    }
+  }
+
   return true;
 }
 

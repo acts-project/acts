@@ -78,6 +78,9 @@ struct SeedFinderOrthogonalConfig {
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
 
+  // enable cut on the compatibility between interaction point and SPs
+  bool interactionPointCut = false;
+
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
   // default is 5%
