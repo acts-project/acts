@@ -285,8 +285,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   }
 
   int numSeeds = 0;
+  size_t t0 = 0;
 
   for (size_t b = 0; b < numBotSP; b++) {
+    // break if we reached the last top SP
+    if (t0 == numTopSP) {
+      break;
+    }
+
     auto lb = linCircleBottom[b];
     float Zob = lb.Zo;
     float cotThetaB = lb.cotTheta;
@@ -314,8 +320,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     top_valid.clear();
     curvatures.clear();
     impactParameters.clear();
-    for (size_t t = 0; t < numTopSP; t++) {
+    for (size_t t = t0; t < numTopSP; t++) {
       auto lt = linCircleTop[t];
+      float cotThetaT = lt.cotTheta;
 
       if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
         continue;
@@ -341,6 +348,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
+        // skip top SPs based on cotTheta sorting when producing triplets
+        if (m_config.skipPreviousTopSP) {
+          // break if cotTheta from bottom SP < cotTheta from top SP because
+          // the SP are sorted by cotTheta
+          if (cotThetaB - cotThetaT < 0) {
+            break;
+          }
+          t0 = t + 1;
+        }
         continue;
       }
 
@@ -374,6 +390,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (deltaCotTheta2 >
           (error2 + (pT2scatter * iSinTheta2 * m_config.sigmaScattering *
                      m_config.sigmaScattering))) {
+        if (m_config.skipPreviousTopSP) {
+          if (cotThetaB - cotThetaT < 0) {
+            break;
+          }
+          t0 = t;
+        }
         continue;
       }
 
