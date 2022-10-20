@@ -164,8 +164,8 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     trackIndices.erase(std::begin(trackIndices) + index);
   }
 
-  ACTS_INFO("Resolved to " << trackParameters.size() << " tracks from "
-                           << trackIndices.size());
+  ACTS_INFO("Resolved to " << trackIndices.size() << " tracks from "
+                           << trackParameters.size());
 
   TrackParametersContainer outputTrackParameters;
   std::vector<std::pair<size_t, size_t>> outputTrackParametersTips;
