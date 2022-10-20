@@ -314,7 +314,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputTrackParameters);
     ACTS_PYTHON_MEMBER(inputTrackParametersTips);
     ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrackIndices);
+    ACTS_PYTHON_MEMBER(outputTrackParametersTips);
     ACTS_PYTHON_MEMBER(maximumSharedHits);
     ACTS_PYTHON_STRUCT_END();
   }

@@ -31,14 +31,18 @@ ActsExamples::AmbiguityResolutionAlgorithm::AmbiguityResolutionAlgorithm(
     throw std::invalid_argument("Missing trajectories input collection");
   }
   if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument(
-        "Missing track parameter tips input collection");
+    throw std::invalid_argument("Missing track parameter input collection");
   }
   if (m_cfg.inputTrackParametersTips.empty()) {
-    throw std::invalid_argument("Missing track parameters input collection");
+    throw std::invalid_argument(
+        "Missing track parameters tips input collection");
   }
-  if (m_cfg.outputTrackIndices.empty()) {
-    throw std::invalid_argument("Missing track indices output collection");
+  if (m_cfg.outputTrackParameters.empty()) {
+    throw std::invalid_argument("Missing track parameter output collection");
+  }
+  if (m_cfg.outputTrackParametersTips.empty()) {
+    throw std::invalid_argument(
+        "Missing track parameters tips output collection");
   }
 }
 
@@ -51,8 +55,7 @@ std::vector<std::size_t> computeSharedHits(
     const std::vector<std::pair<size_t, size_t>>& trackTips) {
   std::vector<std::size_t> hitCountPerMeasurement(sourceLinks.size(), 0);
 
-  for (std::size_t i = 0; i < trackIndices.size(); ++i) {
-    const auto indexTrack = trackIndices[i];
+  for (auto indexTrack : trackIndices) {
     const auto [indexTraj, tip] = trackTips[indexTrack];
     const auto& traj = trajectories[indexTraj];
 
@@ -124,11 +127,13 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
       ctx.eventStore.get<std::vector<std::pair<size_t, size_t>>>(
           m_cfg.inputTrackParametersTips);
 
+  throw_assert(trackParameters.size() == trackTips.size(),
+               "Track tip count does not match track parameter count");
+
   std::vector<uint32_t> hitCount(trackParameters.size(), 0);
   for (std::size_t i = 0; i < trackParameters.size(); ++i) {
     const auto [indexTraj, tip] = trackTips[i];
     const auto& traj = trajectories[indexTraj];
-
     hitCount[i] = computeTrackHits(traj.multiTrajectory(), tip);
   }
 
@@ -142,7 +147,6 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     std::vector<float> relativeSharedHits(trackIndices.size(), 0);
     for (std::size_t i = 0; i < trackIndices.size(); ++i) {
       const auto indexTrack = trackIndices[i];
-
       relativeSharedHits[i] = 1.0f * sharedHits[i] / hitCount[indexTrack];
     }
 
@@ -160,17 +164,21 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     trackIndices.erase(std::begin(trackIndices) + index);
   }
 
-  ACTS_INFO("Resolved to " << trackIndices.size() << " tracks from "
-                           << trackParameters.size());
+  ACTS_INFO("Resolved to " << trackParameters.size() << " tracks from "
+                           << trackIndices.size());
 
   TrackParametersContainer outputTrackParameters;
+  std::vector<std::pair<size_t, size_t>> outputTrackParametersTips;
   outputTrackParameters.reserve(trackIndices.size());
-  for (std::size_t i = 0; i < trackIndices.size(); ++i) {
-    outputTrackParameters.push_back(trackParameters[trackIndices[i]]);
+  outputTrackParametersTips.reserve(trackIndices.size());
+  for (auto indexTrack : trackIndices) {
+    outputTrackParameters.push_back(trackParameters[indexTrack]);
+    outputTrackParametersTips.push_back(trackTips[indexTrack]);
   }
 
   ctx.eventStore.add(m_cfg.outputTrackParameters,
                      std::move(outputTrackParameters));
-  ctx.eventStore.add(m_cfg.outputTrackIndices, std::move(trackIndices));
+  ctx.eventStore.add(m_cfg.outputTrackParametersTips,
+                     std::move(outputTrackParametersTips));
   return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -35,8 +35,8 @@ class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
     std::string inputTrackParametersTips;
     /// Output track parameters collection.
     std::string outputTrackParameters;
-    /// Output track indices.
-    std::string outputTrackIndices;
+    /// Output track parameters tips w.r.t outputTrajectories.
+    std::string outputTrackParametersTips;
 
     /// Maximum amount of shared hits per track.
     std::uint32_t maximumSharedHits = 1;
