@@ -189,6 +189,42 @@ BOOST_AUTO_TEST_CASE(Build) {
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 }
 
+BOOST_AUTO_TEST_CASE(AsReadOnly) {
+  // make mutable
+  VectorMultiTrajectory t;
+  auto i0 = t.addTrackState();
+
+  BOOST_CHECK(!t.ReadOnly);
+
+  {
+    VectorMultiTrajectory::TrackStateProxy tsp = t.getTrackState(i0);
+    static_cast<void>(tsp);
+    VectorMultiTrajectory::ConstTrackStateProxy ctsp = t.getTrackState(i0);
+    static_cast<void>(ctsp);
+  }
+
+  ConstVectorMultiTrajectory ct = t;
+
+  ConstVectorMultiTrajectory ctm{std::move(t)};
+
+  {
+    static_assert(
+        std::is_same_v<ConstVectorMultiTrajectory::ConstTrackStateProxy,
+                       decltype(ct.getTrackState(i0))>,
+        "Got mutable track state proxy");
+    ConstVectorMultiTrajectory::ConstTrackStateProxy ctsp =
+        ct.getTrackState(i0);
+    static_cast<void>(ctsp);
+
+    // doesn't compile:
+    // ctsp.predictedCovariance().setIdentity();
+  }
+
+  // doesn't compile:
+  // ct.clear();
+  // ct.addTrackState();
+}
+
 BOOST_AUTO_TEST_CASE(Clear) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
   VectorMultiTrajectory t;
@@ -1066,6 +1102,52 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryExtraColumnsRuntime) {
   // runTest([](const std::string& c) { return c.c_str(); });
   // runTest([](const std::string& c) { return c; });
   // runTest([](std::string_view c) { return c; });
+}
+
+BOOST_AUTO_TEST_CASE(MemoryStats) {
+  using namespace boost::histogram;
+  using cat = axis::category<std::string>;
+
+  VectorMultiTrajectory mt;
+
+  auto stats = mt.statistics();
+
+  std::stringstream ss;
+  stats.toStream(ss);
+  std::string out = ss.str();
+  BOOST_CHECK(!out.empty());
+  BOOST_CHECK(out.find("total") != std::string::npos);
+
+  const auto& h = stats.hist;
+
+  auto column_axis = axis::get<cat>(h.axis(0));
+  auto type_axis = axis::get<axis::category<>>(h.axis(1));
+
+  for (int t = 0; t < type_axis.size(); t++) {
+    for (int c = 0; c < column_axis.size(); c++) {
+      BOOST_CHECK_EQUAL(h.at(c, t), 0);
+    }
+  }
+
+  TestTrackState pc(rng, 2u);
+  auto ts = mt.getTrackState(mt.addTrackState());
+  fillTrackState(pc, TrackStatePropMask::All, ts);
+
+  stats = mt.statistics();
+
+  for (int t = 0; t < type_axis.size(); t++) {
+    BOOST_TEST_CONTEXT((type_axis.bin(t) == 1 ? "meas" : "other"))
+    for (int c = 0; c < column_axis.size(); c++) {
+      std::string key = column_axis.bin(c);
+      BOOST_TEST_CONTEXT("column: " << key) {
+        if (t == 0) {
+          BOOST_CHECK_NE((h.at(c, t)), 0);
+        } else {
+          BOOST_CHECK_EQUAL((h.at(c, t)), 0);
+        }
+      }
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

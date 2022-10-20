@@ -30,7 +30,7 @@ namespace Cuda {
 
 template <typename external_spacepoint_t>
 SeedFinder<external_spacepoint_t>::SeedFinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> commonConfig,
+    Acts::SeedFinderConfig<external_spacepoint_t> commonConfig,
     const SeedFilterConfig& seedFilterConfig,
     const TripletFilterConfig& tripletFilterConfig, int device,
     std::unique_ptr<const Logger> incomingLogger)
