@@ -55,7 +55,9 @@ class VectorMultiTrajectoryBase {
         "parSmth",
         "covSmth",
         "meas",
+        "measOffset",
         "measCov",
+        "measCovOffset",
         "jac",
         "sourceLinks",
         "projectors",
@@ -94,13 +96,18 @@ class VectorMultiTrajectoryBase {
         h("parSmth", isMeas, weight(par_size));
         h("covSmth", isMeas, weight(cov_size));
       }
-
-      size_t meas_size = eBoundSize * sizeof(scalar);
-      size_t meas_cov_size = eBoundSize * eBoundSize * sizeof(scalar);
-
       h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+      h("measOffset", isMeas,
+        weight(sizeof(decltype(m_measOffset)::value_type)));
+      h("measCovOffset", isMeas,
+        weight(sizeof(decltype(m_measCovOffset)::value_type)));
+
       if (ts.hasCalibrated() &&
           ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Calibrated)) {
+        size_t meas_size = ts.calibratedSize() * sizeof(scalar);
+        size_t meas_cov_size =
+            ts.calibratedSize() * ts.calibratedSize() * sizeof(scalar);
+
         h("meas", isMeas, weight(meas_size));
         h("measCov", isMeas, weight(meas_cov_size));
         h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
