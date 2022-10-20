@@ -16,7 +16,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
     Acts::Extent rRangeSPExtent,
-    const SeedfinderConfig<external_spacepoint_t>& _config) {
+    const SeedFinderConfig<external_spacepoint_t>& _config) {
   auto config = _config.toInternalUnits();
   static_assert(
       std::is_same<
