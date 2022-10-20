@@ -38,6 +38,8 @@ class HitsPrinter : public BareAlgorithm {
 
   ProcessCode execute(const AlgorithmContext& ctx) const;
 
+  const Config& config() const { return m_cfg; }
+
  private:
   Config m_cfg;
 };

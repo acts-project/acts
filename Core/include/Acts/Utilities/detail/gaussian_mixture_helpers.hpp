@@ -141,9 +141,15 @@ auto combineGaussianMixture(const components_t components,
   EIGEN_STATIC_ASSERT_MATRIX_SPECIFIC_SIZE(CovType, D, D);
   static_assert(std::is_floating_point_v<WeightType>);
 
+  // gcc 8 does not like this statement somehow. We must handle clang here since
+  // it defines __GNUC__ as 4.
+#if defined(__GNUC__) && __GNUC__ < 9 && !defined(__clang__)
+  // No check
+#else
   std::apply(
       [&](auto... d) { static_assert((std::less<int>{}(d.idx, D) && ...)); },
       angleDesc);
+#endif
 
   // Define the return type
   using RetType = std::tuple<ActsVector<D>, std::optional<ActsSymMatrix<D>>>;

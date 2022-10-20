@@ -10,7 +10,7 @@ import acts.examples
 from acts.examples import CsvSpacePointReader
 from collections import namedtuple
 from acts.examples.reconstruction import (
-    SeedfinderConfigArg,
+    SeedFinderConfigArg,
     SeedFilterConfigArg,
     SpacePointGridConfigArg,
     SeedingAlgorithmConfigArg,
@@ -24,56 +24,56 @@ u = acts.UnitConstants
 def addITkSeedingCsv(
     s,
     inputSPs,
-    seedfinderConfigArg: SeedfinderConfigArg = SeedfinderConfigArg(),
+    seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
 ):
 
-    seedFinderConfig = acts.SeedfinderConfig(
+    seedFinderConfig = acts.SeedFinderConfig(
         **acts.examples.defaultKWArgs(
-            rMin=seedfinderConfigArg.r[0],
-            rMax=seedfinderConfigArg.r[1],
-            deltaRMin=seedfinderConfigArg.deltaR[0],
-            deltaRMax=seedfinderConfigArg.deltaR[1],
-            deltaRMinTopSP=seedfinderConfigArg.deltaRTopSP[0],
-            deltaRMinBottomSP=seedfinderConfigArg.deltaRBottomSP[0],
-            deltaRMaxTopSP=seedfinderConfigArg.deltaRTopSP[1],
-            deltaRMiddleMinSPRange=seedfinderConfigArg.deltaRMiddleSPRange[0],
-            deltaRMiddleMaxSPRange=seedfinderConfigArg.deltaRMiddleSPRange[1],
-            deltaRMaxBottomSP=seedfinderConfigArg.deltaRBottomSP[1],
-            collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
-            collisionRegionMax=seedfinderConfigArg.collisionRegion[1],
-            zMin=seedfinderConfigArg.z[0],
-            zMax=seedfinderConfigArg.z[1],
-            maxSeedsPerSpM=seedfinderConfigArg.maxSeedsPerSpM,
-            cotThetaMax=seedfinderConfigArg.cotThetaMax,
-            sigmaScattering=seedfinderConfigArg.sigmaScattering,
-            radLengthPerSeed=seedfinderConfigArg.radLengthPerSeed,
-            minPt=seedfinderConfigArg.minPt,
-            bFieldInZ=seedfinderConfigArg.bFieldInZ,
-            impactMax=seedfinderConfigArg.impactMax,
-            interactionPointCut=seedfinderConfigArg.interactionPointCut,
-            arithmeticAverageCotTheta=seedfinderConfigArg.arithmeticAverageCotTheta,
-            deltaZMax=seedfinderConfigArg.deltaZMax,
-            maxPtScattering=seedfinderConfigArg.maxPtScattering,
-            zBinEdges=seedfinderConfigArg.zBinEdges,
-            skipPreviousTopSP=seedfinderConfigArg.skipPreviousTopSP,
-            zBinsCustomLooping=seedfinderConfigArg.zBinsCustomLooping,
-            rRangeMiddleSP=seedfinderConfigArg.rRangeMiddleSP,
-            useVariableMiddleSPRange=seedfinderConfigArg.useVariableMiddleSPRange,
-            binSizeR=seedfinderConfigArg.binSizeR,
-            forceRadialSorting=seedfinderConfigArg.forceRadialSorting,
-            seedConfirmation=seedfinderConfigArg.seedConfirmation,
-            centralSeedConfirmationRange=seedfinderConfigArg.centralSeedConfirmationRange,
-            forwardSeedConfirmationRange=seedfinderConfigArg.forwardSeedConfirmationRange,
+            rMin=seedFinderConfigArg.r[0],
+            rMax=seedFinderConfigArg.r[1],
+            deltaRMin=seedFinderConfigArg.deltaR[0],
+            deltaRMax=seedFinderConfigArg.deltaR[1],
+            deltaRMinTopSP=seedFinderConfigArg.deltaRTopSP[0],
+            deltaRMinBottomSP=seedFinderConfigArg.deltaRBottomSP[0],
+            deltaRMaxTopSP=seedFinderConfigArg.deltaRTopSP[1],
+            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
+            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
+            deltaRMaxBottomSP=seedFinderConfigArg.deltaRBottomSP[1],
+            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+            zMin=seedFinderConfigArg.z[0],
+            zMax=seedFinderConfigArg.z[1],
+            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+            cotThetaMax=seedFinderConfigArg.cotThetaMax,
+            sigmaScattering=seedFinderConfigArg.sigmaScattering,
+            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+            minPt=seedFinderConfigArg.minPt,
+            bFieldInZ=seedFinderConfigArg.bFieldInZ,
+            impactMax=seedFinderConfigArg.impactMax,
+            interactionPointCut=seedFinderConfigArg.interactionPointCut,
+            arithmeticAverageCotTheta=seedFinderConfigArg.arithmeticAverageCotTheta,
+            deltaZMax=seedFinderConfigArg.deltaZMax,
+            maxPtScattering=seedFinderConfigArg.maxPtScattering,
+            zBinEdges=seedFinderConfigArg.zBinEdges,
+            skipPreviousTopSP=seedFinderConfigArg.skipPreviousTopSP,
+            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
+            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+            binSizeR=seedFinderConfigArg.binSizeR,
+            forceRadialSorting=seedFinderConfigArg.forceRadialSorting,
+            seedConfirmation=seedFinderConfigArg.seedConfirmation,
+            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
             beamPos=(
                 None
-                if seedfinderConfigArg.beamPos is None
-                or all([x is None for x in seedfinderConfigArg.beamPos])
+                if seedFinderConfigArg.beamPos is None
+                or all([x is None for x in seedFinderConfigArg.beamPos])
                 else acts.Vector2(
-                    seedfinderConfigArg.beamPos[0] or 0.0,
-                    seedfinderConfigArg.beamPos[1] or 0.0,
+                    seedFinderConfigArg.beamPos[0] or 0.0,
+                    seedFinderConfigArg.beamPos[1] or 0.0,
                 )
             ),
         ),
@@ -176,7 +176,7 @@ def runITkSeedingFromCsv():
 
         s.addReader(evReader)
 
-        print(SeedfinderConfigArg, SeedFilterConfigArg)
+        print(SeedFinderConfigArg, SeedFilterConfigArg)
 
         # run seeding
         addITkSeedingCsv(

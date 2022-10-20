@@ -259,3 +259,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::endRun() {
   m_impl->close();
   return ProcessCode::SUCCESS;
 }
+
+const ActsExamples::TrackFinderPerformanceWriter::Config&
+ActsExamples::TrackFinderPerformanceWriter::config() const {
+  return m_impl->cfg;
+}
