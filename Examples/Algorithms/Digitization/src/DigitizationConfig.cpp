@@ -31,11 +31,9 @@ enum SmearingTypes : int {
 }  // namespace
 
 ActsExamples::DigitizationConfig::DigitizationConfig(
-      bool merge, double sigma, bool commonCorner,
+    bool merge, double sigma, bool commonCorner,
     Acts::GeometryHierarchyMap<DigiComponentsConfig>&& digiCfgs)
-    : doMerge(merge),
-      mergeNsigma(sigma),
-      mergeCommonCorner(commonCorner) {
+    : doMerge(merge), mergeNsigma(sigma), mergeCommonCorner(commonCorner) {
   digitizationConfigs = std::move(digiCfgs);
 }
 

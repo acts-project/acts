@@ -16,8 +16,8 @@
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Options/ParticleSmearingOptions.hpp"
+#include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <filesystem>

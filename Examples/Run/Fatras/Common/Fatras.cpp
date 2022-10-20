@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Fatras.hpp"
-#include "FatrasOptions.hpp"
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
@@ -31,6 +30,8 @@
 #include <string>
 
 #include <boost/program_options.hpp>
+
+#include "FatrasOptions.hpp"
 
 using namespace ActsExamples;
 

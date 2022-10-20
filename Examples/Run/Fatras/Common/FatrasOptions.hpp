@@ -41,7 +41,8 @@ void addFatrasOptions(Options::Description& desc) {
       "Which surfaces should record charged particle hits");
 }
 
-ActsExamples::FatrasSimulation::Config readFatrasConfig(const Options::Variables& vars) {
+ActsExamples::FatrasSimulation::Config readFatrasConfig(
+    const Options::Variables& vars) {
   using namespace Acts::UnitLiterals;
 
   ActsExamples::FatrasSimulation::Config cfg;
@@ -74,5 +75,5 @@ ActsExamples::FatrasSimulation::Config readFatrasConfig(const Options::Variables
   return cfg;
 }
 
-}
-}
+}  // namespace Options
+}  // namespace ActsExamples
