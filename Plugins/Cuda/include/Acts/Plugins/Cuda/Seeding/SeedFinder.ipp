@@ -14,8 +14,8 @@
 namespace Acts {
 
 template <typename external_spacepoint_t>
-Seedfinder<external_spacepoint_t, Acts::Cuda>::Seedfinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> config)
+SeedFinder<external_spacepoint_t, Acts::Cuda>::SeedFinder(
+    Acts::SeedFinderConfig<external_spacepoint_t> config)
     : m_config(config.toInternalUnits()) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
@@ -38,11 +38,11 @@ Seedfinder<external_spacepoint_t, Acts::Cuda>::Seedfinder(
 template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
-Seedfinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
+SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
-  // Get SeedfinderConfig values
+  // Get SeedFinderConfig values
   CudaScalar<float> deltaRMin_cuda(&m_config.deltaRMin);
   CudaScalar<float> deltaRMax_cuda(&m_config.deltaRMax);
   CudaScalar<float> cotThetaMax_cuda(&m_config.cotThetaMax);
