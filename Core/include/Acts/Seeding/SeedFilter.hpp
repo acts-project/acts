@@ -51,7 +51,7 @@ class SeedFilter {
   ///                 with both bottom and middle space point
   /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
   /// @param impactParametersVec vector containing the impact parameters
-  /// @param seedFilterState  holds quantities used in seed filter
+  /// @param seedFilterState holds quantities used in seed filter
   /// @param outCont Output container for the seeds
   virtual void filterSeeds_2SpFixed(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
