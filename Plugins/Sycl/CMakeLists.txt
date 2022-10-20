@@ -12,8 +12,8 @@ add_library(
   include/Acts/Plugins/Sycl/Seeding/detail/Types.hpp
   include/Acts/Plugins/Sycl/Seeding/CreateSeedsForGroupSycl.hpp
   include/Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp
-  include/Acts/Plugins/Sycl/Seeding/Seedfinder.hpp
-  include/Acts/Plugins/Sycl/Seeding/Seedfinder.ipp
+  include/Acts/Plugins/Sycl/Seeding/SeedFinder.hpp
+  include/Acts/Plugins/Sycl/Seeding/SeedFinder.ipp
   include/Acts/Plugins/Sycl/Utilities/CalculateNdRange.hpp
   include/Acts/Plugins/Sycl/Utilities/DeviceSelector.hpp
   include/Acts/Plugins/Sycl/Utilities/ListPlatforms.hpp

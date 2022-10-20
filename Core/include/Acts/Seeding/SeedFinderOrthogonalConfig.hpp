@@ -87,7 +87,7 @@ struct SeedFinderOrthogonalConfig {
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
 
-  // derived values, set on Seedfinder construction
+  // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
   float pTPerHelixRadius = 0;

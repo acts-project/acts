@@ -10,7 +10,7 @@
 
 // Acts include(s).
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 
 // SYCL plugin include(s).
 #include "Acts/Plugins/Sycl/Seeding/DeviceExperimentCuts.hpp"
@@ -23,19 +23,19 @@
 namespace Acts::Sycl {
 
 template <typename external_spacepoint_t>
-class Seedfinder {
+class SeedFinder {
  public:
-  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config,
+  SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config,
              const Acts::Sycl::DeviceExperimentCuts& cuts,
              Acts::Sycl::QueueWrapper wrappedQueue,
              vecmem::memory_resource& resource,
              vecmem::memory_resource* device_resource = nullptr);
 
-  ~Seedfinder() = default;
-  Seedfinder() = delete;
-  Seedfinder(const Seedfinder<external_spacepoint_t>&) = delete;
-  Seedfinder<external_spacepoint_t>& operator=(
-      const Seedfinder<external_spacepoint_t>&) = delete;
+  ~SeedFinder() = default;
+  SeedFinder() = delete;
+  SeedFinder(const SeedFinder<external_spacepoint_t>&) = delete;
+  SeedFinder<external_spacepoint_t>& operator=(
+      const SeedFinder<external_spacepoint_t>&) = delete;
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
@@ -50,13 +50,13 @@ class Seedfinder {
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
  private:
-  Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderConfig<external_spacepoint_t> m_config;
 
   /// Experiment specific cuts
   Acts::Sycl::DeviceExperimentCuts m_deviceCuts;
 
   /// Configuration object for the device side.
-  Acts::Sycl::detail::DeviceSeedfinderConfig m_deviceConfig;
+  Acts::Sycl::detail::DeviceSeedFinderConfig m_deviceConfig;
 
   /// Wrapper around a SYCL queue object.
   QueueWrapper m_wrappedQueue;
@@ -71,4 +71,4 @@ class Seedfinder {
 }  // namespace Acts::Sycl
 
 // Include the template implementation.
-#include "Acts/Plugins/Sycl/Seeding/Seedfinder.ipp"
+#include "Acts/Plugins/Sycl/Seeding/SeedFinder.ipp"
