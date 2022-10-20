@@ -27,12 +27,12 @@ template <typename FitterFunction>
 auto makeGsfOptions(
     const FitterFunction& f,
     const TrackFittingAlgorithm::GeneralFitterOptions& options) {
-  Acts::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
+  Acts::Experimental::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
   extensions.updater.connect<
       &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
       &f.updater);
 
-  Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
+  Acts::Experimental::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
       options.geoContext,
       options.magFieldContext,
       options.calibrationContext,
@@ -119,7 +119,8 @@ TrackFittingAlgorithm::makeGsfFitterFunction(
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg);
   Acts::Propagator propagator(std::move(stepper), std::move(navigator));
-  Acts::GaussianSumFitter<decltype(propagator), Acts::VectorMultiTrajectory>
+  Acts::Experimental::GaussianSumFitter<decltype(propagator),
+                                        Acts::VectorMultiTrajectory>
       trackFitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.
@@ -141,7 +142,8 @@ TrackFittingAlgorithm::makeGsfFitterFunction(
   Acts::MultiEigenStepperLoop stepper(std::move(magneticField));
   Acts::DirectNavigator navigator;
   Acts::Propagator propagator(std::move(stepper), navigator);
-  Acts::GaussianSumFitter<decltype(propagator), Acts::VectorMultiTrajectory>
+  Acts::Experimental::GaussianSumFitter<decltype(propagator),
+                                        Acts::VectorMultiTrajectory>
       trackFitter(std::move(propagator));
 
   // build the fitter functions. owns the fitter object.

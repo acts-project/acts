@@ -61,7 +61,7 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
       const auto new_weight = std::exp(-0.5 * exponent) * weight_a * weight_b;
 
       if (new_weight == 0) {
-        return ResType(GsfError::SmoothingFailed);
+        return ResType(Experimental::GsfError::SmoothingFailed);
       }
 
       smoothedState.push_back({new_weight, new_pars, new_cov});
