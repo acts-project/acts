@@ -146,8 +146,7 @@ auto main(int argc, char** argv) -> int {
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
-  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
+	const Acts::Range1D<float> rMiddleSPRange;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
@@ -214,8 +213,7 @@ auto main(int argc, char** argv) -> int {
          ++groupIt) {
       normalSeedfinder.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleMinSPRange,
-          rMiddleMaxSPRange);
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
         break;

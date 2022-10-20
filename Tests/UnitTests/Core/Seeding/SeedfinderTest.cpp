@@ -145,8 +145,7 @@ int main(int argc, char** argv) {
   Acts::Extent rRangeSPExtent;
 
   config.useVariableMiddleSPRange = false;
-  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
-  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
+	const Acts::Range1D<float> rMiddleSPRange;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
@@ -193,8 +192,7 @@ int main(int argc, char** argv) {
   for (; !(groupIt == endOfGroups); ++groupIt) {
     auto& v = seedVector.emplace_back();
     a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
-                          groupIt.middle(), groupIt.top(), rMiddleMinSPRange,
-                          rMiddleMaxSPRange);
+                          groupIt.middle(), groupIt.top(), rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

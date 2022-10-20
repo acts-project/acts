@@ -112,8 +112,7 @@ int main(int argc, char* argv[]) {
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-  const float rMiddleMinSPRange = std::numeric_limits<float>::max();
-  const float rMiddleMaxSPRange = std::numeric_limits<float>::min();
+	const Acts::Range1D<float> rMiddleSPRange;
 
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
@@ -177,8 +176,7 @@ int main(int argc, char* argv[]) {
       auto& group = seeds_host.emplace_back();
       seedfinder_host.createSeedsForGroup(
           state, std::back_inserter(group), spGroup_itr.bottom(),
-          spGroup_itr.middle(), spGroup_itr.top(), rMiddleMinSPRange,
-          rMiddleMaxSPRange);
+          spGroup_itr.middle(), spGroup_itr.top(), rMiddleSPRange);
     }
   }
 
