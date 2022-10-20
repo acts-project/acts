@@ -102,6 +102,10 @@ struct GsfActor {
     /// Whether to abort immediately when an error occurs
     bool abortOnError = false;
 
+    /// We can stop the propagation if we reach this number of measuerement
+    /// states
+    std::optional<std::size_t> numberMeasurements;
+
     /// The extensions
     GsfExtensions<traj_t> extensions;
   } m_cfg;
@@ -146,10 +150,6 @@ struct GsfActor {
     assert(result.fittedStates && "No MultiTrajectory set");
     const auto& logger = state.options.logger;
 
-    // Prints some VERBOSE things and performs some asserts. Can be removed
-    // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper);
-
     // Set error or abort utility
     auto set_error_or_abort = [&](auto error) {
       if (m_cfg.abortOnError) {
@@ -178,6 +178,11 @@ struct GsfActor {
       }
       return std::make_tuple(missed, reachable);
     }();
+
+    // Prints some VERBOSE things and performs some asserts. Can be removed
+    // without change of behaviour
+    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
+                                                         missed_count);
 
     if (result.parentTips.size() != stepper.numberComponents(state.stepping)) {
       ACTS_ERROR("component number mismatch:"
@@ -289,6 +294,12 @@ struct GsfActor {
         applyMultipleScattering(state, stepper,
                                 MaterialUpdateStage::PostUpdate);
       }
+    }
+
+    // Break the navigation if we found all measurements
+    if (m_cfg.numberMeasurements &&
+        result.measurementStates == m_cfg.numberMeasurements) {
+      state.navigation.targetReached = true;
     }
   }
 

@@ -189,6 +189,42 @@ BOOST_AUTO_TEST_CASE(Build) {
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 }
 
+BOOST_AUTO_TEST_CASE(AsReadOnly) {
+  // make mutable
+  VectorMultiTrajectory t;
+  auto i0 = t.addTrackState();
+
+  BOOST_CHECK(!t.ReadOnly);
+
+  {
+    VectorMultiTrajectory::TrackStateProxy tsp = t.getTrackState(i0);
+    static_cast<void>(tsp);
+    VectorMultiTrajectory::ConstTrackStateProxy ctsp = t.getTrackState(i0);
+    static_cast<void>(ctsp);
+  }
+
+  ConstVectorMultiTrajectory ct = t;
+
+  ConstVectorMultiTrajectory ctm{std::move(t)};
+
+  {
+    static_assert(
+        std::is_same_v<ConstVectorMultiTrajectory::ConstTrackStateProxy,
+                       decltype(ct.getTrackState(i0))>,
+        "Got mutable track state proxy");
+    ConstVectorMultiTrajectory::ConstTrackStateProxy ctsp =
+        ct.getTrackState(i0);
+    static_cast<void>(ctsp);
+
+    // doesn't compile:
+    // ctsp.predictedCovariance().setIdentity();
+  }
+
+  // doesn't compile:
+  // ct.clear();
+  // ct.addTrackState();
+}
+
 BOOST_AUTO_TEST_CASE(Clear) {
   constexpr TrackStatePropMask kMask = TrackStatePropMask::Predicted;
   VectorMultiTrajectory t;

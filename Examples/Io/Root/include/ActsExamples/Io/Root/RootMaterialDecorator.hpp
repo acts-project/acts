@@ -119,6 +119,9 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
     }
   }
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  private:
   /// The config class
   Config m_cfg;
