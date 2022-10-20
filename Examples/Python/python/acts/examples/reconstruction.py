@@ -694,7 +694,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
-    trackSelectorRanges: TrackSelectorRanges = TrackSelectorRanges(),
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -750,31 +750,14 @@ def addCKFTracks(
     s.addAlgorithm(trackFinder)
 
     if trackSelectorRanges is not None:
-        trackSelector = acts.examples.TrackSelector(
-            level=customLogLevel(),
+        addTrackSelection(
+            s,
+            trackSelectorRanges,
             inputTrackParameters=trackFinder.config.outputTrackParameters,
-            outputTrackParameters=outputTrackParameters,
-            outputTrackIndices="fittedTrackIndices",
-            **acts.examples.defaultKWArgs(
-                loc0Min=trackSelectorRanges.loc0[0],
-                loc0Max=trackSelectorRanges.loc0[1],
-                loc1Min=trackSelectorRanges.loc1[0],
-                loc1Max=trackSelectorRanges.loc1[1],
-                timeMin=trackSelectorRanges.time[0],
-                timeMax=trackSelectorRanges.time[1],
-                phiMin=trackSelectorRanges.phi[0],
-                phiMax=trackSelectorRanges.phi[1],
-                etaMin=trackSelectorRanges.eta[0],
-                etaMax=trackSelectorRanges.eta[1],
-                absEtaMin=trackSelectorRanges.absEta[0],
-                absEtaMax=trackSelectorRanges.absEta[1],
-                ptMin=trackSelectorRanges.pt[0],
-                ptMax=trackSelectorRanges.pt[1],
-                removeCharged=trackSelectorRanges.removeCharged,
-                removeNeutral=trackSelectorRanges.removeNeutral,
-            ),
+            outputTrackParameters="trackparameters",
+            outputTrackIndices="outputTrackIndices",
+            logLevel=customLogLevel(),
         )
-        s.addAlgorithm(trackSelector)
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
@@ -844,6 +827,48 @@ def addCKFTracks(
         s.addWriter(csvMTJWriter)
 
     return s
+
+
+@acts.examples.NamedTypeArgs(
+    trackSelectorRanges=TrackSelectorRanges,
+)
+def addTrackSelection(
+    s: acts.examples.Sequencer,
+    trackSelectorRanges: TrackSelectorRanges,
+    inputTrackParameters: str,
+    outputTrackParameters: str,
+    outputTrackIndices: str = "fittedTrackIndices",
+    logLevel: Optional[acts.logging.Level] = None,
+):
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    trackSelector = acts.examples.TrackSelector(
+        level=customLogLevel(),
+        inputTrackParameters=inputTrackParameters,
+        outputTrackParameters=outputTrackParameters,
+        outputTrackIndices=outputTrackIndices,
+        **acts.examples.defaultKWArgs(
+            loc0Min=trackSelectorRanges.loc0[0],
+            loc0Max=trackSelectorRanges.loc0[1],
+            loc1Min=trackSelectorRanges.loc1[0],
+            loc1Max=trackSelectorRanges.loc1[1],
+            timeMin=trackSelectorRanges.time[0],
+            timeMax=trackSelectorRanges.time[1],
+            phiMin=trackSelectorRanges.phi[0],
+            phiMax=trackSelectorRanges.phi[1],
+            etaMin=trackSelectorRanges.eta[0],
+            etaMax=trackSelectorRanges.eta[1],
+            absEtaMin=trackSelectorRanges.absEta[0],
+            absEtaMax=trackSelectorRanges.absEta[1],
+            ptMin=trackSelectorRanges.pt[0],
+            ptMax=trackSelectorRanges.pt[1],
+            removeCharged=trackSelectorRanges.removeCharged,
+            removeNeutral=trackSelectorRanges.removeNeutral,
+        ),
+    )
+
+    s.addAlgorithm(trackSelector)
 
 
 ExaTrkXBackend = Enum("ExaTrkXBackend", "Torch Onnx")
