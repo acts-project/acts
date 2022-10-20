@@ -5,7 +5,6 @@ add_library(
   src/Framework/RandomNumbers.cpp
   src/Framework/Sequencer.cpp
   src/Utilities/Paths.cpp
-  src/Utilities/Options.cpp
   src/Utilities/Helpers.cpp
   src/Validation/DuplicationPlotTool.cpp
   src/Validation/EffPlotTool.cpp

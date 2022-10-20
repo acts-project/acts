@@ -14,7 +14,7 @@
 #include <memory>
 #include <vector>
 
-struct EmptyDetector : public ActsExamples::IBaseDetector {
+struct EmptyDetector {
   void addOptions(
       boost::program_options::options_description& opt) const override;
 

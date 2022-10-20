@@ -16,7 +16,15 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesIoHepMC3
   PUBLIC ActsCore ActsExamplesFramework ${HEPMC3_LIBRARIES}
-  PRIVATE ActsFatras Boost::program_options)
+  PRIVATE ActsFatras)
+
+if( ACTS_BUILD_EXAMPLES_BINARIES )
+  target_link_libraries(
+    ActsExamplesIoHepMC3
+    PRIVATE
+    Boost::program_options
+  )
+endif()
 
 install(
   TARGETS ActsExamplesIoHepMC3

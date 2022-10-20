@@ -6,14 +6,20 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
+#include "ActsExamples/Options/Utilities.hpp"
 
 #include <stdexcept>
 
 #include "boost/program_options.hpp"
 
-void ActsExamples::FatrasSimulation::addOptions(Options::Description& desc) {
+namespace ActsExamples {
+namespace Options {
+
+void addFatrasOptions(Options::Description& desc) {
   using boost::program_options::bool_switch;
   using boost::program_options::value;
 
@@ -35,8 +41,7 @@ void ActsExamples::FatrasSimulation::addOptions(Options::Description& desc) {
       "Which surfaces should record charged particle hits");
 }
 
-ActsExamples::FatrasSimulation::Config
-ActsExamples::FatrasSimulation::readConfig(const Options::Variables& vars) {
+ActsExamples::FatrasSimulation::Config readFatrasConfig(const Options::Variables& vars) {
   using namespace Acts::UnitLiterals;
 
   ActsExamples::FatrasSimulation::Config cfg;
@@ -67,4 +72,7 @@ ActsExamples::FatrasSimulation::readConfig(const Options::Variables& vars) {
   }
 
   return cfg;
+}
+
+}
 }

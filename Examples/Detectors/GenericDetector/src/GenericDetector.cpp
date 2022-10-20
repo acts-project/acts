@@ -17,11 +17,6 @@
 
 #include <boost/program_options.hpp>
 
-void GenericDetector::addOptions(
-    boost::program_options::options_description& opt) const {
-  ActsExamples::Options::addGenericGeometryOptions(opt);
-}
-
 auto GenericDetector::finalize(
     const boost::program_options::variables_map& vm,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)

@@ -15,6 +15,7 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Options/DigitizationOptions.hpp"
 
 #include <fstream>
 #include <memory>

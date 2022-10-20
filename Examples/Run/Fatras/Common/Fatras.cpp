@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Fatras.hpp"
+#include "FatrasOptions.hpp"
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
@@ -43,7 +44,7 @@ void setupFatrasSimulation(
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
   auto logLevel = Options::readLogLevel(vars);
-  auto fatrasCfg = FatrasSimulation::readConfig(vars);
+  auto fatrasCfg = Options::readFatrasConfig(vars);
   fatrasCfg.inputParticles = Simulation::kParticlesSelection;
   fatrasCfg.outputParticlesInitial = Simulation::kParticlesInitial;
   fatrasCfg.outputParticlesFinal = Simulation::kParticlesFinal;
@@ -78,7 +79,7 @@ int runFatras(int argc, char* argv[],
   Options::addMaterialOptions(desc);
   Options::addMagneticFieldOptions(desc);
   // Algorithm-specific options
-  FatrasSimulation::addOptions(desc);
+  Options::addFatrasOptions(desc);
 
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {

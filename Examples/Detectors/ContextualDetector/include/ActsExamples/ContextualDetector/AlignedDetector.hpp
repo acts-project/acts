@@ -20,7 +20,7 @@ namespace ActsExamples::Contextual {
 class InternallyAlignedDetectorElement;
 class InternalAlignmentDecorator;
 
-class AlignedDetector : public ActsExamples::IBaseDetector {
+class AlignedDetector {
  public:
   //   using DetectorElement =
   //       ActsExamples::Contextual::InternallyAlignedDetectorElement;

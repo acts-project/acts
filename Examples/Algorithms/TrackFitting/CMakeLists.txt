@@ -1,6 +1,5 @@
 add_library(
   ActsExamplesTrackFitting SHARED
-  src/TrackFittingOptions.cpp
   src/SurfaceSortingAlgorithm.cpp
   src/TrackFittingAlgorithm.cpp
   src/TrackFittingAlgorithmFunctionsKalman.cpp
@@ -12,8 +11,7 @@ target_link_libraries(
   ActsExamplesTrackFitting
   PUBLIC
     ActsCore
-    ActsExamplesFramework ActsExamplesMagneticField
-    Boost::program_options)
+    ActsExamplesFramework ActsExamplesMagneticField)
 
 install(
   TARGETS ActsExamplesTrackFitting

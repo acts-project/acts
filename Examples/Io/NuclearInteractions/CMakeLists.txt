@@ -12,7 +12,23 @@ target_link_libraries(
   PUBLIC
     ActsCore ActsExamplesFramework
     Threads::Threads
-  PRIVATE ROOT::Core ROOT::Hist ROOT::Tree Boost::program_options)
+  PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
+
+if( ACTS_BUILD_EXAMPLES_BINARIES )
+  target_link_libraries(
+    ActsExamplesIoNuclearInteractions
+    PRIVATE
+    Boost::program_options
+  )
+endif()
+
+if( ACTS_BUILD_EXAMPLES_BINARIES )
+  target_link_libraries(
+    ActsExamplesIoNuclearInteractions
+    PRIVATE
+    Boost::program_options
+  )
+endif()
 
 install(
   TARGETS ActsExamplesIoNuclearInteractions
