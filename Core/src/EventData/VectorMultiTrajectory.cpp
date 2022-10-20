@@ -22,7 +22,8 @@
 
 namespace Acts {
 
-VectorMultiTrajectory::DynamicColumnBase::~DynamicColumnBase() = default;
+detail_vmt::VectorMultiTrajectoryBase::DynamicColumnBase::~DynamicColumnBase() =
+    default;
 
 auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
                                                IndexType iprevious)
@@ -31,7 +32,7 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
 
   m_index.emplace_back();
   IndexData& p = m_index.back();
-  size_t index = m_index.size() - 1;
+  IndexType index = m_index.size() - 1;
 
   p.allocMask = mask;
 
@@ -186,83 +187,8 @@ void VectorMultiTrajectory::clear_impl() {
   }
 }
 
-auto VectorMultiTrajectory::statistics() const -> Statistics {
-  using namespace boost::histogram;
-  using cat = axis::category<std::string>;
-
-  Statistics::axes_t axes;
-  axes.emplace_back(cat({
-      "count",
-      "index",
-      "parPred",
-      "covPred",
-      "parFilt",
-      "covFilt",
-      "parSmth",
-      "covSmth",
-      "meas",
-      "measCov",
-      "jac",
-      "sourceLinks",
-      "projectors",
-  }));
-
-  axes.emplace_back(axis::category<>({0, 1}));
-
-  auto h = make_histogram(axes);
-
-  for (IndexType i = 0; i < size(); i++) {
-    auto ts = getTrackState(i);
-
-    bool isMeas = ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
-
-    h("count", isMeas);
-
-    h("index", isMeas, weight(sizeof(IndexData)));
-
-    using scalar = decltype(ts.predicted())::Scalar;
-    size_t par_size = eBoundSize * sizeof(scalar);
-    size_t cov_size = eBoundSize * eBoundSize * sizeof(scalar);
-
-    const IndexData& index = m_index[i];
-    if (ts.hasPredicted() &&
-        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Predicted)) {
-      h("parPred", isMeas, weight(par_size));
-      h("covPred", isMeas, weight(cov_size));
-    }
-    if (ts.hasFiltered() &&
-        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Filtered)) {
-      h("parFilt", isMeas, weight(par_size));
-      h("covFilt", isMeas, weight(cov_size));
-    }
-    if (ts.hasSmoothed() &&
-        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Smoothed)) {
-      h("parSmth", isMeas, weight(par_size));
-      h("covSmth", isMeas, weight(cov_size));
-    }
-
-    size_t meas_size = eBoundSize * sizeof(scalar);
-    size_t meas_cov_size = eBoundSize * eBoundSize * sizeof(scalar);
-
-    h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
-    if (ts.hasCalibrated() &&
-        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Calibrated)) {
-      h("meas", isMeas, weight(meas_size));
-      h("measCov", isMeas, weight(meas_cov_size));
-      h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
-      h("projectors", isMeas, weight(sizeof(ProjectorBitset)));
-    }
-
-    if (ts.hasJacobian() &&
-        ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Jacobian)) {
-      h("jac", isMeas, weight(cov_size));
-    }
-  }
-
-  return Statistics{h};
-}
-
-void VectorMultiTrajectory::Statistics::toStream(std::ostream& os, size_t n) {
+void detail_vmt::VectorMultiTrajectoryBase::Statistics::toStream(
+    std::ostream& os, size_t n) {
   using namespace boost::histogram;
   using cat = axis::category<std::string>;
 
