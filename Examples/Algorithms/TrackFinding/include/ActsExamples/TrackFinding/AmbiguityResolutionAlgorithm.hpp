@@ -15,7 +15,13 @@
 
 namespace ActsExamples {
 
+/// Evicts tracks that seem to be duplicated.
 ///
+/// The implementation works as follows:
+/// 1) Calculate shared hits per track
+/// 2) If the maximum shared hits criteria is met we are done
+/// 3) Else, remove the track with the highest relative shared hits (i.e. shared
+/// hits / hits) 4) Back to square 1
 class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
@@ -32,17 +38,23 @@ class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
     /// Output track indices.
     std::string outputTrackIndices;
 
-    ///
+    /// Maximum amount of shared hits per track.
     std::uint32_t maximumSharedHits = 1;
   };
 
+  /// Construct the ambiguity resolution algorithm.
   ///
+  /// @param cfg is the algorithm configuration
+  /// @param lvl is the logging level
   AmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
+  /// Run the ambiguity resolution algorithm.
   ///
+  /// @param cxt is the algorithm context with event information
+  /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final override;
 
-  ///
+  /// Const access to the config
   const Config& config() const { return m_cfg; }
 
  private:
