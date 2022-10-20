@@ -42,7 +42,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     State& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
-		const Acts::Range1D<float> rMiddleSPRange) const {
+    const Acts::Range1D<float> rMiddleSPRange) const {
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -539,7 +539,7 @@ std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
   State state;
-	const Acts::Range1D<float> rMiddleSPRange;
+  const Acts::Range1D<float> rMiddleSPRange;
   std::vector<Seed<external_spacepoint_t>> ret;
 
   createSeedsForGroup(state, std::back_inserter(ret), bottomSPs, middleSPs,

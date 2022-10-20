@@ -146,7 +146,7 @@ auto main(int argc, char** argv) -> int {
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-	const Acts::Range1D<float> rMiddleSPRange;
+  const Acts::Range1D<float> rMiddleSPRange;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;

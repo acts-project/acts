@@ -145,7 +145,7 @@ int main(int argc, char** argv) {
   Acts::Extent rRangeSPExtent;
 
   config.useVariableMiddleSPRange = false;
-	const Acts::Range1D<float> rMiddleSPRange;
+  const Acts::Range1D<float> rMiddleSPRange;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;

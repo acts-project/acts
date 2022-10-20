@@ -222,10 +222,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 
   /// variable middle SP radial region of interest
-	const Acts::Range1D<float> rMiddleSPRange(std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
-															 m_cfg.seedFinderConfig.deltaRMiddleMinSPRange, std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
-															 m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
-	
+  const Acts::Range1D<float> rMiddleSPRange(
+      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+          m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
+      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
+          m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
+
   // run the seeding
   static thread_local SimSeedContainer seeds;
   seeds.clear();
