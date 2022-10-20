@@ -296,21 +296,24 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 trackingGeometry,
                 field,
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-                outputDirRoot=None,
-                outputDirCsv=None,
-            )
-
-            addVertexFitting(
-                s,
-                field,
                 TrackSelectorRanges(
                     removeNeutral=True,
                     absEta=(None, 2.5),
                     loc0=(None, 4.0 * u.mm),
                     pt=(500 * u.MeV, None),
                 ),
+                outputDirRoot=None,
+                outputDirCsv=None,
+            )
+
+            addAmbiguityResolution(
+                s,
+            )
+
+            addVertexFitting(
+                s,
+                field,
                 vertexFinder=fitter,
-                trajectories="trajectories",
                 outputDirRoot=tp,
             )
 
