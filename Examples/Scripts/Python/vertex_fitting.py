@@ -89,9 +89,9 @@ def runVertexFitting(
             outputTrackParameters="selectedTrackParameters",
             outputTrackIndices="fittedTrackIndices",
             removeNeutral=True,
-            absEta=(None, 2.5),
-            loc0=(None, 4.0 * u.mm),  # rho max
-            pt=(500 * u.MeV, None),
+            absEtaMax=2.5,
+            loc0Max=4.0 * u.mm,  # rho max
+            ptMin=500 * u.MeV,
         )
         s.addAlgorithm(trackSelector)
         trackParameters = trackSelector.config.outputTrackParameters

@@ -1186,12 +1186,12 @@ def test_vertex_fitting_reading(
     s3 = Sequencer(numThreads=1)
 
     runVertexFitting(
-        s3,
         field,
         inputParticlePath=ptcl_file,
         inputTrackSummary=inputTrackSummary,
         outputDir=tmp_path,
         vertexFinder=finder,
+        s=s3,
     )
 
     alg = AssertCollectionExistsAlg(["fittedVertices"], name="check_alg")
