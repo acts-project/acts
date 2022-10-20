@@ -38,7 +38,7 @@ SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
 
 template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
-void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     SeedingState& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
