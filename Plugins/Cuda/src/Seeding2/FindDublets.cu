@@ -93,14 +93,14 @@ __device__ float getCotTheta<TopSP>(float middleZ, float topZ, float deltaR) {
 ///            @c otherSPs
 /// @param[in] otherSPs Properties of all of the other (bottom or top)
 ///            spacepoints
-/// @param[in] deltaRMin Configuration parameter from @c Acts::SeedfinderConfig
-/// @param[in] deltaRMax Configuration parameter from @c Acts::SeedfinderConfig
+/// @param[in] deltaRMin Configuration parameter from @c Acts::SeedFinderConfig
+/// @param[in] deltaRMax Configuration parameter from @c Acts::SeedFinderConfig
 /// @param[in] cotThetaMax Configuration parameter from
-///            @c Acts::SeedfinderConfig
+///            @c Acts::SeedFinderConfig
 /// @param[in] collisionRegionMin Configuration parameter from
-///            @c Acts::SeedfinderConfig
+///            @c Acts::SeedFinderConfig
 /// @param[in] collisionRegionMax Configuration parameter from
-///            @c Acts::SeedfinderConfig
+///            @c Acts::SeedFinderConfig
 /// @param[out] dubletCounts 1-D array of the middle-other dublets found
 ///             for each middle spacepoint
 /// @param[out] dublets 2-D matrix of size @c nMiddleSPs x @c nOtherSPs, holding

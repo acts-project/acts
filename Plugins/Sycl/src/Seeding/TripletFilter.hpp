@@ -46,7 +46,7 @@ class TripletFilter {
       vecmem::data::vector_view<const detail::DeviceSpacePoint> bottomSPsView,
       vecmem::data::vector_view<uint32_t> countTripletsView,
       vecmem::data::vector_view<detail::SeedData> seedArrayView,
-      const DeviceSeedfinderConfig& config, const DeviceExperimentCuts& cuts)
+      const DeviceSeedFinderConfig& config, const DeviceExperimentCuts& cuts)
       : m_numTripletFilterThreads(numTripletFilterThreads),
         m_sumBotMidView(sumBotMidView),
         m_firstMiddle(firstMiddle),
@@ -161,7 +161,7 @@ class TripletFilter {
   vecmem::data::vector_view<const detail::DeviceSpacePoint> m_bottomSPsView;
   vecmem::data::vector_view<uint32_t> m_countTripletsView;
   vecmem::data::vector_view<detail::SeedData> m_seedArrayView;
-  DeviceSeedfinderConfig m_config;
+  DeviceSeedFinderConfig m_config;
   DeviceExperimentCuts m_cuts;
 };  // struct TripletFilter
 }  // namespace Acts::Sycl::detail
