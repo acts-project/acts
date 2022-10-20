@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 
 namespace Acts {
 /// @brief A partial description of a circle in u-v space.
@@ -20,6 +21,10 @@ struct LinCircle {
   float Er;
   float U;
   float V;
+  float x;
+  float y;
+  float z;
+  float r;
 };
 
 /// @brief Transform two spacepoints to a u-v space circle.
@@ -32,9 +37,14 @@ struct LinCircle {
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottom Should be true if sp is a bottom SP.
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(
-    const InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom);
+LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
+                               InternalSpacePoint<external_spacepoint_t>& spM,
+                               bool bottom);
+
+template <typename external_spacepoint_t, typename callable_t>
+LinCircle transformCoordinates(external_spacepoint_t& sp,
+                               external_spacepoint_t& spM, bool bottom,
+                               callable_t&& extractFunction);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
@@ -44,13 +54,35 @@ LinCircle transformCoordinates(
 /// @param[in] vec The list of bottom or top spacepoints
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
-/// @param[in] enableCutsForSortedSP enables sorting of cotTheta.
 /// @param[out] linCircleVec The output vector to write to.
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    bool enableCutsForSortedSP, std::vector<LinCircle>& linCircleVec);
+    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    std::vector<LinCircle>& linCircleVec);
+
+template <typename external_spacepoint_t, typename callable_t>
+void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+                          external_spacepoint_t& spM, bool bottom,
+                          std::vector<LinCircle>& linCircleVec,
+                          callable_t&& extractFunction);
+
+/// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
+///
+/// @tparam external_spacepoint_t The external spacepoint type.
+/// @tparam sp_range_t Container type for the space point collections.
+///
+/// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
+/// @param[in] sp Input space point used in the check.
+/// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
+/// @param[in] toleranceParam Parameter used to evaluate if spacepointPosition is inside the detector elements.
+/// @param[out] outputCoordinates The output vector to write to.
+/// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
+template <typename external_spacepoint_t, typename sp_range_t>
+bool xyzCoordinateCheck(Acts::SeedFinderConfig<external_spacepoint_t> config,
+                        sp_range_t sp, const double* spacepointPosition,
+                        const float toleranceParam, double* outputCoordinates);
+
 }  // namespace Acts
 
 #include "Acts/Seeding/SeedFinderUtils.ipp"

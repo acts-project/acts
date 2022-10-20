@@ -27,6 +27,9 @@ namespace ActsExamples {
 /// it such that name will be containing the mapping prefix
 /// and the Acts::GeometryIdentifier of the surface.
 ///
+/// The mapping is done by matching the position of the G4 physical volume with
+/// the center position of an Acts::Surface.
+///
 /// This allows to directly associate Geant4 hits to the sensitive
 /// elements of the Acts::TrackingGeoemtry w/o map lookup.
 class SensitiveSurfaceMapper {
@@ -35,9 +38,13 @@ class SensitiveSurfaceMapper {
 
   /// Configuration struct for the surface mapper
   struct Config {
+    /// For which G4 material names we try to find a mapping
     std::vector<std::string> materialMappings = {"Silicon"};
+
+    /// For which G4 volume names we try to find a mapping
     std::vector<std::string> volumeMappings = {};
 
+    /// The tracking geometry we try to map
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
   };
 

@@ -41,7 +41,9 @@ struct TestOutlierFinder {
   /// @param state The track state to classify
   /// @retval False if the measurement is not an outlier
   /// @retval True if the measurement is an outlier
-  bool operator()(Acts::MultiTrajectory::ConstTrackStateProxy state) const {
+  template <typename traj_t>
+  bool operator()(typename Acts::MultiTrajectory<traj_t>::ConstTrackStateProxy
+                      state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
     if (not state.hasCalibrated() or not state.hasPredicted()) {
       return false;
@@ -62,7 +64,9 @@ struct TestReverseFilteringLogic {
   /// @param trackState The trackState of the last measurement
   /// @retval False if we don't use the reverse filtering for the smoothing of the track
   /// @retval True if we use the reverse filtering for the smoothing of the track
-  bool operator()(Acts::MultiTrajectory::ConstTrackStateProxy state) const {
+  template <typename traj_t>
+  bool operator()(typename Acts::MultiTrajectory<traj_t>::ConstTrackStateProxy
+                      state) const {
     // can't determine an outlier w/o a measurement or predicted parameters
     auto momentum = fabs(1 / state.filtered()[Acts::eBoundQOverP]);
     std::cout << "momentum : " << momentum << std::endl;
@@ -179,7 +183,8 @@ struct FitterTester {
     // backward filtering requires a reference surface
     options.referenceSurface = &start.referenceSurface();
     // this is the default option. set anyways for consistency
-    options.propagatorPlainOptions.direction = Acts::forward;
+    options.propagatorPlainOptions.direction =
+        Acts::NavigationDirection::Forward;
 
     auto res =
         fitter.fit(sourceLinks.begin(), sourceLinks.end(), start, options);
@@ -197,10 +202,10 @@ struct FitterTester {
     // count the number of `smoothed` states
     if (expected_reversed) {
       size_t nSmoothed = 0;
-      val.fittedStates.visitBackwards(val.lastMeasurementIndex,
-                                      [&nSmoothed](const auto& state) {
-                                        nSmoothed += state.hasSmoothed();
-                                      });
+      val.fittedStates->visitBackwards(val.lastMeasurementIndex,
+                                       [&nSmoothed](const auto& state) {
+                                         nSmoothed += state.hasSmoothed();
+                                       });
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
     }
   }
@@ -224,7 +229,8 @@ struct FitterTester {
         start.charge(), start.covariance());
 
     options.referenceSurface = &startOuter.referenceSurface();
-    options.propagatorPlainOptions.direction = Acts::backward;
+    options.propagatorPlainOptions.direction =
+        Acts::NavigationDirection::Backward;
 
     auto res =
         fitter.fit(sourceLinks.begin(), sourceLinks.end(), startOuter, options);
@@ -242,10 +248,10 @@ struct FitterTester {
     // count the number of `smoothed` states
     if (expected_reversed) {
       size_t nSmoothed = 0;
-      val.fittedStates.visitBackwards(val.lastMeasurementIndex,
-                                      [&nSmoothed](const auto& state) {
-                                        nSmoothed += state.hasSmoothed();
-                                      });
+      val.fittedStates->visitBackwards(val.lastMeasurementIndex,
+                                       [&nSmoothed](const auto& state) {
+                                         nSmoothed += state.hasSmoothed();
+                                       });
       BOOST_CHECK_EQUAL(nSmoothed, sourceLinks.size());
     }
   }
@@ -399,7 +405,7 @@ struct FitterTester {
       BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
       // count the number of outliers
       size_t nOutliers = 0;
-      val.fittedStates.visitBackwards(
+      val.fittedStates->visitBackwards(
           val.lastMeasurementIndex, [&nOutliers](const auto& state) {
             nOutliers +=
                 state.typeFlags().test(Acts::TrackStateFlag::OutlierFlag);
@@ -464,7 +470,7 @@ struct FitterTester {
     // Calculate global track parameters covariance matrix
     const auto& val = res.value();
     auto [trackParamsCov, stateRowIndices] =
-        Acts::detail::globalTrackParametersCovariance(val.fittedStates,
+        Acts::detail::globalTrackParametersCovariance(*val.fittedStates,
                                                       val.lastMeasurementIndex);
     BOOST_CHECK_EQUAL(trackParamsCov.rows(),
                       sourceLinks.size() * Acts::eBoundSize);

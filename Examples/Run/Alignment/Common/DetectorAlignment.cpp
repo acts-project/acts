@@ -32,11 +32,12 @@
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include <filesystem>
 #include <memory>
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
-using namespace boost::filesystem;
+using namespace std::filesystem;
 
 void addAlignmentOptions(ActsExamples::Options::Description& desc) {
   using boost::program_options::value;
@@ -141,7 +142,7 @@ int runDetectorAlignment(
   SurfaceSortingAlgorithm::Config sorterCfg;
   // Setup the surface sorter if running direct navigator
   sorterCfg.inputProtoTracks = trackFinderCfg.outputProtoTracks;
-  sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
+  sorterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
   sorterCfg.outputProtoTracks = "sortedprototracks";
   if (dirNav) {
@@ -188,14 +189,15 @@ int runDetectorAlignment(
       particleSmearingCfg.outputTrackParameters;
   fitter.outputTrajectories = "trajectories";
   fitter.directNavigation = dirNav;
-  fitter.multipleScattering =
-      vm["fit-multiple-scattering-correction"].as<bool>();
-  fitter.energyLoss = vm["fit-energy-loss-correction"].as<bool>();
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
-  fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
-                                                              magneticField);
+  fitter.dFit = TrackFittingAlgorithm::makeKalmanFitterFunction(
+      magneticField, vm["fit-multiple-scattering-correction"].as<bool>(),
+      vm["fit-energy-loss-correction"].as<bool>());
+  fitter.fit = TrackFittingAlgorithm::makeKalmanFitterFunction(
+      trackingGeometry, magneticField,
+      vm["fit-multiple-scattering-correction"].as<bool>(),
+      vm["fit-energy-loss-correction"].as<bool>());
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 

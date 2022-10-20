@@ -6,6 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -25,7 +26,8 @@ using Smoother = Acts::GainMatrixSmoother;
 using Stepper = Acts::EigenStepper<>;
 using Navigator = Acts::Navigator;
 using Propagator = Acts::Propagator<Stepper, Navigator>;
-using CKF = Acts::CombinatorialKalmanFilter<Propagator>;
+using CKF =
+    Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory>;
 
 struct TrackFinderFunctionImpl
     : public ActsExamples::TrackFindingAlgorithm::TrackFinderFunction {
@@ -34,11 +36,11 @@ struct TrackFinderFunctionImpl
   TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const ActsExamples::IndexSourceLinkContainer& sourcelinks,
       const ActsExamples::TrackParametersContainer& initialParameters,
-      const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options)
-      const override {
-    return trackFinder.findTracks(sourcelinks, initialParameters, options);
+      const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options,
+      std::shared_ptr<Acts::VectorMultiTrajectory> trajectory) const override {
+    return trackFinder.findTracks(initialParameters, options,
+                                  std::move(trajectory));
   };
 };
 

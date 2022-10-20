@@ -1,17 +1,20 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2021-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/TrajectoriesToPrototracks.hpp"
 
 #include <memory>
 
@@ -28,27 +31,10 @@ namespace Acts::Python {
 void addTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
-  {
-    using Config = ActsExamples::SpacePointMaker::Config;
-    auto alg =
-        py::class_<ActsExamples::SpacePointMaker, ActsExamples::BareAlgorithm,
-                   std::shared_ptr<ActsExamples::SpacePointMaker>>(
-            mex, "SpacePointMaker")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config",
-                                   &ActsExamples::SpacePointMaker::config);
-
-    auto c = py::class_<ActsExamples::SpacePointMaker::Config>(alg, "Config")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputSourceLinks);
-    ACTS_PYTHON_MEMBER(inputMeasurements);
-    ACTS_PYTHON_MEMBER(outputSpacePoints);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(geometrySelection);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SpacePointMaker, mex,
+                                "SpacePointMaker", inputSourceLinks,
+                                inputMeasurements, outputSpacePoints,
+                                trackingGeometry, geometrySelection);
 
   {
     using Config = Acts::SeedFilterConfig;
@@ -60,13 +46,22 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaRMin);
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(compatSeedLimit);
+    ACTS_PYTHON_MEMBER(curvatureSortingInFilter);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(useDeltaRorTopRadius);
+    ACTS_PYTHON_MEMBER(seedWeightIncrement);
+    ACTS_PYTHON_MEMBER(numSeedIncrement);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpMConf);
+    ACTS_PYTHON_MEMBER(maxQualitySeedsPerSpMConf);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
 
   {
-    using Config = Acts::SeedfinderConfig<SimSpacePoint>;
-    auto c = py::class_<Config>(m, "SeedfinderConfig").def(py::init<>());
+    using Config = Acts::SeedFinderConfig<SimSpacePoint>;
+    auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);
     ACTS_PYTHON_MEMBER(cotThetaMax);
@@ -102,6 +97,78 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(maxBlockSize);
     ACTS_PYTHON_MEMBER(nTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(deltaZMax);
+    ACTS_PYTHON_MEMBER(zBinEdges);
+    ACTS_PYTHON_MEMBER(skipPreviousTopSP);
+    ACTS_PYTHON_MEMBER(interactionPointCut);
+    ACTS_PYTHON_MEMBER(zBinsCustomLooping);
+    ACTS_PYTHON_MEMBER(rRangeMiddleSP);
+    ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
+    ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
+    ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
+    ACTS_PYTHON_MEMBER(binSizeR);
+    ACTS_PYTHON_MEMBER(forceRadialSorting);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(arithmeticAverageCotTheta);
+    ACTS_PYTHON_MEMBER(useDetailedDoubleMeasurementInfo);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
+    using seedConf = Acts::SeedConfirmationRangeConfig;
+    auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, seedConf);
+    ACTS_PYTHON_MEMBER(zMinSeedConf);
+    ACTS_PYTHON_MEMBER(zMaxSeedConf);
+    ACTS_PYTHON_MEMBER(rMaxSeedConf);
+    ACTS_PYTHON_MEMBER(nTopForLargeR);
+    ACTS_PYTHON_MEMBER(nTopForSmallR);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
+    using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
+    auto c =
+        py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(minPt);
+    ACTS_PYTHON_MEMBER(cotThetaMax);
+    ACTS_PYTHON_MEMBER(deltaRMinBottomSP);
+    ACTS_PYTHON_MEMBER(deltaRMaxBottomSP);
+    ACTS_PYTHON_MEMBER(deltaRMinTopSP);
+    ACTS_PYTHON_MEMBER(deltaRMaxTopSP);
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(deltaZMax);
+    ACTS_PYTHON_MEMBER(sigmaScattering);
+    ACTS_PYTHON_MEMBER(maxPtScattering);
+    ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
+    ACTS_PYTHON_MEMBER(collisionRegionMin);
+    ACTS_PYTHON_MEMBER(collisionRegionMax);
+    ACTS_PYTHON_MEMBER(phiMin);
+    ACTS_PYTHON_MEMBER(phiMax);
+    ACTS_PYTHON_MEMBER(zMin);
+    ACTS_PYTHON_MEMBER(zMax);
+    ACTS_PYTHON_MEMBER(rMax);
+    ACTS_PYTHON_MEMBER(rMin);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_MEMBER(beamPos);
+    ACTS_PYTHON_MEMBER(radLengthPerSeed);
+    ACTS_PYTHON_MEMBER(interactionPointCut);
+    ACTS_PYTHON_MEMBER(rMinMiddle);
+    ACTS_PYTHON_MEMBER(rMaxMiddle);
+    ACTS_PYTHON_MEMBER(deltaPhiMax);
+
+    ACTS_PYTHON_MEMBER(highland);
+    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
+    ACTS_PYTHON_MEMBER(pTPerHelixRadius);
+    ACTS_PYTHON_MEMBER(minHelixDiameter2);
+    ACTS_PYTHON_MEMBER(pT2perRadius);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
@@ -116,68 +183,35 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(zMin);
+    ACTS_PYTHON_MEMBER(phiMin);
+    ACTS_PYTHON_MEMBER(phiMax);
     ACTS_PYTHON_MEMBER(deltaRMax);
     ACTS_PYTHON_MEMBER(cotThetaMax);
+    ACTS_PYTHON_MEMBER(phiBinDeflectionCoverage);
+    ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(zBinEdges);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
 
-  {
-    using Config = ActsExamples::SeedingAlgorithm::Config;
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
+      outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig,
+      gridConfig, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
+      numPhiNeighbors);
 
-    auto alg =
-        py::class_<ActsExamples::SeedingAlgorithm, ActsExamples::BareAlgorithm,
-                   std::shared_ptr<ActsExamples::SeedingAlgorithm>>(
-            mex, "SeedingAlgorithm")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config",
-                                   &ActsExamples::SeedingAlgorithm::config);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
+                                "SeedingOrthogonalAlgorithm", inputSpacePoints,
+                                outputSeeds, outputProtoTracks,
+                                seedFilterConfig, seedFinderConfig);
 
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputSpacePoints);
-    ACTS_PYTHON_MEMBER(outputSeeds);
-    ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_MEMBER(seedFilterConfig);
-    ACTS_PYTHON_MEMBER(seedFinderConfig);
-    ACTS_PYTHON_MEMBER(gridConfig);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using Alg = ActsExamples::TrackParamsEstimationAlgorithm;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackParamsEstimationAlgorithm")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputSeeds);
-    ACTS_PYTHON_MEMBER(inputSpacePoints);
-    ACTS_PYTHON_MEMBER(inputProtoTracks);
-    ACTS_PYTHON_MEMBER(inputSourceLinks);
-    ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(magneticField);
-    ACTS_PYTHON_MEMBER(deltaRMin);
-    ACTS_PYTHON_MEMBER(deltaRMax);
-    ACTS_PYTHON_MEMBER(bFieldMin);
-    ACTS_PYTHON_MEMBER(sigmaLoc0);
-    ACTS_PYTHON_MEMBER(sigmaLoc1);
-    ACTS_PYTHON_MEMBER(sigmaPhi);
-    ACTS_PYTHON_MEMBER(sigmaTheta);
-    ACTS_PYTHON_MEMBER(sigmaQOverP);
-    ACTS_PYTHON_MEMBER(sigmaT0);
-    ACTS_PYTHON_MEMBER(initialVarInflation);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackParamsEstimationAlgorithm, mex,
+      "TrackParamsEstimationAlgorithm", inputSeeds, inputSpacePoints,
+      inputProtoTracks, inputSourceLinks, outputTrackParameters,
+      outputProtoTracks, trackingGeometry, magneticField, deltaRMin, deltaRMax,
+      bFieldMin, sigmaLoc0, sigmaLoc1, sigmaPhi, sigmaTheta, sigmaQOverP,
+      sigmaT0, initialVarInflation);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
@@ -202,8 +236,28 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
     ACTS_PYTHON_MEMBER(outputTrajectories);
+    ACTS_PYTHON_MEMBER(outputTrackParameters);
+    ACTS_PYTHON_MEMBER(outputTrackParametersTips);
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Alg = ActsExamples::TrajectoriesToPrototracks;
+    using Config = Alg::Config;
+
+    auto alg =
+        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
+            mex, "TrajectoriesToPrototracks")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputTrajectories);
+    ACTS_PYTHON_MEMBER(outputPrototracks);
     ACTS_PYTHON_STRUCT_END();
   }
 

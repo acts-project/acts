@@ -25,6 +25,8 @@ template <typename external_spacepoint_t>
 class BinFinder {
  public:
   /// constructor
+  BinFinder();
+
   BinFinder(const std::vector<std::pair<int, int> >&& zBinNeighbors,
             const int&& numPhiNeighbors);
 

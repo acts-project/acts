@@ -25,8 +25,7 @@ class SurfaceBoundsStub : public SurfaceBounds {
     std::iota(m_values.begin(), m_values.end(), 0);
   }
 
-  ~SurfaceBoundsStub() override { /*nop*/
-  }
+  ~SurfaceBoundsStub() override = default;
   BoundsType type() const final { return SurfaceBounds::eOther; }
   std::vector<double> values() const override { return m_values; }
   bool inside(const Vector2& /*lpos*/,

@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -16,18 +17,6 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
-
-namespace {
-struct SimpleReverseFilteringLogic {
-  double momentumThreshold;
-
-  bool doBackwardFiltering(
-      Acts::MultiTrajectory::ConstTrackStateProxy trackState) const {
-    auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
-    return (momentum <= momentumThreshold);
-  }
-};
-}  // namespace
 
 ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     Config config, Acts::Logging::Level level)
@@ -80,36 +69,27 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  // Set the KalmanFitter options
-  Acts::KalmanFitterExtensions extensions;
-  MeasurementCalibrator calibrator{measurements};
-  extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
-  Acts::GainMatrixUpdater kfUpdater;
-  Acts::GainMatrixSmoother kfSmoother;
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&Acts::GainMatrixSmoother::operator()>(
-      &kfSmoother);
+  // Measurement calibrator must be instantiated here, because we need the
+  // measurements to construct it. The other extensions are hold by the
+  // fit-function-object
+  ActsExamples::MeasurementCalibrator calibrator(measurements);
 
-  SimpleReverseFilteringLogic reverseFilteringLogic{
-      m_cfg.reverseFilteringMomThreshold};
-  extensions.reverseFilteringLogic
-      .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
-          &reverseFilteringLogic);
+  GeneralFitterOptions options{ctx.geoContext,
+                               ctx.magFieldContext,
+                               ctx.calibContext,
+                               calibrator,
+                               &(*pSurface),
+                               Acts::LoggerWrapper{logger()},
+                               Acts::PropagatorPlainOptions()};
 
-  Acts::KalmanFitterOptions kfOptions(
-      ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
-      Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
-      &(*pSurface));
-
-  kfOptions.multipleScattering = m_cfg.multipleScattering;
-  kfOptions.energyLoss = m_cfg.energyLoss;
+  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
 
   // Perform the fit for each input track
   std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
-    if (m_cfg.pickTrack > 0 and m_cfg.pickTrack != static_cast<int>(itrack)) {
+    if (m_cfg.pickTrack > -1 and m_cfg.pickTrack != static_cast<int>(itrack)) {
       continue;
     }
 
@@ -149,30 +129,29 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
     ACTS_DEBUG("Invoke fitter");
     auto result =
-        fitTrack(trackSourceLinks, initialParams, kfOptions, surfSequence);
+        fitTrack(trackSourceLinks, initialParams, options, surfSequence, mtj);
 
     if (result.ok()) {
       // Get the fit output object
-      const auto& fitOutput = result.value();
+      auto& fitOutput = result.value();
       // The track entry indices container. One element here.
-      std::vector<size_t> trackTips;
+      std::vector<Acts::MultiTrajectoryTraits::IndexType> trackTips;
       trackTips.reserve(1);
       trackTips.emplace_back(fitOutput.lastMeasurementIndex);
       // The fitted parameters container. One element (at most) here.
       Trajectories::IndexedParameters indexedParams;
       if (fitOutput.fittedParameters) {
         const auto& params = fitOutput.fittedParameters.value();
-        ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
+        ACTS_VERBOSE("Fitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << params.parameters().transpose());
         // Push the fitted parameters to the container
-        indexedParams.emplace(fitOutput.lastMeasurementIndex,
-                              std::move(params));
+        indexedParams.emplace(fitOutput.lastMeasurementIndex, params);
       } else {
-        ACTS_DEBUG("No fitted paramemeters for track " << itrack);
+        ACTS_DEBUG("No fitted parameters for track " << itrack);
       }
       // store the result
-      trajectories.emplace_back(std::move(fitOutput.fittedStates),
-                                std::move(trackTips), std::move(indexedParams));
+      trajectories.emplace_back(fitOutput.fittedStates, std::move(trackTips),
+                                std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track "
                    << itrack << " with error: " << result.error() << ", "
@@ -182,6 +161,10 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       trajectories.push_back(Trajectories());
     }
   }
+
+  std::stringstream ss;
+  mtj->statistics().toStream(ss);
+  ACTS_INFO(ss.str());
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;

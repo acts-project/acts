@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-import os
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import acts
 import acts.examples
@@ -11,115 +10,68 @@ u = acts.UnitConstants
 
 
 def configureDigitization(
-    trackingGeometry,
-    field,
+    trackingGeometry: acts.TrackingGeometry,
+    field: acts.MagneticFieldProvider,
     outputDir: Path,
     particlesInput: Optional[Path] = None,
-    outputRoot=True,
-    outputCsv=True,
-    s=None,
-):
+    outputRoot: bool = True,
+    outputCsv: bool = True,
+    s: Optional[acts.examples.Sequencer] = None,
+    doMerge: Optional[bool] = None,
+) -> acts.examples.Sequencer:
 
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
-
-    csv_dir = os.path.join(outputDir, "csv")
-    if not os.path.exists(csv_dir):
-        os.mkdir(csv_dir)
-
-    # Input
-    rnd = acts.examples.RandomNumbers(seed=42)
-
-    particleCollection = "particles_input"
-    if particlesInput is None:
-        evGen = acts.examples.EventGenerator(
-            level=acts.logging.INFO,
-            generators=[
-                acts.examples.EventGenerator.Generator(
-                    multiplicity=acts.examples.FixedMultiplicityGenerator(n=2),
-                    vertex=acts.examples.GaussianVertexGenerator(
-                        stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
-                    ),
-                    particles=acts.examples.ParametricParticleGenerator(
-                        p=(1 * u.GeV, 10 * u.GeV),
-                        eta=(-2, 2),
-                        phi=(0, 360 * u.degree),
-                        randomizeCharge=True,
-                        numParticles=4,
-                    ),
-                )
-            ],
-            outputParticles=particleCollection,
-            randomNumbers=rnd,
-        )
-    else:
-        # Read input from input collection (e.g. Pythia8 output)
-        evGen = acts.examples.RootParticleReader(
-            level=acts.logging.INFO,
-            particleCollection=particleCollection,
-            filePath=str(particlesInput),
-            orderedEvents=False,
-        )
-
-    # Simulation
-    simAlg = acts.examples.FatrasSimulation(
-        level=acts.logging.INFO,
-        inputParticles=particleCollection,
-        outputParticlesInitial="particles_initial",
-        outputParticlesFinal="particles_final",
-        outputSimHits="simhits",
-        randomNumbers=rnd,
-        trackingGeometry=trackingGeometry,
-        magneticField=field,
-        generateHitsOnSensitive=True,
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        PhiConfig,
+        ParticleConfig,
+        addFatras,
     )
-
-    # Digitization
-    digiCfg = acts.examples.DigitizationConfig(
-        acts.examples.readDigiConfigFromJson(
-            str(
-                srcdir
-                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
-            )
-        ),
-        trackingGeometry=trackingGeometry,
-        randomNumbers=rnd,
-        inputSimHits=simAlg.config.outputSimHits,
-    )
-    digiAlg = acts.examples.DigitizationAlgorithm(digiCfg, acts.logging.INFO)
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
+    rnd = acts.examples.RandomNumbers(seed=42)
 
-    s.addReader(evGen)
-    s.addAlgorithm(simAlg)
-    s.addAlgorithm(digiAlg)
-
-    if outputRoot:
-        rmwConfig = acts.examples.RootMeasurementWriter.Config(
-            inputMeasurements=digiAlg.config.outputMeasurements,
-            inputClusters=digiAlg.config.outputClusters,
-            inputSimHits=simAlg.config.outputSimHits,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
-            filePath=str(outputDir / f"{digiAlg.config.outputMeasurements}.root"),
-            trackingGeometry=trackingGeometry,
+    if particlesInput is None:
+        addParticleGun(
+            s,
+            EtaConfig(-2.0, 2.0),
+            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            PhiConfig(0.0, 360.0 * u.degree),
+            multiplicity=2,
+            rnd=rnd,
         )
-        rmwConfig.addBoundIndicesFromDigiConfig(digiAlg.config)
-        s.addWriter(acts.examples.RootMeasurementWriter(rmwConfig, acts.logging.INFO))
-
-    if outputCsv:
-        csv_dir = outputDir / "csv"
-        csv_dir.mkdir(parents=True, exist_ok=True)
-        s.addWriter(
-            acts.examples.CsvMeasurementWriter(
-                level=acts.logging.VERBOSE,
-                inputMeasurements=digiAlg.config.outputMeasurements,
-                inputClusters=digiAlg.config.outputClusters,
-                inputSimHits=simAlg.config.outputSimHits,
-                inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
-                outputDir=str(csv_dir),
-            )
+    else:
+        # Read input from input collection (e.g. Pythia8 output)
+        evGen = acts.examples.RootParticleReader(
+            level=s.config.logLevel,
+            particleCollection="particles_input",
+            filePath=str(particlesInput),
+            orderedEvents=False,
         )
+        s.addReader(evGen)
+
+    outputDir = Path(outputDir)
+    addFatras(
+        s,
+        trackingGeometry,
+        field,
+        rnd=rnd,
+    )
+    from acts.examples.simulation import addDigitization
+
+    addDigitization(
+        s,
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(__file__).resolve().parent.parent.parent.parent
+        / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
+        outputDirCsv=outputDir / "csv" if outputCsv else None,
+        outputDirRoot=outputDir if outputRoot else None,
+        rnd=rnd,
+        doMerge=doMerge,
+    )
 
     return s
 

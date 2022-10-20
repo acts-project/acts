@@ -1,6 +1,7 @@
+include(FetchContent)
+
 add_library(
   ActsPluginDD4hep SHARED
-  src/ActsExtension.cpp
   src/ConvertDD4hepDetector.cpp
   src/ConvertDD4hepMaterial.cpp
   src/DD4hepDetectorElement.cpp
@@ -19,7 +20,7 @@ if(${DD4hep_VERSION} VERSION_LESS 1.11)
   target_include_directories(ActsPluginDD4hep PUBLIC ${DD4hep_INCLUDE_DIRS})
   target_link_libraries(ActsPluginDD4hep PUBLIC ${DD4hep_DDCORE_LIBRARY})
 else()
-  target_link_libraries(ActsPluginDD4hep PUBLIC DD4hep::DDCore)
+  target_link_libraries(ActsPluginDD4hep PUBLIC DD4hep::DDCore DD4hep::DDRec)
 endif()
 
 install(

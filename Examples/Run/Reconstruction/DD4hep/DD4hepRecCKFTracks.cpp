@@ -11,5 +11,6 @@
 #include "RecCKFTracks.hpp"
 
 int main(int argc, char* argv[]) {
-  return runRecCKFTracks(argc, argv, std::make_shared<DD4hepDetector>());
+  return runRecCKFTracks(
+      argc, argv, std::make_shared<ActsExamples::DD4hep::DD4hepDetector>());
 }

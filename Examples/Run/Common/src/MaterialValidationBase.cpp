@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
@@ -111,7 +110,7 @@ ActsExamples::ProcessCode setupStraightLinePropagation(
   using Propagator = Acts::Propagator<SlStepper, Acts::Navigator>;
   // Make stepper and propagator
   SlStepper stepper;
-  Propagator propagator(std::move(stepper), std::move(navigator));
+  Propagator propagator(stepper, std::move(navigator));
 
   // Read the propagation config and create the algorithms
   auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);

@@ -35,8 +35,9 @@ class Surface;
 
 template <class volume_t>
 class BoundarySurfaceT {
-  /// declare the TrackingVolume as friend
+#ifndef DOXYGEN
   friend volume_t;
+#endif
 
   using VolumePtr = std::shared_ptr<const volume_t>;
   using VolumeArray = BinnedArray<VolumePtr>;
@@ -159,7 +160,7 @@ inline const Surface& BoundarySurfaceT<volume_t>::surfaceRepresentation()
 template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolume(const volume_t* volume,
                                               NavigationDirection navDir) {
-  if (navDir == backward) {
+  if (navDir == NavigationDirection::Backward) {
     m_oppositeVolume = volume;
   } else {
     m_alongVolume = volume;
@@ -170,7 +171,7 @@ template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolumeArray(
     const std::shared_ptr<const VolumeArray> volumes,
     NavigationDirection navDir) {
-  if (navDir == backward) {
+  if (navDir == NavigationDirection::Backward) {
     m_oppositeVolumeArray = volumes;
   } else {
     m_alongVolumeArray = volumes;

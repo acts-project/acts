@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
@@ -46,6 +47,13 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
     double beamPipeLayerThickness{0};
 
     double unitScalor = 1.0;
+
+    Acts::TGeoLayerBuilder::ElementFactory elementFactory =
+        Acts::TGeoLayerBuilder::defaultElementFactory;
+
+    /// Optional geometry identfier hook to be used during closure
+    /// @note Will be @b copied when calling the geometry building
+    Acts::GeometryIdentifierHook geometryIdentifierHook;
 
     enum SubVolume : size_t { Negative = 0, Central, Positive };
 

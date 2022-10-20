@@ -60,7 +60,8 @@ using ConstantFieldPropagator =
 
 using KalmanUpdater = Acts::GainMatrixUpdater;
 using KalmanSmoother = Acts::GainMatrixSmoother;
-using KalmanFitterType = Acts::KalmanFitter<ConstantFieldPropagator>;
+using KalmanFitterType =
+    Acts::KalmanFitter<ConstantFieldPropagator, VectorMultiTrajectory>;
 
 KalmanUpdater kfUpdater;
 KalmanSmoother kfSmoother;
@@ -73,11 +74,14 @@ const CalibrationContext calCtx;
 std::normal_distribution<double> normalDist(0., 1.);
 std::default_random_engine rng(42);
 
-KalmanFitterExtensions getExtensions() {
-  KalmanFitterExtensions extensions;
-  extensions.calibrator.connect<&testSourceLinkCalibrator>();
-  extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
-  extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
+KalmanFitterExtensions<VectorMultiTrajectory> getExtensions() {
+  KalmanFitterExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.updater.connect<&KalmanUpdater::operator()<VectorMultiTrajectory>>(
+      &kfUpdater);
+  extensions.smoother
+      .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
   return extensions;
 }
 
@@ -182,7 +186,7 @@ StraightPropagator makeStraightPropagator(
   cfg.resolveSensitive = true;
   Navigator navigator(cfg);
   StraightLineStepper stepper;
-  return StraightPropagator(std::move(stepper), std::move(navigator));
+  return StraightPropagator(stepper, std::move(navigator));
 }
 
 // Construct a propagator using a constant magnetic field along z.
@@ -297,7 +301,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
          const Transform3& /*unused*/) { return true; };
 
   // Construct the alignment options
-  AlignmentOptions<KalmanFitterOptions> alignOptions(
+  AlignmentOptions<KalmanFitterOptions<VectorMultiTrajectory>> alignOptions(
       kfOptions, voidAlignUpdater, LoggerWrapper{*alignLogger});
   alignOptions.maxIterations = 1;
 

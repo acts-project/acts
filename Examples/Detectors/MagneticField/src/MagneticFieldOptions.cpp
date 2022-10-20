@@ -14,18 +14,17 @@
 #include "Acts/MagneticField/SolenoidBField.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
+#include "ActsExamples/MagneticField/FieldMapRootIo.hpp"
+#include "ActsExamples/MagneticField/FieldMapTextIo.hpp"
 #include "ActsExamples/MagneticField/ScalableBFieldService.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
+#include <filesystem>
 #include <memory>
 #include <stdexcept>
 #include <string>
 
-#include <boost/filesystem.hpp>
 #include <boost/program_options.hpp>
-
-#include "FieldMapRootIo.hpp"
-#include "FieldMapTextIo.hpp"
 
 void ActsExamples::Options::addMagneticFieldOptions(Description& desc) {
   using boost::program_options::bool_switch;
@@ -104,13 +103,13 @@ void ActsExamples::Options::setupMagneticFieldServices(const Variables& vars,
 std::shared_ptr<Acts::MagneticFieldProvider>
 ActsExamples::Options::readMagneticField(const Variables& vars) {
   using namespace ActsExamples::detail;
-  using boost::filesystem::path;
+  using std::filesystem::path;
 
   ACTS_LOCAL_LOGGER(
       Acts::getDefaultLogger("MagneticField", Acts::Logging::INFO));
 
   // first option: create a constant field
-  if (vars.count("bf-constant-tesla")) {
+  if (vars.count("bf-constant-tesla") != 0u) {
     const auto values = vars["bf-constant-tesla"].as<Reals<3>>();
     Acts::Vector3 field(values[0] * Acts::UnitConstants::T,
                         values[1] * Acts::UnitConstants::T,
@@ -125,7 +124,7 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
   }
 
   // second option: read a field map from a file
-  if (vars.count("bf-map-file")) {
+  if (vars.count("bf-map-file") != 0u) {
     const path file = vars["bf-map-file"].as<std::string>();
     const auto tree = vars["bf-map-tree"].as<std::string>();
     const auto type = vars["bf-map-type"].as<std::string>();

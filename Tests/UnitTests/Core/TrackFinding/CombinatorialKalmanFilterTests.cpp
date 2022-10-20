@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -74,25 +75,43 @@ struct TestContainerAccessor {
   using Container = container_t;
   using Key = typename container_t::key_type;
   using Value = typename container_t::mapped_type;
-  using Iterator = typename container_t::const_iterator;
+
+  /// This iterator adapter is needed to have the deref operator return a single
+  /// source link instead of the map pair <GeometryIdentifier,SourceLink>
+  struct Iterator {
+    using BaseIterator = typename container_t::const_iterator;
+
+    using iterator_category = typename BaseIterator::iterator_category;
+    using value_type = typename BaseIterator::value_type;
+    using difference_type = typename BaseIterator::difference_type;
+    using pointer = typename BaseIterator::pointer;
+    using reference = typename BaseIterator::reference;
+
+    Iterator& operator++() {
+      ++m_iterator;
+      return *this;
+    }
+
+    bool operator==(const Iterator& other) const {
+      return m_iterator == other.m_iterator;
+    }
+
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
+
+    const Value& operator*() const { return m_iterator->second; }
+
+    BaseIterator m_iterator;
+  };
 
   // pointer to the container
   const Container* container = nullptr;
 
-  // count the number of elements with requested key
-  size_t count(const Key& key) const {
-    assert(container != nullptr);
-    return container->count(key);
-  }
-
   // get the range of elements with requested key
-  std::pair<Iterator, Iterator> range(const Key& key) const {
+  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
     assert(container != nullptr);
-    return container->equal_range(key);
+    auto [begin, end] = container->equal_range(surface.geometryId());
+    return {Iterator{begin}, Iterator{end}};
   }
-
-  // get the element using the iterator
-  const Value& at(const Iterator& it) const { return (*it).second; }
 };
 
 struct Fixture {
@@ -102,15 +121,18 @@ struct Fixture {
   using ConstantFieldPropagator =
       Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
 
+  using Trajectory = Acts::VectorMultiTrajectory;
+
   using KalmanUpdater = Acts::GainMatrixUpdater;
   using KalmanSmoother = Acts::GainMatrixSmoother;
   using CombinatorialKalmanFilter =
-      Acts::CombinatorialKalmanFilter<ConstantFieldPropagator>;
+      Acts::CombinatorialKalmanFilter<ConstantFieldPropagator, Trajectory>;
   using TestSourceLinkContainer =
       std::unordered_multimap<Acts::GeometryIdentifier, TestSourceLink>;
   using TestSourceLinkAccessor = TestContainerAccessor<TestSourceLinkContainer>;
   using CombinatorialKalmanFilterOptions =
-      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor>;
+      Acts::CombinatorialKalmanFilterOptions<TestSourceLinkAccessor::Iterator,
+                                             Trajectory>;
 
   KalmanUpdater kfUpdater;
   KalmanSmoother kfSmoother;
@@ -139,13 +161,17 @@ struct Fixture {
 
   Acts::MeasurementSelector measSel{measurementSelectorCfg};
 
-  Acts::CombinatorialKalmanFilterExtensions getExtensions() const {
-    Acts::CombinatorialKalmanFilterExtensions extensions;
-    extensions.calibrator.connect<&testSourceLinkCalibrator>();
-    extensions.updater.connect<&KalmanUpdater::operator()>(&kfUpdater);
-    extensions.smoother.connect<&KalmanSmoother::operator()>(&kfSmoother);
-    extensions.measurementSelector.connect<&Acts::MeasurementSelector::select>(
-        &measSel);
+  Acts::CombinatorialKalmanFilterExtensions<Trajectory> getExtensions() const {
+    Acts::CombinatorialKalmanFilterExtensions<Trajectory> extensions;
+    extensions.calibrator
+        .template connect<&testSourceLinkCalibrator<Trajectory>>();
+    extensions.updater.template connect<&KalmanUpdater::operator()<Trajectory>>(
+        &kfUpdater);
+    extensions.smoother
+        .template connect<&KalmanSmoother::operator()<Trajectory>>(&kfSmoother);
+    extensions.measurementSelector
+        .template connect<&Acts::MeasurementSelector::select<Trajectory>>(
+            &measSel);
     return extensions;
   }
 
@@ -206,7 +232,7 @@ struct Fixture {
     cfg.resolveSensitive = true;
     Acts::Navigator navigator{cfg};
     Acts::StraightLineStepper stepper;
-    return StraightPropagator(std::move(stepper), std::move(navigator));
+    return StraightPropagator(stepper, std::move(navigator));
   }
 
   // Construct a propagator using a constant magnetic field along z.
@@ -225,8 +251,13 @@ struct Fixture {
 
   CombinatorialKalmanFilterOptions makeCkfOptions() const {
     return CombinatorialKalmanFilterOptions(
-        geoCtx, magCtx, calCtx, TestSourceLinkAccessor(), getExtensions(),
-        Acts::LoggerWrapper{*logger}, Acts::PropagatorPlainOptions());
+        geoCtx, magCtx, calCtx,
+        Acts::SourceLinkAccessorDelegate<
+            TestSourceLinkAccessor::Iterator>{},  // leave the accessor empty,
+                                                  // this will have to be set
+                                                  // before running the CKF
+        getExtensions(), Acts::LoggerWrapper{*logger},
+        Acts::PropagatorPlainOptions());
   }
 };
 
@@ -239,15 +270,20 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
 
   auto options = f.makeCkfOptions();
   // this is the default option. set anyways for consistency
-  options.propagatorPlainOptions.direction = Acts::forward;
+  options.propagatorPlainOptions.direction = Acts::NavigationDirection::Forward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
   // Set the target surface
   options.referenceSurface = &(*pSurface);
 
+  Fixture::TestSourceLinkAccessor slAccessor;
+  slAccessor.container = &f.sourceLinks;
+  options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
+      &slAccessor);
+
   // run the CKF for all initial track states
-  auto results = f.ckf.findTracks(f.sourceLinks, f.startParameters, options);
+  auto results = f.ckf.findTracks(f.startParameters, options);
   // There should be three track finding results with three initial track states
   BOOST_CHECK_EQUAL(results.size(), 3u);
 
@@ -263,7 +299,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
-    BOOST_CHECK_EQUAL(val.fittedStates.size(), f.detector.numMeasurements);
+    BOOST_CHECK_EQUAL(val.fittedStates->size(),
+                      f.detector.numMeasurements * f.startParameters.size());
 
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
@@ -272,7 +309,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    val.fittedStates.visitBackwards(
+    val.fittedStates->visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
           const auto& sl =
@@ -289,15 +326,21 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   Fixture f(0_T);
 
   auto options = f.makeCkfOptions();
-  options.propagatorPlainOptions.direction = Acts::backward;
+  options.propagatorPlainOptions.direction =
+      Acts::NavigationDirection::Backward;
   // Construct a plane surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Acts::Vector3{3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
   // Set the target surface
   options.referenceSurface = &(*pSurface);
 
+  Fixture::TestSourceLinkAccessor slAccessor;
+  slAccessor.container = &f.sourceLinks;
+  options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
+      &slAccessor);
+
   // run the CKF for all initial track states
-  auto results = f.ckf.findTracks(f.sourceLinks, f.endParameters, options);
+  auto results = f.ckf.findTracks(f.endParameters, options);
   // There should be three found tracks with three initial track states
   BOOST_CHECK_EQUAL(results.size(), 3u);
 
@@ -313,7 +356,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     BOOST_REQUIRE(res.ok());
 
     auto val = *res;
-    BOOST_CHECK_EQUAL(val.fittedStates.size(), f.detector.numMeasurements);
+    BOOST_CHECK_EQUAL(val.fittedStates->size(),
+                      f.detector.numMeasurements * f.endParameters.size());
     // with the given measurement selection cuts, only one trajectory for the
     // given input parameters should be found.
     BOOST_CHECK_EQUAL(val.lastMeasurementIndices.size(), 1u);
@@ -321,7 +365,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    val.fittedStates.visitBackwards(
+    val.fittedStates->visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
           nummismatchedHits += (trackId != static_cast<const TestSourceLink&>(

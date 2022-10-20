@@ -12,7 +12,7 @@
 #include "Acts/MagneticField/NullBField.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
-#include <Acts/Propagator/Navigator.hpp>
+#include "Acts/Propagator/Navigator.hpp"
 
 using namespace Acts;
 using namespace Acts::VectorHelpers;
@@ -29,7 +29,7 @@ using SingleStepper = EigenStepper<StepperExtensionList<DefaultExtension>>;
 
 const double defaultStepSize = 123.;
 const double defaultTolerance = 234.;
-const auto defaultNDir = backward;
+const auto defaultNDir = NavigationDirection::Backward;
 
 const auto defaultBField =
     std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
@@ -40,6 +40,7 @@ struct Options {
   double stepSizeCutOff = 0.0;
   std::size_t maxRungeKuttaStepTrials = 10;
   double mass = 1.0;
+  LoggerWrapper logger = Acts::getDummyLogger();
 };
 
 struct Navigation {};
@@ -370,11 +371,12 @@ void test_multi_stepper_surface_status_update() {
                     .unitDirection()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
-  MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars, forward,
-                         defaultStepSize, defaultTolerance);
+  MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
+                         NavigationDirection::Forward, defaultStepSize,
+                         defaultTolerance);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      forward, defaultStepSize, defaultTolerance);
+      NavigationDirection::Forward, defaultStepSize, defaultTolerance);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
@@ -470,11 +472,12 @@ void test_component_bound_state() {
                     .unitDirection()
                     .isApprox(Vector3{-1.0, 0.0, 0.0}, 1.e-10));
 
-  MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars, forward,
-                         defaultStepSize, defaultTolerance);
+  MultiState multi_state(geoCtx, magCtx, defaultNullBField, multi_pars,
+                         NavigationDirection::Forward, defaultStepSize,
+                         defaultTolerance);
   SingleStepper::State single_state(
       geoCtx, defaultNullBField->makeCache(magCtx), std::get<1>(multi_pars[0]),
-      forward, defaultStepSize, defaultTolerance);
+      NavigationDirection::Forward, defaultStepSize, defaultTolerance);
 
   MultiStepper multi_stepper(defaultNullBField);
   SingleStepper single_stepper(defaultNullBField);
@@ -493,19 +496,21 @@ void test_component_bound_state() {
 
   // Check component-wise bound-state
   {
-    auto single_bound_state =
-        single_stepper.boundState(single_state, *right_surface, true);
+    auto single_bound_state = single_stepper.boundState(
+        single_state, *right_surface, true, FreeToBoundCorrection(false));
     BOOST_REQUIRE(single_bound_state.ok());
 
     auto cmp_iterable = multi_stepper.componentIterable(multi_state);
 
     auto ok_bound_state =
-        (*cmp_iterable.begin()).boundState(*right_surface, true);
+        (*cmp_iterable.begin())
+            .boundState(*right_surface, true, FreeToBoundCorrection(false));
     BOOST_REQUIRE(ok_bound_state.ok());
     BOOST_CHECK(*single_bound_state == *ok_bound_state);
 
     auto failed_bound_state =
-        (*(++cmp_iterable.begin())).boundState(*right_surface, true);
+        (*(++cmp_iterable.begin()))
+            .boundState(*right_surface, true, FreeToBoundCorrection(false));
     BOOST_CHECK(not failed_bound_state.ok());
   }
 }
@@ -538,7 +543,8 @@ void test_combined_bound_state_function() {
                          defaultStepSize, defaultTolerance);
   MultiStepper multi_stepper(defaultBField);
 
-  auto res = multi_stepper.boundState(multi_state, *surface, true);
+  auto res = multi_stepper.boundState(multi_state, *surface, true,
+                                      FreeToBoundCorrection(false));
 
   BOOST_REQUIRE(res.ok());
 

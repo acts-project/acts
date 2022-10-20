@@ -47,7 +47,7 @@ class filter_2sp_fixed_kernel;
 void createSeedsForGroupSycl(
     QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource,
-    const detail::DeviceSeedfinderConfig& seedfinderConfig,
+    const detail::DeviceSeedFinderConfig& seedFinderConfig,
     const DeviceExperimentCuts& deviceCuts,
     vecmem::vector<detail::DeviceSpacePoint>& bottomSPs,
     vecmem::vector<detail::DeviceSpacePoint>& middleSPs,
@@ -154,7 +154,7 @@ void createSeedsForGroupSycl(
     // Perform the middle-bottom duplet search.
     auto middleBottomEvent = q->submit([&](cl::sycl::handler& h) {
       detail::DupletSearch<detail::SpacePointType::Bottom> kernel(
-          middleSPsView, bottomSPsView, *midBotDupletBuffer, seedfinderConfig);
+          middleSPsView, bottomSPsView, *midBotDupletBuffer, seedFinderConfig);
       h.parallel_for<class DupletSearchBottomKernel>(bottomDupletNDRange,
                                                      kernel);
     });
@@ -162,7 +162,7 @@ void createSeedsForGroupSycl(
     // Perform the middle-top duplet search.
     auto middleTopEvent = q->submit([&](cl::sycl::handler& h) {
       detail::DupletSearch<detail::SpacePointType::Top> kernel(
-          middleSPsView, topSPsView, *midTopDupletBuffer, seedfinderConfig);
+          middleSPsView, topSPsView, *midTopDupletBuffer, seedFinderConfig);
       h.parallel_for<class DupletSearchTopKernel>(topDupletNDRange, kernel);
     });
     middleBottomEvent.wait_and_throw();
@@ -599,7 +599,7 @@ void createSeedsForGroupSycl(
               sumBotTopCombView, numTripletSearchThreads, firstMiddle,
               lastMiddle, *midTopDupletBuffer, sumBotMidView, sumTopMidView,
               *linearBotBuffer, *linearTopBuffer, middleSPsView,
-              *indTopDupletBuffer, countTripletsView, seedfinderConfig,
+              *indTopDupletBuffer, countTripletsView, seedFinderConfig,
               *curvImpactBuffer);
           h.parallel_for<class triplet_search_kernel>(tripletSearchNDRange,
                                                       kernel);
@@ -612,7 +612,7 @@ void createSeedsForGroupSycl(
                indMidBotCompView, *indBotDupletBuffer, sumBotTopCombView,
                *midTopDupletBuffer, *curvImpactBuffer, topSPsView,
                middleSPsView, bottomSPsView, countTripletsView,
-               *seedArrayBuffer, seedfinderConfig, deviceCuts);
+               *seedArrayBuffer, seedFinderConfig, deviceCuts);
            h.parallel_for<class filter_2sp_fixed_kernel>(tripletFilterNDRange,
                                                          kernel);
          }).wait_and_throw();

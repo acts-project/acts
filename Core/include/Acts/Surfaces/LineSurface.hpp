@@ -26,9 +26,11 @@ class LineBounds;
 ///
 ///  @note It leaves the type() method virtual, so it can not be instantiated
 ///
-/// @image html LineSurface.png
+/// @image html figures/LineSurface.png
 class LineSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from Transform3 and bounds
@@ -102,7 +104,7 @@ class LineSurface : public Surface {
   /// Return the measurement frame - this is needed for alignment, in particular
   ///
   /// for StraightLine and Perigee Surface
-  ///  - the default implementation is the the RotationMatrix3 of the transform
+  ///  - the default implementation is the RotationMatrix3 of the transform
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position is the global position where the measurement frame is
@@ -174,7 +176,7 @@ class LineSurface : public Surface {
   /// onto \f$ \vec{measX} \f$:<br>
   /// \f$ sign = -sign(\vec{d} \cdot \vec{measX}) \f$
   ///
-  /// \image html SignOfDriftCircleD0.gif
+  /// @image html figures/SignOfDriftCircleD0.gif
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not

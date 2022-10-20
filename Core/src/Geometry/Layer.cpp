@@ -43,7 +43,8 @@ Acts::ApproachDescriptor* Acts::Layer::approachDescriptor() {
 }
 
 void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
-                                const GeometryIdentifier& layerID) {
+                                const GeometryIdentifier& layerID,
+                                const GeometryIdentifierHook& hook) {
   // set the volumeID of this
   assignGeometryId(layerID);
   // assign to the representing surface
@@ -84,6 +85,9 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
     GeometryIdentifier::Value issurface = 0;
     for (auto& sSurface : m_surfaceArray->surfaces()) {
       auto ssurfaceID = GeometryIdentifier(layerID).setSensitive(++issurface);
+      if (hook) {
+        ssurfaceID = hook(ssurfaceID, *sSurface);
+      }
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeometryId(ssurfaceID);
       if (materialDecorator != nullptr) {
@@ -105,7 +109,7 @@ Acts::Layer::compatibleSurfaces(
   boost::container::small_vector<SurfaceIntersection, 10> sIntersections;
 
   // fast exit - there is nothing to
-  if (!m_surfaceArray || !m_approachDescriptor || !options.navDir) {
+  if (!m_surfaceArray || !m_approachDescriptor) {
     return sIntersections;
   }
 
@@ -117,7 +121,7 @@ Acts::Layer::compatibleSurfaces(
   // check if you have to stop at the endSurface
   double pathLimit = options.pathLimit;
   double overstepLimit = options.overstepLimit;
-  if (options.endObject) {
+  if (options.endObject != nullptr) {
     // intersect the end surface
     // - it is the final one don't use the bounday check at all
     SurfaceIntersection endInter = options.endObject->intersect(
@@ -149,7 +153,7 @@ Acts::Layer::compatibleSurfaces(
       return true;
     }
     // next option: it's a material surface and you want to have it
-    if (options.resolveMaterial && sf.surfaceMaterial()) {
+    if (options.resolveMaterial && sf.surfaceMaterial() != nullptr) {
       return true;
     }
     // last option: resovle all
@@ -180,7 +184,7 @@ Acts::Layer::compatibleSurfaces(
     if (sfi && detail::checkIntersection(sfi.intersection, pathLimit,
                                          overstepLimit, s_onSurfaceTolerance)) {
       // Now put the right sign on it
-      sfi.intersection.pathLength *= std::copysign(1., options.navDir);
+      sfi.intersection.pathLength *= options.navDir;
       sIntersections.push_back(sfi);
     }
   };
@@ -240,7 +244,7 @@ Acts::Layer::compatibleSurfaces(
   sIntersections.resize(std::distance(sIntersections.begin(), it));
 
   // sort according to the path length
-  if (options.navDir == forward) {
+  if (options.navDir == NavigationDirection::Forward) {
     std::sort(sIntersections.begin(), sIntersections.end());
   } else {
     std::sort(sIntersections.begin(), sIntersections.end(), std::greater<>());
@@ -260,7 +264,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
   bool resolvePS = options.resolveSensitive || options.resolvePassive;
   bool resolveMS = options.resolveMaterial &&
                    (m_ssSensitiveSurfaces > 1 || m_ssApproachSurfaces > 1 ||
-                    surfaceRepresentation().surfaceMaterial());
+                    (surfaceRepresentation().surfaceMaterial() != nullptr));
 
   // The signed direction: solution (except overstepping) is positive
   auto sDirection = options.navDir * direction;
@@ -279,7 +283,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
 
     if (detail::checkIntersection(isection.intersection, pLimit, oLimit,
                                   s_onSurfaceTolerance)) {
-      isection.intersection.pathLength *= std::copysign(1., options.navDir);
+      isection.intersection.pathLength *= options.navDir;
       return isection;
     }
 
@@ -287,7 +291,7 @@ Acts::SurfaceIntersection Acts::Layer::surfaceOnApproach(
         detail::checkIntersection(isection.alternative, pLimit, oLimit,
                                   s_onSurfaceTolerance)) {
       // Set the right sign for the path length
-      isection.alternative.pathLength *= std::copysign(1., options.navDir);
+      isection.alternative.pathLength *= options.navDir;
       return SurfaceIntersection(isection.alternative, isection.object);
     }
 

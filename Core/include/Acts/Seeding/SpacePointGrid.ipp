@@ -27,6 +27,14 @@ Acts::SpacePointGridCreator::createGrid(
         config.minPt /
         (300. * config.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T]) =
                                     // pT[MeV] / (300 *Bz[kT])
+
+    // sanity check: if yOuter takes the square root of a negative number
+    if (minHelixRadius < config.rMax / 2) {
+      throw std::domain_error(
+          "The value of minHelixRadius cannot be smaller than rMax / 2. Please "
+          "check the configuration of bFieldInZ and minPt");
+    }
+
     float maxR2 = config.rMax * config.rMax;
     float xOuter = maxR2 / (2 * minHelixRadius);
     float yOuter = std::sqrt(maxR2 - xOuter * xOuter);
@@ -51,12 +59,13 @@ Acts::SpacePointGridCreator::createGrid(
 
     // evaluating delta Phi based on the inner and outer angle, and the azimutal
     // deflection including the maximum impact parameter
-    // Divide by config.numPhiNeighbors since we combine config.numPhiNeighbors
-    // number of consecutive phi bins in the seed making step. So each
-    // individual bin should cover 1/config.numPhiNeighbors of the maximum
-    // expected azimutal deflection
+    // Divide by config.phiBinDeflectionCoverage since we combine
+    // config.phiBinDeflectionCoverage number of consecutive phi bins in the
+    // seed making step. So each individual bin should cover
+    // 1/config.phiBinDeflectionCoverage of the maximum expected azimutal
+    // deflection
     float deltaPhi = (outerAngle - innerAngle + deltaAngleWithMaxD0) /
-                     (2 * config.numPhiNeighbors + 1);
+                     config.phiBinDeflectionCoverage;
 
     // sanity check: if the delta phi is equal to or less than zero, we'll be
     // creating an infinite or a negative number of bins, which would be bad!
@@ -77,7 +86,7 @@ Acts::SpacePointGridCreator::createGrid(
 
   Acts::detail::Axis<detail::AxisType::Equidistant,
                      detail::AxisBoundaryType::Closed>
-      phiAxis(-M_PI, M_PI, phiBins);
+      phiAxis(config.phiMin, config.phiMax, phiBins);
 
   // vector that will store the edges of the bins of z
   std::vector<AxisScalar> zValues;

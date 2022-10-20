@@ -158,18 +158,76 @@ enum Level {
   MAX           ///< Must be kept above the maximum supported debug level
 };
 
-/// @brief debug level above which an exception will be thrown after logging
+inline std::string_view levelName(Level level) {
+  switch (level) {
+    case Level::VERBOSE:
+      return "VERBOSE";
+    case Level::DEBUG:
+      return "DEBUG";
+    case Level::INFO:
+      return "INFO";
+    case Level::WARNING:
+      return "WARNING";
+    case Level::ERROR:
+      return "ERROR";
+    case Level::FATAL:
+      return "FATAL";
+    case Level::MAX:
+      return "MAX";
+    default:
+      throw std::invalid_argument{"Unknown level"};
+  }
+}
+
+#ifdef DOXYGEN
+/// @brief Get debug level above which an exception will be thrown after logging
 ///
-/// All messages with a debug level equal or higher than FAILURE_THRESHOLD will
-/// cause an exception to be thrown after log emission. This behavior, which is
-/// controlled via the ACTS_LOG_FAILURE_THRESHOLD preprocessor define, enables
-/// reliably catching non-fatal errors in automated Acts tests.
-constexpr Level FAILURE_THRESHOLD =
-#ifdef ACTS_LOG_FAILURE_THRESHOLD
-    static_cast<Level>(ACTS_LOG_FAILURE_THRESHOLD);
+/// All messages with a debug level equal or higher than the return value of
+/// this function will cause an exception to be thrown after log emission.
+///
+/// @note Depending on preprocessor settings @c ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+///       and @c ACTS_LOG_FAILURE_THRESHOLD, this operations is either constexpr
+///       or a runtime operation.
+Level getFailureThreshold();
+
 #else
-    Level::MAX;
+
+#ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+#ifdef ACTS_LOG_FAILURE_THRESHOLD
+// We have a fixed compile time log failure threshold
+constexpr Level getFailureThreshold() {
+  return Level::ACTS_LOG_FAILURE_THRESHOLD;
+}
+#else
+Level getFailureThreshold();
 #endif
+#else
+constexpr Level getFailureThreshold() {
+  // Default "NO" failure threshold
+  return Level::MAX;
+}
+#endif
+
+#endif
+
+/// @brief Set debug level above which an exception will be thrown after logging
+///
+/// All messages with a debug level equal or higher than @p level will
+/// cause an exception to be thrown after log emission.
+///
+/// @warning The runtime log failure threshold is **global state**, therefore
+///          this function is  **not threadsafe**. The intention is that this
+///          level is set once, before multi-threaded execution begins, and then
+///          not modified before the end of the job.
+/// @note This function is only available if @c ACTS_LOG_FAILURE_THRESHOLD is
+///       unset, i.e. no compile-time threshold is used. Otherwise an
+///       exception is thrown.
+void setFailureThreshold(Level level);
+
+/// Custom exception class so threshold failures can be caught
+class ThresholdFailure : public std::runtime_error {
+  using std::runtime_error::runtime_error;
+};
 
 /// @brief abstract base class for printing debug output
 ///
@@ -215,10 +273,14 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
   ///
   /// @param [in] lvl threshold debug level
   explicit DefaultFilterPolicy(const Level& lvl) : m_level(lvl) {
-    if (lvl > FAILURE_THRESHOLD) {
-      throw std::runtime_error(
+    if (lvl > getFailureThreshold()) {
+      throw ThresholdFailure(
           "Requested debug level is incompatible with "
-          "the ACTS_LOG_FAILURE_THRESHOLD configuration");
+          "the ACTS_LOG_FAILURE_THRESHOLD=" +
+          std::string{levelName(getFailureThreshold())} +
+          " configuration. See "
+          "https://acts.readthedocs.io/en/latest/core/"
+          "logging.html#logging-thresholds");
     }
   }
 
@@ -428,10 +490,14 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// @param [in] input text of debug message
   void flush(const Level& lvl, const std::string& input) final {
     (*m_out) << input << std::endl;
-    if (lvl >= FAILURE_THRESHOLD) {
-      throw std::runtime_error(
+    if (lvl >= getFailureThreshold()) {
+      throw ThresholdFailure(
           "Previous debug message exceeds the "
-          "ACTS_LOG_FAILURE_THRESHOLD configuration, bailing out");
+          "ACTS_LOG_FAILURE_THRESHOLD=" +
+          std::string{levelName(getFailureThreshold())} +
+          " configuration, bailing out. See "
+          "https://acts.readthedocs.io/en/latest/core/"
+          "logging.html#logging-thresholds");
     }
   }
 

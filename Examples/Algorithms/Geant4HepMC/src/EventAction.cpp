@@ -131,7 +131,7 @@ EventAction* EventAction::instance() {
 
 EventAction::EventAction(std::vector<std::string> processFilter)
     : G4UserEventAction(), m_processFilter(std::move(processFilter)) {
-  if (s_instance) {
+  if (s_instance != nullptr) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
     s_instance = this;
@@ -155,32 +155,37 @@ void EventAction::EndOfEventAction(const G4Event*) {
   }
   // Filter irrelevant processes
   auto currentVertex = m_event.vertices()[0];
-  for (auto& bp : m_event.beams())
-    if (!bp->end_vertex())
+  for (auto& bp : m_event.beams()) {
+    if (!bp->end_vertex()) {
       currentVertex->add_particle_in(bp);
+    }
+  }
   followOutgoingParticles(m_event, currentVertex, m_processFilter);
   // Remove vertices w/o outgoing particles and particles w/o production
   // vertices
   while (true) {
     bool sane = true;
     for (auto v : m_event.vertices()) {
-      if (!v)
+      if (!v) {
         continue;
+      }
       if (v->particles_out().empty()) {
         m_event.remove_vertex(v);
         sane = false;
       }
     }
     for (auto p : m_event.particles()) {
-      if (!p)
+      if (!p) {
         continue;
+      }
       if (!p->production_vertex()) {
         m_event.remove_particle(p);
         sane = false;
       }
     }
-    if (sane)
+    if (sane) {
       break;
+    }
   }
 }
 

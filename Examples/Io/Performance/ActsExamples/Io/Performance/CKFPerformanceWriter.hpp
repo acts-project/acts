@@ -27,7 +27,7 @@ namespace ActsExamples {
 /// track efficiency, fake rate etc.
 /// @TODO: add duplication plots
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
@@ -66,6 +66,9 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   /// Finalize plots.
   ProcessCode endRun() final override;
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
                      const TrajectoriesContainer& trajectories) final override;
@@ -86,6 +89,16 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+
+  // Adding numbers for efficiency, fake, duplicate calculations
+  size_t m_nTotalTracks = 0;
+  size_t m_nTotalMatchedTracks = 0;
+  size_t m_nTotalFakeTracks = 0;
+  size_t m_nTotalDuplicateTracks = 0;
+  size_t m_nTotalParticles = 0;
+  size_t m_nTotalMatchedParticles = 0;
+  size_t m_nTotalDuplicateParticles = 0;
+  size_t m_nTotalFakeParticles = 0;
 };
 
 }  // namespace ActsExamples

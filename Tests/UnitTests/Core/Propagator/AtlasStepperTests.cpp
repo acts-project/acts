@@ -50,7 +50,7 @@ static constexpr auto eps = 1024 * std::numeric_limits<double>::epsilon();
 // propagation settings
 static constexpr auto stepSize = 10_mm;
 static constexpr auto tolerance = 10_um;
-static constexpr NavigationDirection navDir = backward;
+static constexpr NavigationDirection navDir = NavigationDirection::Backward;
 static auto magneticField =
     std::make_shared<ConstantBField>(Vector3(0.1_T, -0.2_T, 2_T));
 
@@ -88,7 +88,7 @@ BOOST_AUTO_TEST_CASE(ConstructState) {
   BOOST_CHECK_EQUAL(state.pVector[7], charge / absMom);
   BOOST_CHECK_EQUAL(state.navDir, navDir);
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(state.stepSize, navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
   BOOST_CHECK_EQUAL(state.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(state.tolerance, tolerance);
 }
@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(ConstructStateWithCovariance) {
   BOOST_CHECK_EQUAL(state.pVector[7], charge / absMom);
   BOOST_CHECK_EQUAL(state.navDir, navDir);
   BOOST_CHECK_EQUAL(state.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(state.stepSize, navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
   BOOST_CHECK_EQUAL(state.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(state.tolerance, tolerance);
 }
@@ -256,8 +256,8 @@ BOOST_AUTO_TEST_CASE(Step) {
 
   // extract the actual step size
   auto h = res.value();
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, h);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h);
 
   // check that the position has moved
   auto deltaPos = (stepper.position(state.stepping) - pos).eval();
@@ -289,8 +289,8 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
 
   // extract the actual step size
   auto h = res.value();
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepping.stepSize, h);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepping.stepSize.value(), h);
 
   // check that the position has moved
   auto deltaPos = (stepper.position(state.stepping) - pos).eval();
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
                                 newAbsMom, newCharge, newCov);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp.referenceSurface(), geoCtx, cp.parameters());
-  NavigationDirection ndir = forward;
+  NavigationDirection ndir = NavigationDirection::Forward;
   double stepSize = -256.;
 
   auto copyState = [&](auto& field, const auto& other) {
@@ -392,7 +392,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(stateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize, ndir * stepSize);
+  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(), ndir * stepSize);
   BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
                     state.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(stateCopy.tolerance, state.stepping.tolerance);
@@ -414,8 +414,8 @@ BOOST_AUTO_TEST_CASE(Reset) {
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(stateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize,
-                    ndir * std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
                     state.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(stateCopy.tolerance, state.stepping.tolerance);
@@ -435,9 +435,10 @@ BOOST_AUTO_TEST_CASE(Reset) {
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(stepper.charge(stateCopy), stepper.charge(state.stepping));
   BOOST_CHECK_EQUAL(stepper.time(stateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(stateCopy.navDir, forward);
+  BOOST_CHECK_EQUAL(stateCopy.navDir, NavigationDirection::Forward);
   BOOST_CHECK_EQUAL(stateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(stateCopy.stepSize, std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(stateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(stateCopy.previousStepSize,
                     state.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(stateCopy.tolerance, state.stepping.tolerance);
@@ -522,10 +523,10 @@ BOOST_AUTO_TEST_CASE(StepSize) {
 
   stepper.setStepSize(state, 5_cm);
   BOOST_CHECK_EQUAL(state.previousStepSize, navDir * stepSize);
-  BOOST_CHECK_EQUAL(state.stepSize, 5_cm);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), 5_cm);
 
   stepper.releaseStepSize(state);
-  BOOST_CHECK_EQUAL(state.stepSize, navDir * stepSize);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), navDir * stepSize);
 }
 
 // test step size modification with target surfaces
@@ -550,16 +551,16 @@ BOOST_AUTO_TEST_CASE(StepSizeSurface) {
       target->intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), false),
       false);
-  BOOST_CHECK_EQUAL(state.stepSize, distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 
   // start with a different step size
-  state.stepSize = navDir * stepSize;
+  state.stepSize.setValue(navDir * stepSize);
   stepper.updateStepSize(
       state,
       target->intersect(state.geoContext, stepper.position(state),
                         state.navDir * stepper.direction(state), false),
       true);
-  BOOST_CHECK_EQUAL(state.stepSize, distance);
+  BOOST_CHECK_EQUAL(state.stepSize.value(), distance);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

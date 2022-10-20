@@ -138,9 +138,9 @@ familiar with development process in the Acts project.
    Well-written commit messages are key
    to understand your changes. There are many guidelines available on
    how to write proper commit logs (e.g.
-   `here <http://alistapart.com/article/the-art-of-the-commit>`_,
-   `here <http://chris.beams.io/posts/git-commit/>`_, or
-   `here <https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages>`_).
+   `here <http://alistapart.com/article/the-art-of-the-commit>`__,
+   `here <http://chris.beams.io/posts/git-commit/>`__, or
+   `here <https://wiki.openstack.org/wiki/GitCommitMessages#Information_in_commit_messages>`__).
    As a short summary:
 
    -  Structure your commit messages into short title (max 50
@@ -162,15 +162,15 @@ familiar with development process in the Acts project.
    remote repository. These merge commits are considered to contribute
    little information to the development process of the feature and they
    clutter the history (read more e.g.
-   `here <https://developer.atlassian.com/blog/2016/04/stop-foxtrots-now/>`_
+   `here <https://developer.atlassian.com/blog/2016/04/stop-foxtrots-now/>`__
    or
-   `here <http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history>`_).
+   `here <http://victorlin.me/posts/2013/09/30/keep-a-readable-git-history>`__).
    This problem can be avoided by using ``git pull --rebase`` which
    replays your local (un-pushed) commits on the tip of the remote
    branch. You can make this the default behaviour by running
    ``git config pull.rebase true``. More about merging vs rebasing can
    be found
-   `here <https://www.atlassian.com/git/tutorials/merging-vs-rebasing/>`_.
+   `here <https://www.atlassian.com/git/tutorials/merging-vs-rebasing/>`__.
 
 #. **Update the documentation!**
 
@@ -189,16 +189,14 @@ Developers can use the provided Docker image to format their project or
 install clang-format locally. Developers should be aware that
 clang-format will behave differently for different versions, so
 installing `the same clang version as used in the
-CI <https://github.com/acts-project/machines/blob/github-actions/check/Dockerfile.llvm8>`_
+CI <https://github.com/acts-project/machines/blob/master/format10/Dockerfile>`_
 is recommended. There are several instructions available on how to
 integrate clang-format with your favourite IDE (e.g.
 `eclipse <https://marketplace.eclipse.org/content/cppstyle>`_,
 `Xcode <https://github.com/travisjeffery/ClangFormat-Xcode>`_,
 `emacs <http://clang.llvm.org/docs/ClangFormat.html#emacs-integration>`_).
-The Acts CI system will automatically apply code reformatting using the
-provided clang-format configuration once pull requests are opened.
-However, developers are encouraged to use this code formatter also
-locally to reduce conflicts due to formatting issues.
+The Acts CI system will automatically check code formatting using the
+provided clang-format configuration and will notify incompatible formatting.
 
 In addition, some conventions are used in Acts code, details can be
 found `here <https://acts.readthedocs.io/en/latest/codeguide.html>`_.

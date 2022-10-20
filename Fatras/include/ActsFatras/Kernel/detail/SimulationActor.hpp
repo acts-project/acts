@@ -165,7 +165,8 @@ struct SimulationActor {
           // particle direction is normalized, not sure about surface normal
           auto cosIncidenceInv =
               normal.norm() / normal.dot(before.unitDirection());
-          slab.scaleThickness(cosIncidenceInv);
+          // apply abs in case `normal` and `before` produce an angle > 90°
+          slab.scaleThickness(std::abs(cosIncidenceInv));
           // run the interaction simulation
           interact(slab, result);
         }

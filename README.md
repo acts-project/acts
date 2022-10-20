@@ -23,9 +23,9 @@ following commands will clone the repository, configure, and build the core
 library
 
 ```sh
-git clone --recursive https://github.com/acts-project/acts <source-dir>
-cmake -B <build-dir> -S <source-dir>
-cmake --build <build-dir>
+git clone https://github.com/acts-project/acts <source>
+cmake -B <build> -S <source>
+cmake --build <build>
 ```
 
 For more details, e.g. specific versions and additional dependencies, have a
@@ -74,11 +74,5 @@ http://mozilla.org/MPL/2.0/ .
 
 The Acts project contains copies of the following external packages:
 
--   [dfelibs](https://gitlab.cern.ch/msmk/dfelibs) by Moritz Kiehn
-    licensed under the MIT license.
--   [JSON for Modern C++](https://github.com/nlohmann/json) by Niels Lohmann
-    licensed under the MIT License.
--   [autodiff](https://github.com/autodiff/autodiff/) by Allan Leal licensed
-    under the MIT license.
 -   [OpenDataDetector](https://github.com/acts-project/OpenDataDetector)
     licensed under the MPLv2 license.

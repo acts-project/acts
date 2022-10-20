@@ -39,6 +39,8 @@ class CsvSpacePointReader final : public IReader {
     std::string inputCollection;
     /// Output space point collections.
     std::string outputSpacePoints;
+    /// Read extended collections
+    bool extendCollection;
   };
 
   /// Construct the simhit reader.
@@ -54,6 +56,9 @@ class CsvSpacePointReader final : public IReader {
 
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

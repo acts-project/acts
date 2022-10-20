@@ -20,7 +20,7 @@ namespace Acts {
 struct SpacePointGridConfig {
   // magnetic field
   float bFieldInZ;
-  // minimum pT to be found by seedfinder
+  // minimum pT to be found by seedFinder
   float minPt;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
@@ -37,8 +37,17 @@ struct SpacePointGridConfig {
   float cotThetaMax;
   // maximum impact parameter in mm
   float impactMax;
-  // sets of consecutive phi bins in the seed making step
-  int numPhiNeighbors = 0;
+  // minimum phi value for phiAxis construction
+  float phiMin = -M_PI;
+  // maximum phi value for phiAxis construction
+  float phiMax = M_PI;
+  // Multiplicator for the number of phi-bins. The minimum number of phi-bins
+  // depends on min_pt, magnetic field: 2*M_PI/(minPT particle phi-deflection).
+  // phiBinDeflectionCoverage is a multiplier for this number. If
+  // numPhiNeighbors (in the configuration of the BinFinders) is configured to
+  // return 1 neighbor on either side of the current phi-bin (and you want to
+  // cover the full phi-range of minPT), leave this at 1.
+  int phiBinDeflectionCoverage = 1;
   // enable non equidistant binning in z
   std::vector<float> zBinEdges;
 
@@ -59,8 +68,7 @@ struct SpacePointGridConfig {
 
 template <typename external_spacepoint_t>
 using SpacePointGrid = detail::Grid<
-    std::vector<
-        std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>,
+    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>,
     detail::Axis<detail::AxisType::Equidistant,
                  detail::AxisBoundaryType::Closed>,
     detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>>;

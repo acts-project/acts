@@ -24,7 +24,7 @@ ActsExamples::JsonMaterialWriter::JsonMaterialWriter(
       m_converter{std::make_unique<Acts::MaterialMapJsonConverter>(
           m_cfg.converterCfg, level)} {}
 
-ActsExamples::JsonMaterialWriter::~JsonMaterialWriter() {}
+ActsExamples::JsonMaterialWriter::~JsonMaterialWriter() = default;
 
 void ActsExamples::JsonMaterialWriter::writeMaterial(
     const Acts::DetectorMaterialMaps& detMaterial) {

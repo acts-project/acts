@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-import os
+from typing import Optional, Union
+from pathlib import Path
+from collections.abc import Iterable
 
 import acts
 import acts.examples
-
-from common import addPythia8
+from acts.examples.simulation import addPythia8
 
 u = acts.UnitConstants
 
@@ -17,35 +18,22 @@ def runPythia8(
 ):
     # Preliminaries
     rnd = acts.examples.RandomNumbers()
+    outputDir = Path(outputDir)
 
     # Sequencer
     s = s or acts.examples.Sequencer(
         events=10, numThreads=-1, logLevel=acts.logging.INFO
     )
 
-    evGen = addPythia8(s, rnd)
-
-    if outputRoot:
-        s.addWriter(
-            acts.examples.RootParticleWriter(
-                level=acts.logging.INFO,
-                inputParticles=evGen.config.outputParticles,
-                filePath=outputDir + "/pythia8_particles.root",
-            )
-        )
-
-    if outputCsv:
-        s.addWriter(
-            acts.examples.CsvParticleWriter(
-                level=acts.logging.INFO,
-                inputParticles=evGen.config.outputParticles,
-                outputDir=outputDir + "/csv/",
-                outputStem="particles",
-            )
-        )
+    addPythia8(
+        s,
+        rnd=rnd,
+        outputDirCsv=outputDir / "csv" if outputCsv else None,
+        outputDirRoot=outputDir if outputRoot else None,
+    )
 
     return s
 
 
 if "__main__" == __name__:
-    runPythia8(os.getcwd()).run()
+    runPythia8(Path.cwd()).run()

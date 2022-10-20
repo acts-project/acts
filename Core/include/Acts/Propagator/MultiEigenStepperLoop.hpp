@@ -15,6 +15,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiComponentBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/EigenStepperError.hpp"
@@ -176,9 +177,6 @@ template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class MultiEigenStepperLoop
     : public EigenStepper<extensionlist_t, auctioneer_t> {
-  /// Allows logging in the member functions
-  const LoggerWrapper logger;
-
   /// Limits the number of steps after at least one component reached the
   /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
@@ -208,9 +206,8 @@ class MultiEigenStepperLoop
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
   /// Constructor from a magnetic field and a optionally provided Logger
-  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
-                        LoggerWrapper l = getDummyLogger())
-      : EigenStepper<extensionlist_t, auctioneer_t>(bField), logger(l) {}
+  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField)
+      : EigenStepper<extensionlist_t, auctioneer_t>(bField) {}
 
   struct State {
     /// The struct that stores the individual components
@@ -226,7 +223,7 @@ class MultiEigenStepperLoop
     bool covTransport = false;
     NavigationDirection navDir;
     double pathAccumulated = 0.;
-    int steps = 0;
+    std::size_t steps = 0;
 
     /// geoContext
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -249,7 +246,7 @@ class MultiEigenStepperLoop
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] bfield the shared magnetic filed provider
     /// @param [in] multipars The track multi-component track-parameters at start
-    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
     ///
@@ -259,7 +256,7 @@ class MultiEigenStepperLoop
         const GeometryContext& gctx, const MagneticFieldContext& mctx,
         const std::shared_ptr<const MagneticFieldProvider>& bfield,
         const MultiComponentBoundTrackParameters<charge_t>& multipars,
-        NavigationDirection ndir = forward,
+        NavigationDirection ndir = NavigationDirection::Forward,
         double ssize = std::numeric_limits<double>::max(),
         double stolerance = s_onSurfaceTolerance)
         : navDir(ndir), geoContext(gctx), magContext(mctx) {
@@ -290,7 +287,7 @@ class MultiEigenStepperLoop
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
                   std::reference_wrapper<const MagneticFieldContext> mctx,
                   const MultiComponentBoundTrackParameters<charge_t>& par,
-                  NavigationDirection ndir = forward,
+                  NavigationDirection ndir = NavigationDirection::Forward,
                   double ssize = std::numeric_limits<double>::max(),
                   double stolerance = s_onSurfaceTolerance) const {
     return State(gctx, mctx, SingleStepper::m_bField, par, ndir, ssize,
@@ -307,7 +304,8 @@ class MultiEigenStepperLoop
   /// @param [in] stepSize Step size
   void resetState(
       State& state, const BoundVector& boundParams, const BoundSymMatrix& cov,
-      const Surface& surface, const NavigationDirection navDir = forward,
+      const Surface& surface,
+      const NavigationDirection navDir = NavigationDirection::Forward,
       const double stepSize = std::numeric_limits<double>::max()) const {
     for (auto& component : state.components) {
       SingleStepper::resetState(component.state, boundParams, cov, surface,
@@ -429,11 +427,13 @@ class MultiEigenStepperLoop
           cmp.state, state.navigation, state.options, state.geoContext);
     }
 
-    Result<BoundState> boundState(const Surface& surface, bool transportCov) {
-      return detail::boundState(all_state.geoContext, cov(), jacobian(),
-                                jacTransport(), derivative(), jacToGlobal(),
-                                pars(), all_state.covTransport && transportCov,
-                                cmp.state.pathAccumulated, surface);
+    Result<BoundState> boundState(
+        const Surface& surface, bool transportCov,
+        const FreeToBoundCorrection& freeToBoundCorrection) {
+      return detail::boundState(
+          all_state.geoContext, cov(), jacobian(), jacTransport(), derivative(),
+          jacToGlobal(), pars(), all_state.covTransport && transportCov,
+          cmp.state.pathAccumulated, surface, freeToBoundCorrection);
     }
 
     void update(const FreeVector& freeParams, const BoundVector& boundParams,
@@ -451,17 +451,26 @@ class MultiEigenStepperLoop
   /// proxy internally holding a reference
   auto componentIterable(State& state) const {
     struct Iterator {
+      using difference_type = std::ptrdiff_t;
+      using value_type = ComponentProxy;
+      using reference = ComponentProxy;
+      using pointer = void;
+      using iterator_category = std::forward_iterator_tag;
+
       typename decltype(state.components)::iterator it;
       const State& s;
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
       auto operator!=(const Iterator& other) const { return it != other.it; }
+      auto operator==(const Iterator& other) const { return it == other.it; }
       auto operator*() const { return ComponentProxy(*it, s); }
       // clang-format on
     };
 
     struct Iterable {
+      using iterator = Iterator;
+
       State& s;
 
       // clang-format off
@@ -479,17 +488,25 @@ class MultiEigenStepperLoop
   /// proxy internally holding a reference
   auto constComponentIterable(const State& state) const {
     struct ConstIterator {
+      using difference_type = std::ptrdiff_t;
+      using value_type = ConstComponentProxy;
+      using reference = ConstComponentProxy;
+      using pointer = void;
+      using iterator_category = std::forward_iterator_tag;
+
       typename decltype(state.components)::const_iterator it;
       const State& s;
 
       // clang-format off
       auto& operator++() { ++it; return *this; }
       auto operator!=(const ConstIterator& other) const { return it != other.it; }
+      auto operator==(const ConstIterator& other) const { return it == other.it; }
       auto operator*() const { return ConstComponentProxy{*it}; }
       // clang-format on
     };
 
     struct Iterable {
+      using iterator = ConstIterator;
       const State& s;
 
       // clang-format off
@@ -587,9 +604,10 @@ class MultiEigenStepperLoop
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
+  /// @param logger [in] A @c LoggerWrapper instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      LoggerWrapper /*extLogger*/ = getDummyLogger()) const {
+      LoggerWrapper logger = getDummyLogger()) const {
     using Status = Intersection3D::Status;
 
     std::array<int, 4> counts = {0, 0, 0, 0};
@@ -743,13 +761,16 @@ class MultiEigenStepperLoop
   /// @param [in] state State that will be presented as @c BoundState
   /// @param [in] surface The surface to which we bind the state
   /// @param [in] transportCov Flag steering covariance transport
+  /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
   ///
   /// @return A bound state:
   ///   - the parameters at the surface
   ///   - the stepwise jacobian towards it (from last bound)
   ///   - and the path length (from start - for ordering)
-  Result<BoundState> boundState(State& state, const Surface& surface,
-                                bool transportCov = true) const;
+  Result<BoundState> boundState(
+      State& state, const Surface& surface, bool transportCov = true,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const;
 
   /// Create and return a curvilinear state at the current position
   ///
@@ -787,11 +808,16 @@ class MultiEigenStepperLoop
   ///
   /// @param [in,out] state State of the stepper
   /// @param [in] surface is the surface to which the covariance is forwarded
+  /// @param [in] freeToBoundCorrection Flag steering non-linear correction during global to local correction
   /// to
   /// @note no check is done if the position is actually on the surface
-  void transportCovarianceToBound(State& state, const Surface& surface) const {
+  void transportCovarianceToBound(
+      State& state, const Surface& surface,
+      const FreeToBoundCorrection& freeToBoundCorrection =
+          FreeToBoundCorrection(false)) const {
     for (auto& component : state.components) {
-      SingleStepper::transportCovarianceToBound(component.state, surface);
+      SingleStepper::transportCovarianceToBound(component.state, surface,
+                                                freeToBoundCorrection);
     }
   }
 

@@ -45,8 +45,9 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   m_outputFile->cd();
   m_outputTree =
       new TTree(m_cfg.treeName.c_str(), "TTree from RootMaterialTrackWriter");
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_id", &m_eventId);
@@ -87,6 +88,7 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
     m_outputTree->Branch("sur_x", &m_sur_x);
     m_outputTree->Branch("sur_y", &m_sur_y);
     m_outputTree->Branch("sur_z", &m_sur_z);
+    m_outputTree->Branch("sur_pathCorrection", &m_sur_pathCorrection);
     m_outputTree->Branch("sur_range_min", &m_sur_range_min);
     m_outputTree->Branch("sur_range_max", &m_sur_range_max);
   }
@@ -95,7 +97,11 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
   }
 }
 
-ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {}
+ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
   // write the tree and close the file
@@ -141,6 +147,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_sur_x.clear();
     m_sur_y.clear();
     m_sur_z.clear();
+    m_sur_pathCorrection.clear();
     m_sur_range_min.clear();
     m_sur_range_max.clear();
 
@@ -172,6 +179,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_sur_x.reserve(mints);
     m_sur_y.reserve(mints);
     m_sur_z.reserve(mints);
+    m_sur_pathCorrection.reserve(mints);
     m_sur_range_min.reserve(mints);
     m_sur_range_max.reserve(mints);
 
@@ -225,27 +233,38 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       // Store surface information
       if (m_cfg.storeSurface) {
         const Acts::Surface* surface = mint.surface;
-        Acts::GeometryIdentifier slayerID;
-        if (surface) {
+        if (mint.intersectionID.value() != 0) {
+          m_sur_id.push_back(mint.intersectionID.value());
+          m_sur_pathCorrection.push_back(mint.pathCorrection);
+          m_sur_x.push_back(mint.intersection.x());
+          m_sur_y.push_back(mint.intersection.y());
+          m_sur_z.push_back(mint.intersection.z());
+        } else if (surface != nullptr) {
           auto sfIntersection = surface->intersect(
               ctx.geoContext, mint.position, mint.direction, true);
-          slayerID = surface->geometryId();
-          m_sur_id.push_back(slayerID.value());
-          m_sur_type.push_back(surface->type());
+          m_sur_id.push_back(surface->geometryId().value());
+          m_sur_pathCorrection.push_back(1.0);
           m_sur_x.push_back(sfIntersection.intersection.position.x());
           m_sur_y.push_back(sfIntersection.intersection.position.y());
           m_sur_z.push_back(sfIntersection.intersection.position.z());
-
+        } else {
+          m_sur_id.push_back(Acts::GeometryIdentifier().value());
+          m_sur_x.push_back(0);
+          m_sur_y.push_back(0);
+          m_sur_z.push_back(0);
+          m_sur_pathCorrection.push_back(1.0);
+        }
+        if (surface != nullptr) {
+          m_sur_type.push_back(surface->type());
           const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
           const Acts::RadialBounds* radialBounds =
               dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
           const Acts::CylinderBounds* cylinderBounds =
               dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
-
-          if (radialBounds) {
+          if (radialBounds != nullptr) {
             m_sur_range_min.push_back(radialBounds->rMin());
             m_sur_range_max.push_back(radialBounds->rMax());
-          } else if (cylinderBounds) {
+          } else if (cylinderBounds != nullptr) {
             m_sur_range_min.push_back(
                 -cylinderBounds->get(Acts::CylinderBounds::eHalfLengthZ));
             m_sur_range_max.push_back(
@@ -255,17 +274,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
             m_sur_range_max.push_back(0);
           }
         } else {
-          slayerID.setVolume(0);
-          slayerID.setBoundary(0);
-          slayerID.setLayer(0);
-          slayerID.setApproach(0);
-          slayerID.setSensitive(0);
-          m_sur_id.push_back(slayerID.value());
           m_sur_type.push_back(-1);
-
-          m_sur_x.push_back(0);
-          m_sur_y.push_back(0);
-          m_sur_z.push_back(0);
           m_sur_range_min.push_back(0);
           m_sur_range_max.push_back(0);
         }
@@ -275,7 +284,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       if (m_cfg.storeVolume) {
         const Acts::Volume* volume = mint.volume;
         Acts::GeometryIdentifier vlayerID;
-        if (volume) {
+        if (volume != nullptr) {
           vlayerID = volume->geometryId();
           m_vol_id.push_back(vlayerID.value());
         } else {

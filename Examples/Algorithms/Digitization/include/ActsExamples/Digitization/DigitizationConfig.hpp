@@ -128,7 +128,7 @@ class DigitizationConfig {
   /// Random numbers tool.
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   /// Do we merge hits or not
-  const bool doMerge;
+  bool doMerge;
   /// How close do parameters have to be to consider merged
   const double mergeNsigma;
   /// Consider clusters that share a corner as merged (8-cell connectivity)

@@ -43,7 +43,7 @@ struct SteppingState {
   Vector3 dir = Vector3(0., 0., 1);
   double p = 100_MeV;
 
-  NavigationDirection navDir = NavigationDirection::forward;
+  NavigationDirection navDir = NavigationDirection::Forward;
 };
 
 /// @brief mockup of stepping state
@@ -127,11 +127,10 @@ BOOST_DATA_TEST_CASE(
 
   Stepper pStepper;
 
-  auto initialLimit =
-      pState.options.abortList.get<PathLimitReached>().internalLimit;
+  auto& pathLimit = pState.options.abortList.get<PathLimitReached>();
+  auto initialLimit = pathLimit.internalLimit;
 
-  LoopProtection<PathLimitReached> lProtection;
-  lProtection(pState, pStepper);
+  detail::setupLoopProtection(pState, pStepper, pathLimit);
 
   auto updatedLimit =
       pState.options.abortList.get<PathLimitReached>().internalLimit;

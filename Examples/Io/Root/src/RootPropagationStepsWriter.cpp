@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45,8 +45,9 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
 
   m_outputTree = new TTree(m_cfg.treeName.c_str(),
                            "TTree from RootPropagationStepsWriter");
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_nr", &m_eventNr);
@@ -67,9 +68,14 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("step_act", &m_step_act);
   m_outputTree->Branch("step_abt", &m_step_abt);
   m_outputTree->Branch("step_usr", &m_step_usr);
+  m_outputTree->Branch("nStepTrials", &m_nStepTrials);
 }
 
-ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {}
+ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
   // Write the tree
@@ -113,6 +119,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_step_act.clear();
     m_step_abt.clear();
     m_step_usr.clear();
+    m_nStepTrials.clear();
 
     // loop over single steps
     for (auto& step : steps) {
@@ -136,7 +143,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
         }
       }
       // a current volume overwrites the surface tagged one
-      if (step.volume) {
+      if (step.volume != nullptr) {
         volumeID = step.volume->geometryId().volume();
       }
       // now fill
@@ -181,6 +188,9 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_step_act.push_back(actor);
       m_step_abt.push_back(aborter);
       m_step_usr.push_back(user);
+
+      // stepper efficiency
+      m_nStepTrials.push_back(step.stepSize.nStepTrials);
     }
     m_outputTree->Fill();
   }

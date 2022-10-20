@@ -4,4 +4,6 @@ target_sources(
     KalmanFitterError.cpp
     GainMatrixUpdater.cpp
     GainMatrixSmoother.cpp
+    GsfError.cpp
+    GsfUtils.cpp
 )
