@@ -57,7 +57,6 @@ def runVertexFitting(
     s.addAlgorithm(ptclSelector)
 
     trackParameters = "fittedTrackParameters"
-    trackIndices = None
 
     if inputTrackSummary is None or inputParticlePath is None:
         logger.info("Using smeared particles")
@@ -87,7 +86,6 @@ def runVertexFitting(
             level=acts.logging.INFO,
             inputTrackParameters=trackSummaryReader.config.outputTracks,
             outputTrackParameters="selectedTrackParameters",
-            outputTrackIndices="fittedTrackIndices",
             removeNeutral=True,
             absEtaMax=2.5,
             loc0Max=4.0 * u.mm,  # rho max
@@ -95,7 +93,6 @@ def runVertexFitting(
         )
         s.addAlgorithm(trackSelector)
         trackParameters = trackSelector.config.outputTrackParameters
-        trackIndices = trackSelector.config.outputTrackIndices
 
     logger.info("Using vertex finder: %s", vertexFinder.name)
 
@@ -106,7 +103,6 @@ def runVertexFitting(
         associatedParticles=associatedParticles,
         trajectories=None,
         trackParameters=trackParameters,
-        trackIndices=trackIndices,
         vertexFinder=vertexFinder,
     )
 

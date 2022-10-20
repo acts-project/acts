@@ -233,18 +233,18 @@ def addSeeding(
     else:
         selectedParticles = inputParticles
 
-#Create starting parameters from either particle smearing or combined seed
-#finding and track parameters estimation
+    # Create starting parameters from either particle smearing or combined seed
+    # finding and track parameters estimation
     if seedingAlgorithm == SeedingAlgorithm.TruthSmeared:
         rnd = rnd or acts.examples.RandomNumbers(seed=42)
         logger.info("Using smeared truth particles for seeding")
-#Run particle smearing
+        # Run particle smearing
         ptclSmear = acts.examples.ParticleSmearing(
             level=customLogLevel(),
             inputParticles=selectedParticles,
             outputTrackParameters="estimatedparameters",
             randomNumbers=rnd,
-#gaussian sigmas to smear particle parameters
+            # gaussian sigmas to smear particle parameters
             **acts.examples.defaultKWArgs(
                 sigmaD0=particleSmearingSigmas.d0,
                 sigmaD0PtA=particleSmearingSigmas.d0PtA,
@@ -274,10 +274,10 @@ def addSeeding(
         )
         s.addAlgorithm(spAlg)
 
-#Run either : truth track finding or seeding
+        # Run either : truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
-#Use truth tracking
+            # Use truth tracking
             truthTrackFinder = acts.examples.TruthTrackFinder(
                 level=customLogLevel(),
                 inputParticles=selectedParticles,
@@ -289,7 +289,7 @@ def addSeeding(
             inputSeeds = ""
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
-#Use seeding
+            # Use seeding
             seedFinderConfig = acts.SeedFinderConfig(
                 **acts.examples.defaultKWArgs(
                     rMin=seedFinderConfigArg.r[0],
@@ -423,7 +423,7 @@ def addSeeding(
             inputSeeds = seedingAlg.config.outputSeeds
         elif seedingAlgorithm == SeedingAlgorithm.Orthogonal:
             logger.info("Using orthogonal seeding")
-#Use seeding
+            # Use seeding
             seedFinderConfig = acts.SeedFinderOrthogonalConfig(
                 **acts.examples.defaultKWArgs(
                     rMin=seedFinderConfigArg.r[0],
@@ -726,10 +726,11 @@ def addCKFTracks(
     logger = acts.logging.getLogger("addCKFTracks")
 
     outputTrackParameters = "fittedTrackParameters"
+    outputTrackParametersTips = "fittedTrackParametersTips"
 
-#Setup the track finding algorithm with CKF
-#It takes all the source links created from truth hit smearing, seeds from
-#truth particle smearing and source link selection config
+    # Setup the track finding algorithm with CKF
+    # It takes all the source links created from truth hit smearing, seeds from
+    # truth particle smearing and source link selection config
     trackFinder = acts.examples.TrackFindingAlgorithm(
         level=customLogLevel(),
         measurementSelectorCfg=acts.MeasurementSelector.Config(
@@ -742,7 +743,9 @@ def addCKFTracks(
         outputTrackParameters=outputTrackParameters
         if trackSelectorRanges is None
         else "fittedTrackParametersTmp",
-        outputTrackParametersTips="fittedTrackParametersTips",
+        outputTrackParametersTips=outputTrackParametersTips
+        if trackSelectorRanges is None
+        else "fittedTrackParametersTipsTmp",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
@@ -754,7 +757,9 @@ def addCKFTracks(
             s,
             trackSelectorRanges,
             inputTrackParameters=trackFinder.config.outputTrackParameters,
+            inputTrackParametersTips=trackFinder.config.outputTrackParametersTips,
             outputTrackParameters=outputTrackParameters,
+            outputTrackParametersTips=outputTrackParametersTips,
             logLevel=customLogLevel(),
         )
 
@@ -764,14 +769,14 @@ def addCKFTracks(
             outputDirRoot.mkdir()
 
         if writeTrajectories:
-#write track states from CKF
+            # write track states from CKF
             trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
                 level=customLogLevel(),
                 inputTrajectories=trackFinder.config.outputTrajectories,
-#@note The full particles collection is used here to avoid lots of warnings
-#since the unselected CKF track might have a majority particle not in the
-#filtered particle collection.This could be avoided when a seperate track
-#selection algorithm is used.
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection.This could be avoided when a seperate track
+                # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputSimHits="simhits",
                 inputMeasurementParticlesMap="measurement_particles_map",
@@ -781,14 +786,14 @@ def addCKFTracks(
             )
             s.addWriter(trackStatesWriter)
 
-#write track summary from CKF
+            # write track summary from CKF
             trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
                 level=customLogLevel(),
                 inputTrajectories=trackFinder.config.outputTrajectories,
-#@note The full particles collection is used here to avoid lots of warnings
-#since the unselected CKF track might have a majority particle not in the
-#filtered particle collection.This could be avoided when a seperate track
-#selection algorithm is used.
+                # @note The full particles collection is used here to avoid lots of warnings
+                # since the unselected CKF track might have a majority particle not in the
+                # filtered particle collection.This could be avoided when a seperate track
+                # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 filePath=str(outputDirRoot / "tracksummary_ckf.root"),
@@ -796,14 +801,14 @@ def addCKFTracks(
             )
             s.addWriter(trackSummaryWriter)
 
-#Write CKF performance data
+        # Write CKF performance data
         ckfPerfWriter = acts.examples.CKFPerformanceWriter(
             level=customLogLevel(),
             inputParticles=selectedParticles,
             inputTrajectories=trackFinder.config.outputTrajectories,
             inputMeasurementParticlesMap="measurement_particles_map",
             **acts.examples.defaultKWArgs(
-#The bottom seed could be the first, second or third hits on the truth track
+                # The bottom seed could be the first, second or third hits on the truth track
                 nMeasurementsMin=CKFPerformanceConfigArg.nMeasurementsMin,
                 ptMin=CKFPerformanceConfigArg.ptMin,
                 truthMatchProbMin=CKFPerformanceConfigArg.truthMatchProbMin,
@@ -835,8 +840,9 @@ def addTrackSelection(
     s: acts.examples.Sequencer,
     trackSelectorRanges: TrackSelectorRanges,
     inputTrackParameters: str,
+    inputTrackParametersTips: str,
     outputTrackParameters: str,
-    outputTrackIndices: str = "fittedTrackIndices",
+    outputTrackParametersTips: str,
     logLevel: Optional[acts.logging.Level] = None,
 ):
 
@@ -845,8 +851,9 @@ def addTrackSelection(
     trackSelector = acts.examples.TrackSelector(
         level=customLogLevel(),
         inputTrackParameters=inputTrackParameters,
+        inputTrackParametersTips=inputTrackParametersTips,
         outputTrackParameters=outputTrackParameters,
-        outputTrackIndices=outputTrackIndices,
+        outputTrackParametersTips=outputTrackParametersTips,
         **acts.examples.defaultKWArgs(
             loc0Min=trackSelectorRanges.loc0[0],
             loc0Max=trackSelectorRanges.loc0[1],
@@ -885,10 +892,10 @@ def addExaTrkX(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-#Run the particle selection
-#The pre - selection will select truth particles satisfying provided criteria
-#from all particles read in by particle reader for further processing.It
-#has no impact on the truth hits themselves
+    # Run the particle selection
+    # The pre - selection will select truth particles satisfying provided criteria
+    # from all particles read in by particle reader for further processing.It
+    # has no impact on the truth hits themselves
     s.addAlgorithm(
         acts.examples.TruthSeedSelector(
             level=customLogLevel(),
@@ -900,7 +907,7 @@ def addExaTrkX(
         )
     )
 
-#Create space points
+    # Create space points
     s.addAlgorithm(
         acts.examples.SpacePointMaker(
             level=customLogLevel(),
@@ -914,7 +921,7 @@ def addExaTrkX(
         )
     )
 
-#For now we don't configure only the common options so this works
+    # For now we don't configure only the common options so this works
     exaTrkxModule = (
         acts.examples.ExaTrkXTrackFindingTorch
         if backend == ExaTrkXBackend.Torch
@@ -939,7 +946,7 @@ def addExaTrkX(
         )
     )
 
-#Write truth track finding / seeding performance
+    # Write truth track finding / seeding performance
     if outputDirRoot is not None:
         s.addWriter(
             acts.examples.TrackFinderPerformanceWriter(
