@@ -13,8 +13,8 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 
 #include <array>
 #include <list>
@@ -28,21 +28,21 @@
 namespace Acts {
 
 template <typename external_spacepoint_t>
-class Seedfinder<external_spacepoint_t, Acts::Cuda> {
+class SeedFinder<external_spacepoint_t, Acts::Cuda> {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
 
  public:
-  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
+  SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config);
 
-  ~Seedfinder() = default;
+  ~SeedFinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
-  Seedfinder() = delete;
-  Seedfinder(const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
-  Seedfinder<external_spacepoint_t, Acts::Cuda>& operator=(
-      const Seedfinder<external_spacepoint_t, Acts::Cuda>&) = delete;
+  SeedFinder() = delete;
+  SeedFinder(const SeedFinder<external_spacepoint_t, Acts::Cuda>&) = delete;
+  SeedFinder<external_spacepoint_t, Acts::Cuda>& operator=(
+      const SeedFinder<external_spacepoint_t, Acts::Cuda>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -58,9 +58,9 @@ class Seedfinder<external_spacepoint_t, Acts::Cuda> {
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
  private:
-  Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderConfig<external_spacepoint_t> m_config;
 };
 
 }  // namespace Acts
 
-#include "Acts/Plugins/Cuda/Seeding/Seedfinder.ipp"
+#include "Acts/Plugins/Cuda/Seeding/SeedFinder.ipp"

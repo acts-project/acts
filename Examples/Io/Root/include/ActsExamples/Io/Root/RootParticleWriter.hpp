@@ -53,6 +53,9 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   /// End-of-run hook
   ProcessCode endRun() final override;
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  protected:
   /// Type-specific write implementation.
   ///

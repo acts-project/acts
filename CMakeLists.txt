@@ -30,7 +30,6 @@ option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
 option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
-option(ACTS_SETUP_ACTSVG "Build ActSVG display plugin" OFF)
 option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
@@ -38,7 +37,6 @@ option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx plugin" ON)
-option(ACTS_USE_SYSTEM_ACTSDD4HEP "Use the ActsDD4hep glue library provided by the system instead of building it" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
 option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
@@ -63,7 +61,7 @@ option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
-option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in examples" ON)
+option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examples" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
@@ -169,7 +167,6 @@ endif()
 set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
-set(_acts_actsdd4hep_version 1.0.0)
 set(_acts_edm4hep_version v00-04-01)
 set(_acts_doxygen_version 1.9.4)
 set(_acts_eigen3_version 3.3.7)
@@ -181,10 +178,8 @@ set(_acts_tbb_version 2020.1)
 # required packages
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
-    # NOTE we use boost::filesystem instead of std::filesystem since the later
-    # is not uniformly supported even on compilers that nominally support C++17
     # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
-    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS filesystem program_options unit_test_framework)
+    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
   else()
     add_subdirectory(thirdparty/boost)
   endif()
@@ -205,6 +200,8 @@ if (ACTS_SETUP_VECMEM)
     add_subdirectory(thirdparty/vecmem)
   endif()
 endif()
+
+find_package(Filesystem REQUIRED)
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
 # only local scope, i.e. they are not accessible her for dependencies added
@@ -238,7 +235,7 @@ endmacro()
 # when a particular package is actually needed.
 # plugin dependencies
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-  find_package(Python COMPONENTS Interpreter Development)
+  find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
   if(ACTS_USE_SYSTEM_PYBIND11) 
     find_package(pybind11 CONFIG REQUIRED)
   else()

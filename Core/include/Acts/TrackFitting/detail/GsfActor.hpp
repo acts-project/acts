@@ -64,9 +64,6 @@ struct GsfResult {
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
-
-  // Used for workaround to initialize MT correctly
-  bool haveInitializedResult = false;
 };
 
 /// The actor carrying out the GSF algorithm
@@ -97,10 +94,6 @@ struct GsfActor {
     /// When to discard components
     double weightCutoff = 1.0e-4;
 
-    /// A not so nice workaround to get the first backward state in the
-    /// MultiTrajectory for the DirectNavigator
-    std::function<void(result_type&, const LoggerWrapper&)> resultInitializer;
-
     /// When this option is enabled, material information on all surfaces is
     /// ignored. This disables the component convolution as well as the handling
     /// of energy. This may be useful for debugging.
@@ -108,6 +101,10 @@ struct GsfActor {
 
     /// Whether to abort immediately when an error occurs
     bool abortOnError = false;
+
+    /// We can stop the propagation if we reach this number of measuerement
+    /// states
+    std::optional<std::size_t> numberMeasurements;
 
     /// The extensions
     GsfExtensions<traj_t> extensions;
@@ -153,10 +150,6 @@ struct GsfActor {
     assert(result.fittedStates && "No MultiTrajectory set");
     const auto& logger = state.options.logger;
 
-    // Prints some VERBOSE things and performs some asserts. Can be removed
-    // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper);
-
     // Set error or abort utility
     auto set_error_or_abort = [&](auto error) {
       if (m_cfg.abortOnError) {
@@ -186,17 +179,10 @@ struct GsfActor {
       return std::make_tuple(missed, reachable);
     }();
 
-    // Workaround to initialize e.g. MultiTrajectory in backward mode
-    if (!result.haveInitializedResult && m_cfg.resultInitializer) {
-      m_cfg.resultInitializer(result, logger);
-      result.haveInitializedResult = true;
-    }
-
-    // Initialize the tips if they are empty (should only happen at first pass)
-    if (result.parentTips.empty()) {
-      result.parentTips.resize(stepper.numberComponents(state.stepping),
-                               MultiTrajectoryTraits::kInvalid);
-    }
+    // Prints some VERBOSE things and performs some asserts. Can be removed
+    // without change of behaviour
+    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
+                                                         missed_count);
 
     if (result.parentTips.size() != stepper.numberComponents(state.stepping)) {
       ACTS_ERROR("component number mismatch:"
@@ -308,6 +294,12 @@ struct GsfActor {
         applyMultipleScattering(state, stepper,
                                 MaterialUpdateStage::PostUpdate);
       }
+    }
+
+    // Break the navigation if we found all measurements
+    if (m_cfg.numberMeasurements &&
+        result.measurementStates == m_cfg.numberMeasurements) {
+      state.navigation.targetReached = true;
     }
   }
 
@@ -430,21 +422,9 @@ struct GsfActor {
 
     // We must differ between surface types, since there can be different
     // local coordinates
-    // TODO add other surface types
-    switch (surface.type()) {
-      case Surface::Cylinder: {
-        // The cylinder coordinate is phi*R, so we need to pass R
-        detail::AngleDescription::Cylinder angle_desc;
-        std::get<0>(angle_desc).constant =
-            static_cast<const CylinderSurface&>(surface).bounds().get(
-                CylinderBounds::eR);
-
-        detail::reduceWithKLDistance(cmps, final_cmp_number, proj, angle_desc);
-      } break;
-      default: {
-        detail::reduceWithKLDistance(cmps, final_cmp_number, proj);
-      }
-    }
+    detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
+      detail::reduceWithKLDistance(cmps, final_cmp_number, proj, desc);
+    });
   }
 
   /// Removes the components which are missed and update the list of parent tips
