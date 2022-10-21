@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <boost/program_options.hpp>
 
@@ -18,7 +18,8 @@ namespace Options {
 
 void addParticleSelectorOptions(Options::Description& desc);
 
-ActsExamples::ParticleSelector::Config readParticleSelectorConfig(const Options::Variables& vars);
+ActsExamples::ParticleSelector::Config readParticleSelectorConfig(
+    const Options::Variables& vars);
 
-}
-}
+}  // namespace Options
+}  // namespace ActsExamples

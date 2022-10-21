@@ -8,8 +8,8 @@ namespace Options {
 
 void addTruthSeedSelectorOptions(Options::Description& desc);
 
-ActsExamples::TruthSeedSelector::Config
-readTruthSeedSelectorConfig(const Options::Variables& vars);
+ActsExamples::TruthSeedSelector::Config readTruthSeedSelectorConfig(
+    const Options::Variables& vars);
 
-}
-}
+}  // namespace Options
+}  // namespace ActsExamples

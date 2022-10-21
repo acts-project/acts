@@ -1,4 +1,5 @@
 #include "ActsExamples/Options/TruthSeedSelectorOptions.hpp"
+
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
@@ -28,8 +29,8 @@ void addTruthSeedSelectorOptions(Options::Description& desc) {
       "Select particle minimum hits");
 }
 
-ActsExamples::TruthSeedSelector::Config
-readTruthSeedSelectorConfig(const Options::Variables& vars) {
+ActsExamples::TruthSeedSelector::Config readTruthSeedSelectorConfig(
+    const Options::Variables& vars) {
   using namespace Acts::UnitLiterals;
 
   // Set boundary values if the given config exists
@@ -54,5 +55,5 @@ readTruthSeedSelectorConfig(const Options::Variables& vars) {
   return cfg;
 }
 
-}
-}
+}  // namespace Options
+}  // namespace ActsExamples

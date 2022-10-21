@@ -1,9 +1,9 @@
-#include <boost/program_options.hpp>
-
 #include "ActsExamples/Options/ParticleSelectorOptions.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
+
+#include <boost/program_options.hpp>
 
 namespace ActsExamples {
 namespace Options {
@@ -32,7 +32,8 @@ void addParticleSelectorOptions(Options::Description& desc) {
   opt("remove-neutral", bool_switch(), "Remove neutral particles");
 }
 
-ActsExamples::ParticleSelector::Config readParticleSelectorConfig(const Options::Variables& vars) {
+ActsExamples::ParticleSelector::Config readParticleSelectorConfig(
+    const Options::Variables& vars) {
   using namespace Acts::UnitLiterals;
 
   // Set boundary values if the given config exists
@@ -59,5 +60,5 @@ ActsExamples::ParticleSelector::Config readParticleSelectorConfig(const Options:
   return cfg;
 }
 
-}
-}
+}  // namespace Options
+}  // namespace ActsExamples

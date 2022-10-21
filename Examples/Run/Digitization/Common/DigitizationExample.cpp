@@ -15,14 +15,14 @@
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementReader.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
-#include "ActsExamples/Options/CsvOptionsReader.hpp"
-#include "ActsExamples/Options/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Io/Root/RootMeasurementWriter.hpp"
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/CsvOptionsWriter.hpp"
 #include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -90,9 +90,9 @@ int runDigitizationExample(
   auto particleReaderCfg = setupParticleReading(vm, sequencer);
 
   auto digiCfg = DigitizationConfig(
-      vm["digi-merge"].as<bool>(),
-      vm["digi-merge-nsigma"].as<double>(),
-      vm["digi-merge-common-corner"].as<bool>(), readDigiConfigFromJson(vm["digi-config-file"].as<std::string>()));
+      vm["digi-merge"].as<bool>(), vm["digi-merge-nsigma"].as<double>(),
+      vm["digi-merge-common-corner"].as<bool>(),
+      readDigiConfigFromJson(vm["digi-config-file"].as<std::string>()));
   digiCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   digiCfg.trackingGeometry = tGeometry;
   digiCfg.randomNumbers = randomNumbers;

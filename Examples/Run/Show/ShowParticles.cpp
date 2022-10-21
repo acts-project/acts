@@ -14,10 +14,10 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
-#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
 
 #include <memory>
 
@@ -55,7 +55,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<CsvParticleReader>(readParticlesCfg, logLevel));
 
   // pre-select particles
-  auto selectParticlesCfg = ActsExamples::Options::readParticleSelectorConfig(vars);
+  auto selectParticlesCfg =
+      ActsExamples::Options::readParticleSelectorConfig(vars);
   selectParticlesCfg.inputParticles = readParticlesCfg.outputParticles;
   selectParticlesCfg.outputParticles = "particles_selected";
   sequencer.addAlgorithm(
