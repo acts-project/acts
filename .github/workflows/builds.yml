@@ -263,6 +263,7 @@ jobs:
       - name: Save PR number
         if: ${{ github.event_name == 'pull_request' }}
         run: |
+          mkdir -p physmon
           echo ${{ github.event.number }} > physmon/pr_number
           echo ${{ github.event.pull_request.head.sha }} > physmon/sha
 
