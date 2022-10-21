@@ -84,13 +84,6 @@ struct SeedFinderOrthogonalConfig {
   // skip top SPs based on cotTheta sorting when producing triplets
   bool skipPreviousTopSP = false;
 
-  // seed confirmation
-  bool seedConfirmation = false;
-  // parameters for central seed confirmation
-  SeedConfirmationRangeConfig centralSeedConfirmationRange;
-  // parameters for forward seed confirmation
-  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
-
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
   // default is 5%
