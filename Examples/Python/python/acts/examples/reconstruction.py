@@ -961,11 +961,21 @@ def addExaTrkX(
     return s
 
 
+AmbiguityResolutionConfig = namedtuple(
+    "AmbiguityResolutionConfig",
+    ["maximumSharedHits"],
+    defaults=[None] * 1,
+)
+
+
+@acts.examples.NamedTypeArgs(
+    config=AmbiguityResolutionConfig,
+)
 def addAmbiguityResolution(
     s,
+    config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    """ """
     from acts.examples import (
         AmbiguityResolutionAlgorithm,
     )
@@ -980,6 +990,9 @@ def addAmbiguityResolution(
         inputTrackParametersTips="fittedTrackParametersTips",
         outputTrackParameters="filteredTrackParameters",
         outputTrackParametersTips="filteredTrackParametersTips",
+        **acts.examples.defaultKWArgs(
+            maximumSharedHits=config.maximumSharedHits,
+        ),
     )
     s.addAlgorithm(alg)
 

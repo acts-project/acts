@@ -40,6 +40,7 @@ from acts.examples.reconstruction import (
     addCKFTracks,
     CKFPerformanceConfig,
     addAmbiguityResolution,
+    AmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
     TrackSelectorRanges,
@@ -176,12 +177,21 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             trackingGeometry,
             field,
             CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+            TrackSelectorRanges(
+                removeNeutral=True,
+                absEta=(None, 2.5),
+                loc0=(None, 4.0 * u.mm),
+                pt=(500 * u.MeV, None),
+            ),
             outputDirRoot=tp,
             outputDirCsv=None,
         )
 
         addAmbiguityResolution(
             s,
+            AmbiguityResolutionConfig(
+                maximumSharedHits=3,
+            ),
         )
 
         addVertexFitting(
@@ -308,6 +318,9 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
 
             addAmbiguityResolution(
                 s,
+                AmbiguityResolutionConfig(
+                    maximumSharedHits=3,
+                ),
             )
 
             addVertexFitting(
