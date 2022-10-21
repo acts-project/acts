@@ -77,7 +77,7 @@ jobs:
         uses: chuhlomin/render-template@v1.4
         if: steps.get-pr-number.outputs.result != 'false'
         with:
-          template: comment_template.md
+          template: CI/physmon/comment_template.md
           vars: |
             url: ${{ env.ARTIFACT_URL }}
             commit: ${{ env.PR_SHA }}
