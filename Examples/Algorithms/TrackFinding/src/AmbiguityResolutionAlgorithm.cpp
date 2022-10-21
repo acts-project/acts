@@ -144,24 +144,43 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     const auto sharedHits =
         computeSharedHits(sourceLinks, trajectories, trackIndices, trackTips);
 
+    if (auto it =
+            std::max_element(std::begin(sharedHits), std::end(sharedHits));
+        it == std::end(sharedHits) || *it < this->m_cfg.maximumSharedHits) {
+      break;
+    }
+
     std::vector<float> relativeSharedHits(trackIndices.size(), 0);
     for (std::size_t i = 0; i < trackIndices.size(); ++i) {
       const auto indexTrack = trackIndices[i];
       relativeSharedHits[i] = 1.0f * sharedHits[i] / hitCount[indexTrack];
     }
 
-    auto it = std::max_element(std::begin(relativeSharedHits),
-                               std::end(relativeSharedHits));
-    if (it == std::end(relativeSharedHits)) {
-      break;
-    }
-
-    const auto index = std::distance(std::begin(relativeSharedHits), it);
-    if (sharedHits[index] < this->m_cfg.maximumSharedHits) {
-      break;
-    }
-
+    const auto maxRelativeSharedHits = std::max_element(
+        std::begin(relativeSharedHits), std::end(relativeSharedHits));
+    const auto index =
+        std::distance(std::begin(relativeSharedHits), maxRelativeSharedHits);
     trackIndices.erase(std::begin(trackIndices) + index);
+  }
+
+  if (trackIndices.size() == trackParameters.size()) {
+    const auto sharedHits =
+        computeSharedHits(sourceLinks, trajectories, trackIndices, trackTips);
+    std::cout << "ambi: ";
+    for (auto s : sharedHits) {
+      std::cout << s << " ";
+    }
+    std::cout << "\n";
+
+    std::vector<float> relativeSharedHits(trackIndices.size(), 0);
+    for (std::size_t i = 0; i < trackIndices.size(); ++i) {
+      const auto indexTrack = trackIndices[i];
+      relativeSharedHits[i] = 1.0f * sharedHits[i] / hitCount[indexTrack];
+    }
+    for (auto s : relativeSharedHits) {
+      std::cout << s << " ";
+    }
+    std::cout << "\n";
   }
 
   ACTS_INFO("Resolved to " << trackIndices.size() << " tracks from "
