@@ -8,8 +8,8 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/Pythia8Options.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
