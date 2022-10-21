@@ -78,6 +78,13 @@ struct SeedFinderConfig {
   // additional cut to skip top SPs when producing triplets
   bool skipPreviousTopSP = false;
 
+  // seed confirmation
+  bool seedConfirmation = false;
+  // parameters for central seed confirmation
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  // parameters for forward seed confirmation
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
+
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;
 

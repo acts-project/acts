@@ -473,6 +473,8 @@ def addSeeding(
                     binSizeR=seedFinderConfigArg.binSizeR,
                     forceRadialSorting=seedFinderConfigArg.forceRadialSorting,
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
+                    centralSeedConfirmationRange=seedfinderConfigArg.centralSeedConfirmationRange,
+									  forwardSeedConfirmationRange=seedfinderConfigArg.forwardSeedConfirmationRange,
                     beamPos=(
                         None
                         if seedFinderConfigArg.beamPos is None
