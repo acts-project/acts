@@ -213,12 +213,16 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         s.run()
         del s
 
-        for stem in "performance_ckf", "performance_ambi", "performance_vertexing":
+        for stem in (
+            ["performance_ckf", "performance_vertexing"] + ["performance_ambi"]
+            if label == "seeded"
+            else []
+        ):
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
 
-        if not truthSmearedSeeded and not truthEstimatedSeeded:
+        if label == "seeded":
             residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"
             # @TODO: Add try/except
             subprocess.check_call(
