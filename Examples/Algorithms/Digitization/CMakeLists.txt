@@ -12,7 +12,6 @@ target_link_libraries(
   ActsExamplesDigitization
   PUBLIC
     ActsCore ActsPluginIdentification ActsExamplesFramework)
-target_link_libraries(ActsExamplesDigitization PRIVATE)
 
 install(
   TARGETS ActsExamplesDigitization
