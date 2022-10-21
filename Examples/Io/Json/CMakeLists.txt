@@ -11,14 +11,6 @@ target_link_libraries(
   ActsExamplesIoJson
   PUBLIC ActsCore ActsPluginJson ActsExamplesDigitization ActsExamplesFramework ActsExamplesMaterialMapping)
 
-if( ACTS_BUILD_EXAMPLES_BINARIES )
-  target_link_libraries(
-    ActsExamplesIoJson
-    PRIVATE
-    Boost::program_options
-  )
-endif()
-
 install(
   TARGETS ActsExamplesIoJson
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

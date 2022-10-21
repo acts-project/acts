@@ -22,14 +22,6 @@ target_link_libraries(
     ActsExamplesFramework ActsExamplesDigitization
     Threads::Threads dfelibs)
 
-if( ACTS_BUILD_EXAMPLES_BINARIES )
-  target_link_libraries(
-    ActsExamplesIoCsv
-    PRIVATE
-    Boost::program_options
-  )
-endif()
-
 install(
   TARGETS ActsExamplesIoCsv
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

@@ -18,14 +18,6 @@ target_link_libraries(
   PUBLIC ActsCore ActsExamplesFramework ${HEPMC3_LIBRARIES}
   PRIVATE ActsFatras)
 
-if( ACTS_BUILD_EXAMPLES_BINARIES )
-  target_link_libraries(
-    ActsExamplesIoHepMC3
-    PRIVATE
-    Boost::program_options
-  )
-endif()
-
 install(
   TARGETS ActsExamplesIoHepMC3
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})

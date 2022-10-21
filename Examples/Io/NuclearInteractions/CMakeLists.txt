@@ -14,22 +14,6 @@ target_link_libraries(
     Threads::Threads
   PRIVATE ROOT::Core ROOT::Hist ROOT::Tree)
 
-if( ACTS_BUILD_EXAMPLES_BINARIES )
-  target_link_libraries(
-    ActsExamplesIoNuclearInteractions
-    PRIVATE
-    Boost::program_options
-  )
-endif()
-
-if( ACTS_BUILD_EXAMPLES_BINARIES )
-  target_link_libraries(
-    ActsExamplesIoNuclearInteractions
-    PRIVATE
-    Boost::program_options
-  )
-endif()
-
 install(
   TARGETS ActsExamplesIoNuclearInteractions
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
