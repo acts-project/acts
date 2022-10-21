@@ -260,6 +260,12 @@ jobs:
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
 
+      - name: Save PR number
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          echo ${{ github.event.number }} > physmon/pr_number
+          echo ${{ github.event.pull_request.head.sha }} > physmon/sha
+
       - name: Physics performance checks
         shell: bash
         run: >
