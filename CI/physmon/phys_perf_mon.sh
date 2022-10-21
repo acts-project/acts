@@ -51,15 +51,7 @@ function full_chain() {
         --title "CKF ${suffix}" \
         -c $config \
         -o $outdir/ckf_${suffix}.html \
-        -p $outdir/ckf_${suffix}_plots 
-
-    run \
-        $outdir/performance_ambi_${suffix}.root \
-        $refdir/performance_ambi_${suffix}.root \
-        --title "Ambisolver ${suffix}" \
-        -c $config \
-        -o $outdir/ambi_${suffix}.html \
-        -p $outdir/ambi_${suffix}_plots 
+        -p $outdir/ckf_${suffix}_plots
 
     Examples/Scripts/generic_plotter.py \
         $outdir/performance_vertexing_${suffix}.root \
@@ -91,11 +83,19 @@ run \
     -p $outdir/truth_tracking_plots
 
 run \
+    $outdir/performance_ambi_seeded.root \
+    $refdir/performance_ambi_seeded.root \
+    --title "Ambisolver ${suffix}" \
+    -c $config \
+    -o $outdir/ambi_seeded.html \
+    -p $outdir/ambi_seeded_plots
+
+run \
     $outdir/acts_analysis_residuals_and_pulls.root \
     $refdir/acts_analysis_residuals_and_pulls.root \
     --title "analysis_residuals_and_pulls" \
 #    -o $outdir/analysis_residuals_and_pulls.html \
-#    -p $outdir/analysis_residuals_and_pulls \
+#    -p $outdir/analysis_residuals_and_pulls
 
 
 Examples/Scripts/vertex_mu_scan.py \

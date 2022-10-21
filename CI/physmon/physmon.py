@@ -3,7 +3,6 @@ from pathlib import Path
 import argparse
 import tempfile
 import shutil
-import os
 import datetime
 import sys
 import subprocess
@@ -187,18 +186,26 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             outputDirCsv=None,
         )
 
-        addAmbiguityResolution(
-            s,
-            AmbiguityResolutionConfig(
-                maximumSharedHits=3,
-            ),
-            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-            outputDirRoot=tp,
-        )
+        if label == "seeded":
+            addAmbiguityResolution(
+                s,
+                AmbiguityResolutionConfig(
+                    maximumSharedHits=1,
+                ),
+                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+                outputDirRoot=tp,
+            )
 
         addVertexFitting(
             s,
             field,
+            trajectories="trajectories" if label == "seeded" else None,
+            trackParameters="filteredTrackParameters"
+            if label == "seeded"
+            else "fittedTrackParameters",
+            trackParametersTips="filteredTrackParametersTips"
+            if label == "seeded"
+            else "fittedTrackParametersTips",
             vertexFinder=VertexFinder.Iterative,
             outputDirRoot=tp,
         )
@@ -321,7 +328,7 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
             addAmbiguityResolution(
                 s,
                 AmbiguityResolutionConfig(
-                    maximumSharedHits=3,
+                    maximumSharedHits=1,
                 ),
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
                 outputDirRoot=None,
