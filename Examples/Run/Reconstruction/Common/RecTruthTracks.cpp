@@ -8,11 +8,11 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Digitization/DigitizationOptions.hpp"
+#include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
@@ -24,11 +24,12 @@
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
-#include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
+#include "ActsExamples/Options/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Options/TruthSeedSelectorOptions.hpp"
 
 #include <memory>
 
@@ -52,7 +53,7 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addFittingOptions(desc);
   Options::addDigitizationOptions(desc);
   Options::addParticleSmearingOptions(desc);
-  TruthSeedSelector::addOptions(desc);
+  Options::addTruthSeedSelectorOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -91,7 +92,7 @@ int runRecTruthTracks(int argc, char* argv[],
   // from all particles read in by particle reader for further processing. It
   // has no impact on the truth hits read-in by the cluster reader.
   TruthSeedSelector::Config particleSelectorCfg =
-      TruthSeedSelector::readConfig(vm);
+      Options::readTruthSeedSelectorConfig(vm);
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;

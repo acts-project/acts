@@ -11,7 +11,7 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"  // for evaluating performance
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"

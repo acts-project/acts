@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
@@ -24,7 +25,7 @@ class TelescopeDetectorElement;
 }  // namespace Telescope
 }  // namespace ActsExamples
 
-struct TelescopeDetector {
+struct TelescopeDetector : public ActsExamples::IBaseDetector {
   using DetectorElement = ActsExamples::Telescope::TelescopeDetectorElement;
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;

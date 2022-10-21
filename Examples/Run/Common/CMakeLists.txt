@@ -11,12 +11,16 @@ add_library(
   src/TrackFindingOptions.cpp
   src/TrackFittingOptions.cpp
   src/ParticleSmearingOptions.cpp
+  src/ParticleSelectorOptions.cpp
   src/ParticleGunOptions.cpp
   src/DigitizationOptions.cpp
   src/MagneticFieldOptions.cpp
   src/CsvOptionsReader.cpp
   src/CsvOptionsWriter.cpp
-  src/JsonOptionsWriter.cpp)
+  src/JsonOptionsWriter.cpp
+  src/VertexingOptions.cpp
+  src/SpacePointMakerOptions.cpp
+  src/TruthSeedSelectorOptions.cpp)
 target_include_directories(
   ActsExamplesCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -30,7 +34,9 @@ target_link_libraries(
     ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance
     ActsExamplesDigitization ActsExamplesTrackFitting
     ActsExamplesTrackFinding ActsExamplesTruthTracking
-    ActsExamplesIoCsv)
+    ActsExamplesIoCsv
+  PRIVATE
+    dfelibs)
 
 install(
   TARGETS ActsExamplesCommon

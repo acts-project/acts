@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Options/OptionsFwd.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
 #include <utility>

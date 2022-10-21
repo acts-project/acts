@@ -13,7 +13,7 @@
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
-#include "ActsExamples/Options/OptionsFwd.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 namespace ActsExamples {
 namespace Options {

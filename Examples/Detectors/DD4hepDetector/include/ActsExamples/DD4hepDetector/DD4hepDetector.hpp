@@ -9,6 +9,7 @@
 #pragma once
 
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
@@ -17,7 +18,7 @@
 namespace ActsExamples {
 namespace DD4hep {
 
-struct DD4hepDetector {
+struct DD4hepDetector : public IBaseDetector {
   std::shared_ptr<DD4hepGeometryService> geometryService;
 
   void addOptions(

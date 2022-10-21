@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
-#include "ActsExamples/Options/OptionsUtilities.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
 
 #include <utility>
 

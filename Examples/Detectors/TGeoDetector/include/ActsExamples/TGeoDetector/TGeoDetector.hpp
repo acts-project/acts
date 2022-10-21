@@ -11,6 +11,7 @@
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <map>
@@ -25,7 +26,7 @@ class TGeoDetectorElement;
 
 namespace ActsExamples {
 
-struct TGeoDetector {
+struct TGeoDetector : public ActsExamples::IBaseDetector {
   using DetectorElementPtr = std::shared_ptr<const Acts::TGeoDetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;
 

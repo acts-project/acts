@@ -1,5 +1,14 @@
+#include <boost/program_options.hpp>
 
-void ActsExamples::ParticleSelector::addOptions(Options::Description& desc) {
+#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
+
+#include "Acts/Definitions/Units.hpp"
+
+namespace ActsExamples {
+namespace Options {
+
+void addParticleSelectorOptions(Options::Description& desc) {
   using boost::program_options::bool_switch;
   using boost::program_options::value;
   using Options::Interval;
@@ -23,8 +32,7 @@ void ActsExamples::ParticleSelector::addOptions(Options::Description& desc) {
   opt("remove-neutral", bool_switch(), "Remove neutral particles");
 }
 
-ActsExamples::ParticleSelector::Config
-ActsExamples::ParticleSelector::readConfig(const Options::Variables& vars) {
+ActsExamples::ParticleSelector::Config readParticleSelectorConfig(const Options::Variables& vars) {
   using namespace Acts::UnitLiterals;
 
   // Set boundary values if the given config exists
@@ -38,7 +46,7 @@ ActsExamples::ParticleSelector::readConfig(const Options::Variables& vars) {
     upper = interval.upper.value_or(upper) * unit;
   };
 
-  Config cfg;
+  ActsExamples::ParticleSelector::Config cfg;
   extractInterval("select-rho-mm", 1_mm, cfg.rhoMin, cfg.rhoMax);
   extractInterval("select-absz-mm", 1_mm, cfg.absZMin, cfg.absZMax);
   extractInterval("select-time-ns", 1_ns, cfg.timeMin, cfg.timeMax);
@@ -49,4 +57,7 @@ ActsExamples::ParticleSelector::readConfig(const Options::Variables& vars) {
   cfg.removeCharged = vars["remove-charged"].as<bool>();
   cfg.removeNeutral = vars["remove-neutral"].as<bool>();
   return cfg;
+}
+
+}
 }

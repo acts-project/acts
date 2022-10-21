@@ -1,11 +1,11 @@
 add_library(
   ActsExamplesFramework SHARED
   src/Framework/BareAlgorithm.cpp
-  src/Framework/WhiteBoard.cpp
   src/Framework/BareService.cpp
   src/Framework/RandomNumbers.cpp
   src/Framework/Sequencer.cpp
   src/Utilities/Paths.cpp
+  src/Utilities/Options.cpp
   src/Utilities/Helpers.cpp
   src/Validation/DuplicationPlotTool.cpp
   src/Validation/EffPlotTool.cpp

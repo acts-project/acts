@@ -1,4 +1,13 @@
-void ActsExamples::TruthSeedSelector::addOptions(Options::Description& desc) {
+#include "ActsExamples/Options/TruthSeedSelectorOptions.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/Utilities/Options.hpp"
+
+#include <boost/program_options.hpp>
+
+namespace ActsExamples {
+namespace Options {
+
+void addTruthSeedSelectorOptions(Options::Description& desc) {
   using boost::program_options::value;
   using Options::Interval;
 
@@ -20,7 +29,7 @@ void ActsExamples::TruthSeedSelector::addOptions(Options::Description& desc) {
 }
 
 ActsExamples::TruthSeedSelector::Config
-ActsExamples::TruthSeedSelector::readConfig(const Options::Variables& vars) {
+readTruthSeedSelectorConfig(const Options::Variables& vars) {
   using namespace Acts::UnitLiterals;
 
   // Set boundary values if the given config exists
@@ -34,7 +43,7 @@ ActsExamples::TruthSeedSelector::readConfig(const Options::Variables& vars) {
     upper = interval.upper.value_or(upper) * unit;
   };
 
-  Config cfg;
+  ActsExamples::TruthSeedSelector::Config cfg;
   extractInterval("select-rho-mm", 1_mm, cfg.rhoMin, cfg.rhoMax);
   extractInterval("select-z-mm", 1_mm, cfg.zMin, cfg.zMax);
   extractInterval("select-phi-degree", 1_degree, cfg.phiMin, cfg.phiMax);
@@ -43,4 +52,7 @@ ActsExamples::TruthSeedSelector::readConfig(const Options::Variables& vars) {
   extractInterval("select-pt-gev", 1_GeV, cfg.ptMin, cfg.ptMax);
   cfg.nHitsMin = vars["select-min-hits"].as<size_t>();
   return cfg;
+}
+
+}
 }

@@ -24,7 +24,8 @@
 #include "ActsExamples/TruthTracking/TrackSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
-#include "ActsExamples/Vertexing/VertexingOptions.hpp"
+#include "ActsExamples/Options/VertexingOptions.hpp"
+#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
 
 #include <memory>
 
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
-  ActsExamples::ParticleSelector::addOptions(desc);
+  Options::addParticleSelectorOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;
@@ -67,7 +68,7 @@ int main(int argc, char* argv[]) {
       particleReaderConfig, Acts::Logging::INFO));
 
   // add additional particle selection
-  auto select = ActsExamples::ParticleSelector::readConfig(vars);
+  auto select = Options::readParticleSelectorConfig(vars);
   select.inputParticles = particleReaderConfig.particleCollection;
   select.outputParticles = "detectorAcceptanceSelectedTruthParticles";
   sequencer.addAlgorithm(

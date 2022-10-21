@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Detector/IBaseDetector.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
 #include <vector>
@@ -19,7 +21,7 @@ class GenericDetectorElement;
 }
 }  // namespace ActsExamples
 
-struct GenericDetector {
+struct GenericDetector : public ActsExamples::IBaseDetector {
   using DetectorElement = ActsExamples::Generic::GenericDetectorElement;
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
   using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;

@@ -76,7 +76,7 @@ ActsExamples::DigitizationConfig setupDigitization(
   auto logLevel = Options::readLogLevel(vars);
 
   auto digiCfg = ActsExamples::DigitizationConfig(
-      vars, ActsExamples::readDigiConfigFromJson(
+      vars["digi-merge"].as<bool>(), vars["digi-merge-nsigma"].as<double>(), vars["digi-merge-common-corner"].as<bool>(), ActsExamples::readDigiConfigFromJson(
                 vars["digi-config-file"].as<std::string>()));
   // Common options for digitization
   digiCfg.inputSimHits = inputSimHits;

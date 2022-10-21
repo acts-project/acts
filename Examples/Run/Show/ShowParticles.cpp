@@ -17,6 +17,7 @@
 #include "ActsExamples/Printers/ParticlesPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
 
 #include <memory>
 
@@ -32,7 +33,7 @@ int main(int argc, char* argv[]) {
   Options::addSequencerOptions(desc);
   opts("input-dir", value<std::string>()->default_value(""), "");
   opts("input-stem", value<std::string>()->default_value("particles"), "");
-  ParticleSelector::addOptions(desc);
+  ActsExamples::Options::addParticleSelectorOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;
@@ -54,7 +55,7 @@ int main(int argc, char* argv[]) {
       std::make_shared<CsvParticleReader>(readParticlesCfg, logLevel));
 
   // pre-select particles
-  auto selectParticlesCfg = ParticleSelector::readConfig(vars);
+  auto selectParticlesCfg = ActsExamples::Options::readParticleSelectorConfig(vars);
   selectParticlesCfg.inputParticles = readParticlesCfg.outputParticles;
   selectParticlesCfg.outputParticles = "particles_selected";
   sequencer.addAlgorithm(
