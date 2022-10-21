@@ -213,10 +213,8 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         s.run()
         del s
 
-        for stem in (
-            ["performance_ckf", "performance_vertexing"] + ["performance_ambi"]
-            if label == "seeded"
-            else []
+        for stem in ["performance_ckf", "performance_vertexing"] + (
+            ["performance_ambi"] if label == "seeded" else []
         ):
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
