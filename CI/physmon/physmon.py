@@ -206,7 +206,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         s.run()
         del s
 
-        for stem in "performance_ckf", "performance_vertexing":
+        for stem in "performance_ckf", "performance_ambi", "performance_vertexing":
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
@@ -324,7 +324,7 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                     maximumSharedHits=3,
                 ),
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-                outputDirRoot=tp,
+                outputDirRoot=None,
             )
 
             addVertexFitting(
