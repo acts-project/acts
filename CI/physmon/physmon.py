@@ -192,6 +192,8 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             AmbiguityResolutionConfig(
                 maximumSharedHits=3,
             ),
+            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+            outputDirRoot=tp,
         )
 
         addVertexFitting(
@@ -321,6 +323,8 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 AmbiguityResolutionConfig(
                     maximumSharedHits=3,
                 ),
+                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+                outputDirRoot=tp,
             )
 
             addVertexFitting(

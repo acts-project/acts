@@ -806,6 +806,7 @@ def addCKFTracks(
             level=customLogLevel(),
             inputParticles=selectedParticles,
             inputTrajectories=trackFinder.config.outputTrajectories,
+            inputTrackParametersTips=trackFinder.config.outputTrackParametersTips,
             inputMeasurementParticlesMap="measurement_particles_map",
             **acts.examples.defaultKWArgs(
                 # The bottom seed could be the first, second or third hits on the truth track
@@ -970,10 +971,13 @@ AmbiguityResolutionConfig = namedtuple(
 
 @acts.examples.NamedTypeArgs(
     config=AmbiguityResolutionConfig,
+    ckfPerformanceConfigArg=CKFPerformanceConfig,
 )
 def addAmbiguityResolution(
     s,
     config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
+    ckfPerformanceConfigArg: CKFPerformanceConfig = CKFPerformanceConfig(),
+    outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     from acts.examples import (
@@ -995,6 +999,26 @@ def addAmbiguityResolution(
         ),
     )
     s.addAlgorithm(alg)
+
+    if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+
+        perfWriter = acts.examples.CKFPerformanceWriter(
+            level=customLogLevel(),
+            inputParticles="truth_seeds_selected",
+            inputTrajectories=alg.config.inputTrajectories,
+            inputTrackParametersTips=alg.config.outputTrackParametersTips,
+            inputMeasurementParticlesMap="measurement_particles_map",
+            **acts.examples.defaultKWArgs(
+                nMeasurementsMin=ckfPerformanceConfigArg.nMeasurementsMin,
+                ptMin=ckfPerformanceConfigArg.ptMin,
+                truthMatchProbMin=ckfPerformanceConfigArg.truthMatchProbMin,
+            ),
+            filePath=str(outputDirRoot / "performance_ambi.root"),
+        )
+        s.addWriter(perfWriter)
 
     return s
 

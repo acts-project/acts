@@ -53,6 +53,14 @@ function full_chain() {
         -o $outdir/ckf_${suffix}.html \
         -p $outdir/ckf_${suffix}_plots 
 
+    run \
+        $outdir/performance_ambi_${suffix}.root \
+        $refdir/performance_ambi_${suffix}.root \
+        --title "Ambisolver ${suffix}" \
+        -c $config \
+        -o $outdir/ambi_${suffix}.html \
+        -p $outdir/ambi_${suffix}_plots 
+
     Examples/Scripts/generic_plotter.py \
         $outdir/performance_vertexing_${suffix}.root \
         vertexing \
