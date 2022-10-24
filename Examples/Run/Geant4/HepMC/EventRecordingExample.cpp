@@ -11,7 +11,6 @@
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Geant4/Geant4Options.hpp"
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
@@ -25,6 +24,8 @@
 #include <string>
 
 #include <boost/program_options.hpp>
+
+#include "Geant4Options.hpp"
 
 int main(int argc, char* argv[]) {
   // Declare the supported program options.

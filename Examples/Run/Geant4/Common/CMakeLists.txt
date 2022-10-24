@@ -1,6 +1,7 @@
 add_library(
   ActsExamplesGeant4Common SHARED
-  Geant4.cpp)
+  Geant4.cpp
+  Geant4Options.cpp)
   
 target_include_directories(
   ActsExamplesGeant4Common

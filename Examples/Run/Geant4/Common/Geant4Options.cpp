@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/Geant4/Geant4Options.hpp"
+#include "Geant4Options.hpp"
 
 #include "ActsExamples/Utilities/Options.hpp"
 

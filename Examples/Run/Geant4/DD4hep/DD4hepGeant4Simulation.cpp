@@ -9,7 +9,6 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
-#include "ActsExamples/Geant4/Geant4Options.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Simulation/CommonSimulation.hpp"
@@ -17,6 +16,7 @@
 #include <boost/program_options.hpp>
 
 #include "Geant4.hpp"
+#include "Geant4Options.hpp"
 
 int main(int argc, char* argv[]) {
   using namespace ActsExamples;

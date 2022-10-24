@@ -1,6 +1,6 @@
 add_library(
   ActsExamplesFatrasCommon SHARED
-  Fatras.cpp)
+  Fatras.cpp FatrasOptions.cpp)
 target_include_directories(
   ActsExamplesFatrasCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)

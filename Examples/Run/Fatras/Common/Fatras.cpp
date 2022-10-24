@@ -20,7 +20,6 @@
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Options/FatrasOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/ParticleGunOptions.hpp"
 #include "ActsExamples/Simulation/CommonSimulation.hpp"
@@ -31,6 +30,8 @@
 #include <string>
 
 #include <boost/program_options.hpp>
+
+#include "FatrasOptions.hpp"
 
 using namespace ActsExamples;
 
