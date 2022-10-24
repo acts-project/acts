@@ -101,7 +101,7 @@ struct TestContainerAccessor {
 
     Acts::SourceLink operator*() const {
       const auto& sl = m_iterator->second;
-      return Acts::SourceLink{sl.geometryId, sl};
+      return Acts::SourceLink{sl};
     }
 
     BaseIterator m_iterator;
@@ -222,7 +222,7 @@ struct Fixture {
           measPropagator, geoCtx, magCtx, startParameters[trackId],
           detector.resolutions, rng, trackId);
       for (auto& sl : measurements.sourceLinks) {
-        sourceLinks.emplace(sl.geometryId, std::move(sl));
+        sourceLinks.emplace(sl.geometryId(), std::move(sl));
       }
     }
   }

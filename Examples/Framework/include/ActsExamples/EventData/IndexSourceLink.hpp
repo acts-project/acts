@@ -92,7 +92,7 @@ struct IndexSourceLinkAccessor : GeometryIdMultisetAccessor<IndexSourceLink> {
 
     Acts::SourceLink operator*() const {
       const IndexSourceLink& sl = *m_iterator;
-      return Acts::SourceLink{sl.geometryId(), sl};
+      return Acts::SourceLink{sl};
     }
 
     auto operator-(const Iterator& other) const {

@@ -216,10 +216,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(
-        Acts::SourceLink{surface->geometryId(),
-                         Test::TestSourceLink{eBoundLoc0, eBoundLoc1, loc,
-                                              cov2D, surface->geometryId()}});
+    sourcelinks.emplace_back(Test::TestSourceLink{
+        eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
   // The KalmanFitter - we use the eigen stepper for covariance transport

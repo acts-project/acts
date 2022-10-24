@@ -34,7 +34,7 @@ constexpr FreeIndices freeIndices[] = {
     eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP,
 };
 const TestSourceLink sourceOrig;
-const Acts::SourceLink source{sourceOrig.geometryId, sourceOrig};
+const Acts::SourceLink source{sourceOrig};
 // fix seed for reproducible tests
 std::default_random_engine rng(123);
 }  // namespace

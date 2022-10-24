@@ -145,9 +145,8 @@ struct FitterTester {
       const std::vector<TestSourceLink>& sourceLinks) {
     std::vector<Acts::SourceLink> result;
     std::transform(sourceLinks.begin(), sourceLinks.end(),
-                   std::back_inserter(result), [](const auto& sl) {
-                     return Acts::SourceLink{sl.geometryId, sl};
-                   });
+                   std::back_inserter(result),
+                   [](const auto& sl) { return Acts::SourceLink{sl}; });
     return result;
   }
 

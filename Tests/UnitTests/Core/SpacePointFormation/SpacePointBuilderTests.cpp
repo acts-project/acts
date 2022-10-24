@@ -175,12 +175,12 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   std::vector<const Vector3*> backStripEnds;
 
   for (auto& sl : sourceLinks) {
-    const auto geoId = sl.geometryId;
+    const auto geoId = sl.geometryId();
     const auto volumeId = geoId.volume();
     if (volumeId == 2) {  // pixel type detector
 
       const TestMeasurement* meas = new TestMeasurement(
-          makeMeasurement(SourceLink{geoId, sl}, sl.parameters, sl.covariance,
+          makeMeasurement(SourceLink{sl}, sl.parameters, sl.covariance,
                           sl.indices[0], sl.indices[1]));
       singleHitMeasurements.emplace_back(meas);
     } else if (volumeId == 3) {  // strip type detector
@@ -188,7 +188,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
       const auto layerId = geoId.layer();
 
       const TestMeasurement* meas = new TestMeasurement(
-          makeMeasurement(SourceLink{geoId, sl}, sl.parameters, sl.covariance,
+          makeMeasurement(SourceLink{sl}, sl.parameters, sl.covariance,
                           sl.indices[0], sl.indices[1]));
 
       if (layerId == 2 || layerId == 6) {

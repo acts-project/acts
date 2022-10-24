@@ -138,7 +138,7 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   ts.chi2() = pc.chi2;
   ts.pathLength() = pc.pathLength;
   // source link defines the uncalibrated measurement
-  ts.setUncalibrated(pc.sourceLink.sourceLink());
+  ts.setUncalibrated(SourceLink{pc.sourceLink});
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
     testSourceLinkCalibrator<VectorMultiTrajectory>(Acts::GeometryContext{},
@@ -481,7 +481,7 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
     invalid.sourceId = -1;
     BOOST_CHECK_NE(tsa.uncalibrated().get<TestSourceLink>(), invalid);
     BOOST_CHECK_NE(tsb.uncalibrated().get<TestSourceLink>(), invalid);
-    tsb.setUncalibrated(invalid.sourceLink());
+    tsb.setUncalibrated(SourceLink{invalid});
     BOOST_CHECK_EQUAL(tsa.uncalibrated().get<TestSourceLink>(), invalid);
     BOOST_CHECK_EQUAL(tsb.uncalibrated().get<TestSourceLink>(), invalid);
   }
@@ -547,7 +547,7 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
 
   // use temporary measurement to reset calibrated data
   TestTrackState ttsb(rng, 2u);
-  ts.setUncalibrated(ttsb.sourceLink.sourceLink());
+  ts.setUncalibrated(SourceLink{ttsb.sourceLink});
   auto meas = testSourceLinkCalibratorReturn<VectorMultiTrajectory>(gctx, ts);
   auto m2 = std::get<Measurement<BoundIndices, 2u>>(meas);
 
@@ -570,7 +570,7 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   // check that the surface is correctly set
   BOOST_CHECK_EQUAL(&ts.referenceSurface(), pc.surface.get());
   BOOST_CHECK_EQUAL(ts.referenceSurface().geometryId(),
-                    pc.sourceLink.geometryId);
+                    pc.sourceLink.geometryId());
 
   // check that the track parameters are set
   BOOST_CHECK(ts.hasPredicted());

@@ -32,7 +32,7 @@ namespace Test {
 /// identifier is stored that can be used to store additional information. How
 /// this is interpreted depends on the specific tests.
 struct TestSourceLink final {
-  GeometryIdentifier geometryId{};
+  GeometryIdentifier m_geometryId{};
   size_t sourceId = 0u;
   // use eBoundSize to indicate unused indices
   std::array<BoundIndices, 2> indices = {eBoundSize, eBoundSize};
@@ -42,7 +42,7 @@ struct TestSourceLink final {
   /// Construct a source link for a 1d measurement.
   TestSourceLink(BoundIndices idx, ActsScalar val, ActsScalar var,
                  GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
-      : geometryId(gid),
+      : m_geometryId(gid),
         sourceId(sid),
         indices{idx, eBoundSize},
         parameters(val, 0),
@@ -52,7 +52,7 @@ struct TestSourceLink final {
                  const Acts::ActsVector<2>& params,
                  const Acts::ActsSymMatrix<2>& cov,
                  GeometryIdentifier gid = GeometryIdentifier(), size_t sid = 0u)
-      : geometryId(gid),
+      : m_geometryId(gid),
         sourceId(sid),
         indices{idx0, idx1},
         parameters(params),
@@ -66,7 +66,7 @@ struct TestSourceLink final {
 
   constexpr size_t index() const { return sourceId; }
 
-  SourceLink sourceLink() const { return SourceLink{geometryId, *this}; }
+  GeometryIdentifier geometryId() const { return m_geometryId; }
 };
 
 bool operator==(const TestSourceLink& lhs, const TestSourceLink& rhs);
