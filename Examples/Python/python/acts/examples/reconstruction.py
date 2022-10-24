@@ -895,7 +895,7 @@ def addExaTrkX(
 
     # Run the particle selection
     # The pre-selection will select truth particles satisfying provided criteria
-    # from all particles read in by particle reader for further processing.It
+    # from all particles read in by particle reader for further processing. It
     # has no impact on the truth hits themselves
     s.addAlgorithm(
         acts.examples.TruthSeedSelector(
