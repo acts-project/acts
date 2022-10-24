@@ -274,7 +274,7 @@ def addSeeding(
         )
         s.addAlgorithm(spAlg)
 
-        # Run either : truth track finding or seeding
+        # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
             # Use truth tracking
@@ -775,7 +775,7 @@ def addCKFTracks(
                 inputTrajectories=trackFinder.config.outputTrajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection.This could be avoided when a seperate track
+                # filtered particle collection. This could be avoided when a seperate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputSimHits="simhits",
@@ -792,7 +792,7 @@ def addCKFTracks(
                 inputTrajectories=trackFinder.config.outputTrajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
-                # filtered particle collection.This could be avoided when a seperate track
+                # filtered particle collection. This could be avoided when a seperate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputMeasurementParticlesMap="measurement_particles_map",
@@ -894,7 +894,7 @@ def addExaTrkX(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Run the particle selection
-    # The pre - selection will select truth particles satisfying provided criteria
+    # The pre-selection will select truth particles satisfying provided criteria
     # from all particles read in by particle reader for further processing.It
     # has no impact on the truth hits themselves
     s.addAlgorithm(
