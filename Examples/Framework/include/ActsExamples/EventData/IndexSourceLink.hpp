@@ -72,35 +72,7 @@ using IndexSourceLinkContainer = GeometryIdMultiset<IndexSourceLink>;
 struct IndexSourceLinkAccessor : GeometryIdMultisetAccessor<IndexSourceLink> {
   using BaseIterator = GeometryIdMultisetAccessor<IndexSourceLink>::Iterator;
 
-  struct Iterator {
-    using iterator_category = typename BaseIterator::iterator_category;
-    using value_type = typename BaseIterator::value_type;
-    using difference_type = typename BaseIterator::difference_type;
-    using pointer = typename BaseIterator::pointer;
-    using reference = typename BaseIterator::reference;
-
-    Iterator& operator++() {
-      ++m_iterator;
-      return *this;
-    }
-
-    bool operator==(const Iterator& other) const {
-      return m_iterator == other.m_iterator;
-    }
-
-    bool operator!=(const Iterator& other) const { return !(*this == other); }
-
-    Acts::SourceLink operator*() const {
-      const IndexSourceLink& sl = *m_iterator;
-      return Acts::SourceLink{sl};
-    }
-
-    auto operator-(const Iterator& other) const {
-      return m_iterator - other.m_iterator;
-    }
-
-    BaseIterator m_iterator;
-  };
+  using Iterator = Acts::SourceLinkAdapterIterator<BaseIterator>;
 
   // get the range of elements with requested geoId
   std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {

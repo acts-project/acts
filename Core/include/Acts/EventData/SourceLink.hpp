@@ -101,6 +101,43 @@ class SourceLink final {
   std::any m_upstream;
 };
 
+template <typename T>
+struct SourceLinkAdapterIterator {
+  using BaseIterator = T;
+
+  using iterator_category = typename BaseIterator::iterator_category;
+  using value_type = typename BaseIterator::value_type;
+  using difference_type = typename BaseIterator::difference_type;
+  using pointer = typename BaseIterator::pointer;
+  using reference = typename BaseIterator::reference;
+
+  explicit SourceLinkAdapterIterator(T iterator) : m_iterator{iterator} {}
+
+  SourceLinkAdapterIterator& operator++() {
+    ++m_iterator;
+    return *this;
+  }
+
+  bool operator==(const SourceLinkAdapterIterator& other) const {
+    return m_iterator == other.m_iterator;
+  }
+
+  bool operator!=(const SourceLinkAdapterIterator& other) const {
+    return !(*this == other);
+  }
+
+  Acts::SourceLink operator*() const {
+    const auto& sl = *m_iterator;
+    return Acts::SourceLink{sl};
+  }
+
+  auto operator-(const SourceLinkAdapterIterator& other) const {
+    return m_iterator - other.m_iterator;
+  }
+
+  BaseIterator m_iterator;
+};
+
 // inline SourceLink::~SourceLink() = default;
 
 }  // namespace Acts
