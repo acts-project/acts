@@ -1,7 +1,3 @@
-if( ACTS_USE_SYSTEM_BOOST )
-    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options)
-endif()
-
 # shared code
 add_subdirectory(Common)
 

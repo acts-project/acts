@@ -20,7 +20,8 @@ add_library(
   src/JsonOptionsWriter.cpp
   src/VertexingOptions.cpp
   src/SpacePointMakerOptions.cpp
-  src/TruthSeedSelectorOptions.cpp)
+  src/TruthSeedSelectorOptions.cpp
+  src/FatrasOptions.cpp)
 target_include_directories(
   ActsExamplesCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -34,7 +35,7 @@ target_link_libraries(
     ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance
     ActsExamplesDigitization ActsExamplesTrackFitting
     ActsExamplesTrackFinding ActsExamplesTruthTracking
-    ActsExamplesIoCsv
+    ActsExamplesIoCsv ActsExamplesFatras
   PRIVATE
     dfelibs)
 
