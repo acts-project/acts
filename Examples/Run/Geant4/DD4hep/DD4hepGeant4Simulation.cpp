@@ -12,11 +12,11 @@
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Simulation/CommonSimulation.hpp"
+#include "ActsExamples/Geant4/Geant4Common.hpp"
+#include "ActsExamples/Options/Geant4Options.hpp"
 
 #include <boost/program_options.hpp>
 
-#include "Geant4.hpp"
-#include "Geant4Options.hpp"
 
 int main(int argc, char* argv[]) {
   using namespace ActsExamples;

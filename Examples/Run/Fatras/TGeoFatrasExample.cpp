@@ -7,8 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
-
-#include "Fatras.hpp"
+#include "ActsExamples/Fatras/FatrasCommon.hpp"
 
 int main(int argc, char* argv[]) {
   return runFatras(argc, argv, std::make_shared<ActsExamples::TGeoDetector>());

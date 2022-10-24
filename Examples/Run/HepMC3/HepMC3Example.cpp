@@ -9,7 +9,7 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimVertex.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Event.hpp"
-#include "ActsExamples/Io/HepMC3/HepMC3Options.hpp"
+#include "ActsExamples/Options/HepMC3Options.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsFatras/Utilities/ParticleData.hpp"
