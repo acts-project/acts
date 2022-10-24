@@ -206,7 +206,7 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
   if (!cmdlTool.onlyGpu) {
-    decltype(normalSeedFinder)::State state;
+    decltype(normalSeedFinder)::SeedingState state;
     for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
          ++groupIt) {
       normalSeedFinder.createSeedsForGroup(
