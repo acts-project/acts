@@ -30,11 +30,9 @@ namespace ActsExamples {
 
 class TrackFittingAlgorithm final : public BareAlgorithm {
  public:
-  /// Track fitter function that takes input measurements, initial trackstate
-  /// and fitter options and returns some track-fitter-specific result.
-  using TrackFitterOptions =
-      Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory>;
-
+  // All track fitter function must return the same type. For now this is the
+  // KalmanFitterResult, but maybe in the future it makes sense to generalize
+  // this
   using TrackFitterResult =
       Acts::Result<Acts::KalmanFitterResult<Acts::VectorMultiTrajectory>>;
 
@@ -52,7 +50,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
   /// Fit function that takes the above parameters and runs a fit
   /// @note This is separated into a virtual interface to keep compilation units
-  /// small
+  /// small.
   class TrackFitterFunction {
    public:
     virtual ~TrackFitterFunction() = default;
@@ -98,16 +96,6 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
-
-  // /// Create the track fitter function implementation.
-  // ///
-  // /// The magnetic field is intentionally given by-value since the variant
-  // /// contains shared_ptr anyways.
-  // /// @param trackingGeometry
-  // /// @param multipleScattering correct for MCS (mainly for debugging)
-  // /// @param energyLoss correct for e-loss
-  // /// @param reverseFilteringMomThreshold at which threshold
-  // /// @param freeToBoundCorrection Correction for non-linearity effect during transform from free to bound
 
  private:
   Config m_cfg;
