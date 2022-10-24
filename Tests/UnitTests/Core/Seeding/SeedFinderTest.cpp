@@ -184,7 +184,7 @@ int main(int argc, char** argv) {
       std::move(grid), rRangeSPExtent, config);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
-  decltype(a)::State state;
+  decltype(a)::SeedingState state;
   auto start = std::chrono::system_clock::now();
   auto groupIt = spGroup.begin();
   auto endOfGroups = spGroup.end();
