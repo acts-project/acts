@@ -34,7 +34,6 @@ function run() {
     echo "::endgroup::"
 }
 
-
 function full_chain() {
     suffix=$1
 
@@ -67,7 +66,6 @@ function full_chain() {
         --title "IVF ${suffix}" \
         -o $outdir/ivf_${suffix}.html \
         -p $outdir/ivf_${suffix}_plots
-
 }
 
 full_chain truth_smeared
@@ -85,8 +83,7 @@ run \
 run \
     $outdir/performance_ambi_seeded.root \
     $refdir/performance_ambi_seeded.root \
-    --title "Ambisolver ${suffix}" \
-    -c $config \
+    --title "Ambisolver seeded" \
     -o $outdir/ambi_seeded.html \
     -p $outdir/ambi_seeded_plots
 
@@ -96,7 +93,6 @@ run \
     --title "analysis_residuals_and_pulls" \
 #    -o $outdir/analysis_residuals_and_pulls.html \
 #    -p $outdir/analysis_residuals_and_pulls
-
 
 Examples/Scripts/vertex_mu_scan.py \
     $outdir/performance_vertexing_*mu*.root \

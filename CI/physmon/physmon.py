@@ -178,7 +178,6 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
             TrackSelectorRanges(
                 removeNeutral=True,
-                absEta=(None, 2.5),
                 loc0=(None, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
             ),
@@ -238,7 +237,6 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
                     "",
                 ]
             )
-
 
 ### VERTEX MU SCAN
 
@@ -319,7 +317,6 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
                 TrackSelectorRanges(
                     removeNeutral=True,
-                    absEta=(None, 2.5),
                     loc0=(None, 4.0 * u.mm),
                     pt=(500 * u.MeV, None),
                 ),
