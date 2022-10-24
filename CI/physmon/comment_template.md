@@ -58,6 +58,14 @@ IVF: [seeded]({{ .url }}/ivf_seeded.html), [truth smeared]({{ .url }}/ivf_truth_
   <img src="{{ .url }}/ckf_truth_estimated_plots/nHoles_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ckf_truth_estimated_plots/nMeasurements_vs_eta.pdf?to_png=1" width="50%"/>
 </details>
 
+### Ambiguity resolution
+
+<details>
+  <summary><b>seeded</b></summary>
+  <img src="{{ .url }}/ambi_seeded_plots/trackeff_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ambi_seeded_plots/trackeff_vs_pT.pdf?to_png=1" width="50%"/>
+
+  <img src="{{ .url }}/ambi_seeded_plots/nHoles_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ambi_seeded_plots/nMeasurements_vs_eta.pdf?to_png=1" width="50%"/>
+</details>
 
 ### Truth tracking
 
