@@ -284,7 +284,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
                                top[t]->z() - middle.z()));
   }
 
-  int numSeeds = 0;
   size_t t0 = 0;
 
   for (size_t b = 0; b < numBotSP; b++) {
