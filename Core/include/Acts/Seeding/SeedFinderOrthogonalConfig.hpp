@@ -81,6 +81,9 @@ struct SeedFinderOrthogonalConfig {
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
 
+  // skip top SPs based on cotTheta sorting when producing triplets
+  bool skipPreviousTopSP = false;
+
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
   // default is 5%

@@ -75,7 +75,7 @@ struct SeedFinderConfig {
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
-  // additional cut to skip top SPs when producing triplets
+  // skip top SPs based on cotTheta sorting when producing triplets
   bool skipPreviousTopSP = false;
 
   // FIXME: this is not used yet
