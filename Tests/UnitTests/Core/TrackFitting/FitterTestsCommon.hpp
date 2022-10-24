@@ -12,6 +12,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/ConstantBField.hpp"
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
@@ -20,8 +21,11 @@
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Tests/CommonHelpers/MeasurementsCreator.hpp"
+#include "Acts/Tests/CommonHelpers/TestSourceLink.hpp"
 #include "Acts/TrackFitting/detail/KalmanGlobalCovariance.hpp"
 #include "Acts/Utilities/CalibrationContext.hpp"
+
+#include <iterator>
 
 using namespace Acts::UnitLiterals;
 using namespace Acts::Test;
@@ -137,6 +141,16 @@ struct FitterTester {
   Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator> simPropagator =
       makeStraightPropagator(geometry);
 
+  static std::vector<Acts::SourceLink> prepareSourceLinks(
+      const std::vector<TestSourceLink>& sourceLinks) {
+    std::vector<Acts::SourceLink> result;
+    std::transform(sourceLinks.begin(), sourceLinks.end(),
+                   std::back_inserter(result), [](const auto& sl) {
+                     return Acts::SourceLink{sl.geometryId, sl};
+                   });
+    return result;
+  }
+
   //////////////////////////
   // The testing functions
   //////////////////////////
@@ -149,7 +163,8 @@ struct FitterTester {
                                       const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     // this is the default option. set anyways for consistency
@@ -178,7 +193,7 @@ struct FitterTester {
                                         const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     // initial fitter options configured for backward filtereing mode
@@ -220,7 +235,7 @@ struct FitterTester {
                                          const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     // create a track near the tracker exit for outward->inward filtering
@@ -266,7 +281,7 @@ struct FitterTester {
                                        const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     // create a boundless target surface near the tracker exit
@@ -299,7 +314,7 @@ struct FitterTester {
                               const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     options.referenceSurface = &start.referenceSurface();
@@ -326,7 +341,7 @@ struct FitterTester {
     }
     // fit w/ all hits in random order
     {
-      auto shuffledSourceLinks = sourceLinks;
+      decltype(sourceLinks) shuffledSourceLinks = sourceLinks;
       std::shuffle(shuffledSourceLinks.begin(), shuffledSourceLinks.end(), rng);
       auto res = fitter.fit(shuffledSourceLinks.begin(),
                             shuffledSourceLinks.end(), start, options);
@@ -354,7 +369,7 @@ struct FitterTester {
                               const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     // always keep the first and last measurement. leaving those in seems to not
@@ -389,8 +404,9 @@ struct FitterTester {
                                   const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
-    const auto& outlierSourceLinks = measurements.outlierSourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
+    auto outlierSourceLinks =
+        prepareSourceLinks(measurements.outlierSourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
     BOOST_REQUIRE_EQUAL(outlierSourceLinks.size(), nMeasurements);
 
@@ -433,7 +449,7 @@ struct FitterTester {
                                           const bool expected_smoothed) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     const auto& outlierSourceLinks = measurements.outlierSourceLinks;
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
     BOOST_REQUIRE_EQUAL(outlierSourceLinks.size(), nMeasurements);
@@ -464,7 +480,7 @@ struct FitterTester {
                              const parameters_t& start, Rng& rng) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
-    const auto& sourceLinks = measurements.sourceLinks;
+    auto sourceLinks = prepareSourceLinks(measurements.sourceLinks);
     BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
     auto res =

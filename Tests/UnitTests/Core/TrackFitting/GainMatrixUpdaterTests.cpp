@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(Update) {
   ts.predicted() = trkPar;
   ts.predictedCovariance() = trkCov;
   ts.pathLength() = 0.;
-  ts.setUncalibrated(sourceLink);
+  ts.setUncalibrated(SourceLink{sourceLink.geometryId, sourceLink});
   testSourceLinkCalibrator<VectorMultiTrajectory>(tgContext, ts);
 
   // Check that the state has storage available

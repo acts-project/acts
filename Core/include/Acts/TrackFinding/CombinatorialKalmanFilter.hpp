@@ -805,7 +805,7 @@ class CombinatorialKalmanFilter {
       // to be done based on calibrated measurement
       for (auto it = slBegin; it != slEnd; ++it) {
         // get the source link
-        const auto& sourceLink = *it;
+        const auto sourceLink = *it;
 
         // prepare the track state
         PM mask = PM::Predicted | PM::Jacobian | PM::Calibrated;

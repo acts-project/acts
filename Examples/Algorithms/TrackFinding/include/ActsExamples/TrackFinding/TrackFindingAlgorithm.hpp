@@ -13,6 +13,7 @@
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "Acts/TrackFinding/SourceLinkAccessorConcept.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
@@ -139,7 +140,7 @@ void TrackFindingAlgorithm::computeSharedHits(
         }
 
         std::size_t hitIndex =
-            static_cast<const IndexSourceLink&>(state.uncalibrated()).index();
+            state.uncalibrated().template get<IndexSourceLink>().index();
 
         // Check if hit not already used
         if (firstTrackOnTheHit.at(hitIndex) ==

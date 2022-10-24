@@ -26,15 +26,15 @@ namespace ActsExamples {
 /// Using an index instead of e.g. a pointer, means source link and
 /// measurement are decoupled and the measurement represenation can be
 /// easily changed without having to also change the source link.
-class IndexSourceLink final : public Acts::SourceLink {
+class IndexSourceLink final {
  public:
   /// Construct from geometry identifier and index.
   constexpr IndexSourceLink(Acts::GeometryIdentifier gid, Index idx)
-      : SourceLink(gid), m_index(idx) {}
+      : m_geometryId(gid), m_index(idx) {}
 
   // Construct an invalid source link. Must be default constructible to
   /// satisfy SourceLinkConcept.
-  IndexSourceLink() : SourceLink{Acts::GeometryIdentifier{}} {}
+  IndexSourceLink() = default;
   IndexSourceLink(const IndexSourceLink&) = default;
   IndexSourceLink(IndexSourceLink&&) = default;
   IndexSourceLink& operator=(const IndexSourceLink&) = default;
@@ -43,7 +43,10 @@ class IndexSourceLink final : public Acts::SourceLink {
   /// Access the index.
   constexpr Index index() const { return m_index; }
 
+  Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
+
  private:
+  Acts::GeometryIdentifier m_geometryId;
   Index m_index = 0;
 
   friend constexpr bool operator==(const IndexSourceLink& lhs,
@@ -61,13 +64,49 @@ class IndexSourceLink final : public Acts::SourceLink {
 ///
 /// Since the source links provide a `.geometryId()` accessor, they can be
 /// stored in an ordered geometry container.
-using IndexSourceLinkContainer =
-    GeometryIdMultiset<std::reference_wrapper<const IndexSourceLink>>;
+using IndexSourceLinkContainer = GeometryIdMultiset<IndexSourceLink>;
 /// Accessor for the above source link container
 ///
 /// It wraps up a few lookup methods to be used in the Combinatorial Kalman
 /// Filter
-using IndexSourceLinkAccessor =
-    GeometryIdMultisetAccessor<std::reference_wrapper<const IndexSourceLink>>;
+struct IndexSourceLinkAccessor : GeometryIdMultisetAccessor<IndexSourceLink> {
+  using BaseIterator = GeometryIdMultisetAccessor<IndexSourceLink>::Iterator;
 
+  struct Iterator {
+    using iterator_category = typename BaseIterator::iterator_category;
+    using value_type = typename BaseIterator::value_type;
+    using difference_type = typename BaseIterator::difference_type;
+    using pointer = typename BaseIterator::pointer;
+    using reference = typename BaseIterator::reference;
+
+    Iterator& operator++() {
+      ++m_iterator;
+      return *this;
+    }
+
+    bool operator==(const Iterator& other) const {
+      return m_iterator == other.m_iterator;
+    }
+
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
+
+    Acts::SourceLink operator*() const {
+      const IndexSourceLink& sl = *m_iterator;
+      return Acts::SourceLink{sl.geometryId(), sl};
+    }
+
+    auto operator-(const Iterator& other) const {
+      return m_iterator - other.m_iterator;
+    }
+
+    BaseIterator m_iterator;
+  };
+
+  // get the range of elements with requested geoId
+  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
+    assert(container != nullptr);
+    auto [begin, end] = container->equal_range(surface.geometryId());
+    return {Iterator{begin}, Iterator{end}};
+  }
+};
 }  // namespace ActsExamples
