@@ -618,10 +618,7 @@ def addKalmanTracks(
         directNavigation=directNavigation,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
-        dFit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
-            field, **kalmanOptions
-        ),
-        fit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
+        fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
     )
@@ -655,7 +652,7 @@ def addTruthTrackingGsf(
         directNavigation=False,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
-        fit=acts.examples.TrackFittingAlgorithm.makeGsfFitterFunction(
+        fit=acts.examples.makeGsfFitterFunction(
             trackingGeometry, field, **gsfOptions
         ),
     )
