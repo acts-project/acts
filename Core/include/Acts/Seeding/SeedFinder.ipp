@@ -406,7 +406,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // allows just adding the two errors if they are uncorrelated (which is
         // fair for scattering and measurement uncertainties)
         if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
-          // additional cut to skip top SPs when producing triplets
+          // skip top SPs based on cotTheta sorting when producing triplets
           if (m_config.skipPreviousTopSP) {
             // break if cotTheta from bottom SP < cotTheta from top SP because
             // the SP are sorted by cotTheta
