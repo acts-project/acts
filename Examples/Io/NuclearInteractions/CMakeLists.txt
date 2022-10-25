@@ -1,6 +1,5 @@
 add_library(
   ActsExamplesIoNuclearInteractions SHARED
-  src/NuclearInteractionOptions.cpp
   src/RootNuclearInteractionParametersWriter.cpp
   src/detail/NuclearInteractionParametrisation.cpp
 )

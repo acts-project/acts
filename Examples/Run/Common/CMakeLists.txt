@@ -20,7 +20,8 @@ add_library(
   src/JsonOptionsWriter.cpp
   src/VertexingOptions.cpp
   src/SpacePointMakerOptions.cpp
-  src/TruthSeedSelectorOptions.cpp)
+  src/TruthSeedSelectorOptions.cpp
+  src/NuclearInteractionOptions.cpp)
 target_include_directories(
   ActsExamplesCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
