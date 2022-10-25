@@ -506,7 +506,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Create a vector to contain protoseeds.
    */
   std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed<ActsExamples::SimSpacePoint>>>>
+      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       protoseeds;
 
   int numQualitySeeds = 0;

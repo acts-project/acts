@@ -25,8 +25,8 @@ function run() {
     echo "::group::Comparing $a vs. $b"
 
     histcmp \
-        --label-reference=$refcommit \
-        --label-monitored=$commit \
+        --label-reference=reference \
+        --label-monitored=monitored \
         "$@"
 
     ec=$(($ec | $?))
