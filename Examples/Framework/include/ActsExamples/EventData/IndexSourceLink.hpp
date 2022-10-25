@@ -54,8 +54,8 @@ class IndexSourceLink final {
     return (lhs.geometryId() == rhs.geometryId()) and
            (lhs.m_index == rhs.m_index);
   }
-  friend constexpr bool operator!=(const IndexSourceLink& lhs,
-                                   const IndexSourceLink& rhs) {
+  friend bool operator!=(const IndexSourceLink& lhs,
+                         const IndexSourceLink& rhs) {
     return not(lhs == rhs);
   }
 };
