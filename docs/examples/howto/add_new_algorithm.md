@@ -108,28 +108,29 @@ That is, the destruction of this object at the end of event processing is taken 
 It is customary that an algorithm requires configuration parameters.
 For example, in a seeding algorithm these parameters could include which detector layers should be used.
 The configuration can be provided to an algorithm through an additional class/structure.
-It can be an inner class of the algorithm or it can be external to it.
-One should use an external structure if it is shared among several algorithm classes.
+For algorithm it is typically an inner class named `Config`.
 
-For example that is how the configuration object could look like for `MySeedingAlgorithm`:
+That is how the configuration object could look like for `MySeedingAlgorithm`:
 
 ```cpp
-
-    struct MySeedingConfig {
+class MySeedingAlgoritm : ...
+    public:
+    struct Config {
         std::vector<int> layers; // layers to use by the seeder
         float deltaZ;  // the maximum allowed deviation in r-z plane
     };
+    ...
 ```
 :::{tip}
 It is customary to put the config structures in the ``Acts`` namespace.
 :::
 
-The algorithm constructor would take a `MySeedingConfig` object during
+The algorithm constructor would take a `MySeedingAlgorithm::Config` object during
 the construction in addition to an argument controlling verbosity of diagnostic messages.
 
 ```cpp
 
-    MySeedingAlgorithm::MySeedingAlgorithm( Acts::MySeedingConfig cfg, Acts::Logging::Level lvl):
+    MySeedingAlgorithm::MySeedingAlgorithm( Config cfg, Acts::Logging::Level lvl):
       ActsExamples::BareAlgortihm("MySeedingAlgorithm", lvl),
       m_cfg(std::move(cfg)){...}
 ```
@@ -142,41 +143,15 @@ The binding is defined in C++ code in `Examples/Python/src/` directory.
 There is one source file per category,
 in this particular case the file to edit would be `TrackFinding.cpp`.
 
-
-The configuration structure binding would be defined like this:
-
-```cpp
-
-    using Config = Acts::MySeedingConfig;
-    auto c = py::class_<Config>(m, "MySeedingConfig").def(py::init<>()); // defined here name: MySeedingConfig is the class name that will be known in python
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(layers); // makes the layers field accessible in python
-    ACTS_PYTHON_MEMBER(deltaZ); // makes the deltaZ accessible
-    ACTS_PYTHON_STRUCT_END();
-    patchKwargsConstructor(c);
-```
-The algorithm class can be made known to python via such binding definition:
+The algorithm class and associated config class can be made known to python via such binding definition:
 
 ```cpp
-    auto alg =
-        py::class_<ActsExamples::MySeedingAlgorithm,
-                   ActsExamples::BareAlgorithm,
-                   std::shared_ptr<ActsExamples::MySeedingAlgorithm>>(
-            mex, "MeSeedingAlgorithm")
-            .def(py::init<const Acts::MySeedingConfg&, Acts::Logging::Level>(), // makes the constructor callable from python
-                 py::arg("config"), py::arg("level")); // defines constructor arguments
-        // other methods can be exposed to python (typically config accessor)
-
-    // if the config object is an inner class of the algorithm
-    // and has name Config the python binding generation
-    // can be simplified with this macro
     ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::MySeedingAlgorithm,
       "MySeedingAlgorithm",
-      inputA, inputB, output   // names of class methods that need to be accessible in python
-    )
-
+      layers, deltaZ);
 ```
+
 The bindings can be tested in a standalone python session:
 
 ```python
