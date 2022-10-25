@@ -2,6 +2,7 @@
 [Full report]({{ .url }}/)
 CKF: [seeded]({{ .url }}/ckf_seeded.html), [truth smeared]({{ .url }}/ckf_truth_smeared.html), [truth estimated]({{ .url }}/ckf_truth_estimated.html)
 IVF: [seeded]({{ .url }}/ivf_seeded.html), [truth smeared]({{ .url }}/ivf_truth_smeared.html), [truth estimated]({{ .url }}/ivf_truth_estimated.html) 
+[Ambiguity resolution]({{ .url }}/ambi_seeded.html)
 [Truth tracking]({{ .url }}/truth_tracking.html)
 
 ### Vertexing
