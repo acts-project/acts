@@ -46,7 +46,7 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   /// Accessor to additional propagation quantities
   using detail::Extendable<result_list...>::get;
 
-  /// Final track parameters - initialized to null pointer
+  /// Final track parameters
   std::optional<parameters_t> endParameters = std::nullopt;
 
   /// Full transport jacobian
