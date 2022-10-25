@@ -113,6 +113,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
       }};
 };
 
+// TODO this is somewhat duplicated in AmbiguityResolutionAlgorithm.cpp
+// TODO we should make a common implementation in the core at some point
 template <typename source_link_accessor_container_t>
 void TrackFindingAlgorithm::computeSharedHits(
     const source_link_accessor_container_t& sourceLinks,

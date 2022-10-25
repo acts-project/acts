@@ -48,6 +48,8 @@ ActsExamples::AmbiguityResolutionAlgorithm::AmbiguityResolutionAlgorithm(
 
 namespace {
 
+// TODO this is somewhat duplicated in TrackFindingAlgorithm.hpp
+// TODO we should make a common implementation in the core at some point
 std::vector<std::size_t> computeSharedHits(
     const ActsExamples::IndexSourceLinkContainer& sourceLinks,
     const ActsExamples::TrajectoriesContainer& trajectories,
