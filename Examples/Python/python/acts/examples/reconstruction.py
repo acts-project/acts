@@ -652,9 +652,7 @@ def addTruthTrackingGsf(
         directNavigation=False,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
-        fit=acts.examples.makeGsfFitterFunction(
-            trackingGeometry, field, **gsfOptions
-        ),
+        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
     )
 
     s.addAlgorithm(gsfAlg)
