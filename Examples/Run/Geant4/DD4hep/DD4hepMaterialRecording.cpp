@@ -9,10 +9,10 @@
 #include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
-#include "ActsExamples/Options/CommonOptions.hpp"
-#include "ActsExamples/Options/ParticleGunOptions.hpp"
 #include "ActsExamples/Geant4/Geant4Common.hpp"
+#include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/Geant4Options.hpp"
+#include "ActsExamples/Options/ParticleGunOptions.hpp"
 
 #include <boost/program_options.hpp>
 

@@ -8,9 +8,9 @@
 
 #pragma once
 
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Reader.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 namespace ActsExamples {
 namespace Options {

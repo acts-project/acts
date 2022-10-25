@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 #include "ActsExamples/Fatras/FatrasCommon.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
 int main(int argc, char* argv[]) {
   return runFatras(argc, argv, std::make_shared<TelescopeDetector>());

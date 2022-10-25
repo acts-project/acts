@@ -6,8 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Options/FatrasOptions.hpp"
+
+#include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
