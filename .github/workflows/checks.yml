@@ -8,6 +8,10 @@ on:
       - 'release/**'
       - 'develop/**'
 
+concurrency: 
+  group: ${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   format:
     runs-on: ubuntu-latest
