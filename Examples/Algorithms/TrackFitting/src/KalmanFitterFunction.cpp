@@ -56,14 +56,9 @@ struct KalmanFitterFunctionImpl
   KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
       : fitter(std::move(f)), directFitter(std::move(df)) {}
 
-  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
-      const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      const std::optional<std::vector<const Acts::Surface*>>& surfaceSequence,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
-    // Make the options
+  auto makeKfOptions(
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
+      const {
     Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
@@ -87,16 +82,32 @@ struct KalmanFitterFunctionImpl
         .connect<&ActsExamples::MeasurementCalibrator::calibrate>(
             &options.calibrator.get());
 
-    // Select standard fitter or direct fitter
-    if (surfaceSequence) {
-      return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              initialParameters, kfOptions, *surfaceSequence,
-                              trajectory);
-    } else {
-      return fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                        initialParameters, kfOptions, trajectory);
-    }
-  };
+    return kfOptions;
+  }
+
+  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
+      const std::vector<std::reference_wrapper<
+          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+    const auto kfOptions = makeKfOptions(options);
+    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
+                      kfOptions, trajectory);
+  }
+
+  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
+      const std::vector<std::reference_wrapper<
+          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      const std::vector<const Acts::Surface*>& surfaceSequence,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+    const auto kfOptions = makeKfOptions(options);
+    return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                            initialParameters, kfOptions, surfaceSequence,
+                            trajectory);
+  }
 };
 
 }  // namespace

@@ -29,6 +29,7 @@
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
+#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -191,10 +192,7 @@ int runDetectorAlignment(
   fitter.directNavigation = dirNav;
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeKalmanFitterFunction(
-      magneticField, vm["fit-multiple-scattering-correction"].as<bool>(),
-      vm["fit-energy-loss-correction"].as<bool>());
-  fitter.fit = TrackFittingAlgorithm::makeKalmanFitterFunction(
+  fitter.fit = ActsExamples::makeKalmanFitterFunction(
       trackingGeometry, magneticField,
       vm["fit-multiple-scattering-correction"].as<bool>(),
       vm["fit-energy-loss-correction"].as<bool>());

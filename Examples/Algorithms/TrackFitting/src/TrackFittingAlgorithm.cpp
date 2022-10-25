@@ -133,8 +133,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     auto result = m_cfg.directNavigation
                       ? (*m_cfg.fit)(trackSourceLinks, initialParams, options,
                                      surfSequence, mtj)
-                      : (*m_cfg.fit)(trackSourceLinks, initialParams, options,
-                                     std::nullopt, mtj);
+                      : (*m_cfg.fit)(trackSourceLinks, initialParams, options, mtj);
 
     if (result.ok()) {
       // Get the fit output object

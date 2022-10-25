@@ -46,14 +46,9 @@ struct GsfFitterFunctionImpl
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
       : fitter(std::move(f)), directFitter(std::move(df)) {}
 
-  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
-      const ActsExamples::TrackParameters& initialParameters,
-      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      const std::optional<std::vector<const Acts::Surface*>>& surfaceSequence,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
-    // Make options
+  auto makeGsfOptions(
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
+      const {
     Acts::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
@@ -74,15 +69,31 @@ struct GsfFitterFunctionImpl
         .template connect<&ActsExamples::MeasurementCalibrator::calibrate>(
             &options.calibrator.get());
 
-    // Select which fitter to run
-    if (surfaceSequence) {
-      return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                              initialParameters, gsfOptions, *surfaceSequence,
-                              trajectory);
-    } else {
-      return fitter.fit(sourceLinks.begin(), sourceLinks.end(),
-                        initialParameters, gsfOptions, trajectory);
-    }
+    return gsfOptions;
+  }
+
+  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
+      const std::vector<std::reference_wrapper<
+          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+    const auto gsfOptions = makeGsfOptions(options);
+    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
+                      gsfOptions, trajectory);
+  }
+
+  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
+      const std::vector<std::reference_wrapper<
+          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      const std::vector<const Acts::Surface*>& surfaceSequence,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+    const auto gsfOptions = makeGsfOptions(options);
+    return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                            initialParameters, gsfOptions, surfaceSequence,
+                            trajectory);
   }
 };
 
