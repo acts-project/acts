@@ -81,13 +81,13 @@ struct SeedFinderOrthogonalConfig {
 
   // enable cut on the compatibility between interaction point and SPs
   bool interactionPointCut = false;
-	
-	// seed confirmation
-	bool seedConfirmation = false;
-	// parameters for central seed confirmation
-	SeedConfirmationRangeConfig centralSeedConfirmationRange;
-	// parameters for forward seed confirmation
-	SeedConfirmationRangeConfig forwardSeedConfirmationRange;
+
+  // seed confirmation
+  bool seedConfirmation = false;
+  // parameters for central seed confirmation
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  // parameters for forward seed confirmation
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // skip top SPs based on cotTheta sorting when producing triplets
   bool skipPreviousTopSP = false;
