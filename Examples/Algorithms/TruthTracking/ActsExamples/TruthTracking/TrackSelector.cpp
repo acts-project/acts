@@ -55,16 +55,14 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
                   m_cfg.timeMax);
   };
 
-  const bool doTips = !m_cfg.inputTrackParametersTips.empty();
-
   // prepare input and output containers
   const auto& inputTrackParameters =
       ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
-  const std::vector<std::pair<size_t, size_t>>* inputTrackParametersTips =
-      nullptr;
-  if (doTips) {
+  std::optional<std::vector<std::pair<size_t, size_t>>>
+      inputTrackParametersTips;
+  if (!m_cfg.inputTrackParametersTips.empty()) {
     inputTrackParametersTips =
-        &ctx.eventStore.get<std::vector<std::pair<size_t, size_t>>>(
+        ctx.eventStore.get<std::vector<std::pair<size_t, size_t>>>(
             m_cfg.inputTrackParametersTips);
     throw_assert(
         inputTrackParameters.size() == inputTrackParametersTips->size(),
@@ -74,7 +72,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
   TrackParametersContainer outputTrackParameters;
   std::vector<std::pair<size_t, size_t>> outputTrackParametersTips;
   outputTrackParameters.reserve(inputTrackParameters.size());
-  if (doTips) {
+  if (inputTrackParametersTips) {
     outputTrackParametersTips.reserve(inputTrackParametersTips->size());
   }
 
@@ -83,7 +81,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     const auto& trk = inputTrackParameters[i];
     if (isValidTrack(trk)) {
       outputTrackParameters.push_back(trk);
-      if (doTips) {
+      if (inputTrackParametersTips) {
         outputTrackParametersTips.push_back((*inputTrackParametersTips)[i]);
       }
     }
@@ -97,7 +95,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
 
   ctx.eventStore.add(m_cfg.outputTrackParameters,
                      std::move(outputTrackParameters));
-  if (doTips) {
+  if (inputTrackParametersTips) {
     ctx.eventStore.add(m_cfg.outputTrackParametersTips,
                        std::move(outputTrackParametersTips));
   }

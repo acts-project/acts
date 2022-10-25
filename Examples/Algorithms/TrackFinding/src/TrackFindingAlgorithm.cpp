@@ -40,10 +40,12 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing trajectories output collection");
   }
+
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument(
         "Missing track parameter tips output collection");
   }
+
   if (m_cfg.outputTrackParametersTips.empty()) {
     throw std::invalid_argument("Missing track parameters output collection");
   }

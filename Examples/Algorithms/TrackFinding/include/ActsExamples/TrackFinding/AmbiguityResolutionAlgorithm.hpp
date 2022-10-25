@@ -18,11 +18,13 @@ namespace ActsExamples {
 /// Evicts tracks that seem to be duplicated.
 ///
 /// The implementation works as follows:
-///  1) Calculate shared hits per track
-///  2) If the maximum shared hits criteria is met we are done
+///  1) Calculate shared hits per track.
+///  2) If the maximum shared hits criteria is met, we are done.
+///     This is the configurable amount of shared hits we are ok with
+///     in our experiment.
 ///  3) Else, remove the track with the highest relative shared hits (i.e.
-///     shared hits / hits)
-///  4) Back to square 1
+///     shared hits / hits).
+///  4) Back to square 1.
 class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
