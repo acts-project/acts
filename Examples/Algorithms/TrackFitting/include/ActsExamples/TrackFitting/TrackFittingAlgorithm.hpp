@@ -30,7 +30,7 @@ namespace ActsExamples {
 
 class TrackFittingAlgorithm final : public BareAlgorithm {
  public:
-  // All track fitter function must return the same type. For now this is the
+  // All track fitter functions must return the same type. For now this is the
   // KalmanFitterResult, but maybe in the future it makes sense to generalize
   // this
   using TrackFitterResult =
