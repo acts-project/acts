@@ -414,4 +414,4 @@ ActsExamples::ProcessCode ActsExamples::RootNTupleReader::read(
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-ActsExamples::RootNTupleReader::~RootNTupleReader() {}
+ActsExamples::RootNTupleReader::~RootNTupleReader() = default;
