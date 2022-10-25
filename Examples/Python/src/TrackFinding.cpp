@@ -171,6 +171,11 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(pTPerHelixRadius);
     ACTS_PYTHON_MEMBER(minHelixDiameter2);
     ACTS_PYTHON_MEMBER(pT2perRadius);
+    ACTS_PYTHON_MEMBER(rRangeMiddleSP);
+    ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
+    ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
+    ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
+    ACTS_PYTHON_MEMBER(forceRadialSorting);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }

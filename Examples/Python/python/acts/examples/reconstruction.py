@@ -462,6 +462,9 @@ def addSeeding(
                     interactionPointCut=seedFinderConfigArg.interactionPointCut,
                     deltaZMax=seedFinderConfigArg.deltaZMax,
                     maxPtScattering=seedFinderConfigArg.maxPtScattering,
+                    rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
+                    useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+                    forceRadialSorting=seedFinderConfigArg.forceRadialSorting,
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
                     beamPos=(
                         None

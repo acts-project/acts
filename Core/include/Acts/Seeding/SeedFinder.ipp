@@ -49,7 +49,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     float varianceRM = spM->varianceR();
     float varianceZM = spM->varianceZ();
 
-    /// check if spM is outside our radial region of interest
+    // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
       float rMinMiddleSP = std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
                            m_config.deltaRMiddleMinSPRange;
@@ -67,6 +67,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       zBin == 0 ? zBin : --zBin;
       if (rM < m_config.rRangeMiddleSP[zBin][0] ||
           rM > m_config.rRangeMiddleSP[zBin][1]) {
+        continue;
+      }
+    } else {
+      if (rM > m_config.rMaxMiddle) {
+        continue;
+      }
+      if (rM < m_config.rMinMiddle) {
+        if (m_config.forceRadialSorting) {
+          break;
+        }
         continue;
       }
     }

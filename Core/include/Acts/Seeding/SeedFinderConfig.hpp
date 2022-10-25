@@ -45,7 +45,8 @@ struct SeedFinderConfig {
   float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
-  // force sorting in R in space point grid bins
+
+  // force sorting of middle SPs in radius
   bool forceRadialSorting = false;
 
   // radial range for middle SP
@@ -53,6 +54,9 @@ struct SeedFinderConfig {
   bool useVariableMiddleSPRange = false;
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+
+  float rMinMiddle = 60.f * Acts::UnitConstants::mm;
+  float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
   // seed confirmation
   bool seedConfirmation = false;

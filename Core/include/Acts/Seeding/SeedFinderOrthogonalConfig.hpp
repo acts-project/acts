@@ -37,6 +37,9 @@ struct SeedFinderOrthogonalConfig {
   // maximum distance in r between middle and bottom SP in one seed
   float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
 
+  // force sorting of middle SPs in radius
+  bool forceRadialSorting = false;
+
   // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
 
@@ -62,6 +65,12 @@ struct SeedFinderOrthogonalConfig {
   // WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
+
+  // radial range for middle SP
+  std::vector<std::vector<float>> rRangeMiddleSP;
+  bool useVariableMiddleSPRange = false;
+  float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
