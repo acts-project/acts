@@ -49,8 +49,8 @@ class IndexSourceLink final {
   Acts::GeometryIdentifier m_geometryId;
   Index m_index = 0;
 
-  friend constexpr bool operator==(const IndexSourceLink& lhs,
-                                   const IndexSourceLink& rhs) {
+  friend bool operator==(const IndexSourceLink& lhs,
+                         const IndexSourceLink& rhs) {
     return (lhs.geometryId() == rhs.geometryId()) and
            (lhs.m_index == rhs.m_index);
   }

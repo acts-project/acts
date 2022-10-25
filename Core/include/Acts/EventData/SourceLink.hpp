@@ -97,8 +97,8 @@ class SourceLink final {
   }
 
  private:
-  GeometryIdentifier m_geometryId;
-  std::any m_upstream;
+  GeometryIdentifier m_geometryId{};
+  std::any m_upstream{};
 };
 
 template <typename T>
