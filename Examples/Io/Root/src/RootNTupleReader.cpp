@@ -236,7 +236,8 @@ ActsExamples::RootNTupleReader::RootNTupleReader(
   m_inputChain->SetBranchAddress("recovertex_x", &m_branches.m_recovertex_x);
   m_inputChain->SetBranchAddress("recovertex_y", &m_branches.m_recovertex_y);
   m_inputChain->SetBranchAddress("recovertex_z", &m_branches.m_recovertex_z);
-  m_inputChain->SetBranchAddress("truthvertex_tracks_idx", &m_branches.m_truthvertex_tracks_idx);
+  m_inputChain->SetBranchAddress("truthvertex_tracks_idx",
+                                 &m_branches.m_truthvertex_tracks_idx);
 
   m_inputChain->SetBranchAddress("beamspot_x", &m_branches.m_beamspot_x);
   m_inputChain->SetBranchAddress("beamspot_y", &m_branches.m_beamspot_y);
@@ -249,7 +250,8 @@ ActsExamples::RootNTupleReader::RootNTupleReader(
 
   // add file to the input chain
   m_inputChain->Add(path.c_str());
-  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.inputTreeName << "'.");
+  ACTS_DEBUG("Adding File " << path << " to tree '" << m_cfg.inputTreeName
+                            << "'.");
 
   m_events = m_inputChain->GetEntries();
   ACTS_DEBUG("The full chain has " << m_events << " entries.");
