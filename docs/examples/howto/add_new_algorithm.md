@@ -158,7 +158,6 @@ The configuration structure binding would be defined like this:
 The algorithm class can be made known to python via such binding definition:
 
 ```cpp
-
     auto alg =
         py::class_<ActsExamples::MySeedingAlgorithm,
                    ActsExamples::BareAlgorithm,
@@ -167,6 +166,16 @@ The algorithm class can be made known to python via such binding definition:
             .def(py::init<const Acts::MySeedingConfg&, Acts::Logging::Level>(), // makes the constructor callable from python
                  py::arg("config"), py::arg("level")); // defines constructor arguments
         // other methods can be exposed to python (typically config accessor)
+
+    // if the config object is an inner class of the algorithm
+    // and has name Config the python binding generation
+    // can be simplified with this macro
+    ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::MySeedingAlgorithm,
+      "MySeedingAlgorithm",
+      inputA, inputB, output   // names of class methods that need to be accessible in python
+    )
+
 ```
 The bindings can be tested in a standalone python session:
 
