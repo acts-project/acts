@@ -24,12 +24,12 @@
 #include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
+#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
-#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
