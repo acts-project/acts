@@ -108,6 +108,8 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   // It is not possible to remove components from the vector, since the
   // GSF actor relies on the fact that the ordering and number of
   // components does not change
+  // TODO in principle this is not longer true for the GSF Actor, but revisit
+  // this in a later PR
   auto invalidateComponent = [](auto& cmp) {
     cmp.status = Intersection3D::Status::missed;
     cmp.weight = 0.0;
