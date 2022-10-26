@@ -260,7 +260,6 @@ def addSeeding(
             ),
         )
         s.addAlgorithm(ptclSmear)
-        s.addAlias("trackParameters", ptclSmear.config.outputTrackParameters)
     else:
 
         spAlg = acts.examples.SpacePointMaker(
@@ -528,7 +527,6 @@ def addSeeding(
             ),
         )
         s.addAlgorithm(parEstimateAlg)
-        s.addAlias("trackParameters", parEstimateAlg.config.outputTrackParameters)
 
         if outputDirRoot is not None:
             outputDirRoot = Path(outputDirRoot)

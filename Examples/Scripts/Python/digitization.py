@@ -51,7 +51,6 @@ def configureDigitization(
             orderedEvents=False,
         )
         s.addReader(evGen)
-        s.addAlias("particles", "particles_input")
 
     outputDir = Path(outputDir)
     addFatras(
