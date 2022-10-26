@@ -89,7 +89,7 @@ A GSF example can be found in the Acts Examples Framework [here](https://github.
 
 ### Customizing the Bethe-Heitler approximation
 
-The GSF needs an approximation of the Bethe-Heitler distribution as a gaussian mixture on each material interaction (see above). This task is delegated to a seperate class, that can be provided by a template parameter to {class}`Acts::Experimental::GaussianSumFitter`, so in principle it can be implemented in different ways.
+The GSF needs an approximation of the Bethe-Heitler distribution as a Gaussian mixture on each material interaction (see above). This task is delegated to a separate class, that can be provided by a template parameter to {class}`Acts::Experimental::GaussianSumFitter`, so in principle it can be implemented in different ways.
 
 However, ACTS ships with the class {class}`Acts::Experimental::AtlasBetheHeitlerApprox` that implements the ATLAS strategy for this: To be able to evaluate the approximation of the Bethe-Heitler distribution for different materials and thicknesses, the individual Gaussian components (weight, mean, variance of the ratio $E_f/E_i$) are parametrised as polynomials in $x/x_0$. This class can load files in the ATLAS format that can be found [here](https://gitlab.cern.ch/atlas/athena/-/tree/master/Tracking/TrkFitter/TrkGaussianSumFilter/Data). There is also a default parameterisation provided in the code so no files need to be loaded.
 
