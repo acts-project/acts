@@ -56,7 +56,6 @@ SeedFinderConfigArg = namedtuple(
         "collisionRegion",  # (min,max)
         "r",  # (min,max)
         "z",  # (min,max)
-        "beamPos",  # (x,y)
     ],
     defaults=[None] * 21 + [(None, None)] * 8,
 )

@@ -117,10 +117,6 @@ struct SeedFinderConfig {
   float rMin = 33 * Acts::UnitConstants::mm;
 
   float bFieldInZ = 2.08 * Acts::UnitConstants::T;
-  // location of beam in x,y plane.
-  // used as offset for Space Points
-  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
-                        0 * Acts::UnitConstants::mm};
 
   std::vector<size_t> zBinsCustomLooping = {};
 
@@ -197,15 +193,28 @@ struct SeedFinderConfig {
     config.bFieldInZ /= 1000. * 1_T;
     config.deltaZMax /= 1_mm;
 
-    config.beamPos[0] /= 1_mm;
-    config.beamPos[1] /= 1_mm;
-
     config.zAlign /= 1_mm;
     config.rAlign /= 1_mm;
 
     config.toleranceParam /= 1_mm;
 
     return config;
+  }
+};
+
+
+struct SeedFinderOptions {
+  // location of beam in x,y plane.
+  // used as offset for Space Points
+  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
+                        0 * Acts::UnitConstants::mm};
+
+  SeedFinderOptions toInternalUnits() const {
+    using namespace Acts::UnitLiterals;
+    SeedFinderOptions options = *this;
+    options.beamPos[0] /= 1_mm;
+    options.beamPos[1] /= 1_mm;
+    return options;
   }
 };
 

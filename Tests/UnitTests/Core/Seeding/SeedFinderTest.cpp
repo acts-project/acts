@@ -136,10 +136,12 @@ int main(int argc, char** argv) {
   config.minPt = 500._MeV;
   config.bFieldInZ = 1.99724_T;
 
-  config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
 
   config.useVariableMiddleSPRange = false;
+
+  Acts::SeedFinderOptions options;
+  options.beamPos = {-.5_mm, -.5_mm};
 
   int numPhiNeighbors = 1;
 
@@ -181,7 +183,7 @@ int main(int argc, char** argv) {
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, config);
+      std::move(grid), rRangeSPExtent, config, options);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;
@@ -190,7 +192,7 @@ int main(int argc, char** argv) {
   auto endOfGroups = spGroup.end();
   for (; !(groupIt == endOfGroups); ++groupIt) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
+    a.createSeedsForGroup(state, options, std::back_inserter(v), groupIt.bottom(),
                           groupIt.middle(), groupIt.top(), rRangeSPExtent);
   }
   auto end = std::chrono::system_clock::now();
