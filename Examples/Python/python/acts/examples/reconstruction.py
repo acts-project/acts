@@ -1056,12 +1056,13 @@ def addVertexFitting(
         RootVertexPerformanceWriter,
     )
 
-    if trajectories is None:
-        trajectories = s.resolveAlias("trajectories")
-    if trackParameters is None:
-        trackParameters = s.resolveAlias("trackParameters")
-    if trackParametersTips is None:
-        trackParametersTips = s.resolveAlias("trackParametersTips")
+    if associatedParticles is None:
+        if trajectories is None:
+            trajectories = s.resolveAlias("trajectories")
+        if trackParameters is None:
+            trackParameters = s.resolveAlias("trackParameters")
+        if trackParametersTips is None:
+            trackParametersTips = s.resolveAlias("trackParametersTips")
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1123,12 +1124,14 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                inputTrackParameters=trackParameters,
-                inputTrackParametersTips=trackParametersTips,
-                inputMeasurementParticlesMap="measurement_particles_map",
-                inputTrajectories=trajectories,
                 inputAssociatedTruthParticles=associatedParticles
                 if associatedParticles is not None
+                else "",
+                inputMeasurementParticlesMap="measurement_particles_map",
+                inputTrajectories=trajectories if trajectories is not None else "",
+                inputTrackParameters=trackParameters,
+                inputTrackParametersTips=trackParametersTips
+                if trackParametersTips is not None
                 else "",
                 inputVertices=outputVertices,
                 minTrackVtxMatchFraction=0.0 if trajectories is not None else 0.5,
