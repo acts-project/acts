@@ -169,7 +169,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   std::stringstream ss;
   mtj->statistics().toStream(ss);
-  ACTS_INFO(ss.str());
+  ACTS_DEBUG(ss.str());
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;
