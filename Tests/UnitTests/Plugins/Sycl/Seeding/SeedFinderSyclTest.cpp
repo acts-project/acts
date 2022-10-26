@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/Sycl/Seeding/Seedfinder.hpp"
+#include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
@@ -14,8 +14,8 @@
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -83,9 +83,9 @@ auto readFile(const std::string& filename) -> std::vector<const SpacePoint*> {
 }
 
 template <typename external_spacepoint_t>
-auto setupSeedfinderConfiguration()
-    -> Acts::SeedfinderConfig<external_spacepoint_t> {
-  Acts::SeedfinderConfig<SpacePoint> config;
+auto setupSeedFinderConfiguration()
+    -> Acts::SeedFinderConfig<external_spacepoint_t> {
+  Acts::SeedFinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
@@ -115,7 +115,7 @@ auto setupSeedfinderConfiguration()
 
 template <typename external_spacepoint_t>
 auto setupSpacePointGridConfig(
-    const Acts::SeedfinderConfig<external_spacepoint_t>& config)
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config)
     -> Acts::SpacePointGridConfig {
   Acts::SpacePointGridConfig gridConf{};
   gridConf.bFieldInZ = config.bFieldInZ;
@@ -143,6 +143,9 @@ auto main(int argc, char** argv) -> int {
 
   int numPhiNeighbors = 1;
 
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
+
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
@@ -150,7 +153,7 @@ auto main(int argc, char** argv) -> int {
       Acts::BinFinder<SpacePoint>(zBinNeighborsBottom, numPhiNeighbors));
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
       Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
-  auto config = setupSeedfinderConfiguration<SpacePoint>();
+  auto config = setupSeedFinderConfiguration<SpacePoint>();
 
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   Acts::Sycl::DeviceExperimentCuts deviceAtlasCuts;
@@ -164,9 +167,9 @@ auto main(int argc, char** argv) -> int {
       Acts::getDefaultLogger("Sycl::QueueWrapper", logLvl));
   vecmem::sycl::host_memory_resource resource(queue.getQueue());
   vecmem::sycl::device_memory_resource device_resource(queue.getQueue());
-  Acts::Sycl::Seedfinder<SpacePoint> syclSeedfinder(
+  Acts::Sycl::SeedFinder<SpacePoint> syclSeedFinder(
       config, deviceAtlasCuts, queue, resource, &device_resource);
-  Acts::Seedfinder<SpacePoint> normalSeedfinder(config);
+  Acts::SeedFinder<SpacePoint> normalSeedFinder(config);
   auto globalTool =
       [=](const SpacePoint& sp, float /*unused*/, float /*unused*/,
           float_t /*unused*/) -> std::pair<Acts::Vector3, Acts::Vector2> {
@@ -181,7 +184,7 @@ auto main(int argc, char** argv) -> int {
 
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,
-      std::move(grid), config);
+      std::move(grid), rRangeSPExtent, config);
 
   auto end_prep = std::chrono::system_clock::now();
 
@@ -201,13 +204,12 @@ auto main(int argc, char** argv) -> int {
   auto start_cpu = std::chrono::system_clock::now();
   uint group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-  Acts::Extent rRangeSPExtent;
 
   if (!cmdlTool.onlyGpu) {
-    decltype(normalSeedfinder)::State state;
+    decltype(normalSeedFinder)::SeedingState state;
     for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
          ++groupIt) {
-      normalSeedfinder.createSeedsForGroup(
+      normalSeedFinder.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
           groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent);
       group_count++;
@@ -233,7 +235,7 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_sycl;
 
   for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end()); ++groupIt) {
-    seedVector_sycl.push_back(syclSeedfinder.createSeedsForGroup(
+    seedVector_sycl.push_back(syclSeedFinder.createSeedsForGroup(
         groupIt.bottom(), groupIt.middle(), groupIt.top()));
     group_count++;
     if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {

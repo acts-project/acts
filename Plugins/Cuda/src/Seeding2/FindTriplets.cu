@@ -202,12 +202,12 @@ __global__ void transformCoordinates(
 ///            as @c middleBottomArray
 /// @param[in] topSPLinTransArray 2-dimensional matrix indexed the same way as
 ///            @c middleTopArray
-/// @param[in] maxScatteringAngle2 Parameter from @c Acts::SeedfinderConfig
-/// @param[in] sigmaScattering Parameter from @c Acts::SeedfinderConfig
-/// @param[in] minHelixDiameter2 Parameter from @c Acts::SeedfinderConfig
-/// @param[in] pT2perRadius Parameter from @c Acts::SeedfinderConfig
-/// @param[in] impactMax Parameter from @c Acts::SeedfinderConfig
-/// @param[in] impactWeightFactor Parameter from @c Acts::SeedfinderConfig
+/// @param[in] maxScatteringAngle2 Parameter from @c Acts::SeedFinderConfig
+/// @param[in] sigmaScattering Parameter from @c Acts::SeedFinderConfig
+/// @param[in] minHelixDiameter2 Parameter from @c Acts::SeedFinderConfig
+/// @param[in] pT2perRadius Parameter from @c Acts::SeedFinderConfig
+/// @param[in] impactMax Parameter from @c Acts::SeedFinderConfig
+/// @param[in] impactWeightFactor Parameter from @c Acts::SeedFinderConfig
 /// @param[out] tripletsPerBottomDublet 1-dimensional array of the triplet
 ///             counts for each bottom spacepoint
 /// @param[out] tripletIndices 2-dimensional matrix of the indices of the

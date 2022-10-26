@@ -19,6 +19,19 @@
 #include <vector>
 
 namespace Acts {
+struct SeedFilterState {
+  // longitudinal impact parameter as defined by bottom and middle space point
+  float zOrigin;
+  // number of minimum top SPs in seed confirmation
+  size_t nTopSeedConf = 0;
+  // number of high quality seeds in seed confirmation
+  int numQualitySeeds = 0;
+  // number of seeds that did not pass the quality confirmation but were still
+  // accepted, if quality confirmation is not used this is the total number of
+  // seeds
+  int numSeeds = 0;
+};
+
 /// Filter seeds at various stages with the currently
 /// available information.
 template <typename external_spacepoint_t>
@@ -38,17 +51,14 @@ class SeedFilter {
   ///                 with both bottom and middle space point
   /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
   /// @param impactParametersVec vector containing the impact parameters
-  /// @param zOrigin on the z axis as defined by bottom and middle space point
-  /// @param numQualitySeeds number of high quality seeds in seed confirmation
-  /// @param numSeeds number of seeds that did not pass the quality confirmation but were still accepted, if quality confirmation is not used this is the total number of seeds
+  /// @param seedFilterState holds quantities used in seed filter
   /// @param outCont Output container for the seeds
   virtual void filterSeeds_2SpFixed(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
       InternalSpacePoint<external_spacepoint_t>& middleSP,
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
-      std::vector<float>& impactParametersVec, float zOrigin,
-      int& numQualitySeeds, int& numSeeds,
+      std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
       std::vector<std::pair<
           float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
           outCont) const;

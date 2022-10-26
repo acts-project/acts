@@ -8,6 +8,8 @@
 
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/TrackFitting/GsfFitterFunction.hpp"
+#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
@@ -26,104 +28,43 @@ namespace Acts::Python {
 void addTrackFitting(Context& ctx) {
   auto mex = ctx.get("examples");
 
-  {
-    using Alg = ActsExamples::SurfaceSortingAlgorithm;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "SurfaceSortingAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputProtoTracks);
-    ACTS_PYTHON_MEMBER(inputSimHits);
-    ACTS_PYTHON_MEMBER(inputMeasurementSimHitsMap);
-    ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SurfaceSortingAlgorithm, mex,
+                                "SurfaceSortingAlgorithm", inputProtoTracks,
+                                inputSimHits, inputMeasurementSimHitsMap,
+                                outputProtoTracks);
 
   {
-    using Alg = ActsExamples::TrackFittingAlgorithm;
-    using Config = Alg::Config;
+    ACTS_PYTHON_DECLARE_ALGORITHM(
+        ActsExamples::TrackFittingAlgorithm, mex, "TrackFittingAlgorithm",
+        inputMeasurements, directNavigation, inputSourceLinks, inputProtoTracks,
+        inputInitialTrackParameters, outputTrajectories, fit, trackingGeometry,
+        pickTrack);
+
+    mex.def(
+        "makeKalmanFitterFunction",
+        py::overload_cast<std::shared_ptr<const Acts::TrackingGeometry>,
+                          std::shared_ptr<const Acts::MagneticFieldProvider>,
+                          bool, bool, double, Acts::FreeToBoundCorrection>(
+            &ActsExamples::makeKalmanFitterFunction),
+        py::arg("trackingGeometry"), py::arg("magneticField"),
+        py::arg("multipleScattering"), py::arg("energyLoss"),
+        py::arg("reverseFilteringMomThreshold"),
+        py::arg("freeToBoundCorrection"));
 
     py::enum_<Acts::FinalReductionMethod>(mex, "FinalReductionMethod")
         .value("mean", Acts::FinalReductionMethod::eMean)
         .value("mode", Acts::FinalReductionMethod::eMode)
         .value("maxWeight", Acts::FinalReductionMethod::eMaxWeight);
 
-    auto alg =
-        py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackFittingAlgorithm")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config)
-            .def_static("makeKalmanFitterFunction",
-                        py::overload_cast<
-                            std::shared_ptr<const Acts::TrackingGeometry>,
-                            std::shared_ptr<const Acts::MagneticFieldProvider>,
-                            bool, bool, double, Acts::FreeToBoundCorrection>(
-                            &Alg::makeKalmanFitterFunction),
-                        py::arg("trackingGeometry"), py::arg("magneticField"),
-                        py::arg("multipleScattering"), py::arg("energyLoss"),
-                        py::arg("reverseFilteringMomThreshold"),
-                        py::arg("freeToBoundCorrection"))
-            .def_static("makeKalmanFitterFunction",
-                        py::overload_cast<
-                            std::shared_ptr<const Acts::MagneticFieldProvider>,
-                            bool, bool, double, Acts::FreeToBoundCorrection>(
-                            &Alg::makeKalmanFitterFunction),
-                        py::arg("magneticField"), py::arg("multipleScattering"),
-                        py::arg("energyLoss"),
-                        py::arg("reverseFilteringMomThreshold"),
-                        py::arg("freeToBoundCorrection"))
-            .def_static(
-                "makeGsfFitterFunction",
-                py::overload_cast<
-                    std::shared_ptr<const Acts::TrackingGeometry>,
-                    std::shared_ptr<const Acts::MagneticFieldProvider>,
-                    std::size_t, bool, bool, Acts::FinalReductionMethod>(
-                    &Alg::makeGsfFitterFunction),
-                py::arg("trackingGeometry"), py::arg("magneticField"),
-                py::arg("maxComponents"), py::arg("abortOnError"),
-                py::arg("disableAllMaterialHandling"),
-                py::arg("finalReductionMethod"))
-            .def_static(
-                "makeGsfFitterFunction",
-                py::overload_cast<
-                    std::shared_ptr<const Acts::MagneticFieldProvider>,
-                    std::size_t, bool, bool, Acts::FinalReductionMethod>(
-                    &Alg::makeGsfFitterFunction),
-                py::arg("magneticField"), py::arg("maxComponents"),
-                py::arg("abortOnError"), py::arg("disableAllMaterialHandling"),
-                py::arg("finalReductionMethod"));
-
-    py::class_<TrackFittingAlgorithm::TrackFitterFunction,
-               std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>>(
-        alg, "TrackFitterFunction");
-
-    py::class_<
-        TrackFittingAlgorithm::DirectedTrackFitterFunction,
-        std::shared_ptr<TrackFittingAlgorithm::DirectedTrackFitterFunction>>(
-        alg, "DirectedTrackFitterFunction");
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputMeasurements);
-    ACTS_PYTHON_MEMBER(directNavigation);
-    ACTS_PYTHON_MEMBER(inputSourceLinks);
-    ACTS_PYTHON_MEMBER(inputProtoTracks);
-    ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrajectories);
-    ACTS_PYTHON_MEMBER(fit);
-    ACTS_PYTHON_MEMBER(dFit);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(pickTrack);
-    ACTS_PYTHON_STRUCT_END();
+    mex.def(
+        "makeGsfFitterFunction",
+        py::overload_cast<std::shared_ptr<const Acts::TrackingGeometry>,
+                          std::shared_ptr<const Acts::MagneticFieldProvider>,
+                          std::size_t, Acts::FinalReductionMethod, bool, bool>(
+            &ActsExamples::makeGsfFitterFunction),
+        py::arg("trackingGeometry"), py::arg("magneticField"),
+        py::arg("maxComponents"), py::arg("finalReductionMethod"), py::arg("abortOnError"),
+        py::arg("disableAllMaterialHandling"));
   }
 
   {
