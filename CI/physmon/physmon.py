@@ -199,12 +199,6 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             s,
             field,
             trajectories="trajectories" if label == "seeded" else None,
-            trackParameters="filteredTrackParameters"
-            if label == "seeded"
-            else "fittedTrackParameters",
-            trackParametersTips="filteredTrackParametersTips"
-            if label == "seeded"
-            else "fittedTrackParametersTips",
             vertexFinder=VertexFinder.Iterative,
             outputDirRoot=tp,
         )
