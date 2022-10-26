@@ -36,6 +36,8 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   struct Config {
     /// Input (found) trajectories collection.
     std::string inputTrajectories;
+    /// Input track parameters tips w.r.t inputTrajectories.
+    std::string inputTrackParametersTips;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.

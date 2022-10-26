@@ -85,7 +85,6 @@ int main(int argc, char* argv[]) {
   TrackSelector::Config trackSelectorConfig;
   trackSelectorConfig.inputTrackParameters = trackSummaryReader.outputTracks;
   trackSelectorConfig.outputTrackParameters = "selectedTracks";
-  trackSelectorConfig.outputTrackIndices = "outputTrackIndices";
   trackSelectorConfig.removeNeutral = true;
   trackSelectorConfig.absEtaMax = vars["vertexing-eta-max"].as<double>();
   trackSelectorConfig.loc0Max = vars["vertexing-rho-max"].as<double>() * 1_mm;
@@ -110,7 +109,7 @@ int main(int argc, char* argv[]) {
   vertexWriterConfig.inputSelectedTruthParticles = select.outputParticles;
   vertexWriterConfig.inputAssociatedTruthParticles =
       trackSummaryReader.outputParticles;
-  vertexWriterConfig.inputFittedTracks = trackSummaryReader.outputTracks;
+  vertexWriterConfig.inputTrackParameters = trackSummaryReader.outputTracks;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
   vertexWriterConfig.inputTime = findVertices.outputTime;
   vertexWriterConfig.filePath = outputDir + "/vertexperformance_AMVF.root";

@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesTrackFinding SHARED
+  src/AmbiguityResolutionAlgorithm.cpp
   src/SeedingAlgorithm.cpp
   src/SeedingOrthogonalAlgorithm.cpp
   src/SpacePointMaker.cpp
