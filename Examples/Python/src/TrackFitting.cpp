@@ -53,7 +53,6 @@ void addTrackFitting(Context& ctx) {
 
     py::enum_<Acts::FinalReductionMethod>(mex, "FinalReductionMethod")
         .value("mean", Acts::FinalReductionMethod::eMean)
-        .value("mode", Acts::FinalReductionMethod::eMode)
         .value("maxWeight", Acts::FinalReductionMethod::eMaxWeight);
 
     mex.def(
