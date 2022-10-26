@@ -620,46 +620,47 @@ class Chi2Fitter {
     using Actors = ActionList<Chi2Actor>;
     using Aborters = AbortList<Chi2Aborter>;
 
-    // Create relevant options for the propagation options
-    PropagatorOptions<Actors, Aborters> propOptions(
-        chi2FitterOptions.geoContext, chi2FitterOptions.magFieldContext,
-        logger);
-
-    // Set the trivial propagator options
-    propOptions.setPlainOptions(chi2FitterOptions.propagatorPlainOptions);
-
-    // Catch the actor and set the measurements
-    auto& chi2Actor = propOptions.actionList.template get<Chi2Actor>();
-    chi2Actor.inputMeasurements = &inputMeasurements;
-    chi2Actor.multipleScattering = chi2FitterOptions.multipleScattering;
-    chi2Actor.energyLoss = chi2FitterOptions.energyLoss;
-    chi2Actor.freeToBoundCorrection =
-        std::move(chi2FitterOptions.freeToBoundCorrection);
-    chi2Actor.extensions = std::move(chi2FitterOptions.extensions);
-
-    typename propagator_t::template action_list_t_result_t<
-        CurvilinearTrackParameters, Actors>
-        inputResult;
-
-    auto& r = inputResult.template get<Chi2FitterResult<traj_t>>();
-
-    if (trajectory) {
-      r.fittedStates = std::move(trajectory);
-    } else {
-      r.fittedStates = std::make_shared<traj_t>();
-    }
-
-    using paramType = typename std::conditional<
-        std::is_same<start_parameters_t, parameters_t>::value,
-        std::variant<start_parameters_t>,
-        std::variant<start_parameters_t, parameters_t>>::type;
-    paramType vParams = sParameters;
-    // start_parameters_t and parameter_t can be the same
-
-    Chi2Result c2r;
     // the result object which will be returned. Overridden every iteration.
+    Chi2Result c2r;
+
 
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
+
+      // Create relevant options for the propagation options
+      PropagatorOptions<Actors, Aborters> propOptions(
+          chi2FitterOptions.geoContext, chi2FitterOptions.magFieldContext,
+          logger);
+
+      // Set the trivial propagator options
+      propOptions.setPlainOptions(chi2FitterOptions.propagatorPlainOptions);
+
+      // Catch the actor and set the measurements
+      auto& chi2Actor = propOptions.actionList.template get<Chi2Actor>();
+      chi2Actor.inputMeasurements = &inputMeasurements;
+      chi2Actor.multipleScattering = chi2FitterOptions.multipleScattering;
+      chi2Actor.energyLoss = chi2FitterOptions.energyLoss;
+      chi2Actor.freeToBoundCorrection = chi2FitterOptions.freeToBoundCorrection;
+      chi2Actor.extensions = chi2FitterOptions.extensions;
+
+      typename propagator_t::template action_list_t_result_t<
+          CurvilinearTrackParameters, Actors>
+          inputResult;
+
+      auto& r = inputResult.template get<Chi2FitterResult<traj_t>>();
+
+      if (trajectory) {
+        r.fittedStates = trajectory;
+      } else {
+        r.fittedStates = std::make_shared<traj_t>();
+      }
+
+      using paramType = typename std::conditional<
+          std::is_same<start_parameters_t, parameters_t>::value,
+          std::variant<start_parameters_t>,
+          std::variant<start_parameters_t, parameters_t>>::type;
+      paramType vParams = sParameters;
+      // start_parameters_t and parameter_t can be the same
+
       auto result = m_propagator.template propagate(sParameters, propOptions,
                                                     std::move(inputResult));
 
