@@ -1126,7 +1126,7 @@ def addVertexFitting(
                 inputTrackParameters=trackParameters,
                 inputTrackParametersTips=trackParametersTips,
                 inputMeasurementParticlesMap="measurement_particles_map",
-                inputTrajectories=trajectories if associatedParticles is None else "",
+                inputTrajectories=trajectories,
                 inputAssociatedTruthParticles=associatedParticles
                 if associatedParticles is not None
                 else "",
