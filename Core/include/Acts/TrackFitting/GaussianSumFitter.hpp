@@ -46,24 +46,20 @@ namespace Experimental {
 /// Gaussian Sum Fitter implementation.
 /// @tparam propagator_t The propagator type on which the algorithm is built on
 /// @tparam bethe_heitler_approx_t The type of the Bethe-Heitler-Approximation
-/// @tparam traj_t MultiTrajectory type used to store the states
+/// @tparam traj_t The MultiTrajectory type (backend)
 ///
 /// @note This GSF implementation tries to be as compatible to the KalmanFitter
 /// as possible. However, strict compatibility is not garantueed.
+/// @note Currently there is no possibility to export the states of the
+/// individual components from the GSF, the only thing returned in the
+/// MultiTrajectory are the means of the states. Therefore, also NO dedicated
+/// component smoothing is performed as described e.g. by R. Fruewirth.
 template <typename propagator_t, typename bethe_heitler_approx_t,
           typename traj_t>
 struct GaussianSumFitter {
-  /// Constructor of the GSF
-  ///
-  /// @param propagator The propagator used for propagation
-  /// @param betheHeitlerApproximation The bethe heitler approximation used.
-  /// There are some configuration data defined in
-  /// Core/TrackFitting/BetheHeitlerApprox.hpp but these must used with care,
-  /// since they might be not optimal for all setups
-  GaussianSumFitter(propagator_t&& propagator,
-                    bethe_heitler_approx_t&& betheHeitlerApproximation)
+  GaussianSumFitter(propagator_t&& propagator, bethe_heitler_approx_t&& bha)
       : m_propagator(std::move(propagator)),
-        m_betheHeitlerApproximation(std::move(betheHeitlerApproximation)) {}
+        m_bethe_heitler_approx(std::move(bha)) {}
 
   /// The propagator instance used by the fit function
   propagator_t m_propagator;

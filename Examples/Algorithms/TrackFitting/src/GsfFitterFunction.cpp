@@ -15,11 +15,14 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
+
+#include <filesystem>
 
 using namespace ActsExamples;
 
@@ -27,12 +30,14 @@ namespace {
 
 using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
-using Fitter =
-    Acts::Experimental::GaussianSumFitter<Propagator,
-                                          Acts::VectorMultiTrajectory>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
+
+using BHApprox = Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
+using Fitter =
+    Acts::Experimental::GaussianSumFitter<Propagator, BHApprox,
+                                          Acts::VectorMultiTrajectory>;
 using DirectFitter =
-    Acts::Experimental::GaussianSumFitter<DirectPropagator,
+    Acts::Experimental::GaussianSumFitter<DirectPropagator, BHApprox,
                                           Acts::VectorMultiTrajectory>;
 
 struct GsfFitterFunctionImpl
@@ -106,9 +111,26 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    std::string lowBetheHeitlerPath, std::string highBetheHeitlerPath,
     std::size_t maxComponents, bool abortOnError,
     bool disableAllMaterialHandling) {
   MultiStepper stepper(std::move(magneticField));
+
+  const auto bhapp = [&]() {
+    if (lowBetheHeitlerPath.empty() && highBetheHeitlerPath.empty()) {
+      return Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>(
+          Acts::Experimental::bh_cdf_cmps6_order5_data,
+          Acts::Experimental::bh_cdf_cmps6_order5_data, true, true);
+    } else if (std::filesystem::exists(lowBetheHeitlerPath) &&
+               std::filesystem::exists(highBetheHeitlerPath)) {
+      return Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>::loadFromFile(
+          lowBetheHeitlerPath, highBetheHeitlerPath);
+    } else {
+      throw std::invalid_argument(
+          "Paths to bethe heitler parameterization do not exist. Pass empty "
+          "strings to load a default parameterization");
+    }
+  }();
 
   // Standard fitter
   Acts::Navigator::Config cfg{trackingGeometry};
@@ -117,12 +139,12 @@ ActsExamples::makeGsfFitterFunction(
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg);
   Propagator propagator(std::move(stepper), std::move(navigator));
-  Fitter trackFitter(std::move(propagator));
+  Fitter trackFitter(std::move(propagator), BHApprox(bhapp));
 
   // Direct fitter
   Acts::DirectNavigator directNavigator;
   DirectPropagator directPropagator(stepper, directNavigator);
-  DirectFitter directTrackFitter(std::move(directPropagator));
+  DirectFitter directTrackFitter(std::move(directPropagator), BHApprox(bhapp));
 
   // build the fitter functions. owns the fitter object.
   auto fitterFunction = std::make_shared<GsfFitterFunctionImpl>(
