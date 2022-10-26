@@ -31,7 +31,7 @@ This chapter will be extended in the future.
 :::
 
 (gsf_core)=
-## Gaussian Sum Filter
+## Gaussian Sum Filter (GSF)
 
 :::{note}
 The GSF is not considered as production ready yet, therefore it is located in the namespace `Acts::Experimental`.
