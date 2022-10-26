@@ -198,7 +198,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         addVertexFitting(
             s,
             field,
-            trajectories="trajectories" if label == "seeded" else None,
+            associatedParticles=None if label == "seeded" else "particles_input",
             vertexFinder=VertexFinder.Iterative,
             outputDirRoot=tp,
         )

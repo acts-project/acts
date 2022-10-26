@@ -1025,7 +1025,7 @@ def addVertexFitting(
     s,
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    associatedParticles: str = "particles_input",
+    associatedParticles: Optional[str] = None,
     trajectories: Optional[str] = None,
     trackParameters: Optional[str] = None,
     trackParametersTips: Optional[str] = None,
@@ -1066,8 +1066,8 @@ def addVertexFitting(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     inputParticles = "particles_input"
-    outputVertices = "fittedVertices"
     selectedParticles = "particles_selected"
+    outputVertices = "fittedVertices"
 
     outputTime = ""
     if vertexFinder == VertexFinder.Truth:
@@ -1121,15 +1121,15 @@ def addVertexFitting(
         s.addWriter(
             RootVertexPerformanceWriter(
                 level=customLogLevel(),
-                inputAllTruthParticles="particles_input",
+                inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
                 inputTrackParameters=trackParameters,
                 inputTrackParametersTips=trackParametersTips,
                 inputMeasurementParticlesMap="measurement_particles_map",
-                inputTrajectories=trajectories if trajectories is not None else "",
-                inputAssociatedTruthParticles=""
-                if trajectories is not None
-                else associatedParticles,
+                inputTrajectories=trajectories if associatedParticles is None else "",
+                inputAssociatedTruthParticles=associatedParticles
+                if associatedParticles is not None
+                else "",
                 inputVertices=outputVertices,
                 minTrackVtxMatchFraction=0.0 if trajectories is not None else 0.5,
                 inputTime=outputTime,
