@@ -8,7 +8,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Digitization/DigitizationOptions.hpp"
+#include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
