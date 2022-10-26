@@ -55,7 +55,7 @@ int runRecChi2Tracks(int argc, char* argv[],
   Options::addFittingChi2Options(desc);
   Options::addDigitizationOptions(desc);
   Options::addParticleSmearingOptions(desc);
-  TruthSeedSelector::addOptions(desc);
+  Options::addTruthSeedSelectorOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -95,7 +95,7 @@ int runRecChi2Tracks(int argc, char* argv[],
   // from all particles read in by particle reader for further processing. It
   // has no impact on the truth hits read-in by the cluster reader.
   TruthSeedSelector::Config particleSelectorCfg =
-      TruthSeedSelector::readConfig(vm);
+      Options::addTruthSeedSelectorConfig(vm);
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
