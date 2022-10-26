@@ -159,9 +159,7 @@ struct MaxMomentumReducerLoop {
   }
 };
 
-
-
-/// @enum FinalReductionMethod 
+/// @enum FinalReductionMethod
 ///
 /// Available reduction methods for the reduction in the @class MultiEigenStepperLoop
 /// .boundState() and .curvilinearState() member functions

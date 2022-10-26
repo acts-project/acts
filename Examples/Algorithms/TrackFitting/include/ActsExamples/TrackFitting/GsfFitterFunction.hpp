@@ -16,7 +16,7 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    std::size_t maxComponents, Acts::FinalReductionMethod finalReductionMethod, bool abortOnError,
-    bool disableAllMaterialHandling);
+    std::size_t maxComponents, Acts::FinalReductionMethod finalReductionMethod,
+    bool abortOnError, bool disableAllMaterialHandling);
 
 }  // namespace ActsExamples

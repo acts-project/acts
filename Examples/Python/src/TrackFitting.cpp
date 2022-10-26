@@ -63,8 +63,8 @@ void addTrackFitting(Context& ctx) {
                           std::size_t, Acts::FinalReductionMethod, bool, bool>(
             &ActsExamples::makeGsfFitterFunction),
         py::arg("trackingGeometry"), py::arg("magneticField"),
-        py::arg("maxComponents"), py::arg("finalReductionMethod"), py::arg("abortOnError"),
-        py::arg("disableAllMaterialHandling"));
+        py::arg("maxComponents"), py::arg("finalReductionMethod"),
+        py::arg("abortOnError"), py::arg("disableAllMaterialHandling"));
   }
 
   {

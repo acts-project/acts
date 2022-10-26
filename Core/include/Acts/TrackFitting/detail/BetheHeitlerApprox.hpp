@@ -76,7 +76,8 @@ class BetheHeitlerApprox {
     constexpr double higherRange = 0.10;
     constexpr double maxX0 = 0.20;
 
-    using RetType = boost::container::static_vector<GaussianComponent, NComponents>;
+    using RetType =
+        boost::container::static_vector<GaussianComponent, NComponents>;
 
     // Lambda which builds the components
     auto make_mixture = [&](const Data &data, double xx) {
