@@ -27,6 +27,7 @@ namespace {
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
+using namespace Acts::Experimental;
 
 Acts::GainMatrixUpdater kfUpdater;
 
