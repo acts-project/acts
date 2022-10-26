@@ -14,7 +14,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Geant4.hpp"
+#include "ActsExamples/Geant4/Geant4Common.hpp"
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
@@ -31,8 +31,8 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/ParticleGunOptions.hpp"
 #include "ActsExamples/Simulation/CommonSimulation.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
