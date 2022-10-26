@@ -15,7 +15,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-    const SeedfinderConfig<external_spacepoint_t>& _config) {
+    Acts::Extent rRangeSPExtent,
+    const SeedFinderConfig<external_spacepoint_t>& _config) {
   auto config = _config.toInternalUnits();
   static_assert(
       std::is_same<
@@ -49,6 +50,9 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     float spX = spPosition[0];
     float spY = spPosition[1];
     float spZ = spPosition[2];
+
+    // store x,y,z values in extent
+    rRangeSPExtent.extend({spX, spY, spZ});
 
     if (spZ > zMax || spZ < zMin) {
       continue;

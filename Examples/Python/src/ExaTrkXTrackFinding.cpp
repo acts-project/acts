@@ -89,42 +89,10 @@ void addExaTrkXTrackFinding(Context& ctx) {
   }
 #endif
 
-#ifdef ACTS_EXATRKX_ONNX_BACKEND
-  {
-    using Backend = Acts::ExaTrkXTrackFindingOnnx;
-    using Config = Backend::Config;
-
-    auto  =
-        py::class_<Backend, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Backend>>(
-            mex, "ExaTrkXTrackFindingOnnx")
-            .def(py::init<const Config&>(), py::arg("config"))
-            .def_property_readonly("config", &Backend::config);
-
-    auto c = py::class_<Config>(, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-<<<<<<< HEAD
-    ACTS_PYTHON_MEMBER(modelDir);
-    ACTS_PYTHON_MEMBER(spacepointFeatures);
-    ACTS_PYTHON_MEMBER(embeddingDim);
-    ACTS_PYTHON_MEMBER(rVal);
-    ACTS_PYTHON_MEMBER(knnVal);
-    ACTS_PYTHON_MEMBER(filterCut);
-=======
-    ACTS_PYTHON_MEMBER(inputSpacePoints);
-    ACTS_PYTHON_MEMBER(outputProtoTracks);
-    ACTS_PYTHON_MEMBER(trackFinderML);
-    ACTS_PYTHON_MEMBER(rScale);
-    ACTS_PYTHON_MEMBER(phiScale);
-    ACTS_PYTHON_MEMBER(zScale);
->>>>>>> main
-    ACTS_PYTHON_STRUCT_END();
-  }
-#endif
-
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX,
                                 "TrackFindingAlgorithmExaTrkX",
                                 inputSpacePoints, outputProtoTracks,
-                                trackFinderML, rScale, phiScale, zScale)
+                                trackFinderML, rScale, phiScale, zScale);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SourceLinkSelectorAlgorithm,
                                 "SourceLinkSelectorAlgorithm", inputSourceLinks,
@@ -132,18 +100,18 @@ void addExaTrkXTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParameterFromTrajectoryAlgorithm,
                                 "ParameterFromTrajectoryAlgorithm",
-                                inputTrajectories, outputParamters)
+                                inputTrajectories, outputParamters);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackFindingFromPrototrackAlgorithm,
       "TrackFindingFromPrototrackAlgorithm", inputTracks, inputMeasurements,
       inputSourceLinks, inputInitialTrackParameters, outputTrajectories,
-      measurementSelectorCfg, trackingGeometry, magneticField)
+      measurementSelectorCfg, trackingGeometry, magneticField);
   
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::MeasurementMapSelectorAlgorithm,
       "MeasurementMapSelectorAlgorithm", inputMeasurementParticleMap, inputSourceLinks,
-      outputMeasurementParticleMap, geometrySelection)
+      outputMeasurementParticleMap, geometrySelection);
 }
 
 }  // namespace Acts::Python

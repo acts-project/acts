@@ -1,0 +1,101 @@
+name: Report on physmon
+
+on:
+  workflow_run:
+    workflows: [Builds]
+    types:
+      - completed
+
+jobs:
+  post_comment:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Download artifact'
+        uses: actions/github-script@v6
+        id: dl-af
+        with:
+          script: |
+            let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               run_id: context.payload.workflow_run.id,
+            });
+            let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == "physmon"
+            })[0];
+            let download = await github.rest.actions.downloadArtifact({
+               owner: context.repo.owner,
+               repo: context.repo.repo,
+               artifact_id: matchArtifact.id,
+               archive_format: 'zip',
+            });
+            let fs = require('fs');
+            fs.writeFileSync(`${process.env.GITHUB_WORKSPACE}/physmon.zip`, Buffer.from(download.data));
+            let = url = `https://herald.dokku.paulgessinger.com/view/${process.env.GITHUB_REPOSITORY}/${matchArtifact.id}`;
+
+            core.exportVariable('ARTIFACT_URL', url)
+            
+
+      - name: 'Unzip artifact'
+        run: unzip -d physmon physmon.zip && ls -al && ls -al physmon
+
+
+      - name: 'Determine PR number'
+        uses: actions/github-script@v6
+        id: get-pr-number
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            let fs = require('fs');
+            let file = 'physmon/pr_number';
+            if(!fs.existsSync(file)) {
+              console.log('No file at ' + file);
+              return false;
+            }
+
+            
+            let number = Number(fs.readFileSync(file));
+            console.log('PR number is '+number);
+            core.exportVariable('PR_NUMBER', number)
+
+            let sha = fs.readFileSync('physmon/sha', {encoding: 'utf8'});
+            console.log('SHA is '+sha);
+            core.exportVariable('PR_SHA', sha)
+
+            return number;
+
+      - uses: actions/checkout@v3
+        if: steps.get-pr-number.outputs.result != 'false'
+
+      # ping the url, triggers caching of the artifact
+      - name: Prime cache
+        run: curl -L $ARTIFACT_URL
+        if: steps.get-pr-number.outputs.result != 'false'
+
+      - name: Render template
+        id: template
+        uses: chuhlomin/render-template@v1.4
+        if: steps.get-pr-number.outputs.result != 'false'
+        with:
+          template: CI/physmon/comment_template.md
+          vars: |
+            url: ${{ env.ARTIFACT_URL }}
+            commit: ${{ env.PR_SHA }}
+
+      - name: Find Comment
+        if: steps.get-pr-number.outputs.result != 'false'
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ steps.get-pr-number.outputs.result }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Physics performance monitoring
+
+      - name: Create or update comment
+        if: steps.get-pr-number.outputs.result != 'false'
+        uses: peter-evans/create-or-update-comment@v2
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ steps.get-pr-number.outputs.result }}
+          body: ${{ steps.template.outputs.result }}
+          edit-mode: replace

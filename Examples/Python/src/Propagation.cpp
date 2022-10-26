@@ -66,45 +66,14 @@ void addPropagation(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-  {
-    using Algorithm = ActsExamples::PropagationAlgorithm;
-    using Config = Algorithm::Config;
-    auto alg =
-        py::class_<Algorithm, ActsExamples::BareAlgorithm,
-                   std::shared_ptr<Algorithm>>(mex, "PropagationAlgorithm")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Algorithm::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(propagatorImpl);
-    ACTS_PYTHON_MEMBER(randomNumberSvc);
-    ACTS_PYTHON_MEMBER(mode);
-    ACTS_PYTHON_MEMBER(sterileLogger);
-    ACTS_PYTHON_MEMBER(debugOutput);
-    ACTS_PYTHON_MEMBER(energyLoss);
-    ACTS_PYTHON_MEMBER(multipleScattering);
-    ACTS_PYTHON_MEMBER(recordMaterialInteractions);
-    ACTS_PYTHON_MEMBER(ntests);
-    ACTS_PYTHON_MEMBER(d0Sigma);
-    ACTS_PYTHON_MEMBER(z0Sigma);
-    ACTS_PYTHON_MEMBER(phiSigma);
-    ACTS_PYTHON_MEMBER(thetaSigma);
-    ACTS_PYTHON_MEMBER(qpSigma);
-    ACTS_PYTHON_MEMBER(tSigma);
-    ACTS_PYTHON_MEMBER(phiRange);
-    ACTS_PYTHON_MEMBER(etaRange);
-    ACTS_PYTHON_MEMBER(ptRange);
-    ACTS_PYTHON_MEMBER(ptLoopers);
-    ACTS_PYTHON_MEMBER(maxStepSize);
-    ACTS_PYTHON_MEMBER(propagationStepCollection);
-    ACTS_PYTHON_MEMBER(propagationMaterialCollection);
-    ACTS_PYTHON_MEMBER(covarianceTransport);
-    ACTS_PYTHON_MEMBER(covariances);
-    ACTS_PYTHON_MEMBER(correlations);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::PropagationAlgorithm, mex, "PropagationAlgorithm",
+      propagatorImpl, randomNumberSvc, mode, sterileLogger, debugOutput,
+      energyLoss, multipleScattering, recordMaterialInteractions, ntests,
+      d0Sigma, z0Sigma, phiSigma, thetaSigma, qpSigma, tSigma, phiRange,
+      etaRange, ptRange, ptLoopers, maxStepSize, propagationStepCollection,
+      propagationMaterialCollection, covarianceTransport, covariances,
+      correlations);
 
   py::class_<ActsExamples::PropagatorInterface,
              std::shared_ptr<ActsExamples::PropagatorInterface>>(

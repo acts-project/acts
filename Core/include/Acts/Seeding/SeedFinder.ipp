@@ -15,8 +15,8 @@
 namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t>
-Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
-    Acts::SeedfinderConfig<external_spacepoint_t> config)
+SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
+    Acts::SeedFinderConfig<external_spacepoint_t> config)
     : m_config(config.toInternalUnits()) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
@@ -38,8 +38,8 @@ Seedfinder<external_spacepoint_t, platform_t>::Seedfinder(
 
 template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
-void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
-    State& state,
+void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+    SeedingState& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     Extent rRangeSPExtent) const {
@@ -69,21 +69,6 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           rM > m_config.rRangeMiddleSP[zBin][1]) {
         continue;
       }
-    }
-
-    size_t nTopSeedConf = 0;
-    if (m_config.seedConfirmation == true) {
-      // check if middle SP is in the central or forward region
-      SeedConfirmationRangeConfig seedConfRange =
-          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-           zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
-              ? m_config.forwardSeedConfirmationRange
-              : m_config.centralSeedConfirmationRange;
-      // set the minimum number of top SP depending on whether the middle SP is
-      // in the central or forward region
-      nTopSeedConf = rM > seedConfRange.rMaxSeedConf
-                         ? seedConfRange.nTopForLargeR
-                         : seedConfRange.nTopForSmallR;
     }
 
     state.compatTopSP.clear();
@@ -154,12 +139,25 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
       state.compatTopSP.push_back(topSP);
     }
-    if (state.compatTopSP.empty()) {
-      continue;
-    }
     // apply cut on the number of top SP if seedConfirmation is true
-    if (m_config.seedConfirmation == true &&
-        state.compatTopSP.size() < nTopSeedConf) {
+    SeedFilterState seedFilterState;
+    if (m_config.seedConfirmation == true) {
+      // check if middle SP is in the central or forward region
+      SeedConfirmationRangeConfig seedConfRange =
+          (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+           zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
+              ? m_config.forwardSeedConfirmationRange
+              : m_config.centralSeedConfirmationRange;
+      // set the minimum number of top SP depending on whether the middle SP is
+      // in the central or forward region
+      seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                         ? seedConfRange.nTopForLargeR
+                                         : seedConfRange.nTopForSmallR;
+      if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
+        continue;
+      }
+    }
+    if (state.compatTopSP.empty()) {
       continue;
     }
 
@@ -250,14 +248,16 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     size_t numBotSP = state.compatBottomSP.size();
     size_t numTopSP = state.compatTopSP.size();
 
-    int numQualitySeeds = 0;
-    int numSeeds = 0;
-
     size_t t0 = 0;
 
     for (size_t b = 0; b < numBotSP; b++) {
+      // break if we reached the last top SP
+      if (t0 == numTopSP) {
+        break;
+      }
+
       auto lb = state.linCircleBottom[b];
-      float Zob = lb.Zo;
+      seedFilterState.zOrigin = lb.Zo;
       float cotThetaB = lb.cotTheta;
       float Vb = lb.V;
       float Ub = lb.U;
@@ -510,21 +510,20 @@ void Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       if (!state.topSpVec.empty()) {
         m_config.seedFilter->filterSeeds_2SpFixed(
             *state.compatBottomSP[b], *spM, state.topSpVec, state.curvatures,
-            state.impactParameters, Zob, numQualitySeeds, numSeeds,
-            state.seedsPerSpM);
+            state.impactParameters, seedFilterState, state.seedsPerSpM);
       }
     }
-    m_config.seedFilter->filterSeeds_1SpFixed(state.seedsPerSpM,
-                                              numQualitySeeds, outIt);
+    m_config.seedFilter->filterSeeds_1SpFixed(
+        state.seedsPerSpM, seedFilterState.numQualitySeeds, outIt);
   }
 }
 
 template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
-Seedfinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
+SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
-  State state;
+  SeedingState state;
   Extent extent;
   std::vector<Seed<external_spacepoint_t>> ret;
 
