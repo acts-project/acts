@@ -1058,11 +1058,11 @@ def addVertexFitting(
         RootVertexPerformanceWriter,
     )
 
+    if trackParameters is None:
+        trackParameters = s.resolveAlias("trackParameters")
     if associatedParticles is None:
         if trajectories is None:
             trajectories = s.resolveAlias("trajectories")
-        if trackParameters is None:
-            trackParameters = s.resolveAlias("trackParameters")
         if trackParametersTips is None:
             trackParametersTips = s.resolveAlias("trackParametersTips")
 
