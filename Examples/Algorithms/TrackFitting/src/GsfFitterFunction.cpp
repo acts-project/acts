@@ -106,9 +106,9 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    std::size_t maxComponents, bool abortOnError,
+    std::size_t maxComponents, Acts::FinalReductionMethod finalReductionMethod, bool abortOnError,
     bool disableAllMaterialHandling) {
-  MultiStepper stepper(std::move(magneticField));
+  MultiStepper stepper(std::move(magneticField), finalReductionMethod);
 
   // Standard fitter
   Acts::Navigator::Config cfg{trackingGeometry};

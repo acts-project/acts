@@ -13,6 +13,8 @@
 #include <array>
 #include <fstream>
 
+#include <boost/container/static_vector.hpp>
+
 namespace Acts {
 namespace detail {
 
@@ -20,7 +22,7 @@ inline ActsScalar logistic_sigmoid(ActsScalar x) {
   return 1. / (1 + std::exp(-x));
 }
 
-struct GaussianMixture {
+struct GaussianComponent {
   ActsScalar mean, var, weight;
 };
 
@@ -74,9 +76,11 @@ class BetheHeitlerApprox {
     constexpr double higherRange = 0.10;
     constexpr double maxX0 = 0.20;
 
+    using RetType = boost::container::static_vector<GaussianComponent, NComponents>;
+
     // Lambda which builds the components
     auto make_mixture = [&](const Data &data, double xx) {
-      std::array<GaussianMixture, NComponents> ret{};
+      RetType ret(NComponents);
       ActsScalar weight_sum = 0;
       for (int i = 0; i < NComponents; ++i) {
         // These transformations must be applied to the data according to ATHENA
@@ -97,7 +101,7 @@ class BetheHeitlerApprox {
 
     // Return no change
     if (x < singleGaussianRange) {
-      std::array<GaussianMixture, NComponents> ret{};
+      RetType ret(1);
 
       ret[0].weight = 1.0;
       ret[0].mean = 1.0;  // p_initial = p_final
@@ -107,7 +111,7 @@ class BetheHeitlerApprox {
     }
     // Return single gaussian approximation
     if (x < lowerRange) {
-      std::array<GaussianMixture, NComponents> ret{};
+      RetType ret(1);
 
       ret[0].weight = 1.0;
       ret[0].mean = std::exp(-1. * x);

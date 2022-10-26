@@ -410,3 +410,62 @@ BOOST_AUTO_TEST_CASE(test_kl_mixture_reduction) {
   BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);
   BOOST_CHECK_CLOSE(cmps[0].weight, 1.0, 1.e-8);
 }
+
+BOOST_AUTO_TEST_CASE(test_mode_finding) {
+  constexpr int D = 2;
+
+  auto mixture_pdf = [&](const auto &x, const auto &components) {
+    double res = 0.0;
+
+    for (const auto &cmp : components) {
+      const auto &[weight, mean, cov] = cmp;
+      const auto a = std::sqrt(std::pow(2 * M_PI, D) * cov->determinant());
+      const auto b =
+          -0.5 * (x - mean).transpose() * cov->inverse() * (x - mean);
+      res += weight * a * std::exp(b);
+    }
+
+    return res;
+  };
+
+  auto find_mode_ref = [&](double x_min, double x_max, double step,
+                           const auto &components) {
+    ActsVector<D> res_pos = ActsVector<D>::Zero();
+    double res_val = 0.0;
+
+    for (auto x = x_min; x < x_max; x += step) {
+      ActsVector<D> p;
+      p << x, x;
+
+      const auto val = mixture_pdf(p, components);
+      if (val > res_val) {
+        res_pos = p;
+        res_val = val;
+      }
+    }
+
+    return std::make_tuple(res_pos, res_val);
+  };
+
+  for (auto d : {2.0, 4.0}) {
+    std::vector<DummyComponent<D>> cmps;
+
+    auto x = 0.0;
+    for (auto w : {0.1, 0.2, 0.3, 0.4}) {
+      DummyComponent<D> cmp;
+      cmp.boundPars << x, x;
+      cmp.boundCov = ActsSymMatrix<D>::Identity();
+      cmp.weight = w;
+      cmps.push_back(cmp);
+      x += d;
+    }
+
+    const auto mode_test = detail::computeModeOfMixture(cmps, Identity{}, std::tuple<>{});
+
+    BOOST_CHECK(mode_test.has_value());
+
+    const auto [mode_ref, val_ref] = find_mode_ref(-d, 4 * d, 1.e-4, cmps);
+
+    CHECK_CLOSE_MATRIX(*mode_test, mode_ref, 1.e-3);
+  }
+}

@@ -34,32 +34,11 @@ void addTrackFitting(Context& ctx) {
                                 outputProtoTracks);
 
   {
-    using Alg = ActsExamples::TrackFittingAlgorithm;
-    using Config = Alg::Config;
-
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackFittingAlgorithm")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
-
-    py::class_<TrackFittingAlgorithm::TrackFitterFunction,
-               std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>>(
-        alg, "TrackFitterFunction");
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputMeasurements);
-    ACTS_PYTHON_MEMBER(directNavigation);
-    ACTS_PYTHON_MEMBER(inputSourceLinks);
-    ACTS_PYTHON_MEMBER(inputProtoTracks);
-    ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrajectories);
-    ACTS_PYTHON_MEMBER(fit);
-    ACTS_PYTHON_MEMBER(trackingGeometry);
-    ACTS_PYTHON_MEMBER(pickTrack);
-    ACTS_PYTHON_STRUCT_END();
+    ACTS_PYTHON_DECLARE_ALGORITHM(
+        ActsExamples::TrackFittingAlgorithm, mex, "TrackFittingAlgorithm",
+        inputMeasurements, directNavigation, inputSourceLinks, inputProtoTracks,
+        inputInitialTrackParameters, outputTrajectories, fit, trackingGeometry,
+        pickTrack);
 
     mex.def(
         "makeKalmanFitterFunction",
@@ -72,14 +51,19 @@ void addTrackFitting(Context& ctx) {
         py::arg("reverseFilteringMomThreshold"),
         py::arg("freeToBoundCorrection"));
 
+    py::enum_<Acts::FinalReductionMethod>(mex, "FinalReductionMethod")
+        .value("mean", Acts::FinalReductionMethod::eMean)
+        .value("mode", Acts::FinalReductionMethod::eMode)
+        .value("maxWeight", Acts::FinalReductionMethod::eMaxWeight);
+
     mex.def(
         "makeGsfFitterFunction",
         py::overload_cast<std::shared_ptr<const Acts::TrackingGeometry>,
                           std::shared_ptr<const Acts::MagneticFieldProvider>,
-                          std::size_t, bool, bool>(
+                          std::size_t, Acts::FinalReductionMethod, bool, bool>(
             &ActsExamples::makeGsfFitterFunction),
         py::arg("trackingGeometry"), py::arg("magneticField"),
-        py::arg("maxComponents"), py::arg("abortOnError"),
+        py::arg("maxComponents"), py::arg("finalReductionMethod"), py::arg("abortOnError"),
         py::arg("disableAllMaterialHandling"));
   }
 
