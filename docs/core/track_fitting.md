@@ -87,7 +87,7 @@ To simplify integration, the GSF returns a {class}`Acts::KalmanFitterResult` obj
 
 A GSF example can be found in the Acts Examples Framework [here](https://github.com/acts-project/acts/blob/main/Examples/Scripts/Python/truth_tracking_gsf.py).
 
-### Customizing the Bethe-Heitler approximation
+### Customising the Bethe-Heitler approximation
 
 The GSF needs an approximation of the Bethe-Heitler distribution as a Gaussian mixture on each material interaction (see above). This task is delegated to a separate class, that can be provided by a template parameter to {class}`Acts::Experimental::GaussianSumFitter`, so in principle it can be implemented in different ways.
 
