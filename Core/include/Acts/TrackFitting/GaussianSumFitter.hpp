@@ -54,11 +54,12 @@ namespace Experimental {
 /// * There are only measurement states in the result
 /// * Passed-again-surfaces is always empty at the moment
 /// * Probably some more differences which I don't think of at the moment.
-template <typename propagator_t, typename bethe_heitler_approx_t, typename traj_t>
+template <typename propagator_t, typename bethe_heitler_approx_t,
+          typename traj_t>
 struct GaussianSumFitter {
-  GaussianSumFitter(propagator_t&& propagator,
-                    bethe_heitler_approx_t&& bha)
-      : m_propagator(std::move(propagator)), m_bethe_heitler_approx(std::move(bha)) {}
+  GaussianSumFitter(propagator_t&& propagator, bethe_heitler_approx_t&& bha)
+      : m_propagator(std::move(propagator)),
+        m_bethe_heitler_approx(std::move(bha)) {}
 
   /// The propagator instance used by the fit function
   propagator_t m_propagator;

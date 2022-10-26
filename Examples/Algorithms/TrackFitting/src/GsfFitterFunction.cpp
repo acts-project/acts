@@ -32,11 +32,10 @@ using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
-
 using BHApprox = Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
 using Fitter =
-        Acts::Experimental::GaussianSumFitter<Propagator, BHApprox,
-                                              Acts::VectorMultiTrajectory>;
+    Acts::Experimental::GaussianSumFitter<Propagator, BHApprox,
+                                          Acts::VectorMultiTrajectory>;
 using DirectFitter =
     Acts::Experimental::GaussianSumFitter<DirectPropagator, BHApprox,
                                           Acts::VectorMultiTrajectory>;
@@ -117,17 +116,19 @@ ActsExamples::makeGsfFitterFunction(
     bool disableAllMaterialHandling) {
   MultiStepper stepper(std::move(magneticField));
 
-  const auto bhapp = [&](){
-  if( lowBetheHeitlerPath.empty() && highBetheHeitlerPath.empty() ) {
-    return Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>(
+  const auto bhapp = [&]() {
+    if (lowBetheHeitlerPath.empty() && highBetheHeitlerPath.empty()) {
+      return Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>(
           Acts::Experimental::bh_cdf_cmps6_order5_data,
           Acts::Experimental::bh_cdf_cmps6_order5_data, true, true);
-  } else if (std::filesystem::exists(lowBetheHeitlerPath) &&
-        std::filesystem::exists(highBetheHeitlerPath)) {
+    } else if (std::filesystem::exists(lowBetheHeitlerPath) &&
+               std::filesystem::exists(highBetheHeitlerPath)) {
       return Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>::loadFromFile(
           lowBetheHeitlerPath, highBetheHeitlerPath);
     } else {
-      throw std::invalid_argument("Paths to bethe heitler parameterization do not exist. Pass empty strings to load a default parameterization");
+      throw std::invalid_argument(
+          "Paths to bethe heitler parameterization do not exist. Pass empty "
+          "strings to load a default parameterization");
     }
   }();
 
