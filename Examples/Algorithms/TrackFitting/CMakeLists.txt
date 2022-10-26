@@ -2,8 +2,8 @@ add_library(
   ActsExamplesTrackFitting SHARED
   src/SurfaceSortingAlgorithm.cpp
   src/TrackFittingAlgorithm.cpp
-  src/TrackFittingAlgorithmFunctionsKalman.cpp
-  src/TrackFittingAlgorithmFunctionsGsf.cpp)
+  src/KalmanFitterFunction.cpp
+  src/GsfFitterFunction.cpp)
 target_include_directories(
   ActsExamplesTrackFitting
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

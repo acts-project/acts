@@ -24,6 +24,7 @@
 #include "ActsExamples/Options/TrackFittingOptions.hpp"
 #include "ActsExamples/Options/TruthSeedSelectorOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
+#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
@@ -147,12 +148,7 @@ int runRecTruthTracks(int argc, char* argv[],
   fitter.directNavigation = dirNav;
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeKalmanFitterFunction(
-      magneticField, vm["fit-multiple-scattering-correction"].as<bool>(),
-      vm["fit-energy-loss-correction"].as<bool>(), reverseFilteringMomThreshold,
-      Acts::FreeToBoundCorrection(
-          vm["fit-ftob-nonlinear-correction"].as<bool>()));
-  fitter.fit = TrackFittingAlgorithm::makeKalmanFitterFunction(
+  fitter.fit = makeKalmanFitterFunction(
       trackingGeometry, magneticField,
       vm["fit-multiple-scattering-correction"].as<bool>(),
       vm["fit-energy-loss-correction"].as<bool>(), reverseFilteringMomThreshold,
