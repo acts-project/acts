@@ -972,14 +972,17 @@ def addAmbiguityResolution(
         AmbiguityResolutionAlgorithm,
     )
 
+    trackParameters = s.resolveAlias("trackParameters")
+    trackParametersTips = s.resolveAlias("trackParametersTips")
+
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     alg = AmbiguityResolutionAlgorithm(
         level=customLogLevel(),
         inputSourceLinks="sourcelinks",
         inputTrajectories="trajectories",
-        inputTrackParameters="fittedTrackParameters",
-        inputTrackParametersTips="fittedTrackParametersTips",
+        inputTrackParameters=trackParameters,
+        inputTrackParametersTips=trackParametersTips,
         outputTrackParameters="filteredTrackParameters",
         outputTrackParametersTips="filteredTrackParametersTips",
         **acts.examples.defaultKWArgs(
@@ -987,6 +990,9 @@ def addAmbiguityResolution(
         ),
     )
     s.addAlgorithm(alg)
+
+    s.addAlias("trackParameters", alg.config.outputTrackParameters)
+    s.addAlias("trackParametersTips", alg.config.outputTrackParametersTips)
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
