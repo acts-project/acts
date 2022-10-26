@@ -3,7 +3,6 @@ from pathlib import Path
 import argparse
 import tempfile
 import shutil
-import os
 import datetime
 import sys
 import subprocess
@@ -34,11 +33,13 @@ from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
     ParticleSmearingSigmas,
-    SeedfinderConfigArg,
+    SeedFinderConfigArg,
     SeedingAlgorithm,
     TrackParamsEstimationConfig,
     addCKFTracks,
     CKFPerformanceConfig,
+    addAmbiguityResolution,
+    AmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
     TrackSelectorRanges,
@@ -147,7 +148,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             ParticleSmearingSigmas(
                 pRel=0.01
             ),  # only used by SeedingAlgorithm.TruthSmeared
-            SeedfinderConfigArg(
+            SeedFinderConfigArg(
                 r=(None, 200 * u.mm),  # rMin=default, 33mm
                 deltaR=(1 * u.mm, 60 * u.mm),
                 collisionRegion=(-250 * u.mm, 250 * u.mm),
@@ -175,33 +176,50 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             trackingGeometry,
             field,
             CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+            TrackSelectorRanges(
+                removeNeutral=True,
+                loc0=(None, 4.0 * u.mm),
+                pt=(500 * u.MeV, None),
+            ),
             outputDirRoot=tp,
             outputDirCsv=None,
         )
 
+        if label == "seeded":
+            addAmbiguityResolution(
+                s,
+                AmbiguityResolutionConfig(
+                    maximumSharedHits=3,
+                ),
+                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+                outputDirRoot=tp,
+            )
+
         addVertexFitting(
             s,
             field,
-            TrackSelectorRanges(
-                removeNeutral=True,
-                absEta=(None, 2.5),
-                loc0=(None, 4.0 * u.mm),
-                pt=(500 * u.MeV, None),
-            ),
+            trajectories="trajectories" if label == "seeded" else None,
+            trackParameters="filteredTrackParameters"
+            if label == "seeded"
+            else "fittedTrackParameters",
+            trackParametersTips="filteredTrackParametersTips"
+            if label == "seeded"
+            else "fittedTrackParametersTips",
             vertexFinder=VertexFinder.Iterative,
-            trajectories="trajectories",
             outputDirRoot=tp,
         )
 
         s.run()
         del s
 
-        for stem in "performance_ckf", "performance_vertexing":
+        for stem in ["performance_ckf", "performance_vertexing"] + (
+            ["performance_ambi"] if label == "seeded" else []
+        ):
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
 
-        if not truthSmearedSeeded and not truthEstimatedSeeded:
+        if label == "seeded":
             residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"
             # @TODO: Add try/except
             subprocess.check_call(
@@ -219,7 +237,6 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
                     "",
                 ]
             )
-
 
 ### VERTEX MU SCAN
 
@@ -274,7 +291,7 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 ParticleSmearingSigmas(
                     pRel=0.01
                 ),  # only used by SeedingAlgorithm.TruthSmeared
-                SeedfinderConfigArg(
+                SeedFinderConfigArg(
                     r=(None, 200 * u.mm),  # rMin=default, 33mm
                     deltaR=(1 * u.mm, 60 * u.mm),
                     collisionRegion=(-250 * u.mm, 250 * u.mm),
@@ -298,21 +315,28 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 trackingGeometry,
                 field,
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+                TrackSelectorRanges(
+                    removeNeutral=True,
+                    loc0=(None, 4.0 * u.mm),
+                    pt=(500 * u.MeV, None),
+                ),
                 outputDirRoot=None,
                 outputDirCsv=None,
+            )
+
+            addAmbiguityResolution(
+                s,
+                AmbiguityResolutionConfig(
+                    maximumSharedHits=3,
+                ),
+                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+                outputDirRoot=None,
             )
 
             addVertexFitting(
                 s,
                 field,
-                TrackSelectorRanges(
-                    removeNeutral=True,
-                    absEta=(None, 2.5),
-                    loc0=(None, 4.0 * u.mm),
-                    pt=(500 * u.MeV, None),
-                ),
                 vertexFinder=fitter,
-                trajectories="trajectories",
                 outputDirRoot=tp,
             )
 

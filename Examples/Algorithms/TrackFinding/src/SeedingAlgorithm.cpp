@@ -12,7 +12,7 @@
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -219,12 +219,12 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
       m_cfg.seedFinderConfig);
-  auto finder = Acts::Seedfinder<SimSpacePoint>(m_cfg.seedFinderConfig);
+  auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 
   // run the seeding
   static thread_local SimSeedContainer seeds;
   seeds.clear();
-  static thread_local decltype(finder)::State state;
+  static thread_local decltype(finder)::SeedingState state;
 
   auto group = spacePointsGrouping.begin();
   auto groupEnd = spacePointsGrouping.end();

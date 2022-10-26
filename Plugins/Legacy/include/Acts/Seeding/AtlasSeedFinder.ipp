@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 ///////////////////////////////////////////////////////////////////
-// AtlasSeedfinder.ipp Acts project
+// AtlasSeedFinder.ipp Acts project
 ///////////////////////////////////////////////////////////////////
 
 #include <algorithm>
@@ -17,7 +17,7 @@
 ///////////////////////////////////////////////////////////////////
 
 template <typename SpacePoint>
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::AtlasSeedfinder() {
+Acts::Legacy::AtlasSeedFinder<SpacePoint>::AtlasSeedFinder() {
   m_checketa = false;
   m_maxsize = 50000;
   m_ptmin = 400.;
@@ -92,7 +92,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::AtlasSeedfinder() {
 // Destructor
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-Acts::Legacy::AtlasSeedfinder<SpacePoint>::~AtlasSeedfinder<SpacePoint>() {
+Acts::Legacy::AtlasSeedFinder<SpacePoint>::~AtlasSeedFinder<SpacePoint>() {
   if (r_index) {
     delete[] r_index;
   }
@@ -149,7 +149,7 @@ Acts::Legacy::AtlasSeedfinder<SpacePoint>::~AtlasSeedfinder<SpacePoint>() {
 ///////////////////////////////////////////////////////////////////
 template <typename SpacePoint>
 template <class RandIter>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int iteration,
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::newEvent(int iteration,
                                                          RandIter spBegin,
                                                          RandIter spEnd) {
   iteration <= 0 ? m_iteration = 0 : m_iteration = iteration;
@@ -220,7 +220,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::newEvent(int iteration,
 ///////////////////////////////////////////////////////////////////
 
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::find3Sp() {
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::find3Sp() {
   m_zminU = m_zmin;
   m_zmaxU = m_zmax;
 
@@ -242,7 +242,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::find3Sp() {
 // Find next set space points
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::findNext() {
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::findNext() {
   if (m_endlist) {
     return;
   }
@@ -260,7 +260,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::findNext() {
 // Initiate frame work for seed generator
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork() {
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::buildFrameWork() {
   m_ptmin = fabs(m_ptmin);
 
   if (m_ptmin < 100.) {
@@ -443,7 +443,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildFrameWork() {
 // Initiate beam frame work for seed generator
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildBeamFrameWork() {
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::buildBeamFrameWork() {
   double bx = m_config.beamPosX;
   double by = m_config.beamPosY;
   double bz = m_config.beamPosZ;
@@ -457,7 +457,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::buildBeamFrameWork() {
 // Initiate beam frame work for seed generator
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::convertToBeamFrameWork(
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::convertToBeamFrameWork(
     SpacePoint* const& sp, float* r) {
   r[0] = float(sp->x) - m_xbeam;
   r[1] = float(sp->y) - m_ybeam;
@@ -468,7 +468,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::convertToBeamFrameWork(
 // Initiate space points seed maker
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists() {
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
   const float pi2 = 2. * M_PI;
   typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator r, re;
 
@@ -559,7 +559,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillLists() {
 // Erase space point information
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::erase() {
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::erase() {
   for (int i = 0; i != m_nrfz; ++i) {
     int n = rfz_index[i];
     rfz_map[n] = 0;
@@ -576,7 +576,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::erase() {
 // Production 3 space points seeds
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp() {
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::production3Sp() {
   // if less than 3 sp in total
   if (m_nsaz < 3) {
     return;
@@ -640,7 +640,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp() {
 // Production 3 space points seeds for full scan
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::production3Sp(
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rb,
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rbe,
     typename std::list<Acts::Legacy::SPForSeed<SpacePoint>*>::iterator* rt,
@@ -880,7 +880,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::production3Sp(
 // New 3 space points pro seeds
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::newOneSeed(
     Acts::Legacy::SPForSeed<SpacePoint>*& p1,
     Acts::Legacy::SPForSeed<SpacePoint>*& p2,
     Acts::Legacy::SPForSeed<SpacePoint>*& p3, float z, float q) {
@@ -927,7 +927,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::newOneSeed(
 // New 3 space points pro seeds production
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::
     newOneSeedWithCurvaturesComparison(
         Acts::Legacy::SPForSeed<SpacePoint>*& SPb,
         Acts::Legacy::SPForSeed<SpacePoint>*& SP0, float Zob) {
@@ -1035,7 +1035,7 @@ void Acts::Legacy::AtlasSeedfinder<SpacePoint>::
 // Fill seeds
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
-void Acts::Legacy::AtlasSeedfinder<SpacePoint>::fillSeeds() {
+void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillSeeds() {
   m_fillOneSeeds = 0;
 
   typename std::multimap<float, Acts::Legacy::InternalSeed<SpacePoint>

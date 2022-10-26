@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TruthTracking/TrackSelector.hpp"
 
+#include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -24,9 +25,6 @@ ActsExamples::TrackSelector::TrackSelector(const Config& config,
   }
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing output track parameters collection");
-  }
-  if (m_cfg.outputTrackIndices.empty()) {
-    throw std::invalid_argument("Missing output track indices collection");
   }
 }
 
@@ -45,7 +43,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     const bool validCharge = validNeutral or validCharged;
     return validCharge and
            within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(std::abs(theta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
+           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
            within(trk.template get<Acts::eBoundPhi>(), m_cfg.phiMin,
                   m_cfg.phiMax) and
@@ -60,21 +58,36 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
   // prepare input and output containers
   const auto& inputTrackParameters =
       ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  std::optional<std::vector<std::pair<size_t, size_t>>>
+      inputTrackParametersTips;
+  if (!m_cfg.inputTrackParametersTips.empty()) {
+    inputTrackParametersTips =
+        ctx.eventStore.get<std::vector<std::pair<size_t, size_t>>>(
+            m_cfg.inputTrackParametersTips);
+    throw_assert(
+        inputTrackParameters.size() == inputTrackParametersTips->size(),
+        "Track parameters tips count does not match track parameters count");
+  }
+
   TrackParametersContainer outputTrackParameters;
-  std::vector<uint32_t> outputTrackIndices;
+  std::vector<std::pair<size_t, size_t>> outputTrackParametersTips;
   outputTrackParameters.reserve(inputTrackParameters.size());
-  outputTrackIndices.reserve(inputTrackParameters.size());
+  if (inputTrackParametersTips) {
+    outputTrackParametersTips.reserve(inputTrackParametersTips->size());
+  }
 
   // copy selected tracks and record initial track index
   for (uint32_t i = 0; i < inputTrackParameters.size(); ++i) {
     const auto& trk = inputTrackParameters[i];
     if (isValidTrack(trk)) {
       outputTrackParameters.push_back(trk);
-      outputTrackIndices.push_back(i);
+      if (inputTrackParametersTips) {
+        outputTrackParametersTips.push_back((*inputTrackParametersTips)[i]);
+      }
     }
   }
   outputTrackParameters.shrink_to_fit();
-  outputTrackIndices.shrink_to_fit();
+  outputTrackParametersTips.shrink_to_fit();
 
   ACTS_DEBUG("event " << ctx.eventNumber << " selected "
                       << outputTrackParameters.size() << " from "
@@ -82,6 +95,9 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
 
   ctx.eventStore.add(m_cfg.outputTrackParameters,
                      std::move(outputTrackParameters));
-  ctx.eventStore.add(m_cfg.outputTrackIndices, std::move(outputTrackIndices));
+  if (inputTrackParametersTips) {
+    ctx.eventStore.add(m_cfg.outputTrackParametersTips,
+                       std::move(outputTrackParametersTips));
+  }
   return ProcessCode::SUCCESS;
 }
