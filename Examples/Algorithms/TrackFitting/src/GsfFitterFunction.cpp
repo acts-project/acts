@@ -27,10 +27,13 @@ namespace {
 
 using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
-using Fitter = Acts::GaussianSumFitter<Propagator, Acts::VectorMultiTrajectory>;
+using Fitter =
+    Acts::Experimental::GaussianSumFitter<Propagator,
+                                          Acts::VectorMultiTrajectory>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 using DirectFitter =
-    Acts::GaussianSumFitter<DirectPropagator, Acts::VectorMultiTrajectory>;
+    Acts::Experimental::GaussianSumFitter<DirectPropagator,
+                                          Acts::VectorMultiTrajectory>;
 
 struct GsfFitterFunctionImpl
     : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
@@ -49,12 +52,12 @@ struct GsfFitterFunctionImpl
   auto makeGsfOptions(
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
       const {
-    Acts::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
+    Acts::Experimental::GsfExtensions<Acts::VectorMultiTrajectory> extensions;
     extensions.updater.connect<
         &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
         &updater);
 
-    Acts::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
+    Acts::Experimental::GsfOptions<Acts::VectorMultiTrajectory> gsfOptions{
         options.geoContext,
         options.magFieldContext,
         options.calibrationContext,

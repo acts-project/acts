@@ -113,6 +113,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
       }};
 };
 
+// TODO this is somewhat duplicated in AmbiguityResolutionAlgorithm.cpp
+// TODO we should make a common implementation in the core at some point
 template <typename source_link_accessor_container_t>
 void TrackFindingAlgorithm::computeSharedHits(
     const source_link_accessor_container_t& sourceLinks,
@@ -136,8 +138,9 @@ void TrackFindingAlgorithm::computeSharedHits(
 
     for (auto measIndex : measIndexes) {
       ckfResult.fittedStates->visitBackwards(measIndex, [&](const auto& state) {
-        if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag))
-          return;
+        if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+          return true;
+        }
 
         std::size_t hitIndex =
             static_cast<const IndexSourceLink&>(state.uncalibrated()).index();
@@ -147,7 +150,7 @@ void TrackFindingAlgorithm::computeSharedHits(
             std::numeric_limits<std::size_t>::max()) {
           firstTrackOnTheHit.at(hitIndex) = iresult;
           firstStateOnTheHit.at(hitIndex) = state.index();
-          return;
+          return true;
         }
 
         // if already used, control if first track state has been marked
@@ -158,12 +161,13 @@ void TrackFindingAlgorithm::computeSharedHits(
                     .value()
                     .fittedStates->getTrackState(indexFirstState)
                     .typeFlags()
-                    .test(Acts::TrackStateFlag::SharedHitFlag))
+                    .test(Acts::TrackStateFlag::SharedHitFlag)) {
           results.at(indexFirstTrack)
               .value()
               .fittedStates->getTrackState(indexFirstState)
               .typeFlags()
               .set(Acts::TrackStateFlag::SharedHitFlag);
+        }
 
         // Decorate this track
         results.at(iresult)
@@ -171,6 +175,8 @@ void TrackFindingAlgorithm::computeSharedHits(
             .fittedStates->getTrackState(state.index())
             .typeFlags()
             .set(Acts::TrackStateFlag::SharedHitFlag);
+
+        return true;
       });
     }
   }
