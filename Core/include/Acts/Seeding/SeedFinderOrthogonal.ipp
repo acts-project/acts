@@ -244,7 +244,7 @@ template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-    std::vector<internal_sp_t *> &top, int numQualitySeeds,
+    std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
     output_container_t &cont) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
@@ -284,11 +284,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
                                top[t]->z() - middle.z()));
   }
 
-  int numSeeds = 0;
+  size_t t0 = 0;
 
   for (size_t b = 0; b < numBotSP; b++) {
+    // break if we reached the last top SP
+    if (t0 == numTopSP) {
+      break;
+    }
+
     auto lb = linCircleBottom[b];
-    float Zob = lb.Zo;
+    seedFilterState.zOrigin = lb.Zo;
     float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
     float Ub = lb.U;
@@ -314,8 +319,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     top_valid.clear();
     curvatures.clear();
     impactParameters.clear();
-    for (size_t t = 0; t < numTopSP; t++) {
+    for (size_t t = t0; t < numTopSP; t++) {
       auto lt = linCircleTop[t];
+      float cotThetaT = lt.cotTheta;
 
       if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
         continue;
@@ -341,6 +347,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
+        // skip top SPs based on cotTheta sorting when producing triplets
+        if (m_config.skipPreviousTopSP) {
+          // break if cotTheta from bottom SP < cotTheta from top SP because
+          // the SP are sorted by cotTheta
+          if (cotThetaB - cotThetaT < 0) {
+            break;
+          }
+          t0 = t + 1;
+        }
         continue;
       }
 
@@ -374,6 +389,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (deltaCotTheta2 >
           (error2 + (pT2scatter * iSinTheta2 * m_config.sigmaScattering *
                      m_config.sigmaScattering))) {
+        if (m_config.skipPreviousTopSP) {
+          if (cotThetaB - cotThetaT < 0) {
+            break;
+          }
+          t0 = t;
+        }
         continue;
       }
 
@@ -391,9 +412,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
     }
     if (!top_valid.empty()) {
-      m_config.seedFilter->filterSeeds_2SpFixed(
-          *bottom[b], middle, top_valid, curvatures, impactParameters, Zob,
-          numQualitySeeds, numSeeds, cont);
+      m_config.seedFilter->filterSeeds_2SpFixed(*bottom[b], middle, top_valid,
+                                                curvatures, impactParameters,
+                                                seedFilterState, cont);
     }
   }
 }
@@ -551,13 +572,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       protoseeds;
 
-  int numQualitySeeds = 0;
+  // TODO: add seed confirmation
+  SeedFilterState seedFilterState;
 
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(middle, bottom_lh_v, top_lh_v, numQualitySeeds,
+    filterCandidates(middle, bottom_lh_v, top_lh_v, seedFilterState,
                      protoseeds);
   }
 
@@ -565,14 +587,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(middle, bottom_hl_v, top_hl_v, numQualitySeeds,
+    filterCandidates(middle, bottom_hl_v, top_hl_v, seedFilterState,
                      protoseeds);
   }
 
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, numQualitySeeds,
+  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds,
+                                            seedFilterState.numQualitySeeds,
                                             std::back_inserter(out_cont));
 }
 

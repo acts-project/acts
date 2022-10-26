@@ -12,6 +12,10 @@ on:
     paths-ignore:
       - "docs/**"
 
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
@@ -117,4 +121,3 @@ jobs:
           git add -A
           git commit -m"update metrics"
           git push
-

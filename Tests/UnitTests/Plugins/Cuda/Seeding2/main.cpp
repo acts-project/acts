@@ -167,7 +167,7 @@ int main(int argc, char* argv[]) {
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
     auto spGroup_itr = spGroup.begin();
-    decltype(seedFinder_host)::State state;
+    decltype(seedFinder_host)::SeedingState state;
     for (std::size_t i = 0;
          spGroup_itr != spGroup_end && i < cmdl.groupsToIterate;
          ++i, ++spGroup_itr) {

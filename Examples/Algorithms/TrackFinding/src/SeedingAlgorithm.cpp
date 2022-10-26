@@ -224,7 +224,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // run the seeding
   static thread_local SimSeedContainer seeds;
   seeds.clear();
-  static thread_local decltype(finder)::State state;
+  static thread_local decltype(finder)::SeedingState state;
 
   auto group = spacePointsGrouping.begin();
   auto groupEnd = spacePointsGrouping.end();
