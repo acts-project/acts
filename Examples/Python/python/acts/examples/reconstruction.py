@@ -463,8 +463,8 @@ def addSeeding(
                     deltaZMax=seedFinderConfigArg.deltaZMax,
                     maxPtScattering=seedFinderConfigArg.maxPtScattering,
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
-                    centralSeedConfirmationRange=seedfinderConfigArg.centralSeedConfirmationRange,
-                    forwardSeedConfirmationRange=seedfinderConfigArg.forwardSeedConfirmationRange,
+                    centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+                    forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
                     beamPos=(
                         None
                         if seedFinderConfigArg.beamPos is None
