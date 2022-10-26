@@ -129,8 +129,6 @@ def addParticleGun(
 
     s.addReader(evGen)
 
-    s.addAlias("particles", evGen.config.outputParticles)
-
     if printParticles:
         s.addAlgorithm(
             ParticlesPrinter(
@@ -266,8 +264,6 @@ def addPythia8(
 
     s.addReader(evGen)
 
-    s.addAlias("particles", evGen.config.outputParticles)
-
     if printParticles:
         s.addAlgorithm(
             acts.examples.ParticlesPrinter(
@@ -309,7 +305,7 @@ def addPythia8(
 def addParticleSelection(
     s: acts.examples.Sequencer,
     preselectParticles: ParticleSelectorConfig,
-    inputParticles: Optional[str] = None,
+    inputParticles="particles_input",
     outputParticles="particles_selected",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -327,39 +323,33 @@ def addParticleSelection(
     outputParticles: str
         the identifier for the final selected particle collection
     """
-
-    if inputParticles is None:
-        inputParticles = s.resolveAlias("particles")
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    selector = acts.examples.ParticleSelector(
-        **acts.examples.defaultKWArgs(
-            rhoMin=preselectParticles.rho[0],
-            rhoMax=preselectParticles.rho[1],
-            absZMin=preselectParticles.absZ[0],
-            absZMax=preselectParticles.absZ[1],
-            timeMin=preselectParticles.time[0],
-            timeMax=preselectParticles.time[1],
-            phiMin=preselectParticles.phi[0],
-            phiMax=preselectParticles.phi[1],
-            etaMin=preselectParticles.eta[0],
-            etaMax=preselectParticles.eta[1],
-            absEtaMin=preselectParticles.absEta[0],
-            absEtaMax=preselectParticles.absEta[1],
-            ptMin=preselectParticles.pt[0],
-            ptMax=preselectParticles.pt[1],
-            removeCharged=preselectParticles.removeCharged,
-            removeNeutral=preselectParticles.removeNeutral,
-        ),
-        level=customLogLevel(),
-        inputParticles=inputParticles,
-        outputParticles=outputParticles,
+    s.addAlgorithm(
+        acts.examples.ParticleSelector(
+            **acts.examples.defaultKWArgs(
+                rhoMin=preselectParticles.rho[0],
+                rhoMax=preselectParticles.rho[1],
+                absZMin=preselectParticles.absZ[0],
+                absZMax=preselectParticles.absZ[1],
+                timeMin=preselectParticles.time[0],
+                timeMax=preselectParticles.time[1],
+                phiMin=preselectParticles.phi[0],
+                phiMax=preselectParticles.phi[1],
+                etaMin=preselectParticles.eta[0],
+                etaMax=preselectParticles.eta[1],
+                absEtaMin=preselectParticles.absEta[0],
+                absEtaMax=preselectParticles.absEta[1],
+                ptMin=preselectParticles.pt[0],
+                ptMax=preselectParticles.pt[1],
+                removeCharged=preselectParticles.removeCharged,
+                removeNeutral=preselectParticles.removeNeutral,
+            ),
+            level=customLogLevel(),
+            inputParticles=inputParticles,
+            outputParticles=outputParticles,
+        )
     )
-
-    s.addAlgorithm(selector)
-
-    s.addAlias("particles", selector.config.outputParticles)
 
 
 @acts.examples.NamedTypeArgs(
@@ -395,8 +385,6 @@ def addFatras(
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
-    inputParticles = s.resolveAlias("particles")
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Preliminaries
@@ -404,16 +392,20 @@ def addFatras(
 
     # Selector
     if preselectParticles is not None:
+        particles_selected = "particles_selected"
         addParticleSelection(
             s,
             preselectParticles,
-            outputParticles="particles_selected",
+            inputParticles="particles_input",
+            outputParticles=particles_selected,
         )
+    else:
+        particles_selected = "particles_input"
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
         level=customLogLevel(),
-        inputParticles=inputParticles,
+        inputParticles=particles_selected,
         outputParticlesInitial="particles_initial",
         outputParticlesFinal="particles_final",
         outputSimHits="simhits",
@@ -549,23 +541,25 @@ def addGeant4(
     from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
     from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 
-    inputParticles = s.resolveAlias("particles")
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Selector
     if preselectParticles is not None:
+        particles_selected = "particles_selected"
         addParticleSelection(
             s,
             preselectParticles,
-            outputParticles="particles_selected",
+            inputParticles="particles_input",
+            outputParticles=particles_selected,
         )
+    else:
+        particles_selected = "particles_input"
 
     g4detector = DDG4DetectorConstruction(geometryService)
     g4conf = geant4SimulationConfig(
         level=customLogLevel(),
         detector=g4detector,
-        inputParticles=inputParticles,
+        inputParticles="particles_input",
         trackingGeometry=trackingGeometry,
         magneticField=field,
     )

@@ -74,6 +74,7 @@ def runCKFTracks(
                 orderedEvents=False,
             )
         )
+        s.addAlias("particles", "particles_input")
 
     addFatras(
         s,
