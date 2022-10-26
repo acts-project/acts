@@ -60,20 +60,6 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
           return detail::combineGaussianMixture(states, proj, desc);
         });
 
-    // Mode covariance estimation not yet done
-    if (m_finalReductionMethod == FinalReductionMethod::eMode) {
-      const auto mode =
-          detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-            return detail::computeModeOfMixture(states, proj, desc);
-          });
-      if (mode) {
-        params = *mode;
-        std::cout << "INFO: Mode found\n";
-      } else {
-        std::cout << "INFO: No mode found\n";
-      }
-    }
-
     return BoundState{BoundTrackParameters(surface.getSharedPtr(), params, cov),
                       Jacobian::Zero(), accumulatedPathLength};
   }
@@ -99,10 +85,6 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     BoundSymMatrix cov = BoundSymMatrix::Zero();
     ActsScalar pathLenth = 0.0;
 
-    // TODO At ATLAS, the final parameters seem to be computed with the mode of
-    // the mixture. At the moment, we use the mean of the mixture here, but
-    // there should be done a comparison sometimes in the future. This could
-    // also be configurable maybe...
     for (auto i = 0ul; i < numberComponents(state); ++i) {
       const auto [cp, jac, pl] = SingleStepper::curvilinearState(
           state.components[i].state, transportCov);
