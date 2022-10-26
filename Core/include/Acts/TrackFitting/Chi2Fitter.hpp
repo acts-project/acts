@@ -623,9 +623,7 @@ class Chi2Fitter {
     // the result object which will be returned. Overridden every iteration.
     Chi2Result c2r;
 
-
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
-
       // Create relevant options for the propagation options
       PropagatorOptions<Actors, Aborters> propOptions(
           chi2FitterOptions.geoContext, chi2FitterOptions.magFieldContext,
