@@ -32,7 +32,7 @@ class SeedFinder {
   ///////////////////////////////////////////////////////////////////
 
  public:
-  struct State {
+  struct SeedingState {
     // bottom space point
     std::vector<InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
     std::vector<InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
@@ -78,7 +78,7 @@ class SeedFinder {
   /// @note Ranges must be separate objects for each parallel call.
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
-      State& state,
+      SeedingState& state,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
       Extent rRangeSPExtent) const;

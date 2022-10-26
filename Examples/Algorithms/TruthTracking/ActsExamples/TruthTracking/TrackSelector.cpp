@@ -45,7 +45,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     const bool validCharge = validNeutral or validCharged;
     return validCharge and
            within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(std::abs(theta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
+           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
            within(trk.template get<Acts::eBoundPhi>(), m_cfg.phiMin,
                   m_cfg.phiMax) and
