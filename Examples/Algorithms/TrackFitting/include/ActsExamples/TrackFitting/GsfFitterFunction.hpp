@@ -16,6 +16,7 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    std::string lowBetheHeitlerPath, std::string highBetheHeitlerPath,
     std::size_t maxComponents, bool abortOnError,
     bool disableAllMaterialHandling);
 
