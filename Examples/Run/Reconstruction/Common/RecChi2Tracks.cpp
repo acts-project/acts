@@ -22,6 +22,7 @@
 #include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/TrackFittingOptions.hpp"
+#include "ActsExamples/Options/TruthSeedSelectorOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
@@ -95,7 +96,7 @@ int runRecChi2Tracks(int argc, char* argv[],
   // from all particles read in by particle reader for further processing. It
   // has no impact on the truth hits read-in by the cluster reader.
   TruthSeedSelector::Config particleSelectorCfg =
-      Options::addTruthSeedSelectorConfig(vm);
+      Options::readTruthSeedSelectorConfig(vm);
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
