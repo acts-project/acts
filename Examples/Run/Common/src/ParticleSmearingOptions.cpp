@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TruthTracking/ParticleSmearingOptions.hpp"
+#include "ActsExamples/Options/ParticleSmearingOptions.hpp"
 
 void ActsExamples::Options::addParticleSmearingOptions(Description& desc) {
   using boost::program_options::value;
