@@ -15,6 +15,7 @@
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Options/ParticleGunOptions.hpp"
+#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -34,7 +35,7 @@ void addInputOptions(ActsExamples::Options::Description& desc) {
       "Read particle input from CSV files in the given directory. If not "
       "given, particles are generated with the particle gun");
   ActsExamples::Options::addParticleGunOptions(desc);
-  ActsExamples::ParticleSelector::addOptions(desc);
+  ActsExamples::Options::addParticleSelectorOptions(desc);
 }
 
 void setupInput(
@@ -61,7 +62,7 @@ void setupInput(
   }
 
   // add additional particle selection
-  auto select = ActsExamples::ParticleSelector::readConfig(vars);
+  auto select = ActsExamples::Options::readParticleSelectorConfig(vars);
   select.inputParticles = kParticlesInput;
   select.outputParticles = kParticlesSelection;
   sequencer.addAlgorithm(
