@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
+#include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -298,6 +299,12 @@ void addTrackFinding(Context& ctx) {
                      std::pair<GeometryIdentifier, MeasurementSelectorCuts>>>())
             .def(py::init(constructor));
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::AmbiguityResolutionAlgorithm, mex,
+      "AmbiguityResolutionAlgorithm", inputSourceLinks, inputTrajectories,
+      inputTrackParameters, inputTrackParametersTips, outputTrackParameters,
+      outputTrackParametersTips, maximumSharedHits);
 }
 
 }  // namespace Acts::Python
