@@ -314,7 +314,8 @@ auto makeDefaultBetheHeitlerApprox() {
   }};
   // clang-format on
 
-  return AtlasBetheHeitlerApprox<6,5>(cdf_cmps6_order5_data, cdf_cmps6_order5_data, true, true);
+  return AtlasBetheHeitlerApprox<6, 5>(cdf_cmps6_order5_data,
+                                       cdf_cmps6_order5_data, true, true);
 }
 
 }  // namespace Experimental
