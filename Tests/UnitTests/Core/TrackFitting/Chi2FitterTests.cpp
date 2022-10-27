@@ -49,10 +49,6 @@ using ConstantFieldStepper = Acts::EigenStepper<>;
 using ConstantFieldPropagator =
     Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
 
-// using KalmanUpdater = Acts::GainMatrixUpdater;
-// using KalmanSmoother = Acts::GainMatrixSmoother;
-// using KalmanFitter =  Acts::KalmanFitter<ConstantFieldPropagator,
-// KalmanUpdater, KalmanSmoother>;
 using Chi2Fitter =
     Acts::Chi2Fitter<ConstantFieldPropagator, Acts::VectorMultiTrajectory>;
 
@@ -190,15 +186,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   BOOST_REQUIRE(res.ok());
 
   const auto& val = res.value();
-  //   BOOST_CHECK_NE(val.trackTip, SIZE_MAX);
-  //   BOOST_CHECK(not val.fittedParameters);
-  //   BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
-  // check the output status flags
-  //   BOOST_CHECK(val.smoothed);
-  //   BOOST_CHECK(not val.reversed);
-  //   BOOST_CHECK(not val.reset);
   BOOST_CHECK(val.finished);
-  //   BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
 }
 
 // TODO: add more test cases, for holes, outliers, ...

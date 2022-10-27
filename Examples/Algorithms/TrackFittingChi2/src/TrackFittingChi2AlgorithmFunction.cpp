@@ -18,7 +18,6 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
-// #include "Acts/TrackFitting/Chi2Fitter.hpp"
 
 namespace {
 

@@ -31,23 +31,6 @@ def addChi2Tracks(
         "energyLoss": energyLoss,
     }
 
-    # fitAlg = acts.examples.TrackFittingChi2Algorithm(
-    #     level=acts.logging.INFO,
-    #     inputMeasurements=digiAlg.config.outputMeasurements,
-    #     inputSourceLinks=digiAlg.config.outputSourceLinks,
-    #     inputProtoTracks=inputProtoTracks,
-    #     inputInitialTrackParameters=smearAlg.config.outputTrackParameters,
-    #     outputTrajectories="trajectories",
-    #     nUpdates=3,
-    #     multipleScattering=True,
-    #     energyLoss=True,
-    #     pickTrack=-1,
-    #     trackingGeometry=trackingGeometry,
-    #     fit=acts.examples.TrackFittingChi2Algorithm.makeTrackFitterChi2Function(
-    #         trackingGeometry, field
-    #     ),
-    # )
-
     fitAlg = acts.examples.TrackFittingChi2Algorithm(
         level=acts.logging.INFO,
         inputMeasurements="measurements",

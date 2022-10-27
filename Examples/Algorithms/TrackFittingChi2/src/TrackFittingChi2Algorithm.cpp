@@ -75,7 +75,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
 
   // kfOptions.multipleScattering = m_cfg.multipleScattering;
   // kfOptions.energyLoss = m_cfg.energyLoss;
-  // TODO: pass options so constructor, or here?
+  // TODO: pass options to constructor, or here?
 
   // Perform the fit for each input track
   std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
@@ -119,8 +119,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
                                   << hitIndex);
         return ProcessCode::ABORT;
       }
-      // trackSourceLinks.push_back(*sourceLink);
-      // surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
     }
 
     ACTS_DEBUG("chi2algo | invoke fitter");

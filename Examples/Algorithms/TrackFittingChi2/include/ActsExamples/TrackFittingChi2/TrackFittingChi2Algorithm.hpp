@@ -97,10 +97,6 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
       std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
       std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
-  // static std::shared_ptr<DirectedTrackFitterFunction>
-  // makeTrackFitterFunction(
-  //     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
-
  private:
   /// Helper function to call correct FitterFunction
   TrackFitterChi2Result fitTrack(
