@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Fatras.hpp"
+#include "ActsExamples/Fatras/FatrasCommon.hpp"
 
 #include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Fatras/FatrasSimulation.hpp"
@@ -19,8 +19,9 @@
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Root/RootParticleWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/FatrasOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/ParticleGunOptions.hpp"
 #include "ActsExamples/Simulation/CommonSimulation.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
@@ -43,7 +44,7 @@ void setupFatrasSimulation(
     std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
   auto logLevel = Options::readLogLevel(vars);
-  auto fatrasCfg = FatrasSimulation::readConfig(vars);
+  auto fatrasCfg = Options::readFatrasConfig(vars);
   fatrasCfg.inputParticles = Simulation::kParticlesSelection;
   fatrasCfg.outputParticlesInitial = Simulation::kParticlesInitial;
   fatrasCfg.outputParticlesFinal = Simulation::kParticlesFinal;
@@ -78,7 +79,7 @@ int runFatras(int argc, char* argv[],
   Options::addMaterialOptions(desc);
   Options::addMagneticFieldOptions(desc);
   // Algorithm-specific options
-  FatrasSimulation::addOptions(desc);
+  Options::addFatrasOptions(desc);
 
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {

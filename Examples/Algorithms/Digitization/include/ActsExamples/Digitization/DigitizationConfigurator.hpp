@@ -21,7 +21,6 @@
 #include "Acts/Utilities/BinningData.hpp"
 #include "ActsExamples/Digitization/DigitizationAlgorithm.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 
 #include <map>
 #include <memory>
