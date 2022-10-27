@@ -118,9 +118,7 @@ ActsExamples::makeGsfFitterFunction(
 
   const auto bhapp = [&]() {
     if (lowBetheHeitlerPath.empty() && highBetheHeitlerPath.empty()) {
-      return Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>(
-          Acts::Experimental::bh_cdf_cmps6_order5_data,
-          Acts::Experimental::bh_cdf_cmps6_order5_data, true, true);
+      return Acts::Experimental::makeDefaultBetheHeitlerApprox();
     } else if (std::filesystem::exists(lowBetheHeitlerPath) &&
                std::filesystem::exists(highBetheHeitlerPath)) {
       return Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>::loadFromFile(

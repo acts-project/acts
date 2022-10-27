@@ -75,6 +75,8 @@ This approximation of the Bethe-Heitler distribution is described in {class}`Act
 
 For small $x/x_0$ the {class}`Acts::detail::BetheHeitlerApprox` only returns a one-component mixture or no change at all. When loading a custom parametrization, it is possible to specify different parameterizations for high and for low $x/x_0$. The thresholds are currently not configurable.
 
+A default parameterization can be created without files by {func}`Acts::Experimental::makeDefaultBetheHeitlerApprox`.
+
 ### Further reading
 * *Thomas Atkinson*, Electron reconstruction with the ATLAS inner detector, 2006, see [here](https://cds.cern.ch/record/1448253)
 * *R Frühwirth*, Track fitting with non-Gaussian noise, 1997, see [here](https://doi.org/10.1016/S0010-4655(96)00155-5)
