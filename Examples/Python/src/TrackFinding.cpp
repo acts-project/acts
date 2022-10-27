@@ -83,7 +83,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
-    ACTS_PYTHON_MEMBER(bFieldInZ);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(zAlign);
     ACTS_PYTHON_MEMBER(rAlign);
@@ -118,10 +117,10 @@ void addTrackFinding(Context& ctx) {
   }
   {
     using seedOptions = Acts::SeedFinderOptions;
-    auto c = py::class_<seedOptions>(m, "SeedFinderOptions")
-                 .def(py::init<>());
+    auto c = py::class_<seedOptions>(m, "SeedFinderOptions").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, seedOptions);
     ACTS_PYTHON_MEMBER(beamPos);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }

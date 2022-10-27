@@ -8,12 +8,12 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Definitions/Units.hpp"
 
 #include <array>
 #include <list>
@@ -25,7 +25,6 @@
 #include <vector>
 
 namespace Acts {
-
 
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
@@ -54,12 +53,12 @@ class SeedFinder {
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
         seedsPerSpM;
-        
   };
 
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the SeedFinder
-  SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config);
+  SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config,
+             const Acts::SeedFinderOptions& options);
   ~SeedFinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
@@ -72,7 +71,6 @@ class SeedFinder {
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
   /// @param state State object that holds memory used
-  /// @param options semi configuration parameters that can change from event to event
   /// @param outIt Output iterator for the seeds in the group
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
@@ -83,7 +81,6 @@ class SeedFinder {
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
       SeedingState& state,
-      const SeedFinderOptions& options,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
       Extent rRangeSPExtent) const;
@@ -111,6 +108,7 @@ class SeedFinder {
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderOptions m_options;
 };
 
 }  // namespace Acts

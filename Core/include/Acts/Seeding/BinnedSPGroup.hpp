@@ -265,7 +265,9 @@ class BinnedSPGroup {
  public:
   BinnedSPGroup() = delete;
 
-  using GlobalPositionFunctor = std::function<std::pair<Acts::Vector3, Acts::Vector2>(const external_spacepoint_t&, float, float, float)>;
+  using GlobalPositionFunctor =
+      std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+          const external_spacepoint_t&, float, float, float)>;
 
   template <typename spacepoint_iterator_t>
   BinnedSPGroup<external_spacepoint_t>(

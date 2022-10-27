@@ -134,7 +134,6 @@ int main(int argc, char** argv) {
   config.sigmaScattering = 1.00000;
 
   config.minPt = 500._MeV;
-  config.bFieldInZ = 1.99724_T;
 
   config.impactMax = 10._mm;
 
@@ -142,6 +141,7 @@ int main(int argc, char** argv) {
 
   Acts::SeedFinderOptions options;
   options.beamPos = {-.5_mm, -.5_mm};
+  options.bFieldInZ = 1.99724_T;
 
   int numPhiNeighbors = 1;
 
@@ -159,7 +159,7 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::SeedFinder<SpacePoint> a(config);
+  Acts::SeedFinder<SpacePoint> a(config, options);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,
@@ -171,7 +171,7 @@ int main(int argc, char** argv) {
 
   // setup spacepoint grid config
   Acts::SpacePointGridConfig gridConf;
-  gridConf.bFieldInZ = config.bFieldInZ;
+  gridConf.bFieldInZ = options.bFieldInZ;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
@@ -192,7 +192,7 @@ int main(int argc, char** argv) {
   auto endOfGroups = spGroup.end();
   for (; !(groupIt == endOfGroups); ++groupIt) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(state, options, std::back_inserter(v), groupIt.bottom(),
+    a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
                           groupIt.middle(), groupIt.top(), rRangeSPExtent);
   }
   auto end = std::chrono::system_clock::now();

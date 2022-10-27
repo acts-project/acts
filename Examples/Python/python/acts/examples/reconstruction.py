@@ -33,7 +33,6 @@ SeedFinderConfigArg = namedtuple(
         "sigmaScattering",
         "radLengthPerSeed",
         "minPt",
-        "bFieldInZ",
         "impactMax",
         "interactionPointCut",
         "arithmeticAverageCotTheta",
@@ -57,7 +56,7 @@ SeedFinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
     ],
-    defaults=[None] * 21 + [(None, None)] * 8,
+    defaults=[None] * 20 + [(None, None)] * 7
 )
 
 SeedFilterConfigArg = namedtuple(
