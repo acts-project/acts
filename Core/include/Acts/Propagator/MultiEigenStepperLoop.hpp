@@ -626,6 +626,12 @@ class MultiEigenStepperLoop
     std::array<int, 4> counts = {0, 0, 0, 0};
 
     for (auto& component : state.components) {
+      // TODO this is to prevent invalidated components from being updated, not
+      // sure why this happens. With the new GSF structure it should be possible
+      // to just remove components from the std::vector in the state
+      if (component.weight == 0.0) {
+        continue;
+      }
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
           *this, component.state, surface, bcheck, logger);
       ++counts[static_cast<std::size_t>(component.status)];

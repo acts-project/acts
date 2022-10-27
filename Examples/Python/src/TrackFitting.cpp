@@ -79,8 +79,9 @@ void addTrackFitting(Context& ctx) {
     mex.def(
         "makeGsfFitterFunction",
         py::overload_cast<std::shared_ptr<const Acts::TrackingGeometry>,
-                          std::shared_ptr<const Acts::MagneticFieldProvider>, std::string, std::string,
-                          std::size_t, Acts::FinalReductionMethod, bool, bool>(
+                          std::shared_ptr<const Acts::MagneticFieldProvider>,
+                          std::string, std::string, std::size_t,
+                          Acts::FinalReductionMethod, bool, bool>(
             &ActsExamples::makeGsfFitterFunction),
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("lowBetheHeitlerPath"), py::arg("highBetheHeitlerPath"),
