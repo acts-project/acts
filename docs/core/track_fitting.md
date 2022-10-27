@@ -37,6 +37,10 @@ This chapter will be extended in the future.
 The GSF is not considered as production ready yet, therefore it is located in the namespace `Acts::Experimental`.
 :::
 
+:::{note}
+The GSF is not considered as production ready yet, therefore it is located in the namespace `Acts::Experimental`.
+:::
+
 The GSF is an extension of the Kalman-Filter that allows to handle non-gaussian errors by modelling the track state as a gaussian mixture:
 
 $$

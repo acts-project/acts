@@ -68,7 +68,7 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
   }
 
   if (smoothedState.empty()) {
-    return ResType(GsfError::SmoothingFailed);
+    return ResType(Experimental::GsfError::SmoothingFailed);
   }
 
   normalizeWeights(smoothedState, [](auto &tuple) -> decltype(auto) {
