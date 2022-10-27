@@ -14,7 +14,6 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
 
 #include <fstream>
@@ -47,6 +46,7 @@ namespace Experimental {
 /// Gaussian Sum Fitter implementation.
 /// @tparam propagator_t The propagator type on which the algorithm is built on
 /// @tparam bethe_heitler_approx_t The type of the Bethe-Heitler-Approximation
+/// @tparam traj_t The MultiTrajectory type (backend)
 ///
 /// @note This GSF implementation tries to be as compatible to the KalmanFitter
 /// as possible. However, there are certain differences at the moment:
@@ -54,13 +54,12 @@ namespace Experimental {
 /// * There are only measurement states in the result
 /// * Passed-again-surfaces is always empty at the moment
 /// * Probably some more differences which I don't think of at the moment.
-template <typename propagator_t, typename traj_t,
-          typename bethe_heitler_approx_t = detail::BetheHeitlerApprox<6, 5>>
+template <typename propagator_t, typename bethe_heitler_approx_t,
+          typename traj_t>
 struct GaussianSumFitter {
-  GaussianSumFitter(propagator_t&& propagator,
-                    bethe_heitler_approx_t&& bha = bethe_heitler_approx_t(
-                        detail::bh_cdf_cmps6_order5_data))
-      : m_propagator(std::move(propagator)), m_bethe_heitler_approx(bha) {}
+  GaussianSumFitter(propagator_t&& propagator, bethe_heitler_approx_t&& bha)
+      : m_propagator(std::move(propagator)),
+        m_bethe_heitler_approx(std::move(bha)) {}
 
   /// The propagator instance used by the fit function
   propagator_t m_propagator;

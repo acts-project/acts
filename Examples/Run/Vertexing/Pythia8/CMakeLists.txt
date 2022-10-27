@@ -4,6 +4,7 @@ set(_common_libraries
   ActsExamplesCommon
   ActsExamplesGenerators
   ActsExamplesGeneratorsPythia8
+  ActsExamplesGeneratorsPythia8Options
   ActsExamplesTruthTracking
   ActsExamplesVertexing
   Boost::program_options)
