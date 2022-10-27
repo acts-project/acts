@@ -80,6 +80,7 @@ add_custom_target(
   COMMAND find ${sphinx_api} -mindepth 1 -type f -and -not -name "api_stub.rst" -and -not -name "api_index.rst" -delete
   COMMAND find ${sphinx_api} -mindepth 1 -type d -delete
   COMMAND rm -rf ${sphinx_build}
+  COMMAND rm -rf "${CMAKE_CURRENT_SOURCE_DIR}/pythonapi/_autosummary"
   COMMENT "Cleaning documentation artifacts"
 )
 

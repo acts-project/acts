@@ -159,12 +159,13 @@ def addSeeding(
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> None:
     """This function steers the seeding
-    Parameters
-    ----------
+
     s: Sequencer
         the sequencer module to which we add the Seeding steps (returned from addSeeding)
-    trackingGeometry : tracking geometry
+    trackingGeometry: tracking geometry
+        The tracking geometry
     field : magnetic field
+        The magnetic field
     geoSelectionConfigFile : Path|str, path, None
         Json file for space point geometry selection. Not required for SeedingAlgorithm.TruthSmeared.
     seedingAlgorithm : SeedingAlgorithm, Default
@@ -183,12 +184,11 @@ def addSeeding(
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, curvatureSortingInFilter, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
-                                Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
+        Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, impactMax)
-                                SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
-        Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
+        SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max). Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
-                                Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
+        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
     trackParamsEstimationConfig : TrackParamsEstimationConfig(deltaR)
         TrackParamsEstimationAlgorithm configuration. Currently only deltaR=(min,max) range specified here.
         Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
@@ -683,12 +683,12 @@ def addCKFTracks(
 ) -> None:
     """This function steers the seeding
 
-    Parameters
-    ----------
     s: Sequencer
-        the sequencer module to which we add the Seeding steps (returned from addSeeding)
+        The sequencer module to which we add the Seeding steps (returned from addSeeding)
     trackingGeometry : tracking geometry
+        The tracking geometry
     field : magnetic field
+        The magnetic field
     CKFPerformanceConfigArg : CKFPerformanceConfig(truthMatchProbMin, nMeasurementsMin, ptMin)
         CKFPerformanceWriter configuration.
         Defaults specified in Examples/Io/Performance/ActsExamples/Io/Performance/CKFPerformanceWriter.hpp
@@ -897,13 +897,13 @@ def addVertexFitting(
     trackSelectorRanges: TrackSelectorRanges = TrackSelectorRanges(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    """This function steers the vertex fitting
+    """
+    This function steers the vertex fitting
 
-    Parameters
-    ----------
     s: Sequencer
         the sequencer module to which we add the Seeding steps (returned from addVertexFitting)
     field : magnetic field
+        The magnetic field
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     associatedParticles : str, "associatedTruthParticles"

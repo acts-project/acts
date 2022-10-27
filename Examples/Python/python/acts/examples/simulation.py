@@ -68,8 +68,6 @@ def addParticleGun(
 ) -> None:
     """This function steers the particle generation using the particle gun
 
-    Parameters
-    ----------
     s: Sequencer
         the sequencer module to which we add the particle gun steps (returned from addParticleGun)
     outputDirCsv : Path|str, path, None
@@ -186,8 +184,6 @@ def addPythia8(
 ) -> None:
     """This function steers the particle generation using Pythia8
 
-    Parameters
-    ----------
     s: Sequencer
         the sequencer module to which we add the particle gun steps (returned from addParticleGun)
     rnd : RandomNumbers, None
@@ -312,8 +308,6 @@ def addParticleSelection(
     """
     This function steers the particle selection.
 
-    Parameters
-    ----------
     s: Sequencer
         the sequencer module to which we add the ParticleSelector
     preselectedParticles: ParticleSelectorConfig
@@ -367,12 +361,12 @@ def addFatras(
 ) -> None:
     """This function steers the detector simulation using Fatras
 
-    Parameters
-    ----------
     s: Sequencer
         the sequencer module to which we add the Fatras steps (returned from addFatras)
     trackingGeometry : tracking geometry
+        the tracking Geometry
     field : magnetic field
+        the magnetic field
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
@@ -520,12 +514,12 @@ def addGeant4(
 ) -> None:
     """This function steers the detector simulation using Geant4
 
-    Parameters
-    ----------
     s: Sequencer
         the sequencer module to which we add the Geant4 steps (returned from addGeant4)
     trackingGeometry : tracking geometry
+        the tracking geometry
     field : magnetic field
+        the magnetic field
     rnd : RandomNumbers, None
         random number generator
     outputDirCsv : Path|str, path, None
@@ -602,12 +596,12 @@ def addDigitization(
 ) -> acts.examples.Sequencer:
     """This function steers the digitization step
 
-    Parameters
-    ----------
     s: Sequencer
         the sequencer module to which we add the Digitization steps (returned from addDigitization)
     trackingGeometry : tracking geometry
+        The tracking geometry
     field : magnetic field
+        The magnetic field
     digiConfigFile : Path|str, path
         Configuration (.json) file for digitization or smearing description
     outputDirCsv : Path|str, path, None
