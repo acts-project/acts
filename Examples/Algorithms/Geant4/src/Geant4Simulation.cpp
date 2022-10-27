@@ -130,6 +130,12 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   // Set the seed new per event, so that we get reproducible results
   G4Random::setTheSeed(m_cfg.randomNumbers->generateSeed(ctx));
 
+  // Set the seed new per event, so that we get reproducible results
+  G4Random::setTheSeed(m_cfg.randomNumbers->generateSeed(ctx));
+
+  // Set the seed new per event, so that we get reproducible results
+  G4Random::setTheSeed(m_cfg.randomNumbers->generateSeed(ctx));
+
   // Get and reset event registry state
   auto& eventData = EventStoreRegistry::eventData();
   eventData = EventStoreRegistry::State{};

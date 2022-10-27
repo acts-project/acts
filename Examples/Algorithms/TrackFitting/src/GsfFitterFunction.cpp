@@ -112,15 +112,13 @@ ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     std::string lowBetheHeitlerPath, std::string highBetheHeitlerPath,
-    std::size_t maxComponents, bool abortOnError,
-    bool disableAllMaterialHandling) {
-  MultiStepper stepper(std::move(magneticField));
+    std::size_t maxComponents, Acts::FinalReductionMethod finalReductionMethod,
+    bool abortOnError, bool disableAllMaterialHandling) {
+  MultiStepper stepper(std::move(magneticField), finalReductionMethod);
 
   const auto bhapp = [&]() {
     if (lowBetheHeitlerPath.empty() && highBetheHeitlerPath.empty()) {
-      return Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>(
-          Acts::Experimental::bh_cdf_cmps6_order5_data,
-          Acts::Experimental::bh_cdf_cmps6_order5_data, true, true);
+      return Acts::Experimental::makeDefaultBetheHeitlerApprox();
     } else if (std::filesystem::exists(lowBetheHeitlerPath) &&
                std::filesystem::exists(highBetheHeitlerPath)) {
       return Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>::loadFromFile(
