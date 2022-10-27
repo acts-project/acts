@@ -1,0 +1,149 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2019-2021 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
+
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Navigator.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
+#include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/MagneticField/MagneticField.hpp"
+
+namespace {
+
+using Stepper = Acts::EigenStepper<>;
+using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+using Fitter = Acts::KalmanFitter<Propagator, Acts::VectorMultiTrajectory>;
+using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
+using DirectFitter =
+    Acts::KalmanFitter<DirectPropagator, Acts::VectorMultiTrajectory>;
+
+struct SimpleReverseFilteringLogic {
+  double momentumThreshold;
+
+  bool doBackwardFiltering(
+      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::ConstTrackStateProxy
+          trackState) const {
+    auto momentum = fabs(1 / trackState.filtered()[Acts::eBoundQOverP]);
+    return (momentum <= momentumThreshold);
+  }
+};
+
+struct KalmanFitterFunctionImpl
+    : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
+  Fitter fitter;
+  DirectFitter directFitter;
+
+  Acts::GainMatrixUpdater kfUpdater;
+  Acts::GainMatrixSmoother kfSmoother;
+  SimpleReverseFilteringLogic reverseFilteringLogic;
+
+  bool multipleScattering;
+  bool energyLoss;
+  Acts::FreeToBoundCorrection freeToBoundCorrection;
+
+  KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
+      : fitter(std::move(f)), directFitter(std::move(df)) {}
+
+  auto makeKfOptions(
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options)
+      const {
+    Acts::KalmanFitterExtensions<Acts::VectorMultiTrajectory> extensions;
+    extensions.updater.connect<
+        &Acts::GainMatrixUpdater::operator()<Acts::VectorMultiTrajectory>>(
+        &kfUpdater);
+    extensions.smoother.connect<
+        &Acts::GainMatrixSmoother::operator()<Acts::VectorMultiTrajectory>>(
+        &kfSmoother);
+    extensions.reverseFilteringLogic
+        .connect<&SimpleReverseFilteringLogic::doBackwardFiltering>(
+            &reverseFilteringLogic);
+
+    Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
+        options.geoContext, options.magFieldContext, options.calibrationContext,
+        extensions, options.logger, options.propOptions,
+        &(*options.referenceSurface));
+
+    kfOptions.multipleScattering = multipleScattering;
+    kfOptions.energyLoss = energyLoss;
+    kfOptions.freeToBoundCorrection = freeToBoundCorrection;
+    kfOptions.extensions.calibrator
+        .connect<&ActsExamples::MeasurementCalibrator::calibrate>(
+            &options.calibrator.get());
+
+    return kfOptions;
+  }
+
+  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
+      const std::vector<std::reference_wrapper<
+          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+    const auto kfOptions = makeKfOptions(options);
+    return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
+                      kfOptions, trajectory);
+  }
+
+  ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
+      const std::vector<std::reference_wrapper<
+          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const ActsExamples::TrackParameters& initialParameters,
+      const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
+      const std::vector<const Acts::Surface*>& surfaceSequence,
+      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+    const auto kfOptions = makeKfOptions(options);
+    return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
+                            initialParameters, kfOptions, surfaceSequence,
+                            trajectory);
+  }
+};
+
+}  // namespace
+
+std::shared_ptr<ActsExamples::TrackFittingAlgorithm::TrackFitterFunction>
+ActsExamples::makeKalmanFitterFunction(
+    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    bool multipleScattering, bool energyLoss,
+    double reverseFilteringMomThreshold,
+    Acts::FreeToBoundCorrection freeToBoundCorrection) {
+  // Stepper should be copied into the fitters
+  const Stepper stepper(std::move(magneticField));
+
+  // Standard fitter
+  Acts::Navigator::Config cfg{trackingGeometry};
+  cfg.resolvePassive = false;
+  cfg.resolveMaterial = true;
+  cfg.resolveSensitive = true;
+  Acts::Navigator navigator(cfg);
+  Propagator propagator(stepper, std::move(navigator));
+  Fitter trackFitter(std::move(propagator));
+
+  // Direct fitter
+  Acts::DirectNavigator directNavigator;
+  DirectPropagator directPropagator(stepper, directNavigator);
+  DirectFitter directTrackFitter(std::move(directPropagator));
+
+  // build the fitter function. owns the fitter object.
+  auto fitterFunction = std::make_shared<KalmanFitterFunctionImpl>(
+      std::move(trackFitter), std::move(directTrackFitter));
+  fitterFunction->multipleScattering = multipleScattering;
+  fitterFunction->energyLoss = energyLoss;
+  fitterFunction->reverseFilteringLogic.momentumThreshold =
+      reverseFilteringMomThreshold;
+  fitterFunction->freeToBoundCorrection = freeToBoundCorrection;
+
+  return fitterFunction;
+}

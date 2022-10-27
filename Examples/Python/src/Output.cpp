@@ -257,10 +257,9 @@ void addOutput(Context& ctx) {
       ActsExamples::RootVertexPerformanceWriter, mex,
       "RootVertexPerformanceWriter", inputAllTruthParticles,
       inputSelectedTruthParticles, inputAssociatedTruthParticles,
-      inputFittedTracks, inputFittedTracksIndices, inputAllFittedTracksTips,
-      inputTrajectories, inputMeasurementParticlesMap, inputVertices, inputTime,
-      filePath, treeName, fileMode, minTrackVtxMatchFraction,
-      truthMatchProbMin);
+      inputTrackParameters, inputTrackParametersTips, inputTrajectories,
+      inputMeasurementParticlesMap, inputVertices, inputTime, filePath,
+      treeName, fileMode, minTrackVtxMatchFraction, truthMatchProbMin);
 
   // CSV WRITERS
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvParticleWriter, mex,
@@ -293,10 +292,11 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
-      inputTrajectories, inputParticles, inputMeasurementParticlesMap, filePath,
-      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
-      duplicationPlotToolConfig, trackSummaryPlotToolConfig, truthMatchProbMin,
-      nMeasurementsMin, ptMin, duplicatedPredictor);
+      inputTrajectories, inputTrackParametersTips, inputParticles,
+      inputMeasurementParticlesMap, filePath, fileMode, effPlotToolConfig,
+      fakeRatePlotToolConfig, duplicationPlotToolConfig,
+      trackSummaryPlotToolConfig, truthMatchProbMin, nMeasurementsMin, ptMin,
+      duplicatedPredictor);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,

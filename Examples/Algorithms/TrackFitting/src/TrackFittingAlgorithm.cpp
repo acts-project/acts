@@ -112,6 +112,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     // Clear & reserve the right size
     trackSourceLinks.clear();
     trackSourceLinks.reserve(protoTrack.size());
+    surfSequence.clear();
+    surfSequence.reserve(protoTrack.size());
 
     // Fill the source links via their indices from the container
     for (auto hitIndex : protoTrack) {
@@ -127,9 +129,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       }
     }
 
-    ACTS_DEBUG("Invoke fitter");
+    ACTS_DEBUG("Invoke direct fitter for track " << itrack);
     auto result =
-        fitTrack(trackSourceLinks, initialParams, options, surfSequence, mtj);
+        m_cfg.directNavigation
+            ? (*m_cfg.fit)(trackSourceLinks, initialParams, options,
+                           surfSequence, mtj)
+            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, mtj);
 
     if (result.ok()) {
       // Get the fit output object
@@ -164,7 +169,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   std::stringstream ss;
   mtj->statistics().toStream(ss);
-  ACTS_INFO(ss.str());
+  ACTS_DEBUG(ss.str());
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;

@@ -9,7 +9,7 @@ Acts is designed as a library that *contains components* for assembling a track 
 ```
 
 The library is structured as follows:
- * The `Core` library contains considered production ready components that can be interfaced to experiment code
+ * The `Core` library contains considered production ready components (except for components located in the `Acts::Experimental` namespace) that can be interfaced to experiment code
  * The `Plugin` folder contains additional extensions that can be optionally switched on to use increase the functionality of the software suite, but also in general increase dependencies to other/thirdparty libraries
  * The `Fatras` library contains a fast track simulation module, that is based on the same concepts that are used for the [ATLAS Fatras](https://cds.cern.ch/record/1091969) fast track simulation  
  * An `Examples` folder that contains a minimal test framework used for showcasing and integration testing, 
