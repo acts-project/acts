@@ -413,6 +413,10 @@ def addFatras(
         trackingGeometry=trackingGeometry,
         magneticField=field,
         generateHitsOnSensitive=True,
+        emScattering=True,
+        emEnergyLossIonisation=True,
+        emEnergyLossRadiation=True,
+        emPhotonConversion=True,
     )
 
     # Sequencer
