@@ -53,6 +53,9 @@ class HepMC3AsciiReader final : public IReader {
   /// Read out data from the input stream.
   ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  private:
   /// The configuration of this writer
   Config m_cfg;

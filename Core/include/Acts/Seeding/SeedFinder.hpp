@@ -11,8 +11,8 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
 
 #include <array>
 #include <list>
@@ -26,13 +26,13 @@
 namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t = void*>
-class Seedfinder {
+class SeedFinder {
   ///////////////////////////////////////////////////////////////////
   // Public methods:
   ///////////////////////////////////////////////////////////////////
 
  public:
-  struct State {
+  struct SeedingState {
     // bottom space point
     std::vector<InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
     std::vector<InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
@@ -55,15 +55,15 @@ class Seedfinder {
   };
 
   /// The only constructor. Requires a config object.
-  /// @param config the configuration for the Seedfinder
-  Seedfinder(Acts::SeedfinderConfig<external_spacepoint_t> config);
-  ~Seedfinder() = default;
+  /// @param config the configuration for the SeedFinder
+  SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config);
+  ~SeedFinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
-  Seedfinder() = delete;
-  Seedfinder(const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
-  Seedfinder<external_spacepoint_t, platform_t>& operator=(
-      const Seedfinder<external_spacepoint_t, platform_t>&) = delete;
+  SeedFinder() = delete;
+  SeedFinder(const SeedFinder<external_spacepoint_t, platform_t>&) = delete;
+  SeedFinder<external_spacepoint_t, platform_t>& operator=(
+      const SeedFinder<external_spacepoint_t, platform_t>&) = delete;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
@@ -78,7 +78,7 @@ class Seedfinder {
   /// @note Ranges must be separate objects for each parallel call.
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
-      State& state,
+      SeedingState& state,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
       Extent rRangeSPExtent) const;
@@ -105,11 +105,11 @@ class Seedfinder {
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
 
  private:
-  Acts::SeedfinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderConfig<external_spacepoint_t> m_config;
 };
 
 }  // namespace Acts
 
 #ifndef DOXYGEN
-#include "Acts/Seeding/Seedfinder.ipp"
+#include "Acts/Seeding/SeedFinder.ipp"
 #endif

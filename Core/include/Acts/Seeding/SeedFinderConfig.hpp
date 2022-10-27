@@ -22,7 +22,7 @@ template <typename T>
 class SeedFilter;
 
 template <typename SpacePoint>
-struct SeedfinderConfig {
+struct SeedFinderConfig {
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
 
   // Seed Cuts
@@ -75,7 +75,7 @@ struct SeedfinderConfig {
   // non equidistant binning in z
   std::vector<float> zBinEdges;
 
-  // additional cut to skip top SPs when producing triplets
+  // skip top SPs based on cotTheta sorting when producing triplets
   bool skipPreviousTopSP = false;
 
   // FIXME: this is not used yet
@@ -141,7 +141,7 @@ struct SeedfinderConfig {
   // find seeds within 5sigma error ellipse
   float sigmaError = 5;
 
-  // derived values, set on Seedfinder construction
+  // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
   float pTPerHelixRadius = 0;
@@ -173,9 +173,9 @@ struct SeedfinderConfig {
   // Returns position of the center of the top strip.
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
-  SeedfinderConfig toInternalUnits() const {
+  SeedFinderConfig toInternalUnits() const {
     using namespace Acts::UnitLiterals;
-    SeedfinderConfig config = *this;
+    SeedFinderConfig config = *this;
     config.minPt /= 1_MeV;
     config.deltaRMin /= 1_mm;
     config.deltaRMax /= 1_mm;

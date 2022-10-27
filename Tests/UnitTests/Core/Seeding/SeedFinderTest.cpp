@@ -12,7 +12,7 @@
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/Seedfinder.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <chrono>
@@ -115,7 +115,7 @@ int main(int argc, char** argv) {
   std::cout << "read " << spVec.size() << " SP from file " << file << " in "
             << elapsed_read.count() << "s" << std::endl;
 
-  Acts::SeedfinderConfig<SpacePoint> config;
+  Acts::SeedFinderConfig<SpacePoint> config;
   // silicon detector max
   config.rMax = 160._mm;
   config.deltaRMin = 5._mm;
@@ -140,9 +140,11 @@ int main(int argc, char** argv) {
   config.impactMax = 10._mm;
 
   config.useVariableMiddleSPRange = false;
-  Acts::Extent rRangeSPExtent;
 
   int numPhiNeighbors = 1;
+
+  // extent used to store r range for middle spacepoint
+  Acts::Extent rRangeSPExtent;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
@@ -155,7 +157,7 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::Seedfinder<SpacePoint> a(config);
+  Acts::SeedFinder<SpacePoint> a(config);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,
@@ -177,12 +179,12 @@ int main(int argc, char** argv) {
   // create grid with bin sizes according to the configured geometry
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
-  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(spVec.begin(), spVec.end(), ct,
-                                                 bottomBinFinder, topBinFinder,
-                                                 std::move(grid), config);
+  auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
+      spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
+      std::move(grid), rRangeSPExtent, config);
 
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
-  decltype(a)::State state;
+  decltype(a)::SeedingState state;
   auto start = std::chrono::system_clock::now();
   auto groupIt = spGroup.begin();
   auto endOfGroups = spGroup.end();
