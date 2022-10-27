@@ -77,7 +77,7 @@ SeedFilterConfigArg = namedtuple(
         "useDeltaRorTopRadius",
         "deltaRMin",
     ],
-    defaults=[None] * 11,
+    defaults=[None] * 12,
 )
 
 SpacePointGridConfigArg = namedtuple(
