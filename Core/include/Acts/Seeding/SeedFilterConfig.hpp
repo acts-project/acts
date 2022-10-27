@@ -19,9 +19,12 @@ struct SeedFilterConfig {
   // the allowed delta between two inverted seed radii for them to be considered
   // compatible.
   float deltaInvHelixDiameter = 0.00003 * 1. / Acts::UnitConstants::mm;
-  // the impact parameters (d0) is multiplied by this factor and subtracted from
-  // weight
+  // the transverse impact parameters (d0) is multiplied by this factor and
+  // subtracted from weight
   float impactWeightFactor = 1.;
+  // the logitudinal impact parameters (z0) is multiplied by this factor and
+  // subtracted from weight
+  float zOriginWeightFactor = 1.;
   // seed weight increased by this value if a compatible seed has been found.
   float compatSeedWeight = 200.;
   // minimum distance between compatible seeds to be considered for weight boost
