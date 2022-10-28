@@ -64,11 +64,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
   trajectories.reserve(protoTracks.size());
 
   // Set Chi2 options
-  Acts::Chi2FitterExtensions<Acts::VectorMultiTrajectory> extensions;
+  Acts::Experimental::Chi2FitterExtensions<Acts::VectorMultiTrajectory>
+      extensions;
   MeasurementCalibrator calibrator{measurements};
   extensions.calibrator.connect<&MeasurementCalibrator::calibrate>(&calibrator);
 
-  Acts::Chi2FitterOptions chi2Options(
+  Acts::Experimental::Chi2FitterOptions chi2Options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
       Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), false,
       false, m_cfg.nUpdates, true);  // mScattering=false, eLoss=false

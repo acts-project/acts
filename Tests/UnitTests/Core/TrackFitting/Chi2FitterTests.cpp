@@ -42,6 +42,7 @@ namespace {
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
+using namespace Acts::Experimental;
 
 using StraightPropagator =
     Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>;
@@ -49,8 +50,8 @@ using ConstantFieldStepper = Acts::EigenStepper<>;
 using ConstantFieldPropagator =
     Acts::Propagator<ConstantFieldStepper, Acts::Navigator>;
 
-using Chi2Fitter =
-    Acts::Chi2Fitter<ConstantFieldPropagator, Acts::VectorMultiTrajectory>;
+using Chi2Fitter = Acts::Experimental::Chi2Fitter<ConstantFieldPropagator,
+                                                  Acts::VectorMultiTrajectory>;
 
 Chi2FitterExtensions<VectorMultiTrajectory> getExtensions() {
   Chi2FitterExtensions<VectorMultiTrajectory> extensions;

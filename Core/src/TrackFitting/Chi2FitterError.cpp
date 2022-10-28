@@ -17,7 +17,7 @@ class Chi2FitterErrorCategory : public std::error_category {
 
   // Return what each enum means in text.
   std::string message(int c) const final {
-    using Acts::Chi2FitterError;
+    using Acts::Experimental::Chi2FitterError;
 
     switch (static_cast<Chi2FitterError>(c)) {
       case Chi2FitterError::NoMeasurementFound:
@@ -30,7 +30,8 @@ class Chi2FitterErrorCategory : public std::error_category {
 
 }  // namespace
 
-std::error_code Acts::make_error_code(Acts::Chi2FitterError e) {
+std::error_code Acts::Experimental::make_error_code(
+    Acts::Experimental::Chi2FitterError e) {
   static Chi2FitterErrorCategory c;
   return {static_cast<int>(e), c};
 }

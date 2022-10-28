@@ -11,18 +11,21 @@
 #include <system_error>
 
 namespace Acts {
+namespace Experimental {
 
 enum class Chi2FitterError {
   // ensure all values are non-zero
   NoMeasurementFound = 1,
 };
 
-std::error_code make_error_code(Acts::Chi2FitterError e);
+std::error_code make_error_code(Chi2FitterError e);
 
+}  // namespace Experimental
 }  // namespace Acts
 
 namespace std {
 // register with STL
 template <>
-struct is_error_code_enum<Acts::Chi2FitterError> : std::true_type {};
+struct is_error_code_enum<Acts::Experimental::Chi2FitterError>
+    : std::true_type {};
 }  // namespace std

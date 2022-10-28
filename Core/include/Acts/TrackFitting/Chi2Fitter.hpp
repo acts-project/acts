@@ -44,6 +44,8 @@
 
 namespace Acts {
 
+namespace Experimental {
+
 /// Extension struct which holds delegates to customize the GX2F behavior
 template <typename traj_t>
 struct Chi2FitterExtensions {
@@ -753,5 +755,7 @@ class Chi2Fitter {
     return c2r;
   }
 };
+
+}  // namespace Experimental
 
 }  // namespace Acts

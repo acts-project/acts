@@ -32,10 +32,10 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
   /// Track fitter function that takes input measurements, initial trackstate
   /// and fitter options and returns some track-fitter-specific result.
   using TrackFitterChi2Options =
-      Acts::Chi2FitterOptions<Acts::VectorMultiTrajectory>;
+      Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>;
 
-  using TrackFitterChi2Result =
-      Acts::Result<Acts::Chi2FitterResult<Acts::VectorMultiTrajectory>>;
+  using TrackFitterChi2Result = Acts::Result<
+      Acts::Experimental::Chi2FitterResult<Acts::VectorMultiTrajectory>>;
 
   /// Fit function that takes the above parameters and runs a fit
   /// @note This is separated into a virtual interface to keep compilation units
@@ -103,7 +103,8 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
       const std::vector<std::reference_wrapper<
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
-      const Acts::Chi2FitterOptions<Acts::VectorMultiTrajectory>& options,
+      const Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>&
+          options,
       const std::vector<const Acts::Surface*>& surfSequence,
       std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const;
 
@@ -115,7 +116,8 @@ ActsExamples::TrackFittingChi2Algorithm::fitTrack(
     const std::vector<std::reference_wrapper<
         const ActsExamples::IndexSourceLink>>& sourceLinks,
     const ActsExamples::TrackParameters& initialParameters,
-    const Acts::Chi2FitterOptions<Acts::VectorMultiTrajectory>& options,
+    const Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>&
+        options,
     // const Acts::Chi2FitterOptions& options,
     const std::vector<const Acts::Surface*>& surfSequence,
     std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const {
