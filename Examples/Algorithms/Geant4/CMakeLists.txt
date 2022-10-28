@@ -1,7 +1,6 @@
 set(ACTS_EXAMPLES_G4SOURCES
     src/EventStoreRegistry.cpp
     src/GdmlDetectorConstruction.cpp
-    src/Geant4Options.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp
@@ -28,8 +27,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesGeant4
-  PUBLIC ActsCore ActsExamplesFramework ${Geant4_LIBRARIES}
-  PRIVATE Boost::program_options)
+  PUBLIC ActsCore ActsExamplesFramework ${Geant4_LIBRARIES})
 
 if (ACTS_BUILD_EXAMPLES_DD4HEP)
   if(${DD4hep_VERSION} VERSION_LESS 1.11)
