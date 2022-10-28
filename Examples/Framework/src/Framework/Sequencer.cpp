@@ -29,46 +29,90 @@
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
+
 #include <backward.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
-static void fpe_signal_handler(int sig, siginfo_t* sip, void* scp) {
+static void ill_signal_handler(int /*sig*/, siginfo_t* /*sip*/, void* /*scp*/) {
+  std::cout << "Caught SIGILL (likely via FPE signal handler)" << std::endl;
+
+  using namespace backward;
+  StackTrace st;
+  st.load_here(32);
+  Printer p;
+  p.print(st, stderr);
+}
+
+static void fpe_signal_handler(int /*sig*/, siginfo_t* sip, void* /*scp*/) {
   int fe_code = sip->si_code;
 
-  printf("In signal handler : ");
-
-  if (fe_code == ILL_ILLTRP) {
-    printf("Illegal trap detected\n");
-    using namespace backward;
-    StackTrace st;
-    st.load_here(32);
-    Printer p;
-    p.object = true;
-    p.color_mode = ColorMode::always;
-    p.address = true;
-    p.print(st, stderr);
-  } else {
-    printf("Code detected : %d\n", fe_code);
+  switch (fe_code) {
+    case FPE_INTDIV:
+      std::cout << "Integer divide by zero" << std::endl;
+      break;
+    case FPE_INTOVF:
+      std::cout << "Integer overflow" << std::endl;
+      break;
+    case FPE_FLTDIV:
+      std::cout << "Floating point divide by zero" << std::endl;
+      break;
+    case FPE_FLTOVF:
+      std::cout << "Floating point overflow" << std::endl;
+      break;
+    case FPE_FLTUND:
+      std::cout << "Floating point underflow" << std::endl;
+      break;
+    case FPE_FLTRES:
+      std::cout << "Floating point inexact result" << std::endl;
+      break;
+    case FPE_FLTINV:
+      std::cout << "Floating point invalid operation" << std::endl;
+      break;
+    case FPE_FLTSUB:
+      std::cout << "Floating point subscript out of range" << std::endl;
+      break;
+    default:
+      std::cerr << "Unknown signal caught:" << fe_code << std::endl;
+      std::abort();
   }
 
-  abort();
+  using namespace backward;
+  StackTrace st;
+  st.load_here(32);
+  Printer p;
+  p.print(st, stderr);
+
+  std::abort();
 }
 
 void enable_floating_point_exceptions() {
-  fenv_t env;
-  fegetenv(&env);
+  // macOS
+  // fegetenv(&env);
+  // env.__fpcr = env.__fpcr | __fpcr_trap_invalid | __fpcr_trap_divbyzero |
+  // __fpcr_trap_overflow;
+  // fesetenv(&env);
 
-  env.__fpcr = env.__fpcr | __fpcr_trap_invalid | __fpcr_trap_divbyzero |
-               __fpcr_trap_overflow;
-  fesetenv(&env);
+  // std::fenv_t env;
+  // std::fegetenv(&env);
+  // std::fesetenv(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
+  feenableexcept(FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW);
 
-  struct sigaction act;
-  act.sa_sigaction = fpe_signal_handler;
-  sigemptyset(&act.sa_mask);
-  act.sa_flags = SA_SIGINFO;
-  sigaction(SIGILL, &act, NULL);
-  sigaction(SIGFPE, &act, NULL);
+  {
+    struct sigaction act {};
+    act.sa_sigaction = fpe_signal_handler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGFPE, &act, nullptr);
+  }
+
+  {
+    struct sigaction act {};
+    act.sa_sigaction = ill_signal_handler;
+    sigemptyset(&act.sa_mask);
+    act.sa_flags = SA_SIGINFO;
+    sigaction(SIGILL, &act, nullptr);
+  }
 }
 
 ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
@@ -349,10 +393,10 @@ int ActsExamples::Sequencer::run() {
   // volatile double x = 1 / z;
   // std::cout << "x: " << x << std::endl;
 
-  volatile float v;
-  volatile double w = std::numeric_limits<double>::max();
-  v = 2 * w;
-  std::cout << v << std::endl;
+  // volatile float v;
+  // volatile double w = std::numeric_limits<double>::max();
+  // v = 2 * w;
+  // std::cout << v << std::endl;
 
   // execute the parallel event loop
   std::atomic<size_t> nProcessedEvents = 0;
