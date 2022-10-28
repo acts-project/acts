@@ -72,10 +72,9 @@ void addTrackFitting(Context& ctx) {
         py::arg("reverseFilteringMomThreshold"),
         py::arg("freeToBoundCorrection"));
 
-    using BetheHeitlerApprox =
-        Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
-    py::class_<BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
-        .def_static("loadFromFiles", &BetheHeitlerApprox::loadFromFiles,
+    py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
+        .def_static("loadFromFiles",
+                    &ActsExamples::BetheHeitlerApprox::loadFromFiles,
                     py::arg("lowParametersPath"), py::arg("lowParametersPath"))
         .def_static("makeDefault  ", []() {
           return Acts::Experimental::makeDefaultBetheHeitlerApprox();
