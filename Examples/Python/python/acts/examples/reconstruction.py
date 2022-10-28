@@ -637,6 +637,7 @@ def addTruthTrackingGsf(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     gsfOptions = {
+        "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
         "maxComponents": 12,
         "abortOnError": False,
         "disableAllMaterialHandling": False,

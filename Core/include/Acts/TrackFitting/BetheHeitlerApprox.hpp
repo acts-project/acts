@@ -213,8 +213,8 @@ class AtlasBetheHeitlerApprox {
   /// the parameterization for low x/x0
   /// @param high_parameters_path Path to the foo.par file that stores
   /// the parameterization for high x/x0
-  static auto loadFromFile(const std::string &low_parameters_path,
-                           const std::string &high_parameters_path) {
+  static auto loadFromFiles(const std::string &low_parameters_path,
+                            const std::string &high_parameters_path) {
     auto read_file = [](const std::string &filepath) {
       std::ifstream file(filepath);
 

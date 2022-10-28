@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 namespace ActsExamples {
@@ -16,12 +17,10 @@ namespace ActsExamples {
 ///
 /// @param trackingGeometry the trackingGeometry for the propagator
 /// @param magneticField the magnetic field for the propagator
-/// @param lowBetheHeitlerPath path to a parameterization of the bethe heitler
-/// distribution suitable for low thicknesses (x/x0 < 0.1). Pass empty string
-/// to load a default.
-/// @param highBetheHeitlerPath path to a parameterization of the bethe heitler
-/// distribution suitable for higher thicknesses (0.1 < x/x0 < 0.2). Pass empty
-/// string to load a default.
+/// @param betheHeitlerApprox The object that encapsulates the approximation.
+/// For the examples framework this is fixed to a ATLAS-like approximation with
+/// 6 components interpolated by a 5th order polynomial, but in general this can
+/// be customized.
 /// @param maxComponents number of maximum components in the track state
 /// @param abortOnError wether to call std::abort on an error
 /// @param disableAllMaterialHandling run the GSF like a KF (no energy loss,
@@ -30,7 +29,7 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    std::string lowBetheHeitlerPath, std::string highBetheHeitlerPath,
+    Acts::Experimental::AtlasBetheHeitlerApprox<6, 5> betheHeitlerApprox,
     std::size_t maxComponents, bool abortOnError,
     bool disableAllMaterialHandling);
 

@@ -72,16 +72,24 @@ void addTrackFitting(Context& ctx) {
         py::arg("reverseFilteringMomThreshold"),
         py::arg("freeToBoundCorrection"));
 
+    using BetheHeitlerApprox =
+        Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
+    py::class_<BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
+        .def_static("loadFromFiles", &BetheHeitlerApprox::loadFromFiles,
+                    py::arg("lowParametersPath"), py::arg("lowParametersPath"))
+        .def_static("makeDefault", []() {
+          return Acts::Experimental::makeDefaultBetheHeitlerApprox();
+        });
+
     mex.def(
         "makeGsfFitterFunction",
         py::overload_cast<std::shared_ptr<const Acts::TrackingGeometry>,
                           std::shared_ptr<const Acts::MagneticFieldProvider>,
-                          std::string, std::string, std::size_t, bool, bool>(
+                          BetheHeitlerApprox, std::size_t, bool, bool>(
             &ActsExamples::makeGsfFitterFunction),
         py::arg("trackingGeometry"), py::arg("magneticField"),
-        py::arg("lowBetheHeitlerPath"), py::arg("highBetheHeitlerPath"),
-        py::arg("maxComponents"), py::arg("abortOnError"),
-        py::arg("disableAllMaterialHandling"));
+        py::arg("betheHeitlerApprox"), py::arg("maxComponents"),
+        py::arg("abortOnError"), py::arg("disableAllMaterialHandling"));
   }
 
   {
