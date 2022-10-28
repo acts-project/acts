@@ -32,12 +32,11 @@ using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
-using BHApprox = Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
 using Fitter =
-    Acts::Experimental::GaussianSumFitter<Propagator, BHApprox,
+    Acts::Experimental::GaussianSumFitter<Propagator, BetheHeitlerApprox,
                                           Acts::VectorMultiTrajectory>;
 using DirectFitter =
-    Acts::Experimental::GaussianSumFitter<DirectPropagator, BHApprox,
+    Acts::Experimental::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
                                           Acts::VectorMultiTrajectory>;
 
 struct GsfFitterFunctionImpl
@@ -111,9 +110,8 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    Acts::Experimental::AtlasBetheHeitlerApprox<6, 5> betheHeitlerApprox,
-    std::size_t maxComponents, bool abortOnError,
-    bool disableAllMaterialHandling) {
+    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+    bool abortOnError, bool disableAllMaterialHandling) {
   MultiStepper stepper(std::move(magneticField));
 
   // Standard fitter
@@ -123,13 +121,14 @@ ActsExamples::makeGsfFitterFunction(
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg);
   Propagator propagator(std::move(stepper), std::move(navigator));
-  Fitter trackFitter(std::move(propagator), BHApprox(betheHeitlerApprox));
+  Fitter trackFitter(std::move(propagator),
+                     BetheHeitlerApprox(betheHeitlerApprox));
 
   // Direct fitter
   Acts::DirectNavigator directNavigator;
   DirectPropagator directPropagator(stepper, directNavigator);
   DirectFitter directTrackFitter(std::move(directPropagator),
-                                 BHApprox(betheHeitlerApprox));
+                                 BetheHeitlerApprox(betheHeitlerApprox));
 
   // build the fitter functions. owns the fitter object.
   auto fitterFunction = std::make_shared<GsfFitterFunctionImpl>(

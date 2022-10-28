@@ -13,14 +13,15 @@
 
 namespace ActsExamples {
 
+/// This type is used in the Examples framework for the Bethe-Heitler
+/// approximation
+using BetheHeitlerApprox = Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
+
 /// Makes a fitter function object for the GSF
 ///
 /// @param trackingGeometry the trackingGeometry for the propagator
 /// @param magneticField the magnetic field for the propagator
 /// @param betheHeitlerApprox The object that encapsulates the approximation.
-/// For the examples framework this is fixed to a ATLAS-like approximation with
-/// 6 components interpolated by a 5th order polynomial, but in general this can
-/// be customized.
 /// @param maxComponents number of maximum components in the track state
 /// @param abortOnError wether to call std::abort on an error
 /// @param disableAllMaterialHandling run the GSF like a KF (no energy loss,
@@ -29,8 +30,7 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    Acts::Experimental::AtlasBetheHeitlerApprox<6, 5> betheHeitlerApprox,
-    std::size_t maxComponents, bool abortOnError,
-    bool disableAllMaterialHandling);
+    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+    bool abortOnError, bool disableAllMaterialHandling);
 
 }  // namespace ActsExamples
