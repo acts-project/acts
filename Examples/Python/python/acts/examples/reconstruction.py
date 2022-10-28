@@ -58,6 +58,14 @@ SeedFinderConfigArg = namedtuple(
     ],
     defaults=[None] * 20 + [(None, None)] * 7
 )
+SeedFinderOptionsArg = namedtuple(
+    "SeedFinderOptions",
+    [
+        "beamPos",
+        "bFieldInZ"
+    ],
+    defaults = [(None, None), None]
+)
 
 SeedFilterConfigArg = namedtuple(
     "SeedFilterConfig",
@@ -147,6 +155,7 @@ def addSeeding(
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
     seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
+    seedFinderOptionsArg: SeedFinderOptionsArg = SeedFinderOptionsArg(),
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
