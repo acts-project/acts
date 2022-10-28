@@ -631,13 +631,13 @@ def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    options: Optional[dict] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    gsfOptions = options or {
+    gsfOptions = {
+        "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
         "maxComponents": 12,
         "abortOnError": False,
         "disableAllMaterialHandling": False,
