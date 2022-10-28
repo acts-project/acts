@@ -79,10 +79,6 @@ struct BetheHeitlerApproxSingleCmp {
     ret[0].mean = std::pow(2, -c);
     ret[0].var = std::pow(3, -c) - std::pow(4, -c);
 
-    // ret[0].mean = std::exp(-1. * x);
-    // ret[0].var =
-    //     std::exp(-1. * x * std::log(3.) / std::log(2.)) - std::exp(-2. * x);
-
     return ret;
   }
 };
@@ -204,11 +200,9 @@ class AtlasBetheHeitlerApprox {
       return make_mixture(m_low_data, x, m_low_transform);
     }
     // Return a component representation for higher x0
-    else {
-      // Cap the x because beyond the parameterization goes wild
-      const auto high_x = std::min(higherLimit, x);
-      return make_mixture(m_high_data, high_x, m_high_transform);
-    }
+    // Cap the x because beyond the parameterization goes wild
+    const auto high_x = std::min(higherLimit, x);
+    return make_mixture(m_high_data, high_x, m_high_transform);
   }
 
   /// Loads a parameterization from a file according to the Atlas file
@@ -239,11 +233,6 @@ class AtlasBetheHeitlerApprox {
 
       if (PolyDegree != degree) {
         throw std::invalid_argument("Wrong wrong polynom order in '" +
-                                    filepath + "'");
-      }
-
-      if (!transform_code) {
-        throw std::invalid_argument("Transform-code is required in '" +
                                     filepath + "'");
       }
 
