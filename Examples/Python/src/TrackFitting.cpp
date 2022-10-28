@@ -77,7 +77,7 @@ void addTrackFitting(Context& ctx) {
     py::class_<BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles", &BetheHeitlerApprox::loadFromFiles,
                     py::arg("lowParametersPath"), py::arg("lowParametersPath"))
-        .def_static("makeDefault", []() {
+        .def_static("makeDefault  ", []() {
           return Acts::Experimental::makeDefaultBetheHeitlerApprox();
         });
 

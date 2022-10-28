@@ -16,15 +16,16 @@
 #include <mutex>
 #include <random>
 
-#include <boost/math/quadrature/trapezoidal.hpp>
-#include <boost/math/special_functions/gamma.hpp>
+#include <boost/container/static_vector.hpp>
 
 namespace Acts {
 
 namespace detail {
 
 struct GaussianComponent {
-  ActsScalar weight, mean, var;
+  ActsScalar weight = 0.0;
+  ActsScalar mean = 0.0;
+  ActsScalar var = 0.0;
 };
 
 /// Transform a gaussian component to a space where all values are defined from
@@ -97,7 +98,9 @@ class AtlasBetheHeitlerApprox {
 
  public:
   struct PolyData {
-    std::array<ActsScalar, PolyDegree + 1> weightCoeffs, meanCoeffs, varCoeffs;
+    std::array<ActsScalar, PolyDegree + 1> weightCoeffs;
+    std::array<ActsScalar, PolyDegree + 1> meanCoeffs;
+    std::array<ActsScalar, PolyDegree + 1> varCoeffs;
   };
 
   using Data = std::array<PolyData, NComponents>;
@@ -139,6 +142,8 @@ class AtlasBetheHeitlerApprox {
   ///
   /// @param x The input in terms of x/x0 (pathlength in terms of radiation length)
   auto mixture(ActsScalar x) const {
+    using Array =
+        boost::container::static_vector<detail::GaussianComponent, NComponents>;
     // Build a polynom
     auto poly = [](ActsScalar xx,
                    const std::array<ActsScalar, PolyDegree + 1> &coeffs) {
@@ -146,14 +151,14 @@ class AtlasBetheHeitlerApprox {
       for (const auto c : coeffs) {
         sum = xx * sum + c;
       }
-      throw_assert(std::isfinite(sum), "polynom result not finite");
+      assert((std::isfinite(sum) && "polynom result not finite"));
       return sum;
     };
 
     // Lambda which builds the components
     auto make_mixture = [&](const Data &data, double xx, bool transform) {
       // Value initialization should garanuee that all is initialized to zero
-      std::array<detail::GaussianComponent, NComponents> ret{};
+      Array ret(NComponents);
       ActsScalar weight_sum = 0;
       for (int i = 0; i < NComponents; ++i) {
         // These transformations must be applied to the data according to ATHENA
@@ -180,7 +185,7 @@ class AtlasBetheHeitlerApprox {
 
     // Return no change
     if (x < noChangeLimit) {
-      std::array<detail::GaussianComponent, NComponents> ret{};
+      Array ret(1);
 
       ret[0].weight = 1.0;
       ret[0].mean = 1.0;  // p_initial = p_final
@@ -190,7 +195,7 @@ class AtlasBetheHeitlerApprox {
     }
     // Return single gaussian approximation
     if (x < singleGaussianLimit) {
-      std::array<detail::GaussianComponent, NComponents> ret{};
+      Array ret(1);
       ret[0] = BetheHeitlerApproxSingleCmp::mixture(x)[0];
       return ret;
     }
