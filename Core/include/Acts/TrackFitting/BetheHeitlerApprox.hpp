@@ -16,15 +16,16 @@
 #include <mutex>
 #include <random>
 
-#include <boost/math/quadrature/trapezoidal.hpp>
-#include <boost/math/special_functions/gamma.hpp>
+#include <boost/container/static_vector.hpp>
 
 namespace Acts {
 
 namespace detail {
 
 struct GaussianComponent {
-  ActsScalar weight, mean, var;
+  ActsScalar weight = 0.0;
+  ActsScalar mean = 0.0;
+  ActsScalar var = 0.0;
 };
 
 /// Transform a gaussian component to a space where all values are defined from
@@ -78,10 +79,6 @@ struct BetheHeitlerApproxSingleCmp {
     ret[0].mean = std::pow(2, -c);
     ret[0].var = std::pow(3, -c) - std::pow(4, -c);
 
-    // ret[0].mean = std::exp(-1. * x);
-    // ret[0].var =
-    //     std::exp(-1. * x * std::log(3.) / std::log(2.)) - std::exp(-2. * x);
-
     return ret;
   }
 };
@@ -97,7 +94,9 @@ class AtlasBetheHeitlerApprox {
 
  public:
   struct PolyData {
-    std::array<ActsScalar, PolyDegree + 1> weightCoeffs, meanCoeffs, varCoeffs;
+    std::array<ActsScalar, PolyDegree + 1> weightCoeffs;
+    std::array<ActsScalar, PolyDegree + 1> meanCoeffs;
+    std::array<ActsScalar, PolyDegree + 1> varCoeffs;
   };
 
   using Data = std::array<PolyData, NComponents>;
@@ -139,6 +138,8 @@ class AtlasBetheHeitlerApprox {
   ///
   /// @param x The input in terms of x/x0 (pathlength in terms of radiation length)
   auto mixture(ActsScalar x) const {
+    using Array =
+        boost::container::static_vector<detail::GaussianComponent, NComponents>;
     // Build a polynom
     auto poly = [](ActsScalar xx,
                    const std::array<ActsScalar, PolyDegree + 1> &coeffs) {
@@ -146,14 +147,14 @@ class AtlasBetheHeitlerApprox {
       for (const auto c : coeffs) {
         sum = xx * sum + c;
       }
-      throw_assert(std::isfinite(sum), "polynom result not finite");
+      assert((std::isfinite(sum) && "polynom result not finite"));
       return sum;
     };
 
     // Lambda which builds the components
     auto make_mixture = [&](const Data &data, double xx, bool transform) {
       // Value initialization should garanuee that all is initialized to zero
-      std::array<detail::GaussianComponent, NComponents> ret{};
+      Array ret(NComponents);
       ActsScalar weight_sum = 0;
       for (int i = 0; i < NComponents; ++i) {
         // These transformations must be applied to the data according to ATHENA
@@ -180,7 +181,7 @@ class AtlasBetheHeitlerApprox {
 
     // Return no change
     if (x < noChangeLimit) {
-      std::array<detail::GaussianComponent, NComponents> ret{};
+      Array ret(1);
 
       ret[0].weight = 1.0;
       ret[0].mean = 1.0;  // p_initial = p_final
@@ -190,7 +191,7 @@ class AtlasBetheHeitlerApprox {
     }
     // Return single gaussian approximation
     if (x < singleGaussianLimit) {
-      std::array<detail::GaussianComponent, NComponents> ret{};
+      Array ret(1);
       ret[0] = BetheHeitlerApproxSingleCmp::mixture(x)[0];
       return ret;
     }
@@ -199,11 +200,9 @@ class AtlasBetheHeitlerApprox {
       return make_mixture(m_low_data, x, m_low_transform);
     }
     // Return a component representation for higher x0
-    else {
-      // Cap the x because beyond the parameterization goes wild
-      const auto high_x = std::min(higherLimit, x);
-      return make_mixture(m_high_data, high_x, m_high_transform);
-    }
+    // Cap the x because beyond the parameterization goes wild
+    const auto high_x = std::min(higherLimit, x);
+    return make_mixture(m_high_data, high_x, m_high_transform);
   }
 
   /// Loads a parameterization from a file according to the Atlas file
@@ -213,8 +212,8 @@ class AtlasBetheHeitlerApprox {
   /// the parameterization for low x/x0
   /// @param high_parameters_path Path to the foo.par file that stores
   /// the parameterization for high x/x0
-  static auto loadFromFile(const std::string &low_parameters_path,
-                           const std::string &high_parameters_path) {
+  static auto loadFromFiles(const std::string &low_parameters_path,
+                            const std::string &high_parameters_path) {
     auto read_file = [](const std::string &filepath) {
       std::ifstream file(filepath);
 
@@ -234,11 +233,6 @@ class AtlasBetheHeitlerApprox {
 
       if (PolyDegree != degree) {
         throw std::invalid_argument("Wrong wrong polynom order in '" +
-                                    filepath + "'");
-      }
-
-      if (!transform_code) {
-        throw std::invalid_argument("Transform-code is required in '" +
                                     filepath + "'");
       }
 

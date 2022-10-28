@@ -376,6 +376,13 @@ struct GsfActor {
                                old_bound.unitDirection());
     slab.scaleThickness(pathCorrection);
 
+    // Emit a warning if the approximation is not valid for this x/x0
+    if (not m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
+      ACTS_WARNING(
+          "Bethe-Heitler approximation encountered invalid value for x/x0 "
+          << slab.thicknessInX0());
+    }
+
     // Get the mixture
     const auto mixture =
         m_cfg.bethe_heitler_approx->mixture(slab.thicknessInX0());
