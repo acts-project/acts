@@ -146,6 +146,8 @@ auto main(int argc, char** argv) -> int {
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
+  const Acts::Range1D<float> rMiddleSPRange;
+
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
 
@@ -206,12 +208,12 @@ auto main(int argc, char** argv) -> int {
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
 
   if (!cmdlTool.onlyGpu) {
-    decltype(normalSeedFinder)::State state;
+    decltype(normalSeedFinder)::SeedingState state;
     for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
          ++groupIt) {
       normalSeedFinder.createSeedsForGroup(
           state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rRangeSPExtent);
+          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
         break;

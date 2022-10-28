@@ -13,6 +13,7 @@
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Json/JsonDigitizationConfig.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 

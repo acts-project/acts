@@ -15,14 +15,21 @@ jobs:
         id: dl-af
         with:
           script: |
+            console.log(`Getting artifacts for workflow run id: ${context.payload.workflow_run.id}`);
             let allArtifacts = await github.rest.actions.listWorkflowRunArtifacts({
                owner: context.repo.owner,
                repo: context.repo.repo,
                run_id: context.payload.workflow_run.id,
             });
-            let matchArtifact = allArtifacts.data.artifacts.filter((artifact) => {
-              return artifact.name == "physmon"
-            })[0];
+            let matchArtifacts = allArtifacts.data.artifacts.filter((artifact) => {
+              return artifact.name == 'physmon'
+            });
+            if(matchArtifacts.length == 0) {
+              console.log("Could not find artifact");
+              return false;
+            }
+            let matchArtifact = matchArtifacts[0];
+            console.log(`Artifact id is: ${matchArtifact.id}`);
             let download = await github.rest.actions.downloadArtifact({
                owner: context.repo.owner,
                repo: context.repo.repo,
@@ -34,10 +41,11 @@ jobs:
             let = url = `https://herald.dokku.paulgessinger.com/view/${process.env.GITHUB_REPOSITORY}/${matchArtifact.id}`;
 
             core.exportVariable('ARTIFACT_URL', url)
-            
+            return true;
 
       - name: 'Unzip artifact'
-        run: unzip -d physmon physmon.zip && ls -al && ls -al physmon
+        if: steps.dl-af.outputs.result != 'false'
+        run: unzip -d physmon physmon.zip
 
 
       - name: 'Determine PR number'
@@ -46,6 +54,10 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |
+            if(!${{ steps.dl-af.outputs.result }}) {
+              console.log("No artifact => no PR numner");
+              return false;
+            }
             let fs = require('fs');
             let file = 'physmon/pr_number';
             if(!fs.existsSync(file)) {
@@ -54,11 +66,11 @@ jobs:
             }
 
             
-            let number = Number(fs.readFileSync(file));
+            let number = Number(fs.readFileSync(file, {encoding: 'utf8'}).trim());
             console.log('PR number is '+number);
             core.exportVariable('PR_NUMBER', number)
 
-            let sha = fs.readFileSync('physmon/sha', {encoding: 'utf8'});
+            let sha = fs.readFileSync('physmon/sha', {encoding: 'utf8'}).trim();
             console.log('SHA is '+sha);
             core.exportVariable('PR_SHA', sha)
 
@@ -69,18 +81,16 @@ jobs:
 
       # ping the url, triggers caching of the artifact
       - name: Prime cache
-        run: curl -L $ARTIFACT_URL
         if: steps.get-pr-number.outputs.result != 'false'
+        run: curl -sL $ARTIFACT_URL
 
       - name: Render template
-        id: template
-        uses: chuhlomin/render-template@v1.4
         if: steps.get-pr-number.outputs.result != 'false'
-        with:
-          template: CI/physmon/comment_template.md
-          vars: |
-            url: ${{ env.ARTIFACT_URL }}
-            commit: ${{ env.PR_SHA }}
+        run: |
+          cp CI/physmon/comment_template.md comment.md
+          sed -i "s/{{ .url }}/${ARTIFACT_URL//\//\\/}/g" comment.md
+          sed -i "s/{{ .commit }}/${PR_SHA}/g" comment.md
+          cat comment.md
 
       - name: Find Comment
         if: steps.get-pr-number.outputs.result != 'false'
@@ -97,5 +107,5 @@ jobs:
         with:
           comment-id: ${{ steps.fc.outputs.comment-id }}
           issue-number: ${{ steps.get-pr-number.outputs.result }}
-          body: ${{ steps.template.outputs.result }}
+          body-file: comment.md
           edit-mode: replace
