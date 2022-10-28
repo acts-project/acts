@@ -16,14 +16,60 @@
 #include <atomic>
 #include <chrono>
 #include <exception>
+#include <limits>
 #include <numeric>
 #include <stdexcept>
+
+#include <fenv.h>
+#include <math.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
+#include <backward.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
+
+static void fpe_signal_handler(int sig, siginfo_t* sip, void* scp) {
+  int fe_code = sip->si_code;
+
+  printf("In signal handler : ");
+
+  if (fe_code == ILL_ILLTRP) {
+    printf("Illegal trap detected\n");
+    using namespace backward;
+    StackTrace st;
+    st.load_here(32);
+    Printer p;
+    p.object = true;
+    p.color_mode = ColorMode::always;
+    p.address = true;
+    p.print(st, stderr);
+  } else {
+    printf("Code detected : %d\n", fe_code);
+  }
+
+  abort();
+}
+
+void enable_floating_point_exceptions() {
+  fenv_t env;
+  fegetenv(&env);
+
+  env.__fpcr = env.__fpcr | __fpcr_trap_invalid | __fpcr_trap_divbyzero |
+               __fpcr_trap_overflow;
+  fesetenv(&env);
+
+  struct sigaction act;
+  act.sa_sigaction = fpe_signal_handler;
+  sigemptyset(&act.sa_mask);
+  act.sa_flags = SA_SIGINFO;
+  sigaction(SIGILL, &act, NULL);
+  sigaction(SIGFPE, &act, NULL);
+}
 
 ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),
@@ -287,6 +333,26 @@ int ActsExamples::Sequencer::run() {
       throw std::runtime_error("Failed to process event data");
     }
   }
+
+  // fenv_t curr_env;
+  // int rtn = fegetenv(&curr_env);
+  // feset
+
+  enable_floating_point_exceptions();
+
+  // std::feclearexcept(FE_ALL_EXCEPT);
+  // int r = std::feraiseexcept(FE_OVERFLOW | FE_INVALID | FE_DIVBYZERO);
+
+  // volatile const double x = -1;
+  // printf("y = %f\n", sqrt(x));
+  // volatile double z = 0;
+  // volatile double x = 1 / z;
+  // std::cout << "x: " << x << std::endl;
+
+  volatile float v;
+  volatile double w = std::numeric_limits<double>::max();
+  v = 2 * w;
+  std::cout << v << std::endl;
 
   // execute the parallel event loop
   std::atomic<size_t> nProcessedEvents = 0;
