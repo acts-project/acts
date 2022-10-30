@@ -11,6 +11,7 @@
 #include <system_error>
 
 namespace Acts {
+namespace Experimental {
 
 enum class GsfError {
   // ensure all values are non-zero
@@ -25,12 +26,13 @@ enum class GsfError {
   SmoothingFailed
 };
 
-std::error_code make_error_code(Acts::GsfError e);
+std::error_code make_error_code(GsfError e);
 
+}  // namespace Experimental
 }  // namespace Acts
 
 // register with STL
 namespace std {
 template <>
-struct is_error_code_enum<Acts::GsfError> : std::true_type {};
+struct is_error_code_enum<Acts::Experimental::GsfError> : std::true_type {};
 }  // namespace std
