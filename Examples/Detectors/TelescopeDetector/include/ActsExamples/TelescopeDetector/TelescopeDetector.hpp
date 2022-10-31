@@ -25,7 +25,7 @@ namespace Telescope {
 class TelescopeDetectorElement;
 class TelescopeG4DetectorConstruction;
 
-struct TelescopeDetector : public ActsExamples::IBaseDetector {
+struct TelescopeDetector : public IBaseDetector {
   using DetectorElement = ActsExamples::Telescope::TelescopeDetectorElement;
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;

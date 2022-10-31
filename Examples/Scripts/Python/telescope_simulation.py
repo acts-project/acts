@@ -4,7 +4,6 @@ from pathlib import Path
 
 import acts
 import acts.examples
-from acts.examples.geant4 import TelescopeG4DetectorConstruction
 from acts.examples.simulation import (
     addParticleGun,
     EtaConfig,
@@ -45,7 +44,7 @@ if "__main__" == __name__:
         if geant:
             addGeant4(
                 s,
-                TelescopeG4DetectorConstruction(detector),
+                detector,
                 trackingGeometry,
                 field,
                 rnd=rnd,

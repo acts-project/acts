@@ -48,7 +48,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
 
   {
     auto gd =
-        py::class_<DD4hep::DD4hepDetector,
+        py::class_<DD4hep::DD4hepDetector, ActsExamples::IBaseDetector,
                    std::shared_ptr<DD4hep::DD4hepDetector>>(m, "DD4hepDetector")
             .def(py::init<>())
             .def("finalize",

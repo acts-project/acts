@@ -1,3 +1,4 @@
+from argparse import ArgumentError
 from typing import Optional, Union, Any
 from pathlib import Path
 from collections import namedtuple
@@ -508,10 +509,11 @@ def addSimWriters(
 
 def addGeant4(
     s: acts.examples.Sequencer,
-    g4detectorConstruction: Any,
+    detector: Optional[Any],
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
+    g4detectorConstruction: Optional[Any] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
@@ -537,7 +539,11 @@ def addGeant4(
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
-    from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
+    from acts.examples.geant4 import (
+        Geant4Simulation,
+        geant4SimulationConfig,
+        getG4DetectorContruction,
+    )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -554,7 +560,9 @@ def addGeant4(
         particles_selected = "particles_input"
 
     if g4detectorConstruction is None:
-        raise Exception("G4 detector contruction not given")
+        if detector is None:
+            raise ArgumentError("detector not given")
+        g4detectorConstruction = getG4DetectorContruction(detector)
 
     g4conf = geant4SimulationConfig(
         level=customLogLevel(),
