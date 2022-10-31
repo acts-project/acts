@@ -1,6 +1,5 @@
 add_library(
   ActsExamplesTrackFittingChi2 SHARED
-  src/TrackFittingChi2Options.cpp
   src/TrackFittingChi2Algorithm.cpp
   src/TrackFittingChi2AlgorithmFunction.cpp)
 target_include_directories(
@@ -10,8 +9,7 @@ target_link_libraries(
   ActsExamplesTrackFittingChi2
   PUBLIC
     ActsCore
-    ActsExamplesFramework ActsExamplesMagneticField
-    Boost::program_options)
+    ActsExamplesFramework ActsExamplesMagneticField)
 
 install(
   TARGETS ActsExamplesTrackFittingChi2

@@ -9,6 +9,7 @@ add_library(
   src/PropagationExampleBase.cpp
   src/ReconstructionBase.cpp
   src/TrackFindingOptions.cpp
+  src/TrackFittingChi2Options.cpp
   src/TrackFittingOptions.cpp
   src/ParticleSmearingOptions.cpp
   src/ParticleSelectorOptions.cpp
