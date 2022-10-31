@@ -508,13 +508,12 @@ def addSimWriters(
 
 def addGeant4(
     s: acts.examples.Sequencer,
-    geometryService: Any,  # acts.examples.dd4hep.DD4hepGeometryService
+    g4detectorConstruction: Any,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    seed: Optional[int] = None,
     preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -538,8 +537,7 @@ def addGeant4(
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
-    from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
-    from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
+    from acts.examples.geant4 import Geant4Simulation
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -555,23 +553,20 @@ def addGeant4(
     else:
         particles_selected = "particles_input"
 
-    g4detector = DDG4DetectorConstruction(geometryService)
-    g4conf = geant4SimulationConfig(
-        level=customLogLevel(),
-        detector=g4detector,
-        inputParticles="particles_input",
-        trackingGeometry=trackingGeometry,
-        magneticField=field,
-    )
-    g4conf.outputSimHits = "simhits"
-    g4conf.outputParticlesInitial = "particles_initial"
-    g4conf.outputParticlesFinal = "particles_final"
-    g4conf.randomNumbers = rnd
+    if g4detectorConstruction is None:
+        raise Exception("G4 detector contruction not given")
 
     # Simulation
     alg = Geant4Simulation(
         level=customLogLevel(),
-        config=g4conf,
+        detector=g4detectorConstruction,
+        inputParticles="particles_input",
+        trackingGeometry=trackingGeometry,
+        magneticField=field,
+        outputSimHits="simhits",
+        outputParticlesInitial="particles_initial",
+        outputParticlesFinal="particles_final",
+        randomNumbers=rnd,
     )
 
     # Sequencer
@@ -580,7 +575,7 @@ def addGeant4(
     # Output
     addSimWriters(
         s,
-        g4conf.outputSimHits,
+        alg.config.outputSimHits,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,
