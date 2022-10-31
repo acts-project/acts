@@ -388,7 +388,12 @@ class Chi2Fitter {
                                                    // diagonal.
         const auto covInv = covariance.inverse();
         auto residualsFull =
-            trackStateProxy.calibrated() -
+            // This abuses an incorrectly sized vector / matrix to access the
+            // data pointer! This works (don't use the matrix as is!), but be
+            // careful!
+            trackStateProxy
+              .template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
+              .data() -
             trackStateProxy.projector() * trackStateProxy.predicted();  // 6x1
 
         auto residuals =
