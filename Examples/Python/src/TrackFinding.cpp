@@ -129,6 +129,9 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rMaxSeedConf);
     ACTS_PYTHON_MEMBER(nTopForLargeR);
     ACTS_PYTHON_MEMBER(nTopForSmallR);
+    ACTS_PYTHON_MEMBER(seedConfMinBottomRadius);
+    ACTS_PYTHON_MEMBER(seedConfMaxZOrigin);
+    ACTS_PYTHON_MEMBER(minImpactSeedConf);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
