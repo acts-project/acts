@@ -537,7 +537,7 @@ def addGeant4(
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
-    from acts.examples.geant4 import Geant4Simulation, Geant4SimulationConfig
+    from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -556,7 +556,7 @@ def addGeant4(
     if g4detectorConstruction is None:
         raise Exception("G4 detector contruction not given")
 
-    g4conf = Geant4SimulationConfig(
+    g4conf = geant4SimulationConfig(
         level=customLogLevel(),
         detector=g4detectorConstruction,
         inputParticles="particles_input",
