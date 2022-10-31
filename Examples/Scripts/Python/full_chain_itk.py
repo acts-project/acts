@@ -10,6 +10,7 @@ from acts.examples.simulation import (
     ParticleSelectorConfig,
     addDigitization,
 )
+from acts.examples import TrackSelector
 from acts.examples.reconstruction import (
     addSeeding,
     TruthSeedRanges,
@@ -93,13 +94,24 @@ addCKFTracks(
     outputDirRoot=outputDir,
 )
 
+ckfTrackParameters = "fittedTrackParameters"
+vtxTrackParameters = "vtxTrackParameters"
+trackSelector = TrackSelector(
+            level=acts.logging.INFO,
+            inputTrackParameters=ckfTrackParameters,
+            outputTrackParameters=vtxTrackParameters,
+            removeNeutral=True,
+            ptMin=1.0 * u.GeV,
+            absEtaMax=4.0,
+         )
+s.addAlgorithm(trackSelector)
 addVertexFitting(
     s,
     field,
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0), removeNeutral=True),
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
-    trajectories="trajectories",
+    trajectories=None,
+    trackParameters=vtxTrackParameters,
 )
 
 s.run()
