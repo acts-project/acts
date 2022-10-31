@@ -30,8 +30,6 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
     return m_world;
   }
 
-  std::cout << "TelescopeG4DetectorConstruction" << std::endl;
-
   G4double center =
       (m_cfg.positions.back() + m_cfg.positions.front()) * 0.5 * mm;
   G4double length = (m_cfg.positions.back() - m_cfg.positions.front()) * mm;
@@ -96,15 +94,16 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
                           galactic,           // its material
                           "Envelope Logic");  // its name
 
-  new G4PVPlacement(rotation,  // no rotation
-                    G4ThreeVector(m_cfg.offsets[0] * mm, m_cfg.offsets[1] * mm,
-                                  center),  // at detector center
-                    logicEnv,               // its logical volume
-                    "Envelope Phys",        // its name
-                    logicWorld,             // its mother  volume
-                    false,                  // no boolean operation
-                    0,                      // copy number
-                    checkOverlaps);         // overlaps checking
+  G4VPhysicalVolume* physEnv = new G4PVPlacement(
+      rotation,  // no rotation
+      G4ThreeVector(m_cfg.offsets[0] * mm, m_cfg.offsets[1] * mm,
+                    center),  // at detector center
+      logicEnv,               // its logical volume
+      "Envelope Phys",        // its name
+      logicWorld,             // its mother  volume
+      false,                  // no boolean operation
+      0,                      // copy number
+      checkOverlaps);         // overlaps checking
 
   G4Box* solidLayer = new G4Box("Layer Solid", 0.5 * m_cfg.bounds[0],
                                 0.5 * m_cfg.bounds[1], 0.5 * m_cfg.thickness);
@@ -117,9 +116,9 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
     new G4PVPlacement(
         nullptr,                                                // no rotation
         G4ThreeVector(0, 0, m_cfg.positions[i] * mm - center),  // at position
-        logicLayer,                          // its logical volume
         "Layer Phys #" + std::to_string(i),  // its name
-        logicWorld,                          // its mother  volume
+        logicLayer,                          // its logical volume
+        physEnv,                             // its mother  volume
         false,                               // no boolean operation
         0,                                   // copy number
         checkOverlaps);                      // overlaps checking

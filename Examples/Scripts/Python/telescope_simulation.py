@@ -39,7 +39,7 @@ if "__main__" == __name__:
             s,
             EtaConfig(-10.0, 10.0),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(10, acts.PdgParticle.eMuon, False),
+            ParticleConfig(1000, acts.PdgParticle.eMuon, False),
             multiplicity=1,
             rnd=rnd,
             outputDirRoot=outputDir / postfix,
