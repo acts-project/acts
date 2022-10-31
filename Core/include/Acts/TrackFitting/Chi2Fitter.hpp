@@ -136,11 +136,11 @@ struct Chi2FitterOptions {
   bool energyLoss = false;  // TODO: add later
 
   /// Number of iterations to improve chi2
-  int nUpdates;
+  int nUpdates = 1;
 
   /// Whether to do an additional propagation step, just to get the latest chi2
   /// value
-  bool calcFinalChi2;
+  bool calcFinalChi2 = true;
 
   /// Whether to include non-linear correction during global to local
   /// transformation
