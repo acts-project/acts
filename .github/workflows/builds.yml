@@ -39,6 +39,9 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
+      - name: Install dependencies
+        run: dnf -y install libdwarf-devel libdw-devel
+
       - name: Cache build
         uses: actions/cache@v3
         with:
@@ -130,7 +133,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get install -y git-lfs libdwarf-dev libdw-dev
 
       - uses: actions/checkout@v3
         with:
@@ -210,7 +213,7 @@ jobs:
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get install -y git-lfs libdwarf-dev libdw-dev
 
       - uses: actions/checkout@v3
         with:
@@ -250,7 +253,7 @@ jobs:
 
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get install -y git-lfs libdwarf-dev libdw-dev
 
       - uses: actions/checkout@v3
         with:
@@ -307,7 +310,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs
+        run: apt-get install -y git-lfs libdwarf-dev libdw-dev
 
       - uses: actions/checkout@v3
         with:
@@ -398,7 +401,7 @@ jobs:
       - name: Install dependencies
           # Install tbb-devel also to build the examples
         run: >
-          dnf -y install ninja-build tbb-devel ccache
+          dnf -y install ninja-build tbb-devel ccache libdwarf-devel libdw-devel
           && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
       - name: Cache build
@@ -547,69 +550,69 @@ jobs:
       - name: Downstream run
         run: ./build-downstream/bin/ShowActsVersion
 
-  cuda:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v29
-    steps:
-      - uses: actions/checkout@v3
+  # cuda:
+    # runs-on: ubuntu-latest
+    # container: ghcr.io/acts-project/ubuntu1804_cuda:v29
+    # steps:
+      # - uses: actions/checkout@v2
 
-      - name: Cache build
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_
+      # - name: Cache build
+        # uses: actions/cache@v3
+        # with:
+          # path: ${{ github.workspace }}/ccache
+          # key: ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          # restore-keys: |
+            # ${{ runner.os  }}-ccache-cuda_${{ env.CCACHE_KEY_SUFFIX }}_
 
-      - name: Configure
-        run: >
-          ccache -z &&
-          cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_BUILD_PLUGIN_CUDA=ON
-          -DACTS_BUILD_UNITTESTS=ON
-      - name: Build
-        run: cmake --build build
-      - name: ccache stats
-        run: ccache -s
+      # - name: Configure
+        # run: >
+          # ccache -z &&
+          # cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          # -DCMAKE_CXX_COMPILER=/usr/bin/g++-8
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DACTS_BUILD_PLUGIN_CUDA=ON
+          # -DACTS_BUILD_UNITTESTS=ON
+      # - name: Build
+        # run: cmake --build build
+      # - name: ccache stats
+        # run: ccache -s
 
-  sycl:
-    runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v29
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v3
+  # sycl:
+    # runs-on: ubuntu-latest
+    # container: ghcr.io/acts-project/ubuntu2004_oneapi:v29
+    # defaults:
+      # run:
+        # shell: bash
+    # steps:
+      # - uses: actions/checkout@v2
 
-      - name: Cache build
-        uses: actions/cache@v3
-        with:
-          path: ${{ github.workspace }}/ccache
-          key: ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_
+      # - name: Cache build
+        # uses: actions/cache@v3
+        # with:
+          # path: ${{ github.workspace }}/ccache
+          # key: ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          # restore-keys: |
+            # ${{ runner.os  }}-ccache-sycl_${{ env.CCACHE_KEY_SUFFIX }}_
 
-      - name: Configure
-        run: >
-          source /opt/intel/oneapi/setvars.sh
-          && ccache -z
-          && cmake -B build -S .
-          -GNinja
-          -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
-          -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2022.0.2/linux/bin-llvm/clang++
-          -DCMAKE_BUILD_TYPE=Release
-          -DCMAKE_CXX_FLAGS=-Werror
-          -DACTS_SETUP_VECMEM=ON
-          -DACTS_BUILD_PLUGIN_SYCL=ON
-          -DACTS_BUILD_UNITTESTS=ON
-      - name: Build
-        run: >
-          source /opt/intel/oneapi/setvars.sh
-          && cmake --build build
-      - name: ccache stats
-        run: ccache -s
+      # - name: Configure
+        # run: >
+          # source /opt/intel/oneapi/setvars.sh
+          # && ccache -z
+          # && cmake -B build -S .
+          # -GNinja
+          # -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
+          # -DCMAKE_CXX_COMPILER=/opt/intel/oneapi/compiler/2022.0.2/linux/bin-llvm/clang++
+          # -DCMAKE_BUILD_TYPE=Release
+          # -DCMAKE_CXX_FLAGS=-Werror
+          # -DACTS_SETUP_VECMEM=ON
+          # -DACTS_BUILD_PLUGIN_SYCL=ON
+          # -DACTS_BUILD_UNITTESTS=ON
+      # - name: Build
+        # run: >
+          # source /opt/intel/oneapi/setvars.sh
+          # && cmake --build build
+      # - name: ccache stats
+        # run: ccache -s
