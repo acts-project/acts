@@ -2,7 +2,6 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 
 #include "G4Box.hh"
@@ -20,9 +19,9 @@
 ActsExamples::Telescope::TelescopeG4DetectorConstruction::
     TelescopeG4DetectorConstruction(TelescopeDetector::Config cfg)
     : m_cfg(cfg) {
-  throw_assert(
-      cfg.surfaceType == static_cast<int>(Telescope::TelescopeSurfaceType::Plane),
-      "only plan is supported right now");
+  throw_assert(cfg.surfaceType ==
+                   static_cast<int>(Telescope::TelescopeSurfaceType::Plane),
+               "only plan is supported right now");
 }
 
 G4VPhysicalVolume*

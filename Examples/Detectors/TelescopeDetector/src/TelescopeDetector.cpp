@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
-
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
