@@ -123,7 +123,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       "outputMaterialTracks"_a);
 
   mod.def(
-      "Geant4SimulationConfig",
+      "geant4SimulationConfig",
       [](Acts::Logging::Level& level, G4VUserDetectorConstruction* detector,
          const std::string& inputParticles,
          std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
