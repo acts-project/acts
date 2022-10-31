@@ -31,9 +31,7 @@ if "__main__" == __name__:
     for geant, postfix in [(False, "fatras"), (True, "geant4")]:
         rnd = acts.examples.RandomNumbers()
 
-        s = acts.examples.Sequencer(
-            events=1, numThreads=1, logLevel=acts.logging.INFO
-        )
+        s = acts.examples.Sequencer(events=1, numThreads=1, logLevel=acts.logging.INFO)
 
         addParticleGun(
             s,

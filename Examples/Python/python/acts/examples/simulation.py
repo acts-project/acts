@@ -563,7 +563,7 @@ def addGeant4(
         trackingGeometry=trackingGeometry,
         magneticField=field,
         volumeMappings=[],
-        materialMappings=['G4_Si'],
+        materialMappings=["G4_Si"],
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"

@@ -9,7 +9,6 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
-
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
@@ -208,7 +207,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
   {
     using Detector = ActsExamples::Telescope::TelescopeDetector;
-    using DetectorConstruction = ActsExamples::Telescope::TelescopeG4DetectorConstruction;
+    using DetectorConstruction =
+        ActsExamples::Telescope::TelescopeG4DetectorConstruction;
 
     py::class_<DetectorConstruction, G4VUserDetectorConstruction>(
         mod, "TelescopeG4DetectorConstructionImpl");
@@ -216,8 +216,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     mod.def(
         "TelescopeG4DetectorConstruction",
         [](Detector& detector) {
-          return new DetectorConstruction(
-              detector.config);
+          return new DetectorConstruction(detector.config);
         },
         py::return_value_policy::reference);
   }
