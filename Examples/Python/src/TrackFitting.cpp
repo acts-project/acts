@@ -76,7 +76,7 @@ void addTrackFitting(Context& ctx) {
         .def_static("loadFromFiles",
                     &ActsExamples::BetheHeitlerApprox::loadFromFiles,
                     py::arg("lowParametersPath"), py::arg("lowParametersPath"))
-        .def_static("makeDefault  ", []() {
+        .def_static("makeDefault", []() {
           return Acts::Experimental::makeDefaultBetheHeitlerApprox();
         });
 
