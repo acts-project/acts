@@ -80,9 +80,17 @@ struct TestOutlierFinder {
     if (not state.hasCalibrated() or not state.hasPredicted()) {
       return false;
     }
-    auto residuals = state.calibrated() - state.projector() * state.predicted();
-    auto distance = residuals.norm();
-    return (distanceMax <= distance);
+
+    return visit_measurement(state.calibratedSize(), [&](auto N) {
+      constexpr size_t kMeasurementSize = decltype(N)::value;
+      auto residuals =
+          state.template calibrated<kMeasurementSize>() -
+          state.projector()
+                  .template topLeftCorner<kMeasurementSize, eBoundSize>() *
+              state.predicted();
+      auto distance = residuals.norm();
+      return (distanceMax <= distance);
+    });
   }
 };
 

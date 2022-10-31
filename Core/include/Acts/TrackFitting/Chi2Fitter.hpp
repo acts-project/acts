@@ -12,6 +12,7 @@
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -375,42 +376,42 @@ class Chi2Fitter {
 
         extensions.calibrator(state.geoContext, trackStateProxy);
 
-        const auto& proj = trackStateProxy.effectiveProjector();
-        // simple projection matrix H_is, composed of 1 and 0, 2x6 or 1x6
+        visit_measurement(trackStateProxy.calibratedSize(), [&](auto N) {
+          constexpr size_t kMeasurementSize = decltype(N)::value;
 
-        const auto Hi = (proj * result.jacobianFromStart).eval();  // 2x6 or 1x6
-        const auto& localMeasurements =
-            trackStateProxy.effectiveCalibrated();  // 2x1 or 1x1
+          // simple projection matrix H_is, composed of 1 and 0, 2x6 or 1x6
+          const ActsMatrix<kMeasurementSize, eBoundSize> proj =
+              trackStateProxy.projector()
+                  .template topLeftCorner<kMeasurementSize, eBoundSize>();
 
-        const auto& covariance =
-            trackStateProxy
-                .effectiveCalibratedCovariance();  // 2x2 or 1x1. Should be
-                                                   // diagonal.
-        const auto covInv = covariance.inverse();
-        auto residualsFull =
-            // This abuses an incorrectly sized vector / matrix to access the
-            // data pointer! This works (don't use the matrix as is!), but be
-            // careful!
-            trackStateProxy
-              .template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
-              .data() -
-            trackStateProxy.projector() * trackStateProxy.predicted();  // 6x1
+          const auto Hi =
+              (proj * result.jacobianFromStart).eval();  // 2x6 or 1x6
+          const auto localMeasurements =
+              trackStateProxy
+                  .template calibrated<kMeasurementSize>();  // 2x1 or 1x1
 
-        auto residuals =
-            (trackStateProxy.effectiveProjector() * residualsFull).eval();
+          const auto& covariance =
+              trackStateProxy.template calibratedCovariance<
+                  kMeasurementSize>();  // 2x2 or 1x1. Should
+                                        // be diagonal.
+          const auto covInv = covariance.inverse();
 
-        // TODO: use detail::calculateResiduals? Theta/Phi?
-        const auto deriv1 = (-2 * Hi.transpose() * covInv * residuals).eval();
-        const auto deriv2 = (2 * Hi.transpose() * covInv * Hi).eval();
-        result.collectorDeriv1Sum += deriv1;
-        result.collectorDeriv2Sum += deriv2;
+          auto residuals =
+              localMeasurements - proj * trackStateProxy.predicted();
 
-        for (int i = 0; i < localMeasurements.rows(); ++i) {
-          result.collectorMeasurements.push_back(localMeasurements(i));
-          result.collectorResiduals.push_back(residuals(i));
-          result.collectorCovariance.push_back(covariance(i, i));
-          // we assume measurements are not correlated
-        }
+          // TODO: use detail::calculateResiduals? Theta/Phi?
+          const auto deriv1 = (-2 * Hi.transpose() * covInv * residuals).eval();
+          const auto deriv2 = (2 * Hi.transpose() * covInv * Hi).eval();
+          result.collectorDeriv1Sum += deriv1;
+          result.collectorDeriv2Sum += deriv2;
+
+          for (int i = 0; i < localMeasurements.rows(); ++i) {
+            result.collectorMeasurements.push_back(localMeasurements(i));
+            result.collectorResiduals.push_back(residuals(i));
+            result.collectorCovariance.push_back(covariance(i, i));
+            // we assume measurements are not correlated
+          }
+        });
 
         //====================================
 
