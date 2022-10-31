@@ -32,9 +32,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         outCont) const {
   // seed confirmation
+  SeedConfirmationRangeConfig seedConfRange;
   if (m_cfg.seedConfirmation) {
     // check if bottom SP is in the central or forward region
-    SeedConfirmationRangeConfig seedConfRange =
+    seedConfRange =
         (bottomSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
          bottomSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
             ? m_cfg.forwardSeedConfirmationRange
@@ -149,10 +150,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
           (seedFilterState.numQualitySeeds and deltaSeedConf == 0)) {
         continue;
       }
-      bool seedRangeCuts = bottomSP.radius() < m_cfg.seedConfMinBottomRadius ||
-                           std::abs(zOrigin) > m_cfg.seedConfMaxZOrigin;
+      bool seedRangeCuts =
+          bottomSP.radius() < seedConfRange.seedConfMinBottomRadius ||
+          std::abs(zOrigin) > seedConfRange.seedConfMaxZOrigin;
       if (seedRangeCuts and deltaSeedConf == 0 and
-          impact > m_cfg.minImpactSeedConf) {
+          impact > seedConfRange.minImpactSeedConf) {
         continue;
       }
 

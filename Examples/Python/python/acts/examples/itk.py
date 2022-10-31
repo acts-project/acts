@@ -314,6 +314,9 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         rMaxSeedConf=140 * u.mm,
         nTopForLargeR=1,
         nTopForSmallR=2,
+        seedConfMinBottomRadius=60.0 * u.mm,
+        seedConfMaxZOrigin=150.0 * u.mm,
+        minImpactSeedConf=1.0 * u.mm,
     )  # contains parameters for seed confirmation
     forwardSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
         zMinSeedConf=-3000 * u.mm,
@@ -321,6 +324,9 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         rMaxSeedConf=140 * u.mm,
         nTopForLargeR=1,
         nTopForSmallR=2,
+        seedConfMinBottomRadius=60.0 * u.mm,
+        seedConfMaxZOrigin=150.0 * u.mm,
+        minImpactSeedConf=1.0 * u.mm,
     )
     compatSeedWeight = 100
     curvatureSortingInFilter = True
