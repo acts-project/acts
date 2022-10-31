@@ -87,23 +87,11 @@ static void fpe_signal_handler(int /*sig*/, siginfo_t* sip, void* /*scp*/) {
   std::abort();
 }
 
-#if defined(__APPLE__) && defined(__aarch64__)
+#if defined(__APPLE__)
 inline int feenableexcept(unsigned int excepts) {
+#if defined(__aarch64__)
   fenv_t env;
   fegetenv(&env);
-  // static fenv_t fenv;
-  // unsigned int new_excepts = excepts & FE_ALL_EXCEPT;
-  // // previous masks
-  // unsigned int old_excepts;
-
-  // if (fegetenv(&fenv)) {
-  // return -1;
-  // }
-  // old_excepts = fenv.__control & FE_ALL_EXCEPT;
-
-  // fegetenv(&env);
-  env.__fpcr = env.__fpcr | __fpcr_trap_invalid | __fpcr_trap_divbyzero |
-               __fpcr_trap_overflow;
 
   if (ACTS_CHECK_BIT(excepts, FE_DIVBYZERO)) {
     env.__fpcr |= __fpcr_trap_divbyzero;
@@ -118,6 +106,12 @@ inline int feenableexcept(unsigned int excepts) {
   }
 
   return fesetenv(&env);
+#else
+  ACTS_LOCAL_LOGGER(
+      Acts::getDefaultLogger("feenableexcept", Acts::Logging::WARNING));
+  ACTS_WARNING(
+      "FPE exception raising currently not implemented for macOS x86_64");
+#endif
 
   // unmask
   // fenv.__control &= ~new_excepts;
