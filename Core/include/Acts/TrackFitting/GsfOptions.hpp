@@ -18,6 +18,7 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
+namespace Experimental {
 
 /// The extensions needed for the GSF
 template <typename traj_t>
@@ -74,4 +75,5 @@ struct GsfOptions {
   bool disableAllMaterialHandling = false;
 };
 
+}  // namespace Experimental
 }  // namespace Acts
