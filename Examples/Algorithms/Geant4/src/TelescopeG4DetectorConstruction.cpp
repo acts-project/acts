@@ -10,7 +10,6 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/BinningType.hpp"
-
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 
 #include "G4Box.hh"
