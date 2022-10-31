@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
@@ -85,6 +86,44 @@ static void fpe_signal_handler(int /*sig*/, siginfo_t* sip, void* /*scp*/) {
 
   std::abort();
 }
+
+#if defined(__APPLE__)
+inline int feenableexcept(unsigned int excepts) {
+  fenv_t env;
+  fegetenv(&env);
+  // static fenv_t fenv;
+  // unsigned int new_excepts = excepts & FE_ALL_EXCEPT;
+  // // previous masks
+  // unsigned int old_excepts;
+
+  // if (fegetenv(&fenv)) {
+  // return -1;
+  // }
+  // old_excepts = fenv.__control & FE_ALL_EXCEPT;
+
+  // fegetenv(&env);
+  env.__fpcr = env.__fpcr | __fpcr_trap_invalid | __fpcr_trap_divbyzero |
+               __fpcr_trap_overflow;
+
+  if (ACTS_CHECK_BIT(excepts, FE_DIVBYZERO)) {
+    env.__fpcr |= __fpcr_trap_divbyzero;
+  }
+
+  if (ACTS_CHECK_BIT(excepts, FE_INVALID)) {
+    env.__fpcr |= __fpcr_trap_invalid;
+  }
+
+  if (ACTS_CHECK_BIT(excepts, FE_OVERFLOW)) {
+    env.__fpcr |= __fpcr_trap_overflow;
+  }
+
+  return fesetenv(&env);
+
+  // unmask
+  // fenv.__control &= ~new_excepts;
+  // fenv.__mxcsr &= ~(new_excepts << 7);
+}
+#endif
 
 void enable_floating_point_exceptions() {
   // macOS
