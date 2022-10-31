@@ -27,6 +27,8 @@ class TelescopeG4DetectorConstruction final
 
  private:
   TelescopeDetector::Config m_cfg;
+
+  G4VPhysicalVolume* m_world{};
 };
 
 }  // namespace Telescope

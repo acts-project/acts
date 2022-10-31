@@ -9,6 +9,7 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
@@ -18,7 +19,7 @@
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeDetectorConstruction.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include <memory>
 
@@ -205,13 +206,21 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{});
 
-  mod.def(
-      "TelescopeG4DetectorConstruction",
-      [](ActsExamples::Telescope::TelescopeDetector& detector) {
-        return new ActsExamples::Telescope::TelescopeG4DetectorConstruction(
-            detector.config);
-      },
-      py::return_value_policy::reference);
+  {
+    using Detector = ActsExamples::Telescope::TelescopeDetector;
+    using DetectorConstruction = ActsExamples::Telescope::TelescopeG4DetectorConstruction;
+
+    py::class_<DetectorConstruction, G4VUserDetectorConstruction>(
+        mod, "TelescopeG4DetectorConstructionImpl");
+
+    mod.def(
+        "TelescopeG4DetectorConstruction",
+        [](Detector& detector) {
+          return new DetectorConstruction(
+              detector.config);
+        },
+        py::return_value_policy::reference);
+  }
 
   Acts::Python::Context ctx;
   ctx.modules["geant4"] = &mod;

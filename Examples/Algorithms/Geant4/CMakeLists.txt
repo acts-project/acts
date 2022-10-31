@@ -1,7 +1,7 @@
 set(ACTS_EXAMPLES_G4SOURCES
     src/EventStoreRegistry.cpp
     src/GdmlDetectorConstruction.cpp
-    src/TelescopeDetectorConstruction.cpp
+    src/TelescopeG4DetectorConstruction.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp

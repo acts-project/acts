@@ -4,7 +4,7 @@ from pathlib import Path
 
 import acts
 import acts.examples
-from acts.examples.geant4 import TelescopeDetectorConstruction
+from acts.examples.geant4 import TelescopeG4DetectorConstruction
 from acts.examples.simulation import (
     addParticleGun,
     EtaConfig,
@@ -20,6 +20,7 @@ if "__main__" == __name__:
     detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
         bounds=[200, 200], positions=[30, 60, 90, 120, 150, 180, 210, 240, 270]
     )
+    g4detectorConstruciton = TelescopeG4DetectorConstruction(detector)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -31,14 +32,14 @@ if "__main__" == __name__:
         rnd = acts.examples.RandomNumbers()
 
         s = acts.examples.Sequencer(
-            events=100, numThreads=-1, logLevel=acts.logging.INFO
+            events=1, numThreads=1, logLevel=acts.logging.INFO
         )
 
         addParticleGun(
             s,
-            EtaConfig(-2.0, 2.0),
+            EtaConfig(-10.0, 10.0),
             PhiConfig(0.0, 360.0 * u.degree),
-            ParticleConfig(1, acts.PdgParticle.eMuon, False),
+            ParticleConfig(10, acts.PdgParticle.eMuon, False),
             multiplicity=1,
             rnd=rnd,
             outputDirRoot=outputDir / postfix,
@@ -47,11 +48,13 @@ if "__main__" == __name__:
         if geant:
             addGeant4(
                 s,
-                TelescopeDetectorConstruction(detector),
+                g4detectorConstruciton,
                 trackingGeometry,
                 field,
                 rnd=rnd,
                 outputDirRoot=outputDir / postfix,
+                outputDirCsv=outputDir / postfix,
+                logLevel=acts.logging.VERBOSE,
             )
         else:
             addFatras(
