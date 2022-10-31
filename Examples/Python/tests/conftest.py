@@ -383,6 +383,7 @@ def material_recording_session():
         s.run()
 
         del s
+        del detector
         del dd4hepG4Construction
 
         yield Path(d)
