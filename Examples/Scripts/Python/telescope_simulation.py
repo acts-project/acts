@@ -20,7 +20,6 @@ if "__main__" == __name__:
     detector, trackingGeometry, decorators = acts.examples.TelescopeDetector.create(
         bounds=[200, 200], positions=[30, 60, 90, 120, 150, 180, 210, 240, 270]
     )
-    g4detectorConstruciton = TelescopeG4DetectorConstruction(detector)
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
@@ -46,7 +45,7 @@ if "__main__" == __name__:
         if geant:
             addGeant4(
                 s,
-                g4detectorConstruciton,
+                TelescopeG4DetectorConstruction(detector),
                 trackingGeometry,
                 field,
                 rnd=rnd,
