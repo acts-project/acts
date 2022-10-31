@@ -10,5 +10,5 @@
 #include "ActsExamples/TelescopeDetector/TelescopeDetector.hpp"
 
 int main(int argc, char* argv[]) {
-  return runFatras(argc, argv, std::make_shared<TelescopeDetector>());
+  return runFatras(argc, argv, std::make_shared<ActsExamples::Telescope::TelescopeDetector>());
 }

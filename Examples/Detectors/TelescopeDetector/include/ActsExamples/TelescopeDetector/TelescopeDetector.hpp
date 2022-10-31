@@ -21,9 +21,9 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 namespace Telescope {
+
 class TelescopeDetectorElement;
-}  // namespace Telescope
-}  // namespace ActsExamples
+class TelescopeG4DetectorConstruction;
 
 struct TelescopeDetector : public ActsExamples::IBaseDetector {
   using DetectorElement = ActsExamples::Telescope::TelescopeDetectorElement;
@@ -52,3 +52,6 @@ struct TelescopeDetector : public ActsExamples::IBaseDetector {
   finalize(const Config& cfg,
            std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
+
+}  // namespace Telescope
+}  // namespace ActsExamples

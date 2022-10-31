@@ -56,6 +56,7 @@ void addDetector(Context& ctx) {
   }
 
   {
+    using TelescopeDetector = ActsExamples::Telescope::TelescopeDetector;
     using Config = TelescopeDetector::Config;
 
     auto td = py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(

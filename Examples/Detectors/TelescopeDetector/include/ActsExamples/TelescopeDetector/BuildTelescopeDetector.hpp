@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
+
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
 
 #include <array>

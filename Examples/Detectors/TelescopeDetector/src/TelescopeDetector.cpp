@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
@@ -18,12 +19,12 @@
 
 #include <boost/program_options.hpp>
 
-void TelescopeDetector::addOptions(
+void ActsExamples::Telescope::TelescopeDetector::addOptions(
     ActsExamples::Options::Description& desc) const {
   ActsExamples::Options::addTelescopeGeometryOptions(desc);
 }
 
-auto TelescopeDetector::finalize(
+auto ActsExamples::Telescope::TelescopeDetector::finalize(
     const boost::program_options::variables_map& vm,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
@@ -46,7 +47,7 @@ auto TelescopeDetector::finalize(
   return finalize(cfg, std::move(mdecorator));
 }
 
-auto TelescopeDetector::finalize(
+auto ActsExamples::Telescope::TelescopeDetector::finalize(
     const Config& cfg,
     std::shared_ptr<const Acts::IMaterialDecorator> /* mdecorator */)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
