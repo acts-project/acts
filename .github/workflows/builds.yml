@@ -401,7 +401,7 @@ jobs:
       - name: Install dependencies
           # Install tbb-devel also to build the examples
         run: >
-          dnf -y install ninja-build tbb-devel ccache libdwarf-devel libdw-devel
+          dnf -y install ninja-build tbb-devel ccache libdwarf-devel
           && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
       - name: Cache build
