@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -67,6 +68,14 @@ struct Types {
   using Covariance = Eigen::Matrix<Scalar, Size, Size, Flags>;
   using CoefficientsMap = Eigen::Map<ConstIf<Coefficients, ReadOnlyMaps>>;
   using CovarianceMap = Eigen::Map<ConstIf<Covariance, ReadOnlyMaps>>;
+
+  using DynamicCoefficients = Eigen::Matrix<Scalar, Eigen::Dynamic, 1, Flags>;
+  using DynamicCovariance =
+      Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic, Flags>;
+  using DynamicCoefficientsMap =
+      Eigen::Map<ConstIf<DynamicCoefficients, ReadOnlyMaps>>;
+  using DynamicCovarianceMap =
+      Eigen::Map<ConstIf<DynamicCovariance, ReadOnlyMaps>>;
 };
 }  // namespace detail_lt
 
@@ -101,9 +110,12 @@ class TrackStateProxy {
  public:
   using Parameters = typename TrackStateTraits<M, ReadOnly>::Parameters;
   using Covariance = typename TrackStateTraits<M, ReadOnly>::Covariance;
-  using Measurement = typename TrackStateTraits<M, ReadOnly>::Measurement;
+
+  template <size_t N>
+  using Measurement = typename TrackStateTraits<N, ReadOnly>::Measurement;
+  template <size_t N>
   using MeasurementCovariance =
-      typename TrackStateTraits<M, ReadOnly>::MeasurementCovariance;
+      typename TrackStateTraits<N, ReadOnly>::MeasurementCovariance;
 
   using IndexType = typename TrackStateTraits<M, ReadOnly>::IndexType;
   static constexpr IndexType kInvalid = TrackStateTraits<M, ReadOnly>::kInvalid;
@@ -223,8 +235,17 @@ class TrackStateProxy {
       auto dest = getMask();
       auto src = other.getMask() &
                  mask;  // combine what we have with what we want to copy
-      if (static_cast<std::underlying_type_t<TrackStatePropMask>>((src ^ dest) &
-                                                                  src) != 0) {
+
+      if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
+        // on-demand allocate calibrated
+        dest |= PM::Calibrated;
+      }
+
+      if ((static_cast<std::underlying_type_t<TrackStatePropMask>>(
+               (src ^ dest) & src) != 0 ||
+           dest == TrackStatePropMask::None ||
+           src == TrackStatePropMask::None) &&
+          mask != TrackStatePropMask::None) {
         throw std::runtime_error(
             "Attempt track state copy with incompatible allocations");
       }
@@ -259,9 +280,19 @@ class TrackStateProxy {
         component<const SourceLink*, hashString("calibratedSourceLink")>() =
             other.template component<const SourceLink*,
                                      hashString("calibratedSourceLink")>();
-        calibrated() = other.calibrated();
-        calibratedCovariance() = other.calibratedCovariance();
-        calibratedSize() = other.calibratedSize();
+        allocateCalibrated(other.calibratedSize());
+
+        // workaround for gcc8 bug:
+        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+        auto* self = this;
+        visit_measurement(other.calibratedSize(), [&](auto N) {
+          constexpr int measdim = decltype(N)::value;
+          self->template calibrated<measdim>() =
+              other.template calibrated<measdim>();
+          self->template calibratedCovariance<measdim>() =
+              other.template calibratedCovariance<measdim>();
+        });
+
         setProjectorBitset(other.projectorBitset());
       }
     } else {
@@ -303,9 +334,20 @@ class TrackStateProxy {
         component<const SourceLink*, hashString("calibratedSourceLink")>() =
             other.template component<const SourceLink*,
                                      hashString("calibratedSourceLink")>();
-        calibrated() = other.calibrated();
-        calibratedCovariance() = other.calibratedCovariance();
-        calibratedSize() = other.calibratedSize();
+
+        allocateCalibrated(other.calibratedSize());
+
+        // workaround for gcc8 bug:
+        // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+        auto* self = this;
+        visit_measurement(other.calibratedSize(), [&](auto N) {
+          constexpr int measdim = decltype(N)::value;
+          self->template calibrated<measdim>() =
+              other.template calibrated<measdim>();
+          self->template calibratedCovariance<measdim>() =
+              other.template calibratedCovariance<measdim>();
+        });
+
         setProjectorBitset(other.projectorBitset());
       }
     }
@@ -578,24 +620,43 @@ class TrackStateProxy {
   /// Full calibrated measurement vector. Might contain additional zeroed
   /// dimensions.
   /// @return The measurement vector
-  Measurement calibrated() const;
+  template <size_t measdim>
+  Measurement<measdim> calibrated() const;
 
   /// Full calibrated measurement covariance matrix. The effective covariance
   /// is located in the top left corner, everything else is zeroed.
   /// @return The measurement covariance matrix
-  MeasurementCovariance calibratedCovariance() const;
+  template <size_t measdim>
+  MeasurementCovariance<measdim> calibratedCovariance() const;
 
   /// Dynamic measurement vector with only the valid dimensions.
   /// @return The effective calibrated measurement vector
   auto effectiveCalibrated() const {
-    return calibrated().head(calibratedSize());
+    // repackage the data pointer to a dynamic map type
+    // workaround for gcc8 bug:
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+    auto* self = this;
+    return visit_measurement(calibratedSize(), [&](auto N) {
+      constexpr int kMeasurementSize = decltype(N)::value;
+      return typename Types<M, ReadOnly>::DynamicCoefficientsMap{
+          self->template calibrated<kMeasurementSize>().data(),
+          kMeasurementSize};
+    });
   }
 
   /// Dynamic measurement covariance matrix with only the valid dimensions.
   /// @return The effective calibrated covariance matrix
   auto effectiveCalibratedCovariance() const {
-    const size_t measdim = calibratedSize();
-    return calibratedCovariance().topLeftCorner(measdim, measdim);
+    // repackage the data pointer to a dynamic map type
+    // workaround for gcc8 bug:
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+    auto* self = this;
+    return visit_measurement(calibratedSize(), [&](auto N) {
+      constexpr int kMeasurementSize = decltype(N)::value;
+      return typename Types<M, ReadOnly>::DynamicCovarianceMap{
+          self->template calibratedCovariance<kMeasurementSize>().data(),
+          kMeasurementSize, kMeasurementSize};
+    });
   }
 
   /// Return the (dynamic) number of dimensions stored for this measurement.
@@ -642,14 +703,22 @@ class TrackStateProxy {
         (component<const SourceLink*, hashString("calibratedSourceLink")>() !=
          nullptr));
 
+    allocateCalibrated(kMeasurementSize);
     assert(hasCalibrated());
-    calibrated().setZero();
-    calibrated().template head<kMeasurementSize>() = meas.parameters();
-    calibratedCovariance().setZero();
-    calibratedCovariance()
+
+    calibrated<kMeasurementSize>().setZero();
+    calibrated<kMeasurementSize>().template head<kMeasurementSize>() =
+        meas.parameters();
+    calibratedCovariance<kMeasurementSize>().setZero();
+    calibratedCovariance<kMeasurementSize>()
         .template topLeftCorner<kMeasurementSize, kMeasurementSize>() =
         meas.covariance();
     setProjector(meas.projector());
+  }
+
+  void allocateCalibrated(size_t measdim) {
+    m_traj->allocateCalibrated(m_istate, measdim);
+    calibratedSize() = measdim;
   }
 
   /// Getter/setter for chi2 value associated with the track state
@@ -979,39 +1048,47 @@ class MultiTrajectory {
   }
 
   /// Retrieve a measurement proxy instance for a measurement at a given index
+  /// @tparam measdim the measurement dimension
   /// @param measIdx Index into the measurement column
   /// @return Mutable proxy
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr typename TrackStateProxy::Measurement measurement(
+  template <size_t measdim, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  constexpr typename TrackStateProxy::template Measurement<measdim> measurement(
       IndexType measIdx) {
-    return self().measurement_impl(measIdx);
+    return self().template measurement_impl<measdim>(measIdx);
   }
 
   /// Retrieve a measurement proxy instance for a measurement at a given index
+  /// @tparam measdim the measurement dimension
   /// @param measIdx Index into the measurement column
   /// @return Const proxy
-  constexpr typename ConstTrackStateProxy::Measurement measurement(
-      IndexType measIdx) const {
-    return self().measurement_impl(measIdx);
+  template <size_t measdim>
+  constexpr typename ConstTrackStateProxy::template Measurement<measdim>
+  measurement(IndexType measIdx) const {
+    return self().template measurement_impl<measdim>(measIdx);
   }
 
   /// Retrieve a measurement covariance proxy instance for a measurement at a
   /// given index
+  /// @tparam measdim the measurement dimension
   /// @param covIdx Index into the measurement covariance column
   /// @return Mutable proxy
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr typename TrackStateProxy::MeasurementCovariance
+  template <size_t measdim, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  constexpr typename TrackStateProxy::template MeasurementCovariance<measdim>
   measurementCovariance(IndexType covIdx) {
-    return self().measurementCovariance_impl(covIdx);
+    return self().template measurementCovariance_impl<measdim>(covIdx);
   }
 
   /// Retrieve a measurement covariance proxy instance for a measurement at a
   /// given index
   /// @param covIdx Index into the measurement covariance column
   /// @return Const proxy
-  constexpr typename ConstTrackStateProxy::MeasurementCovariance
-  measurementCovariance(IndexType covIdx) const {
-    return self().measurementCovariance_impl(covIdx);
+  template <size_t measdim>
+  constexpr
+      typename ConstTrackStateProxy::template MeasurementCovariance<measdim>
+      measurementCovariance(IndexType covIdx) const {
+    return self().template measurementCovariance_impl<measdim>(covIdx);
   }
 
   /// Share a shareable component from between track state.
@@ -1082,6 +1159,10 @@ class MultiTrajectory {
   constexpr const T& component(HashedString key, IndexType istate) const {
     assert(checkOptional(key, istate));
     return *std::any_cast<const T*>(self().component_impl(key, istate));
+  }
+
+  void allocateCalibrated(IndexType istate, size_t measdim) {
+    self().allocateCalibrated_impl(istate, measdim);
   }
 
  private:
