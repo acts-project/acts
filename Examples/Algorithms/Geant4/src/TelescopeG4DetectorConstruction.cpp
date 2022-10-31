@@ -62,9 +62,11 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
   // This assumes the binValue is binX, binY or binZ. No reset is necessary in
   // case of binZ
   G4RotationMatrix* rotation = nullptr;
-  if (m_cfg.binValue == Acts::BinningValue::binX) {
+  if (static_cast<Acts::BinningValue>(m_cfg.binValue) ==
+      Acts::BinningValue::binX) {
     rotation = new G4RotationMatrix({0, 0, -1}, {0, 1, 0}, {1, 0, 0});
-  } else if (m_cfg.binValue == Acts::BinningValue::binY) {
+  } else if (static_cast<Acts::BinningValue>(m_cfg.binValue) ==
+             Acts::BinningValue::binY) {
     rotation = new G4RotationMatrix({1, 0, 0}, {0, 0, -1}, {0, 1, 0});
   }
 
@@ -116,12 +118,12 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
     new G4PVPlacement(
         nullptr,                                                // no rotation
         G4ThreeVector(0, 0, m_cfg.positions[i] * mm - center),  // at position
-        "Layer Phys #" + std::to_string(i),  // its name
-        logicLayer,                          // its logical volume
-        physEnv,                             // its mother  volume
-        false,                               // no boolean operation
-        0,                                   // copy number
-        checkOverlaps);                      // overlaps checking
+        "Layer Phys #" + std::to_string(i),                     // its name
+        logicLayer,      // its logical volume
+        physEnv,         // its mother  volume
+        false,           // no boolean operation
+        0,               // copy number
+        checkOverlaps);  // overlaps checking
   }
 
   m_world = physWorld;
