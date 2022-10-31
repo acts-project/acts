@@ -66,6 +66,8 @@ auto ActsExamples::Telescope::TelescopeDetector::finalize(
         "The minR should be smaller than the maxR for disc surface bounds.");
   }
 
+  config = cfg;
+
   // Sort the provided distances
   std::vector<double> positions = cfg.positions;
   std::sort(positions.begin(), positions.end());

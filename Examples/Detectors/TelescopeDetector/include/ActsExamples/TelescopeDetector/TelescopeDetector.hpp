@@ -39,6 +39,7 @@ struct TelescopeDetector : public ActsExamples::IBaseDetector {
     int binValue{2};
   };
 
+  Config config;
   /// The store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 

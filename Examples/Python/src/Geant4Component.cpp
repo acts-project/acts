@@ -18,6 +18,7 @@
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeDetectorConstruction.hpp"
 
 #include <memory>
 
@@ -122,7 +123,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       "outputMaterialTracks"_a);
 
   mod.def(
-      "geant4SimulationConfig",
+      "Geant4SimulationConfig",
       [](Acts::Logging::Level& level, G4VUserDetectorConstruction* detector,
          const std::string& inputParticles,
          std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
@@ -203,6 +204,14 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{});
+
+  mod.def(
+      "TelescopeG4DetectorConstruction",
+      [](ActsExamples::Telescope::TelescopeDetector& detector) {
+        return new ActsExamples::Telescope::TelescopeG4DetectorConstruction(
+            detector.config);
+      },
+      py::return_value_policy::reference);
 
   Acts::Python::Context ctx;
   ctx.modules["geant4"] = &mod;
