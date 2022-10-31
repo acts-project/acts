@@ -17,22 +17,25 @@ using TrackStateTraits =
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>;
 
 ActsScalar calculateDeterminant(
-    TrackStateTraits::Measurement fullCalibrated,
-    TrackStateTraits::MeasurementCovariance fullCalibratedCovariance,
+    const double* fullCalibrated, const double* fullCalibratedCovariance,
     TrackStateTraits::Covariance predictedCovariance,
     TrackStateTraits::Projector projector, unsigned int calibratedSize) {
-  return visit_measurement(
-      fullCalibrated, fullCalibratedCovariance, calibratedSize,
-      [&](const auto calibrated, const auto calibratedCovariance) {
-        constexpr size_t kMeasurementSize =
-            decltype(calibrated)::RowsAtCompileTime;
-        const auto H =
-            projector.template topLeftCorner<kMeasurementSize, eBoundSize>()
-                .eval();
+  return visit_measurement(calibratedSize, [&](auto N) {
+    constexpr size_t kMeasurementSize = decltype(N)::value;
 
-        return (H * predictedCovariance * H.transpose() + calibratedCovariance)
-            .determinant();
-      });
+    typename Acts::TrackStateTraits<kMeasurementSize, true>::Measurement
+        calibrated{fullCalibrated};
+
+    typename Acts::TrackStateTraits<
+        kMeasurementSize, true>::MeasurementCovariance calibratedCovariance{
+        fullCalibratedCovariance};
+
+    const auto H =
+        projector.template topLeftCorner<kMeasurementSize, eBoundSize>().eval();
+
+    return (H * predictedCovariance * H.transpose() + calibratedCovariance)
+        .determinant();
+  });
 }
 }  // namespace detail
 }  // namespace Acts
