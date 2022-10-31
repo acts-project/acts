@@ -71,7 +71,7 @@ IVF: [seeded]({{ .url }}/ivf_seeded.html), [truth smeared]({{ .url }}/ivf_truth_
 ### Truth tracking
 
 <details>
-  <summary><b>Truth tracking</b></summary>
+  <summary><b>Kalman Filter</b></summary>
   <img src="{{ .url }}/truth_tracking_plots/nHoles_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/truth_tracking_plots/nMeasurements_vs_eta.pdf?to_png=1" width="50%"/>
 
   <img src="{{ .url }}/truth_tracking_plots/pull_d0.pdf?to_png=1" width="50%"/><img src="{{ .url }}/truth_tracking_plots/pull_z0.pdf?to_png=1" width="50%"/>
@@ -79,4 +79,10 @@ IVF: [seeded]({{ .url }}/ivf_seeded.html), [truth smeared]({{ .url }}/ivf_truth_
   <img src="{{ .url }}/truth_tracking_plots/pull_theta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/truth_tracking_plots/pull_phi.pdf?to_png=1" width="50%"/>
 
   <img src="{{ .url }}/truth_tracking_plots/pull_qop.pdf?to_png=1" width="50%"/><img src="{{ .url }}/truth_tracking_plots/pull_t.pdf?to_png=1" width="50%"/>
+</details>
+
+
+<details>
+  <summary><b>GSF</b></summary>
+  <img src="{{ .url }}/gsf_plots/pull_qop.pdf?to_png=1" width="50%"/><img src="{{ .url }}/truth_tracking_plots/res_qop.pdf?to_png=1" width="50%"/>
 </details>

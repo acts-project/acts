@@ -412,6 +412,7 @@ def addFatras(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
+    enableInteractions = False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Fatras
@@ -430,6 +431,7 @@ def addFatras(
         ParticleSelector configuration to select particles as input to Fatras. Each range is specified as a tuple of (min,max).
         Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
+    enableInteractions : Enable the particle interactions in the simulation
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -460,6 +462,10 @@ def addFatras(
         trackingGeometry=trackingGeometry,
         magneticField=field,
         generateHitsOnSensitive=True,
+        emScattering=enableInteractions,
+        emEnergyLossIonisation=enableInteractions,
+        emEnergyLossRadiation=enableInteractions,
+        emPhotonConversion=enableInteractions,
     )
 
     # Sequencer
