@@ -13,6 +13,7 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 namespace Acts {
+namespace Experimental {
 
 template <typename traj_t>
 void voidChi2Calibrator(
@@ -27,4 +28,5 @@ bool voidChi2OutlierFinder(
   return false;
 }
 
+}  // namespace Experimental
 }  // namespace Acts
