@@ -87,7 +87,7 @@ static void fpe_signal_handler(int /*sig*/, siginfo_t* sip, void* /*scp*/) {
   std::abort();
 }
 
-#if defined(__APPLE__)
+#if defined(__APPLE__) && defined(__aarch64__)
 inline int feenableexcept(unsigned int excepts) {
   fenv_t env;
   fegetenv(&env);

@@ -25,7 +25,7 @@ target_link_libraries(
 if(UNIX AND NOT APPLE)
 target_link_libraries(
   ActsExamplesFramework
-  PRIVATE dwarf)
+  PRIVATE dw dwarf)
 endif()
 target_compile_definitions(
   ActsExamplesFramework
