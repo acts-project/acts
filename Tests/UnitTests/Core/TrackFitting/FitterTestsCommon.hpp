@@ -48,7 +48,8 @@ struct TestOutlierFinder {
     if (not state.hasCalibrated() or not state.hasPredicted()) {
       return false;
     }
-    auto residuals = state.calibrated() - state.projector() * state.predicted();
+    auto residuals = state.effectiveCalibrated() -
+                     state.effectiveProjector() * state.predicted();
     auto distance = residuals.norm();
     return (distanceMax <= distance);
   }
