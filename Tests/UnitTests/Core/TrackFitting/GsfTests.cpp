@@ -50,8 +50,10 @@ using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 
 auto gsfZeroPropagator =
     makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T);
-const GaussianSumFitter<Propagator, VectorMultiTrajectory> gsfZero(
-    std::move(gsfZeroPropagator));
+auto betheHeitlerApprox = Acts::Experimental::makeDefaultBetheHeitlerApprox();
+const GaussianSumFitter<Propagator, decltype(betheHeitlerApprox),
+                        VectorMultiTrajectory>
+    gsfZero(std::move(gsfZeroPropagator), std::move(betheHeitlerApprox));
 
 std::default_random_engine rng(42);
 
