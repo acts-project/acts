@@ -737,12 +737,19 @@ def addCKFTracks(
     s.addAlias("trackParametersTips", trackFinder.config.outputTrackParametersTips)
 
     if trackSelectorRanges is not None:
-        addTrackSelection(
+        trackSelector = addTrackSelection(
             s,
             trackSelectorRanges,
             inputTrackParameters=trackFinder.config.outputTrackParameters,
             inputTrackParametersTips=trackFinder.config.outputTrackParametersTips,
+            outputTrackParameters="selectedTrackParameters",
+            outputTrackParametersTips="selectedTrackParametersTips",
             logLevel=customLogLevel(),
+        )
+
+        s.addAlias("trackParameters", trackSelector.config.outputTrackParameters)
+        s.addAlias(
+            "trackParametersTips", trackSelector.config.outputTrackParametersTips
         )
 
     if outputDirRoot is not None:
@@ -822,12 +829,12 @@ def addCKFTracks(
 def addTrackSelection(
     s: acts.examples.Sequencer,
     trackSelectorRanges: TrackSelectorRanges,
+    outputTrackParameters: str,
+    outputTrackParametersTips: str,
     inputTrackParameters: str = "trackParameters",
     inputTrackParametersTips: str = "trackParametersTips",
-    outputTrackParameters: str = "selectedTrackParameters",
-    outputTrackParametersTips: str = "selectedTrackParametersTips",
     logLevel: Optional[acts.logging.Level] = None,
-):
+) -> acts.examples.TrackSelector:
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -859,8 +866,7 @@ def addTrackSelection(
 
     s.addAlgorithm(trackSelector)
 
-    s.addAlias("trackParameters", trackSelector.config.outputTrackParameters)
-    s.addAlias("trackParametersTips", trackSelector.config.outputTrackParametersTips)
+    return trackSelector
 
 
 ExaTrkXBackend = Enum("ExaTrkXBackend", "Torch Onnx")
@@ -1064,18 +1070,22 @@ def addVertexFitting(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if trackSelectorRanges is not None:
-        addTrackSelection(
+        trackSelector = addTrackSelection(
             s,
             trackSelectorRanges,
             inputTrackParameters=trackParameters,
             inputTrackParametersTips=trackParametersTips,
-            outputTrackParameters=trackParameters + "Tmp",
-            outputTrackParametersTips=trackParametersTips + "Tmp",
+            outputTrackParameters="selectedTrackParametersVertexing",
+            outputTrackParametersTips="selectedTrackParametersTipsVertexing",
             logLevel=customLogLevel(),
         )
 
-        trackParameters = trackParameters + "Tmp"
-        trackParametersTips = trackParametersTips + "Tmp"
+        trackParameters = trackSelector.config.outputTrackParameters
+        trackParametersTips = (
+            trackSelector.config.outputTrackParametersTips
+            if trackParametersTips is not None
+            else None
+        )
 
     inputParticles = "particles_input"
     selectedParticles = "particles_selected"
