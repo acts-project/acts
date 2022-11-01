@@ -1118,9 +1118,6 @@ def test_vertex_fitting(tmp_path):
     assert alg.events_seen == s.config.events
 
 
-import itertools
-
-
 @pytest.mark.parametrize(
     "finder,inputTracks,entries",
     [
