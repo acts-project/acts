@@ -5,7 +5,6 @@ import acts
 import acts.examples
 from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
 from acts.examples.odd import getOpenDataDetector
-from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
