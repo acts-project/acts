@@ -408,7 +408,7 @@ struct GaussianSumFitter {
     }
 
     KalmanFitterResult<traj_t> kalmanResult;
-    if( options.referenceSurface ) {
+    if (options.referenceSurface) {
       kalmanResult.fittedParameters = *bwdResult->endParameters;
     }
     kalmanResult.fittedStates = fwdGsfResult.fittedStates;
