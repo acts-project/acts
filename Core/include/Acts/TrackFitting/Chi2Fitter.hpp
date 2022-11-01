@@ -194,8 +194,8 @@ struct Chi2FitterResult {
   std::vector<ActsScalar> collectorResiduals;
 
   /// first derivative of chi2 wrt starting track parameters
-  BoundVector collectorDeriv1Sum = BoundVector::Zero();
-  BoundMatrix collectorDeriv2Sum = BoundMatrix::Zero();
+  BoundVector collectorDerive1Chi2Sum = BoundVector::Zero();
+  BoundMatrix collectorDerive2Chi2Sum = BoundMatrix::Zero();
 
   BoundMatrix jacobianFromStart = BoundMatrix::Identity();
 
@@ -400,10 +400,11 @@ class Chi2Fitter {
               localMeasurements - proj * trackStateProxy.predicted();
 
           // TODO: use detail::calculateResiduals? Theta/Phi?
-          const auto deriv1 = (-2 * Hi.transpose() * covInv * residuals).eval();
-          const auto deriv2 = (2 * Hi.transpose() * covInv * Hi).eval();
-          result.collectorDeriv1Sum += deriv1;
-          result.collectorDeriv2Sum += deriv2;
+          const auto derive1Chi2 =
+              (-2 * Hi.transpose() * covInv * residuals).eval();
+          const auto derive2Chi2 = (2 * Hi.transpose() * covInv * Hi).eval();
+          result.collectorDerive1Chi2Sum += derive1Chi2;
+          result.collectorDerive2Chi2Sum += derive2Chi2;
 
           for (int i = 0; i < localMeasurements.rows(); ++i) {
             result.collectorMeasurements.push_back(localMeasurements(i));
@@ -695,11 +696,6 @@ class Chi2Fitter {
       c2rCurrent.residuals =
           Eigen::Map<ActsDynamicVector>(c2rCurrent.collectorResiduals.data(),
                                         c2rCurrent.collectorResiduals.size());
-      // TODO: is this safe? from Stackoverflow: "dangerous! Because the Eigen
-      // object will NOT create its own memory. It will operate on the memory
-      // provided by "data". In other words, working with the Eigen object
-      // when the "data" object is out of scope will result in a segmentation
-      // fault (or memory access violation)."
 
       ActsDynamicVector variance =
           Eigen::Map<ActsDynamicVector>(c2rCurrent.collectorCovariance.data(),
@@ -738,8 +734,8 @@ class Chi2Fitter {
 
       // calculate updates to parameters
       BoundVector delta_start_parameters =
-          c2r.collectorDeriv2Sum.colPivHouseholderQr().solve(
-              c2r.collectorDeriv1Sum);
+          c2r.collectorDerive2Chi2Sum.colPivHouseholderQr().solve(
+              c2r.collectorDerive1Chi2Sum);
 
       c2r.fittedParameters = std::visit(
           [delta_start_parameters, logger, i](auto&& prevParams) {
