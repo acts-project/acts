@@ -32,7 +32,7 @@ void addEDM4hep(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepSimHitReader, edm4hep,
                              "EDM4hepSimHitReader", inputPath, inputParticles,
-                             outputSimHits, dd4hepGeometryService);
+                             outputSimHits, dd4hepDetector);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepSimHitWriter, edm4hep,
                              "EDM4hepSimHitWriter", inputSimHits,
