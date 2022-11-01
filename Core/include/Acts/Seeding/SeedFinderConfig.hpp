@@ -54,13 +54,6 @@ struct SeedFinderConfig {
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
 
-  // seed confirmation
-  bool seedConfirmation = false;
-  // parameters for central seed confirmation
-  SeedConfirmationRangeConfig centralSeedConfirmationRange;
-  // parameters for forward seed confirmation
-  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
-
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
@@ -77,6 +70,13 @@ struct SeedFinderConfig {
 
   // skip top SPs based on cotTheta sorting when producing triplets
   bool skipPreviousTopSP = false;
+
+  // seed confirmation
+  bool seedConfirmation = false;
+  // parameters for central seed confirmation
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  // parameters for forward seed confirmation
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // FIXME: this is not used yet
   //        float upperPtResolutionPerSeed = 20* Acts::GeV;
