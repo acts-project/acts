@@ -206,7 +206,7 @@ Acts::Result<void> Acts::
       return res.error();
     }
     // Set ip3dParams for current trackAtVertex
-    currentVtxInfo.ip3dParams.emplace(trk, *(res.value()));
+    currentVtxInfo.ip3dParams.emplace(trk, res.value());
   }
   return {};
 }
@@ -236,7 +236,7 @@ Acts::AdaptiveMultiVertexFitter<input_track_t, linearizer_t>::
         return res.error();
       }
       // Set ip3dParams for current trackAtVertex
-      currentVtxInfo.ip3dParams.emplace(trk, *(res.value()));
+      currentVtxInfo.ip3dParams.emplace(trk, res.value());
     }
     // Set compatibility with current vertex
     auto compRes = m_cfg.ipEst.get3dVertexCompatibility(
