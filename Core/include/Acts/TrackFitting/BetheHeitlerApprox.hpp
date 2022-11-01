@@ -57,19 +57,24 @@ auto inverseTransformComponent(double transformed_weight,
 
 namespace Experimental {
 
-/// This class approximates the Bethe-Heitler with only one component. The
+/// This class approximates the Bethe-Heitler with only one component. This is
+/// mainly inside @ref AtlasBetheHeitlerApprox, but can also be used as the
+/// only component approximation (then probably for debugging)
 struct BetheHeitlerApproxSingleCmp {
   /// Returns the number of components the returned mixture will have
   constexpr auto numComponents() const { return 1; }
 
-  /// Checks if an input is valid for the parameterization. Since this is for
-  /// debugging, it always returns false
-  ///
-  /// @param x input in terms of x/x0
-  constexpr bool validXOverX0(ActsScalar) const { return false; }
+  /// Checks if an input is valid for the parameterization. The threshold for
+  /// x/x0 is 0.002 and orientates on the values used in ATLAS
+  constexpr bool validXOverX0(ActsScalar x) const {
+    return x < 0.002;
+    ;
+  }
 
   /// Returns array with length 1 containing a 1-component-representation of the
   /// Bethe-Heitler-Distribution
+  ///
+  /// @param x pathlength in terms of the radiation length
   static auto mixture(const ActsScalar x) {
     std::array<detail::GaussianComponent, 1> ret{};
 
@@ -130,13 +135,13 @@ class AtlasBetheHeitlerApprox {
 
   /// Checks if an input is valid for the parameterization
   ///
-  /// @param x input in terms of x/x0
+  /// @param x pathlength in terms of the radiation length
   constexpr bool validXOverX0(ActsScalar x) const { return x < higherLimit; }
 
   /// Generates the mixture from the polynomials and reweights them, so
   /// that the sum of all weights is 1
   ///
-  /// @param x The input in terms of x/x0 (pathlength in terms of radiation length)
+  /// @param x pathlength in terms of the radiation length
   auto mixture(ActsScalar x) const {
     using Array =
         boost::container::static_vector<detail::GaussianComponent, NComponents>;
