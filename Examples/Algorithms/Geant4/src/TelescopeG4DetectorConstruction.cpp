@@ -64,7 +64,8 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
 
   // Materials
   G4Material* galactic = nist->FindOrBuildMaterial("G4_Galactic");
-  G4Material* silicon = nist->FindOrBuildMaterial("G4_Si");
+  G4Material* silicon =
+      new G4Material("Silicon", 14, 28.0855 * g / mole, 2.329 * g / cm3);
 
   // Construct the rotation
   // This assumes the binValue is binX, binY or binZ. No reset is necessary in
@@ -126,7 +127,7 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
     new G4PVPlacement(
         nullptr,                                                // no rotation
         G4ThreeVector(0, 0, m_cfg.positions[i] * mm - center),  // at position
-        "Layer Phys #" + std::to_string(i),                     // its name
+        "Layer #" + std::to_string(i) + " Phys",                // its name
         logicLayer,      // its logical volume
         physEnv,         // its mother  volume
         false,           // no boolean operation

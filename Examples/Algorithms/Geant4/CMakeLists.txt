@@ -2,7 +2,6 @@ set(ACTS_EXAMPLES_G4SOURCES
     src/EventStoreRegistry.cpp
     src/GdmlDetectorConstruction.cpp
     src/TelescopeG4DetectorConstruction.cpp
-    src/DetectorConstructionHelper.cpp
     src/Geant4Simulation.cpp
     src/MagneticFieldWrapper.cpp
     src/MaterialPhysicsList.cpp
@@ -32,9 +31,6 @@ target_link_libraries(
   PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorTelescope ${Geant4_LIBRARIES})
 
 if (ACTS_BUILD_EXAMPLES_DD4HEP)
-  target_compile_definitions(
-    ActsExamplesGeant4
-    PRIVATE ACTS_GEANT4_DD4HEP)
   if(${DD4hep_VERSION} VERSION_LESS 1.11)
   target_include_directories(
     ActsExamplesGeant4

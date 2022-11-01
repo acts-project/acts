@@ -507,6 +507,32 @@ def addSimWriters(
     return s
 
 
+def getG4DetectorContruction(
+    detector: Any,
+) -> Any:
+    print(detector)
+
+    try:
+        from acts.examples import TelescopeDetector
+        from acts.examples.geant4 import TelescopeG4DetectorConstruction
+
+        if type(detector) is TelescopeDetector:
+            return TelescopeG4DetectorConstruction(detector)
+    except Exception as e:
+        print(e)
+
+    try:
+        from acts.examples.dd4hep import DD4hepDetector
+        from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
+
+        if type(detector) is DD4hepDetector:
+            return DDG4DetectorConstruction(detector.geometryService)
+    except Exception as e:
+        print(e)
+
+    raise ArgumentError(f"cannot find a suitable detector construction for {detector}")
+
+
 def addGeant4(
     s: acts.examples.Sequencer,
     detector: Optional[Any],
@@ -514,9 +540,11 @@ def addGeant4(
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     g4detectorConstruction: Optional[Any] = None,
+    volumeMappings: list[str] = [],
+    materialMappings: list[str] = [],
+    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Geant4
@@ -542,7 +570,6 @@ def addGeant4(
     from acts.examples.geant4 import (
         Geant4Simulation,
         geant4SimulationConfig,
-        getG4DetectorContruction,
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -563,6 +590,7 @@ def addGeant4(
         if detector is None:
             raise ArgumentError("detector not given")
         g4detectorConstruction = getG4DetectorContruction(detector)
+        print(g4detectorConstruction)
 
     g4conf = geant4SimulationConfig(
         level=customLogLevel(),
@@ -570,8 +598,8 @@ def addGeant4(
         inputParticles="particles_input",
         trackingGeometry=trackingGeometry,
         magneticField=field,
-        volumeMappings=[],
-        materialMappings=["G4_Si"],
+        volumeMappings=volumeMappings,
+        materialMappings=materialMappings,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
