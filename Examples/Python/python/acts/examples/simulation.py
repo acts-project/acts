@@ -510,8 +510,6 @@ def addSimWriters(
 def getG4DetectorContruction(
     detector: Any,
 ) -> Any:
-    print(detector)
-
     try:
         from acts.examples import TelescopeDetector
         from acts.examples.geant4 import TelescopeG4DetectorConstruction
@@ -590,7 +588,6 @@ def addGeant4(
         if detector is None:
             raise ArgumentError("detector not given")
         g4detectorConstruction = getG4DetectorContruction(detector)
-        print(g4detectorConstruction)
 
     g4conf = geant4SimulationConfig(
         level=customLogLevel(),
