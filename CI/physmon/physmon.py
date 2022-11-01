@@ -188,9 +188,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         if label == "seeded":
             addAmbiguityResolution(
                 s,
-                AmbiguityResolutionConfig(
-                    maximumSharedHits=3,
-                ),
+                AmbiguityResolutionConfig(maximumSharedHits=3),
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
                 outputDirRoot=tp,
             )
@@ -320,9 +318,7 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
 
             addAmbiguityResolution(
                 s,
-                AmbiguityResolutionConfig(
-                    maximumSharedHits=3,
-                ),
+                AmbiguityResolutionConfig(maximumSharedHits=3),
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
                 outputDirRoot=None,
             )

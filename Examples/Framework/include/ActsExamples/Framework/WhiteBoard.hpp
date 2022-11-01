@@ -101,7 +101,7 @@ inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
   m_store.emplace(name, holder);
   ACTS_VERBOSE("Added object '" << name << "'");
   if (auto it = m_aliases.find(name); it != m_aliases.end()) {
-    m_store.emplace(it->second, holder);
+    m_store[it->second] = holder;
     ACTS_VERBOSE("Added alias object '" << it->second << "'");
   }
 }

@@ -742,8 +742,8 @@ def addCKFTracks(
             trackSelectorRanges,
             inputTrackParameters=trackFinder.config.outputTrackParameters,
             inputTrackParametersTips=trackFinder.config.outputTrackParametersTips,
-            outputTrackParameters="selectedTrackParameters",
-            outputTrackParametersTips="selectedTrackParametersTips",
+            outputTrackParameters="selectedFittedTrackParameters",
+            outputTrackParametersTips="selectedFittedTrackParametersTips",
             logLevel=customLogLevel(),
         )
 
@@ -829,10 +829,10 @@ def addCKFTracks(
 def addTrackSelection(
     s: acts.examples.Sequencer,
     trackSelectorRanges: TrackSelectorRanges,
+    inputTrackParameters: str,
+    inputTrackParametersTips: str,
     outputTrackParameters: str,
     outputTrackParametersTips: str,
-    inputTrackParameters: str = "trackParameters",
-    inputTrackParametersTips: str = "trackParametersTips",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.TrackSelector:
 
@@ -972,12 +972,7 @@ def addAmbiguityResolution(
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
-    from acts.examples import (
-        AmbiguityResolutionAlgorithm,
-    )
-
-    trackParameters = "trackParameters"
-    trackParametersTips = "trackParametersTips"
+    from acts.examples import AmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -985,8 +980,8 @@ def addAmbiguityResolution(
         level=customLogLevel(),
         inputSourceLinks="sourcelinks",
         inputTrajectories="trajectories",
-        inputTrackParameters=trackParameters,
-        inputTrackParametersTips=trackParametersTips,
+        inputTrackParameters="trackParameters",
+        inputTrackParametersTips="trackParametersTips",
         outputTrackParameters="filteredTrackParameters",
         outputTrackParametersTips="filteredTrackParametersTips",
         **acts.examples.defaultKWArgs(
@@ -1037,7 +1032,7 @@ def addVertexFitting(
     associatedParticles: Optional[str] = None,
     trajectories: Optional[str] = "trajectories",
     trackParameters: str = "trackParameters",
-    trackParametersTips: str = "trackParametersTips",
+    trackParametersTips: Optional[str] = "trackParametersTips",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1155,7 +1150,7 @@ def addVertexFitting(
                 if trackParametersTips is not None
                 else "",
                 inputVertices=outputVertices,
-                minTrackVtxMatchFraction=0.0 if trajectories is not None else 0.5,
+                minTrackVtxMatchFraction=0.0 if associatedParticles is None else 0.5,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
