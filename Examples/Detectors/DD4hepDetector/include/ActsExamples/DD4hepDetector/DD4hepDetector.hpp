@@ -20,6 +20,7 @@ namespace DD4hep {
 
 struct DD4hepDetector : public IBaseDetector {
   std::shared_ptr<DD4hepGeometryService> geometryService;
+  dd4hep::Detector* lcdd;
 
   void addOptions(
       boost::program_options::options_description& opt) const override;
