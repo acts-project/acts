@@ -10,30 +10,36 @@
 
 #include "Acts/Utilities/FpeMonitor.hpp"
 
+#include <optional>
+
+namespace utf = boost::unit_test;
+
 namespace Acts {
 
 namespace Test {
 
-BOOST_AUTO_TEST_CASE(FpeMonitor) {
-  enable_floating_point_exceptions();
+// BOOST_AUTO_TEST_CASE(FpeMonitorTest) {
+// FpeMonitor mon;
+// volatile const double x = -1;
+// printf("y = %f\n", sqrt(x));
+// }
+
+BOOST_AUTO_TEST_CASE(FpeMonitorTestDivByZero) {
+  // {
+  // FpeMonitor mon;
+  // volatile double z = 0;
+  // volatile double x = 1 / z;
+  // std::cout << "x: " << x << std::endl;
+  // }
 
   {
-    volatile const double x = -1;
-    printf("y = %f\n", sqrt(x));
-  }
-  {
-    volatile double z = 0;
-    volatile double x = 1 / z;
-    std::cout << "x: " << x << std::endl;
-  }
-
-  {
+    FpeMonitor mon;
     volatile float v;
     volatile double w = std::numeric_limits<double>::max();
     v = 2 * w;
     std::cout << v << std::endl;
   }
-}
+}  // namespace Test
 
 }  // namespace Test
 

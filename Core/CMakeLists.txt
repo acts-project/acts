@@ -19,6 +19,17 @@ target_link_libraries(
   ActsCore
   PUBLIC Boost::boost Eigen3::Eigen)
 
+find_package(BFD)
+
+if(BFD_FOUND)
+  message(STATUS "Have BFD: stack traces available")
+  target_include_directories(ActsCore PUBLIC ${BFD_INCLUDE_PATH})
+  target_link_libraries(ActsCore PUBLIC ${BFD_LIBRARIES})
+  target_compile_definitions(ActsCore PUBLIC ACTS_HAVE_BFD)
+else()
+  message(STATUS "Do not habe BFD: no stack traces available")
+endif()
+
 if(ACTS_PARAMETER_DEFINITIONS_HEADER)
   target_compile_definitions(
     ActsCore

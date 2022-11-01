@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
+#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -15,6 +16,7 @@
 
 #include <algorithm>
 #include <atomic>
+#include <cfenv>
 #include <chrono>
 #include <exception>
 #include <limits>
@@ -295,24 +297,6 @@ int ActsExamples::Sequencer::run() {
     }
   }
 
-  // fenv_t curr_env;
-  // int rtn = fegetenv(&curr_env);
-  // feset
-
-  // std::feclearexcept(FE_ALL_EXCEPT);
-  // int r = std::feraiseexcept(FE_OVERFLOW | FE_INVALID | FE_DIVBYZERO);
-
-  // volatile const double x = -1;
-  // printf("y = %f\n", sqrt(x));
-  // volatile double z = 0;
-  // volatile double x = 1 / z;
-  // std::cout << "x: " << x << std::endl;
-
-  // volatile float v;
-  // volatile double w = std::numeric_limits<double>::max();
-  // v = 2 * w;
-  // std::cout << v << std::endl;
-
   // execute the parallel event loop
   std::atomic<size_t> nProcessedEvents = 0;
   size_t nTotalEvents = eventsRange.second - eventsRange.first;
@@ -320,6 +304,14 @@ int ActsExamples::Sequencer::run() {
     tbbWrap::parallel_for(
         tbb::blocked_range<size_t>(eventsRange.first, eventsRange.second),
         [&](const tbb::blocked_range<size_t>& r) {
+          // std::optional<Acts::FpeMonitor> fpeMonitor;
+
+          // fpeMonitor.emplace();
+
+          // volatile float v;
+          // volatile double w = std::numeric_limits<double>::max();
+          // v = 2 * w;
+
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
 

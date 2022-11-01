@@ -14,10 +14,13 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/FpeMonitor.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <csignal>
+#include <limits>
 #include <stdexcept>
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
@@ -175,6 +178,8 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
+  Acts::FpeMonitor fpeMonitor;
+
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
@@ -222,12 +227,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig,
                                                 m_cfg.seedFinderOptions);
 
-  // variable middle SP radial region of interest
+
+  double _up = std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2;
+  float up =
+      std::min(_up, static_cast<double>(std::numeric_limits<float>::max()));
+
+  std::cout << up << std::endl;
+  // -m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange;
+
+  /// variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
       std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
           m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
-      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
-          m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
+      up);
 
   // run the seeding
   static thread_local SimSeedContainer seeds;
