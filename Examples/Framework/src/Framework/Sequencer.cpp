@@ -86,16 +86,7 @@ void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
 
 void ActsExamples::Sequencer::addAlias(const std::string& from,
                                        const std::string& to) {
-  m_alias[from] = to;
-}
-
-const std::string& ActsExamples::Sequencer::resolveAlias(
-    const std::string& name) const {
-  return m_alias.at(name);
-}
-
-bool ActsExamples::Sequencer::hasAlias(const std::string& name) const {
-  return m_alias.find(name) != std::end(m_alias);
+  m_aliases[to] = from;
 }
 
 std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {
@@ -306,8 +297,10 @@ int ActsExamples::Sequencer::run() {
           for (size_t event = r.begin(); event != r.end(); ++event) {
             m_cfg.iterationCallback();
             // Use per-event store
-            WhiteBoard eventStore(Acts::getDefaultLogger(
-                "EventStore#" + std::to_string(event), m_cfg.logLevel));
+            WhiteBoard eventStore(
+                Acts::getDefaultLogger("EventStore#" + std::to_string(event),
+                                       m_cfg.logLevel),
+                m_aliases);
             // If we ever wanted to run algorithms in parallel, this needs to be
             // changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);

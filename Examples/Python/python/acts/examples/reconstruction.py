@@ -820,17 +820,12 @@ def addCKFTracks(
 def addTrackSelection(
     s: acts.examples.Sequencer,
     trackSelectorRanges: TrackSelectorRanges,
-    inputTrackParameters: Optional[str] = None,
-    inputTrackParametersTips: Optional[str] = None,
+    inputTrackParameters: str = "trackParameters",
+    inputTrackParametersTips: str = "trackParametersTips",
     outputTrackParameters: str = "selectedTrackParameters",
     outputTrackParametersTips: str = "selectedTrackParametersTips",
     logLevel: Optional[acts.logging.Level] = None,
 ):
-
-    if inputTrackParameters is None:
-        inputTrackParameters = s.resolveAlias("trackParameters")
-    if inputTrackParametersTips is None:
-        inputTrackParametersTips = s.resolveAlias("trackParametersTips")
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -968,12 +963,13 @@ def addAmbiguityResolution(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
+
     from acts.examples import (
         AmbiguityResolutionAlgorithm,
     )
 
-    trackParameters = s.resolveAlias("trackParameters")
-    trackParametersTips = s.resolveAlias("trackParametersTips")
+    trackParameters = "trackParameters"
+    trackParametersTips = "trackParametersTips"
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1028,12 +1024,13 @@ def addVertexFitting(
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
     associatedParticles: Optional[str] = None,
-    trajectories: Optional[str] = None,
-    trackParameters: Optional[str] = None,
-    trackParametersTips: Optional[str] = None,
+    trajectories: Optional[str] = "trajectories",
+    trackParameters: str = "trackParameters",
+    trackParametersTips: str = "trackParametersTips",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
+
     """This function steers the vertex fitting
 
     Parameters
@@ -1057,14 +1054,6 @@ def addVertexFitting(
         AdaptiveMultiVertexFinderAlgorithm,
         RootVertexPerformanceWriter,
     )
-
-    if trackParameters is None:
-        trackParameters = s.resolveAlias("trackParameters")
-    if associatedParticles is None:
-        if trajectories is None:
-            trajectories = s.resolveAlias("trajectories")
-        if trackParametersTips is None:
-            trackParametersTips = s.resolveAlias("trackParametersTips")
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 

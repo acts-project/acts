@@ -78,12 +78,6 @@ class Sequencer {
 
   /// Add an alias to the sequencer.
   void addAlias(const std::string &from, const std::string &to);
-  /// Resolve an alias by the sequencer.
-  ///
-  /// @throws std::out_of_range if the alias does not exist.
-  const std::string &resolveAlias(const std::string &name) const;
-  /// Check if a given alias exsits.
-  bool hasAlias(const std::string &name) const;
 
   /// Run the event loop.
   ///
@@ -131,7 +125,7 @@ class Sequencer {
   std::vector<std::shared_ptr<IWriter>> m_writers;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::unordered_map<std::string, std::string> m_alias;
+  std::unordered_map<std::string, std::string> m_aliases;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };
