@@ -186,7 +186,6 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
     }
   }
 
-
   // Since we have invalidated some components, we need to reweight
   if (errorSteps > 0) {
     removeMissedComponents(stepping);

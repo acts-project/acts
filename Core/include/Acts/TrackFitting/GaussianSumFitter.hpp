@@ -256,6 +256,7 @@ struct GaussianSumFitter {
       actor.m_cfg.disableAllMaterialHandling =
           options.disableAllMaterialHandling;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
+      actor.m_cfg.inReversePass = false;
 
       fwdPropOptions.direction = gsfForward;
 
@@ -324,6 +325,7 @@ struct GaussianSumFitter {
       actor.m_cfg.disableAllMaterialHandling =
           options.disableAllMaterialHandling;
       actor.m_cfg.extensions = options.extensions;
+      actor.m_cfg.inReversePass = true;
 
       bwdPropOptions.direction = gsfBackward;
 
@@ -391,7 +393,7 @@ struct GaussianSumFitter {
     ////////////////////////////////////
     // Create Kalman Result
     ////////////////////////////////////
-    ACTS_VERBOSE("Gsf: Do smoothing");
+    ACTS_VERBOSE("Gsf - States summary:");
     ACTS_VERBOSE("- Fwd measurement states: " << fwdGsfResult.measurementStates
                                               << ", holes: "
                                               << fwdGsfResult.measurementHoles);
@@ -401,18 +403,23 @@ struct GaussianSumFitter {
 
     // TODO should this be warning level? it happens quite often... Investigate!
     if (bwdGsfResult.measurementStates != fwdGsfResult.measurementStates) {
-      ACTS_WARNING("Fwd and bwd measuerement states do not match, momentum = "
-                   << bwdResult->endParameters->absoluteMomentum());
+      ACTS_DEBUG("Fwd and bwd measuerement states do not match");
     }
 
     KalmanFitterResult<traj_t> kalmanResult;
+    if (options.referenceSurface) {
+      kalmanResult.fittedParameters = *bwdResult->endParameters;
+    }
     kalmanResult.fittedStates = fwdGsfResult.fittedStates;
     kalmanResult.lastTrackIndex = fwdGsfResult.currentTip;
     kalmanResult.lastMeasurementIndex = fwdGsfResult.lastMeasurementTip;
-    kalmanResult.fittedParameters = *bwdResult->endParameters;
     kalmanResult.smoothed = false;
     kalmanResult.finished = true;
     kalmanResult.reversed = true;
+    kalmanResult.measurementStates = fwdGsfResult.measurementStates;
+    kalmanResult.measurementHoles = fwdGsfResult.measurementHoles;
+    kalmanResult.processedStates = fwdGsfResult.processedStates;
+    kalmanResult.missedActiveSurfaces = fwdGsfResult.missedActiveSurfaces;
 
     return kalmanResult;
   }

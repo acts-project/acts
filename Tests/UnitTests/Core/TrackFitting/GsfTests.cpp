@@ -50,8 +50,10 @@ using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 
 auto gsfZeroPropagator =
     makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T);
-const GaussianSumFitter<Propagator, VectorMultiTrajectory> gsfZero(
-    std::move(gsfZeroPropagator));
+auto betheHeitlerApprox = Acts::Experimental::makeDefaultBetheHeitlerApprox();
+const GaussianSumFitter<Propagator, decltype(betheHeitlerApprox),
+                        VectorMultiTrajectory>
+    gsfZero(std::move(gsfZeroPropagator), std::move(betheHeitlerApprox));
 
 std::default_random_engine rng(42);
 
@@ -126,7 +128,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto options = makeDefaultGsfOptions();
 
   tester.test_ZeroFieldNoSurfaceForward(gsfZero, options, multi_pars, rng, true,
-                                        true);
+                                        false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
@@ -134,7 +136,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   auto options = makeDefaultGsfOptions();
 
   tester.test_ZeroFieldWithSurfaceForward(gsfZero, options, multi_pars, rng,
-                                          true, true);
+                                          true, false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
@@ -142,7 +144,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
   auto options = makeDefaultGsfOptions();
 
   tester.test_ZeroFieldWithSurfaceBackward(gsfZero, options, multi_pars, rng,
-                                           true, true);
+                                           true, false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
@@ -150,21 +152,21 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
   auto options = makeDefaultGsfOptions();
 
   tester.test_ZeroFieldWithSurfaceBackward(gsfZero, options, multi_pars, rng,
-                                           true, true);
+                                           true, false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
   auto multi_pars = makeParameters();
   auto options = makeDefaultGsfOptions();
 
-  tester.test_ZeroFieldShuffled(gsfZero, options, multi_pars, rng, true, true);
+  tester.test_ZeroFieldShuffled(gsfZero, options, multi_pars, rng, true, false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
   auto options = makeDefaultGsfOptions();
   auto multi_pars = makeParameters();
 
-  tester.test_ZeroFieldWithHole(gsfZero, options, multi_pars, rng, true, true);
+  tester.test_ZeroFieldWithHole(gsfZero, options, multi_pars, rng, true, false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
@@ -178,7 +180,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
   auto multi_pars = makeParameters();
 
   tester.test_ZeroFieldWithOutliers(gsfZero, options, multi_pars, rng, true,
-                                    true);
+                                    false);
 }
 
 // NOTE This test makes no sense for the GSF since there is always reverse
