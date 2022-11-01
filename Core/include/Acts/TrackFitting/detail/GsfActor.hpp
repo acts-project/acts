@@ -384,8 +384,8 @@ struct GsfActor {
     // Emit a warning if the approximation is not valid for this x/x0
     if (not m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
       ACTS_WARNING(
-          "Bethe-Heitler approximation encountered invalid value for x/x0 "
-          << slab.thicknessInX0());
+          "Bethe-Heitler approximation encountered invalid value for x/x0="
+          << slab.thicknessInX0() << " at surface " << surface.geometryId());
     }
 
     // Get the mixture
