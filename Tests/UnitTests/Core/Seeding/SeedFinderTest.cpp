@@ -139,12 +139,13 @@ int main(int argc, char** argv) {
   config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
 
-  config.useVariableMiddleSPRange = false;
-
   int numPhiNeighbors = 1;
 
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
+
+  config.useVariableMiddleSPRange = false;
+  const Acts::Range1D<float> rMiddleSPRange;
 
   std::vector<std::pair<int, int>> zBinNeighborsTop;
   std::vector<std::pair<int, int>> zBinNeighborsBottom;
@@ -191,7 +192,7 @@ int main(int argc, char** argv) {
   for (; !(groupIt == endOfGroups); ++groupIt) {
     auto& v = seedVector.emplace_back();
     a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
-                          groupIt.middle(), groupIt.top(), rRangeSPExtent);
+                          groupIt.middle(), groupIt.top(), rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

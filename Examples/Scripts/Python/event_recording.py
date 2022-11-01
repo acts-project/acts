@@ -14,6 +14,7 @@ import acts.examples.geant4.hepmc3
 u = acts.UnitConstants
 
 from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 
 def runEventRecording(g4geo, outputDir, s=None):
@@ -77,10 +78,10 @@ def runEventRecording(g4geo, outputDir, s=None):
 
 if "__main__" == __name__:
 
-    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
     )
 
-    g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(dd4hepSvc)
+    g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(detector)
 
     runEventRecording(g4geo=g4geo, outputDir=os.getcwd()).run()

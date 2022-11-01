@@ -109,8 +109,8 @@ BOOST_DATA_TEST_CASE(
   options.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
-  BOOST_CHECK(epropagator.propagate(start, options).value().endParameters !=
-              nullptr);
+  BOOST_CHECK(
+      epropagator.propagate(start, options).value().endParameters.has_value());
 }
 
 // This test case checks that no segmentation fault appears
@@ -176,7 +176,7 @@ BOOST_DATA_TEST_CASE(
     const auto& cresult = epropagator.propagate(start, *csurface, optionsEmpty)
                               .value()
                               .endParameters;
-    BOOST_CHECK(cresult != nullptr);
+    BOOST_CHECK(cresult.has_value());
   }
 }
 
