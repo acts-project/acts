@@ -79,21 +79,22 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
     rotation = new G4RotationMatrix({1, 0, 0}, {0, 0, -1}, {0, 1, 0});
   }
 
-  G4Box* solidWorld = new G4Box("World", worldSize, worldSize, worldSize);
-  G4LogicalVolume* logicWorld =
-      new G4LogicalVolume(solidWorld, galactic, "World");
-
-  G4VPhysicalVolume* physWorld =
-      new G4PVPlacement(nullptr,          // rotation
-                        G4ThreeVector(),  // position
-                        logicWorld,       // its logical volume
-                        "World",          // its name
-                        nullptr,          // its mother  volume
-                        false,            // no boolean operation
-                        0,                // copy number
-                        checkOverlaps);   // overlaps checking
-
+  // World
   //
+  G4Box* solidWorld = new G4Box("World Solid", worldSize, worldSize, worldSize);
+
+  G4LogicalVolume* logicWorld =
+      new G4LogicalVolume(solidWorld, galactic, "World Logic");
+
+  m_world = new G4PVPlacement(nullptr,          // rotation
+                              G4ThreeVector(),  // position
+                              logicWorld,       // its logical volume
+                              "World Phys",     // its name
+                              nullptr,          // its mother  volume
+                              false,            // no boolean operation
+                              0,                // copy number
+                              checkOverlaps);   // overlaps checking
+
   // Envelope
   //
   G4Box* solidEnv =
@@ -135,6 +136,5 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
         checkOverlaps);  // overlaps checking
   }
 
-  m_world = physWorld;
-  return physWorld;
+  return m_world;
 }

@@ -1,4 +1,3 @@
-from argparse import ArgumentError
 from typing import Optional, Union, Any
 from pathlib import Path
 from collections import namedtuple
@@ -528,7 +527,7 @@ def getG4DetectorContruction(
     except Exception as e:
         print(e)
 
-    raise ArgumentError(f"cannot find a suitable detector construction for {detector}")
+    raise AttributeError(f"cannot find a suitable detector construction for {detector}")
 
 
 def addGeant4(
@@ -565,10 +564,7 @@ def addGeant4(
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
-    from acts.examples.geant4 import (
-        Geant4Simulation,
-        geant4SimulationConfig,
-    )
+    from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -586,7 +582,7 @@ def addGeant4(
 
     if g4detectorConstruction is None:
         if detector is None:
-            raise ArgumentError("detector not given")
+            raise AttributeError("detector not given")
         g4detectorConstruction = getG4DetectorContruction(detector)
 
     g4conf = geant4SimulationConfig(
