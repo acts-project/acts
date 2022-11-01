@@ -112,11 +112,10 @@ class ImpactPointEstimator {
   /// @param state The state object
   ///
   /// @return New track params
-  Result<std::unique_ptr<const BoundTrackParameters>>
-  estimate3DImpactParameters(const GeometryContext& gctx,
-                             const Acts::MagneticFieldContext& mctx,
-                             const BoundTrackParameters& trkParams,
-                             const Vector3& vtxPos, State& state) const;
+  Result<BoundTrackParameters> estimate3DImpactParameters(
+      const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+      const BoundTrackParameters& trkParams, const Vector3& vtxPos,
+      State& state) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
