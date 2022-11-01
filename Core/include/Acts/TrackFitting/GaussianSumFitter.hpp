@@ -393,7 +393,7 @@ struct GaussianSumFitter {
     ////////////////////////////////////
     // Create Kalman Result
     ////////////////////////////////////
-    ACTS_VERBOSE("Gsf: Do smoothing");
+    ACTS_VERBOSE("Gsf - States summary:");
     ACTS_VERBOSE("- Fwd measurement states: " << fwdGsfResult.measurementStates
                                               << ", holes: "
                                               << fwdGsfResult.measurementHoles);
@@ -403,8 +403,7 @@ struct GaussianSumFitter {
 
     // TODO should this be warning level? it happens quite often... Investigate!
     if (bwdGsfResult.measurementStates != fwdGsfResult.measurementStates) {
-      ACTS_WARNING("Fwd and bwd measuerement states do not match, momentum = "
-                   << bwdResult->endParameters->absoluteMomentum());
+      ACTS_DEBUG("Fwd and bwd measuerement states do not match");
     }
 
     KalmanFitterResult<traj_t> kalmanResult;
