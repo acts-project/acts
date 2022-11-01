@@ -48,8 +48,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
 
   {
     py::class_<DD4hep::DD4hepDetector, ActsExamples::IBaseDetector,
-               std::shared_ptr<DD4hep::DD4hepDetector>>(
-        m, "DD4hepDetector")
+               std::shared_ptr<DD4hep::DD4hepDetector>>(m, "DD4hepDetector")
         .def(py::init<>())
         .def("finalize",
              py::overload_cast<DD4hep::DD4hepGeometryService::Config,

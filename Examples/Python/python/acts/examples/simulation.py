@@ -1,4 +1,4 @@
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, List
 from pathlib import Path
 from collections import namedtuple
 from collections.abc import Iterable
@@ -537,8 +537,8 @@ def addGeant4(
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     g4detectorConstruction: Optional[Any] = None,
-    volumeMappings: list[str] = [],
-    materialMappings: list[str] = [],
+    volumeMappings: List[str] = [],
+    materialMappings: List[str] = [],
     preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
