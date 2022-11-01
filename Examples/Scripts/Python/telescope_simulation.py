@@ -27,7 +27,7 @@ if "__main__" == __name__:
         outputDir.mkdir()
 
     for geant, postfix in [(False, "fatras"), (True, "geant4")]:
-        rnd = acts.examples.RandomNumbers()
+        rnd = acts.examples.RandomNumbers(seed=42)
 
         s = acts.examples.Sequencer(events=1, numThreads=1, logLevel=acts.logging.INFO)
 
