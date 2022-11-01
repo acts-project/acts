@@ -23,11 +23,19 @@ struct SeedConfirmationRangeConfig {
   // compatible top required
   float rMaxSeedConf =
       std::numeric_limits<float>::max();  // Acts::UnitConstants::mm
+
   // number of compatible top SPs of seed if bottom radius is larger than
   // rMaxSeedConf
   size_t nTopForLargeR = 0;
   // number of compatible top SPs of seed if bottom radius is smaller than
   // rMaxSeedConf
   size_t nTopForSmallR = 0;
+
+  // minimum radius for bottom SP in seed confirmation
+  float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
+  // maximum zOrigin in seed confirmation
+  float seedConfMaxZOrigin = 150. * Acts::UnitConstants::mm;
+  // minimum impact parameter for seed confirmation
+  float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
 };
 }  // namespace Acts
