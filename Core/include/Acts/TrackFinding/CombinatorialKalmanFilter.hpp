@@ -903,6 +903,7 @@ class CombinatorialKalmanFilter {
         }
 
         // either copy ALL or everything except for predicted and jacobian
+        trackState.allocateCalibrated(candidateTrackState.calibratedSize());
         trackState.copyFrom(candidateTrackState, mask, false);
 
         auto& typeFlags = trackState.typeFlags();

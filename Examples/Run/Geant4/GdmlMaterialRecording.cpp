@@ -7,13 +7,12 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
-#include "ActsExamples/Geant4/Geant4Options.hpp"
+#include "ActsExamples/Geant4/Geant4Common.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/Geant4Options.hpp"
 #include "ActsExamples/Options/ParticleGunOptions.hpp"
 
 #include <boost/program_options.hpp>
-
-#include "Geant4.hpp"
 
 using namespace ActsExamples;
 

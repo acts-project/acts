@@ -10,8 +10,8 @@
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <random>
