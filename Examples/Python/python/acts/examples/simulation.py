@@ -523,7 +523,7 @@ def getG4DetectorContruction(
         from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 
         if type(detector) is DD4hepDetector:
-            return DDG4DetectorConstruction(detector.geometryService)
+            return DDG4DetectorConstruction(detector)
     except Exception as e:
         print(e)
 
