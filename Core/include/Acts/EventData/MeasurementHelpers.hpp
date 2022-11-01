@@ -57,4 +57,16 @@ auto visit_measurement(A&& param, B&& cov, size_t dim, L&& lambda) {
       dim, param, cov, lambda);
 }
 
+/// Dispatch a generic lambda on a measurement dimension. This overload doesn't
+/// assume anything about what is needed inside the lambda, it communicates the
+/// dimension via an integral constant type
+/// @tparam L The generic lambda type to call
+/// @param dim The runtime dimension of the measurement
+/// @param lambda The generic lambda instance to call
+/// @return Returns the lambda return value
+template <typename L>
+auto visit_measurement(size_t dim, L&& lambda) {
+  return template_switch_lambda<1, eBoundSize>(dim, lambda);
+}
+
 }  // namespace Acts

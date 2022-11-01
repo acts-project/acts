@@ -146,10 +146,7 @@ class ScopedGsfInfoPrinterAndChecker {
 };
 
 ActsScalar calculateDeterminant(
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     true>::Measurement fullCalibrated,
-    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                     true>::MeasurementCovariance fullCalibratedCovariance,
+    const double *fullCalibrated, const double *fullCalibratedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                      true>::Covariance predictedCovariance,
     TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
@@ -182,7 +179,15 @@ void computePosteriorWeights(
     const auto state = mt.getTrackState(tip);
     const double chi2 = state.chi2() - minChi2;
     const double detR = calculateDeterminant(
-        state.calibrated(), state.calibratedCovariance(),
+        // This abuses an incorrectly sized vector / matrix to access the
+        // data pointer! This works (don't use the matrix as is!), but be
+        // careful!
+        state.template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
+            .data(),
+        state
+            .template calibratedCovariance<
+                MultiTrajectoryTraits::MeasurementSizeMax>()
+            .data(),
         state.predictedCovariance(), state.projector(), state.calibratedSize());
 
     const auto factor = std::sqrt(1. / detR) * std::exp(-0.5 * chi2);
