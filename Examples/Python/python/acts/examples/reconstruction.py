@@ -1012,6 +1012,9 @@ class VertexFinder(Enum):
     Iterative = (3,)
 
 
+@acts.examples.NamedTypeArgs(
+    trackSelectorRanges=TrackSelectorRanges,
+)
 def addVertexFitting(
     s,
     field,
