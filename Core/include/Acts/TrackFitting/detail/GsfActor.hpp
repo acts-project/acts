@@ -116,6 +116,11 @@ struct GsfActor {
 
     /// The extensions
     Experimental::GsfExtensions<traj_t> extensions;
+
+    /// Wether we are in the reverse pass or not. This is more reliable than
+    /// checking the navigation direction, because in principle the fitter can
+    /// be started backwards in the first pass
+    bool inReversePass = false;
   } m_cfg;
 
   /// Stores meta information about the components
@@ -623,7 +628,7 @@ struct GsfActor {
       ++result.measurementStates;
     }
 
-    addCombinedState(result, tmpStates, surface, state.stepping.navDir);
+    addCombinedState(result, tmpStates, surface);
     result.lastMeasurementTip = result.currentTip;
 
     using FiltProjector =
@@ -695,7 +700,7 @@ struct GsfActor {
 
     ++result.processedStates;
 
-    addCombinedState(result, tmpStates, surface, state.stepping.navDir);
+    addCombinedState(result, tmpStates, surface);
 
     return Result<void>::success();
   }
@@ -740,14 +745,13 @@ struct GsfActor {
   }
 
   void addCombinedState(result_type& result, const TemporaryStates& tmpStates,
-                        const Surface& surface,
-                        NavigationDirection navDir) const {
+                        const Surface& surface) const {
     using PredProjector =
         MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
     using FiltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
-    if (navDir == NavigationDirection::Forward) {
+    if (not m_cfg.inReversePass) {
       result.currentTip = result.fittedStates->addTrackState(
           TrackStatePropMask::All, result.currentTip);
       auto proxy = result.fittedStates->getTrackState(result.currentTip);
