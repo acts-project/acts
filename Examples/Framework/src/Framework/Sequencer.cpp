@@ -278,6 +278,7 @@ int ActsExamples::Sequencer::run() {
             // changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);
             size_t ialgo = 0;
+
             // Prepare event store w/ service information
             for (auto& service : m_services) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -291,6 +292,7 @@ int ActsExamples::Sequencer::run() {
                 throw std::runtime_error("Failed to decorate event context");
               }
             }
+
             ACTS_VERBOSE("Execute readers");
             for (auto& rdr : m_readers) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -299,6 +301,7 @@ int ActsExamples::Sequencer::run() {
                 throw std::runtime_error("Failed to read input data");
               }
             }
+
             ACTS_VERBOSE("Execute algorithms");
             for (auto& alg : m_algorithms) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -307,6 +310,7 @@ int ActsExamples::Sequencer::run() {
                 throw std::runtime_error("Failed to process event data");
               }
             }
+
             ACTS_VERBOSE("Execute writers");
             for (auto& wrt : m_writers) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -315,6 +319,7 @@ int ActsExamples::Sequencer::run() {
                 throw std::runtime_error("Failed to write output data");
               }
             }
+
             nProcessedEvents++;
             if (nTotalEvents <= 100) {
               ACTS_INFO("finished event " << event);
@@ -335,6 +340,7 @@ int ActsExamples::Sequencer::run() {
           }
         });
   });
+
   // run end-of-run hooks
   for (auto& wrt : m_writers) {
     names.push_back("Writer:" + wrt->name() + ":endRun");
