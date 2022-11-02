@@ -134,7 +134,7 @@ BOOST_DATA_TEST_CASE(SingleTrackDistanceParametersCompatibility3d, tracks, d0,
   // estimate parameters at the closest point in 3d
   auto res = ipEstimator.estimate3DImpactParameters(
       geoContext, magFieldContext, myTrack, refPosition, state);
-  BoundTrackParameters trackAtIP3d = **res;
+  BoundTrackParameters trackAtIP3d = *res;
   const auto& atPerigee = myTrack.parameters();
   const auto& atIp3d = trackAtIP3d.parameters();
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
   auto res2 = ipEstimator.estimate3DImpactParameters(
       geoContext, magFieldContext, params1, vtxPos, state);
   BOOST_CHECK(res2.ok());
-  BoundTrackParameters endParams = **res2;
+  BoundTrackParameters endParams = *res2;
   Vector3 surfaceCenter = endParams.referenceSurface().center(geoContext);
 
   BOOST_CHECK_EQUAL(surfaceCenter, vtxPos);
