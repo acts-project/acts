@@ -278,6 +278,7 @@ int ActsExamples::Sequencer::run() {
             // changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);
             size_t ialgo = 0;
+            
             // Prepare event store w/ service information
             for (auto& service : m_services) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
