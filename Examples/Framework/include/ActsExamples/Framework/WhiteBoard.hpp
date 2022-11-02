@@ -30,7 +30,7 @@ class WhiteBoard {
  public:
   WhiteBoard(std::unique_ptr<const Acts::Logger> logger =
                  Acts::getDefaultLogger("WhiteBoard", Acts::Logging::INFO),
-             std::unordered_map<std::string, std::string> aliases = {});
+             std::unordered_map<std::string, std::string> objectAliases = {});
 
   // A WhiteBoard holds unique elements and can not be copied
   WhiteBoard(const WhiteBoard& other) = delete;
@@ -77,7 +77,7 @@ class WhiteBoard {
 
   std::unique_ptr<const Acts::Logger> m_logger;
   std::unordered_map<std::string, std::shared_ptr<IHolder>> m_store;
-  std::unordered_map<std::string, std::string> m_aliases;
+  std::unordered_map<std::string, std::string> m_objectAliases;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
@@ -86,8 +86,8 @@ class WhiteBoard {
 
 inline ActsExamples::WhiteBoard::WhiteBoard(
     std::unique_ptr<const Acts::Logger> logger,
-    std::unordered_map<std::string, std::string> aliases)
-    : m_logger(std::move(logger)), m_aliases(std::move(aliases)) {}
+    std::unordered_map<std::string, std::string> objectAliases)
+    : m_logger(std::move(logger)), m_objectAliases(std::move(objectAliases)) {}
 
 template <typename T>
 inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
@@ -100,7 +100,7 @@ inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
   auto holder = std::make_shared<HolderT<T>>(std::forward<T>(object));
   m_store.emplace(name, holder);
   ACTS_VERBOSE("Added object '" << name << "'");
-  if (auto it = m_aliases.find(name); it != m_aliases.end()) {
+  if (auto it = m_objectAliases.find(name); it != m_objectAliases.end()) {
     m_store[it->second] = holder;
     ACTS_VERBOSE("Added alias object '" << it->second << "'");
   }

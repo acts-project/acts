@@ -76,8 +76,9 @@ class Sequencer {
   /// @throws std::invalid_argument if the writer is NULL.
   void addWriter(std::shared_ptr<IWriter> writer);
 
-  /// Add an alias to the sequencer.
-  void addAlias(const std::string &from, const std::string &to);
+  /// Add an alias to the whiteboard.
+  void addWhiteboardAlias(const std::string &aliasName,
+                          const std::string &objectName);
 
   /// Run the event loop.
   ///
@@ -125,7 +126,7 @@ class Sequencer {
   std::vector<std::shared_ptr<IWriter>> m_writers;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  std::unordered_map<std::string, std::string> m_aliases;
+  std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };

@@ -732,9 +732,11 @@ def addCKFTracks(
     )
     s.addAlgorithm(trackFinder)
 
-    s.addAlias("trajectories", trackFinder.config.outputTrajectories)
-    s.addAlias("trackParameters", trackFinder.config.outputTrackParameters)
-    s.addAlias("trackParametersTips", trackFinder.config.outputTrackParametersTips)
+    s.addWhiteboardAlias("trajectories", trackFinder.config.outputTrajectories)
+    s.addWhiteboardAlias("trackParameters", trackFinder.config.outputTrackParameters)
+    s.addWhiteboardAlias(
+        "trackParametersTips", trackFinder.config.outputTrackParametersTips
+    )
 
     if trackSelectorRanges is not None:
         trackSelector = addTrackSelection(
@@ -747,8 +749,10 @@ def addCKFTracks(
             logLevel=customLogLevel(),
         )
 
-        s.addAlias("trackParameters", trackSelector.config.outputTrackParameters)
-        s.addAlias(
+        s.addWhiteboardAlias(
+            "trackParameters", trackSelector.config.outputTrackParameters
+        )
+        s.addWhiteboardAlias(
             "trackParametersTips", trackSelector.config.outputTrackParametersTips
         )
 
@@ -990,8 +994,8 @@ def addAmbiguityResolution(
     )
     s.addAlgorithm(alg)
 
-    s.addAlias("trackParameters", alg.config.outputTrackParameters)
-    s.addAlias("trackParametersTips", alg.config.outputTrackParametersTips)
+    s.addWhiteboardAlias("trackParameters", alg.config.outputTrackParameters)
+    s.addWhiteboardAlias("trackParametersTips", alg.config.outputTrackParametersTips)
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)

@@ -84,9 +84,13 @@ void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   ACTS_INFO("Added writer '" << m_writers.back()->name() << "'");
 }
 
-void ActsExamples::Sequencer::addAlias(const std::string& from,
-                                       const std::string& to) {
-  m_aliases[to] = from;
+void ActsExamples::Sequencer::addWhiteboardAlias(
+    const std::string& aliasName, const std::string& objectName) {
+  auto [it, success] =
+      m_whiteboardObjectAliases.insert({objectName, aliasName});
+  if (!success) {
+    throw std::invalid_argument("Alias to '" + objectName + "' already set");
+  }
 }
 
 std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {
@@ -300,7 +304,7 @@ int ActsExamples::Sequencer::run() {
             WhiteBoard eventStore(
                 Acts::getDefaultLogger("EventStore#" + std::to_string(event),
                                        m_cfg.logLevel),
-                m_aliases);
+                m_whiteboardObjectAliases);
             // If we ever wanted to run algorithms in parallel, this needs to be
             // changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);
