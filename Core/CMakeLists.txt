@@ -19,15 +19,19 @@ target_link_libraries(
   ActsCore
   PUBLIC Boost::boost Eigen3::Eigen)
 
-find_package(BFD)
-
-if(BFD_FOUND)
-  message(STATUS "Have BFD: stack traces available")
-  target_include_directories(ActsCore PUBLIC ${BFD_INCLUDE_PATH})
-  target_link_libraries(ActsCore PUBLIC ${BFD_LIBRARIES})
-  target_compile_definitions(ActsCore PUBLIC ACTS_HAVE_BFD)
+find_library (dl_LIBRARY dl)
+find_program(addr2line_EXECUTABLE addr2line)
+message(STATUS ${dl_LIBRARY} ", " ${addr2line_EXECUTABLE})
+if(dl_LIBRARY)
+  target_link_libraries(ActsCore PUBLIC ${dl_LIBRARY})
+  if(addr2line_EXECUTABLE)
+    target_compile_definitions(ActsCore PUBLIC 
+      BOOST_STACKTRACE_USE_ADDR2LINE
+      BOOST_STACKTRACE_ADDR2LINE_LOCATION=${addr2line_EXECUTABLE}
+    )
+  endif()
 else()
-  message(STATUS "Do not habe BFD: no stack traces available")
+  target_compile_definitions(ActsCore PUBLIC BOOST_STACKTRACE_USE_NOOP)
 endif()
 
 if(ACTS_PARAMETER_DEFINITIONS_HEADER)

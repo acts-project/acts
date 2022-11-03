@@ -39,9 +39,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Install dependencies
-        run: yum -y install libdwarf-devel libdw-devel
-
       - name: Cache build
         uses: actions/cache@v3
         with:
@@ -133,7 +130,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs libdwarf-dev libdw-dev
+        run: apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -213,7 +210,7 @@ jobs:
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs libdwarf-dev libdw-dev
+        run: apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -253,7 +250,7 @@ jobs:
 
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs libdwarf-dev libdw-dev
+        run: apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -310,7 +307,7 @@ jobs:
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
     steps:
       - name: Install git lfs
-        run: apt-get install -y git-lfs libdwarf-dev libdw-dev
+        run: apt-get install -y git-lfs
 
       - uses: actions/checkout@v3
         with:
@@ -401,7 +398,7 @@ jobs:
       - name: Install dependencies
           # Install tbb-devel also to build the examples
         run: >
-          dnf -y install ninja-build tbb-devel ccache libdwarf-devel
+          dnf -y install ninja-build tbb-devel ccache
           && ln -s $(find / -type f -name 'ccache') /usr/local/bin/ccache
 
       - name: Cache build
