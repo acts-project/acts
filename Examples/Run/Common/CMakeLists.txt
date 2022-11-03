@@ -9,6 +9,7 @@ add_library(
   src/PropagationExampleBase.cpp
   src/ReconstructionBase.cpp
   src/TrackFindingOptions.cpp
+  src/TrackFittingChi2Options.cpp
   src/TrackFittingOptions.cpp
   src/ParticleSmearingOptions.cpp
   src/ParticleSelectorOptions.cpp
@@ -34,6 +35,7 @@ target_link_libraries(
     ActsExamplesMaterialMapping ActsExamplesIoCsv ActsExamplesIoJson
     ActsExamplesIoRoot ActsExamplesIoObj ActsExamplesIoPerformance
     ActsExamplesDigitization ActsExamplesTrackFitting
+    ActsExamplesTrackFittingChi2
     ActsExamplesTrackFinding ActsExamplesTruthTracking
     ActsExamplesIoCsv
   PRIVATE
