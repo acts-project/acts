@@ -96,8 +96,8 @@ with tempfile.TemporaryDirectory() as temp:
     assert perf_file.exists(), "Performance file not found"
     shutil.copy(perf_file, outdir / "performance_gsf.root")
 
-if "PHYSMON_GSF_ONLY" in os.environ:
-    exit(0)
+# if "PHYSMON_GSF_ONLY" in os.environ:
+#     exit(0)
 
 with tempfile.TemporaryDirectory() as temp:
     s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)

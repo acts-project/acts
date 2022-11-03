@@ -76,8 +76,8 @@ run \
     -o $outdir/gsf.html \
     -p $outdir/gsf_plots
 
-if [[ -v PHYSMON_GSF_ONLY ]]; then
-    exit $ec
+# if [[ -v PHYSMON_GSF_ONLY ]]; then
+#     exit $ec
 
 full_chain truth_smeared
 full_chain truth_estimated
