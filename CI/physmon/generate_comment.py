@@ -33,7 +33,7 @@ _, artifact_dir, outfile = sys.argv
 artifact_dir = Path(artifact_dir)
 outfile = Path(outfile)
 
-artifact_url = PurePath(os.environ["ARTIFACT_URL"])
+artifact_url = os.environ["ARTIFACT_URL"]
 pr_sha = os.environ["PR_SHA"]
 
 
@@ -60,7 +60,8 @@ def all_exist(*args):
 
 def make_url(title, target):
     if (artifact_dir / target).exists():
-        return f"[{title}]({artifact_url/target})"
+        url = artifact_url + "/" + target
+        return f"[{title}]({url})"
     else:
         global has_errors
         has_errors = True
@@ -72,7 +73,8 @@ def make_image(target, width):
     if "?" in target:
         file = target[: target.index("?")]
     if exists(file):
-        return f'<img src="{artifact_url/file}?to_png=1" width="{width}"/>'
+        url = artifact_url + "/" + file
+        return f'<img src="{url}?to_png=1" width="{width}"/>'
     else:
         global has_errors
         has_errors = True
