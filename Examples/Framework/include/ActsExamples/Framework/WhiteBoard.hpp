@@ -29,7 +29,8 @@ namespace ActsExamples {
 class WhiteBoard {
  public:
   WhiteBoard(std::unique_ptr<const Acts::Logger> logger =
-                 Acts::getDefaultLogger("WhiteBoard", Acts::Logging::INFO));
+                 Acts::getDefaultLogger("WhiteBoard", Acts::Logging::INFO),
+             std::unordered_map<std::string, std::string> objectAliases = {});
 
   // A WhiteBoard holds unique elements and can not be copied
   WhiteBoard(const WhiteBoard& other) = delete;
@@ -54,6 +55,11 @@ class WhiteBoard {
   bool exists(const std::string& name) const;
 
  private:
+  /// Find similar names for suggestions with levenshtein-distance
+  std::vector<std::string_view> similarNames(const std::string_view& name,
+                                             int distThreshold,
+                                             std::size_t maxNumber) const;
+
   // type-erased value holder for move-constructible types
   struct IHolder {
     virtual ~IHolder() = default;
@@ -70,7 +76,8 @@ class WhiteBoard {
   };
 
   std::unique_ptr<const Acts::Logger> m_logger;
-  std::unordered_map<std::string, std::unique_ptr<IHolder>> m_store;
+  std::unordered_map<std::string, std::shared_ptr<IHolder>> m_store;
+  std::unordered_map<std::string, std::string> m_objectAliases;
 
   const Acts::Logger& logger() const { return *m_logger; }
 };
@@ -78,8 +85,9 @@ class WhiteBoard {
 }  // namespace ActsExamples
 
 inline ActsExamples::WhiteBoard::WhiteBoard(
-    std::unique_ptr<const Acts::Logger> logger)
-    : m_logger(std::move(logger)) {}
+    std::unique_ptr<const Acts::Logger> logger,
+    std::unordered_map<std::string, std::string> objectAliases)
+    : m_logger(std::move(logger)), m_objectAliases(std::move(objectAliases)) {}
 
 template <typename T>
 inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
@@ -89,15 +97,31 @@ inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
   if (0 < m_store.count(name)) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
-  m_store.emplace(name, std::make_unique<HolderT<T>>(std::forward<T>(object)));
+  auto holder = std::make_shared<HolderT<T>>(std::forward<T>(object));
+  m_store.emplace(name, holder);
   ACTS_VERBOSE("Added object '" << name << "'");
+  if (auto it = m_objectAliases.find(name); it != m_objectAliases.end()) {
+    m_store[it->second] = holder;
+    ACTS_VERBOSE("Added alias object '" << it->second << "'");
+  }
 }
 
 template <typename T>
 inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
   auto it = m_store.find(name);
   if (it == m_store.end()) {
-    throw std::out_of_range("Object '" + name + "' does not exists");
+    const auto names = similarNames(name, 10, 3);
+
+    std::stringstream ss;
+    if (not names.empty()) {
+      ss << ", similar ones are: [ ";
+      for (std::size_t i = 0; i < std::min(3ul, names.size()); ++i) {
+        ss << "'" << names[i] << "' ";
+      }
+      ss << "]";
+    }
+
+    throw std::out_of_range("Object '" + name + "' does not exists" + ss.str());
   }
   const IHolder* holder = it->second.get();
 

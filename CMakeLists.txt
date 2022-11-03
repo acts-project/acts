@@ -109,6 +109,7 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
+  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
 set_option_if(
@@ -235,7 +236,7 @@ endmacro()
 # when a particular package is actually needed.
 # plugin dependencies
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-  find_package(Python COMPONENTS Interpreter Development)
+  find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
   if(ACTS_USE_SYSTEM_PYBIND11) 
     find_package(pybind11 CONFIG REQUIRED)
   else()

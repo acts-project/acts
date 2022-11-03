@@ -25,8 +25,8 @@ ParticleSmearingSigmas = namedtuple(
     defaults=[None] * 10,
 )
 
-SeedfinderConfigArg = namedtuple(
-    "SeedfinderConfig",
+SeedFinderConfigArg = namedtuple(
+    "SeedFinderConfig",
     [
         "maxSeedsPerSpM",
         "cotThetaMax",
@@ -132,7 +132,7 @@ TrackSelectorRanges = namedtuple(
     seedingAlgorithm=SeedingAlgorithm,
     truthSeedRanges=TruthSeedRanges,
     particleSmearingSigmas=ParticleSmearingSigmas,
-    seedfinderConfigArg=SeedfinderConfigArg,
+    seedFinderConfigArg=SeedFinderConfigArg,
     seedFilterConfigArg=SeedFilterConfigArg,
     spacePointGridConfigArg=SpacePointGridConfigArg,
     seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg,
@@ -148,7 +148,7 @@ def addSeeding(
     truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
-    seedfinderConfigArg: SeedfinderConfigArg = SeedfinderConfigArg(),
+    seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
@@ -179,9 +179,9 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedfinderConfigArg : SeedfinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, forceRadialSorting, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, beamPos)
-        SeedfinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
-        Defaults specified in Core/include/Acts/Seeding/SeedfinderConfig.hpp
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, forceRadialSorting, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, beamPos)
+        SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
+        Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, curvatureSortingInFilter, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
                                 Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, impactMax)
@@ -290,66 +290,66 @@ def addSeeding(
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
             # Use seeding
-            seedFinderConfig = acts.SeedfinderConfig(
+            seedFinderConfig = acts.SeedFinderConfig(
                 **acts.examples.defaultKWArgs(
-                    rMin=seedfinderConfigArg.r[0],
-                    rMax=seedfinderConfigArg.r[1],
-                    deltaRMin=seedfinderConfigArg.deltaR[0],
-                    deltaRMax=seedfinderConfigArg.deltaR[1],
+                    rMin=seedFinderConfigArg.r[0],
+                    rMax=seedFinderConfigArg.r[1],
+                    deltaRMin=seedFinderConfigArg.deltaR[0],
+                    deltaRMax=seedFinderConfigArg.deltaR[1],
                     deltaRMinTopSP=(
-                        seedfinderConfigArg.deltaR[0]
-                        if seedfinderConfigArg.deltaRTopSP[0] is None
-                        else seedfinderConfigArg.deltaRTopSP[0]
+                        seedFinderConfigArg.deltaR[0]
+                        if seedFinderConfigArg.deltaRTopSP[0] is None
+                        else seedFinderConfigArg.deltaRTopSP[0]
                     ),
                     deltaRMaxTopSP=(
-                        seedfinderConfigArg.deltaR[1]
-                        if seedfinderConfigArg.deltaRTopSP[1] is None
-                        else seedfinderConfigArg.deltaRTopSP[1]
+                        seedFinderConfigArg.deltaR[1]
+                        if seedFinderConfigArg.deltaRTopSP[1] is None
+                        else seedFinderConfigArg.deltaRTopSP[1]
                     ),
                     deltaRMinBottomSP=(
-                        seedfinderConfigArg.deltaR[0]
-                        if seedfinderConfigArg.deltaRBottomSP[0] is None
-                        else seedfinderConfigArg.deltaRBottomSP[0]
+                        seedFinderConfigArg.deltaR[0]
+                        if seedFinderConfigArg.deltaRBottomSP[0] is None
+                        else seedFinderConfigArg.deltaRBottomSP[0]
                     ),
                     deltaRMaxBottomSP=(
-                        seedfinderConfigArg.deltaR[1]
-                        if seedfinderConfigArg.deltaRBottomSP[1] is None
-                        else seedfinderConfigArg.deltaRBottomSP[1]
+                        seedFinderConfigArg.deltaR[1]
+                        if seedFinderConfigArg.deltaRBottomSP[1] is None
+                        else seedFinderConfigArg.deltaRBottomSP[1]
                     ),
-                    deltaRMiddleMinSPRange=seedfinderConfigArg.deltaRMiddleSPRange[0],
-                    deltaRMiddleMaxSPRange=seedfinderConfigArg.deltaRMiddleSPRange[1],
-                    collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
-                    collisionRegionMax=seedfinderConfigArg.collisionRegion[1],
-                    zMin=seedfinderConfigArg.z[0],
-                    zMax=seedfinderConfigArg.z[1],
-                    maxSeedsPerSpM=seedfinderConfigArg.maxSeedsPerSpM,
-                    cotThetaMax=seedfinderConfigArg.cotThetaMax,
-                    sigmaScattering=seedfinderConfigArg.sigmaScattering,
-                    radLengthPerSeed=seedfinderConfigArg.radLengthPerSeed,
-                    minPt=seedfinderConfigArg.minPt,
-                    bFieldInZ=seedfinderConfigArg.bFieldInZ,
-                    impactMax=seedfinderConfigArg.impactMax,
-                    interactionPointCut=seedfinderConfigArg.interactionPointCut,
-                    arithmeticAverageCotTheta=seedfinderConfigArg.arithmeticAverageCotTheta,
-                    deltaZMax=seedfinderConfigArg.deltaZMax,
-                    maxPtScattering=seedfinderConfigArg.maxPtScattering,
-                    zBinEdges=seedfinderConfigArg.zBinEdges,
-                    skipPreviousTopSP=seedfinderConfigArg.skipPreviousTopSP,
-                    zBinsCustomLooping=seedfinderConfigArg.zBinsCustomLooping,
-                    rRangeMiddleSP=seedfinderConfigArg.rRangeMiddleSP,
-                    useVariableMiddleSPRange=seedfinderConfigArg.useVariableMiddleSPRange,
-                    binSizeR=seedfinderConfigArg.binSizeR,
-                    forceRadialSorting=seedfinderConfigArg.forceRadialSorting,
-                    seedConfirmation=seedfinderConfigArg.seedConfirmation,
-                    centralSeedConfirmationRange=seedfinderConfigArg.centralSeedConfirmationRange,
-                    forwardSeedConfirmationRange=seedfinderConfigArg.forwardSeedConfirmationRange,
+                    deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
+                    deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
+                    collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+                    collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+                    zMin=seedFinderConfigArg.z[0],
+                    zMax=seedFinderConfigArg.z[1],
+                    maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+                    cotThetaMax=seedFinderConfigArg.cotThetaMax,
+                    sigmaScattering=seedFinderConfigArg.sigmaScattering,
+                    radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+                    minPt=seedFinderConfigArg.minPt,
+                    bFieldInZ=seedFinderConfigArg.bFieldInZ,
+                    impactMax=seedFinderConfigArg.impactMax,
+                    interactionPointCut=seedFinderConfigArg.interactionPointCut,
+                    arithmeticAverageCotTheta=seedFinderConfigArg.arithmeticAverageCotTheta,
+                    deltaZMax=seedFinderConfigArg.deltaZMax,
+                    maxPtScattering=seedFinderConfigArg.maxPtScattering,
+                    zBinEdges=seedFinderConfigArg.zBinEdges,
+                    skipPreviousTopSP=seedFinderConfigArg.skipPreviousTopSP,
+                    zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
+                    rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
+                    useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+                    binSizeR=seedFinderConfigArg.binSizeR,
+                    forceRadialSorting=seedFinderConfigArg.forceRadialSorting,
+                    seedConfirmation=seedFinderConfigArg.seedConfirmation,
+                    centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+                    forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
                     beamPos=(
                         None
-                        if seedfinderConfigArg.beamPos is None
-                        or all([x is None for x in seedfinderConfigArg.beamPos])
+                        if seedFinderConfigArg.beamPos is None
+                        or all([x is None for x in seedFinderConfigArg.beamPos])
                         else acts.Vector2(
-                            seedfinderConfigArg.beamPos[0] or 0.0,
-                            seedfinderConfigArg.beamPos[1] or 0.0,
+                            seedFinderConfigArg.beamPos[0] or 0.0,
+                            seedFinderConfigArg.beamPos[1] or 0.0,
                         )
                     ),
                 ),
@@ -426,60 +426,52 @@ def addSeeding(
             # Use seeding
             seedFinderConfig = acts.SeedFinderOrthogonalConfig(
                 **acts.examples.defaultKWArgs(
-                    rMin=seedfinderConfigArg.r[0],
-                    rMax=seedfinderConfigArg.r[1],
+                    rMin=seedFinderConfigArg.r[0],
+                    rMax=seedFinderConfigArg.r[1],
                     deltaRMinTopSP=(
-                        seedfinderConfigArg.deltaR[0]
-                        if seedfinderConfigArg.deltaRTopSP[0] is None
-                        else seedfinderConfigArg.deltaRTopSP[0]
+                        seedFinderConfigArg.deltaR[0]
+                        if seedFinderConfigArg.deltaRTopSP[0] is None
+                        else seedFinderConfigArg.deltaRTopSP[0]
                     ),
                     deltaRMaxTopSP=(
-                        seedfinderConfigArg.deltaR[1]
-                        if seedfinderConfigArg.deltaRTopSP[1] is None
-                        else seedfinderConfigArg.deltaRTopSP[1]
+                        seedFinderConfigArg.deltaR[1]
+                        if seedFinderConfigArg.deltaRTopSP[1] is None
+                        else seedFinderConfigArg.deltaRTopSP[1]
                     ),
                     deltaRMinBottomSP=(
-                        seedfinderConfigArg.deltaR[0]
-                        if seedfinderConfigArg.deltaRBottomSP[0] is None
-                        else seedfinderConfigArg.deltaRBottomSP[0]
+                        seedFinderConfigArg.deltaR[0]
+                        if seedFinderConfigArg.deltaRBottomSP[0] is None
+                        else seedFinderConfigArg.deltaRBottomSP[0]
                     ),
                     deltaRMaxBottomSP=(
-                        seedfinderConfigArg.deltaR[1]
-                        if seedfinderConfigArg.deltaRBottomSP[1] is None
-                        else seedfinderConfigArg.deltaRBottomSP[1]
+                        seedFinderConfigArg.deltaR[1]
+                        if seedFinderConfigArg.deltaRBottomSP[1] is None
+                        else seedFinderConfigArg.deltaRBottomSP[1]
                     ),
-                    deltaRMiddleMinSPRange=seedfinderConfigArg.deltaRMiddleSPRange[0],
-                    deltaRMiddleMaxSPRange=seedfinderConfigArg.deltaRMiddleSPRange[1],
-                    collisionRegionMin=seedfinderConfigArg.collisionRegion[0],
-                    collisionRegionMax=seedfinderConfigArg.collisionRegion[1],
-                    zMin=seedfinderConfigArg.z[0],
-                    zMax=seedfinderConfigArg.z[1],
-                    maxSeedsPerSpM=seedfinderConfigArg.maxSeedsPerSpM,
-                    cotThetaMax=seedfinderConfigArg.cotThetaMax,
-                    sigmaScattering=seedfinderConfigArg.sigmaScattering,
-                    radLengthPerSeed=seedfinderConfigArg.radLengthPerSeed,
-                    minPt=seedfinderConfigArg.minPt,
-                    bFieldInZ=seedfinderConfigArg.bFieldInZ,
-                    impactMax=seedfinderConfigArg.impactMax,
-                    interactionPointCut=seedfinderConfigArg.interactionPointCut,
-                    arithmeticAverageCotTheta=seedfinderConfigArg.arithmeticAverageCotTheta,
-                    deltaZMax=seedfinderConfigArg.deltaZMax,
-                    maxPtScattering=seedfinderConfigArg.maxPtScattering,
-                    zBinEdges=seedfinderConfigArg.zBinEdges,
-                    skipPreviousTopSP=seedfinderConfigArg.skipPreviousTopSP,
-                    zBinsCustomLooping=seedfinderConfigArg.zBinsCustomLooping,
-                    rRangeMiddleSP=seedfinderConfigArg.rRangeMiddleSP,
-                    useVariableMiddleSPRange=seedfinderConfigArg.useVariableMiddleSPRange,
-                    binSizeR=seedfinderConfigArg.binSizeR,
-                    forceRadialSorting=seedfinderConfigArg.forceRadialSorting,
-                    seedConfirmation=seedfinderConfigArg.seedConfirmation,
+                    collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+                    collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+                    zMin=seedFinderConfigArg.z[0],
+                    zMax=seedFinderConfigArg.z[1],
+                    maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+                    cotThetaMax=seedFinderConfigArg.cotThetaMax,
+                    sigmaScattering=seedFinderConfigArg.sigmaScattering,
+                    radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+                    minPt=seedFinderConfigArg.minPt,
+                    bFieldInZ=seedFinderConfigArg.bFieldInZ,
+                    impactMax=seedFinderConfigArg.impactMax,
+                    interactionPointCut=seedFinderConfigArg.interactionPointCut,
+                    deltaZMax=seedFinderConfigArg.deltaZMax,
+                    maxPtScattering=seedFinderConfigArg.maxPtScattering,
+                    seedConfirmation=seedFinderConfigArg.seedConfirmation,
+                    centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+                    forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
                     beamPos=(
                         None
-                        if seedfinderConfigArg.beamPos is None
-                        or all([x is None for x in seedfinderConfigArg.beamPos])
+                        if seedFinderConfigArg.beamPos is None
+                        or all([x is None for x in seedFinderConfigArg.beamPos])
                         else acts.Vector2(
-                            seedfinderConfigArg.beamPos[0] or 0.0,
-                            seedfinderConfigArg.beamPos[1] or 0.0,
+                            seedFinderConfigArg.beamPos[0] or 0.0,
+                            seedFinderConfigArg.beamPos[1] or 0.0,
                         )
                     ),
                 ),
@@ -489,7 +481,7 @@ def addSeeding(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
                     deltaRMin=(
-                        seedfinderConfigArg.deltaR[0]
+                        seedFinderConfigArg.deltaR[0]
                         if seedFilterConfigArg.deltaRMin is None
                         else seedFilterConfigArg.deltaRMin
                     ),
@@ -628,10 +620,7 @@ def addKalmanTracks(
         directNavigation=directNavigation,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
-        dFit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
-            field, **kalmanOptions
-        ),
-        fit=acts.examples.TrackFittingAlgorithm.makeKalmanFitterFunction(
+        fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
     )
@@ -665,9 +654,7 @@ def addTruthTrackingGsf(
         directNavigation=False,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
-        fit=acts.examples.TrackFittingAlgorithm.makeGsfFitterFunction(
-            trackingGeometry, field, **gsfOptions
-        ),
+        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
     )
 
     s.addAlgorithm(gsfAlg)
@@ -684,6 +671,7 @@ CKFPerformanceConfig = namedtuple(
 
 @acts.examples.NamedTypeArgs(
     CKFPerformanceConfigArg=CKFPerformanceConfig,
+    trackSelectorRanges=TrackSelectorRanges,
 )
 def addCKFTracks(
     s: acts.examples.Sequencer,
@@ -693,6 +681,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -713,6 +702,9 @@ def addCKFTracks(
         the output folder for the Root output, None triggers no output
     selectedParticles : str, "truth_seeds_selected"
         CKFPerformanceWriter truth input
+    trackSelectorRanges : TrackSelectorRanges(loc0, loc1, time, eta, absEta, pt, phi, removeNeutral, removeCharged)
+        TrackSelector configuration. Each range is specified as a tuple of (min,max).
+        Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
     writeTrajectories : bool, True
         write trackstates_ckf.root and tracksummary_ckf.root ntuples? These can be quite large.
     """
@@ -739,6 +731,30 @@ def addCKFTracks(
         ),
     )
     s.addAlgorithm(trackFinder)
+
+    s.addWhiteboardAlias("trajectories", trackFinder.config.outputTrajectories)
+    s.addWhiteboardAlias("trackParameters", trackFinder.config.outputTrackParameters)
+    s.addWhiteboardAlias(
+        "trackParametersTips", trackFinder.config.outputTrackParametersTips
+    )
+
+    if trackSelectorRanges is not None:
+        trackSelector = addTrackSelection(
+            s,
+            trackSelectorRanges,
+            inputTrackParameters=trackFinder.config.outputTrackParameters,
+            inputTrackParametersTips=trackFinder.config.outputTrackParametersTips,
+            outputTrackParameters="selectedFittedTrackParameters",
+            outputTrackParametersTips="selectedFittedTrackParametersTips",
+            logLevel=customLogLevel(),
+        )
+
+        s.addWhiteboardAlias(
+            "trackParameters", trackSelector.config.outputTrackParameters
+        )
+        s.addWhiteboardAlias(
+            "trackParametersTips", trackSelector.config.outputTrackParametersTips
+        )
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
@@ -783,6 +799,7 @@ def addCKFTracks(
             level=customLogLevel(),
             inputParticles=selectedParticles,
             inputTrajectories=trackFinder.config.outputTrajectories,
+            inputTrackParametersTips=trackFinder.config.outputTrackParametersTips,
             inputMeasurementParticlesMap="measurement_particles_map",
             **acts.examples.defaultKWArgs(
                 # The bottom seed could be the first, second or third hits on the truth track
@@ -808,6 +825,52 @@ def addCKFTracks(
         s.addWriter(csvMTJWriter)
 
     return s
+
+
+@acts.examples.NamedTypeArgs(
+    trackSelectorRanges=TrackSelectorRanges,
+)
+def addTrackSelection(
+    s: acts.examples.Sequencer,
+    trackSelectorRanges: TrackSelectorRanges,
+    inputTrackParameters: str,
+    inputTrackParametersTips: str,
+    outputTrackParameters: str,
+    outputTrackParametersTips: str,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> acts.examples.TrackSelector:
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    trackSelector = acts.examples.TrackSelector(
+        level=customLogLevel(),
+        inputTrackParameters=inputTrackParameters,
+        inputTrackParametersTips=inputTrackParametersTips,
+        outputTrackParameters=outputTrackParameters,
+        outputTrackParametersTips=outputTrackParametersTips,
+        **acts.examples.defaultKWArgs(
+            loc0Min=trackSelectorRanges.loc0[0],
+            loc0Max=trackSelectorRanges.loc0[1],
+            loc1Min=trackSelectorRanges.loc1[0],
+            loc1Max=trackSelectorRanges.loc1[1],
+            timeMin=trackSelectorRanges.time[0],
+            timeMax=trackSelectorRanges.time[1],
+            phiMin=trackSelectorRanges.phi[0],
+            phiMax=trackSelectorRanges.phi[1],
+            etaMin=trackSelectorRanges.eta[0],
+            etaMax=trackSelectorRanges.eta[1],
+            absEtaMin=trackSelectorRanges.absEta[0],
+            absEtaMax=trackSelectorRanges.absEta[1],
+            ptMin=trackSelectorRanges.pt[0],
+            ptMax=trackSelectorRanges.pt[1],
+            removeCharged=trackSelectorRanges.removeCharged,
+            removeNeutral=trackSelectorRanges.removeNeutral,
+        ),
+    )
+
+    s.addAlgorithm(trackSelector)
+
+    return trackSelector
 
 
 ExaTrkXBackend = Enum("ExaTrkXBackend", "Torch Onnx")
@@ -894,24 +957,91 @@ def addExaTrkX(
     return s
 
 
+AmbiguityResolutionConfig = namedtuple(
+    "AmbiguityResolutionConfig",
+    ["maximumSharedHits"],
+    defaults=[None] * 1,
+)
+
+
+@acts.examples.NamedTypeArgs(
+    config=AmbiguityResolutionConfig,
+    ckfPerformanceConfigArg=CKFPerformanceConfig,
+)
+def addAmbiguityResolution(
+    s,
+    config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
+    ckfPerformanceConfigArg: CKFPerformanceConfig = CKFPerformanceConfig(),
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+
+    from acts.examples import AmbiguityResolutionAlgorithm
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    alg = AmbiguityResolutionAlgorithm(
+        level=customLogLevel(),
+        inputSourceLinks="sourcelinks",
+        inputTrajectories="trajectories",
+        inputTrackParameters="trackParameters",
+        inputTrackParametersTips="trackParametersTips",
+        outputTrackParameters="filteredTrackParameters",
+        outputTrackParametersTips="filteredTrackParametersTips",
+        **acts.examples.defaultKWArgs(
+            maximumSharedHits=config.maximumSharedHits,
+        ),
+    )
+    s.addAlgorithm(alg)
+
+    s.addWhiteboardAlias("trackParameters", alg.config.outputTrackParameters)
+    s.addWhiteboardAlias("trackParametersTips", alg.config.outputTrackParametersTips)
+
+    if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+
+        perfWriter = acts.examples.CKFPerformanceWriter(
+            level=customLogLevel(),
+            inputParticles="truth_seeds_selected",
+            inputTrajectories=alg.config.inputTrajectories,
+            inputTrackParametersTips=alg.config.outputTrackParametersTips,
+            inputMeasurementParticlesMap="measurement_particles_map",
+            **acts.examples.defaultKWArgs(
+                nMeasurementsMin=ckfPerformanceConfigArg.nMeasurementsMin,
+                ptMin=ckfPerformanceConfigArg.ptMin,
+                truthMatchProbMin=ckfPerformanceConfigArg.truthMatchProbMin,
+            ),
+            filePath=str(outputDirRoot / "performance_ambi.root"),
+        )
+        s.addWriter(perfWriter)
+
+    return s
+
+
 class VertexFinder(Enum):
     Truth = (1,)
     AMVF = (2,)
     Iterative = (3,)
 
 
-@acts.examples.NamedTypeArgs(trackSelectorRanges=TrackSelectorRanges)
+@acts.examples.NamedTypeArgs(
+    trackSelectorRanges=TrackSelectorRanges,
+)
 def addVertexFitting(
     s,
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    associatedParticles: str = "particles_input",
-    trajectories: Optional[str] = None,
-    trackParameters: str = "fittedTrackParameters",
+    associatedParticles: Optional[str] = None,
+    trajectories: Optional[str] = "trajectories",
+    trackParameters: str = "trackParameters",
+    trackParametersTips: Optional[str] = "trackParametersTips",
     vertexFinder: VertexFinder = VertexFinder.Truth,
-    trackSelectorRanges: TrackSelectorRanges = TrackSelectorRanges(),
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
+
     """This function steers the vertex fitting
 
     Parameters
@@ -925,9 +1055,6 @@ def addVertexFitting(
         RootVertexPerformanceWriter.inputAssociatedTruthParticles
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
-    trackSelectorRanges : TrackSelectorRanges(loc0, loc1, time, eta, absEta, pt, phi, removeNeutral, removeCharged)
-        TrackSelector configuration. Each range is specified as a tuple of (min,max).
-        Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
     logLevel : acts.logging.Level, None
         logging level to override setting given in `s`
     """
@@ -942,41 +1069,26 @@ def addVertexFitting(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if trackSelectorRanges is not None:
-        selectedTrackParameters = "trackparameters"
-        trackIndices = "outputTrackIndices"
-
-        trackSelector = acts.examples.TrackSelector(
-            level=customLogLevel(),
+        trackSelector = addTrackSelection(
+            s,
+            trackSelectorRanges,
             inputTrackParameters=trackParameters,
-            outputTrackParameters=selectedTrackParameters,
-            outputTrackIndices=trackIndices,
-            **acts.examples.defaultKWArgs(
-                loc0Min=trackSelectorRanges.loc0[0],
-                loc0Max=trackSelectorRanges.loc0[1],
-                loc1Min=trackSelectorRanges.loc1[0],
-                loc1Max=trackSelectorRanges.loc1[1],
-                timeMin=trackSelectorRanges.time[0],
-                timeMax=trackSelectorRanges.time[1],
-                phiMin=trackSelectorRanges.phi[0],
-                phiMax=trackSelectorRanges.phi[1],
-                etaMin=trackSelectorRanges.eta[0],
-                etaMax=trackSelectorRanges.eta[1],
-                absEtaMin=trackSelectorRanges.absEta[0],
-                absEtaMax=trackSelectorRanges.absEta[1],
-                ptMin=trackSelectorRanges.pt[0],
-                ptMax=trackSelectorRanges.pt[1],
-                removeCharged=trackSelectorRanges.removeCharged,
-                removeNeutral=trackSelectorRanges.removeNeutral,
-            ),
+            inputTrackParametersTips=trackParametersTips,
+            outputTrackParameters="selectedTrackParametersVertexing",
+            outputTrackParametersTips="selectedTrackParametersTipsVertexing",
+            logLevel=customLogLevel(),
         )
-        s.addAlgorithm(trackSelector)
-    else:
-        selectedTrackParameters = trackParameters
-        trackIndices = ""
+
+        trackParameters = trackSelector.config.outputTrackParameters
+        trackParametersTips = (
+            trackSelector.config.outputTrackParametersTips
+            if trackParametersTips is not None
+            else None
+        )
 
     inputParticles = "particles_input"
-    outputVertices = "fittedVertices"
     selectedParticles = "particles_selected"
+    outputVertices = "fittedVertices"
 
     outputTime = ""
     if vertexFinder == VertexFinder.Truth:
@@ -990,7 +1102,7 @@ def addVertexFitting(
         fitVertices = VertexFitterAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=selectedTrackParameters,
+            inputTrackParameters=trackParameters,
             inputProtoVertices=findVertices.config.outputProtoVertices,
             outputVertices=outputVertices,
         )
@@ -999,7 +1111,7 @@ def addVertexFitting(
         findVertices = IterativeVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=selectedTrackParameters,
+            inputTrackParameters=trackParameters,
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
         )
@@ -1009,7 +1121,7 @@ def addVertexFitting(
         findVertices = AdaptiveMultiVertexFinderAlgorithm(
             level=customLogLevel(),
             bField=field,
-            inputTrackParameters=selectedTrackParameters,
+            inputTrackParameters=trackParameters,
             outputProtoVertices="protovertices",
             outputVertices=outputVertices,
             outputTime=outputTime,
@@ -1032,16 +1144,17 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                inputFittedTracks=selectedTrackParameters,
-                inputFittedTracksIndices=trackIndices,
-                inputAllFittedTracksTips="fittedTrackParametersTips",
+                inputAssociatedTruthParticles=associatedParticles
+                if associatedParticles is not None
+                else "",
                 inputMeasurementParticlesMap="measurement_particles_map",
-                inputTrajectories="trajectories" if trajectories is not None else "",
-                inputAssociatedTruthParticles=""
-                if trajectories is not None
-                else associatedParticles,
+                inputTrajectories=trajectories if trajectories is not None else "",
+                inputTrackParameters=trackParameters,
+                inputTrackParametersTips=trackParametersTips
+                if trackParametersTips is not None
+                else "",
                 inputVertices=outputVertices,
-                minTrackVtxMatchFraction=0.0 if trajectories is not None else 0.5,
+                minTrackVtxMatchFraction=0.0 if associatedParticles is None else 0.5,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),

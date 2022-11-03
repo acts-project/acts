@@ -36,6 +36,8 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   struct Config {
     /// Input (found) trajectories collection.
     std::string inputTrajectories;
+    /// Input track parameters tips w.r.t inputTrajectories.
+    std::string inputTrackParametersTips;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
@@ -65,6 +67,9 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
 
   /// Finalize plots.
   ProcessCode endRun() final override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,

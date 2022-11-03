@@ -42,6 +42,8 @@ struct IsMultiComponentBoundParameters<MultiComponentBoundTrackParameters<T>>
 
 }  // namespace detail
 
+namespace Experimental {
+
 /// Gaussian Sum Fitter implementation.
 /// @tparam propagator_t The propagator type on which the algorithm is built on
 /// @tparam bethe_heitler_approx_t The type of the Bethe-Heitler-Approximation
@@ -254,6 +256,7 @@ struct GaussianSumFitter {
       actor.m_cfg.abortOnError = options.abortOnError;
       actor.m_cfg.disableAllMaterialHandling =
           options.disableAllMaterialHandling;
+      actor.m_cfg.numberMeasurements = inputMeasurements.size();
 
       fwdPropOptions.direction = gsfForward;
 
@@ -269,8 +272,12 @@ struct GaussianSumFitter {
 
       r.fittedStates = trajectory;
 
+      // This allows the initialization with single- and multicomponent start
+      // parameters
       if constexpr (not IsMultiParameters::value) {
         using Charge = typename IsMultiParameters::Charge;
+
+        r.parentTips.resize(1, MultiTrajectoryTraits::kInvalid);
 
         MultiComponentBoundTrackParameters<Charge> params(
             sParameters.referenceSurface().getSharedPtr(),
@@ -279,6 +286,9 @@ struct GaussianSumFitter {
         return m_propagator.propagate(params, fwdPropOptions,
                                       std::move(inputResult));
       } else {
+        r.parentTips.resize(sParameters.components().size(),
+                            MultiTrajectoryTraits::kInvalid);
+
         return m_propagator.propagate(sParameters, fwdPropOptions,
                                       std::move(inputResult));
       }
@@ -311,11 +321,6 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("+------------------------------+");
 
     auto bwdResult = [&]() {
-      // Use last forward state as start parameters for backward propagation
-      const auto params = detail::extractMultiComponentState(
-          *fwdGsfResult.fittedStates, fwdGsfResult.lastMeasurementTips,
-          fwdGsfResult.weightsOfStates, detail::StatesType::eFiltered);
-
       auto bwdPropOptions = bwdPropInitializer(options, logger);
 
       auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
@@ -326,59 +331,79 @@ struct GaussianSumFitter {
           options.disableAllMaterialHandling;
       actor.m_cfg.extensions = options.extensions;
 
-      // Workaround to get the first state into the MultiTrajectory seems also
-      // to be necessary for standard navigator to prevent double kalman
-      // update on the last surface
-      actor.m_cfg.resultInitializer = [&fwdGsfResult](auto& result,
-                                                      const auto& gsf_logger) {
-        result.currentTips.clear();
-
-        // Manually expand the logging macro here since a function parameter
-        // named 'logger' seems to trigger a false-positive for gcc's
-        // -Wshadow warning
-        gsf_logger().log(Acts::Logging::VERBOSE,
-                         "Initialize the MultiTrajectory with information "
-                         "provided to the Actor");
-
-        for (const auto idx : fwdGsfResult.lastMeasurementTips) {
-          result.currentTips.push_back(
-              result.fittedStates->addTrackState(TrackStatePropMask::All));
-
-          auto proxy =
-              result.fittedStates->getTrackState(result.currentTips.back());
-          proxy.copyFrom(fwdGsfResult.fittedStates->getTrackState(idx));
-          result.weightsOfStates[result.currentTips.back()] =
-              fwdGsfResult.weightsOfStates.at(idx);
-
-          // Because we are backwards, we use forward filtered as predicted
-          using PM = TrackStatePropMask;
-          proxy.shareFrom(proxy, PM::Filtered, PM::Predicted);
-
-          // Mark surface as visited
-          result.visitedSurfaces.insert(proxy.referenceSurface().geometryId());
-        }
-
-        result.parentTips = result.currentTips;
-        result.measurementStates++;
-        result.processedStates++;
-      };
-
       bwdPropOptions.direction = gsfBackward;
 
-      // TODO somehow this proagation fails if we target the first
-      // measuerement surface, go instead back to beamline or to start
-      // parameters for now
       const Surface& target = options.referenceSurface
                                   ? *options.referenceSurface
                                   : sParameters.referenceSurface();
+
+      using PM = TrackStatePropMask;
 
       typename propagator_t::template action_list_t_result_t<
           BoundTrackParameters, decltype(bwdPropOptions.actionList)>
           inputResult;
 
+      // Unfortunately we must construct the result type here to be able to
+      // return an error code
+      using ResultType =
+          decltype(m_propagator.template propagate<
+                   MultiComponentBoundTrackParameters<SinglyCharged>,
+                   decltype(bwdPropOptions), MultiStepperSurfaceReached>(
+              std::declval<MultiComponentBoundTrackParameters<SinglyCharged>>(),
+              std::declval<Acts::Surface&>(),
+              std::declval<decltype(bwdPropOptions)>(),
+              std::declval<decltype(inputResult)>()));
+
       auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
 
       r.fittedStates = trajectory;
+
+      // We take the last measurement state (filtered) from the forward result
+      // as the first measurement state in the backward result (predicted and
+      // filtered), so we can skip the Kalman update on the first surface as
+      // this would be redundant. We combine this with the construction of the
+      // propagation start parameters to ensure they are consistent.
+      std::vector<std::tuple<double, BoundVector, BoundSymMatrix>> cmps;
+      std::shared_ptr<const Surface> surface;
+
+      for (const auto idx : fwdGsfResult.lastMeasurementTips) {
+        // TODO This should not happen, but very rarely does. Maybe investigate
+        // later
+        if (fwdGsfResult.weightsOfStates.at(idx) == 0) {
+          continue;
+        }
+
+        r.currentTips.push_back(
+            r.fittedStates->addTrackState(TrackStatePropMask::All));
+
+        auto proxy = r.fittedStates->getTrackState(r.currentTips.back());
+        proxy.copyFrom(fwdGsfResult.fittedStates->getTrackState(idx));
+        r.weightsOfStates[r.currentTips.back()] =
+            fwdGsfResult.weightsOfStates.at(idx);
+
+        proxy.shareFrom(proxy, PM::Filtered, PM::Predicted);
+
+        // Avoid accessing the surface for every component, since it should be
+        // the same
+        if (not surface) {
+          surface = proxy.referenceSurface().getSharedPtr();
+        }
+
+        cmps.push_back({fwdGsfResult.weightsOfStates.at(idx), proxy.filtered(),
+                        proxy.filteredCovariance()});
+      }
+
+      if (cmps.empty()) {
+        return ResultType{GsfError::NoComponentCreated};
+      }
+
+      r.visitedSurfaces.insert(surface->geometryId());
+      r.parentTips = r.currentTips;
+      r.measurementStates++;
+      r.processedStates++;
+
+      const auto params =
+          MultiComponentBoundTrackParameters<SinglyCharged>(surface, cmps);
 
       return m_propagator
           .template propagate<decltype(params), decltype(bwdPropOptions),
@@ -449,7 +474,7 @@ struct GaussianSumFitter {
       ACTS_VERBOSE("+-----------------------------------------------+");
       ACTS_VERBOSE("| Gsf: Do propagation back to reference surface |");
       ACTS_VERBOSE("+-----------------------------------------------+");
-      auto lastResult = [&]() -> Result<std::unique_ptr<BoundTrackParameters>> {
+      auto lastResult = [&]() -> Result<std::optional<BoundTrackParameters>> {
         const auto& [surface, lastSmoothedState] =
             std::get<1>(smoothResult).front();
 
@@ -470,13 +495,6 @@ struct GaussianSumFitter {
         actor.m_cfg.disableAllMaterialHandling =
             options.disableAllMaterialHandling;
 
-        // Add the initial surface to the list of already visited surfaces, so
-        // that the material effects are not applied twice
-        actor.m_cfg.resultInitializer = [id = surface->geometryId()](
-                                            auto& result, const auto&) {
-          result.visitedSurfaces.insert(id);
-        };
-
         lastPropOptions.direction = gsfBackward;
 
         typename propagator_t::template action_list_t_result_t<
@@ -486,6 +504,12 @@ struct GaussianSumFitter {
         auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
 
         r.fittedStates = trajectory;
+        r.parentTips.resize(params.components().size(),
+                            MultiTrajectoryTraits::kInvalid);
+
+        // Add the initial surface to the list of already visited surfaces, so
+        // that the material effects are not applied twice
+        r.visitedSurfaces.insert(surface->geometryId());
 
         auto result =
             m_propagator
@@ -512,4 +536,5 @@ struct GaussianSumFitter {
   }
 };
 
+}  // namespace Experimental
 }  // namespace Acts

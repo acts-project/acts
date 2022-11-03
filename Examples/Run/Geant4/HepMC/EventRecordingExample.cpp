@@ -11,14 +11,14 @@
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Geant4/Geant4Options.hpp"
 #include "ActsExamples/Geant4HepMC/EventRecording.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/Io/HepMC3/HepMC3Options.hpp"
 #include "ActsExamples/Io/HepMC3/HepMC3Writer.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/Geant4Options.hpp"
+#include "ActsExamples/Options/HepMC3Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <fstream>
