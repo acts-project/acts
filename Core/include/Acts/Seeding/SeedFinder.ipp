@@ -403,10 +403,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         // use geometric average
         float cotThetaAvg2 = cotThetaB * cotThetaT;
+        if (cotThetaAvg2 < 0) {
+          // middle |z| smaller than both top and bottom |z| -> can't proceed
+          continue;
+        }
         if (m_config.arithmeticAverageCotTheta) {
           // use arithmetic average
           cotThetaAvg2 = std::pow((cotThetaB + cotThetaT) / 2, 2);
-          assert(cotThetaAvg2 > 0);
         }
 
         // add errors of spB-spM and spM-spT pairs and add the correlation term
@@ -522,7 +525,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           state.impactParameters.push_back(Im);
 
           // evaluate eta and pT of the seed
-          assert(cotThetaAvg2 > 0);
           float cotThetaAvg = std::sqrt(cotThetaAvg2);
           float theta = std::atan(1. / cotThetaAvg);
           float eta = -std::log(std::tan(0.5 * theta));

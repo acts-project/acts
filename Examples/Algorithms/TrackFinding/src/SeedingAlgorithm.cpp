@@ -227,13 +227,13 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig,
                                                 m_cfg.seedFinderOptions);
 
-
   double _up = std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2;
-  float up =
-      std::min(_up, static_cast<double>(std::numeric_limits<float>::max()));
 
-  std::cout << up << std::endl;
-  // -m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange;
+  // safely truncate double to float
+  float up =
+      std::clamp(std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2,
+                 static_cast<double>(std::numeric_limits<float>::lowest()),
+                 static_cast<double>(std::numeric_limits<float>::max()));
 
   /// variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
