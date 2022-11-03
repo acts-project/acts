@@ -36,6 +36,11 @@ static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
 /// respect to a given momentum or direction
 enum class NavigationDirection : int { Backward = -1, Forward = 1 };
 
+/// Convert navigation dir to index
+inline size_t indexFromDirection(NavigationDirection nDir) {
+  return static_cast<size_t>((static_cast<int>(nDir) + 1) / 2);
+}
+
 inline constexpr NavigationDirection directionFromStepSize(double value) {
   assert(value != 0);
   return value > 0 ? NavigationDirection::Forward
