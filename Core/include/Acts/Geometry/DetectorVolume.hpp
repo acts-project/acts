@@ -430,6 +430,9 @@ class DetectorVolumeFactory {
   /// Create a detector volume - from factory
   /// @param portalGenerator the volume portal generator
   /// @param gctx the geometry context for construction and potential contextual store
+  /// @param args the arguments forwarded to the detector volume contructor
+  ///
+  /// @return a shared object DetectorVolume
   template <typename... Args>
   static std::shared_ptr<DetectorVolume> construct(
       const PortalGenerator& portalGenerator, const GeometryContext& gctx,

@@ -18,7 +18,7 @@
 #include <assert.h>
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const GeometryContext&, const std::string& name,
+    const GeometryContext& gctx, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
