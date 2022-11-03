@@ -18,7 +18,7 @@
 #include <assert.h>
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const GeometryContext& gctx, const std::string& name,
+    const GeometryContext&, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
@@ -40,7 +40,8 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
   m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 
-  assert(checkContainment(gctx) and "Objects are not contained by volume.");
+  assert(checkContainment(GeometryContext()) and
+         "Objects are not contained by volume.");
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(

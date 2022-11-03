@@ -28,7 +28,7 @@ void Acts::Experimental::Portal::assignGeometryId(
   m_surface->assignGeometryId(geometryId);
 }
 
-void Acts::Experimental::Portal::fuse(Portal& other) {
+void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
   // Determine this directioon
   NavigationDirection tDir =
       (m_volumeLinks[indexFromDirection(NavigationDirection::Backward)]
@@ -45,14 +45,18 @@ void Acts::Experimental::Portal::fuse(Portal& other) {
                                  ? NavigationDirection::Backward
                                  : NavigationDirection::Forward;
 
-  if (other.m_volumeLinks[indexFromDirection(oDir)].implementation == nullptr) {
-    throw std::invalid_argument(
+  if (other->m_volumeLinks[indexFromDirection(oDir)].implementation ==
+      nullptr) {
+    throw std::runtime_error(
         "Portal: trying to fuse portal (waste) with no links.");
   }
 
   auto odx = indexFromDirection(oDir);
-  m_volumeLinks[odx] = std::move(other.m_volumeLinks[odx]);
-  m_attachedVolumes[odx] = other.m_attachedVolumes[odx];
+  m_volumeLinks[odx] = std::move(other->m_volumeLinks[odx]);
+  m_attachedVolumes[odx] = other->m_attachedVolumes[odx];
+
+  // And finally overwrite
+  other = getSharedPtr();
 }
 
 void Acts::Experimental::Portal::updateVolumeLink(

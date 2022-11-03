@@ -117,7 +117,9 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// @note this will move the portal links from the other
   /// into this volume, it will throw an exception if the
   /// portals are not fusable
-  void fuse(Portal& other) noexcept(false);
+  ///
+  /// @note that other will be overwritten to point to this
+  void fuse(std::shared_ptr<Portal>& other) noexcept(false);
 
   /// Update the volume link
   ///
