@@ -80,7 +80,13 @@ Additionally, it can contain:
 * an optional collection of contained volumes which describe sub volumes, as e.g. chambers or cells 
 * a volume material description
 
-In case the volume contains surfaces and/or volumes, an adequate navigation state updator is to be provided that can resolve surface candidates or portal candidates into the sub volumes.
+In case the volume contains surfaces and/or volumes, an adequate navigation state updator is to be provided that can resolve surface candidates or portal candidates into the sub volumes. E.g.~if the volume contain a layer with sensitive surfaces, a grid can be used to associate an entry/global position with the candidate surfaces further tested in the navigation.
+
+:::{figure} /figures/geometry/EndcapGrid.png
+:width: 600px
+:align: center
+Illustration of a planar module andcap detector with a grid holding the indices to the candidate surfaces.
+:::
 
 :::{tip}
 When compiling and running in `debug` mode, the containment of the objects in the mother volume is checked, and when failing an `std::exception` is thrown.
