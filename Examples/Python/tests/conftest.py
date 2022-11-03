@@ -367,11 +367,12 @@ def material_recording_session():
 
     from material_recording import runMaterialRecording
 
-    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
     )
+
     dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
-        dd4hepSvc
+        detector
     )
 
     with tempfile.TemporaryDirectory() as d:
@@ -382,7 +383,7 @@ def material_recording_session():
         s.run()
 
         del s
-        del dd4hepSvc
+        del detector
         del dd4hepG4Construction
 
         yield Path(d)

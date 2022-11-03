@@ -463,6 +463,8 @@ def addSeeding(
                     deltaZMax=seedFinderConfigArg.deltaZMax,
                     maxPtScattering=seedFinderConfigArg.maxPtScattering,
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
+                    centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+                    forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
                     beamPos=(
                         None
                         if seedFinderConfigArg.beamPos is None
@@ -680,7 +682,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
-    trackSelectorRanges: Optional[TrackSelectorRanges] = TrackSelectorRanges(),
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -727,11 +729,9 @@ def addCKFTracks(
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
         outputTrackParameters=outputTrackParameters
-        if trackSelectorRanges is None
-        else "fittedTrackParametersTmp",
+        + ("" if trackSelectorRanges is None else "Tmp"),
         outputTrackParametersTips=outputTrackParametersTips
-        if trackSelectorRanges is None
-        else "fittedTrackParametersTipsTmp",
+        + ("" if trackSelectorRanges is None else "Tmp"),
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
@@ -1015,6 +1015,9 @@ class VertexFinder(Enum):
     Iterative = (3,)
 
 
+@acts.examples.NamedTypeArgs(
+    trackSelectorRanges=TrackSelectorRanges,
+)
 def addVertexFitting(
     s,
     field,
@@ -1024,6 +1027,7 @@ def addVertexFitting(
     trackParameters: str = "filteredTrackParameters",
     trackParametersTips: Optional[str] = "filteredTrackParametersTips",
     vertexFinder: VertexFinder = VertexFinder.Truth,
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the vertex fitting
@@ -1051,6 +1055,20 @@ def addVertexFitting(
     )
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    if trackSelectorRanges is not None:
+        addTrackSelection(
+            s,
+            trackSelectorRanges,
+            inputTrackParameters=trackParameters,
+            inputTrackParametersTips=trackParametersTips,
+            outputTrackParameters=trackParameters + "Tmp",
+            outputTrackParametersTips=trackParametersTips + "Tmp",
+            logLevel=customLogLevel(),
+        )
+
+        trackParameters = trackParameters + "Tmp"
+        trackParametersTips = trackParametersTips + "Tmp"
 
     inputParticles = "particles_input"
     outputVertices = "fittedVertices"

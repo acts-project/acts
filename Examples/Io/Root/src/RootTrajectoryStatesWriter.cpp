@@ -376,8 +376,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         m_pathLength.push_back(state.pathLength());
 
         // expand the local measurements into the full bound space
-        Acts::BoundVector meas =
-            state.projector().transpose() * state.calibrated();
+        Acts::BoundVector meas = state.effectiveProjector().transpose() *
+                                 state.effectiveCalibrated();
         // extract local and global position
         Acts::Vector2 local(meas[Acts::eBoundLoc0], meas[Acts::eBoundLoc1]);
         Acts::Vector3 mom(1, 1, 1);
