@@ -73,10 +73,10 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
   G4RotationMatrix* rotation = nullptr;
   if (static_cast<Acts::BinningValue>(m_cfg.binValue) ==
       Acts::BinningValue::binX) {
-    rotation = new G4RotationMatrix({0, 0, -1}, {0, 1, 0}, {1, 0, 0});
+    rotation = new G4RotationMatrix({0, 0, 1}, {0, 1, 0}, {-1, 0, 0});
   } else if (static_cast<Acts::BinningValue>(m_cfg.binValue) ==
              Acts::BinningValue::binY) {
-    rotation = new G4RotationMatrix({1, 0, 0}, {0, 0, -1}, {0, 1, 0});
+    rotation = new G4RotationMatrix({1, 0, 0}, {0, 0, 1}, {0, -1, 0});
   }
 
   // World
@@ -86,36 +86,56 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
   G4LogicalVolume* logicWorld =
       new G4LogicalVolume(solidWorld, galactic, "World Logic");
 
-  m_world = new G4PVPlacement(nullptr,          // rotation
+  m_world = new G4PVPlacement(nullptr,          // no rotation
                               G4ThreeVector(),  // position
                               logicWorld,       // its logical volume
                               "World Phys",     // its name
-                              nullptr,          // its mother  volume
+                              nullptr,          // its mother volume
                               false,            // no boolean operation
                               0,                // copy number
                               checkOverlaps);   // overlaps checking
 
-  // Envelope
+  // Envelope 1
   //
   G4Box* solidEnv =
       new G4Box("Envelope Solid",                                 // its name
                 0.5 * envSizeX, 0.5 * envSizeY, 0.5 * envSizeZ);  // its size
 
-  G4LogicalVolume* logicEnv =
-      new G4LogicalVolume(solidEnv,           // its solid
-                          galactic,           // its material
-                          "Envelope Logic");  // its name
+  G4LogicalVolume* logicEnv1 =
+      new G4LogicalVolume(solidEnv,              // its solid
+                          galactic,              // its material
+                          "Envelope #1 Logic");  // its name
 
-  G4VPhysicalVolume* physEnv = new G4PVPlacement(
-      rotation,  // no rotation
+  G4VPhysicalVolume* physEnv1 =
+      new G4PVPlacement(rotation,            // rotation
+                        G4ThreeVector(),     // at detector center
+                        logicEnv1,           // its logical volume
+                        "Envelope #1 Phys",  // its name
+                        logicWorld,          // its mother volume
+                        false,               // no boolean operation
+                        0,                   // copy number
+                        checkOverlaps);      // overlaps checking
+
+  // Envelope 2
+  //
+  G4LogicalVolume* logicEnv2 =
+      new G4LogicalVolume(solidEnv,              // its solid
+                          galactic,              // its material
+                          "Envelope #2 Logic");  // its name
+
+  G4VPhysicalVolume* physEnv2 = new G4PVPlacement(
+      nullptr,  // no rotation
       G4ThreeVector(m_cfg.offsets[0] * mm, m_cfg.offsets[1] * mm,
                     center),  // at detector center
-      logicEnv,               // its logical volume
-      "Envelope Phys",        // its name
-      logicWorld,             // its mother  volume
+      "Envelope #2 Phys",     // its name
+      logicEnv2,              // its logical volume
+      physEnv1,               // its mother volume
       false,                  // no boolean operation
       0,                      // copy number
       checkOverlaps);         // overlaps checking
+
+  // Layer
+  //
 
   G4Box* solidLayer = new G4Box("Layer Solid", 0.5 * m_cfg.bounds[0],
                                 0.5 * m_cfg.bounds[1], 0.5 * m_cfg.thickness);
@@ -130,7 +150,7 @@ ActsExamples::Telescope::TelescopeG4DetectorConstruction::Construct() {
         G4ThreeVector(0, 0, m_cfg.positions[i] * mm - center),  // at position
         "Layer #" + std::to_string(i) + " Phys",                // its name
         logicLayer,      // its logical volume
-        physEnv,         // its mother  volume
+        physEnv2,        // its mother volume
         false,           // no boolean operation
         0,               // copy number
         checkOverlaps);  // overlaps checking
