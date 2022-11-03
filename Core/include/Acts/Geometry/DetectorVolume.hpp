@@ -198,6 +198,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @param gctx is the geometry context
   /// @param nseg is the number of segements to approximate
+  ///
+  /// @return an Extent object
   Extent extent(const GeometryContext& gctx, size_t nseg = 1) const;
 
   /// Initialize/update the navigation status in this environment
@@ -259,15 +261,16 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// This method allows to udate the navigation state updator
   /// module.
   ///
-  /// @param navStateUpator the new navigation state updator
+  /// @param navStateUpdator the new navigation state updator
   /// @param surfaces the surfaces the new navigation state updator points to
   /// @param volumes the volumes the new navigation state updator points to
+  ///
   void assignNavigationStateUpdator(
       ManagedNavigationStateUpdator&& navStateUpdator,
       const std::vector<std::shared_ptr<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
-  /// Get const access to the navigation state updator
+  /// Const access to the navigation state updator
   const ManagedNavigationStateUpdator& navigationStateUpdator() const;
 
   /// Update a portal given a portal index
@@ -302,9 +305,6 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   void lock(
       const GeometryIdentifier& geometryId = GeometryIdentifier().setVolume(1));
 
-  /// Set the name of the volume
-  void setName(const std::string& name);
-
   /// @return the name of the volume
   const std::string& name() const;
 
@@ -325,6 +325,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @param gctx the current geometry context object, e.g. alignment
   /// @param nseg is the number of segements to approximate
+  ///
+  /// @return a boolean indicating if the objects are properly contained
   bool checkContainment(const GeometryContext& gctx, size_t nseg = 1) const;
 
   /// Name of the volume
@@ -416,14 +418,13 @@ inline const GeometryIdentifier& DetectorVolume::geometryId() const {
   return m_geometryId;
 }
 
-inline void DetectorVolume::setName(const std::string& name) {
-  m_name = name;
-}
-
 inline const std::string& DetectorVolume::name() const {
   return m_name;
 }
 
+/// @brief  A detector volume factory which first constructs the detector volume
+/// and then constructs the portals. This ensures that the std::shared_ptr
+/// holding the detector volume is not weak when assigning to the portals.
 class DetectorVolumeFactory {
  public:
   /// Create a detector volume - from factory
