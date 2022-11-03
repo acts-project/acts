@@ -561,13 +561,12 @@ def addSimWriters(
 
 def addGeant4(
     s: acts.examples.Sequencer,
-    geometryService: Any,  # acts.examples.dd4hep.DD4hepGeometryService
+    g4detectorConstruction: Any,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    seed: Optional[int] = None,
     preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -592,7 +591,6 @@ def addGeant4(
     """
 
     from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
-    from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -608,10 +606,12 @@ def addGeant4(
     else:
         particles_selected = "particles_input"
 
-    g4detector = DDG4DetectorConstruction(geometryService)
+    if g4detectorConstruction is None:
+        raise Exception("G4 detector contruction not given")
+
     g4conf = geant4SimulationConfig(
         level=customLogLevel(),
-        detector=g4detector,
+        detector=g4detectorConstruction,
         inputParticles="particles_input",
         trackingGeometry=trackingGeometry,
         magneticField=field,
@@ -633,7 +633,7 @@ def addGeant4(
     # Output
     addSimWriters(
         s,
-        g4conf.outputSimHits,
+        alg.config.outputSimHits,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,
