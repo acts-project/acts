@@ -53,7 +53,7 @@ auto gsfZeroPropagator =
 auto betheHeitlerApprox = Acts::Experimental::makeDefaultBetheHeitlerApprox();
 const GaussianSumFitter<Propagator, decltype(betheHeitlerApprox),
                         VectorMultiTrajectory>
-    gsfZero(std::move(gsfZeroPropagator), betheHeitlerApprox);
+    gsfZero(std::move(gsfZeroPropagator), std::move(betheHeitlerApprox));
 
 std::default_random_engine rng(42);
 
