@@ -118,11 +118,14 @@ class AtlasBetheHeitlerApprox {
   bool m_high_transform;
 
  public:
-  /// Construct the Bethe-Heitler approximation description
+  /// Construct the Bethe-Heitler approximation description. Additional to the
+  /// coefficients of the polynomials, the information wether these values need
+  /// to be transformed beforehand must be given (see ATLAS code).
   ///
   /// @param low_data data for the lower x/x0 range
   /// @param high_data data for the higher x/x0 range
-  /// @param transform wether the data need to be transformed (see Atlas code)
+  /// @param low_transform wether the low data need to be transformed
+  /// @param high_transform wether the high data need to be transformed
   constexpr AtlasBetheHeitlerApprox(const Data &low_data, const Data &high_data,
                                     bool low_transform, bool high_transform)
       : m_low_data(low_data),
