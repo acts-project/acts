@@ -208,6 +208,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
           .def("addAlgorithm", &Sequencer::addAlgorithm, py::keep_alive<1, 2>())
           .def("addReader", &Sequencer::addReader)
           .def("addWriter", &Sequencer::addWriter)
+          .def("addWhiteboardAlias", &Sequencer::addWhiteboardAlias)
           .def_property_readonly("config", &Sequencer::config);
 
   py::class_<Config>(sequencer, "Config")
