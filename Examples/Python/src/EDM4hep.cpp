@@ -28,130 +28,39 @@ namespace Acts::Python {
 
 void addEDM4hep(Context& ctx) {
   auto mex = ctx.get("examples");
-
   auto edm4hep = mex.def_submodule("_edm4hep");
 
-  {
-    using Reader = ActsExamples::EDM4hepSimHitReader;
-    using Config = Reader::Config;
-    auto r = py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
-                 edm4hep, "EDM4hepSimHitReader")
-                 .def(py::init<const Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"))
-                 .def_property_readonly("config", &Reader::config);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepSimHitReader, edm4hep,
+                             "EDM4hepSimHitReader", inputPath, inputParticles,
+                             outputSimHits, dd4hepGeometryService);
 
-    auto c = py::class_<Config>(r, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputPath);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(outputSimHits);
-    ACTS_PYTHON_MEMBER(dd4hepGeometryService);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepSimHitWriter, edm4hep,
+                             "EDM4hepSimHitWriter", inputSimHits,
+                             inputParticles, outputPath, outputParticles,
+                             outputSimTrackerHits);
 
-  {
-    using Writer = ActsExamples::EDM4hepSimHitWriter;
-    using Config = Writer::Config;
-    auto w = py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
-                 edm4hep, "EDM4hepSimHitWriter")
-                 .def(py::init<const Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"));
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepMeasurementReader, edm4hep,
+                             "EDM4hepMeasurementReader", inputPath,
+                             outputMeasurements, outputMeasurementSimHitsMap,
+                             outputSourceLinks, outputClusters);
 
-    auto c = py::class_<Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputSimHits);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(outputPath);
-    ACTS_PYTHON_MEMBER(outputParticles);
-    ACTS_PYTHON_MEMBER(outputSimTrackerHits);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMeasurementWriter, edm4hep,
+                             "EDM4hepMeasurementWriter", inputMeasurements,
+                             inputClusters, inputSimHits,
+                             inputMeasurementSimHitsMap, outputPath);
 
-  {
-    using Reader = ActsExamples::EDM4hepMeasurementReader;
-    using Config = Reader::Config;
-    auto r = py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
-                 edm4hep, "EDM4hepMeasurementReader")
-                 .def(py::init<const Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"))
-                 .def_property_readonly("config", &Reader::config);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::EDM4hepParticleReader, edm4hep,
+                             "EDM4hepParticleReader", inputPath, inputParticles,
+                             outputParticles);
 
-    auto c = py::class_<Config>(r, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputPath);
-    ACTS_PYTHON_MEMBER(outputMeasurements);
-    ACTS_PYTHON_MEMBER(outputMeasurementSimHitsMap);
-    ACTS_PYTHON_MEMBER(outputSourceLinks);
-    ACTS_PYTHON_MEMBER(outputClusters);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepParticleWriter, edm4hep,
+                             "EDM4hepParticleWriter", inputParticles,
+                             outputPath, outputParticles);
 
-  {
-    using Writer = ActsExamples::EDM4hepMeasurementWriter;
-    using Config = Writer::Config;
-    auto w = py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
-                 edm4hep, "EDM4hepMeasurementWriter")
-                 .def(py::init<const Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"));
-
-    auto c = py::class_<Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputMeasurements);
-    ACTS_PYTHON_MEMBER(inputClusters);
-    ACTS_PYTHON_MEMBER(inputSimHits);
-    ACTS_PYTHON_MEMBER(inputMeasurementSimHitsMap);
-    ACTS_PYTHON_MEMBER(outputPath);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using Reader = ActsExamples::EDM4hepParticleReader;
-    using Config = Reader::Config;
-    auto r = py::class_<Reader, ActsExamples::IReader, std::shared_ptr<Reader>>(
-                 edm4hep, "EDM4hepParticleReader")
-                 .def(py::init<const Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"))
-                 .def_property_readonly("config", &Reader::config);
-
-    auto c = py::class_<Config>(r, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputPath);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(outputParticles);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using Writer = ActsExamples::EDM4hepParticleWriter;
-    using Config = Writer::Config;
-    auto w = py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
-                 edm4hep, "EDM4hepParticleWriter")
-                 .def(py::init<const Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"));
-
-    auto c = py::class_<Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputParticles);
-    ACTS_PYTHON_MEMBER(outputPath);
-    ACTS_PYTHON_MEMBER(outputParticles);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using Writer = ActsExamples::EDM4hepMultiTrajectoryWriter;
-    using Config = Writer::Config;
-    auto w = py::class_<Writer, ActsExamples::IWriter, std::shared_ptr<Writer>>(
-                 edm4hep, "EDM4hepMultiTrajectoryWriter")
-                 .def(py::init<const Config&, Acts::Logging::Level>(),
-                      py::arg("config"), py::arg("level"));
-
-    auto c = py::class_<Config>(w, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTrajectories);
-    ACTS_PYTHON_MEMBER(inputMeasurementParticlesMap);
-    ACTS_PYTHON_MEMBER(outputPath);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepMultiTrajectoryWriter,
+                             edm4hep, "EDM4hepMultiTrajectoryWriter",
+                             inputTrajectories, inputMeasurementParticlesMap,
+                             outputPath);
 }
 
 }  // namespace Acts::Python
