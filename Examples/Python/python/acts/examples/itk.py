@@ -332,20 +332,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     curvatureSortingInFilter = True
     phiMin = 0
     phiMax = 2 * math.pi
-    zBinEdges = [
-        -3000.0,
-        -2500.0,
-        -1400.0,
-        -925.0,
-        -450.0,
-        -250.0,
-        250.0,
-        450.0,
-        925.0,
-        1400.0,
-        2500.0,
-        3000.0,
-    ]  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
     phiBinDeflectionCoverage = 3
     numPhiNeighbors = 1
 
