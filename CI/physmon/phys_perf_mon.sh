@@ -10,9 +10,9 @@ refdir=CI/physmon/reference
 refcommit=$(cat $refdir/commit)
 commit=$(git rev-parse --short HEAD)
 
-echo "::group::Generate validation dataset"
-CI/physmon/physmon.py $outdir 2>&1 > $outdir/run.log
-echo "::endgroup::"
+# echo "::group::Generate validation dataset"
+# CI/physmon/physmon.py $outdir 2>&1 > $outdir/run.log
+# echo "::endgroup::"
 
 set +e
 
@@ -75,9 +75,6 @@ run \
     -c CI/physmon/gsf.yml \
     -o $outdir/gsf.html \
     -p $outdir/gsf_plots
-
-# if [[ -v PHYSMON_GSF_ONLY ]]; then
-#     exit $ec
 
 full_chain truth_smeared
 full_chain truth_estimated
