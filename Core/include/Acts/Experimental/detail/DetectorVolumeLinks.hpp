@@ -39,7 +39,7 @@ inline static const DetectorVolume* nullVolumeLink(
 /// @brief  The implementation of a single link,
 /// The given volume is returned and geometry context,
 /// position and direction ignored.
-class SingleLinkImpl : public INavigationDelegate {
+class SingleLinkImpl : public IDelegateImpl {
  public:
   /// The single volume to point to
   const DetectorVolume* dVolume = nullptr;
@@ -68,7 +68,7 @@ class SingleLinkImpl : public INavigationDelegate {
 /// position and direction ignored.
 ///
 /// @note this does not apply any transform operation
-class MultiLink1DImpl : public INavigationDelegate {
+class MultiLink1DImpl : public IDelegateImpl {
  public:
   std::vector<const DetectorVolume*> dVolumes = {};
   std::vector<ActsScalar> cBoundaries = {};
@@ -109,7 +109,7 @@ class MultiLink1DImpl : public INavigationDelegate {
 };
 
 /// @brief A transformed multi link relation shipt
-class TransformedMultiLink1DImpl : public INavigationDelegate {
+class TransformedMultiLink1DImpl : public IDelegateImpl {
  public:
   MultiLink1DImpl multiLink;
   Transform3 transform = Transform3::Identity();

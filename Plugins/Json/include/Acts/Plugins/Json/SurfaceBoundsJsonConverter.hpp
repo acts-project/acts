@@ -44,4 +44,24 @@ std::shared_ptr<const bounds_t> surfaceBoundsFromJson(const nlohmann::json& j) {
   return std::make_shared<const bounds_t>(bValues);
 }
 
+template <typename bounds_t>
+std::shared_ptr<bounds_t>  createBounds(const std::vector<ActsScalar>& bVector){
+  const size_t kValues = bounds_t::BoundValues::eSize;
+  std::array<ActsScalar, kValues> bValues;
+  std::copy_n(bVector.begin(), kValues, bValues.begin());
+  return std::make_shared<bounds_t>(bValues);
+}
+
+/// @brief  Helper method to convert the bounds type string to an actual bounds type
+/// @param bTypeString the string indication
+/// @return a bounds type 
+Acts::SurfaceBounds::BoundsType boundsType(const std::string& bTypeString);
+
+/// @brief  A bounds factor from values
+/// @param values the bounds values for creating this surface
+/// @return new shared bouns type
+std::shared_ptr<SurfaceBounds> createBounds(
+    const SurfaceBounds::BoundsType& bType,
+    const std::vector<ActsScalar>& bVector);
+
 }  // namespace Acts

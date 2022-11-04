@@ -16,11 +16,13 @@ macro(add_benchmark _name)
     PRIVATE
       ActsCore
       ActsTestsCommonHelpers
+      ActsPluginJson
       Boost::program_options
       Boost::unit_test_framework)
 endmacro()
 
 add_benchmark(AtlasStepper AtlasStepperBenchmark.cpp)
+add_benchmark(DetectorVolumeFinder DetectorVolumeFinderBenchmark.cpp)
 add_benchmark(BoundaryCheck BoundaryCheckBenchmark.cpp)
 add_benchmark(BinUtility BinUtilityBenchmark.cpp)
 add_benchmark(CovarianceTransport CovarianceTransportBenchmark.cpp)

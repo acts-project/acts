@@ -30,27 +30,10 @@ auto nominal = Acts::Transform3::Identity();
 auto portalGenerator = Acts::Experimental::detail::defaultPortalGenerator();
 
 auto navigationStateUpdator =
-    Acts::Experimental::detail::defaultPortalProvider();
+    Acts::Experimental::detail::allPortals();
 
 using namespace Acts::Experimental;
 
-/// Trial and error volume finder
-///
-/// @param gctx is the geometry context of this call
-/// @param detector is the detector
-/// @param position is the position
-///
-/// @return a detector volume pointer or null
-const DetectorVolume* trialAndError(const Acts::GeometryContext& gctx,
-                                    const Detector& detector,
-                                    const Acts::Vector3& position) {
-  for (const auto v : detector.volumes()) {
-    if (v->inside(gctx, position)) {
-      return v;
-    }
-  }
-  return nullptr;
-}
 
 BOOST_AUTO_TEST_SUITE(DetectorSvgConverter)
 
@@ -111,14 +94,11 @@ BOOST_AUTO_TEST_CASE(TubeSectorCylindricalDetectorVolume) {
         cOptions);
   }
 
-  // A detector construction that should work
-  DetectorVolumeFinder trialAndErrorFinder;
-  trialAndErrorFinder.connect<&trialAndError>();
 
   std::vector<std::shared_ptr<DetectorVolume>> detectorVolumes = {
       necCylinderVolume, centralCylinderVolume, pecCylinderVolume};
   auto detector =
-      Detector::makeShared("Detector", detectorVolumes, trialAndErrorFinder);
+      Detector::makeShared("Detector", detectorVolumes, detail::tryAllVolumes());
 
   Acts::Svg::DetectorConverter::Options detectorOptions;
 

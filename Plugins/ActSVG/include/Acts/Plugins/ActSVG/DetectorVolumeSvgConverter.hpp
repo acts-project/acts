@@ -31,10 +31,12 @@ namespace DetectorVolumeConverter {
 
 /// A nested options class for the layer conversion
 struct Options {
-  // The Portal indices
+  /// The Portal indices
   std::map<const Experimental::Portal*, unsigned int> portalIndices;
-  // The Portal converter options
+  /// The Portal converter options
   PortalConverter::Options portalOptions;
+  /// The Surface converter options
+  SurfaceConverter::Options surfaceOptions;
   /// ACTS log level
   Logging::Level logLevel = Logging::INFO;
 };
@@ -83,6 +85,13 @@ static inline actsvg::svg::object zr(const ProtoVolume& volume,
   return actsvg::display::volume(identification, volume, zrView,
                                  displayPortals);
 }
+
+/// Write/create the layer sheets for a given layer
+///
+/// @param volume the volume to be displayed as layer
+///
+/// @return a vector of svg objects
+std::array<actsvg::svg::object, 2u> layer(const ProtoVolume& volume);
 
 }  // namespace View
 

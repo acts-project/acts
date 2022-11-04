@@ -65,6 +65,7 @@ void Acts::toJson(nlohmann::json& j, const Acts::Surface& surface,
   }
 }
 std::shared_ptr<Acts::Surface> Acts::surfaceFromJson(const nlohmann::json& j) {
+  
   std::string sType = j["type"];
   std::string bType = j["bounds"]["type"];
 

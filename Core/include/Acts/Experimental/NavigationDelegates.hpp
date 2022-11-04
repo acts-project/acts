@@ -26,11 +26,12 @@ namespace Experimental {
 
 class Portal;
 class DetectorVolume;
+class Detector;
 
 /// Base class for all link implementations that need class structure
-class INavigationDelegate {
+class IDelegateImpl {
  public:
-  virtual ~INavigationDelegate() {}
+  virtual ~IDelegateImpl() {}
 };
 
 /// Memory managed delegate to guarantee the lifetime
@@ -41,7 +42,7 @@ template <typename deletage_type>
 struct ManagedDelegate {
  public:
   deletage_type delegate;
-  std::shared_ptr<INavigationDelegate> implementation = nullptr;
+  std::shared_ptr<IDelegateImpl> implementation = nullptr;
 };
 
 /// Declare a navigation state updator
@@ -79,6 +80,18 @@ using DetectorVolumeLink = Delegate<const DetectorVolume*(
 
 /// Memory managed detector volume link
 using ManagedDetectorVolumeLink = ManagedDelegate<DetectorVolumeLink>;
+
+/// @brief  Definition of a volume finder, this can be set and optimised at construction
+///
+/// @param gctx the geometry context of this call
+/// @param detector is the detector in which the volume should be found
+/// @param position the search position for this associated volume
+///
+using DetectorVolumeFinder = Delegate<const DetectorVolume*(
+    const GeometryContext& gctx, const Detector& detector,
+    const Vector3& position)>;
+using ManagedDetectorVolumeFinder = ManagedDelegate<DetectorVolumeFinder>;
+
 
 }  // namespace Experimental
 }  // namespace Acts

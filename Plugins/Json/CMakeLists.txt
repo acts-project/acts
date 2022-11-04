@@ -1,11 +1,16 @@
 add_library(
   ActsPluginJson SHARED
-  src/MaterialMapJsonConverter.cpp
   src/AlgebraJsonConverter.cpp
+  src/DetectorJsonConverter.cpp
+  src/DetrayJsonHelper.cpp
+  src/GridJsonConverter.cpp
+  src/MaterialMapJsonConverter.cpp
   src/MaterialJsonConverter.cpp
+  src/PortalJsonConverter.cpp
   src/SurfaceBoundsJsonConverter.cpp
   src/SurfaceJsonConverter.cpp
   src/UtilitiesJsonConverter.cpp
+  src/VolumeBoundsJsonConverter.cpp
   src/VolumeJsonConverter.cpp)
 target_include_directories(
   ActsPluginJson

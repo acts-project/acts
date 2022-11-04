@@ -155,7 +155,8 @@ Acts::Svg::ProtoPortal Acts::Svg::PortalConverter::convert(
         return convertMultiLink(portalOptions, *multiLink, surface, rPos,
                                 backward, gctx);
       }
-      // Check for a composed link
+      // Check for a transformed link
+      /// @todo finish this
     }
     return {};
   };

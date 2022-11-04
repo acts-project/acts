@@ -447,6 +447,14 @@ class Grid final {
     }
   }
 
+  /// @brief Access to the gobal value container
+  /// @return the values 
+  const std::vector<T>& values() const {
+    return m_values;
+  }
+
+  /// @brief  Access to the axes 
+  /// @return an array of axes in right dimensionality
   std::array<const IAxis*, DIM> axes() const {
     return grid_helper::getAxes(m_axes);
   }

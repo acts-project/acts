@@ -1,4 +1,4 @@
-set(unittest_extra_libraries ActsPluginActSVG)
+set(unittest_extra_libraries ActsPluginActSVG ActsPluginJson)
 add_unittest(CylindricalDetectorHelper CylindricalDetectorHelperTests.cpp)
 add_unittest(Detector DetectorTests.cpp)
 add_unittest(DetectorVolume DetectorVolumeTests.cpp)

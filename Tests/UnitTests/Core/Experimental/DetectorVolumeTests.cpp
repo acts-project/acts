@@ -52,13 +52,13 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   auto portalGenerator = detail::defaultPortalGenerator();
 
-  auto navigationStateUpdator = detail::defaultPortalProvider();
+  auto navigationStateUpdator = detail::allPortals();
 
   // Misconfigured - null pointer for bounds
   BOOST_CHECK_THROW(
       DetectorVolumeFactory::construct(
           portalGenerator, tContext, "MisconfiguredFullCylinderVolume", nominal,
-          nullptr, detail::defaultPortalProvider()),
+          nullptr, detail::allPortals()),
       std::invalid_argument);
 
   // Misconfigured - portal generator not connected
@@ -66,13 +66,13 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   BOOST_CHECK_THROW(
       DetectorVolumeFactory::construct(
           unconnected, tContext, "MisconfiguredFullCylinderVolume", nominal,
-          nullptr, detail::defaultPortalProvider()),
+          nullptr, detail::allPortals()),
       std::invalid_argument);
 
   // A full cylinder
   auto fullCylinderVolume = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "FullCylinderVolume", nominal,
-      std::move(fullCylinderBounds), detail::defaultPortalProvider());
+      std::move(fullCylinderBounds), detail::allPortals());
 
   BOOST_CHECK(fullCylinderVolume ==
               unpackToShared<DetectorVolume>(*fullCylinderVolume));
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   auto tubeCylinderVolume = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "TubeCylinderVolume", nominal,
-      std::move(tubeCylinderBounds), detail::defaultPortalProvider());
+      std::move(tubeCylinderBounds), detail::allPortals());
 
   BOOST_CHECK(tubeCylinderVolume->surfaces().size() == 0u);
   BOOST_CHECK(tubeCylinderVolume->volumes().size() == 0u);
@@ -140,15 +140,15 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   // Create the inner box
   auto innerBox = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "InnerBox", nominal, std::move(smallBoxBounds),
-      detail::defaultPortalProvider());
+      detail::allPortals());
 
   // A Portal attacher for inner and outer portals
   detail::AllPortalsAttacher ap;
   auto nStateUpdatorStore =
-      std::make_shared<detail::NavigationStateUpdator<decltype(ap)>>(
+      std::make_shared<detail::NavigationStateUpdatorImpl<decltype(ap)>>(
           std::make_tuple(ap));
   NavigationStateUpdator nStateUpdator;
-  nStateUpdator.connect<&detail::NavigationStateUpdator<decltype(ap)>::update>(
+  nStateUpdator.connect<&detail::NavigationStateUpdatorImpl<decltype(ap)>::update>(
       nStateUpdatorStore.get());
 
   ManagedNavigationStateUpdator navStateUpdator;

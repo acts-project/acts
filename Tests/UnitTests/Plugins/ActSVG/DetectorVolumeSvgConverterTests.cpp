@@ -28,7 +28,7 @@ auto nominal = Acts::Transform3::Identity();
 auto portalGenerator = Acts::Experimental::detail::defaultPortalGenerator();
 
 auto navigationStateUpdator =
-    Acts::Experimental::detail::defaultPortalProvider();
+    Acts::Experimental::detail::allPortals();
 
 BOOST_AUTO_TEST_SUITE(DetectorVolumeSvgConverter)
 

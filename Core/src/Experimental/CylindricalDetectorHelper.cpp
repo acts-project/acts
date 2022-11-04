@@ -8,7 +8,9 @@
 
 #include "Acts/Experimental/CylindricalDetectorHelper.hpp"
 
+#include "Acts/Experimental/Detector.hpp"
 #include "Acts/Experimental/DetectorVolume.hpp"
+#include "Acts/Experimental/detail/DetectorVolumeFinders.hpp"
 #include "Acts/Experimental/detail/DetectorVolumeLinks.hpp"
 #include "Acts/Experimental/detail/PortalHelper.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
@@ -21,6 +23,8 @@
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
 
 #include <exception>
 #include <unordered_set>
@@ -200,7 +204,13 @@ stripSideVolumes(
 Acts::Experimental::ProtoContainer Acts::Experimental::connectVolumesInR(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<Experimental::DetectorVolume>>& volumes,
-    const std::vector<unsigned int>& selectedOnly) {
+    const std::vector<unsigned int>& selectedOnly,
+    Acts::Logging::Level logLevel) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
+
+  ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in R.");
+
   // Return proto container
   ProtoContainer protoContainer;
 
@@ -306,7 +316,13 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectVolumesInR(
 Acts::Experimental::ProtoContainer Acts::Experimental::connectVolumesInZ(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>& volumes,
-    const std::vector<unsigned int>& selectedOnly) {
+    const std::vector<unsigned int>& selectedOnly,
+    Acts::Logging::Level logLevel) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
+
+  ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in z.");
+
   // Return proto container
   ProtoContainer protoContainer;
 
@@ -449,7 +465,13 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectVolumesInZ(
 Acts::Experimental::ProtoContainer Acts::Experimental::connectVolumesInPhi(
     const Acts::GeometryContext& gctx,
     std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>& volumes,
-    const std::vector<unsigned int>& selectedOnly) {
+    const std::vector<unsigned int>& selectedOnly,
+    Acts::Logging::Level logLevel) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
+
+  ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in phi.");
+
   // Return proto container
   ProtoContainer protoContainer;
 
@@ -472,7 +494,13 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectVolumesInPhi(
 
 Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInR(
     const GeometryContext& gctx, const std::vector<ProtoContainer>& containers,
-    const std::vector<unsigned int>& selectedOnly) noexcept(false) {
+    const std::vector<unsigned int>& selectedOnly,
+    Acts::Logging::Level logLevel) noexcept(false) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
+
+  ACTS_DEBUG("Connect " << containers.size() << " proto containers in R.");
+
   // Return the new container
   ProtoContainer protoContainer;
 
@@ -523,7 +551,13 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInR(
 
 Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInZ(
     const GeometryContext& gctx, const std::vector<ProtoContainer>& containers,
-    const std::vector<unsigned int>& selectedOnly) noexcept(false) {
+    const std::vector<unsigned int>& selectedOnly,
+    Acts::Logging::Level logLevel) noexcept(false) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
+
+  ACTS_DEBUG("Connect " << containers.size() << " proto containers in Z.");
+
   // Return the new container
   ProtoContainer protoContainer;
 
@@ -572,4 +606,151 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInZ(
 
   // Done.
   return protoContainer;
+}
+
+std::array<std::vector<Acts::ActsScalar>, 3u>
+Acts::Experimental::rzphiBoundaries(
+    const GeometryContext& gctx,
+    const std::vector<const Acts::Experimental::DetectorVolume*>& volumes,
+    Acts::Logging::Level logLevel) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
+
+  ACTS_DEBUG("Estimate R/z/phi boundaries of  " << volumes.size()
+                                                << " volumes.");
+
+  // The return boundaries
+  std::array<std::vector<Acts::ActsScalar>, 3u> boundaries;
+
+  // The map for collecting
+  std::array<std::map<ActsScalar, size_t>, 3u> valueMaps;
+  auto& rMap = valueMaps[0u];
+  auto& zMap = valueMaps[1u];
+  auto& phiMap = valueMaps[2u];
+
+  auto fillMap = [&](std::map<ActsScalar, size_t>& map,
+                     const std::array<ActsScalar, 2u>& values) {
+    for (auto v : values) {
+      if (map.find(v) != map.end()) {
+        ++map[v];
+      } else {
+        map[v] = 1u;
+      }
+    }
+  };
+
+  // Loop over the volumes and collect boundaries
+  for (const auto& v : volumes) {
+    if (v->volumeBounds().type() == Acts::VolumeBounds::BoundsType::eCylinder) {
+      auto bValues = v->volumeBounds().values();
+      // The min/max values
+      ActsScalar rMin = bValues[CylinderVolumeBounds::BoundValues::eMinR];
+      ActsScalar rMax = bValues[CylinderVolumeBounds::BoundValues::eMaxR];
+      ActsScalar zCenter = v->transform(gctx).translation().z();
+      ActsScalar zHalfLength =
+          bValues[CylinderVolumeBounds::BoundValues::eHalfLengthZ];
+      ActsScalar zMin = zCenter - zHalfLength;
+      ActsScalar zMax = zCenter + zHalfLength;
+      ActsScalar phiCenter =
+          bValues[CylinderVolumeBounds::BoundValues::eAveragePhi];
+      ActsScalar phiSector =
+          bValues[CylinderVolumeBounds::BoundValues::eHalfPhiSector];
+      ActsScalar phiMin = phiCenter - phiSector;
+      ActsScalar phiMax = phiCenter + phiSector;
+      // Fill the maps
+      fillMap(rMap, {rMin, rMax});
+      fillMap(zMap, {zMin, zMax});
+      fillMap(phiMap, {phiMin, phiMax});
+    }
+  }
+
+  for (auto [im, map] : enumerate(valueMaps)) {
+    for (auto [key, value] : map) {
+      boundaries[im].push_back(key);
+    }
+    std::sort(boundaries[im].begin(), boundaries[im].end());
+  }
+
+  ACTS_VERBOSE("- did yield " << boundaries[0u].size() << " boundaries in R.");
+  ACTS_VERBOSE("- did yield " << boundaries[1u].size() << " boundaries in z.");
+  ACTS_VERBOSE("- did yield " << boundaries[2u].size()
+                              << " boundaries in phi.");
+
+  return boundaries;
+}
+
+void Acts::Experimental::attachGridVolumeFinder(
+    const GeometryContext& gctx, std::shared_ptr<Detector>& detector,
+    Acts::Logging::Level logLevel) {
+  // The local logger
+  ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
+
+  ACTS_DEBUG("Attaching grid volume finder to detector " << detector->name());
+
+  const auto& volumes = detector->volumes();
+
+  auto rzphi = rzphiBoundaries(gctx, volumes, logLevel);
+  const auto& rBoundaries = rzphi[0u];
+  const auto& zBoundaries = rzphi[1u];
+  const auto& phiBoundaries = rzphi[2u];
+
+  using Axis = Acts::detail::Axis<Acts::detail::AxisType::Variable,
+                                  Acts::detail::AxisBoundaryType::Bound>;
+  using Grid1 = Acts::detail::Grid<unsigned int, Axis>;
+  using Grid2 = Acts::detail::Grid<unsigned int, Axis, Axis>;
+  using Grid3 = Acts::detail::Grid<unsigned int, Axis, Axis, Axis>;
+
+  unsigned int invalidIndex = std::numeric_limits<unsigned int>::max();
+
+  if (phiBoundaries.size() == 2u) {
+    std::size_t binsFilled = 0;
+    ACTS_VERBOSE("- no phi binning necessary.");
+    if (rBoundaries.size() > 2u and zBoundaries.size() > 2u) {
+      // Create grid
+      Axis rAxis(rBoundaries);
+      Axis zAxis(zBoundaries);
+      Grid2 rzGrid(
+          std::make_tuple<Axis, Axis>(std::move(rAxis), std::move(zAxis)));
+      // Now create the look up and fill
+      for (auto [ir, r] : enumerate(rBoundaries)) {
+        if (ir > 0u) {
+          ActsScalar rC = 0.5 * (r + rBoundaries[ir - 1u]);
+          for (auto [iz, z] : enumerate(zBoundaries)) {
+            if (iz > 0u) {
+              ActsScalar zC = 0.5 * (z + zBoundaries[ir - 1u]);
+              Vector3 rzPosition(rC, 0., zC);
+              const DetectorVolume* v =
+                  detail::trialAndError(gctx, *detector, rzPosition);
+              if (v != nullptr) {
+                auto vit = std::find(volumes.begin(), volumes.end(), v);
+                if (vit != volumes.end()) {
+                  std::size_t vIndex = std::distance(volumes.begin(), vit);
+                  rzGrid.atPosition(std::array<ActsScalar, 2u>{rC, zC}) =
+                      vIndex;
+                  ++binsFilled;
+                } else {
+                  rzGrid.atPosition(std::array<ActsScalar, 2u>{rC, zC}) =
+                      invalidIndex;
+                }
+              }
+            }
+          }
+        }
+      }
+      // Create the managed lookup
+      std::array<Acts::BinningValue, 2u> bValues = {binR, binZ};
+      auto vFinderImpl =
+          std::make_shared<detail::GridDetectorVolumeFinder<Grid2>>(
+              std::move(rzGrid), bValues);
+      ManagedDetectorVolumeFinder managedFinder;
+      DetectorVolumeFinder volumeFinder;
+      volumeFinder.connect<&detail::GridDetectorVolumeFinder<Grid2>::find>(
+          vFinderImpl.get());
+      managedFinder.delegate = std::move(volumeFinder);
+      managedFinder.implementation = vFinderImpl;
+      // Assign it to the detector
+      detector->updateDetectorVolumeFinder(std::move(managedFinder));
+    }
+    ACTS_VERBOSE("- " << binsFilled << " bins of the volume grid filled.");
+  }
 }

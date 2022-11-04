@@ -38,8 +38,8 @@ static inline actsvg::point2 zr(const Vector3& position) {
 
 struct Style {
   // Fill parameters
-  std::array<int, 3> fillColor = {0, 0, 0};
-  ActsScalar fillOpacity = 1.;
+  std::array<int, 3> fillColor = {255, 255, 255};
+  ActsScalar fillOpacity = 0.;
 
   // Fill Highlight parameters
   std::array<int, 3> highlightColor = {0, 0, 0};

@@ -121,6 +121,7 @@ std::vector<std::shared_ptr<DetectorVolume>> attachedVolumes(
   return attachedVolumes[iu];
 }
 
+
 }  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts

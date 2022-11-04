@@ -126,10 +126,22 @@ void Acts::Experimental::DetectorVolume::updateNavigationStatus(
   }
   // The state updator of the volume itself
   m_navigationStateUpdator.delegate(nState, *this, gctx, position, direction,
-                           absMomentum, charge);
+                                    absMomentum, charge);
   nState.currentVolume = this;
   nState.surfaceCandidate = nState.surfaceCandidates.begin();
   return;
+}
+
+void Acts::Experimental::DetectorVolume::updateNavigationStateUpator(
+    ManagedNavigationStateUpdator&& navStateUpdator,
+    const std::vector<std::shared_ptr<Surface>>& surfaces,
+    const std::vector<std::shared_ptr<DetectorVolume>>& volumes) {
+
+  m_navigationStateUpdator = std::move(navStateUpdator);
+  m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
+  m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
+
+  assert(checkContainment(gctx) and "Objects are not contained by volume.");
 }
 
 void Acts::Experimental::DetectorVolume::resize(

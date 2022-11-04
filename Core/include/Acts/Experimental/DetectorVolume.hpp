@@ -97,12 +97,12 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume([[maybe_unused]] const GeometryContext& gctx,
-                 const std::string& name, const Transform3& transform,
-                 std::unique_ptr<VolumeBounds> bounds,
-                 const std::vector<std::shared_ptr<Surface>>& surfaces,
-                 const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-                 ManagedNavigationStateUpdator&& navStateUpdator) noexcept(false);
+  DetectorVolume(
+      [[maybe_unused]] const GeometryContext& gctx, const std::string& name,
+      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      const std::vector<std::shared_ptr<Surface>>& surfaces,
+      const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+      ManagedNavigationStateUpdator&& navStateUpdator) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
@@ -115,10 +115,10 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume([[maybe_unused]] const GeometryContext& gctx,
-                 const std::string& name, const Transform3& transform,
-                 std::unique_ptr<VolumeBounds> bounds,
-                 ManagedNavigationStateUpdator&& navStateUpdator) noexcept(false);
+  DetectorVolume(
+      [[maybe_unused]] const GeometryContext& gctx, const std::string& name,
+      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      ManagedNavigationStateUpdator&& navStateUpdator) noexcept(false);
 
   /// Factory for producing memory managed instances of DetectorVolume.
   /// Will forward all parameters and will attempt to find a suitable
@@ -163,6 +163,17 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ///
   /// @return const reference to the contextual transform
   const Transform3& transform(
+      const GeometryContext& gctx = GeometryContext()) const;
+
+  /// Const access to the center
+  ///
+  /// @param gctx the geometry contect
+  ///
+  /// @note the geometry context is currently ignored, but
+  ///       is a placeholder for eventually misaligned volumes
+  ///
+  /// @return a contextually created center
+  Vector3 center(
       const GeometryContext& gctx = GeometryContext()) const;
 
   /// Const access to the volume bounds
@@ -261,6 +272,20 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
 
+  /// This method allows to udate the navigation state updator
+  /// module. 
+  ///
+  /// @param navStateUpator the new navigation state updator
+  /// @param surfaces the surfaces the new navigation state updator points to 
+  /// @param volumes the volumes the new navigation state updator points to  
+  void updateNavigationStateUpator(
+      ManagedNavigationStateUpdator&& navStateUpdator,
+      const std::vector<std::shared_ptr<Surface>>& surfaces = {},
+      const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
+
+  /// Get const access to the navigation state updator
+  const ManagedNavigationStateUpdator& navigationStateUpdator() const;
+
   /// Update a portal
   ///
   /// @param portal the portal to be updated
@@ -348,6 +373,11 @@ inline const Transform3& DetectorVolume::transform(
   return m_transform;
 }
 
+inline Vector3 DetectorVolume::center(
+    const GeometryContext& gctx) const {
+  return transform(gctx).translation();
+}
+
 inline const VolumeBounds& DetectorVolume::volumeBounds() const {
   return (*m_bounds.get());
 }
@@ -376,6 +406,10 @@ inline const std::vector<const Surface*>& DetectorVolume::surfaces() const {
 inline const std::vector<const DetectorVolume*>& DetectorVolume::volumes()
     const {
   return m_volumes.external;
+}
+
+inline const ManagedNavigationStateUpdator& DetectorVolume::navigationStateUpdator() const {
+  return m_navigationStateUpdator;
 }
 
 inline void DetectorVolume::assignVolumeMaterial(

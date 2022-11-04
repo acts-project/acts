@@ -29,8 +29,10 @@ namespace SurfaceConverter {
 struct Options {
   /// A The style for the surfaces
   Style style;
+  /// The volume index (for colorizing)
+  unsigned int volumeIndex = 0u;
   /// Indicate if you want to draw this as a template surface
-  bool templateSurface = false;
+  bool templateSurface = false;  
   /// ACTS log level
   Logging::Level logLevel = Logging::INFO;
 };

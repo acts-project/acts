@@ -6,6 +6,7 @@ add_library(
   src/LayerSvgConverter.cpp
   src/PortalSvgConverter.cpp
   src/SurfaceArraySvgConverter.cpp
+  src/SurfaceGridSvgConverter.cpp
   src/SurfaceSvgConverter.cpp
   src/TrackingGeometrySvgConverter.cpp)
 target_include_directories(

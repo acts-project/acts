@@ -77,7 +77,7 @@ class VolumeBounds {
   /// Access method for bound values, this is a dynamically sized
   /// vector containing the parameters needed to describe these bounds
   ///
-  /// @return of the stored values for this SurfaceBounds object
+  /// @return of the stored values for this VolumeBounds object
   virtual std::vector<double> values() const = 0;
 
   /// Checking if position given in volume frame is inside

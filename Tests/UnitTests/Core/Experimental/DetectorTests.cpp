@@ -12,6 +12,7 @@
 #include "Acts/Experimental/DetectorVolume.hpp"
 #include "Acts/Experimental/detail/NavigationStateUpdators.hpp"
 #include "Acts/Experimental/detail/PortalGenerators.hpp"
+#include "Acts/Experimental/detail/DetectorVolumeFinders.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -21,24 +22,6 @@
 #include <memory>
 
 using namespace Acts::Experimental;
-
-/// Trial and error volume finder
-///
-/// @param gctx is the geometry context of this call
-/// @param detector is the detector
-/// @param position is the position
-///
-/// @return a detector volume pointer or null
-const DetectorVolume* trialAndError(const Acts::GeometryContext& gctx,
-                                    const Detector& detector,
-                                    const Acts::Vector3& position) {
-  for (const auto v : detector.volumes()) {
-    if (v->inside(gctx, position)) {
-      return v;
-    }
-  }
-  return nullptr;
-}
 
 /// Unpack to shared - simply to test the getSharedPtr mechanism
 ///
@@ -82,26 +65,23 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   auto cyl0 = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0Bounds),
-      detail::defaultPortalProvider());
+      detail::allPortals());
 
   auto cyl0nameDup = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0BoundsCopy),
-      detail::defaultPortalProvider());
+      detail::allPortals());
 
   auto cyl1 = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl1", nominal, std::move(cyl1Bounds),
-      detail::defaultPortalProvider());
+      detail::allPortals());
 
   auto cyl2 = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl2", nominal, std::move(cyl2Bounds),
-      detail::defaultPortalProvider());
-
-  // A detector construction that should work
-  DetectorVolumeFinder trialAndErrorFinder;
-  trialAndErrorFinder.connect<&trialAndError>();
+      detail::allPortals());
 
   std::vector<std::shared_ptr<DetectorVolume>> volumes012 = {cyl0, cyl1, cyl2};
-  auto det012 = Detector::makeShared("Det012", volumes012, trialAndErrorFinder);
+  auto det012 =
+      Detector::makeShared("Det012", volumes012, detail::tryAllVolumes());
 
   // Check the basic return functions
   BOOST_CHECK(det012->name() == "Det012");
@@ -133,16 +113,16 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   BOOST_CHECK(findNull == nullptr);
 
   // Misconfigured - unkonnected finder
-  DetectorVolumeFinder unconnected;
+  ManagedDetectorVolumeFinder unconnected;  
   BOOST_CHECK_THROW(
-      Detector::makeShared("Det012_unconnected", volumes012, unconnected),
+      Detector::makeShared("Det012_unconnected", volumes012, std::move(unconnected)),
       std::invalid_argument);
 
   // Misconfigured - duplicate name
   std::vector<std::shared_ptr<DetectorVolume>> volumes002 = {cyl0, cyl0nameDup,
                                                              cyl2};
   BOOST_CHECK_THROW(Detector::makeShared("Det002_name_duplicate", volumes002,
-                                         trialAndErrorFinder),
+                                         detail::tryAllVolumes()),
                     std::invalid_argument);
 }
 

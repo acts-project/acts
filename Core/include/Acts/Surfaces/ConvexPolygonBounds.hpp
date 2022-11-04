@@ -65,12 +65,15 @@ class ConvexPolygonBounds : public ConvexPolygonBoundsBase {
   /// Type that's used to store the vertices, in this case a fixed size array.
   ///
   using vertex_array = std::array<Vector2, num_vertices>;
+ 
   /// Expose number of parameters as a template parameter
-  ///
-  static constexpr size_t eSize = 2 * N;
+  struct BoundValues {
+    static constexpr size_t eSize = 2 * N;
+  };
+
   /// Type that's used to store the vertices, in this case a fixed size array.
   ///
-  using value_array = std::array<double, eSize>;
+  using value_array = std::array<double, BoundValues::eSize>;
 
   static_assert(N >= 3, "ConvexPolygonBounds needs at least 3 sides.");
 
