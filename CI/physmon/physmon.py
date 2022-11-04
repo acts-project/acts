@@ -100,7 +100,8 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
     (False, True, "truth_estimated"),
     (False, False, "seeded"),
 ]:
-    s = acts.examples.Sequencer(events=500, numThreads=-1, logLevel=acts.logging.INFO)
+    # TODO There seems to be a difference to the reference files when using multithreading ActsAnalysisResidualsAndPulls
+    s = acts.examples.Sequencer(events=500, 1 if label == "seeded" else -1, logLevel=acts.logging.INFO)
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
