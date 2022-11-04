@@ -71,8 +71,8 @@ def buildITkGeometry(
                 binToleranceZ=(5 * u.mm, 5 * u.mm),
                 binTolerancePhi=(0.025 * u.mm, 0.025 * u.mm),
                 layers=LayerTriplet(True),
-                subVolumeName=LayerTriplet("Pixel::Pixel"),
-                sensitiveNames=LayerTriplet(["Pixel::siLog"]),
+                subVolumeName=LayerTriplet("ITkPixel__ITkPixelDetector"),
+                sensitiveNames=LayerTriplet(["ITkPixel__*_Sensor"]),
                 sensitiveAxes=LayerTriplet("YZX"),
                 rRange=LayerTriplet((0 * u.mm, 135 * u.mm)),
                 zRange=LayerTriplet(
@@ -109,8 +109,8 @@ def buildITkGeometry(
                 binToleranceZ=(5 * u.mm, 5 * u.mm),
                 binTolerancePhi=(0.025 * u.mm, 0.025 * u.mm),
                 layers=LayerTriplet(True),
-                subVolumeName=LayerTriplet("Pixel::Pixel"),
-                sensitiveNames=LayerTriplet(["Pixel::siLog"]),
+                subVolumeName=LayerTriplet("ITkPixel__ITkPixelDetector"),
+                sensitiveNames=LayerTriplet(["ITkPixel__*_Sensor"]),
                 sensitiveAxes=LayerTriplet("YZX"),
                 rRange=LayerTriplet((135 * u.mm, 350 * u.mm)),
                 zRange=LayerTriplet(
@@ -149,15 +149,11 @@ def buildITkGeometry(
                 binToleranceZ=(5 * u.mm, 5 * u.mm),
                 binTolerancePhi=(0.025 * u.mm, 0.025 * u.mm),
                 layers=LayerTriplet(True),
-                subVolumeName=LayerTriplet(
-                    negative="*",
-                    central="SCT::SCT_Barrel",
-                    positive="*",
-                ),
+                subVolumeName=LayerTriplet("ITkStrip__ITkStrip"),
                 sensitiveNames=LayerTriplet(
-                    negative=["SCT::ECSensor*"],
-                    central=["SCT::BRLSensor*"],
-                    positive=["SCT::ECSensor*"],
+                    negative=["ITkStrip__ECSensor*"],
+                    central=["ITkStrip__BRLSensor*"],
+                    positive=["ITkStrip__ECSensor*"],
                 ),
                 sensitiveAxes=LayerTriplet("XYZ"),
                 rRange=LayerTriplet(
@@ -225,8 +221,8 @@ def buildITkGeometry(
                 binToleranceZ=(5 * u.mm, 5 * u.mm),
                 binTolerancePhi=(0.25 * u.mm, 0.25 * u.mm),
                 layers=LayerTriplet(positive=True, central=False, negative=True),
-                subVolumeName=LayerTriplet("HGTD::HGTD"),
-                sensitiveNames=LayerTriplet(["HGTD::HGTDSiSensor*"]),
+                subVolumeName=LayerTriplet("HGTD__HGTD"),
+                sensitiveNames=LayerTriplet(["HGTD__HGTDSiSensor*"]),
                 sensitiveAxes=LayerTriplet("XYZ"),
                 rRange=LayerTriplet(
                     negative=(0 * u.mm, 1050 * u.mm),
