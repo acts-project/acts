@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DDG4/DDG4DetectorConstruction.hpp"
 
 #include <functional>
@@ -35,8 +35,8 @@ PYBIND11_MODULE(ActsPythonBindingsDDG4, m) {
   // ownership of the returned pointer, and it is safe to pass to G4
   m.def(
       "DDG4DetectorConstruction",
-      [](DD4hep::DD4hepGeometryService& geometrySvc) {
-        return new DDG4DetectorConstruction(*geometrySvc.lcdd());
+      [](DD4hep::DD4hepDetector& detector) {
+        return new DDG4DetectorConstruction(*detector.lcdd);
       },
       py::return_value_policy::reference);
 }
