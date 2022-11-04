@@ -405,6 +405,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         // use geometric average
         float cotThetaAvg2 = cotThetaB * cotThetaT;
+        if (cotThetaAvg2 < 0) {
+          continue;
+        }
         if (m_config.arithmeticAverageCotTheta) {
           // use arithmetic average
           cotThetaAvg2 = std::pow((cotThetaB + cotThetaT) / 2, 2);
