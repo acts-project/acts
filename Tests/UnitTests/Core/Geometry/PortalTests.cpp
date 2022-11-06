@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   // Create a portal out of it
   auto portalA = Portal::makeShared(surface);
 
-  BOOST_TEST(&(portalA->surface()), surface.get());
+  BOOST_CHECK(&(portalA->surface()) == surface.get());
 
   portalA->assignGeometryId(Acts::GeometryIdentifier{5});
   BOOST_CHECK(portalA->surface().geometryId() == Acts::GeometryIdentifier{5});
