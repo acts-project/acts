@@ -45,46 +45,37 @@ struct ManagedDelegate {
   std::shared_ptr<IDelegateImpl> implementation = nullptr;
 };
 
-/// Declare a navigation state updator
+/// Declare an updator for the local navigation, i.e. the
+/// navigation inside a detector volume. This can be called
+/// either directly after a volume switch or in order to update
+/// within a volume after some progression
 ///
 /// This delegate dispatches the local navigation action
 /// to a dedicated struct or function that is optimised for
 /// the given environment.
 ///
 /// @param gctx is the current geometry context
-/// @param nState is the navigation state to be updated
+/// @param nState [in,out] is the navigation state to be updated
 ///
 /// @note it relies on the detector volume to be set to the state
-using NavigationStateUpdator =
+using SurfaceCandidatesUpdator =
     Delegate<void(const GeometryContext& gctx, NavigationState& nState)>;
 
 /// Memory  managed navigation state updator
-using ManagedNavigationStateUpdator = ManagedDelegate<NavigationStateUpdator>;
+using ManagedSurfaceCandidatesUpdator =
+    ManagedDelegate<SurfaceCandidatesUpdator>;
 
-/// Declare a Detctor Volume Switching delegate
+/// Declare a Detctor Volume finding or switching delegate
 ///
 /// @param gctx is the current geometry context
-/// @param position is the position at the query
-/// @param direction is the direction at the query
+/// @param nState [in, out] is the navigation state to be updated
 ///
 /// @return the new DetectorVolume into which one changes at this switch
-using DetectorVolumeLink = Delegate<const DetectorVolume*(
-    const GeometryContext& gctx, const Vector3& position,
-    const Vector3& direction)>;
+using DetectorVolumeUpdator =
+    Delegate<void(const GeometryContext& gctx, NavigationState& nState)>;
 
 /// Memory managed detector volume link
-using ManagedDetectorVolumeLink = ManagedDelegate<DetectorVolumeLink>;
-
-/// @brief  Definition of a volume finder, this can be set and optimised at construction
-///
-/// @param gctx the geometry context of this call
-/// @param detector is the detector in which the volume should be found
-/// @param position the search position for this associated volume
-///
-using DetectorVolumeFinder = Delegate<const DetectorVolume*(
-    const GeometryContext& gctx, const Detector& detector,
-    const Vector3& position)>;
-using ManagedDetectorVolumeFinder = ManagedDelegate<DetectorVolumeFinder>;
+using ManagedDetectorVolumeUpdator = ManagedDelegate<DetectorVolumeUpdator>;
 
 }  // namespace Experimental
 }  // namespace Acts

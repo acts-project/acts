@@ -22,11 +22,11 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    ManagedNavigationStateUpdator&& navStateUpdator)
+    ManagedSurfaceCandidatesUpdator&& navStateUpdator)
     : m_name(name),
       m_transform(transform),
       m_bounds(std::move(bounds)),
-      m_navigationStateUpdator(std::move(navStateUpdator)),
+      m_SurfaceCandidatesUpdator(std::move(navStateUpdator)),
       m_volumeMaterial(nullptr) {
   if (m_bounds == nullptr) {
     throw std::invalid_argument(
@@ -47,11 +47,11 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext&, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-    ManagedNavigationStateUpdator&& navStateUpdator)
+    ManagedSurfaceCandidatesUpdator&& navStateUpdator)
     : m_name(name),
       m_transform(transform),
       m_bounds(std::move(bounds)),
-      m_navigationStateUpdator(std::move(navStateUpdator)),
+      m_SurfaceCandidatesUpdator(std::move(navStateUpdator)),
       m_volumeMaterial(nullptr) {
   if (m_bounds == nullptr) {
     throw std::invalid_argument(
@@ -126,16 +126,16 @@ void Acts::Experimental::DetectorVolume::updateNavigationState(
   }
   // The state updator of the volume itself
   nState.currentVolume = this;
-  m_navigationStateUpdator.delegate(gctx, nState);
+  m_SurfaceCandidatesUpdator.delegate(gctx, nState);
   nState.surfaceCandidate = nState.surfaceCandidates.begin();
   return;
 }
 
-void Acts::Experimental::DetectorVolume::assignNavigationStateUpdator(
-    ManagedNavigationStateUpdator&& navStateUpdator,
+void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdator(
+    ManagedSurfaceCandidatesUpdator&& navStateUpdator,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes) {
-  m_navigationStateUpdator = std::move(navStateUpdator);
+  m_SurfaceCandidatesUpdator = std::move(navStateUpdator);
   m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 

@@ -31,12 +31,12 @@ void Acts::Experimental::Portal::assignGeometryId(
 void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
   // Determine this directioon
   NavigationDirection tDir =
-      (m_volumeLinks[indexFromDirection(NavigationDirection::Backward)]
+      (m_volumeUpdators[indexFromDirection(NavigationDirection::Backward)]
            .implementation == nullptr)
           ? NavigationDirection::Forward
           : NavigationDirection::Backward;
 
-  if (m_volumeLinks[indexFromDirection(tDir)].implementation == nullptr) {
+  if (m_volumeUpdators[indexFromDirection(tDir)].implementation == nullptr) {
     throw std::invalid_argument(
         "Portal: trying to fuse portal (keep) with no links.");
   }
@@ -45,39 +45,40 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
                                  ? NavigationDirection::Backward
                                  : NavigationDirection::Forward;
 
-  if (other->m_volumeLinks[indexFromDirection(oDir)].implementation ==
+  if (other->m_volumeUpdators[indexFromDirection(oDir)].implementation ==
       nullptr) {
     throw std::runtime_error(
         "Portal: trying to fuse portal (waste) with no links.");
   }
 
   auto odx = indexFromDirection(oDir);
-  m_volumeLinks[odx] = std::move(other->m_volumeLinks[odx]);
+  m_volumeUpdators[odx] = std::move(other->m_volumeUpdators[odx]);
   m_attachedVolumes[odx] = other->m_attachedVolumes[odx];
 
   // And finally overwrite
   other = getSharedPtr();
 }
 
-void Acts::Experimental::Portal::updateVolumeLink(
-    NavigationDirection nDir, ManagedDetectorVolumeLink&& dVolumeLink,
+void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
+    NavigationDirection nDir, ManagedDetectorVolumeUpdator&& dVolumeUpdator,
     const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
   auto idx = indexFromDirection(nDir);
-  m_volumeLinks[idx] = std::move(dVolumeLink);
+  m_volumeUpdators[idx] = std::move(dVolumeUpdator);
   m_attachedVolumes[idx] = attachedVolumes;
 }
 
-const Acts::Experimental::DetectorVolume*
-Acts::Experimental::Portal::nextVolume(const GeometryContext& gctx,
-                                       const Vector3& position,
-                                       const Vector3& direction) const {
+void Acts::Experimental::Portal::updateDetectorVolume(
+    const GeometryContext& gctx, NavigationState& nState) const {
+  const auto& position = nState.position;
+  const auto& direction = nState.direction;
   const Vector3 normal = surface().normal(gctx, position);
   NavigationDirection nDir = (normal.dot(direction) < 0.)
                                  ? NavigationDirection::Backward
                                  : NavigationDirection::Forward;
-  const auto& dLink = m_volumeLinks[indexFromDirection(nDir)].delegate;
-  if (dLink.connected()) {
-    return dLink(gctx, position, direction);
+  const auto& vUpdator = m_volumeUpdators[indexFromDirection(nDir)].delegate;
+  if (vUpdator.connected()) {
+    vUpdator(gctx, nState);
+  } else {
+    nState.currentVolume = nullptr;
   }
-  return nullptr;
 }

@@ -33,6 +33,7 @@ namespace Experimental {
 
 class DetectorVolume;
 class Portal;
+class Detector;
 
 /// The Portal genertor definition
 ///
@@ -104,7 +105,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-      ManagedNavigationStateUpdator&& navStateUpdator) noexcept(false);
+      ManagedSurfaceCandidatesUpdator&& navStateUpdator) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
@@ -120,7 +121,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   DetectorVolume(
       [[maybe_unused]] const GeometryContext& gctx, const std::string& name,
       const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-      ManagedNavigationStateUpdator&& navStateUpdator) noexcept(false);
+      ManagedSurfaceCandidatesUpdator&& navStateUpdator) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   /// Will forward all parameters and will attempt to find a suitable
@@ -265,13 +266,13 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param surfaces the surfaces the new navigation state updator points to
   /// @param volumes the volumes the new navigation state updator points to
   ///
-  void assignNavigationStateUpdator(
-      ManagedNavigationStateUpdator&& navStateUpdator,
+  void assignSurfaceCandidatesUpdator(
+      ManagedSurfaceCandidatesUpdator&& navStateUpdator,
       const std::vector<std::shared_ptr<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
   /// Const access to the navigation state updator
-  const ManagedNavigationStateUpdator& navigationStateUpdator() const;
+  const ManagedSurfaceCandidatesUpdator& SurfaceCandidatesUpdator() const;
 
   /// Update a portal given a portal index
   ///
@@ -311,6 +312,13 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @return the geometry identifier
   const GeometryIdentifier& geometryId() const;
 
+  /// Assign Detector to this volume (for back navigation issues)
+  /// @param detector the parenting detector class
+  void assignDetector(const Detector& detector);
+
+  /// Const access to the detector
+  const Detector* detector() const;
+
  private:
   /// Internal construction method that calls the poral genenerator
   ///
@@ -348,13 +356,16 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
   /// The navigation state updator
-  ManagedNavigationStateUpdator m_navigationStateUpdator;
+  ManagedSurfaceCandidatesUpdator m_SurfaceCandidatesUpdator;
 
   /// Volume material (optional)
   std::shared_ptr<IVolumeMaterial> m_volumeMaterial = nullptr;
 
   /// GeometryIdentifier of this volume
   GeometryIdentifier m_geometryId{0};
+
+  /// The detector it belongs to
+  const Detector* m_detector = nullptr;
 };
 
 inline const Transform3& DetectorVolume::transform(
@@ -396,9 +407,9 @@ inline const std::vector<const DetectorVolume*>& DetectorVolume::volumes()
   return m_volumes.external;
 }
 
-inline const ManagedNavigationStateUpdator&
-DetectorVolume::navigationStateUpdator() const {
-  return m_navigationStateUpdator;
+inline const ManagedSurfaceCandidatesUpdator&
+DetectorVolume::SurfaceCandidatesUpdator() const {
+  return m_SurfaceCandidatesUpdator;
 }
 
 inline void DetectorVolume::assignVolumeMaterial(
@@ -422,6 +433,14 @@ inline const std::string& DetectorVolume::name() const {
   return m_name;
 }
 
+inline void DetectorVolume::assignDetector(const Detector& detector) {
+  m_detector = &detector;
+}
+
+inline const Detector* DetectorVolume::detector() const {
+  return m_detector;
+}
+
 /// @brief  A detector volume factory which first constructs the detector volume
 /// and then constructs the portals. This ensures that the std::shared_ptr
 /// holding the detector volume is not weak when assigning to the portals.
@@ -441,6 +460,91 @@ class DetectorVolumeFactory {
         DetectorVolume::makeShared(gctx, std::forward<Args>(args)...);
     dVolume->construct(gctx, portalGenerator);
     return dVolume;
+  }
+};
+
+/// Helper extractors: all portals
+struct AllPortalsExtractor {
+  /// Extract the portals from the volume
+  ///
+  /// @param gctx the geometry contextfor this extraction call
+  /// @param volume is the detector volume
+  inline static const std::vector<const Portal*> extract(
+      [[maybe_unused]] const GeometryContext& gctx,
+      const DetectorVolume& volume) {
+    return volume.portals();
+  }
+};
+
+/// Helper extractors: all surfaces
+struct AllSurfacesExtractor {
+  /// Extract the surfaces from the volume
+  ///
+  /// @param gctx the geometry contextfor this extraction call
+  /// @param volume is the detector volume
+  /// @param indices is an ignored index vector
+  inline static const std::vector<const Surface*> extract(
+      [[maybe_unused]] const GeometryContext& gctx,
+      const DetectorVolume& volume,
+      [[maybe_unused]] const std::vector<size_t> indices = {}) {
+    return volume.surfaces();
+  }
+};
+
+/// Helper extractors: indexed surfaces
+struct IndexedSurfacesExtractor {
+  /// Extract the surfaces from the volume
+  ///
+  /// @param gctx the geometry contextfor this extraction call
+  /// @param volume is the detector volume
+  /// @param indices are access indices into the surfaces store
+  inline static const std::vector<const Surface*> extract(
+      [[maybe_unused]] const GeometryContext& gctx,
+      const DetectorVolume& volume, const std::vector<size_t> indices) {
+    // Get the surface container
+    const auto& surfaces = volume.surfaces();
+    // The extracted surfaces
+    std::vector<const Surface*> eSurfaces;
+    eSurfaces.reserve(indices.size());
+    std::for_each(indices.begin(), indices.end(),
+                  [&](const auto& i) { eSurfaces.push_back(surfaces[i]); });
+    return eSurfaces;
+  }
+};
+
+/// Helper extractors: all surfaces
+struct AllVolumesExtractor {
+  /// Extract the sub volumes from the volume
+  ///
+  /// @param gctx the geometry contextfor this extraction call
+  /// @param volume is the detector volume
+  /// @param indices are access indices into the surfaces store
+  inline static const std::vector<const DetectorVolume*> extract(
+      [[maybe_unused]] const GeometryContext& gctx,
+      const DetectorVolume& volume,
+      [[maybe_unused]] const std::vector<size_t> indices = {}) {
+    return volume.volumes();
+  }
+};
+
+/// Helper extractors: indexed surfaces
+struct IndexedVolumesExtractor {
+  /// Extract the surfaces from the volume
+  ///
+  /// @param gctx the geometry contextfor this extraction call
+  /// @param volume is the detector volume
+  /// @param indices are access indices into the surfaces store
+  inline static const std::vector<const DetectorVolume*> extract(
+      [[maybe_unused]] const GeometryContext& gctx,
+      const DetectorVolume& volume, const std::vector<size_t> indices) {
+    // Get the sub volumes container
+    const auto& volumes = volume.volumes();
+    // The extracted volumes
+    std::vector<const DetectorVolume*> eVolumes;
+    eVolumes.reserve(indices.size());
+    std::for_each(indices.begin(), indices.end(),
+                  [&](const auto& i) { eVolumes.push_back(volumes[i]); });
+    return eVolumes;
   }
 };
 

@@ -44,11 +44,11 @@ class Portal : public std::enable_shared_from_this<Portal> {
 
  public:
   /// The volume links forward/backward with respect to the surface normal
-  using VolumeLinks = std::array<ManagedDetectorVolumeLink, 2u>;
+  using DetectorVolumeUpdators = std::array<ManagedDetectorVolumeUpdator, 2u>;
 
   /// The vector of attached volumes forward/backward, this is useful in the
   /// geometry building
-  using AttachedVolumes =
+  using AttachedDetectorVolumes =
       std::array<std::vector<std::shared_ptr<DetectorVolume>>, 2u>;
 
   /// Declare the DetectorVolume friend for portal setting
@@ -93,17 +93,13 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// Non-const access to the surface
   std::shared_ptr<Surface> surfacePtr();
 
-  /// Update switching to next volume on this portal
+  /// Update the current volume
   ///
-  /// @param gctx is the current geometry context
-  /// @param position is the position at the query
-  /// @param direction is the direction at the query
+  /// @param gctx is the Geometry context of this call
+  /// @param nState [in,out] the navigation state for the volume to be updated
   ///
-  /// @return a raw pointer to the next volume, a nullptr
-  ///         if no next volume is found, e.g. end of world
-  const DetectorVolume* nextVolume(const GeometryContext& gctx,
-                                   const Vector3& position,
-                                   const Vector3& direction) const;
+  void updateDetectorVolume(const GeometryContext& gctx,
+                            NavigationState& nState) const noexcept(false);
 
   /// Set the geometry identifier (to the underlying surface)
   ///
@@ -124,29 +120,29 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// Update the volume link
   ///
   /// @param nDir the navigation direction for the link
-  /// @param dVolumeLink is the mangaged link delegate
+  /// @param dVolumeUpdator is the mangaged volume updator delegate
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
-  void updateVolumeLink(
-      NavigationDirection nDir, ManagedDetectorVolumeLink&& dVolumeLink,
+  void assignDetectorVolumeUpdator(
+      NavigationDirection nDir, ManagedDetectorVolumeUpdator&& dVolumeUpdator,
       const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes);
 
   // Access to the portal targets
-  const VolumeLinks& volumeLinks() const;
+  const DetectorVolumeUpdators& detectorVolumeUpdators() const;
 
   // Access to the attached volumes - non-const access
-  AttachedVolumes& attachedVolumes();
+  AttachedDetectorVolumes& attachedDetectorVolumes();
 
  private:
   /// The surface representation of this portal
   std::shared_ptr<Surface> m_surface;
 
   /// The portal targets along/opposite the normal vector
-  VolumeLinks m_volumeLinks;
+  DetectorVolumeUpdators m_volumeUpdators;
 
   /// The portal attaches to the following volumes
-  AttachedVolumes m_attachedVolumes;
+  AttachedDetectorVolumes m_attachedVolumes;
 };
 
 inline const Surface& Portal::surface() const {
@@ -157,11 +153,12 @@ inline std::shared_ptr<Surface> Portal::surfacePtr() {
   return m_surface;
 }
 
-inline const Portal::VolumeLinks& Portal::volumeLinks() const {
-  return m_volumeLinks;
+inline const Portal::DetectorVolumeUpdators& Portal::detectorVolumeUpdators()
+    const {
+  return m_volumeUpdators;
 }
 
-inline Portal::AttachedVolumes& Portal::attachedVolumes() {
+inline Portal::AttachedDetectorVolumes& Portal::attachedDetectorVolumes() {
   return m_attachedVolumes;
 }
 

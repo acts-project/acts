@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationDelegates.hpp"
+#include "Acts/Geometry/NavigationState.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -32,9 +33,8 @@ class LinkToVolumeImpl : public IDelegateImpl {
 
   /// @return the link to the contained volume
   /// @note the parameters are ignored
-  const DetectorVolume* link(const GeometryContext&, const Vector3&,
-                             const Vector3&) const {
-    return dVolume.get();
+  void link(const GeometryContext&, NavigationState& nState) const {
+    nState.currentVolume = dVolume.get();
   }
 };
 
@@ -85,49 +85,51 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   auto linkToAImpl = std::make_shared<LinkToVolumeImpl>(volumeA);
   auto linkToBImpl = std::make_shared<LinkToVolumeImpl>(volumeB);
 
-  DetectorVolumeLink linkToA;
+  DetectorVolumeUpdator linkToA;
   linkToA.connect<&LinkToVolumeImpl::link>(linkToAImpl.get());
-  ManagedDetectorVolumeLink mLinkToA{std::move(linkToA), linkToAImpl};
-  portalA->updateVolumeLink(Acts::NavigationDirection::Forward,
-                            std::move(mLinkToA), {volumeA});
+  ManagedDetectorVolumeUpdator mLinkToA{std::move(linkToA), linkToAImpl};
+  portalA->assignDetectorVolumeUpdator(Acts::NavigationDirection::Forward,
+                                       std::move(mLinkToA), {volumeA});
 
-  auto attachedVolumes = portalA->attachedVolumes();
-  BOOST_CHECK(attachedVolumes[0u].size() == 0u);
-  BOOST_CHECK(attachedVolumes[1u].size() == 1u);
-  BOOST_CHECK(attachedVolumes[1u][0u] == volumeA);
+  auto attachedDetectorVolumes = portalA->attachedDetectorVolumes();
+  BOOST_CHECK(attachedDetectorVolumes[0u].size() == 0u);
+  BOOST_CHECK(attachedDetectorVolumes[1u].size() == 1u);
+  BOOST_CHECK(attachedDetectorVolumes[1u][0u] == volumeA);
 
+  NavigationState nState;
+  nState.position = Acts::Vector3(0., 0., 0.);
+  nState.direction = Acts::Vector3(0., 0., 1.);
   // The next volume in forward should be volume A
-  auto forwardVolume = portalA->nextVolume(tContext, Acts::Vector3(0., 0., 0.),
-                                           Acts::Vector3(0., 0., 1.));
-  BOOST_CHECK(forwardVolume == volumeA.get());
-  auto backwardVolume = portalA->nextVolume(tContext, Acts::Vector3(0., 0., 0.),
-                                            Acts::Vector3(0., 0., -1.));
-  // The backwar volume should be nullptr
-  BOOST_CHECK(backwardVolume == nullptr);
+  portalA->updateDetectorVolume(tContext, nState);
+  BOOST_CHECK(nState.currentVolume == volumeA.get());
+  // reverse should yield nullptr
+  nState.direction = Acts::Vector3(0., 0., -1.);
+  portalA->updateDetectorVolume(tContext, nState);
+  BOOST_CHECK(nState.currentVolume == nullptr);
 
   auto portalB = Portal::makeShared(surface);
-  DetectorVolumeLink linkToB;
+  DetectorVolumeUpdator linkToB;
   linkToB.connect<&LinkToVolumeImpl::link>(linkToBImpl.get());
-  ManagedDetectorVolumeLink mLinkToB{std::move(linkToB), linkToBImpl};
-  portalB->updateVolumeLink(Acts::NavigationDirection::Backward,
-                            std::move(mLinkToB), {volumeB});
+  ManagedDetectorVolumeUpdator mLinkToB{std::move(linkToB), linkToBImpl};
+  portalB->assignDetectorVolumeUpdator(Acts::NavigationDirection::Backward,
+                                       std::move(mLinkToB), {volumeB});
 
   // Reverse: forwad volume nullptr, backward volume volumeB
-  forwardVolume = portalB->nextVolume(tContext, Acts::Vector3(0., 0., 0.),
-                                      Acts::Vector3(0., 0., 1.));
-  BOOST_CHECK(forwardVolume == nullptr);
-  backwardVolume = portalB->nextVolume(tContext, Acts::Vector3(0., 0., 0.),
-                                       Acts::Vector3(0., 0., -1.));
-  BOOST_CHECK(backwardVolume == volumeB.get());
+  nState.direction = Acts::Vector3(0., 0., 1.);
+  portalB->updateDetectorVolume(tContext, nState);
+  BOOST_CHECK(nState.currentVolume == nullptr);
+  nState.direction = Acts::Vector3(0., 0., -1.);
+  portalB->updateDetectorVolume(tContext, nState);
+  BOOST_CHECK(nState.currentVolume == volumeB.get());
 
-  // Now fuse the portals together
+  // Now fuse the portals together, both links valid
   portalA->fuse(portalB);
-  forwardVolume = portalA->nextVolume(tContext, Acts::Vector3(0., 0., 0.),
-                                      Acts::Vector3(0., 0., 1.));
-  BOOST_CHECK(forwardVolume == volumeA.get());
-  backwardVolume = portalA->nextVolume(tContext, Acts::Vector3(0., 0., 0.),
-                                       Acts::Vector3(0., 0., -1.));
-  BOOST_CHECK(backwardVolume == volumeB.get());
+  nState.direction = Acts::Vector3(0., 0., 1.);
+  portalA->updateDetectorVolume(tContext, nState);
+  BOOST_CHECK(nState.currentVolume == volumeA.get());
+  nState.direction = Acts::Vector3(0., 0., -1.);
+  portalA->updateDetectorVolume(tContext, nState);
+  BOOST_CHECK(nState.currentVolume == volumeB.get());
 
   // Portal A is now identical to portal B
   BOOST_CHECK(portalA == portalB);
@@ -137,18 +139,18 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   auto linkToBIImpl = std::make_shared<LinkToVolumeImpl>(volumeB);
 
   auto portalAI = Portal::makeShared(surface);
-  DetectorVolumeLink linkToAI;
+  DetectorVolumeUpdator linkToAI;
   linkToAI.connect<&LinkToVolumeImpl::link>(linkToAIImpl.get());
-  ManagedDetectorVolumeLink mLinkToAI{std::move(linkToAI), linkToAIImpl};
-  portalAI->updateVolumeLink(Acts::NavigationDirection::Forward,
-                             std::move(mLinkToAI), {volumeA});
+  ManagedDetectorVolumeUpdator mLinkToAI{std::move(linkToAI), linkToAIImpl};
+  portalAI->assignDetectorVolumeUpdator(Acts::NavigationDirection::Forward,
+                                        std::move(mLinkToAI), {volumeA});
 
   auto portalBI = Portal::makeShared(surface);
-  DetectorVolumeLink linkToBI;
+  DetectorVolumeUpdator linkToBI;
   linkToBI.connect<&LinkToVolumeImpl::link>(linkToBIImpl.get());
-  ManagedDetectorVolumeLink mLinkToBI{std::move(linkToBI), linkToBIImpl};
-  portalBI->updateVolumeLink(Acts::NavigationDirection::Forward,
-                             std::move(mLinkToBI), {volumeB});
+  ManagedDetectorVolumeUpdator mLinkToBI{std::move(linkToBI), linkToBIImpl};
+  portalBI->assignDetectorVolumeUpdator(Acts::NavigationDirection::Forward,
+                                        std::move(mLinkToBI), {volumeB});
 
   BOOST_CHECK_THROW(portalAI->fuse(portalBI), std::runtime_error);
 }
