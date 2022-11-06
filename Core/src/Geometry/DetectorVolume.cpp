@@ -40,8 +40,10 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
   m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 
-  assert(checkContainment(GeometryContext()) and
-         "Objects are not contained by volume.");
+  // This can take a while for complicated geometries
+  // if (not checkContainment(gctx)) {
+  //  throw std::runtime_error("Objects are not contained by volume.");
+  //}
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
@@ -139,7 +141,11 @@ void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdator(
   m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 
-  assert(checkContainment(gctx) and "Objects are not contained by volume.");
+  // This can take a while for complicated geometries
+  // it also needs a geometry context, needs to be figured out
+  // if (not checkContainment(GeometryContext)) {
+  //  throw std::runtime_error("Objects are not contained by volume.");
+  //}
 }
 
 Acts::Extent Acts::Experimental::DetectorVolume::extent(
