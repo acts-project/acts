@@ -1,5 +1,5 @@
 import sys, inspect
-from typing import Optional, Protocol, Dict
+from typing import Optional, Protocol
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings

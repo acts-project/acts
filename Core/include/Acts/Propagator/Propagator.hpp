@@ -29,7 +29,7 @@
 
 #include <cmath>
 #include <functional>
-#include <memory>
+#include <optional>
 #include <type_traits>
 
 #include <boost/algorithm/string.hpp>
@@ -46,11 +46,11 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   /// Accessor to additional propagation quantities
   using detail::Extendable<result_list...>::get;
 
-  /// Final track parameters - initialized to null pointer
-  std::unique_ptr<parameters_t> endParameters = nullptr;
+  /// Final track parameters
+  std::optional<parameters_t> endParameters = std::nullopt;
 
   /// Full transport jacobian
-  std::unique_ptr<BoundMatrix> transportJacobian = nullptr;
+  std::optional<BoundMatrix> transportJacobian = std::nullopt;
 
   /// Number of propagation steps that were carried out
   unsigned int steps = 0;

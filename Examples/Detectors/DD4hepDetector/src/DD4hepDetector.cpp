@@ -42,6 +42,7 @@ auto DD4hepDetector::finalize(
   config.matDecorator = mdecorator;
   geometryService =
       std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
+  lcdd = geometryService->lcdd();
   TrackingGeometryPtr dd4tGeometry =
       geometryService->trackingGeometry(dd4HepContext);
   if (!dd4tGeometry) {
