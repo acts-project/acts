@@ -162,6 +162,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             ),
             SeedFinderOptionsArg(
                 bFieldInZ=1.99724 * u.T,
+                beamPos=(0.,0.)
             ),
             TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.TruthSmeared

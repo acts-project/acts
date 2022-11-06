@@ -205,7 +205,7 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
-      outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig,
+      outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions,
       gridConfig, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
       numPhiNeighbors);
 

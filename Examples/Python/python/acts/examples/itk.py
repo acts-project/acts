@@ -7,6 +7,7 @@ from acts.examples import TGeoDetector
 
 from acts.examples.reconstruction import (
     SeedFinderConfigArg,
+    SeedFinderOptionsArg,
     SeedFilterConfigArg,
     SpacePointGridConfigArg,
     SeedingAlgorithmConfigArg,
@@ -468,7 +469,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         sigmaScattering=sigmaScattering,
         radLengthPerSeed=radLengthPerSeed,
         minPt=minPt,
-        bFieldInZ=bFieldInZ,
         impactMax=impactMax,
         interactionPointCut=interactionPointCut,
         arithmeticAverageCotTheta=arithmeticAverageCotTheta,
@@ -491,8 +491,13 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         collisionRegion=(collisionRegionMin, collisionRegionMax),
         r=(None, rMaxSeedFinderConfig),
         z=(zMin, zMax),
-        beamPos=beamPos,
     )
+    
+    seedFinderOptionsArg = SeedFinderOptionsArg(
+        bFieldInZ=bFieldInZ,
+        beamPos=beamPos
+    )
+
     seedFilterConfigArg = SeedFilterConfigArg(
         impactWeightFactor=impactWeightFactor,
         compatSeedWeight=compatSeedWeight,
@@ -521,6 +526,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
 
     return (
         seedFinderConfigArg,
+        seedFinderOptionsArg,
         seedFilterConfigArg,
         spacePointGridConfigArg,
         seedingAlgorithmConfigArg,
