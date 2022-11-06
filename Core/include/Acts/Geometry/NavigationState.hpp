@@ -88,10 +88,12 @@ struct NavigationState {
 
 /// Filler of the current volume
 struct DetectorVolumeFiller {
-  /// Helper struct that allows to fill surfaces into the candidate vector
+  /// Helper struct that allows to fill a volume into the
+  /// navigation state, it allows to use common navigation
+  /// structs for volume, portal, surfaces
   ///
   /// @param nState the navigation state
-  /// @param surfaces the surfaces that are filled in
+  /// @param volume the volume that is filled
   inline static void fill(NavigationState& nState,
                           const DetectorVolume* volume) {
     nState.currentVolume = volume;
@@ -100,7 +102,8 @@ struct DetectorVolumeFiller {
 
 /// Fillers and attachers for surfaces to act on the navigation state
 struct SurfacesFiller {
-  /// Helper struct that allows to fill surfaces into the candidate vector
+  /// Helper struct that allows to fill surfaces into the candidate vector it
+  /// allows to use common navigation structs for volume, portal, surfaces
   ///
   /// @param nState the navigation state
   /// @param surfaces the surfaces that are filled in
@@ -116,7 +119,8 @@ struct SurfacesFiller {
 
 /// Fillers and attachers for portals to act on the navigation state
 struct PortalsFiller {
-  /// Helper struct that allows to fill surfaces into the candidate vector
+  /// Helper struct that allows to fill surfaces into the candidate vector it
+  /// allows to use common navigation structs for volume, portal, surfaces
   ///
   /// @param nState the navigation state
   /// @param portals the portals that are filled in
