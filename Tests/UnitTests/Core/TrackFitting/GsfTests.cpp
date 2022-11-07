@@ -47,8 +47,9 @@ const auto logger = getDefaultLogger("GSF", Logging::INFO);
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
-using GSF = GaussianSumFitter<Propagator, decltype(betheHeitlerApprox),
-                              VectorMultiTrajectory>;
+using BetheHeitlerApprox = AtlasBetheHeitlerApprox<6, 5>;
+using GSF =
+    GaussianSumFitter<Propagator, BetheHeitlerApprox, VectorMultiTrajectory>;
 
 const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
                   makeDefaultBetheHeitlerApprox());
