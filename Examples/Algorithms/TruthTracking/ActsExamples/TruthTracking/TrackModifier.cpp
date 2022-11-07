@@ -1,13 +1,14 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackModifier.hpp"
 
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -18,9 +19,9 @@
 #include <stdexcept>
 #include <vector>
 
-ActsExamples::TrackSelector::TrackSelector(const Config& config,
+ActsExamples::TrackModifier::TrackModifier(const Config& config,
                                            Acts::Logging::Level level)
-    : BareAlgorithm("TrackSelector", level), m_cfg(config) {
+    : BareAlgorithm("TrackModifier", level), m_cfg(config) {
   if (m_cfg.inputTrajectories.empty() == m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument(
         "Exactly one of trajectories or track parameters input must be set");
@@ -36,31 +37,44 @@ ActsExamples::TrackSelector::TrackSelector(const Config& config,
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
+ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  // helper functions to select tracks
-  auto within = [](double x, double min, double max) {
-    return (min <= x) and (x < max);
-  };
-  auto isValidTrack = [&](const auto& trk) {
-    const auto theta = trk.template get<Acts::eBoundTheta>();
-    const auto eta = -std::log(std::tan(theta / 2));
-    // define charge selection
-    const bool validNeutral = (trk.charge() == 0) and not m_cfg.removeNeutral;
-    const bool validCharged = (trk.charge() != 0) and not m_cfg.removeCharged;
-    const bool validCharge = validNeutral or validCharged;
-    return validCharge and
-           within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
-           within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
-           within(eta, m_cfg.etaMin, m_cfg.etaMax) and
-           within(trk.template get<Acts::eBoundPhi>(), m_cfg.phiMin,
-                  m_cfg.phiMax) and
-           within(trk.template get<Acts::eBoundLoc0>(), m_cfg.loc0Min,
-                  m_cfg.loc0Max) and
-           within(trk.template get<Acts::eBoundLoc1>(), m_cfg.loc1Min,
-                  m_cfg.loc1Max) and
-           within(trk.template get<Acts::eBoundTime>(), m_cfg.timeMin,
-                  m_cfg.timeMax);
+  auto modifyTrack = [this](auto trk) {
+    auto newTrk = trk;
+
+    {
+      auto params = trk.parameters();
+
+      if (m_cfg.killTime) {
+        params[Acts::eBoundTime] = 0;
+      }
+
+      newTrk.setParameters(params);
+    }
+
+    {
+      auto optCov = trk.covariance();
+
+      if (optCov) {
+        auto& cov = *optCov;
+
+        if (m_cfg.dropCovariance) {
+          cov = Acts::BoundSymMatrix(cov.diagonal().asDiagonal());
+        }
+        if (m_cfg.covScale != 1) {
+          cov *= m_cfg.covScale;
+        }
+        if (m_cfg.killTime) {
+          cov.row(Acts::eBoundTime).setZero();
+          cov.col(Acts::eBoundTime).setZero();
+          cov(Acts::eBoundTime, Acts::eBoundTime) = 0;
+        }
+      }
+
+      newTrk.setCovariance(optCov);
+    }
+
+    return newTrk;
   };
 
   if (!m_cfg.inputTrackParameters.empty()) {
@@ -70,19 +84,10 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     TrackParametersContainer outputTrackParameters;
     outputTrackParameters.reserve(inputTrackParameters.size());
 
-    // copy selected tracks and record initial track index
     for (uint32_t i = 0; i < inputTrackParameters.size(); ++i) {
       const auto& trk = inputTrackParameters[i];
-      if (isValidTrack(trk)) {
-        outputTrackParameters.push_back(trk);
-      }
+      outputTrackParameters.push_back(modifyTrack(trk));
     }
-    outputTrackParameters.shrink_to_fit();
-
-    ACTS_DEBUG("event " << ctx.eventNumber << " selected "
-                        << outputTrackParameters.size() << " from "
-                        << inputTrackParameters.size()
-                        << " tracks in track parameters");
 
     ctx.eventStore.add(m_cfg.outputTrackParameters,
                        std::move(outputTrackParameters));
@@ -92,31 +97,23 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     TrajectoriesContainer outputTrajectories;
     outputTrajectories.reserve(inputTrajectories.size());
 
-    std::size_t inputCount = 0;
-    std::size_t outputCount = 0;
     for (const auto& trajectories : inputTrajectories) {
       std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
+      tips.reserve(trajectories.tips().size());
       Trajectories::IndexedParameters parameters;
 
       for (auto tip : trajectories.tips()) {
         if (!trajectories.hasTrackParameters(tip)) {
           continue;
         }
-        ++inputCount;
-        if (!isValidTrack(trajectories.trackParameters(tip))) {
-          continue;
-        }
+        const auto& trk = trajectories.trackParameters(tip);
         tips.push_back(tip);
-        parameters.emplace(tip, trajectories.trackParameters(tip));
-        ++outputCount;
+        parameters.emplace(tip, modifyTrack(trk));
       }
 
       outputTrajectories.emplace_back(trajectories.multiTrajectoryPtr(), tips,
                                       parameters);
     }
-
-    ACTS_DEBUG("event " << ctx.eventNumber << " selected " << outputCount
-                        << " from " << inputCount << " tracks in trajectories");
 
     ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));
   }

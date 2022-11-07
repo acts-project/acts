@@ -266,6 +266,8 @@ def addSeeding(
             ),
         )
         s.addAlgorithm(ptclSmear)
+
+        s.addWhiteboardAlias("trackParameters", ptclSmear.config.outputTrackParameters)
     else:
 
         spAlg = acts.examples.SpacePointMaker(
@@ -536,6 +538,10 @@ def addSeeding(
         )
         s.addAlgorithm(parEstimateAlg)
 
+        s.addWhiteboardAlias(
+            "trackParameters", parEstimateAlg.config.outputTrackParameters
+        )
+
         if outputDirRoot is not None:
             outputDirRoot = Path(outputDirRoot)
             if not outputDirRoot.exists():
@@ -669,6 +675,8 @@ def addTruthTrackingGsf(
     )
 
     s.addAlgorithm(gsfAlg)
+
+    s.addWhiteboardAlias("trajectories", gsfAlg.config.outputTrajectories)
 
     return s
 
