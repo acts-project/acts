@@ -269,9 +269,9 @@ class AtlasBetheHeitlerApprox {
   }
 };
 
-/// Creates a @ref AtlasBetheHeitlerApprox object based on a ATLAS
+/// Creates a @ref AtlasBetheHeitlerApprox object based on an ATLAS
 /// configuration, that are stored as static data in the source code.
-/// This may not be an optimal configuration, but should allow running
+/// This may not be an optimal configuration, but should allow to run
 /// the GSF without the need to load files
 auto makeDefaultBetheHeitlerApprox() {
   // Tracking/TrkFitter/TrkGaussianSumFilterUtils/Data/BetheHeitler_cdf_nC6_O5.par
