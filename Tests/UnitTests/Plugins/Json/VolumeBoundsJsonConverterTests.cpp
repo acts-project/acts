@@ -24,117 +24,117 @@ using namespace Acts;
 
 BOOST_AUTO_TEST_SUITE(VolumeBoundsJsonConverter)
 BOOST_AUTO_TEST_CASE(Cuboid) {
-    std::ofstream out;
+  std::ofstream out;
 
-    auto cuboidRef = std::make_shared<const CuboidVolumeBounds>(2., 4., 6.);
-    nlohmann::json cuboidOut;
-    to_json(cuboidOut, *cuboidRef);
-    out.open("CuboidVolumeBounds.json");
-    out << cuboidOut.dump(2);
-    out.close();
+  auto cuboidRef = std::make_shared<const CuboidVolumeBounds>(2., 4., 6.);
+  nlohmann::json cuboidOut;
+  to_json(cuboidOut, *cuboidRef);
+  out.open("CuboidVolumeBounds.json");
+  out << cuboidOut.dump(2);
+  out.close();
 
-    //Read in json file
-    auto in = std::ifstream("CuboidVolumeBounds.json",
-                            std::ifstream::in | std::ifstream::binary);
-    BOOST_CHECK(in.good());
-    nlohmann::json cuboidIn;
-    in >> cuboidIn;
-    in.close();
+  // Read in json file
+  auto in = std::ifstream("CuboidVolumeBounds.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json cuboidIn;
+  in >> cuboidIn;
+  in.close();
 
-    auto cuboidTest = volumeBoundsFromJson<CuboidVolumeBounds>(cuboidIn);
-    BOOST_CHECK(cuboidRef->values() == cuboidTest->values());
+  auto cuboidTest = volumeBoundsFromJson<CuboidVolumeBounds>(cuboidIn);
+  BOOST_CHECK(cuboidRef->values() == cuboidTest->values());
 }
 
 BOOST_AUTO_TEST_CASE(Cylinder) {
-    std::ofstream out;
+  std::ofstream out;
 
-    auto cylinderRef = std::make_shared<const CylinderVolumeBounds>(10., 20., 30., M_PI/4, 0);
-    nlohmann::json cylinderOut;
-    to_json(cylinderOut, *cylinderRef);
-    out.open("CylinderVolumeBounds.json");
-    out << cylinderOut.dump(2);
-    out.close();
+  auto cylinderRef =
+      std::make_shared<const CylinderVolumeBounds>(10., 20., 30., M_PI / 4, 0);
+  nlohmann::json cylinderOut;
+  to_json(cylinderOut, *cylinderRef);
+  out.open("CylinderVolumeBounds.json");
+  out << cylinderOut.dump(2);
+  out.close();
 
-    //Read in json file
-    auto in = std::ifstream("CylinderVolumeBounds.json",
-                            std::ifstream::in | std::ifstream::binary);
-    BOOST_CHECK(in.good());
-    nlohmann::json cylinderIn;
-    in >> cylinderIn;
-    in.close();
+  // Read in json file
+  auto in = std::ifstream("CylinderVolumeBounds.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json cylinderIn;
+  in >> cylinderIn;
+  in.close();
 
-    auto cylinderTest = volumeBoundsFromJson<CylinderVolumeBounds>(cylinderIn);
-    BOOST_CHECK(cylinderRef->values() == cylinderTest->values());
+  auto cylinderTest = volumeBoundsFromJson<CylinderVolumeBounds>(cylinderIn);
+  BOOST_CHECK(cylinderRef->values() == cylinderTest->values());
 }
 
 BOOST_AUTO_TEST_CASE(Cone) {
-    std::ofstream out;
+  std::ofstream out;
 
-    auto coneRef = std::make_shared<const ConeVolumeBounds>(0., 0., 0.45, 0.050, 0.050, 0., M_PI);
-    nlohmann::json coneOut;
-    to_json(coneOut, *coneRef);
-    out.open("ConeVolumeBounds.json");
-    out << coneOut.dump(2);
-    out.close();
+  auto coneRef = std::make_shared<const ConeVolumeBounds>(0., 0., 0.45, 0.050,
+                                                          0.050, 0., M_PI);
+  nlohmann::json coneOut;
+  to_json(coneOut, *coneRef);
+  out.open("ConeVolumeBounds.json");
+  out << coneOut.dump(2);
+  out.close();
 
-    //Read in json file
-    auto in = std::ifstream("ConeVolumeBounds.json",
-                            std::ifstream::in | std::ifstream::binary);
-    BOOST_CHECK(in.good());
-    nlohmann::json coneIn;
-    in >> coneIn;
-    in.close();
+  // Read in json file
+  auto in = std::ifstream("ConeVolumeBounds.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json coneIn;
+  in >> coneIn;
+  in.close();
 
-    auto coneTest = volumeBoundsFromJson<ConeVolumeBounds>(coneIn);
-    BOOST_CHECK(coneRef->values() == coneTest->values());
+  auto coneTest = volumeBoundsFromJson<ConeVolumeBounds>(coneIn);
+  BOOST_CHECK(coneRef->values() == coneTest->values());
 }
 
 BOOST_AUTO_TEST_CASE(CutoutCylinder) {
-    std::ofstream out;
+  std::ofstream out;
 
-    auto cutoutCylinderRef =
-        std::make_shared<const CutoutCylinderVolumeBounds>(5, 10, 15, 30, 25);
-    nlohmann::json cutoutCylinderOut;
-    to_json(cutoutCylinderOut, *cutoutCylinderRef);
-    out.open("CutoutCylinderVolumeBounds.json");
-    out << cutoutCylinderOut.dump(2);
-    out.close();
+  auto cutoutCylinderRef =
+      std::make_shared<const CutoutCylinderVolumeBounds>(5, 10, 15, 30, 25);
+  nlohmann::json cutoutCylinderOut;
+  to_json(cutoutCylinderOut, *cutoutCylinderRef);
+  out.open("CutoutCylinderVolumeBounds.json");
+  out << cutoutCylinderOut.dump(2);
+  out.close();
 
-    //Read in json file
-    auto in = std::ifstream("CutoutCylinderVolumeBounds.json",
-                            std::ifstream::in | std::ifstream::binary);
-    BOOST_CHECK(in.good());
-    nlohmann::json cutoutCylinderIn;
-    in >> cutoutCylinderIn;
-    in.close();
+  // Read in json file
+  auto in = std::ifstream("CutoutCylinderVolumeBounds.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json cutoutCylinderIn;
+  in >> cutoutCylinderIn;
+  in.close();
 
-    auto cutoutCylinderTest =
-        volumeBoundsFromJson<CutoutCylinderVolumeBounds>(cutoutCylinderIn);
-    BOOST_CHECK(cutoutCylinderRef->values() ==
-                cutoutCylinderTest->values());
+  auto cutoutCylinderTest =
+      volumeBoundsFromJson<CutoutCylinderVolumeBounds>(cutoutCylinderIn);
+  BOOST_CHECK(cutoutCylinderRef->values() == cutoutCylinderTest->values());
 }
 
 BOOST_AUTO_TEST_CASE(Trapezoid) {
-    std::ofstream out;
+  std::ofstream out;
 
-    auto trapezoidRef =
-        std::make_shared<const TrapezoidVolumeBounds>(2., 4., 6., 8.);
-    nlohmann::json trapezoidOut;
-    to_json(trapezoidOut, *trapezoidRef);
-    out.open("TrapezoidVolumeBounds.json");
-    out << trapezoidOut.dump(2);
-    out.close();
+  auto trapezoidRef =
+      std::make_shared<const TrapezoidVolumeBounds>(2., 4., 6., 8.);
+  nlohmann::json trapezoidOut;
+  to_json(trapezoidOut, *trapezoidRef);
+  out.open("TrapezoidVolumeBounds.json");
+  out << trapezoidOut.dump(2);
+  out.close();
 
-    //Read in json file
-    auto in = std::ifstream("TrapezoidVolumeBounds.json",
-                            std::ifstream::in | std::ifstream::binary);
-    BOOST_CHECK(in.good());
-    nlohmann::json trapezoidIn;
-    in >> trapezoidIn;
-    in.close();
+  // Read in json file
+  auto in = std::ifstream("TrapezoidVolumeBounds.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json trapezoidIn;
+  in >> trapezoidIn;
+  in.close();
 
-    auto trapezoidTest =
-        volumeBoundsFromJson<TrapezoidVolumeBounds>(trapezoidIn);
-    BOOST_CHECK(trapezoidRef->values() == trapezoidTest->values());
+  auto trapezoidTest = volumeBoundsFromJson<TrapezoidVolumeBounds>(trapezoidIn);
+  BOOST_CHECK(trapezoidRef->values() == trapezoidTest->values());
 }
 BOOST_AUTO_TEST_SUITE_END()

@@ -18,9 +18,9 @@
 // can not match our naming guidelines.
 namespace Acts {
 
-static std::vector<std::string> volumeBoundTypes = {"Cone",           "Cuboid",
-                                              "CutoutCylinder", "Cylinder",
-                                              "GenericCuboid",  "Trapezoid"};
+static std::vector<std::string> volumeBoundTypes = {
+    "Cone",     "Cuboid",        "CutoutCylinder",
+    "Cylinder", "GenericCuboid", "Trapezoid"};
 
 void to_json(nlohmann::json& j, const VolumeBounds& bounds);
 
@@ -45,7 +45,7 @@ std::unique_ptr<bounds_t> volumeBoundsFromJson(const nlohmann::json& j) {
 /// @param j the read-in json object
 ///
 /// @return a shared_ptr to a surface object for type polymorphism
-std::unique_ptr<VolumeBounds> unqiueVolumeBoundsFromJson(const nlohmann::json& j);
-
+std::unique_ptr<VolumeBounds> unqiueVolumeBoundsFromJson(
+    const nlohmann::json& j);
 
 }  // namespace Acts
