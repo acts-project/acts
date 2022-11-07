@@ -156,6 +156,9 @@ class SingleBoundTrackParameters {
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
 
+  /// Set optional covariance matrix.
+  void setCovariance(const std::optional<CovarianceMatrix>& cov) { m_cov = cov; }
+
   /// Access a single parameter value indentified by its index.
   ///
   /// @tparam kIndex Track parameter index
