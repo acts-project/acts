@@ -89,7 +89,7 @@ struct BetheHeitlerApproxSingleCmp {
 };
 
 /// This class approximates the Bethe-Heitler distribution as a gaussian
-/// mixture. To enable an approximation for continous input variables, the
+/// mixture. To enable an approximation for continuous input variables, the
 /// weights, means and variances are internally parametrized as a Nth order
 /// polynomial.
 template <int NComponents, int PolyDegree>
