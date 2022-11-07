@@ -89,7 +89,7 @@ struct BetheHeitlerApproxSingleCmp {
 };
 
 /// This class approximates the Bethe-Heitler distribution as a gaussian
-/// mixture. To enable an approximation for continous input variables, the
+/// mixture. To enable an approximation for continuous input variables, the
 /// weights, means and variances are internally parametrized as a Nth order
 /// polynomial.
 template <int NComponents, int PolyDegree>
@@ -118,11 +118,14 @@ class AtlasBetheHeitlerApprox {
   bool m_high_transform;
 
  public:
-  /// Construct the Bethe-Heitler approximation description
+  /// Construct the Bethe-Heitler approximation description. Additional to the
+  /// coefficients of the polynomials, the information whether these values need
+  /// to be transformed beforehand must be given (see ATLAS code).
   ///
   /// @param low_data data for the lower x/x0 range
   /// @param high_data data for the higher x/x0 range
-  /// @param transform wether the data need to be transformed (see Atlas code)
+  /// @param low_transform wether the low data need to be transformed
+  /// @param high_transform wether the high data need to be transformed
   constexpr AtlasBetheHeitlerApprox(const Data &low_data, const Data &high_data,
                                     bool low_transform, bool high_transform)
       : m_low_data(low_data),
@@ -266,9 +269,9 @@ class AtlasBetheHeitlerApprox {
   }
 };
 
-/// Creates a @ref AtlasBetheHeitlerApprox object based on a ATLAS
+/// Creates a @ref AtlasBetheHeitlerApprox object based on an ATLAS
 /// configuration, that are stored as static data in the source code.
-/// This may not be an optimal configuration, but should allow running
+/// This may not be an optimal configuration, but should allow to run
 /// the GSF without the need to load files
 auto makeDefaultBetheHeitlerApprox() {
   // Tracking/TrkFitter/TrkGaussianSumFilterUtils/Data/BetheHeitler_cdf_nC6_O5.par
