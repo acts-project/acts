@@ -39,4 +39,4 @@ std::unique_ptr<Acts::VolumeBounds> Acts::unqiueVolumeBoundsFromJson(
   //   return volumeBoundsFromJson<GenericCuboidVolumeBounds>(j);
   // };
   return nullptr;
-}
+}  // namespace Acts
