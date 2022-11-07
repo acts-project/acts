@@ -36,7 +36,6 @@ artifact_url = os.environ["ARTIFACT_URL"]
 pr_sha = os.environ["PR_SHA"]
 
 
-
 has_errors = False
 
 
