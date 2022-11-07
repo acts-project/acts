@@ -56,15 +56,10 @@ SeedFinderConfigArg = namedtuple(
         "r",  # (min,max)
         "z",  # (min,max)
     ],
-    defaults=[None] * 20 + [(None, None)] * 7
+    defaults=[None] * 20 + [(None, None)] * 7,
 )
 SeedFinderOptionsArg = namedtuple(
-    "SeedFinderOptions",
-    [
-        "beamPos",
-        "bFieldInZ"
-    ],
-    defaults = [(None, None), None]
+    "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
 )
 
 SeedFilterConfigArg = namedtuple(
@@ -356,8 +351,11 @@ def addSeeding(
             )
             seedFinderOptions = acts.SeedFinderOptions(
                 bFieldInZ=seedFinderOptionsArg.bFieldInZ,
-                beamPos=acts.Vector2(0.0, 0.0) if seedFinderOptionsArg.beamPos is (None,None)
-                        else acts.Vector2(seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[0])
+                beamPos=acts.Vector2(0.0, 0.0)
+                if seedFinderOptionsArg.beamPos == (None, None)
+                else acts.Vector2(
+                    seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[0]
+                ),
             )
 
             seedFilterConfig = acts.SeedFilterConfig(
@@ -422,7 +420,7 @@ def addSeeding(
                 gridConfig=gridConfig,
                 seedFilterConfig=seedFilterConfig,
                 seedFinderConfig=seedFinderConfig,
-                seedFinderOptions=seedFinderOptions
+                seedFinderOptions=seedFinderOptions,
             )
             s.addAlgorithm(seedingAlg)
             inputProtoTracks = seedingAlg.config.outputProtoTracks

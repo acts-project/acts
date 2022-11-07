@@ -484,11 +484,8 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         r=(None, rMaxSeedFinderConfig),
         z=(zMin, zMax),
     )
-    
-    seedFinderOptionsArg = SeedFinderOptionsArg(
-        bFieldInZ=bFieldInZ,
-        beamPos=beamPos
-    )
+
+    seedFinderOptionsArg = SeedFinderOptionsArg(bFieldInZ=bFieldInZ, beamPos=beamPos)
 
     seedFilterConfigArg = SeedFilterConfigArg(
         impactWeightFactor=impactWeightFactor,

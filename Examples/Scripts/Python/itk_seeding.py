@@ -74,8 +74,11 @@ def addITkSeedingCsv(
     seedFinderOptions = acts.SeedFinderOptions(
         **acts.examples.defaultKWArgs(
             bFieldInZ=seedFinderConfigArg.bFieldInZ,
-            beamPos=acts.Vector2(0.0, 0.0) if seedFinderOptionsArg.beamPos is (None,None)
-                        else acts.Vector2(seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[0])
+            beamPos=acts.Vector2(0.0, 0.0)
+            if seedFinderOptionsArg.beamPos is (None, None)
+            else acts.Vector2(
+                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[0]
+            ),
         ),
     )
 
@@ -91,7 +94,7 @@ def addITkSeedingCsv(
             seedConfirmation=seedFilterConfigArg.seedConfirmation,
             centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
             forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
-            curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
+            curvatureSortingInFilter=seedFilterConfigArg.curvatxureSortingInFilter,
             maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
@@ -131,7 +134,7 @@ def addITkSeedingCsv(
         gridConfig=gridConfig,
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
-        seedFinderOptions=seedFinderOptions
+        seedFinderOptions=seedFinderOptions,
     )
 
     s = s or acts.examples.Sequencer(
