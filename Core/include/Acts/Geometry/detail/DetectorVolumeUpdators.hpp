@@ -1,0 +1,148 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2022 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/NavigationDelegates.hpp"
+#include "Acts/Geometry/NavigationState.hpp"
+#include "Acts/Geometry/detail/NavigationStateUpdators.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
+#include "Acts/Utilities/detail/Grid.hpp"
+
+#include <exception>
+
+namespace Acts {
+namespace Experimental {
+
+class DetectorVolume;
+
+namespace detail {
+
+/// @brief  The end of world sets the volume pointer of the
+/// navigation state to nullptr, usually indicates the end of
+/// the known world, hence the name
+struct EndOfWorldImpl : public IDelegateImpl {
+  /// @brief a null volume link - explicitely
+  ///
+  /// @note the method parameters are ignored
+  ///
+  inline void operator()(const GeometryContext& /*ignored*/,
+                         NavigationState& nState) const {
+    nState.currentVolume = nullptr;
+  }
+};
+
+/// @brief Single volume updator, it sets the current navigation
+/// volume to the volume in question
+///
+struct SingleDetectorVolumeImpl : public IDelegateImpl {
+  const DetectorVolume* dVolume = nullptr;
+
+  /// @brief Allowed constructor
+  /// @param sVolume the volume to which it points
+  SingleDetectorVolumeImpl(const DetectorVolume* sVolume) noexcept(false)
+      : dVolume(sVolume) {
+    if (sVolume == nullptr) {
+      throw std::invalid_argument(
+          "DetectorVolumeUpdators: nullptr provided, use EndOfWorld instead.");
+    }
+  }
+
+  SingleDetectorVolumeImpl() = delete;
+
+  /// @brief a null volume link - explicitely
+  ///
+  /// @note the method parameters are ignored
+  ///
+  inline void operator()(const GeometryContext& /*ignored*/,
+                         NavigationState& nState) const {
+    nState.currentVolume = dVolume;
+  }
+};
+
+using SingleIndex = std::size_t;
+
+using VariableBoundAxis =
+    Acts::detail::Axis<Acts::detail::AxisType::Variable,
+                       Acts::detail::AxisBoundaryType::Bound>;
+using VariableBoundIndexGrid1 =
+    Acts::detail::Grid<SingleIndex, VariableBoundAxis>;
+
+/// @brief This holds and extracts a collection of detector
+/// volumes. Alternatively an extractor could also use the
+/// detector and its associated detector volume container for
+/// volume extraction.
+///
+struct DetectorVolumesCollection {
+  /// The volumes held by this collection
+  std::vector<const DetectorVolume*> dVolumes = {};
+
+  /// Extract the sub volumes from the volume
+  ///
+  /// @param gctx the geometry contextfor this extraction call
+  /// @param volume is the detector volume
+  /// @param indices are access indices into the surfaces store
+  inline const DetectorVolume* extract(
+      [[maybe_unused]] const GeometryContext& gctx,
+      [[maybe_unused]] const DetectorVolume& volume,
+      const SingleIndex& index) const {
+    return dVolumes[index];
+  }
+};
+
+/// @brief This is used for volumes that are indexed in a bound
+/// 1-dimensional grid, e.g. a z-spaced array, or an r-spaced array
+/// of volumes.
+///
+struct BoundVolumesGrid1Impl : public IDelegateImpl {
+  using IndexedUpdator =
+      IndexedUpdatorImpl<VariableBoundIndexGrid1, DetectorVolumesCollection,
+                         DetectorVolumeFiller>;
+  // The indexed updator
+  IndexedUpdator indexedUpdator;
+
+  /// Allowed constructor with explicit arguments
+  ///
+  /// @param gBoundaries the grid boundaries
+  /// @param bValue the binning value
+  /// @param cVolumes the contained volumes
+  /// @param bTransfrom is the optional transform
+  BoundVolumesGrid1Impl(
+      const std::vector<ActsScalar>& gBoundaries, BinningValue bValue,
+      const std::vector<const DetectorVolume*>& cVolumes,
+      const Transform3& bTransform = Transform3::Identity()) noexcept(false)
+      : indexedUpdator(IndexedUpdator(VariableBoundIndexGrid1(std::make_tuple(
+                                          VariableBoundAxis(gBoundaries))),
+                                      {bValue}, bTransform)) {
+    indexedUpdator.extractor.dVolumes = cVolumes;
+
+    if (gBoundaries.size() != cVolumes.size() + 1u) {
+      throw std::invalid_argument(
+          "DetectorVolumeUpdators: mismatching boundaries and volume numbers");
+    }
+    // Initialize the grid entries
+    for (std::size_t ib = 1u; ib < gBoundaries.size(); ++ib) {
+      indexedUpdator.grid.at(ib) = ib - 1;
+    }
+  }
+  // Deleted default constructor
+  BoundVolumesGrid1Impl() = delete;
+
+  /// @brief This updatored relies on an 1D single index grid
+  ///
+  ///
+  inline void operator()(const GeometryContext& gctx,
+                         NavigationState& nState) const {
+    indexedUpdator(gctx, nState);
+  }
+};
+
+}  // namespace detail
+}  // namespace Experimental
+}  // namespace Acts
