@@ -53,12 +53,6 @@ struct SeedFilterConfig {
   SeedConfirmationRangeConfig centralSeedConfirmationRange;
   // contains parameters for forward seed confirmation
   SeedConfirmationRangeConfig forwardSeedConfirmationRange;
-  // minimum radius for bottom SP in seed confirmation
-  float seedConfMinBottomRadius = 60. * Acts::UnitConstants::mm;
-  // maximum zOrigin in seed confirmation
-  float seedConfMaxZOrigin = 150. * Acts::UnitConstants::mm;
-  // minimum impact parameter for seed confirmation
-  float minImpactSeedConf = 1. * Acts::UnitConstants::mm;
 
   // maximum number of lower quality seeds in seed confirmation
   int maxSeedsPerSpMConf = std::numeric_limits<int>::max();
@@ -76,9 +70,6 @@ struct SeedFilterConfig {
     SeedFilterConfig config = *this;
     config.deltaRMin /= 1_mm;
     config.deltaInvHelixDiameter /= 1. / 1_mm;
-    config.seedConfMinBottomRadius /= 1_mm;
-    config.seedConfMaxZOrigin /= 1_mm;
-    config.minImpactSeedConf /= 1_mm;
 
     return config;
   }

@@ -47,17 +47,12 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
   }
 
   {
-    auto gd =
-        py::class_<DD4hep::DD4hepDetector,
-                   std::shared_ptr<DD4hep::DD4hepDetector>>(m, "DD4hepDetector")
-            .def(py::init<>())
-            .def("finalize",
-                 py::overload_cast<
-                     DD4hep::DD4hepGeometryService::Config,
-                     std::shared_ptr<const Acts::IMaterialDecorator>>(
-                     &DD4hep::DD4hepDetector::finalize));
-    ACTS_PYTHON_STRUCT_BEGIN(gd, DD4hep::DD4hepDetector);
-    ACTS_PYTHON_MEMBER(geometryService);
-    ACTS_PYTHON_STRUCT_END();
+    py::class_<DD4hep::DD4hepDetector, ActsExamples::IBaseDetector,
+               std::shared_ptr<DD4hep::DD4hepDetector>>(m, "DD4hepDetector")
+        .def(py::init<>())
+        .def("finalize",
+             py::overload_cast<DD4hep::DD4hepGeometryService::Config,
+                               std::shared_ptr<const Acts::IMaterialDecorator>>(
+                 &DD4hep::DD4hepDetector::finalize));
   }
 }

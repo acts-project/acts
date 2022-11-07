@@ -463,6 +463,8 @@ def addSeeding(
                     deltaZMax=seedFinderConfigArg.deltaZMax,
                     maxPtScattering=seedFinderConfigArg.maxPtScattering,
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
+                    centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+                    forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
                     beamPos=(
                         None
                         if seedFinderConfigArg.beamPos is None
@@ -641,7 +643,7 @@ def addTruthTrackingGsf(
         "maxComponents": 12,
         "abortOnError": False,
         "disableAllMaterialHandling": False,
-        "finalReductionMethod": acts.examples.FinalReductionMethod.mean,
+        "finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
     }
 
     gsfAlg = acts.examples.TrackFittingAlgorithm(
@@ -681,7 +683,7 @@ def addCKFTracks(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     selectedParticles: str = "truth_seeds_selected",
-    trackSelectorRanges: Optional[TrackSelectorRanges] = TrackSelectorRanges(),
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -712,9 +714,6 @@ def addCKFTracks(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
     logger = acts.logging.getLogger("addCKFTracks")
 
-    outputTrackParameters = "fittedTrackParameters"
-    outputTrackParametersTips = "fittedTrackParametersTips"
-
     # Setup the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
     # truth particle smearing and source link selection config
@@ -727,27 +726,36 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
-        outputTrackParameters=outputTrackParameters
-        if trackSelectorRanges is None
-        else "fittedTrackParametersTmp",
-        outputTrackParametersTips=outputTrackParametersTips
-        if trackSelectorRanges is None
-        else "fittedTrackParametersTipsTmp",
+        outputTrackParameters="fittedTrackParameters",
+        outputTrackParametersTips="fittedTrackParametersTips",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
     )
     s.addAlgorithm(trackFinder)
 
+    s.addWhiteboardAlias("trajectories", trackFinder.config.outputTrajectories)
+    s.addWhiteboardAlias("trackParameters", trackFinder.config.outputTrackParameters)
+    s.addWhiteboardAlias(
+        "trackParametersTips", trackFinder.config.outputTrackParametersTips
+    )
+
     if trackSelectorRanges is not None:
-        addTrackSelection(
+        trackSelector = addTrackSelection(
             s,
             trackSelectorRanges,
             inputTrackParameters=trackFinder.config.outputTrackParameters,
             inputTrackParametersTips=trackFinder.config.outputTrackParametersTips,
-            outputTrackParameters=outputTrackParameters,
-            outputTrackParametersTips=outputTrackParametersTips,
+            outputTrackParameters="selectedFittedTrackParameters",
+            outputTrackParametersTips="selectedFittedTrackParametersTips",
             logLevel=customLogLevel(),
+        )
+
+        s.addWhiteboardAlias(
+            "trackParameters", trackSelector.config.outputTrackParameters
+        )
+        s.addWhiteboardAlias(
+            "trackParametersTips", trackSelector.config.outputTrackParametersTips
         )
 
     if outputDirRoot is not None:
@@ -832,7 +840,7 @@ def addTrackSelection(
     outputTrackParameters: str,
     outputTrackParametersTips: str,
     logLevel: Optional[acts.logging.Level] = None,
-):
+) -> acts.examples.TrackSelector:
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -863,6 +871,8 @@ def addTrackSelection(
     )
 
     s.addAlgorithm(trackSelector)
+
+    return trackSelector
 
 
 ExaTrkXBackend = Enum("ExaTrkXBackend", "Torch Onnx")
@@ -967,9 +977,8 @@ def addAmbiguityResolution(
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-    from acts.examples import (
-        AmbiguityResolutionAlgorithm,
-    )
+
+    from acts.examples import AmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -977,8 +986,8 @@ def addAmbiguityResolution(
         level=customLogLevel(),
         inputSourceLinks="sourcelinks",
         inputTrajectories="trajectories",
-        inputTrackParameters="fittedTrackParameters",
-        inputTrackParametersTips="fittedTrackParametersTips",
+        inputTrackParameters="trackParameters",
+        inputTrackParametersTips="trackParametersTips",
         outputTrackParameters="filteredTrackParameters",
         outputTrackParametersTips="filteredTrackParametersTips",
         **acts.examples.defaultKWArgs(
@@ -986,6 +995,9 @@ def addAmbiguityResolution(
         ),
     )
     s.addAlgorithm(alg)
+
+    s.addWhiteboardAlias("trackParameters", alg.config.outputTrackParameters)
+    s.addWhiteboardAlias("trackParametersTips", alg.config.outputTrackParametersTips)
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
@@ -1016,17 +1028,22 @@ class VertexFinder(Enum):
     Iterative = (3,)
 
 
+@acts.examples.NamedTypeArgs(
+    trackSelectorRanges=TrackSelectorRanges,
+)
 def addVertexFitting(
     s,
     field,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    associatedParticles: str = "particles_input",
+    associatedParticles: Optional[str] = None,
     trajectories: Optional[str] = "trajectories",
-    trackParameters: str = "filteredTrackParameters",
-    trackParametersTips: Optional[str] = "filteredTrackParametersTips",
+    trackParameters: str = "trackParameters",
+    trackParametersTips: Optional[str] = "trackParametersTips",
     vertexFinder: VertexFinder = VertexFinder.Truth,
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
+
     """This function steers the vertex fitting
 
     Parameters
@@ -1053,9 +1070,27 @@ def addVertexFitting(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
+    if trackSelectorRanges is not None:
+        trackSelector = addTrackSelection(
+            s,
+            trackSelectorRanges,
+            inputTrackParameters=trackParameters,
+            inputTrackParametersTips=trackParametersTips,
+            outputTrackParameters="selectedTrackParametersVertexing",
+            outputTrackParametersTips="selectedTrackParametersTipsVertexing",
+            logLevel=customLogLevel(),
+        )
+
+        trackParameters = trackSelector.config.outputTrackParameters
+        trackParametersTips = (
+            trackSelector.config.outputTrackParametersTips
+            if trackParametersTips is not None
+            else None
+        )
+
     inputParticles = "particles_input"
-    outputVertices = "fittedVertices"
     selectedParticles = "particles_selected"
+    outputVertices = "fittedVertices"
 
     outputTime = ""
     if vertexFinder == VertexFinder.Truth:
@@ -1111,15 +1146,17 @@ def addVertexFitting(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
-                inputTrackParameters=trackParameters,
-                inputTrackParametersTips=trackParametersTips,
+                inputAssociatedTruthParticles=associatedParticles
+                if associatedParticles is not None
+                else "",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputTrajectories=trajectories if trajectories is not None else "",
-                inputAssociatedTruthParticles=""
-                if trajectories is not None
-                else associatedParticles,
+                inputTrackParameters=trackParameters,
+                inputTrackParametersTips=trackParametersTips
+                if trackParametersTips is not None
+                else "",
                 inputVertices=outputVertices,
-                minTrackVtxMatchFraction=0.0 if trajectories is not None else 0.5,
+                minTrackVtxMatchFraction=0.0 if associatedParticles is None else 0.5,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),

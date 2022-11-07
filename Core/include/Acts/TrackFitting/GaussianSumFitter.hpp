@@ -473,7 +473,7 @@ struct GaussianSumFitter {
       ACTS_VERBOSE("+-----------------------------------------------+");
       ACTS_VERBOSE("| Gsf: Do propagation back to reference surface |");
       ACTS_VERBOSE("+-----------------------------------------------+");
-      auto lastResult = [&]() -> Result<std::unique_ptr<BoundTrackParameters>> {
+      auto lastResult = [&]() -> Result<std::optional<BoundTrackParameters>> {
         const auto& [surface, lastSmoothedState] =
             std::get<1>(smoothResult).front();
 
