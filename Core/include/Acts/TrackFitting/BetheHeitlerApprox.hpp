@@ -119,7 +119,7 @@ class AtlasBetheHeitlerApprox {
 
  public:
   /// Construct the Bethe-Heitler approximation description. Additional to the
-  /// coefficients of the polynomials, the information wether these values need
+  /// coefficients of the polynomials, the information whether these values need
   /// to be transformed beforehand must be given (see ATLAS code).
   ///
   /// @param low_data data for the lower x/x0 range
