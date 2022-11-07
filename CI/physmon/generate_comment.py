@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-expected_reports = {""}
 
 ### CHANGE BELOW WITH CAUTION ###
 
@@ -37,7 +36,6 @@ artifact_url = os.environ["ARTIFACT_URL"]
 pr_sha = os.environ["PR_SHA"]
 
 
-print("Hi from python")
 
 has_errors = False
 
