@@ -18,12 +18,12 @@
 
 #include <boost/program_options.hpp>
 
-void TelescopeDetector::addOptions(
+void ActsExamples::Telescope::TelescopeDetector::addOptions(
     ActsExamples::Options::Description& desc) const {
   ActsExamples::Options::addTelescopeGeometryOptions(desc);
 }
 
-auto TelescopeDetector::finalize(
+auto ActsExamples::Telescope::TelescopeDetector::finalize(
     const boost::program_options::variables_map& vm,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
@@ -46,7 +46,7 @@ auto TelescopeDetector::finalize(
   return finalize(cfg, std::move(mdecorator));
 }
 
-auto TelescopeDetector::finalize(
+auto ActsExamples::Telescope::TelescopeDetector::finalize(
     const Config& cfg,
     std::shared_ptr<const Acts::IMaterialDecorator> /* mdecorator */)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
@@ -65,6 +65,8 @@ auto TelescopeDetector::finalize(
     throw std::invalid_argument(
         "The minR should be smaller than the maxR for disc surface bounds.");
   }
+
+  config = cfg;
 
   // Sort the provided distances
   std::vector<double> positions = cfg.positions;

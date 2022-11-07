@@ -8,15 +8,29 @@
 
 #pragma once
 
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 namespace ActsExamples {
 
+/// This type is used in the Examples framework for the Bethe-Heitler
+/// approximation
+using BetheHeitlerApprox = Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
+
+/// Makes a fitter function object for the GSF
+///
+/// @param trackingGeometry the trackingGeometry for the propagator
+/// @param magneticField the magnetic field for the propagator
+/// @param betheHeitlerApprox The object that encapsulates the approximation.
+/// @param maxComponents number of maximum components in the track state
+/// @param abortOnError wether to call std::abort on an error
+/// @param disableAllMaterialHandling run the GSF like a KF (no energy loss,
+/// always 1 component, ...)
 std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    std::size_t maxComponents, bool abortOnError,
-    bool disableAllMaterialHandling);
+    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+    bool abortOnError, bool disableAllMaterialHandling);
 
 }  // namespace ActsExamples
