@@ -1,4 +1,4 @@
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, List
 from pathlib import Path
 from collections import namedtuple
 from collections.abc import Iterable
@@ -412,7 +412,7 @@ def addFatras(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
-    enableInteractions = False,
+    enableInteractions=False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Fatras
@@ -559,15 +559,42 @@ def addSimWriters(
     return s
 
 
+def getG4DetectorContruction(
+    detector: Any,
+) -> Any:
+    try:
+        from acts.examples import TelescopeDetector
+        from acts.examples.geant4 import TelescopeG4DetectorConstruction
+
+        if type(detector) is TelescopeDetector:
+            return TelescopeG4DetectorConstruction(detector)
+    except Exception as e:
+        print(e)
+
+    try:
+        from acts.examples.dd4hep import DD4hepDetector
+        from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
+
+        if type(detector) is DD4hepDetector:
+            return DDG4DetectorConstruction(detector)
+    except Exception as e:
+        print(e)
+
+    raise AttributeError(f"cannot find a suitable detector construction for {detector}")
+
+
 def addGeant4(
     s: acts.examples.Sequencer,
-    g4detectorConstruction: Any,
+    detector: Optional[Any],
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
+    g4detectorConstruction: Optional[Any] = None,
+    volumeMappings: List[str] = [],
+    materialMappings: List[str] = [],
+    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Geant4
@@ -607,7 +634,9 @@ def addGeant4(
         particles_selected = "particles_input"
 
     if g4detectorConstruction is None:
-        raise Exception("G4 detector contruction not given")
+        if detector is None:
+            raise AttributeError("detector not given")
+        g4detectorConstruction = getG4DetectorContruction(detector)
 
     g4conf = geant4SimulationConfig(
         level=customLogLevel(),
@@ -615,6 +644,8 @@ def addGeant4(
         inputParticles="particles_input",
         trackingGeometry=trackingGeometry,
         magneticField=field,
+        volumeMappings=volumeMappings,
+        materialMappings=materialMappings,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
