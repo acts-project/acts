@@ -30,7 +30,7 @@ ActsExamples::SensitiveSurfaceMapper::SensitiveSurfaceMapper(
 }
 
 void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
-    G4VPhysicalVolume* g4PhysicalVolume, const Acts::Vector3 motherPosition,
+    G4VPhysicalVolume* g4PhysicalVolume, Acts::Transform3 motherTransform,
     int& sCounter) const {
   auto g4LogicalVolume = g4PhysicalVolume->GetLogicalVolume();
   auto g4SensitiveDetector = g4LogicalVolume->GetSensitiveDetector();
@@ -39,78 +39,91 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
 
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
 
-  // Get the relative translation of the G4 object
-  auto g4RelTranslation = g4PhysicalVolume->GetTranslation();
-  Acts::Vector3 g4RelPosition(g4RelTranslation[0] * convertLength,
-                              g4RelTranslation[1] * convertLength,
-                              g4RelTranslation[2] * convertLength);
-
-  if (nDaughters == 0) {
-    std::string volumeName = g4LogicalVolume->GetName();
-    std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
-    if (g4SensitiveDetector != nullptr or
-        std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
-                  volumeMaterialName) != m_cfg.materialMappings.end() or
-        std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
-                  volumeName) != m_cfg.volumeMappings.end()) {
-      // Find the associated ACTS object
-      Acts::Vector3 g4AbsPosition = g4RelPosition + motherPosition;
-      auto actsLayer = m_cfg.trackingGeometry->associatedLayer(
-          Acts::GeometryContext(), g4AbsPosition);
-
-      // Prepare the mapped surface
-      const Acts::Surface* mappedSurface = nullptr;
-
-      if (actsLayer != nullptr and actsLayer->surfaceArray() != nullptr) {
-        auto actsSurfaces = actsLayer->surfaceArray()->at(g4AbsPosition);
-        if (not actsSurfaces.empty()) {
-          // Fast matching: search
-          for (const auto& as : actsSurfaces) {
-            if (as->center(Acts::GeometryContext()).isApprox(g4AbsPosition)) {
-              mappedSurface = as;
-              break;
-            }
-          }
-        }
-        if (mappedSurface == nullptr) {
-          // Slow matching: Fallback, loop over all layer surfaces
-          for (const auto& as : actsLayer->surfaceArray()->surfaces()) {
-            if (as->center(Acts::GeometryContext()).isApprox(g4AbsPosition)) {
-              mappedSurface = as;
-              break;
-            }
-          }
-        }
-      }
-      // A mapped surface was found, a new name will be set that
-      // contains the GeometryID/
-      if (mappedSurface != nullptr) {
-        ++sCounter;
-        std::string mappedVolumeName = SensitiveSurfaceMapper::mappingPrefix;
-        mappedVolumeName += std::to_string(mappedSurface->geometryId().value());
-        ACTS_VERBOSE("Found matching surface " << mappedSurface->geometryId()
-                                               << " at position "
-                                               << g4RelPosition.transpose());
-        ACTS_VERBOSE("Remap: " << g4PhysicalVolume->GetName() << " -> "
-                               << mappedVolumeName);
-        g4PhysicalVolume->SetName(mappedVolumeName.c_str());
-      } else {
-        ACTS_VERBOSE("No mapping found for '"
-                     << volumeName << "' with material '" << volumeMaterialName
-                     << "' at position " << g4RelPosition.transpose());
-      }
-    } else {
-      ACTS_VERBOSE(
-          "Did not try mapping '"
-          << g4PhysicalVolume->GetName() << "' at " << g4RelPosition.transpose()
-          << " because g4SensitiveDetector is nullptr"
-          << " and none of the provided volumes or materials were found");
-    }
+  // Get the transform of the G4 object
+  auto g4Translation = g4PhysicalVolume->GetTranslation();
+  auto g4Rotation = g4PhysicalVolume->GetRotation();
+  Acts::Vector3 g4RelPosition(g4Translation[0] * convertLength,
+                              g4Translation[1] * convertLength,
+                              g4Translation[2] * convertLength);
+  Acts::Translation3 translation(g4RelPosition);
+  Acts::Transform3 transform;
+  if (g4Rotation == nullptr) {
+    transform = motherTransform * translation;
   } else {
+    Acts::RotationMatrix3 rotation;
+    rotation << g4Rotation->xx(), g4Rotation->yx(), g4Rotation->zx(),
+        g4Rotation->xy(), g4Rotation->yy(), g4Rotation->zy(), g4Rotation->xz(),
+        g4Rotation->yz(), g4Rotation->zz();
+    transform = motherTransform * (translation * rotation);
+  }
+  Acts::Vector3 g4AbsPosition = transform * Acts::Vector3::Zero();
+
+  if (nDaughters > 0) {
     // Step down to all daughters
     for (G4int id = 0; id < nDaughters; ++id) {
-      remapSensitiveNames(g4LogicalVolume->GetDaughter(id),
-                          motherPosition + g4RelPosition, sCounter);
+      remapSensitiveNames(g4LogicalVolume->GetDaughter(id), transform,
+                          sCounter);
     }
+    return;
+  }
+
+  std::string volumeName = g4LogicalVolume->GetName();
+  std::string volumeMaterialName = g4LogicalVolume->GetMaterial()->GetName();
+  if (g4SensitiveDetector != nullptr or
+      std::find(m_cfg.materialMappings.begin(), m_cfg.materialMappings.end(),
+                volumeMaterialName) != m_cfg.materialMappings.end() or
+      std::find(m_cfg.volumeMappings.begin(), m_cfg.volumeMappings.end(),
+                volumeName) != m_cfg.volumeMappings.end()) {
+    // Find the associated ACTS object
+    auto actsLayer = m_cfg.trackingGeometry->associatedLayer(
+        Acts::GeometryContext(), g4AbsPosition);
+
+    // Prepare the mapped surface
+    const Acts::Surface* mappedSurface = nullptr;
+
+    if (actsLayer != nullptr and actsLayer->surfaceArray() != nullptr) {
+      auto actsSurfaces = actsLayer->surfaceArray()->at(g4AbsPosition);
+      if (not actsSurfaces.empty()) {
+        // Fast matching: search
+        for (const auto& as : actsSurfaces) {
+          if (as->center(Acts::GeometryContext()).isApprox(g4AbsPosition)) {
+            mappedSurface = as;
+            break;
+          }
+        }
+      }
+      if (mappedSurface == nullptr) {
+        // Slow matching: Fallback, loop over all layer surfaces
+        for (const auto& as : actsLayer->surfaceArray()->surfaces()) {
+          if (as->center(Acts::GeometryContext()).isApprox(g4AbsPosition)) {
+            mappedSurface = as;
+            break;
+          }
+        }
+      }
+    }
+    // A mapped surface was found, a new name will be set that
+    // contains the GeometryID/
+    if (mappedSurface != nullptr) {
+      ++sCounter;
+      std::string mappedVolumeName = SensitiveSurfaceMapper::mappingPrefix;
+      mappedVolumeName += std::to_string(mappedSurface->geometryId().value());
+      ACTS_VERBOSE("Found matching surface " << mappedSurface->geometryId()
+                                             << " at position "
+                                             << g4RelPosition.transpose());
+      ACTS_VERBOSE("Remap: " << g4PhysicalVolume->GetName() << " -> "
+                             << mappedVolumeName);
+      g4PhysicalVolume->SetName(mappedVolumeName.c_str());
+    } else {
+      ACTS_VERBOSE("No mapping found for '"
+                   << volumeName << "' with material '" << volumeMaterialName
+                   << "' at position " << g4RelPosition.transpose());
+    }
+  } else {
+    ACTS_VERBOSE(
+        "Did not try mapping '"
+        << g4PhysicalVolume->GetName() << "' at " << g4RelPosition.transpose()
+        << " because g4SensitiveDetector is nullptr"
+        << " and none of the provided volumes or materials were found");
   }
 }

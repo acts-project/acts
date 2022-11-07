@@ -21,11 +21,11 @@ using namespace Acts::UnitLiterals;
 
 namespace ActsExamples {
 namespace Telescope {
-class TelescopeDetectorElement;
-}  // namespace Telescope
-}  // namespace ActsExamples
 
-struct TelescopeDetector : public ActsExamples::IBaseDetector {
+class TelescopeDetectorElement;
+class TelescopeG4DetectorConstruction;
+
+struct TelescopeDetector : public IBaseDetector {
   using DetectorElement = ActsExamples::Telescope::TelescopeDetectorElement;
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;
@@ -39,6 +39,7 @@ struct TelescopeDetector : public ActsExamples::IBaseDetector {
     int binValue{2};
   };
 
+  Config config;
   /// The store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 
@@ -52,3 +53,6 @@ struct TelescopeDetector : public ActsExamples::IBaseDetector {
   finalize(const Config& cfg,
            std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
+
+}  // namespace Telescope
+}  // namespace ActsExamples
