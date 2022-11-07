@@ -36,13 +36,13 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
   TrackParametersContainer outputTrackParameters;
   outputTrackParameters.reserve(inputTrackParameters.size());
 
-  for (const auto &trk : inputTrackParameters) {
+  for (const auto& trk : inputTrackParameters) {
     auto newTrk = trk;
 
     std::optional<Acts::BoundSymMatrix> optCov = trk.covariance();
 
     if (optCov) {
-      auto &cov = *optCov;
+      auto& cov = *optCov;
 
       if (m_cfg.dropCovariance) {
         cov = cov.diagonal().asDiagonal();
