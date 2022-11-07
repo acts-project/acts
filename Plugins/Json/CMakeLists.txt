@@ -6,6 +6,7 @@ add_library(
   src/SurfaceBoundsJsonConverter.cpp
   src/SurfaceJsonConverter.cpp
   src/UtilitiesJsonConverter.cpp
+  src/VolumeBoundsJsonConverter.cpp
   src/VolumeJsonConverter.cpp)
 target_include_directories(
   ActsPluginJson
