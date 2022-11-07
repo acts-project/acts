@@ -167,4 +167,36 @@ BOOST_AUTO_TEST_CASE(DelegateReferenceMember) {
   // d.connect<&SignatureTest::noModify>(&s);
 }
 
+BOOST_AUTO_TEST_CASE(StatefullLambdas) {
+  std::vector<int> v;
+
+  auto lambda = [&](int n) -> int {
+    v.push_back(n);
+    return v.size();
+  };
+
+  Delegate<int(int)> d(lambda);
+
+  BOOST_CHECK(d);
+  BOOST_CHECK(d.connected());
+  BOOST_CHECK(d(2) == 1);
+
+  d.disconnect();
+  d = lambda;
+
+  BOOST_CHECK(d);
+  BOOST_CHECK(d.connected());
+  BOOST_CHECK(d(2) == 2);
+
+  d.disconnect();
+  d.connect(lambda);
+
+  BOOST_CHECK(d);
+  BOOST_CHECK(d.connected());
+  BOOST_CHECK(d(2) == 3);
+
+  // This should not compile because of deleted && overloads
+  // d.connect([&](int a){ v.push_back(a); return v.size(); });
+}
+
 BOOST_AUTO_TEST_SUITE_END()

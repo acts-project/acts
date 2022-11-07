@@ -1,6 +1,15 @@
 # Event data
 
+:::{attention}
+This section is largely **outdated** and will be replaced in the future.
+:::
+
 ## Track parametrization
+
+:::{tip}
+An introduction to track parametrization concepts can be found in
+[](track_parametrization).
+:::
 
 A trajectory in a magnetic field is generally parameterized by a set of at least
 five parameters (when being bound to a surface). Two different categories are

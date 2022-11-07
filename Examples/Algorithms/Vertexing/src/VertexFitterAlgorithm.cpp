@@ -21,7 +21,6 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
 #include <stdexcept>
 
@@ -88,6 +87,11 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     inputTrackPtrCollection.clear();
     inputTrackPtrCollection.reserve(protoVertex.size());
     for (const auto& trackIdx : protoVertex) {
+      if (trackIdx >= trackParameters.size()) {
+        ACTS_ERROR("track parameters " << trackIdx << " does not exist");
+        continue;
+      }
+
       inputTrackPtrCollection.push_back(&trackParameters[trackIdx]);
     }
 
@@ -99,8 +103,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
-        ACTS_ERROR("Error in vertex fit.");
-        ACTS_ERROR(fitRes.error().message());
+        ACTS_ERROR("Error in vertex fitter: " << fitRes.error().message());
       }
     } else {
       // Vertex constraint
@@ -118,15 +121,19 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
-        ACTS_ERROR("Error in vertex fit with constraint.");
-        ACTS_ERROR(fitRes.error().message());
+        ACTS_ERROR(
+            "Error in constrained vertex fitter: " << fitRes.error().message());
       }
     }
 
-    ACTS_DEBUG("Fitted Vertex "
-               << fittedVertices.back().fullPosition().transpose());
-    ACTS_DEBUG(
-        "Tracks at fitted Vertex: " << fittedVertices.back().tracks().size());
+    if (fittedVertices.empty()) {
+      ACTS_DEBUG("No fitted vertex");
+    } else {
+      ACTS_DEBUG("Fitted Vertex "
+                 << fittedVertices.back().fullPosition().transpose());
+      ACTS_DEBUG(
+          "Tracks at fitted Vertex: " << fittedVertices.back().tracks().size());
+    }
   }
 
   ctx.eventStore.add(m_cfg.outputVertices, std::move(fittedVertices));

@@ -15,15 +15,24 @@
 #include <memory>
 #include <vector>
 
-struct DD4hepDetector : public ActsExamples::IBaseDetector {
+namespace ActsExamples {
+namespace DD4hep {
+
+struct DD4hepDetector : public IBaseDetector {
+  std::shared_ptr<DD4hepGeometryService> geometryService;
+  dd4hep::Detector* lcdd;
+
   void addOptions(
       boost::program_options::options_description& opt) const override;
 
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const boost::program_options::variables_map& vm,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
+  std::pair<IBaseDetector::TrackingGeometryPtr, ContextDecorators> finalize(
+      const boost::program_options::variables_map& vm,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
 
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(ActsExamples::DD4hep::DD4hepGeometryService::Config cfg,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+  std::pair<IBaseDetector::TrackingGeometryPtr, ContextDecorators> finalize(
+      DD4hepGeometryService::Config cfg,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
+
+}  // namespace DD4hep
+}  // namespace ActsExamples

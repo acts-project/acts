@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
@@ -29,46 +30,41 @@ namespace ActsExamples {
 
 class TrackFittingAlgorithm final : public BareAlgorithm {
  public:
-  /// Track fitter function that takes input measurements, initial trackstate
-  /// and fitter options and returns some track-fitter-specific result.
-  using TrackFitterOptions = Acts::KalmanFitterOptions;
+  // All track fitter functions must return the same type. For now this is the
+  // KalmanFitterResult, but maybe in the future it makes sense to generalize
+  // this
+  using TrackFitterResult =
+      Acts::Result<Acts::KalmanFitterResult<Acts::VectorMultiTrajectory>>;
 
-  using TrackFitterResult = Acts::Result<Acts::KalmanFitterResult>;
+  /// General options that do not depend on the fitter type, but need to be
+  /// handed over by the algorithm
+  struct GeneralFitterOptions {
+    std::reference_wrapper<const Acts::GeometryContext> geoContext;
+    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
+    std::reference_wrapper<const Acts::CalibrationContext> calibrationContext;
+    std::reference_wrapper<const MeasurementCalibrator> calibrator;
+    const Acts::Surface* referenceSurface = nullptr;
+    Acts::LoggerWrapper logger;
+    Acts::PropagatorPlainOptions propOptions;
+  };
 
   /// Fit function that takes the above parameters and runs a fit
   /// @note This is separated into a virtual interface to keep compilation units
-  /// small
+  /// small.
   class TrackFitterFunction {
    public:
     virtual ~TrackFitterFunction() = default;
     virtual TrackFitterResult operator()(
         const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const TrackFitterOptions&) const = 0;
-  };
+        const TrackParameters&, const GeneralFitterOptions&,
+        std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
 
-  /// Fit function that takes the above parameters plus a sorted surface
-  /// sequence for the DirectNavigator to follow
-  /// @note This is separated into a virtual interface to keep compilation units
-  /// small
-  class DirectedTrackFitterFunction {
-   public:
-    virtual ~DirectedTrackFitterFunction() = default;
     virtual TrackFitterResult operator()(
         const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const TrackFitterOptions&,
-        const std::vector<const Acts::Surface*>&) const = 0;
+        const TrackParameters&, const GeneralFitterOptions&,
+        const std::vector<const Acts::Surface*>&,
+        std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
   };
-
-  /// Create the track fitter function implementation.
-  ///
-  /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
-  static std::shared_ptr<TrackFitterFunction> makeTrackFitterFunction(
-      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
-
-  static std::shared_ptr<DirectedTrackFitterFunction> makeTrackFitterFunction(
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
 
   struct Config {
     /// Input measurements collection.
@@ -85,21 +81,10 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     std::string outputTrajectories;
     /// Type erased fitter function.
     std::shared_ptr<TrackFitterFunction> fit;
-    /// Type erased direct navigation fitter function
-    std::shared_ptr<DirectedTrackFitterFunction> dFit;
     /// Tracking geometry for surface lookup
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// Some more detailed steering - mainly for debugging, correct for MCS
-    bool multipleScattering = true;
-    /// Some more detailed steering - correct for e-loss
-    bool energyLoss = true;
-    // Correction for non-linearity effect during transform from free to bound
-    Acts::FreeToBoundCorrection freeToBoundCorrection;
     /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
-    /// Switch to fully-fledged backwards filtering below this pt value
-    /// (default: never)
-    double reverseFilteringMomThreshold = 0;
   };
 
   /// Constructor of the fitting algorithm
@@ -118,29 +103,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  /// Helper function to call correct FitterFunction
-  TrackFitterResult fitTrack(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
-      const ActsExamples::TrackParameters& initialParameters,
-      const TrackFitterOptions& options,
-      const std::vector<const Acts::Surface*>& surfSequence) const;
-
   Config m_cfg;
 };
-
-inline ActsExamples::TrackFittingAlgorithm::TrackFitterResult
-ActsExamples::TrackFittingAlgorithm::fitTrack(
-    const std::vector<std::reference_wrapper<
-        const ActsExamples::IndexSourceLink>>& sourceLinks,
-    const ActsExamples::TrackParameters& initialParameters,
-    const Acts::KalmanFitterOptions& options,
-    const std::vector<const Acts::Surface*>& surfSequence) const {
-  if (m_cfg.directNavigation) {
-    return (*m_cfg.dFit)(sourceLinks, initialParameters, options, surfSequence);
-  }
-
-  return (*m_cfg.fit)(sourceLinks, initialParameters, options);
-}
 
 }  // namespace ActsExamples

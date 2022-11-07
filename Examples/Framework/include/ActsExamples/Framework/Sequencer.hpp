@@ -13,16 +13,16 @@
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsExamples/Utilities/tbbWrap.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
 #include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
-
-#include <tbb/task_arena.h>
 
 namespace ActsExamples {
 
@@ -53,7 +53,7 @@ class Sequencer {
     IterationCallback iterationCallback = []() {};
   };
 
-  Sequencer(const Config& cfg);
+  Sequencer(const Config &cfg);
 
   /// Add a service to the set of services.
   ///
@@ -75,6 +75,10 @@ class Sequencer {
   ///
   /// @throws std::invalid_argument if the writer is NULL.
   void addWriter(std::shared_ptr<IWriter> writer);
+
+  /// Add an alias to the whiteboard.
+  void addWhiteboardAlias(const std::string &aliasName,
+                          const std::string &objectName);
 
   /// Run the event loop.
   ///
@@ -105,7 +109,7 @@ class Sequencer {
   int run();
 
   /// Get const access to the config
-  const Config& config() const { return m_cfg; }
+  const Config &config() const { return m_cfg; }
 
  private:
   /// List of all configured algorithm names.
@@ -114,7 +118,7 @@ class Sequencer {
   std::pair<size_t, size_t> determineEventsRange() const;
 
   Config m_cfg;
-  tbb::task_arena m_taskArena;
+  tbbWrap::task_arena m_taskArena;
   std::vector<std::shared_ptr<IService>> m_services;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;
@@ -122,7 +126,9 @@ class Sequencer {
   std::vector<std::shared_ptr<IWriter>> m_writers;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  const Acts::Logger& logger() const { return *m_logger; }
+  std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
+
+  const Acts::Logger &logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples

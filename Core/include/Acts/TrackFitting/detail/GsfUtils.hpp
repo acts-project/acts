@@ -73,6 +73,7 @@ class ScopedGsfInfoPrinterAndChecker {
   const propagator_state_t &m_state;
   const stepper_t &m_stepper;
   double m_p_initial;
+  std::size_t m_missedCount;
 
   const auto &logger() const { return m_state.options.logger(); }
 
@@ -91,22 +92,30 @@ class ScopedGsfInfoPrinterAndChecker {
 
   void checks(const std::string_view &where) const {
     const auto cmps = m_stepper.constComponentIterable(m_state.stepping);
-    throw_assert(detail::weightsAreNormalized(
-                     cmps, [](const auto &cmp) { return cmp.weight(); }),
-                 "not normalized at " << where);
 
-    throw_assert(
-        std::all_of(cmps.begin(), cmps.end(),
-                    [](auto cmp) { return std::isfinite(cmp.weight()); }),
-        "some weights are not finite at " << where);
+    // If all components are missed, their weights have been reset to zero.
+    // In this case the weights might not be normalized and not even be
+    // finite due to a division by zero.
+    if (m_stepper.numberComponents(m_state.stepping) > m_missedCount) {
+      throw_assert(detail::weightsAreNormalized(
+                       cmps, [](const auto &cmp) { return cmp.weight(); }),
+                   "not normalized at " << where);
+
+      throw_assert(
+          std::all_of(cmps.begin(), cmps.end(),
+                      [](auto cmp) { return std::isfinite(cmp.weight()); }),
+          "some weights are not finite at " << where);
+    }
   }
 
  public:
   ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
-                                 const stepper_t &stepper)
+                                 const stepper_t &stepper,
+                                 std::size_t missedCount)
       : m_state(state),
         m_stepper(stepper),
-        m_p_initial(stepper.momentum(state.stepping)) {
+        m_p_initial(stepper.momentum(state.stepping)),
+        m_missedCount(missedCount) {
     // Some initial printing
     checks("start");
     ACTS_VERBOSE("Gsf step "
@@ -136,30 +145,59 @@ class ScopedGsfInfoPrinterAndChecker {
   }
 };
 
+ActsScalar calculateDeterminant(
+    const double *fullCalibrated, const double *fullCalibratedCovariance,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                     true>::Covariance predictedCovariance,
+    TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax, true>::Projector
+        projector,
+    unsigned int calibratedSize);
+
 /// Reweight the components according to `R. Frühwirth, "Track fitting
 /// with non-Gaussian noise"`. See also the implementation in Athena at
 /// PosteriorWeightsCalculator.cxx
 /// @note The weights are not renormalized!
-void computePosteriorWeights(const MultiTrajectory &mt,
-                             const std::vector<std::size_t> &tips,
-                             std::map<std::size_t, double> &weights);
+template <typename D>
+void computePosteriorWeights(
+    const MultiTrajectory<D> &mt,
+    const std::vector<MultiTrajectoryTraits::IndexType> &tips,
+    std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
+  // Helper Function to compute detR
 
-/// Enumeration type used in extractMultiComponentStates(...)
-enum class StatesType { ePredicted, eFiltered, eSmoothed };
+  // Find minChi2, this can be used to factor some things later in the
+  // exponentiation
+  const auto minChi2 =
+      mt.getTrackState(*std::min_element(tips.begin(), tips.end(),
+                                         [&](const auto &a, const auto &b) {
+                                           return mt.getTrackState(a).chi2() <
+                                                  mt.getTrackState(b).chi2();
+                                         }))
+          .chi2();
 
-inline std::ostream &operator<<(std::ostream &os, StatesType type) {
-  constexpr static std::array names = {"predicted", "filtered", "smoothed"};
-  os << names[static_cast<int>(type)];
-  return os;
+  // Loop over the tips and compute new weights
+  for (auto tip : tips) {
+    const auto state = mt.getTrackState(tip);
+    const double chi2 = state.chi2() - minChi2;
+    const double detR = calculateDeterminant(
+        // This abuses an incorrectly sized vector / matrix to access the
+        // data pointer! This works (don't use the matrix as is!), but be
+        // careful!
+        state.template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
+            .data(),
+        state
+            .template calibratedCovariance<
+                MultiTrajectoryTraits::MeasurementSizeMax>()
+            .data(),
+        state.predictedCovariance(), state.projector(), state.calibratedSize());
+
+    const auto factor = std::sqrt(1. / detR) * std::exp(-0.5 * chi2);
+
+    // If something is not finite here, just leave the weight as it is
+    if (std::isfinite(factor)) {
+      weights.at(tip) *= factor;
+    }
+  }
 }
 
-/// @brief Extracts a MultiComponentState from a MultiTrajectory and a given list of indices
-auto extractMultiComponentState(const MultiTrajectory &traj,
-                                const std::vector<size_t> &tips,
-                                const std::map<size_t, ActsScalar> &weights,
-                                StatesType type)
-    -> MultiComponentBoundTrackParameters<SinglyCharged>;
-
 }  // namespace detail
-
 }  // namespace Acts

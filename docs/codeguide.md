@@ -209,4 +209,4 @@ Files that contain only symbols in the `detail` namespace should be moved in a`d
 
 ## Formatting
 
-Code formatting is handled by [ClangFormat](https://clang.llvm.org/docs/ClangFormat.html). A configuration file is available in the repository root. Please set up your editor/IDE to format files automatically.
+See [](howto_format)

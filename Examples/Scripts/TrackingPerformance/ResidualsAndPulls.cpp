@@ -27,7 +27,7 @@ int main(int argc, char** argv) {
     auto ao = description.add_options();
     ao("help,h", "Display this help message");
     ao("silent,s", bool_switch(), "Silent mode (without X-window/display).");
-    ao("input,i", value<std::string>()->default_value(""),
+    ao("input,i", value<std::string>()->required(),
        "Input ROOT file containing the input TTree.");
     ao("tree,t", value<std::string>()->default_value("trackstates"),
        "Input TTree name.");
@@ -43,12 +43,13 @@ int main(int argc, char** argv) {
     // Set up the variables map
     variables_map vm;
     store(command_line_parser(argc, argv).options(description).run(), vm);
-    notify(vm);
 
-    if (vm.count("help")) {
+    if (vm.count("help") != 0u) {
       std::cout << description;
       return 1;
     }
+
+    notify(vm);
 
     // Parse the parameters
     auto iFile = vm["input"].as<std::string>();
@@ -56,9 +57,10 @@ int main(int argc, char** argv) {
     auto oFile = vm["output"].as<std::string>();
     auto saveAs = vm["save"].as<std::string>();
 
-    TApplication* tApp = vm["silent"].as<bool>()
-                             ? nullptr
-                             : new TApplication("ResidualAndPulls", 0, 0);
+    TApplication* tApp =
+        vm["silent"].as<bool>()
+            ? nullptr
+            : new TApplication("ResidualAndPulls", nullptr, nullptr);
 
     // Run the actual resolution estimation
     switch (boundParamResolution(
@@ -68,10 +70,12 @@ int main(int argc, char** argv) {
       case -1: {
         std::cout << "*** Input file could not be opened, check name/path."
                   << std::endl;
+        return -1;
       } break;
       case -2: {
         std::cout << "*** Input tree could not be found, check name."
                   << std::endl;
+        return -2;
       } break;
       default: {
         std::cout << "*** Successful run." << std::endl;
@@ -87,5 +91,5 @@ int main(int argc, char** argv) {
   }
 
   std::cout << "*** Done." << std::endl;
-  return 1;
+  return 0;
 }

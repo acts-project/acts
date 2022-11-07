@@ -18,7 +18,6 @@
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <functional>
@@ -100,12 +99,13 @@ struct DigiComponentsConfig {
 
 class DigitizationConfig {
  public:
-  DigitizationConfig(const Options::Variables &vars)
+  DigitizationConfig(bool merge, double sigma, bool commonCorner)
       : DigitizationConfig(
-            vars, Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+            merge, sigma, commonCorner,
+            Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
 
   DigitizationConfig(
-      const Options::Variables &vars,
+      bool doMerge, double mergeNsigma, bool mergeCommonCorner,
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   DigitizationConfig(
@@ -128,7 +128,7 @@ class DigitizationConfig {
   /// Random numbers tool.
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
   /// Do we merge hits or not
-  const bool doMerge;
+  bool doMerge;
   /// How close do parameters have to be to consider merged
   const double mergeNsigma;
   /// Consider clusters that share a corner as merged (8-cell connectivity)

@@ -60,9 +60,9 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
   }
   m_outputFile->cd();
   m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
-  else {
+  } else {
     // I/O parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
     m_outputTree->Branch("multiTraj_nr", &m_multiTrajNr);
@@ -128,15 +128,18 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
   }
 }
 
-ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {}
+ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
+}
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_outputTree->Write();
     ACTS_INFO("Write parameters of trajectories to tree '"
               << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
-    m_outputFile->Close();
   }
   return ProcessCode::SUCCESS;
 }
@@ -145,8 +148,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
 
-  if (m_outputFile == nullptr)
+  if (m_outputFile == nullptr) {
     return ProcessCode::SUCCESS;
+  }
 
   // Read additional input collections
   const auto& particles =
@@ -268,7 +272,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           t_eta = eta(particle.unitDirection());
           t_pT = t_p * perp(particle.unitDirection());
 
-          if (pSurface) {
+          if (pSurface != nullptr) {
             // get the truth perigee parameter
             auto lpResult = pSurface->globalToLocal(
                 ctx.geoContext, particle.position(), particle.unitDirection());

@@ -7,8 +7,8 @@ import acts
 from acts import (
     UnitConstants as u,
 )
-
-from common import getOpenDataDetector
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 
 def runMaterialValidation(
@@ -61,7 +61,9 @@ def runMaterialValidation(
 if "__main__" == __name__:
     matDeco = acts.IMaterialDecorator.fromFile("material-map.json")
 
-    detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=matDeco)
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory(), mdecorator=matDeco
+    )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
 

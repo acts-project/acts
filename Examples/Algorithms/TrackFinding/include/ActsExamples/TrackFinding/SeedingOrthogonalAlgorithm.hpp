@@ -41,23 +41,6 @@ class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
 
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedFinderOrthogonalConfig<SimSpacePoint> seedFinderConfig;
-
-    float rMax = 200.;
-    float deltaRMin = 1.;
-    float deltaRMax = 60.;
-    float collisionRegionMin = -250;
-    float collisionRegionMax = 250.;
-    float zMin = -2000.;
-    float zMax = 2000.;
-    float maxSeedsPerSpM = 1;
-    float cotThetaMax = 7.40627;  // 2.7 eta
-    float sigmaScattering = 5;
-    float radLengthPerSeed = 0.1;
-    float minPt = 500.;
-    float bFieldInZ = 0.00199724;
-    float beamPosX = 0;
-    float beamPosY = 0;
-    float impactMax = 3.;
   };
 
   /// Construct the seeding algorithm.

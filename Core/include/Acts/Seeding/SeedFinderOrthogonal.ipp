@@ -51,8 +51,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeLH(
    * Cut: Ensure that we search only in Δr_min ≤ r - r_L ≤ Δr_max, as defined
    * by the seeding configuration and the given lower spacepoint.
    */
-  res[DimR].shrinkMin(rL + m_config.deltaRMin);
-  res[DimR].shrinkMax(rL + m_config.deltaRMax);
+  res[DimR].shrinkMin(rL + m_config.deltaRMinTopSP);
+  res[DimR].shrinkMax(rL + m_config.deltaRMaxTopSP);
 
   /*
    * Cut: Now that we have constrained r, we can use that new r range to
@@ -117,8 +117,8 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
    * Cut: Ensure that we search only in Δr_min ≤ r_H - r ≤ Δr_max, as defined
    * by the seeding configuration and the given higher spacepoint.
    */
-  res[DimR].shrinkMin(rM - m_config.deltaRMax);
-  res[DimR].shrinkMax(rM - m_config.deltaRMin);
+  res[DimR].shrinkMin(rM - m_config.deltaRMaxBottomSP);
+  res[DimR].shrinkMax(rM - m_config.deltaRMinBottomSP);
 
   /*
    * Cut: Now that we have constrained r, we can use that new r range to
@@ -158,7 +158,8 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
    * Cut: Ensure that the forward angle (z / r) lies within reasonable bounds,
    * which is to say the absolute value must be smaller than the max cot(θ).
    */
-  float cotTheta = (zH - zL) / deltaR;
+  float deltaZ = (zH - zL);
+  float cotTheta = deltaZ / deltaR;
   if (std::fabs(cotTheta) > m_config.cotThetaMax) {
     return false;
   }
@@ -171,6 +172,47 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   if (zOrigin < m_config.collisionRegionMin ||
       zOrigin > m_config.collisionRegionMax) {
     return false;
+  }
+  if (std::abs(deltaZ) > m_config.deltaZMax) {
+    return false;
+  }
+
+  // cut on the max curvature calculated from dublets
+  // first transform the space point coordinates into a frame such that the
+  // central space point SPm is in the origin of the frame and the x axis
+  // points away from the interaction point in addition to a translation
+  // transformation we also perform a rotation in order to keep the
+  // curvature of the circle tangent to the x axis
+  if (m_config.interactionPointCut) {
+    float xVal = (high.x() - low.x()) * (low.x() / rL) +
+                 (high.y() - low.y()) * (low.y() / rL);
+    float yVal = (high.y() - low.y()) * (low.x() / rL) -
+                 (high.x() - low.x()) * (low.y() / rL);
+    if (std::abs(rL * yVal) > m_config.impactMax * xVal) {
+      // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
+      // circle into straight lines in the u/v plane the line equation can
+      // be described in terms of aCoef and bCoef, where v = aCoef * u +
+      // bCoef
+      float uT = xVal / (xVal * xVal + yVal * yVal);
+      float vT = yVal / (xVal * xVal + yVal * yVal);
+      // in the rotated frame the interaction point is positioned at x = -rM
+      // and y ~= impactParam
+      float uIP = -1. / rL;
+      float vIP = m_config.impactMax / (rL * rL);
+      if (yVal > 0.)
+        vIP = -vIP;
+      // we can obtain aCoef as the slope dv/du of the linear function,
+      // estimated using du and dv between the two SP bCoef is obtained by
+      // inserting aCoef into the linear equation
+      float aCoef = (vT - vIP) / (uT - uIP);
+      float bCoef = vIP - aCoef * uIP;
+      // the distance of the straight line from the origin (radius of the
+      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+      if ((bCoef * bCoef) > (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
+        return false;
+      }
+    }
   }
 
   return true;
@@ -199,13 +241,32 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
 }
 
 template <typename external_spacepoint_t>
-template <typename output_it_t>
+template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-    std::vector<internal_sp_t *> &top, output_it_t it) const {
+    std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
+    output_container_t &cont) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
+
+  // apply cut on the number of top SP if seedConfirmation is true
+  if (m_config.seedConfirmation == true) {
+    // check if middle SP is in the central or forward region
+    SeedConfirmationRangeConfig seedConfRange =
+        (middle.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         middle.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_config.forwardSeedConfirmationRange
+            : m_config.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the middle SP is
+    // in the central or forward region
+    seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                       ? seedConfRange.nTopForLargeR
+                                       : seedConfRange.nTopForSmallR;
+    if (top.size() < seedFilterState.nTopSeedConf) {
+      return;
+    }
+  }
 
   std::vector<internal_sp_t *> top_valid;
   std::vector<float> curvatures;
@@ -241,9 +302,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
                                top[t]->z() - middle.z()));
   }
 
+  size_t t0 = 0;
+
   for (size_t b = 0; b < numBotSP; b++) {
+    // break if we reached the last top SP
+    if (t0 == numTopSP) {
+      break;
+    }
+
     auto lb = linCircleBottom[b];
-    float Zob = lb.Zo;
+    seedFilterState.zOrigin = lb.Zo;
     float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
     float Ub = lb.U;
@@ -269,8 +337,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     top_valid.clear();
     curvatures.clear();
     impactParameters.clear();
-    for (size_t t = 0; t < numTopSP; t++) {
+    for (size_t t = t0; t < numTopSP; t++) {
       auto lt = linCircleTop[t];
+      float cotThetaT = lt.cotTheta;
 
       if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
         continue;
@@ -296,6 +365,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       // allows just adding the two errors if they are uncorrelated (which is
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
+        // skip top SPs based on cotTheta sorting when producing triplets
+        if (m_config.skipPreviousTopSP) {
+          // break if cotTheta from bottom SP < cotTheta from top SP because
+          // the SP are sorted by cotTheta
+          if (cotThetaB - cotThetaT < 0) {
+            break;
+          }
+          t0 = t + 1;
+        }
         continue;
       }
 
@@ -329,6 +407,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (deltaCotTheta2 >
           (error2 + (pT2scatter * iSinTheta2 * m_config.sigmaScattering *
                      m_config.sigmaScattering))) {
+        if (m_config.skipPreviousTopSP) {
+          if (cotThetaB - cotThetaT < 0) {
+            break;
+          }
+          t0 = t;
+        }
         continue;
       }
 
@@ -346,16 +430,17 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
     }
     if (!top_valid.empty()) {
-      m_config.seedFilter->filterSeeds_2SpFixed(
-          *bottom[b], middle, top_valid, curvatures, impactParameters, Zob, it);
+      m_config.seedFilter->filterSeeds_2SpFixed(*bottom[b], middle, top_valid,
+                                                curvatures, impactParameters,
+                                                seedFilterState, cont);
     }
   }
 }
 
 template <typename external_spacepoint_t>
-template <typename output_it_t>
+template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
-    const tree_t &tree, output_it_t out_it,
+    const tree_t &tree, output_container_t &out_cont,
     const typename tree_t::pair_t &middle_p) const {
   using range_t = typename tree_t::range_t;
   internal_sp_t &middle = *middle_p.second;
@@ -502,29 +587,34 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * Create a vector to contain protoseeds.
    */
   std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed<ActsExamples::SimSpacePoint>>>>
+      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
       protoseeds;
+
+  // TODO: add seed confirmation
+  SeedFilterState seedFilterState;
 
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
-    filterCandidates(middle, bottom_lh_v, top_lh_v,
-                     std::back_inserter(protoseeds));
+    filterCandidates(middle, bottom_lh_v, top_lh_v, seedFilterState,
+                     protoseeds);
   }
 
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
-    filterCandidates(middle, bottom_hl_v, top_hl_v,
-                     std::back_inserter(protoseeds));
+    filterCandidates(middle, bottom_hl_v, top_hl_v, seedFilterState,
+                     protoseeds);
   }
 
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds, out_it);
+  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds,
+                                            seedFilterState.numQualitySeeds,
+                                            std::back_inserter(out_cont));
 }
 
 template <typename external_spacepoint_t>
@@ -553,8 +643,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
 template <typename external_spacepoint_t>
 template <typename input_container_t, typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
-    const input_container_t &spacePoints,
-    std::back_insert_iterator<output_container_t> out_it) const {
+    const input_container_t &spacePoints, output_container_t &out_cont) const {
   /*
    * The template parameters we accept are a little too generic, so we want to
    * run some basic checks to make sure the containers have the correct value
@@ -591,7 +680,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * seeing what happens if we take them to be our middle spacepoint.
    */
   for (const typename tree_t::pair_t &middle_p : tree) {
-    processFromMiddleSP(tree, out_it, middle_p);
+    processFromMiddleSP(tree, out_cont, middle_p);
   }
 
   /*
@@ -609,7 +698,7 @@ SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const input_container_t &spacePoints) const {
   std::vector<seed_t> r;
 
-  createSeeds(spacePoints, std::back_inserter(r));
+  createSeeds(spacePoints, r);
 
   return r;
 }

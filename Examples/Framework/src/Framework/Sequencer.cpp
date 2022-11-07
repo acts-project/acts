@@ -13,22 +13,33 @@
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <chrono>
 #include <exception>
 #include <numeric>
+#include <stdexcept>
 
+#ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
+#endif
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
-#include <tbb/parallel_for.h>
-#include <tbb/queuing_mutex.h>
 
 ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),
       m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic
                                          : m_cfg.numThreads),
       m_logger(Acts::getDefaultLogger("Sequencer", m_cfg.logLevel)) {
-  ROOT::EnableThreadSafety();
+#ifndef ACTS_EXAMPLES_NO_TBB
+  if (m_cfg.numThreads == 1) {
+#endif
+    ACTS_INFO("Create Sequencer (single-threaded)");
+#ifndef ACTS_EXAMPLES_NO_TBB
+  } else {
+    ROOT::EnableThreadSafety();
+    ACTS_INFO("Create Sequencer with " << m_cfg.numThreads << " threads");
+  }
+#endif
 }
 
 void ActsExamples::Sequencer::addService(std::shared_ptr<IService> service) {
@@ -73,6 +84,15 @@ void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   ACTS_INFO("Added writer '" << m_writers.back()->name() << "'");
 }
 
+void ActsExamples::Sequencer::addWhiteboardAlias(
+    const std::string& aliasName, const std::string& objectName) {
+  auto [it, success] =
+      m_whiteboardObjectAliases.insert({objectName, aliasName});
+  if (!success) {
+    throw std::invalid_argument("Alias to '" + objectName + "' already set");
+  }
+}
+
 std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {
   std::vector<std::string> names;
 
@@ -102,7 +122,7 @@ namespace {
 // From http://locklessinc.com/articles/sat_arithmetic/
 size_t saturatedAdd(size_t a, size_t b) {
   size_t res = a + b;
-  res |= -(res < a);
+  res |= -static_cast<int>(res < a);
   return res;
 }
 }  // namespace
@@ -215,7 +235,7 @@ struct TimingInfo {
 void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
                  std::string path) {
-  dfe::NamedTupleTsvWriter<TimingInfo> writer(std::move(path), 4);
+  dfe::NamedTupleTsvWriter<TimingInfo> writer(path, 4);
   for (size_t i = 0; i < identifiers.size(); ++i) {
     TimingInfo info;
     info.identifier = identifiers[i];
@@ -233,7 +253,7 @@ int ActsExamples::Sequencer::run() {
   // per-algorithm time measures
   std::vector<std::string> names = listAlgorithmNames();
   std::vector<Duration> clocksAlgorithms(names.size(), Duration::zero());
-  tbb::queuing_mutex clocksAlgorithmsMutex;
+  tbbWrap::queuing_mutex clocksAlgorithmsMutex;
 
   // processing only works w/ a well-known number of events
   // error message is already handled by the helper function
@@ -259,11 +279,20 @@ int ActsExamples::Sequencer::run() {
     service->startRun();
   }
 
+  ACTS_VERBOSE("Initialize algorithms");
+  for (auto& alg : m_algorithms) {
+    ACTS_VERBOSE("Initialize algorithm: " << alg->name());
+    if (alg->initialize() != ProcessCode::SUCCESS) {
+      ACTS_FATAL("Failed to initialize algorithm: " << alg->name());
+      throw std::runtime_error("Failed to process event data");
+    }
+  }
+
   // execute the parallel event loop
   std::atomic<size_t> nProcessedEvents = 0;
   size_t nTotalEvents = eventsRange.second - eventsRange.first;
   m_taskArena.execute([&] {
-    tbb::parallel_for(
+    tbbWrap::parallel_for(
         tbb::blocked_range<size_t>(eventsRange.first, eventsRange.second),
         [&](const tbb::blocked_range<size_t>& r) {
           std::vector<Duration> localClocksAlgorithms(names.size(),
@@ -272,8 +301,10 @@ int ActsExamples::Sequencer::run() {
           for (size_t event = r.begin(); event != r.end(); ++event) {
             m_cfg.iterationCallback();
             // Use per-event store
-            WhiteBoard eventStore(Acts::getDefaultLogger(
-                "EventStore#" + std::to_string(event), m_cfg.logLevel));
+            WhiteBoard eventStore(
+                Acts::getDefaultLogger("EventStore#" + std::to_string(event),
+                                       m_cfg.logLevel),
+                m_whiteboardObjectAliases);
             // If we ever wanted to run algorithms in parallel, this needs to be
             // changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);
@@ -307,6 +338,7 @@ int ActsExamples::Sequencer::run() {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute algorithm: " << alg->name());
               if (alg->execute(++context) != ProcessCode::SUCCESS) {
+                ACTS_FATAL("Failed to execute algorithm: " << alg->name());
                 throw std::runtime_error("Failed to process event data");
               }
             }
@@ -333,13 +365,22 @@ int ActsExamples::Sequencer::run() {
 
           // add timing info to global information
           {
-            tbb::queuing_mutex::scoped_lock lock(clocksAlgorithmsMutex);
+            tbbWrap::queuing_mutex::scoped_lock lock(clocksAlgorithmsMutex);
             for (size_t i = 0; i < clocksAlgorithms.size(); ++i) {
               clocksAlgorithms[i] += localClocksAlgorithms[i];
             }
           }
         });
   });
+
+  ACTS_VERBOSE("Finalize algorithms");
+  for (auto& alg : m_algorithms) {
+    ACTS_VERBOSE("Finalize algorithm: " << alg->name());
+    if (alg->finalize() != ProcessCode::SUCCESS) {
+      ACTS_FATAL("Failed to finalize algorithm: " << alg->name());
+      throw std::runtime_error("Failed to process event data");
+    }
+  }
 
   // run end-of-run hooks
   for (auto& wrt : m_writers) {

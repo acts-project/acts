@@ -8,10 +8,11 @@
 
 #pragma once
 
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <memory>
@@ -194,7 +195,7 @@ class BinnedSPGroupIterator {
   BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,
                         BinFinder<external_spacepoint_t>* botBinFinder,
                         BinFinder<external_spacepoint_t>* tBinFinder,
-                        boost::container::small_vector<size_t, 20> bins = {}) {
+                        std::vector<size_t> bins = {}) {
     grid = spgrid;
     m_bottomBinFinder = botBinFinder;
     m_topBinFinder = tBinFinder;
@@ -216,7 +217,7 @@ class BinnedSPGroupIterator {
                         BinFinder<external_spacepoint_t>* botBinFinder,
                         BinFinder<external_spacepoint_t>* tBinFinder,
                         size_t phiInd, size_t zInd,
-                        boost::container::small_vector<size_t, 20> bins = {}) {
+                        std::vector<size_t> bins = {}) {
     m_bottomBinFinder = botBinFinder;
     m_topBinFinder = tBinFinder;
     grid = spgrid;
@@ -252,7 +253,7 @@ class BinnedSPGroupIterator {
   std::array<long unsigned int, 2ul> phiZbins;
   BinFinder<external_spacepoint_t>* m_bottomBinFinder;
   BinFinder<external_spacepoint_t>* m_topBinFinder;
-  boost::container::small_vector<size_t, 20> customZorder;
+  std::vector<size_t> customZorder;
   // 	bool start = true;
 };
 
@@ -272,7 +273,8 @@ class BinnedSPGroup {
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-      const SeedfinderConfig<external_spacepoint_t>& _config);
+      Acts::Extent rRangeSPExtent,
+      const SeedFinderConfig<external_spacepoint_t>& _config);
 
   size_t size() { return m_binnedSP->size(); }
 
@@ -298,7 +300,7 @@ class BinnedSPGroup {
   std::shared_ptr<BinFinder<external_spacepoint_t>> m_topBinFinder;
   std::shared_ptr<BinFinder<external_spacepoint_t>> m_bottomBinFinder;
 
-  boost::container::small_vector<size_t, 20> m_bins;
+  std::vector<size_t> m_bins;
 };
 
 }  // namespace Acts

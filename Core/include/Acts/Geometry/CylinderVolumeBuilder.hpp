@@ -94,7 +94,7 @@ struct VolumeConfig {
 
   /// Attach method - non-const
   /// it attaches the one volume config to the other one in Z
-  /// this is the non-cost method, i.e. the mit point is is used
+  /// this is the non-cost method, i.e. the mid point is used
   ///
   /// @param [in] lConfig is the config to which it should be attached
   /// @note lConfig will be changed

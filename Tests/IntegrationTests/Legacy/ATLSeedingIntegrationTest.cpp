@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Seeding/AtlasSeedfinder.hpp"
+#include "Acts/Seeding/AtlasSeedFinder.hpp"
 
 #include <algorithm>
 
@@ -33,13 +33,13 @@ struct SpacePoint {
 // call to next() overwrites the previous seed object
 std::vector<Acts::Legacy::Seed<SpacePoint>> runSeeding(
     std::vector<SpacePoint*> spVec) {
-  Acts::Legacy::AtlasSeedfinder<SpacePoint> seedMaker;
+  Acts::Legacy::AtlasSeedFinder<SpacePoint> seedMaker;
   seedMaker.newEvent(0, spVec.begin(), spVec.end());
   seedMaker.find3Sp();
   const Acts::Legacy::Seed<SpacePoint>* seed = seedMaker.next();
   int numSeeds = 0;
   std::vector<Acts::Legacy::Seed<SpacePoint>> seedVec;
-  while (seed != 0) {
+  while (seed != nullptr) {
     numSeeds++;
     auto spIter = seed->spacePoints().begin();
     spIter++;

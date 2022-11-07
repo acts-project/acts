@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
-
-#include "Fatras.hpp"
+#include "ActsExamples/Fatras/FatrasCommon.hpp"
 
 int main(int argc, char* argv[]) {
-  return runFatras(argc, argv, std::make_shared<DD4hepDetector>());
+  return runFatras(argc, argv,
+                   std::make_shared<ActsExamples::DD4hep::DD4hepDetector>());
 }

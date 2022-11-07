@@ -1,48 +1,86 @@
 #!/usr/bin/env python3
-import argparse
 import pathlib, acts, acts.examples
-import acts.examples.dd4hep
-from common import getOpenDataDetector, getOpenDataDetectorDirectory
+from acts.examples.simulation import (
+    addParticleGun,
+    MomentumConfig,
+    EtaConfig,
+    ParticleConfig,
+    addPythia8,
+    addFatras,
+    ParticleSelectorConfig,
+    addDigitization,
+)
+from acts.examples.reconstruction import (
+    addSeeding,
+    TruthSeedRanges,
+    addCKFTracks,
+    CKFPerformanceConfig,
+    TrackSelectorRanges,
+    addAmbiguityResolution,
+    AmbiguityResolutionConfig,
+    addVertexFitting,
+    VertexFinder,
+)
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
-
+ttbar_pu200 = False
 u = acts.UnitConstants
+geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
-outputDir.mkdir(exist_ok=True)
+# acts.examples.dump_args_calls(locals())  # show python binding calls
 
-oddDir = getOpenDataDetectorDirectory()
-
-oddMaterialMap = oddDir / "data/odd-material-maps.root"
-oddDigiConfig = oddDir / "config/odd-digi-smearing-config.json"
-oddSeedingSel = oddDir / "config/odd-seeding-config.json"
+oddMaterialMap = geoDir / "data/odd-material-maps.root"
+oddDigiConfig = geoDir / "config/odd-digi-smearing-config.json"
+oddSeedingSel = geoDir / "config/odd-seeding-config.json"
 oddMaterialDeco = acts.IMaterialDecorator.fromFile(oddMaterialMap)
 
-detector, trackingGeometry, decorators = getOpenDataDetector(mdecorator=oddMaterialDeco)
+detector, trackingGeometry, decorators = getOpenDataDetector(
+    geoDir, mdecorator=oddMaterialDeco
+)
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-from particle_gun import addParticleGun, MomentumConfig, EtaConfig, ParticleConfig
-from fatras import addFatras
-from digitization import addDigitization
-from seeding import addSeeding, SeedingAlgorithm, TruthSeedRanges
-from ckf_tracks import addCKFTracks
+s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, logLevel=acts.logging.INFO)
+if not ttbar_pu200:
+    addParticleGun(
+        s,
+        MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+        EtaConfig(-3.0, 3.0, uniform=True),
+        ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
+        vtxGen=acts.examples.GaussianVertexGenerator(
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+            mean=acts.Vector4(0, 0, 0, 0),
+        ),
+        multiplicity=50,
+        rnd=rnd,
+    )
+else:
+    addPythia8(
+        s,
+        hardProcess=["Top:qqbar2ttbar=on"],
+        npileup=200,
+        vtxGen=acts.examples.GaussianVertexGenerator(
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+            mean=acts.Vector4(0, 0, 0, 0),
+        ),
+        rnd=rnd,
+        outputDirRoot=outputDir,
+    )
 
-s = addParticleGun(
-    s,
-    MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, True),
-    EtaConfig(-3.0, 3.0, True),
-    ParticleConfig(1, acts.PdgParticle.eMuon, True),
-    rnd=rnd,
-)
-s = addFatras(
+addFatras(
     s,
     trackingGeometry,
     field,
+    ParticleSelectorConfig(eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True)
+    if ttbar_pu200
+    else ParticleSelectorConfig(),
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-s = addDigitization(
+
+addDigitization(
     s,
     trackingGeometry,
     field,
@@ -50,20 +88,38 @@ s = addDigitization(
     outputDirRoot=outputDir,
     rnd=rnd,
 )
-s = addSeeding(
+
+addSeeding(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-2.7, 2.7), nHits=(9, None)),
+    TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-3.0, 3.0), nHits=(9, None))
+    if ttbar_pu200
+    else TruthSeedRanges(),
     geoSelectionConfigFile=oddSeedingSel,
     outputDirRoot=outputDir,
-    initialVarInflation=[100, 100, 100, 100, 100, 100],
 )
-s = addCKFTracks(
+
+addCKFTracks(
     s,
     trackingGeometry,
     field,
-    TruthSeedRanges(pt=(400.0 * u.MeV, None), nHits=(6, None)),
+    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 3.0), removeNeutral=True),
+    outputDirRoot=outputDir,
+)
+
+addAmbiguityResolution(
+    s,
+    AmbiguityResolutionConfig(maximumSharedHits=3),
+    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+    outputDirRoot=outputDir,
+)
+
+addVertexFitting(
+    s,
+    field,
+    vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
 )
 

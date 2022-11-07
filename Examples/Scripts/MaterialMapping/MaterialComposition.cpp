@@ -62,7 +62,7 @@ int main(int argc, char** argv) {
     store(command_line_parser(argc, argv).options(description).run(), vm);
     notify(vm);
 
-    if (vm.count("help")) {
+    if (vm.count("help") != 0u) {
       std::cout << description;
     }
 
@@ -97,9 +97,10 @@ int main(int argc, char** argv) {
           {snames[is], rmins[is], rmaxs[is], zmins[is], zmaxs[is]});
     }
 
-    TApplication* tApp = vm["silent"].as<bool>()
-                             ? nullptr
-                             : new TApplication("ResidualAndPulls", 0, 0);
+    TApplication* tApp =
+        vm["silent"].as<bool>()
+            ? nullptr
+            : new TApplication("ResidualAndPulls", nullptr, nullptr);
 
     materialComposition(iFile, iTree, oFile, bins, eta, dRegion);
 

@@ -1,5 +1,5 @@
 Run the seeding example
-===============================
+=======================
 
 Prerequisites
 -------------
@@ -28,7 +28,7 @@ The following parameters for the seed finding are set in ``/acts/Examples/Run/Se
   seedingCfg.zMax = 2000.;
   seedingCfg.maxSeedsPerSpM = 1;
   seedingCfg.cotThetaMax = 7.40627;  // 2.7 eta
-  seedingCfg.sigmaScattering = 50;
+  seedingCfg.sigmaScattering = 5;
   seedingCfg.radLengthPerSeed = 0.1;
   seedingCfg.minPt = 500.;
   seedingCfg.bFieldInZ = 0.00199724;
@@ -63,10 +63,10 @@ The example also generates output root files in the output directory.
 In ``performance_seeding_hists.root``, you can find the efficiency plots.
 The plots below are examples of the efficiency plots produced using the ttbar sample with 200 pile-up vertices.
 
-.. image:: ../figures/performance/seeding/seeding_eff_vs_pt.png
+.. image:: ../../figures/performance/seeding/seeding_eff_vs_pt.png
    :width: 300
 
-.. image:: ../figures/performance/seeding/seeding_eff_vs_eta.png
+.. image:: ../../figures/performance/seeding/seeding_eff_vs_eta.png
    :width: 300
 
 

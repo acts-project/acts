@@ -35,7 +35,8 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
                        component_iterator_t bwdBegin,
                        component_iterator_t bwdEnd,
                        fwd_projector_t fwdProjector = fwd_projector_t{},
-                       bwd_projector_t bwdProjector = bwd_projector_t{}) {
+                       bwd_projector_t bwdProjector = bwd_projector_t{},
+                       ActsScalar weightCutoff = 1.e-16) {
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       smoothedState;
 
@@ -60,12 +61,14 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
 
       const auto new_weight = std::exp(-0.5 * exponent) * weight_a * weight_b;
 
-      if (new_weight == 0) {
-        return ResType(GsfError::SmoothingFailed);
+      if (std::isfinite(new_weight) and new_weight > weightCutoff) {
+        smoothedState.push_back({new_weight, new_pars, new_cov});
       }
-
-      smoothedState.push_back({new_weight, new_pars, new_cov});
     }
+  }
+
+  if (smoothedState.empty()) {
+    return ResType(Experimental::GsfError::SmoothingFailed);
   }
 
   normalizeWeights(smoothedState, [](auto &tuple) -> decltype(auto) {
@@ -80,15 +83,25 @@ auto bayesianSmoothing(component_iterator_t fwdBegin,
   return ResType(smoothedState);
 }
 
+/// Enumeration type to allow templating on the state we want to project on with
+/// a MultiTrajectory
+enum class StatesType { ePredicted, eFiltered, eSmoothed };
+
+inline std::ostream &operator<<(std::ostream &os, StatesType type) {
+  constexpr static std::array names = {"predicted", "filtered", "smoothed"};
+  os << names[static_cast<int>(type)];
+  return os;
+}
+
 /// @brief Projector type which maps a MultiTrajectory-Index to a tuple of
 /// [weight, parameters, covariance]. Therefore, it contains a MultiTrajectory
 /// and for now a std::map for the weights
-template <StatesType type>
+template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
-  const MultiTrajectory &mt;
-  const std::map<std::size_t, double> &weights;
+  const MultiTrajectory<traj_t> &mt;
+  const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
 
-  auto operator()(std::size_t idx) const {
+  auto operator()(MultiTrajectoryTraits::IndexType idx) const {
     const auto proxy = mt.getTrackState(idx);
     switch (type) {
       case StatesType::ePredicted:
@@ -113,12 +126,14 @@ struct MultiTrajectoryProjector {
 /// TODO this function does not handle outliers correctly at the moment I think
 /// TODO change std::vector< size_t > to boost::small_vector for better
 /// performance
-template <bool ReturnSmootedStates = false>
+template <typename traj_t, bool ReturnSmootedStates = false>
 auto smoothAndCombineTrajectories(
-    const MultiTrajectory &fwd, const std::vector<std::size_t> &fwdStartTips,
-    const std::map<std::size_t, double> &fwdWeights, const MultiTrajectory &bwd,
-    const std::vector<std::size_t> &bwdStartTips,
-    const std::map<std::size_t, double> &bwdWeights,
+    const MultiTrajectory<traj_t> &fwd,
+    const std::vector<MultiTrajectoryTraits::IndexType> &fwdStartTips,
+    const std::map<MultiTrajectoryTraits::IndexType, double> &fwdWeights,
+    const MultiTrajectory<traj_t> &bwd,
+    const std::vector<MultiTrajectoryTraits::IndexType> &bwdStartTips,
+    const std::map<MultiTrajectoryTraits::IndexType, double> &bwdWeights,
     LoggerWrapper logger = getDummyLogger()) {
   // This vector gets only filled if ReturnSmootedStates is true
   std::vector<std::pair<const Surface *,
@@ -128,16 +143,16 @@ auto smoothAndCombineTrajectories(
 
   // Use backward trajectory as basic trajectory, so that final trajectory is
   // ordered correctly. We ensure also that they are unique.
-  std::vector<std::size_t> bwdTips = bwdStartTips;
+  std::vector<MultiTrajectoryTraits::IndexType> bwdTips = bwdStartTips;
 
-  // Ensures that the bwd tips are unique and do not contain MAX_SIZE which
+  // Ensures that the bwd tips are unique and do not contain kInvalid which
   // represents an invalid trajectory state
   auto sortUniqueValidateBwdTips = [&]() {
     std::sort(bwdTips.begin(), bwdTips.end());
     bwdTips.erase(std::unique(bwdTips.begin(), bwdTips.end()), bwdTips.end());
 
     auto invalid_it = std::find(bwdTips.begin(), bwdTips.end(),
-                                std::numeric_limits<uint16_t>::max());
+                                MultiTrajectoryTraits::kInvalid);
     if (invalid_it != bwdTips.end()) {
       bwdTips.erase(invalid_it);
     }
@@ -145,7 +160,8 @@ auto smoothAndCombineTrajectories(
 
   sortUniqueValidateBwdTips();
 
-  KalmanFitterResult result;
+  KalmanFitterResult<traj_t> result;
+  result.fittedStates = std::make_shared<traj_t>();
 
   while (!bwdTips.empty()) {
     // Ensure that we update the bwd tips whenever we go to the next iteration
@@ -164,7 +180,7 @@ auto smoothAndCombineTrajectories(
 
     // Search corresponding forward tips
     const auto bwdGeoId = currentSurface.geometryId();
-    std::vector<std::size_t> fwdTips;
+    std::vector<MultiTrajectoryTraits::IndexType> fwdTips;
 
     for (const auto tip : fwdStartTips) {
       fwd.visitBackwards(tip, [&](const auto &state) {
@@ -185,19 +201,21 @@ auto smoothAndCombineTrajectories(
     fwdTips.erase(std::unique(fwdTips.begin(), fwdTips.end()), fwdTips.end());
 
     // Add state to MultiTrajectory
-    result.lastTrackIndex = result.fittedStates.addTrackState(
+    result.lastTrackIndex = result.fittedStates->addTrackState(
         TrackStatePropMask::All, result.lastTrackIndex);
     result.processedStates++;
 
-    auto proxy = result.fittedStates.getTrackState(result.lastTrackIndex);
+    auto proxy = result.fittedStates->getTrackState(result.lastTrackIndex);
 
     // This way we copy all relevant flags and the calibrated field. However
     // this assumes that the relevant flags do not differ between components
     proxy.copyFrom(firstBwdState);
 
     // Define some Projector types we need in the following
-    using PredProjector = MultiTrajectoryProjector<StatesType::ePredicted>;
-    using FiltProjector = MultiTrajectoryProjector<StatesType::eFiltered>;
+    using PredProjector =
+        MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
+    using FiltProjector =
+        MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
     if (proxy.typeFlags().test(Acts::TrackStateFlag::HoleFlag)) {
       result.measurementHoles++;
@@ -210,12 +228,16 @@ auto smoothAndCombineTrajectories(
     // If we have a hole or an outlier, just take the combination of filtered
     // and predicted and no smoothed state
     if (not proxy.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-      const auto [mean, cov] = combineBoundGaussianMixture(
-          bwdTips.begin(), bwdTips.end(), FiltProjector{bwd, bwdWeights});
+      const auto [mean, cov] =
+          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
+            return combineGaussianMixture(bwdTips,
+                                          FiltProjector{bwd, bwdWeights}, desc);
+          });
 
       proxy.predicted() = mean;
       proxy.predictedCovariance() = cov.value();
-      proxy.data().ifiltered = proxy.data().ipredicted;
+      using PM = TrackStatePropMask;
+      proxy.shareFrom(proxy, PM::Predicted, PM::Filtered);
 
     }
     // If we have a measurement, do the smoothing
@@ -223,14 +245,20 @@ auto smoothAndCombineTrajectories(
       result.measurementStates++;
 
       // The predicted state is the forward pass
-      const auto [fwdMeanPred, fwdCovPred] = combineBoundGaussianMixture(
-          fwdTips.begin(), fwdTips.end(), PredProjector{fwd, fwdWeights});
+      const auto [fwdMeanPred, fwdCovPred] =
+          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
+            return combineGaussianMixture(fwdTips,
+                                          PredProjector{fwd, fwdWeights}, desc);
+          });
       proxy.predicted() = fwdMeanPred;
       proxy.predictedCovariance() = fwdCovPred.value();
 
       // The filtered state is the backward pass
-      const auto [bwdMeanFilt, bwdCovFilt] = combineBoundGaussianMixture(
-          bwdTips.begin(), bwdTips.end(), FiltProjector{bwd, bwdWeights});
+      const auto [bwdMeanFilt, bwdCovFilt] =
+          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
+            return combineGaussianMixture(bwdTips,
+                                          FiltProjector{bwd, bwdWeights}, desc);
+          });
       proxy.filtered() = bwdMeanFilt;
       proxy.filteredCovariance() = bwdCovFilt.value();
 
@@ -251,8 +279,10 @@ auto smoothAndCombineTrajectories(
       }
 
       // The smoothed state is a combination
-      const auto [smoothedMean, smoothedCov] = combineBoundGaussianMixture(
-          smoothedState.begin(), smoothedState.end());
+      const auto [smoothedMean, smoothedCov] =
+          angleDescriptionSwitch(currentSurface, [&](const auto &desc) {
+            return combineGaussianMixture(smoothedState, Identity{}, desc);
+          });
       proxy.smoothed() = smoothedMean;
       proxy.smoothedCovariance() = smoothedCov.value();
       ACTS_VERBOSE("Added smoothed state to MultiTrajectory");

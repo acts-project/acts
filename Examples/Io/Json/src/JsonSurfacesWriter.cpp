@@ -29,7 +29,7 @@ JsonSurfacesWriter::JsonSurfacesWriter(const JsonSurfacesWriter::Config& config,
     throw std::invalid_argument("Missing tracking geometry");
   }
   m_world = m_cfg.trackingGeometry->highestTrackingVolume();
-  if (not m_world) {
+  if (m_world == nullptr) {
     throw std::invalid_argument("Could not identify the world volume");
   }
 }
@@ -51,7 +51,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
                      bool writeApproach, bool writeSensitive,
                      bool writeBoundary) {
   // Process all layers that are directly stored within this volume
-  if (volume.confinedLayers()) {
+  if (volume.confinedLayers() != nullptr) {
     for (auto layer : volume.confinedLayers()->arrayObjects()) {
       // We jump navigation layers
       if (layer->layerType() == Acts::navigation) {
@@ -64,16 +64,16 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
             layer->surfaceRepresentation().geometryId(), layerSurfacePtr});
       }
       // Approach surfaces
-      if (writeApproach and layer->approachDescriptor()) {
+      if (writeApproach and layer->approachDescriptor() != nullptr) {
         for (auto sf : layer->approachDescriptor()->containedSurfaces()) {
           cSurfaces.push_back(SurfaceContainer::InputElement{
               sf->geometryId(), sf->getSharedPtr()});
         }
       }
       // Check for sensitive surfaces
-      if (layer->surfaceArray() and writeSensitive) {
+      if (layer->surfaceArray() != nullptr and writeSensitive) {
         for (auto surface : layer->surfaceArray()->surfaces()) {
-          if (surface) {
+          if (surface != nullptr) {
             cSurfaces.push_back(SurfaceContainer::InputElement{
                 surface->geometryId(), surface->getSharedPtr()});
           }

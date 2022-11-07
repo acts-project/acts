@@ -54,7 +54,7 @@ class StraightLineStepper {
     /// @param [in] gctx is the context object for the geometry
     /// @param [in] mctx is the context object for the magnetic field
     /// @param [in] par The track parameters at start
-    /// @param [in] ndir The navigation direciton w.r.t momentum
+    /// @param [in] ndir The navigation direction w.r.t momentum
     /// @param [in] ssize is the maximum step size
     /// @param [in] stolerance is the stepping tolerance
     ///
@@ -115,7 +115,7 @@ class StraightLineStepper {
     double pathAccumulated = 0.;
 
     /// adaptive step size of the runge-kutta integration
-    ConstrainedStep stepSize = std::numeric_limits<double>::max();
+    ConstrainedStep stepSize;
 
     // Previous step size for overstep estimation (ignored for SL stepper)
     double previousStepSize = 0.;
@@ -250,7 +250,7 @@ class StraightLineStepper {
   void setStepSize(State& state, double stepSize,
                    ConstrainedStep::Type stype = ConstrainedStep::actor,
                    bool release = true) const {
-    state.previousStepSize = state.stepSize;
+    state.previousStepSize = state.stepSize.value();
     state.stepSize.update(stepSize, stype, release);
   }
 
@@ -367,7 +367,7 @@ class StraightLineStepper {
   template <typename propagator_state_t>
   Result<double> step(propagator_state_t& state) const {
     // use the adjusted step size
-    const auto h = state.stepping.stepSize;
+    const auto h = state.stepping.stepSize.value();
     const double p = momentum(state.stepping);
     // time propagates along distance as 1/b = sqrt(1 + m²/p²)
     const auto dtds = std::hypot(1., state.options.mass / p);

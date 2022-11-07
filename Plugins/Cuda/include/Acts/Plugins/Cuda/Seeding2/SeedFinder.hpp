@@ -14,7 +14,7 @@
 // Acts include(s).
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 // System include(s).
@@ -32,14 +32,14 @@ class SeedFinder {
  public:
   /// Create a CUDA backed seed finder object
   ///
-  /// @param commonConfig Configuration shared with @c Acts::Seedfinder
+  /// @param commonConfig Configuration shared with @c Acts::SeedFinder
   /// @param seedFilterConfig Configuration shared with @c Acts::SeedFilter
   /// @param tripletFilterConfig Configuration for the GPU based triplet
   ///        filtering
   /// @param device The identifier of the CUDA device to run on
   /// @param logger A @c Logger instance
   ///
-  SeedFinder(SeedfinderConfig<external_spacepoint_t> commonConfig,
+  SeedFinder(SeedFinderConfig<external_spacepoint_t> commonConfig,
              const SeedFilterConfig& seedFilterConfig,
              const TripletFilterConfig& tripletFilterConfig, int device = 0,
              std::unique_ptr<const Logger> logger =
@@ -69,7 +69,7 @@ class SeedFinder {
   const Logger& logger() const { return *m_logger; }
 
   /// Configuration for the seed finder
-  SeedfinderConfig<external_spacepoint_t> m_commonConfig;
+  SeedFinderConfig<external_spacepoint_t> m_commonConfig;
   /// Configuration for the (host) seed filter
   SeedFilterConfig m_seedFilterConfig;
   /// Configuration for the (device) triplet filter
