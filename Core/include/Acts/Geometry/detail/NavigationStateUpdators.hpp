@@ -70,6 +70,9 @@ class StaticUpdatorImpl : public IDelegateImpl {
 /// @brief  This is an index grid based navigation state updator, it uses
 /// an extractor type and a filler type to handle the navigation state
 ///
+/// @note a transform is applied `p3l = transform * p3` in order to allow
+/// shifted, transformed grids
+///
 /// It can be used for volumes, surfaces at convenience
 ///
 /// @tparam grid_type is the type of the grid
@@ -82,20 +85,22 @@ class IndexedUpdatorImpl : public IDelegateImpl {
   grid_type grid;
   /// An extractor helper to get the object(s) from the volume
   extractor_type extractor;
-  /// A filler helper to fill the selected objects into the naavigation state
-  filler_type filler;
   /// These are the cast parameters
   std::array<BinningValue, grid_type::DIM> casts;
+  /// A transform to be applied to the position
+  Transform3 transform = Transform3::Identity();
 
   /// @brief  Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
   /// @param icasts is the cast values array
+  /// @param itr a transform applied to the global position
   IndexedUpdatorImpl(grid_type&& igrid,
-                     const std::array<BinningValue, grid_type::DIM>& icasts)
-      : grid(std::move(igrid)), casts(icasts) {}
+                     const std::array<BinningValue, grid_type::DIM>& icasts,
+                     Transform3 itr = Transform3::Identity())
+      : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
   /// @brief updates the navigation state with objects from the grid according
-  /// to the filling type
+  /// to the filling type AFTER applying `p3loc = transform * p3`
   ///
   /// @param gctx is the Geometry context of this call
   /// @param nState the navigation state to which the surfaces are attached
@@ -103,10 +108,12 @@ class IndexedUpdatorImpl : public IDelegateImpl {
   /// @note this is attaching objects without intersecting nor checking
   void operator()([[maybe_unused]] const GeometryContext& gctx,
                   NavigationState& nState) const {
+    // Transform into local 3D frame
+    Vector3 p3loc = transform * nState.position;
     // Extract the index grid entry
-    const auto& entry = grid.atPosition(castPosition(nState.position));
+    const auto& entry = grid.atPosition(castPosition(p3loc));
     auto extracted =
-        extractor_type::extract(gctx, *nState.currentVolume, entry);
+       extractor.extract(gctx, *nState.currentVolume, entry);
     filler_type::fill(nState, extracted);
   }
 
