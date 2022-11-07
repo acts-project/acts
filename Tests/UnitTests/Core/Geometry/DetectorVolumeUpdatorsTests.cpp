@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(EndOfWorldUpdate) {
   BOOST_CHECK(nState.currentVolume == volumeA.get());
 
   Acts::Experimental::detail::EndOfWorldImpl eow;
-  eow(tContext, nState);
+  eow.update(tContext, nState);
 
   BOOST_CHECK(nState.currentVolume == nullptr);
 }
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(SingleVolumeUpdate) {
   BOOST_CHECK(nState.currentVolume == volumeA.get());
 
   Acts::Experimental::detail::SingleDetectorVolumeImpl svu(volumeB.get());
-  svu(tContext, nState);
+  svu.update(tContext, nState);
 
   BOOST_CHECK(nState.currentVolume == volumeB.get());
 
@@ -80,11 +80,11 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
 
   // Check the volume retrieval
   nState.position = Acts::Vector3(0., 0., -150.);
-  bvg(tContext, nState);
+  bvg.update(tContext, nState);
   BOOST_CHECK(nState.currentVolume == volumeA.get());
 
   nState.position = Acts::Vector3(0., 0., 600.);
-  bvg(tContext, nState);
+  bvg.update(tContext, nState);
   BOOST_CHECK(nState.currentVolume == volumeD.get());
 
   // Check a shifted one
@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
 
   // 150 (-300) -> transforms to -150, hence it yields A
   nState.position = Acts::Vector3(0., 0., 150.);
-  bvgs(tContext, nState);
+  bvgs.update(tContext, nState);
   BOOST_CHECK(nState.currentVolume == volumeA.get());
 }
 

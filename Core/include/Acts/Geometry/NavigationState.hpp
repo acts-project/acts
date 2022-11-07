@@ -26,6 +26,7 @@ class Surface;
 namespace Experimental {
 
 class Portal;
+class Detector;
 class DetectorVolume;
 
 /// @brief A navigation state struct that is
@@ -65,6 +66,9 @@ struct NavigationState {
 
   /// The current magnetic field
   Vector3 magneticField = Vector3(0., 0., 0.);
+
+  /// The current detector in processing
+  const Detector* currentDetector = nullptr;
 
   /// The current volume in processing, i.e. the position is inside
   const DetectorVolume* currentVolume = nullptr;

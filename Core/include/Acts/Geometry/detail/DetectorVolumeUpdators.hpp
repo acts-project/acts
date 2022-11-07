@@ -31,9 +31,8 @@ struct EndOfWorldImpl : public IDelegateImpl {
   /// @brief a null volume link - explicitely
   ///
   /// @note the method parameters are ignored
-  ///
-  inline void operator()(const GeometryContext& /*ignored*/,
-                         NavigationState& nState) const {
+  inline static void update(const GeometryContext& /*ignored*/,
+                            NavigationState& nState) {
     nState.currentVolume = nullptr;
   }
 };
@@ -60,8 +59,8 @@ struct SingleDetectorVolumeImpl : public IDelegateImpl {
   ///
   /// @note the method parameters are ignored
   ///
-  inline void operator()(const GeometryContext& /*ignored*/,
-                         NavigationState& nState) const {
+  inline void update(const GeometryContext& /*ignored*/,
+                     NavigationState& nState) const {
     nState.currentVolume = dVolume;
   }
 };
@@ -134,12 +133,13 @@ struct BoundVolumesGrid1Impl : public IDelegateImpl {
   // Deleted default constructor
   BoundVolumesGrid1Impl() = delete;
 
-  /// @brief This updatored relies on an 1D single index grid
+  /// @brief This updator relies on an 1D single index grid
   ///
-  ///
-  inline void operator()(const GeometryContext& gctx,
-                         NavigationState& nState) const {
-    indexedUpdator(gctx, nState);
+  /// @param gctx the geometry context
+  /// @param nState [in,out] the navigation state to be updated
+  inline void update(const GeometryContext& gctx,
+                     NavigationState& nState) const {
+    indexedUpdator.update(gctx, nState);
   }
 };
 

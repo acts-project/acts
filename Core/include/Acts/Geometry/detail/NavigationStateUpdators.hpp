@@ -40,8 +40,8 @@ class SingleObjectImpl : public IDelegateImpl {
   /// @param nState the navigation state to which the surfaces are attached
   ///
   /// @note this is attaching objects without intersecting nor checking
-  void operator()([[maybe_unused]] const GeometryContext& gctx,
-                  NavigationState& nState) const {
+  void update([[maybe_unused]] const GeometryContext& gctx,
+              NavigationState& nState) const {
     filler_type::fill(nState, object);
   }
 };
@@ -60,8 +60,8 @@ class StaticUpdatorImpl : public IDelegateImpl {
   /// @param nState the navigation state to which the surfaces are attached
   ///
   /// @note this is attaching objects without intersecting nor checking
-  void operator()([[maybe_unused]] const GeometryContext& gctx,
-                  NavigationState& nState) const {
+  void update([[maybe_unused]] const GeometryContext& gctx,
+              NavigationState& nState) const {
     auto extracted = extractor_type::extract(gctx, *nState.currentVolume);
     filler_type::fill(nState, extracted);
   }
@@ -106,14 +106,13 @@ class IndexedUpdatorImpl : public IDelegateImpl {
   /// @param nState the navigation state to which the surfaces are attached
   ///
   /// @note this is attaching objects without intersecting nor checking
-  void operator()([[maybe_unused]] const GeometryContext& gctx,
-                  NavigationState& nState) const {
+  void update([[maybe_unused]] const GeometryContext& gctx,
+              NavigationState& nState) const {
     // Transform into local 3D frame
     Vector3 p3loc = transform * nState.position;
     // Extract the index grid entry
     const auto& entry = grid.atPosition(castPosition(p3loc));
-    auto extracted =
-       extractor.extract(gctx, *nState.currentVolume, entry);
+    auto extracted = extractor.extract(gctx, *nState.currentVolume, entry);
     filler_type::fill(nState, extracted);
   }
 
@@ -161,10 +160,11 @@ class ChainedUpdatorImpl : public IDelegateImpl {
   /// @param gctx is the Geometry context of this call
   /// @param nState the navigation state to which the objects are attached
   ///
-  void operator()(const GeometryContext& gctx, NavigationState& nState) const {
+  void update(const GeometryContext& gctx, NavigationState& nState) const {
     // Unfold the tuple and add the attachers
-    std::apply([&](auto&&... updator) { ((updator(gctx, nState)), ...); },
-               updators);
+    std::apply(
+        [&](auto&&... updator) { ((updator.update(gctx, nState)), ...); },
+        updators);
   }
 };
 
