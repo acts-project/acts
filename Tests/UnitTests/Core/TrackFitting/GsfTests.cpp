@@ -27,6 +27,7 @@ namespace {
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
+using namespace Acts::Experimental;
 
 Acts::GainMatrixUpdater kfUpdater;
 
@@ -46,11 +47,12 @@ const auto logger = getDefaultLogger("GSF", Logging::INFO);
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+using BetheHeitlerApprox = AtlasBetheHeitlerApprox<6, 5>;
+using GSF =
+    GaussianSumFitter<Propagator, BetheHeitlerApprox, VectorMultiTrajectory>;
 
-auto gsfZeroPropagator =
-    makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T);
-const GaussianSumFitter<Propagator, VectorMultiTrajectory> gsfZero(
-    std::move(gsfZeroPropagator));
+const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
+                  makeDefaultBetheHeitlerApprox());
 
 std::default_random_engine rng(42);
 

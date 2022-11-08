@@ -176,6 +176,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize()
       });
   std::stringstream ss;
   memoryStatistics.toStream(ss);
-  ACTS_INFO("Track State memory statistics (averaged):\n" << ss.str());
+  ACTS_DEBUG("Track State memory statistics (averaged):\n" << ss.str());
   return ProcessCode::SUCCESS;
 }

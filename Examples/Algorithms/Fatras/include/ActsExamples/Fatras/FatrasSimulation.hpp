@@ -13,7 +13,6 @@
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
 
 #include <memory>
@@ -50,15 +49,15 @@ class FatrasSimulation final : public BareAlgorithm {
     /// Minimal absolute momentum for particles to be simulated.
     double pMin = 0.5 * Acts::UnitConstants::GeV;
     /// Simulate (multiple) scattering for charged particles.
-    bool emScattering = false;
+    bool emScattering = true;
     /// Simulate ionisiation/excitation energy loss of charged particles.
-    bool emEnergyLossIonisation = false;
+    bool emEnergyLossIonisation = true;
     /// Simulate radiative energy loss of charged particles.
-    bool emEnergyLossRadiation = false;
+    bool emEnergyLossRadiation = true;
     /// Simulate electron-positron pair production by photon conversion.
-    bool emPhotonConversion = false;
+    bool emPhotonConversion = true;
     /// Generate simulation hits on sensitive surfaces.
-    bool generateHitsOnSensitive = false;
+    bool generateHitsOnSensitive = true;
     /// Generate simulation hits on surfaces with associated material.
     bool generateHitsOnMaterial = false;
     /// Generate simulation hits on passive surfaces, i.e neither sensitive nor
@@ -72,11 +71,6 @@ class FatrasSimulation final : public BareAlgorithm {
     /// pre-allocate to avoid allocation during event simulation.
     size_t averageHitsPerParticle = 16u;
   };
-
-  /// Add options for the particle selector.
-  static void addOptions(Options::Description& desc);
-  /// Construct particle selector config from user variables.
-  static Config readConfig(const Options::Variables& vars);
 
   /// Construct the algorithm from a config.
   ///

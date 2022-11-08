@@ -33,21 +33,19 @@ class RootVertexPerformanceWriter final
     : public WriterT<std::vector<Acts::Vertex<Acts::BoundTrackParameters>>> {
  public:
   struct Config {
-    /// All input truth particle collection
+    /// All input truth particle collection.
     std::string inputAllTruthParticles;
-    /// Selected input truth particle collection
+    /// Selected input truth particle collection.
     std::string inputSelectedTruthParticles;
-    /// Truth particles associated to fitted tracks
+    /// Optional. Truth particles associated to tracks. Using 1:1 matching if
+    /// given.
     std::string inputAssociatedTruthParticles;
-    /// Selected fitted tracks
-    std::string inputFittedTracks;
-    /// Selected fitted tracks indices (points from `inputSelectedFittedTracks`
-    /// to `inputAllFittedTracks`). If empty all we assume selected == all.
-    std::string inputFittedTracksIndices;
-    /// All event fitted tracks tips (points from `inputAllFittedTracks` to
-    /// `inputTrajectories`)
-    std::string inputAllFittedTracksTips;
-    /// Trajectories object from track finidng
+    /// Input track parameters.
+    std::string inputTrackParameters;
+    /// Input track parameters tips (points from `inputTrackParameters` to
+    /// `inputTrajectories`).
+    std::string inputTrackParametersTips;
+    /// Trajectories object from track finidng.
     std::string inputTrajectories;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
@@ -62,10 +60,10 @@ class RootVertexPerformanceWriter final
     /// File access mode.
     std::string fileMode = "RECREATE";
     /// Minimum fraction of tracks matched between truth
-    /// and reco vertices to be matched for resolution plots
+    /// and reco vertices to be matched for resolution plots.
     double minTrackVtxMatchFraction = 0.5;
     /// Minimum fraction of hits associated to particle to consider
-    /// as truth matched
+    /// as truth matched.
     double truthMatchProbMin = 0.5;
   };
 

@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
+#include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -119,20 +120,6 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using seedConf = Acts::SeedConfirmationRangeConfig;
-    auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
-                 .def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, seedConf);
-    ACTS_PYTHON_MEMBER(zMinSeedConf);
-    ACTS_PYTHON_MEMBER(zMaxSeedConf);
-    ACTS_PYTHON_MEMBER(rMaxSeedConf);
-    ACTS_PYTHON_MEMBER(nTopForLargeR);
-    ACTS_PYTHON_MEMBER(nTopForSmallR);
-    ACTS_PYTHON_STRUCT_END();
-    patchKwargsConstructor(c);
-  }
-
-  {
     using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
     auto c =
         py::class_<Config>(m, "SeedFinderOrthogonalConfig").def(py::init<>());
@@ -159,16 +146,37 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(bFieldInZ);
     ACTS_PYTHON_MEMBER(beamPos);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
+    ACTS_PYTHON_MEMBER(deltaZMax);
+    ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(rMinMiddle);
     ACTS_PYTHON_MEMBER(rMaxMiddle);
     ACTS_PYTHON_MEMBER(deltaPhiMax);
-
     ACTS_PYTHON_MEMBER(highland);
     ACTS_PYTHON_MEMBER(maxScatteringAngle2);
     ACTS_PYTHON_MEMBER(pTPerHelixRadius);
     ACTS_PYTHON_MEMBER(minHelixDiameter2);
     ACTS_PYTHON_MEMBER(pT2perRadius);
+    ACTS_PYTHON_MEMBER(seedConfirmation);
+    ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
+    ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
+
+  {
+    using seedConf = Acts::SeedConfirmationRangeConfig;
+    auto c = py::class_<seedConf>(m, "SeedConfirmationRangeConfig")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, seedConf);
+    ACTS_PYTHON_MEMBER(zMinSeedConf);
+    ACTS_PYTHON_MEMBER(zMaxSeedConf);
+    ACTS_PYTHON_MEMBER(rMaxSeedConf);
+    ACTS_PYTHON_MEMBER(nTopForLargeR);
+    ACTS_PYTHON_MEMBER(nTopForSmallR);
+    ACTS_PYTHON_MEMBER(seedConfMinBottomRadius);
+    ACTS_PYTHON_MEMBER(seedConfMaxZOrigin);
+    ACTS_PYTHON_MEMBER(minImpactSeedConf);
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
@@ -294,6 +302,12 @@ void addTrackFinding(Context& ctx) {
                      std::pair<GeometryIdentifier, MeasurementSelectorCuts>>>())
             .def(py::init(constructor));
   }
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::AmbiguityResolutionAlgorithm, mex,
+      "AmbiguityResolutionAlgorithm", inputSourceLinks, inputTrajectories,
+      inputTrackParameters, inputTrackParametersTips, outputTrackParameters,
+      outputTrackParametersTips, maximumSharedHits);
 }
 
 }  // namespace Acts::Python

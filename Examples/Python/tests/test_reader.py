@@ -352,7 +352,7 @@ def test_edm4hep_simhit_reader(tmp_path):
             level=acts.logging.INFO,
             inputPath=tmp_file,
             outputSimHits="simhits",
-            dd4hepGeometryService=detector.geometryService,
+            dd4hepDetector=detector,
         )
     )
 

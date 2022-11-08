@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-import os
+
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional
 
 import acts
 import acts.examples
@@ -14,7 +14,6 @@ def runTruthTrackingKalman(
     field: acts.MagneticFieldProvider,
     outputDir: Path,
     digiConfigFile: Path,
-    decorators=[],
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
     s: acts.examples.Sequencer = None,
@@ -23,7 +22,6 @@ def runTruthTrackingKalman(
     from acts.examples.simulation import (
         addParticleGun,
         EtaConfig,
-        PhiConfig,
         ParticleConfig,
         addFatras,
         addDigitization,

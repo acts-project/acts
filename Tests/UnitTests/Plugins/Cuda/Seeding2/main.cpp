@@ -112,6 +112,8 @@ int main(int argc, char* argv[]) {
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
+  const Acts::Range1D<float> rMiddleSPRange;
+
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
   auto grid =
@@ -167,14 +169,14 @@ int main(int argc, char* argv[]) {
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
     auto spGroup_itr = spGroup.begin();
-    decltype(seedFinder_host)::State state;
+    decltype(seedFinder_host)::SeedingState state;
     for (std::size_t i = 0;
          spGroup_itr != spGroup_end && i < cmdl.groupsToIterate;
          ++i, ++spGroup_itr) {
       auto& group = seeds_host.emplace_back();
       seedFinder_host.createSeedsForGroup(
           state, std::back_inserter(group), spGroup_itr.bottom(),
-          spGroup_itr.middle(), spGroup_itr.top(), rRangeSPExtent);
+          spGroup_itr.middle(), spGroup_itr.top(), rMiddleSPRange);
     }
   }
 
