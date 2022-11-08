@@ -33,12 +33,12 @@ A struct {class}`Acts::Experimental::NavigationState` holds the current navigati
 * a list of surface canidates to be tested within the `currentVolume`
 * a current position, direction, momentum, charge and magnetic field
 
-Several navigation delegates built upon the {class}`Acts::Delegate` template class are defined and can be adapted and specialized for dedicated detector layouts.
+Several navigation delegates built upon the {class}`Acts::Delegate<>` template class are defined and can be adapted and specialized for dedicated detector layouts.
 These delegates are called:
 
 * {class}`Acts::Experimental::SurfaceCandidatesUpdator` that is called for updating the information at initialization, within the volume or at a volume switch caused by traversing a portal
 * {class}`Acts::Experimental::DetectorVolumeUpdator` which is attached to a {class}`Acts::Experimental::Portal` and switches to a new volume environment when traversing a portal
-* {class}`Acts::Experimental::DetecorVolumeFinder` which allows to find a volume by simple a global position (and is usually only needed at initialization of the navigation)
+* {class}`Acts::Experimental::DetectorVolumeFinder` which allows to find a volume by simple a global position (and is usually only needed at initialization of the navigation)
 
 ## Detailed Description
 
@@ -88,9 +88,6 @@ In case the volume contains surfaces and/or volumes, an adequate navigation stat
 Illustration of a planar module andcap detector with a grid holding the indices to the candidate surfaces.
 :::
 
-:::{tip}
-When compiling and running in `debug` mode, the containment of the objects in the mother volume is checked, and when failing an `std::exception` is thrown.
-:::
 
 ### The Detector object
 

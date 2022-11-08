@@ -49,6 +49,21 @@ struct TryAndErrorImpl : public IDelegateImpl {
   }
 };
 
+/// Generate a delegate to try all volume
+///
+/// @note this is a try-and error navigation, not recommended for production
+/// setup with many surfaces
+///
+/// @return a connected navigationstate updator
+inline static ManagedDetectorVolumeUpdator tryAllVolumes() {
+  ManagedDetectorVolumeUpdator managedUpdator;
+  DetectorVolumeUpdator vFinder;
+  vFinder.connect<&TryAndErrorImpl::update>();
+  managedUpdator.delegate = std::move(vFinder);
+  managedUpdator.implementation = nullptr;
+  return managedUpdator;
+}
+
 /// @brief A helper struct that allows to extrace a volume
 /// from the detector by its index
 struct IndexedDetectorVolumeExtractor {
@@ -75,7 +90,7 @@ struct IndexedDetectorVolumeExtractor {
 ///
 /// @tparam grid_type is the grid type used for this
 template <typename grid_type>
-using IndexedSurfacesImpl =
+using IndexedDetectorVolumeImpl =
     IndexedUpdatorImpl<grid_type, IndexedDetectorVolumeExtractor,
                        DetectorVolumeFiller>;
 

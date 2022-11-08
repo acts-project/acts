@@ -54,8 +54,6 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   auto portalGenerator = detail::defaultPortalGenerator();
 
-  auto SurfaceCandidatesUpdator = detail::allPortals();
-
   // Misconfigured - null pointer for bounds
   BOOST_CHECK_THROW(
       DetectorVolumeFactory::construct(portalGenerator, tContext,
