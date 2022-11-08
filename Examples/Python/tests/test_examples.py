@@ -586,7 +586,6 @@ def test_truth_tracking_kalman(
 
     runTruthTrackingKalman(
         trackingGeometry=detector_config.trackingGeometry,
-        decorators=detector_config.decorators,
         field=field,
         digiConfigFile=detector_config.digiConfigFile,
         outputDir=tmp_path,
@@ -1117,9 +1116,6 @@ def test_vertex_fitting(tmp_path):
 
     s.run()
     assert alg.events_seen == s.config.events
-
-
-import itertools
 
 
 @pytest.mark.parametrize(

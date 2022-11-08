@@ -1,4 +1,4 @@
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, List
 from pathlib import Path
 from collections import namedtuple
 from collections.abc import Iterable
@@ -363,6 +363,7 @@ def addFatras(
     outputDirRoot: Optional[Union[Path, str]] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
     preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
+    enableInteractions=False,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Fatras
@@ -383,6 +384,7 @@ def addFatras(
         ParticleSelector configuration to select particles as input to Fatras. Each range is specified as a tuple of (min,max).
         Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
+    enableInteractions : Enable the particle interactions in the simulation
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -413,6 +415,10 @@ def addFatras(
         trackingGeometry=trackingGeometry,
         magneticField=field,
         generateHitsOnSensitive=True,
+        emScattering=enableInteractions,
+        emEnergyLossIonisation=enableInteractions,
+        emEnergyLossRadiation=enableInteractions,
+        emPhotonConversion=enableInteractions,
     )
 
     # Sequencer
@@ -506,16 +512,42 @@ def addSimWriters(
     return s
 
 
+def getG4DetectorContruction(
+    detector: Any,
+) -> Any:
+    try:
+        from acts.examples import TelescopeDetector
+        from acts.examples.geant4 import TelescopeG4DetectorConstruction
+
+        if type(detector) is TelescopeDetector:
+            return TelescopeG4DetectorConstruction(detector)
+    except Exception as e:
+        print(e)
+
+    try:
+        from acts.examples.dd4hep import DD4hepDetector
+        from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
+
+        if type(detector) is DD4hepDetector:
+            return DDG4DetectorConstruction(detector)
+    except Exception as e:
+        print(e)
+
+    raise AttributeError(f"cannot find a suitable detector construction for {detector}")
+
+
 def addGeant4(
     s: acts.examples.Sequencer,
-    geometryService: Any,  # acts.examples.dd4hep.DD4hepGeometryService
+    detector: Optional[Any],
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
+    g4detectorConstruction: Optional[Any] = None,
+    volumeMappings: List[str] = [],
+    materialMappings: List[str] = [],
+    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    seed: Optional[int] = None,
-    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Geant4
@@ -539,7 +571,6 @@ def addGeant4(
     """
 
     from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
-    from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -555,13 +586,19 @@ def addGeant4(
     else:
         particles_selected = "particles_input"
 
-    g4detector = DDG4DetectorConstruction(geometryService)
+    if g4detectorConstruction is None:
+        if detector is None:
+            raise AttributeError("detector not given")
+        g4detectorConstruction = getG4DetectorContruction(detector)
+
     g4conf = geant4SimulationConfig(
         level=customLogLevel(),
-        detector=g4detector,
+        detector=g4detectorConstruction,
         inputParticles="particles_input",
         trackingGeometry=trackingGeometry,
         magneticField=field,
+        volumeMappings=volumeMappings,
+        materialMappings=materialMappings,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
@@ -580,7 +617,7 @@ def addGeant4(
     # Output
     addSimWriters(
         s,
-        g4conf.outputSimHits,
+        alg.config.outputSimHits,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,

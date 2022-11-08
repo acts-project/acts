@@ -102,7 +102,8 @@ Acts::SpacePointGridCreator::createGrid(
         std::max(1, (int)std::floor((config.zMax - config.zMin) / zBinSize));
 
     for (int bin = 0; bin <= zBins; bin++) {
-      AxisScalar edge = config.zMin + bin * zBinSize;
+      AxisScalar edge =
+          config.zMin + bin * ((config.zMax - config.zMin) / (float)zBins);
       zValues.push_back(edge);
     }
 

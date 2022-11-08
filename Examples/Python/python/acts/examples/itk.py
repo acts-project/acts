@@ -328,24 +328,11 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         seedConfMaxZOrigin=150.0 * u.mm,
         minImpactSeedConf=1.0 * u.mm,
     )
+    zOriginWeightFactor = 1
     compatSeedWeight = 100
     curvatureSortingInFilter = True
     phiMin = 0
     phiMax = 2 * math.pi
-    zBinEdges = [
-        -3000.0,
-        -2500.0,
-        -1400.0,
-        -925.0,
-        -450.0,
-        -250.0,
-        250.0,
-        450.0,
-        925.0,
-        1400.0,
-        2500.0,
-        3000.0,
-    ]  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
     phiBinDeflectionCoverage = 3
     numPhiNeighbors = 1
 
@@ -501,6 +488,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     )
     seedFilterConfigArg = SeedFilterConfigArg(
         impactWeightFactor=impactWeightFactor,
+        zOriginWeightFactor=zOriginWeightFactor,
         compatSeedWeight=compatSeedWeight,
         compatSeedLimit=compatSeedLimit,
         numSeedIncrement=numSeedIncrement,
