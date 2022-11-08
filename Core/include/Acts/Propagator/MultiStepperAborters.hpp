@@ -18,7 +18,7 @@ struct MultiStepperSurfaceReached {
   MultiStepperSurfaceReached() = default;
 
   /// If this is set, we are also happy if the mean of the components is on the
-  /// surface How the averaging is performed depends on the stepper
+  /// surface. How the averaging is performed depends on the stepper
   /// implementation
   bool averageOnSurface = true;
 
