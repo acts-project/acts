@@ -13,6 +13,8 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
+  assert(!state.components.empty());
+
   if (numberComponents(state) == 1) {
     return SingleStepper::boundState(state.components.front().state, surface,
                                      transportCov, freeToBoundCorrection);
@@ -69,6 +71,8 @@ template <typename E, typename R, typename A>
 auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
                                                       bool transportCov) const
     -> CurvilinearState {
+  assert(!state.components.empty());
+
   if (numberComponents(state) == 1) {
     return SingleStepper::curvilinearState(state.components.front().state,
                                            transportCov);

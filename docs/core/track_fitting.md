@@ -50,6 +50,13 @@ A common use case of this is electron fitting. The energy-loss of Bremsstrahlung
 
 To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`. On a surface with material, the Bethe-Heitler energy-loss distribution is approximated with a fixed number of gaussian distributions for each component. Since the number of components would grow exponentially with each material interaction, components that are close in terms of their *Kullback–Leibler divergence* are merged to limit the computational cost. The Kalman update mechanism is based on the code for the {class}`Acts::KalmanFitter`.
 
+At the end of the fit the multi-component state must be reduced to a single set of parameters with a corresponding covariance matrix. This is supported by the {class}`Acts::MultiEigenStepperLoop` in two different ways currently: The *mean* method computes the mean of the state and the covariance matrix of the multi-component state, whereas the *maximum weight* method just returns the component with the maximum weight. This can be configured in the constructor of the {class}`Acts::MultiEigenStepperLoop` with the {enum}`Acts::FinalReductionMethod`. In the future there is planned to add a *mode* finding method as well.
+
+:::{note}
+In practice it turned out that the *maximum weight* method leads to better results so far.
+:::
+
+
 ### Using the GSF
 
 The GSF is implemented in the class {class}`Acts::Experimental::GaussianSumFitter`. The interface of its `fit(...)`-functions is very similar to the one of the {class}`Acts::KalmanFitter` (one for the standard {class}`Acts::Navigator` and one for the {class}`Acts::DirectNavigator` that takes an additional `std::vector<const Acts::Surface *>` as an argument):
