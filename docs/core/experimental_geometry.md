@@ -36,9 +36,9 @@ A struct {class}`Acts::Experimental::NavigationState` holds the current navigati
 Several navigation delegates built upon the {class}`Acts::Delegate` template class are defined and can be adapted and specialized for dedicated detector layouts.
 These delegates are called:
 
-* {class}`Acts::Experimental::SurfaceCandidatesUpdator` that is called for updating the information at initialization, within the volume or at a volume switch caused by traversing a portal
-* {class}`Acts::Experimental::DetectorVolumeUpdator` which is attached to a {class}`Acts::Experimental::Portal` and switches to a new volume environment when traversing a portal
-* {class}`Acts::Experimental::DetectorVolumeFinder` which allows to find a volume by simple a global position (and is usually only needed at initialization of the navigation)
+* `Acts::Experimental::SurfaceCandidatesUpdator` that is called for updating the information at initialization, within the volume or at a volume switch caused by traversing a portal
+* `Acts::Experimental::DetectorVolumeUpdator` which is attached to a {class}`Acts::Experimental::Portal` and switches to a new volume environment when traversing a portal
+* `Acts::Experimental::DetectorVolumeFinder` which allows to find a volume by simple a global position (and is usually only needed at initialization of the navigation)
 
 ## Detailed Description
 
@@ -60,14 +60,14 @@ Illustration of a shared direct portal between two volumes, the arrows indicate 
 Illustration of a shared extended portal between several volumes, the arrows indicate the direction of attachment.
 :::
 
-The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitable {class}`Acts::Experimental::DetectorVolumeUpdator` delegate.
+The implementation of a unique, binned or any other volume link can be adapted to the detector geometry by providing a suitablen `Acts::Experimental::DetectorVolumeUpdator` delegate.
 
 ### The Detector volume object
 
 A detector volume has to contain:
 
 * a list of bounding portal objects (that can be shared with other volumes)
-* a navigation state updator as a {class}`Acts::Experimental::SurfaceCandidatesUpdator` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
+* a navigation state updator as a `Acts::Experimental::SurfaceCandidatesUpdator` delegate, that at minimum is able to provide the portal surfaces for leaving the volume again.
 * a unique name string
 
 :::{note}
@@ -95,7 +95,7 @@ The detector object is the holder class of all geometry objects, it has to conta
 
 * at least one detector volume 
 * a name string
-* a volume finder delegate (as {class}`Acts::Experimental::DetecorVolumeFinder`) that allows to uniquely associate a point in space with a contained volume of the detector.
+* a volume finder delegate (as `Acts::Experimental::DetecorVolumeFinder`) that allows to uniquely associate a point in space with a contained volume of the detector.
 
 :::{note}
 When the detector is constructed, name duplicates are checked for an when  failing an `std::exception` is thrown.

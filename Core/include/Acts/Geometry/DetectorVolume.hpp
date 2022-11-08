@@ -100,7 +100,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume(const GeometryContext& gctx, const std::string& name,
+  DetectorVolume(
+      const GeometryContext& gctx, const std::string& name,
       const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
@@ -117,7 +118,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume(const GeometryContext& gctx, const std::string& name,
+  DetectorVolume(
+      const GeometryContext& gctx, const std::string& name,
       const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
       ManagedSurfaceCandidatesUpdator&& navStateUpdator) noexcept(false);
 
