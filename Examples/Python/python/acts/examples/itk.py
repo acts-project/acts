@@ -314,6 +314,9 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         rMaxSeedConf=140 * u.mm,
         nTopForLargeR=1,
         nTopForSmallR=2,
+        seedConfMinBottomRadius=60.0 * u.mm,
+        seedConfMaxZOrigin=150.0 * u.mm,
+        minImpactSeedConf=1.0 * u.mm,
     )  # contains parameters for seed confirmation
     forwardSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
         zMinSeedConf=-3000 * u.mm,
@@ -321,26 +324,15 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         rMaxSeedConf=140 * u.mm,
         nTopForLargeR=1,
         nTopForSmallR=2,
+        seedConfMinBottomRadius=60.0 * u.mm,
+        seedConfMaxZOrigin=150.0 * u.mm,
+        minImpactSeedConf=1.0 * u.mm,
     )
     zOriginWeightFactor = 1
     compatSeedWeight = 100
     curvatureSortingInFilter = True
     phiMin = 0
     phiMax = 2 * math.pi
-    zBinEdges = [
-        -3000.0,
-        -2500.0,
-        -1400.0,
-        -925.0,
-        -450.0,
-        -250.0,
-        250.0,
-        450.0,
-        925.0,
-        1400.0,
-        2500.0,
-        3000.0,
-    ]  # zBinEdges enables non-equidistant binning in z, in case the binning is not defined the edges are evaluated automatically using equidistant binning
     phiBinDeflectionCoverage = 3
     numPhiNeighbors = 1
 

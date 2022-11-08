@@ -21,6 +21,7 @@ pybind11_add_module(ActsPythonBindings
   src/Generators.cpp
   src/TruthTracking.cpp
   src/TrackFitting.cpp
+  src/TrackFittingChi2.cpp
   src/TrackFinding.cpp
   src/Vertexing.cpp
 )
@@ -47,6 +48,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesGenerators
   ActsExamplesTrackFinding
   ActsExamplesTrackFitting
+  ActsExamplesTrackFittingChi2
   ActsExamplesVertexing
   ActsExamplesFatras
   ActsExamplesPrinters
@@ -108,7 +110,7 @@ endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
   target_link_libraries(ActsPythonBindingsGeant4 PUBLIC 
-    ActsExamplesGeant4 
+    ActsExamplesGeant4
     ActsPythonUtilities)
   add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
 

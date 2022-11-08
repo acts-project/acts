@@ -114,7 +114,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     G4VPhysicalVolume* g4World = m_cfg.detectorConstruction->Construct();
     int sCounter = 0;
     m_cfg.sensitiveSurfaceMapper->remapSensitiveNames(
-        g4World, Acts::Vector3(0., 0., 0.), sCounter);
+        g4World, Acts::Transform3::Identity(), sCounter);
 
     ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
   }

@@ -84,12 +84,15 @@ jobs:
         if: steps.get-pr-number.outputs.result != 'false'
         run: curl -sL $ARTIFACT_URL
 
-      - name: Render template
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Render comment
         if: steps.get-pr-number.outputs.result != 'false'
         run: |
-          cp CI/physmon/comment_template.md comment.md
-          sed -i "s/{{ .url }}/${ARTIFACT_URL//\//\\/}/g" comment.md
-          sed -i "s/{{ .commit }}/${PR_SHA}/g" comment.md
+          pip install Jinja2
+          CI/physmon/generate_comment.py $GITHUB_WORKSPACE/physmon comment.md
           cat comment.md
 
       - name: Find Comment

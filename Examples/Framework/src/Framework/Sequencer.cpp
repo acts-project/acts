@@ -17,6 +17,7 @@
 #include <chrono>
 #include <exception>
 #include <numeric>
+#include <stdexcept>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
@@ -81,6 +82,15 @@ void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   }
   m_writers.push_back(std::move(writer));
   ACTS_INFO("Added writer '" << m_writers.back()->name() << "'");
+}
+
+void ActsExamples::Sequencer::addWhiteboardAlias(
+    const std::string& aliasName, const std::string& objectName) {
+  auto [it, success] =
+      m_whiteboardObjectAliases.insert({objectName, aliasName});
+  if (!success) {
+    throw std::invalid_argument("Alias to '" + objectName + "' already set");
+  }
 }
 
 std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {
@@ -291,8 +301,10 @@ int ActsExamples::Sequencer::run() {
           for (size_t event = r.begin(); event != r.end(); ++event) {
             m_cfg.iterationCallback();
             // Use per-event store
-            WhiteBoard eventStore(Acts::getDefaultLogger(
-                "EventStore#" + std::to_string(event), m_cfg.logLevel));
+            WhiteBoard eventStore(
+                Acts::getDefaultLogger("EventStore#" + std::to_string(event),
+                                       m_cfg.logLevel),
+                m_whiteboardObjectAliases);
             // If we ever wanted to run algorithms in parallel, this needs to be
             // changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);
