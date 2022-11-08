@@ -23,10 +23,12 @@ struct Polyhedron;
 ///  Class for a StrawSurface in the TrackingGeometry
 ///  to describe dirft tube and straw like detectors.
 ///
-/// @image html LineSurface.png
+/// @image html figures/LineSurface.png
 ///
 class StrawSurface : public LineSurface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from Transform3 and bounds

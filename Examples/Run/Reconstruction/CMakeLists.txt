@@ -71,6 +71,15 @@ target_link_libraries(
     ActsExamplesDetectorGeneric
 )
 
+# Chi2 fitting for Telescope detector
+add_executable(
+  ActsExampleChi2TracksTelescope
+  TelescopeRecChi2Tracks.cpp)
+target_link_libraries(
+  ActsExampleChi2TracksTelescope
+  PRIVATE
+    ActsExamplesRecTracksCommon
+    ActsExamplesDetectorTelescope)
 
 # Seeding for Generic detector
 add_executable(
@@ -139,10 +148,10 @@ install(
     ActsExampleCKFTracksGeneric
     ActsExampleCKFTracksTGeo
     ActsExampleCKFTracksTelescope
+    ActsExampleChi2TracksTelescope
     ActsExampleSeedingGeneric
     ActsExampleHough
     ActsExampleSeedingTGeo
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 add_subdirectory_if(DD4hep ACTS_BUILD_EXAMPLES_DD4HEP)
-add_subdirectory_if(ExaTrkX ACTS_BUILD_EXAMPLES_EXATRKX)

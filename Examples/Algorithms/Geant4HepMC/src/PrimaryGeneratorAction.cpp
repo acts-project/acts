@@ -27,7 +27,7 @@ PrimaryGeneratorAction::PrimaryGeneratorAction(G4int randomSeed1,
                                                G4int randomSeed2)
     : G4VUserPrimaryGeneratorAction(), m_particleGun(nullptr) {
   // Configure the run
-  if (s_instance) {
+  if (s_instance != nullptr) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
     s_instance = this;

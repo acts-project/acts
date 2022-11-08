@@ -24,9 +24,11 @@ file(
   ../Fatras/include/*.hpp
   ../Plugins/include/*.hpp)
 
+set(sphinx_build ${CMAKE_CURRENT_SOURCE_DIR}/_build)
 set(doxygen_index ${CMAKE_CURRENT_SOURCE_DIR}/_build/doxygen-xml/index.xml)
 set(sphinx_doctrees ${CMAKE_CURRENT_SOURCE_DIR}/_build/doctrees)
 set(sphinx_html ${CMAKE_CURRENT_SOURCE_DIR}/_build/html)
+set(sphinx_api ${CMAKE_CURRENT_SOURCE_DIR}/api)
 
 add_custom_command(
   OUTPUT ${doxygen_index}
@@ -38,33 +40,48 @@ add_custom_command(
 # this is a debug target to diagnose issues with the Doxygen configuration
 add_custom_target(run-doxygen DEPENDS ${doxygen_index})
 
+set(api_dir ${CMAKE_CURRENT_SOURCE_DIR}/api)
+set(api_index ${api_dir}/api.rst)
+
+set(doxygen_command)
+# list(APPEND doxygen_command "${Sphinx_EXECUTABLE}")
+list(APPEND doxygen_command "-b;html")
+list(APPEND doxygen_command "-d;${sphinx_doctrees}")
+list(APPEND doxygen_command "-j;auto")
+list(APPEND doxygen_command "-W;--keep-going")
+
+if(DEFINED ENV{CI})
+  list(APPEND doxygen_command "-b;linkcheck")
+endif()
+
+list(APPEND doxygen_command "${CMAKE_CURRENT_SOURCE_DIR}")
+list(APPEND doxygen_command "${sphinx_html}")
+
 # standard target to build the documentation without automatic API generation
 add_custom_target(
   docs
-  COMMAND
-    ${Sphinx_EXECUTABLE}
-      -b html
-      -d ${sphinx_doctrees}
-      -j auto
-      ${CMAKE_CURRENT_SOURCE_DIR}
-      ${sphinx_html}
+  COMMAND ${Sphinx_EXECUTABLE} ${doxygen_command}
   DEPENDS ${doxygen_index}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Build documentation WITHOUT API documentation")
+
+list(APPEND doxygen_command "-t;run_apidoc")
+
 # extended target to build the full documentation with automatic API generation
 add_custom_target(
   docs-with-api
-  COMMAND
-    ${Sphinx_EXECUTABLE}
-      -b html
-      -d ${sphinx_doctrees}
-      -j auto
-      -t run_apidoc
-      ${CMAKE_CURRENT_SOURCE_DIR}
-      ${sphinx_html}
+  COMMAND ${Sphinx_EXECUTABLE} ${doxygen_command}
   DEPENDS ${doxygen_index}
   WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   COMMENT "Build full documentation")
+
+add_custom_target(
+  docs-clean
+  COMMAND find ${sphinx_api} -mindepth 1 -type f -and -not -name "api_stub.rst" -and -not -name "api_index.rst" -delete
+  COMMAND find ${sphinx_api} -mindepth 1 -type d -delete
+  COMMAND rm -rf ${sphinx_build}
+  COMMENT "Cleaning documentation artifacts"
+)
 
 install(
   DIRECTORY ${sphinx_html}/

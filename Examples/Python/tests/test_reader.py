@@ -7,11 +7,9 @@ from helpers import (
     edm4hepEnabled,
     AssertCollectionExistsAlg,
 )
+from common import getOpenDataDetectorDirectory
 
-from common import (
-    getOpenDataDetectorDirectory,
-    getOpenDataDetector,
-)
+from acts.examples.odd import getOpenDataDetector
 
 import acts
 from acts import PlanarModuleStepper
@@ -317,7 +315,10 @@ def generate_input_test_edm4hep_simhit_reader(input, output):
     from DDSim.DD4hepSimulation import DD4hepSimulation
 
     ddsim = DD4hepSimulation()
-    ddsim.compactFile = input
+    if isinstance(ddsim.compactFile, list):
+        ddsim.compactFile = [input]
+    else:
+        ddsim.compactFile = input
     ddsim.enableGun = True
     ddsim.gun.direction = (1, 0, 0)
     ddsim.gun.distribution = "eta"
@@ -340,7 +341,9 @@ def test_edm4hep_simhit_reader(tmp_path):
 
     assert os.path.exists(tmp_file)
 
-    detector, _, _ = getOpenDataDetector()
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )
 
     s = Sequencer(numThreads=1)
 
@@ -349,7 +352,7 @@ def test_edm4hep_simhit_reader(tmp_path):
             level=acts.logging.INFO,
             inputPath=tmp_file,
             outputSimHits="simhits",
-            dd4hepGeometryService=detector.geometryService,
+            dd4hepDetector=detector,
         )
     )
 

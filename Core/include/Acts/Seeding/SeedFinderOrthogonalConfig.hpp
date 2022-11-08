@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
 
 #include <memory>
 
@@ -28,10 +29,14 @@ struct SeedFinderOrthogonalConfig {
   // cot of maximum theta angle
   // equivalent to 2.7 eta (pseudorapidity)
   float cotThetaMax = 7.40627;
-  // minimum distance in r between two measurements within one seed
-  float deltaRMin = 5 * Acts::UnitConstants::mm;
-  // maximum distance in r between two measurements within one seed
-  float deltaRMax = 270 * Acts::UnitConstants::mm;
+  // minimum distance in r between middle and top SP in one seed
+  float deltaRMinTopSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and top SP in one seed
+  float deltaRMaxTopSP = 270 * Acts::UnitConstants::mm;
+  // minimum distance in r between middle and bottom SP in one seed
+  float deltaRMinBottomSP = 5 * Acts::UnitConstants::mm;
+  // maximum distance in r between middle and bottom SP in one seed
+  float deltaRMaxBottomSP = 270 * Acts::UnitConstants::mm;
 
   // impact parameter
   float impactMax = 20. * Acts::UnitConstants::mm;
@@ -70,13 +75,30 @@ struct SeedFinderOrthogonalConfig {
   Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
                         0 * Acts::UnitConstants::mm};
 
+  // cut to the maximum value of delta z between SPs
+  float deltaZMax =
+      std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;
+
+  // enable cut on the compatibility between interaction point and SPs
+  bool interactionPointCut = false;
+
+  // seed confirmation
+  bool seedConfirmation = false;
+  // parameters for central seed confirmation
+  SeedConfirmationRangeConfig centralSeedConfirmationRange;
+  // parameters for forward seed confirmation
+  SeedConfirmationRangeConfig forwardSeedConfirmationRange;
+
+  // skip top SPs based on cotTheta sorting when producing triplets
+  bool skipPreviousTopSP = false;
+
   // average radiation lengths of material on the length of a seed. used for
   // scattering.
   // default is 5%
   // TODO: necessary to make amount of material dependent on detector region?
   float radLengthPerSeed = 0.05;
 
-  // derived values, set on Seedfinder construction
+  // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
   float pTPerHelixRadius = 0;
@@ -88,8 +110,10 @@ struct SeedFinderOrthogonalConfig {
     using namespace Acts::UnitLiterals;
     SeedFinderOrthogonalConfig config = *this;
     config.minPt /= 1_MeV;
-    config.deltaRMin /= 1_mm;
-    config.deltaRMax /= 1_mm;
+    config.deltaRMinTopSP /= 1_mm;
+    config.deltaRMaxTopSP /= 1_mm;
+    config.deltaRMinBottomSP /= 1_mm;
+    config.deltaRMaxBottomSP /= 1_mm;
     config.impactMax /= 1_mm;
     config.maxPtScattering /= 1_MeV;
     config.collisionRegionMin /= 1_mm;

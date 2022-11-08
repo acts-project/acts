@@ -2,7 +2,6 @@ add_library(
   ActsExamplesTruthTracking SHARED
   ActsExamples/TruthTracking/ParticleSelector.cpp
   ActsExamples/TruthTracking/ParticleSmearing.cpp
-  ActsExamples/TruthTracking/ParticleSmearingOptions.cpp
   ActsExamples/TruthTracking/TrackSelector.cpp
   ActsExamples/TruthTracking/TruthSeedSelector.cpp
   ActsExamples/TruthTracking/TruthTrackFinder.cpp
@@ -13,7 +12,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
 target_link_libraries(
   ActsExamplesTruthTracking
-  PUBLIC ActsCore ActsExamplesFramework Boost::program_options)
+  PUBLIC ActsCore ActsExamplesFramework)
 
 install(
   TARGETS ActsExamplesTruthTracking

@@ -23,6 +23,7 @@
 #include <iostream>
 #include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 #define ACTS_CHECK_BIT(value, mask) ((value & mask) == mask)
@@ -381,6 +382,28 @@ auto template_switch(size_t v, Args&&... args) {
   if constexpr (N < NMAX) {
     return template_switch<Callable, N + 1, NMAX>(v,
                                                   std::forward<Args>(args)...);
+  }
+  std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
+            << ") is not valid (v > NMAX)" << std::endl;
+  std::abort();
+}
+
+/// Alternative version of @c template_switch which accepts a generic
+/// lambda and communicates the dimension via an integral constant type
+/// @tparam N Value from which to start the dispatch chain, i.e. 0 in most cases
+/// @tparam NMAX Maximum value up to which to attempt a dispatch
+/// @param v The runtime value to dispatch on
+/// @param func The lambda to invoke
+/// @param args Additional arguments passed to @p func
+template <size_t N, size_t NMAX, typename Lambda, typename... Args>
+auto template_switch_lambda(size_t v, Lambda&& func, Args&&... args) {
+  if (v == N) {
+    return func(std::integral_constant<size_t, N>{},
+                std::forward<Args>(args)...);
+  }
+  if constexpr (N < NMAX) {
+    return template_switch_lambda<N + 1, NMAX>(v, func,
+                                               std::forward<Args>(args)...);
   }
   std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
             << ") is not valid (v > NMAX)" << std::endl;

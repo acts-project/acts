@@ -12,6 +12,7 @@
 #include "Acts/Geometry/CylinderVolumeBuilder.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Plugins/DD4hep/DD4hepConversionHelpers.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
@@ -76,6 +77,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 ///                              ascending. The default is sorting by ID.
 /// @param gctx The geometry context to use
 /// @param matDecorator is the material decorator that loads material maps
+/// @param geometryIdentifierHook Hook to apply to surfaces during geometry closure.
 ///
 /// @exception std::logic_error if an error in the translation occurs
 /// @return std::unique_ptr to the full TrackingGeometry
@@ -96,7 +98,8 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
     const std::function<void(std::vector<dd4hep::DetElement>& detectors)>&
         sortSubDetectors = sortDetElementsByID,
     const GeometryContext& gctx = GeometryContext(),
-    std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr);
+    std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr,
+    GeometryIdentifierHook geometryIdentifierHook = {});
 
 /// @brief Method internally used to create an Acts::CylinderVolumeBuilder
 ///
@@ -157,8 +160,10 @@ std::shared_ptr<const CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
 /// detectors should be collected
 /// @param [out] subdetectors the DD4hep::DetElements of the sub detectors
 /// contained by detElement
+/// @param logger a @c LoggerWrapper for output
 void collectSubDetectors_dd4hep(dd4hep::DetElement& detElement,
-                                std::vector<dd4hep::DetElement>& subdetectors);
+                                std::vector<dd4hep::DetElement>& subdetectors,
+                                LoggerWrapper logger);
 
 /// Method internally used by convertDD4hepDetector to collect all volumes of a
 /// compound detector
@@ -174,14 +179,9 @@ void collectCompounds_dd4hep(dd4hep::DetElement& detElement,
 /// layers should be collected
 /// @param [out] layers the DD4hep::DetElements of the layers contained by
 /// detElement
+/// @param logger a @c LoggerWrapper for output
 void collectLayers_dd4hep(dd4hep::DetElement& detElement,
-                          std::vector<dd4hep::DetElement>& layers);
+                          std::vector<dd4hep::DetElement>& layers,
+                          LoggerWrapper logger);
 
-/// Method internally used by convertDD4hepDetector
-/// @param [in] detElement the dd4hep::DetElement of the volume of which the
-/// volumes should be collected
-/// @param [out] volumes the DD4hep::DetElements of the volumes contained by
-/// detElement
-void collectVolumes_dd4hep(dd4hep::DetElement& detElement,
-                           std::vector<dd4hep::DetElement>& volumes);
 }  // namespace Acts

@@ -88,16 +88,14 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
                 return result;
               },
               [&](std::uint64_t cellId) {
-                auto detElement = m_cfg.dd4hepGeometryService->lcdd()
-                                      ->volumeManager()
+                auto detElement = m_cfg.dd4hepDetector->lcdd->volumeManager()
                                       .lookupDetElement(cellId);
                 Acts::GeometryIdentifier result = detElement.volumeID();
                 return result;
               });
           unordered.push_back(std::move(hit));
         } catch (...) {
-          m_logger->log(Acts::Logging::Level::ERROR,
-                        "EDM4hepSimHitReader: failed to convert SimTrackerHit");
+          ACTS_ERROR("EDM4hepSimHitReader: failed to convert SimTrackerHit");
           continue;
         }
       }

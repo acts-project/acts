@@ -55,8 +55,9 @@ Acts::AnnulusBounds::AnnulusBounds(
                 (std::pow(m, 2) + 1);
 
     Vector2 v1(x1, m * x1);
-    if (v1.dot(dir) > 0)
+    if (v1.dot(dir) > 0) {
       return v1;
+    }
     return {x2, m * x2};
   };
 

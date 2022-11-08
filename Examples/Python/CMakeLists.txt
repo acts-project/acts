@@ -21,6 +21,7 @@ pybind11_add_module(ActsPythonBindings
   src/Generators.cpp
   src/TruthTracking.cpp
   src/TrackFitting.cpp
+  src/TrackFittingChi2.cpp
   src/TrackFinding.cpp
   src/Vertexing.cpp
 )
@@ -47,6 +48,7 @@ target_link_libraries(ActsPythonBindings PUBLIC
   ActsExamplesGenerators
   ActsExamplesTrackFinding
   ActsExamplesTrackFitting
+  ActsExamplesTrackFittingChi2
   ActsExamplesVertexing
   ActsExamplesFatras
   ActsExamplesPrinters
@@ -56,6 +58,10 @@ target_link_libraries(ActsPythonBindings PUBLIC
 set(py_files 
   __init__.py 
   examples/__init__.py
+  examples/simulation.py
+  examples/reconstruction.py
+  examples/itk.py
+  examples/odd.py
   _adapter.py
 )
 
@@ -65,6 +71,14 @@ if(ACTS_BUILD_PLUGIN_JSON)
 else()
   target_sources(ActsPythonBindings PRIVATE src/JsonStub.cpp)
 endif()
+
+if(ACTS_BUILD_PLUGIN_ACTSVG)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesIoSvg)
+  target_sources(ActsPythonBindings PRIVATE src/Svg.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
+endif()
+
 
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
   pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
@@ -96,7 +110,7 @@ endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
   target_link_libraries(ActsPythonBindingsGeant4 PUBLIC 
-    ActsExamplesGeant4 
+    ActsExamplesGeant4
     ActsPythonUtilities)
   add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
 

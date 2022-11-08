@@ -179,14 +179,19 @@ inline std::string_view levelName(Level level) {
   }
 }
 
+#ifdef DOXYGEN
 /// @brief Get debug level above which an exception will be thrown after logging
 ///
-/// All messages with a debug level equal or higher than FAILURE_THRESHOLD will
-/// cause an exception to be thrown after log emission.
+/// All messages with a debug level equal or higher than the return value of
+/// this function will cause an exception to be thrown after log emission.
 ///
-/// @note Depending on preprocessor settings ACTS_ENABLE_LOG_FAILURE_THRESHOLD
-/// and ACTS_LOG_FAILURE_THRESHOLD, this operations is either constexpr or a
-/// runtime operation.
+/// @note Depending on preprocessor settings @c ACTS_ENABLE_LOG_FAILURE_THRESHOLD
+///       and @c ACTS_LOG_FAILURE_THRESHOLD, this operations is either constexpr
+///       or a runtime operation.
+Level getFailureThreshold();
+
+#else
+
 #ifdef ACTS_ENABLE_LOG_FAILURE_THRESHOLD
 #ifdef ACTS_LOG_FAILURE_THRESHOLD
 // We have a fixed compile time log failure threshold
@@ -203,12 +208,20 @@ constexpr Level getFailureThreshold() {
 }
 #endif
 
+#endif
+
 /// @brief Set debug level above which an exception will be thrown after logging
 ///
-/// All messages with a debug level equal or higher than FAILURE_THRESHOLD will
+/// All messages with a debug level equal or higher than @p level will
 /// cause an exception to be thrown after log emission.
-/// @note This sets a global static runtime value, which is not thread-safe! This
-///      function should not be called during a job.
+///
+/// @warning The runtime log failure threshold is **global state**, therefore
+///          this function is  **not threadsafe**. The intention is that this
+///          level is set once, before multi-threaded execution begins, and then
+///          not modified before the end of the job.
+/// @note This function is only available if @c ACTS_LOG_FAILURE_THRESHOLD is
+///       unset, i.e. no compile-time threshold is used. Otherwise an
+///       exception is thrown.
 void setFailureThreshold(Level level);
 
 /// Custom exception class so threshold failures can be caught
@@ -264,7 +277,10 @@ class DefaultFilterPolicy final : public OutputFilterPolicy {
       throw ThresholdFailure(
           "Requested debug level is incompatible with "
           "the ACTS_LOG_FAILURE_THRESHOLD=" +
-          std::string{levelName(getFailureThreshold())} + " configuration");
+          std::string{levelName(getFailureThreshold())} +
+          " configuration. See "
+          "https://acts.readthedocs.io/en/latest/core/"
+          "logging.html#logging-thresholds");
     }
   }
 
@@ -479,7 +495,9 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
           "Previous debug message exceeds the "
           "ACTS_LOG_FAILURE_THRESHOLD=" +
           std::string{levelName(getFailureThreshold())} +
-          " configuration, bailing out");
+          " configuration, bailing out. See "
+          "https://acts.readthedocs.io/en/latest/core/"
+          "logging.html#logging-thresholds");
     }
   }
 

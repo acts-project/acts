@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
-from common import getOpenDataDetector
 import os
-
+from acts.examples.odd import getOpenDataDetector
 from acts.examples import (
     GenericDetector,
     AlignedDetector,
@@ -73,6 +72,7 @@ def runGeometry(
                 processRepresenting=True,
                 processBoundaries=True,
                 processVolumes=True,
+                processNonMaterial=True,
                 context=context.geoContext,
             )
 
@@ -89,6 +89,6 @@ def runGeometry(
 if "__main__" == __name__:
     detector, trackingGeometry, decorators = AlignedDetector.create()
     # detector, trackingGeometry, decorators = GenericDetector.create()
-    # detector, trackingGeometry, decorators = getOpenDataDetector()
+    # detector, trackingGeometry, decorators = getOpenDataDetector(getOpenDataDetectorDirectory() )
 
     runGeometry(trackingGeometry, decorators, outputDir=os.getcwd())

@@ -33,6 +33,7 @@ void ActsExamples::MaterialPhysicsList::ConstructProcess() {
 void ActsExamples::MaterialPhysicsList::SetCuts() {
   SetCutsWithDefault();
 
-  if (verboseLevel > 0)
+  if (verboseLevel > 0) {
     DumpCutValuesTable();
+  }
 }

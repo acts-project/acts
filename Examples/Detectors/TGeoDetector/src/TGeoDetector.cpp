@@ -265,7 +265,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
     Acts::CylinderVolumeBuilder::Config volumeConfig;
     volumeConfig.trackingVolumeHelper = cylinderVolumeHelper;
     volumeConfig.volumeName = lbc.configurationName;
-    volumeConfig.buildToRadiusZero = (volumeBuilders.size() == 0);
+    volumeConfig.buildToRadiusZero = volumeBuilders.empty();
     volumeConfig.layerEnvelopeR = {1. * Acts::UnitConstants::mm,
                                    5. * Acts::UnitConstants::mm};
     auto ringLayoutConfiguration =
@@ -298,6 +298,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   Acts::TrackingGeometryBuilder::Config tgConfig;
   // Add the builders
   tgConfig.materialDecorator = mdecorator;
+  tgConfig.geometryIdentifierHook = config.geometryIdentifierHook;
 
   for (auto& vb : volumeBuilders) {
     tgConfig.trackingVolumeBuilders.push_back(

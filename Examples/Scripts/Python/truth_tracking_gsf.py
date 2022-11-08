@@ -6,38 +6,7 @@ from acts.examples import Sequencer, GenericDetector, RootParticleReader
 
 import acts
 
-from acts import UnitConstants as u
-
-
-def addTruthTrackingGsf(
-    s: acts.examples.Sequencer,
-    trackingGeometry: acts.TrackingGeometry,
-    field: acts.MagneticFieldProvider,
-):
-    gsfOptions = {
-        "maxComponents": 12,
-        "abortOnError": False,
-        "disableAllMaterialHandling": False,
-    }
-
-    gsfAlg = acts.examples.TrackFittingAlgorithm(
-        level=acts.logging.INFO,
-        inputMeasurements="measurements",
-        inputSourceLinks="sourcelinks",
-        inputProtoTracks="prototracks",
-        inputInitialTrackParameters="estimatedparameters",
-        outputTrajectories="gsf_trajectories",
-        directNavigation=False,
-        pickTrack=-1,
-        trackingGeometry=trackingGeometry,
-        fit=acts.examples.TrackFittingAlgorithm.makeGsfFitterFunction(
-            trackingGeometry, field, **gsfOptions
-        ),
-    )
-
-    s.addAlgorithm(gsfAlg)
-
-    return s
+u = acts.UnitConstants
 
 
 def runTruthTrackingGsf(
@@ -51,10 +20,19 @@ def runTruthTrackingGsf(
     s=None,
 ):
 
-    from particle_gun import addParticleGun, EtaConfig, PhiConfig, ParticleConfig
-    from fatras import addFatras
-    from digitization import addDigitization
-    from seeding import addSeeding, SeedingAlgorithm
+    from acts.examples.simulation import (
+        addParticleGun,
+        EtaConfig,
+        PhiConfig,
+        ParticleConfig,
+        addFatras,
+        addDigitization,
+    )
+    from acts.examples.reconstruction import (
+        addSeeding,
+        SeedingAlgorithm,
+        addTruthTrackingGsf,
+    )
 
     s = s or acts.examples.Sequencer(
         events=100, numThreads=-1, logLevel=acts.logging.INFO
@@ -67,7 +45,7 @@ def runTruthTrackingGsf(
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
-        s = addParticleGun(
+        addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
@@ -89,14 +67,14 @@ def runTruthTrackingGsf(
             )
         )
 
-    s = addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
     )
 
-    s = addDigitization(
+    addDigitization(
         s,
         trackingGeometry,
         field,
@@ -104,7 +82,7 @@ def runTruthTrackingGsf(
         rnd=rnd,
     )
 
-    s = addSeeding(
+    addSeeding(
         s,
         trackingGeometry,
         field,
@@ -120,7 +98,7 @@ def runTruthTrackingGsf(
 
     s.addAlgorithm(truthTrkFndAlg)
 
-    s = addTruthTrackingGsf(s, trackingGeometry, field)
+    addTruthTrackingGsf(s, trackingGeometry, field)
 
     # Output
     s.addWriter(

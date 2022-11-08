@@ -17,14 +17,32 @@ sys.path += [
 
 import helpers
 import helpers.hash_root
-from common import getOpenDataDetectorDirectory, getOpenDataDetector
+from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 import pytest
 
 import acts
 import acts.examples
 
-acts.logging.setFailureThreshold(acts.logging.WARNING)
+try:
+    if acts.logging.getFailureThreshold() != acts.logging.WARNING:
+        acts.logging.setFailureThreshold(acts.logging.WARNING)
+except RuntimeError:
+    # Repackage with different error string
+    errtype = (
+        "negative"
+        if acts.logging.getFailureThreshold() < acts.logging.WARNING
+        else "positive"
+    )
+    warnings.warn(
+        "Runtime log failure threshold could not be set. "
+        "Compile-time value is probably set via CMake, i.e. "
+        f"`ACTS_LOG_FAILURE_THRESHOLD={acts.logging.getFailureThreshold().name}` is set, "
+        "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
+        f"The pytest test-suite can produce false-{errtype} results in this configuration"
+    )
+
 
 u = acts.UnitConstants
 
@@ -246,7 +264,9 @@ def detector_config(request):
             srcdir / "thirdparty/OpenDataDetector/data/odd-material-maps.root",
             level=acts.logging.INFO,
         )
-        detector, trackingGeometry, decorators = getOpenDataDetector(matDeco)
+        detector, trackingGeometry, decorators = getOpenDataDetector(
+            getOpenDataDetectorDirectory(), matDeco
+        )
         return DetectorConfig(
             detector,
             trackingGeometry,
@@ -312,6 +332,10 @@ def fatras(ptcl_gun, trk_geo, rng):
             trackingGeometry=trk_geo,
             magneticField=field,
             generateHitsOnSensitive=True,
+            emScattering=False,
+            emEnergyLossIonisation=False,
+            emEnergyLossRadiation=False,
+            emPhotonConversion=False,
         )
 
         s.addAlgorithm(simAlg)
@@ -347,11 +371,12 @@ def material_recording_session():
 
     from material_recording import runMaterialRecording
 
-    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
     )
+
     dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
-        dd4hepSvc
+        detector
     )
 
     with tempfile.TemporaryDirectory() as d:
@@ -362,7 +387,7 @@ def material_recording_session():
         s.run()
 
         del s
-        del dd4hepSvc
+        del detector
         del dd4hepG4Construction
 
         yield Path(d)

@@ -21,12 +21,13 @@ class TrackSelector final : public BareAlgorithm {
   struct Config {
     /// Input track parameters collection.
     std::string inputTrackParameters;
+    /// Optional. Input track parameters tips w.r.t a trajectories container.
+    std::string inputTrackParametersTips;
     /// Output track parameters collection.
     std::string outputTrackParameters;
-    /// Output track indices collection.
-    ///
-    /// This records for each output track the index in the input container.
-    std::string outputTrackIndices;
+    /// Optional. Output track parameters tips w.r.t a trajectories container.
+    std::string outputTrackParametersTips;
+
     // Minimum/maximum local positions.
     double loc0Min = -std::numeric_limits<double>::infinity();
     double loc0Max = std::numeric_limits<double>::infinity();

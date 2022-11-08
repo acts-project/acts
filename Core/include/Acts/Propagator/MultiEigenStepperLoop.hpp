@@ -159,6 +159,12 @@ struct MaxMomentumReducerLoop {
   }
 };
 
+/// @enum FinalReductionMethod
+///
+/// Available reduction methods for the reduction in the boundState and
+/// curvilinearState member functions of the MultiEigenStepperLoop.
+enum class FinalReductionMethod { eMean, eMaxWeight };
+
 /// @brief Stepper based on the EigenStepper, but handles Multi-Component Tracks
 /// (e.g., for the GSF). Internally, this only manages a vector of
 /// EigenStepper::States. This simplifies implementation, but has several
@@ -177,12 +183,13 @@ template <typename extensionlist_t = StepperExtensionList<DefaultExtension>,
           typename auctioneer_t = detail::VoidAuctioneer>
 class MultiEigenStepperLoop
     : public EigenStepper<extensionlist_t, auctioneer_t> {
-  /// Allows logging in the member functions
-  const LoggerWrapper logger;
-
   /// Limits the number of steps after at least one component reached the
   /// surface
   std::size_t m_stepLimitAfterFirstComponentOnSurface = 50;
+
+  /// How to extract a single component state when calling .boundState() or
+  /// .curvilinearState()
+  FinalReductionMethod m_finalReductionMethod = FinalReductionMethod::eMean;
 
   /// Small vector type for speeding up some computations where we need to
   /// accumulate stuff of components. We think 16 is a reasonable amount here.
@@ -209,9 +216,11 @@ class MultiEigenStepperLoop
   static constexpr int maxComponents = std::numeric_limits<int>::max();
 
   /// Constructor from a magnetic field and a optionally provided Logger
-  MultiEigenStepperLoop(std::shared_ptr<const MagneticFieldProvider> bField,
-                        LoggerWrapper l = getDummyLogger())
-      : EigenStepper<extensionlist_t, auctioneer_t>(bField), logger(l) {}
+  MultiEigenStepperLoop(
+      std::shared_ptr<const MagneticFieldProvider> bField,
+      FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean)
+      : EigenStepper<extensionlist_t, auctioneer_t>(bField),
+        m_finalReductionMethod(finalReductionMethod) {}
 
   struct State {
     /// The struct that stores the individual components
@@ -227,7 +236,7 @@ class MultiEigenStepperLoop
     bool covTransport = false;
     NavigationDirection navDir;
     double pathAccumulated = 0.;
-    int steps = 0;
+    std::size_t steps = 0;
 
     /// geoContext
     std::reference_wrapper<const GeometryContext> geoContext;
@@ -608,9 +617,10 @@ class MultiEigenStepperLoop
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
+  /// @param logger [in] A @c LoggerWrapper instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      LoggerWrapper /*extLogger*/ = getDummyLogger()) const {
+      LoggerWrapper logger = getDummyLogger()) const {
     using Status = Intersection3D::Status;
 
     std::array<int, 4> counts = {0, 0, 0, 0};

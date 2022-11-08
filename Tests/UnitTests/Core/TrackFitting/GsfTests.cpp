@@ -27,13 +27,17 @@ namespace {
 using namespace Acts;
 using namespace Acts::Test;
 using namespace Acts::UnitLiterals;
+using namespace Acts::Experimental;
 
 Acts::GainMatrixUpdater kfUpdater;
 
-GsfExtensions getExtensions() {
-  GsfExtensions extensions;
-  extensions.calibrator.connect<&testSourceLinkCalibrator>();
-  extensions.updater.connect<&Acts::GainMatrixUpdater::operator()>(&kfUpdater);
+GsfExtensions<VectorMultiTrajectory> getExtensions() {
+  GsfExtensions<VectorMultiTrajectory> extensions;
+  extensions.calibrator
+      .connect<&testSourceLinkCalibrator<VectorMultiTrajectory>>();
+  extensions.updater
+      .connect<&Acts::GainMatrixUpdater::operator()<VectorMultiTrajectory>>(
+          &kfUpdater);
   return extensions;
 }
 
@@ -43,17 +47,19 @@ const auto logger = getDefaultLogger("GSF", Logging::INFO);
 
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
+using BetheHeitlerApprox = AtlasBetheHeitlerApprox<6, 5>;
+using GSF =
+    GaussianSumFitter<Propagator, BetheHeitlerApprox, VectorMultiTrajectory>;
 
-auto gsfZeroPropagator =
-    makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T);
-const GaussianSumFitter<Propagator> gsfZero(std::move(gsfZeroPropagator));
+const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
+                  makeDefaultBetheHeitlerApprox());
 
 std::default_random_engine rng(42);
 
 auto makeDefaultGsfOptions() {
-  return GsfOptions{tester.geoCtx,          tester.magCtx,
-                    tester.calCtx,          getExtensions(),
-                    LoggerWrapper{*logger}, PropagatorPlainOptions()};
+  return GsfOptions<VectorMultiTrajectory>{
+      tester.geoCtx,   tester.magCtx,          tester.calCtx,
+      getExtensions(), LoggerWrapper{*logger}, PropagatorPlainOptions()};
 }
 
 // A Helper type to allow us to put the MultiComponentBoundTrackParameters into
@@ -167,8 +173,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
   // default outlier distance in the `MeasurementsCreator`
   TestOutlierFinder tof{5_mm};
   auto options = makeDefaultGsfOptions();
-  options.extensions.outlierFinder.connect<&TestOutlierFinder::operator()>(
-      &tof);
+  options.extensions.outlierFinder
+      .connect<&TestOutlierFinder::operator()<VectorMultiTrajectory>>(&tof);
 
   auto multi_pars = makeParameters();
 

@@ -36,6 +36,8 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   struct Config {
     /// Input (found) trajectories collection.
     std::string inputTrajectories;
+    /// Input track parameters tips w.r.t inputTrajectories.
+    std::string inputTrackParametersTips;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
@@ -66,6 +68,9 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   /// Finalize plots.
   ProcessCode endRun() final override;
 
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
+
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
                      const TrajectoriesContainer& trajectories) final override;
@@ -86,6 +91,16 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
   TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+
+  // Adding numbers for efficiency, fake, duplicate calculations
+  size_t m_nTotalTracks = 0;
+  size_t m_nTotalMatchedTracks = 0;
+  size_t m_nTotalFakeTracks = 0;
+  size_t m_nTotalDuplicateTracks = 0;
+  size_t m_nTotalParticles = 0;
+  size_t m_nTotalMatchedParticles = 0;
+  size_t m_nTotalDuplicateParticles = 0;
+  size_t m_nTotalFakeParticles = 0;
 };
 
 }  // namespace ActsExamples
