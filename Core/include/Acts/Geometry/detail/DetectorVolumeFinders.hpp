@@ -43,6 +43,7 @@ struct TryAndErrorImpl : public IDelegateImpl {
     for (const auto v : volumes) {
       if (v->inside(gctx, nState.position)) {
         nState.currentVolume = v;
+        return;
       }
     }
     nState.currentVolume = nullptr;

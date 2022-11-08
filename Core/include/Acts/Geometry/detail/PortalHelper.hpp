@@ -14,6 +14,7 @@
 #include "Acts/Geometry/detail/PortalGenerators.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <exception>
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -27,14 +28,19 @@ namespace detail {
 /// This code is split off the PortalGenerator code in order to allow
 /// unit testing of the portal generation wihtout detector volume construction
 ///
-/// @param dTransform the context-resolved transform of the detector volume
+/// @param dTransform a contextually resolved transform
 /// @param dBounds the detecor volume bounds
 /// @param dVolume the reference to the detector volume which generates this volume
 ///
 /// @return a vector of newly created portals with registered inside volume
 inline static std::vector<std::shared_ptr<Portal>> portalsAndSubPortals(
     const Transform3& dTransform, const VolumeBounds& dBounds,
-    std::shared_ptr<DetectorVolume> dVolume) {
+    std::shared_ptr<DetectorVolume> dVolume) noexcept(false) {
+  if (dVolume == nullptr) {
+    throw std::runtime_error(
+        "PortalsAndSubPortals: no detector volume provided.");
+  }
+
   // Setting link to the mother volume to all sub volumes of this volume
   for (auto vPtr : dVolume->volumePtrs()) {
     for (auto pPtr : vPtr->portalPtrs()) {

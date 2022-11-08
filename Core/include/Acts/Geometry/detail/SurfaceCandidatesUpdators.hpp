@@ -103,7 +103,7 @@ inline static void portalCandidates(const GeometryContext& gctx,
   updateCandidates(gctx, nState);
 }
 
-/// A ordered portal and surface provider
+/// An ordered list of portals and surfaces provider
 ///
 /// @param gctx is the Geometry context of this call
 /// @param nState is the navigation state to be updated
@@ -111,7 +111,7 @@ inline static void portalCandidates(const GeometryContext& gctx,
 /// @note that the intersections are ordered, such that the
 /// smallest intersection pathlength >= overstep tolerance is the lowest
 ///
-/// @return an ordered list of portal candidates
+/// @return an ordered list of portal and surface candidates
 inline static void portalAndSurfaceCandidates(const GeometryContext& gctx,
                                               NavigationState& nState) {
   if (nState.currentDetector == nullptr) {

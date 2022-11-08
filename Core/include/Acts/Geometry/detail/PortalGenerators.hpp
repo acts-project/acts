@@ -15,6 +15,7 @@
 #include "Acts/Geometry/detail/DetectorVolumeUpdators.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <exception>
 #include <memory>
 #include <tuple>
 #include <vector>
@@ -26,14 +27,18 @@ namespace detail {
 /// @brief Generator function for creation of portal surfaces
 /// for a cylindrical volume
 ///
-/// @param dTransform the context-resolved transform of the detector volume
+/// @param dTransform a contextually resolved transform
 /// @param dBounds the detecor volume bounds
 /// @param dVolume the reference to the detector volume which generates this volume
 ///
 /// @return a vector of newly created portals with registered inside volume
 inline static std::vector<std::shared_ptr<Portal>> portals(
     const Transform3& dTransform, const VolumeBounds& dBounds,
-    std::shared_ptr<DetectorVolume> dVolume) {
+    std::shared_ptr<DetectorVolume> dVolume) noexcept(false) {
+  if (dVolume == nullptr) {
+    throw std::runtime_error("PortalsGenerator: no detector volume provided.");
+  }
+
   // Get the oriented boundary surfaces
   auto orientedSurfaces = dBounds.orientedSurfaces(dTransform);
 

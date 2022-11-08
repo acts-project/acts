@@ -73,6 +73,7 @@ const Acts::Experimental::DetectorVolume*
 Acts::Experimental::Detector::findDetectorVolume(
     const GeometryContext& gctx, const Vector3& position) const {
   NavigationState nState;
+  nState.currentDetector = this;
   nState.position = position;
   m_volumeFinder.delegate(gctx, nState);
   return nState.currentVolume;

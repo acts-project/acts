@@ -36,13 +36,8 @@ class Portal;
 class Detector;
 
 /// The Portal genertor definition
-///
-/// @param gctx the geometry context
-/// @param bounds the volume bounds
-/// @param volume the detector volume for which this generator is called
 using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
-    const Transform3& gctx, const VolumeBounds& bounds,
-    std::shared_ptr<DetectorVolume> volume)>;
+    const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>;
 
 /// A detector volume description which can be:
 ///

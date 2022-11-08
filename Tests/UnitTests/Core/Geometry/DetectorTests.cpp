@@ -96,6 +96,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   // Check the inside function with positions
   Acts::Experimental::NavigationState nState;
   nState.position = Acts::Vector3(5., 0., 0.);
+  nState.currentDetector = det012.get();
   det012->updateDetectorVolume(tContext, nState);
   BOOST_CHECK(nState.currentVolume == cyl0.get());
 

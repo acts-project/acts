@@ -89,9 +89,7 @@ void Acts::Experimental::Portal::updateDetectorVolume(
   const auto& position = nState.position;
   const auto& direction = nState.direction;
   const Vector3 normal = surface().normal(gctx, position);
-  NavigationDirection nDir = (normal.dot(direction) < 0.)
-                                 ? NavigationDirection::Backward
-                                 : NavigationDirection::Forward;
+  NavigationDirection nDir = directionFromStepSize(normal.dot(direction));
   const auto& vUpdator = m_volumeUpdators[indexFromDirection(nDir)].delegate;
   if (vUpdator.connected()) {
     vUpdator(gctx, nState);
