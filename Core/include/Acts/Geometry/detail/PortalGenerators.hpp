@@ -72,7 +72,7 @@ inline static std::vector<std::shared_ptr<Portal>> portals(
 
   // The portals are returned
   return portals;
-};
+}
 
 /// Create a default portal generator that connects to the
 /// static method.

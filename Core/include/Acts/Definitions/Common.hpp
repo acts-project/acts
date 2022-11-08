@@ -36,7 +36,8 @@ static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
 /// respect to a given momentum or direction
 enum class NavigationDirection : int { Backward = -1, Forward = 1 };
 
-/// Convert navigation dir to index
+/// Convert navigation dir to index [0,1] which allows to
+/// store direction dependent objects in std::array<T,2u> e.g.
 inline size_t indexFromDirection(NavigationDirection nDir) {
   return static_cast<size_t>((static_cast<int>(nDir) + 1) / 2);
 }

@@ -33,7 +33,7 @@ A struct {class}`Acts::Experimental::NavigationState` holds the current navigati
 * a list of surface canidates to be tested within the `currentVolume`
 * a current position, direction, momentum, charge and magnetic field
 
-Several navigation delegates built upon the {class}`Acts::Delegate<>` template class are defined and can be adapted and specialized for dedicated detector layouts.
+Several navigation delegates built upon the {class}`Acts::Delegate` template class are defined and can be adapted and specialized for dedicated detector layouts.
 These delegates are called:
 
 * {class}`Acts::Experimental::SurfaceCandidatesUpdator` that is called for updating the information at initialization, within the volume or at a volume switch caused by traversing a portal

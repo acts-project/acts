@@ -90,8 +90,8 @@ class Portal : public std::enable_shared_from_this<Portal> {
   /// Const access to the surface representation
   const Surface& surface() const;
 
-  /// Non-const access to the surface
-  std::shared_ptr<Surface> surfacePtr();
+  /// Non-const access to the surface reference
+  Surface& surface();
 
   /// Update the current volume
   ///
@@ -161,8 +161,8 @@ inline const Surface& Portal::surface() const {
   return *(m_surface.get());
 }
 
-inline std::shared_ptr<Surface> Portal::surfacePtr() {
-  return m_surface;
+inline Surface& Portal::surface() {
+  return *(m_surface.get());
 }
 
 inline const Portal::DetectorVolumeUpdators& Portal::detectorVolumeUpdators()
