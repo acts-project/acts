@@ -161,8 +161,9 @@ struct MaxMomentumReducerLoop {
 
 /// @enum FinalReductionMethod
 ///
-/// Available reduction methods for the reduction in the @ref MultiEigenStepperLoop
-/// .boundState() and .curvilinearState() member functions
+/// Available reduction methods for the reduction in the
+/// @ref MultiEigenStepperLoop::boundState and
+/// @ref MultiEigenStepperLoop::curvilinearState member functions.
 enum class FinalReductionMethod { eMean, eMaxWeight };
 
 /// @brief Stepper based on the EigenStepper, but handles Multi-Component Tracks
