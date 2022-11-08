@@ -7,7 +7,7 @@ add_library(
   src/TrackFindingAlgorithm.cpp
   src/TrackFindingAlgorithmFunction.cpp
   src/TrackFindingOptions.cpp
-  src/TrackParamsEstimationAlgorithm.cpp)
+  src/TrackParamsEstimationAlgorithm.cpp
   src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp
   src/TrajectoriesToPrototracks.cpp)
