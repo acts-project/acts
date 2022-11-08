@@ -328,6 +328,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         seedConfMaxZOrigin=150.0 * u.mm,
         minImpactSeedConf=1.0 * u.mm,
     )
+    zOriginWeightFactor = 1
     compatSeedWeight = 100
     curvatureSortingInFilter = True
     phiMin = 0
@@ -487,6 +488,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     )
     seedFilterConfigArg = SeedFilterConfigArg(
         impactWeightFactor=impactWeightFactor,
+        zOriginWeightFactor=zOriginWeightFactor,
         compatSeedWeight=compatSeedWeight,
         compatSeedLimit=compatSeedLimit,
         numSeedIncrement=numSeedIncrement,

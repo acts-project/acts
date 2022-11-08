@@ -72,6 +72,10 @@ void addTrackFitting(Context& ctx) {
         py::arg("reverseFilteringMomThreshold"),
         py::arg("freeToBoundCorrection"));
 
+    py::enum_<Acts::FinalReductionMethod>(mex, "FinalReductionMethod")
+        .value("mean", Acts::FinalReductionMethod::eMean)
+        .value("maxWeight", Acts::FinalReductionMethod::eMaxWeight);
+
     py::class_<ActsExamples::BetheHeitlerApprox>(mex, "AtlasBetheHeitlerApprox")
         .def_static("loadFromFiles",
                     &ActsExamples::BetheHeitlerApprox::loadFromFiles,
@@ -84,11 +88,13 @@ void addTrackFitting(Context& ctx) {
         "makeGsfFitterFunction",
         py::overload_cast<std::shared_ptr<const Acts::TrackingGeometry>,
                           std::shared_ptr<const Acts::MagneticFieldProvider>,
-                          BetheHeitlerApprox, std::size_t, bool, bool>(
+                          BetheHeitlerApprox, std::size_t,
+                          Acts::FinalReductionMethod, bool, bool>(
             &ActsExamples::makeGsfFitterFunction),
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("betheHeitlerApprox"), py::arg("maxComponents"),
-        py::arg("abortOnError"), py::arg("disableAllMaterialHandling"));
+        py::arg("finalReductionMethod"), py::arg("abortOnError"),
+        py::arg("disableAllMaterialHandling"));
   }
 
   {
