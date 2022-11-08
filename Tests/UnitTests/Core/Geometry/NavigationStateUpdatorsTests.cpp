@@ -59,13 +59,13 @@ struct AllPortalsExtractor {
   /// Extract the surfaces from the volume
   ///
   /// @param gctx the geometry contextfor this extraction call
-  /// @param volume is the detector volume
+  /// @param nState is the navigation state for the extraction
   /// @param indices is an ignored index vector
   inline static const std::vector<const Portal*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const DetectorVolume& volume,
+      const NavigationState& nState,
       [[maybe_unused]] const std::vector<size_t> indices = {}) {
-    return volume.portals();
+    return nState.currentVolume->portals();
   }
 };
 
@@ -74,13 +74,13 @@ struct AllSurfacesExtractor {
   /// Extract the surfaces from the volume
   ///
   /// @param gctx the geometry contextfor this extraction call
-  /// @param volume is the detector volume
+  /// @param nState is the navigation state for the extraction
   /// @param indices is an ignored index vector
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const DetectorVolume& volume,
+      const NavigationState& nState,
       [[maybe_unused]] const std::vector<size_t> indices = {}) {
-    return volume.surfaces();
+    return nState.currentVolume->surfaces();
   }
 };
 
@@ -89,13 +89,13 @@ struct IndexedSurfacesExtractor {
   /// Extract the surfaces from the volume
   ///
   /// @param gctx the geometry contextfor this extraction call
-  /// @param volume is the detector volume
+  /// @param nState is the navigation state for the extraction
   /// @param indices are access indices into the surfaces store
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const DetectorVolume& volume, const std::vector<size_t> indices) {
+      const NavigationState& nState, const std::vector<size_t> indices) {
     // Get the surface container
-    const auto& surfaces = volume.surfaces();
+    const auto& surfaces = nState.currentVolume->surfaces();
     // The extracted surfaces
     std::vector<const Surface*> eSurfaces;
     eSurfaces.reserve(indices.size());

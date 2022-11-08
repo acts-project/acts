@@ -84,12 +84,12 @@ struct DetectorVolumesCollection {
 
   /// Extract the sub volumes from the volume
   ///
-  /// @param gctx the geometry contextfor this extraction call
-  /// @param volume is the detector volume
+  /// @param gctx the geometry contextfor this extraction call (ignored)
+  /// @param nState is the navigation state (ingored)
   /// @param indices are access indices into the surfaces store
   inline const DetectorVolume* extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      [[maybe_unused]] const DetectorVolume& volume,
+      [[maybe_unused]] const NavigationState& nState,
       const SingleIndex& index) const {
     return dVolumes[index];
   }

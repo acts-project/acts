@@ -62,7 +62,7 @@ class StaticUpdatorImpl : public IDelegateImpl {
   /// @note this is attaching objects without intersecting nor checking
   void update([[maybe_unused]] const GeometryContext& gctx,
               NavigationState& nState) const {
-    auto extracted = extractor_type::extract(gctx, *nState.currentVolume);
+    auto extracted = extractor_type::extract(gctx, nState);
     filler_type::fill(nState, extracted);
   }
 };
@@ -112,7 +112,7 @@ class IndexedUpdatorImpl : public IDelegateImpl {
     Vector3 p3loc = transform * nState.position;
     // Extract the index grid entry
     const auto& entry = grid.atPosition(castPosition(p3loc));
-    auto extracted = extractor.extract(gctx, *nState.currentVolume, entry);
+    auto extracted = extractor.extract(gctx, nState, entry);
     filler_type::fill(nState, extracted);
   }
 

@@ -468,11 +468,17 @@ struct AllPortalsExtractor {
   /// Extract the portals from the volume
   ///
   /// @param gctx the geometry contextfor this extraction call
-  /// @param volume is the detector volume
+  /// @param nState is the current navigation state
+  ///
+  /// @return a vector of raw Portal pointers
   inline static const std::vector<const Portal*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const DetectorVolume& volume) {
-    return volume.portals();
+      const NavigationState& nState) {
+    if (nState.currentVolume == nullptr) {
+      throw std::runtime_error(
+          "AllPortalsExtractor: no detector volume given.");
+    }
+    return nState.currentVolume->portals();
   }
 };
 
@@ -481,13 +487,19 @@ struct AllSurfacesExtractor {
   /// Extract the surfaces from the volume
   ///
   /// @param gctx the geometry contextfor this extraction call
-  /// @param volume is the detector volume
+  /// @param nState is the current navigation state
   /// @param indices is an ignored index vector
+  ///
+  /// @return a vector of raw Surface pointers
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const DetectorVolume& volume,
+      const NavigationState& nState,
       [[maybe_unused]] const std::vector<size_t> indices = {}) {
-    return volume.surfaces();
+    if (nState.currentVolume == nullptr) {
+      throw std::runtime_error(
+          "AllSurfacesExtractor: no detector volume given.");
+    }
+    return nState.currentVolume->surfaces();
   }
 };
 
@@ -496,13 +508,19 @@ struct IndexedSurfacesExtractor {
   /// Extract the surfaces from the volume
   ///
   /// @param gctx the geometry contextfor this extraction call
-  /// @param volume is the detector volume
+  /// @param nState is the current navigation state
   /// @param indices are access indices into the surfaces store
+  ///
+  /// @return a vector of raw Surface pointers
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const DetectorVolume& volume, const std::vector<size_t> indices) {
+      const NavigationState& nState, const std::vector<size_t> indices) {
+    if (nState.currentVolume == nullptr) {
+      throw std::runtime_error(
+          "IndexedSurfacesExtractor: no detector volume given.");
+    }
     // Get the surface container
-    const auto& surfaces = volume.surfaces();
+    const auto& surfaces = nState.currentVolume->surfaces();
     // The extracted surfaces
     std::vector<const Surface*> eSurfaces;
     eSurfaces.reserve(indices.size());
@@ -512,33 +530,45 @@ struct IndexedSurfacesExtractor {
   }
 };
 
-/// Helper extractors: all surfaces
-struct AllVolumesExtractor {
+/// Helper extractors: all sub volumes of a volume
+struct AllSubVolumesExtractor {
   /// Extract the sub volumes from the volume
   ///
   /// @param gctx the geometry contextfor this extraction call
-  /// @param volume is the detector volume
-  /// @param indices are access indices into the surfaces store
+  /// @param nState is the current navigation state
+  /// @param indices are access indices into the volume store (ignored)
+  ///
+  /// @return a vector of raw DetectorVolume pointers
   inline static const std::vector<const DetectorVolume*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const DetectorVolume& volume,
+      const NavigationState& nState,
       [[maybe_unused]] const std::vector<size_t> indices = {}) {
-    return volume.volumes();
+    if (nState.currentVolume == nullptr) {
+      throw std::runtime_error(
+          "AllSubVolumesExtractor: no detector volume given.");
+    }
+    return nState.currentVolume->volumes();
   }
 };
 
-/// Helper extractors: indexed surfaces
-struct IndexedVolumesExtractor {
-  /// Extract the surfaces from the volume
+/// Helper extractors: indexed sub volume of a volume
+struct IndexedSubVolumesExtractor {
+  /// Extract the sub volumes from the volume
   ///
   /// @param gctx the geometry contextfor this extraction call
-  /// @param volume is the detector volume
-  /// @param indices are access indices into the surfaces store
+  /// @param nState is the current navigation state
+  /// @param indices are access indices into the volume store
+  ///
+  /// @return a vector of raw DetectorVolume pointers
   inline static const std::vector<const DetectorVolume*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const DetectorVolume& volume, const std::vector<size_t> indices) {
+      const NavigationState& nState, const std::vector<size_t> indices) {
+    if (nState.currentVolume == nullptr) {
+      throw std::runtime_error(
+          "AllSubVolumesExtractor: no detector volume given.");
+    }
     // Get the sub volumes container
-    const auto& volumes = volume.volumes();
+    const auto& volumes = nState.currentVolume->volumes();
     // The extracted volumes
     std::vector<const DetectorVolume*> eVolumes;
     eVolumes.reserve(indices.size());
