@@ -128,6 +128,18 @@ class Portal : public std::enable_shared_from_this<Portal> {
       NavigationDirection nDir, ManagedDetectorVolumeUpdator&& dVolumeUpdator,
       const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes);
 
+  /// Update the volume link, w/o directive, i.e. it relies that there's only
+  /// one remaining link to be set, throws an exception if that's not the case
+  ///
+  /// @param dVolumeUpdator is the mangaged volume updator delegate
+  /// @param attachedVolumes is the list of attached volumes for book keeping
+  ///
+  /// @note this overwrites the existing link
+  void assignDetectorVolumeUpdator(
+      ManagedDetectorVolumeUpdator&& dVolumeUpdator,
+      const std::vector<std::shared_ptr<DetectorVolume>>&
+          attachedVolumes) noexcept(false);
+
   // Access to the portal targets
   const DetectorVolumeUpdators& detectorVolumeUpdators() const;
 

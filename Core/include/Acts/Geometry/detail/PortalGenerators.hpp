@@ -69,6 +69,8 @@ inline static std::vector<std::shared_ptr<Portal>> portals(
     // Portal is prepared
     portals.push_back(portal);
   }
+
+  // The portals are returned
   return portals;
 };
 

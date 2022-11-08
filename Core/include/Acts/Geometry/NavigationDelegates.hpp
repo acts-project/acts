@@ -28,7 +28,11 @@ class Portal;
 class DetectorVolume;
 class Detector;
 
-/// Base class for all link implementations that need class structure
+/// Base class for navigaiton delegate implementations
+/// that allows to then do some sort of type erasure,
+/// e.g. for plotting or I/O.
+///
+/// The interface is never touched in the navigation stream
 class IDelegateImpl {
  public:
   virtual ~IDelegateImpl() {}

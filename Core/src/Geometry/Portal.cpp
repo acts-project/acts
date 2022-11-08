@@ -67,6 +67,23 @@ void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
   m_attachedVolumes[idx] = attachedVolumes;
 }
 
+void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
+    ManagedDetectorVolumeUpdator&& dVolumeUpdator,
+    const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
+  // Check and throw exceptions
+  if (m_volumeUpdators[0u].implementation == nullptr and
+      m_volumeUpdators[1u].implementation == nullptr) {
+    throw std::runtime_error("Portal: portal has no link on either side.");
+  }
+  if (m_volumeUpdators[0u].implementation != nullptr and
+      m_volumeUpdators[1u].implementation != nullptr) {
+    throw std::runtime_error("Portal: portal already links on both sides.");
+  }
+  size_t idx = (m_volumeUpdators[0u].implementation == nullptr) ? 0u : 1u;
+  m_volumeUpdators[idx] = std::move(dVolumeUpdator);
+  m_attachedVolumes[idx] = attachedVolumes;
+}
+
 void Acts::Experimental::Portal::updateDetectorVolume(
     const GeometryContext& gctx, NavigationState& nState) const {
   const auto& position = nState.position;

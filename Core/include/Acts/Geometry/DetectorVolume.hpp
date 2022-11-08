@@ -272,7 +272,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
   /// Const access to the navigation state updator
-  const ManagedSurfaceCandidatesUpdator& SurfaceCandidatesUpdator() const;
+  const ManagedSurfaceCandidatesUpdator& surfaceCandidatesUpdator() const;
 
   /// Update a portal given a portal index
   ///
@@ -408,7 +408,7 @@ inline const std::vector<const DetectorVolume*>& DetectorVolume::volumes()
 }
 
 inline const ManagedSurfaceCandidatesUpdator&
-DetectorVolume::SurfaceCandidatesUpdator() const {
+DetectorVolume::surfaceCandidatesUpdator() const {
   return m_SurfaceCandidatesUpdator;
 }
 

@@ -33,10 +33,10 @@ struct TryAndErrorImpl : public IDelegateImpl {
   /// @param gctx the geometry context for this call
   /// @param nState the navigation state into which the volume is set
   inline static void update(const GeometryContext& gctx,
-                            NavigationState& nState) {
+                            NavigationState& nState) noexcept(false) {
     if (nState.currentDetector == nullptr) {
       throw std::runtime_error(
-          "DetectorVolumeFinders: no detectore set to navigation state.");
+          "DetectorVolumeFinders: no detector set to navigation state.");
     }
 
     auto volumes = nState.currentDetector->volumes();
@@ -51,25 +51,33 @@ struct TryAndErrorImpl : public IDelegateImpl {
 
 /// @brief A helper struct that allows to extrace a volume
 /// from the detector by its index
-struct IndexedVolumeExtractor : public IDelegateImpl {
+struct IndexedDetectorVolumeExtractor {
   /// Extract the surfaces from the volume
   ///
   /// @param gctx the geometry contextfor this extraction call
   /// @param nState is the current navigation state
   /// @param index is the index in the global detector volume store
   ///
-  /// @return a vector of raw DetectorVolume pointers
-  inline static const std::vector<const DetectorVolume*> extract(
+  /// @return a raw DetectorVolume pointer
+  inline static const DetectorVolume* extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, size_t index) {
-    if (nState.detector == nullptr) {
+      const NavigationState& nState, size_t index) noexcept(false) {
+    if (nState.currentDetector == nullptr) {
       throw std::runtime_error("IndexedVolumeExtractor: no detector given.");
     }
     // Get the volume container from the detector
-    const auto& volumes = nState.detector->volumes();
+    const auto& volumes = nState.currentDetector->volumes();
     return volumes[index];
   }
 };
+
+/// @brief  An indexed volume implementation access
+///
+/// @tparam grid_type is the grid type used for this
+template <typename grid_type>
+using IndexedSurfacesImpl =
+    IndexedUpdatorImpl<grid_type, IndexedDetectorVolumeExtractor,
+                       DetectorVolumeFiller>;
 
 }  // namespace detail
 }  // namespace Experimental
