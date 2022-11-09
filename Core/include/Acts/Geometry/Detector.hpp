@@ -15,10 +15,10 @@
 #include "Acts/Geometry/NavigationDelegates.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
-#include <map>
 #include <memory>
 #include <stdexcept>
 #include <string>
+#include <unordered_map>
 #include <vector>
 
 namespace Acts {
@@ -130,8 +130,8 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// A volume finder delegate
   ManagedDetectorVolumeUpdator m_volumeFinder;
 
-  /// Name/index map
-  std::map<std::string, size_t> m_volumeNameIndex;
+  /// Name/index map to find volumes by name and detect duplicates
+  std::unordered_map<std::string, size_t> m_volumeNameIndex;
 };
 
 inline std::vector<std::shared_ptr<DetectorVolume>>& Detector::volumePtrs() {
