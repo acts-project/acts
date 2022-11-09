@@ -260,6 +260,8 @@ def addSeeding(
             ),
         )
         s.addAlgorithm(ptclSmear)
+
+        s.addWhiteboardAlias("trackParameters", ptclSmear.config.outputTrackParameters)
     else:
 
         spAlg = acts.examples.SpacePointMaker(
@@ -530,6 +532,10 @@ def addSeeding(
         )
         s.addAlgorithm(parEstimateAlg)
 
+        s.addWhiteboardAlias(
+            "trackParameters", parEstimateAlg.config.outputTrackParameters
+        )
+
         if outputDirRoot is not None:
             outputDirRoot = Path(outputDirRoot)
             if not outputDirRoot.exists():
@@ -626,6 +632,8 @@ def addKalmanTracks(
     )
     s.addAlgorithm(fitAlg)
 
+    s.addWhiteboardAlias("trajectories", fitAlg.config.outputTrajectories)
+
     return s
 
 
@@ -658,6 +666,8 @@ def addTruthTrackingGsf(
     )
 
     s.addAlgorithm(gsfAlg)
+
+    s.addWhiteboardAlias("trajectories", gsfAlg.config.outputTrajectories)
 
     return s
 
@@ -834,9 +844,9 @@ def addTrackSelection(
     s: acts.examples.Sequencer,
     trackSelectorRanges: TrackSelectorRanges,
     inputTrackParameters: str,
-    inputTrackParametersTips: str,
+    inputTrackParametersTips: Optional[str],
     outputTrackParameters: str,
-    outputTrackParametersTips: str,
+    outputTrackParametersTips: Optional[str],
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.TrackSelector:
 
@@ -845,9 +855,13 @@ def addTrackSelection(
     trackSelector = acts.examples.TrackSelector(
         level=customLogLevel(),
         inputTrackParameters=inputTrackParameters,
-        inputTrackParametersTips=inputTrackParametersTips,
+        inputTrackParametersTips=inputTrackParametersTips
+        if inputTrackParametersTips is not None
+        else "",
         outputTrackParameters=outputTrackParameters,
-        outputTrackParametersTips=outputTrackParametersTips,
+        outputTrackParametersTips=outputTrackParametersTips
+        if inputTrackParametersTips is not None
+        else "",
         **acts.examples.defaultKWArgs(
             loc0Min=trackSelectorRanges.loc0[0],
             loc0Max=trackSelectorRanges.loc0[1],

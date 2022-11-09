@@ -45,11 +45,11 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
       auto& cov = *optCov;
 
       if (m_cfg.dropCovariance) {
-        cov = cov.diagonal().asDiagonal();
+        cov = Acts::BoundSymMatrix(cov.diagonal().asDiagonal());
       }
-      cov *= m_cfg.covScale;
-
-      optCov = cov;
+      if (m_cfg.covScale != 1) {
+        cov *= m_cfg.covScale;
+      }
     }
 
     newTrk.setCovariance(optCov);
