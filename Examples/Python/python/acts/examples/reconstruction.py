@@ -65,7 +65,6 @@ SeedFilterConfigArg = namedtuple(
     "SeedFilterConfig",
     [
         "impactWeightFactor",
-        "zOriginWeightFactor",
         "compatSeedWeight",
         "compatSeedLimit",
         "numSeedIncrement",
@@ -77,7 +76,7 @@ SeedFilterConfigArg = namedtuple(
         "useDeltaRorTopRadius",
         "deltaRMin",
     ],
-    defaults=[None] * 12,
+    defaults=[None] * 11,
 )
 
 SpacePointGridConfigArg = namedtuple(
@@ -365,7 +364,6 @@ def addSeeding(
                         else seedFilterConfigArg.deltaRMin
                     ),
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
-                    zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
                     compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
                     numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
@@ -488,7 +486,6 @@ def addSeeding(
                         else seedFilterConfigArg.deltaRMin
                     ),
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
-                    zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
                     compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
                     numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
@@ -621,7 +618,7 @@ def addKalmanTracks(
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="trajectories",
         directNavigation=directNavigation,
-        pickTrack=0,
+        pickTrack=-1,
         trackingGeometry=trackingGeometry,
         fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
@@ -646,7 +643,6 @@ def addTruthTrackingGsf(
         "maxComponents": 12,
         "abortOnError": False,
         "disableAllMaterialHandling": False,
-        "finalReductionMethod": acts.examples.FinalReductionMethod.mean,
     }
 
     gsfAlg = acts.examples.TrackFittingAlgorithm(
@@ -657,7 +653,7 @@ def addTruthTrackingGsf(
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="gsf_trajectories",
         directNavigation=False,
-        pickTrack=0,
+        pickTrack=-1,
         trackingGeometry=trackingGeometry,
         fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
     )
