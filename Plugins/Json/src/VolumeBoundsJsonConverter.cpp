@@ -20,8 +20,18 @@ void Acts::to_json(nlohmann::json& j, const Acts::VolumeBounds& bounds) {
   j["values"] = bounds.values();
 }
 
+void Acts::to_json(nlohmann::json&j, const Acts::GenericCuboidVolumeBounds& bounds) {
+  j["type"] = volumeBoundTypes[bounds.type()];
+  std::vector<std::vector<double>> vertices;
+  for (size_t i = 0; i < bounds.values().size(); i += 3) {
+    vertices.push_back({bounds.values()[i], bounds.values()[i + 1],
+                        bounds.values()[i + 2]});
+  }
+  j["values"] = vertices;
+}
+
 std::unique_ptr<Acts::VolumeBounds> Acts::unqiueVolumeBoundsFromJson(
-    const nlohmann::json& j) {
+    const nlohmann::json& j ) {
   const std::string type = j["type"];
 
   if (type == "Cone") {
@@ -34,9 +44,10 @@ std::unique_ptr<Acts::VolumeBounds> Acts::unqiueVolumeBoundsFromJson(
     return volumeBoundsFromJson<CylinderVolumeBounds>(j);
   } else if (type == "Trapezoid") {
     return volumeBoundsFromJson<TrapezoidVolumeBounds>(j);
+  } else if (type == "GenericCuboid") {
+    return genericVolumeBoundsFromJson(j);
+  } else {
+    throw std::invalid_argument("Unknown volume bounds type: " + type);
   }
-  // case "GenericCuboid": {
-  //   return volumeBoundsFromJson<GenericCuboidVolumeBounds>(j);
-  // };
   return nullptr;
 }  // namespace Acts

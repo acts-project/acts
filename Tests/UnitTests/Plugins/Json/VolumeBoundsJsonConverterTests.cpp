@@ -13,6 +13,7 @@
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CutoutCylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/GenericCuboidVolumeBounds.hpp"
 #include "Acts/Geometry/TrapezoidVolumeBounds.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/VolumeBoundsJsonConverter.hpp"
@@ -24,12 +25,11 @@ using namespace Acts;
 
 BOOST_AUTO_TEST_SUITE(VolumeBoundsJsonConverter)
 BOOST_AUTO_TEST_CASE(Cuboid) {
-  std::ofstream out;
+  std::ofstream out("CuboidVolumeBounds.json");
 
   auto cuboidRef = std::make_shared<const CuboidVolumeBounds>(2., 4., 6.);
   nlohmann::json cuboidOut;
   to_json(cuboidOut, *cuboidRef);
-  out.open("CuboidVolumeBounds.json");
   out << cuboidOut.dump(2);
   out.close();
 
@@ -46,13 +46,12 @@ BOOST_AUTO_TEST_CASE(Cuboid) {
 }
 
 BOOST_AUTO_TEST_CASE(Cylinder) {
-  std::ofstream out;
+  std::ofstream out("CylinderVolumeBounds.json");
 
   auto cylinderRef =
       std::make_shared<const CylinderVolumeBounds>(10., 20., 30., M_PI / 4, 0);
   nlohmann::json cylinderOut;
   to_json(cylinderOut, *cylinderRef);
-  out.open("CylinderVolumeBounds.json");
   out << cylinderOut.dump(2);
   out.close();
 
@@ -69,13 +68,12 @@ BOOST_AUTO_TEST_CASE(Cylinder) {
 }
 
 BOOST_AUTO_TEST_CASE(Cone) {
-  std::ofstream out;
+  std::ofstream out("ConeVolumeBounds.json");
 
   auto coneRef = std::make_shared<const ConeVolumeBounds>(0., 0., 0.45, 0.050,
                                                           0.050, 0., M_PI);
   nlohmann::json coneOut;
   to_json(coneOut, *coneRef);
-  out.open("ConeVolumeBounds.json");
   out << coneOut.dump(2);
   out.close();
 
@@ -92,13 +90,12 @@ BOOST_AUTO_TEST_CASE(Cone) {
 }
 
 BOOST_AUTO_TEST_CASE(CutoutCylinder) {
-  std::ofstream out;
+  std::ofstream out("CutoutCylinderVolumeBounds.json");
 
   auto cutoutCylinderRef =
       std::make_shared<const CutoutCylinderVolumeBounds>(5, 10, 15, 30, 25);
   nlohmann::json cutoutCylinderOut;
   to_json(cutoutCylinderOut, *cutoutCylinderRef);
-  out.open("CutoutCylinderVolumeBounds.json");
   out << cutoutCylinderOut.dump(2);
   out.close();
 
@@ -115,14 +112,44 @@ BOOST_AUTO_TEST_CASE(CutoutCylinder) {
   BOOST_CHECK(cutoutCylinderRef->values() == cutoutCylinderTest->values());
 }
 
+BOOST_AUTO_TEST_CASE(GenericCuboid){
+  std::ofstream out("GenericCuboidVolumeBounds.json");
+  std::array<Vector3, 8> vertices;
+  vertices = {{{0, 0, 0},
+               {2, 0, 0},
+               {2, 1, 0},
+               {0, 1, 0},
+               {0, 0, 1},
+               {2, 0, 1},
+               {2, 1, 1},
+               {0, 1, 1}}};
+
+  nlohmann::json genericCuboidOut;
+  auto genericCuboidRef = std::make_shared<const GenericCuboidVolumeBounds>(vertices);
+  to_json(genericCuboidOut, *genericCuboidRef);
+  out << genericCuboidOut.dump(2);
+  out.close();
+
+  // Read in json file
+  auto in = std::ifstream("GenericCuboidVolumeBounds.json",
+                          std::ifstream::in | std::ifstream::binary);
+  BOOST_CHECK(in.good());
+  nlohmann::json genericCuboidIn;
+  in >> genericCuboidIn;
+  in.close();
+
+  auto genericCuboidTest = genericVolumeBoundsFromJson(genericCuboidIn);
+  BOOST_CHECK(genericCuboidRef->values() == genericCuboidTest->values());
+
+}
+
 BOOST_AUTO_TEST_CASE(Trapezoid) {
-  std::ofstream out;
+  std::ofstream out("TrapezoidVolumeBounds.json");
 
   auto trapezoidRef =
       std::make_shared<const TrapezoidVolumeBounds>(2., 4., 6., 8.);
   nlohmann::json trapezoidOut;
   to_json(trapezoidOut, *trapezoidRef);
-  out.open("TrapezoidVolumeBounds.json");
   out << trapezoidOut.dump(2);
   out.close();
 
@@ -135,6 +162,5 @@ BOOST_AUTO_TEST_CASE(Trapezoid) {
   in.close();
 
   auto trapezoidTest = volumeBoundsFromJson<TrapezoidVolumeBounds>(trapezoidIn);
-  BOOST_CHECK(trapezoidRef->values() == trapezoidTest->values());
-}
+  BOOST_CHECK(trapezoidRef->values() == trapezoidTest->values());}
 BOOST_AUTO_TEST_SUITE_END()
