@@ -220,10 +220,9 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
 
 template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
-    const SeedFinderOrthogonalConfig<external_spacepoint_t>& config,
-    const SeedFinderOptions& options)
-    : m_config(config.toInternalUnits()),
-      m_options(options.toInternalUnits()){
+    const SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
+    const SeedFinderOptions &options)
+    : m_config(config.toInternalUnits()), m_options(options.toInternalUnits()) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_config.highland = 13.6 * std::sqrt(config.radLengthPerSeed) *

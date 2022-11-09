@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/KDTree.hpp"

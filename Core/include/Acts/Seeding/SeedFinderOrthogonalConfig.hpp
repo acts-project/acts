@@ -116,10 +116,6 @@ struct SeedFinderOrthogonalConfig {
     config.zMax /= 1_mm;
     config.rMax /= 1_mm;
     config.rMin /= 1_mm;
-    config.bFieldInZ /= 1000. * 1_T;
-
-    config.beamPos[0] /= 1_mm;
-    config.beamPos[1] /= 1_mm;
 
     return config;
   }
