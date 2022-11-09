@@ -42,10 +42,10 @@ class IDelegateImpl {
 /// of eventual unterlying delegate memory and the
 /// delegate function
 ///
-template <typename deletage_type>
+template <typename function_type>
 struct ManagedDelegate {
  public:
-  deletage_type delegate;
+  Delegate<function_type> delegate;
   std::shared_ptr<IDelegateImpl> implementation = nullptr;
 };
 
@@ -67,7 +67,7 @@ using SurfaceCandidatesUpdator =
 
 /// Memory  managed navigation state updator
 using ManagedSurfaceCandidatesUpdator =
-    ManagedDelegate<SurfaceCandidatesUpdator>;
+    ManagedDelegate<void(const GeometryContext& gctx, NavigationState& nState)>;
 
 /// Declare a Detctor Volume finding or switching delegate
 ///
@@ -79,7 +79,8 @@ using DetectorVolumeUpdator =
     Delegate<void(const GeometryContext& gctx, NavigationState& nState)>;
 
 /// Memory managed detector volume link
-using ManagedDetectorVolumeUpdator = ManagedDelegate<DetectorVolumeUpdator>;
+using ManagedDetectorVolumeUpdator =
+    ManagedDelegate<void(const GeometryContext& gctx, NavigationState& nState)>;
 
 }  // namespace Experimental
 }  // namespace Acts

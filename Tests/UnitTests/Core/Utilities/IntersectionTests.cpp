@@ -161,6 +161,15 @@ BOOST_AUTO_TEST_CASE(SwapObjectIntersectionTest) {
                               IntersectionStatus::onSurface);
   Intersection3D alternative(Vector3(10., 0., 0.), 10.,
                              IntersectionStatus::reachable);
+  ObjectIntersection oIntersection;
+  oIntersection.intersection = intersection;
+  oIntersection.alternative = alternative;
+
+  BOOST_CHECK(oIntersection.intersection.position == Vector3(0., 0., 0.));
+  BOOST_CHECK(oIntersection.alternative.position == Vector3(10., 0., 0.));
+  oIntersection.swapSolutions();
+  BOOST_CHECK(oIntersection.alternative.position == Vector3(0., 0., 0.));
+  BOOST_CHECK(oIntersection.intersection.position == Vector3(10., 0., 0.));
 }
 
 /// test of the object intersection class

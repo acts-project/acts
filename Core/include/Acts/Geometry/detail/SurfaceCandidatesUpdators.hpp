@@ -119,7 +119,6 @@ inline static void portalAndSurfaceCandidates(const GeometryContext& gctx,
         "PortalAndSurfaceCandidates: no detector volume set to navigation "
         "state.");
   }
-  // A volu
   // A volume switch has happened, update list of portals & surfaces
   if (nState.surfaceCandidates.empty()) {
     // Fill internal portals if existing

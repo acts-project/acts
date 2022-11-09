@@ -17,6 +17,7 @@
 #include "Acts/Geometry/detail/PortalGenerators.hpp"
 #include "Acts/Geometry/detail/PortalHelper.hpp"
 #include "Acts/Geometry/detail/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Delegate.hpp"
@@ -107,6 +108,28 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   CHECK_CLOSE_ABS(volumeExtent.max(Acts::binR), 100., 10e-5);
   CHECK_CLOSE_ABS(volumeExtent.min(Acts::binZ), -200., 10e-5);
   CHECK_CLOSE_ABS(volumeExtent.max(Acts::binZ), 200., 10e-5);
+}
+
+BOOST_AUTO_TEST_CASE(UpdatePortal) {
+  Acts::Transform3 nominal = Acts::Transform3::Identity();
+
+  auto fullCylinderBounds =
+      std::make_unique<Acts::CylinderVolumeBounds>(0., 10., 100.);
+
+  auto portalGenerator = detail::defaultPortalGenerator();
+
+  auto fullCylinderVolume = DetectorVolumeFactory::construct(
+      portalGenerator, tContext, "FullCylinderVolume", nominal,
+      std::move(fullCylinderBounds), detail::allPortals());
+
+  auto cylinderSurface =
+      Acts::Surface::makeShared<Acts::CylinderSurface>(nominal, 10., 100.);
+
+  auto cylinderPortal = Acts::Experimental::Portal::makeShared(cylinderSurface);
+
+  fullCylinderVolume->updatePortal(cylinderPortal, 2u);
+
+  BOOST_CHECK(fullCylinderVolume->portals()[2u] == cylinderPortal.get());
 }
 
 BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
