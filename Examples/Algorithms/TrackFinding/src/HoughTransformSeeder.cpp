@@ -29,22 +29,21 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
     ActsExamples::HoughTransformSeeder::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("HoughTransformSeeder", lvl),
       m_cfg(std::move(cfg)),
-      m_logger(Acts::getDefaultLogger("HoughTransformSeeder",lvl))
-{   
-   // require spacepoints or input measurements (or both), but at least one kind
-   // of input
-   bool foundInput = false;
-   for (const auto& i : m_cfg.inputSpacePoints) {
-      if (!(i.empty())) {
-         foundInput = true;
-      }
-   }
-   if (!(m_cfg.inputMeasurements.empty())) {
+      m_logger(Acts::getDefaultLogger("HoughTransformSeeder", lvl)) {
+  // require spacepoints or input measurements (or both), but at least one kind
+  // of input
+  bool foundInput = false;
+  for (const auto& i : m_cfg.inputSpacePoints) {
+    if (!(i.empty())) {
+      foundInput = true;
+    }
+  }
+  if (!(m_cfg.inputMeasurements.empty())) {
     foundInput = true;
-   }
+  }
 
   if (!foundInput) {
-     ACTS_ERROR("Missing some kind of input");
+    ACTS_ERROR("Missing some kind of input");
   }
 
   if (m_cfg.outputProtoTracks.empty()) {
@@ -95,8 +94,8 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   std::sort(geoSelBeg, geoSelEnd);
   auto geoSelLastUnique = std::unique(geoSelBeg, geoSelEnd, isDuplicate);
   if (geoSelLastUnique != geoSelEnd) {
-     ACTS_WARNING("Removed " << std::distance(geoSelLastUnique, geoSelEnd)
-                             << " geometry selection duplicates");
+    ACTS_WARNING("Removed " << std::distance(geoSelLastUnique, geoSelEnd)
+                            << " geometry selection duplicates");
     m_cfg.geometrySelection.erase(geoSelLastUnique, geoSelEnd);
   }
   ACTS_INFO("Hough geometry selection:");
@@ -117,23 +116,21 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
 
 ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
     const AlgorithmContext& ctx) const {
+  // clear our Hough measurements out from the previous iteration, if at all
+  houghMeasurementStructs.clear();
 
-   // clear our Hough measurements out from the previous iteration, if at all
-   houghMeasurementStructs.clear();
-  
-   // add SPs to the inputs
-   addSpacePoints(ctx); 
+  // add SPs to the inputs
+  addSpacePoints(ctx);
 
-   // add ACTS measurements
-   addMeasurements(ctx);
-    
-   static thread_local ProtoTrackContainer protoTracks;
-   protoTracks.clear();
+  // add ACTS measurements
+  addMeasurements(ctx);
 
-   // loop over our subregions and run the Hough Transform on each
+  static thread_local ProtoTrackContainer protoTracks;
+  protoTracks.clear();
+
+  // loop over our subregions and run the Hough Transform on each
   for (auto subregion : m_cfg.subRegions) {
-    ActsExamples::HoughHist m_houghHist =
-        createHoughHist(subregion);
+    ActsExamples::HoughHist m_houghHist = createHoughHist(subregion);
 
     for (unsigned y = 0; y < m_cfg.houghHistSize_y; y++)
       for (unsigned x = 0; x < m_cfg.houghHistSize_x; x++)
@@ -145,14 +142,16 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
               m_cfg.nLayers);  // [layer,Index]
           std::vector<size_t> nHitsPerLayer(m_cfg.nLayers);
           for (auto measurementIndex : m_houghHist(y, x).second) {
-             HoughMeasurementStruct *meas = houghMeasurementStructs[measurementIndex].get();
-             hitIndicesAll[meas->layer].push_back(meas->index);
-             nHitsPerLayer[meas->layer]++;
+            HoughMeasurementStruct* meas =
+                houghMeasurementStructs[measurementIndex].get();
+            hitIndicesAll[meas->layer].push_back(meas->index);
+            nHitsPerLayer[meas->layer]++;
           }
 
           std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
 
-          for (auto [icomb, hit_indices] : Acts::enumerate(combs)){ // loop over all the combination
+          for (auto [icomb, hit_indices] :
+               Acts::enumerate(combs)) {  // loop over all the combination
 
             ProtoTrack protoTrack;
             for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
@@ -167,18 +166,19 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
   ACTS_DEBUG("Created " << protoTracks.size() << " track seeds");
 
   ctx.eventStore.add(m_cfg.outputProtoTracks, ProtoTrackContainer{protoTracks});
-  // clear the vector 
+  // clear the vector
   houghMeasurementStructs.clear();
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createLayerHoughHist(
-    unsigned layer, int subregion) const {
-
-  ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y, m_cfg.houghHistSize_x);
+ActsExamples::HoughHist
+ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
+                                                         int subregion) const {
+  ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y,
+                                    m_cfg.houghHistSize_x);
 
   for (unsigned index = 0; index < houghMeasurementStructs.size(); index++) {
-     HoughMeasurementStruct *meas = houghMeasurementStructs[index].get();
+    HoughMeasurementStruct* meas = houghMeasurementStructs[index].get();
     if (meas->layer != layer)
       continue;
     if (!(m_cfg.sliceTester(meas->z, meas->layer, subregion)).value())
@@ -206,7 +206,8 @@ ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createLayerHoughHist
 
 ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
     int subregion) const {
-  ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y, m_cfg.houghHistSize_x);
+  ActsExamples::HoughHist houghHist(m_cfg.houghHistSize_y,
+                                    m_cfg.houghHistSize_x);
 
   for (unsigned i = 0; i < m_cfg.nLayers; i++) {
     HoughHist layerHoughHist = createLayerHoughHist(i, subregion);
@@ -215,16 +216,15 @@ ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
         if (layerHoughHist(y, x).first > 0) {
           houghHist(y, x).first++;
           houghHist(y, x).second.insert(layerHoughHist(y, x).second.begin(),
-                                    layerHoughHist(y, x).second.end());
+                                        layerHoughHist(y, x).second.end());
         }
   }
 
   return houghHist;
 }
 
-bool ActsExamples::HoughTransformSeeder::passThreshold(HoughHist const& houghHist,
-                                                       unsigned x,
-                                                       unsigned y) const {
+bool ActsExamples::HoughTransformSeeder::passThreshold(
+    HoughHist const& houghHist, unsigned x, unsigned y) const {
   // Pass window threshold
   unsigned width = m_cfg.threshold.size() / 2;
   if (x < width || (houghHist.size(1) - x) < width)
@@ -246,7 +246,8 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(HoughHist const& houghHis
           if (houghHist(y + j, x + i).first > houghHist(y, x).first)
             return false;
           if (houghHist(y + j, x + i).first == houghHist(y, x).first) {
-            if (houghHist(y + j, x + i).second.size() > houghHist(y, x).second.size())
+            if (houghHist(y + j, x + i).second.size() >
+                houghHist(y, x).second.size())
               return false;
             if (houghHist(y + j, x + i).second.size() ==
                     houghHist(y, x).second.size() &&
@@ -295,7 +296,7 @@ double ActsExamples::HoughTransformSeeder::yToX(double y, double r,
       asin(r * ActsExamples::HoughTransformSeeder::m_cfg.kA * y - d0 / r) + phi;
 
   if (m_cfg.fieldCorrector.connected())
-     x += (m_cfg.fieldCorrector(0, y, r)).value();
+    x += (m_cfg.fieldCorrector(0, y, r)).value();
 
   return x;
 }
@@ -315,9 +316,8 @@ std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(
 
   // Get bins
   int x_bin_min = quant(m_cfg.xMin, m_cfg.xMax, m_cfg.houghHistSize_x, x_min);
-  int x_bin_max =
-      quant(m_cfg.xMin, m_cfg.xMax, m_cfg.houghHistSize_x, x_max) +
-      1;  // exclusive
+  int x_bin_max = quant(m_cfg.xMin, m_cfg.xMax, m_cfg.houghHistSize_x, x_max) +
+                  1;  // exclusive
 
   // Extend bins
   unsigned extend = getExtension(yBin_min, layer);
@@ -337,10 +337,9 @@ std::pair<unsigned, unsigned> ActsExamples::HoughTransformSeeder::yToXBins(
 // below.
 unsigned ActsExamples::HoughTransformSeeder::getExtension(
     unsigned y, unsigned layer) const {
-   if (m_cfg.hitExtend_x.size() == m_cfg.nLayers) {
-      return m_cfg.hitExtend_x[layer];
-   }
-
+  if (m_cfg.hitExtend_x.size() == m_cfg.nLayers) {
+    return m_cfg.hitExtend_x[layer];
+  }
 
   if (m_cfg.hitExtend_x.size() == m_cfg.nLayers * 2) {
     // different extension for low pt vs high pt, split in half but irrespective
@@ -398,29 +397,34 @@ ActsExamples::HoughTransformSeeder::getComboIndices(
   return combos;
 }
 
-
-void ActsExamples::HoughTransformSeeder::addSpacePoints(const AlgorithmContext& ctx) const {
-
+void ActsExamples::HoughTransformSeeder::addSpacePoints(
+    const AlgorithmContext& ctx) const {
   // construct the combined input container of space point pointers from all
   // configured input sources.
   for (const auto& isp : m_cfg.inputSpacePoints) {
     for (auto& sp : ctx.eventStore.get<SimSpacePointContainer>(isp)) {
+      double r = std::hypot(sp.x(), sp.y());
+      double z = sp.z();
+      float phi = std::atan2(sp.y(), sp.x());
+      ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();
+      if (!(hitlayer.ok()))
+        continue;
 
-       double r = std::hypot(sp.x(), sp.y());
-       double z = sp.z();
-       float phi = std::atan2(sp.y(), sp.x());
-       ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();
-       if (!(hitlayer.ok())) continue;
-
-       // Pixel will have two source links, strips one, we just use the first one then
-       auto meas = std::shared_ptr<HoughMeasurementStruct>(new HoughMeasurementStruct(hitlayer.value(), phi, r, z, (static_cast<const IndexSourceLink&>((*sp.sourceLinks()[0]))).index(), HoughHitType::SP)); 
-       houghMeasurementStructs.push_back(meas);
+      // Pixel will have two source links, strips one, we just use the first one
+      // then
+      auto meas =
+          std::shared_ptr<HoughMeasurementStruct>(new HoughMeasurementStruct(
+              hitlayer.value(), phi, r, z,
+              (static_cast<const IndexSourceLink&>((*sp.sourceLinks()[0])))
+                  .index(),
+              HoughHitType::SP));
+      houghMeasurementStructs.push_back(meas);
     }
   }
 }
 
-void ActsExamples::HoughTransformSeeder::addMeasurements(const AlgorithmContext& ctx) const {
-
+void ActsExamples::HoughTransformSeeder::addMeasurements(
+    const AlgorithmContext& ctx) const {
   const auto& measurements =
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
   const auto& sourceLinks =
@@ -473,10 +477,13 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(const AlgorithmContext&
         double z = globalPos[Acts::ePos2];
         ResultUnsigned hitlayer = m_cfg.layerIDFinder(r);
         if (hitlayer.ok()) {
-           auto meas = std::shared_ptr<HoughMeasurementStruct>(new HoughMeasurementStruct(hitlayer.value(), phi, r, z, sourceLink.get().index(),HoughHitType::MEASUREMENT));
-           houghMeasurementStructs.push_back(meas);
+          auto meas = std::shared_ptr<HoughMeasurementStruct>(
+              new HoughMeasurementStruct(hitlayer.value(), phi, r, z,
+                                         sourceLink.get().index(),
+                                         HoughHitType::MEASUREMENT));
+          houghMeasurementStructs.push_back(meas);
         }
       }
     }
-  } 
+  }
 }

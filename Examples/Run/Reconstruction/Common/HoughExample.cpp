@@ -9,7 +9,6 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
@@ -17,9 +16,10 @@
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
-#include "ActsExamples/Options/CsvOptionsReader.hpp"
-#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/DigitizationOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/SpacePointMakerOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
@@ -144,16 +144,18 @@ int runHoughExample(int argc, char* argv[],
   houghCfg.nLayers = 10;
 
   houghCfg.threshold = {9};  // Minimum point value post-convolution to accept
-                               // as a road (inclusive)
+                             // as a road (inclusive)
 
   houghCfg.localMaxWindowSize =
       0;  // Only create roads from a local maximum, requires traceHits
   houghCfg.kA = 0.0003;  // Assume B = 2T constant.
 
-
-  houghCfg.fieldCorrector.connect<&ActsExamples::DefaultHoughFunctions::fieldCorrectionDefault>();
-  houghCfg.layerIDFinder.connect<&ActsExamples::DefaultHoughFunctions::findLayerIDDefault>();
-  houghCfg.sliceTester.connect<&ActsExamples::DefaultHoughFunctions::inSliceDefault>();
+  houghCfg.fieldCorrector
+      .connect<&ActsExamples::DefaultHoughFunctions::fieldCorrectionDefault>();
+  houghCfg.layerIDFinder
+      .connect<&ActsExamples::DefaultHoughFunctions::findLayerIDDefault>();
+  houghCfg.sliceTester
+      .connect<&ActsExamples::DefaultHoughFunctions::inSliceDefault>();
 
   sequencer.addAlgorithm(
       std::make_shared<HoughTransformSeeder>(houghCfg, logLevel));
