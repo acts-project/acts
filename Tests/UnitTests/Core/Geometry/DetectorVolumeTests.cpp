@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   BOOST_CHECK(fullCylinderVolume ==
               unpackToShared<const DetectorVolume>(*fullCylinderVolume));
 
-  BOOST_CHECK(fullCylinderVolume->surfaces().size() == 0u);
-  BOOST_CHECK(fullCylinderVolume->volumes().size() == 0u);
+  BOOST_CHECK(fullCylinderVolume->surfaces().empty());
+  BOOST_CHECK(fullCylinderVolume->volumes().empty());
   BOOST_CHECK(fullCylinderVolume->portals().size() == 3u);
 
   // A tube cylinder
@@ -92,8 +92,8 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
       portalGenerator, tContext, "TubeCylinderVolume", nominal,
       std::move(tubeCylinderBounds), detail::allPortals());
 
-  BOOST_CHECK(tubeCylinderVolume->surfaces().size() == 0u);
-  BOOST_CHECK(tubeCylinderVolume->volumes().size() == 0u);
+  BOOST_CHECK(tubeCylinderVolume->surfaces().empty());
+  BOOST_CHECK(tubeCylinderVolume->volumes().empty());
   BOOST_CHECK(tubeCylinderVolume->portals().size() == 4u);
 
   // Let's test the resizing, first inside test: OK

@@ -92,7 +92,7 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
                                        std::move(mLinkToA), {volumeA});
 
   auto attachedDetectorVolumes = portalA->attachedDetectorVolumes();
-  BOOST_CHECK(attachedDetectorVolumes[0u].size() == 0u);
+  BOOST_CHECK(attachedDetectorVolumes[0u].empty());
   BOOST_CHECK(attachedDetectorVolumes[1u].size() == 1u);
   BOOST_CHECK(attachedDetectorVolumes[1u][0u] == volumeA);
 

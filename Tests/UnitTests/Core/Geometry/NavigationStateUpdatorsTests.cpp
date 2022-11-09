@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(AllSurfaces) {
 
   Acts::Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
-  BOOST_CHECK(nState.surfaceCandidates.size() == 0u);
+  BOOST_CHECK(nState.surfaceCandidates.empty());
   AllSurfacesProvider allSurfaces;
   allSurfaces.update(tContext, nState);
   BOOST_CHECK(nState.surfaceCandidates.size() == 3u);
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(AllPortals) {
 
   Acts::Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
-  BOOST_CHECK(nState.surfaceCandidates.size() == 0u);
+  BOOST_CHECK(nState.surfaceCandidates.empty());
   AllPortalsProvider allPortals;
   allPortals.update(tContext, nState);
   BOOST_CHECK(nState.surfaceCandidates.size() == 2u);
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsAllSurfaces) {
 
   Acts::Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
-  BOOST_CHECK(nState.surfaceCandidates.size() == 0u);
+  BOOST_CHECK(nState.surfaceCandidates.empty());
 
   AllPortalsProvider allPortals;
   AllSurfacesProvider allSurfaces;
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid1DSurfaces) {
 
   Acts::Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
-  BOOST_CHECK(nState.surfaceCandidates.size() == 0u);
+  BOOST_CHECK(nState.surfaceCandidates.empty());
 
   AllPortalsProvider allPortals;
   Acts::MultiGrid1D grid;
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(AllPortalsGrid2DSurfaces) {
 
   Acts::Experimental::NavigationState nState;
   nState.currentVolume = dVolume.get();
-  BOOST_CHECK(nState.surfaceCandidates.size() == 0u);
+  BOOST_CHECK(nState.surfaceCandidates.empty());
 
   AllPortalsProvider allPortals;
   Acts::MultiGrid2D grid;

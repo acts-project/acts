@@ -116,7 +116,7 @@ void Acts::Experimental::DetectorVolume::updateNavigationState(
   // if the internal volumes can be excluded.
   //
   // This can be avoided by a precise volume finder
-  if (m_volumes.external.size()) {
+  if (not m_volumes.external.empty()) {
     for (const auto v : volumes()) {
       if (v->inside(gctx, nState.position)) {
         v->updateNavigationState(gctx, nState);

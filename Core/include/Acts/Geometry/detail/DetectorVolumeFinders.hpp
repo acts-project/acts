@@ -27,7 +27,7 @@ namespace detail {
 /// @brief The end of world sets the volume pointer of the
 /// navigation state to nullptr, usually indicates the end of
 /// the known world, hence the name
-struct TryAndErrorImpl : public IDelegateImpl {
+struct TrialAndErrorImpl : public IDelegateImpl {
   /// @brief a null volume link - explicitely
   ///
   /// @param gctx the geometry context for this call
@@ -59,7 +59,7 @@ struct TryAndErrorImpl : public IDelegateImpl {
 inline static ManagedDetectorVolumeUpdator tryAllVolumes() {
   ManagedDetectorVolumeUpdator managedUpdator;
   DetectorVolumeUpdator vFinder;
-  vFinder.connect<&TryAndErrorImpl::update>();
+  vFinder.connect<&TrialAndErrorImpl::update>();
   managedUpdator.delegate = std::move(vFinder);
   managedUpdator.implementation = nullptr;
   return managedUpdator;
