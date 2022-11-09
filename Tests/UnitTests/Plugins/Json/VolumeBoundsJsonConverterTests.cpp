@@ -112,7 +112,7 @@ BOOST_AUTO_TEST_CASE(CutoutCylinder) {
   BOOST_CHECK(cutoutCylinderRef->values() == cutoutCylinderTest->values());
 }
 
-BOOST_AUTO_TEST_CASE(GenericCuboid){
+BOOST_AUTO_TEST_CASE(GenericCuboid) {
   std::ofstream out("GenericCuboidVolumeBounds.json");
   std::array<Vector3, 8> vertices;
   vertices = {{{0, 0, 0},
@@ -125,7 +125,8 @@ BOOST_AUTO_TEST_CASE(GenericCuboid){
                {0, 1, 1}}};
 
   nlohmann::json genericCuboidOut;
-  auto genericCuboidRef = std::make_shared<const GenericCuboidVolumeBounds>(vertices);
+  auto genericCuboidRef =
+      std::make_shared<const GenericCuboidVolumeBounds>(vertices);
   to_json(genericCuboidOut, *genericCuboidRef);
   out << genericCuboidOut.dump(2);
   out.close();
@@ -140,7 +141,6 @@ BOOST_AUTO_TEST_CASE(GenericCuboid){
 
   auto genericCuboidTest = genericVolumeBoundsFromJson(genericCuboidIn);
   BOOST_CHECK(genericCuboidRef->values() == genericCuboidTest->values());
-
 }
 
 BOOST_AUTO_TEST_CASE(Trapezoid) {
@@ -162,5 +162,6 @@ BOOST_AUTO_TEST_CASE(Trapezoid) {
   in.close();
 
   auto trapezoidTest = volumeBoundsFromJson<TrapezoidVolumeBounds>(trapezoidIn);
-  BOOST_CHECK(trapezoidRef->values() == trapezoidTest->values());}
+  BOOST_CHECK(trapezoidRef->values() == trapezoidTest->values());
+}
 BOOST_AUTO_TEST_SUITE_END()
