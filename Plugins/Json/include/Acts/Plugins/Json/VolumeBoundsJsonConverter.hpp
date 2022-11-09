@@ -41,7 +41,7 @@ std::unique_ptr<bounds_t> volumeBoundsFromJson(const nlohmann::json& j) {
   return std::make_unique<bounds_t>(bValues);
 }
 
-/// Converstion to surfaceBounds from json
+/// Conversion to surfaceBounds from json
 /// @param j the read-in json object
 ///
 /// @return a shared_ptr to a surface object for type polymorphism
