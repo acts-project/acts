@@ -411,8 +411,9 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(const AlgorithmContext& 
        float phi = std::atan2(sp.y(), sp.x());
        ResultUnsigned hitlayer = m_cfg.layerIDFinder(r).value();
        if (!(hitlayer.ok())) continue;
+
        // Pixel will have two source links, strips one, we just use the first one then
-       auto meas = std::shared_ptr<HoughMeasurementStruct>(new HoughMeasurementStruct(hitlayer.value(), phi, r, z, sp.sourceLinks()[0]->get().index(), HoughHitType::SP)); 
+       auto meas = std::shared_ptr<HoughMeasurementStruct>(new HoughMeasurementStruct(hitlayer.value(), phi, r, z, (static_cast<const IndexSourceLink&>((*sp.sourceLinks()[0]))).index(), HoughHitType::SP)); 
        houghMeasurementStructs.push_back(meas);
     }
   }
