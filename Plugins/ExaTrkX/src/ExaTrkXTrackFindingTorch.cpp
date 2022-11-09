@@ -87,8 +87,11 @@ std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
 
   // Clone models (solve memory leak? members can be const...)
   auto e_model = m_embeddingModel->clone();
+  e_model.to(device);
   auto f_model = m_filterModel->clone();
+  f_model.to(device);
   auto g_model = m_gnnModel->clone();
+  g_model.to(device);
 
   // printout the r,phi,z of the first spacepoint
   ACTS_VERBOSE("First spacepoint information [r, phi, z]: "
