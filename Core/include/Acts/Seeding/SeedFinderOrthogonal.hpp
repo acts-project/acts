@@ -11,6 +11,7 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 
 #include <array>
 #include <list>
@@ -56,7 +57,8 @@ class SeedFinderOrthogonal {
    * @param config The configuration parameters for this seed finder.
    */
   SeedFinderOrthogonal(
-      Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> config);
+      const Acts::SeedFinderOrthogonalConfig<external_spacepoint_t>& config, 
+      const Acts::SeedFinderOptions& options);
 
   /**
    * @brief Destroy the orthogonal seed finder object.
@@ -223,6 +225,7 @@ class SeedFinderOrthogonal {
    * @brief The configuration for the seeding algorithm.
    */
   Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderOptions m_options;
 };
 }  // namespace Acts
 

@@ -69,12 +69,6 @@ struct SeedFinderOrthogonalConfig {
 
   float deltaPhiMax = 0.085;
 
-  float bFieldInZ = 2.08 * Acts::UnitConstants::T;
-  // location of beam in x,y plane.
-  // used as offset for Space Points
-  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
-                        0 * Acts::UnitConstants::mm};
-
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
       std::numeric_limits<float>::infinity() * Acts::UnitConstants::mm;

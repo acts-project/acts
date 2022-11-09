@@ -79,7 +79,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     }
   }
 
-  Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig);
+  Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
 
   SimSeedContainer seeds = finder.createSeeds(spacePoints);
 

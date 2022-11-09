@@ -149,8 +149,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
-    ACTS_PYTHON_MEMBER(bFieldInZ);
-    ACTS_PYTHON_MEMBER(beamPos);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(skipPreviousTopSP);
@@ -217,7 +215,8 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
                                 "SeedingOrthogonalAlgorithm", inputSpacePoints,
                                 outputSeeds, outputProtoTracks,
-                                seedFilterConfig, seedFinderConfig);
+                                seedFilterConfig, seedFinderConfig, 
+                                seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
