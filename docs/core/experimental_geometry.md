@@ -88,6 +88,9 @@ In case the volume contains surfaces and/or volumes, an adequate navigation stat
 Illustration of a planar module andcap detector with a grid holding the indices to the candidate surfaces.
 :::
 
+:::{note}
+When building in `Debug` mode the containment of objects inside a `DetectorVolume` is checked with an `assert(...)` statement.
+:::
 
 ### The Detector object
 
