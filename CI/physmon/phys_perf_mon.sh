@@ -47,7 +47,7 @@ function full_chain() {
 		run \
         $outdir/performance_seeding_hists_${suffix}.root \
         $refdir/performance_seeding_hists_${suffix}.root \
-        --title "CKF ${suffix}" \
+        --title "Seeding ${suffix}" \
         -c $config \
         -o $outdir/seeding_${suffix}.html \
         -p $outdir/seeding_${suffix}_plots
