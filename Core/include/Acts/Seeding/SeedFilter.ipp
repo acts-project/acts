@@ -31,6 +31,23 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     std::vector<std::pair<
         float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
         outCont) const {
+  // seed confirmation
+  SeedConfirmationRangeConfig seedConfRange;
+  if (m_cfg.seedConfirmation) {
+    // check if bottom SP is in the central or forward region
+    seedConfRange =
+        (bottomSP.z() > m_cfg.centralSeedConfirmationRange.zMaxSeedConf ||
+         bottomSP.z() < m_cfg.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_cfg.forwardSeedConfirmationRange
+            : m_cfg.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the bottom SP is
+    // in the central or forward region
+    seedFilterState.nTopSeedConf =
+        bottomSP.radius() > seedConfRange.rMaxSeedConf
+            ? seedConfRange.nTopForLargeR
+            : seedConfRange.nTopForSmallR;
+  }
+
   size_t maxWeightSeedIndex = 0;
   bool maxWeightSeed = false;
   float weightMax = -std::numeric_limits<float>::max();
@@ -133,15 +150,17 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
           (seedFilterState.numQualitySeeds and deltaSeedConf == 0)) {
         continue;
       }
-      bool seedRangeCuts = bottomSP.radius() < m_cfg.seedConfMinBottomRadius ||
-                           std::abs(zOrigin) > m_cfg.seedConfMaxZOrigin;
+      bool seedRangeCuts =
+          bottomSP.radius() < seedConfRange.seedConfMinBottomRadius ||
+          std::abs(zOrigin) > seedConfRange.seedConfMaxZOrigin;
       if (seedRangeCuts and deltaSeedConf == 0 and
-          impact > m_cfg.minImpactSeedConf) {
+          impact > seedConfRange.minImpactSeedConf) {
         continue;
       }
 
       // term on the weight that depends on the value of zOrigin
-      weight += -std::abs(zOrigin) + m_cfg.compatSeedWeight;
+      weight += -(std::abs(zOrigin) * m_cfg.zOriginWeightFactor) +
+                m_cfg.compatSeedWeight;
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight

@@ -1,82 +1,99 @@
-## :bar_chart: Physics performance monitoring for {{ .commit }}
-[Full report]({{ .url }}/)
-CKF: [seeded]({{ .url }}/ckf_seeded.html), [truth smeared]({{ .url }}/ckf_truth_smeared.html), [truth estimated]({{ .url }}/ckf_truth_estimated.html)
-IVF: [seeded]({{ .url }}/ivf_seeded.html), [truth smeared]({{ .url }}/ivf_truth_smeared.html), [truth estimated]({{ .url }}/ivf_truth_estimated.html) 
-[Ambiguity resolution]({{ .url }}/ambi_seeded.html)
-[Truth tracking]({{ .url }}/truth_tracking.html)
+## :bar_chart: Physics performance monitoring for {{ commit }}
+{% if has_errors %}
+> :red_square: **ERROR** The result has missing elements! 
+> This is likely a physmon job failure
+{% endif %}
 
-### Vertexing
+[Full report]({{ url }}/)
+CKF: {{ make_url("seeded", "ckf_seeded.html") }}, {{ make_url("truth smeared", "ckf_truth_smeared.html") }}, {{ make_url("truth estimated", "ckf_truth_estimated.html") }}
+IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "ivf_truth_smeared.html") }}, {{ make_url("truth estimated", "ivf_truth_estimated.html") }}
+{{ make_url("Ambiguity resolution", "ambi_seeded.html") }}
+{{ make_url("Truth tracking", "truth_tracking.html") }}
 
-<img src="{{ .url }}/vertexing_mu_scan.pdf?to_png=1" width="350"/>
+### Vertexing {{ "" if all_exist(
+    "vertexing_mu_scan.pdf", 
+    "ivf_seeded_plots",
+    "ivf_truth_smeared_plots",
+    "ivf_truth_estimated_plots",
+) else ":x: "}}
 
-<details>
-  <summary><b>IVF seeded</b></summary>
-  <img src="{{ .url }}/ivf_seeded_plots/covXX.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_seeded_plots/covYY.pdf?to_png=1" width="50%"/>
+{% call detail_block("Vertexing vs. mu", "vertexing_mu_scan.pdf") %}
+{{ make_image("vertexing_mu_scan.pdf", 350) }}
+{% endcall %}
 
-  <img src="{{ .url }}/ivf_seeded_plots/diffx.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_seeded_plots/diffy.pdf?to_png=1" width="50%"/>
+{% for mode in ["seeded", "truth_smeared", "truth_estimated"] %}
 
-  <img src="{{ .url }}/ivf_seeded_plots/diffz.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_seeded_plots/recoOverTrue.pdf?to_png=1" width="50%"/>
-</details>
+{% call detail_block("IVF "+mode, "ivf_"+mode+"_plots") %}
+    
+{% for url in [
+    "covXX.pdf",
+    "covYY.pdf",
+    "diffx.pdf",
+    "diffy.pdf",
+    "diffz.pdf",
+    "recoOverTrue.pdf",
+] -%}
+{{- make_image("ivf_"+mode+"_plots/"+url, "50%") -}}
+{%- endfor %}
 
-<details>
-  <summary><b>IVF truth smeared</b></summary>
-  <img src="{{ .url }}/ivf_truth_smeared_plots/covXX.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_truth_smeared_plots/covYY.pdf?to_png=1" width="50%"/>
+{% endcall %}
 
-  <img src="{{ .url }}/ivf_truth_smeared_plots/diffx.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_truth_smeared_plots/diffy.pdf?to_png=1" width="50%"/>
+{% endfor %}
 
-  <img src="{{ .url }}/ivf_truth_smeared_plots/diffz.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_truth_smeared_plots/recoOverTrue.pdf?to_png=1" width="50%"/>
-</details>
 
-<details>
-  <summary><b>IVF truth estimated</b></summary>
-  <img src="{{ .url }}/ivf_truth_estimated_plots/covXX.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_truth_estimated_plots/covYY.pdf?to_png=1" width="50%"/>
+### CKF {{ "" if all_exist(
+    "ckf_seeded_plots",
+    "ckf_truth_smeared_plots",
+    "ckf_truth_estimated_plots",
+) else ":x: "}}
 
-  <img src="{{ .url }}/ivf_truth_estimated_plots/diffx.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_truth_estimated_plots/diffy.pdf?to_png=1" width="50%"/>
+{% for mode in ["seeded", "truth_smeared", "truth_estimated"] %}
 
-  <img src="{{ .url }}/ivf_truth_estimated_plots/diffz.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_truth_estimated_plots/recoOverTrue.pdf?to_png=1" width="50%"/>
-</details>
+{% call detail_block("CKF "+mode, "ckf_"+mode+"_plots") %}
+    
+{% for url in [
+    "trackeff_vs_eta.pdf",
+    "trackeff_vs_pT.pdf",
+    "nHoles_vs_eta.pdf",
+    "nMeasurements_vs_eta.pdf",
+] -%}
+{{- make_image("ckf_"+mode+"_plots/"+url, "50%") -}}
+{%- endfor %}
 
-### CKF
+{% endcall %}
 
-<details>
-  <summary><b>seeded</b></summary>
-  <img src="{{ .url }}/ckf_seeded_plots/trackeff_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ckf_seeded_plots/trackeff_vs_pT.pdf?to_png=1" width="50%"/>
+{% endfor %}
 
-  <img src="{{ .url }}/ckf_seeded_plots/nHoles_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ckf_seeded_plots/nMeasurements_vs_eta.pdf?to_png=1" width="50%"/>
-</details>
+### Ambiguity resolution {{ "" if exists("ambi_seeded_plots") else ":x: "}}
 
-<details>
-  <summary><b>truth smeared</b></summary>
-  <img src="{{ .url }}/ckf_truth_smeared_plots/trackeff_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ckf_truth_smeared_plots/trackeff_vs_pT.pdf?to_png=1" width="50%"/>
+{% call detail_block("seeded", "ambi_seeded_plots") %}
+    
+{% for url in [
+    "trackeff_vs_eta.pdf",
+    "trackeff_vs_pT.pdf",
+    "nHoles_vs_eta.pdf",
+    "nMeasurements_vs_eta.pdf",
+] -%}
+{{- make_image("ambi_seeded_plots/"+url, "50%") -}}
+{%- endfor %}
 
-  <img src="{{ .url }}/ckf_truth_smeared_plots/nHoles_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ckf_truth_smeared_plots/nMeasurements_vs_eta.pdf?to_png=1" width="50%"/>
-</details>
+{% endcall %}
 
-<details>
-  <summary><b>truth estimated</b></summary>
-  <img src="{{ .url }}/ckf_truth_estimated_plots/trackeff_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ckf_truth_estimated_plots/trackeff_vs_pT.pdf?to_png=1" width="50%"/>
+### Truth tracking {{ "" if exists("truth_tracking_plots") else ":x: "}}
 
-  <img src="{{ .url }}/ckf_truth_estimated_plots/nHoles_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ckf_truth_estimated_plots/nMeasurements_vs_eta.pdf?to_png=1" width="50%"/>
-</details>
+{% call detail_block("Truth tracking", "truth_tracking_plots") %}
+    
+{% for url in [
+    "nHoles_vs_eta.pdf",
+    "nMeasurements_vs_eta.pdf",
+    "pull_d0.pdf",
+    "pull_z0.pdf",
+    "pull_theta.pdf",
+    "pull_phi.pdf",
+    "pull_qop.pdf",
+    "pull_t.pdf",
+] -%}
+{{- make_image("truth_tracking_plots/"+url, "50%") -}}
+{%- endfor %}
 
-### Ambiguity resolution
-
-<details>
-  <summary><b>seeded</b></summary>
-  <img src="{{ .url }}/ambi_seeded_plots/trackeff_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ambi_seeded_plots/trackeff_vs_pT.pdf?to_png=1" width="50%"/>
-
-  <img src="{{ .url }}/ambi_seeded_plots/nHoles_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ambi_seeded_plots/nMeasurements_vs_eta.pdf?to_png=1" width="50%"/>
-</details>
-
-### Truth tracking
-
-<details>
-  <summary><b>Truth tracking</b></summary>
-  <img src="{{ .url }}/truth_tracking_plots/nHoles_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/truth_tracking_plots/nMeasurements_vs_eta.pdf?to_png=1" width="50%"/>
-
-  <img src="{{ .url }}/truth_tracking_plots/pull_d0.pdf?to_png=1" width="50%"/><img src="{{ .url }}/truth_tracking_plots/pull_z0.pdf?to_png=1" width="50%"/>
-
-  <img src="{{ .url }}/truth_tracking_plots/pull_theta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/truth_tracking_plots/pull_phi.pdf?to_png=1" width="50%"/>
-
-  <img src="{{ .url }}/truth_tracking_plots/pull_qop.pdf?to_png=1" width="50%"/><img src="{{ .url }}/truth_tracking_plots/pull_t.pdf?to_png=1" width="50%"/>
-</details>
+{% endcall %}

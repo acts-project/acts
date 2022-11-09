@@ -15,11 +15,14 @@
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
+
+#include <filesystem>
 
 using namespace ActsExamples;
 
@@ -27,12 +30,13 @@ namespace {
 
 using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
-using Fitter =
-    Acts::Experimental::GaussianSumFitter<Propagator,
-                                          Acts::VectorMultiTrajectory>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
+
+using Fitter =
+    Acts::Experimental::GaussianSumFitter<Propagator, BetheHeitlerApprox,
+                                          Acts::VectorMultiTrajectory>;
 using DirectFitter =
-    Acts::Experimental::GaussianSumFitter<DirectPropagator,
+    Acts::Experimental::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
                                           Acts::VectorMultiTrajectory>;
 
 struct GsfFitterFunctionImpl
@@ -43,6 +47,7 @@ struct GsfFitterFunctionImpl
   Acts::GainMatrixUpdater updater;
 
   std::size_t maxComponents;
+  double weightCutoff;
   bool abortOnError;
   bool disableAllMaterialHandling;
 
@@ -66,8 +71,10 @@ struct GsfFitterFunctionImpl
         options.propOptions,
         &(*options.referenceSurface),
         maxComponents,
+        weightCutoff,
         abortOnError,
         disableAllMaterialHandling};
+
     gsfOptions.extensions.calibrator
         .template connect<&ActsExamples::MeasurementCalibrator::calibrate>(
             &options.calibrator.get());
@@ -106,9 +113,10 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    std::size_t maxComponents, bool abortOnError,
-    bool disableAllMaterialHandling) {
-  MultiStepper stepper(std::move(magneticField));
+    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+    double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
+    bool abortOnError, bool disableAllMaterialHandling) {
+  MultiStepper stepper(std::move(magneticField), finalReductionMethod);
 
   // Standard fitter
   Acts::Navigator::Config cfg{trackingGeometry};
@@ -117,17 +125,20 @@ ActsExamples::makeGsfFitterFunction(
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg);
   Propagator propagator(std::move(stepper), std::move(navigator));
-  Fitter trackFitter(std::move(propagator));
+  Fitter trackFitter(std::move(propagator),
+                     BetheHeitlerApprox(betheHeitlerApprox));
 
   // Direct fitter
   Acts::DirectNavigator directNavigator;
   DirectPropagator directPropagator(stepper, directNavigator);
-  DirectFitter directTrackFitter(std::move(directPropagator));
+  DirectFitter directTrackFitter(std::move(directPropagator),
+                                 BetheHeitlerApprox(betheHeitlerApprox));
 
   // build the fitter functions. owns the fitter object.
   auto fitterFunction = std::make_shared<GsfFitterFunctionImpl>(
       std::move(trackFitter), std::move(directTrackFitter));
   fitterFunction->maxComponents = maxComponents;
+  fitterFunction->weightCutoff = weightCutoff;
   fitterFunction->abortOnError = abortOnError;
   fitterFunction->disableAllMaterialHandling = disableAllMaterialHandling;
 
