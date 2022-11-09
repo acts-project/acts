@@ -36,6 +36,29 @@ IVF: [seeded]({{ .url }}/ivf_seeded.html), [truth smeared]({{ .url }}/ivf_truth_
   <img src="{{ .url }}/ivf_truth_estimated_plots/diffz.pdf?to_png=1" width="50%"/><img src="{{ .url }}/ivf_truth_estimated_plots/recoOverTrue.pdf?to_png=1" width="50%"/>
 </details>
 
+### Seeding
+
+<details>
+<summary><b>seeded</b></summary>
+<img src="{{ .url }}/seeding_seeded_plots/trackeff_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/seeding_seeded_plots/trackeff_vs_pT.pdf?to_png=1" width="50%"/>
+
+<img src="{{ .url }}/seeding_seeded_plots/duplicationRate_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/seeding_seeded_plots/duplicationRate_vs_pT.pdf?to_png=1" width="50%"/>
+</details>
+
+<details>
+<summary><b>truth smeared</b></summary>
+<img src="{{ .url }}/seeding_truth_smeared_plots/trackeff_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/seeding_truth_smeared_plots/trackeff_vs_pT.pdf?to_png=1" width="50%"/>
+
+<img src="{{ .url }}/seeding_truth_smeared_plots/duplicationRate_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/seeding_truth_smeared_plots/duplicationRate_vs_pT.pdf?to_png=1" width="50%"/>
+</details>
+
+<details>
+<summary><b>truth estimated</b></summary>
+<img src="{{ .url }}/seeding_truth_estimated_plots/trackeff_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/seeding_truth_estimated_plots/trackeff_vs_pT.pdf?to_png=1" width="50%"/>
+
+<img src="{{ .url }}/seeding_truth_estimated_plots/duplicationRate_vs_eta.pdf?to_png=1" width="50%"/><img src="{{ .url }}/seeding_truth_estimated_plots/duplicationRate_vs_pT.pdf?to_png=1" width="50%"/>
+</details>
+
 ### CKF
 
 <details>
