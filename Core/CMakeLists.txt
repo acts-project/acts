@@ -4,7 +4,8 @@ configure_file(
 
 # source files will be added later
 add_library(
-  ActsCore SHARED "")
+  ActsCore SHARED
+  Core/include/Acts/MagneticField/detail/SmallObjectCache.hpp)
 target_compile_features(
   ActsCore
   PUBLIC cxx_std_17)
