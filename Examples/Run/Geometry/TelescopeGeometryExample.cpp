@@ -15,7 +15,7 @@
 /// @param argv The argument list
 int main(int argc, char* argv[]) {
   // --------------------------------------------------------------------------------
-  TelescopeDetector detector;
+  ActsExamples::Telescope::TelescopeDetector detector;
   // now process it
   return processGeometry(argc, argv, detector);
 }

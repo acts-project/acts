@@ -5,14 +5,13 @@ import acts
 import acts.examples
 from acts.examples.simulation import addParticleGun, addGeant4, EtaConfig
 from acts.examples.odd import getOpenDataDetector
-from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 from common import getOpenDataDetectorDirectory
 
 u = acts.UnitConstants
 
 
 def runGeant4(
-    g4detectorConstruction,
+    detector,
     trackingGeometry,
     field,
     outputDir,
@@ -29,7 +28,7 @@ def runGeant4(
     outputDir = Path(outputDir)
     addGeant4(
         s,
-        g4detectorConstruction,
+        detector,
         trackingGeometry,
         field,
         outputDirCsv=outputDir / "csv",
@@ -46,6 +45,4 @@ if "__main__" == __name__:
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-    runGeant4(
-        DDG4DetectorConstruction(detector), trackingGeometry, field, Path.cwd()
-    ).run()
+    runGeant4(detector, trackingGeometry, field, Path.cwd()).run()

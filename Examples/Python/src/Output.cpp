@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/Io/Csv/CsvBFieldWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMeasurementWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvMultiTrajectoryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
@@ -35,6 +36,7 @@
 #include "ActsExamples/Validation/ResPlotTool.hpp"
 
 #include <memory>
+#include <string_view>
 
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
@@ -44,6 +46,33 @@ namespace py = pybind11;
 using namespace pybind11::literals;
 
 using namespace ActsExamples;
+
+namespace {
+template <ActsExamples::CsvBFieldWriter::CoordinateType CType, bool Grid>
+void register_csv_bfield_writer_binding(
+    pybind11::class_<ActsExamples::CsvBFieldWriter>& w) {
+  std::string name =
+      std::string(CType == ActsExamples::CsvBFieldWriter::CoordinateType::XYZ
+                      ? "Xyz"
+                      : "Rz") +
+      std::string(Grid ? "Grid" : "Gridless");
+
+  using Config = ActsExamples::CsvBFieldWriter::Config<CType, Grid>;
+  w.def_static((std::string("run") + name).c_str(),
+               [](const Config& config, Acts::Logging::Level level) {
+                 ActsExamples::CsvBFieldWriter::run(config, level);
+               },
+               py::arg("config"), py::arg("level"));
+  auto c = py::class_<Config>(w, (std::string("Config") + name).c_str())
+               .def(py::init<>());
+  ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+  ACTS_PYTHON_MEMBER(fileName);
+  ACTS_PYTHON_MEMBER(bField);
+  ACTS_PYTHON_MEMBER(range);
+  ACTS_PYTHON_MEMBER(bins);
+  ACTS_PYTHON_STRUCT_END();
+}
+}  // namespace
 
 namespace Acts::Python {
 void addOutput(Context& ctx) {
@@ -304,5 +333,20 @@ void addOutput(Context& ctx) {
       filePath, fileMode, interactionProbabilityBins, momentumBins,
       invariantMassBins, multiplicityMax, writeOptionalHistograms,
       nSimulatedEvents);
+
+  {
+    using Writer = ActsExamples::CsvBFieldWriter;
+
+    auto w = py::class_<Writer>(mex, "CsvBFieldWriter");
+
+    py::enum_<Writer::CoordinateType>(w, "CoordinateType")
+        .value("rz", Writer::CoordinateType::RZ)
+        .value("xyz", Writer::CoordinateType::XYZ);
+
+    register_csv_bfield_writer_binding<Writer::CoordinateType::XYZ, true>(w);
+    register_csv_bfield_writer_binding<Writer::CoordinateType::XYZ, false>(w);
+    register_csv_bfield_writer_binding<Writer::CoordinateType::RZ, true>(w);
+    register_csv_bfield_writer_binding<Writer::CoordinateType::RZ, false>(w);
+  }
 }
 }  // namespace Acts::Python
