@@ -53,6 +53,22 @@ def buildITkGeometry(
     equidistant = TGeoDetector.Config.BinningType.equidistant
     arbitrary = TGeoDetector.Config.BinningType.arbitrary
 
+    # ## Create TGeo geometry from `tgeo_fileName = itk-hgtd/ATLAS-ITk-HGTD.tgeo.root`.
+    # The `subVolumeName` and `sensitiveNames` specified below may change with new geometry versions
+    # in the root file (it changed ATLAS-P2-23 -> ATLAS-P2-RUN4-01-00-00).
+    # `TGeoParser` searches the tree below `subVolumeName` for all elements that match any of the
+    # list of `sensitiveNames` wildcards and also fall inside the `rRange`/`zRange` selections.
+    # If no `TGeoDetectorElements`` are found for an ACTS `Volume()`, then `TGeoDetector.create()`
+    # raises an exception along the lines of:
+    # 1. Missing tracking geometry - or
+    # 2. Incorrect binning configuration found: Number of configurations does not match number of protolayers
+    # Unless you know in advance, working out what names to change may not be trivial.
+    # I (@timadye) used a combination of
+    # * adding `printf`s in `Acts::TGeoParser::select()` (useful to find what it found with the old version),
+    # * printing object descendants from root (good for making long lists, but navigation cumbersome), and
+    # * browsing `TGeoManager` with ROOT's `TBrowser` (easy to navigate, but have to scan through long lists by eye).
+    # If the detector has moved significantly, it may be necessary to change the `rRange`/`zRange`.
+    # This specification should be kept in sync with `itk-hgtd/tgeo-atlas-itk-hgtd.json`.
     return TGeoDetector.create(
         fileName=str(tgeo_fileName),
         mdecorator=matDeco,
