@@ -41,7 +41,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 
   [[maybe_unused]] const auto& gctx_ref = gctx;
-  assert(checkContainment(gctx));
+  assert(checkContainment(gctx) && "Objects are not contained by volume.");
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
