@@ -36,7 +36,7 @@ void to_json(nlohmann::json& j, const GenericCuboidVolumeBounds& bounds);
 ///
 /// @return a shared_ptr to a surface object for type polymorphism
 template <typename bounds_t>
-std::unique_ptr<bounds_t> volumeBoundsFromJson(const nlohmann::json& j){
+std::unique_ptr<bounds_t> volumeBoundsFromJson(const nlohmann::json& j) {
   const size_t kValues = bounds_t::BoundValues::eSize;
   std::array<ActsScalar, kValues> bValues;
   std::vector<ActsScalar> bVector = j["values"];
@@ -45,14 +45,15 @@ std::unique_ptr<bounds_t> volumeBoundsFromJson(const nlohmann::json& j){
 }
 
 inline std::unique_ptr<GenericCuboidVolumeBounds> genericVolumeBoundsFromJson(
-    const nlohmann::json& j){
+    const nlohmann::json& j) {
   auto json_vertices = j["values"];
   std::array<Vector3, 8> vertices;
   for (size_t i = 0; i < 8; i++) {
-    vertices[i] << json_vertices[i][0], json_vertices[i][1], json_vertices[i][2];
+    vertices[i] << json_vertices[i][0], json_vertices[i][1],
+        json_vertices[i][2];
   }
   return std::make_unique<GenericCuboidVolumeBounds>(vertices);
-  }
+}
 
 /// Conversion to surfaceBounds from json
 /// @param j the read-in json object
