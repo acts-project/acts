@@ -105,7 +105,7 @@ namespace ActsExamples {
 /// single layer, the int refers to the number of hits in the bin of the
 /// houghHist
 //// For the total houghHist, the int counts the number of layers with one or
-///more
+/// more
 /// hit in that bin
 // The unsigned is a counter that will point to a spacepoint or to a measurement
 // object
