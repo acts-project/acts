@@ -18,7 +18,7 @@
 #include <assert.h>
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const GeometryContext&, const std::string& name,
+    const GeometryContext& gctx, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
@@ -39,6 +39,9 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 
   m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
+
+  [[maybe_unused]] const auto& gctx_ref = gctx;
+  assert(checkContainment(gctx));
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
@@ -135,12 +138,6 @@ void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdator(
   m_SurfaceCandidatesUpdator = std::move(navStateUpdator);
   m_surfaces = ObjectStore<std::shared_ptr<Surface>>(surfaces);
   m_volumes = ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
-
-  // This can take a while for complicated geometries
-  // it also needs a geometry context, needs to be figured out
-  // if (not checkContainment(GeometryContext)) {
-  //  throw std::runtime_error("Objects are not contained by volume.");
-  //}
 }
 
 Acts::Extent Acts::Experimental::DetectorVolume::extent(
