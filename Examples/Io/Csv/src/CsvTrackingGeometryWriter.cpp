@@ -99,7 +99,7 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
     (*dataBoundParameters[ipar]) = boundValues[ipar];
   }
 
-  if (surface.associatedDetectorElement()) {
+  if (surface.associatedDetectorElement() != nullptr) {
     data.module_t = surface.associatedDetectorElement()->thickness() /
                     Acts::UnitConstants::mm;
 
@@ -107,13 +107,13 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
         dynamic_cast<const Acts::IdentifiedDetectorElement*>(
             surface.associatedDetectorElement());
 
-    if (detElement and detElement->digitizationModule()) {
+    if (detElement != nullptr and detElement->digitizationModule()) {
       auto dModule = detElement->digitizationModule();
       // dynamic_cast to CartesianSegmentation
       const auto* cSegmentation =
           dynamic_cast<const Acts::CartesianSegmentation*>(
               &(dModule->segmentation()));
-      if (cSegmentation) {
+      if (cSegmentation != nullptr) {
         auto pitch = cSegmentation->pitch();
         data.pitch_u = pitch.first / Acts::UnitConstants::mm;
         data.pitch_v = pitch.second / Acts::UnitConstants::mm;
