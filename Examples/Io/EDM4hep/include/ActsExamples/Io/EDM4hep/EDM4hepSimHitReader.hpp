@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
@@ -39,8 +39,8 @@ class EDM4hepSimHitReader final : public IReader {
     std::string outputParticles;
     /// Output simulated (truth) hits collection.
     std::string outputSimHits;
-    /// DD4hep geometry service for cellID resolution.
-    std::shared_ptr<DD4hep::DD4hepGeometryService> dd4hepGeometryService;
+    /// DD4hep detector for cellID resolution.
+    std::shared_ptr<DD4hep::DD4hepDetector> dd4hepDetector;
   };
 
   /// Construct the simhit reader.

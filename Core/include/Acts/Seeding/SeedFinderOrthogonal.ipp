@@ -250,6 +250,24 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
 
+  // apply cut on the number of top SP if seedConfirmation is true
+  if (m_config.seedConfirmation == true) {
+    // check if middle SP is in the central or forward region
+    SeedConfirmationRangeConfig seedConfRange =
+        (middle.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         middle.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+            ? m_config.forwardSeedConfirmationRange
+            : m_config.centralSeedConfirmationRange;
+    // set the minimum number of top SP depending on whether the middle SP is
+    // in the central or forward region
+    seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
+                                       ? seedConfRange.nTopForLargeR
+                                       : seedConfRange.nTopForSmallR;
+    if (top.size() < seedFilterState.nTopSeedConf) {
+      return;
+    }
+  }
+
   std::vector<internal_sp_t *> top_valid;
   std::vector<float> curvatures;
   std::vector<float> impactParameters;

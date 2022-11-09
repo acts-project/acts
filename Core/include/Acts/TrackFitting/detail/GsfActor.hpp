@@ -15,10 +15,10 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/detail/GsfSmoothing.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
@@ -107,7 +107,7 @@ struct GsfActor {
     std::optional<std::size_t> numberMeasurements;
 
     /// The extensions
-    GsfExtensions<traj_t> extensions;
+    Experimental::GsfExtensions<traj_t> extensions;
   } m_cfg;
 
   /// Stores meta information about the components
@@ -189,7 +189,8 @@ struct GsfActor {
                  << result.parentTips.size() << " vs "
                  << stepper.numberComponents(state.stepping));
 
-      return set_error_or_abort(GsfError::ComponentNumberMismatch);
+      return set_error_or_abort(
+          Experimental::GsfError::ComponentNumberMismatch);
     }
 
     // There seem to be cases where this is not always after initializing the
@@ -346,6 +347,13 @@ struct GsfActor {
                                old_bound.position(state.stepping.geoContext),
                                old_bound.unitDirection());
     slab.scaleThickness(pathCorrection);
+
+    // Emit a warning if the approximation is not valid for this x/x0
+    if (not m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
+      ACTS_WARNING(
+          "Bethe-Heitler approximation encountered invalid value for x/x0="
+          << slab.thicknessInX0() << " at surface " << surface.geometryId());
+    }
 
     // Get the mixture
     const auto mixture =

@@ -11,5 +11,7 @@
 #include "RecTruthTracks.hpp"
 
 int main(int argc, char* argv[]) {
-  return runRecTruthTracks(argc, argv, std::make_shared<TelescopeDetector>());
+  return runRecTruthTracks(
+      argc, argv,
+      std::make_shared<ActsExamples::Telescope::TelescopeDetector>());
 }

@@ -15,9 +15,11 @@ from acts.examples.reconstruction import (
     TruthSeedRanges,
     addCKFTracks,
     CKFPerformanceConfig,
+    TrackSelectorRanges,
+    addAmbiguityResolution,
+    AmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
-    TrackSelectorRanges,
 )
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
@@ -47,6 +49,11 @@ if not ttbar_pu200:
         MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
         EtaConfig(-3.0, 3.0, uniform=True),
         ParticleConfig(2, acts.PdgParticle.eMuon, randomizeCharge=True),
+        vtxGen=acts.examples.GaussianVertexGenerator(
+            stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+            mean=acts.Vector4(0, 0, 0, 0),
+        ),
+        multiplicity=50,
         rnd=rnd,
     )
 else:
@@ -98,16 +105,22 @@ addCKFTracks(
     trackingGeometry,
     field,
     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 3.0), removeNeutral=True),
+    outputDirRoot=outputDir,
+)
+
+addAmbiguityResolution(
+    s,
+    AmbiguityResolutionConfig(maximumSharedHits=3),
+    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
 
 addVertexFitting(
     s,
     field,
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 3.0), removeNeutral=True),
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
-    trajectories="trajectories",
 )
 
 s.run()
