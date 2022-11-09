@@ -44,7 +44,7 @@ function full_chain() {
     fi
     echo $config
     
-		run \
+    run \
         $outdir/performance_seeding_hists_${suffix}.root \
         $refdir/performance_seeding_hists_${suffix}.root \
         --title "Seeding ${suffix}" \
@@ -52,7 +52,7 @@ function full_chain() {
         -o $outdir/seeding_${suffix}.html \
         -p $outdir/seeding_${suffix}_plots
     
-		run \
+    run \
         $outdir/performance_ckf_${suffix}.root \
         $refdir/performance_ckf_${suffix}.root \
         --title "CKF ${suffix}" \
@@ -99,8 +99,8 @@ run \
     $outdir/acts_analysis_residuals_and_pulls.root \
     $refdir/acts_analysis_residuals_and_pulls.root \
     --title "analysis_residuals_and_pulls" \
-    -o $outdir/analysis_residuals_and_pulls.html \
-    -p $outdir/analysis_residuals_and_pulls
+#    -o $outdir/analysis_residuals_and_pulls.html \
+#    -p $outdir/analysis_residuals_and_pulls
 
 Examples/Scripts/vertex_mu_scan.py \
     $outdir/performance_vertexing_*mu*.root \
