@@ -22,6 +22,11 @@ struct MultiStepperSurfaceReached {
   /// implementation
   bool averageOnSurface = true;
 
+  /// A configurable tolerance within which distance to the intersection we
+  /// consider the surface as reached. Has no effect if averageOnSurface is
+  /// false
+  double averageOnSurfaceTolerance = 0.2;
+
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -66,7 +71,7 @@ struct MultiStepperSurfaceReached {
 
       if (sIntersection.intersection.status ==
               Intersection3D::Status::onSurface or
-          sIntersection.intersection.pathLength < 0.2) {
+          sIntersection.intersection.pathLength < averageOnSurfaceTolerance) {
         ACTS_VERBOSE("Reached target in average mode");
         state.navigation.currentSurface = &targetSurface;
         state.navigation.targetReached = true;
