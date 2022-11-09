@@ -52,7 +52,7 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
   m_volumeUpdators[odx] = std::move(other->m_volumeUpdators[odx]);
   m_attachedVolumes[odx] = other->m_attachedVolumes[odx];
 
-  // And finally overwrite
+  // And finally overwrite the original portal
   other = getSharedPtr();
 }
 
