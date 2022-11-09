@@ -101,7 +101,13 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
     (False, True, "truth_estimated"),
     (False, False, "seeded"),
 ]:
-    s = acts.examples.Sequencer(events=500, numThreads=1, logLevel=acts.logging.INFO)
+    # TODO There seems to be a difference to the reference files when using
+    # multithreading ActsAnalysisResidualsAndPulls
+    s = acts.examples.Sequencer(
+        events=500,
+        numThreads=1 if label == "seeded" else -1,
+        logLevel=acts.logging.INFO,
+    )
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
@@ -236,7 +242,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
 for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
     for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
         start = datetime.datetime.now()
-        s = acts.examples.Sequencer(events=5, numThreads=1, logLevel=acts.logging.INFO)
+        s = acts.examples.Sequencer(events=5, numThreads=-1, logLevel=acts.logging.INFO)
 
         with tempfile.TemporaryDirectory() as temp:
             tp = Path(temp)

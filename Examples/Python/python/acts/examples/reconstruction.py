@@ -66,6 +66,7 @@ SeedFilterConfigArg = namedtuple(
     "SeedFilterConfig",
     [
         "impactWeightFactor",
+        "zOriginWeightFactor",
         "compatSeedWeight",
         "compatSeedLimit",
         "numSeedIncrement",
@@ -77,7 +78,7 @@ SeedFilterConfigArg = namedtuple(
         "useDeltaRorTopRadius",
         "deltaRMin",
     ],
-    defaults=[None] * 11,
+    defaults=[None] * 12,
 )
 
 SpacePointGridConfigArg = namedtuple(
@@ -368,6 +369,7 @@ def addSeeding(
                         else seedFilterConfigArg.deltaRMin
                     ),
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+                    zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
                     compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
                     numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
@@ -488,6 +490,7 @@ def addSeeding(
                         else seedFilterConfigArg.deltaRMin
                     ),
                     impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+                    zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
                     compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
                     compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
                     numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
@@ -642,9 +645,11 @@ def addTruthTrackingGsf(
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     gsfOptions = {
+        "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
         "maxComponents": 12,
         "abortOnError": False,
         "disableAllMaterialHandling": False,
+        "finalReductionMethod": acts.examples.FinalReductionMethod.mean,
     }
 
     gsfAlg = acts.examples.TrackFittingAlgorithm(

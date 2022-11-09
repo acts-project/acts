@@ -50,6 +50,13 @@ A common use case of this is electron fitting. The energy-loss of Bremsstrahlung
 
 To implement the GSF, a special stepper is needed, that can handle a multi-component state internally: The {class}`Acts::MultiEigenStepperLoop`. On a surface with material, the Bethe-Heitler energy-loss distribution is approximated with a fixed number of gaussian distributions for each component. Since the number of components would grow exponentially with each material interaction, components that are close in terms of their *Kullback–Leibler divergence* are merged to limit the computational cost. The Kalman update mechanism is based on the code for the {class}`Acts::KalmanFitter`.
 
+At the end of the fit the multi-component state must be reduced to a single set of parameters with a corresponding covariance matrix. This is supported by the {class}`Acts::MultiEigenStepperLoop` in two different ways currently: The *mean* method computes the mean of the state and the covariance matrix of the multi-component state, whereas the *maximum weight* method just returns the component with the maximum weight. This can be configured in the constructor of the {class}`Acts::MultiEigenStepperLoop` with the {enum}`Acts::FinalReductionMethod`. In the future there is planned to add a *mode* finding method as well.
+
+:::{note}
+In practice it turned out that the *maximum weight* method leads to better results so far.
+:::
+
+
 ### Using the GSF
 
 The GSF is implemented in the class {class}`Acts::Experimental::GaussianSumFitter`. The interface of its `fit(...)`-functions is very similar to the one of the {class}`Acts::KalmanFitter` (one for the standard {class}`Acts::Navigator` and one for the {class}`Acts::DirectNavigator` that takes an additional `std::vector<const Acts::Surface *>` as an argument):
@@ -69,15 +76,20 @@ A GSF example can be found in the Acts Examples Framework [here](https://github.
 
 ### Customizing the Bethe-Heitler approximation
 
-To be able to evaluate the approximation of the Bethe-Heitler distribution for different materials and thicknesses, the individual gaussian components (weight, mean, variance of the ratio $E_f/E_i$) are parameterized as polynomials in $x/x_0$. The default parametrization uses 6 components and 5th order polynomials.
+The GSF needs an approximation of the Bethe-Heitler distribution as a Gaussian mixture on each material interaction (see above). This task is delegated to a separate class, that can be provided by a template parameter to {class}`Acts::Experimental::GaussianSumFitter`, so in principle it can be implemented in different ways.
 
-This approximation of the Bethe-Heitler distribution is described in {class}`Acts::detail::BetheHeitlerApprox`. The class is templated on the number of components and the degree of the polynomial, and is designed to be used with the [parameterization files from ATLAS](https://gitlab.cern.ch/atlas/athena/-/tree/master/Tracking/TrkFitter/TrkGaussianSumFilter/Data). However, in principle the GSF could be constructed with custom classes with the same interface as {class}`Acts::detail::BetheHeitlerApprox`.
+However, ACTS ships with the class {class}`Acts::Experimental::AtlasBetheHeitlerApprox` that implements the ATLAS strategy for this task: To be able to evaluate the approximation of the Bethe-Heitler distribution for different materials and thicknesses, the individual Gaussian components (weight, mean, variance of the ratio $E_f/E_i$) are parametrised as polynomials in $x/x_0$. This class can load files in the ATLAS format that can be found [here](https://gitlab.cern.ch/atlas/athena/-/tree/master/Tracking/TrkFitter/TrkGaussianSumFilter/Data). A default parameterization can be created with {func}`Acts::Experimental::makeDefaultBetheHeitlerApprox`.
 
-For small $x/x_0$ the {class}`Acts::detail::BetheHeitlerApprox` only returns a one-component mixture or no change at all. When loading a custom parametrization, it is possible to specify different parameterizations for high and for low $x/x_0$. The thresholds are currently not configurable.
+The {class}`Acts::Experimental::AtlasBetheHeitlerApprox` is constructed with two parameterizations, allowing to use different parameterizations for different $x/x_0$. In particular, it has this behaviour:
+* $x/x_0 < 0.0001$: Return no change
+* $x/x_0 < 0.002$: Return a single gaussian approximation
+* $x/x_0 < 0.1$: Return the approximation for low $x/x_0$.
+* $x/x_0 \geq 0.1$: Return the approximation for high $x/x_0$. The maximum possible value is $x/x_0 = 0.2$, for higher values it is clipped to 0.2 and the GSF emits a warning.
 
 ### Further reading
 * *Thomas Atkinson*, Electron reconstruction with the ATLAS inner detector, 2006, see [here](https://cds.cern.ch/record/1448253)
 * *R Frühwirth*, Track fitting with non-Gaussian noise, 1997, see [here](https://doi.org/10.1016/S0010-4655(96)00155-5)
+* *R Frühwirth*, A Gaussian-mixture approximation of the Bethe–Heitler model of electron energy loss by bremsstrahlung, 2003, see [here](https://doi.org/10.1016/S0010-4655(03)00292-3)
 
 (gx2f_core)=
 ## Global Chi-Square Fitter (GX2F) [wip]

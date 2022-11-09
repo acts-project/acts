@@ -43,6 +43,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(deltaInvHelixDiameter);
     ACTS_PYTHON_MEMBER(impactWeightFactor);
+    ACTS_PYTHON_MEMBER(zOriginWeightFactor);
     ACTS_PYTHON_MEMBER(compatSeedWeight);
     ACTS_PYTHON_MEMBER(deltaRMin);
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
