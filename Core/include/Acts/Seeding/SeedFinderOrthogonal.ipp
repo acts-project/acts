@@ -694,10 +694,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
         continue;
       }
       if (rM > rMiddleMaxSPRange) {
-        // break if SP are sorted in r
-        if (m_config.forceRadialSorting) {
-          break;
-        }
         continue;
       }
     } else {
@@ -705,9 +701,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
         continue;
       }
       if (rM < m_config.rMinMiddle) {
-        if (m_config.forceRadialSorting) {
-          break;
-        }
         continue;
       }
     }

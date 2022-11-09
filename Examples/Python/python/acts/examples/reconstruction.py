@@ -466,7 +466,6 @@ def addSeeding(
                     maxPtScattering=seedFinderConfigArg.maxPtScattering,
                     rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
                     useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
-                    forceRadialSorting=seedFinderConfigArg.forceRadialSorting,
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
                     centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
                     forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
