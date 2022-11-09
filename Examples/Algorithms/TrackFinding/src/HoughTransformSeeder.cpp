@@ -132,40 +132,40 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
 
   // loop over our subregions and run the Hough Transform on each
   for (auto subregion : m_cfg.subRegions) {
-     ActsExamples::HoughHist m_houghHist = createHoughHist(subregion);
-     
-     for (unsigned y = 0; y < m_cfg.houghHistSize_y; y++) {
-        for (unsigned x = 0; x < m_cfg.houghHistSize_x; x++) {
-           if (passThreshold(m_houghHist, x, y)) {
-              /* now we need to unpack the hits; there should be multiple track
-                 candidates if we have multiple hits in a given layer So the first
-                 thing is to unpack the indices (which is what we need) by layer */
-              std::vector<std::vector<Index>> hitIndicesAll(
-                 m_cfg.nLayers);  // [layer,Index]
-              std::vector<size_t> nHitsPerLayer(m_cfg.nLayers);
-              for (auto measurementIndex : m_houghHist(y, x).second) {
-                 HoughMeasurementStruct* meas =
-                    houghMeasurementStructs[measurementIndex].get();
-                 hitIndicesAll[meas->layer].push_back(meas->index);
-                 nHitsPerLayer[meas->layer]++;
+    ActsExamples::HoughHist m_houghHist = createHoughHist(subregion);
+
+    for (unsigned y = 0; y < m_cfg.houghHistSize_y; y++) {
+      for (unsigned x = 0; x < m_cfg.houghHistSize_x; x++) {
+        if (passThreshold(m_houghHist, x, y)) {
+          /* now we need to unpack the hits; there should be multiple track
+             candidates if we have multiple hits in a given layer So the first
+             thing is to unpack the indices (which is what we need) by layer */
+          std::vector<std::vector<Index>> hitIndicesAll(
+              m_cfg.nLayers);  // [layer,Index]
+          std::vector<size_t> nHitsPerLayer(m_cfg.nLayers);
+          for (auto measurementIndex : m_houghHist(y, x).second) {
+            HoughMeasurementStruct* meas =
+                houghMeasurementStructs[measurementIndex].get();
+            hitIndicesAll[meas->layer].push_back(meas->index);
+            nHitsPerLayer[meas->layer]++;
+          }
+
+          std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
+
+          for (auto [icomb, hit_indices] :
+               Acts::enumerate(combs)) {  // loop over all the combination
+
+            ProtoTrack protoTrack;
+            for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
+              if (hit_indices[layer] >= 0) {
+                protoTrack.push_back(hitIndicesAll[layer][hit_indices[layer]]);
               }
-              
-              std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
-              
-              for (auto [icomb, hit_indices] :
-                      Acts::enumerate(combs)) {  // loop over all the combination
-                 
-                 ProtoTrack protoTrack;
-                 for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
-                    if (hit_indices[layer] >= 0) {
-                       protoTrack.push_back(hitIndicesAll[layer][hit_indices[layer]]);
-                    }
-                 }
-                 protoTracks.push_back(protoTrack);
-              }
-           }
+            }
+            protoTracks.push_back(protoTrack);
+          }
         }
-     }
+      }
+    }
   }
   ACTS_DEBUG("Created " << protoTracks.size() << " track seeds");
 
@@ -200,10 +200,10 @@ ActsExamples::HoughTransformSeeder::createLayerHoughHist(unsigned layer,
           yToXBins(y_bin_min, y_bin_max, meas->radius, meas->phi, meas->layer);
       // Update the houghHist
       for (unsigned y = y_bin_min; y < y_bin_max; y++) {
-         for (unsigned x = xBins.first; x < xBins.second; x++) {
-            houghHist(y, x).first++;
-            houghHist(y, x).second.insert(index);
-         }
+        for (unsigned x = xBins.first; x < xBins.second; x++) {
+          houghHist(y, x).first++;
+          houghHist(y, x).second.insert(index);
+        }
       }
     }
   }
@@ -219,13 +219,13 @@ ActsExamples::HoughHist ActsExamples::HoughTransformSeeder::createHoughHist(
   for (unsigned i = 0; i < m_cfg.nLayers; i++) {
     HoughHist layerHoughHist = createLayerHoughHist(i, subregion);
     for (unsigned x = 0; x < m_cfg.houghHistSize_x; ++x) {
-       for (unsigned y = 0; y < m_cfg.houghHistSize_y; ++y) {
-          if (layerHoughHist(y, x).first > 0) {
-             houghHist(y, x).first++;
-             houghHist(y, x).second.insert(layerHoughHist(y, x).second.begin(),
-                                           layerHoughHist(y, x).second.end());
-          }
-       }
+      for (unsigned y = 0; y < m_cfg.houghHistSize_y; ++y) {
+        if (layerHoughHist(y, x).first > 0) {
+          houghHist(y, x).first++;
+          houghHist(y, x).second.insert(layerHoughHist(y, x).second.begin(),
+                                        layerHoughHist(y, x).second.end());
+        }
+      }
     }
   }
 
@@ -240,9 +240,9 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
     return false;
   }
   for (unsigned i = 0; i < m_cfg.threshold.size(); i++) {
-     if (houghHist(y, x - width + i).first < m_cfg.threshold[i]) {
-        return false;
-     }
+    if (houghHist(y, x - width + i).first < m_cfg.threshold[i]) {
+      return false;
+    }
   }
 
   // Pass local-maximum check, if used
@@ -252,12 +252,12 @@ bool ActsExamples::HoughTransformSeeder::passThreshold(
       for (int i = -m_cfg.localMaxWindowSize; i <= m_cfg.localMaxWindowSize;
            i++) {
         if (i == 0 && j == 0) {
-         continue;
+          continue;
         }
         if (y + j < houghHist.size(0) && x + i < houghHist.size(1)) {
-           if (houghHist(y + j, x + i).first > houghHist(y, x).first) {
+          if (houghHist(y + j, x + i).first > houghHist(y, x).first) {
             return false;
-           }
+          }
           if (houghHist(y + j, x + i).first == houghHist(y, x).first) {
             if (houghHist(y + j, x + i).second.size() >
                 houghHist(y, x).second.size()) {
@@ -365,11 +365,11 @@ unsigned ActsExamples::HoughTransformSeeder::getExtension(
     // different extension for low pt vs high pt, split in half but irrespective
     // of sign first nLayers entries of m_hitExtend_x is for low pt half, rest
     // are for high pt half
-     if (y < m_cfg.houghHistSize_y / 4 || y > 3 * m_cfg.houghHistSize_y / 4) {
-        return m_cfg.hitExtend_x[layer];
-     }
+    if (y < m_cfg.houghHistSize_y / 4 || y > 3 * m_cfg.houghHistSize_y / 4) {
+      return m_cfg.hitExtend_x[layer];
+    }
 
-     return m_cfg.hitExtend_x[m_cfg.nLayers + layer];
+    return m_cfg.hitExtend_x[m_cfg.nLayers + layer];
   }
   return 0;
 }
@@ -410,8 +410,8 @@ ActsExamples::HoughTransformSeeder::getComboIndices(
   for (size_t icomb = 0; icomb < nCombs; icomb++) {
     size_t index = icomb;
     for (size_t isize = sizes.size() - 1; isize < sizes.size(); isize--) {
-      if (sizes[isize] == 0)  {
-       continue;
+      if (sizes[isize] == 0) {
+        continue;
       }
       combos[icomb][isize] = static_cast<int>(index / nCombs_prior[isize]);
       index = index % nCombs_prior[isize];
