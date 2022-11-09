@@ -41,10 +41,7 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
         "Portal: trying to fuse portal (keep) with no links.");
   }
   // And now check other direction
-  NavigationDirection oDir = (tDir == NavigationDirection::Forward)
-                                 ? NavigationDirection::Backward
-                                 : NavigationDirection::Forward;
-
+  NavigationDirection oDir = invertDirection(tDir);
   if (other->m_volumeUpdators[indexFromDirection(oDir)].implementation ==
       nullptr) {
     throw std::runtime_error(

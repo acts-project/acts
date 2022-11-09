@@ -37,15 +37,34 @@ static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
 enum class NavigationDirection : int { Backward = -1, Forward = 1 };
 
 /// Convert navigation dir to index [0,1] which allows to
-/// store direction dependent objects in std::array<T,2u> e.g.
+/// store direction dependent objects in std::array<T,2u>
+///
+/// @param nDir is the navigation direction at input
+///
+/// returns either 0 or 1
 inline constexpr size_t indexFromDirection(NavigationDirection nDir) {
   return static_cast<size_t>((static_cast<int>(nDir) + 1) / 2);
 }
 
-inline constexpr NavigationDirection directionFromStepSize(double value) {
+/// This turns a signed value into a navigation direction
+///
+/// @param value is the signed value
+///
+/// @return a navigation direciton enum
+inline constexpr NavigationDirection directionFromStepSize(ActsScalar value) {
   assert(value != 0);
   return value > 0 ? NavigationDirection::Forward
                    : NavigationDirection::Backward;
+}
+
+/// Invert a navigation direction enum
+///
+/// @param nDir is the navigation direction at input
+///
+/// return an opposite navigation direction
+inline constexpr NavigationDirection invertDirection(NavigationDirection nDir) {
+  return (nDir == NavigationDirection::Forward) ? NavigationDirection::Backward
+                                                : NavigationDirection::Forward;
 }
 
 std::ostream& operator<<(std::ostream& os, NavigationDirection navDir);
