@@ -111,8 +111,9 @@ ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    bool abortOnError, bool disableAllMaterialHandling) {
-  MultiStepper stepper(std::move(magneticField));
+    Acts::FinalReductionMethod finalReductionMethod, bool abortOnError,
+    bool disableAllMaterialHandling) {
+  MultiStepper stepper(std::move(magneticField), finalReductionMethod);
 
   // Standard fitter
   Acts::Navigator::Config cfg{trackingGeometry};
