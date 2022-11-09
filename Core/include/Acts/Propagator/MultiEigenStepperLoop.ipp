@@ -13,10 +13,19 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
+  assert(!state.components.empty());
+
   if (numberComponents(state) == 1) {
     return SingleStepper::boundState(state.components.front().state, surface,
                                      transportCov, freeToBoundCorrection);
-  } else {  // Do the combinatio
+  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
+    auto cmpIt = std::max_element(
+        state.components.begin(), state.components.end(),
+        [](const auto& a, const auto& b) { return a.weight < b.weight; });
+
+    return SingleStepper::boundState(cmpIt->state, surface, transportCov,
+                                     freeToBoundCorrection);
+  } else {
     SmallVector<std::pair<double, BoundTrackParameters>> states;
     double accumulatedPathLength = 0.0;
     int failedBoundTransforms = 0;
@@ -43,16 +52,12 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       return MultiStepperError::SomeComponentsConversionToBoundFailed;
     }
 
-    // TODO At ATLAS, the final parameters seem to be computed with the mode of
-    // the mixture. At the moment, we use the mean of the mixture here, but
-    // there should be done a comparison sometimes in the future. This could
-    // also be configurable maybe...
     const auto proj = [&](const auto& wbs) {
       return std::tie(wbs.first, wbs.second.parameters(),
                       wbs.second.covariance());
     };
 
-    const auto [params, cov] =
+    auto [params, cov] =
         detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
           return detail::combineGaussianMixture(states, proj, desc);
         });
@@ -66,9 +71,17 @@ template <typename E, typename R, typename A>
 auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
                                                       bool transportCov) const
     -> CurvilinearState {
+  assert(!state.components.empty());
+
   if (numberComponents(state) == 1) {
     return SingleStepper::curvilinearState(state.components.front().state,
                                            transportCov);
+  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
+    auto cmpIt = std::max_element(
+        state.components.begin(), state.components.end(),
+        [](const auto& a, const auto& b) { return a.weight < b.weight; });
+
+    return SingleStepper::curvilinearState(cmpIt->state, transportCov);
   } else {
     Vector4 pos4 = Vector4::Zero();
     Vector3 dir = Vector3::Zero();
@@ -76,10 +89,6 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     BoundSymMatrix cov = BoundSymMatrix::Zero();
     ActsScalar pathLenth = 0.0;
 
-    // TODO At ATLAS, the final parameters seem to be computed with the mode of
-    // the mixture. At the moment, we use the mean of the mixture here, but
-    // there should be done a comparison sometimes in the future. This could
-    // also be configurable maybe...
     for (auto i = 0ul; i < numberComponents(state); ++i) {
       const auto [cp, jac, pl] = SingleStepper::curvilinearState(
           state.components[i].state, transportCov);

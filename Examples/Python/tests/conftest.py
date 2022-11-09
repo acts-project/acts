@@ -332,6 +332,10 @@ def fatras(ptcl_gun, trk_geo, rng):
             trackingGeometry=trk_geo,
             magneticField=field,
             generateHitsOnSensitive=True,
+            emScattering=False,
+            emEnergyLossIonisation=False,
+            emEnergyLossRadiation=False,
+            emPhotonConversion=False,
         )
 
         s.addAlgorithm(simAlg)
