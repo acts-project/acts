@@ -52,7 +52,7 @@ function full_chain() {
         -o $outdir/seeding_${suffix}.html \
         -p $outdir/seeding_${suffix}_plots
     
-    run \
+		run \
         $outdir/performance_ckf_${suffix}.root \
         $refdir/performance_ckf_${suffix}.root \
         --title "CKF ${suffix}" \
