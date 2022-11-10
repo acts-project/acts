@@ -67,30 +67,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
-  std::vector<Acts::BoundTrackParameters> inputTrackParameters;
-  std::vector<const Acts::BoundTrackParameters*> inputTrackPointers;
-
-  if (!m_cfg.inputTrackParameters.empty()) {
-    const auto& tmp =
-        ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
-            m_cfg.inputTrackParameters);
-    inputTrackParameters = tmp;
-    inputTrackPointers = makeTrackParametersPointerContainer(tmp);
-  } else {
-    const auto& inputTrajectories =
-        ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
-
-    for (const auto& trajectories : inputTrajectories) {
-      for (auto tip : trajectories.tips()) {
-        if (!trajectories.hasTrackParameters(tip)) {
-          continue;
-        }
-        const auto& trackParam = trajectories.trackParameters(tip);
-        inputTrackParameters.push_back(trackParam);
-        inputTrackPointers.push_back(&trackParam);
-      }
-    }
-  }
+  auto [inputTrackParameters, inputTrackPointers] =
+      makeParameterContainers(m_cfg, ctx);
 
   ACTS_VERBOSE("Have " << inputTrackParameters.size() << " track parameters");
   const auto& protoVertices =

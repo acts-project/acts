@@ -19,13 +19,17 @@ namespace ActsExamples {
 class TrackSelector final : public BareAlgorithm {
  public:
   struct Config {
-    /// Optional. Input track parameters collection.
+    /// Optional. Input track parameters collection. Mutually exclusive with
+    /// trajectories input.
     std::string inputTrackParameters;
-    /// Optional. Input trajectories container.
+    /// Optional. Input trajectories container. Mutually exclusive with track
+    /// parameters input.
     std::string inputTrajectories;
-    /// Optional. Output track parameters collection.
+    /// Optional. Output track parameters collection. Will only be set if track
+    /// parameters input was set.
     std::string outputTrackParameters;
-    /// Optional. Output trajectories container.
+    /// Optional. Output trajectories container. Will only be set if
+    /// trajectories input was set
     std::string outputTrajectories;
 
     // Minimum/maximum local positions.
