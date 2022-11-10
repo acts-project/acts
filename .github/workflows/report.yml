@@ -92,6 +92,7 @@ jobs:
         if: steps.get-pr-number.outputs.result != 'false'
         run: |
           pip install Jinja2
+          ls -al $GITHUB_WORKSPACE/physmon
           CI/physmon/generate_comment.py $GITHUB_WORKSPACE/physmon comment.md
           cat comment.md
 
