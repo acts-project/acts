@@ -33,6 +33,7 @@ from acts.examples import (
     RootMaterialWriter,
     RootPlanarClusterWriter,
     RootSimHitWriter,
+    RootSpacepointWriter,
     RootTrajectoryStatesWriter,
     RootTrajectorySummaryWriter,
     RootVertexPerformanceWriter,
@@ -40,6 +41,7 @@ from acts.examples import (
     CsvParticleWriter,
     CsvPlanarClusterWriter,
     CsvSimHitWriter,
+    CsvSpacepointWriter,
     CsvMultiTrajectoryWriter,
     CsvTrackingGeometryWriter,
     CsvMeasurementWriter,
@@ -202,6 +204,28 @@ def test_root_simhits_writer(tmp_path, fatras, conf_const, assert_root_hash):
     assert out.stat().st_size > 2e4
     assert_root_hash(out.name, out)
 
+@pytest.mark.root
+def test_root_spacepoints_writer(tmp_path, fatras, conf_const, assert_root_hash):
+    s = Sequencer(numThreads=1, events=10)
+    evGen, simAlg, digiAlg = fatras(s)
+
+    out = tmp_path / "sp.root"
+
+    assert not out.exists()
+
+    s.addWriter(
+        conf_const(
+            RootSpacepointWriter,
+            level=acts.logging.INFO,
+            inputSimHits=simAlg.config.outputSpacepoints,
+            filePath=str(out),
+        )
+    )
+
+    s.run()
+    assert out.exists()
+    assert out.stat().st_size > 2e4
+    assert_root_hash(out.name, out)
 
 @pytest.mark.root
 def test_root_clusters_writer(
@@ -286,6 +310,29 @@ def test_csv_simhits_writer(tmp_path, fatras, conf_const):
             CsvSimHitWriter,
             level=acts.logging.INFO,
             inputSimHits=simAlg.config.outputSimHits,
+            outputDir=str(out),
+            outputStem="hits",
+        )
+    )
+
+    s.run()
+    assert len([f for f in out.iterdir() if f.is_file()]) == s.config.events
+    assert all(f.stat().st_size > 200 for f in out.iterdir())
+
+
+@pytest.mark.csv
+def test_csv_spacepoint_writer(tmp_path, fatras, conf_const):
+    s = Sequencer(numThreads=1, events=10)
+    evGen, simAlg, digiAlg = fatras(s)
+
+    out = tmp_path / "csv"
+    out.mkdir()
+
+    s.addWriter(
+        conf_const(
+            CsvSpacepointWriter,
+            level=acts.logging.INFO,
+            inputSimHits=simAlg.config.outputSpacepoint,
             outputDir=str(out),
             outputStem="hits",
         )
