@@ -53,18 +53,6 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
     throw std::invalid_argument(
         "Collection with selected truth particles missing");
   }
-  if (m_cfg.inputAssociatedTruthParticles.empty() !=
-      m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument(
-        "You need to provide associated truth particles together with track "
-        "parameters");
-  }
-  if (m_cfg.inputAssociatedTruthParticles.empty() ==
-      m_cfg.inputTrajectories.empty()) {
-    throw std::invalid_argument(
-        "You need to either provide collection of truth particles matching 1:1 "
-        "to tracks, or trajectories");
-  }
 
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
