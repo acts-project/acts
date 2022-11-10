@@ -619,7 +619,7 @@ def addKalmanTracks(
         inputSourceLinks="sourcelinks",
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
-        outputTrajectories="trajectories",
+        outputTrajectories="kfTrajectories",
         directNavigation=directNavigation,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
@@ -628,6 +628,8 @@ def addKalmanTracks(
         ),
     )
     s.addAlgorithm(fitAlg)
+
+    s.addWhiteboardAlias("trajectories", fitAlg.config.outputTrajectories)
 
     return s
 
@@ -728,7 +730,7 @@ def addCKFTracks(
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
-        outputTrajectories="trajectories",
+        outputTrajectories="ckfTrajectories",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
@@ -742,7 +744,7 @@ def addCKFTracks(
             s,
             trackSelectorRanges,
             inputTrajectories=trackFinder.config.outputTrajectories,
-            outputTrajectories="selectedFittedTrajectories",
+            outputTrajectories="selectedTrajectories",
             logLevel=customLogLevel(),
         )
 
