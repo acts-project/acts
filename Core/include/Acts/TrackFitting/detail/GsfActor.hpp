@@ -720,10 +720,10 @@ struct GsfActor {
     using FiltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
-    // TODO in principle we do not need all, but we can only use copyFrom with
-    // the same mask. For now, we just initialize all smoothed to zero, but in
-    // the future we could do a more fine-grained copy here to save some memory
-    const auto mask = TrackStatePropMask::All;
+    // We do not need smoothed and jacobian for now
+    const auto mask = TrackStatePropMask::Calibrated |
+                      TrackStatePropMask::Predicted |
+                      TrackStatePropMask::Filtered;
 
     if (not m_cfg.inReversePass) {
       // The predicted state is the forward pass
@@ -737,7 +737,10 @@ struct GsfActor {
       result.currentTip =
           result.fittedStates->addTrackState(mask, result.currentTip);
       auto proxy = result.fittedStates->getTrackState(result.currentTip);
+      auto firstCmpProxy = tmpStates.traj.getTrackState(tmpStates.tips.front());
+
       proxy.setReferenceSurface(surface.getSharedPtr());
+      proxy.copyFrom(firstCmpProxy, mask);
 
       // We set predicted & filtered the same so that the fields are not
       // uninitialized when not finding this state in the reverse pass.
@@ -745,10 +748,6 @@ struct GsfActor {
       proxy.predictedCovariance() = filtCov.value();
       proxy.filtered() = filtMean;
       proxy.filteredCovariance() = filtCov.value();
-
-      // As mentioned above, for now we just make these fields zero
-      proxy.smoothed() = BoundVector::Zero();
-      proxy.smoothedCovariance() = BoundSymMatrix::Zero();
     } else {
       assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
               "tip not valid"));
@@ -785,3 +784,5 @@ struct GsfActor {
 
 }  // namespace detail
 }  // namespace Acts
+
+
