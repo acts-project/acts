@@ -45,7 +45,7 @@ jobs:
 
       - name: 'Unzip artifact'
         if: steps.dl-af.outputs.result != 'false'
-        run: unzip -d physmon physmon.zip
+        run: unzip -d $GITHUB_WORKSPACE/physmon $GITHUB_WORKSPACE/physmon.zip
 
 
       - name: 'Determine PR number'
