@@ -12,7 +12,11 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+<<<<<<< HEAD
 #include <memory>
+=======
+#include <array>
+>>>>>>> b5578fbc2 (addressing more PR comments, add unit tests for ManagedDelegate and Common functions)
 #include <numeric>
 #include <optional>
 #include <random>

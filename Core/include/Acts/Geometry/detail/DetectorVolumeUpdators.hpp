@@ -27,7 +27,7 @@ namespace detail {
 /// @brief  The end of world sets the volume pointer of the
 /// navigation state to nullptr, usually indicates the end of
 /// the known world, hence the name
-struct EndOfWorldImpl : public IDelegateImpl {
+struct EndOfWorldImpl : public IManagedDelegateImpl {
   /// @brief a null volume link - explicitely
   ///
   /// @note the method parameters are ignored
@@ -40,7 +40,7 @@ struct EndOfWorldImpl : public IDelegateImpl {
 /// @brief Single volume updator, it sets the current navigation
 /// volume to the volume in question
 ///
-struct SingleDetectorVolumeImpl : public IDelegateImpl {
+struct SingleDetectorVolumeImpl : public IManagedDelegateImpl {
   const DetectorVolume* dVolume = nullptr;
 
   /// @brief Allowed constructor
@@ -99,7 +99,7 @@ struct DetectorVolumesCollection {
 /// 1-dimensional grid, e.g. a z-spaced array, or an r-spaced array
 /// of volumes.
 ///
-struct BoundVolumesGrid1Impl : public IDelegateImpl {
+struct BoundVolumesGrid1Impl : public IManagedDelegateImpl {
   using IndexedUpdator =
       IndexedUpdatorImpl<VariableBoundIndexGrid1, DetectorVolumesCollection,
                          DetectorVolumeFiller>;

@@ -28,27 +28,6 @@ class Portal;
 class DetectorVolume;
 class Detector;
 
-/// Base class for navigaiton delegate implementations
-/// that allows to then do some sort of type erasure,
-/// e.g. for plotting or I/O.
-///
-/// The interface is never touched in the navigation stream
-class IDelegateImpl {
- public:
-  virtual ~IDelegateImpl() {}
-};
-
-/// Memory managed delegate to guarantee the lifetime
-/// of eventual unterlying delegate memory and the
-/// delegate function
-///
-template <typename function_type>
-struct ManagedDelegate {
- public:
-  Delegate<function_type> delegate;
-  std::shared_ptr<IDelegateImpl> implementation = nullptr;
-};
-
 /// Declare an updator for the local navigation, i.e. the
 /// navigation inside a detector volume. This can be called
 /// either directly after a volume switch or in order to update

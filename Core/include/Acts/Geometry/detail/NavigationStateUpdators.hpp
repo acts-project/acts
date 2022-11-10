@@ -25,7 +25,7 @@ namespace detail {
 /// @tparam object_type the type of the object to be filled
 /// @tparam filler_type is the helper to fill the object into nState
 template <typename object_type, typename filler_type>
-class SingleObjectImpl : public IDelegateImpl {
+class SingleObjectImpl : public IManagedDelegateImpl {
  public:
   // The object to be filled in
   const object_type* object = nullptr;
@@ -52,7 +52,7 @@ class SingleObjectImpl : public IDelegateImpl {
 /// @tparam extractor_type the helper to extract the objects from
 /// @tparam filler_type is the helper to fill the object into nState
 template <typename extractor_type, typename filler_type>
-class StaticUpdatorImpl : public IDelegateImpl {
+class StaticUpdatorImpl : public IManagedDelegateImpl {
  public:
   /// @brief updates the navigation state with a single object that is filled in
   ///
@@ -79,7 +79,7 @@ class StaticUpdatorImpl : public IDelegateImpl {
 /// @tparam extractor_type is the helper to extract the object
 /// @tparam filler_type is the helper to fill the object into the nState
 template <typename grid_type, typename extractor_type, typename filler_type>
-class IndexedUpdatorImpl : public IDelegateImpl {
+class IndexedUpdatorImpl : public IManagedDelegateImpl {
  public:
   /// The grid where the indices are stored
   grid_type grid;
@@ -144,7 +144,7 @@ class IndexedUpdatorImpl : public IDelegateImpl {
 ///
 /// @tparam updators_t the updators that will be called in sequence
 template <typename... updators_t>
-class ChainedUpdatorImpl : public IDelegateImpl {
+class ChainedUpdatorImpl {
  public:
   // The stored updators
   std::tuple<updators_t...> updators;

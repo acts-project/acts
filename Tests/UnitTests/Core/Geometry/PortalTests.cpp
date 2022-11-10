@@ -15,6 +15,7 @@
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
 
@@ -24,7 +25,7 @@ namespace Experimental {
 class DetectorVolume {};
 
 /// a simple link to volume struct
-class LinkToVolumeImpl : public IDelegateImpl {
+class LinkToVolumeImpl : public IManagedDelegateImpl {
  public:
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
 

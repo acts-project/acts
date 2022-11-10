@@ -167,7 +167,7 @@ inline static ManagedSurfaceCandidatesUpdator allPortalsAndSurfaces() {
 /// checking, this could be e.g. support surfaces for layer structures,
 /// e.g.
 ///
-struct AdditionalSurfacesImpl : public IDelegateImpl {
+struct AdditionalSurfacesImpl : public IManagedDelegateImpl {
   /// The volumes held by this collection
   std::vector<const Surface*> surfaces = {};
 

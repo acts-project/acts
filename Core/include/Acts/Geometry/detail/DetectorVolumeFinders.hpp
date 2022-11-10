@@ -27,7 +27,7 @@ namespace detail {
 /// @brief The end of world sets the volume pointer of the
 /// navigation state to nullptr, usually indicates the end of
 /// the known world, hence the name
-struct TrialAndErrorImpl : public IDelegateImpl {
+struct TrialAndErrorImpl : public IManagedDelegateImpl {
   /// @brief a null volume link - explicitely
   ///
   /// @param gctx the geometry context for this call

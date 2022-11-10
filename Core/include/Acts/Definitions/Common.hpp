@@ -43,7 +43,10 @@ enum class NavigationDirection : int { Backward = -1, Forward = 1 };
 ///
 /// returns either 0 or 1
 inline constexpr size_t indexFromDirection(NavigationDirection nDir) {
-  return static_cast<size_t>((static_cast<int>(nDir) + 1) / 2);
+  if (nDir == NavigationDirection::Backward) {
+    return 0u;
+  }
+  return 1u;
 }
 
 /// This turns a signed value into a navigation direction
