@@ -265,7 +265,7 @@ jobs:
         run: mkdir build && tar xf build.tar.gz -C build
 
       - uses: 8BitJonny/gh-get-current-pr@2.1.3
-          id: PR
+        id: PR
 
       - name: Save PR number
         if: steps.PR.outcome == 'success'
