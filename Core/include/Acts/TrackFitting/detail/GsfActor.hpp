@@ -784,5 +784,3 @@ struct GsfActor {
 
 }  // namespace detail
 }  // namespace Acts
-
-
