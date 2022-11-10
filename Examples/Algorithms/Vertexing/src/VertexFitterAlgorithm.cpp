@@ -18,11 +18,12 @@
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
-
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+
+#include "VertexingHelpers.hpp"
 
 #include <stdexcept>
 
@@ -66,12 +67,15 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
-  std::vector<Acts::BoundTrackParameters> trackParameters;
+  std::vector<Acts::BoundTrackParameters> inputTrackParameters;
+  std::vector<const Acts::BoundTrackParameters*> inputTrackPointers;
 
   if (!m_cfg.inputTrackParameters.empty()) {
-    trackParameters =
+    const auto& tmp =
         ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
             m_cfg.inputTrackParameters);
+    inputTrackParameters = tmp;
+    inputTrackPointers = makeTrackParametersPointerContainer(tmp);
   } else {
     const auto& inputTrajectories =
         ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
@@ -81,12 +85,14 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
         if (!trajectories.hasTrackParameters(tip)) {
           continue;
         }
-        trackParameters.push_back(trajectories.trackParameters(tip));
+        const auto& trackParam = trajectories.trackParameters(tip);
+        inputTrackParameters.push_back(trackParam);
+        inputTrackPointers.push_back(&trackParam);
       }
     }
   }
 
-  ACTS_VERBOSE("Have " << trackParameters.size() << " track parameters");
+  ACTS_VERBOSE("Have " << inputTrackParameters.size() << " track parameters");
   const auto& protoVertices =
       ctx.eventStore.get<ProtoVertexContainer>(m_cfg.inputProtoVertices);
   ACTS_VERBOSE("Have " << protoVertices.size() << " proto vertices");
@@ -108,12 +114,12 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     inputTrackPtrCollection.clear();
     inputTrackPtrCollection.reserve(protoVertex.size());
     for (const auto& trackIdx : protoVertex) {
-      if (trackIdx >= trackParameters.size()) {
+      if (trackIdx >= inputTrackParameters.size()) {
         ACTS_ERROR("track parameters " << trackIdx << " does not exist");
         continue;
       }
 
-      inputTrackPtrCollection.push_back(&trackParameters[trackIdx]);
+      inputTrackPtrCollection.push_back(inputTrackPointers[trackIdx]);
     }
 
     if (!m_cfg.doConstrainedFit) {

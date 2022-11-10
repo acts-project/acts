@@ -33,9 +33,9 @@
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <chrono>
-
 #include "VertexingHelpers.hpp"
+
+#include <chrono>
 
 ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
     const Config& config, Acts::Logging::Level level)
@@ -61,11 +61,14 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   // retrieve input tracks and convert into the expected format
 
   std::vector<Acts::BoundTrackParameters> inputTrackParameters;
+  std::vector<const Acts::BoundTrackParameters*> inputTrackPointers;
 
   if (!m_cfg.inputTrackParameters.empty()) {
-    inputTrackParameters =
+    const auto& tmp =
         ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
             m_cfg.inputTrackParameters);
+    inputTrackParameters = tmp;
+    inputTrackPointers = makeTrackParametersPointerContainer(tmp);
   } else {
     const auto& inputTrajectories =
         ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
@@ -75,13 +78,12 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
         if (!trajectories.hasTrackParameters(tip)) {
           continue;
         }
-        inputTrackParameters.push_back(trajectories.trackParameters(tip));
+        const auto& trackParam = trajectories.trackParameters(tip);
+        inputTrackParameters.push_back(trackParam);
+        inputTrackPointers.push_back(&trackParam);
       }
     }
   }
-
-  const auto& inputTrackPointers =
-      makeTrackParametersPointerContainer(inputTrackParameters);
 
   using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
   using PropagatorOptions = Acts::PropagatorOptions<>;

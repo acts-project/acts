@@ -319,7 +319,6 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     std::vector<int> contributingTruthVertices;
 
     for (const auto& trk : tracks) {
-      std::cout << "RootVertexPerformanceWriter " << *trk.originalParams << std::endl;
       Acts::BoundTrackParameters origTrack = *(trk.originalParams);
 
       // Find associated truth particle now
