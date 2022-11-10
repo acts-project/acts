@@ -269,7 +269,7 @@ jobs:
 
       - run: echo "$prJSON"
         env:
-          prJSON: ${{ toJSON(fromJSON(steps.current_pr.outputs.pr)) }}
+          prJSON: ${{ toJSON(fromJSON(steps.PR.outputs.pr)) }}
 
       - name: Save PR number
         if: steps.PR.outcome == 'success'
