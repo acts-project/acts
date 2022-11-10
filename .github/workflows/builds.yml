@@ -257,9 +257,9 @@ jobs:
           submodules: true
           lfs: true
 
-      - uses: actions/download-artifact@v3
-        with:
-          name: acts-linux-ubuntu
+      # - uses: actions/download-artifact@v3
+        # with:
+          # name: acts-linux-ubuntu
 
       - name: Unpack build
         run: mkdir build && tar xf build.tar.gz -C build
