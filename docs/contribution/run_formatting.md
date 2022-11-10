@@ -33,6 +33,8 @@ versions to install), or to use statically linked binaries from
 
 You can also download the required changes by clicking on *Summary* on the top left-hand
 portion of the CI job and scrolling down to the bottom of the page (see *Changed*).
+However, it is suggested to run the `CI/check_format` locally before committing, to not
+clog the shared resources with repeated checks.
 
 ## Python formatting
 
