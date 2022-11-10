@@ -270,11 +270,11 @@ jobs:
       - name: Save PR number
         if: steps.PR.outcome == 'success'
         env:
-          PR_HEAD_REF: ${{ fromJSON(steps.PR.outputs.pr).head.ref }}
+          PR_HEAD_SHA: ${{ fromJSON(steps.PR.outputs.pr).head.sha }}
         run: |
           mkdir -p physmon
           echo ${{ steps.PR.outputs.number }} > physmon/pr_number
-          echo $PR_HEAD_REF > physmon/sha
+          echo $PR_HEAD_SHA > physmon/sha
 
       # - name: Physics performance checks
         # shell: bash
