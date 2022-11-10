@@ -246,7 +246,7 @@ jobs:
   linux_physmon:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu2004:v29
-    # needs: [linux_ubuntu]
+    needs: [linux_ubuntu]
 
     steps:
       - name: Install git lfs
