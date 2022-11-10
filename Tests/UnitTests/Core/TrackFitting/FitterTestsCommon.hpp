@@ -313,7 +313,8 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, MultiTrajectoryTraits::kInvalid);
+      BOOST_CHECK_NE(val.lastMeasurementIndex,
+                     Acts::MultiTrajectoryTraits::kInvalid);
       BOOST_REQUIRE(val.fittedParameters);
       parameters = val.fittedParameters->parameters();
       BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
@@ -332,7 +333,8 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
+      BOOST_CHECK_NE(val.lastMeasurementIndex,
+                     Acts::MultiTrajectoryTraits::kInvalid);
       BOOST_REQUIRE(val.fittedParameters);
       // check consistency w/ un-shuffled measurements
       CHECK_CLOSE_ABS(val.fittedParameters->parameters(), parameters, 1e-5);
