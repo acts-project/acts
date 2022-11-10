@@ -267,16 +267,14 @@ jobs:
       - uses: 8BitJonny/gh-get-current-pr@2.1.3
         id: PR
 
-      - run: echo "$prJSON"
-        env:
-          prJSON: ${{ toJSON(fromJSON(steps.PR.outputs.pr)) }}
-
       - name: Save PR number
         if: steps.PR.outcome == 'success'
+        env:
+          PR_HEAD_REF: ${{ fromJSON(steps.PR.outputs.pr).head.ref }}
         run: |
           mkdir -p physmon
           echo ${{ steps.PR.outputs.number }} > physmon/pr_number
-          echo ${{ fromJSON(steps.PR.outputs.pr).head.ref }} > physmon/sha
+          echo $PR_HEAD_REF > physmon/sha
 
       # - name: Physics performance checks
         # shell: bash
