@@ -29,9 +29,9 @@
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include "VertexingHelpers.hpp"
-
 #include <chrono>
+
+#include "VertexingHelpers.hpp"
 
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
     AdaptiveMultiVertexFinderAlgorithm(const Config& config,
