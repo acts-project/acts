@@ -1145,7 +1145,7 @@ def addVertexFitting(
                 inputTrackParameters=trackParameters,
                 inputAssociatedTruthParticles=associatedParticles,
                 inputVertices=outputVertices,
-                minTrackVtxMatchFraction=0.0 if associatedParticles else 0.5,
+                minTrackVtxMatchFraction=0.5 if associatedParticles else 0.0,
                 inputTime=outputTime,
                 treeName="vertexing",
                 filePath=str(outputDirRoot / "performance_vertexing.root"),
