@@ -57,6 +57,7 @@ class SeedFinder {
 
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the SeedFinder
+  /// @param options frequently changing configuration (like beam position)
   SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config,
              const Acts::SeedFinderOptions& options);
   ~SeedFinder() = default;

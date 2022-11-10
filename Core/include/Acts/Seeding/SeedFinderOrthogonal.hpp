@@ -55,6 +55,7 @@ class SeedFinderOrthogonal {
    * @brief Construct a new orthogonal seed finder.
    *
    * @param config The configuration parameters for this seed finder.
+   * @param options frequently changing configuration (like beam position)
    */
   SeedFinderOrthogonal(
       const Acts::SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
