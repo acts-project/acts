@@ -267,6 +267,11 @@ jobs:
       - uses: 8BitJonny/gh-get-current-pr@2.1.3
         id: cur-pr
 
+      - run: echo "$prJSON"
+        env:
+          prJSON: ${{ toJSON(fromJSON(steps.cur-pr.outputs.pr)) }}
+
+
       - name: Save PR number
         if: steps.cur-pr.outcome == 'success'
         env:
