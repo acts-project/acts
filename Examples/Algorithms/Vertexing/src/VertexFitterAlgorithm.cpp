@@ -18,6 +18,8 @@
 #include "Acts/Vertexing/LinearizedTrack.hpp"
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
+
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -27,8 +29,9 @@
 ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("VertexFit", lvl), m_cfg(cfg) {
-  if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing input track parameters collection");
+  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
+    throw std::invalid_argument(
+        "You have to either provide track parameters or trajectories");
   }
   if (m_cfg.inputProtoVertices.empty()) {
     throw std::invalid_argument("Missing input proto vertices collection");
@@ -63,8 +66,26 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
-  const auto& trackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  std::vector<Acts::BoundTrackParameters> trackParameters;
+
+  if (!m_cfg.inputTrackParameters.empty()) {
+    trackParameters =
+        ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
+            m_cfg.inputTrackParameters);
+  } else {
+    const auto& inputTrajectories =
+        ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+
+    for (const auto& trajectories : inputTrajectories) {
+      for (auto tip : trajectories.tips()) {
+        if (!trajectories.hasTrackParameters(tip)) {
+          continue;
+        }
+        trackParameters.push_back(trajectories.trackParameters(tip));
+      }
+    }
+  }
+
   ACTS_VERBOSE("Have " << trackParameters.size() << " track parameters");
   const auto& protoVertices =
       ctx.eventStore.get<ProtoVertexContainer>(m_cfg.inputProtoVertices);
