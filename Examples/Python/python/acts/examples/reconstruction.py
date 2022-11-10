@@ -746,9 +746,7 @@ def addCKFTracks(
             logLevel=customLogLevel(),
         )
 
-        s.addWhiteboardAlias(
-            "trajectories", trackSelector.config.outputTrajectories
-        )
+        s.addWhiteboardAlias("trajectories", trackSelector.config.outputTrajectories)
 
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
@@ -837,9 +835,13 @@ def addTrackSelection(
 
     trackSelector = acts.examples.TrackSelector(
         level=customLogLevel(),
-        inputTrackParameters=inputTrackParameters if inputTrackParameters is not None else "",
+        inputTrackParameters=inputTrackParameters
+        if inputTrackParameters is not None
+        else "",
         inputTrajectories=inputTrajectories if inputTrajectories is not None else "",
-        outputTrackParameters=outputTrackParameters if outputTrackParameters is not None else "",
+        outputTrackParameters=outputTrackParameters
+        if outputTrackParameters is not None
+        else "",
         outputTrajectories=outputTrajectories if outputTrajectories is not None else "",
         **acts.examples.defaultKWArgs(
             loc0Min=trackSelectorRanges.loc0[0],
@@ -1053,21 +1055,9 @@ def addVertexFitting(
         RootVertexPerformanceWriter,
     )
 
-    trajectories = (
-        trajectories
-        if trajectories is not None
-        else ""
-    )
-    trackParameters = (
-        trackParameters
-        if trackParameters is not None
-        else ""
-    )
-    associatedParticles = (
-        associatedParticles
-        if associatedParticles is not None
-        else ""
-    )
+    trajectories = trajectories if trajectories is not None else ""
+    trackParameters = trackParameters if trackParameters is not None else ""
+    associatedParticles = associatedParticles if associatedParticles is not None else ""
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -1082,15 +1072,9 @@ def addVertexFitting(
             logLevel=customLogLevel(),
         )
 
-        trajectories = (
-            trackSelector.config.outputTrajectories
-            if trajectories
-            else ""
-        )
+        trajectories = trackSelector.config.outputTrajectories if trajectories else ""
         trackParameters = (
-            trackSelector.config.outputTrackParameters
-            if trackParameters
-            else ""
+            trackSelector.config.outputTrackParameters if trackParameters else ""
         )
 
     inputParticles = "particles_input"

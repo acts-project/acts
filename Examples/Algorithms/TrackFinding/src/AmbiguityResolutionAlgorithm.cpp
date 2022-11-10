@@ -117,7 +117,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
   std::vector<std::pair<size_t, size_t>> trackTips;
 
   for (std::size_t iTraj = 0; iTraj < trajectories.size(); ++iTraj) {
-    const auto &traj = trajectories[iTraj];
+    const auto& traj = trajectories[iTraj];
     for (auto tip : traj.tips()) {
       if (!traj.hasTrackParameters(tip)) {
         continue;
@@ -177,7 +177,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
   TrajectoriesContainer outputTrajectories;
   outputTrajectories.reserve(trajectories.size());
   for (std::size_t iTraj = 0; iTraj < trajectories.size(); ++iTraj) {
-    const auto &traj = trajectories[iTraj];
+    const auto& traj = trajectories[iTraj];
 
     std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
     Trajectories::IndexedParameters parameters;
@@ -191,10 +191,10 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
       parameters.emplace(tip, trackParameters[iTrack]);
     }
 
-    outputTrajectories.emplace_back(traj.multiTrajectoryPtr(), tips, parameters);
+    outputTrajectories.emplace_back(traj.multiTrajectoryPtr(), tips,
+                                    parameters);
   }
 
-  ctx.eventStore.add(m_cfg.outputTrajectories,
-                     std::move(outputTrajectories));
+  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));
   return ActsExamples::ProcessCode::SUCCESS;
 }

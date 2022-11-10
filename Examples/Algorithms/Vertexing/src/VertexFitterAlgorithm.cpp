@@ -23,9 +23,9 @@
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include "VertexingHelpers.hpp"
-
 #include <stdexcept>
+
+#include "VertexingHelpers.hpp"
 
 ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)

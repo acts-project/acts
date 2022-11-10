@@ -9,9 +9,8 @@
 #include "ActsExamples/TruthTracking/TrackSelector.hpp"
 
 #include "Acts/Utilities/ThrowAssert.hpp"
-
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <cmath>
@@ -87,7 +86,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
 
     std::size_t inputCount = 0;
     std::size_t outputCount = 0;
-    for (const auto &trajectories : inputTrajectories) {
+    for (const auto& trajectories : inputTrajectories) {
       std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
       Trajectories::IndexedParameters parameters;
 
@@ -104,12 +103,12 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
         ++outputCount;
       }
 
-      outputTrajectories.emplace_back(trajectories.multiTrajectoryPtr(), tips, parameters);
+      outputTrajectories.emplace_back(trajectories.multiTrajectoryPtr(), tips,
+                                      parameters);
     }
 
-    ACTS_DEBUG("event " << ctx.eventNumber << " selected "
-                        << outputCount << " from "
-                        << inputCount << " tracks");
+    ACTS_DEBUG("event " << ctx.eventNumber << " selected " << outputCount
+                        << " from " << inputCount << " tracks");
 
     ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));
   }
