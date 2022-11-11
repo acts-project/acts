@@ -221,7 +221,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.seedFinderConfig);
   auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 
-  /// variable middle SP radial region of interest
+  // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
       std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
           m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
