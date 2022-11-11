@@ -310,7 +310,8 @@ struct QopResidualAccessor {
   ///
   /// @param entry the entry in the tree
   float operator()(ULong64_t entry) {
-    if (qop_value and reference_charge and reference_p) {
+    if (qop_value != nullptr and reference_charge != nullptr and
+        reference_p != nullptr) {
       float v = qop_value->at(entry);
       float q_true = reference_charge->at(entry);
       float p_true = reference_p->at(entry);

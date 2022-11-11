@@ -38,7 +38,7 @@ template <typename external_spacepoint_t>
 class SeedFilter {
  public:
   SeedFilter(SeedFilterConfig config,
-             IExperimentCuts<external_spacepoint_t>* expCuts = 0);
+             IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
 
   SeedFilter() = delete;
   virtual ~SeedFilter() = default;

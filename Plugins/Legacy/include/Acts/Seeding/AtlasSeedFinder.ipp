@@ -93,13 +93,13 @@ Acts::Legacy::AtlasSeedFinder<SpacePoint>::AtlasSeedFinder() {
 ///////////////////////////////////////////////////////////////////
 template <class SpacePoint>
 Acts::Legacy::AtlasSeedFinder<SpacePoint>::~AtlasSeedFinder<SpacePoint>() {
-  if (r_index) {
+  if (r_index != nullptr) {
     delete[] r_index;
   }
-  if (r_map) {
+  if (r_map != nullptr) {
     delete[] r_map;
   }
-  if (r_Sorted) {
+  if (r_Sorted != nullptr) {
     delete[] r_Sorted;
   }
 
@@ -114,32 +114,32 @@ Acts::Legacy::AtlasSeedFinder<SpacePoint>::~AtlasSeedFinder<SpacePoint>() {
   for (; i_spforseed != l_spforseed.end(); ++i_spforseed) {
     delete *i_spforseed;
   }
-  if (m_seedOutput) {
+  if (m_seedOutput != nullptr) {
     delete m_seedOutput;
   }
 
-  if (m_SP) {
+  if (m_SP != nullptr) {
     delete[] m_SP;
   }
-  if (m_R) {
+  if (m_R != nullptr) {
     delete[] m_R;
   }
-  if (m_Tz) {
+  if (m_Tz != nullptr) {
     delete[] m_Tz;
   }
-  if (m_Er) {
+  if (m_Er != nullptr) {
     delete[] m_Er;
   }
-  if (m_U) {
+  if (m_U != nullptr) {
     delete[] m_U;
   }
-  if (m_V) {
+  if (m_V != nullptr) {
     delete[] m_V;
   }
-  if (m_Zo) {
+  if (m_Zo != nullptr) {
     delete[] m_Zo;
   }
-  if (m_OneSeeds) {
+  if (m_OneSeeds != nullptr) {
     delete[] m_OneSeeds;
   }
 }
@@ -476,7 +476,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
   bool ibl = false;
 
   r_first = 0;
-  if (m_iteration) {
+  if (m_iteration != 0) {
     r_first = m_config.SCT_rMin / r_rstep;
   }
   for (int i = r_first; i != r_size; ++i) {
@@ -526,19 +526,18 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
       // assign z-bin a value between 0 and 10 identifying the z-slice of a
       // space-point
       if (Z > 0.) {
-        Z < 250.    ? z = 5
-        : Z < 450.  ? z = 6
-        : Z < 925.  ? z = 7
-        : Z < 1400. ? z = 8
-        : Z < 2500. ? z = 9
-                    : z = 10;
+        Z < 250. ? z = 5
+                 : Z < 450. ? z = 6
+                            : Z < 925. ? z = 7
+                                       : Z < 1400. ? z = 8
+                                                   : Z < 2500. ? z = 9 : z = 10;
       } else {
-        Z > -250.    ? z = 5
-        : Z > -450.  ? z = 4
-        : Z > -925.  ? z = 3
-        : Z > -1400. ? z = 2
-        : Z > -2500. ? z = 1
-                     : z = 0;
+        Z > -250.
+            ? z = 5
+            : Z > -450.
+                  ? z = 4
+                  : Z > -925. ? z = 3
+                              : Z > -1400. ? z = 2 : Z > -2500. ? z = 1 : z = 0;
       }
       // calculate bin nr "n" for self made r-phi-z sorted 3D array "rfz_Sorted"
       // record number of sp in m_nsaz
@@ -548,7 +547,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
       // rfz_map,
       // if 1st entry record non-empty bin in "rfz_index"
       rfz_Sorted[n].push_back(*r);
-      if (!rfz_map[n]++) {
+      if (rfz_map[n]++ == 0) {
         rfz_index[m_nrfz++] = n;
       }
     }
@@ -602,14 +601,14 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::production3Sp() {
     }
     for (; z != 11; ++z) {
       int a = f * 11 + ZI[z];
-      if (!rfz_map[a]) {
+      if (rfz_map[a] == 0) {
         continue;
       }
       int NB = 0, NT = 0;
       for (int i = 0; i != rfz_b[a]; ++i) {
         int an = rfz_ib[a][i];
         // if bin has no entry: continue
-        if (!rfz_map[an]) {
+        if (rfz_map[an] == 0) {
           continue;
         }
         // assign begin-pointer and end-pointer of current bin to rb and rbe

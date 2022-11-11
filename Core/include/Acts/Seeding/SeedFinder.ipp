@@ -130,8 +130,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // and y ~= impactParam
           float uIP = -1. / rM;
           float vIP = m_config.impactMax / (rM * rM);
-          if (yVal > 0.)
+          if (yVal > 0.) {
             vIP = -vIP;
+          }
           // we can obtain aCoef as the slope dv/du of the linear function,
           // estimated using du and dv between the two SP bCoef is obtained by
           // inserting aCoef into the linear equation
@@ -219,8 +220,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // and y ~= impactParam
           float uIP = -1. / rM;
           float vIP = m_config.impactMax / (rM * rM);
-          if (yVal < 0.)
+          if (yVal < 0.) {
             vIP = -vIP;
+          }
           // we can obtain aCoef as the slope dv/du of the linear function,
           // estimated using du and dv between the two SP bCoef is obtained by
           // inserting aCoef into the linear equation

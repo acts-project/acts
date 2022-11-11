@@ -28,10 +28,10 @@ class BinFinder {
   BinFinder();
 
   BinFinder(const std::vector<std::pair<int, int> >&& zBinNeighbors,
-            const int&& numPhiNeighbors);
+            int numPhiNeighbors);
 
   BinFinder(const std::vector<std::pair<int, int> >& zBinNeighbors,
-            const int& numPhiNeighbors);
+            int numPhiNeighbors);
 
   /// destructor
   ~BinFinder() = default;
