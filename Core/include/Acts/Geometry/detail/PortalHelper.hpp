@@ -44,7 +44,7 @@ inline static std::vector<std::shared_ptr<Portal>> portalsAndSubPortals(
   // Setting link to the mother volume to all sub volumes of this volume
   for (auto vPtr : dVolume->volumePtrs()) {
     for (auto pPtr : vPtr->portalPtrs()) {
-      // Creatint a link to the mother
+      // Creating a link to the mother
       auto motherLinkImpl =
           std::make_shared<SingleDetectorVolumeImpl>(dVolume.get());
       DetectorVolumeUpdator motherLink;
