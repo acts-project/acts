@@ -140,12 +140,9 @@ inline static void portalAndSurfaceCandidates(const GeometryContext& gctx,
 ///
 /// @return a connected navigationstate updator
 inline static ManagedSurfaceCandidatesUpdator allPortals() {
-  ManagedSurfaceCandidatesUpdator managedUpdator;
   SurfaceCandidatesUpdator nStateUpdator;
   nStateUpdator.connect<&portalCandidates>();
-  managedUpdator.delegate = std::move(nStateUpdator);
-  managedUpdator.implementation = nullptr;
-  return managedUpdator;
+  return ManagedSurfaceCandidatesUpdator{std::move(nStateUpdator), nullptr};
 }
 
 /// Generate a provider for all portals and Surfacess
@@ -157,7 +154,7 @@ inline static ManagedSurfaceCandidatesUpdator allPortals() {
 inline static ManagedSurfaceCandidatesUpdator allPortalsAndSurfaces() {
   SurfaceCandidatesUpdator nStateUpdator;
   nStateUpdator.connect<&portalAndSurfaceCandidates>();
-  return ManagedSurfaceCandidatesUpdator{nStateUpdator, nullptr};
+  return ManagedSurfaceCandidatesUpdator{std::move(nStateUpdator), nullptr};
 }
 
 /// @brief This holds and extracts a collection of surfaces without much

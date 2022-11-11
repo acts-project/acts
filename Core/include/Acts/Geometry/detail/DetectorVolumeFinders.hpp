@@ -59,7 +59,7 @@ struct TrialAndErrorImpl : public IManagedDelegateImpl {
 inline static ManagedDetectorVolumeUpdator tryAllVolumes() {
   DetectorVolumeUpdator vFinder;
   vFinder.connect<&TrialAndErrorImpl::update>();
-  return ManagedDetectorVolumeUpdator{vFinder, nullptr};
+  return ManagedDetectorVolumeUpdator{st::move(vFinder), nullptr};
 }
 
 /// @brief A helper struct that allows to extrace a volume
