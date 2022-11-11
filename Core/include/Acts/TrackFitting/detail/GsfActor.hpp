@@ -720,13 +720,12 @@ struct GsfActor {
     using FiltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
+    // We do not need smoothed and jacobian for now
+    const auto mask = TrackStatePropMask::Calibrated |
+                      TrackStatePropMask::Predicted |
+                      TrackStatePropMask::Filtered;
+
     if (not m_cfg.inReversePass) {
-      result.currentTip = result.fittedStates->addTrackState(
-          TrackStatePropMask::All, result.currentTip);
-      auto proxy = result.fittedStates->getTrackState(result.currentTip);
-
-      proxy.copyFrom(tmpStates.traj.getTrackState(tmpStates.tips.front()));
-
       // The predicted state is the forward pass
       const auto [filtMean, filtCov] =
           angleDescriptionSwitch(surface, [&](const auto& desc) {
@@ -735,11 +734,20 @@ struct GsfActor {
                 FiltProjector{tmpStates.traj, tmpStates.weights}, desc);
           });
 
+      result.currentTip =
+          result.fittedStates->addTrackState(mask, result.currentTip);
+      auto proxy = result.fittedStates->getTrackState(result.currentTip);
+      auto firstCmpProxy = tmpStates.traj.getTrackState(tmpStates.tips.front());
+
+      proxy.setReferenceSurface(surface.getSharedPtr());
+      proxy.copyFrom(firstCmpProxy, mask);
+
+      // We set predicted & filtered the same so that the fields are not
+      // uninitialized when not finding this state in the reverse pass.
       proxy.predicted() = filtMean;
       proxy.predictedCovariance() = filtCov.value();
       proxy.filtered() = filtMean;
       proxy.filteredCovariance() = filtCov.value();
-      proxy.setReferenceSurface(surface.getSharedPtr());
     } else {
       assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
               "tip not valid"));
