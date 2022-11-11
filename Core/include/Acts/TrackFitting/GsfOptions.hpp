@@ -70,6 +70,8 @@ struct GsfOptions {
 
   std::size_t maxComponents = 4;
 
+  double weightCutoff = 1.e-4;
+
   bool abortOnError = true;
 
   bool disableAllMaterialHandling = false;

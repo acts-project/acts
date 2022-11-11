@@ -41,6 +41,7 @@ auto computeKLDistance(const component_t &a, const component_t &b,
   throw_assert(kl >= 0.0, "kl-distance should be positive, but is: "
                               << kl << "(qop_a: " << parsA << "+-" << covA
                               << ", qop_b: " << parsB << "+-" << covB << ")");
+
   return kl;
 }
 

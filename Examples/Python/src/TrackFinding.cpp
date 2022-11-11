@@ -245,8 +245,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
     ACTS_PYTHON_MEMBER(outputTrajectories);
-    ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrackParametersTips);
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_STRUCT_END();
@@ -304,11 +302,10 @@ void addTrackFinding(Context& ctx) {
             .def(py::init(constructor));
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AmbiguityResolutionAlgorithm, mex,
-      "AmbiguityResolutionAlgorithm", inputSourceLinks, inputTrajectories,
-      inputTrackParameters, inputTrackParametersTips, outputTrackParameters,
-      outputTrackParametersTips, maximumSharedHits);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionAlgorithm, mex,
+                                "AmbiguityResolutionAlgorithm",
+                                inputSourceLinks, inputTrajectories,
+                                outputTrajectories, maximumSharedHits);
 }
 
 }  // namespace Acts::Python

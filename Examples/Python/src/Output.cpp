@@ -285,8 +285,8 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootVertexPerformanceWriter, mex,
       "RootVertexPerformanceWriter", inputAllTruthParticles,
-      inputSelectedTruthParticles, inputAssociatedTruthParticles,
-      inputTrackParameters, inputTrackParametersTips, inputTrajectories,
+      inputSelectedTruthParticles, inputTrackParameters,
+      inputAssociatedTruthParticles, inputTrackParameters, inputTrajectories,
       inputMeasurementParticlesMap, inputVertices, inputTime, filePath,
       treeName, fileMode, minTrackVtxMatchFraction, truthMatchProbMin);
 
@@ -321,11 +321,10 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CKFPerformanceWriter, mex, "CKFPerformanceWriter",
-      inputTrajectories, inputTrackParametersTips, inputParticles,
-      inputMeasurementParticlesMap, filePath, fileMode, effPlotToolConfig,
-      fakeRatePlotToolConfig, duplicationPlotToolConfig,
-      trackSummaryPlotToolConfig, truthMatchProbMin, nMeasurementsMin, ptMin,
-      duplicatedPredictor);
+      inputTrajectories, inputParticles, inputMeasurementParticlesMap, filePath,
+      fileMode, effPlotToolConfig, fakeRatePlotToolConfig,
+      duplicationPlotToolConfig, trackSummaryPlotToolConfig, truthMatchProbMin,
+      nMeasurementsMin, ptMin, duplicatedPredictor);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootNuclearInteractionParametersWriter, mex,
