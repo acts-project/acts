@@ -210,13 +210,11 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         s.run()
         del s
 
-        for stem in [
-            "performance_seeding_hists",
-            "performance_ckf",
-            "performance_vertexing",
-        ] + (
+        for stem in ["performance_ckf", "performance_vertexing",] + (
             ["performance_seeding_hists", "performance_ambi"]
             if label == "seeded"
+            else ["performance_seeding_hists"]
+            if label == "truth_estimated"
             else []
         ):
             perf_file = tp / f"{stem}.root"
