@@ -134,7 +134,7 @@ const Acts::LayerVector LayerBuilderT<detector_element_t>::centralLayers(
         gctx, cpl.surfaces, cpl.bins0, cpl.bins1, cpl.protoLayer);
 
     // the layer is built let's see if it needs material
-    if (m_cfg.centralLayerMaterial.size()) {
+    if (!m_cfg.centralLayerMaterial.empty()) {
       std::shared_ptr<const Acts::ISurfaceMaterial> layerMaterialPtr =
           m_cfg.centralLayerMaterial.at(icl);
       // central material
@@ -207,7 +207,7 @@ LayerBuilderT<detector_element_t>::constructEndcapLayers(
         gctx, ple.surfaces, ple.bins0, ple.bins1, ple.protoLayer);
 
     // the layer is built let's see if it needs material
-    if (m_cfg.posnegLayerMaterial.size()) {
+    if (!m_cfg.posnegLayerMaterial.empty()) {
       std::shared_ptr<const Acts::ISurfaceMaterial> layerMaterialPtr =
           m_cfg.posnegLayerMaterial[ipnl];
       // central material

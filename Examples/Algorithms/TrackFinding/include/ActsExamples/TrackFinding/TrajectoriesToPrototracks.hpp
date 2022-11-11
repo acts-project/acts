@@ -28,7 +28,7 @@ class TrajectoriesToPrototracks final : public BareAlgorithm {
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }

@@ -55,8 +55,9 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
             spParams, m_config.stripLengthGapTolerance);
       }
 
-      if (!spFound.ok())
+      if (!spFound.ok()) {
         return;
+      }
 
       gPos = 0.5 *
              (ends1.first + ends1.second + spParams.m * spParams.firstBtmToTop);
@@ -66,8 +67,9 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
       auto resultPerpProj =
           m_spUtility->calcPerpendicularProjection(ends1, ends2, spParams);
 
-      if (!resultPerpProj.ok())
+      if (!resultPerpProj.ok()) {
         return;
+      }
       gPos = ends1.first + resultPerpProj.value() * spParams.firstBtmToTop;
     }
 
@@ -125,8 +127,9 @@ void SpacePointBuilder<spacepoint_t>::makeMeasurementPairs(
       auto res = m_spUtility->differenceOfMeasurementsChecked(
           gposFront, gposBack, m_config.vertex, m_config.diffDist,
           m_config.diffPhi2, m_config.diffTheta2);
-      if (!res.ok())
+      if (!res.ok()) {
         continue;
+      }
 
       currentDiff = res.value();
 

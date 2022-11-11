@@ -49,7 +49,7 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
           "ExternalAlignmentDecorator", Acts::Logging::INFO));
 
   /// Virtual destructor
-  virtual ~ExternalAlignmentDecorator() = default;
+  ~ExternalAlignmentDecorator() override = default;
 
   /// @brief decorates (adds, modifies) the AlgorithmContext
   /// with a geometric rotation per event

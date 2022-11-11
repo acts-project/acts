@@ -178,8 +178,9 @@ bool xyzCoordinateCheck(Acts::SeedFinderConfig<external_spacepoint_t> m_config,
   // spacepointPosition is inside the bottom detector element
   double s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
                stripCenterDistance[2] * d1[2]);
-  if (std::abs(s1) > std::abs(bd1) * toleranceParam)
+  if (std::abs(s1) > std::abs(bd1) * toleranceParam) {
     return false;
+  }
 
   // cross product between bottom strip vector and spacepointPosition
   double d0[3] = {(bottomHalfStripLength * bottomStripDirection[1]) *

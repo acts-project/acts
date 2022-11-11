@@ -69,18 +69,18 @@ Acts::Legacy::AtlasSeedFinder<SpacePoint>::AtlasSeedFinder() {
 
   m_nlist = 0;
   m_endlist = true;
-  r_Sorted = 0;
-  r_index = 0;
-  r_map = 0;
-  m_SP = 0;
-  m_R = 0;
-  m_Tz = 0;
-  m_Er = 0;
-  m_U = 0;
-  m_V = 0;
-  m_Zo = 0;
-  m_OneSeeds = 0;
-  m_seedOutput = 0;
+  r_Sorted = nullptr;
+  r_index = nullptr;
+  r_map = nullptr;
+  m_SP = nullptr;
+  m_R = nullptr;
+  m_Tz = nullptr;
+  m_Er = nullptr;
+  m_U = nullptr;
+  m_V = nullptr;
+  m_Zo = nullptr;
+  m_OneSeeds = nullptr;
+  m_seedOutput = nullptr;
 
   // Build framework
   //
@@ -224,7 +224,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::find3Sp() {
   m_zminU = m_zmin;
   m_zmaxU = m_zmax;
 
-  if ((m_state == 0) || m_nlist) {
+  if ((m_state == 0) || (m_nlist != 0)) {
     i_seede = l_seeds.begin();
     m_state = 1;
     m_nlist = 0;
@@ -526,18 +526,19 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
       // assign z-bin a value between 0 and 10 identifying the z-slice of a
       // space-point
       if (Z > 0.) {
-        Z < 250. ? z = 5
-                 : Z < 450. ? z = 6
-                            : Z < 925. ? z = 7
-                                       : Z < 1400. ? z = 8
-                                                   : Z < 2500. ? z = 9 : z = 10;
+        Z < 250.    ? z = 5
+        : Z < 450.  ? z = 6
+        : Z < 925.  ? z = 7
+        : Z < 1400. ? z = 8
+        : Z < 2500. ? z = 9
+                    : z = 10;
       } else {
-        Z > -250.
-            ? z = 5
-            : Z > -450.
-                  ? z = 4
-                  : Z > -925. ? z = 3
-                              : Z > -1400. ? z = 2 : Z > -2500. ? z = 1 : z = 0;
+        Z > -250.    ? z = 5
+        : Z > -450.  ? z = 4
+        : Z > -925.  ? z = 3
+        : Z > -1400. ? z = 2
+        : Z > -2500. ? z = 1
+                     : z = 0;
       }
       // calculate bin nr "n" for self made r-phi-z sorted 3D array "rfz_Sorted"
       // record number of sp in m_nsaz
