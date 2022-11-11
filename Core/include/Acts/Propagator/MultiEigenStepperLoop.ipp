@@ -114,15 +114,6 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   const auto& logger = state.options.logger;
   State& stepping = state.stepping;
 
-  // It is not possible to remove components from the vector, since the
-  // GSF actor relies on the fact that the ordering and number of
-  // components does not change
-  auto invalidateComponent = [](auto& cmp) {
-    cmp.status = Intersection3D::Status::missed;
-    cmp.weight = 0.0;
-    cmp.state.pars.template segment<3>(eFreeDir0) = Vector3::Zero();
-  };
-
   // Lambda for reweighting the components
   auto reweight = [](auto& cmps) {
     ActsScalar sumOfWeights = 0.0;
@@ -147,10 +138,11 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
         m_stepLimitAfterFirstComponentOnSurface) {
       for (auto& cmp : stepping.components) {
         if (cmp.status != Intersection3D::Status::onSurface) {
-          invalidateComponent(cmp);
+          cmp.status = Intersection3D::Status::missed;
         }
       }
 
+      removeMissedComponents(stepping);
       reweight(stepping.components);
 
       ACTS_VERBOSE("Stepper performed "
@@ -194,12 +186,13 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
       accumulatedPathLength += component.weight * results.back()->value();
     } else {
       ++errorSteps;
-      invalidateComponent(component);
+      component.status = Intersection3D::Status::missed;
     }
   }
 
   // Since we have invalidated some components, we need to reweight
   if (errorSteps > 0) {
+    removeMissedComponents(stepping);
     reweight(stepping.components);
   }
 

@@ -174,8 +174,8 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             if truthEstimatedSeeded
             else SeedingAlgorithm.Default,
             geoSelectionConfigFile=geoSel,
-            outputDirRoot=tp,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
+            outputDirRoot=tp,
         )
 
         addCKFTracks(
@@ -307,8 +307,8 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
                 seedingAlgorithm=SeedingAlgorithm.Default,
                 geoSelectionConfigFile=geoSel,
-                outputDirRoot=None,
                 rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
+                outputDirRoot=None,
             )
 
             addCKFTracks(
