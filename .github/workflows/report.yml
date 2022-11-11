@@ -45,7 +45,7 @@ jobs:
 
       - name: 'Unzip artifact'
         if: steps.dl-af.outputs.result != 'false'
-        run: unzip -d physmon physmon.zip
+        run: unzip -d $GITHUB_WORKSPACE/physmon $GITHUB_WORKSPACE/physmon.zip
 
 
       - name: 'Determine PR number'
@@ -92,6 +92,7 @@ jobs:
         if: steps.get-pr-number.outputs.result != 'false'
         run: |
           pip install Jinja2
+          ls -al $GITHUB_WORKSPACE/physmon
           CI/physmon/generate_comment.py $GITHUB_WORKSPACE/physmon comment.md
           cat comment.md
 
