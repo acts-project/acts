@@ -98,6 +98,28 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
   for (size_t ipar = 0; ipar < boundValues.size(); ++ipar) {
     (*dataBoundParameters[ipar]) = boundValues[ipar];
   }
+
+  if (surface.associatedDetectorElement() != nullptr) {
+    data.module_t = surface.associatedDetectorElement()->thickness() /
+                    Acts::UnitConstants::mm;
+
+    const auto* detElement =
+        dynamic_cast<const Acts::IdentifiedDetectorElement*>(
+            surface.associatedDetectorElement());
+
+    if (detElement != nullptr and detElement->digitizationModule()) {
+      auto dModule = detElement->digitizationModule();
+      // dynamic_cast to CartesianSegmentation
+      const auto* cSegmentation =
+          dynamic_cast<const Acts::CartesianSegmentation*>(
+              &(dModule->segmentation()));
+      if (cSegmentation != nullptr) {
+        auto pitch = cSegmentation->pitch();
+        data.pitch_u = pitch.first / Acts::UnitConstants::mm;
+        data.pitch_v = pitch.second / Acts::UnitConstants::mm;
+      }
+    }
+  }
 }
 
 /// Write a single surface.
