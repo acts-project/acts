@@ -20,15 +20,19 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
 
+#include "VertexingHelpers.hpp"
+
 ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("VertexFit", lvl), m_cfg(cfg) {
-  if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing input track parameters collection");
+  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
+    throw std::invalid_argument(
+        "You have to either provide track parameters or trajectories");
   }
   if (m_cfg.inputProtoVertices.empty()) {
     throw std::invalid_argument("Missing input proto vertices collection");
@@ -63,9 +67,10 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
-  const auto& trackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
-  ACTS_VERBOSE("Have " << trackParameters.size() << " track parameters");
+  auto [inputTrackParameters, inputTrackPointers] =
+      makeParameterContainers(m_cfg, ctx);
+
+  ACTS_VERBOSE("Have " << inputTrackParameters.size() << " track parameters");
   const auto& protoVertices =
       ctx.eventStore.get<ProtoVertexContainer>(m_cfg.inputProtoVertices);
   ACTS_VERBOSE("Have " << protoVertices.size() << " proto vertices");
@@ -87,12 +92,12 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     inputTrackPtrCollection.clear();
     inputTrackPtrCollection.reserve(protoVertex.size());
     for (const auto& trackIdx : protoVertex) {
-      if (trackIdx >= trackParameters.size()) {
+      if (trackIdx >= inputTrackParameters.size()) {
         ACTS_ERROR("track parameters " << trackIdx << " does not exist");
         continue;
       }
 
-      inputTrackPtrCollection.push_back(&trackParameters[trackIdx]);
+      inputTrackPtrCollection.push_back(inputTrackPointers[trackIdx]);
     }
 
     if (!m_cfg.doConstrainedFit) {

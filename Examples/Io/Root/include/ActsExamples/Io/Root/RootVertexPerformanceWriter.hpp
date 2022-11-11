@@ -37,15 +37,12 @@ class RootVertexPerformanceWriter final
     std::string inputAllTruthParticles;
     /// Selected input truth particle collection.
     std::string inputSelectedTruthParticles;
+    /// Optional. Input track parameters.
+    std::string inputTrackParameters;
     /// Optional. Truth particles associated to tracks. Using 1:1 matching if
     /// given.
     std::string inputAssociatedTruthParticles;
-    /// Input track parameters.
-    std::string inputTrackParameters;
-    /// Input track parameters tips (points from `inputTrackParameters` to
-    /// `inputTrajectories`).
-    std::string inputTrackParametersTips;
-    /// Trajectories object from track finidng.
+    /// Optional. Trajectories object from track finidng.
     std::string inputTrajectories;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
