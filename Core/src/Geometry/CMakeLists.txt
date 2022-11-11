@@ -16,6 +16,7 @@ target_sources(
     DetectorVolume.cpp
     DiscLayer.cpp
     GenericApproachDescriptor.cpp
+    GeometryIdGenerators.cpp
     GenericCuboidVolumeBounds.cpp
     GeometryIdentifier.cpp
     GlueVolumesDescriptor.cpp

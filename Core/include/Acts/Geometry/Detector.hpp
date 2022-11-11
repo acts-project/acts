@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Geometry/GeometryDelegates.hpp"
 #include "Acts/Geometry/NavigationDelegates.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -72,6 +73,12 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @return The shared pointer
   std::shared_ptr<const Detector> getSharedPtr() const;
+
+  /// Assign the geometry identifiers
+  ///
+  /// @param geoIdGenerator is the generator that sets geo ids
+  ///
+  void assignGeometryIdentifiers(GeometryIdGenerator& geoIdGenerator);
 
   /// Non-const access to the volumes
   ///

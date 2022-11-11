@@ -172,6 +172,7 @@ bool Acts::Experimental::DetectorVolume::checkContainment(
   // All contained
   return true;
 }
+<<<<<<< HEAD
 
 void Acts::Experimental::DetectorVolume::closePortals() {
   for (auto& p : m_portals.internal) {
@@ -191,3 +192,5 @@ void Acts::Experimental::DetectorVolume::closePortals() {
     v->closePortals();
   }
 }
+=======
+>>>>>>> 81c018583 (introducin GeometryId generation concept)
