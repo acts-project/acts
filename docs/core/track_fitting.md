@@ -37,10 +37,6 @@ This chapter will be extended in the future.
 The GSF is not considered as production ready yet, therefore it is located in the namespace `Acts::Experimental`.
 :::
 
-:::{note}
-The GSF is not considered as production ready yet, therefore it is located in the namespace `Acts::Experimental`.
-:::
-
 The GSF is an extension of the Kalman-Filter that allows to handle non-gaussian errors by modelling the track state as a gaussian mixture:
 
 $$
@@ -57,7 +53,7 @@ $$
 :::{figure} ../figures/gsf_bethe_heitler_approx.svg
 :width: 450px
 :align: center
-The true Bethe-Heitler distribution compared with the gaussian mixture approximation (in thin lines the individual components are drawn) at t = 0.1 (corresponds to ~ 10mm Silicon).
+The true Bethe-Heitler distribution compared with a gaussian mixture approximation (in thin lines the individual components are drawn) at t = 0.1 (corresponds to ~ 10mm Silicon).
 :::
 
 To be able to handle this with the Kalman filter mechanics, this distribution is approximated by a gaussian mixture as well (see {numref}`figBetheHeitler`). The GSF Algorithm works then as follows (see also {numref}`figGsf`)
