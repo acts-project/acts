@@ -44,6 +44,7 @@ IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "
     "seeding_seeded_plots",
     "seeding_truth_smeared_plots",
     "seeding_truth_estimated_plots",
+    "seeding_truth_orthogonal_plots",
 ) else ":x: "}}
 
 {% for mode in ["seeded", "truth_smeared", "truth_estimated"] %}
@@ -67,6 +68,7 @@ IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "
     "ckf_seeded_plots",
     "ckf_truth_smeared_plots",
     "ckf_truth_estimated_plots",
+    "ckf_truth_orthogonal_plots",
 ) else ":x: "}}
 
 {% for mode in ["seeded", "truth_smeared", "truth_estimated"] %}
