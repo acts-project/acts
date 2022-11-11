@@ -2,14 +2,9 @@ configure_file(
   ActsVersion.hpp.in
   ${CMAKE_CURRENT_BINARY_DIR}/Acts/ActsVersion.hpp)
 
-file(GLOB ACTS_CORE_HEADERS
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.hpp
-  ${CMAKE_CURRENT_SOURCE_DIR}/*.ipp)
-
 # source files will be added later
 add_library(
-  ActsCore SHARED
-  ${ACTS_CORE_HEADERS})
+  ActsCore SHARED "")
 target_compile_features(
   ActsCore
   PUBLIC cxx_std_17)
