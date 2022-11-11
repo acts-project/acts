@@ -11,5 +11,7 @@
 #include "RecChi2Tracks.hpp"
 
 int main(int argc, char* argv[]) {
-  return runRecChi2Tracks(argc, argv, std::make_shared<TelescopeDetector>());
+  return runRecChi2Tracks(
+      argc, argv,
+      std::make_shared<ActsExamples::Telescope::TelescopeDetector>());
 }

@@ -15,10 +15,10 @@
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GsfError.hpp"
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "Acts/TrackFitting/detail/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/detail/GsfSmoothing.hpp"
 #include "Acts/TrackFitting/detail/GsfUtils.hpp"
 #include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
@@ -347,6 +347,13 @@ struct GsfActor {
                                old_bound.position(state.stepping.geoContext),
                                old_bound.unitDirection());
     slab.scaleThickness(pathCorrection);
+
+    // Emit a warning if the approximation is not valid for this x/x0
+    if (not m_cfg.bethe_heitler_approx->validXOverX0(slab.thicknessInX0())) {
+      ACTS_WARNING(
+          "Bethe-Heitler approximation encountered invalid value for x/x0="
+          << slab.thicknessInX0() << " at surface " << surface.geometryId());
+    }
 
     // Get the mixture
     const auto mixture =

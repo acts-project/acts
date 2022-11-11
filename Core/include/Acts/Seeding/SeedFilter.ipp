@@ -159,7 +159,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       }
 
       // term on the weight that depends on the value of zOrigin
-      weight += -std::abs(zOrigin) + m_cfg.compatSeedWeight;
+      weight += -(std::abs(zOrigin) * m_cfg.zOriginWeightFactor) +
+                m_cfg.compatSeedWeight;
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
