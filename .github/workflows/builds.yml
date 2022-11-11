@@ -394,7 +394,7 @@ jobs:
       PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install dependencies
           # Install tbb-devel also to build the examples
         run: >
@@ -530,7 +530,7 @@ jobs:
         run: cmake --build build --target integrationtests
       - name: Install
         run: cmake --build build --target install
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: acts-macos
           path: ${{ env.INSTALL_DIR }}
@@ -551,7 +551,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu1804_cuda:v29
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache build
         uses: actions/cache@v3
@@ -584,7 +584,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache build
         uses: actions/cache@v3
