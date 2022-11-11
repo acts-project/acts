@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -70,15 +70,18 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   TFile* m_outputFile = nullptr;
   TTree* m_outputTree = nullptr;
   /// Event identifier.
-  uint32_t m_eventId;
+  uint32_t m_eventId = 0;
   /// Hit surface identifier.
-  uint64_t m_measurementId;
+  uint64_t m_measurementId = 0;
   /// Space point surface identifier.
-  uint64_t m_geometryId;
+  uint64_t m_geometryId = 0;
   /// Global space point position components in mm.
-  float m_x, m_y, m_z;
+  float m_x = std::numeric_limits<float>::infinity();
+  float m_y = std::numeric_limits<float>::infinity();
+  float m_z = std::numeric_limits<float>::infinity();
   // Global space point position uncertainties
-  float m_var_r, m_var_z;
+  float m_var_r = std::numeric_limits<float>::infinity();
+  float m_var_z = std::numeric_limits<float>::infinity();
 };
 
 }  // namespace ActsExamples

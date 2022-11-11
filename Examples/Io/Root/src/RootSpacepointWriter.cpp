@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -19,7 +19,8 @@
 ActsExamples::RootSpacepointWriter::RootSpacepointWriter(
     const ActsExamples::RootSpacepointWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(config.inputSpacepoints, "RootSpacepointWriter", level), m_cfg(config) {
+    : WriterT(config.inputSpacepoints, "RootSpacepointWriter", level),
+      m_cfg(config) {
   // inputParticles is already checked by base constructor
   if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing file path");
@@ -57,33 +58,31 @@ ActsExamples::RootSpacepointWriter::~RootSpacepointWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_VERBOSE("Wrote hits to tree '" << m_cfg.treeName << "' in '"
-                                        << m_cfg.filePath << "'");
-    m_outputFile->Close();
-  }
+  m_outputFile->cd();
+  m_outputTree->Write();
+  ACTS_VERBOSE("Wrote hits to tree '" << m_cfg.treeName << "' in '"
+                                      << m_cfg.filePath << "'");
+  m_outputFile->Close();
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
-    const AlgorithmContext& ctx, const ActsExamples::SimSpacePointContainer& spacepoints) {
-  if (m_outputFile == nullptr) {
-    ACTS_ERROR("Missing output file");
-    return ProcessCode::ABORT;
-  }
-
+    const AlgorithmContext& ctx,
+    const ActsExamples::SimSpacePointContainer& spacepoints) {
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
   // Get the event number
   m_eventId = ctx.eventNumber;
   for (const auto& sp : spacepoints) {
-    const auto slink =
-        static_cast<const IndexSourceLink&>(*(sp.sourceLinks()[0]));
-    m_measurementId = slink.index();
-    m_geometryId = slink.geometryId().value();
+    const auto slinkPtr =
+        dynamic_cast<const IndexSourceLink*>(sp.sourceLinks()[0]);
+    if (slinkPtr == nullptr) {
+      ACTS_ERROR("Missing source link for a space point");
+      return ProcessCode::ABORT;
+    }
+    m_measurementId = slinkPtr->index();
+    m_geometryId = slinkPtr->geometryId().value();
     // write sp position
     m_x = sp.x() / Acts::UnitConstants::mm;
     m_y = sp.y() / Acts::UnitConstants::mm;

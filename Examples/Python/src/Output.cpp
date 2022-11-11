@@ -315,9 +315,9 @@ void addOutput(Context& ctx) {
                              "CsvSimHitWriter", inputSimHits, outputDir,
                              outputStem, outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacepointWriter, mex, 
-                            "CsvSpacepointWriter", inputSpacepoints, outputDir,
-                            outputPrecision );
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacepointWriter, mex,
+                             "CsvSpacepointWriter", inputSpacepoints, outputDir,
+                             outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CsvMultiTrajectoryWriter, mex, "CsvMultiTrajectoryWriter",
