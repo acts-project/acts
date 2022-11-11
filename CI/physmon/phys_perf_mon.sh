@@ -68,6 +68,10 @@ function full_chain() {
         -p $outdir/ivf_${suffix}_plots
 }
 
+full_chain truth_smeared
+full_chain truth_estimated
+full_chain seeded
+
 run \
     $outdir/performance_gsf.root \
     $refdir/performance_gsf.root \
@@ -75,10 +79,6 @@ run \
     -c CI/physmon/gsf.yml \
     -o $outdir/gsf.html \
     -p $outdir/gsf_plots
-
-full_chain truth_smeared
-full_chain truth_estimated
-full_chain seeded
 
 run \
     $outdir/performance_truth_tracking.root \
