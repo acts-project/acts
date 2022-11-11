@@ -35,7 +35,7 @@ class ExaTrkXTrackFinding {
 
   /// Constructor of the track finding module
   ///
-  /// @param cfg is the config struct to configure the module
+  /// @param config is the config struct to configure the module
   ExaTrkXTrackFinding(const Config& config);
 
   virtual ~ExaTrkXTrackFinding() = default;

@@ -96,9 +96,10 @@ class SingleBoundTrackParameters {
   /// @note The returned result indicates whether the free parameters could
   /// successfully be converted to on-surface parameters.
   static Result<SingleBoundTrackParameters<charge_t>> create(
-      std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
-      const Vector4& pos4, const Vector3& dir, Scalar p, Scalar q,
-      std::optional<CovarianceMatrix> cov = std::nullopt) {
+      const std::shared_ptr<const Surface>& surface,
+      const GeometryContext& geoCtx, const Vector4& pos4, const Vector3& dir,
+      Scalar p, Scalar q,
+      const std::optional<CovarianceMatrix>& cov = std::nullopt) {
     Result<BoundVector> bound = detail::transformFreeToBoundParameters(
         pos4.segment<3>(ePos0), pos4[eTime], dir,
         (q != Scalar(0)) ? (q / p) : (1 / p), *surface, geoCtx);
@@ -129,9 +130,10 @@ class SingleBoundTrackParameters {
   template <typename T = charge_t,
             std::enable_if_t<std::is_default_constructible_v<T>, int> = 0>
   static Result<SingleBoundTrackParameters<charge_t>> create(
-      std::shared_ptr<const Surface> surface, const GeometryContext& geoCtx,
-      const Vector4& pos4, const Vector3& dir, Scalar qOverP,
-      std::optional<CovarianceMatrix> cov = std::nullopt) {
+      const std::shared_ptr<const Surface>& surface,
+      const GeometryContext& geoCtx, const Vector4& pos4, const Vector3& dir,
+      Scalar qOverP,
+      const std::optional<CovarianceMatrix>& cov = std::nullopt) {
     Result<BoundVector> bound = detail::transformFreeToBoundParameters(
         pos4.segment<3>(ePos0), pos4[eTime], dir, qOverP, *surface, geoCtx);
     if (!bound.ok()) {

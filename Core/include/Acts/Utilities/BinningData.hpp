@@ -38,18 +38,18 @@ namespace Acts {
 ///
 class BinningData {
  public:
-  BinningType type;       ///< binning type: equidistant, arbitrary
-  BinningOption option;   ///< binning option: open, closed
-  BinningValue binvalue;  ///< binning value: binX, binY, binZ, binR ...
-  float min;              ///< minimum value
-  float max;              ///< maximum value
-  float step;             ///< binning step
-  bool zdim;              ///< zero dimensional binning : direct access
+  BinningType type{};       ///< binning type: equidistant, arbitrary
+  BinningOption option{};   ///< binning option: open, closed
+  BinningValue binvalue{};  ///< binning value: binX, binY, binZ, binR ...
+  float min{};              ///< minimum value
+  float max{};              ///< maximum value
+  float step{};             ///< binning step
+  bool zdim{};              ///< zero dimensional binning : direct access
 
   /// sub structure: describe some sub binning
   std::unique_ptr<const BinningData> subBinningData;
   /// sub structure: additive or multipicative
-  bool subBinningAdditive;
+  bool subBinningAdditive{};
 
   /// Constructor for 0D binning
   ///
@@ -433,12 +433,12 @@ class BinningData {
   }
 
  private:
-  size_t m_bins;                    ///< number of bins
+  size_t m_bins{};                  ///< number of bins
   std::vector<float> m_boundaries;  ///< vector of holding the bin boundaries
-  size_t m_totalBins;               ///< including potential substructure
+  size_t m_totalBins{};             ///< including potential substructure
   std::vector<float> m_totalBoundaries;  ///< including potential substructure
 
-  size_t (*m_functionPtr)(float, const BinningData&);  /// function pointer
+  size_t (*m_functionPtr)(float, const BinningData&){};  /// function pointer
 
   /// helper method to set the sub structure
   void checkSubStructure() {
