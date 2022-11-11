@@ -145,7 +145,8 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
       std::make_unique<Acts::CuboidVolumeBounds>(smallBox, smallBox, smallBox);
 
   auto portals = detail::defaultPortalGenerator();
-  auto portalsAndSubPortals = detail::defaultPortalAndSubPortalGenerator();
+  auto generatePortalsUpdateInternals =
+      detail::defaultPortalAndSubPortalGenerator();
 
   // Create the inner box
   auto innerBox = DetectorVolumeFactory::construct(
@@ -159,7 +160,7 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   // Create the outer box and insert the inner box, use a portal generator
   // with sub portal registration
   auto outerBox = DetectorVolumeFactory::construct(
-      portalsAndSubPortals, tContext, "OuterBox", nominal,
+      generatePortalsUpdateInternals, tContext, "OuterBox", nominal,
       std::move(bigBoxBounds), surfaces, volumes, detail::allPortals());
 
   // Check that we are within the outer box

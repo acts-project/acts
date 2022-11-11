@@ -57,12 +57,9 @@ struct TrialAndErrorImpl : public IManagedDelegateImpl {
 ///
 /// @return a connected navigationstate updator
 inline static ManagedDetectorVolumeUpdator tryAllVolumes() {
-  ManagedDetectorVolumeUpdator managedUpdator;
   DetectorVolumeUpdator vFinder;
   vFinder.connect<&TrialAndErrorImpl::update>();
-  managedUpdator.delegate = std::move(vFinder);
-  managedUpdator.implementation = nullptr;
-  return managedUpdator;
+  return ManagedDetectorVolumeUpdator{vFinder, nullptr};
 }
 
 /// @brief A helper struct that allows to extrace a volume

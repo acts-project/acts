@@ -33,12 +33,13 @@ namespace detail {
 /// @param dVolume the reference to the detector volume which generates this volume
 ///
 /// @return a vector of newly created portals with registered inside volume
-inline static std::vector<std::shared_ptr<Portal>> portalsAndSubPortals(
+inline static std::vector<std::shared_ptr<Portal>>
+generatePortalsUpdateInternals(
     const Transform3& dTransform, const VolumeBounds& dBounds,
     std::shared_ptr<DetectorVolume> dVolume) noexcept(false) {
   if (dVolume == nullptr) {
     throw std::runtime_error(
-        "PortalsAndSubPortals: no detector volume provided.");
+        "generatePortalsUpdateInternals: no detector volume provided.");
   }
 
   // Setting link to the mother volume to all sub volumes of this volume
@@ -58,7 +59,7 @@ inline static std::vector<std::shared_ptr<Portal>> portalsAndSubPortals(
     }
   }
   // Return from the standard generator
-  return portals(dTransform, dBounds, dVolume);
+  return generatePortals(dTransform, dBounds, dVolume);
 }
 
 /// Create a default portal generator that connects to the
@@ -70,7 +71,7 @@ defaultPortalAndSubPortalGenerator() {
   Delegate<std::vector<std::shared_ptr<Portal>>(
       const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>
       pGenerator;
-  pGenerator.connect<&portalsAndSubPortals>();
+  pGenerator.connect<&generatePortalsUpdateInternals>();
   return pGenerator;
 }
 

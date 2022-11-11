@@ -32,7 +32,7 @@ namespace detail {
 /// @param dVolume the reference to the detector volume which generates this volume
 ///
 /// @return a vector of newly created portals with registered inside volume
-inline static std::vector<std::shared_ptr<Portal>> portals(
+inline static std::vector<std::shared_ptr<Portal>> generatePortals(
     const Transform3& dTransform, const VolumeBounds& dBounds,
     std::shared_ptr<DetectorVolume> dVolume) noexcept(false) {
   if (dVolume == nullptr) {
@@ -88,7 +88,7 @@ defaultPortalGenerator() {
   Delegate<std::vector<std::shared_ptr<Portal>>(
       const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>
       pGenerator;
-  pGenerator.connect<&portals>();
+  pGenerator.connect<&generatePortals>();
   return pGenerator;
 }
 

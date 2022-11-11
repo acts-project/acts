@@ -27,9 +27,6 @@ namespace detail {
 template <typename object_type, typename filler_type>
 class SingleObjectImpl : public IManagedDelegateImpl {
  public:
-  // The object to be filled in
-  const object_type* object = nullptr;
-
   /// Convenience constructor
   /// @param so the single object
   SingleObjectImpl(const object_type* so) : object(so) {}
@@ -44,6 +41,10 @@ class SingleObjectImpl : public IManagedDelegateImpl {
               NavigationState& nState) const {
     filler_type::fill(nState, object);
   }
+
+ private:
+  // The object to be filled in
+  const object_type* object = nullptr;
 };
 
 /// @brief This uses state less extractor and fillers to manipulate
@@ -81,14 +82,11 @@ class StaticUpdatorImpl : public IManagedDelegateImpl {
 template <typename grid_type, typename extractor_type, typename filler_type>
 class IndexedUpdatorImpl : public IManagedDelegateImpl {
  public:
-  /// The grid where the indices are stored
-  grid_type grid;
   /// An extractor helper to get the object(s) from the volume
   extractor_type extractor;
-  /// These are the cast parameters
-  std::array<BinningValue, grid_type::DIM> casts;
-  /// A transform to be applied to the position
-  Transform3 transform = Transform3::Identity();
+
+  /// The grid where the indices are stored
+  grid_type grid;
 
   /// @brief  Constructor for a grid based surface attacher
   /// @param igrid the grid that is moved into this attacher
@@ -106,8 +104,7 @@ class IndexedUpdatorImpl : public IManagedDelegateImpl {
   /// @param nState the navigation state to which the surfaces are attached
   ///
   /// @note this is attaching objects without intersecting nor checking
-  void update([[maybe_unused]] const GeometryContext& gctx,
-              NavigationState& nState) const {
+  void update(const GeometryContext& gctx, NavigationState& nState) const {
     // Transform into local 3D frame
     Vector3 p3loc = transform * nState.position;
     // Extract the index grid entry
@@ -128,6 +125,11 @@ class IndexedUpdatorImpl : public IManagedDelegateImpl {
   }
 
  private:
+  /// These are the cast parameters
+  std::array<BinningValue, grid_type::DIM> casts;
+  /// A transform to be applied to the position
+  Transform3 transform = Transform3::Identity();
+
   /// Unroll cast loop
   /// @param position is the position of the update call
   /// @param a is the array to be filled
@@ -146,9 +148,6 @@ class IndexedUpdatorImpl : public IManagedDelegateImpl {
 template <typename... updators_t>
 class ChainedUpdatorImpl {
  public:
-  // The stored updators
-  std::tuple<updators_t...> updators;
-
   /// Constructor for chained updators in a tuple, this will unroll
   /// the tuple and call them in sequence
   ///
@@ -166,6 +165,10 @@ class ChainedUpdatorImpl {
         [&](auto&&... updator) { ((updator.update(gctx, nState)), ...); },
         updators);
   }
+
+ private:
+  // The stored updators
+  std::tuple<updators_t...> updators;
 };
 
 }  // namespace detail

@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   // Filled Cylinder
   Acts::CylinderVolumeBounds cBar(0., 100, 200.);
 
-  auto cBarPortals = detail::portals(dTransform, cBar, dVolume);
+  auto cBarPortals = detail::generatePortals(dTransform, cBar, dVolume);
 
   BOOST_CHECK(cBarPortals.size() == 3u);
   // Check they are not nullptrs
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
 
   // Tube Cylinder
   Acts::CylinderVolumeBounds cTube(10., 100, 200.);
-  auto cTubePortals = detail::portals(dTransform, cTube, dVolume);
+  auto cTubePortals = detail::generatePortals(dTransform, cTube, dVolume);
   BOOST_CHECK(cTubePortals.size() == 4u);
   // Check they are not nullptrs
   for (const auto& p : cTubePortals) {
@@ -109,7 +109,8 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   Acts::Vector3 posPhiSecDir(r * std::cos(alpha), -r * std::sin(alpha), 0.);
 
   Acts::CylinderVolumeBounds cTubeSector(10., 100., 200., alpha, 0.);
-  auto cTubeSectorPortals = detail::portals(dTransform, cTubeSector, dVolume);
+  auto cTubeSectorPortals =
+      detail::generatePortals(dTransform, cTubeSector, dVolume);
   BOOST_CHECK(cTubeSectorPortals.size() == 6u);
   // Check they are not nullptrs
   for (const auto& p : cTubeSectorPortals) {

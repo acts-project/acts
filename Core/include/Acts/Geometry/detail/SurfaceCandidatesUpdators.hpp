@@ -155,12 +155,9 @@ inline static ManagedSurfaceCandidatesUpdator allPortals() {
 ///
 /// @return a connected navigationstate updator
 inline static ManagedSurfaceCandidatesUpdator allPortalsAndSurfaces() {
-  ManagedSurfaceCandidatesUpdator managedUpdator;
   SurfaceCandidatesUpdator nStateUpdator;
   nStateUpdator.connect<&portalAndSurfaceCandidates>();
-  managedUpdator.delegate = std::move(nStateUpdator);
-  managedUpdator.implementation = nullptr;
-  return managedUpdator;
+  return ManagedSurfaceCandidatesUpdator{nStateUpdator, nullptr};
 }
 
 /// @brief This holds and extracts a collection of surfaces without much

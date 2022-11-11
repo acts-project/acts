@@ -15,7 +15,7 @@
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <assert.h>
+#include <cassert>
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& gctx, const std::string& name,
