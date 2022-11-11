@@ -127,11 +127,11 @@ struct HoughMeasurementStruct {
   double phi;
   double radius;
   double z;
-  Index index;
+  std::vector<Index> indices;
   HoughHitType type;
-  HoughMeasurementStruct(unsigned l, double p, double r, double thez, Index i,
+  HoughMeasurementStruct(unsigned l, double p, double r, double thez, std::vector<Index> &i,
                          HoughHitType t)
-      : layer(l), phi(p), radius(r), z(thez), index(i), type(t) {}
+     : layer(l), phi(p), radius(r), z(thez), indices(i), type(t) {}
 };
 
 thread_local std::vector<std::shared_ptr<HoughMeasurementStruct>>

@@ -140,16 +140,16 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
           /* now we need to unpack the hits; there should be multiple track
              candidates if we have multiple hits in a given layer So the first
              thing is to unpack the indices (which is what we need) by layer */
-          std::vector<std::vector<Index>> hitIndicesAll(
-              m_cfg.nLayers);  // [layer,Index]
+
+           std::vector<std::vector<std::vector<Index>>> hitIndicesAll(
+              m_cfg.nLayers);  // [layer,vector<Index]
           std::vector<size_t> nHitsPerLayer(m_cfg.nLayers);
           for (auto measurementIndex : m_houghHist(y, x).second) {
             HoughMeasurementStruct* meas =
                 houghMeasurementStructs[measurementIndex].get();
-            hitIndicesAll[meas->layer].push_back(meas->index);
+            hitIndicesAll[meas->layer].push_back(meas->indices);
             nHitsPerLayer[meas->layer]++;
           }
-
           std::vector<std::vector<int>> combs = getComboIndices(nHitsPerLayer);
 
           for (auto [icomb, hit_indices] :
@@ -158,7 +158,9 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
             ProtoTrack protoTrack;
             for (unsigned layer = 0; layer < m_cfg.nLayers; layer++) {
               if (hit_indices[layer] >= 0) {
-                protoTrack.push_back(hitIndicesAll[layer][hit_indices[layer]]);
+                 for (auto index : hitIndicesAll[layer][hit_indices[layer]]) {
+                    protoTrack.push_back(index);
+                 }
               }
             }
             protoTracks.push_back(protoTrack);
@@ -434,15 +436,15 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
       if (!(hitlayer.ok())) {
         continue;
       }
+      std::vector<Index> indices;
+      for (const auto slink : sp.sourceLinks()) {
+         const auto islink = static_cast<const IndexSourceLink&>(*slink);
+         indices.push_back(islink.index());
+      }
 
-      // Pixel will have two source links, strips one, we just use the first one
-      // then
       auto meas =
           std::shared_ptr<HoughMeasurementStruct>(new HoughMeasurementStruct(
-              hitlayer.value(), phi, r, z,
-              (static_cast<const IndexSourceLink&>((*sp.sourceLinks()[0])))
-                  .index(),
-              HoughHitType::SP));
+             hitlayer.value(), phi, r, z, indices, HoughHitType::SP));
       houghMeasurementStructs.push_back(meas);
     }
   }
@@ -502,11 +504,13 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
         double z = globalPos[Acts::ePos2];
         ResultUnsigned hitlayer = m_cfg.layerIDFinder(r);
         if (hitlayer.ok()) {
-          auto meas = std::shared_ptr<HoughMeasurementStruct>(
+           std::vector<Index> index;
+           index.push_back(sourceLink.get().index());
+           auto meas = std::shared_ptr<HoughMeasurementStruct>(
               new HoughMeasurementStruct(hitlayer.value(), phi, r, z,
-                                         sourceLink.get().index(),
+                                         index,
                                          HoughHitType::MEASUREMENT));
-          houghMeasurementStructs.push_back(meas);
+           houghMeasurementStructs.push_back(meas);
         }
       }
     }
