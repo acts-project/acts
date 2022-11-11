@@ -99,6 +99,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
     (True, False, "truth_smeared"),  # if first is true, second is ignored
     (False, True, "truth_estimated"),
     (False, False, "seeded"),
+    (False, False, "orthogonal"),
 ]:
     # TODO There seems to be a difference to the reference files when using
     # multithreading ActsAnalysisResidualsAndPulls
@@ -171,7 +172,9 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             if truthSmearedSeeded
             else SeedingAlgorithm.TruthEstimated
             if truthEstimatedSeeded
-            else SeedingAlgorithm.Default,
+            else SeedingAlgorithm.Default
+            if label == "seeded"
+            else SeedingAlgorithm.Orthogonal,
             geoSelectionConfigFile=geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
@@ -191,7 +194,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             outputDirCsv=None,
         )
 
-        if label == "seeded":
+        if label in ["seeded", "orthogonal"]:
             addAmbiguityResolution(
                 s,
                 AmbiguityResolutionConfig(maximumSharedHits=3),
@@ -202,7 +205,9 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         addVertexFitting(
             s,
             field,
-            associatedParticles=None if label == "seeded" else "particles_input",
+            associatedParticles=None
+            if label in ["seeded", "orthogonal"]
+            else "particles_input",
             vertexFinder=VertexFinder.Iterative,
             outputDirRoot=tp,
         )
@@ -212,7 +217,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
 
         for stem in ["performance_ckf", "performance_vertexing",] + (
             ["performance_seeding_hists", "performance_ambi"]
-            if label == "seeded"
+            if label in ["seeded", "orthogonal"]
             else ["performance_seeding_hists"]
             if label == "truth_estimated"
             else []
@@ -221,7 +226,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
 
-        if label == "seeded":
+        if label in ["seeded", "orthogonal"]:
             residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"
             # @TODO: Add try/except
             subprocess.check_call(
