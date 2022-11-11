@@ -56,7 +56,7 @@ struct SeedFinderConfig {
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
   // range defined in vector for each z region
   std::vector<std::vector<float>> rRangeMiddleSP;
-  // range deined by rMinMiddle and rMaxMiddle
+  // range defined by rMinMiddle and rMaxMiddle
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
