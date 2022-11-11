@@ -65,6 +65,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
               });
   }
 
+  size_t j0 = 0;
   for (auto& i : idx) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
@@ -80,7 +81,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     float impact = impactParametersVec[i];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
-    for (auto& j : idx) {
+
+    for (size_t j = j0; j < idx.size(); j++) {
       if (i == j) {
         continue;
       }
@@ -90,6 +92,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       // curvature difference within limits?
       if (invHelixDiameterVec[j] < lowerLimitCurv) {
+        if (m_cfg.curvatureSortingInFilter) {
+          j0 = j + 1;
+        }
         continue;
       }
       if (invHelixDiameterVec[j] > upperLimitCurv) {
@@ -101,6 +106,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTop_r - otherTop_r;
       if (std::abs(deltaR) < m_cfg.deltaRMin) {
+        if (m_cfg.curvatureSortingInFilter) {
+          break;
+        }
         continue;
       }
       bool newCompSeed = true;
