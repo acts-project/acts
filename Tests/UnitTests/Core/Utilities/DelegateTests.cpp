@@ -12,6 +12,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
+#include <memory>
 #include <numeric>
 #include <optional>
 #include <random>
@@ -197,6 +198,56 @@ BOOST_AUTO_TEST_CASE(StatefullLambdas) {
 
   // This should not compile because of deleted && overloads
   // d.connect([&](int a){ v.push_back(a); return v.size(); });
+}
+
+struct CheckDestructor {
+  CheckDestructor(bool* _out) : destructorCalled{_out} {}
+
+  bool* destructorCalled;
+
+  void func() const {}
+
+  ~CheckDestructor() { (*destructorCalled) = true; }
+};
+
+BOOST_AUTO_TEST_CASE(OwningDelegate) {
+  {
+    auto s = std::make_unique<const SignatureTest>();
+    Delegate<void(int&, int)> d;
+    d.connect<&SignatureTest::modify>(std::move(s));
+
+    int v = 0;
+    d(v, 42);
+    BOOST_CHECK_EQUAL(v, 42);
+  }
+
+  {
+    bool destructorCalled = false;
+    auto s = std::make_unique<const CheckDestructor>(&destructorCalled);
+    {
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      Delegate<void()> d;
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      d.connect<&CheckDestructor::func>(s.get());
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      d();
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+    }
+    // destructor not called after non-owning delegate goes out of scope
+    BOOST_CHECK_EQUAL(destructorCalled, false);
+
+    {
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      Delegate<void()> d;
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      d.connect<&CheckDestructor::func>(std::move(s));
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      d();
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+    }
+    // destructor called after owning delegate goes out of scope
+    BOOST_CHECK_EQUAL(destructorCalled, true);
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -39,6 +39,8 @@ class Delegate<R(Args...)> {
 
   using function_ptr_type = return_type (*)(Args...);
 
+  using deleter_type = void (*)(const void *);
+
   template <typename T, typename C>
   using isSignatureCompatible =
       decltype(std::declval<T &>() = std::declval<C>());
@@ -100,6 +102,7 @@ class Delegate<R(Args...)> {
   template <auto Callable>
   void connect() {
     m_payload = nullptr;
+    m_deleter = &noopDeleter;
 
     static_assert(
         Concepts::is_detected<isSignatureCompatible, function_ptr_type,
@@ -134,6 +137,7 @@ class Delegate<R(Args...)> {
   ///       signature has to be `void(const void*, int)`.
   void connect(function_type callable) {
     m_payload = nullptr;
+    m_deleter = &noopDeleter;
     m_function = callable;
   }
 
@@ -152,7 +156,31 @@ class Delegate<R(Args...)> {
                   "Callable given does not correspond exactly to required call "
                   "signature");
 
+    m_deleter = &noopDeleter;
     m_payload = instance;
+    m_function = [](const void *payload, Args... args) -> return_type {
+      assert(payload != nullptr && "Payload is required, but not set");
+      const auto *concretePayload = static_cast<const Type *>(payload);
+      return std::invoke(Callable, concretePayload,
+                         std::forward<Args>(args)...);
+    };
+  }
+
+  template <auto Callable, typename Type>
+  void connect(std::unique_ptr<const Type> instance) {
+    using member_ptr_type = return_type (Type::*)(Args...) const;
+    static_assert(Concepts::is_detected<isSignatureCompatible, member_ptr_type,
+                                        decltype(Callable)>::value,
+                  "Callable given does not correspond exactly to required call "
+                  "signature");
+
+    m_deleter = [](const void *payload) {
+      const auto *concretePayload = static_cast<const Type *>(payload);
+      delete concretePayload;
+    };
+
+    m_payload = instance.release();
+
     m_function = [](const void *payload, Args... args) -> return_type {
       assert(payload != nullptr && "Payload is required, but not set");
       const auto *concretePayload = static_cast<const Type *>(payload);
@@ -179,14 +207,22 @@ class Delegate<R(Args...)> {
 
   /// Disconnect this delegate, meaning it cannot be called anymore
   void disconnect() {
+    assert(m_deleter != nullptr);
+    m_deleter(m_payload);
+    m_deleter = nullptr;
     m_payload = nullptr;
     m_function = nullptr;
   }
 
+  ~Delegate() { disconnect(); }
+
  private:
+  static void noopDeleter(const void *) {}
+
   /// Stores the instance pointer
   const void *m_payload{nullptr};
   /// Stores the function pointer wrapping the compile time function pointer given in @c connect().
   function_type m_function{nullptr};
+  deleter_type m_deleter;
 };
 }  // namespace Acts
