@@ -17,6 +17,16 @@ namespace Acts {
 struct MultiStepperSurfaceReached {
   MultiStepperSurfaceReached() = default;
 
+  /// If this is set, we are also happy if the mean of the components is on the
+  /// surface. How the averaging is performed depends on the stepper
+  /// implementation
+  bool averageOnSurface = true;
+
+  /// A configurable tolerance within which distance to the intersection we
+  /// consider the surface as reached. Has no effect if averageOnSurface is
+  /// false
+  double averageOnSurfaceTolerance = 0.2;
+
   /// boolean operator for abort condition without using the result
   ///
   /// @tparam propagator_state_t Type of the propagator state
@@ -40,6 +50,7 @@ struct MultiStepperSurfaceReached {
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const Surface& targetSurface) const {
+    const auto& logger = state.options.logger;
     bool reached = true;
     const auto oldCurrentSurface = state.navigation.currentSurface;
 
@@ -49,6 +60,22 @@ struct MultiStepperSurfaceReached {
 
       if (!SurfaceReached{}(singleState, singleStepper, targetSurface)) {
         reached = false;
+      }
+    }
+
+    // However, if mean of all is on surface, we are happy as well
+    if (averageOnSurface) {
+      const auto sIntersection = targetSurface.intersect(
+          state.geoContext, stepper.position(state.stepping),
+          state.stepping.navDir * stepper.direction(state.stepping), true);
+
+      if (sIntersection.intersection.status ==
+              Intersection3D::Status::onSurface or
+          sIntersection.intersection.pathLength < averageOnSurfaceTolerance) {
+        ACTS_VERBOSE("Reached target in average mode");
+        state.navigation.currentSurface = &targetSurface;
+        state.navigation.targetReached = true;
+        return true;
       }
     }
 

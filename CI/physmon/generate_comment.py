@@ -35,12 +35,16 @@ outfile = Path(outfile)
 artifact_url = os.environ["ARTIFACT_URL"]
 pr_sha = os.environ["PR_SHA"]
 
+print("artifact_url:", artifact_url)
+print("pr_sha:", pr_sha)
 
 has_errors = False
 
 
 def exists(arg):
-    result = (artifact_dir / arg).exists()
+    file = artifact_dir / arg
+    result = file.exists()
+    print("Check exists:", file, "=>", result)
     global has_errors
     if not result:
         has_errors = True
@@ -56,7 +60,7 @@ def all_exist(*args):
 
 
 def make_url(title, target):
-    if (artifact_dir / target).exists():
+    if exists(target):
         url = artifact_url + "/" + target
         return f"[{title}]({url})"
     else:

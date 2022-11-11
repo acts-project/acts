@@ -19,8 +19,10 @@ namespace ActsExamples {
 class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
-    /// Input track parameters collection
+    /// Optional. Input track parameters collection
     std::string inputTrackParameters;
+    /// Optional. Input trajectories container.
+    std::string inputTrajectories;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
