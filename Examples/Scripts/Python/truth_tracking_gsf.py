@@ -35,7 +35,7 @@ def runTruthTrackingGsf(
     )
 
     s = s or acts.examples.Sequencer(
-        events=500, numThreads=-1, logLevel=acts.logging.INFO
+        events=100, numThreads=-1, logLevel=acts.logging.INFO
     )
 
     for d in decorators:
@@ -48,7 +48,7 @@ def runTruthTrackingGsf(
         addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
-            ParticleConfig(4, acts.PdgParticle.eElectron, False),
+            ParticleConfig(4, acts.PdgParticle.eMuon, True),
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=2,
             rnd=rnd,
@@ -71,7 +71,6 @@ def runTruthTrackingGsf(
         s,
         trackingGeometry,
         field,
-        enableInteractions=True,
         rnd=rnd,
     )
 
@@ -121,16 +120,6 @@ def runTruthTrackingGsf(
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_gsf.root"),
-        )
-    )
-
-    s.addWriter(
-        acts.examples.TrackFitterPerformanceWriter(
-            level=acts.logging.INFO,
-            inputTrajectories="gsf_trajectories",
-            inputParticles="truth_seeds_selected",
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDir / "performance_gsf.root"),
         )
     )
 

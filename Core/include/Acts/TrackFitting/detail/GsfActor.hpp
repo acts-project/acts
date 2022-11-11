@@ -36,29 +36,15 @@ struct GsfResult {
   /// The multi-trajectory which stores the graph of components
   std::shared_ptr<traj_t> fittedStates;
 
-  /// This provides the weights for the states in the MultiTrajectory. Each
-  /// entry maps to one track state. TODO This is a workaround until the
-  /// MultiTrajectory can handle weights
-  // std::map<MultiTrajectoryTraits::IndexType, ActsScalar> weightsOfStates;
-
-  /// The current indexes for the newest components in the multi trajectory
-  /// (this includes material, hole and outlier states)
-  // std::vector<MultiTrajectoryTraits::IndexType> currentTips;
+  /// The current top index of the MultiTrajectory
   MultiTrajectoryTraits::IndexType currentTip = MultiTrajectoryTraits::kInvalid;
 
-  /// The last tips referring to a measuerement state so we do not need so
-  /// search them recursively later
-  // std::vector<MultiTrajectoryTraits::IndexType> lastMeasurementTips;
+  /// The last tip referring to a measurement state in the MultiTrajectory
   MultiTrajectoryTraits::IndexType lastMeasurementTip =
       MultiTrajectoryTraits::kInvalid;
 
-  /// We must capture the parent tips to ensure that we can keep track of the
-  /// last states in the multitrajectory after the component convolution and
-  /// reduction
-  // std::vector<MultiTrajectoryTraits::IndexType> parentTips;
-
-  /// Last measurement state AFTER the electron loss computation (compared to
-  /// the MTJ that does store before the electron loss)
+  /// The last multi-component measurement state. Used to initialize the
+  /// backward pass.
   std::optional<MultiComponentBoundTrackParameters<SinglyCharged>>
       lastMeasurementState;
 
@@ -234,7 +220,14 @@ struct GsfActor {
 
       result.visitedSurfaces.push_back(&surface);
 
-      removeMissedComponents(state, stepper);
+      // Remove the missed components and normalize
+      // TODO should be redundant if stepper behaves correctly but do for now to
+      // be safe
+      stepper.removeMissedComponents(state.stepping);
+
+      auto stepperComponents = stepper.componentIterable(state.stepping);
+      detail::normalizeWeights(
+          stepperComponents, [](auto& cmp) -> double& { return cmp.weight(); });
 
       // Check what we have on this surface
       const auto found_source_link =
@@ -468,32 +461,6 @@ struct GsfActor {
     });
   }
 
-  /// Removes the components which are missed and update the list of parent tips
-  /// for the MultiTrajectory
-  template <typename propagator_state_t, typename stepper_t>
-  void removeMissedComponents(propagator_state_t& state,
-                              const stepper_t& stepper) const {
-    auto components = stepper.componentIterable(state.stepping);
-    // double sum_w = 0.0;
-    // for (auto [tip, cmp] : zip(tips, components)) {
-    //   if (cmp.status() == Intersection3D::Status::onSurface) {
-    //     sum_w += cmp.weight();
-    //   }
-    // }
-    //
-    // // If the remaining weights are close to zero, re-sanitize all weights
-    // if (sum_w < m_cfg.weightCutoff) {
-    //   for (auto cmp : components) {
-    //     cmp.weight() = 1.0;
-    //   }
-    // }
-
-    stepper.removeMissedComponents(state.stepping);
-
-    detail::normalizeWeights(components,
-                             [](auto& cmp) -> double& { return cmp.weight(); });
-  }
-
   /// Remove components with low weights and renormalize from the component
   /// cache
   /// TODO This function does not expect normalized components, but this
@@ -566,11 +533,13 @@ struct GsfActor {
       }
 
       auto& cmp = *res;
-      // cmp.jacobian() = meta.jacobian;
       cmp.jacToGlobal() = surface.boundToFreeJacobian(state.geoContext, pars);
       cmp.pathAccumulated() = meta.pathLength;
-      // cmp.derivative() = meta.derivative;
-      // cmp.jacTransport() = meta.jacTransport;
+
+      // TODO check if they are not anyways reset to identity or zero
+      cmp.jacobian() = meta.jacobian;
+      cmp.derivative() = meta.derivative;
+      cmp.jacTransport() = meta.jacTransport;
     }
   }
 
@@ -637,7 +606,7 @@ struct GsfActor {
 
     std::vector<std::tuple<double, BoundVector, BoundMatrix>> v;
 
-    // TODO why can 0 weight happen?
+    // TODO Check why can zero weights can occur
     for (const auto& idx : tmpStates.tips) {
       const auto [w, p, c] = proj(idx);
       if (w > 0.0) {
@@ -649,7 +618,7 @@ struct GsfActor {
 
     result.lastMeasurementState =
         MultiComponentBoundTrackParameters<SinglyCharged>(
-            surface.getSharedPtr(), v);
+            surface.getSharedPtr(), std::move(v));
 
     // Return sucess
     return Acts::Result<void>::success();
@@ -751,13 +720,12 @@ struct GsfActor {
     using FiltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
+    // We do not need smoothed and jacobian for now
+    const auto mask = TrackStatePropMask::Calibrated |
+                      TrackStatePropMask::Predicted |
+                      TrackStatePropMask::Filtered;
+
     if (not m_cfg.inReversePass) {
-      result.currentTip = result.fittedStates->addTrackState(
-          TrackStatePropMask::All, result.currentTip);
-      auto proxy = result.fittedStates->getTrackState(result.currentTip);
-
-      proxy.copyFrom(tmpStates.traj.getTrackState(tmpStates.tips.front()));
-
       // The predicted state is the forward pass
       const auto [filtMean, filtCov] =
           angleDescriptionSwitch(surface, [&](const auto& desc) {
@@ -766,11 +734,20 @@ struct GsfActor {
                 FiltProjector{tmpStates.traj, tmpStates.weights}, desc);
           });
 
+      result.currentTip =
+          result.fittedStates->addTrackState(mask, result.currentTip);
+      auto proxy = result.fittedStates->getTrackState(result.currentTip);
+      auto firstCmpProxy = tmpStates.traj.getTrackState(tmpStates.tips.front());
+
+      proxy.setReferenceSurface(surface.getSharedPtr());
+      proxy.copyFrom(firstCmpProxy, mask);
+
+      // We set predicted & filtered the same so that the fields are not
+      // uninitialized when not finding this state in the reverse pass.
       proxy.predicted() = filtMean;
       proxy.predictedCovariance() = filtCov.value();
       proxy.filtered() = filtMean;
       proxy.filteredCovariance() = filtCov.value();
-      proxy.setReferenceSurface(surface.getSharedPtr());
     } else {
       assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
               "tip not valid"));
@@ -792,6 +769,16 @@ struct GsfActor {
             return true;
           });
     }
+  }
+
+  /// Set the relevant options that can be set from the Options struct all in
+  /// one place
+  void setOptions(const Acts::Experimental::GsfOptions<traj_t>& options) {
+    m_cfg.maxComponents = options.maxComponents;
+    m_cfg.extensions = options.extensions;
+    m_cfg.abortOnError = options.abortOnError;
+    m_cfg.disableAllMaterialHandling = options.disableAllMaterialHandling;
+    m_cfg.weightCutoff = options.weightCutoff;
   }
 };
 

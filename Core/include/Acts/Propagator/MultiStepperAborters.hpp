@@ -18,9 +18,14 @@ struct MultiStepperSurfaceReached {
   MultiStepperSurfaceReached() = default;
 
   /// If this is set, we are also happy if the mean of the components is on the
-  /// surface How the averaging is performed depends on the stepper
+  /// surface. How the averaging is performed depends on the stepper
   /// implementation
   bool averageOnSurface = true;
+
+  /// A configurable tolerance within which distance to the intersection we
+  /// consider the surface as reached. Has no effect if averageOnSurface is
+  /// false
+  double averageOnSurfaceTolerance = 0.2;
 
   /// boolean operator for abort condition without using the result
   ///
@@ -66,7 +71,7 @@ struct MultiStepperSurfaceReached {
 
       if (sIntersection.intersection.status ==
               Intersection3D::Status::onSurface or
-          sIntersection.intersection.pathLength < 0.2) {
+          sIntersection.intersection.pathLength < averageOnSurfaceTolerance) {
         ACTS_VERBOSE("Reached target in average mode");
         state.navigation.currentSurface = &targetSurface;
         state.navigation.targetReached = true;

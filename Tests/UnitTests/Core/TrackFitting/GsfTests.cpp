@@ -182,16 +182,4 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
                                     false);
 }
 
-// NOTE This test makes no sense for the GSF since there is always reverse
-// filtering BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) { ... }
-
-// TODO this is not really Kalman fitter specific. is probably better tested
-// with a synthetic trajectory.
-BOOST_AUTO_TEST_CASE(GlobalCovariance) {
-  auto options = makeDefaultGsfOptions();
-  auto multi_pars = makeParameters();
-
-  tester.test_GlobalCovariance(gsfZero, options, multi_pars, rng);
-}
-
 BOOST_AUTO_TEST_SUITE_END()

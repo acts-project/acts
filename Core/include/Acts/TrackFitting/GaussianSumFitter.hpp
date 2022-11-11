@@ -51,7 +51,7 @@ namespace Experimental {
 /// @note This GSF implementation tries to be as compatible to the KalmanFitter
 /// as possible. However, strict compatibility is not garantueed.
 /// @note Currently there is no possibility to export the states of the
-/// individual components from the GSF, the only thing returned in the
+/// individual components from the GSF, the only information returned in the
 /// MultiTrajectory are the means of the states. Therefore, also NO dedicated
 /// component smoothing is performed as described e.g. by R. Fruewirth.
 template <typename propagator_t, typename bethe_heitler_approx_t,
@@ -249,12 +249,8 @@ struct GaussianSumFitter {
 
       // Catch the actor and set the measurements
       auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
+      actor.setOptions(options);
       actor.m_cfg.inputMeasurements = inputMeasurements;
-      actor.m_cfg.maxComponents = options.maxComponents;
-      actor.m_cfg.extensions = options.extensions;
-      actor.m_cfg.abortOnError = options.abortOnError;
-      actor.m_cfg.disableAllMaterialHandling =
-          options.disableAllMaterialHandling;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
       actor.m_cfg.inReversePass = false;
 
@@ -319,13 +315,10 @@ struct GaussianSumFitter {
       auto bwdPropOptions = bwdPropInitializer(options, logger);
 
       auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
+      actor.setOptions(options);
       actor.m_cfg.inputMeasurements = inputMeasurements;
-      actor.m_cfg.maxComponents = options.maxComponents;
-      actor.m_cfg.abortOnError = options.abortOnError;
-      actor.m_cfg.disableAllMaterialHandling =
-          options.disableAllMaterialHandling;
-      actor.m_cfg.extensions = options.extensions;
       actor.m_cfg.inReversePass = true;
+      actor.setOptions(options);
 
       bwdPropOptions.direction = gsfBackward;
 
