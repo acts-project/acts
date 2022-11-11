@@ -55,6 +55,7 @@ void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
   // semantics, otherwise there is a `cannot bind ... to ...` error
   for (auto it = cmps.begin(); it != cmps.end(); ++it) {
     decltype(auto) cmp = *it;
+    throw_assert(std::isfinite(proj(cmp)), "weight not finite:" << proj(cmp));
     sum_of_weights += proj(cmp);
   }
 
@@ -86,25 +87,25 @@ class ScopedGsfInfoPrinterAndChecker {
       ACTS_VERBOSE("  #" << i++ << " pos: " << getVector(eFreePos0) << ", dir: "
                          << getVector(eFreeDir0) << ", weight: " << cmp.weight()
                          << ", status: " << cmp.status()
-                         << ", qop: " << cmp.pars()[eFreeQOverP]);
+                         << ", qop: " << cmp.pars()[eFreeQOverP]
+                         << ", det(cov): " << cmp.cov().determinant());
     }
   }
 
   void checks(const std::string_view &where) const {
     const auto cmps = m_stepper.constComponentIterable(m_state.stepping);
-
     // If all components are missed, their weights have been reset to zero.
     // In this case the weights might not be normalized and not even be
     // finite due to a division by zero.
     if (m_stepper.numberComponents(m_state.stepping) > m_missedCount) {
-      throw_assert(detail::weightsAreNormalized(
-                       cmps, [](const auto &cmp) { return cmp.weight(); }),
-                   "not normalized at " << where);
-
       throw_assert(
           std::all_of(cmps.begin(), cmps.end(),
                       [](auto cmp) { return std::isfinite(cmp.weight()); }),
           "some weights are not finite at " << where);
+
+      throw_assert(detail::weightsAreNormalized(
+                       cmps, [](const auto &cmp) { return cmp.weight(); }),
+                   "not normalized at " << where);
     }
   }
 
@@ -198,6 +199,40 @@ void computePosteriorWeights(
     }
   }
 }
+
+/// Enumeration type to allow templating on the state we want to project on with
+/// a MultiTrajectory
+enum class StatesType { ePredicted, eFiltered, eSmoothed };
+
+inline std::ostream &operator<<(std::ostream &os, StatesType type) {
+  constexpr static std::array names = {"predicted", "filtered", "smoothed"};
+  os << names[static_cast<int>(type)];
+  return os;
+}
+
+/// @brief Projector type which maps a MultiTrajectory-Index to a tuple of
+/// [weight, parameters, covariance]. Therefore, it contains a MultiTrajectory
+/// and for now a std::map for the weights
+template <StatesType type, typename traj_t>
+struct MultiTrajectoryProjector {
+  const MultiTrajectory<traj_t> &mt;
+  const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
+
+  auto operator()(MultiTrajectoryTraits::IndexType idx) const {
+    const auto proxy = mt.getTrackState(idx);
+    switch (type) {
+      case StatesType::ePredicted:
+        return std::make_tuple(weights.at(idx), proxy.predicted(),
+                               std::optional{proxy.predictedCovariance()});
+      case StatesType::eFiltered:
+        return std::make_tuple(weights.at(idx), proxy.filtered(),
+                               std::optional{proxy.filteredCovariance()});
+      case StatesType::eSmoothed:
+        return std::make_tuple(weights.at(idx), proxy.smoothed(),
+                               std::optional{proxy.smoothedCovariance()});
+    }
+  }
+};
 
 }  // namespace detail
 }  // namespace Acts
