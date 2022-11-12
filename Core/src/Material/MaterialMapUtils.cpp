@@ -37,7 +37,7 @@ auto Acts::materialMapperRZ(
   std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());
 
-  for (Material& mat : material) {
+  for (const Material& mat : material) {
     materialVector.push_back(mat.parameters());
   }
 
