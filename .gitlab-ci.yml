@@ -37,9 +37,6 @@ clang_tidy:
     # Main clang-tidy run during cmake compilation
     - CI/clang_tidy/run_clang_tidy.sh build > clang-tidy/clang-tidy.log
 
-    # Execute clang-tidy on headers
-    - CI/clang_tidy/run_clang_tidy_headers.sh > clang-tidy/clang-tidy-headers.log
-
     # Install dependencies for processing scripts
     - pip install -r CI/clang_tidy/requirements.txt
 
