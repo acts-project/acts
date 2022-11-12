@@ -301,9 +301,7 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                     minPt=500 * u.MeV,
                     impactMax=3 * u.mm,
                 ),
-                SeedFinderOptionsArg(
-                    bFieldInZ=1.99724 * u.T,
-                ),
+                SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
                 TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
                 seedingAlgorithm=SeedingAlgorithm.Default,
                 geoSelectionConfigFile=geoSel,

@@ -502,8 +502,6 @@ def addSeeding(
                     useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
                 )
             )
-            # print(help(acts.examples.SeedingOrthogonalAlgorithm))
-            # kaboom
             seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
                 level=customLogLevel(),
                 inputSpacePoints=[spAlg.config.outputSpacePoints],
