@@ -63,7 +63,7 @@ materialMapperRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
                                             std::array<size_t, 2> nBinsRZ)>&
                      materialVectorToGridMapper,
                  std::vector<double> rPos, std::vector<double> zPos,
-                 std::vector<Material> material,
+                 const std::vector<Acts::Material>& material,
                  double lengthUnit = UnitConstants::mm);
 
 /// Method to setup the MaterialMapper

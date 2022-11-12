@@ -29,7 +29,7 @@ auto Acts::materialMapperRZ(
                                std::array<size_t, 2> nBinsRZ)>&
         materialVectorToGridMapper,
     std::vector<double> rPos, std::vector<double> zPos,
-    std::vector<Acts::Material> material, double lengthUnit)
+    const std::vector<Acts::Material>& material, double lengthUnit)
     -> MaterialMapper<
         detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
                      detail::EquidistantAxis>> {

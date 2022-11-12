@@ -43,7 +43,7 @@ struct VolumeMaterialInteraction {
   /// Data evaluated within this struct
   MaterialSlab slab;
   /// The path correction factor due to non-zero incidence on the surface.
-  double pathCorrection;
+  double pathCorrection = 0;
 
   /// @brief Constructor
   ///

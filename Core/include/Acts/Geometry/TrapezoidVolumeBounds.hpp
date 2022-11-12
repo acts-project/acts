@@ -143,7 +143,7 @@ class TrapezoidVolumeBounds : public VolumeBounds {
 
  private:
   /// The internal version of the bounds can be float/double
-  std::array<double, eSize> m_values;
+  std::array<double, eSize> m_values{};
   /// The face PlaneSurface parallel to local xy plane
   std::shared_ptr<const TrapezoidBounds> m_faceXYTrapezoidBounds{nullptr};
   /// Thhe face PlaneSurface attached to alpha (negative local x)

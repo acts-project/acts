@@ -133,14 +133,14 @@ class VectorMultiTrajectoryBase {
     IndexType iprojector = kInvalid;
 
     double chi2 = 0;
-    double pathLength;
+    double pathLength = 0;
     TrackStateType typeFlags;
 
     IndexType iuncalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
     IndexType measdim = 0;
 
-    TrackStatePropMask allocMask;
+    TrackStatePropMask allocMask = TrackStatePropMask::None;
   };
 
   VectorMultiTrajectoryBase() = default;
@@ -430,7 +430,9 @@ class VectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const { return m_index.size(); }
+  IndexType size_impl() const {
+    return m_index.size();
+  }
 
   void clear_impl();
 
@@ -532,7 +534,9 @@ class ConstVectorMultiTrajectory final
     return detail_vmt::VectorMultiTrajectoryBase::has_impl(*this, key, istate);
   }
 
-  IndexType size_impl() const { return m_index.size(); }
+  IndexType size_impl() const {
+    return m_index.size();
+  }
 
   std::any component_impl(HashedString key, IndexType istate) const {
     return detail_vmt::VectorMultiTrajectoryBase::component_impl<true>(
