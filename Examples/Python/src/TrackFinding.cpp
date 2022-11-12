@@ -85,8 +85,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
-    ACTS_PYTHON_MEMBER(bFieldInZ);
-    ACTS_PYTHON_MEMBER(beamPos);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(zAlign);
     ACTS_PYTHON_MEMBER(rAlign);
@@ -119,7 +117,15 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
-
+  {
+    using seedOptions = Acts::SeedFinderOptions;
+    auto c = py::class_<seedOptions>(m, "SeedFinderOptions").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, seedOptions);
+    ACTS_PYTHON_MEMBER(beamPos);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
   {
     using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
     auto c =
@@ -144,8 +150,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
-    ACTS_PYTHON_MEMBER(bFieldInZ);
-    ACTS_PYTHON_MEMBER(beamPos);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(skipPreviousTopSP);
@@ -206,13 +210,13 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig,
-      gridConfig, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
-      numPhiNeighbors);
+      seedFinderOptions, gridConfig, allowSeparateRMax, zBinNeighborsTop,
+      zBinNeighborsBottom, numPhiNeighbors);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
-                                "SeedingOrthogonalAlgorithm", inputSpacePoints,
-                                outputSeeds, outputProtoTracks,
-                                seedFilterConfig, seedFinderConfig);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SeedingOrthogonalAlgorithm, mex,
+      "SeedingOrthogonalAlgorithm", inputSpacePoints, outputSeeds,
+      outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
