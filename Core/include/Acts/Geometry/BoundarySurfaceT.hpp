@@ -107,7 +107,7 @@ class BoundarySurfaceT {
   /// @return The attached volume at that position
   virtual const volume_t* attachedVolume(const GeometryContext& gctx,
                                          const Vector3& pos, const Vector3& mom,
-                                         NavigationDirection pdir) const;
+                                         NavigationDirection navDir) const;
 
   /// templated onBoundary method
   ///

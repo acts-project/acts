@@ -65,7 +65,6 @@ class BinningData {
         step((bMax - bMin)),
         zdim(true),
         subBinningData(nullptr),
-        subBinningAdditive(false),
         m_bins(1),
         m_boundaries({{min, max}}),
         m_totalBins(1),
@@ -99,8 +98,7 @@ class BinningData {
         m_bins(bBins),
         m_boundaries(std::vector<float>()),
         m_totalBins(bBins),
-        m_totalBoundaries(std::vector<float>()),
-        m_functionPtr(nullptr) {
+        m_totalBoundaries(std::vector<float>()) {
     // set to equidistant search
     m_functionPtr = &searchEquidistantWithBoundary;
     // fill the boundary vector for fast access to center & boundaries
@@ -124,17 +122,13 @@ class BinningData {
       : type(arbitrary),
         option(bOption),
         binvalue(bValue),
-        min(0.),
-        max(0.),
-        step(0.),
         zdim(bBoundaries.size() == 2 ? true : false),
         subBinningData(std::move(sBinData)),
         subBinningAdditive(true),
         m_bins(bBoundaries.size() - 1),
         m_boundaries(bBoundaries),
         m_totalBins(bBoundaries.size() - 1),
-        m_totalBoundaries(bBoundaries),
-        m_functionPtr(nullptr) {
+        m_totalBoundaries(bBoundaries) {
     // assert a no-size case
     throw_assert(m_boundaries.size() > 1, "Must have more than one boundary");
     min = m_boundaries[0];
@@ -161,8 +155,7 @@ class BinningData {
         m_bins(bdata.m_bins),
         m_boundaries(bdata.m_boundaries),
         m_totalBins(bdata.m_totalBins),
-        m_totalBoundaries(bdata.m_totalBoundaries),
-        m_functionPtr(nullptr) {
+        m_totalBoundaries(bdata.m_totalBoundaries) {
     // get the binning data
     subBinningData =
         bdata.subBinningData
