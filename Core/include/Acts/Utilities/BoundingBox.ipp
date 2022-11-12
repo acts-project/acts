@@ -388,7 +388,7 @@ template <typename entity_t, typename value_t, size_t DIM>
 template <size_t D, std::enable_if_t<D == 2, int>>
 std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
     std::ostream& os, value_type w, value_type h, value_type unit,
-    const std::string& std::string label, const std::string& fillcolor) const {
+    const std::string& label, const std::string& fillcolor) const {
   static_assert(DIM == 2, "SVG is only supported in 2D");
 
   VertexType mid(w / 2., h / 2.);
