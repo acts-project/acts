@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
@@ -56,7 +57,9 @@ class SeedFinder {
 
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the SeedFinder
-  SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config);
+  /// @param options frequently changing configuration (like beam position)
+  SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config,
+             const Acts::SeedFinderOptions& options);
   ~SeedFinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
@@ -106,6 +109,7 @@ class SeedFinder {
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderOptions m_options;
 };
 
 }  // namespace Acts

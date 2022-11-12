@@ -31,10 +31,12 @@ namespace Cuda {
 template <typename external_spacepoint_t>
 SeedFinder<external_spacepoint_t>::SeedFinder(
     Acts::SeedFinderConfig<external_spacepoint_t> commonConfig,
+    const Acts::SeedFinderOptions& seedFinderOptions,
     const SeedFilterConfig& seedFilterConfig,
     const TripletFilterConfig& tripletFilterConfig, int device,
     std::unique_ptr<const Logger> incomingLogger)
     : m_commonConfig(commonConfig.toInternalUnits()),
+      m_seedFinderOptions(seedFinderOptions.toInternalUnits()),
       m_seedFilterConfig(seedFilterConfig.toInternalUnits()),
       m_tripletFilterConfig(tripletFilterConfig),
       m_device(device),
@@ -50,7 +52,7 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
   // millimeter
   // TODO: change using ACTS units
-  m_commonConfig.pTPerHelixRadius = 300. * m_commonConfig.bFieldInZ;
+  m_commonConfig.pTPerHelixRadius = 300. * m_seedFinderOptions.bFieldInZ;
   m_commonConfig.minHelixDiameter2 =
       std::pow(m_commonConfig.minPt * 2 / m_commonConfig.pTPerHelixRadius, 2);
   m_commonConfig.pT2perRadius =

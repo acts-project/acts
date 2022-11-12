@@ -33,7 +33,6 @@ SeedFinderConfigArg = namedtuple(
         "sigmaScattering",
         "radLengthPerSeed",
         "minPt",
-        "bFieldInZ",
         "impactMax",
         "interactionPointCut",
         "arithmeticAverageCotTheta",
@@ -56,9 +55,11 @@ SeedFinderConfigArg = namedtuple(
         "collisionRegion",  # (min,max)
         "r",  # (min,max)
         "z",  # (min,max)
-        "beamPos",  # (x,y)
     ],
-    defaults=[None] * 21 + [(None, None)] * 8,
+    defaults=[None] * 20 + [(None, None)] * 7,
+)
+SeedFinderOptionsArg = namedtuple(
+    "SeedFinderOptions", ["beamPos", "bFieldInZ"], defaults=[(None, None), None]
 )
 
 SeedFilterConfigArg = namedtuple(
@@ -134,6 +135,7 @@ TrackSelectorRanges = namedtuple(
     truthSeedRanges=TruthSeedRanges,
     particleSmearingSigmas=ParticleSmearingSigmas,
     seedFinderConfigArg=SeedFinderConfigArg,
+    seedFinderOptionsArg=SeedFinderOptionsArg,
     seedFilterConfigArg=SeedFilterConfigArg,
     spacePointGridConfigArg=SpacePointGridConfigArg,
     seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg,
@@ -150,6 +152,7 @@ def addSeeding(
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
     seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
+    seedFinderOptionsArg: SeedFinderOptionsArg = SeedFinderOptionsArg(),
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
@@ -182,6 +185,8 @@ def addSeeding(
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
     seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, forceRadialSorting, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, beamPos)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
+        Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
+    seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, curvatureSortingInFilter, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
                                 Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
@@ -328,7 +333,6 @@ def addSeeding(
                     sigmaScattering=seedFinderConfigArg.sigmaScattering,
                     radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
                     minPt=seedFinderConfigArg.minPt,
-                    bFieldInZ=seedFinderConfigArg.bFieldInZ,
                     impactMax=seedFinderConfigArg.impactMax,
                     interactionPointCut=seedFinderConfigArg.interactionPointCut,
                     arithmeticAverageCotTheta=seedFinderConfigArg.arithmeticAverageCotTheta,
@@ -344,18 +348,18 @@ def addSeeding(
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
                     centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
                     forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
-                    beamPos=(
-                        None
-                        if seedFinderConfigArg.beamPos is None
-                        or all([x is None for x in seedFinderConfigArg.beamPos])
-                        else acts.Vector2(
-                            seedFinderConfigArg.beamPos[0] or 0.0,
-                            seedFinderConfigArg.beamPos[1] or 0.0,
-                        )
-                    ),
                 ),
             )
-
+            seedFinderOptions = acts.SeedFinderOptions(
+                **acts.examples.defaultKWArgs(
+                    beamPos=acts.Vector2(0.0, 0.0)
+                    if seedFinderOptionsArg.beamPos == (None, None)
+                    else acts.Vector2(
+                        seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+                    ),
+                    bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+                )
+            )
             seedFilterConfig = acts.SeedFilterConfig(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
@@ -382,7 +386,7 @@ def addSeeding(
 
             gridConfig = acts.SpacePointGridConfig(
                 **acts.examples.defaultKWArgs(
-                    bFieldInZ=seedFinderConfig.bFieldInZ,
+                    bFieldInZ=seedFinderOptions.bFieldInZ,
                     minPt=seedFinderConfig.minPt,
                     rMax=(
                         seedFinderConfig.rMax
@@ -419,6 +423,7 @@ def addSeeding(
                 gridConfig=gridConfig,
                 seedFilterConfig=seedFilterConfig,
                 seedFinderConfig=seedFinderConfig,
+                seedFinderOptions=seedFinderOptions,
             )
             s.addAlgorithm(seedingAlg)
             inputProtoTracks = seedingAlg.config.outputProtoTracks
@@ -459,7 +464,6 @@ def addSeeding(
                     sigmaScattering=seedFinderConfigArg.sigmaScattering,
                     radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
                     minPt=seedFinderConfigArg.minPt,
-                    bFieldInZ=seedFinderConfigArg.bFieldInZ,
                     impactMax=seedFinderConfigArg.impactMax,
                     interactionPointCut=seedFinderConfigArg.interactionPointCut,
                     deltaZMax=seedFinderConfigArg.deltaZMax,
@@ -467,18 +471,16 @@ def addSeeding(
                     seedConfirmation=seedFinderConfigArg.seedConfirmation,
                     centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
                     forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
-                    beamPos=(
-                        None
-                        if seedFinderConfigArg.beamPos is None
-                        or all([x is None for x in seedFinderConfigArg.beamPos])
-                        else acts.Vector2(
-                            seedFinderConfigArg.beamPos[0] or 0.0,
-                            seedFinderConfigArg.beamPos[1] or 0.0,
-                        )
-                    ),
                 ),
             )
-
+            seedFinderOptions = SeedFinderOptionsArg(
+                **acts.examples.defaultKWArgs(
+                    bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+                    beamPos=acts.Vector2(0.0, 0.0)
+                    if seedFinderOptionsArg.beamPos == (None, None)
+                    else seedFinderOptionsArg.beamPos,
+                )
+            )
             seedFilterConfig = acts.SeedFilterConfig(
                 **acts.examples.defaultKWArgs(
                     maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
@@ -500,7 +502,6 @@ def addSeeding(
                     useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
                 )
             )
-
             seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
                 level=customLogLevel(),
                 inputSpacePoints=[spAlg.config.outputSpacePoints],
