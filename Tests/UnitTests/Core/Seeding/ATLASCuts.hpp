@@ -21,7 +21,7 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// @return seed weight to be added to the seed's weight
   float seedWeight(const InternalSpacePoint<SpacePoint>& bottom,
                    const InternalSpacePoint<SpacePoint>& middle,
-                   const InternalSpacePoint<SpacePoint>& top) const;
+                   const InternalSpacePoint<SpacePoint>& top) const override;
   /// @param weight the current seed weight
   /// @param bottom bottom space point of the current seed
   /// @param middle middle space point of the current seed
@@ -30,7 +30,7 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// discarded
   bool singleSeedCut(float weight, const InternalSpacePoint<SpacePoint>& bottom,
                      const InternalSpacePoint<SpacePoint>&,
-                     const InternalSpacePoint<SpacePoint>&) const;
+                     const InternalSpacePoint<SpacePoint>&) const override;
 
   /// @param seeds contains pairs of weight and seed created for one middle
   /// space
@@ -40,7 +40,7 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   cutPerMiddleSP(
       std::vector<
           std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-          seeds) const;
+          seeds) const override;
 };
 
 template <typename SpacePoint>

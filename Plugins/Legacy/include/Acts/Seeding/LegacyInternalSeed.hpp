@@ -59,9 +59,9 @@ class InternalSeed {
 
 template <typename SpacePoint>
 inline InternalSeed<SpacePoint>::InternalSeed() {
-  m_s0 = 0;
-  m_s1 = 0;
-  m_s2 = 0;
+  m_s0 = nullptr;
+  m_s1 = nullptr;
+  m_s2 = nullptr;
   m_z = 0.;
   m_q = 0.;
 }

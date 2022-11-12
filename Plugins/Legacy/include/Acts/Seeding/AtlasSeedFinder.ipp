@@ -480,7 +480,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
     r_first = m_config.SCT_rMin / r_rstep;
   }
   for (int i = r_first; i != r_size; ++i) {
-    if (!r_map[i]) {
+    if (r_map[i] == 0) {
       continue;
     }
 
@@ -491,7 +491,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
       ir0 = i;
     }
     // if not 1st event
-    if (m_iteration) {
+    if (m_iteration != 0) {
       //
       if (!(*r)->spacepoint->clusterList().second) {
         if (i < 20) {
@@ -526,18 +526,19 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
       // assign z-bin a value between 0 and 10 identifying the z-slice of a
       // space-point
       if (Z > 0.) {
-        Z < 250. ? z = 5
-                 : Z < 450. ? z = 6
-                            : Z < 925. ? z = 7
-                                       : Z < 1400. ? z = 8
-                                                   : Z < 2500. ? z = 9 : z = 10;
+        Z < 250.    ? z = 5
+        : Z < 450.  ? z = 6
+        : Z < 925.  ? z = 7
+        : Z < 1400. ? z = 8
+        : Z < 2500. ? z = 9
+                    : z = 10;
       } else {
-        Z > -250.
-            ? z = 5
-            : Z > -450.
-                  ? z = 4
-                  : Z > -925. ? z = 3
-                              : Z > -1400. ? z = 2 : Z > -2500. ? z = 1 : z = 0;
+        Z > -250.    ? z = 5
+        : Z > -450.  ? z = 4
+        : Z > -925.  ? z = 3
+        : Z > -1400. ? z = 2
+        : Z > -2500. ? z = 1
+                     : z = 0;
       }
       // calculate bin nr "n" for self made r-phi-z sorted 3D array "rfz_Sorted"
       // record number of sp in m_nsaz
@@ -618,7 +619,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::production3Sp() {
       for (int i = 0; i != rfz_t[a]; ++i) {
         int an = rfz_it[a][i];
         // if bin has no entry: continue
-        if (!rfz_map[an]) {
+        if (rfz_map[an] == 0) {
           continue;
         }
         // assign begin-pointer and end-pointer of current bin to rt and rte
