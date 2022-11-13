@@ -94,6 +94,8 @@ class BinUtility {
   /// @param sbu is the source bin utility
   BinUtility(const BinUtility& sbu) = default;
 
+  BinUtility(BinUtility&& sbu) = default;
+
   /// Assignment operator
   ///
   /// @param sbu is the source bin utility
@@ -105,6 +107,8 @@ class BinUtility {
     }
     return (*this);
   }
+
+  BinUtility& operator=(BinUtility &&) = default;	
 
   /// Operator+= to make multidimensional BinUtility
   ///
