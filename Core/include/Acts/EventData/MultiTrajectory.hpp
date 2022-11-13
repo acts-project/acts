@@ -379,7 +379,9 @@ class TrackStateProxy {
   /// @param srf Shared pointer to the surface to set
   /// @note This overload is only present in case @c ReadOnly is false.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setReferenceSurface(std::shared_ptr<const Surface> srf) {
+  void setReferenceSurface(
+      std::shared_ptr<const Surface>
+          srf) {  // NOLINT(performance-unnecessary-value-param)
     component<std::shared_ptr<const Surface>,
               hashString("referenceSurface")>() = std::move(srf);
   }

@@ -49,7 +49,7 @@ struct GeneralMixture {
       // R.Fruehwirth, M. Liendl. -
       // Computer Physics Communications 141 (2001) 230â246
       //----------------------------------------------------------------------------
-      std::array<double, 4> scattering_params;
+      std::array<double, 4> scattering_params{};
       // Decide which mixture is best
       //   beta² = (p/E)² = p²/(p² + m²) = 1/(1 + (m/p)²)
       // 1/beta² = 1 + (m/p)²
@@ -95,7 +95,7 @@ struct GeneralMixture {
 
   std::array<double, 4> getGaussian(double beta, double p, double tInX0,
                                     double scale) const {
-    std::array<double, 4> scattering_params;
+    std::array<double, 4> scattering_params{};
     // Total standard deviation of mixture
     scattering_params[0] = 15. / beta / p * std::sqrt(tInX0) * scale;
     scattering_params[1] = 1.0;  // Variance of core
@@ -106,12 +106,12 @@ struct GeneralMixture {
 
   std::array<double, 4> getGaussmix(double beta, double p, double tInX0,
                                     double Z, double scale) const {
-    std::array<double, 4> scattering_params;
+    std::array<double, 4> scattering_params{};
     scattering_params[0] = 15. / beta / p * std::sqrt(tInX0) *
                            scale;  // Total standard deviation of mixture
     double d1 = std::log(tInX0 / (beta * beta));
     double d2 = std::log(std::pow(Z, 2.0 / 3.0) * tInX0 / (beta * beta));
-    double epsi;
+    double epsi = 0;
     double var1 = (-1.843e-3 * d1 + 3.347e-2) * d1 + 8.471e-1;  // Variance of
                                                                 // core
     if (d2 < 0.5) {
@@ -127,7 +127,7 @@ struct GeneralMixture {
 
   std::array<double, 6> getSemigauss(double beta, double p, double tInX0,
                                      double Z, double scale) const {
-    std::array<double, 6> scattering_params;
+    std::array<double, 6> scattering_params{};
     double N = tInX0 * 1.587E7 * std::pow(Z, 1.0 / 3.0) / (beta * beta) /
                (Z + 1) / std::log(287 / std::sqrt(Z));
     scattering_params[4] = 15. / beta / p * std::sqrt(tInX0) *

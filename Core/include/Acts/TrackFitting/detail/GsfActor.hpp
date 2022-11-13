@@ -112,7 +112,7 @@ struct GsfActor {
   /// Stores meta information about the components
   struct MetaCache {
     /// Where to find the parent component in the MultiTrajectory
-    MultiTrajectoryTraits::IndexType parentIndex;
+    MultiTrajectoryTraits::IndexType parentIndex = 0;
 
     /// Other quantities TODO are they really needed here? seems they are
     /// reinitialized to Identity etc.
@@ -122,12 +122,12 @@ struct GsfActor {
     FreeVector derivative;
 
     /// We need to preserve the path length
-    ActsScalar pathLength;
+    ActsScalar pathLength = 0;
   };
 
   /// Stores parameters of a gaussian component
   struct ParameterCache {
-    ActsScalar weight;
+    ActsScalar weight = 0;
     BoundVector boundPars;
     std::optional<BoundSymMatrix> boundCov;
   };

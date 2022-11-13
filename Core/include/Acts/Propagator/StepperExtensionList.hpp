@@ -44,7 +44,7 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   using detail::Extendable<extensions...>::tuple;
 
   // Vector of valid extensions for a step
-  std::array<bool, nExtensions> validExtensions;
+  std::array<bool, nExtensions> validExtensions{};
 
  public:
   // Access to an extension

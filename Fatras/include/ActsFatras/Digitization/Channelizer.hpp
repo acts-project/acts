@@ -49,7 +49,7 @@ struct Channelizer {
     ChannelStep(BinDelta2D delta_, Acts::Vector2 intersect_,
                 const Acts::Vector2& start)
         : delta(delta_),
-          intersect(intersect_),
+          intersect(std::move(intersect_)),
           path((intersect - start).norm()) {}
 
     /// Smaller operator for sorting the ChannelStep objects.

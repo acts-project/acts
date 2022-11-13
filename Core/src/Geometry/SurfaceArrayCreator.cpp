@@ -238,7 +238,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
     std::transform(
         phiModules.begin(), phiModules.end(), std::back_inserter(nPhiModules),
-        [&equal, this](std::vector<const Surface*> surfaces_) -> size_t {
+        [&equal, this](const std::vector<const Surface*>& surfaces_) -> size_t {
           return this->findKeySurfaces(surfaces_, equal).size();
         });
 

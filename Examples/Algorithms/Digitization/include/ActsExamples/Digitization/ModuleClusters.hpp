@@ -35,7 +35,7 @@ class ModuleClusters {
   ModuleClusters(Acts::BinUtility segmentation,
                  std::vector<Acts::BoundIndices> geoIndices, bool merge,
                  double nsigma, bool commonCorner)
-      : m_segmentation(segmentation),
+      : m_segmentation(std::move(segmentation)),
         m_geoIndices(std::move(geoIndices)),
         m_merge(merge),
         m_nsigma(nsigma),

@@ -48,7 +48,7 @@ class Geant4Decay {
   ///
   /// @return Vector containing decay products
   template <typename generator_t>
-  std::vector<Particle> run(generator_t&, Particle& particle) const;
+  std::vector<Particle> run(generator_t& /*unused*/, Particle& particle) const;
 
  private:
   /// This function evaluates the decay products of a given particle
@@ -92,7 +92,8 @@ Particle::Scalar Geant4Decay::generateProperTimeLimit(
 }
 
 template <typename generator_t>
-std::vector<Particle> Geant4Decay::run(generator_t&, Particle& particle) const {
+std::vector<Particle> Geant4Decay::run(generator_t& /*unused*/,
+                                       Particle& particle) const {
   return decayParticle(particle);
 }
 }  // namespace ActsFatras
