@@ -411,7 +411,8 @@ size_t Acts::SurfaceArrayCreator::determineBinCount(
 Acts::SurfaceArrayCreator::ProtoAxis
 Acts::SurfaceArrayCreator::createVariableAxis(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-    BinningValue bValue, ProtoLayer protoLayer, Transform3& transform) const {
+    BinningValue bValue, const ProtoLayer& protoLayer,
+    Transform3& transform) const {
   if (surfaces.empty()) {
     throw std::logic_error(
         "No surfaces handed over for creating arbitrary bin utility!");
@@ -550,7 +551,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
 Acts::SurfaceArrayCreator::ProtoAxis
 Acts::SurfaceArrayCreator::createEquidistantAxis(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-    BinningValue bValue, ProtoLayer protoLayer, Transform3& transform,
+    BinningValue bValue, const ProtoLayer& protoLayer, Transform3& transform,
     size_t nBins) const {
   if (surfaces.empty()) {
     throw std::logic_error(

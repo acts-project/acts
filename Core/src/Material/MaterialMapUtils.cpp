@@ -112,7 +112,8 @@ auto Acts::materialMapperXYZ(
                                std::array<size_t, 3> nBinsXYZ)>&
         materialVectorToGridMapper,
     std::vector<double> xPos, std::vector<double> yPos,
-    std::vector<double> zPos, std::vector<Material> material, double lengthUnit)
+    std::vector<double> zPos, const std::vector<Material>& material,
+    double lengthUnit)
     -> MaterialMapper<
         detail::Grid<Material::ParametersVector, detail::EquidistantAxis,
                      detail::EquidistantAxis, detail::EquidistantAxis>> {
@@ -120,7 +121,7 @@ auto Acts::materialMapperXYZ(
   std::vector<Material::ParametersVector> materialVector;
   materialVector.reserve(material.size());
 
-  for (Material& mat : material) {
+  for (const Material& mat : material) {
     materialVector.push_back(mat.parameters());
   }
 

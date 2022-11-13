@@ -234,7 +234,8 @@ void Acts::VolumeMaterialMapper::collectMaterialSurfaces(
 void Acts::VolumeMaterialMapper::createExtraHits(
     State& mState,
     std::pair<const GeometryIdentifier, BinUtility>& currentBinning,
-    Acts::MaterialSlab properties, Vector3 position, Vector3 direction) const {
+    Acts::MaterialSlab properties, const Vector3& position,
+    Vector3 direction) const {
   if (currentBinning.second.dimensions() == 0) {
     // Writing homogeneous material for the current volumes no need to create
     // extra hits. We directly accumulate the material

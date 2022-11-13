@@ -198,7 +198,7 @@ Particle::Scalar PhotonConversion::generateFirstChildEnergyFraction(
 
   // We will need 3 uniform random number for each trial of sampling
   Scalar greject = 0.;
-  Scalar eps;
+  Scalar eps = 0.;
   std::uniform_real_distribution<Scalar> rndmEngine;
   do {
     if (NormF1 > rndmEngine(generator) * (NormF1 + NormF2)) {
