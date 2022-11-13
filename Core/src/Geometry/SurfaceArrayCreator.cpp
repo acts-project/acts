@@ -568,7 +568,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   // direction
   std::vector<const Acts::Surface*> keys;
 
-  size_t binNumber;
+  size_t binNumber = 0;
   if (nBins == 0) {
     // determine bin count
     binNumber = determineBinCount(gctx, surfaces, bValue);

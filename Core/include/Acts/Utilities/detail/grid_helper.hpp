@@ -25,9 +25,9 @@ namespace detail {
 
 template <typename T>
 constexpr T ipow(T num, unsigned int pow) {
-  return (pow >= sizeof(unsigned int) * 8)
-             ? 0
-             : pow == 0 ? 1 : num * ipow(num, pow - 1);
+  return (pow >= sizeof(unsigned int) * 8) ? 0
+         : pow == 0                        ? 1
+                                           : num * ipow(num, pow - 1);
 }
 
 // This object can be iterated to produce the (ordered) set of global indices
@@ -524,7 +524,7 @@ struct grid_helper {
   static std::array<ActsScalar, sizeof...(Axes)> getBinCenter(
       const std::array<size_t, sizeof...(Axes)>& localIndices,
       const std::tuple<Axes...>& axes) {
-    std::array<ActsScalar, sizeof...(Axes)> center;
+    std::array<ActsScalar, sizeof...(Axes)> center{};
     constexpr size_t MAX = sizeof...(Axes) - 1;
     grid_helper_impl<MAX>::getBinCenter(center, localIndices, axes);
 

@@ -263,7 +263,7 @@ struct GenericDenseEnvironmentExtension {
     Vector3 dk4dL = Vector3::Zero();
 
     /// Propagation of derivatives of dLambda''dlambda at each sub-step
-    std::array<double, 4> jdL;
+    std::array<double, 4> jdL{};
 
     // Evaluation of the rightmost column without the last term.
     jdL[0] = dLdl[0];

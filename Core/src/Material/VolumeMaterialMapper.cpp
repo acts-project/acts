@@ -94,13 +94,11 @@ void Acts::VolumeMaterialMapper::checkAndInsert(
     ACTS_DEBUG("Material volume found with volumeID " << volumeID);
     ACTS_DEBUG("       - ID is " << geoID);
 
-    const BinUtility* bu;
-
     // We need a dynamic_cast to either a volume material proxy or
     // proper surface material
     auto psm = dynamic_cast<const ProtoVolumeMaterial*>(volumeMaterial);
     // Get the bin utility: try proxy material first
-    bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;
+    const BinUtility* bu = (psm != nullptr) ? (&psm->binUtility()) : nullptr;
     if (bu != nullptr) {
       // Screen output for Binned Surface material
       ACTS_DEBUG("       - (proto) binning is " << *bu);
