@@ -108,7 +108,7 @@ class BinUtility {
     return (*this);
   }
 
-  BinUtility& operator=(BinUtility &&) = default;	
+  BinUtility& operator=(BinUtility&&) = default;
 
   /// Operator+= to make multidimensional BinUtility
   ///
