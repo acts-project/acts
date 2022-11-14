@@ -19,6 +19,7 @@ import acts.examples
 acts.logging.setFailureThreshold(acts.logging.FATAL)
 
 from truth_tracking_kalman import runTruthTrackingKalman
+from truth_tracking_gsf import runTruthTrackingGsf
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
@@ -74,9 +75,11 @@ geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 
 field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
+
+### Truth tracking with Kalman Filter
 
 with tempfile.TemporaryDirectory() as temp:
+    s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
     tp = Path(temp)
     runTruthTrackingKalman(
         trackingGeometry,
@@ -92,6 +95,28 @@ with tempfile.TemporaryDirectory() as temp:
     perf_file = tp / "performance_track_fitter.root"
     assert perf_file.exists(), "Performance file not found"
     shutil.copy(perf_file, outdir / "performance_truth_tracking.root")
+
+
+### GSF
+
+with tempfile.TemporaryDirectory() as temp:
+    s = acts.examples.Sequencer(events=500, numThreads=-1, logLevel=acts.logging.INFO)
+
+    tp = Path(temp)
+    runTruthTrackingGsf(
+        trackingGeometry,
+        digiConfig,
+        field,
+        outputDir=tp,
+        s=s,
+    )
+
+    s.run()
+    del s
+
+    perf_file = tp / "performance_gsf.root"
+    assert perf_file.exists(), "Performance file not found"
+    shutil.copy(perf_file, outdir / "performance_gsf.root")
 
 
 ### CKF track finding variations
