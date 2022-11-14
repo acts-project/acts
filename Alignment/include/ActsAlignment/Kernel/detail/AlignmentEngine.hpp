@@ -118,7 +118,7 @@ TrackAlignmentState trackAlignmentState(
   std::vector<std::pair<size_t, bool>> measurementStates;
   measurementStates.reserve(15);
   // Number of smoothed states on the track
-  size_t nSmoothedStates = 0;  // NOLINT
+  [[maybe_unused]] size_t nSmoothedStates = 0;
   // Number of alignable surfaces on the track
   size_t nAlignSurfaces = 0;
 
