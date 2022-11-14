@@ -1,6 +1,6 @@
 ## :bar_chart: Physics performance monitoring for {{ commit }}
 {% if has_errors %}
-> :red_square: **ERROR** The result has missing elements! 
+> :red_square: **ERROR** The result has missing elements!
 > This is likely a physmon job failure
 {% endif %}
 
@@ -8,7 +8,8 @@
 CKF: {{ make_url("seeded", "ckf_seeded.html") }}, {{ make_url("truth smeared", "ckf_truth_smeared.html") }}, {{ make_url("truth estimated", "ckf_truth_estimated.html") }}
 IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "ivf_truth_smeared.html") }}, {{ make_url("truth estimated", "ivf_truth_estimated.html") }}
 {{ make_url("Ambiguity resolution", "ambi_seeded.html") }}
-{{ make_url("Truth tracking", "truth_tracking.html") }}
+{{ make_url("Truth tracking (Kalman Filter)", "truth_tracking.html") }}
+{{ make_url("Truth tracking (GSF)", "gsf.html")}}
 
 ### Vertexing {{ "" if all_exist(
     "vertexing_mu_scan.pdf", 
@@ -79,7 +80,7 @@ IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "
 
 {% endcall %}
 
-### Truth tracking {{ "" if exists("truth_tracking_plots") else ":x: "}}
+### Truth tracking (Kalman Filter) {{ "" if exists("truth_tracking_plots") else ":x: "}}
 
 {% call detail_block("Truth tracking", "truth_tracking_plots") %}
     
@@ -94,6 +95,21 @@ IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "
     "pull_t.pdf",
 ] -%}
 {{- make_image("truth_tracking_plots/"+url, "50%") -}}
+{%- endfor %}
+
+{% endcall %}
+
+### Truth tracking (GSF) {{ "" if exists("truth_tracking_plots") else ":x: "}}
+
+{% call detail_block("Truth tracking", "truth_tracking_plots") %}
+
+{% for url in [
+    "pull_d0.pdf",
+    "res_d0.pdf",
+    "pull_qop.pdf",
+    "res_qop.pdf",
+] -%}
+{{- make_image("gsf_plots/"+url, "50%") -}}
 {%- endfor %}
 
 {% endcall %}
