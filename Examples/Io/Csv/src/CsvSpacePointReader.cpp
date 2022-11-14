@@ -20,7 +20,10 @@
 #include <vector>
 
 #include <boost/container/static_vector.hpp>
+
+// NOLINTBEGIN
 #include <dfe/dfe_io_dsv.hpp>
+// NOLINTEND
 
 #include "CsvOutputData.hpp"
 

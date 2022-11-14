@@ -101,7 +101,7 @@ bool compareVertices(const std::shared_ptr<ActsExamples::SimVertex>& actsVertex,
 void ActsExamples::HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
                                              const double momentumUnit) {
   // Check, if the momentum unit fits Acts::UnitConstants::MeV or _GeV
-  HepMC3::Units::MomentumUnit mom = 0;
+  HepMC3::Units::MomentumUnit mom = HepMC3::Units::MomentumUnit::GEV;
   if (momentumUnit == Acts::UnitConstants::MeV) {
     mom = HepMC3::Units::MomentumUnit::MEV;
   } else if (momentumUnit == Acts::UnitConstants::GeV) {
@@ -110,7 +110,6 @@ void ActsExamples::HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
     // Report invalid momentum unit and set GeV
     std::cout << "Invalid unit of momentum: " << momentumUnit << std::endl;
     std::cout << "Momentum unit [GeV] will be used instead" << std::endl;
-    mom = HepMC3::Units::MomentumUnit::GEV;
   }
   // Set units
   event.set_units(mom, event.length_unit());
@@ -119,7 +118,7 @@ void ActsExamples::HepMC3Event::momentumUnit(HepMC3::GenEvent& event,
 void ActsExamples::HepMC3Event::lengthUnit(HepMC3::GenEvent& event,
                                            const double lengthUnit) {
   // Check, if the length unit fits Acts::UnitConstants::mm or _cm
-  HepMC3::Units::LengthUnit len = 0;
+  HepMC3::Units::LengthUnit len = HepMC3::Units::LengthUnit::MM;
   if (lengthUnit == Acts::UnitConstants::mm) {
     len = HepMC3::Units::LengthUnit::MM;
   } else if (lengthUnit == Acts::UnitConstants::cm) {
@@ -128,7 +127,6 @@ void ActsExamples::HepMC3Event::lengthUnit(HepMC3::GenEvent& event,
     // Report invalid length unit and set mm
     std::cout << "Invalid unit of length: " << lengthUnit << std::endl;
     std::cout << "Length unit [mm] will be used instead" << std::endl;
-    len = HepMC3::Units::LengthUnit::MM;
   }
 
   // Set units

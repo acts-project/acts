@@ -13,7 +13,9 @@
 
 #include <cstdint>
 
+// NOLINTBEGIN
 #include <dfe/dfe_namedtuple.hpp>
+// NOLINTEND
 
 namespace ActsExamples {
 

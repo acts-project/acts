@@ -16,7 +16,9 @@
 
 #include <stdexcept>
 
+// NOLINTBEGIN
 #include <dfe/dfe_io_dsv.hpp>
+// NOLINTEND
 
 #include "CsvOutputData.hpp"
 

@@ -16,3 +16,4 @@ limits:
   "cppcoreguidelines-pro-type-member-init": 0
   "cppcoreguidelines-init-variables": 0
   "clang-analyzer-optin.cplusplus.UninitializedObject": 0
+  "clang-diagnostic-error": 0

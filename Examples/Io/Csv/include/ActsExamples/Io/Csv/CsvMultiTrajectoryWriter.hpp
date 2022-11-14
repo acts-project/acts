@@ -67,12 +67,12 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// @brief Struct for brief trajectory summary info
   ///
   struct trackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
-    size_t trackId;
+    size_t trackId = 0;
     ActsFatras::Barcode particleId;
-    size_t nMajorityHits;
+    size_t nMajorityHits = 0;
     std::string trackType;
-    double truthMatchProb;
-    const TrackParameters* fittedParameters;
+    double truthMatchProb = 0;
+    const TrackParameters* fittedParameters = nullptr;
   };  // trackInfo struct
 };
 
