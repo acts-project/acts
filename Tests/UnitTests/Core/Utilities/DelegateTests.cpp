@@ -243,6 +243,9 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
       // This doesn't compile: owning delegate is not copyable
       // Delegate<int(), DelegateType::Owning> dCopy = d;
       BOOST_CHECK_EQUAL(destructorCalled, false);
+      // This doesn't compile: owning delegate cannot accept raw pointer
+      // instance
+      // d.connect<&CheckDestructor::func>(s.get());
       d.connect<&CheckDestructor::func>(std::move(s));
       BOOST_CHECK_EQUAL(destructorCalled, false);
       BOOST_CHECK_EQUAL(d(), 4);
