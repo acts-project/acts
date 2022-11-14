@@ -210,6 +210,14 @@ struct CheckDestructor {
   ~CheckDestructor() { (*destructorCalled) = true; }
 };
 
+int owningTest() {
+  return 8;
+}
+
+int owningTest2(const void*) {
+  return 8;
+}
+
 BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
   {
     auto s = std::make_unique<const SignatureTest>();
@@ -269,6 +277,56 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
     }
     // destructor called after owning delegate goes out of scope
     BOOST_CHECK_EQUAL(destructorCalled, true);
+  }
+
+  {
+    bool destructorCalled = false;
+    auto s = std::make_unique<const CheckDestructor>(&destructorCalled);
+    {
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      Delegate<int(), DelegateType::NonOwning> d;
+      Delegate<int(), DelegateType::NonOwning> dCopy{d};
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      d.connect<&CheckDestructor::func>(s.get());
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      BOOST_CHECK_EQUAL(d(), 4);
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      d.disconnect();
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+    }
+
+    {
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      Delegate<int(), DelegateType::Owning> d;
+      // This doesn't compile: owning delegate is not copyable
+      // Delegate<int(), DelegateType::Owning> dCopy = d;
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      // This doesn't compile: owning delegate cannot accept raw pointer
+      // instance
+      // d.connect<&CheckDestructor::func>(s.get());
+      d.connect<&CheckDestructor::func>(std::move(s));
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      BOOST_CHECK_EQUAL(d(), 4);
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      d.disconnect();
+      BOOST_CHECK_EQUAL(destructorCalled, true);
+    }
+    // destructor called after owning delegate goes out of scope
+    BOOST_CHECK_EQUAL(destructorCalled, true);
+  }
+
+  {
+    OwningDelegate<int()> d;
+    d.connect<&owningTest>();
+    BOOST_CHECK_EQUAL(d(), 8);
+
+    d.disconnect();
+    d.connect<&owningTest>();
+    BOOST_CHECK_EQUAL(d(), 8);
+
+    d.disconnect();
+    d.connect(owningTest2);
+    BOOST_CHECK_EQUAL(d(), 8);
   }
 }
 

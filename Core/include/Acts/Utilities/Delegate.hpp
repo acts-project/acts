@@ -238,9 +238,10 @@ class Delegate<R(Args...), O> {
   /// Disconnect this delegate, meaning it cannot be called anymore
   void disconnect() {
     if constexpr (kOwnership == DelegateType::Owning) {
-      assert(m_payload.deleter != nullptr);
-      m_payload.deleter(m_payload.payload);
-      m_payload.deleter = nullptr;
+      if (m_payload.deleter != nullptr) {
+        m_payload.deleter(m_payload.payload);
+        m_payload.deleter = nullptr;
+      }
     }
     m_payload.payload = nullptr;
     m_function = nullptr;
