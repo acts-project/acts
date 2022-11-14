@@ -30,7 +30,7 @@ struct DD4hepDetector : public IBaseDetector {
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
 
   std::pair<IBaseDetector::TrackingGeometryPtr, ContextDecorators> finalize(
-      DD4hepGeometryService::Config cfg,
+      DD4hepGeometryService::Config config,
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
 

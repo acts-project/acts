@@ -9,7 +9,7 @@
 namespace Acts {
 template <typename spacepoint_t>
 SpacePointBuilder<spacepoint_t>::SpacePointBuilder(
-    SpacePointBuilderConfig cfg,
+    const SpacePointBuilderConfig& cfg,
     std::function<
         spacepoint_t(Acts::Vector3, Acts::Vector2,
                      boost::container::static_vector<const SourceLink*, 2>)>
@@ -106,9 +106,9 @@ void SpacePointBuilder<spacepoint_t>::makeMeasurementPairs(
     return;
   }
   // Declare helper variables
-  double currentDiff;
-  double diffMin;
-  unsigned int measurementMinDist;
+  double currentDiff = 0;
+  double diffMin = 0;
+  unsigned int measurementMinDist = 0;
 
   // Walk through all Measurements on both surfaces
   for (unsigned int iMeasurementsFront = 0;

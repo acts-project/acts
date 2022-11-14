@@ -38,7 +38,7 @@ class NeighborhoodIterator {
   NeighborhoodIterator(NeighborhoodVector indices,
                        const SpacePointGrid<external_spacepoint_t>* spgrid) {
     m_grid = spgrid;
-    m_indices = indices;
+    m_indices = std::move(indices);
     m_curInd = 0;
     if (m_indices.size() > m_curInd) {
       m_curIt = std::begin(spgrid->at(m_indices[m_curInd]));
@@ -50,7 +50,7 @@ class NeighborhoodIterator {
                        const SpacePointGrid<external_spacepoint_t>* spgrid,
                        size_t curInd, sp_it_t curIt) {
     m_grid = spgrid;
-    m_indices = indices;
+    m_indices = std::move(indices);
     m_curInd = curInd;
     m_curIt = curIt;
     if (m_indices.size() > m_curInd) {
@@ -122,7 +122,7 @@ class Neighborhood {
   Neighborhood() = delete;
   Neighborhood(NeighborhoodVector indices,
                const SpacePointGrid<external_spacepoint_t>* spgrid) {
-    m_indices = indices;
+    m_indices = std::move(indices);
     m_spgrid = spgrid;
   }
   NeighborhoodIterator<external_spacepoint_t> begin() {
@@ -270,7 +270,8 @@ class BinnedSPGroup {
   BinnedSPGroup<external_spacepoint_t>(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
       std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-          const external_spacepoint_t&, float, float, float)>,
+          const external_spacepoint_t&, float, float, float)>
+          globTool,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,

@@ -287,7 +287,7 @@ class KDTree {
   static range_t boundingBox(iterator_t b, iterator_t e) {
     // Firstly, we find the minimum and maximum value in each dimension to
     // construct a bounding box around this node's values.
-    std::array<Scalar, Dims> min_v, max_v;
+    std::array<Scalar, Dims> min_v{}, max_v{};
 
     for (std::size_t i = 0; i < Dims; ++i) {
       min_v[i] = std::numeric_limits<Scalar>::max();
@@ -414,7 +414,7 @@ class KDTree {
       // because the optimal way of constructing a k-d tree is to select the
       // pivot dimension as the dimension with the highest variance. To this
       // end, we first start by calculating the sum of all the values.
-      std::array<Scalar, Dims> sum_v;
+      std::array<Scalar, Dims> sum_v{};
 
       sum_v.fill(0.0);
 
@@ -431,7 +431,7 @@ class KDTree {
 
       // Using the sum in each dimension, we can now calculate the mean in each
       // dimension.
-      std::array<Scalar, Dims> mean_v;
+      std::array<Scalar, Dims> mean_v{};
 
       for (std::size_t j = 0; j < Dims; ++j) {
         mean_v[j] = sum_v[j] / this->size();
@@ -439,7 +439,7 @@ class KDTree {
 
       // Next, we calculate the summed squared error from the mean in each
       // dimension, again with the normalized values.
-      std::array<Scalar, Dims> sqe_v;
+      std::array<Scalar, Dims> sqe_v{};
       sqe_v.fill(0);
 
       for (iterator_t i = this->m_begin_it; i != this->m_end_it; ++i) {
@@ -451,7 +451,7 @@ class KDTree {
       }
 
       // Finally, we calculate the variance of the elements in each dimension.
-      std::array<Scalar, Dims> var_v;
+      std::array<Scalar, Dims> var_v{};
 
       for (std::size_t j = 0; j < Dims; ++j) {
         var_v[j] = sqe_v[j] / this->size();

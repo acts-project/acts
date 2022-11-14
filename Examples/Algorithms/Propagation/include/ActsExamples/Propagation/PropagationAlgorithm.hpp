@@ -119,9 +119,9 @@ class PropagationAlgorithm : public BareAlgorithm {
   };
 
   /// Constructor
-  /// @param [in] cnf is the configuration struct
+  /// @param [in] config is the configuration struct
   /// @param [in] loglevel is the loggin level
-  PropagationAlgorithm(const Config& cnf, Acts::Logging::Level level);
+  PropagationAlgorithm(const Config& config, Acts::Logging::Level level);
 
   /// Framework execute method
   /// @param [in] the algorithm context for event consistency

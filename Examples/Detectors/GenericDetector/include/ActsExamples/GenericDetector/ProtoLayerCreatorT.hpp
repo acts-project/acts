@@ -147,9 +147,9 @@ class ProtoLayerCreatorT {
   };
 
   /// Constructor
-  /// @param glbConfig is the configuration class
+  /// @param cfg is the configuration class
   /// @param logger is the logging class for screen output
-  ProtoLayerCreatorT(const Config& glbConfig,
+  ProtoLayerCreatorT(const Config& cfg,
                      std::unique_ptr<const Acts::Logger> logger =
                          Acts::getDefaultLogger("ProtoLayerCreatorT",
                                                 Acts::Logging::INFO));

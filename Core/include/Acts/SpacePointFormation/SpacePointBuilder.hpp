@@ -39,7 +39,7 @@ class SpacePointBuilder {
   /// @param cfg The configuration for the space point builder
   /// @param func The function that provides user's SP constructor with global pos, global cov, and sourceLinks.
   /// @param logger The logging instance
-  SpacePointBuilder(SpacePointBuilderConfig cfg,
+  SpacePointBuilder(const SpacePointBuilderConfig& cfg,
                     std::function<spacepoint_t(
                         Acts::Vector3, Acts::Vector2,
                         boost::container::static_vector<const SourceLink*, 2>)>

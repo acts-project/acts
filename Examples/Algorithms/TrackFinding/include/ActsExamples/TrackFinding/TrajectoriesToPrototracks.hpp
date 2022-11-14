@@ -22,7 +22,8 @@ class TrajectoriesToPrototracks final : public BareAlgorithm {
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
   TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl)
-      : BareAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(cfg) {}
+      : BareAlgorithm("TrajectoriesToPrototracks", lvl),
+        m_cfg(std::move(cfg)) {}
 
   /// Run the algorithm.
   ///

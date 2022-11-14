@@ -39,7 +39,7 @@ auto DD4hepDetector::finalize(
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext dd4HepContext;
-  config.matDecorator = mdecorator;
+  config.matDecorator = std::move(mdecorator);
   geometryService =
       std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
   lcdd = geometryService->lcdd();

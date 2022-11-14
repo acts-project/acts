@@ -42,7 +42,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     SeedingState& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
-    const Acts::Range1D<float> rMiddleSPRange) const {
+    const Acts::Range1D<float>& rMiddleSPRange) const {
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -429,11 +429,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           continue;
         }
 
-        float dU;
-        float A;
-        float S2;
-        float B;
-        float B2;
+        float dU = 0;
+        float A = 0;
+        float S2 = 0;
+        float B = 0;
+        float B2 = 0;
 
         if (m_config.useDetailedDoubleMeasurementInfo) {
           dU = ut - ub;
@@ -496,7 +496,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // A and B allow calculation of impact params in U/V plane with linear
         // function
         // (in contrast to having to solve a quadratic function in x/y plane)
-        float Im;
+        float Im = 0;
         if (m_config.useDetailedDoubleMeasurementInfo == false) {
           Im = std::abs((A - B * rM) * rM);
         } else {
