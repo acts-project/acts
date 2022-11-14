@@ -1,14 +1,6 @@
-## :bar_chart: Physics performance monitoring for {{ .commit }}
-[Full report]({{ .url }}/)
-CKF: [seeded]({{ .url }}/ckf_seeded.html), [truth smeared]({{ .url }}/ckf_truth_smeared.html), [truth estimated]({{ .url }}/ckf_truth_estimated.html)
-IVF: [seeded]({{ .url }}/ivf_seeded.html), [truth smeared]({{ .url }}/ivf_truth_smeared.html), [truth estimated]({{ .url }}/ivf_truth_estimated.html) 
-[Ambiguity resolution]({{ .url }}/ambi_seeded.html)
-[Truth tracking (Kalman Filter)]({{ .url }}/truth_tracking.html)
-[Truth tracking (GSF)]({{ .url }}/gsf.html)
-=======
 ## :bar_chart: Physics performance monitoring for {{ commit }}
 {% if has_errors %}
-> :red_square: **ERROR** The result has missing elements! 
+> :red_square: **ERROR** The result has missing elements!
 > This is likely a physmon job failure
 {% endif %}
 >>>>>>> main
@@ -17,7 +9,8 @@ IVF: [seeded]({{ .url }}/ivf_seeded.html), [truth smeared]({{ .url }}/ivf_truth_
 CKF: {{ make_url("seeded", "ckf_seeded.html") }}, {{ make_url("truth smeared", "ckf_truth_smeared.html") }}, {{ make_url("truth estimated", "ckf_truth_estimated.html") }}
 IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "ivf_truth_smeared.html") }}, {{ make_url("truth estimated", "ivf_truth_estimated.html") }}
 {{ make_url("Ambiguity resolution", "ambi_seeded.html") }}
-{{ make_url("Truth tracking", "truth_tracking.html") }}
+{{ make_url("Truth tracking (Kalman Filter)", "truth_tracking.html") }}
+{{ make_url("Truth tracking (GSF)", "gsf.html")}}
 
 ### Vertexing {{ "" if all_exist(
     "vertexing_mu_scan.pdf", 
