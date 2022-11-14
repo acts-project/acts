@@ -12,6 +12,7 @@
 
 #include <cassert>
 #include <functional>
+#include <memory>
 #include <type_traits>
 
 namespace Acts {
@@ -119,9 +120,6 @@ class Delegate<R(Args...), O> {
   template <auto Callable>
   void connect() {
     m_payload.payload = nullptr;
-    if constexpr (kOwnership == DelegateType::Owning) {
-      m_payload.deleter = &noopDeleter;
-    }
 
     static_assert(
         Concepts::is_detected<isSignatureCompatible, function_ptr_type,
@@ -155,9 +153,8 @@ class Delegate<R(Args...), O> {
   ///       i.e. if the signature of the delegate is `void(int)`, the
   ///       callable's signature has to be `void(const void*, int)`.
   void connect(function_type callable) {
-    m_payload.payload = nullptr;
-    if constexpr (kOwnership == DelegateType::Owning) {
-      m_payload.deleter = &noopDeleter;
+    if constexpr (kOwnership == DelegateType::NonOwning) {
+      m_payload.payload = nullptr;
     }
     m_function = callable;
   }
@@ -202,13 +199,14 @@ class Delegate<R(Args...), O> {
                   "signature");
 
     if constexpr (kOwnership == DelegateType::Owning) {
-      m_payload.deleter = [](const void *payload) {
-        const auto *concretePayload = static_cast<const Type *>(payload);
-        delete concretePayload;
-      };
+      m_payload.payload = std::unique_ptr<const void, deleter_type>(
+          instance.release(), [](const void *payload) {
+            const auto *concretePayload = static_cast<const Type *>(payload);
+            delete concretePayload;
+          });
+    } else {
+      m_payload.payload = instance.release();
     }
-
-    m_payload.payload = instance.release();
 
     m_function = [](const void *payload, Args... args) -> return_type {
       assert(payload != nullptr && "Payload is required, but not set");
@@ -223,7 +221,7 @@ class Delegate<R(Args...), O> {
   /// @return Return value of the contained function
   return_type operator()(Args... args) const {
     assert(connected() && "Delegate is not connected");
-    return std::invoke(m_function, m_payload.payload,
+    return std::invoke(m_function, m_payload.ptr(),
                        std::forward<Args>(args)...);
   }
 
@@ -237,17 +235,9 @@ class Delegate<R(Args...), O> {
 
   /// Disconnect this delegate, meaning it cannot be called anymore
   void disconnect() {
-    if constexpr (kOwnership == DelegateType::Owning) {
-      if (m_payload.deleter != nullptr) {
-        m_payload.deleter(m_payload.payload);
-        m_payload.deleter = nullptr;
-      }
-    }
-    m_payload.payload = nullptr;
+    m_payload.clear();
     m_function = nullptr;
   }
-
-  ~Delegate() { disconnect(); }
 
  private:
   // Deleter that does not do anything
@@ -255,17 +245,20 @@ class Delegate<R(Args...), O> {
 
   // Payload object without a deleter
   struct NonOwningPayload {
+    void clear() { payload = nullptr; }
+
+    const void *ptr() const { return payload; }
+
     const void *payload{nullptr};
   };
 
   // Payload object with a deleter
   struct OwningPayload {
-    OwningPayload() = default;
-    OwningPayload(const OwningPayload &) = delete;
-    OwningPayload &operator=(const OwningPayload &) = delete;
+    void clear() { payload.reset(); }
 
-    const void *payload{nullptr};
-    deleter_type deleter{nullptr};
+    const void *ptr() const { return payload.get(); }
+
+    std::unique_ptr<const void, deleter_type> payload{nullptr, &noopDeleter};
   };
 
   /// Stores the instance pointer and maybe a deleter
@@ -283,6 +276,5 @@ class OwningDelegate;
 template <typename R, typename... Args>
 class OwningDelegate<R(Args...)>
     : public Delegate<R(Args...), DelegateType::Owning> {};
-// using OwningDelegate = Delegate<R(Args...), DelegateType::Owning>;
 
 }  // namespace Acts

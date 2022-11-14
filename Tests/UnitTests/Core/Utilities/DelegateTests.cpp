@@ -235,11 +235,12 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
     {
       BOOST_CHECK_EQUAL(destructorCalled, false);
       Delegate<int(), DelegateType::NonOwning> d;
-      Delegate<int(), DelegateType::NonOwning> dCopy{d};
       BOOST_CHECK_EQUAL(destructorCalled, false);
       d.connect<&CheckDestructor::func>(s.get());
       BOOST_CHECK_EQUAL(destructorCalled, false);
+      Delegate<int(), DelegateType::NonOwning> dCopy{d};
       BOOST_CHECK_EQUAL(d(), 4);
+      BOOST_CHECK_EQUAL(dCopy(), 4);
       BOOST_CHECK_EQUAL(destructorCalled, false);
     }
     // destructor not called after non-owning delegate goes out of scope
@@ -285,11 +286,12 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
     {
       BOOST_CHECK_EQUAL(destructorCalled, false);
       Delegate<int(), DelegateType::NonOwning> d;
-      Delegate<int(), DelegateType::NonOwning> dCopy{d};
       BOOST_CHECK_EQUAL(destructorCalled, false);
       d.connect<&CheckDestructor::func>(s.get());
+      Delegate<int(), DelegateType::NonOwning> dCopy{d};
       BOOST_CHECK_EQUAL(destructorCalled, false);
       BOOST_CHECK_EQUAL(d(), 4);
+      BOOST_CHECK_EQUAL(dCopy(), 4);
       BOOST_CHECK_EQUAL(destructorCalled, false);
       d.disconnect();
       BOOST_CHECK_EQUAL(destructorCalled, false);
