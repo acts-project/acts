@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "DetectorAlignment.hpp"
+
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
@@ -33,8 +35,6 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-
-#include "DetectorAlignment.hpp"
 
 #include <filesystem>
 #include <memory>
