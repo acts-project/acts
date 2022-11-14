@@ -205,12 +205,12 @@ struct CheckDestructor {
 
   bool* destructorCalled;
 
-  void func() const {}
+  int func() const { return 4; }
 
   ~CheckDestructor() { (*destructorCalled) = true; }
 };
 
-BOOST_AUTO_TEST_CASE(OwningDelegate) {
+BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
   {
     auto s = std::make_unique<const SignatureTest>();
     Delegate<void(int&, int)> d;
@@ -226,11 +226,12 @@ BOOST_AUTO_TEST_CASE(OwningDelegate) {
     auto s = std::make_unique<const CheckDestructor>(&destructorCalled);
     {
       BOOST_CHECK_EQUAL(destructorCalled, false);
-      Delegate<void()> d;
+      Delegate<int(), DelegateType::NonOwning> d;
+      Delegate<int(), DelegateType::NonOwning> dCopy{d};
       BOOST_CHECK_EQUAL(destructorCalled, false);
       d.connect<&CheckDestructor::func>(s.get());
       BOOST_CHECK_EQUAL(destructorCalled, false);
-      d();
+      BOOST_CHECK_EQUAL(d(), 4);
       BOOST_CHECK_EQUAL(destructorCalled, false);
     }
     // destructor not called after non-owning delegate goes out of scope
@@ -238,11 +239,29 @@ BOOST_AUTO_TEST_CASE(OwningDelegate) {
 
     {
       BOOST_CHECK_EQUAL(destructorCalled, false);
-      Delegate<void()> d;
+      Delegate<int(), DelegateType::Owning> d;
+      // This doesn't compile: owning delegate is not copyable
+      // Delegate<int(), DelegateType::Owning> dCopy = d;
       BOOST_CHECK_EQUAL(destructorCalled, false);
       d.connect<&CheckDestructor::func>(std::move(s));
       BOOST_CHECK_EQUAL(destructorCalled, false);
-      d();
+      BOOST_CHECK_EQUAL(d(), 4);
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+    }
+    // destructor called after owning delegate goes out of scope
+    BOOST_CHECK_EQUAL(destructorCalled, true);
+
+    destructorCalled = false;
+    s = std::make_unique<const CheckDestructor>(&destructorCalled);
+    {
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      OwningDelegate<int()> d;
+      // This doesn't compile: owning delegate is not copyable
+      // OwningDelegate<int()> dCopy = d;
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      d.connect<&CheckDestructor::func>(std::move(s));
+      BOOST_CHECK_EQUAL(destructorCalled, false);
+      BOOST_CHECK_EQUAL(d(), 4);
       BOOST_CHECK_EQUAL(destructorCalled, false);
     }
     // destructor called after owning delegate goes out of scope
