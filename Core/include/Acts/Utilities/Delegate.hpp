@@ -243,6 +243,8 @@ class Delegate<R(Args...), O> {
   // Deleter that does not do anything
   static void noopDeleter(const void *) {}
 
+  /// @cond
+
   // Payload object without a deleter
   struct NonOwningPayload {
     void clear() { payload = nullptr; }
@@ -265,6 +267,9 @@ class Delegate<R(Args...), O> {
   std::conditional_t<kOwnership == DelegateType::NonOwning, NonOwningPayload,
                      OwningPayload>
       m_payload;
+
+  /// @endcond
+
   /// Stores the function pointer wrapping the compile time function pointer given in @c connect().
   function_type m_function{nullptr};
 };
