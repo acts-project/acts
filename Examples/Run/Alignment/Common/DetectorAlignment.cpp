@@ -34,6 +34,8 @@
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
+#include "DetectorAlignment.hpp"
+
 #include <filesystem>
 #include <memory>
 
