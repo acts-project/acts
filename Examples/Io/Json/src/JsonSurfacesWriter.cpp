@@ -23,7 +23,6 @@ using namespace ActsExamples;
 JsonSurfacesWriter::JsonSurfacesWriter(const JsonSurfacesWriter::Config& config,
                                        Acts::Logging::Level level)
     : m_cfg(config),
-      m_world(nullptr),
       m_logger(Acts::getDefaultLogger("JsonSurfacesWriter", level)) {
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
@@ -91,7 +90,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
   }
   // Step down into hierarchy to process all child volumnes
   if (volume.confinedVolumes()) {
-    for (auto confined : volume.confinedVolumes()->arrayObjects()) {
+    for (const auto& confined : volume.confinedVolumes()->arrayObjects()) {
       collectSurfaces(cSurfaces, *confined.get(), writeLayer, writeApproach,
                       writeSensitive, writeBoundary);
     }

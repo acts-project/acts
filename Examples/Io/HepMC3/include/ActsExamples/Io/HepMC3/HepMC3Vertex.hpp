@@ -61,31 +61,31 @@ double time(const std::shared_ptr<HepMC3::GenVertex>& vertex);
 /// @param vertex vertex in HepMC data type
 /// @param particle incoming particle that will be added
 void addParticleIn(const std::shared_ptr<HepMC3::GenVertex>& vertex,
-                   std::shared_ptr<SimParticle> particle);
+                   const std::shared_ptr<SimParticle>& particle);
 
 /// @brief Adds an outgoing particle to a vertex translated into Acts
 /// @param vertex vertex in HepMC data type
 /// @param particle outgoing particle that will be added
 void addParticleOut(const std::shared_ptr<HepMC3::GenVertex>& vertex,
-                    std::shared_ptr<SimParticle> particle);
+                    const std::shared_ptr<SimParticle>& particle);
 
 /// @brief Removes an incoming particle from a vertex translated into Acts
 /// @param vertex vertex in HepMC data type
 /// @param particle incoming particle that will be removed
 void removeParticleIn(const std::shared_ptr<HepMC3::GenVertex>& vertex,
-                      std::shared_ptr<SimParticle> particle);
+                      const std::shared_ptr<SimParticle>& particle);
 
 /// @brief Removes an outgoing particle from a vertex translated into Acts
 /// @param vertex vertex in HepMC data type
 /// @param particle outgoing particle that will be removed
 void removeParticleOut(const std::shared_ptr<HepMC3::GenVertex>& vertex,
-                       std::shared_ptr<SimParticle> particle);
+                       const std::shared_ptr<SimParticle>& particle);
 
 /// @brief Sets the position of a vertex translated into Acts
 /// @param vertex vertex in HepMC data type
 /// @param pos new position of the vertex
 void position(const std::shared_ptr<HepMC3::GenVertex>& vertex,
-              Acts::Vector3 pos);
+              const Acts::Vector3& pos);
 
 /// @brief Sets the time of a vertex translated into Acts
 /// @param vertex vertex in HepMC data type

@@ -133,8 +133,8 @@ void ActsExamples::HepMC3Vertex::removeParticleIn(
 }
 
 void ActsExamples::HepMC3Vertex::removeParticleOut(
-    std::shared_ptr<HepMC3::GenVertex> vertex,
-    std::shared_ptr<SimParticle> particle) {
+    const std::shared_ptr<HepMC3::GenVertex>& vertex,
+    const std::shared_ptr<SimParticle>& particle) {
   // Remove particle if it exists
   if (HepMC3::GenParticlePtr genParticle =
           matchParticles(vertex->particles_out(), particle)) {
@@ -143,13 +143,14 @@ void ActsExamples::HepMC3Vertex::removeParticleOut(
 }
 
 void ActsExamples::HepMC3Vertex::position(
-    const std::shared_ptr<HepMC3::GenVertex> vertex, Acts::Vector3 pos) {
+    const std::shared_ptr<HepMC3::GenVertex>& vertex,
+    const Acts::Vector3& pos) {
   HepMC3::FourVector fVec(pos(0), pos(1), pos(2), vertex->position().t());
   vertex->set_position(fVec);
 }
 
 void ActsExamples::HepMC3Vertex::time(
-    const std::shared_ptr<HepMC3::GenVertex> vertex, double time) {
+    const std::shared_ptr<HepMC3::GenVertex>& vertex, double time) {
   HepMC3::FourVector fVec(vertex->position().x(), vertex->position().y(),
                           vertex->position().z(), time);
   vertex->set_position(fVec);
