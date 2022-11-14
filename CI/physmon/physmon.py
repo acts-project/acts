@@ -265,7 +265,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
                     "-i",
                     str(tp / "trackstates_ckf.root"),
                     "-o",
-                    str(outdir / "acts_analysis_residuals_and_pulls_{label}.root"),
+                    str(outdir / f"acts_analysis_residuals_and_pulls_{label}.root"),
                     "--save",
                     "",
                 ]
