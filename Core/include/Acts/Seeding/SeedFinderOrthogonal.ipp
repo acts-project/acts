@@ -220,8 +220,9 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
 
 template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
-    SeedFinderOrthogonalConfig<external_spacepoint_t> config)
-    : m_config(config.toInternalUnits()) {
+    const SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
+    const SeedFinderOptions &options)
+    : m_config(config.toInternalUnits()), m_options(options.toInternalUnits()) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_config.highland = 13.6 * std::sqrt(config.radLengthPerSeed) *
@@ -231,7 +232,7 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
   // millimeter
   // TODO: change using ACTS units
-  m_config.pTPerHelixRadius = 300. * config.bFieldInZ;
+  m_config.pTPerHelixRadius = 300. * m_options.bFieldInZ;
   m_config.minHelixDiameter2 =
       std::pow(config.minPt * 2 / config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =

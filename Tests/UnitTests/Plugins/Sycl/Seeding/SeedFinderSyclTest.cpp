@@ -103,22 +103,26 @@ auto setupSeedFinderConfiguration()
   config.cotThetaMax = 7.40627;
   config.sigmaScattering = 1.00000;
   config.minPt = 500._MeV;
-  config.bFieldInZ = 1.99724_T;
-  config.beamPos = {-.5_mm, -.5_mm};
   config.impactMax = 10._mm;
-
   // for sycl
   config.nTrplPerSpBLimit = 100;
   config.nAvgTrplPerSpBLimit = 6;
   return config;
 }
 
+auto setupSeedFinderOptions() {
+  Acts::SeedFinderOptions options;
+  options.bFieldInZ = 1.99724_T;
+  options.beamPos = {-.5_mm, -.5_mm};
+  return options;
+}
+
 template <typename external_spacepoint_t>
 auto setupSpacePointGridConfig(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config)
-    -> Acts::SpacePointGridConfig {
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    const Acts::SeedFinderOptions& options) -> Acts::SpacePointGridConfig {
   Acts::SpacePointGridConfig gridConf{};
-  gridConf.bFieldInZ = config.bFieldInZ;
+  gridConf.bFieldInZ = options.bFieldInZ;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
@@ -156,6 +160,7 @@ auto main(int argc, char** argv) -> int {
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
       Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
   auto config = setupSeedFinderConfiguration<SpacePoint>();
+  auto options = setupSeedFinderOptions();
 
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   Acts::Sycl::DeviceExperimentCuts deviceAtlasCuts;
@@ -170,8 +175,8 @@ auto main(int argc, char** argv) -> int {
   vecmem::sycl::host_memory_resource resource(queue.getQueue());
   vecmem::sycl::device_memory_resource device_resource(queue.getQueue());
   Acts::Sycl::SeedFinder<SpacePoint> syclSeedFinder(
-      config, deviceAtlasCuts, queue, resource, &device_resource);
-  Acts::SeedFinder<SpacePoint> normalSeedFinder(config);
+      config, options, deviceAtlasCuts, queue, resource, &device_resource);
+  Acts::SeedFinder<SpacePoint> normalSeedFinder(config, options);
   auto globalTool =
       [=](const SpacePoint& sp, float /*unused*/, float /*unused*/,
           float_t /*unused*/) -> std::pair<Acts::Vector3, Acts::Vector2> {
@@ -182,11 +187,11 @@ auto main(int argc, char** argv) -> int {
 
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
       Acts::SpacePointGridCreator::createGrid<SpacePoint>(
-          setupSpacePointGridConfig(config));
+          setupSpacePointGridConfig(config, options));
 
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, config);
+      std::move(grid), rRangeSPExtent, config, options);
 
   auto end_prep = std::chrono::system_clock::now();
 

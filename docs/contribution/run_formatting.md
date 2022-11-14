@@ -31,6 +31,11 @@ are to use your package manager (e.g. Ubuntu distributions usually offer a set o
 versions to install), or to use statically linked binaries from
 [here](https://github.com/muttleyxd/clang-tools-static-binaries)[^1].
 
+You can also download the required changes by clicking on *Summary* on the top left-hand
+portion of the CI job and scrolling down to the bottom of the page (see *Changed*).
+However, it is suggested to run the `CI/check_format` locally before committing, to not
+clog the shared resources with repeated checks.
+
 ## Python formatting
 
 Formatting of the Python source code uses the library
