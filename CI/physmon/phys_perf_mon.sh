@@ -84,6 +84,14 @@ full_chain seeded
 full_chain orthogonal
 
 run \
+    $outdir/performance_gsf.root \
+    $refdir/performance_gsf.root \
+    --title "Truth tracking (GSF)" \
+    -c CI/physmon/gsf.yml \
+    -o $outdir/gsf.html \
+    -p $outdir/gsf_plots
+
+run \
     $outdir/performance_truth_tracking.root \
     $refdir/performance_truth_tracking.root \
     --title "Truth tracking" \
