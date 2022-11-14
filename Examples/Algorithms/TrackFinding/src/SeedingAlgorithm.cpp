@@ -108,7 +108,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config minPt");
   }
 
-  if (m_cfg.gridConfig.bFieldInZ != m_cfg.seedFinderConfig.bFieldInZ) {
+  if (m_cfg.gridConfig.bFieldInZ != m_cfg.seedFinderOptions.bFieldInZ) {
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
@@ -218,8 +218,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
-      m_cfg.seedFinderConfig);
-  auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig);
+      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
+  auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig,
+                                                m_cfg.seedFinderOptions);
 
   /// variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(

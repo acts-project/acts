@@ -11,6 +11,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 
 #include <vector>
 
@@ -30,6 +31,37 @@ makeTrackParametersPointerContainer(
     trackParametersPointers.push_back(&trackParam);
   }
   return trackParametersPointers;
+}
+
+template <typename config_t>
+auto makeParameterContainers(const config_t& config,
+                             const ActsExamples::AlgorithmContext& ctx) {
+  std::vector<Acts::BoundTrackParameters> inputTrackParameters;
+  std::vector<const Acts::BoundTrackParameters*> inputTrackPointers;
+
+  if (!config.inputTrackParameters.empty()) {
+    const auto& tmp =
+        ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
+            config.inputTrackParameters);
+    inputTrackParameters = tmp;
+    inputTrackPointers = makeTrackParametersPointerContainer(tmp);
+  } else {
+    const auto& inputTrajectories =
+        ctx.eventStore.get<TrajectoriesContainer>(config.inputTrajectories);
+
+    for (const auto& trajectories : inputTrajectories) {
+      for (auto tip : trajectories.tips()) {
+        if (!trajectories.hasTrackParameters(tip)) {
+          continue;
+        }
+        const auto& trackParam = trajectories.trackParameters(tip);
+        inputTrackParameters.push_back(trackParam);
+        inputTrackPointers.push_back(&trackParam);
+      }
+    }
+  }
+
+  return std::make_tuple(inputTrackParameters, inputTrackPointers);
 }
 
 /// Create proto vertices from reconstructed vertices.
