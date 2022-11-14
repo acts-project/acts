@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "Acts/Utilities/KDTree.hpp"
@@ -41,6 +42,7 @@ class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
 
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedFinderOrthogonalConfig<SimSpacePoint> seedFinderConfig;
+    Acts::SeedFinderOptions seedFinderOptions;
   };
 
   /// Construct the seeding algorithm.
