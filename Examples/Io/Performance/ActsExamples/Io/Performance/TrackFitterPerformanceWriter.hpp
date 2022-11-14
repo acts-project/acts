@@ -76,7 +76,7 @@ class TrackFitterPerformanceWriter final
   EffPlotTool::EffPlotCache m_effPlotCache;
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
 };
 
 }  // namespace ActsExamples

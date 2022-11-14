@@ -32,7 +32,7 @@ class HelloRandomAlgorithm : public ActsExamples::BareAlgorithm {
     std::string output;
   };
 
-  HelloRandomAlgorithm(const Config& cnf,
+  HelloRandomAlgorithm(const Config& cfg,
                        Acts::Logging::Level level = Acts::Logging::INFO);
 
   // Generate random numbers from various distributions.

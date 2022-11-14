@@ -64,7 +64,7 @@ void setupFatrasSimulation(
 /// Standard arguments @param argc and @param argv[] are forwarded
 /// @param detector abstracts the used detector input
 int runFatras(int argc, char* argv[],
-              std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+              const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   using namespace ActsExamples;
 
   // Setup and parse options

@@ -52,7 +52,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
                      bool writeBoundary) {
   // Process all layers that are directly stored within this volume
   if (volume.confinedLayers() != nullptr) {
-    for (auto layer : volume.confinedLayers()->arrayObjects()) {
+    for (const auto& layer : volume.confinedLayers()->arrayObjects()) {
       // We jump navigation layers
       if (layer->layerType() == Acts::navigation) {
         continue;
@@ -72,7 +72,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
       }
       // Check for sensitive surfaces
       if (layer->surfaceArray() != nullptr and writeSensitive) {
-        for (auto surface : layer->surfaceArray()->surfaces()) {
+        for (const auto& surface : layer->surfaceArray()->surfaces()) {
           if (surface != nullptr) {
             cSurfaces.push_back(SurfaceContainer::InputElement{
                 surface->geometryId(), surface->getSharedPtr()});
@@ -82,7 +82,7 @@ void collectSurfaces(std::vector<SurfaceContainer::InputElement>& cSurfaces,
     }
     // This is a navigation volume, write the boundaries
     if (writeBoundary) {
-      for (auto bsurface : volume.boundarySurfaces()) {
+      for (const auto& bsurface : volume.boundarySurfaces()) {
         const auto& bsRep = bsurface->surfaceRepresentation();
         cSurfaces.push_back(SurfaceContainer::InputElement{
             bsRep.geometryId(), bsRep.getSharedPtr()});

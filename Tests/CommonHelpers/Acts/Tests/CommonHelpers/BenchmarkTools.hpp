@@ -183,7 +183,7 @@ inline void assumeWritten(T& clobber) {
 struct MicroBenchmarkResult {
   using Duration = std::chrono::duration<double, std::nano>;
 
-  size_t iters_per_run;
+  size_t iters_per_run = 0;
   std::vector<Duration> run_timings;
 
   // Total benchmark running time
@@ -411,7 +411,8 @@ struct MicroBenchmarkIter<Callable, void> {
   constexpr static bool is_callable =
       Concepts ::exists<call_without_input_t, Callable>;
 
-  static inline void iter(const Callable& iteration, const void* = nullptr) {
+  static inline void iter(const Callable& iteration,
+                          const void* /*unused*/ = nullptr) {
     static_assert(is_callable,
                   "Gave callable that is not callable without input");
     if constexpr (is_callable) {

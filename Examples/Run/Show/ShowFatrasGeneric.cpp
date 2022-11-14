@@ -52,7 +52,7 @@ int main(int argc, char* argv[]) {
 
   // setup detector
   auto [trackingGeometry, contextDecorators] = Geometry::build(vars, detector);
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 

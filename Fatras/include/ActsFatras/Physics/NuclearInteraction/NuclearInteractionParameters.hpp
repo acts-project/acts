@@ -81,9 +81,9 @@ struct NuclearInteractionParameters {
   };
 
   /// Initial momentum
-  float momentum;
+  float momentum = 0;
   /// Probability for soft nuclear interacion
-  float softInteractionProbability;
+  float softInteractionProbability = 0;
   /// PDG ID based branching probabilities
   PdgMap pdgMap;
   /// Probability for nuclear interaction

@@ -48,7 +48,7 @@ auto ActsExamples::Telescope::TelescopeDetector::finalize(
 
 auto ActsExamples::Telescope::TelescopeDetector::finalize(
     const Config& cfg,
-    std::shared_ptr<const Acts::IMaterialDecorator> /* mdecorator */)
+    std::shared_ptr<const Acts::IMaterialDecorator> /*mdecorator*/)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   DetectorElement::ContextType nominalContext;
 

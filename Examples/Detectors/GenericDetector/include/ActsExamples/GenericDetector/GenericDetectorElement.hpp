@@ -49,7 +49,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
       std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::PlanarBounds> pBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
-      std::shared_ptr<const Acts::DigitizationModule> digitzationModule =
+      std::shared_ptr<const Acts::DigitizationModule> digitizationModule =
           nullptr);
 
   /// Constructor for single sided detector element
@@ -65,7 +65,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
       std::shared_ptr<const Acts::Transform3> transform,
       std::shared_ptr<const Acts::DiscBounds> dBounds, double thickness,
       std::shared_ptr<const Acts::ISurfaceMaterial> material = nullptr,
-      std::shared_ptr<const Acts::DigitizationModule> digitzationModule =
+      std::shared_ptr<const Acts::DigitizationModule> digitizationModule =
           nullptr);
 
   /// Identifier

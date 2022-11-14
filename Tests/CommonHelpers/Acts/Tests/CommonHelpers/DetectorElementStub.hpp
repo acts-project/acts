@@ -46,14 +46,14 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(
-      const Transform3& transform, std::shared_ptr<const PlanarBounds> pBounds,
-      double thickness,
+      const Transform3& transform,
+      const std::shared_ptr<const PlanarBounds>& pBounds, double thickness,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : DetectorElementBase(),
         m_elementTransform(transform),
         m_elementThickness(thickness) {
     auto mutableSurface = Surface::makeShared<PlaneSurface>(pBounds, *this);
-    mutableSurface->assignSurfaceMaterial(material);
+    mutableSurface->assignSurfaceMaterial(std::move(material));
     m_elementSurface = mutableSurface;
   }
 
@@ -65,14 +65,14 @@ class DetectorElementStub : public DetectorElementBase {
   /// @param thickness is the module thickness
   /// @param material is the (optional) Surface material associated to it
   DetectorElementStub(
-      const Transform3& transform, std::shared_ptr<const LineBounds> lBounds,
-      double thickness,
+      const Transform3& transform,
+      const std::shared_ptr<const LineBounds>& lBounds, double thickness,
       std::shared_ptr<const ISurfaceMaterial> material = nullptr)
       : DetectorElementBase(),
         m_elementTransform(transform),
         m_elementThickness(thickness) {
     auto mutableSurface = Surface::makeShared<LineSurfaceStub>(lBounds, *this);
-    mutableSurface->assignSurfaceMaterial(material);
+    mutableSurface->assignSurfaceMaterial(std::move(material));
     m_elementSurface = mutableSurface;
   }
 

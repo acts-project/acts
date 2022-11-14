@@ -519,25 +519,26 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
         f = 0;
       }
 
-      int z;
+      int z = 0;
       float Z = (*r)->z();
 
       // Azimuthal angle and Z-coordinate sort
       // assign z-bin a value between 0 and 10 identifying the z-slice of a
       // space-point
       if (Z > 0.) {
-        Z < 250. ? z = 5
-                 : Z < 450. ? z = 6
-                            : Z < 925. ? z = 7
-                                       : Z < 1400. ? z = 8
-                                                   : Z < 2500. ? z = 9 : z = 10;
+        Z < 250.    ? z = 5
+        : Z < 450.  ? z = 6
+        : Z < 925.  ? z = 7
+        : Z < 1400. ? z = 8
+        : Z < 2500. ? z = 9
+                    : z = 10;
       } else {
-        Z > -250.
-            ? z = 5
-            : Z > -450.
-                  ? z = 4
-                  : Z > -925. ? z = 3
-                              : Z > -1400. ? z = 2 : Z > -2500. ? z = 1 : z = 0;
+        Z > -250.    ? z = 5
+        : Z > -450.  ? z = 4
+        : Z > -925.  ? z = 3
+        : Z > -1400. ? z = 2
+        : Z > -2500. ? z = 1
+                     : z = 0;
       }
       // calculate bin nr "n" for self made r-phi-z sorted 3D array "rfz_Sorted"
       // record number of sp in m_nsaz
@@ -853,7 +854,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::production3Sp(
         if (Im <= imax) {
           // Add penalty factor dependent on difference between cot(theta) to
           // the quality Im (previously Impact)
-          float dr;
+          float dr = 0;
           m_R[t] < m_R[b] ? dr = m_R[t] : dr = m_R[b];
           Im += fabs((Tzb - m_Tz[t]) / (dr * sTzb2));
           // B/sqrt(S2) = 1/helixradius
@@ -1047,7 +1048,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillSeeds() {
     return;
   }
 
-  Acts::Legacy::InternalSeed<SpacePoint>* s;
+  Acts::Legacy::InternalSeed<SpacePoint>* s = nullptr;
 
   for (; l != le; ++l) {
     float w = (*l).first;

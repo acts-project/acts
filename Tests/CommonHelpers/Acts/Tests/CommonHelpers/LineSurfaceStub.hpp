@@ -25,12 +25,13 @@ class LineSurfaceStub : public LineSurface {
   //
   LineSurfaceStub(const Transform3& htrans,
                   std::shared_ptr<const LineBounds> lbounds = nullptr)
-      : GeometryObject(), LineSurface(htrans, lbounds) { /*nop */
+      : GeometryObject(), LineSurface(htrans, std::move(lbounds)) { /*nop */
   }
   //
   LineSurfaceStub(std::shared_ptr<const LineBounds> lbounds,
                   const DetectorElementBase& detelement)
-      : GeometryObject(), LineSurface(lbounds, detelement) { /* nop */
+      : GeometryObject(),
+        LineSurface(std::move(lbounds), detelement) { /* nop */
   }
 
   //
