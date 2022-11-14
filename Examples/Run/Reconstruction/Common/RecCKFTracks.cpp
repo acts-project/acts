@@ -205,9 +205,9 @@ int runRecCKFTracks(int argc, char* argv[],
       seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
 
       seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
-      seedingCfg.seedFinderConfig.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
 
-      seedingCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
+      seedingCfg.seedFinderOptions.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
+      seedingCfg.seedFinderOptions.beamPos = {0_mm, 0_mm};
 
       seedingCfg.seedFinderConfig.impactMax = 3._mm;
 

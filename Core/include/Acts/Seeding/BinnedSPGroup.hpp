@@ -265,16 +265,20 @@ class BinnedSPGroup {
  public:
   BinnedSPGroup() = delete;
 
+  using GlobalPositionFunctor =
+      std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+          const external_spacepoint_t&, float, float, float)>;
+
   template <typename spacepoint_iterator_t>
   BinnedSPGroup<external_spacepoint_t>(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-      std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-          const external_spacepoint_t&, float, float, float)>,
+      GlobalPositionFunctor toGlobal,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
       Acts::Extent rRangeSPExtent,
-      const SeedFinderConfig<external_spacepoint_t>& _config);
+      const SeedFinderConfig<external_spacepoint_t>& _config,
+      const SeedFinderOptions& _options);
 
   size_t size() { return m_binnedSP->size(); }
 

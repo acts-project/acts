@@ -34,6 +34,7 @@ from acts.examples.reconstruction import (
     TruthSeedRanges,
     ParticleSmearingSigmas,
     SeedFinderConfigArg,
+    SeedFinderOptionsArg,
     SeedingAlgorithm,
     TrackParamsEstimationConfig,
     addCKFTracks,
@@ -163,9 +164,9 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
                 sigmaScattering=5,
                 radLengthPerSeed=0.1,
                 minPt=500 * u.MeV,
-                bFieldInZ=1.99724 * u.T,
                 impactMax=3 * u.mm,
             ),
+            SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
             TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.TruthSmeared
             if truthSmearedSeeded
@@ -173,8 +174,8 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             if truthEstimatedSeeded
             else SeedingAlgorithm.Default,
             geoSelectionConfigFile=geoSel,
-            outputDirRoot=tp,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
+            outputDirRoot=tp,
         )
 
         addCKFTracks(
@@ -298,14 +299,14 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                     sigmaScattering=5,
                     radLengthPerSeed=0.1,
                     minPt=500 * u.MeV,
-                    bFieldInZ=1.99724 * u.T,
                     impactMax=3 * u.mm,
                 ),
+                SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
                 TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
                 seedingAlgorithm=SeedingAlgorithm.Default,
                 geoSelectionConfigFile=geoSel,
-                outputDirRoot=None,
                 rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
+                outputDirRoot=None,
             )
 
             addCKFTracks(
