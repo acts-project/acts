@@ -666,9 +666,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
       std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
-          m_config.seedFinderConfig.deltaRMiddleMinSPRange,
+          m_config.deltaRMiddleMinSPRange,
       std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
-          m_config.seedFinderConfig.deltaRMiddleMaxSPRange);
+          m_config.deltaRMiddleMaxSPRange);
 
   /*
    * Construct the k-d tree from these points. Note that this not consume or
