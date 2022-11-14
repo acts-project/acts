@@ -106,9 +106,6 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // compared top SP should have at least deltaRMin distance
       float deltaR = currentTop_r - otherTop_r;
       if (std::abs(deltaR) < m_cfg.deltaRMin) {
-        if (m_cfg.curvatureSortingInFilter) {
-          break;
-        }
         continue;
       }
       bool newCompSeed = true;
