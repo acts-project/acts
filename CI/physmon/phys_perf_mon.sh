@@ -99,12 +99,17 @@ run \
     -p $outdir/ambi_seeded_plots
 
 run \
-    $outdir/acts_analysis_residuals_and_pulls.root \
-    $refdir/acts_analysis_residuals_and_pulls.root \
-    --title "analysis_residuals_and_pulls" \
+    $outdir/acts_analysis_residuals_and_pulls_seeded.root \
+    $refdir/acts_analysis_residuals_and_pulls_seeded.root \
+    --title "analysis_residuals_and_pulls_seeded" \
 #    -o $outdir/analysis_residuals_and_pulls.html \
 #    -p $outdir/analysis_residuals_and_pulls
 
+run \
+    $outdir/acts_analysis_residuals_and_pulls_orthogonal.root \
+    $refdir/acts_analysis_residuals_and_pulls_orthogonal.root \
+    --title "analysis_residuals_and_pulls_orthogonal" \
+    
 Examples/Scripts/vertex_mu_scan.py \
     $outdir/performance_vertexing_*mu*.root \
     $outdir/vertexing_mu_scan.pdf

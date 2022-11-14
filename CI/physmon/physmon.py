@@ -106,7 +106,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
     # multithreading ActsAnalysisResidualsAndPulls
     s = acts.examples.Sequencer(
         events=500,
-        numThreads=1 if label == "seeded" else -1,
+        numThreads=1 if label in ["seeded", "orthogonal"] else -1,
         logLevel=acts.logging.INFO,
     )
 
@@ -240,7 +240,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
                     "-i",
                     str(tp / "trackstates_ckf.root"),
                     "-o",
-                    str(outdir / "acts_analysis_residuals_and_pulls.root"),
+                    str(outdir / "acts_analysis_residuals_and_pulls_{label}.root"),
                     "--save",
                     "",
                 ]
