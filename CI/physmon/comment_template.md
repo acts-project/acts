@@ -3,7 +3,6 @@
 > :red_square: **ERROR** The result has missing elements!
 > This is likely a physmon job failure
 {% endif %}
->>>>>>> main
 
 [Full report]({{ url }}/)
 CKF: {{ make_url("seeded", "ckf_seeded.html") }}, {{ make_url("truth smeared", "ckf_truth_smeared.html") }}, {{ make_url("truth estimated", "ckf_truth_estimated.html") }}
