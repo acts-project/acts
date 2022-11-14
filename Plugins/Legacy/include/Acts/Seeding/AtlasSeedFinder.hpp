@@ -153,9 +153,9 @@ class AtlasSeedFinder {
   int m_nr = 0;
   int* r_index = nullptr;
   int* r_map = nullptr;
-  int m_nrfz = 0, rfz_index[583] = {}, rfz_map[583] + {};
-  int rfz_b[583] = {}, rfz_t[593] = {}, rfz_ib[583][9] + {},
-      rfz_it[583][9] + {};
+  int m_nrfz = 0, rfz_index[583] = {}, rfz_map[583] = {};
+  int rfz_b[583] = {}, rfz_t[593] = {}, rfz_ib[583][9] = {},
+      rfz_it[583][9] = {};
   float m_sF = 0;
 
   ///////////////////////////////////////////////////////////////////

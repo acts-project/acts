@@ -11,6 +11,7 @@
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
+#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
 
