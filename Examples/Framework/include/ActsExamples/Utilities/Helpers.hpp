@@ -26,12 +26,12 @@ struct Binning {
   Binning() = default;
 
   Binning(std::string bTitle, int bins, float bMin, float bMax)
-      : title(bTitle), nBins(bins), min(bMin), max(bMax){};
+      : title(std::move(bTitle)), nBins(bins), min(bMin), max(bMax){};
 
   std::string title;  ///< title to be displayed
-  int nBins;          ///< number of bins
-  float min;          ///< minimum value
-  float max;          ///< maximum value
+  int nBins = 0;      ///< number of bins
+  float min = 0;      ///< minimum value
+  float max = 0;      ///< maximum value
 };
 
 /// @brief book a 1D histogram

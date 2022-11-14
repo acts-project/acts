@@ -49,8 +49,8 @@ void setupFatrasSimulation(
   fatrasCfg.outputParticlesInitial = Simulation::kParticlesInitial;
   fatrasCfg.outputParticlesFinal = Simulation::kParticlesFinal;
   fatrasCfg.outputSimHits = Simulation::kSimHits;
-  fatrasCfg.randomNumbers = randomNumbers;
-  fatrasCfg.trackingGeometry = trackingGeometry;
+  fatrasCfg.randomNumbers = std::move(randomNumbers);
+  fatrasCfg.trackingGeometry = std::move(trackingGeometry);
   fatrasCfg.magneticField = ActsExamples::Options::readMagneticField(vars);
 
   sequencer.addAlgorithm(
@@ -94,7 +94,7 @@ int runFatras(int argc, char* argv[],
   Sequencer sequencer(Options::readSequencerConfig(vars));
   // Setup detector geometry and material and the magnetic field
   auto [trackingGeometry, contextDecorators] = Geometry::build(vars, *detector);
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
   // Setup input, algorithm chain, output

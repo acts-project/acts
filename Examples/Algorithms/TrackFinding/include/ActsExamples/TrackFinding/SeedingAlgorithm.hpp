@@ -49,7 +49,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::vector<std::pair<int, int> > zBinNeighborsBottom;
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
-    int numPhiNeighbors;
+    int numPhiNeighbors = 0;
   };
 
   /// Construct the seeding algorithm.

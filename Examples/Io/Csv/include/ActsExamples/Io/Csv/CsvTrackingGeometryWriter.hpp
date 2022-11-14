@@ -61,7 +61,7 @@ class CsvTrackingGeometryWriter : public IWriter {
   std::string name() const override;
 
   /// Write geometry using the per-event context (optional).
-  ProcessCode write(const AlgorithmContext& context) override;
+  ProcessCode write(const AlgorithmContext& ctx) override;
 
   /// Write geometry using the default context.
   ProcessCode endRun() override;
@@ -71,7 +71,7 @@ class CsvTrackingGeometryWriter : public IWriter {
 
  private:
   Config m_cfg;
-  const Acts::TrackingVolume* m_world;
+  const Acts::TrackingVolume* m_world = nullptr;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   const Acts::Logger& logger() const { return *m_logger; }
