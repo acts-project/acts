@@ -80,9 +80,10 @@ int main(int argc, char* argv[]) {
   sfConfig.cotThetaMax = 7.40627;
   sfConfig.sigmaScattering = 1.00000;
   sfConfig.minPt = 500._MeV;
-  sfConfig.bFieldInZ = 1.99724_T;
-  sfConfig.beamPos = {-.5_mm, -.5_mm};
   sfConfig.impactMax = 10._mm;
+  Acts::SeedFinderOptions sfOptions;
+  sfOptions.bFieldInZ = 1.99724_T;
+  sfOptions.beamPos = {-.5_mm, -.5_mm};
 
   // Use a size slightly smaller than what modern GPUs are capable of. This is
   // because for debugging we can't use all available threads in a block, and
@@ -93,7 +94,7 @@ int main(int argc, char* argv[]) {
 
   // Set up the spacepoint grid configuration.
   Acts::SpacePointGridConfig gridConfig;
-  gridConfig.bFieldInZ = sfConfig.bFieldInZ;
+  gridConfig.bFieldInZ = sfOptions.bFieldInZ;
   gridConfig.minPt = sfConfig.minPt;
   gridConfig.rMax = sfConfig.rMax;
   gridConfig.zMax = sfConfig.zMax;
@@ -120,7 +121,7 @@ int main(int argc, char* argv[]) {
       Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(gridConfig);
   auto spGroup = Acts::BinnedSPGroup<TestSpacePoint>(
       spView.begin(), spView.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, sfConfig);
+      std::move(grid), rRangeSPExtent, sfConfig, sfOptions);
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
 
@@ -153,9 +154,9 @@ int main(int argc, char* argv[]) {
   auto deviceCuts = testDeviceCuts();
 
   // Set up the seedFinder objects.
-  Acts::SeedFinder<TestSpacePoint> seedFinder_host(sfConfig);
+  Acts::SeedFinder<TestSpacePoint> seedFinder_host(sfConfig, sfOptions);
   Acts::Cuda::SeedFinder<TestSpacePoint> seedFinder_device(
-      sfConfig, filterConfig, deviceCuts, cmdl.cudaDevice);
+      sfConfig, sfOptions, filterConfig, deviceCuts, cmdl.cudaDevice);
 
   //
   // Perform the seed finding on the host.
