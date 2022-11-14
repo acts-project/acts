@@ -13,6 +13,7 @@
 #include "ActsExamples/Io/Csv/CsvParticleWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
@@ -27,6 +28,7 @@
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
 #include "ActsExamples/Io/Root/RootSimHitWriter.hpp"
+#include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrackParameterWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
@@ -271,6 +273,10 @@ void addOutput(Context& ctx) {
                              "RootSimHitWriter", inputSimHits, filePath,
                              fileMode, treeName);
 
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootSpacepointWriter, mex,
+                             "RootSpacepointWriter", inputSpacepoints, filePath,
+                             fileMode, treeName);
+
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::RootTrajectoryStatesWriter, mex,
       "RootTrajectoryStatesWriter", inputTrajectories, inputParticles,
@@ -308,6 +314,10 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSimHitWriter, mex,
                              "CsvSimHitWriter", inputSimHits, outputDir,
                              outputStem, outputPrecision);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvSpacepointWriter, mex,
+                             "CsvSpacepointWriter", inputSpacepoints, outputDir,
+                             outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CsvMultiTrajectoryWriter, mex, "CsvMultiTrajectoryWriter",

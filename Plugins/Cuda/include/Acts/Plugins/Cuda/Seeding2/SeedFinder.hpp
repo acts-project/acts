@@ -33,6 +33,7 @@ class SeedFinder {
   /// Create a CUDA backed seed finder object
   ///
   /// @param commonConfig Configuration shared with @c Acts::SeedFinder
+  /// @param seedFinderOptions options als shared with Acts::SeedFinder
   /// @param seedFilterConfig Configuration shared with @c Acts::SeedFilter
   /// @param tripletFilterConfig Configuration for the GPU based triplet
   ///        filtering
@@ -40,6 +41,7 @@ class SeedFinder {
   /// @param logger A @c Logger instance
   ///
   SeedFinder(SeedFinderConfig<external_spacepoint_t> commonConfig,
+             const SeedFinderOptions& seedFinderOptions,
              const SeedFilterConfig& seedFilterConfig,
              const TripletFilterConfig& tripletFilterConfig, int device = 0,
              std::unique_ptr<const Logger> logger =
@@ -70,6 +72,7 @@ class SeedFinder {
 
   /// Configuration for the seed finder
   SeedFinderConfig<external_spacepoint_t> m_commonConfig;
+  SeedFinderOptions m_seedFinderOptions;
   /// Configuration for the (host) seed filter
   SeedFilterConfig m_seedFilterConfig;
   /// Configuration for the (device) triplet filter
