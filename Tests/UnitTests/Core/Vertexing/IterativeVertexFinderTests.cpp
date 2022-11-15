@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test) {
     static_assert(VertexFinderConcept<VertexFinder>,
                   "Vertex finder does not fulfill vertex finder concept.");
 
-    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                              ipEstimator);
 
     cfg.reassignTracksAfterFirstFit = true;
@@ -357,7 +357,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
 
     // Vertex Finder
     using VertexFinder = IterativeVertexFinder<BilloirFitter, ZScanSeedFinder>;
-    VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+    VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                              ipEstimator);
     cfg.reassignTracksAfterFirstFit = true;
 
@@ -567,7 +567,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_athena_reference) {
   static_assert(VertexFinderConcept<VertexFinder>,
                 "Vertex finder does not fulfill vertex finder concept.");
 
-  VertexFinder::Config cfg(bFitter, linearizer, std::move(sFinder),
+  VertexFinder::Config cfg(bFitter, std::move(linearizer), std::move(sFinder),
                            ipEstimator);
 
   cfg.useBeamConstraint = true;
