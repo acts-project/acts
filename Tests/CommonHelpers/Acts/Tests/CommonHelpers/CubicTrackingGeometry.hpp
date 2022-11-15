@@ -150,7 +150,7 @@ struct CubicTrackingGeometry {
     trafoVol2.translation() = Vector3(1.5_m, 0., 0.);
 
     layVec.clear();
-    for (i = 2; i < 6; i++) {
+    for (unsigned int i = 2; i < 6; i++) {
       layVec.push_back(layers[i]);
     }
     std::unique_ptr<const LayerArray> layArr2(
