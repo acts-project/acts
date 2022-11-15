@@ -34,6 +34,7 @@ class Delegate;
 ///          to @c DelegateType::Owning, it will assume ownership.
 /// @note Currently @c Delegate only supports callables that are ``const``
 /// @tparam R Return type of the function signature
+/// @tparam H Holder type that is used to store an instance
 /// @tparam O Ownership type of the delegate: Owning or NonOwning
 /// @tparam Args Types of the arguments of the function signatures
 ///
