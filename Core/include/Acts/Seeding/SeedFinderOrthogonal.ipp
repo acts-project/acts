@@ -690,7 +690,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
      * middle points.
      */
     if (m_config.useVariableMiddleSPRange) {
-      if (rM < rMiddleSPRange.max() || rM > rMiddleSPRange.min()) {
+      if (rM < rMiddleSPRange.min() || rM > rMiddleSPRange.max()) {
         continue;
       }
     } else {
