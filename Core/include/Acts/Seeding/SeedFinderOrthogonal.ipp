@@ -459,15 +459,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   std::vector<internal_sp_t *> bottom_lh_v, bottom_hl_v, top_lh_v, top_hl_v;
 
   /*
-   * Cut: Ensure that the middle spacepoint lies within a valid r-region for
-   * middle points.
-   */
-  if (middle.radius() > m_config.rMaxMiddle ||
-      middle.radius() < m_config.rMinMiddle) {
-    return;
-  }
-
-  /*
    * Calculate the search ranges for bottom and top candidates for this middle
    * space point.
    */
@@ -663,12 +654,22 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * take each external spacepoint, allocate a corresponding internal space
    * point, and save it in a vector.
    */
+  Acts::Extent rRangeSPExtent;
   std::vector<internal_sp_t *> internalSpacePoints;
   for (const external_spacepoint_t *p : spacePoints) {
     internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
         *p, {p->x(), p->y(), p->z()}, {0.0, 0.0},
         {p->varianceR(), p->varianceZ()}));
+    // store x,y,z values in extent
+    rRangeSPExtent.extend({p->x(), p->y(), p->z()});
   }
+
+  // variable middle SP radial region of interest
+  const Acts::Range1D<float> rMiddleSPRange(
+      std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
+          m_config.deltaRMiddleMinSPRange,
+      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
+          m_config.deltaRMiddleMaxSPRange);
 
   /*
    * Construct the k-d tree from these points. Note that this not consume or
@@ -681,6 +682,23 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * seeing what happens if we take them to be our middle spacepoint.
    */
   for (const typename tree_t::pair_t &middle_p : tree) {
+    internal_sp_t &middle = *middle_p.second;
+    auto rM = middle.radius();
+
+    /*
+     * Cut: Ensure that the middle spacepoint lies within a valid r-region for
+     * middle points.
+     */
+    if (m_config.useVariableMiddleSPRange) {
+      if (rM < rMiddleSPRange.min() || rM > rMiddleSPRange.max()) {
+        continue;
+      }
+    } else {
+      if (rM > m_config.rMaxMiddle || rM < m_config.rMinMiddle) {
+        continue;
+      }
+    }
+
     processFromMiddleSP(tree, out_cont, middle_p);
   }
 
