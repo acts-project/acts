@@ -155,7 +155,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     sConf.thickness = 1._um;
     sConf.detElementConstructor =
         [](const Transform3& trans,
-           std::shared_ptr<const RectangleBounds> bounds, double thickness) {
+           const std::shared_ptr<const RectangleBounds>& bounds,
+           double thickness) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };
     CuboidVolumeBuilder::LayerConfig lConf;

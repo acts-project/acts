@@ -164,7 +164,7 @@ BOOST_AUTO_TEST_CASE(Visualization3DConstruction) {
   PlyVisualization3D ply;
   ObjVisualization3D obj;
 
-  IVisualization3D* vis;
+  IVisualization3D* vis = nullptr;
   vis = &ply;
   std::cout << *vis << std::endl;
   vis = &obj;

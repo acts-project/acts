@@ -84,9 +84,9 @@ struct MockStepperState {
   using Vector3 = Acts::ActsVector<3>;
 
   Vector3 pos;
-  Scalar time;
+  Scalar time = 0;
   Vector3 dir;
-  Scalar p;
+  Scalar p = 0;
 };
 
 struct MockStepper {

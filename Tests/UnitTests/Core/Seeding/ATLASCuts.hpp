@@ -47,7 +47,7 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
 template <typename SpacePoint>
 float ATLASCuts<SpacePoint>::seedWeight(
     const InternalSpacePoint<SpacePoint>& bottom,
-    const InternalSpacePoint<SpacePoint>&,
+    const InternalSpacePoint<SpacePoint>& /*unused*/,
     const InternalSpacePoint<SpacePoint>& top) const {
   float weight = 0;
   if (bottom.radius() > 150) {
