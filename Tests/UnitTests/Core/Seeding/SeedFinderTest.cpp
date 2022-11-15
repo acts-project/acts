@@ -74,7 +74,8 @@ int main(int argc, char** argv) {
   bool help(false);
   bool quiet(false);
 
-  while (int opt; (opt = getopt(argc, argv, "hf:q")) != -1) {
+  int opt = -1;
+  while ((opt = getopt(argc, argv, "hf:q")) != -1) {
     switch (opt) {
       case 'f':
         file = optarg;
