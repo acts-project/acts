@@ -64,6 +64,14 @@ struct SeedFinderOrthogonalConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
+  // radial range for middle SP
+  // variable range based on SP radius
+  bool useVariableMiddleSPRange = true;
+  float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
+  float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+  // range defined in vector for each z region
+  std::vector<std::vector<float>> rRangeMiddleSP;
+  // range defined by rMinMiddle and rMaxMiddle
   float rMinMiddle = 60.f * Acts::UnitConstants::mm;
   float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
