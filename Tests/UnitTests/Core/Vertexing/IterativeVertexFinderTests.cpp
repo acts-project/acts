@@ -337,7 +337,7 @@ BOOST_AUTO_TEST_CASE(iterative_finder_test_user_track_type) {
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
     std::function<BoundTrackParameters(InputTrack)> extractParameters =
-        [](InputTrack params) { return params.parameters(); };
+        [](const InputTrack& params) { return params.parameters(); };
 
     // Set up Billoir Vertex Fitter
     BilloirFitter::Config vertexFitterCfg;

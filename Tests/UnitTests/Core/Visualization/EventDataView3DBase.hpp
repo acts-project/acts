@@ -145,8 +145,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Construct layer configs
   std::vector<CuboidVolumeBuilder::LayerConfig> lConfs;
   lConfs.reserve(6);
-  unsigned int i;
-  for (i = 0; i < translations.size(); i++) {
+  for (unsigned int i = 0; i < translations.size(); i++) {
     CuboidVolumeBuilder::SurfaceConfig sConf;
     sConf.position = translations[i];
     sConf.rotation = rotation;

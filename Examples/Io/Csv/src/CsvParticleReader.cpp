@@ -19,9 +19,7 @@
 #include <string>
 #include <vector>
 
-// NOLINTBEGIN
 #include <dfe/dfe_io_dsv.hpp>
-// NOLINTEND
 
 #include "CsvOutputData.hpp"
 

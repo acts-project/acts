@@ -11,10 +11,7 @@
 #include <limits>
 
 #include <boost/program_options.hpp>
-
-// NOLINTBEGIN
 #include <dfe/dfe_io_dsv.hpp>
-// NOLINTEND
 
 void ActsExamples::Options::addCsvWriterOptions(
     ActsExamples::Options::Description& desc) {

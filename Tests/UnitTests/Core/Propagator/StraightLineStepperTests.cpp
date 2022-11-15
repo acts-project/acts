@@ -29,7 +29,7 @@ using Jacobian = BoundMatrix;
 /// @brief Simplified propagator state
 struct PropState {
   /// @brief Constructor
-  PropState(StraightLineStepper::State sState) : stepping(sState) {}
+  PropState(StraightLineStepper::State sState) : stepping(std::move(sState)) {}
   /// State of the straight line stepper
   StraightLineStepper::State stepping;
   /// Propagator options which only carry the particle's mass

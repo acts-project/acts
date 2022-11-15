@@ -23,10 +23,8 @@
 #include <TROOT.h>
 #endif
 
-// NOLINTBEGIN
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
-// NOLINTEND
 
 ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),

@@ -86,8 +86,7 @@ struct CubicTrackingGeometry {
 
     // Construct surfaces
     std::array<std::shared_ptr<const Surface>, 6> surfaces;
-    unsigned int i;
-    for (i = 0; i < translations.size(); i++) {
+    for (unsigned int i = 0; i < translations.size(); i++) {
       RotationMatrix3 rotation_strip;
       double angle = rotAngle[i];
       Vector3 xPos(cos(angle), sin(angle), 0.);
@@ -110,8 +109,8 @@ struct CubicTrackingGeometry {
     }
 
     // Construct layers
-    std::array<LayerPtr, 6> layers;
-    for (i = 0; i < 6; i++) {
+    std::array<LayerPtr, 6> layers{};
+    for (unsigned int i = 0; i < 6; i++) {
       Transform3 trafo(Transform3::Identity() * rotation);
       trafo.translation() = translations[i];
 

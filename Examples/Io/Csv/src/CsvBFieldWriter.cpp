@@ -15,9 +15,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-// NOLINTBEGIN
 #include <dfe/dfe_io_dsv.hpp>
-// NOLINTEND
 
 namespace ActsExamples {
 template <CsvBFieldWriter::CoordinateType Coord, bool Grid>

@@ -28,9 +28,9 @@
 
 using namespace Acts::UnitLiterals;
 
-std::vector<const SpacePoint*> readFile(std::string filename) {
+std::vector<const SpacePoint*> readFile(const std::string& filename) {
   std::string line;
-  int layer;
+  int layer = 0;
   std::vector<const SpacePoint*> readSP;
 
   std::ifstream spFile(filename);
@@ -40,7 +40,7 @@ std::vector<const SpacePoint*> readFile(std::string filename) {
       std::stringstream ss(line);
       std::string linetype;
       ss >> linetype;
-      float x, y, z, r, varianceR, varianceZ;
+      float x = 0, y = 0, z = 0, r = 0, varianceR = 0, varianceZ = 0;
       if (linetype == "lxyz") {
         ss >> layer >> x >> y >> z >> varianceR >> varianceZ;
         r = std::sqrt(x * x + y * y);
@@ -74,8 +74,7 @@ int main(int argc, char** argv) {
   bool help(false);
   bool quiet(false);
 
-  int opt;
-  while ((opt = getopt(argc, argv, "hf:q")) != -1) {
+  while (int opt; (opt = getopt(argc, argv, "hf:q")) != -1) {
     switch (opt) {
       case 'f':
         file = optarg;

@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(PrimitivesView3DObj) {
   auto objTest = PrimitivesView3DTest::run(obj);
   auto objErrors = testObjString(objTest);
   BOOST_CHECK(objErrors.empty());
-  for (auto objerr : objErrors) {
+  for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
 }
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE(PrimitivesView3DPly) {
   auto plyTest = PrimitivesView3DTest::run(ply);
   auto plyErrors = testPlyString(plyTest);
   BOOST_CHECK(plyErrors.empty());
-  for (auto plyerr : plyErrors) {
+  for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
 }

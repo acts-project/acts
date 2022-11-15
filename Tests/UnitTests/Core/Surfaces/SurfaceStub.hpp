@@ -37,7 +37,8 @@ class SurfaceStub : public Surface {
     return normal(gctx);
   }
 
-  Vector3 normal(const GeometryContext& gctx, const Vector3&) const final {
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector3& /*position*/) const final {
     return normal(gctx);
   }
 

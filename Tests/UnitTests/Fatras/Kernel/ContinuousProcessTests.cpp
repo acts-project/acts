@@ -26,7 +26,7 @@ namespace {
 /// particles with momenta 1,2,3,4 GeV.
 struct MockMakeChildren {
   template <typename generator_t>
-  std::array<ActsFatras::Particle, 4> operator()(generator_t &,
+  std::array<ActsFatras::Particle, 4> operator()(generator_t & /*unused*/,
                                                  const Acts::MaterialSlab &,
                                                  ActsFatras::Particle &) const {
     // create daughter particles
@@ -41,7 +41,7 @@ struct MockMakeChildren {
 
 /// Mock particle selector that selects everything
 struct MockEverything {
-  bool operator()(const Particle &) const { return true; }
+  bool operator()(const Particle & /*unused*/) const { return true; }
 };
 
 /// Mock particle selector for particles with momenta equal or above 10GeV.
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_SUITE(FatrasContinuousProcess)
 
 BOOST_AUTO_TEST_CASE(NoSelectors) {
   Fixture f;
-  ContinuousProcess<MockMakeChildren, MockEverything, MockEverything> process;
+  ContinuousProcess<MockMakeChildren, MockEverything, MockEverything> process{};
 
   // process should not abort
   BOOST_CHECK(not process(f.generator, f.slab, f.parent, f.children));
