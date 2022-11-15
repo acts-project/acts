@@ -28,7 +28,7 @@ struct MockMakeChildren {
   template <typename generator_t>
   std::array<ActsFatras::Particle, 4> operator()(
       generator_t & /*unused*/, const Acts::MaterialSlab & /*unused*/,
-      ActsFatras::Particle &) const {
+      ActsFatras::Particle & /*unused*/) const {
     // create daughter particles
     return {
         Particle().setAbsoluteMomentum(1_GeV),
