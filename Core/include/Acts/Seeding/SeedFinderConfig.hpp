@@ -45,14 +45,20 @@ struct SeedFinderConfig {
   float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
-  // force sorting in R in space point grid bins
+
+  // force sorting of middle SPs in radius
   bool forceRadialSorting = false;
 
   // radial range for middle SP
-  std::vector<std::vector<float>> rRangeMiddleSP;
-  bool useVariableMiddleSPRange = false;
+  // variable range based on SP radius
+  bool useVariableMiddleSPRange = true;
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+  // range defined in vector for each z region
+  std::vector<std::vector<float>> rRangeMiddleSP;
+  // range defined by rMinMiddle and rMaxMiddle
+  float rMinMiddle = 60.f * Acts::UnitConstants::mm;
+  float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
