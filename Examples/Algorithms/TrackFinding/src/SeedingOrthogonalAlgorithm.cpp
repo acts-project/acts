@@ -57,7 +57,7 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
   // millimeter
   // TODO: change using ACTS units
   m_cfg.seedFinderConfig.pTPerHelixRadius =
-      300. * m_cfg.seedFinderConfig.bFieldInZ;
+      300. * m_cfg.seedFinderOptions.bFieldInZ;
   m_cfg.seedFinderConfig.minHelixDiameter2 =
       std::pow(m_cfg.seedFinderConfig.minPt * 2 /
                    m_cfg.seedFinderConfig.pTPerHelixRadius,
@@ -79,7 +79,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     }
   }
 
-  Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig);
+  Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig,
+                                                   m_cfg.seedFinderOptions);
 
   SimSeedContainer seeds = finder.createSeeds(spacePoints);
 
