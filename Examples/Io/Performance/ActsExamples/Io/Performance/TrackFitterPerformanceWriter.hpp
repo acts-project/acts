@@ -52,17 +52,17 @@ class TrackFitterPerformanceWriter final
   /// @param level The logger level
   TrackFitterPerformanceWriter(Config config, Acts::Logging::Level level);
 
-  ~TrackFitterPerformanceWriter() final override;
+  ~TrackFitterPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.
@@ -76,7 +76,7 @@ class TrackFitterPerformanceWriter final
   EffPlotTool::EffPlotCache m_effPlotCache;
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
 };
 
 }  // namespace ActsExamples

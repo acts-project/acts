@@ -22,7 +22,7 @@ void BareService::startRun() {
   // nothing to do in the default implementation
 }
 
-void BareService::prepare(AlgorithmContext&) {
+void BareService::prepare(AlgorithmContext& /*ctx*/) {
   // nothing to do in the default implementation
 }
 

@@ -92,7 +92,7 @@ class AlignmentAlgorithm final : public BareAlgorithm {
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algporithm flow
   ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final override;
+      const ActsExamples::AlgorithmContext& ctx) const override;
 
  private:
   Config m_cfg;

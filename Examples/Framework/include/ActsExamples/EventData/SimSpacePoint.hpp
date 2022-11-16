@@ -45,17 +45,17 @@ class SimSpacePoint {
       const Eigen::MatrixBase<position_t>& pos, float varRho, float varZ,
       boost::container::static_vector<const Acts::SourceLink*, 2> sourceLinks,
       const float topHalfStripLength, const float bottomHalfStripLength,
-      const Acts::Vector3 topStripDirection,
-      const Acts::Vector3 bottomStripDirection,
-      const Acts::Vector3 stripCenterDistance,
-      const Acts::Vector3 topStripCenterPosition)
+      const Acts::Vector3& topStripDirection,
+      const Acts::Vector3& bottomStripDirection,
+      const Acts::Vector3& stripCenterDistance,
+      const Acts::Vector3& topStripCenterPosition)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
         m_z(pos[Acts::ePos2]),
         m_rho(std::hypot(m_x, m_y)),
         m_varianceRho(varRho),
         m_varianceZ(varZ),
-        m_sourceLinks(sourceLinks),
+        m_sourceLinks(std::move(sourceLinks)),
         m_topHalfStripLength(topHalfStripLength),
         m_bottomHalfStripLength(bottomHalfStripLength),
         m_topStripDirection(topStripDirection),
@@ -83,7 +83,7 @@ class SimSpacePoint {
         m_rho(std::hypot(m_x, m_y)),
         m_varianceRho(varRho),
         m_varianceZ(varZ),
-        m_sourceLinks(sourceLinks) {
+        m_sourceLinks(std::move(sourceLinks)) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
 

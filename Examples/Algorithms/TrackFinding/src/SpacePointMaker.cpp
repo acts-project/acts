@@ -89,9 +89,11 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
       Acts::Vector3, Acts::Vector2,
       boost::container::static_vector<const Acts::SourceLink*, 2>)>
       spConstructor =
-          [](Acts::Vector3 pos, Acts::Vector2 cov,
+          [](const Acts::Vector3& pos, const Acts::Vector2& cov,
              boost::container::static_vector<const Acts::SourceLink*, 2> slinks)
-      -> SimSpacePoint { return SimSpacePoint(pos, cov[0], cov[1], slinks); };
+      -> SimSpacePoint {
+    return SimSpacePoint(pos, cov[0], cov[1], std::move(slinks));
+  };
   m_spacePointBuilder = Acts::SpacePointBuilder<SimSpacePoint>(
       spBuilderConfig, spConstructor,
       Acts::getDefaultLogger("SpacePointBuilder", lvl));

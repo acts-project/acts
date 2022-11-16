@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
     // check the geometry id of all boundary surfaces of the volume
     // - this is strictly only possible when glueing is OFF
     GeometryIdentifier::Value bsurface_id = 0;
-    for (auto bSf : vol.boundarySurfaces()) {
+    for (const auto& bSf : vol.boundarySurfaces()) {
       // check the bsurface volume id
       auto bs_vol_id = bSf->surfaceRepresentation().geometryId().volume();
       BOOST_CHECK_EQUAL(geoid, bs_vol_id);
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
     if (vol.confinedLayers() != nullptr) {
       // layers start are counted from 1 - n
       GeometryIdentifier::Value layer_id = 0;
-      for (auto lay : vol.confinedLayers()->arrayObjects()) {
+      for (const auto& lay : vol.confinedLayers()->arrayObjects()) {
         // check the layer volume id and layer layer id
         auto lay_vol_id = lay->geometryId().volume();
         auto lay_lay_id = lay->geometryId().layer();
@@ -126,7 +126,8 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
         if (lay->approachDescriptor() != nullptr) {
           // approach surfacesare counted from 1 - n
           GeometryIdentifier::Value asurface_id = 0;
-          for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
+          for (const auto& asf :
+               lay->approachDescriptor()->containedSurfaces()) {
             // check the approach volume id, approach layer id, approach
             // approach
             // id
@@ -144,7 +145,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
         if (lay->surfaceArray() != nullptr) {
           // sensitive surfaces are counted from 1 - n
           GeometryIdentifier::Value ssurface_id = 0;
-          for (auto ssf : lay->surfaceArray()->surfaces()) {
+          for (const auto& ssf : lay->surfaceArray()->surfaces()) {
             // check the approach volume id, approach layer id, approach
             // approach
             // id
@@ -204,7 +205,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
     // check the geometry id of all boundary surfaces of the volume
     // - this is strictly only possible when glueing is OFF
     GeometryIdentifier::Value bsurface_id = 0;
-    for (auto bSf : vol.boundarySurfaces()) {
+    for (const auto& bSf : vol.boundarySurfaces()) {
       // check the bsurface volume id
       auto bs_vol_id = bSf->surfaceRepresentation().geometryId().volume();
       BOOST_CHECK_EQUAL(geoid, bs_vol_id);
@@ -218,7 +219,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
     if (vol.confinedLayers() != nullptr) {
       // layers start are counted from 1 - n
       GeometryIdentifier::Value layer_id = 0;
-      for (auto lay : vol.confinedLayers()->arrayObjects()) {
+      for (const auto& lay : vol.confinedLayers()->arrayObjects()) {
         // check the layer volume id and layer layer id
         auto lay_vol_id = lay->geometryId().volume();
         auto lay_lay_id = lay->geometryId().layer();
@@ -228,7 +229,8 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
         if (lay->approachDescriptor() != nullptr) {
           // approach surfaces are counted from 1 - n
           GeometryIdentifier::Value asurface_id = 0;
-          for (auto asf : lay->approachDescriptor()->containedSurfaces()) {
+          for (const auto& asf :
+               lay->approachDescriptor()->containedSurfaces()) {
             // check the approach volume id, approach layer id, approach
             // approach
             // id
@@ -246,7 +248,7 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
         if (lay->surfaceArray() != nullptr) {
           // sensitive surfaces are counted from 1 - n
           GeometryIdentifier::Value ssurface_id = 0;
-          for (auto ssf : lay->surfaceArray()->surfaces()) {
+          for (const auto& ssf : lay->surfaceArray()->surfaces()) {
             // check the approach volume id, approach layer id, approach
             // approach
             // id

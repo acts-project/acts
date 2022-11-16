@@ -122,7 +122,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     // betweent the bottom and top space point
     // @todo add the check of deltaZ
     bool seedFound = false;
-    std::array<size_t, 3> bestSPIndices;
+    std::array<size_t, 3> bestSPIndices{};
     double maxDeltaR = std::numeric_limits<double>::min();
     for (size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
       for (size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {

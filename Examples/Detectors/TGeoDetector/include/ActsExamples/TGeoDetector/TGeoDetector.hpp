@@ -38,7 +38,7 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
     Acts::Logging::Level layerLogLevel = Acts::Logging::WARNING;
     Acts::Logging::Level volumeLogLevel = Acts::Logging::WARNING;
 
-    void readJson(const std::string& fileName);
+    void readJson(const std::string& jsonFile);
 
     std::string fileName;
     bool buildBeamPipe = false;
@@ -116,10 +116,10 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
       Options::Interval binToleranceZ;
 
       bool cylinderDiscSplit = false;
-      unsigned int cylinderNZSegments;
-      unsigned int cylinderNPhiSegments;
-      unsigned int discNRSegments;
-      unsigned int discNPhiSegments;
+      unsigned int cylinderNZSegments = 0;
+      unsigned int cylinderNPhiSegments = 0;
+      unsigned int discNRSegments = 0;
+      unsigned int discNPhiSegments = 0;
 
       bool itkModuleSplit = false;
       std::map<std::string, unsigned int> barrelMap;

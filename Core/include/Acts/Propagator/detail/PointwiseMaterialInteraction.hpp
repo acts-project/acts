@@ -53,7 +53,7 @@ struct PointwiseMaterialInteraction {
   /// The energy change due to the interaction.
   double Eloss = 0.;
   /// The momentum after the interaction
-  double nextP;
+  double nextP = 0.;
 
   /// @brief Contructor
   ///

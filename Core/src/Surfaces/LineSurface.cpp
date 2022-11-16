@@ -24,10 +24,10 @@ Acts::LineSurface::LineSurface(const Transform3& transform,
                                std::shared_ptr<const LineBounds> lbounds)
     : GeometryObject(), Surface(transform), m_bounds(std::move(lbounds)) {}
 
-Acts::LineSurface::LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
+Acts::LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
                                const DetectorElementBase& detelement)
-    : GeometryObject(), Surface(detelement), m_bounds(lbounds) {
-  throw_assert(lbounds, "LineBounds must not be nullptr");
+    : GeometryObject(), Surface(detelement), m_bounds(std::move(lbounds)) {
+  throw_assert(m_bounds, "LineBounds must not be nullptr");
 }
 
 Acts::LineSurface::LineSurface(const LineSurface& other)
