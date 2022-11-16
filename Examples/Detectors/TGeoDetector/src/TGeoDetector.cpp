@@ -297,7 +297,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   // create the tracking geometry
   Acts::TrackingGeometryBuilder::Config tgConfig;
   // Add the builders
-  tgConfig.materialDecorator = mdecorator;
+  tgConfig.materialDecorator = std::move(mdecorator);
   tgConfig.geometryIdentifierHook = config.geometryIdentifierHook;
 
   for (auto& vb : volumeBuilders) {
@@ -389,7 +389,7 @@ void writeTGeoDetectorConfig(const Variables& vm,
 }  // namespace
 
 void TGeoDetector::addOptions(
-    boost::program_options::options_description& desc) const {
+    boost::program_options::options_description& opt) const {
   using boost::program_options::value;
 
   // The options are encoded in a json file, where an empty version containing
@@ -452,13 +452,13 @@ void TGeoDetector::addOptions(
   //   "geo-tgeo-disc-nr-segs"   # number of r segments for disc splitting
   //   "geo-tgeo-disc-nphi-segs" # number of phi segments for disc splitting
 
-  auto opt = desc.add_options();
+  auto tmp = opt.add_options();
   // required global options
-  opt("geo-tgeo-filename", value<std::string>()->default_value(""),
+  tmp("geo-tgeo-filename", value<std::string>()->default_value(""),
       "Root file name.");
-  opt("geo-tgeo-jsonconfig", value<std::string>()->default_value(""),
+  tmp("geo-tgeo-jsonconfig", value<std::string>()->default_value(""),
       "Json config file name.");
-  opt("geo-tgeo-dump-jsonconfig",
+  tmp("geo-tgeo-dump-jsonconfig",
       value<std::string>()->default_value("tgeo_empty_config.json"),
       "Json file to dump empty config into.");
 }
@@ -501,7 +501,7 @@ auto TGeoDetector::finalize(
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext tGeoContext;
   TrackingGeometryPtr tgeoTrackingGeometry =
-      buildTGeoDetector(cfg, tGeoContext, detectorStore, mdecorator);
+      buildTGeoDetector(cfg, tGeoContext, detectorStore, std::move(mdecorator));
 
   ContextDecorators tgeoContextDeocrators = {};
   // Return the pair of geometry and empty decorators

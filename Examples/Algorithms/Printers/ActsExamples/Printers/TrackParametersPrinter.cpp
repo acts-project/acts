@@ -14,8 +14,8 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 ActsExamples::TrackParametersPrinter::TrackParametersPrinter(
-    const Config& cfg, Acts::Logging::Level lvl)
-    : BareAlgorithm("TrackParametersPrinter", lvl), m_cfg(cfg) {
+    const Config& cfg, Acts::Logging::Level level)
+    : BareAlgorithm("TrackParametersPrinter", level), m_cfg(cfg) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument(
         "Input track parameters collection is not configured");

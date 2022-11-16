@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(RectangleBoundsRecreation) {
   RectangleBounds original(halfX, halfY);
   // const bool symmetric(false);
   auto valvector = original.values();
-  std::array<double, RectangleBounds::eSize> values;
+  std::array<double, RectangleBounds::eSize> values{};
   std::copy_n(valvector.begin(), RectangleBounds::eSize, values.begin());
   RectangleBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

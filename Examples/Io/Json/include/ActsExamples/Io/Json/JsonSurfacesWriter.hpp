@@ -60,20 +60,20 @@ class JsonSurfacesWriter : public IWriter {
   /// @param level is the logging level
   JsonSurfacesWriter(const Config& config, Acts::Logging::Level level);
 
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Write geometry using the per-event context (optional).
-  ProcessCode write(const AlgorithmContext& context) final override;
+  ProcessCode write(const AlgorithmContext& ctx) override;
 
   /// Write geometry using the default context.
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Readonly access to config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
-  const Acts::TrackingVolume* m_world;
+  const Acts::TrackingVolume* m_world = nullptr;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   const Acts::Logger& logger() const { return *m_logger; }

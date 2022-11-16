@@ -184,6 +184,7 @@ void addLogging(Acts::Python::Context& ctx) {
 
   static py::exception<Logging::ThresholdFailure> exc(
       logging, "ThresholdFailure", PyExc_RuntimeError);
+  // NOLINTNEXTLINE(performance-unnecessary-value-param)
   py::register_exception_translator([](std::exception_ptr p) {
     try {
       if (p) {

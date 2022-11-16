@@ -34,7 +34,7 @@ using Acts::VectorHelpers::eta;
 using Acts::VectorHelpers::perp;
 using Acts::VectorHelpers::phi;
 
-typedef std::pair<const Acts::Surface*, Acts::Vector3> SurfacePosition;
+using SurfacePosition = std::pair<const Acts::Surface*, Acts::Vector3>;
 
 /// @class LayerBuilderT
 ///
@@ -91,18 +91,18 @@ class LayerBuilderT : public Acts::ILayerBuilder {
 
   /// LayerBuilder interface method - returning the layers at negative side
   const Acts::LayerVector negativeLayers(
-      const Acts::GeometryContext& gctx) const final override;
+      const Acts::GeometryContext& gctx) const override;
 
   /// LayerBuilder interface method - returning the central layers
   const Acts::LayerVector centralLayers(
-      const Acts::GeometryContext& gctx) const final override;
+      const Acts::GeometryContext& gctx) const override;
 
   /// LayerBuilder interface method - returning the layers at positive side
   const Acts::LayerVector positiveLayers(
-      const Acts::GeometryContext& gctx) const final override;
+      const Acts::GeometryContext& gctx) const override;
 
   /// ILayerBuilder method
-  const std::string& identification() const final override {
+  const std::string& identification() const override {
     return m_cfg.layerIdentification;
   }
 
@@ -134,7 +134,7 @@ const Acts::LayerVector LayerBuilderT<detector_element_t>::centralLayers(
         gctx, cpl.surfaces, cpl.bins0, cpl.bins1, cpl.protoLayer);
 
     // the layer is built let's see if it needs material
-    if (m_cfg.centralLayerMaterial.size()) {
+    if (!m_cfg.centralLayerMaterial.empty()) {
       std::shared_ptr<const Acts::ISurfaceMaterial> layerMaterialPtr =
           m_cfg.centralLayerMaterial.at(icl);
       // central material
@@ -207,7 +207,7 @@ LayerBuilderT<detector_element_t>::constructEndcapLayers(
         gctx, ple.surfaces, ple.bins0, ple.bins1, ple.protoLayer);
 
     // the layer is built let's see if it needs material
-    if (m_cfg.posnegLayerMaterial.size()) {
+    if (!m_cfg.posnegLayerMaterial.empty()) {
       std::shared_ptr<const Acts::ISurfaceMaterial> layerMaterialPtr =
           m_cfg.posnegLayerMaterial[ipnl];
       // central material

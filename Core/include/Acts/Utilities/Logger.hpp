@@ -399,7 +399,7 @@ class TimedOutputDecorator final : public OutputDecorator {
   /// @return current time stamp as string
   std::string now() const {
     char buffer[20];
-    time_t t;
+    time_t t{};
     std::time(&t);
     std::strftime(buffer, sizeof(buffer), m_format.c_str(), localtime(&t));
     return buffer;

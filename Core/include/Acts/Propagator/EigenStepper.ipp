@@ -119,7 +119,7 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   // Runge-Kutta integrator state
   auto& sd = state.stepping.stepData;
   double error_estimate = 0.;
-  double h2, half_h;
+  double h2 = 0, half_h = 0;
 
   auto pos = position(state.stepping);
   auto dir = direction(state.stepping);
