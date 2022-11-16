@@ -52,7 +52,7 @@ ActsExamples::TrackFittingChi2Algorithm::makeTrackFitterChi2Function(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   Stepper stepper(std::move(magneticField));
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

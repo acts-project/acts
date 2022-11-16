@@ -48,10 +48,10 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   RootSpacepointWriter(const Config& config, Acts::Logging::Level level);
 
   /// Ensure underlying file is closed.
-  ~RootSpacepointWriter() final override;
+  ~RootSpacepointWriter() final;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -62,7 +62,7 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] hits are the hits to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimSpacePointContainer& hits) final override;
+                     const SimSpacePointContainer& spacepoints) final;
 
  private:
   Config m_cfg;

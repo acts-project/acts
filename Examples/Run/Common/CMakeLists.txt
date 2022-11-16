@@ -1,3 +1,5 @@
+include(ActsTargetLinkLibrariesSystem)
+
 add_library(
   ActsExamplesCommon SHARED
   src/CommonGeometry.cpp
@@ -37,9 +39,10 @@ target_link_libraries(
     ActsExamplesDigitization ActsExamplesTrackFitting
     ActsExamplesTrackFittingChi2
     ActsExamplesTrackFinding ActsExamplesTruthTracking
-    ActsExamplesIoCsv
-  PRIVATE
-    dfelibs)
+    ActsExamplesIoCsv)
+acts_target_link_libraries_system(
+  ActsExamplesCommon
+  PRIVATE dfelibs)
 
 install(
   TARGETS ActsExamplesCommon

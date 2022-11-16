@@ -48,7 +48,7 @@ class TGeoCylinderDiscSplitter : public ITGeoDetectorElementSplitter {
       std::unique_ptr<const Acts::Logger> logger = Acts::getDefaultLogger(
           "TGeoCylinderDiscSplitter", Acts::Logging::INFO));
 
-  virtual ~TGeoCylinderDiscSplitter() = default;
+  ~TGeoCylinderDiscSplitter() override = default;
 
   /// Take a geometry context and TGeoElement and split it into sub elements
   ///
@@ -60,7 +60,7 @@ class TGeoCylinderDiscSplitter : public ITGeoDetectorElementSplitter {
   /// @return a vector of TGeoDetectorElement objects
   std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>> split(
       const GeometryContext& gctx,
-      std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const;
+      std::shared_ptr<const Acts::TGeoDetectorElement> tgde) const override;
 
  private:
   Config m_cfg;

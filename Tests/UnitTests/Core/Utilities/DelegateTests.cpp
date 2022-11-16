@@ -86,7 +86,7 @@ BOOST_AUTO_TEST_CASE(ConnectStruct) {
   BOOST_CHECK_EQUAL(sub(7), 7 - 18);
 }
 
-int addition(const void*, int a, int b) {
+int addition(const void* /*unused*/, int a, int b) {
   return a + b;
 }
 
@@ -214,7 +214,7 @@ int owningTest() {
   return 8;
 }
 
-int owningTest2(const void*) {
+int owningTest2(const void* /*unused*/) {
   return 8;
 }
 

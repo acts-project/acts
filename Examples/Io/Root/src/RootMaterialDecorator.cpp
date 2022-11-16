@@ -36,8 +36,7 @@ ActsExamples::RootMaterialDecorator::RootMaterialDecorator(
     const ActsExamples::RootMaterialDecorator::Config& config,
     Acts::Logging::Level level)
     : m_cfg(config),
-      m_logger{Acts::getDefaultLogger("RootMaterialDecorator", level)},
-      m_inputFile(nullptr) {
+      m_logger{Acts::getDefaultLogger("RootMaterialDecorator", level)} {
   // Validate the configuration
   if (m_cfg.folderSurfaceNameBase.empty()) {
     throw std::invalid_argument("Missing surface folder name base");

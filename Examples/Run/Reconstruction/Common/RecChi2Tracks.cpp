@@ -37,8 +37,9 @@
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-int runRecChi2Tracks(int argc, char* argv[],
-                     std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runRecChi2Tracks(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   using boost::program_options::value;
 
   // setup and parse options
@@ -77,7 +78,7 @@ int runRecChi2Tracks(int argc, char* argv[],
   auto geometry = Geometry::build(vm, *detector);
   auto trackingGeometry = geometry.first;
   // Add context decorators
-  for (auto cdr : geometry.second) {
+  for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
   // Setup the magnetic field

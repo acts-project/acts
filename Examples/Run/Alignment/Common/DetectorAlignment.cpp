@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "DetectorAlignment.hpp"
+
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
@@ -52,12 +54,9 @@ void addAlignmentOptions(ActsExamples::Options::Description& desc) {
 
 int runDetectorAlignment(
     int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector,
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector,
     ActsAlignment::AlignedTransformUpdater alignedTransformUpdater,
-    std::function<std::vector<Acts::DetectorElementBase*>(
-        const std::shared_ptr<ActsExamples::IBaseDetector>&,
-        const std::vector<Acts::GeometryIdentifier>&)>
-        alignedDetElementsGetter) {
+    const AlignedDetElementGetter& alignedDetElementsGetter) {
   // using boost::program_options::value;
 
   // setup and parse options
@@ -93,7 +92,7 @@ int runDetectorAlignment(
   auto geometry = Geometry::build(vm, *detector);
   auto trackingGeometry = geometry.first;
   // Add context decorators
-  for (auto cdr : geometry.second) {
+  for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
   // Setup the magnetic field
@@ -162,7 +161,7 @@ int runDetectorAlignment(
     alignment.inputInitialTrackParameters =
         particleSmearingCfg.outputTrackParameters;
     alignment.outputAlignmentParameters = "alignment-parameters";
-    alignment.alignedTransformUpdater = alignedTransformUpdater;
+    alignment.alignedTransformUpdater = std::move(alignedTransformUpdater);
     std::string path = vm["alignment-geo-config-file"].as<std::string>();
     if (not path.empty()) {
       alignment.alignedDetElements = alignedDetElementsGetter(

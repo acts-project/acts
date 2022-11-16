@@ -97,7 +97,7 @@ struct TestOutlierFinder {
 // Construct a straight-line propagator.
 StraightPropagator makeStraightPropagator(
     std::shared_ptr<const Acts::TrackingGeometry> geo) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -109,7 +109,7 @@ StraightPropagator makeStraightPropagator(
 // Construct a propagator using a constant magnetic field along z.
 ConstantFieldPropagator makeConstantFieldPropagator(
     std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

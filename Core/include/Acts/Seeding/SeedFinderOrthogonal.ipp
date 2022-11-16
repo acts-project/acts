@@ -199,8 +199,9 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
       // and y ~= impactParam
       float uIP = -1. / rL;
       float vIP = m_config.impactMax / (rL * rL);
-      if (yVal > 0.)
+      if (yVal > 0.) {
         vIP = -vIP;
+      }
       // we can obtain aCoef as the slope dv/du of the linear function,
       // estimated using du and dv between the two SP bCoef is obtained by
       // inserting aCoef into the linear equation

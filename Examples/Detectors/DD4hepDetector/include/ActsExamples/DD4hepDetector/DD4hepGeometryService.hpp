@@ -77,7 +77,7 @@ class DD4hepGeometryService final : public BareService {
   };
 
   DD4hepGeometryService(const Config& cfg);
-  ~DD4hepGeometryService() final override;
+  ~DD4hepGeometryService() final;
 
   /// Interface method to access the DD4hep geometry
   /// @return The world DD4hep DetElement
