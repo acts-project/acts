@@ -214,7 +214,7 @@ int owningTest() {
   return 8;
 }
 
-int owningTest2(const void*) {
+int owningTest2(const void* /*unused*/) {
   return 8;
 }
 
