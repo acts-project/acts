@@ -123,7 +123,9 @@ with acts.FpeMonitor():
     addAmbiguityResolution(
         s,
         AmbiguityResolutionConfig(maximumSharedHits=3),
-        CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+        CKFPerformanceConfig(
+            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6
+        ),
         outputDirRoot=outputDir,
     )
 
