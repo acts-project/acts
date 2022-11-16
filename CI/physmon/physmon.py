@@ -125,12 +125,13 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
     (True, False, "truth_smeared"),  # if first is true, second is ignored
     (False, True, "truth_estimated"),
     (False, False, "seeded"),
+    (False, False, "orthogonal"),
 ]:
     # TODO There seems to be a difference to the reference files when using
     # multithreading ActsAnalysisResidualsAndPulls
     s = acts.examples.Sequencer(
         events=500,
-        numThreads=1 if label == "seeded" else -1,
+        numThreads=1 if label in ["seeded", "orthogonal"] else -1,
         logLevel=acts.logging.INFO,
     )
 
@@ -197,7 +198,9 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             if truthSmearedSeeded
             else SeedingAlgorithm.TruthEstimated
             if truthEstimatedSeeded
-            else SeedingAlgorithm.Default,
+            else SeedingAlgorithm.Default
+            if label == "seeded"
+            else SeedingAlgorithm.Orthogonal,
             geoSelectionConfigFile=geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
             outputDirRoot=tp,
@@ -217,7 +220,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             outputDirCsv=None,
         )
 
-        if label == "seeded":
+        if label in ["seeded", "orthogonal"]:
             addAmbiguityResolution(
                 s,
                 AmbiguityResolutionConfig(maximumSharedHits=3),
@@ -228,7 +231,9 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         addVertexFitting(
             s,
             field,
-            associatedParticles=None if label == "seeded" else "particles_input",
+            associatedParticles=None
+            if label in ["seeded", "orthogonal"]
+            else "particles_input",
             vertexFinder=VertexFinder.Iterative,
             outputDirRoot=tp,
         )
@@ -237,7 +242,11 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         del s
 
         for stem in ["performance_ckf", "performance_vertexing"] + (
-            ["performance_ambi"] if label == "seeded" else []
+            ["performance_seeding_hists", "performance_ambi"]
+            if label in ["seeded", "orthogonal"]
+            else ["performance_seeding_hists"]
+            if label == "truth_estimated"
+            else []
         ):
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
