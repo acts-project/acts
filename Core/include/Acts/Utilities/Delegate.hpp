@@ -241,7 +241,7 @@ class Delegate<R(Args...), O> {
 
  private:
   // Deleter that does not do anything
-  static void noopDeleter(const void *) {}
+  static void noopDeleter(const void * /*unused*/) {}
 
   /// @cond
 

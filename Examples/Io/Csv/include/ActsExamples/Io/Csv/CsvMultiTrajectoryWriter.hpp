@@ -59,7 +59,7 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// @param [in] context is the algorithm context for consistency
   /// @param [in] tracks is the track collection
   ProcessCode writeT(const AlgorithmContext& context,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
  private:
   Config m_cfg;  //!< Nested configuration struct
@@ -67,12 +67,12 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// @brief Struct for brief trajectory summary info
   ///
   struct trackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
-    size_t trackId;
+    size_t trackId = 0;
     ActsFatras::Barcode particleId;
-    size_t nMajorityHits;
+    size_t nMajorityHits = 0;
     std::string trackType;
-    double truthMatchProb;
-    const TrackParameters* fittedParameters;
+    double truthMatchProb = 0;
+    const TrackParameters* fittedParameters = nullptr;
   };  // trackInfo struct
 };
 

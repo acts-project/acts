@@ -35,7 +35,7 @@ class MaterialWiper : public IMaterialDecorator {
   /// Decorate a TrackingVolume
   ///
   /// @param volume the non-cost volume that is decorated
-  virtual void decorate(TrackingVolume& volume) const final {
+  void decorate(TrackingVolume& volume) const final {
     volume.assignVolumeMaterial(nullptr);
   }
 };

@@ -53,7 +53,7 @@ class RootPropagationStepsWriter
   ~RootPropagationStepsWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -63,16 +63,17 @@ class RootPropagationStepsWriter
   /// and is called by the WriterT<>::write interface
   ///
   /// @param context The Algorithm context with per event information
-  /// @param steps is the data to be written out
-  ProcessCode writeT(const AlgorithmContext& context,
-                     const std::vector<PropagationSteps>& steps) final override;
+  /// @param stepCollection is the data to be written out
+  ProcessCode writeT(
+      const AlgorithmContext& context,
+      const std::vector<PropagationSteps>& stepCollection) override;
 
  private:
   Config m_cfg;                    ///< the configuration object
   std::mutex m_writeMutex;         ///< protect multi-threaded writes
-  TFile* m_outputFile;             ///< the output file name
-  TTree* m_outputTree;             ///< the output tree
-  int m_eventNr;                   ///< the event number of
+  TFile* m_outputFile = nullptr;   ///< the output file name
+  TTree* m_outputTree = nullptr;   ///< the output tree
+  int m_eventNr = 0;               ///< the event number of
   std::vector<int> m_volumeID;     ///< volume identifier
   std::vector<int> m_boundaryID;   ///< boundary identifier
   std::vector<int> m_layerID;      ///< layer identifier if

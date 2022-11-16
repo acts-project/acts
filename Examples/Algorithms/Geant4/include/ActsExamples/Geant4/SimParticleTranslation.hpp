@@ -55,12 +55,12 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
                              Acts::getDefaultLogger("SimParticleTranslation",
                                                     Acts::Logging::INFO));
 
-  ~SimParticleTranslation() final override;
+  ~SimParticleTranslation() override;
 
   /// Interface method to generate the primary
   ///
   /// @param anEvent is the event that will be run
-  void GeneratePrimaries(G4Event* anEvent) final override;
+  void GeneratePrimaries(G4Event* anEvent) override;
 
  protected:
   Config m_cfg;

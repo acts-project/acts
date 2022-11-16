@@ -50,8 +50,7 @@ struct TelescopeDetector : public IBaseDetector {
            std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
 
   std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const Config& cfg,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+  finalize(const Config& cfg);
 };
 
 }  // namespace Telescope

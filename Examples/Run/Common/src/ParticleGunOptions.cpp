@@ -73,7 +73,7 @@ ActsExamples::Options::readParticleGunOptions(const Variables& vars) {
   ParametricParticleGenerator::Config pgCfg;
   getRange("gen-phi-degree", 1_degree, pgCfg.phiMin, pgCfg.phiMax);
   // user config sets eta but the generator takes theta
-  double etaMin, etaMax;
+  double etaMin = 0, etaMax = 0;
   getRange("gen-eta", 1.0, etaMin, etaMax);
 
   pgCfg.etaUniform = vars["gen-eta-uniform"].template as<bool>();

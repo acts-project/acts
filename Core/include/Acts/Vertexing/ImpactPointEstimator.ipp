@@ -214,7 +214,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   double bZ = (*fieldRes)[eZ];
 
   // The radius
-  double r;
+  double r = 0;
   // Curvature is infinite w/o b field
   if (bZ == 0. || std::abs(qOvP) < m_cfg.minQoP) {
     r = m_cfg.maxRho;

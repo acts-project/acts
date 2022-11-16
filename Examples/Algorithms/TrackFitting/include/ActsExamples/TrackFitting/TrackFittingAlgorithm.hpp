@@ -71,7 +71,7 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     /// Input measurements collection.
     std::string inputMeasurements;
     /// Boolean determining to use DirectNavigator or standard Navigator
-    bool directNavigation;
+    bool directNavigation = false;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input proto tracks collection, i.e. groups of hit indices.

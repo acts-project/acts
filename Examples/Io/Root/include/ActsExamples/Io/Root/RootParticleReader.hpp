@@ -45,19 +45,18 @@ class RootParticleReader : public IReader {
   RootParticleReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootParticleReader();
+  ~RootParticleReader() override;
 
   /// Framework name() method
-  std::string name() const final override { return "RootParticleReader"; }
+  std::string name() const override { return "RootParticleReader"; }
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t> availableEvents() const override;
 
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(
-      const ActsExamples::AlgorithmContext& context) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -81,7 +80,7 @@ class RootParticleReader : public IReader {
   TChain* m_inputChain = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId;
+  uint32_t m_eventId = 0;
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)

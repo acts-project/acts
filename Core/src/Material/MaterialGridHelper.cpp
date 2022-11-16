@@ -83,31 +83,31 @@ std::function<double(Acts::Vector3)> Acts::globalToLocalFromBin(
 
   switch (type) {
     case Acts::binX:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.x());
       };
       break;
 
     case Acts::binY:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.y());
       };
       break;
 
     case Acts::binR:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (Acts::VectorHelpers::perp(pos));
       };
       break;
 
     case Acts::binPhi:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (Acts::VectorHelpers::phi(pos));
       };
       break;
 
     case Acts::binZ:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.z());
       };
       break;
@@ -128,8 +128,8 @@ Acts::Grid2D Acts::createGrid2D(
     std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
   // First we nee to create the 2 axis
-  std::array<double, 3> gridAxis1;
-  std::array<double, 3> gridAxis2;
+  std::array<double, 3> gridAxis1{};
+  std::array<double, 3> gridAxis2{};
 
   bool isCartesian = false;
   bool isCylindrical = false;
@@ -172,9 +172,9 @@ Acts::Grid3D Acts::createGrid3D(
     std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
   // First we nee to create the 3 axis
-  std::array<double, 3> gridAxis1;
-  std::array<double, 3> gridAxis2;
-  std::array<double, 3> gridAxis3;
+  std::array<double, 3> gridAxis1{};
+  std::array<double, 3> gridAxis2{};
+  std::array<double, 3> gridAxis3{};
 
   bool isCartesian = false;
   bool isCylindrical = false;

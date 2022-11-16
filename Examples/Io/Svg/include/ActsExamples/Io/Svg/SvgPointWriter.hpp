@@ -109,7 +109,7 @@ class SvgPointWriter final : public WriterT<GeometryIdMultiset<T>> {
  protected:
   ActsExamples::ProcessCode writeT(
       const ActsExamples::AlgorithmContext& context,
-      const GeometryIdMultiset<T>& pointCollection) final override;
+      const GeometryIdMultiset<T>& pointCollection) final;
 
  private:
   Config m_cfg;
