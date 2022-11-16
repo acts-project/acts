@@ -76,7 +76,7 @@ const Vector2 getLocalPos(const TestMeasurement* meas) {
 }
 
 std::pair<Vector3, Vector3> stripEnds(
-    const std::shared_ptr<const TrackingGeometry> geo,
+    const std::shared_ptr<const TrackingGeometry>& geo,
     const GeometryContext& gctx, const TestMeasurement* meas,
     const double stripFrac = 0.4) {
   const auto lpos = getLocalPos(meas);
@@ -127,7 +127,7 @@ const MeasurementResolutionMap resolutions = {
 // Construct a straight-line propagator.
 static StraightPropagator makeStraightPropagator(
     std::shared_ptr<const Acts::TrackingGeometry> geo) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -206,9 +206,11 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
       Acts::Vector3, Acts::Vector2,
       boost::container::static_vector<const Acts::SourceLink*, 2>)>
       spConstructor =
-          [](Acts::Vector3 pos, Acts::Vector2 cov,
+          [](const Acts::Vector3& pos, const Acts::Vector2& cov,
              boost::container::static_vector<const Acts::SourceLink*, 2> slinks)
-      -> TestSpacePoint { return TestSpacePoint(pos, cov[0], cov[1], slinks); };
+      -> TestSpacePoint {
+    return TestSpacePoint(pos, cov[0], cov[1], std::move(slinks));
+  };
 
   auto spBuilderConfig = SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = geometry;

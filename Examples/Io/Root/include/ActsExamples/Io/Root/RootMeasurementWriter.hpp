@@ -68,23 +68,23 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
 
     TTree* tree = nullptr;
     // Identification parameters
-    int eventNr;
-    int volumeID;
-    int layerID;
-    int surfaceID;
+    int eventNr = 0;
+    int volumeID = 0;
+    int layerID = 0;
+    int surfaceID = 0;
 
     /// Type 0 - free, 1 - bound
     int measType = 1;
 
     /// Truth parameters
-    float trueBound[Acts::eBoundSize];
+    float trueBound[Acts::eBoundSize] = {};
     float trueGx = 0.;
     float trueGy = 0.;
     float trueGz = 0.;
 
     /// Reconstruction information
-    float recBound[Acts::eBoundSize];
-    float varBound[Acts::eBoundSize];
+    float recBound[Acts::eBoundSize] = {};
+    float varBound[Acts::eBoundSize] = {};
 
     /// Cluster information comprised of
     /// nch :  number of channels
@@ -92,7 +92,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// chId : channel identification
     /// chValue: value/activation of the channel
     int nch = 0;
-    int cSize[2];
+    int cSize[2] = {};
     std::array<std::vector<int>*, 2> chId = {nullptr, nullptr};
     std::vector<float>* chValue = nullptr;
 
@@ -246,10 +246,10 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   RootMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~RootMeasurementWriter() final override;
+  ~RootMeasurementWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }
@@ -261,7 +261,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const MeasurementContainer& measurements) final override;
+                     const MeasurementContainer& measurements) override;
 
  private:
   Config m_cfg;

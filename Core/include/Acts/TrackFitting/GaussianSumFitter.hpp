@@ -28,7 +28,7 @@ namespace detail {
 template <typename T>
 struct IsMultiComponentBoundParameters : public std::false_type {
   template <template <class> class U, class V>
-  static auto detectCharge(const U<V>&) {
+  static auto detectCharge(const U<V>& /*unused*/) {
     return V{};
   }
 

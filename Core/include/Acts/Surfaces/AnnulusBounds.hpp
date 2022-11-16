@@ -81,8 +81,8 @@ class AnnulusBounds : public DiscBounds {
   /// @param lposition Local position (assumed to be in right surface frame)
   /// @param bcheck boundary check directive
   /// @return boolean indicator for the success of this operation
-  virtual bool inside(const Vector2& lposition,
-                      const BoundaryCheck& bcheck) const final;
+  bool inside(const Vector2& lposition,
+              const BoundaryCheck& bcheck) const final;
 
   /// Outstream operator
   ///
@@ -139,7 +139,7 @@ class AnnulusBounds : public DiscBounds {
   ///  which may slightly alter the number of segments returned
   ///
   /// @return vector for vertices in 2D
-  std::vector<Vector2> vertices(unsigned int lseg) const;
+  std::vector<Vector2> vertices(unsigned int lseg) const override;
 
   /// This method returns inner radius
   double rMin() const final;

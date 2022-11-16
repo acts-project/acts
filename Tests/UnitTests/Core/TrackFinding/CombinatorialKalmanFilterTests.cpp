@@ -65,7 +65,7 @@ struct Detector {
       {Acts::GeometryIdentifier().setVolume(3).setLayer(8), resStrip1},
   };
 
-  Detector(const Acts::GeometryContext geoCtx)
+  Detector(const Acts::GeometryContext& geoCtx)
       : store(geoCtx), geometry(store()) {}
 };
 
@@ -226,7 +226,7 @@ struct Fixture {
   // Construct a straight-line propagator.
   static StraightPropagator makeStraightPropagator(
       std::shared_ptr<const Acts::TrackingGeometry> geo) {
-    Acts::Navigator::Config cfg{geo};
+    Acts::Navigator::Config cfg{std::move(geo)};
     cfg.resolvePassive = false;
     cfg.resolveMaterial = true;
     cfg.resolveSensitive = true;
@@ -238,7 +238,7 @@ struct Fixture {
   // Construct a propagator using a constant magnetic field along z.
   static ConstantFieldPropagator makeConstantFieldPropagator(
       std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
-    Acts::Navigator::Config cfg{geo};
+    Acts::Navigator::Config cfg{std::move(geo)};
     cfg.resolvePassive = false;
     cfg.resolveMaterial = true;
     cfg.resolveSensitive = true;

@@ -92,7 +92,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
  private:
   template <typename source_link_accessor_container_t>
   void computeSharedHits(const source_link_accessor_container_t& sourcelinks,
-                         TrackFinderResult&) const;
+                         TrackFinderResult& /*result*/) const;
 
   ActsExamples::ProcessCode finalize() const override;
 

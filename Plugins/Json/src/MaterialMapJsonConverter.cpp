@@ -31,7 +31,7 @@
 namespace {
 
 Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
-    std::shared_ptr<const Acts::Surface> surface,
+    const std::shared_ptr<const Acts::Surface>& surface,
     const Acts::GeometryContext& context) {
   if (surface->surfaceMaterialSharedPtr() != nullptr) {
     return {surface, surface->surfaceMaterialSharedPtr(), context};
@@ -274,9 +274,8 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
     const Acts::TrackingVolume* tVolume) {
   auto sameId =
       [tVolume](
-          std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial> pair) {
-        return (tVolume->geometryId() == pair.first);
-      };
+          const std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>&
+              pair) { return (tVolume->geometryId() == pair.first); };
   if (std::find_if(volumeHierarchy.begin(), volumeHierarchy.end(), sameId) !=
       volumeHierarchy.end()) {
     // this volume was already visited
