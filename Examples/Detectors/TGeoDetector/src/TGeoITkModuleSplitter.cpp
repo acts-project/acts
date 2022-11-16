@@ -143,7 +143,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   // Check annulus bounds origin
   auto printOrigin = [&](const Acts::Surface& sf) {
     Acts::Vector3 discOrigin =
-        sf.localToGlobal(gctx, Acts::Vector2(0., 0.), {});
+        sf.localToGlobal(gctx, Acts::Vector2(0., 0.), Acts::Vector3::Zero());
     std::string out =
         "Disc surface origin at: " + std::to_string(discOrigin[0]) + ", " +
         std::to_string(discOrigin[1]) + ", " + std::to_string(discOrigin[2]);
