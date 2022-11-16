@@ -37,11 +37,11 @@ class PlanarModuleCluster : public Measurement<BoundIndices, 3> {
   /// @param [in] dModule an optional pointer to a digitization configuration
   PlanarModuleCluster(std::shared_ptr<const Surface> surface,
                       const DigitizationSourceLink& sourceLink,
-                      Base::CovarianceMatrix cov, double loc0, double loc1,
-                      double t, std::vector<DigitizationCell> dCells,
+                      const Base::CovarianceMatrix& cov, double loc0,
+                      double loc1, double t,
+                      std::vector<DigitizationCell> dCells,
                       const DigitizationModule* dModule = nullptr)
-      : Base(sourceLink, kIndices, Base::ParametersVector(loc0, loc1, t),
-             std::move(cov)),
+      : Base(sourceLink, kIndices, Base::ParametersVector(loc0, loc1, t), cov),
         m_surface(std::move(surface)),
         m_digitizationCells(std::move(dCells)),
         m_digitizationModule(dModule) {

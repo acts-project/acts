@@ -24,7 +24,7 @@ class TrackParametersPrinter : public BareAlgorithm {
 
   TrackParametersPrinter(const Config& cfg, Acts::Logging::Level level);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   const Config& config() const { return m_cfg; }
 

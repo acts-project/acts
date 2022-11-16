@@ -296,7 +296,7 @@ BOOST_AUTO_TEST_CASE(track_density_finder_usertrack_test) {
   vertexingOptions.vertexConstraint = vertexConstraint;
 
   std::function<BoundTrackParameters(InputTrack)> extractParameters =
-      [](InputTrack params) { return params.parameters(); };
+      [](const InputTrack& params) { return params.parameters(); };
 
   using Finder = TrackDensityVertexFinder<DummyVertexFitter<InputTrack>,
                                           GaussianTrackDensity<InputTrack>>;

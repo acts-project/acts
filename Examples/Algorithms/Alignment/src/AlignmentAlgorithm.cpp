@@ -16,8 +16,8 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
-                                                     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("AlignmentAlgorithm", level),
+                                                     Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("AlignmentAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");

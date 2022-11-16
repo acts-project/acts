@@ -812,7 +812,7 @@ std::unique_ptr<const Acts::TrackingGeometry> buildDetector(
         });
   }
   tgConfig.trackingVolumeHelper = cylinderVolumeHelper;
-  tgConfig.materialDecorator = matDecorator;
+  tgConfig.materialDecorator = std::move(matDecorator);
 
   auto cylinderGeometryBuilder =
       std::make_shared<const Acts::TrackingGeometryBuilder>(

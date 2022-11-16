@@ -375,6 +375,9 @@ class TrackStateProxy {
                       hashString("referenceSurface")>();
   }
 
+  // NOLINTBEGIN(performance-unnecessary-value-param)
+  // looks like a false-positive. clang-tidy believes `srf` is not movable.
+
   /// Set the reference surface to a given value
   /// @param srf Shared pointer to the surface to set
   /// @note This overload is only present in case @c ReadOnly is false.
@@ -383,6 +386,7 @@ class TrackStateProxy {
     component<std::shared_ptr<const Surface>,
               hashString("referenceSurface")>() = std::move(srf);
   }
+  // NOLINTEND(performance-unnecessary-value-param)
 
   /// Check if a component is set
   /// @tparam key Hashed string key to check for

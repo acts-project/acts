@@ -62,14 +62,7 @@ class AtlasStepper {
           double ssize = std::numeric_limits<double>::max(),
           double stolerance = s_onSurfaceTolerance)
         : navDir(ndir),
-          useJacobian(false),
-          step(0.),
-          maxPathLength(0.),
-          mcondition(false),
-          needgradient(false),
-          newfield(true),
           field(0., 0., 0.),
-          covariance(nullptr),
           stepSize(ndir * std::abs(ssize)),
           tolerance(stolerance),
           fieldCache(std::move(fieldCacheIn)),
@@ -81,11 +74,10 @@ class AtlasStepper {
       const auto pos = pars.position(gctx);
       const auto Vp = pars.parameters();
 
-      double Sf, Cf, Ce, Se;
-      Sf = sin(Vp[eBoundPhi]);
-      Cf = cos(Vp[eBoundPhi]);
-      Se = sin(Vp[eBoundTheta]);
-      Ce = cos(Vp[eBoundTheta]);
+      double Sf = sin(Vp[eBoundPhi]);
+      double Cf = cos(Vp[eBoundPhi]);
+      double Se = sin(Vp[eBoundTheta]);
+      double Ce = cos(Vp[eBoundTheta]);
 
       pVector[0] = pos[ePos0];
       pVector[1] = pos[ePos1];
@@ -241,16 +233,16 @@ class AtlasStepper {
     // optimisation that init is not called twice
     bool state_ready = false;
     // configuration
-    NavigationDirection navDir;
-    bool useJacobian;
-    double step;
-    double maxPathLength;
-    bool mcondition;
-    bool needgradient;
-    bool newfield;
+    NavigationDirection navDir = NavigationDirection::Forward;
+    bool useJacobian = false;
+    double step = 0;
+    double maxPathLength = 0;
+    bool mcondition = false;
+    bool needgradient = false;
+    bool newfield = true;
     // internal parameters to be used
     Vector3 field;
-    std::array<double, 60> pVector;
+    std::array<double, 60> pVector{};
 
     /// Storage pattern of pVector
     ///                   /dL0    /dL1    /dPhi   /dThe   /dCM   /dT
@@ -266,10 +258,10 @@ class AtlasStepper {
 
     // result
     double parameters[eBoundSize] = {0., 0., 0., 0., 0., 0.};
-    const Covariance* covariance;
+    const Covariance* covariance = nullptr;
     Covariance cov = Covariance::Zero();
     bool covTransport = false;
-    double jacobian[eBoundSize * eBoundSize];
+    double jacobian[eBoundSize * eBoundSize] = {};
 
     // accummulated path length cache
     double pathAccumulated = 0.;
@@ -570,11 +562,10 @@ class AtlasStepper {
     Vector3 pos(state.pVector[0], state.pVector[1], state.pVector[2]);
     Vector3 mom(state.pVector[4], state.pVector[5], state.pVector[6]);
 
-    double Sf, Cf, Ce, Se;
-    Sf = sin(boundParams[eBoundPhi]);
-    Cf = cos(boundParams[eBoundPhi]);
-    Se = sin(boundParams[eBoundTheta]);
-    Ce = cos(boundParams[eBoundTheta]);
+    double Sf = sin(boundParams[eBoundPhi]);
+    double Cf = cos(boundParams[eBoundPhi]);
+    double Se = sin(boundParams[eBoundTheta]);
+    double Ce = cos(boundParams[eBoundTheta]);
 
     const auto transform = surface.referenceFrame(state.geoContext, pos, mom);
 
@@ -813,7 +804,7 @@ class AtlasStepper {
     P[45] -= (s4 * P[57]);
     P[46] -= (s4 * P[58]);
 
-    double P3, P4, C = P[4] * P[4] + P[5] * P[5];
+    double P3 = 0, P4 = 0, C = P[4] * P[4] + P[5] * P[5];
     if (C > 1.e-20) {
       C = 1. / C;
       P3 = P[4] * C;
@@ -1018,7 +1009,7 @@ class AtlasStepper {
     P[45] -= (s4 * P[57]);
     P[46] -= (s4 * P[58]);
 
-    double P3, P4, C = P[4] * P[4] + P[5] * P[5];
+    double P3 = 0, P4 = 0, C = P[4] * P[4] + P[5] * P[5];
     if (C > 1.e-20) {
       C = 1. / C;
       P3 = P[4] * C;

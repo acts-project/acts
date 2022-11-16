@@ -39,7 +39,7 @@ using namespace ActsExamples;
 
 int runDigitizationExample(
     int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -76,7 +76,7 @@ int runDigitizationExample(
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vm));
 
   // Add the decorator to the sequencer
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 

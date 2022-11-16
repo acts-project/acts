@@ -167,7 +167,7 @@ struct CombinatorialKalmanFilterOptions {
         magFieldContext(mctx),
         calibrationContext(cctx),
         sourcelinkAccessor(std::move(accessor_)),
-        extensions(std::move(extensions_)),
+        extensions(extensions_),
         propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
@@ -737,8 +737,7 @@ class CombinatorialKalmanFilter {
           // Check the branch
           if (not m_extensions.branchStopper(tipState)) {
             // Remember the active tip and its state
-            result.activeTips.emplace_back(std::move(currentTip),
-                                           std::move(tipState));
+            result.activeTips.emplace_back(currentTip, tipState);
           } else {
             // No branch on this surface
             nBranchesOnSurface = 0;
@@ -951,8 +950,7 @@ class CombinatorialKalmanFilter {
         // Check if need to stop this branch
         if (not m_extensions.branchStopper(tipState)) {
           // Put tipstate back into active tips to continue with it
-          result.activeTips.emplace_back(std::move(currentTip),
-                                         std::move(tipState));
+          result.activeTips.emplace_back(currentTip, tipState);
           // Record the number of branches on surface
           nBranchesOnSurface++;
         }
