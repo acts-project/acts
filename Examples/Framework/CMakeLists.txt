@@ -21,12 +21,8 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras Boost::boost ROOT::Core ROOT::Hist
-  PRIVATE dfelibs std::filesystem Backward::Backward)
-if(UNIX AND NOT APPLE)
-target_link_libraries(
-  ActsExamplesFramework
-  PRIVATE dw dwarf)
-endif()
+  PRIVATE dfelibs std::filesystem)
+
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)

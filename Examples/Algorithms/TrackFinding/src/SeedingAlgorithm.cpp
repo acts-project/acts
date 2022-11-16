@@ -227,8 +227,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig,
                                                 m_cfg.seedFinderOptions);
 
-  double _up = std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2;
-
   // safely truncate double to float
   float up =
       std::clamp(std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2,
