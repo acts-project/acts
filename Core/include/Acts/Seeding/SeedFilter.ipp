@@ -65,13 +65,16 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
               });
   }
 
-  size_t j0 = 0;
-  for (auto& i : idx) {
+  // loop over top SPs and other compatible top SP candidates
+  std::vector<size_t>::iterator topSP = idx.begin();
+  std::vector<size_t>::iterator startCompTopLoopIt = topSP;
+  for (; topSP != idx.end(); topSP++) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
     // -> weaker requirement for a good seed
     std::vector<float> compatibleSeedR;
 
+    size_t i = std::distance(idx.begin(), topSP);
     float invHelixDiameter = invHelixDiameterVec[i];
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
@@ -82,18 +85,21 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
     float weight = -(impact * m_cfg.impactWeightFactor);
 
-    for (size_t j = j0; j < idx.size(); j++) {
-      if (i == j) {
+    for (auto compatibleTopSP = startCompTopLoopIt;
+         compatibleTopSP != idx.end(); compatibleTopSP++) {
+      if (topSP == compatibleTopSP) {
         continue;
       }
 
+      size_t j = std::distance(idx.begin(), compatibleTopSP);
       float otherTop_r = m_cfg.useDeltaRorTopRadius ? topSpVec[j]->deltaR()
                                                     : topSpVec[j]->radius();
 
       // curvature difference within limits?
       if (invHelixDiameterVec[j] < lowerLimitCurv) {
         if (m_cfg.curvatureSortingInFilter) {
-          j0 = j + 1;
+          startCompTopLoopIt = compatibleTopSP;
+          startCompTopLoopIt++;
         }
         continue;
       }
