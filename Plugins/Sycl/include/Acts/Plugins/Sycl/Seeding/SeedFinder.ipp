@@ -26,10 +26,12 @@ namespace Acts::Sycl {
 template <typename external_spacepoint_t>
 SeedFinder<external_spacepoint_t>::SeedFinder(
     Acts::SeedFinderConfig<external_spacepoint_t> config,
+    const Acts::SeedFinderOptions& options,
     const Acts::Sycl::DeviceExperimentCuts& cuts,
     Acts::Sycl::QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource)
     : m_config(config.toInternalUnits()),
+      m_options(options.toInternalUnits()),
       m_deviceCuts(cuts),
       m_wrappedQueue(std::move(wrappedQueue)),
       m_resource(&resource),
@@ -39,7 +41,7 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
                       (1 + 0.038f * std::log(m_config.radLengthPerSeed));
   float maxScatteringAngle = m_config.highland / m_config.minPt;
   m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-  m_config.pTPerHelixRadius = 300.f * m_config.bFieldInZ;
+  m_config.pTPerHelixRadius = 300.f * m_options.bFieldInZ;
   m_config.minHelixDiameter2 =
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
