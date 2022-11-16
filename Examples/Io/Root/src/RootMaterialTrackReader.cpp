@@ -20,9 +20,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     const Config& config, Acts::Logging::Level level)
     : ActsExamples::IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
-      m_cfg(config),
-      m_events(0),
-      m_inputChain(nullptr) {
+      m_cfg(config) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   // Set the branches
@@ -61,7 +59,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   }
 
   // loop over the input files
-  for (auto inputFile : m_cfg.fileList) {
+  for (const auto& inputFile : m_cfg.fileList) {
     // add file to the input chain
     m_inputChain->Add(inputFile.c_str());
     ACTS_DEBUG("Adding File " << inputFile << " to tree '" << m_cfg.treeName

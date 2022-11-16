@@ -25,7 +25,7 @@ void ActsExamples::Telescope::TelescopeDetector::addOptions(
 
 auto ActsExamples::Telescope::TelescopeDetector::finalize(
     const boost::program_options::variables_map& vm,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
+    std::shared_ptr<const Acts::IMaterialDecorator> /*mdecorator*/)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Config cfg;
 
@@ -43,12 +43,10 @@ auto ActsExamples::Telescope::TelescopeDetector::finalize(
   cfg.surfaceType = vm["geo-tele-surface"].template as<int>();
   cfg.binValue = vm["geo-tele-alignaxis"].template as<int>();
 
-  return finalize(cfg, std::move(mdecorator));
+  return finalize(cfg);
 }
 
-auto ActsExamples::Telescope::TelescopeDetector::finalize(
-    const Config& cfg,
-    std::shared_ptr<const Acts::IMaterialDecorator> /* mdecorator */)
+auto ActsExamples::Telescope::TelescopeDetector::finalize(const Config& cfg)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   DetectorElement::ContextType nominalContext;
 

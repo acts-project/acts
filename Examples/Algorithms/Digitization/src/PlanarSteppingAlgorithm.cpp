@@ -195,9 +195,9 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
                                    std::vector<std::size_t>{simHitIdx});
       Acts::DigitizationSourceLink& digiSourceLink = digiSourceLinks.back();
 
-      Acts::PlanarModuleCluster cluster(
-          dg.surface->getSharedPtr(), digiSourceLink, std::move(cov), localX,
-          localY, simHit.time(), std::move(usedCells));
+      Acts::PlanarModuleCluster cluster(dg.surface->getSharedPtr(),
+                                        digiSourceLink, cov, localX, localY,
+                                        simHit.time(), std::move(usedCells));
 
       // the measurement container is unordered and the index under which
       // the measurement will be stored is known before adding it.

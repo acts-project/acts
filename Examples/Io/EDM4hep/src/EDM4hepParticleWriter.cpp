@@ -20,11 +20,11 @@
 namespace ActsExamples {
 
 EDM4hepParticleWriter::EDM4hepParticleWriter(
-    const EDM4hepParticleWriter::Config& config, Acts::Logging::Level lvl)
-    : WriterT(config.inputParticles, "EDM4hepParticleWriter", lvl),
-      m_cfg(config),
-      m_writer(config.outputPath, &m_store) {
-  ACTS_VERBOSE("Created output file " << config.outputPath);
+    const EDM4hepParticleWriter::Config& cfg, Acts::Logging::Level lvl)
+    : WriterT(cfg.inputParticles, "EDM4hepParticleWriter", lvl),
+      m_cfg(cfg),
+      m_writer(cfg.outputPath, &m_store) {
+  ACTS_VERBOSE("Created output file " << cfg.outputPath);
 
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
@@ -42,7 +42,7 @@ ActsExamples::ProcessCode EDM4hepParticleWriter::endRun() {
 }
 
 ProcessCode EDM4hepParticleWriter::writeT(
-    const AlgorithmContext&, const SimParticleContainer& particles) {
+    const AlgorithmContext& /*ctx*/, const SimParticleContainer& particles) {
   for (const auto& particle : particles) {
     auto p = m_mcParticleCollection->create();
     EDM4hepUtil::writeParticle(particle, p);

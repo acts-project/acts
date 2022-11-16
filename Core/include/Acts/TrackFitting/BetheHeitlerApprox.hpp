@@ -229,8 +229,8 @@ class AtlasBetheHeitlerApprox {
         throw std::invalid_argument("Could not open '" + filepath + "'");
       }
 
-      std::size_t n_cmps, degree;
-      bool transform_code;
+      std::size_t n_cmps = 0, degree = 0;
+      bool transform_code = false;
 
       file >> n_cmps >> degree >> transform_code;
 

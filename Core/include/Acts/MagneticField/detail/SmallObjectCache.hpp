@@ -73,7 +73,7 @@ class SmallObjectCache {
   }
 
  private:
-  SmallObjectCache(){};
+  SmallObjectCache() = default;
 
   struct HandlerBase {
     virtual void destroy(void* ptr) const = 0;
@@ -108,7 +108,7 @@ class SmallObjectCache {
     }
   };
 
-  alignas(std::max_align_t) std::array<char, 512> m_data;
+  alignas(std::max_align_t) std::array<char, 512> m_data{};
   HandlerBase* m_handler{nullptr};
 };
 

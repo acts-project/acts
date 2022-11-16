@@ -93,11 +93,12 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   ///
   /// @param volume to be looped onto
   void volumeLoop(const Acts::TrackingVolume* tVolume) {
-    auto sameId = [tVolume](std::pair<Acts::GeometryIdentifier,
-                                      std::shared_ptr<const IVolumeMaterial>>
-                                pair) {
-      return (tVolume->geometryId() == pair.first);
-    };
+    auto sameId =
+        [tVolume](
+            const std::pair<Acts::GeometryIdentifier,
+                            std::shared_ptr<const IVolumeMaterial>>& pair) {
+          return (tVolume->geometryId() == pair.first);
+        };
     if (std::find_if(m_volumeMaterialMap.begin(), m_volumeMaterialMap.end(),
                      sameId) != m_volumeMaterialMap.end()) {
       // this volume was already visited
@@ -171,7 +172,7 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   ///
   /// @param surface protomaterial will be added to
   std::shared_ptr<const Acts::ISurfaceMaterial> binnedSurfaceMaterial(
-      std::shared_ptr<const Acts::Surface> surface) const {
+      const std::shared_ptr<const Acts::Surface>& surface) const {
     auto bin = m_binningMap.find(surface->geometryId().value());
     Acts::BinUtility bUtility;
     if (bin == m_binningMap.end()) {
@@ -265,7 +266,9 @@ class MappingMaterialDecorator : public IMaterialDecorator {
   BinningMap& binningMap() { return m_binningMap; }
 
   /// set the binning map
-  void setBinningMap(BinningMap binningMap) { m_binningMap = binningMap; }
+  void setBinningMap(BinningMap binningMap) {
+    m_binningMap = std::move(binningMap);
+  }
 
  private:
   BinningMap m_binningMap;

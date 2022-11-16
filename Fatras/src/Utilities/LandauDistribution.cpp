@@ -186,7 +186,7 @@ double ActsFatras::LandauDistribution::quantile(double z) {
     return std::numeric_limits<double>::infinity();
   }
 
-  double ranlan, u, v;
+  double ranlan = 0, u = 0, v = 0;
   u = 1000 * z;
   int i = int(u);
   u -= i;

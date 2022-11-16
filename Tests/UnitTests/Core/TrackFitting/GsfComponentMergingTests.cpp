@@ -29,7 +29,7 @@ using namespace Acts::UnitLiterals;
 // Describes a component of a D-dimensional gaussian component
 template <int D>
 struct DummyComponent {
-  Acts::ActsScalar weight;
+  Acts::ActsScalar weight = 0;
   Acts::ActsVector<D> boundPars;
   std::optional<Acts::ActsSymMatrix<D>> boundCov;
 };

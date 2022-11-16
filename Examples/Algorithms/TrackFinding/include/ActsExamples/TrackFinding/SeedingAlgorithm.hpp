@@ -49,7 +49,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::vector<std::pair<int, int> > zBinNeighborsBottom;
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
-    int numPhiNeighbors;
+    int numPhiNeighbors = 0;
   };
 
   /// Construct the seeding algorithm.
@@ -62,7 +62,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }

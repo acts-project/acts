@@ -119,7 +119,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
                                0.5 * thickness);
       auto cvbOrientedSurfaces = cvb.orientedSurfaces();
       for (auto z : zValues) {
-        for (auto cvbSf : cvbOrientedSurfaces) {
+        for (const auto& cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
@@ -135,7 +135,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
         CylinderVolumeBounds cvb(r - 0.5 * thickness, r + 0.5 * thickness,
                                  0.5 * thickness);
         auto cvbOrientedSurfaces = cvb.orientedSurfaces();
-        for (auto cvbSf : cvbOrientedSurfaces) {
+        for (const auto& cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
@@ -231,7 +231,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
   if (writeIt) {
     std::vector<std::string> repChar = {"::" /*, "|", " ", "{", "}"*/};
     // std::cout << "PRE: " << vname << std::endl;
-    for (auto rchar : repChar) {
+    for (const auto& rchar : repChar) {
       while (vname.find(rchar) != std::string::npos) {
         vname.replace(vname.find(rchar), rchar.size(), std::string("_"));
       }
