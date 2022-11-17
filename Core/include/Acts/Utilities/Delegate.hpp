@@ -21,7 +21,7 @@ namespace Acts {
 enum class DelegateType { Owning, NonOwning };
 
 // Specialization needed for defaulting ownership and for R(Args...) syntax
-template <typename, DelegateType = DelegateType::NonOwning>
+template <typename, typename H = void, DelegateType = DelegateType::NonOwning>
 class Delegate;
 
 /// Delegate type that allows type erasure of a callable without allocation
@@ -34,17 +34,19 @@ class Delegate;
 ///          to @c DelegateType::Owning, it will assume ownership.
 /// @note Currently @c Delegate only supports callables that are ``const``
 /// @tparam R Return type of the function signature
+/// @tparam H Holder type that is used to store an instance
 /// @tparam O Ownership type of the delegate: Owning or NonOwning
 /// @tparam Args Types of the arguments of the function signatures
 ///
-template <typename R, DelegateType O, typename... Args>
-class Delegate<R(Args...), O> {
+template <typename R, typename H, DelegateType O, typename... Args>
+class Delegate<R(Args...), H, O> {
   static constexpr DelegateType kOwnership = O;
 
   /// Alias of the return type
   using return_type = R;
+  using holder_type = H;
   /// Alias to the function pointer type this class will store
-  using function_type = return_type (*)(const void *, Args...);
+  using function_type = return_type (*)(const holder_type *, Args...);
 
   using function_ptr_type = return_type (*)(Args...);
 
@@ -54,8 +56,10 @@ class Delegate<R(Args...), O> {
   using isSignatureCompatible =
       decltype(std::declval<T &>() = std::declval<C>());
 
-  using OwningDelegate = Delegate<R(Args...), DelegateType::Owning>;
-  using NonOwningDelegate = Delegate<R(Args...), DelegateType::NonOwning>;
+  using OwningDelegate =
+      Delegate<R(Args...), holder_type, DelegateType::Owning>;
+  using NonOwningDelegate =
+      Delegate<R(Args...), holder_type, DelegateType::NonOwning>;
   template <typename T>
   using isNoFunPtr = std::enable_if_t<
       not std::is_convertible_v<std::decay_t<T>, function_type> and
@@ -127,7 +131,8 @@ class Delegate<R(Args...), O> {
         "Callable given does not correspond exactly to required call "
         "signature");
 
-    m_function = [](const void * /*payload*/, Args... args) -> return_type {
+    m_function = [](const holder_type * /*payload*/,
+                    Args... args) -> return_type {
       return std::invoke(Callable, std::forward<Args>(args)...);
     };
   }
@@ -177,7 +182,7 @@ class Delegate<R(Args...), O> {
 
     m_payload.payload = instance;
 
-    m_function = [](const void *payload, Args... args) -> return_type {
+    m_function = [](const holder_type *payload, Args... args) -> return_type {
       assert(payload != nullptr && "Payload is required, but not set");
       const auto *concretePayload = static_cast<const Type *>(payload);
       return std::invoke(Callable, concretePayload,
@@ -199,8 +204,8 @@ class Delegate<R(Args...), O> {
                   "signature");
 
     if constexpr (kOwnership == DelegateType::Owning) {
-      m_payload.payload = std::unique_ptr<const void, deleter_type>(
-          instance.release(), [](const void *payload) {
+      m_payload.payload = std::unique_ptr<const holder_type, deleter_type>(
+          instance.release(), [](const holder_type *payload) {
             const auto *concretePayload = static_cast<const Type *>(payload);
             delete concretePayload;
           });
@@ -208,7 +213,7 @@ class Delegate<R(Args...), O> {
       m_payload.payload = instance.release();
     }
 
-    m_function = [](const void *payload, Args... args) -> return_type {
+    m_function = [](const holder_type *payload, Args... args) -> return_type {
       assert(payload != nullptr && "Payload is required, but not set");
       const auto *concretePayload = static_cast<const Type *>(payload);
       return std::invoke(Callable, concretePayload,
@@ -239,9 +244,15 @@ class Delegate<R(Args...), O> {
     m_function = nullptr;
   }
 
+  template <typename holder_t = holder_type,
+            typename = std::enable_if_t<!std::is_same_v<holder_t, void>>>
+  const holder_type *instance() const {
+    return m_payload.ptr();
+  }
+
  private:
   // Deleter that does not do anything
-  static void noopDeleter(const void * /*unused*/) {}
+  static void noopDeleter(const holder_type * /*unused*/) {}
 
   /// @cond
 
@@ -249,18 +260,19 @@ class Delegate<R(Args...), O> {
   struct NonOwningPayload {
     void clear() { payload = nullptr; }
 
-    const void *ptr() const { return payload; }
+    const holder_type *ptr() const { return payload; }
 
-    const void *payload{nullptr};
+    const holder_type *payload{nullptr};
   };
 
   // Payload object with a deleter
   struct OwningPayload {
     void clear() { payload.reset(); }
 
-    const void *ptr() const { return payload.get(); }
+    const holder_type *ptr() const { return payload.get(); }
 
-    std::unique_ptr<const void, deleter_type> payload{nullptr, &noopDeleter};
+    std::unique_ptr<const holder_type, deleter_type> payload{nullptr,
+                                                             &noopDeleter};
   };
 
   /// Stores the instance pointer and maybe a deleter
@@ -274,12 +286,12 @@ class Delegate<R(Args...), O> {
   function_type m_function{nullptr};
 };
 
-template <typename>
+template <typename, typename H = void>
 class OwningDelegate;
 
 /// Alias for an owning delegate
-template <typename R, typename... Args>
-class OwningDelegate<R(Args...)>
-    : public Delegate<R(Args...), DelegateType::Owning> {};
+template <typename R, typename H, typename... Args>
+class OwningDelegate<R(Args...), H>
+    : public Delegate<R(Args...), H, DelegateType::Owning> {};
 
 }  // namespace Acts

@@ -17,6 +17,7 @@
 #include <optional>
 #include <random>
 #include <tuple>
+#include <type_traits>
 
 using namespace Acts;
 
@@ -234,11 +235,11 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
     auto s = std::make_unique<const CheckDestructor>(&destructorCalled);
     {
       BOOST_CHECK_EQUAL(destructorCalled, false);
-      Delegate<int(), DelegateType::NonOwning> d;
+      Delegate<int(), void, DelegateType::NonOwning> d;
       BOOST_CHECK_EQUAL(destructorCalled, false);
       d.connect<&CheckDestructor::func>(s.get());
       BOOST_CHECK_EQUAL(destructorCalled, false);
-      Delegate<int(), DelegateType::NonOwning> dCopy{d};
+      Delegate<int(), void, DelegateType::NonOwning> dCopy{d};
       BOOST_CHECK_EQUAL(d(), 4);
       BOOST_CHECK_EQUAL(dCopy(), 4);
       BOOST_CHECK_EQUAL(destructorCalled, false);
@@ -248,7 +249,7 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
 
     {
       BOOST_CHECK_EQUAL(destructorCalled, false);
-      Delegate<int(), DelegateType::Owning> d;
+      Delegate<int(), void, DelegateType::Owning> d;
       // This doesn't compile: owning delegate is not copyable
       // Delegate<int(), DelegateType::Owning> dCopy = d;
       BOOST_CHECK_EQUAL(destructorCalled, false);
@@ -285,10 +286,10 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
     auto s = std::make_unique<const CheckDestructor>(&destructorCalled);
     {
       BOOST_CHECK_EQUAL(destructorCalled, false);
-      Delegate<int(), DelegateType::NonOwning> d;
+      Delegate<int(), void, DelegateType::NonOwning> d;
       BOOST_CHECK_EQUAL(destructorCalled, false);
       d.connect<&CheckDestructor::func>(s.get());
-      Delegate<int(), DelegateType::NonOwning> dCopy{d};
+      Delegate<int(), void, DelegateType::NonOwning> dCopy{d};
       BOOST_CHECK_EQUAL(destructorCalled, false);
       BOOST_CHECK_EQUAL(d(), 4);
       BOOST_CHECK_EQUAL(dCopy(), 4);
@@ -299,7 +300,7 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
 
     {
       BOOST_CHECK_EQUAL(destructorCalled, false);
-      Delegate<int(), DelegateType::Owning> d;
+      Delegate<int(), void, DelegateType::Owning> d;
       // This doesn't compile: owning delegate is not copyable
       // Delegate<int(), DelegateType::Owning> dCopy = d;
       BOOST_CHECK_EQUAL(destructorCalled, false);
@@ -329,6 +330,82 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
     d.disconnect();
     d.connect(owningTest2);
     BOOST_CHECK_EQUAL(d(), 8);
+  }
+}
+
+struct DelegateInterface {
+  virtual ~DelegateInterface() = 0;
+
+  virtual std::string func() const { return "base"; }
+};
+inline DelegateInterface::~DelegateInterface() = default;
+
+struct ConcreteDelegate : public DelegateInterface {
+  std::string func() const final { return "derived"; }
+};
+
+struct SeparateDelegate {
+  std::string func() const { return "separate"; }
+};
+
+BOOST_AUTO_TEST_CASE(NonVoidDelegateTest) {
+  // check void behavior with virtuals
+  {
+    Delegate<std::string(), void> d;
+    ConcreteDelegate c;
+    d.connect<&ConcreteDelegate::func>(&c);
+    BOOST_CHECK_EQUAL(d(), "derived");
+
+    // does not compile: delegate won't hand out void pointer
+    // d.instance();
+  }
+  {
+    Delegate<std::string(), void> d;
+    ConcreteDelegate c;
+    d.connect<&DelegateInterface::func>(&c);
+    BOOST_CHECK_EQUAL(
+        d(), "derived");  // <- even if you plug in the base class member
+                          // pointer you get the derived class call
+  }
+
+  {
+    Delegate<std::string(), DelegateInterface> d;
+    ConcreteDelegate c;
+    d.connect<&ConcreteDelegate::func>(&c);
+    BOOST_CHECK_EQUAL(d(), "derived");
+
+    const auto* instance = d.instance();
+    static_assert(
+        std::is_same_v<
+            std::remove_const_t<std::remove_pointer_t<decltype(instance)>>,
+            DelegateInterface>,
+        "Did not get correct instance pointer");
+    BOOST_CHECK_NE(dynamic_cast<const DelegateInterface*>(instance), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<const ConcreteDelegate*>(instance), nullptr);
+  }
+  {
+    Delegate<std::string(), ConcreteDelegate> d;
+    ConcreteDelegate c;
+    d.connect<&ConcreteDelegate::func>(&c);
+    BOOST_CHECK_EQUAL(d(), "derived");
+
+    const auto* instance = d.instance();
+    static_assert(
+        std::is_same_v<
+            std::remove_const_t<std::remove_pointer_t<decltype(instance)>>,
+            ConcreteDelegate>,
+        "Did not get correct instance pointer");
+    BOOST_CHECK_NE(dynamic_cast<const DelegateInterface*>(instance), nullptr);
+    BOOST_CHECK_NE(dynamic_cast<const ConcreteDelegate*>(instance), nullptr);
+  }
+
+  {
+    Delegate<std::string(), DelegateInterface> d;
+    SeparateDelegate c;
+    // Does not compile: cannot assign unrelated type
+    // d.connect<&SeparateDelegate::func>(&c);
+    (void)d;
+    (void)c;
   }
 }
 
