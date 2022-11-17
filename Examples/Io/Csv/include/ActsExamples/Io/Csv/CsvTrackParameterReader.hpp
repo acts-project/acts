@@ -13,6 +13,7 @@
 
 #include <memory>
 #include <string>
+#include <array>
 
 namespace ActsExamples {
 

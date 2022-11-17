@@ -96,16 +96,10 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   VertexFinder::Config finderCfg(vertexFitter, linearizer, std::move(seeder),
                                  ipEst);
   finderCfg.maxVertices = 200;
-  //finderCfg.reassignTracksAfterFirstFit = true;
-  finderCfg.useBeamConstraint = true;
+  finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);
   VertexFinder::State state(*m_cfg.bField, ctx.magFieldContext);
-
-  Acts::Vertex<Acts::BoundTrackParameters> constraint;
-  constraint.setPosition({0, 0, 0});
-  constraint.setCovariance(Acts::Vector3(0, 0, 10000).asDiagonal());
-
-  VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext, constraint);
+  VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // find vertices and measure elapsed time
   auto t1 = std::chrono::high_resolution_clock::now();
