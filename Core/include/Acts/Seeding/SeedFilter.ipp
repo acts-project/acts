@@ -65,8 +65,6 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
               });
   }
 
-//    std::cout << "======> Middle " << middleSP.radius() << std::endl;
-
   size_t startCompTopLoopIdx = 0;
   // loop over top SPs and other compatible top SP candidates
   for (auto& topSPIdx : idx) {
@@ -86,8 +84,6 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
     float weight = -(impact * m_cfg.impactWeightFactor);
 
-//        std::cout << "**** new top ****" << std::endl;
-
     for (size_t j = startCompTopLoopIdx; j < idx.size(); j++) {
       size_t compatibleTopSPIdx = idx[j];
       if (compatibleTopSPIdx == topSPIdx) {
@@ -98,15 +94,12 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
                              ? topSpVec[compatibleTopSPIdx]->deltaR()
                              : topSpVec[compatibleTopSPIdx]->radius();
 
-//			std::cout << "i, j, j0 " << topSPIdx << " " << compatibleTopSPIdx << " " << startCompTopLoopIdx << " " << invHelixDiameterVec[topSPIdx] << " " << invHelixDiameterVec[compatibleTopSPIdx] << std::endl;
-
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibleTopSPIdx] < lowerLimitCurv) {
         if (m_cfg.curvatureSortingInFilter) {
           startCompTopLoopIdx = j;
           startCompTopLoopIdx++;
         }
-//                std::cout << "continue" << std::endl;
         continue;
       }
       if (invHelixDiameterVec[compatibleTopSPIdx] > upperLimitCurv) {
