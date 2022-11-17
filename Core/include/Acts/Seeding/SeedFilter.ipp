@@ -103,8 +103,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // curvature difference within limits?
       if (invHelixDiameterVec[compatibleTopSPIdx] < lowerLimitCurv) {
         if (m_cfg.curvatureSortingInFilter) {
-//          startCompTopLoopIdx = compatibleTopSPIdx;
-//          startCompTopLoopIdx++;
+          startCompTopLoopIdx = j;
+          startCompTopLoopIdx++;
         }
 //                std::cout << "continue" << std::endl;
         continue;
