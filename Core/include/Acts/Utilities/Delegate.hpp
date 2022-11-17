@@ -50,7 +50,7 @@ class Delegate<R(Args...), H, O> {
 
   using function_ptr_type = return_type (*)(Args...);
 
-  using deleter_type = void (*)(const void *);
+  using deleter_type = void (*)(const holder_type *);
 
   template <typename T, typename C>
   using isSignatureCompatible =
