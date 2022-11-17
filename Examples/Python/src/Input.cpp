@@ -70,8 +70,8 @@ void addInput(Context& ctx) {
       ActsExamples::CsvSpacePointReader, mex, "CsvSpacePointReader", inputDir,
       inputStem, inputCollection, outputSpacePoints, extendCollection);
 
-  ACTS_PYTHON_DECLARE_READER(
-      ActsExamples::CsvTrackParameterReader, mex, "CsvTrackParameterReader", inputDir,
-      inputStem, outputTrackParameters, beamspot);
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvTrackParameterReader, mex,
+                             "CsvTrackParameterReader", inputDir, inputStem,
+                             outputTrackParameters, beamspot);
 }
 }  // namespace Acts::Python
