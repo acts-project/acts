@@ -11,6 +11,7 @@
 #include "Acts/Geometry/NavigationState.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Geometry/detail/DetectorVolumeUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -172,54 +173,21 @@ bool Acts::Experimental::DetectorVolume::checkContainment(
   return true;
 }
 
-void Acts::Experimental::DetectorVolume::lock(
-    const GeometryIdentifier& geometryId) {
-  m_geometryId = geometryId;
-
-  // Assign the boundary Identifier
-  GeometryIdentifier portalId = geometryId;
-  for (auto [i, p] : enumerate(m_portals.internal)) {
-    portalId.setBoundary(i + 1);
-    p->assignGeometryId(portalId);
+void Acts::Experimental::DetectorVolume::closePortals() {
+  for (auto& p : m_portals.internal) {
+    // Create a null link
+    for (auto [ivu, vu] : enumerate(p->detectorVolumeUpdators())) {
+      if (not vu.connected()) {
+        auto eowDir = Acts::directionFromIndex(ivu);
+        auto eow = std::make_unique<const detail::EndOfWorldImpl>();
+        Acts::Experimental::DetectorVolumeUpdator eowLink;
+        eowLink.connect<&detail::EndOfWorldImpl::update>(std::move(eow));
+        p->assignDetectorVolumeUpdator(eowDir, std::move(eowLink), {});
+      }
+    }
   }
 
-  // Assign the sensitive/surface Identifier
-  GeometryIdentifier sensitiveId = geometryId;
-  /// @todo add passive count
-  for (auto [i, s] : enumerate(m_surfaces.internal)) {
-    sensitiveId.setSensitive(i + 1);
-    s->assignGeometryId(sensitiveId);
-  }
-
-  // Check if it is a container or detector volume
-  if (not m_volumes.internal.empty()) {
-    // Detection if any of the volume has sub surfaces
-    bool detectorVolume = false;
-    for (auto v : volumes()) {
-      // Would in principle qualify
-      if (not v->surfaces().empty()) {
-        detectorVolume = true;
-        break;
-      }
-    }
-    // Cross-check if no container is present
-    for (auto v : volumes()) {
-      // Pure detector volume is vetoed
-      if (not v->volumes().empty()) {
-        detectorVolume = false;
-        break;
-      }
-    }
-
-    // Assign the volume Identifier (recursive step down)
-    for (auto [i, v] : enumerate(m_volumes.internal)) {
-      GeometryIdentifier volumeId = geometryId;
-      if (detectorVolume) {
-        volumeId.setLayer(i + 1);
-      } else {
-        volumeId.setVolume(volumeId.volume() + i + 1);
-      }
-      v->lock(volumeId);
-    }
+  for (auto& v : m_volumes.internal) {
+    v->closePortals();
   }
 }

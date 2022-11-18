@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/Detector.hpp"
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/NavigationState.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
@@ -44,6 +45,8 @@ Acts::Experimental::Detector::Detector(
   for (auto [iv, v] : enumerate(m_volumes.internal)) {
     // Assign this detector
     v->assignDetector(*this);
+    // Close the portals
+    v->closePortals();
     // Store the name
     const std::string vName = v->name();
     if (m_volumeNameIndex.find(vName) != m_volumeNameIndex.end()) {

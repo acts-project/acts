@@ -31,8 +31,8 @@ struct EndOfWorldImpl : public INavigationDelegate {
   /// @brief a null volume link - explicitely
   ///
   /// @note the method parameters are ignored
-  inline static void update(const GeometryContext& /*ignored*/,
-                            NavigationState& nState) {
+  inline void update(const GeometryContext& /*ignored*/,
+                     NavigationState& nState) const {
     nState.currentVolume = nullptr;
   }
 };

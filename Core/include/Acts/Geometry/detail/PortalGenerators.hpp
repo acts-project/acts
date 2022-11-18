@@ -49,24 +49,14 @@ inline static std::vector<std::shared_ptr<Portal>> generatePortals(
     auto portal = Portal::makeShared(oSurface.first);
     // Create a shared link instance & delegate
     auto singleLinkImpl =
-        std::make_unique<SingleDetectorVolumeImpl>(dVolume.get());
+        std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
     DetectorVolumeUpdator singleLink;
-    singleLink.connect<&SingleDetectorVolumeImpl::update>(std::move(singleLinkImpl.get()));
+    singleLink.connect<&SingleDetectorVolumeImpl::update>(
+        std::move(singleLinkImpl));
     // Update the volume link and the store
     NavigationDirection insideDir = oSurface.second;
     portal->assignDetectorVolumeUpdator(insideDir, std::move(singleLink),
                                         {dVolume});
-
-    // Create a null link
-    auto eow = std::make_unqiue<EndOfWorldImpl>();
-    DetectorVolumeUpdator nullLink;
-    nullLink.connect<&EndOfWorldImpl::update>(std::move(eow));
-    NavigationDirection outsideDir =
-        (insideDir == Acts::NavigationDirection::Forward)
-            ? Acts::NavigationDirection::Backward
-            : Acts::NavigationDirection::Forward;
-    portal->assignDetectorVolumeUpdator(outsideDir, std::move(nullLink),
-                                        {});
 
     // Portal is prepared
     portals.push_back(std::move(portal));

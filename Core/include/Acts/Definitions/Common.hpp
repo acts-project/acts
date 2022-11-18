@@ -49,6 +49,19 @@ inline constexpr size_t indexFromDirection(NavigationDirection nDir) {
   return 1u;
 }
 
+/// Convert and ndex [0,1] to a navigation direction
+/// for sorting  in std::array<T,2u>
+///
+/// @param index is the navigation direction at input
+///
+/// returns either 0 or 1
+inline constexpr NavigationDirection directionFromIndex(size_t index) {
+  if (index == 0u) {
+    return NavigationDirection::Backward;
+  }
+  return NavigationDirection::Forward;
+}
+
 /// This turns a signed value into a navigation direction
 ///
 /// @param value is the signed value

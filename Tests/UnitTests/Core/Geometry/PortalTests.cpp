@@ -83,14 +83,11 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   BOOST_CHECK(portalA == unpackToShared<const Portal>(*portalA));
 
   // Create a links to volumes
-  auto linkToAImpl = std::make_shared<LinkToVolumeImpl>(volumeA);
-  auto linkToBImpl = std::make_shared<LinkToVolumeImpl>(volumeB);
-
+  auto linkToAImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
   DetectorVolumeUpdator linkToA;
-  linkToA.connect<&LinkToVolumeImpl::link>(linkToAImpl.get());
-  ManagedDetectorVolumeUpdator mLinkToA{std::move(linkToA), linkToAImpl};
+  linkToA.connect<&LinkToVolumeImpl::link>(std::move(linkToAImpl));
   portalA->assignDetectorVolumeUpdator(Acts::NavigationDirection::Forward,
-                                       std::move(mLinkToA), {volumeA});
+                                       std::move(linkToA), {volumeA});
 
   auto attachedDetectorVolumes = portalA->attachedDetectorVolumes();
   BOOST_CHECK(attachedDetectorVolumes[0u].empty());
@@ -110,10 +107,10 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
 
   auto portalB = Portal::makeShared(surface);
   DetectorVolumeUpdator linkToB;
-  linkToB.connect<&LinkToVolumeImpl::link>(linkToBImpl.get());
-  ManagedDetectorVolumeUpdator mLinkToB{std::move(linkToB), linkToBImpl};
+  auto linkToBImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
+  linkToB.connect<&LinkToVolumeImpl::link>(std::move(linkToBImpl));
   portalB->assignDetectorVolumeUpdator(Acts::NavigationDirection::Backward,
-                                       std::move(mLinkToB), {volumeB});
+                                       std::move(linkToB), {volumeB});
 
   // Reverse: forwad volume nullptr, backward volume volumeB
   nState.direction = Acts::Vector3(0., 0., 1.);
@@ -136,22 +133,20 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   BOOST_CHECK(portalA == portalB);
 
   // An invalid fusing setup
-  auto linkToAIImpl = std::make_shared<LinkToVolumeImpl>(volumeA);
-  auto linkToBIImpl = std::make_shared<LinkToVolumeImpl>(volumeB);
+  auto linkToAIImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
+  auto linkToBIImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
 
   auto portalAI = Portal::makeShared(surface);
   DetectorVolumeUpdator linkToAI;
-  linkToAI.connect<&LinkToVolumeImpl::link>(linkToAIImpl.get());
-  ManagedDetectorVolumeUpdator mLinkToAI{std::move(linkToAI), linkToAIImpl};
+  linkToAI.connect<&LinkToVolumeImpl::link>(std::move(linkToAIImpl));
   portalAI->assignDetectorVolumeUpdator(Acts::NavigationDirection::Forward,
-                                        std::move(mLinkToAI), {volumeA});
+                                        std::move(linkToAI), {volumeA});
 
   auto portalBI = Portal::makeShared(surface);
   DetectorVolumeUpdator linkToBI;
-  linkToBI.connect<&LinkToVolumeImpl::link>(linkToBIImpl.get());
-  ManagedDetectorVolumeUpdator mLinkToBI{std::move(linkToBI), linkToBIImpl};
+  linkToBI.connect<&LinkToVolumeImpl::link>(std::move(linkToBIImpl));
   portalBI->assignDetectorVolumeUpdator(Acts::NavigationDirection::Forward,
-                                        std::move(mLinkToBI), {volumeB});
+                                        std::move(linkToBI), {volumeB});
 
   BOOST_CHECK_THROW(portalAI->fuse(portalBI), std::runtime_error);
 }

@@ -147,8 +147,7 @@ inline void Detector::updateDetectorVolumeFinder(
   m_volumeFinder = std::move(mVolumeFinder);
 }
 
-inline const DetectorVolumeUpdator& Detector::detectorVolumeFinder()
-    const {
+inline const DetectorVolumeUpdator& Detector::detectorVolumeFinder() const {
   return m_volumeFinder;
 }
 

@@ -8,15 +8,9 @@
 
 #pragma once
 
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationState.hpp"
 #include "Acts/Utilities/Delegate.hpp"
-
-#include <memory>
-#include <tuple>
-
-/// @note this is foreseen for the 'Geometry' module
 
 namespace Acts {
 
@@ -24,16 +18,11 @@ class Surface;
 
 namespace Experimental {
 
-class Portal;
-class DetectorVolume;
-class Detector;
-
 /// Base class for navigation delegates
-class INavigationDelegate {
-    public:
-        INavigationDelegate() = default;
-
-};
+/// This allows to define a common Owning delegate
+/// schema, which in turn allows for accessing the holder
+/// of the delegate implementation for e.g. I/O or display
+class INavigationDelegate {};
 
 /// Declare an updator for the local navigation, i.e. the
 /// navigation inside a detector volume. This can be called
@@ -63,15 +52,11 @@ using DetectorVolumeUpdator =
     OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
                    INavigationDelegate>;
 
-// Construct and return a void delegate for initialization
-inline static OwningDelegate<void(const GeometryContext& gctx,
-                           NavigationState& nState),
-                      INavigationDelegate>
-voidDelegate() {
-  OwningDelegate<void(const GeometryContext& gctx, NavigationState& nState),
-                 INavigationDelegate>
-      d;
-  return d;
+/// @brief  A dummy constructed updator
+inline static DetectorVolumeUpdator unconnectedUpdator() {
+  DetectorVolumeUpdator unconnected;
+  unconnected.disconnect();
+  return unconnected;
 }
 
 }  // namespace Experimental

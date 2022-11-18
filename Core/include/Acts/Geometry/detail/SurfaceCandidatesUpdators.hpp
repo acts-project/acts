@@ -73,76 +73,81 @@ inline static void updateCandidates(const GeometryContext& gctx,
   nState.surfaceCandidate = nCandidates.begin();
 }
 
-/// A ordered portal provider
-///
-/// @param gctx is the Geometry context of this call
-/// @param nState is the navigation state to be updated
-///
-/// @note that the intersections are ordered, such that the
-/// smallest intersection pathlength >= overstep tolerance is the lowest
-///
-/// @return an ordered list of portal candidates
-inline static void portalCandidates(const GeometryContext& gctx,
-                                    NavigationState& nState) noexcept(false) {
-  if (nState.currentVolume == nullptr) {
-    throw std::runtime_error(
-        "PortalCandidates: no detector volume set to navigation state.");
-  }
-  // Retrieval necessary
-  if (nState.surfaceCandidates.empty()) {
-    // Fill internal portals if existing
-    for (const auto v : nState.currentVolume->volumes()) {
-      const auto& iPortals = v->portals();
-      PortalsFiller::fill(nState, iPortals);
+struct AllPortalsImpl : public INavigationDelegate {
+  /// A ordered portal provider
+  ///
+  /// @param gctx is the Geometry context of this call
+  /// @param nState is the navigation state to be updated
+  ///
+  /// @note that the intersections are ordered, such that the
+  /// smallest intersection pathlength >= overstep tolerance is the lowest
+  ///
+  /// @return an ordered list of portal candidates
+  inline void update(const GeometryContext& gctx,
+                     NavigationState& nState) const {
+    if (nState.currentVolume == nullptr) {
+      throw std::runtime_error(
+          "AllPortalsImpl: no detector volume set to navigation state.");
     }
-    // Filling the new portal candidates
-    const auto& portals = nState.currentVolume->portals();
-    PortalsFiller::fill(nState, portals);
+    // Retrieval necessary
+    if (nState.surfaceCandidates.empty()) {
+      // Fill internal portals if existing
+      for (const auto v : nState.currentVolume->volumes()) {
+        const auto& iPortals = v->portals();
+        PortalsFiller::fill(nState, iPortals);
+      }
+      // Filling the new portal candidates
+      const auto& portals = nState.currentVolume->portals();
+      PortalsFiller::fill(nState, portals);
+    }
+    // Sort and update
+    updateCandidates(gctx, nState);
   }
-  // Sort and update
-  updateCandidates(gctx, nState);
-}
+};
 
-/// An ordered list of portals and surfaces provider
-///
-/// @param gctx is the Geometry context of this call
-/// @param nState is the navigation state to be updated
-///
-/// @note that the intersections are ordered, such that the
-/// smallest intersection pathlength >= overstep tolerance is the lowest
-///
-/// @return an ordered list of portal and surface candidates
-inline static void portalAndSurfaceCandidates(const GeometryContext& gctx,
-                                              NavigationState& nState) {
-  if (nState.currentDetector == nullptr) {
-    throw std::runtime_error(
-        "PortalAndSurfaceCandidates: no detector volume set to navigation "
-        "state.");
-  }
-  // A volume switch has happened, update list of portals & surfaces
-  if (nState.surfaceCandidates.empty()) {
-    // Fill internal portals if existing
-    for (const auto v : nState.currentVolume->volumes()) {
-      const auto& iPortals = v->portals();
-      PortalsFiller::fill(nState, iPortals);
+struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
+  /// An ordered list of portals and surfaces provider
+  ///
+  /// @param gctx is the Geometry context of this call
+  /// @param nState is the navigation state to be updated
+  ///
+  /// @note that the intersections are ordered, such that the
+  /// smallest intersection pathlength >= overstep tolerance is the lowest
+  ///
+  /// @return an ordered list of portal and surface candidates
+  inline void update(const GeometryContext& gctx,
+                     NavigationState& nState) const {
+    if (nState.currentDetector == nullptr) {
+      throw std::runtime_error(
+          "AllPortalsAndSurfacesImpl: no detector volume set to navigation "
+          "state.");
     }
-    // Assign the new volume
-    const auto& portals = nState.currentVolume->portals();
-    const auto& surfaces = nState.currentVolume->surfaces();
-    PortalsFiller::fill(nState, portals);
-    SurfacesFiller::fill(nState, surfaces);
+    // A volume switch has happened, update list of portals & surfaces
+    if (nState.surfaceCandidates.empty()) {
+      // Fill internal portals if existing
+      for (const auto v : nState.currentVolume->volumes()) {
+        const auto& iPortals = v->portals();
+        PortalsFiller::fill(nState, iPortals);
+      }
+      // Assign the new volume
+      const auto& portals = nState.currentVolume->portals();
+      const auto& surfaces = nState.currentVolume->surfaces();
+      PortalsFiller::fill(nState, portals);
+      SurfacesFiller::fill(nState, surfaces);
+    }
+    // Update internal candidates
+    updateCandidates(gctx, nState);
   }
-  // Update internal candidates
-  updateCandidates(gctx, nState);
-}
+};
 
 /// Generate a provider for all portals
 ///
 /// @return a connected navigationstate updator
-inline static ManagedSurfaceCandidatesUpdator allPortals() {
+inline static SurfaceCandidatesUpdator allPortals() {
+  auto ap = std::make_unique<const AllPortalsImpl>();
   SurfaceCandidatesUpdator nStateUpdator;
-  nStateUpdator.connect<&portalCandidates>();
-  return ManagedSurfaceCandidatesUpdator{std::move(nStateUpdator), nullptr};
+  nStateUpdator.connect<&AllPortalsImpl::update>(std::move(ap));
+  return nStateUpdator;
 }
 
 /// Generate a provider for all portals and Surfacess
@@ -151,10 +156,11 @@ inline static ManagedSurfaceCandidatesUpdator allPortals() {
 /// setup with many surfaces
 ///
 /// @return a connected navigationstate updator
-inline static ManagedSurfaceCandidatesUpdator allPortalsAndSurfaces() {
+inline static SurfaceCandidatesUpdator allPortalsAndSurfaces() {
+  auto aps = std::make_unique<const AllPortalsAndSurfacesImpl>();
   SurfaceCandidatesUpdator nStateUpdator;
-  nStateUpdator.connect<&portalAndSurfaceCandidates>();
-  return ManagedSurfaceCandidatesUpdator{std::move(nStateUpdator), nullptr};
+  nStateUpdator.connect<&AllPortalsAndSurfacesImpl::update>(std::move(aps));
+  return nStateUpdator;
 }
 
 /// @brief This holds and extracts a collection of surfaces without much

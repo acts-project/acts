@@ -32,8 +32,8 @@ struct TrialAndErrorImpl : public INavigationDelegate {
   ///
   /// @param gctx the geometry context for this call
   /// @param nState the navigation state into which the volume is set
-  inline static void update(const GeometryContext& gctx,
-                            NavigationState& nState) noexcept(false) {
+  inline void update(const GeometryContext& gctx,
+                     NavigationState& nState) const {
     if (nState.currentDetector == nullptr) {
       throw std::runtime_error(
           "DetectorVolumeFinders: no detector set to navigation state.");
@@ -58,7 +58,7 @@ struct TrialAndErrorImpl : public INavigationDelegate {
 /// @return a connected navigationstate updator
 inline static DetectorVolumeUpdator tryAllVolumes() {
   DetectorVolumeUpdator vFinder;
-  auto tae = std::unique_ptr<TrialAndErrorImpl>();
+  auto tae = std::unique_ptr<const TrialAndErrorImpl>();
   vFinder.connect<&TrialAndErrorImpl::update>(std::move(tae));
   return vFinder;
 }

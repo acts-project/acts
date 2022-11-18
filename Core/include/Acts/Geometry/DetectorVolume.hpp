@@ -60,21 +60,21 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// reference counted objects and provides an external
   /// (const raw pointer) access
   ///
-  /// @tparam internal_t is the internal storage representation,
+  /// @tparam internal_type is the internal storage representation,
   /// has to comply with std::shared_ptr semantics
   ///
-  template <typename internal_t>
+  template <typename internal_type>
   struct ObjectStore {
     /// The internal storage vector
-    std::vector<internal_t> internal = {};
+    std::vector<internal_type> internal = {};
 
     /// The external storage vector, const raw pointer
-    std::vector<const typename internal_t::element_type*> external = {};
+    std::vector<const typename internal_type::element_type*> external = {};
 
     /// Store constructor
     ///
     /// @param objects are the ones copied into the internal store
-    ObjectStore(const std::vector<internal_t>& objects) : internal(objects) {
+    ObjectStore(const std::vector<internal_type>& objects) : internal(objects) {
       external = unpack_shared_const_vector(internal);
     }
 
@@ -95,13 +95,12 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume(const GeometryContext& gctx, const std::string& name,
-                 const Transform3& transform,
-                 std::unique_ptr<VolumeBounds> bounds,
-                 const std::vector<std::shared_ptr<Surface>>& surfaces,
-                 const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-                 SurfaceCandidatesUpdator&&
-                     surfaceCandidateUpdator) noexcept(false);
+  DetectorVolume(
+      const GeometryContext& gctx, const std::string& name,
+      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      const std::vector<std::shared_ptr<Surface>>& surfaces,
+      const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
   ///
@@ -114,11 +113,10 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @note throws exception if misconfigured: no bounds
   /// @note throws exception if ghe portal general or navigation
   ///       state updator delegates are not connected
-  DetectorVolume(const GeometryContext& gctx, const std::string& name,
-                 const Transform3& transform,
-                 std::unique_ptr<VolumeBounds> bounds,
-                 SurfaceCandidatesUpdator&&
-                     surfaceCandidateUpdator) noexcept(false);
+  DetectorVolume(
+      const GeometryContext& gctx, const std::string& name,
+      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
   /// Will forward all parameters and will attempt to find a suitable
@@ -280,6 +278,9 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   void updatePortal(std::shared_ptr<Portal> portal,
                     unsigned int pIndex) noexcept(false);
 
+  /// Final closing of portal, i.e. this sets the end of world
+  void closePortals();
+
   /// Assign the volume material description
   ///
   /// This method allows to load a material description during the
@@ -294,14 +295,6 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
 
   /// Const access to the volume amterial
   const IVolumeMaterial* volumeMaterial() const;
-
-  /// Lock the geometry, this sets the GeometryIdentifier
-  /// of the sub surfaces
-  ///
-  /// @param geometryId is the geometry base identifier of
-  /// this detector volume
-  void lock(
-      const GeometryIdentifier& geometryId = GeometryIdentifier().setVolume(1));
 
   /// @return the name of the volume
   const std::string& name() const;

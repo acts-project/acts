@@ -31,19 +31,18 @@ void Acts::Experimental::Portal::assignGeometryId(
 void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
   // Determine this directioon
   NavigationDirection tDir =
-      (m_volumeUpdators[indexFromDirection(NavigationDirection::Backward)]
-           .implementation == nullptr)
+      (not m_volumeUpdators[indexFromDirection(NavigationDirection::Backward)]
+               .connected())
           ? NavigationDirection::Forward
           : NavigationDirection::Backward;
 
-  if (m_volumeUpdators[indexFromDirection(tDir)].implementation == nullptr) {
+  if (not m_volumeUpdators[indexFromDirection(tDir)].connected()) {
     throw std::invalid_argument(
         "Portal: trying to fuse portal (keep) with no links.");
   }
   // And now check other direction
   NavigationDirection oDir = invertDirection(tDir);
-  if (other->m_volumeUpdators[indexFromDirection(oDir)].implementation ==
-      nullptr) {
+  if (not other->m_volumeUpdators[indexFromDirection(oDir)].connected()) {
     throw std::runtime_error(
         "Portal: trying to fuse portal (waste) with no links.");
   }
@@ -51,7 +50,6 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
   auto odx = indexFromDirection(oDir);
   m_volumeUpdators[odx] = std::move(other->m_volumeUpdators[odx]);
   m_attachedVolumes[odx] = other->m_attachedVolumes[odx];
-
   // And finally overwrite the original portal
   other = getSharedPtr();
 }
@@ -68,15 +66,14 @@ void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
     DetectorVolumeUpdator&& dVolumeUpdator,
     const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
   // Check and throw exceptions
-  if (m_volumeUpdators[0u].implementation == nullptr and
-      m_volumeUpdators[1u].implementation == nullptr) {
+  if (not m_volumeUpdators[0u].connected() and
+      not m_volumeUpdators[1u].connected()) {
     throw std::runtime_error("Portal: portal has no link on either side.");
   }
-  if (m_volumeUpdators[0u].implementation != nullptr and
-      m_volumeUpdators[1u].implementation != nullptr) {
-    throw std::runtime_error("Portal: portal already links on both sides.");
+  if (m_volumeUpdators[0u].connected() and m_volumeUpdators[1u].connected()) {
+    throw std::runtime_error("Portal: portal already has links on both sides.");
   }
-  size_t idx = (m_volumeUpdators[0u].implementation == nullptr) ? 0u : 1u;
+  size_t idx = m_volumeUpdators[0u].connected() ? 1u : 0u;
   m_volumeUpdators[idx] = std::move(dVolumeUpdator);
   m_attachedVolumes[idx] = attachedVolumes;
 }

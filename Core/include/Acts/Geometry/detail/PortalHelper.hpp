@@ -44,18 +44,18 @@ generatePortalsUpdateInternals(
 
   // Setting link to the mother volume to all sub volumes of this volume
   for (auto vPtr : dVolume->volumePtrs()) {
+    std::cout << "Assigning mother to child volume " << vPtr->name()
+              << std::endl;
+    std::size_t ip = 0;
     for (auto pPtr : vPtr->portalPtrs()) {
+      std::cout << " - portal " << ip++ << std::endl;
       // Creating a link to the mother
       auto motherLinkImpl =
-          std::make_shared<SingleDetectorVolumeImpl>(dVolume.get());
+          std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
       DetectorVolumeUpdator motherLink;
       motherLink.connect<&SingleDetectorVolumeImpl::update>(
-          motherLinkImpl.get());
-      // Set it ot the portal
-      ManagedDetectorVolumeUpdator managedMotherLink{std::move(motherLink),
-                                                     std::move(motherLinkImpl)};
-      pPtr->assignDetectorVolumeUpdator(std::move(managedMotherLink),
-                                        {dVolume});
+          std::move(motherLinkImpl));
+      pPtr->assignDetectorVolumeUpdator(std::move(motherLink), {dVolume});
     }
   }
   // Return from the standard generator

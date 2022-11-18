@@ -40,6 +40,10 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 // helper delegates that set/reset the volume raw pointer in the
 // NavigaitonState according to some given information.
 //
+BOOST_AUTO_TEST_CASE(UnconnectedUpdate) {
+  Acts::Experimental::DetectorVolumeUpdator ucUpdator;
+  BOOST_CHECK(not ucUpdator.connected());
+}
 
 // The end of world is reached
 BOOST_AUTO_TEST_CASE(EndOfWorldUpdate) {
