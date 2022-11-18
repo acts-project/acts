@@ -57,7 +57,7 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
 }
 
 void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
-    NavigationDirection nDir, ManagedDetectorVolumeUpdator&& dVolumeUpdator,
+    NavigationDirection nDir, DetectorVolumeUpdator&& dVolumeUpdator,
     const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
   auto idx = indexFromDirection(nDir);
   m_volumeUpdators[idx] = std::move(dVolumeUpdator);
@@ -65,7 +65,7 @@ void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
 }
 
 void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
-    ManagedDetectorVolumeUpdator&& dVolumeUpdator,
+    DetectorVolumeUpdator&& dVolumeUpdator,
     const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
   // Check and throw exceptions
   if (m_volumeUpdators[0u].implementation == nullptr and
@@ -87,7 +87,7 @@ void Acts::Experimental::Portal::updateDetectorVolume(
   const auto& direction = nState.direction;
   const Vector3 normal = surface().normal(gctx, position);
   NavigationDirection nDir = directionFromStepSize(normal.dot(direction));
-  const auto& vUpdator = m_volumeUpdators[indexFromDirection(nDir)].delegate;
+  const auto& vUpdator = m_volumeUpdators[indexFromDirection(nDir)];
   if (vUpdator.connected()) {
     vUpdator(gctx, nState);
   } else {

@@ -44,7 +44,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
 
  public:
   /// The volume links forward/backward with respect to the surface normal
-  using DetectorVolumeUpdators = std::array<ManagedDetectorVolumeUpdator, 2u>;
+  using DetectorVolumeUpdators = std::array<DetectorVolumeUpdator, 2u>;
 
   /// The vector of attached volumes forward/backward, this is useful in the
   /// geometry building
@@ -125,7 +125,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   ///
   /// @note this overwrites the existing link
   void assignDetectorVolumeUpdator(
-      NavigationDirection nDir, ManagedDetectorVolumeUpdator&& dVolumeUpdator,
+      NavigationDirection nDir, DetectorVolumeUpdator&& dVolumeUpdator,
       const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes);
 
   /// Update the volume link, w/o directive, i.e. it relies that there's only
@@ -136,7 +136,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   ///
   /// @note this overwrites the existing link
   void assignDetectorVolumeUpdator(
-      ManagedDetectorVolumeUpdator&& dVolumeUpdator,
+      DetectorVolumeUpdator&& dVolumeUpdator,
       const std::vector<std::shared_ptr<DetectorVolume>>&
           attachedVolumes) noexcept(false);
 
@@ -151,7 +151,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   std::shared_ptr<Surface> m_surface;
 
   /// The portal targets along/opposite the normal vector
-  DetectorVolumeUpdators m_volumeUpdators;
+  DetectorVolumeUpdators m_volumeUpdators = { voidDelegate(), voidDelegate() };
 
   /// The portal attaches to the following volumes
   AttachedDetectorVolumes m_attachedVolumes;

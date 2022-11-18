@@ -25,7 +25,7 @@ namespace detail {
 /// @tparam object_type the type of the object to be filled
 /// @tparam filler_type is the helper to fill the object into nState
 template <typename object_type, typename filler_type>
-class SingleObjectImpl : public IManagedDelegateImpl {
+class SingleObjectImpl : public INavigationDelegate {
  public:
   /// Convenience constructor
   /// @param so the single object
@@ -53,7 +53,7 @@ class SingleObjectImpl : public IManagedDelegateImpl {
 /// @tparam extractor_type the helper to extract the objects from
 /// @tparam filler_type is the helper to fill the object into nState
 template <typename extractor_type, typename filler_type>
-class StaticUpdatorImpl : public IManagedDelegateImpl {
+class StaticUpdatorImpl : public INavigationDelegate {
  public:
   /// @brief updates the navigation state with a single object that is filled in
   ///
@@ -80,7 +80,7 @@ class StaticUpdatorImpl : public IManagedDelegateImpl {
 /// @tparam extractor_type is the helper to extract the object
 /// @tparam filler_type is the helper to fill the object into the nState
 template <typename grid_type, typename extractor_type, typename filler_type>
-class IndexedUpdatorImpl : public IManagedDelegateImpl {
+class IndexedUpdatorImpl : public INavigationDelegate {
  public:
   /// An extractor helper to get the object(s) from the volume
   extractor_type extractor;
@@ -146,7 +146,7 @@ class IndexedUpdatorImpl : public IManagedDelegateImpl {
 ///
 /// @tparam updators_t the updators that will be called in sequence
 template <typename... updators_t>
-class ChainedUpdatorImpl {
+class ChainedUpdatorImpl : public INavigationDelegate {
  public:
   /// Constructor for chained updators in a tuple, this will unroll
   /// the tuple and call them in sequence

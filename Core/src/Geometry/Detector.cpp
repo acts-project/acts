@@ -18,12 +18,12 @@
 Acts::Experimental::Detector::Detector(
     const std::string& name,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    ManagedDetectorVolumeUpdator&& volumeFinder)
+    DetectorVolumeUpdator&& volumeFinder)
     : m_name(name), m_volumeFinder(std::move(volumeFinder)) {
   if (volumes.empty()) {
     throw std::invalid_argument("Detector: no volumes were given.");
   }
-  if (not m_volumeFinder.delegate.connected()) {
+  if (not m_volumeFinder.connected()) {
     throw std::invalid_argument(
         "Detector: volume finder delegate is not connected.");
   }
@@ -66,7 +66,7 @@ Acts::Experimental::Detector::getSharedPtr() const {
 
 void Acts::Experimental::Detector::updateDetectorVolume(
     const GeometryContext& gctx, NavigationState& nState) const {
-  m_volumeFinder.delegate(gctx, nState);
+  m_volumeFinder(gctx, nState);
 }
 
 const Acts::Experimental::DetectorVolume*
@@ -75,7 +75,7 @@ Acts::Experimental::Detector::findDetectorVolume(
   NavigationState nState;
   nState.currentDetector = this;
   nState.position = position;
-  m_volumeFinder.delegate(gctx, nState);
+  m_volumeFinder(gctx, nState);
   return nState.currentVolume;
 }
 

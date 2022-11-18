@@ -25,7 +25,7 @@ namespace Experimental {
 class DetectorVolume {};
 
 /// a simple link to volume struct
-class LinkToVolumeImpl : public IManagedDelegateImpl {
+class LinkToVolumeImpl : public INavigationDelegate {
  public:
   std::shared_ptr<DetectorVolume> dVolume = nullptr;
 

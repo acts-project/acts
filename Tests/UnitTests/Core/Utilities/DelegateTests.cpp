@@ -12,11 +12,7 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
-<<<<<<< HEAD
 #include <memory>
-=======
-#include <array>
->>>>>>> b5578fbc2 (addressing more PR comments, add unit tests for ManagedDelegate and Common functions)
 #include <numeric>
 #include <optional>
 #include <random>
@@ -338,6 +334,7 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
 }
 
 struct DelegateInterface {
+  DelegateInterface() = default;
   virtual ~DelegateInterface() = 0;
 
   virtual std::string func() const { return "base"; }
@@ -445,6 +442,11 @@ BOOST_AUTO_TEST_CASE(NonVoidDelegateTest) {
     (void)d;
     (void)c;
   }
+
+  { 
+    OwningDelegate<std::string(), DelegateInterface> d;
+  }
+
 }
 
 BOOST_AUTO_TEST_SUITE_END()

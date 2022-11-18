@@ -100,7 +100,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
                  std::unique_ptr<VolumeBounds> bounds,
                  const std::vector<std::shared_ptr<Surface>>& surfaces,
                  const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-                 ManagedSurfaceCandidatesUpdator&&
+                 SurfaceCandidatesUpdator&&
                      surfaceCandidateUpdator) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
@@ -117,7 +117,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   DetectorVolume(const GeometryContext& gctx, const std::string& name,
                  const Transform3& transform,
                  std::unique_ptr<VolumeBounds> bounds,
-                 ManagedSurfaceCandidatesUpdator&&
+                 SurfaceCandidatesUpdator&&
                      surfaceCandidateUpdator) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
@@ -264,12 +264,12 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param volumes the volumes the new navigation state updator points to
   ///
   void assignSurfaceCandidatesUpdator(
-      ManagedSurfaceCandidatesUpdator&& surfaceCandidateUpdator,
+      SurfaceCandidatesUpdator&& surfaceCandidateUpdator,
       const std::vector<std::shared_ptr<Surface>>& surfaces = {},
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes = {});
 
   /// Const access to the navigation state updator
-  const ManagedSurfaceCandidatesUpdator& surfaceCandidatesUpdator() const;
+  const SurfaceCandidatesUpdator& surfaceCandidatesUpdator() const;
 
   /// Update a portal given a portal index
   ///
@@ -353,7 +353,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
   /// The navigation state updator
-  ManagedSurfaceCandidatesUpdator m_surfaceCandidatesUpdator;
+  SurfaceCandidatesUpdator m_surfaceCandidatesUpdator;
 
   /// Volume material (optional)
   std::shared_ptr<IVolumeMaterial> m_volumeMaterial = nullptr;
@@ -404,7 +404,7 @@ inline const std::vector<const DetectorVolume*>& DetectorVolume::volumes()
   return m_volumes.external;
 }
 
-inline const ManagedSurfaceCandidatesUpdator&
+inline const SurfaceCandidatesUpdator&
 DetectorVolume::surfaceCandidatesUpdator() const {
   return m_surfaceCandidatesUpdator;
 }

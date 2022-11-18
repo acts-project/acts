@@ -12,8 +12,8 @@ target_sources(
     CylinderVolumeBuilder.cpp
     CylinderVolumeHelper.cpp
     Extent.cpp
-    Detector.cpp
-    DetectorVolume.cpp
+    #Detector.cpp
+    #DetectorVolume.cpp
     DiscLayer.cpp
     GenericApproachDescriptor.cpp
     GenericCuboidVolumeBounds.cpp
@@ -26,7 +26,7 @@ target_sources(
     PassiveLayerBuilder.cpp
     PlaneLayer.cpp
     Polyhedron.cpp
-    Portal.cpp
+    #Portal.cpp
     ProtoLayer.cpp
     ProtoLayerHelper.cpp
     SurfaceArrayCreator.cpp

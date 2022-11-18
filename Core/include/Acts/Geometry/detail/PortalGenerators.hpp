@@ -49,26 +49,23 @@ inline static std::vector<std::shared_ptr<Portal>> generatePortals(
     auto portal = Portal::makeShared(oSurface.first);
     // Create a shared link instance & delegate
     auto singleLinkImpl =
-        std::make_shared<SingleDetectorVolumeImpl>(dVolume.get());
+        std::make_unique<SingleDetectorVolumeImpl>(dVolume.get());
     DetectorVolumeUpdator singleLink;
-    singleLink.connect<&SingleDetectorVolumeImpl::update>(singleLinkImpl.get());
+    singleLink.connect<&SingleDetectorVolumeImpl::update>(std::move(singleLinkImpl.get()));
     // Update the volume link and the store
     NavigationDirection insideDir = oSurface.second;
-    ManagedDetectorVolumeUpdator managedLink{std::move(singleLink),
-                                             std::move(singleLinkImpl)};
-    portal->assignDetectorVolumeUpdator(insideDir, std::move(managedLink),
+    portal->assignDetectorVolumeUpdator(insideDir, std::move(singleLink),
                                         {dVolume});
 
     // Create a null link
+    auto eow = std::make_unqiue<EndOfWorldImpl>();
     DetectorVolumeUpdator nullLink;
-    nullLink.connect<&EndOfWorldImpl::update>();
-
+    nullLink.connect<&EndOfWorldImpl::update>(std::move(eow));
     NavigationDirection outsideDir =
         (insideDir == Acts::NavigationDirection::Forward)
             ? Acts::NavigationDirection::Backward
             : Acts::NavigationDirection::Forward;
-    ManagedDetectorVolumeUpdator managedNullLink{std::move(nullLink), nullptr};
-    portal->assignDetectorVolumeUpdator(outsideDir, std::move(managedNullLink),
+    portal->assignDetectorVolumeUpdator(outsideDir, std::move(nullLink),
                                         {});
 
     // Portal is prepared

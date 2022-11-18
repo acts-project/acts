@@ -22,7 +22,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    ManagedSurfaceCandidatesUpdator&& surfaceCandidateUpdator)
+    SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : m_name(name),
       m_transform(transform),
       m_bounds(std::move(bounds)),
@@ -32,7 +32,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
     throw std::invalid_argument(
         "DetectorVolume: construction with nullptr bounds.");
   }
-  if (not m_surfaceCandidatesUpdator.delegate.connected()) {
+  if (not m_surfaceCandidatesUpdator.connected()) {
     throw std::invalid_argument(
         "DetectorVolume: navigation state updator delegate is not connected.");
   }
@@ -47,7 +47,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext&, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-    ManagedSurfaceCandidatesUpdator&& surfaceCandidateUpdator)
+    SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : m_name(name),
       m_transform(transform),
       m_bounds(std::move(bounds)),
@@ -57,7 +57,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
     throw std::invalid_argument(
         "DetectorVolume: construction with nullptr bounds.");
   }
-  if (not m_surfaceCandidatesUpdator.delegate.connected()) {
+  if (not m_surfaceCandidatesUpdator.connected()) {
     throw std::invalid_argument(
         "DetectorVolume: navigation state updator delegate is not connected.");
   }
@@ -126,13 +126,13 @@ void Acts::Experimental::DetectorVolume::updateNavigationState(
   }
   // The state updator of the volume itself
   nState.currentVolume = this;
-  m_surfaceCandidatesUpdator.delegate(gctx, nState);
+  m_surfaceCandidatesUpdator(gctx, nState);
   nState.surfaceCandidate = nState.surfaceCandidates.begin();
   return;
 }
 
 void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdator(
-    ManagedSurfaceCandidatesUpdator&& surfaceCandidateUpdator,
+    SurfaceCandidatesUpdator&& surfaceCandidateUpdator,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes) {
   m_surfaceCandidatesUpdator = std::move(surfaceCandidateUpdator);

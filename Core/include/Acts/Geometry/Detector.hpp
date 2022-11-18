@@ -31,14 +31,14 @@ class Detector : public std::enable_shared_from_this<Detector> {
   ///
   /// @param name the detecor name
   /// @param volumes the objets contained by this detector
-  /// @param volumeFinder is a managed Delegate to find the assocaited volume
+  /// @param volumeFinder is a Delegate to find the assocaited volume
   ///
   /// @note will throw an exception if volumes vector is empty
   /// @note will throw an exception if duplicate volume names exist
   /// @note will throw an exception if the delegate is not connected
   Detector(const std::string& name,
            const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-           ManagedDetectorVolumeUpdator&& volumeFinder) noexcept(false);
+           DetectorVolumeUpdator&& volumeFinder) noexcept(false);
 
  public:
   /// Factory for producing memory managed instances of Detector.
@@ -111,11 +111,11 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
   /// Update the volume finder
   ///
-  /// @param mVolumeFinder the new managed volume finder
-  void updateDetectorVolumeFinder(ManagedDetectorVolumeUpdator&& mVolumeFinder);
+  /// @param mVolumeFinder the new volume finder
+  void updateDetectorVolumeFinder(DetectorVolumeUpdator&& mVolumeFinder);
 
   /// Const access to the volume finder
-  const ManagedDetectorVolumeUpdator& detectorVolumeFinder() const;
+  const DetectorVolumeUpdator& detectorVolumeFinder() const;
 
   /// Return the name of the detector
   const std::string& name() const;
@@ -128,7 +128,7 @@ class Detector : public std::enable_shared_from_this<Detector> {
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
   /// A volume finder delegate
-  ManagedDetectorVolumeUpdator m_volumeFinder;
+  DetectorVolumeUpdator m_volumeFinder;
 
   /// Name/index map to find volumes by name and detect duplicates
   std::unordered_map<std::string, size_t> m_volumeNameIndex;
@@ -143,11 +143,11 @@ inline const std::vector<const DetectorVolume*>& Detector::volumes() const {
 }
 
 inline void Detector::updateDetectorVolumeFinder(
-    ManagedDetectorVolumeUpdator&& mVolumeFinder) {
+    DetectorVolumeUpdator&& mVolumeFinder) {
   m_volumeFinder = std::move(mVolumeFinder);
 }
 
-inline const ManagedDetectorVolumeUpdator& Detector::detectorVolumeFinder()
+inline const DetectorVolumeUpdator& Detector::detectorVolumeFinder()
     const {
   return m_volumeFinder;
 }
