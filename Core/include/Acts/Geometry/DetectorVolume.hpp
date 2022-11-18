@@ -404,7 +404,7 @@ DetectorVolume::surfaceCandidatesUpdator() const {
 
 inline void DetectorVolume::assignVolumeMaterial(
     std::shared_ptr<IVolumeMaterial> material) {
-  m_volumeMaterial = material;
+  m_volumeMaterial = std::move(material);
 }
 
 inline std::shared_ptr<IVolumeMaterial> DetectorVolume::volumeMaterialPtr() {
@@ -484,7 +484,7 @@ struct AllSurfacesExtractor {
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t> indices = {}) {
+      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
           "AllSurfacesExtractor: no detector volume given.");
@@ -504,7 +504,7 @@ struct IndexedSurfacesExtractor {
   /// @return a vector of raw Surface pointers
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t> indices) {
+      const NavigationState& nState, const std::vector<size_t>& indices) {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
           "IndexedSurfacesExtractor: no detector volume given.");
@@ -532,7 +532,7 @@ struct AllSubVolumesExtractor {
   inline static const std::vector<const DetectorVolume*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t> indices = {}) {
+      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
           "AllSubVolumesExtractor: no detector volume given.");
@@ -552,7 +552,7 @@ struct IndexedSubVolumesExtractor {
   /// @return a vector of raw DetectorVolume pointers
   inline static const std::vector<const DetectorVolume*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t> indices) {
+      const NavigationState& nState, const std::vector<size_t>& indices) {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
           "AllSubVolumesExtractor: no detector volume given.");

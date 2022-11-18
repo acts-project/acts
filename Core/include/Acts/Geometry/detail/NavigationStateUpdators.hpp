@@ -94,7 +94,7 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// @param itr a transform applied to the global position
   IndexedUpdatorImpl(grid_type&& igrid,
                      const std::array<BinningValue, grid_type::DIM>& icasts,
-                     Transform3 itr = Transform3::Identity())
+                     const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
   /// @brief updates the navigation state with objects from the grid according

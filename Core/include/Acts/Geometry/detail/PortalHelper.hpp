@@ -43,12 +43,8 @@ generatePortalsUpdateInternals(
   }
 
   // Setting link to the mother volume to all sub volumes of this volume
-  for (auto vPtr : dVolume->volumePtrs()) {
-    std::cout << "Assigning mother to child volume " << vPtr->name()
-              << std::endl;
-    std::size_t ip = 0;
-    for (auto pPtr : vPtr->portalPtrs()) {
-      std::cout << " - portal " << ip++ << std::endl;
+  for (auto& vPtr : dVolume->volumePtrs()) {
+    for (auto& pPtr : vPtr->portalPtrs()) {
       // Creating a link to the mother
       auto motherLinkImpl =
           std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());

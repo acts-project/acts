@@ -30,8 +30,8 @@ Acts::Experimental::Detector::Detector(
   }
   // Fill and make unique
   std::vector<std::shared_ptr<DetectorVolume>> uniqueVolumes = volumes;
-  for (auto v : volumes) {
-    for (auto vv : v->volumePtrs()) {
+  for (auto& v : volumes) {
+    for (auto& vv : v->volumePtrs()) {
       uniqueVolumes.push_back(vv);
     }
   }

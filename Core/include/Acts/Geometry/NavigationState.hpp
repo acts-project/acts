@@ -112,7 +112,7 @@ struct SurfacesFiller {
   /// @param nState the navigation state
   /// @param surfaces the surfaces that are filled in
   inline static void fill(NavigationState& nState,
-                          const std::vector<const Surface*> surfaces) {
+                          const std::vector<const Surface*>& surfaces) {
     std::for_each(surfaces.begin(), surfaces.end(), [&](const auto& s) {
       nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
           ObjectIntersection<Surface>{}, s, nullptr,
@@ -129,7 +129,7 @@ struct PortalsFiller {
   /// @param nState the navigation state
   /// @param portals the portals that are filled in
   inline static void fill(NavigationState& nState,
-                          const std::vector<const Portal*> portals) {
+                          const std::vector<const Portal*>& portals) {
     std::for_each(portals.begin(), portals.end(), [&](const auto& p) {
       nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
           ObjectIntersection<Surface>{}, nullptr, p, true});
