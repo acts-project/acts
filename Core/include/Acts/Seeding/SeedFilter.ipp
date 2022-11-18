@@ -54,62 +54,64 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   float zOrigin = seedFilterState.zOrigin;
 
   // initialize original index locations
-  std::vector<size_t> idx(topSpVec.size());
-  std::iota(idx.begin(), idx.end(), 0);
+  std::vector<size_t> topSPIndexVec(topSpVec.size());
+  std::iota(topSPIndexVec.begin(), topSPIndexVec.end(), 0);
 
   if (m_cfg.curvatureSortingInFilter and topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
-    std::sort(idx.begin(), idx.end(),
+    std::sort(topSPIndexVec.begin(), topSPIndexVec.end(),
               [&invHelixDiameterVec](size_t i1, size_t i2) {
                 return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
               });
   }
 
-  size_t startCompTopLoopIdx = 0;
+  size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
-  for (auto& topSPIdx : idx) {
+  for (auto& topSPIndex : topSPIndexVec) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
     // -> weaker requirement for a good seed
     std::vector<float> compatibleSeedR;
 
-    float invHelixDiameter = invHelixDiameterVec[topSPIdx];
+    float invHelixDiameter = invHelixDiameterVec[topSPIndex];
     float lowerLimitCurv = invHelixDiameter - m_cfg.deltaInvHelixDiameter;
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
     // use deltaR instead of top radius
-    float currentTop_r = m_cfg.useDeltaRorTopRadius
-                             ? topSpVec[topSPIdx]->deltaR()
-                             : topSpVec[topSPIdx]->radius();
-    float impact = impactParametersVec[topSPIdx];
+    float currentTopR = m_cfg.useDeltaRorTopRadius
+                            ? topSpVec[topSPIndex]->deltaR()
+                            : topSpVec[topSPIndex]->radius();
+    float impact = impactParametersVec[topSPIndex];
 
     float weight = -(impact * m_cfg.impactWeightFactor);
 
-    for (size_t j = startCompTopLoopIdx; j < idx.size(); j++) {
-      size_t compatibleTopSPIdx = idx[j];
-      if (compatibleTopSPIdx == topSPIdx) {
+    for (size_t variableCompTopIndex = beginCompTopIndex;
+         variableCompTopIndex < topSPIndexVec.size(); variableCompTopIndex++) {
+      size_t compatibleTopSPIndex = topSPIndexVec[variableCompTopIndex];
+      if (compatibleTopSPIndex == topSPIndex) {
         continue;
       }
 
-      float otherTop_r = m_cfg.useDeltaRorTopRadius
-                             ? topSpVec[compatibleTopSPIdx]->deltaR()
-                             : topSpVec[compatibleTopSPIdx]->radius();
+      float otherTopR = m_cfg.useDeltaRorTopRadius
+                            ? topSpVec[compatibleTopSPIndex]->deltaR()
+                            : topSpVec[compatibleTopSPIndex]->radius();
 
       // curvature difference within limits?
-      if (invHelixDiameterVec[compatibleTopSPIdx] < lowerLimitCurv) {
+      if (invHelixDiameterVec[compatibleTopSPIndex] < lowerLimitCurv) {
+        // if SPs are sorted in curvature we skip unnecessary iterations
         if (m_cfg.curvatureSortingInFilter) {
-          startCompTopLoopIdx = j;
-          startCompTopLoopIdx++;
+          beginCompTopIndex = variableCompTopIndex + 1;
         }
         continue;
       }
-      if (invHelixDiameterVec[compatibleTopSPIdx] > upperLimitCurv) {
+      if (invHelixDiameterVec[compatibleTopSPIndex] > upperLimitCurv) {
+        // if SPs are sorted in curvature we skip unnecessary iterations
         if (m_cfg.curvatureSortingInFilter) {
           break;
         }
         continue;
       }
       // compared top SP should have at least deltaRMin distance
-      float deltaR = currentTop_r - otherTop_r;
+      float deltaR = currentTopR - otherTopR;
       if (std::abs(deltaR) < m_cfg.deltaRMin) {
         continue;
       }
@@ -119,13 +121,13 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // seed (20mm instead of 5mm)
         // add new compatible seed only if distance larger than rmin to all
         // other compatible seeds
-        if (std::abs(previousDiameter - otherTop_r) < m_cfg.deltaRMin) {
+        if (std::abs(previousDiameter - otherTopR) < m_cfg.deltaRMin) {
           newCompSeed = false;
           break;
         }
       }
       if (newCompSeed) {
-        compatibleSeedR.push_back(otherTop_r);
+        compatibleSeedR.push_back(otherTopR);
         weight += m_cfg.compatSeedWeight;
       }
       if (compatibleSeedR.size() >= m_cfg.compatSeedLimit) {
@@ -135,11 +137,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
     if (m_experimentCuts != nullptr) {
       // add detector specific considerations on the seed weight
-      weight +=
-          m_experimentCuts->seedWeight(bottomSP, middleSP, *topSpVec[topSPIdx]);
+      weight += m_experimentCuts->seedWeight(bottomSP, middleSP,
+                                             *topSpVec[topSPIndex]);
       // discard seeds according to detector specific cuts (e.g.: weight)
       if (!m_experimentCuts->singleSeedCut(weight, bottomSP, middleSP,
-                                           *topSpVec[topSPIdx])) {
+                                           *topSpVec[topSPIndex])) {
         continue;
       }
     }
@@ -176,7 +178,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
       if (weight < bottomSP.quality() and weight < middleSP.quality() and
-          weight < topSpVec[topSPIdx]->quality()) {
+          weight < topSpVec[topSPIndex]->quality()) {
         continue;
       }
 
@@ -189,17 +191,17 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
           outCont.push_back(std::make_pair(
               weight,
               std::make_unique<const InternalSeed<external_spacepoint_t>>(
-                  bottomSP, middleSP, *topSpVec[topSPIdx], zOrigin, true)));
+                  bottomSP, middleSP, *topSpVec[topSPIndex], zOrigin, true)));
         } else {
           // otherwise we check if there is a lower quality seed to remove
-          checkReplaceSeeds(bottomSP, middleSP, *topSpVec[topSPIdx], zOrigin,
+          checkReplaceSeeds(bottomSP, middleSP, *topSpVec[topSPIndex], zOrigin,
                             true, weight, outCont);
         }
 
       } else if (weight > weightMax) {
         // store weight and index of the best "lower quality" seed
         weightMax = weight;
-        maxWeightSeedIndex = topSPIdx;
+        maxWeightSeedIndex = topSPIndex;
         maxWeightSeed = true;
       }
     } else {
@@ -212,10 +214,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         outCont.push_back(std::make_pair(
             weight,
             std::make_unique<const InternalSeed<external_spacepoint_t>>(
-                bottomSP, middleSP, *topSpVec[topSPIdx], zOrigin, false)));
+                bottomSP, middleSP, *topSpVec[topSPIndex], zOrigin, false)));
       } else {
         // otherwise we check if there is a lower quality seed to remove
-        checkReplaceSeeds(bottomSP, middleSP, *topSpVec[topSPIdx], zOrigin,
+        checkReplaceSeeds(bottomSP, middleSP, *topSpVec[topSPIndex], zOrigin,
                           false, weight, outCont);
       }
     }
