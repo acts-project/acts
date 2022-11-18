@@ -54,11 +54,11 @@ class SurfaceArrayCreator {
   friend class Acts::SurfaceArray;
 
   struct ProtoAxis {
-    BinningType bType;
-    BinningValue bValue;
-    size_t nBins;
-    AxisScalar min;
-    AxisScalar max;
+    BinningType bType = BinningType::equidistant;
+    BinningValue bValue = BinningValue::binX;
+    size_t nBins = 0;
+    AxisScalar min = 0;
+    AxisScalar max = 0;
     std::vector<AxisScalar> binEdges;
 
     size_t getBin(AxisScalar x) const {
@@ -313,7 +313,8 @@ class SurfaceArrayCreator {
   ///       into an actual @c Axis object to be used
   ProtoAxis createVariableAxis(const GeometryContext& gctx,
                                const std::vector<const Surface*>& surfaces,
-                               BinningValue bValue, ProtoLayer protoLayer,
+                               BinningValue bValue,
+                               const ProtoLayer& protoLayer,
                                Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
@@ -340,7 +341,8 @@ class SurfaceArrayCreator {
   ///       into an actual @c Axis object to be used
   ProtoAxis createEquidistantAxis(const GeometryContext& gctx,
                                   const std::vector<const Surface*>& surfaces,
-                                  BinningValue bValue, ProtoLayer protoLayer,
+                                  BinningValue bValue,
+                                  const ProtoLayer& protoLayer,
                                   Transform3& transform,
                                   size_t nBins = 0) const;
 

@@ -44,7 +44,7 @@ class IndexSourceLink final : public Acts::SourceLink {
   constexpr Index index() const { return m_index; }
 
  private:
-  Index m_index;
+  Index m_index = 0;
 
   friend constexpr bool operator==(const IndexSourceLink& lhs,
                                    const IndexSourceLink& rhs) {

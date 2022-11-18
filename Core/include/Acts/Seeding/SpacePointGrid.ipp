@@ -17,7 +17,7 @@ Acts::SpacePointGridCreator::createGrid(
   Acts::SpacePointGridConfig config = _config.toInternalUnits();
   using AxisScalar = Acts::Vector3::Scalar;
 
-  int phiBins;
+  int phiBins = 0;
   // for no magnetic field, create 100 phi-bins
   if (config.bFieldInZ == 0) {
     phiBins = 100;

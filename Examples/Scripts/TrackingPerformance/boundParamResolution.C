@@ -15,6 +15,7 @@
 #include <TCanvas.h>
 #include <TColor.h>
 #include <TDirectory.h>
+#include <TError.h>
 #include <TF1.h>
 #include <TFile.h>
 #include <TH1F.h>
@@ -24,7 +25,6 @@
 #include <TProfile2D.h>
 #include <TStyle.h>
 #include <TTree.h>
-#include <TError.h>
 
 #include "CommonUtils.h"
 #include "TreeReader.h"
@@ -217,12 +217,12 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   // Book histograms (with adapted range):
   //
   // Global profile histograms : residuals/pulls
-  std::array<TProfile2D*, 6> p2d_res_zr_prt;
-  std::array<TProfile2D*, 6> p2d_res_zr_flt;
-  std::array<TProfile2D*, 6> p2d_res_zr_smt;
-  std::array<TProfile2D*, 6> p2d_pull_zr_prt;
-  std::array<TProfile2D*, 6> p2d_pull_zr_flt;
-  std::array<TProfile2D*, 6> p2d_pull_zr_smt;
+  std::array<TProfile2D*, 6> p2d_res_zr_prt{};
+  std::array<TProfile2D*, 6> p2d_res_zr_flt{};
+  std::array<TProfile2D*, 6> p2d_res_zr_smt{};
+  std::array<TProfile2D*, 6> p2d_pull_zr_prt{};
+  std::array<TProfile2D*, 6> p2d_pull_zr_flt{};
+  std::array<TProfile2D*, 6> p2d_pull_zr_smt{};
 
   for (unsigned int ipar = 0; ipar < paramNames.size(); ++ipar) {
     const auto& par = paramNames[ipar];
@@ -321,13 +321,10 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
       auto ranges = histRanges(vlIdCut);
 
       // Residual range
-      std::map<std::pair<std::string,std::string>, double> paramResidualRange = {
-          {{"loc0", "l_{0}"}, ranges[0]},
-          {{"loc1", "l_{1}"}, ranges[1]},
-          {{"#phi", "#phi"}, ranges[2]},
-          {{"#theta","#theta"}, ranges[3]},
-          {{"q/p","q/p"}, ranges[4]},
-          {{"t","t"}, ranges[5]}};
+      std::map<std::pair<std::string, std::string>, double> paramResidualRange =
+          {{{"loc0", "l_{0}"}, ranges[0]}, {{"loc1", "l_{1}"}, ranges[1]},
+           {{"#phi", "#phi"}, ranges[2]},  {{"#theta", "#theta"}, ranges[3]},
+           {{"q/p", "q/p"}, ranges[4]},    {{"t", "t"}, ranges[5]}};
 
       // Create the hists and set up for them
       for (const auto& [partwin, resRange] : paramResidualRange) {
@@ -336,9 +333,11 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
         std::string id_par = vlIdCut[0] + par;
 
         TString par_string(partwin.second.c_str());
-        TString res_string = par_string + TString("^{rec} - ") + par_string + TString("^{true}");
+        TString res_string =
+            par_string + TString("^{rec} - ") + par_string + TString("^{true}");
 
-        TString pull_string = TString("(") + res_string + TString(")/#sigma_{")+par_string+TString("}");
+        TString pull_string = TString("(") + res_string +
+                              TString(")/#sigma_{") + par_string + TString("}");
 
         if (predicted) {
           res_prt[id_par] =
@@ -711,11 +710,9 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
             TString sfit_info = "#sigma = ";
             sfit_info += sigma_info(0, 5);
 
-            legend->AddEntry(gauss,
-                             sfit_info.Data(), "l");
+            legend->AddEntry(gauss, sfit_info.Data(), "l");
             legend->AddEntry(pull_smt[vlID + paramNames.at(ipar)],
                              mfit_info.Data(), "");
-
           }
         }
 

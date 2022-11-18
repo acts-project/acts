@@ -17,11 +17,12 @@
 
 ActsExamples::detail::InterpolatedMagneticField2
 ActsExamples::makeMagneticFieldMapRzFromRoot(
-    std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)>
+    const std::function<size_t(std::array<size_t, 2> binsRZ,
+                               std::array<size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, std::string treeName, Acts::ActsScalar lengthUnit,
-    Acts::ActsScalar BFieldUnit, bool firstQuadrant) {
+    const std::string& fieldMapFile, const std::string& treeName,
+    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
+    bool firstQuadrant) {
   /// [1] Read in field map file
   // Grid position points in r and z
   std::vector<double> rPos;
@@ -39,8 +40,8 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
   }
   Int_t entries = tree->GetEntries();
 
-  double r, z;
-  double Br, Bz;
+  double r = 0, z = 0;
+  double Br = 0, Bz = 0;
 
   tree->SetBranchAddress("r", &r);
   tree->SetBranchAddress("z", &z);
@@ -67,11 +68,12 @@ ActsExamples::makeMagneticFieldMapRzFromRoot(
 
 ActsExamples::detail::InterpolatedMagneticField3
 ActsExamples::makeMagneticFieldMapXyzFromRoot(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
+    const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                               std::array<size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, std::string treeName, Acts::ActsScalar lengthUnit,
-    Acts::ActsScalar BFieldUnit, bool firstOctant) {
+    const std::string& fieldMapFile, const std::string& treeName,
+    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
+    bool firstOctant) {
   /// [1] Read in field map file
   // Grid position points in x, y and z
   std::vector<double> xPos;
@@ -90,8 +92,8 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
   }
   Int_t entries = tree->GetEntries();
 
-  double x, y, z;
-  double Bx, By, Bz;
+  double x = 0, y = 0, z = 0;
+  double Bx = 0, By = 0, Bz = 0;
 
   tree->SetBranchAddress("x", &x);
   tree->SetBranchAddress("y", &y);

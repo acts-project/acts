@@ -325,7 +325,7 @@ Acts::MutableLayerPtr Acts::LayerCreator::planeLayer(
       _protoLayer ? *_protoLayer : ProtoLayer(gctx, surfaces);
 
   // remaining layer parameters
-  double layerHalf1, layerHalf2, layerThickness;
+  double layerHalf1 = 0, layerHalf2 = 0, layerThickness = 0;
   switch (bValue) {
     case BinningValue::binX: {
       layerHalf1 = 0.5 * (protoLayer.max(binY) - protoLayer.min(binY));

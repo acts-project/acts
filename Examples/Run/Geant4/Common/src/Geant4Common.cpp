@@ -55,8 +55,8 @@ void setupGeant4Simulation(
     std::vector<G4UserEventAction*> eventActions,
     std::vector<G4UserTrackingAction*> trackingActions,
     std::vector<G4UserSteppingAction*> steppingActions,
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-    std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+    const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
+    const std::shared_ptr<const Acts::MagneticFieldProvider>& magneticField,
     bool materialRecording) {
   auto g4loglevel =
       Acts::Logging::Level(vars["g4-loglevel"].as<unsigned int>());
@@ -66,7 +66,7 @@ void setupGeant4Simulation(
   // Set the main Geant4 algorithm, primary generation, detector construction
   Geant4Simulation::Config g4Cfg;
 
-  g4Cfg.runManager = runManager;
+  g4Cfg.runManager = std::move(runManager);
   g4Cfg.randomNumbers = std::make_shared<ActsExamples::RandomNumbers>(
       ActsExamples::RandomNumbers::Config{seed});
 
@@ -88,10 +88,10 @@ void setupGeant4Simulation(
   g4Cfg.detectorConstruction = detector.release();
 
   // Set the user actions
-  g4Cfg.runActions = runActions;
-  g4Cfg.eventActions = eventActions;
-  g4Cfg.trackingActions = trackingActions;
-  g4Cfg.steppingActions = steppingActions;
+  g4Cfg.runActions = std::move(runActions);
+  g4Cfg.eventActions = std::move(eventActions);
+  g4Cfg.trackingActions = std::move(trackingActions);
+  g4Cfg.steppingActions = std::move(steppingActions);
 
   // An ACTS Magnetic field is provided
   if (magneticField) {
@@ -188,7 +188,7 @@ int runMaterialRecording(
 int runGeant4Simulation(
     const ActsExamples::Options::Variables& vars,
     std::unique_ptr<G4VUserDetectorConstruction> detector,
-    std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry) {
+    const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry) {
   // Basic services
   auto randomNumbers =
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vars));

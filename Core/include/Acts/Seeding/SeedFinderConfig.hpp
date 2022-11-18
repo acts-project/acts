@@ -45,14 +45,20 @@ struct SeedFinderConfig {
   float deltaRMaxBottomSP = std::numeric_limits<float>::quiet_NaN();
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
-  // force sorting in R in space point grid bins
+
+  // force sorting of middle SPs in radius
   bool forceRadialSorting = false;
 
   // radial range for middle SP
-  std::vector<std::vector<float>> rRangeMiddleSP;
-  bool useVariableMiddleSPRange = false;
+  // variable range based on SP radius
+  bool useVariableMiddleSPRange = true;
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
+  // range defined in vector for each z region
+  std::vector<std::vector<float>> rRangeMiddleSP;
+  // range defined by rMinMiddle and rMaxMiddle
+  float rMinMiddle = 60.f * Acts::UnitConstants::mm;
+  float rMaxMiddle = 120.f * Acts::UnitConstants::mm;
 
   // cut to the maximum value of delta z between SPs
   float deltaZMax =
@@ -115,12 +121,6 @@ struct SeedFinderConfig {
   // WARNING: if rMin is smaller than impactMax, the bin size will be 2*pi,
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
-
-  float bFieldInZ = 2.08 * Acts::UnitConstants::T;
-  // location of beam in x,y plane.
-  // used as offset for Space Points
-  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
-                        0 * Acts::UnitConstants::mm};
 
   std::vector<size_t> zBinsCustomLooping = {};
 
@@ -194,11 +194,7 @@ struct SeedFinderConfig {
     config.zMax /= 1_mm;
     config.rMax /= 1_mm;
     config.rMin /= 1_mm;
-    config.bFieldInZ /= 1000. * 1_T;
     config.deltaZMax /= 1_mm;
-
-    config.beamPos[0] /= 1_mm;
-    config.beamPos[1] /= 1_mm;
 
     config.zAlign /= 1_mm;
     config.rAlign /= 1_mm;
@@ -206,6 +202,26 @@ struct SeedFinderConfig {
     config.toleranceParam /= 1_mm;
 
     return config;
+  }
+};
+
+struct SeedFinderOptions {
+  // location of beam in x,y plane.
+  // used as offset for Space Points
+  Acts::Vector2 beamPos{0 * Acts::UnitConstants::mm,
+                        0 * Acts::UnitConstants::mm};
+
+  float bFieldInZ = 2.08 * Acts::UnitConstants::T;
+
+  SeedFinderOptions toInternalUnits() const {
+    using namespace Acts::UnitLiterals;
+    SeedFinderOptions options = *this;
+    options.beamPos[0] /= 1_mm;
+    options.beamPos[1] /= 1_mm;
+
+    options.bFieldInZ /= 1000. * 1_T;
+
+    return options;
   }
 };
 

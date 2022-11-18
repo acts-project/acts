@@ -77,13 +77,12 @@ class FatrasSimulation final : public BareAlgorithm {
   /// @param cfg is the configuration struct
   /// @param lvl is the logging level
   FatrasSimulation(Config cfg, Acts::Logging::Level lvl);
-  ~FatrasSimulation() final override;
+  ~FatrasSimulation() override;
 
   /// Run the simulation for a single event.
   ///
   /// @param ctx the algorithm context containing all event information
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }

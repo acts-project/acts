@@ -81,7 +81,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     return field.error();
   }
   double Bz = (*field)[eZ];
-  double rho;
+  double rho = 0;
   // Curvature is infinite w/o b field
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
     rho = sgnH * m_cfg.maxRho;
@@ -103,7 +103,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   int sgnX = (X < 0.) ? -1 : 1;
   int sgnY = (Y < 0.) ? -1 : 1;
 
-  double phiAtPCA;
+  double phiAtPCA = 0;
   if (std::abs(X) > std::abs(Y)) {
     phiAtPCA = sgnH * sgnX * std::acos(-sgnH * Y / S);
   } else {

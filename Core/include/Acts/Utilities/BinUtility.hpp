@@ -92,10 +92,9 @@ class BinUtility {
   /// Copy constructor
   ///
   /// @param sbu is the source bin utility
-  BinUtility(const BinUtility& sbu)
-      : m_binningData(sbu.m_binningData),
-        m_transform(sbu.m_transform),
-        m_itransform(sbu.m_itransform) {}
+  BinUtility(const BinUtility& sbu) = default;
+
+  BinUtility(BinUtility&& sbu) = default;
 
   /// Assignment operator
   ///
@@ -108,6 +107,8 @@ class BinUtility {
     }
     return (*this);
   }
+
+  BinUtility& operator=(BinUtility&&) = default;
 
   /// Operator+= to make multidimensional BinUtility
   ///
