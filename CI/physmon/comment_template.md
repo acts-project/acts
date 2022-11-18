@@ -5,10 +5,10 @@
 {% endif %}
 
 [Full report]({{ url }}/)
-CKF: {{ make_url("seeded", "ckf_seeded.html") }}, {{ make_url("truth smeared", "ckf_truth_smeared.html") }}, {{ make_url("truth estimated", "ckf_truth_estimated.html") }}
-IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "ivf_truth_smeared.html") }}, {{ make_url("truth estimated", "ivf_truth_estimated.html") }}
-{{ make_url("Ambiguity resolution", "ambi_seeded.html") }}
-{{ make_url("Truth tracking (Kalman Filter)", "truth_tracking.html") }}
+CKF: {{ make_url("seeded", "ckf_seeded.html") }}, {{ make_url("truth smeared", "ckf_truth_smeared.html") }}, {{ make_url("truth estimated", "ckf_truth_estimated.html") }}, {{ make_url("orthogonal", "ckf_orthogonal.html") }}
+IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "ivf_truth_smeared.html") }}, {{ make_url("truth estimated", "ivf_truth_estimated.html") }}, {{ make_url("orthogonal", "ivf_orthogonal.html") }}
+Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, , {{ make_url("orthogonal", "ambi_orthogonal.html") }}
+{{ make_url("Truth tracking", "truth_tracking.html") }}
 {{ make_url("Truth tracking (GSF)", "gsf.html")}}
 
 ### Vertexing {{ "" if all_exist(
@@ -16,13 +16,14 @@ IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "
     "ivf_seeded_plots",
     "ivf_truth_smeared_plots",
     "ivf_truth_estimated_plots",
+    "ivf_orthogonal_plots",
 ) else ":x: "}}
 
 {% call detail_block("Vertexing vs. mu", "vertexing_mu_scan.pdf") %}
 {{ make_image("vertexing_mu_scan.pdf", 350) }}
 {% endcall %}
 
-{% for mode in ["seeded", "truth_smeared", "truth_estimated"] %}
+{% for mode in ["seeded", "truth_smeared", "truth_estimated", "orthogonal"] %}
 
 {% call detail_block("IVF "+mode, "ivf_"+mode+"_plots") %}
     
@@ -41,14 +42,38 @@ IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "
 
 {% endfor %}
 
+### Seeding {{ "" if all_exist(
+    "seeding_seeded_plots",
+    "seeding_truth_smeared_plots",
+    "seeding_truth_estimated_plots",
+    "seeding_orthogonal_plots",
+) else ":x: "}}
+
+{% for mode in ["seeded", "truth_smeared", "truth_estimated", "orthogonal"] %}
+
+{% call detail_block("Seeding "+mode, "seeding_"+mode+"_plots") %}
+    
+{% for url in [
+    "trackeff_vs_eta.pdf",
+    "trackeff_vs_pT.pdf",
+    "duplicationRate_vs_eta.pdf",
+    "duplicationRate_vs_pT.pdf",
+] -%}
+{{- make_image("seeding_"+mode+"_plots/"+url, "50%") -}}
+{%- endfor %}
+
+{% endcall %}
+
+{% endfor %}
 
 ### CKF {{ "" if all_exist(
     "ckf_seeded_plots",
     "ckf_truth_smeared_plots",
     "ckf_truth_estimated_plots",
+    "ckf_orthogonal_plots",
 ) else ":x: "}}
 
-{% for mode in ["seeded", "truth_smeared", "truth_estimated"] %}
+{% for mode in ["seeded", "truth_smeared", "truth_estimated", "orthogonal"] %}
 
 {% call detail_block("CKF "+mode, "ckf_"+mode+"_plots") %}
     
@@ -67,7 +92,7 @@ IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "
 
 ### Ambiguity resolution {{ "" if exists("ambi_seeded_plots") else ":x: "}}
 
-{% call detail_block("seeded", "ambi_seeded_plots") %}
+{% call detail_block("seeded", "ambi_seeded_plots", "orthogonal") %}
     
 {% for url in [
     "trackeff_vs_eta.pdf",
