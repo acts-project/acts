@@ -58,7 +58,7 @@ struct TrialAndErrorImpl : public INavigationDelegate {
 /// @return a connected navigationstate updator
 inline static DetectorVolumeUpdator tryAllVolumes() {
   DetectorVolumeUpdator vFinder;
-  auto tae = std::unique_ptr<const TrialAndErrorImpl>();
+  auto tae = std::make_unique<const TrialAndErrorImpl>();
   vFinder.connect<&TrialAndErrorImpl::update>(std::move(tae));
   return vFinder;
 }
