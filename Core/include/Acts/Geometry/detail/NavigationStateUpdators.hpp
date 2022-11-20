@@ -97,6 +97,8 @@ class IndexedUpdatorImpl : public INavigationDelegate {
                      const Transform3& itr = Transform3::Identity())
       : grid(std::move(igrid)), casts(icasts), transform(itr) {}
 
+  IndexedUpdatorImpl() = delete;
+
   /// @brief updates the navigation state with objects from the grid according
   /// to the filling type AFTER applying `p3loc = transform * p3`
   ///
@@ -130,12 +132,12 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 
-  /// Unroll cast loop
+  /// Unroll the cast loop
   /// @param position is the position of the update call
   /// @param a is the array to be filled
   template <typename Array, std::size_t... idx>
   void fillCasts(const Vector3& position, Array& a,
-                 std::index_sequence<idx...>) const {
+                 std::index_sequence<idx...> /*unused*/) const {
     ((a[idx] = VectorHelpers::cast(position, casts[idx])), ...);
   }
 };
