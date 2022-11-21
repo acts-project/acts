@@ -92,7 +92,7 @@ Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, , {{ make_ur
 
 ### Ambiguity resolution {{ "" if exists("ambi_seeded_plots") else ":x: "}}
 
-{% call detail_block("seeded", "ambi_seeded_plots", "orthogonal") %}
+{% call detail_block("seeded", "ambi_seeded_plots") %}
     
 {% for url in [
     "trackeff_vs_eta.pdf",
