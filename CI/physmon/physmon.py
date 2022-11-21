@@ -24,9 +24,11 @@ from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
+    addPythia8,
     EtaConfig,
     PhiConfig,
     ParticleConfig,
+    ParticleSelectorConfig,
     addFatras,
     addDigitization,
 )
@@ -291,13 +293,14 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 mean=acts.Vector4(0, 0, 0, 0),
             )
 
-            addParticleGun(
+            addPythia8(
                 s,
-                EtaConfig(-4.0, 4.0),
-                ParticleConfig(4, acts.PdgParticle.eMuon, True),
-                PhiConfig(0.0, 360.0 * u.degree),
-                vtxGen=vtxGen,
-                multiplicity=mu,
+                hardProcess=["Top:qqbar2ttbar=on"],
+                npileup=mu,
+                vtxGen=acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
                 rnd=rnd,
             )
 
@@ -305,6 +308,7 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 s,
                 trackingGeometry,
                 field,
+                ParticleSelectorConfig(eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True)
                 rnd=rnd,
             )
 
