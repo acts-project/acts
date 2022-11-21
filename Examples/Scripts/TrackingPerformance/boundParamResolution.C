@@ -153,7 +153,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
   // Section 2: Branch assignment -----------------------------------------
   //
   // Helper for assigning branches to the input tree
-  TrackStatesReader tsReader(tree, false);
+  TrackStatesReader tsReader(tree, true);
 
   // Section 3: Histogram booking -----------------------------------------
 
