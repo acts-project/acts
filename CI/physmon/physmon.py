@@ -298,7 +298,9 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 hardProcess=["Top:qqbar2ttbar=on"],
                 npileup=mu,
                 vtxGen=acts.examples.GaussianVertexGenerator(
-                    stddev=acts.Vector4(0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns),
+                    stddev=acts.Vector4(
+                        0.0125 * u.mm, 0.0125 * u.mm, 55.5 * u.mm, 5.0 * u.ns
+                    ),
                     mean=acts.Vector4(0, 0, 0, 0),
                 ),
                 rnd=rnd,
@@ -308,7 +310,9 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 s,
                 trackingGeometry,
                 field,
-                ParticleSelectorConfig(eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True)
+                ParticleSelectorConfig(
+                    eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True
+                ),
                 rnd=rnd,
             )
 
