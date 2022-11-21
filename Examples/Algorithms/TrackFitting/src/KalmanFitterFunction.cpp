@@ -30,7 +30,7 @@ using DirectFitter =
     Acts::KalmanFitter<DirectPropagator, Acts::VectorMultiTrajectory>;
 
 struct SimpleReverseFilteringLogic {
-  double momentumThreshold;
+  double momentumThreshold = 0;
 
   bool doBackwardFiltering(
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::ConstTrackStateProxy
@@ -49,8 +49,8 @@ struct KalmanFitterFunctionImpl
   Acts::GainMatrixSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
 
-  bool multipleScattering;
-  bool energyLoss;
+  bool multipleScattering = false;
+  bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
 
   KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
@@ -123,7 +123,7 @@ ActsExamples::makeKalmanFitterFunction(
   const Stepper stepper(std::move(magneticField));
 
   // Standard fitter
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

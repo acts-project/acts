@@ -21,7 +21,7 @@ namespace Telescope {
 class TelescopeG4DetectorConstruction final
     : public G4VUserDetectorConstruction {
  public:
-  TelescopeG4DetectorConstruction(TelescopeDetector::Config cfg);
+  TelescopeG4DetectorConstruction(const TelescopeDetector::Config& cfg);
 
   G4VPhysicalVolume* Construct() final;
 

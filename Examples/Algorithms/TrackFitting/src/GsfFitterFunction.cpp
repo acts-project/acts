@@ -46,10 +46,10 @@ struct GsfFitterFunctionImpl
 
   Acts::GainMatrixUpdater updater;
 
-  std::size_t maxComponents;
-  double weightCutoff;
-  bool abortOnError;
-  bool disableAllMaterialHandling;
+  std::size_t maxComponents = 0;
+  double weightCutoff = 0;
+  bool abortOnError = false;
+  bool disableAllMaterialHandling = false;
 
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
       : fitter(std::move(f)), directFitter(std::move(df)) {}
@@ -119,7 +119,7 @@ ActsExamples::makeGsfFitterFunction(
   MultiStepper stepper(std::move(magneticField), finalReductionMethod);
 
   // Standard fitter
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

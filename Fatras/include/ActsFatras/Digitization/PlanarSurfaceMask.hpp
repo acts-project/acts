@@ -81,7 +81,7 @@ struct PlanarSurfaceMask {
                                       const Segment2D& segment,
                                       bool firstInside) const;
 
-  Acts::detail::IntersectionHelper2D intersector;
+  Acts::detail::IntersectionHelper2D intersector{};
 };
 
 }  // namespace ActsFatras

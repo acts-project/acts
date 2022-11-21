@@ -139,15 +139,15 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       weight += m_cfg.seedWeightIncrement;
     }
 
-    int deltaSeedConf;
     if (m_cfg.seedConfirmation) {
       // seed confirmation cuts - keep seeds if they have specific values of
       // impact parameter, z-origin and number of compatible seeds inside a
       // pre-defined range that also depends on the region of the detector (i.e.
       // forward or central region) defined by SeedConfirmationRange
-      deltaSeedConf = compatibleSeedR.size() + 1 - seedFilterState.nTopSeedConf;
+      int deltaSeedConf =
+          compatibleSeedR.size() + 1 - seedFilterState.nTopSeedConf;
       if (deltaSeedConf < 0 ||
-          (seedFilterState.numQualitySeeds and deltaSeedConf == 0)) {
+          (seedFilterState.numQualitySeeds != 0 and deltaSeedConf == 0)) {
         continue;
       }
       bool seedRangeCuts =
@@ -211,7 +211,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
   if (m_cfg.seedConfirmation and maxWeightSeed and
-      !seedFilterState.numQualitySeeds) {
+      seedFilterState.numQualitySeeds == 0) {
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
     if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {

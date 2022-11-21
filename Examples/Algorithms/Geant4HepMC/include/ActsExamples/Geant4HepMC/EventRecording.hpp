@@ -56,10 +56,10 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
   /// @param level the log level
   EventRecording(const Config& config, Acts::Logging::Level level);
 
-  ~EventRecording();
+  ~EventRecording() override;
 
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

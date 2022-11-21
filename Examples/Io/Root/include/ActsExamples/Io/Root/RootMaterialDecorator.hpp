@@ -87,7 +87,7 @@ class RootMaterialDecorator : public Acts::IMaterialDecorator {
   RootMaterialDecorator(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootMaterialDecorator();
+  ~RootMaterialDecorator() override;
 
   /// Decorate a surface
   ///

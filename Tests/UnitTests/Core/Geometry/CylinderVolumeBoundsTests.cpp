@@ -73,7 +73,7 @@ BOOST_AUTO_TEST_CASE(CylinderVolumeBoundsRecreation) {
   double rmin{10.}, rmax{20.}, halfz{30.}, halfphi{M_PI / 4}, avgphi{0.};
 
   CylinderVolumeBounds original(rmin, rmax, halfz, halfphi, avgphi);
-  std::array<double, CylinderVolumeBounds::eSize> values;
+  std::array<double, CylinderVolumeBounds::eSize> values{};
   std::vector<double> valvector = original.values();
   std::copy_n(valvector.begin(), CylinderVolumeBounds::eSize, values.begin());
   CylinderVolumeBounds recreated(values);

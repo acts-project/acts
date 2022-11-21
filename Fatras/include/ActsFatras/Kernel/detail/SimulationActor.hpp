@@ -46,7 +46,8 @@ struct SimulationActor {
     using action_type = SimulationActor;
 
     template <typename propagator_state_t, typename stepper_t>
-    constexpr bool operator()(propagator_state_t &, const stepper_t &,
+    constexpr bool operator()(propagator_state_t & /*unused*/,
+                              const stepper_t & /*unused*/,
                               const result_type &result) const {
       // must return true if the propagation should abort
       return not result.isAlive;
@@ -190,7 +191,8 @@ struct SimulationActor {
 
   /// Pure observer interface. Does not apply to the Fatras simulator.
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t &, stepper_t &) const {}
+  void operator()(propagator_state_t & /*unused*/,
+                  stepper_t & /*unused*/) const {}
 
   /// Construct the current particle state from the stepper state.
   template <typename stepper_t>

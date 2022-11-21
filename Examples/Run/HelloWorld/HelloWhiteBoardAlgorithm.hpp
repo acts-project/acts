@@ -29,8 +29,7 @@ class HelloWhiteBoardAlgorithm : public ActsExamples::BareAlgorithm {
                            Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Read input and copy to the output
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
  private:
   Config m_cfg;

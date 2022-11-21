@@ -46,19 +46,18 @@ class RootTrajectorySummaryReader : public IReader {
   RootTrajectorySummaryReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootTrajectorySummaryReader();
+  ~RootTrajectorySummaryReader() override;
 
   /// Framework name() method
-  std::string name() const final override { return "RootTrackSummaryReader"; }
+  std::string name() const override { return "RootTrackSummaryReader"; }
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t> availableEvents() const override;
 
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(
-      const ActsExamples::AlgorithmContext& context) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

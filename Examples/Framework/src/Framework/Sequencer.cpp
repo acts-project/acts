@@ -22,6 +22,7 @@
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
+
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
@@ -226,15 +227,15 @@ inline std::string perEvent(D duration, size_t numEvents) {
 // Store timing data
 struct TimingInfo {
   std::string identifier;
-  double time_total_s;
-  double time_perevent_s;
+  double time_total_s = 0;
+  double time_perevent_s = 0;
 
   DFE_NAMEDTUPLE(TimingInfo, identifier, time_total_s, time_perevent_s);
 };
 
 void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
-                 std::string path) {
+                 const std::string& path) {
   dfe::NamedTupleTsvWriter<TimingInfo> writer(path, 4);
   for (size_t i = 0; i < identifiers.size(); ++i) {
     TimingInfo info;

@@ -25,9 +25,7 @@ ActsExamples::RootTrajectorySummaryReader::RootTrajectorySummaryReader(
     Acts::Logging::Level level)
     : ActsExamples::IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
-      m_cfg(config),
-      m_events(0),
-      m_inputChain(nullptr) {
+      m_cfg(config) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   if (m_cfg.filePath.empty()) {

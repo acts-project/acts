@@ -49,7 +49,7 @@ template <size_t kMeasDIM>
 std::tuple<std::array<Acts::BoundIndices, kMeasDIM>, Acts::ActsVector<kMeasDIM>,
            Acts::ActsSymMatrix<kMeasDIM>>
 measurementConstituents(const DigitizedParameters& dParams) {
-  std::array<Acts::BoundIndices, kMeasDIM> indices;
+  std::array<Acts::BoundIndices, kMeasDIM> indices{};
   Acts::ActsVector<kMeasDIM> par;
   Acts::ActsSymMatrix<kMeasDIM> cov = Acts::ActsSymMatrix<kMeasDIM>::Identity();
   for (Eigen::Index ei = 0; ei < static_cast<Eigen::Index>(kMeasDIM); ++ei) {

@@ -313,8 +313,8 @@ class AxisAlignedBoundingBox {
    */
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::ostream& svg(std::ostream& os, value_type w, value_type h,
-                    value_type unit = 10, std::string label = "",
-                    std::string fillcolor = "grey") const;
+                    value_type unit = 10, const std::string& label = "",
+                    const std::string& fillcolor = "grey") const;
 
  private:
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
