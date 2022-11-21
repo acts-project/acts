@@ -64,7 +64,7 @@ struct AllPortalsExtractor {
   inline static const std::vector<const Portal*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t> indices = {}) {
+      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
     return nState.currentVolume->portals();
   }
 };
