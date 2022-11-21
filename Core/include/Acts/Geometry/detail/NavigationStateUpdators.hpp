@@ -120,7 +120,7 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// @param position is the position of the update call
   std::array<ActsScalar, grid_type::DIM> castPosition(
       const Vector3& position) const {
-    std::array<ActsScalar, grid_type::DIM> casted;
+    std::array<ActsScalar, grid_type::DIM> casted{};
     fillCasts(position, casted,
               std::make_integer_sequence<std::size_t, grid_type::DIM>{});
     return casted;
@@ -128,7 +128,7 @@ class IndexedUpdatorImpl : public INavigationDelegate {
 
  private:
   /// These are the cast parameters
-  std::array<BinningValue, grid_type::DIM> casts;
+  std::array<BinningValue, grid_type::DIM> casts{};
   /// A transform to be applied to the position
   Transform3 transform = Transform3::Identity();
 

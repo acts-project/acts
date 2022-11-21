@@ -34,11 +34,10 @@ namespace detail {
 /// @return a vector of newly created portals with registered inside volume
 inline static std::vector<std::shared_ptr<Portal>> generatePortals(
     const Transform3& dTransform, const VolumeBounds& dBounds,
-    std::shared_ptr<DetectorVolume> dVolume) noexcept(false) {
+    const std::shared_ptr<DetectorVolume>& dVolume) noexcept(false) {
   if (dVolume == nullptr) {
     throw std::runtime_error("PortalsGenerator: no detector volume provided.");
   }
-
   // Get the oriented boundary surfaces
   auto orientedSurfaces = dBounds.orientedSurfaces(dTransform);
 
@@ -57,7 +56,6 @@ inline static std::vector<std::shared_ptr<Portal>> generatePortals(
     NavigationDirection insideDir = oSurface.second;
     portal->assignDetectorVolumeUpdator(insideDir, std::move(singleLink),
                                         {dVolume});
-
     // Portal is prepared
     portals.push_back(std::move(portal));
   }
@@ -70,10 +68,12 @@ inline static std::vector<std::shared_ptr<Portal>> generatePortals(
 /// static method.
 ///
 inline static Delegate<std::vector<std::shared_ptr<Portal>>(
-    const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>
+    const Transform3&, const VolumeBounds&,
+    const std::shared_ptr<DetectorVolume>&)>
 defaultPortalGenerator() {
   Delegate<std::vector<std::shared_ptr<Portal>>(
-      const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>
+      const Transform3&, const VolumeBounds&,
+      const std::shared_ptr<DetectorVolume>&)>
       pGenerator;
   pGenerator.connect<&generatePortals>();
   return pGenerator;

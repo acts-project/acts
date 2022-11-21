@@ -36,7 +36,7 @@ namespace detail {
 inline static std::vector<std::shared_ptr<Portal>>
 generatePortalsUpdateInternals(
     const Transform3& dTransform, const VolumeBounds& dBounds,
-    std::shared_ptr<DetectorVolume> dVolume) noexcept(false) {
+    const std::shared_ptr<DetectorVolume>& dVolume) noexcept(false) {
   if (dVolume == nullptr) {
     throw std::runtime_error(
         "generatePortalsUpdateInternals: no detector volume provided.");
@@ -62,10 +62,12 @@ generatePortalsUpdateInternals(
 /// static method.
 ///
 inline static Delegate<std::vector<std::shared_ptr<Portal>>(
-    const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>
+    const Transform3&, const VolumeBounds&,
+    const std::shared_ptr<DetectorVolume>&)>
 defaultPortalAndSubPortalGenerator() {
   Delegate<std::vector<std::shared_ptr<Portal>>(
-      const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>
+      const Transform3&, const VolumeBounds&,
+      const std::shared_ptr<DetectorVolume>&)>
       pGenerator;
   pGenerator.connect<&generatePortalsUpdateInternals>();
   return pGenerator;

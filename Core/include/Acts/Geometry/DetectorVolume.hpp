@@ -37,7 +37,8 @@ class Detector;
 
 /// The Portal genertor definition
 using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
-    const Transform3&, const VolumeBounds&, std::shared_ptr<DetectorVolume>)>;
+    const Transform3&, const VolumeBounds&,
+    const std::shared_ptr<DetectorVolume>&)>;
 
 /// A detector volume description which can be:
 ///

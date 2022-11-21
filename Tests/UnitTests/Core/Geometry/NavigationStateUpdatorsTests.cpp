@@ -30,7 +30,7 @@ namespace Experimental {
 class Portal {
  public:
   std::shared_ptr<Surface> m_surface = nullptr;
-  Portal(std::shared_ptr<Surface> sf) : m_surface(sf) {}
+  Portal(std::shared_ptr<Surface> sf) : m_surface(std::move(sf)) {}
   const Surface& surface() const { return (*m_surface.get()); }
 };
 
@@ -79,7 +79,7 @@ struct AllSurfacesExtractor {
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
       const NavigationState& nState,
-      [[maybe_unused]] const std::vector<size_t> indices = {}) {
+      [[maybe_unused]] const std::vector<size_t>& indices = {}) {
     return nState.currentVolume->surfaces();
   }
 };
@@ -93,7 +93,7 @@ struct IndexedSurfacesExtractor {
   /// @param indices are access indices into the surfaces store
   inline static const std::vector<const Surface*> extract(
       [[maybe_unused]] const GeometryContext& gctx,
-      const NavigationState& nState, const std::vector<size_t> indices) {
+      const NavigationState& nState, const std::vector<size_t>& indices) {
     // Get the surface container
     const auto& surfaces = nState.currentVolume->surfaces();
     // The extracted surfaces
@@ -112,7 +112,7 @@ class MultiGrid1D {
   static constexpr size_t DIM = 1u;
 
   const std::vector<size_t>& atPosition(
-      const std::array<ActsScalar, 1u>&) const {
+      const std::array<ActsScalar, 1u>& /*unused*/) const {
     return e;
   }
 
@@ -125,7 +125,7 @@ class MultiGrid2D {
   static constexpr size_t DIM = 2u;
 
   const std::vector<size_t>& atPosition(
-      const std::array<ActsScalar, 2u>&) const {
+      const std::array<ActsScalar, 2u>& /*unused*/) const {
     return e;
   }
 
