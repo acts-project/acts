@@ -46,13 +46,13 @@ class CsvTrackParameterReader final : public IReader {
   /// @param level is the logging level
   CsvTrackParameterReader(const Config& config, Acts::Logging::Level level);
 
-  std::string name() const final override;
+  std::string name() const final;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t> availableEvents() const final;
 
   /// Read out data from the input stream.
-  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

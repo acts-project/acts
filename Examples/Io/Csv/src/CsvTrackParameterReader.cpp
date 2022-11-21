@@ -60,7 +60,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
   auto path = perEventFilepath(m_cfg.inputDir, m_cfg.inputStem + ".csv",
                                ctx.eventNumber);
   dfe::NamedTupleCsvReader<TrackParameterData> reader(path);
-  TrackParameterData d;
+  TrackParameterData d{};
 
   while (reader.read(d)) {
     Acts::BoundVector params = Acts::BoundVector::Zero();
