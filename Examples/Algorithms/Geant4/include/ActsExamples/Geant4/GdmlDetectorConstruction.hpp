@@ -22,7 +22,7 @@ class GdmlDetectorConstruction final : public G4VUserDetectorConstruction {
   ///
   /// @note to simplify further setup withiin the ACTS framework
   /// the world is cached when first constructed
-  G4VPhysicalVolume* Construct() final override;
+  G4VPhysicalVolume* Construct() override;
 
  private:
   /// Path to the Gdml file

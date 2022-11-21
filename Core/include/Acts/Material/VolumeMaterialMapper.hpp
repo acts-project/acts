@@ -209,7 +209,8 @@ class VolumeMaterialMapper {
   void createExtraHits(
       State& mState,
       std::pair<const GeometryIdentifier, BinUtility>& currentBinning,
-      Acts::MaterialSlab properties, Vector3 position, Vector3 direction) const;
+      Acts::MaterialSlab properties, const Vector3& position,
+      Vector3 direction) const;
 
   /// Standard logger method
   const Logger& logger() const { return *m_logger; }

@@ -47,14 +47,14 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   ~SeedingPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ProtoTrackContainer& tracks) final override;
+                     const ProtoTrackContainer& tracks) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.

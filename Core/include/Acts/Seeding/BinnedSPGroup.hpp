@@ -38,7 +38,7 @@ class NeighborhoodIterator {
   NeighborhoodIterator(NeighborhoodVector indices,
                        const SpacePointGrid<external_spacepoint_t>* spgrid) {
     m_grid = spgrid;
-    m_indices = indices;
+    m_indices = std::move(indices);
     m_curInd = 0;
     if (m_indices.size() > m_curInd) {
       m_curIt = std::begin(spgrid->at(m_indices[m_curInd]));
@@ -50,7 +50,7 @@ class NeighborhoodIterator {
                        const SpacePointGrid<external_spacepoint_t>* spgrid,
                        size_t curInd, sp_it_t curIt) {
     m_grid = spgrid;
-    m_indices = indices;
+    m_indices = std::move(indices);
     m_curInd = curInd;
     m_curIt = curIt;
     if (m_indices.size() > m_curInd) {
@@ -122,7 +122,7 @@ class Neighborhood {
   Neighborhood() = delete;
   Neighborhood(NeighborhoodVector indices,
                const SpacePointGrid<external_spacepoint_t>* spgrid) {
-    m_indices = indices;
+    m_indices = std::move(indices);
     m_spgrid = spgrid;
   }
   NeighborhoodIterator<external_spacepoint_t> begin() {
@@ -154,8 +154,9 @@ class BinnedSPGroupIterator {
     }
 
     size_t this_zIndex = zIndex;
-    if (not customZorder.empty())
+    if (not customZorder.empty()) {
       this_zIndex = customZorder.at(this_zIndex - 1);
+    }
 
     // set current & neighbor bins only if bin indices valid
     if (phiIndex <= phiZbins[0] && zIndex <= phiZbins[1]) {

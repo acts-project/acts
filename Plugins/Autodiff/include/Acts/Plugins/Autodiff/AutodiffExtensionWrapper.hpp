@@ -73,7 +73,7 @@ struct AutodiffExtensionWrapper {
   struct FakeStepperState {
     AutodiffFreeVector pars;
     AutodiffFreeVector derivative;
-    double q;
+    double q = 0;
     bool covTransport = false;
   };
 

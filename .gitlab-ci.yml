@@ -12,10 +12,13 @@ clang_tidy:
     - git checkout $HEAD_SHA
     - >
         apt-get update
-        && apt-get install -y clang-10 clang-tidy-10 g++-8 libstdc++-8-dev
-        && ln -s /usr/bin/clang++-10 /usr/bin/clang++
-        && ln -s /usr/bin/clang-10 /usr/bin/clang
-        && ln -s /usr/bin/clang-tidy-10 /usr/bin/clang-tidy
+        && apt-get install -y g++-8 libstdc++-8-dev parallel software-properties-common 
+        && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add
+        && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal main'
+        && apt-get install -y clang-16 clang-tidy-16
+        && ln -s /usr/bin/clang++-16 /usr/bin/clang++
+        && ln -s /usr/bin/clang-16 /usr/bin/clang
+        && ln -s /usr/bin/clang-tidy-16 /usr/bin/clang-tidy
         && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
         && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/ 
         && clang++ --gcc-toolchain=/opt -v
@@ -30,10 +33,24 @@ clang_tidy:
         -DACTS_RUN_CLANG_TIDY=on
 
     - mkdir clang-tidy
-    - CI/clang_tidy/run_clang_tidy.sh build > clang-tidy/clang-tidy.log
+
+    # Main clang-tidy run during cmake compilation
+    - CI/clang_tidy/run_clang_tidy.sh build | tee clang-tidy/clang-tidy.log
+
+    # Install dependencies for processing scripts
     - pip install -r CI/clang_tidy/requirements.txt
-    - CI/clang_tidy/parse_clang_tidy.py clang-tidy/clang-tidy.log clang-tidy/clang-tidy.json --exclude "*thirdparty*"
+
+    # Parse the main clang-tidy run
+    - >
+        CI/clang_tidy/parse_clang_tidy.py 
+        clang-tidy/clang-tidy.log 
+        clang-tidy/clang-tidy.json 
+        --exclude "*thirdparty*"
+
+    # Check the combined report against the defined limits
     - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
+
+    # Generate an html report
     - codereport clang-tidy/clang-tidy.json clang-tidy/html
 
 build:

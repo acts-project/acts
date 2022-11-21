@@ -8,8 +8,8 @@
 
 #include "Acts/Plugins/Json/AlgebraJsonConverter.hpp"
 
-void Acts::to_json(nlohmann::json& j, const Acts::Transform3& r) {
-  auto translation = r.translation();
+void Acts::to_json(nlohmann::json& j, const Acts::Transform3& t) {
+  auto translation = t.translation();
   if (translation != Acts::Vector3(0., 0., 0)) {
     std::array<Acts::ActsScalar, 3> tdata = {translation.x(), translation.y(),
                                              translation.z()};
@@ -18,7 +18,7 @@ void Acts::to_json(nlohmann::json& j, const Acts::Transform3& r) {
     j["translation"] = nlohmann::json();
   }
 
-  auto rotation = r.rotation();
+  auto rotation = t.rotation();
   if (rotation != Acts::RotationMatrix3::Identity()) {
     std::array<Acts::ActsScalar, 9> rdata = {
         rotation(0, 0), rotation(0, 1), rotation(0, 2),

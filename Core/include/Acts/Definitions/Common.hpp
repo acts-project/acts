@@ -58,7 +58,8 @@ inline constexpr auto operator*(NavigationDirection dir, double value) {
   return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
 }
 
-inline Acts::Vector3 operator*(NavigationDirection dir, Acts::Vector3 value) {
+inline Acts::Vector3 operator*(NavigationDirection dir,
+                               const Acts::Vector3& value) {
   return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
 }
 
@@ -76,7 +77,8 @@ inline constexpr auto operator*(double value, NavigationDirection dir) {
   return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
 }
 
-inline Acts::Vector3 operator*(Acts::Vector3 value, NavigationDirection dir) {
+inline Acts::Vector3 operator*(const Acts::Vector3& value,
+                               NavigationDirection dir) {
   return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
 }
 

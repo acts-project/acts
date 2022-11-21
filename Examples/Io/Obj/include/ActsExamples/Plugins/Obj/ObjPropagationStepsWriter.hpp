@@ -54,9 +54,7 @@ class ObjPropagationStepsWriter
   ~ObjPropagationStepsWriter() override = default;
 
   /// End-of-run hook
-  ProcessCode endRun() final override {
-    return ActsExamples::ProcessCode::SUCCESS;
-  }
+  ProcessCode endRun() override { return ActsExamples::ProcessCode::SUCCESS; }
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -69,7 +67,7 @@ class ObjPropagationStepsWriter
   /// and is called by the WriterT<>::write interface
   ProcessCode writeT(
       const AlgorithmContext& context,
-      const std::vector<std::vector<step_t>>& stepCollection) final override {
+      const std::vector<std::vector<step_t>>& stepCollection) override {
     // open per-event file
     std::string path = ActsExamples::perEventFilepath(
         m_cfg.outputDir, "propagation-steps.obj", context.eventNumber);
@@ -94,8 +92,9 @@ class ObjPropagationStepsWriter
         }
         // Write out the line - only if we have at least two points created
         size_t vBreak = vCounter + steps.size() - 1;
-        for (; vCounter < vBreak; ++vCounter)
+        for (; vCounter < vBreak; ++vCounter) {
           os << "l " << vCounter << " " << vCounter + 1 << '\n';
+        }
       }
     }
     return ActsExamples::ProcessCode::SUCCESS;

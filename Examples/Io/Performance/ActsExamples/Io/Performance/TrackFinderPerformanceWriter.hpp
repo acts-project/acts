@@ -44,16 +44,16 @@ class TrackFinderPerformanceWriter final : public WriterT<ProtoTrackContainer> {
   /// @param level The log level
   TrackFinderPerformanceWriter(Config config, Acts::Logging::Level level);
 
-  ~TrackFinderPerformanceWriter() final override;
+  ~TrackFinderPerformanceWriter() override;
 
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const;
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ProtoTrackContainer& tracks) final override;
+                     const ProtoTrackContainer& tracks) override;
 
   struct Impl;
   std::unique_ptr<Impl> m_impl;

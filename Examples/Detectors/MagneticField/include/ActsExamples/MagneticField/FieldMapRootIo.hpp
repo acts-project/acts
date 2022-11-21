@@ -52,11 +52,12 @@ namespace ActsExamples {
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromRoot(
-    std::function<size_t(std::array<size_t, 2> binsRZ,
-                         std::array<size_t, 2> nBinsRZ)>
+    const std::function<size_t(std::array<size_t, 2> binsRZ,
+                               std::array<size_t, 2> nBinsRZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, std::string treeName, Acts::ActsScalar lengthUnit,
-    Acts::ActsScalar BFieldUnit, bool firstOctant = false);
+    const std::string& fieldMapFile, const std::string& treeName,
+    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
+    bool firstQuadrant = false);
 
 /// Method to setup the FieldMap
 /// @param localToGlobalBin Function mapping the local bins of x,y,z to the
@@ -98,10 +99,11 @@ detail::InterpolatedMagneticField2 makeMagneticFieldMapRzFromRoot(
 /// {-1,0,1}
 /// and the BFieldValues will be set to {3,2,3}.
 detail::InterpolatedMagneticField3 makeMagneticFieldMapXyzFromRoot(
-    std::function<size_t(std::array<size_t, 3> binsXYZ,
-                         std::array<size_t, 3> nBinsXYZ)>
+    const std::function<size_t(std::array<size_t, 3> binsXYZ,
+                               std::array<size_t, 3> nBinsXYZ)>&
         localToGlobalBin,
-    std::string fieldMapFile, std::string treeName, Acts::ActsScalar lengthUnit,
-    Acts::ActsScalar BFieldUnit, bool firstOctant = false);
+    const std::string& fieldMapFile, const std::string& treeName,
+    Acts::ActsScalar lengthUnit, Acts::ActsScalar BFieldUnit,
+    bool firstOctant = false);
 
 }  // namespace ActsExamples
