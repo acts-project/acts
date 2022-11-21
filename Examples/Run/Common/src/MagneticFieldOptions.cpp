@@ -196,7 +196,7 @@ ActsExamples::Options::readMagneticField(const Variables& vars) {
   // third option: create a solenoid field
   if (vars["bf-solenoid-mag-tesla"].as<double>() > 0) {
     // Construct a solenoid field
-    Acts::SolenoidBField::Config solenoidConfig;
+    Acts::SolenoidBField::Config solenoidConfig{};
     solenoidConfig.length =
         vars["bf-solenoid-length"].as<double>() * Acts::UnitConstants::mm;
     solenoidConfig.radius =

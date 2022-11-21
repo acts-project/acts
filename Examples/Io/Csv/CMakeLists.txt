@@ -1,3 +1,5 @@
+include(ActsTargetLinkLibrariesSystem)
+
 add_library(
   ActsExamplesIoCsv SHARED
   src/CsvMeasurementReader.cpp
@@ -21,7 +23,10 @@ target_link_libraries(
   PRIVATE
     ActsCore ActsPluginIdentification
     ActsExamplesFramework ActsExamplesDigitization
-    Threads::Threads dfelibs)
+    Threads::Threads)
+acts_target_link_libraries_system(
+  ActsExamplesIoCsv
+  PRIVATE dfelibs)
 
 install(
   TARGETS ActsExamplesIoCsv

@@ -25,20 +25,20 @@ namespace Test {
 /// @brief Simplified stepper state
 struct StepperState {
   Vector3 pos, dir;
-  double t, p, q;
-  bool covTransport;
-  NavigationDirection navDir;
+  double t = 0, p = 0, q = 0;
+  bool covTransport = false;
+  NavigationDirection navDir = NavigationDirection::Forward;
 };
 
 /// @brief Simplified propgator state
 struct State {
   struct {
-    double mass;
-    int absPdgCode;
+    double mass = 0;
+    int absPdgCode = 0;
   } options;
 
   struct {
-    TrackingVolume* currentVolume;
+    TrackingVolume* currentVolume = nullptr;
   } navigation;
 
   StepperState stepping;

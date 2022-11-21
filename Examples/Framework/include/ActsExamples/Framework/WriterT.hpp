@@ -52,10 +52,10 @@ class WriterT : public IWriter {
           Acts::Logging::Level level);
 
   /// Provide the name of the writer
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Read the object and call the type-specific member function.
-  ProcessCode write(const AlgorithmContext& context) final override;
+  ProcessCode write(const AlgorithmContext& context) override;
 
   /// No-op default implementation.
   ProcessCode endRun() override;

@@ -26,8 +26,10 @@ Acts::PlaneSurface::PlaneSurface(const PlaneSurface& other)
 
 Acts::PlaneSurface::PlaneSurface(const GeometryContext& gctx,
                                  const PlaneSurface& other,
-                                 const Transform3& shift)
-    : GeometryObject(), Surface(gctx, other, shift), m_bounds(other.m_bounds) {}
+                                 const Transform3& transform)
+    : GeometryObject(),
+      Surface(gctx, other, transform),
+      m_bounds(other.m_bounds) {}
 
 Acts::PlaneSurface::PlaneSurface(const Vector3& center, const Vector3& normal)
     : Surface(), m_bounds(nullptr) {
