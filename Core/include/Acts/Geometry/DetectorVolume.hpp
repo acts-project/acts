@@ -297,15 +297,9 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// Const access to the volume amterial
   const IVolumeMaterial* volumeMaterial() const;
 
-<<<<<<< HEAD
-  /// @return the name of the volume
-  const std::string& name() const;
-=======
-  /// Assign the GeometryId
-  ///
-  /// @param geoID the ID to be assigned to this volume
+  /// Assign a geometry identifier to this volume
+  /// @param geoID the assigned geometry identifier
   void assignGeometryId(const GeometryIdentifier& geoID);
->>>>>>> 81c018583 (introducin GeometryId generation concept)
 
   /// @return the geometry identifier
   const GeometryIdentifier& geometryId() const;
