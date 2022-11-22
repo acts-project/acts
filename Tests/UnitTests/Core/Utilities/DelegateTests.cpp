@@ -334,6 +334,7 @@ BOOST_AUTO_TEST_CASE(OwningDelegateTest) {
 }
 
 struct DelegateInterface {
+  DelegateInterface() = default;
   virtual ~DelegateInterface() = 0;
 
   virtual std::string func() const { return "base"; }
@@ -441,6 +442,8 @@ BOOST_AUTO_TEST_CASE(NonVoidDelegateTest) {
     (void)d;
     (void)c;
   }
+
+  { OwningDelegate<std::string(), DelegateInterface> d; }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
