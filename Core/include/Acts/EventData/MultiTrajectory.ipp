@@ -177,7 +177,7 @@ void MultiTrajectory<D>::visitBackwards(IndexType iendpoint,
 
   if (iendpoint == MultiTrajectoryTraits::kInvalid) {
     throw std::runtime_error(
-        "Cannot apply backwards with kInvalid as endpoint");
+        "Cannot visit backwards with kInvalid as endpoint");
   }
 
   while (true) {
