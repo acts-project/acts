@@ -1,3 +1,5 @@
+include(ActsTargetLinkLibrariesSystem)
+
 add_library(
   ActsPluginJson SHARED
   src/MaterialMapJsonConverter.cpp
@@ -6,6 +8,7 @@ add_library(
   src/SurfaceBoundsJsonConverter.cpp
   src/SurfaceJsonConverter.cpp
   src/UtilitiesJsonConverter.cpp
+  src/VolumeBoundsJsonConverter.cpp
   src/VolumeJsonConverter.cpp)
 target_include_directories(
   ActsPluginJson
@@ -13,7 +16,9 @@ target_include_directories(
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/>
     $<INSTALL_INTERFACE:include>)
 target_link_libraries(
-  ActsPluginJson PUBLIC ActsCore nlohmann_json::nlohmann_json)
+  ActsPluginJson PUBLIC ActsCore)
+acts_target_link_libraries_system(
+  ActsPluginJson PUBLIC nlohmann_json::nlohmann_json)
 
 install(
   TARGETS ActsPluginJson

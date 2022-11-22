@@ -64,8 +64,8 @@ void checkParameters(const SingleBoundTrackParameters<charge_t>& params,
   BOOST_CHECK_EQUAL(params.charge(), q);
 }
 
-void runTest(std::shared_ptr<const Surface> surface, double l0, double l1,
-             double time, double phi, double theta, double p) {
+void runTest(const std::shared_ptr<const Surface>& surface, double l0,
+             double l1, double time, double phi, double theta, double p) {
   // phi is ill-defined in forward/backward tracks
   phi = ((0 < theta) and (theta < M_PI)) ? phi : 0.0;
 

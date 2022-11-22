@@ -9,15 +9,15 @@ template <typename external_spacepoint_t>
 template <typename spacepoint_iterator_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-        const external_spacepoint_t&, float, float, float)>
-        globTool,
+    GlobalPositionFunctor toGlobal,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
     Acts::Extent rRangeSPExtent,
-    const SeedFinderConfig<external_spacepoint_t>& _config) {
+    const SeedFinderConfig<external_spacepoint_t>& _config,
+    const SeedFinderOptions& _options) {
   auto config = _config.toInternalUnits();
+  auto options = _options.toInternalUnits();
   static_assert(
       std::is_same<
           typename std::iterator_traits<spacepoint_iterator_t>::value_type,
@@ -35,7 +35,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
   // binSizeR allows to increase or reduce numRBins if needed
-  size_t numRBins = (config.rMax + config.beamPos.norm()) / config.binSizeR;
+  size_t numRBins = (config.rMax + options.beamPos.norm()) / config.binSizeR;
   std::vector<
       std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
       rBins(numRBins);
@@ -45,7 +45,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     }
     const external_spacepoint_t& sp = **it;
     const auto& [spPosition, variance] =
-        globTool(sp, config.zAlign, config.rAlign, config.sigmaError);
+        toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
     float spX = spPosition[0];
     float spY = spPosition[1];
@@ -63,7 +63,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     }
 
     auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        sp, spPosition, config.beamPos, variance);
+        sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     size_t rIndex = isp->radius() / config.binSizeR;

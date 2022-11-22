@@ -57,7 +57,7 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
     ACTS_VERBOSE("Gamma   : " << gamma);
     ACTS_VERBOSE("Poisson : " << poisson);
 
-    HelloData x;
+    HelloData x{};
     x.x = gauss;
     x.a = uniform;
     x.b = gamma;

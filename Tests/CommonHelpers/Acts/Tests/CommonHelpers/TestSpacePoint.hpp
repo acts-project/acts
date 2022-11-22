@@ -38,7 +38,7 @@ class TestSpacePoint {
         m_rho(std::hypot(m_x, m_y)),
         m_varianceRho(varRho),
         m_varianceZ(varZ),
-        m_sourceLinks(sourceLinks) {
+        m_sourceLinks(std::move(sourceLinks)) {
     EIGEN_STATIC_ASSERT_VECTOR_SPECIFIC_SIZE(position_t, 3);
   }
   TestSpacePoint() = default;
@@ -56,13 +56,13 @@ class TestSpacePoint {
 
  private:
   // Global position
-  float m_x;
-  float m_y;
-  float m_z;
-  float m_rho;
+  float m_x = 0;
+  float m_y = 0;
+  float m_z = 0;
+  float m_rho = 0;
   // Variance in rho/z of the global coordinates
-  float m_varianceRho;
-  float m_varianceZ;
+  float m_varianceRho = 0;
+  float m_varianceZ = 0;
   // source links. A Pixel (strip) SP has one (two) sourceLink(s).
   boost::container::static_vector<const Acts::SourceLink*, 2> m_sourceLinks;
 };

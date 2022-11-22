@@ -32,8 +32,8 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
 
   int iteration = 0;
   std::vector<const InputTrack_t*> removedSeedTracks;
-  while (((m_cfg.addSingleTrackVertices && seedTracks.size() > 0) ||
-          ((!m_cfg.addSingleTrackVertices) && seedTracks.size() > 1)) &&
+  while (((m_cfg.addSingleTrackVertices && !seedTracks.empty()) ||
+          ((!m_cfg.addSingleTrackVertices) && !seedTracks.empty())) &&
          iteration < m_cfg.maxIterations) {
     // Tracks that are used for searching compatible tracks
     // near a vertex candidate
@@ -519,7 +519,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
     const double deltaZPos = otherZPos - candidateZPos;
     const double sumCovZ = otherZCov + candidateZCov;
 
-    double significance;
+    double significance = 0;
     if (not m_cfg.do3dSplitting) {
       // Use only z significance
       if (sumCovZ > 0.) {
@@ -531,7 +531,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::isMergedVertex(
       // Use full 3d information for significance
       SymMatrix4 sumCov = candidateCov + otherCov;
       SymMatrix4 sumCovInverse;
-      bool invertible;
+      bool invertible = false;
       sumCov.computeInverseWithCheck(sumCovInverse, invertible);
       if (invertible) {
         significance = std::sqrt(deltaPos.dot(sumCovInverse * deltaPos));

@@ -91,7 +91,8 @@ BOOST_AUTO_TEST_CASE(CuboidVolumeBuilderTest) {
 
     cfg.detElementConstructor =
         [](const Transform3& trans,
-           std::shared_ptr<const RectangleBounds> bounds, double thickness) {
+           const std::shared_ptr<const RectangleBounds>& bounds,
+           double thickness) {
           return new DetectorElementStub(trans, bounds, thickness);
         };
     surfaceConfig.push_back(cfg);

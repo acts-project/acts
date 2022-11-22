@@ -144,7 +144,7 @@ class BinnedArrayXD : public BinnedArray<T> {
 
   // satisfy overload / override
   T object(const Vector2& lposition) const override {
-    std::array<size_t, 3> bins;
+    std::array<size_t, 3> bins{};
     return object(lposition, bins);
   }
 
@@ -167,7 +167,7 @@ class BinnedArrayXD : public BinnedArray<T> {
 
   // satisfy overload / override
   T object(const Vector3& position) const override {
-    std::array<size_t, 3> bins;
+    std::array<size_t, 3> bins{};
     return object(position, bins);
   }
 

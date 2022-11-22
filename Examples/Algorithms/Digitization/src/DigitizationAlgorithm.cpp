@@ -132,7 +132,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
   ACTS_DEBUG("Starting loop over modules ...");
-  for (auto simHitsGroup : groupByModule(simHits)) {
+  for (const auto& simHitsGroup : groupByModule(simHits)) {
     // Manual pair unpacking instead of using
     //   auto [moduleGeoId, moduleSimHits] : ...
     // otherwise clang on macos complains that it is unable to capture the local
