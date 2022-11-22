@@ -388,7 +388,7 @@ template <typename entity_t, typename value_t, size_t DIM>
 template <size_t D, std::enable_if_t<D == 2, int>>
 std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
     std::ostream& os, value_type w, value_type h, value_type unit,
-    std::string label, std::string fillcolor) const {
+    const std::string& label, const std::string& fillcolor) const {
   static_assert(DIM == 2, "SVG is only supported in 2D");
 
   VertexType mid(w / 2., h / 2.);
@@ -400,7 +400,8 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
   trf = trf * Eigen::Scaling(VertexType(1, -1));
   trf.scale(unit);
 
-  auto draw_point = [&](const VertexType& p_, std::string color, size_t r) {
+  auto draw_point = [&](const VertexType& p_, const std::string& color,
+                        size_t r) {
     VertexType p = trf * p_;
     os << "<circle ";
     os << "cx=\"" << p.x() << "\" cy=\"" << p.y() << "\" r=\"" << r << "\"";
@@ -409,7 +410,7 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
   };
 
   auto draw_rect = [&](const VertexType& center_, const VertexType& size_,
-                       std::string color) {
+                       const std::string& color) {
     VertexType size = size_ * unit;
     VertexType center = trf * center_ - size * 0.5;
 
@@ -420,8 +421,8 @@ std::ostream& Acts::AxisAlignedBoundingBox<entity_t, value_t, DIM>::svg(
     os << "/>\n";
   };
 
-  auto draw_text = [&](const VertexType& center_, std::string text,
-                       std::string color, size_t size) {
+  auto draw_text = [&](const VertexType& center_, const std::string& text,
+                       const std::string& color, size_t size) {
     VertexType center = trf * center_;
     os << "<text dominant-baseline=\"middle\" text-anchor=\"middle\" ";
     os << "fill=\"" << color << "\" font-size=\"" << size << "\" ";

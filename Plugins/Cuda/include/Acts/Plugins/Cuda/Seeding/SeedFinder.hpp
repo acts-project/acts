@@ -34,7 +34,8 @@ class SeedFinder<external_spacepoint_t, Acts::Cuda> {
   ///////////////////////////////////////////////////////////////////
 
  public:
-  SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config);
+  SeedFinder(const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+             const Acts::SeedFinderOptions& options);
 
   ~SeedFinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
@@ -59,6 +60,7 @@ class SeedFinder<external_spacepoint_t, Acts::Cuda> {
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderOptions m_options;
 };
 
 }  // namespace Acts

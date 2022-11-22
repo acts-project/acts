@@ -36,8 +36,9 @@
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-int runSeedingExample(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runSeedingExample(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   // Setup and parse options
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -69,7 +70,7 @@ int runSeedingExample(int argc, char* argv[],
       std::make_shared<RandomNumbers>(Options::readRandomNumbersConfig(vm));
 
   // Add the decorator to the sequencer
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 
@@ -158,9 +159,9 @@ int runSeedingExample(int argc, char* argv[],
   seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
 
   seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
-  seedingCfg.seedFinderConfig.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
 
-  seedingCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
+  seedingCfg.seedFinderOptions.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
+  seedingCfg.seedFinderOptions.beamPos = {0_mm, 0_mm};
 
   seedingCfg.seedFinderConfig.impactMax = 3._mm;
 

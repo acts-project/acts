@@ -46,9 +46,10 @@ struct GsfFitterFunctionImpl
 
   Acts::GainMatrixUpdater updater;
 
-  std::size_t maxComponents;
-  bool abortOnError;
-  bool disableAllMaterialHandling;
+  std::size_t maxComponents = 0;
+  double weightCutoff = 0;
+  bool abortOnError = false;
+  bool disableAllMaterialHandling = false;
 
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
       : fitter(std::move(f)), directFitter(std::move(df)) {}
@@ -70,8 +71,10 @@ struct GsfFitterFunctionImpl
         options.propOptions,
         &(*options.referenceSurface),
         maxComponents,
+        weightCutoff,
         abortOnError,
         disableAllMaterialHandling};
+
     gsfOptions.extensions.calibrator
         .template connect<&ActsExamples::MeasurementCalibrator::calibrate>(
             &options.calibrator.get());
@@ -111,12 +114,12 @@ ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    Acts::FinalReductionMethod finalReductionMethod, bool abortOnError,
-    bool disableAllMaterialHandling) {
+    double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
+    bool abortOnError, bool disableAllMaterialHandling) {
   MultiStepper stepper(std::move(magneticField), finalReductionMethod);
 
   // Standard fitter
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -135,6 +138,7 @@ ActsExamples::makeGsfFitterFunction(
   auto fitterFunction = std::make_shared<GsfFitterFunctionImpl>(
       std::move(trackFitter), std::move(directTrackFitter));
   fitterFunction->maxComponents = maxComponents;
+  fitterFunction->weightCutoff = weightCutoff;
   fitterFunction->abortOnError = abortOnError;
   fitterFunction->disableAllMaterialHandling = disableAllMaterialHandling;
 

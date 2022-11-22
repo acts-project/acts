@@ -16,18 +16,20 @@ namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t>
 SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
-    Acts::SeedFinderConfig<external_spacepoint_t> config)
-    : m_config(config.toInternalUnits()) {
+    Acts::SeedFinderConfig<external_spacepoint_t> config,
+    const Acts::SeedFinderOptions& options)
+    : m_config(config.toInternalUnits()), m_options(options.toInternalUnits()) {
   // calculation of scattering using the highland formula
   // convert pT to p once theta angle is known
   m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
                       (1 + 0.038 * std::log(m_config.radLengthPerSeed));
   float maxScatteringAngle = m_config.highland / m_config.minPt;
   m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
+
   // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
   // millimeter
   // TODO: change using ACTS units
-  m_config.pTPerHelixRadius = 300. * m_config.bFieldInZ;
+  m_config.pTPerHelixRadius = 300. * m_options.bFieldInZ;
   m_config.minHelixDiameter2 =
       std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
   m_config.pT2perRadius =
@@ -42,14 +44,14 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     SeedingState& state,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
-    const Acts::Range1D<float> rMiddleSPRange) const {
+    const Acts::Range1D<float>& rMiddleSPRange) const {
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
     float varianceZM = spM->varianceZ();
 
-    /// check if spM is outside our radial region of interest
+    // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
       if (rM < rMiddleSPRange.min()) {
         continue;
@@ -73,6 +75,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
       if (rM > m_config.rRangeMiddleSP[zBin][1]) {
         // break if SP are sorted in r
+        if (m_config.forceRadialSorting) {
+          break;
+        }
+        continue;
+      }
+    } else {
+      if (rM > m_config.rMaxMiddle) {
+        continue;
+      }
+      if (rM < m_config.rMinMiddle) {
         if (m_config.forceRadialSorting) {
           break;
         }
@@ -130,8 +142,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // and y ~= impactParam
           float uIP = -1. / rM;
           float vIP = m_config.impactMax / (rM * rM);
-          if (yVal > 0.)
+          if (yVal > 0.) {
             vIP = -vIP;
+          }
           // we can obtain aCoef as the slope dv/du of the linear function,
           // estimated using du and dv between the two SP bCoef is obtained by
           // inserting aCoef into the linear equation
@@ -219,8 +232,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // and y ~= impactParam
           float uIP = -1. / rM;
           float vIP = m_config.impactMax / (rM * rM);
-          if (yVal < 0.)
+          if (yVal < 0.) {
             vIP = -vIP;
+          }
           // we can obtain aCoef as the slope dv/du of the linear function,
           // estimated using du and dv between the two SP bCoef is obtained by
           // inserting aCoef into the linear equation
@@ -427,11 +441,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           continue;
         }
 
-        float dU;
-        float A;
-        float S2;
-        float B;
-        float B2;
+        float dU = 0;
+        float A = 0;
+        float S2 = 0;
+        float B = 0;
+        float B2 = 0;
 
         if (m_config.useDetailedDoubleMeasurementInfo) {
           dU = ut - ub;
@@ -494,7 +508,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // A and B allow calculation of impact params in U/V plane with linear
         // function
         // (in contrast to having to solve a quadratic function in x/y plane)
-        float Im;
+        float Im = 0;
         if (m_config.useDetailedDoubleMeasurementInfo == false) {
           Im = std::abs((A - B * rM) * rM);
         } else {

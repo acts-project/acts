@@ -31,7 +31,6 @@ Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
                        const Transform3& shift)
     : GeometryObject(),
       m_transform(shift * other.transform(gctx)),
-      m_associatedLayer(nullptr),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
 Acts::Surface::~Surface() = default;

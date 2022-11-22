@@ -10,6 +10,8 @@ jobs:
   post_comment:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v3
+
       - name: 'Download artifact'
         uses: actions/github-script@v6
         id: dl-af
@@ -45,7 +47,7 @@ jobs:
 
       - name: 'Unzip artifact'
         if: steps.dl-af.outputs.result != 'false'
-        run: unzip -d physmon physmon.zip
+        run: unzip -d $GITHUB_WORKSPACE/physmon $GITHUB_WORKSPACE/physmon.zip
 
 
       - name: 'Determine PR number'
@@ -76,8 +78,6 @@ jobs:
 
             return number;
 
-      - uses: actions/checkout@v3
-        if: steps.get-pr-number.outputs.result != 'false'
 
       # ping the url, triggers caching of the artifact
       - name: Prime cache
@@ -92,6 +92,7 @@ jobs:
         if: steps.get-pr-number.outputs.result != 'false'
         run: |
           pip install Jinja2
+          ls -al $GITHUB_WORKSPACE/physmon
           CI/physmon/generate_comment.py $GITHUB_WORKSPACE/physmon comment.md
           cat comment.md
 

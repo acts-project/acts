@@ -219,7 +219,7 @@ class MultiEigenStepperLoop
   MultiEigenStepperLoop(
       std::shared_ptr<const MagneticFieldProvider> bField,
       FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean)
-      : EigenStepper<extensionlist_t, auctioneer_t>(bField),
+      : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
         m_finalReductionMethod(finalReductionMethod) {}
 
   struct State {
@@ -746,8 +746,9 @@ class MultiEigenStepperLoop
   /// @param state [in,out] The stepping state (thread-local cache)
   std::string outputStepSize(const State& state) const {
     std::stringstream ss;
-    for (const auto& component : state.components)
+    for (const auto& component : state.components) {
       ss << component.state.stepSize.toString() << " || ";
+    }
 
     return ss.str();
   }

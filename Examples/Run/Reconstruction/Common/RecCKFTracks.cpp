@@ -58,8 +58,9 @@ void addRecCKFOptions(ActsExamples::Options::Description& desc) {
       "Use track parameters estimated from truth tracks for steering CKF");
 }
 
-int runRecCKFTracks(int argc, char* argv[],
-                    std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runRecCKFTracks(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   // setup and parse options
   auto desc = ActsExamples::Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
@@ -100,7 +101,7 @@ int runRecCKFTracks(int argc, char* argv[],
   auto geometry = Geometry::build(vm, *detector);
   auto trackingGeometry = geometry.first;
   // Add context decorators
-  for (auto cdr : geometry.second) {
+  for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
   // Setup the magnetic field
@@ -205,9 +206,9 @@ int runRecCKFTracks(int argc, char* argv[],
       seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
 
       seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
-      seedingCfg.seedFinderConfig.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
 
-      seedingCfg.seedFinderConfig.beamPos = {0_mm, 0_mm};
+      seedingCfg.seedFinderOptions.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
+      seedingCfg.seedFinderOptions.beamPos = {0_mm, 0_mm};
 
       seedingCfg.seedFinderConfig.impactMax = 3._mm;
 

@@ -20,8 +20,10 @@ namespace ActsExamples {
 class VertexFitterAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
-    /// Input track parameters collection
+    /// Optional. Input track parameters collection
     std::string inputTrackParameters;
+    /// Optional. Input trajectories container.
+    std::string inputTrajectories;
     /// Input proto vertex collection
     std::string inputProtoVertices;
     /// Output vertex collection

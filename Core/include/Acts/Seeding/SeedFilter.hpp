@@ -21,7 +21,7 @@
 namespace Acts {
 struct SeedFilterState {
   // longitudinal impact parameter as defined by bottom and middle space point
-  float zOrigin;
+  float zOrigin = 0;
   // number of minimum top SPs in seed confirmation
   size_t nTopSeedConf = 0;
   // number of high quality seeds in seed confirmation
@@ -38,7 +38,7 @@ template <typename external_spacepoint_t>
 class SeedFilter {
  public:
   SeedFilter(SeedFilterConfig config,
-             IExperimentCuts<external_spacepoint_t>* expCuts = 0);
+             IExperimentCuts<external_spacepoint_t>* expCuts = nullptr);
 
   SeedFilter() = delete;
   virtual ~SeedFilter() = default;
