@@ -109,7 +109,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     const auto& trackTips = traj.tips();
     const auto& mj = traj.multiTrajectory();
 
-    if(trackTips.empty()) {
+    if (trackTips.empty()) {
       ACTS_WARNING("No trajectory found for entry " << itraj);
       continue;
     }
