@@ -56,8 +56,8 @@ Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, {{ make_url(
 {% for url in [
     "trackeff_vs_eta.pdf",
     "trackeff_vs_pT.pdf",
-    "duplicationRate_vs_eta.pdf",
-    "duplicationRate_vs_pT.pdf",
+    "nDuplicated_vs_eta.pdf",
+    "nDuplicated_vs_pT.pdf",
 ] -%}
 {{- make_image("seeding_"+mode+"_plots/"+url, "50%") -}}
 {%- endfor %}
