@@ -5,9 +5,10 @@
 {% endif %}
 
 [Full report]({{ url }}/)
+Seeding: {{ make_url("seeded", "seeding_seeded.html") }}, {{ make_url("truth smeared", "seeding_truth_smeared.html") }}, {{ make_url("truth estimated", "seeding_truth_estimated.html") }}, {{ make_url("orthogonal", "seeding_orthogonal.html") }}
 CKF: {{ make_url("seeded", "ckf_seeded.html") }}, {{ make_url("truth smeared", "ckf_truth_smeared.html") }}, {{ make_url("truth estimated", "ckf_truth_estimated.html") }}, {{ make_url("orthogonal", "ckf_orthogonal.html") }}
 IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "ivf_truth_smeared.html") }}, {{ make_url("truth estimated", "ivf_truth_estimated.html") }}, {{ make_url("orthogonal", "ivf_orthogonal.html") }}
-Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, , {{ make_url("orthogonal", "ambi_orthogonal.html") }}
+Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, {{ make_url("orthogonal", "ambi_orthogonal.html") }}
 {{ make_url("Truth tracking", "truth_tracking.html") }}
 {{ make_url("Truth tracking (GSF)", "gsf.html")}}
 

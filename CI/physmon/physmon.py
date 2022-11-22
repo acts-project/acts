@@ -245,8 +245,6 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             ["performance_seeding_hists", "performance_ambi"]
             if label in ["seeded", "orthogonal"]
             else ["performance_seeding_hists"]
-            if label == "truth_estimated"
-            else []
         ):
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
