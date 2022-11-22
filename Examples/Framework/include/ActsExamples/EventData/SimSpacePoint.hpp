@@ -94,7 +94,7 @@ class SimSpacePoint {
   constexpr Scalar varianceR() const { return m_varianceRho; }
   constexpr Scalar varianceZ() const { return m_varianceZ; }
 
-  const boost::container::static_vector<Acts::SourceLink, 2> sourceLinks()
+  const boost::container::static_vector<Acts::SourceLink, 2>& sourceLinks()
       const {
     return m_sourceLinks;
   }

@@ -139,6 +139,4 @@ struct SourceLinkAdapterIterator {
   BaseIterator m_iterator;
 };
 
-// inline SourceLink::~SourceLink() = default;
-
 }  // namespace Acts
