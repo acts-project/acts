@@ -301,7 +301,6 @@ ActsAlignment::Alignment<fitter_t>::align(
   // Screen out the final aligned parameters
   // @todo
   if (alignmentParametersUpdated) {
-    unsigned int iDetElement = 0;
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
       const auto& transform =
@@ -318,7 +317,6 @@ ActsAlignment::Alignment<fitter_t>::align(
       ACTS_VERBOSE(
           "Euler angles (rotZ, rotY, rotX) = " << rotAngles.transpose());
       ACTS_VERBOSE("Rotation marix = \n" << rotation);
-      iDetElement++;
     }
   } else {
     ACTS_DEBUG("Alignment parameters is not updated.");

@@ -15,12 +15,12 @@
 #include <unordered_map>
 
 ActsExamples::MaterialMapping::MaterialMapping(
-    const ActsExamples::MaterialMapping::Config& cnf,
+    const ActsExamples::MaterialMapping::Config& cfg,
     Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("MaterialMapping", level),
-      m_cfg(cnf),
-      m_mappingState(cnf.geoContext, cnf.magFieldContext),
-      m_mappingStateVol(cnf.geoContext, cnf.magFieldContext) {
+      m_cfg(cfg),
+      m_mappingState(cfg.geoContext, cfg.magFieldContext),
+      m_mappingStateVol(cfg.geoContext, cfg.magFieldContext) {
   if (!m_cfg.materialSurfaceMapper && !m_cfg.materialVolumeMapper) {
     throw std::invalid_argument("Missing material mapper");
   } else if (!m_cfg.trackingGeometry) {

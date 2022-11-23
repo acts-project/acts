@@ -64,10 +64,10 @@ struct PropagatorState {
       Vector3 dir = Vector3(1., 0., 0.);
 
       /// Momentum
-      double p;
+      double p = 0;
 
       /// Charge
-      double q;
+      double q = 0;
 
       /// the navigation direction
       NavigationDirection navDir = NavigationDirection::Forward;

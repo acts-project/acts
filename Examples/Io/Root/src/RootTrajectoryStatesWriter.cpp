@@ -266,11 +266,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
-      continue;
-    }
-
     // The trajectory index
     m_multiTrajNr = itraj;
 

@@ -28,7 +28,7 @@ struct BilloirTrack {
 
   const input_track_t* originalTrack;
   Acts::LinearizedTrack linTrack;
-  double chi2;
+  double chi2 = 0;
   Jacobian DiMat;                               // position jacobian
   Acts::ActsMatrix<Acts::eBoundSize, 3> EiMat;  // momentum jacobian
   Acts::ActsSymMatrix<3> CiMat;                 //  = EtWmat * Emat (see below)

@@ -27,14 +27,8 @@ class BinFinder {
   /// constructor
   BinFinder();
 
-  BinFinder(const std::vector<std::pair<int, int> >&& zBinNeighbors,
-            const int&& numPhiNeighbors);
-
-  BinFinder(const std::vector<std::pair<int, int> >& zBinNeighbors,
-            const int& numPhiNeighbors);
-
-  /// destructor
-  ~BinFinder() = default;
+  BinFinder(std::vector<std::pair<int, int> > zBinNeighbors,
+            int numPhiNeighbors);
 
   /// Return all bins that could contain space points that can be used with the
   /// space points in the bin with the provided indices to create seeds.
@@ -43,11 +37,11 @@ class BinFinder {
   /// @param binnedSP phi-z grid containing all bins
   boost::container::small_vector<size_t, 10> findBins(
       size_t phiBin, size_t zBin,
-      const SpacePointGrid<external_spacepoint_t>* binnedSP);
+      const SpacePointGrid<external_spacepoint_t>* binnedSP) const;
 
  private:
-  const std::vector<std::pair<int, int> > m_zBinNeighbors;
-  const int m_numPhiNeighbors;
+  std::vector<std::pair<int, int> > m_zBinNeighbors;
+  int m_numPhiNeighbors = 1;
 };
 }  // namespace Acts
 #include "Acts/Seeding/BinFinder.ipp"

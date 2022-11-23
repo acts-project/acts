@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryView3DObj) {
             << " characters written with " << objErrors.size() << " errors."
             << std::endl;
   BOOST_CHECK(objErrors.empty());
-  for (auto objerr : objErrors) {
+  for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
   // Triangular mesh test
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryView3DObj) {
             << " characters written with " << objErrors3M.size() << " errors."
             << std::endl;
   BOOST_CHECK(objErrors3M.empty());
-  for (auto objerr : objErrors3M) {
+  for (const auto& objerr : objErrors3M) {
     std::cout << objerr << std::endl;
   }
 }
@@ -63,7 +63,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryView3DPly) {
             << " characters written with " << plyErrors.size() << " errors."
             << std::endl;
   BOOST_CHECK(plyErrors.size() == 0);
-  for (auto plyerr : plyErrors) {
+  for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
   // Triangular mesh test
@@ -74,7 +74,7 @@ BOOST_AUTO_TEST_CASE(TrackingGeometryView3DPly) {
             << " characters written with " << plyErrors3M.size() << " errors."
             << std::endl;
   BOOST_CHECK(plyErrors3M.size() == 0);
-  for (auto plyerr : plyErrors3M) {
+  for (const auto& plyerr : plyErrors3M) {
     std::cout << plyerr << std::endl;
   }
 }

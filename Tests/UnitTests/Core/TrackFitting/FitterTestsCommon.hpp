@@ -48,8 +48,9 @@ struct TestOutlierFinder {
     if (not state.hasCalibrated() or not state.hasPredicted()) {
       return false;
     }
-    auto residuals = state.effectiveCalibrated() -
-                     state.effectiveProjector() * state.predicted();
+    auto residuals = (state.effectiveCalibrated() -
+                      state.effectiveProjector() * state.predicted())
+                         .eval();
     auto distance = residuals.norm();
     return (distanceMax <= distance);
   }
@@ -77,21 +78,21 @@ struct TestReverseFilteringLogic {
 
 // Construct a straight-line propagator.
 auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg);
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
-      std::move(stepper), std::move(navigator));
+      stepper, std::move(navigator));
 }
 
 // Construct a propagator using a constant magnetic field along z.
 template <typename stepper_t>
 auto makeConstantFieldPropagator(
     std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -201,7 +202,7 @@ struct FitterTester {
     BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
     // count the number of `smoothed` states
-    if (expected_reversed) {
+    if (expected_reversed && expected_smoothed) {
       size_t nSmoothed = 0;
       val.fittedStates->visitBackwards(val.lastMeasurementIndex,
                                        [&nSmoothed](const auto& state) {
@@ -247,7 +248,7 @@ struct FitterTester {
     BOOST_CHECK(val.finished);
     BOOST_CHECK_EQUAL(val.missedActiveSurfaces.size(), 0u);
     // count the number of `smoothed` states
-    if (expected_reversed) {
+    if (expected_reversed && expected_smoothed) {
       size_t nSmoothed = 0;
       val.fittedStates->visitBackwards(val.lastMeasurementIndex,
                                        [&nSmoothed](const auto& state) {
@@ -312,7 +313,8 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
+      BOOST_CHECK_NE(val.lastMeasurementIndex,
+                     Acts::MultiTrajectoryTraits::kInvalid);
       BOOST_REQUIRE(val.fittedParameters);
       parameters = val.fittedParameters->parameters();
       BOOST_CHECK_EQUAL(val.measurementStates, sourceLinks.size());
@@ -331,7 +333,8 @@ struct FitterTester {
       BOOST_REQUIRE(res.ok());
 
       const auto& val = res.value();
-      BOOST_CHECK_NE(val.lastMeasurementIndex, SIZE_MAX);
+      BOOST_CHECK_NE(val.lastMeasurementIndex,
+                     Acts::MultiTrajectoryTraits::kInvalid);
       BOOST_REQUIRE(val.fittedParameters);
       // check consistency w/ un-shuffled measurements
       CHECK_CLOSE_ABS(val.fittedParameters->parameters(), parameters, 1e-5);

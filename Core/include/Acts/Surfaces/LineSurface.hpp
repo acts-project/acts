@@ -54,7 +54,7 @@ class LineSurface : public Surface {
   ///
   /// @param lbounds The bounds describing the straw dimensions
   /// @param detelement for which this surface is (at least) one representation
-  LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
+  LineSurface(std::shared_ptr<const LineBounds> lbounds,
               const DetectorElementBase& detelement);
 
   /// Copy constructor

@@ -37,15 +37,12 @@ class RootVertexPerformanceWriter final
     std::string inputAllTruthParticles;
     /// Selected input truth particle collection.
     std::string inputSelectedTruthParticles;
+    /// Optional. Input track parameters.
+    std::string inputTrackParameters;
     /// Optional. Truth particles associated to tracks. Using 1:1 matching if
     /// given.
     std::string inputAssociatedTruthParticles;
-    /// Input track parameters.
-    std::string inputTrackParameters;
-    /// Input track parameters tips (points from `inputTrackParameters` to
-    /// `inputTrajectories`).
-    std::string inputTrackParametersTips;
-    /// Trajectories object from track finidng.
+    /// Optional. Trajectories object from track finidng.
     std::string inputTrajectories;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
@@ -73,10 +70,10 @@ class RootVertexPerformanceWriter final
   /// @param level Message level declaration
   RootVertexPerformanceWriter(const Config& config, Acts::Logging::Level level);
 
-  ~RootVertexPerformanceWriter() final override;
+  ~RootVertexPerformanceWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -87,7 +84,7 @@ class RootVertexPerformanceWriter final
   ProcessCode writeT(
       const AlgorithmContext& ctx,
       const std::vector<Acts::Vertex<Acts::BoundTrackParameters>>& vertices)
-      final override;
+      override;
 
  private:
   Config m_cfg;             ///< The config class

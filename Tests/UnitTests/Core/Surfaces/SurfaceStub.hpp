@@ -26,8 +26,7 @@ class SurfaceStub : public Surface {
   SurfaceStub(const DetectorElementBase& detelement)
       : GeometryObject(), Surface(detelement) {}
 
-  ~SurfaceStub() override { /*nop */
-  }
+  ~SurfaceStub() override = default;
 
   /// Return method for the Surface type to avoid dynamic casts
   SurfaceType type() const final { return Surface::Other; }
@@ -38,7 +37,8 @@ class SurfaceStub : public Surface {
     return normal(gctx);
   }
 
-  Vector3 normal(const GeometryContext& gctx, const Vector3&) const final {
+  Vector3 normal(const GeometryContext& gctx,
+                 const Vector3& /*position*/) const final {
     return normal(gctx);
   }
 

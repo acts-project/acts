@@ -20,7 +20,7 @@ namespace DD4hep {
 
 struct DD4hepDetector : public IBaseDetector {
   std::shared_ptr<DD4hepGeometryService> geometryService;
-  dd4hep::Detector* lcdd;
+  dd4hep::Detector* lcdd = nullptr;
 
   void addOptions(
       boost::program_options::options_description& opt) const override;
@@ -30,7 +30,7 @@ struct DD4hepDetector : public IBaseDetector {
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
 
   std::pair<IBaseDetector::TrackingGeometryPtr, ContextDecorators> finalize(
-      DD4hepGeometryService::Config cfg,
+      DD4hepGeometryService::Config config,
       std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
 
