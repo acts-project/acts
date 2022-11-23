@@ -226,7 +226,6 @@ BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
   runRestrictedTest<decltype(vrIdGenerator)>(vrIdGenerator, {A, B, C, D, E, F});
 }
 
-
 BOOST_AUTO_TEST_CASE(LayeredDetectorTests_NameIdentified) {
   auto [A, B, C, D, E, F] = mockupVolumes(centralStore);
   // Volume B and D have sensitive surfaces and will be counted
