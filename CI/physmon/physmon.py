@@ -24,6 +24,7 @@ from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
     addParticleGun,
+    MomentumConfig,
     EtaConfig,
     PhiConfig,
     ParticleConfig,
@@ -275,28 +276,27 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
 
 for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
     for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
-        start = datetime.datetime.now()
-        s = acts.examples.Sequencer(events=5, numThreads=-1, logLevel=acts.logging.INFO)
-
         with tempfile.TemporaryDirectory() as temp:
             tp = Path(temp)
+
+            s = acts.examples.Sequencer(
+                events=5, numThreads=-1, logLevel=acts.logging.INFO
+            )
 
             for d in decorators:
                 s.addContextDecorator(d)
 
             rnd = acts.examples.RandomNumbers(seed=42)
 
-            vtxGen = acts.examples.GaussianVertexGenerator(
-                stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
-                mean=acts.Vector4(0, 0, 0, 0),
-            )
-
             addParticleGun(
                 s,
-                EtaConfig(-4.0, 4.0),
-                ParticleConfig(4, acts.PdgParticle.eMuon, True),
-                PhiConfig(0.0, 360.0 * u.degree),
-                vtxGen=vtxGen,
+                MomentumConfig(1.0 * u.GeV, 10.0 * u.GeV, transverse=True),
+                EtaConfig(-3.0, 3.0),
+                ParticleConfig(4, acts.PdgParticle.eMuon, randomizeCharge=True),
+                vtxGen=acts.examples.GaussianVertexGenerator(
+                    stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
+                    mean=acts.Vector4(0, 0, 0, 0),
+                ),
                 multiplicity=mu,
                 rnd=rnd,
             )
@@ -340,7 +340,6 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 seedingAlgorithm=SeedingAlgorithm.Default,
                 geoSelectionConfigFile=geoSel,
                 rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
-                outputDirRoot=None,
             )
 
             addCKFTracks(
@@ -349,19 +348,17 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 field,
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
                 TrackSelectorRanges(
-                    removeNeutral=True,
-                    loc0=(None, 4.0 * u.mm),
                     pt=(500 * u.MeV, None),
+                    loc0=(-4.0 * u.mm, 4.0 * u.mm),
+                    absEta=(None, 3.0),
+                    removeNeutral=True,
                 ),
-                outputDirRoot=None,
-                outputDirCsv=None,
             )
 
             addAmbiguityResolution(
                 s,
                 AmbiguityResolutionConfig(maximumSharedHits=3),
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-                outputDirRoot=None,
             )
 
             addVertexFitting(
@@ -370,6 +367,8 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 vertexFinder=fitter,
                 outputDirRoot=tp,
             )
+
+            start = datetime.datetime.now()
 
             s.run()
 
