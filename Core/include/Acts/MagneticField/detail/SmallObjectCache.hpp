@@ -122,66 +122,82 @@ class SmallObjectCacheBase {
   SmallObjectCacheBase() = default;
 
  private:
-  struct HandlerBase {
-    virtual void destroy(void* ptr) const = 0;
-    virtual void moveConstruct(void* from, void* to) const = 0;
-    virtual void move(void* from, void* to) const = 0;
-    virtual void copyConstruct(const void* from, void* to) const = 0;
-    virtual void copy(const void* from, void* to) const = 0;
-    virtual ~HandlerBase() = default;
+  struct Handler {
+    void (*destroy)(void* ptr);
+    void (*moveConstruct)(void* from, void* to);
+    void (*move)(void* from, void* to);
+    void (*copyConstruct)(const void* from, void* to);
+    void (*copy)(const void* from, void* to);
+
+    // virtual void destroy(void* ptr) const = 0;
+    // virtual void moveConstruct(void* from, void* to) const = 0;
+    // virtual void move(void* from, void* to) const = 0;
+    // virtual void copyConstruct(const void* from, void* to) const = 0;
+    // virtual void copy(const void* from, void* to) const = 0;
+    // virtual ~HandlerBase() = default;
   };
 
   template <typename T>
-  static HandlerBase& makeHandler() {
-    static Handler<std::decay_t<T>> static_handler{};
+  static Handler& makeHandler() {
+    static Handler static_handler = []() {
+      Handler h;
+      h.destroy = &destroy<T>;
+      h.moveConstruct = &moveConstruct<T>;
+      h.move = &move<T>;
+      h.copyConstruct = &copyConstruct<T>;
+      h.copy = &copy<T>;
+      return h;
+    }();
     return static_handler;
   }
 
   template <typename T>
-  struct Handler final : public HandlerBase {
-    void destroy(void* ptr) const override {
-      assert(ptr != nullptr && "Address to destroy is nullptr");
-      T* obj = static_cast<T*>(ptr);
-      obj->~T();
-    }
+  static void destroy(void* ptr) {
+    assert(ptr != nullptr && "Address to destroy is nullptr");
+    T* obj = static_cast<T*>(ptr);
+    obj->~T();
+  }
 
-    void moveConstruct(void* from, void* to) const override {
-      assert(from != nullptr && "Source is null");
-      assert(to != nullptr && "Target is null");
-      T* _from = static_cast<T*>(from);
-      /*T* ptr =*/new (to) T(std::move(*_from));
-    }
+  template <typename T>
+  static void moveConstruct(void* from, void* to) {
+    assert(from != nullptr && "Source is null");
+    assert(to != nullptr && "Target is null");
+    T* _from = static_cast<T*>(from);
+    /*T* ptr =*/new (to) T(std::move(*_from));
+  }
 
-    void move(void* from, void* to) const override {
-      assert(from != nullptr && "Source is null");
-      assert(to != nullptr && "Target is null");
+  template <typename T>
+  static void move(void* from, void* to) {
+    assert(from != nullptr && "Source is null");
+    assert(to != nullptr && "Target is null");
 
-      T* _from = static_cast<T*>(from);
-      T* _to = static_cast<T*>(to);
+    T* _from = static_cast<T*>(from);
+    T* _to = static_cast<T*>(to);
 
-      (*_to) = std::move(*_from);
-    }
+    (*_to) = std::move(*_from);
+  }
 
-    void copyConstruct(const void* from, void* to) const override {
-      assert(from != nullptr && "Source is null");
-      assert(to != nullptr && "Target is null");
-      const T* _from = static_cast<const T*>(from);
-      /*T* ptr =*/new (to) T(*_from);
-    }
+  template <typename T>
+  static void copyConstruct(const void* from, void* to) {
+    assert(from != nullptr && "Source is null");
+    assert(to != nullptr && "Target is null");
+    const T* _from = static_cast<const T*>(from);
+    /*T* ptr =*/new (to) T(*_from);
+  }
 
-    void copy(const void* from, void* to) const override {
-      assert(from != nullptr && "Source is null");
-      assert(to != nullptr && "Target is null");
+  template <typename T>
+  static void copy(const void* from, void* to) {
+    assert(from != nullptr && "Source is null");
+    assert(to != nullptr && "Target is null");
 
-      const T* _from = static_cast<const T*>(from);
-      T* _to = static_cast<T*>(to);
+    const T* _from = static_cast<const T*>(from);
+    T* _to = static_cast<T*>(to);
 
-      (*_to) = *_from;
-    }
-  };
+    (*_to) = *_from;
+  }
 
   alignas(std::max_align_t) std::array<char, SIZE> m_data{};
-  HandlerBase* m_handler{nullptr};
+  Handler* m_handler{nullptr};
 };
 
 using SmallObjectCache = SmallObjectCacheBase<512>;
