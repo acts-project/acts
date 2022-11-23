@@ -915,6 +915,11 @@ class MultiTrajectory {
     static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
                   "Callable needs to satisfy VisitorConcept");
 
+    if (iendpoint == MultiTrajectoryTraits::kInvalid) {
+      throw std::runtime_error(
+          "Cannot apply backwards with kInvalid as endpoint");
+    }
+
     while (true) {
       auto ts = getTrackState(iendpoint);
       if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
