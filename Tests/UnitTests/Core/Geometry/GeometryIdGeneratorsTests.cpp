@@ -66,8 +66,6 @@ Acts::GeometryContext tContext;
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 
-std::vector<Acts::TestDetectorElement> centralStore = {};
-
 namespace {
 
 /// @brief  This generator a vector of mockup volumes
@@ -205,7 +203,8 @@ void runRestrictedTest(
 }  // namespace
 
 BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
-  auto [A, B, C, D, E, F] = mockupVolumes(centralStore);
+  std::vector<Acts::TestDetectorElement> detElStore = {};
+  auto [A, B, C, D, E, F] = mockupVolumes(detElStore);
   // Volume B and D have sensitive surfaces and will be counted
   // as layers of volume 1, their portals and their sensitive and passive will
   // just be counted per volume
@@ -227,7 +226,8 @@ BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
 }
 
 BOOST_AUTO_TEST_CASE(LayeredDetectorTests_NameIdentified) {
-  auto [A, B, C, D, E, F] = mockupVolumes(centralStore);
+  std::vector<Acts::TestDetectorElement> detElStore = {};
+  auto [A, B, C, D, E, F] = mockupVolumes(detElStore);
   // Volume B and D have sensitive surfaces and will be counted
   // as layers of volume 1, their portals and their sensitive and passive will
   // just be counted per volume
@@ -248,7 +248,9 @@ BOOST_AUTO_TEST_CASE(LayeredDetectorTests_NameIdentified) {
 }
 
 BOOST_AUTO_TEST_CASE(DuplicateAndUnsetIdCheckerTest) {
-  auto [A, B, C, D, E, F] = mockupVolumes(centralStore);
+  std::vector<Acts::TestDetectorElement> detElStore = {};
+  auto [A, B, C, D, E, F] = mockupVolumes(detElStore);
+  // Set same identifier to A/C
   A->assignGeometryId(Acts::GeometryIdentifier().setVolume(3u));
   C->assignGeometryId(Acts::GeometryIdentifier().setVolume(3u));
 
