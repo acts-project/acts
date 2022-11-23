@@ -54,7 +54,7 @@ class GeometryIdentifier {
   /// Return the approach identifier.
   constexpr Value approach() const { return getBits(kApproachMask); }
   /// Return the approach identifier.
-  constexpr Value passive() const { return getBits(kApproachMask); }
+  constexpr Value passive() const { return getBits(kPassiveMask); }
   /// Return the sensitive identifier.
   constexpr Value sensitive() const { return getBits(kSensitiveMask); }
   /// Return the extra identifier
@@ -80,7 +80,7 @@ class GeometryIdentifier {
   }
   /// Set the passive identifier.
   constexpr GeometryIdentifier& setPassive(Value passive) {
-    return setBits(kApproachMask, passive);
+    return setBits(kPassiveMask, passive);
   }
   /// Set the sensitive identifier.
   constexpr GeometryIdentifier& setSensitive(Value sensitive) {
@@ -97,6 +97,7 @@ class GeometryIdentifier {
   static constexpr Value kBoundaryMask  = 0x00ff000000000000; // (2^8)-1 = 255 boundaries
   static constexpr Value kLayerMask     = 0x0000fff000000000; // (2^12)-1 = 4095 layers
   static constexpr Value kApproachMask  = 0x0000000ff0000000; // (2^8)-1 = 255 approach/passive surfaces
+  static constexpr Value kPassiveMask   = kApproachMask;      // approach/passive are identical
   static constexpr Value kSensitiveMask = 0x000000000fffff00; // (2^20)-1 = 1048575 sensitive surfaces
   static constexpr Value kExtraMask     = 0x00000000000000ff; // (2^8)-1 = 255 extra values
   // clang-format on
