@@ -37,11 +37,12 @@ class vector2D {
   }
 
   size_t size(int dim) const {
-    if (dim == 0)
+    if (dim == 0) {
       return m_d1;
-    if (dim == 1)
+    }
+    if (dim == 1) {
       return m_d2;
-    else {
+    } else {
       ACTS_ERROR("vector2D: Argument to size() must be 0 or 1");
       return 0;
     }
