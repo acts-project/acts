@@ -5,9 +5,10 @@
 {% endif %}
 
 [Full report]({{ url }}/)
+Seeding: {{ make_url("seeded", "seeding_seeded.html") }}, {{ make_url("truth estimated", "seeding_truth_estimated.html") }}, {{ make_url("orthogonal", "seeding_orthogonal.html") }}
 CKF: {{ make_url("seeded", "ckf_seeded.html") }}, {{ make_url("truth smeared", "ckf_truth_smeared.html") }}, {{ make_url("truth estimated", "ckf_truth_estimated.html") }}, {{ make_url("orthogonal", "ckf_orthogonal.html") }}
 IVF: {{ make_url("seeded", "ivf_seeded.html") }}, {{ make_url("truth smeared", "ivf_truth_smeared.html") }}, {{ make_url("truth estimated", "ivf_truth_estimated.html") }}, {{ make_url("orthogonal", "ivf_orthogonal.html") }}
-Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, , {{ make_url("orthogonal", "ambi_orthogonal.html") }}
+Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, {{ make_url("orthogonal", "ambi_orthogonal.html") }}
 {{ make_url("Truth tracking", "truth_tracking.html") }}
 {{ make_url("Truth tracking (GSF)", "gsf.html")}}
 
@@ -44,7 +45,6 @@ Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, , {{ make_ur
 
 ### Seeding {{ "" if all_exist(
     "seeding_seeded_plots",
-    "seeding_truth_smeared_plots",
     "seeding_truth_estimated_plots",
     "seeding_orthogonal_plots",
 ) else ":x: "}}
@@ -56,8 +56,8 @@ Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, , {{ make_ur
 {% for url in [
     "trackeff_vs_eta.pdf",
     "trackeff_vs_pT.pdf",
-    "duplicationRate_vs_eta.pdf",
-    "duplicationRate_vs_pT.pdf",
+    "nDuplicated_vs_eta.pdf",
+    "nDuplicated_vs_pT.pdf",
 ] -%}
 {{- make_image("seeding_"+mode+"_plots/"+url, "50%") -}}
 {%- endfor %}
