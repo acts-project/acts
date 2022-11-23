@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <any>
@@ -25,6 +26,8 @@ using geometry_id_t = decltype(std::declval<T>().geometryId());
 }  // namespace detail_sl
 
 class SourceLink final {
+  using SBO = detail::SmallObjectCacheBase<32>;
+
  public:
   /// Getter for the geometry identifier
   /// @return The GeometryIdentifier
@@ -63,9 +66,9 @@ class SourceLink final {
                   "Cannot wrap SourceLink in SourceLink");
 
     if constexpr (std::is_same_v<T, std::decay_t<T>>) {
-      m_upstream = std::move(upstream);
+      m_upstream = SBO{std::move(upstream)};
     } else {
-      m_upstream = static_cast<std::decay_t<T>>(upstream);
+      m_upstream = SBO{static_cast<std::decay_t<T>>(upstream)};
     }
   }
 
@@ -74,13 +77,12 @@ class SourceLink final {
   /// @return Reference to the stored source link
   template <typename T>
   T& get() {
-    assert(m_upstream.has_value() &&
-           "Contained source link does not have value");
-    T* val = std::any_cast<T>(&m_upstream);
-    if (val == nullptr) {
-      throw std::bad_any_cast{};
-    }
-    return *val;
+    return m_upstream.get<T>();
+    // T* val = boost::any_cast<T>(&m_upstream);
+    // if (val == nullptr) {
+    // throw boost::bad_any_cast{};
+    // }
+    // return *val;
   }
 
   /// Concrete source link class getter, const version
@@ -88,18 +90,17 @@ class SourceLink final {
   /// @return Const reference to the stored source link
   template <typename T>
   const T& get() const {
-    assert(m_upstream.has_value() &&
-           "Contained source link does not have value");
-    const T* val = std::any_cast<const T>(&m_upstream);
-    if (val == nullptr) {
-      throw std::bad_any_cast{};
-    }
-    return *val;
+    return m_upstream.get<T>();
+    // const T* val = boost::any_cast<const T>(&m_upstream);
+    // if (val == nullptr) {
+    // throw boost::bad_any_cast{};
+    // }
+    // return *val;
   }
 
  private:
   GeometryIdentifier m_geometryId{};
-  std::any m_upstream{};
+  SBO m_upstream{};
 };
 
 template <typename T>
