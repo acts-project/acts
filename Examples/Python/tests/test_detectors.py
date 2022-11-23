@@ -37,7 +37,7 @@ def test_telescope_geometry():
 
     detector, geo, contextDecorators = acts.examples.TelescopeDetector.create(
         bounds=[100, 100],
-        positions=[10 * n for i in range(n_surfaces)],
+        positions=[10 * i for i in range(n_surfaces)],
         binValue=0,
     )
 
