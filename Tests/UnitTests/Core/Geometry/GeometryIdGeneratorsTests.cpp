@@ -66,9 +66,9 @@ Acts::GeometryContext tContext;
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 
-namespace {
-
 std::vector<Acts::TestDetectorElement> centralStore = {};
+
+namespace {
 
 /// @brief  This generator a vector of mockup volumes
 ///
@@ -84,7 +84,7 @@ std::vector<Acts::TestDetectorElement> centralStore = {};
 ///
 /// @return
 std::array<std::shared_ptr<Acts::Experimental::DetectorVolume>, 6u>
-mockupVolumes() {
+mockupVolumes(std::vector<Acts::TestDetectorElement>& store) {
   auto portals = Acts::Experimental::detail::defaultPortalGenerator();
 
   Acts::ActsScalar hLength = 100.;
@@ -108,8 +108,8 @@ mockupVolumes() {
     // Create constituents
     // - sensitive
     if (n.find("s") != std::string::npos) {
-      centralStore.push_back(Acts::TestDetectorElement(vTransform));
-      surfaces.push_back(centralStore.back().surface().getSharedPtr());
+      store.push_back(Acts::TestDetectorElement(vTransform));
+      surfaces.push_back(store.back().surface().getSharedPtr());
     }
     // - passive
     if (n.find("p") != std::string::npos) {
@@ -203,9 +203,9 @@ void runRestrictedTest(
 }
 
 }  // namespace
-/*
+
 BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
-  auto [A, B, C, D, E, F] = mockupVolumes();
+  auto [A, B, C, D, E, F] = mockupVolumes(centralStore);
   // Volume B and D have sensitive surfaces and will be counted
   // as layers of volume 1, their portals and their sensitive and passive will
   // just be counted per volume
@@ -225,10 +225,10 @@ BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
       vrIdGenerator(chGenerator1, {B.get(), D.get()});
   runRestrictedTest<decltype(vrIdGenerator)>(vrIdGenerator, {A, B, C, D, E, F});
 }
-*/
+
 
 BOOST_AUTO_TEST_CASE(LayeredDetectorTests_NameIdentified) {
-  auto [A, B, C, D, E, F] = mockupVolumes();
+  auto [A, B, C, D, E, F] = mockupVolumes(centralStore);
   // Volume B and D have sensitive surfaces and will be counted
   // as layers of volume 1, their portals and their sensitive and passive will
   // just be counted per volume
@@ -249,7 +249,7 @@ BOOST_AUTO_TEST_CASE(LayeredDetectorTests_NameIdentified) {
 }
 
 BOOST_AUTO_TEST_CASE(DuplicateAndUnsetIdCheckerTest) {
-  auto [A, B, C, D, E, F] = mockupVolumes();
+  auto [A, B, C, D, E, F] = mockupVolumes(centralStore);
   A->assignGeometryId(Acts::GeometryIdentifier().setVolume(3u));
   C->assignGeometryId(Acts::GeometryIdentifier().setVolume(3u));
 
