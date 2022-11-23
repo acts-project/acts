@@ -203,7 +203,7 @@ void runRestrictedTest(
 }
 
 }  // namespace
-
+/*
 BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
   auto [A, B, C, D, E, F] = mockupVolumes();
   // Volume B and D have sensitive surfaces and will be counted
@@ -225,6 +225,7 @@ BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
       vrIdGenerator(chGenerator1, {B.get(), D.get()});
   runRestrictedTest<decltype(vrIdGenerator)>(vrIdGenerator, {A, B, C, D, E, F});
 }
+*/
 
 BOOST_AUTO_TEST_CASE(LayeredDetectorTests_NameIdentified) {
   auto [A, B, C, D, E, F] = mockupVolumes();
