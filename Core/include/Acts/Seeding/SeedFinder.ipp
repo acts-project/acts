@@ -484,7 +484,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         float pT2scatterSigma = iHelixDiameter2 * sigmapT2perRadius;
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
-        float pT = m_config.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+        float pT = pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
         if (pT > m_config.maxPtScattering) {
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *
