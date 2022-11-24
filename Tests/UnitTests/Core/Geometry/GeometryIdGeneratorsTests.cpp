@@ -220,8 +220,8 @@ BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
       decltype(pCounter1)>
       chGenerator1(std::tie(lCounter1, poCounter1, sCounter1, pCounter1));
   // These are restricted to volumes B, D
-  Acts::Experimental::detail::VolumeRestrictedIdGenerator<
-      decltype(chGenerator1)>
+  Acts::Experimental::detail::VolumeRestrictedIdGenerator<decltype(
+      chGenerator1)>
       vrIdGenerator(chGenerator1, {B.get(), D.get()});
   runRestrictedTest<decltype(vrIdGenerator)>(vrIdGenerator, {A, B, C, D, E, F});
 }
