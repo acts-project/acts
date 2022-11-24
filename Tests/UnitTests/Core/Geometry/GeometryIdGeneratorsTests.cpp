@@ -32,9 +32,6 @@ namespace Acts {
 /// A mockup detector element
 class TestDetectorElement : public DetectorElementBase {
  public:
-  Transform3 m_transform = Transform3::Identity();
-  std::shared_ptr<PlaneSurface> m_surface = nullptr;
-
   /// @brief  Constructor of a dummy test element
   TestDetectorElement(const Transform3& trf = Transform3::Identity())
       : m_transform(trf) {
@@ -58,6 +55,10 @@ class TestDetectorElement : public DetectorElementBase {
   /// Returns the thickness of the module
   /// @return double that indicates the thickness of the module
   double thickness() const final { return 1.; }
+
+ private:
+  Transform3 m_transform = Transform3::Identity();
+  std::shared_ptr<PlaneSurface> m_surface = nullptr;
 };
 
 }  // namespace Acts
@@ -82,7 +83,7 @@ namespace {
 ///
 /// @return
 std::array<std::shared_ptr<Acts::Experimental::DetectorVolume>, 6u>
-mockupVolumes(std::vector<Acts::TestDetectorElement>& store) {
+mockupVolumes(std::vector<std::shared_ptr<Acts::TestDetectorElement>>& store) {
   auto portals = Acts::Experimental::detail::defaultPortalGenerator();
 
   Acts::ActsScalar hLength = 100.;
@@ -106,8 +107,8 @@ mockupVolumes(std::vector<Acts::TestDetectorElement>& store) {
     // Create constituents
     // - sensitive
     if (n.find("s") != std::string::npos) {
-      store.push_back(Acts::TestDetectorElement(vTransform));
-      surfaces.push_back(store.back().surface().getSharedPtr());
+      store.push_back(std::make_shared<Acts::TestDetectorElement>(vTransform));
+      surfaces.push_back(store.back()->surface().getSharedPtr());
     }
     // - passive
     if (n.find("p") != std::string::npos) {
@@ -203,7 +204,7 @@ void runRestrictedTest(
 }  // namespace
 
 BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
-  std::vector<Acts::TestDetectorElement> detElStore = {};
+  std::vector<std::shared_ptr<Acts::TestDetectorElement>> detElStore = {};
   auto [A, B, C, D, E, F] = mockupVolumes(detElStore);
   // Volume B and D have sensitive surfaces and will be counted
   // as layers of volume 1, their portals and their sensitive and passive will
@@ -219,14 +220,14 @@ BOOST_AUTO_TEST_CASE(LayeredDetectorTests_VolumeIdentified) {
       decltype(pCounter1)>
       chGenerator1(std::tie(lCounter1, poCounter1, sCounter1, pCounter1));
   // These are restricted to volumes B, D
-  Acts::Experimental::detail::VolumeRestrictedIdGenerator<decltype(
-      chGenerator1)>
+  Acts::Experimental::detail::VolumeRestrictedIdGenerator<
+      decltype(chGenerator1)>
       vrIdGenerator(chGenerator1, {B.get(), D.get()});
   runRestrictedTest<decltype(vrIdGenerator)>(vrIdGenerator, {A, B, C, D, E, F});
 }
 
 BOOST_AUTO_TEST_CASE(LayeredDetectorTests_NameIdentified) {
-  std::vector<Acts::TestDetectorElement> detElStore = {};
+  std::vector<std::shared_ptr<Acts::TestDetectorElement>> detElStore = {};
   auto [A, B, C, D, E, F] = mockupVolumes(detElStore);
   // Volume B and D have sensitive surfaces and will be counted
   // as layers of volume 1, their portals and their sensitive and passive will
@@ -248,7 +249,7 @@ BOOST_AUTO_TEST_CASE(LayeredDetectorTests_NameIdentified) {
 }
 
 BOOST_AUTO_TEST_CASE(DuplicateAndUnsetIdCheckerTest) {
-  std::vector<Acts::TestDetectorElement> detElStore = {};
+  std::vector<std::shared_ptr<Acts::TestDetectorElement>> detElStore = {};
   auto [A, B, C, D, E, F] = mockupVolumes(detElStore);
   // Set same identifier to A/C
   A->assignGeometryId(Acts::GeometryIdentifier().setVolume(3u));
