@@ -13,13 +13,30 @@
 #include <cstddef>
 #include <memory>
 
+#define _ENABLE_ACTS_ANY_DEBUG = 1
+
+#if defined(_ENABLE_ACTS_ANY_DEBUG)
+#include <iomanip>
+#include <iostream>
+#define _ACTS_ANY_DEBUG(x) std::cout << x << std::endl;
+#define _ACTS_ANY_DEBUG_BUFFER(s, b)   \
+  do {                                 \
+    std::cout << "" << s << ": 0x";    \
+    for (char c : b) {                 \
+      std::cout << std::hex << (int)c; \
+    }                                  \
+    std::cout << std::endl;            \
+  } while (0)
+#else
+#define _ACTS_ANY_DEBUG(x)
+#define _ACTS_ANY_DEBUG_BUFFER(s, b)
+#endif
+
 namespace Acts {
 
 /// Small opaque cache type which uses small buffer optimization
 template <size_t SIZE>
 class AnyBase {
-  static_assert(SIZE > sizeof(void*), "Size cannot be smaller than a pointer");
-
  public:
   template <typename T, typename... Args>
   static AnyBase make(Args&&... args) {
@@ -28,7 +45,6 @@ class AnyBase {
     using U = std::decay_t<T>;
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    static_assert(sizeof(U) <= sizeof(m_data), "Passed type is too large");
     static_assert(
         std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
         "Type needs to be move assignable and move constructible");
@@ -36,16 +52,25 @@ class AnyBase {
         std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U>,
         "Type needs to be copy assignable and copy constructible");
 
-    /*T* ptr =*/new (cache.m_data.data()) U(std::forward<Args>(args)...);
     cache.m_handler = makeHandler<U>();
+    if constexpr (sizeof(U) <= SIZE) {
+      // construct into local buffer
+      /*T* ptr =*/new (cache.m_data.data()) U(std::forward<Args>(args)...);
+    } else {
+      // too large, heap allocate
+      // U*& ptr = *reinterpret_cast<U**>(cache.m_data.data());
+      U* heap = new U(std::forward<Args>(args)...);
+      std::memcpy(cache.m_data.data(), &heap, sizeof(U*));
+    }
 
     return cache;
   }
 
+  AnyBase() { _ACTS_ANY_DEBUG("Default construct this=" << this); };
+
   template <typename T>
   explicit AnyBase(T&& value) {
     using U = std::decay_t<T>;
-    static_assert(sizeof(U) <= sizeof(m_data), "Passed type is too large");
     static_assert(
         std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
         "Type needs to be move assignable and move constructible");
@@ -53,33 +78,61 @@ class AnyBase {
         std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U>,
         "Type needs to be copy assignable and copy constructible");
 
-    // move construct into data block by move construct with placement new
-    /*T* ptr =*/new (m_data.data()) U(std::move(value));
     m_handler = makeHandler<U>();
+
+    if constexpr (sizeof(U) <= SIZE) {
+      // construct into local buffer
+      /*U* ptr =*/new (m_data.data()) U(std::move(value));
+      _ACTS_ANY_DEBUG(
+          "Construct local (this=" << this << ") at: " << (void*)m_data.data());
+    } else {
+      // too large, heap allocate
+      U* heap = new U(std::move(value));
+      _ACTS_ANY_DEBUG("Construct heap (this=" << this << ") at: " << heap);
+      _ACTS_ANY_DEBUG_BUFFER("-> buffer before", m_data);
+      U*& ptr = *((U**)m_data.data());
+      ptr = heap;
+      // U*& ptr = *reinterpret_cast<U**>(m_data.data());
+      // ptr = heap;
+      _ACTS_ANY_DEBUG_BUFFER("-> buffer after", m_data);
+    }
   }
 
   template <typename T>
-  T& get() {
+  T& as() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    static_assert(sizeof(T) <= sizeof(m_data), "Passed type is too large");
     assert(makeHandler<T>() == m_handler && "Bad type access");
-    return *reinterpret_cast<T*>(m_data.data());
+    if (m_handler->typeSize <= SIZE) {
+      T* ptr = reinterpret_cast<T*>(m_data.data());
+      _ACTS_ANY_DEBUG("As local: " << ptr);
+      return *ptr;
+    } else {
+      // is heap allocated
+      void* ptr = *reinterpret_cast<void**>(m_data.data());
+      _ACTS_ANY_DEBUG("As heap: " << ptr);
+      return *reinterpret_cast<T*>(ptr);
+    }
   }
 
   template <typename T>
-  const T& get() const {
+  const T& as() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    static_assert(sizeof(T) <= sizeof(m_data), "Passed type is too large");
     assert(makeHandler<T>() == m_handler && "Bad type access");
-    return *reinterpret_cast<const T*>(m_data.data());
+    if (m_handler->typeSize <= SIZE) {
+      const T* ptr = reinterpret_cast<const T*>(m_data.data());
+      _ACTS_ANY_DEBUG("As local: " << ptr);
+      return *ptr;
+    } else {
+      // is heap allocated
+      const void* ptr = *reinterpret_cast<const void**>(m_data.data());
+      _ACTS_ANY_DEBUG("As heap: " << ptr);
+      return *reinterpret_cast<const T*>(ptr);
+    }
   }
 
-  ~AnyBase() {
-    assert(m_handler && "Handler cannot be dead");
-    destroy();
-  }
+  ~AnyBase() { destroy(); }
 
   AnyBase(const AnyBase& other) {
     if (m_handler == nullptr) {  // this object is empty
@@ -131,7 +184,7 @@ class AnyBase {
     return *this;
   }
 
-  AnyBase() = default;
+  operator bool() const { return m_handler != nullptr; }
 
  private:
   struct Handler {
@@ -140,95 +193,172 @@ class AnyBase {
     void (*move)(void* from, void* to) = nullptr;
     void (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
+    std::size_t typeSize;
   };
 
   template <typename T>
   static Handler* makeHandler() {
     static Handler static_handler = []() {
       Handler h;
-      if constexpr (!std::is_trivially_destructible_v<T>) {
+      if constexpr (!std::is_trivially_destructible_v<T> || sizeof(T) > SIZE) {
         h.destroy = &destroyImpl<T>;
       }
-      if constexpr (!std::is_trivially_move_constructible_v<T>) {
+      if constexpr (!std::is_trivially_move_constructible_v<T> ||
+                    sizeof(T) > SIZE) {
         h.moveConstruct = &moveConstructImpl<T>;
       }
-      if constexpr (!std::is_trivially_move_assignable_v<T>) {
+      if constexpr (!std::is_trivially_move_assignable_v<T> ||
+                    sizeof(T) > SIZE) {
         h.move = &moveImpl<T>;
       }
-      if constexpr (!std::is_trivially_copy_constructible_v<T>) {
+      if constexpr (!std::is_trivially_copy_constructible_v<T> ||
+                    sizeof(T) > SIZE) {
         h.copyConstruct = &copyConstructImpl<T>;
       }
-      if constexpr (!std::is_trivially_copy_assignable_v<T>) {
+      if constexpr (!std::is_trivially_copy_assignable_v<T> ||
+                    sizeof(T) > SIZE) {
         h.copy = &copyImpl<T>;
       }
+      h.typeSize = sizeof(T);
       return h;
     }();
     return &static_handler;
   }
 
   void destroy() {
+    _ACTS_ANY_DEBUG("Destructor this=" << this << " handler: " << m_handler);
     if (m_handler != nullptr && m_handler->destroy != nullptr) {
-      m_handler->destroy(m_data.data());
+      void* ptr = m_data.data();
+      if (m_handler->typeSize > SIZE) {
+        // stored on heap: interpret buffer as pointer
+        _ACTS_ANY_DEBUG("Pre-destroy data: " << (void*)m_data.data());
+
+        _ACTS_ANY_DEBUG_BUFFER("-> buffer pre-destroy", m_data);
+
+        // ptr = *reinterpret_cast<void**>(m_data.data());
+        std::memcpy(&ptr, m_data.data(), sizeof(void*));
+        _ACTS_ANY_DEBUG("Pre-destroy: " << ptr);
+      }
+      m_handler->destroy(ptr);
+      m_handler = nullptr;
     }
   }
 
-  void moveConstruct(AnyBase&& from) {
+  void moveConstruct(AnyBase&& fromAny) {
     if (m_handler == nullptr) {
       return;
     }
+
+    void* to = m_data.data();
+    void* from = fromAny.m_data.data();
+    if (m_handler->typeSize > SIZE) {
+      // stored on heap: interpret buffer as pointer
+      // to = *reinterpret_cast<void**>(m_data.data());
+      // from = *reinterpret_cast<void**>(fromAny.m_data.data());
+
+      // just copy the pointer
+      // to = from;
+      std::memcpy(m_data.data(), fromAny.m_data.data(), sizeof(void*));
+      // do not delete in moved-from any
+      fromAny.m_handler = nullptr;
+      return;
+    }
+
     if (m_handler->moveConstruct == nullptr) {
       // trivially move constructible
-      m_data = std::move(from.m_data);
+      m_data = std::move(fromAny.m_data);
     } else {
-      m_handler->moveConstruct(from.m_data.data(), m_data.data());
+      m_handler->moveConstruct(from, to);
     }
   }
 
-  void move(AnyBase&& from) {
+  void move(AnyBase&& fromAny) {
     if (m_handler == nullptr) {
       return;
     }
+
+    void* to = m_data.data();
+    void* from = fromAny.m_data.data();
+    if (m_handler->typeSize > SIZE) {
+      // stored on heap: interpret buffer as pointer
+      // to = *reinterpret_cast<void**>(m_data.data());
+      // from = *reinterpret_cast<void**>(fromAny.m_data.data());
+
+      // just copy the pointer
+      // to = from;
+      std::memcpy(m_data.data(), fromAny.m_data.data(), sizeof(void*));
+      // do not delete in moved-from any
+      fromAny.m_handler = nullptr;
+      return;
+    }
+
     if (m_handler->move == nullptr) {
       // trivially move constructible -> trivially movable
-      m_data = std::move(from.m_data);
+      m_data = std::move(fromAny.m_data);
     } else {
-      m_handler->move(from.m_data.data(), m_data.data());
+      m_handler->move(from, to);
     }
   }
 
-  void copyConstruct(const AnyBase& from) {
+  void copyConstruct(const AnyBase& fromAny) {
     if (m_handler == nullptr) {
       return;
     }
+
+    void* to = m_data.data();
+    const void* from = fromAny.m_data.data();
+    if (m_handler->typeSize > SIZE) {
+      // stored on heap: interpret buffer as pointer
+      to = *reinterpret_cast<void**>(m_data.data());
+      from = *reinterpret_cast<void* const*>(fromAny.m_data.data());
+    }
+
     if (m_handler->copyConstruct == nullptr) {
       // trivially copyable
-      m_data = from.m_data;
+      m_data = fromAny.m_data;
     } else {
-      m_handler->copyConstruct(from.m_data.data(), m_data.data());
+      m_handler->copyConstruct(from, to);
     }
   }
 
-  void copy(const AnyBase& from) {
+  void copy(const AnyBase& fromAny) {
     if (m_handler == nullptr) {
       return;
     }
+
+    void* to = m_data.data();
+    const void* from = fromAny.m_data.data();
+    if (m_handler->typeSize > SIZE) {
+      // stored on heap: interpret buffer as pointer
+      to = *reinterpret_cast<void**>(m_data.data());
+      from = *reinterpret_cast<void* const*>(fromAny.m_data.data());
+    }
+
     if (m_handler->copy == nullptr) {
       // trivially copyable
-      m_data = from.m_data;
+      m_data = fromAny.m_data;
     } else {
-      m_handler->copy(from.m_data.data(), m_data.data());
+      m_handler->copy(from, to);
     }
   }
 
   template <typename T>
   static void destroyImpl(void* ptr) {
+    _ACTS_ANY_DEBUG("Destroy: " << ptr);
     assert(ptr != nullptr && "Address to destroy is nullptr");
     T* obj = static_cast<T*>(ptr);
-    obj->~T();
+    if constexpr (sizeof(T) <= SIZE) {
+      // stored in place: just call the destructor
+      obj->~T();
+    } else {
+      // stored on heap: delete
+      delete obj;
+    }
   }
 
   template <typename T>
   static void moveConstructImpl(void* from, void* to) {
+    _ACTS_ANY_DEBUG("move const: " << from << " -> " << to);
     assert(from != nullptr && "Source is null");
     assert(to != nullptr && "Target is null");
     T* _from = static_cast<T*>(from);
@@ -237,6 +367,7 @@ class AnyBase {
 
   template <typename T>
   static void moveImpl(void* from, void* to) {
+    _ACTS_ANY_DEBUG("move: " << from << " -> " << to);
     assert(from != nullptr && "Source is null");
     assert(to != nullptr && "Target is null");
 
@@ -248,6 +379,7 @@ class AnyBase {
 
   template <typename T>
   static void copyConstructImpl(const void* from, void* to) {
+    _ACTS_ANY_DEBUG("copy const: " << from << " -> " << to);
     assert(from != nullptr && "Source is null");
     assert(to != nullptr && "Target is null");
     const T* _from = static_cast<const T*>(from);
@@ -256,6 +388,7 @@ class AnyBase {
 
   template <typename T>
   static void copyImpl(const void* from, void* to) {
+    _ACTS_ANY_DEBUG("copy: " << from << " -> " << to);
     assert(from != nullptr && "Source is null");
     assert(to != nullptr && "Target is null");
 
@@ -266,7 +399,7 @@ class AnyBase {
   }
 
   alignas(std::max_align_t) std::array<char, SIZE> m_data{};
-  Handler* m_handler{nullptr};
+  const Handler* m_handler{nullptr};
 };
 
 using Any = AnyBase<8>;
