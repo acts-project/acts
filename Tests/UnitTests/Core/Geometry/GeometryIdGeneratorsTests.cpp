@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 
 namespace {
 
-/// @brief  This generator a vector of mockup volumes
+/// @brief  This generates a vector of mockup volumes
 ///
 ///  | A | B | C | D  | E | F |
 ///  |   | s |   | sp | p | v |
@@ -81,7 +81,7 @@ namespace {
 /// E -> volume with passive surface
 /// F -> volume with sub volume
 ///
-/// @return
+/// @return an array of 6 volumes with different content
 std::array<std::shared_ptr<Acts::Experimental::DetectorVolume>, 6u>
 mockupVolumes(std::vector<std::shared_ptr<Acts::TestDetectorElement>>& store) {
   auto portals = Acts::Experimental::detail::defaultPortalGenerator();

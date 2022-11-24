@@ -29,7 +29,7 @@ void Acts::Experimental::detail::VolumeCounter::generateIds(
     // Set to all contained surfaces
     size_t sensitiveCounter = 0;
     size_t passiveCounter = 0;
-    for (auto sPtr : volume.surfacePtrs()) {
+    for (auto& sPtr : volume.surfacePtrs()) {
       auto surfaceID = sPtr->geometryId();
       if (sPtr->associatedDetectorElement() != nullptr and
           surfaceID.sensitive() == 0u) {
@@ -43,7 +43,7 @@ void Acts::Experimental::detail::VolumeCounter::generateIds(
 
     // Set to the portal if not yet claimed by another volume
     size_t portalCounter = 0;
-    for (auto pPtr : volume.portalPtrs()) {
+    for (auto& pPtr : volume.portalPtrs()) {
       if (pPtr->surface().geometryId().boundary() == 0u) {
         // Claim the portal surface
         pPtr->surface().assignGeometryId(
@@ -53,7 +53,7 @@ void Acts::Experimental::detail::VolumeCounter::generateIds(
   }
 
   // Recursively step down down into sub volumes if present
-  for (auto vPtr : volume.volumePtrs()) {
+  for (auto& vPtr : volume.volumePtrs()) {
     generateIds(*vPtr);
   }
 }
@@ -70,7 +70,7 @@ void Acts::Experimental::detail::LayerCounter::generateIds(
 void Acts::Experimental::detail::PortalCounter::generateIds(
     DetectorVolume& volume) {
   size_t portalCounter = 0;
-  for (auto pPtr : volume.portalPtrs()) {
+  for (auto& pPtr : volume.portalPtrs()) {
     if (pPtr->surface().geometryId().boundary() == 0u) {
       // Claim the portal surface
       pPtr->surface().assignGeometryId(
@@ -97,7 +97,7 @@ void Acts::Experimental::detail::SensitiveCounter::generateIds(
 void Acts::Experimental::detail::PassiveCounter::generateIds(
     DetectorVolume& volume) {
   size_t passiveCounter = 0;
-  for (auto sPtr : volume.surfacePtrs()) {
+  for (auto& sPtr : volume.surfacePtrs()) {
     auto surfaceID = sPtr->geometryId();
     // Set only if the surface is indeed passive
     if (surfaceID.passive() == 0u and
@@ -130,18 +130,18 @@ void Acts::Experimental::detail::DuplicateIdChecker::generateIds(
   check(volume.geometryId());
   m_processedVolumes[&volume] = true;
   // Check contained surfaces
-  for (auto s : volume.surfaces()) {
+  for (auto& s : volume.surfaces()) {
     check(s->geometryId());
   }
   // Check contained portals, but keep track of shared ones
-  for (auto p : volume.portals()) {
+  for (auto& p : volume.portals()) {
     if (m_processedPortals.find(p) == m_processedPortals.end()) {
       check(p->surface().geometryId());
       m_processedPortals[p] = true;
     }
   }
   // Check contained volumes, allow for global appearance in detector listx
-  for (auto v : volume.volumePtrs()) {
+  for (auto& v : volume.volumePtrs()) {
     if (m_processedVolumes.find(v.get()) == m_processedVolumes.end()) {
       generateIds(*v);
       m_processedVolumes[v.get()] = true;
