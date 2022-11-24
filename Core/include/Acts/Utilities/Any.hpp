@@ -359,14 +359,15 @@ class AnyBase {
 
   template <typename T>
   static void destroyImpl(void* ptr) {
-    _ACTS_ANY_DEBUG("Destroy: " << ptr);
     assert(ptr != nullptr && "Address to destroy is nullptr");
     T* obj = static_cast<T*>(ptr);
     if constexpr (sizeof(T) <= SIZE) {
       // stored in place: just call the destructor
+      _ACTS_ANY_DEBUG("Destroy local at: " << ptr);
       obj->~T();
     } else {
       // stored on heap: delete
+      _ACTS_ANY_DEBUG("Delete heap at: " << obj);
       delete obj;
     }
   }
