@@ -12,7 +12,6 @@
 #include "Acts/Seeding/BinnedSPGroup.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -171,6 +170,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   m_cfg.seedFinderConfig.seedFilter =
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
+  m_seedFinder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -219,8 +219,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
-  auto finder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig,
-                                                m_cfg.seedFinderOptions);
 
   // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
@@ -232,13 +230,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // run the seeding
   static thread_local SimSeedContainer seeds;
   seeds.clear();
-  static thread_local decltype(finder)::SeedingState state;
+  static thread_local decltype(m_seedFinder)::SeedingState state;
 
   auto group = spacePointsGrouping.begin();
   auto groupEnd = spacePointsGrouping.end();
   for (; !(group == groupEnd); ++group) {
-    finder.createSeedsForGroup(state, std::back_inserter(seeds), group.bottom(),
-                               group.middle(), group.top(), rMiddleSPRange);
+    m_seedFinder.createSeedsForGroup(
+        m_cfg.seedFinderOptions, state, std::back_inserter(seeds),
+        group.bottom(), group.middle(), group.top(), rMiddleSPRange);
   }
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
