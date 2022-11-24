@@ -68,8 +68,11 @@ void addDetector(Context& ctx) {
         py::class_<TelescopeDetector, IBaseDetector,
                    std::shared_ptr<TelescopeDetector>>(mex, "TelescopeDetector")
             .def(py::init<>())
-            .def("finalize", py::overload_cast<const Config&>(
-                                 &TelescopeDetector::finalize));
+            .def("finalize",
+                 py::overload_cast<
+                     const Config&,
+                     const std::shared_ptr<const Acts::IMaterialDecorator>&>(
+                     &TelescopeDetector::finalize));
 
     py::class_<Config>(td, "Config")
         .def(py::init<>())
