@@ -12,8 +12,9 @@
 #include <cassert>
 #include <cstddef>
 #include <memory>
+#include <utility>
 
-#define _ENABLE_ACTS_ANY_DEBUG = 1
+// #define _ENABLE_ACTS_ANY_DEBUG
 
 #if defined(_ENABLE_ACTS_ANY_DEBUG)
 #include <iomanip>
@@ -55,18 +56,44 @@ class AnyBase {
     cache.m_handler = makeHandler<U>();
     if constexpr (sizeof(U) <= SIZE) {
       // construct into local buffer
-      /*T* ptr =*/new (cache.m_data.data()) U(std::forward<Args>(args)...);
+      /*U* ptr =*/new (cache.m_data.data()) U(std::forward<Args>(args)...);
     } else {
       // too large, heap allocate
-      // U*& ptr = *reinterpret_cast<U**>(cache.m_data.data());
       U* heap = new U(std::forward<Args>(args)...);
-      std::memcpy(cache.m_data.data(), &heap, sizeof(U*));
+      *reinterpret_cast<U**>(cache.m_data.data()) = heap;
     }
 
     return cache;
   }
 
+  template <typename T, typename... Args>
+  explicit AnyBase(std::in_place_type_t<T> /*unused*/, Args&&... args) {
+    using U = std::decay_t<T>;
+    static_assert(std::is_same_v<T, std::decay_t<T>>,
+                  "Please pass the raw type, no const or ref");
+    static_assert(
+        std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
+        "Type needs to be move assignable and move constructible");
+    static_assert(
+        std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U>,
+        "Type needs to be copy assignable and copy constructible");
+
+    m_handler = makeHandler<U>();
+    if constexpr (sizeof(U) <= SIZE) {
+      // construct into local buffer
+      /*U* ptr =*/new (m_data.data()) U(std::forward<Args>(args)...);
+    } else {
+      // too large, heap allocate
+      U* heap = new U(std::forward<Args>(args)...);
+      *reinterpret_cast<U**>(m_data.data()) = heap;
+    }
+  }
+
+#if defined(_ENABLE_ACTS_ANY_DEBUG)
   AnyBase() { _ACTS_ANY_DEBUG("Default construct this=" << this); };
+#else
+  AnyBase() = default;
+#endif
 
   template <typename T>
   explicit AnyBase(T&& value) {
@@ -90,10 +117,7 @@ class AnyBase {
       U* heap = new U(std::move(value));
       _ACTS_ANY_DEBUG("Construct heap (this=" << this << ") at: " << heap);
       _ACTS_ANY_DEBUG_BUFFER("-> buffer before", m_data);
-      U*& ptr = *((U**)m_data.data());
-      ptr = heap;
-      // U*& ptr = *reinterpret_cast<U**>(m_data.data());
-      // ptr = heap;
+      *reinterpret_cast<U**>(m_data.data()) = heap;
       _ACTS_ANY_DEBUG_BUFFER("-> buffer after", m_data);
     }
   }
@@ -235,8 +259,7 @@ class AnyBase {
 
         _ACTS_ANY_DEBUG_BUFFER("-> buffer pre-destroy", m_data);
 
-        // ptr = *reinterpret_cast<void**>(m_data.data());
-        std::memcpy(&ptr, m_data.data(), sizeof(void*));
+        ptr = *reinterpret_cast<void**>(m_data.data());
         _ACTS_ANY_DEBUG("Pre-destroy: " << ptr);
       }
       m_handler->destroy(ptr);
@@ -252,13 +275,9 @@ class AnyBase {
     void* to = m_data.data();
     void* from = fromAny.m_data.data();
     if (m_handler->typeSize > SIZE) {
-      // stored on heap: interpret buffer as pointer
-      // to = *reinterpret_cast<void**>(m_data.data());
-      // from = *reinterpret_cast<void**>(fromAny.m_data.data());
-
-      // just copy the pointer
-      // to = from;
-      std::memcpy(m_data.data(), fromAny.m_data.data(), sizeof(void*));
+      // stored on heap: just copy the pointer
+      *reinterpret_cast<void**>(m_data.data()) =
+          *reinterpret_cast<void**>(fromAny.m_data.data());
       // do not delete in moved-from any
       fromAny.m_handler = nullptr;
       return;
@@ -280,13 +299,9 @@ class AnyBase {
     void* to = m_data.data();
     void* from = fromAny.m_data.data();
     if (m_handler->typeSize > SIZE) {
-      // stored on heap: interpret buffer as pointer
-      // to = *reinterpret_cast<void**>(m_data.data());
-      // from = *reinterpret_cast<void**>(fromAny.m_data.data());
-
-      // just copy the pointer
-      // to = from;
-      std::memcpy(m_data.data(), fromAny.m_data.data(), sizeof(void*));
+      // stored on heap: just copy the pointer
+      *reinterpret_cast<void**>(m_data.data()) =
+          *reinterpret_cast<void**>(fromAny.m_data.data());
       // do not delete in moved-from any
       fromAny.m_handler = nullptr;
       return;
@@ -403,5 +418,9 @@ class AnyBase {
 };
 
 using Any = AnyBase<8>;
+
+#undef _ACTS_ANY_DEBUG
+#undef _ACTS_ANY_DEBUG_BUFFER
+#undef _ENABLE_ACTS_ANY_DEBUG
 
 }  // namespace Acts

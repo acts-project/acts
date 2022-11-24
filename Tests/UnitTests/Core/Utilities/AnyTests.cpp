@@ -73,6 +73,17 @@ BOOST_AUTO_TEST_CASE(AnyConstructCustom) {
   BOOST_CHECK_EQUAL(a.as<A>().value, 76);
 }
 
+BOOST_AUTO_TEST_CASE(AnyConstructCustomInPlace) {
+  struct A {
+    int value;
+    A(int v) { value = v; }
+  };
+
+  Any a{std::in_place_type<A>, 42};
+  BOOST_CHECK(!!a);
+  BOOST_CHECK_EQUAL(a.as<A>().value, 42);
+}
+
 BOOST_AUTO_TEST_CASE(AnyMove) {
   {
     // small type
@@ -117,12 +128,15 @@ BOOST_AUTO_TEST_CASE(AnyCopy) {
 
 struct D {
   bool* destroyed;
+  D(bool* d) : destroyed{d} {}
   ~D() { *destroyed = true; }
 };
 
 struct D2 {
   bool* destroyed{nullptr};
   std::array<char, 512> blob{};
+
+  D2(bool* d) : destroyed{d} {}
 
   ~D2() { *destroyed = true; }
 };
@@ -145,6 +159,28 @@ BOOST_AUTO_TEST_CASE(AnyDestroy) {
     BOOST_CHECK(!destroyed);
     {
       Any a{std::move(d)};
+      BOOST_CHECK(!destroyed);
+    }
+    BOOST_CHECK(destroyed);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(AnyDestroyInPlace) {
+  {  // small type
+    bool destroyed = false;
+    BOOST_CHECK(!destroyed);
+    {
+      Any a{std::in_place_type<D>, &destroyed};
+      BOOST_CHECK(!destroyed);
+    }
+    BOOST_CHECK(destroyed);
+  }
+
+  {  // large type
+    bool destroyed = false;
+    BOOST_CHECK(!destroyed);
+    {
+      Any a{std::in_place_type<D2>, &destroyed};
       BOOST_CHECK(!destroyed);
     }
     BOOST_CHECK(destroyed);
