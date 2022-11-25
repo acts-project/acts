@@ -29,6 +29,9 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
 
     BOOST_CHECK_EQUAL(a.as<int>(), v);
     BOOST_CHECK_NE(a.as<int>(), v + 1);
+
+    BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
+    BOOST_CHECK_THROW(a = Any{0.5f}, std::bad_any_cast);
   }
 
   {
@@ -43,6 +46,8 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
     BOOST_CHECK_EQUAL_COLLECTIONS(a.as<decltype(v)>().begin(),
                                   a.as<decltype(v)>().end(), v.begin(),
                                   v.end());
+    BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
+    BOOST_CHECK_THROW(a = Any{0.5f}, std::bad_any_cast);
   }
 
   {
@@ -57,7 +62,23 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
     BOOST_CHECK_EQUAL_COLLECTIONS(a.as<decltype(v)>().begin(),
                                   a.as<decltype(v)>().end(), v.begin(),
                                   v.end());
+    BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
+    BOOST_CHECK_THROW(a = Any{0.5f}, std::bad_any_cast);
   }
+}
+
+BOOST_AUTO_TEST_CASE(AnyAssignConstructEmpty) {
+  Any a;
+  Any b;
+  a = b;
+  Any c{a};
+  a = std::move(b);
+  Any d{std::move(a)};
+
+  BOOST_CHECK(!a);
+  BOOST_CHECK(!b);
+  BOOST_CHECK(!c);
+  BOOST_CHECK(!d);
 }
 
 BOOST_AUTO_TEST_CASE(AnyConstructCustom) {

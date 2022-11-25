@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include <any>
 #include <array>
 #include <cassert>
 #include <cstddef>
@@ -84,8 +85,6 @@ class AnyBase : public AnyBaseAll {
     AnyBase cache{};
 
     using U = std::decay_t<T>;
-    static_assert(std::is_same_v<T, std::decay_t<T>>,
-                  "Please pass the raw type, no const or ref");
     static_assert(
         std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
         "Type needs to be move assignable and move constructible");
@@ -115,8 +114,6 @@ class AnyBase : public AnyBaseAll {
   template <typename T, typename... Args>
   explicit AnyBase(std::in_place_type_t<T> /*unused*/, Args&&... args) {
     using U = std::decay_t<T>;
-    static_assert(std::is_same_v<T, std::decay_t<T>>,
-                  "Please pass the raw type, no const or ref");
     static_assert(
         std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
         "Type needs to be move assignable and move constructible");
@@ -182,45 +179,14 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
-  // template <typename T>
-  // explicit AnyBase(const T& value) {
-  // using U = std::decay_t<T>;
-  // static_assert(
-  // std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
-  // "Type needs to be move assignable and move constructible");
-  // static_assert(
-  // std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U>,
-  // "Type needs to be copy assignable and copy constructible");
-
-  // m_handler = makeHandler<U>();
-
-  // if constexpr (sizeof(U) <= SIZE) {
-  // // construct into local buffer
-  // [>U* ptr =<]new (m_data.data()) U(value);
-  // _ACTS_ANY_VERBOSE(
-  // "Construct local (this=" << this << ") at: " << (void*)m_data.data());
-  // } else {
-  // // too large, heap allocate
-  // U* heap = new U(value);
-  // _ACTS_ANY_VERBOSE("Construct heap (this=" << this << ") at: " << heap);
-  // _ACTS_ANY_VERBOSE_BUFFER("-> buffer before", m_data);
-  // #if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
-  // {
-  // std::lock_guard guard{_s_any_mutex};
-  // _s_any_allocations.emplace(std::type_index(typeid(T)), heap);
-  // }
-  // #endif
-  // *reinterpret_cast<U**>(m_data.data()) = heap;
-  // _ACTS_ANY_VERBOSE_BUFFER("-> buffer after", m_data);
-  // }
-  // }
-
   template <typename T>
   T& as() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    assert(makeHandler<T>() == m_handler && "Bad type access");
-    if (m_handler->typeSize <= SIZE) {
+    if (makeHandler<T>() != m_handler) {
+      throw std::bad_any_cast{};
+    }
+    if (!m_handler->heap) {
       T* ptr = reinterpret_cast<T*>(m_data.data());
       _ACTS_ANY_VERBOSE("As local: " << ptr);
       return *ptr;
@@ -236,8 +202,10 @@ class AnyBase : public AnyBaseAll {
   const T& as() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    assert(makeHandler<T>() == m_handler && "Bad type access");
-    if (m_handler->typeSize <= SIZE) {
+    if (makeHandler<T>() != m_handler) {
+      throw std::bad_any_cast{};
+    }
+    if (!m_handler->heap) {
       const T* ptr = reinterpret_cast<const T*>(m_data.data());
       _ACTS_ANY_VERBOSE("As local: " << ptr);
       return *ptr;
@@ -252,52 +220,62 @@ class AnyBase : public AnyBaseAll {
   ~AnyBase() { destroy(); }
 
   AnyBase(const AnyBase& other) {
-    if (m_handler == nullptr) {  // this object is empty
-      m_handler = other.m_handler;
-      assert(m_handler != nullptr && "Handler is null");
-      // @FIXME: Need to allocate
-      copyConstruct(other);
-    } else {
-      // @TODO: Support assigning between different types
-      assert(m_handler == other.m_handler);
-      copy(other);
+    if (m_handler == nullptr && other.m_handler == nullptr) {
+      // both are empty, noop
+      return;
     }
+
+    m_handler = other.m_handler;
+    assert(m_handler != nullptr && "Handler is null");
+    copyConstruct(other);
   }
 
   AnyBase& operator=(const AnyBase& other) {
+    if (m_handler == nullptr && other.m_handler == nullptr) {
+      // both are empty, noop
+      return *this;
+    }
+
     if (m_handler == nullptr) {  // this object is empty
       m_handler = other.m_handler;
       assert(m_handler && "Handler is null");
       copyConstruct(other);
     } else {
       // @TODO: Support assigning between different types
-      assert(m_handler == other.m_handler);
+      if (m_handler != other.m_handler) {
+        throw std::bad_any_cast{};
+      }
       copy(other);
     }
     return *this;
   }
 
   AnyBase(AnyBase&& other) {
-    if (m_handler == nullptr) {  // this object is empty
-      m_handler = other.m_handler;
-      assert(m_handler != nullptr && "Handler is null");
-      // @FIXME: Need to allocate
-      moveConstruct(std::move(other));
-    } else {
-      // @TODO: Support assigning between different types
-      assert(m_handler == other.m_handler);
-      move(std::move(other));
+    if (m_handler == nullptr && other.m_handler == nullptr) {
+      // both are empty, noop
+      return;
     }
+
+    m_handler = other.m_handler;
+    assert(m_handler != nullptr && "Handler is null");
+    moveConstruct(std::move(other));
   }
 
   AnyBase& operator=(AnyBase&& other) {
+    if (m_handler == nullptr && other.m_handler == nullptr) {
+      // both are empty, noop
+      return *this;
+    }
+
     if (m_handler == nullptr) {  // this object is empty
       m_handler = other.m_handler;
       assert(m_handler && "Handler is null");
       moveConstruct(std::move(other));
     } else {
       // @TODO: Support assigning between different types
-      assert(m_handler == other.m_handler);
+      if (m_handler != other.m_handler) {
+        throw std::bad_any_cast{};
+      }
       move(std::move(other));
     }
     return *this;
@@ -312,7 +290,7 @@ class AnyBase : public AnyBaseAll {
     void (*move)(void* from, void* to) = nullptr;
     void* (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
-    std::size_t typeSize{0};
+    bool heap{false};
   };
 
   template <typename T>
@@ -339,7 +317,7 @@ class AnyBase : public AnyBaseAll {
                     sizeof(T) > SIZE) {
         h.copy = &copyImpl<T>;
       }
-      h.typeSize = sizeof(T);
+      h.heap = sizeof(T) > SIZE;
 
       _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
       _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
@@ -347,8 +325,7 @@ class AnyBase : public AnyBaseAll {
       _ACTS_ANY_DEBUG(" -> move: " << h.move);
       _ACTS_ANY_DEBUG(" -> copyConstruct: " << h.copyConstruct);
       _ACTS_ANY_DEBUG(" -> copy: " << h.copy);
-      _ACTS_ANY_DEBUG(" -> typeSize: " << h.typeSize << " heap: "
-                                       << (h.typeSize > SIZE ? "yes" : "no"));
+      _ACTS_ANY_DEBUG(" -> heap: " << (h.heap ? "yes" : "no"));
 
       return h;
     }();
@@ -359,7 +336,7 @@ class AnyBase : public AnyBaseAll {
     _ACTS_ANY_VERBOSE("Destructor this=" << this << " handler: " << m_handler);
     if (m_handler != nullptr && m_handler->destroy != nullptr) {
       void* ptr = m_data.data();
-      if (m_handler->typeSize > SIZE) {
+      if (m_handler->heap) {
         // stored on heap: interpret buffer as pointer
         _ACTS_ANY_VERBOSE("Pre-destroy data: " << (void*)m_data.data());
 
@@ -380,7 +357,7 @@ class AnyBase : public AnyBaseAll {
 
     void* to = m_data.data();
     void* from = fromAny.m_data.data();
-    if (m_handler->typeSize > SIZE) {
+    if (m_handler->heap) {
       // stored on heap: just copy the pointer
       *reinterpret_cast<void**>(m_data.data()) =
           *reinterpret_cast<void**>(fromAny.m_data.data());
@@ -404,7 +381,7 @@ class AnyBase : public AnyBaseAll {
 
     void* to = m_data.data();
     void* from = fromAny.m_data.data();
-    if (m_handler->typeSize > SIZE) {
+    if (m_handler->heap) {
       // stored on heap: just copy the pointer
       *reinterpret_cast<void**>(m_data.data()) =
           *reinterpret_cast<void**>(fromAny.m_data.data());
@@ -414,7 +391,7 @@ class AnyBase : public AnyBaseAll {
     }
 
     if (m_handler->move == nullptr) {
-      // trivially move constructible -> trivially movable
+      // trivially movable
       m_data = std::move(fromAny.m_data);
     } else {
       m_handler->move(from, to);
@@ -428,20 +405,14 @@ class AnyBase : public AnyBaseAll {
 
     void* to = m_data.data();
     const void* from = fromAny.m_data.data();
-    if (m_handler->typeSize > SIZE) {
+    if (m_handler->heap) {
       // stored on heap: interpret buffer as pointer
       to = *reinterpret_cast<void**>(m_data.data());
       from = *reinterpret_cast<void* const*>(fromAny.m_data.data());
-
-      // if (to == nullptr) {
-      // // want to copy but do not have allocation yet
-      // to = new char[m_handler->typeSize];
-      // *reinterpret_cast<void**>(m_data.data()) = to;
-      // }
     }
 
     if (m_handler->copyConstruct == nullptr) {
-      // trivially copyable
+      // trivially copy constructible
       m_data = fromAny.m_data;
     } else {
       void* copyAt = m_handler->copyConstruct(from, to);
@@ -460,7 +431,7 @@ class AnyBase : public AnyBaseAll {
 
     void* to = m_data.data();
     const void* from = fromAny.m_data.data();
-    if (m_handler->typeSize > SIZE) {
+    if (m_handler->heap) {
       // stored on heap: interpret buffer as pointer
       to = *reinterpret_cast<void**>(m_data.data());
       from = *reinterpret_cast<void* const*>(fromAny.m_data.data());
@@ -564,7 +535,7 @@ class AnyBase : public AnyBaseAll {
 #if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
 #endif
 
-using Any = AnyBase<8>;
+using Any = AnyBase<sizeof(void*)>;
 
 #undef _ACTS_ANY_VERBOSE
 #undef _ACTS_ANY_VERBOSE_BUFFER
