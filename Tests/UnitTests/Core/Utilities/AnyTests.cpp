@@ -11,6 +11,8 @@
 
 #include "Acts/Utilities/Any.hpp"
 
+#include <utility>
+
 using namespace Acts;
 
 BOOST_AUTO_TEST_SUITE(AnyTests)
@@ -184,6 +186,29 @@ BOOST_AUTO_TEST_CASE(AnyDestroyInPlace) {
       BOOST_CHECK(!destroyed);
     }
     BOOST_CHECK(destroyed);
+  }
+}
+
+struct D3 {
+  size_t* destroyed{nullptr};
+  std::array<char, 512> blob{};
+
+  D3(size_t* d) : destroyed{d} {}
+
+  ~D3() { (*destroyed)++; }
+};
+
+BOOST_AUTO_TEST_CASE(LeakCheck) {
+  size_t destroyed = 0;
+  for (size_t i = 0; i < 10000; i++) {
+    {
+      BOOST_CHECK_EQUAL(destroyed, i);
+      Any a;
+      BOOST_CHECK_EQUAL(destroyed, i);
+      a = Any{std::in_place_type<D3>, &destroyed};
+      BOOST_CHECK_EQUAL(destroyed, i);
+    }
+    BOOST_CHECK_EQUAL(destroyed, i + 1);
   }
 }
 
