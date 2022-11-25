@@ -11,11 +11,11 @@
 namespace det {
 namespace geoIDHook {
 
-Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier, const Acts::Surface& surface){
-
-  if(identifier.volume() == 28 || identifier.volume() == 30){
+Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
+                                        const Acts::Surface& surface) {
+  if (identifier.volume() == 28 || identifier.volume() == 30) {
     Acts::Vector3 center = surface.center(Acts::GeometryContext());
-    double radius = sqrt(center[0]*center[0]+center[1]*center[1]);
+    double radius = sqrt(center[0] * center[0] + center[1] * center[1]);
     if (radius < 850) {
       identifier.setExtra(1);
     } else {
@@ -26,6 +26,5 @@ Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier, con
   return identifier;
 }
 
-}
-}
-
+}  // namespace geoIDHook
+}  // namespace det
