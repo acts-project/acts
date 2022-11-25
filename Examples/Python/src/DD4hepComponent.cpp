@@ -10,10 +10,12 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
+#include "ActsExamples/DD4hepDetector/GeoIDHooks.h"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
 #include <memory>
 
+#include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
@@ -41,6 +43,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_MEMBER(envelopeR);
     ACTS_PYTHON_MEMBER(envelopeZ);
     ACTS_PYTHON_MEMBER(defaultLayerThickness);
+    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
@@ -55,4 +58,5 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                                std::shared_ptr<const Acts::IMaterialDecorator>>(
                  &DD4hep::DD4hepDetector::finalize));
   }
+  m.def("stripEndcapODD", &det::geoIDHook::stripEndcapODD);
 }

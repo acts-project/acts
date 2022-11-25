@@ -16,6 +16,7 @@
 #include "Acts/Geometry/TrackingVolumeArrayCreator.hpp"
 #include "Acts/Plugins/DD4hep/ConvertDD4hepDetector.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "ActsExamples/DD4hepDetector/GeoIDHooks.h"
 
 #include <stdexcept>
 

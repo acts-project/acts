@@ -48,6 +48,7 @@ def getOpenDataDetector(
         xmlFileNames=[str(odd_xml)],
         logLevel=customLogLevel(),
         dd4hepLogLevel=customLogLevel(),
+        geometryIdentifierHook=acts.examples.dd4hep.stripEndcapODD,
     )
     detector = acts.examples.dd4hep.DD4hepDetector()
 
