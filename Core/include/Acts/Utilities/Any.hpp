@@ -486,9 +486,6 @@ class AnyBase : public AnyBaseAll {
   const Handler* m_handler{nullptr};
 };
 
-#if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
-#endif
-
 using Any = AnyBase<sizeof(void*)>;
 
 #undef _ACTS_ANY_VERBOSE
