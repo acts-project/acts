@@ -252,25 +252,6 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
 
-        if label == "seeded":
-            residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"
-            # @TODO: Add try/except
-            subprocess.check_call(
-                [
-                    str(residual_app),
-                    "--predicted",
-                    "--filtered",
-                    "--smoothed",
-                    "--silent",
-                    "-i",
-                    str(tp / "trackstates_ckf.root"),
-                    "-o",
-                    str(outdir / "acts_analysis_residuals_and_pulls.root"),
-                    "--save",
-                    "",
-                ]
-            )
-
 ### VERTEX MU SCAN
 
 for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
