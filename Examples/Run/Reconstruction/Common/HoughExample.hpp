@@ -21,5 +21,6 @@ class IBaseDetector;
 /// @param argc the number of argumetns of the call
 /// @param argv the argument list
 /// @param detector The detector descriptor instance
-int runHoughExample(int argc, char* argv[],
-                    std::shared_ptr<ActsExamples::IBaseDetector> detector);
+int runHoughExample(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector);
