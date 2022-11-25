@@ -4,6 +4,7 @@ add_library(
   RecCKFTracks.cpp
   RecChi2Tracks.cpp
   SeedingExample.cpp
+  HoughExample.cpp
   MeasurementsToSpacepoints.cpp
 )
 target_include_directories(
