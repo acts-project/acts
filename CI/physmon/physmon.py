@@ -242,7 +242,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
         del s
 
         for stem in ["performance_ckf", "performance_vertexing"] + (
-            ["trackstates_ckf", "performance_seeding_hists", "performance_ambi"]
+            ["performance_seeding_hists", "performance_ambi"]
             if label in ["seeded", "orthogonal"]
             else ["performance_seeding_hists"]
             if label == "truth_estimated"

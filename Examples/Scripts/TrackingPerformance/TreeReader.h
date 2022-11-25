@@ -8,9 +8,7 @@
 
 #pragma once
 
-#include <algorithm>
 #include <array>
-#include <numeric>
 #include <string>
 #include <vector>
 
@@ -148,18 +146,10 @@ struct TrackStatesReader : public TreeReader {
     // synchronize events if multiple root files are read
     if (sortEvents) {
       entryNumbers.resize(tree->GetEntries());
-      std::iota(entryNumbers.begin(), entryNumbers.end(), 0);
-
-      std::vector<unsigned int> eventIds;
-      eventIds.reserve(tree->GetEntries());
-      for (unsigned int i = 0; i < tree->GetEntries(); i++) {
-        tree->GetEntry(i);
-        eventIds.push_back(eventId);
-      }
-
-      std::stable_sort(entryNumbers.begin(), entryNumbers.end(), [&](auto a, auto b) {
-        return eventIds[a] < eventIds[b];
-      });
+      tree->Draw("event_nr", "", "goff");
+      // Sort to get the entry numbers of the ordered events
+      TMath::Sort(tree->GetEntries(), tree->GetV1(), entryNumbers.data(),
+                  false);
     }
   }
 
