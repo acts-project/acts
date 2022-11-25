@@ -112,7 +112,7 @@ class AnyBase : public AnyBaseAll {
       // too large, heap allocate
       U* heap = new U(std::forward<Args>(args)...);
       _ACTS_ANY_TRACK_ALLOCATION(T, heap);
-      *reinterpret_cast<U**>(m_data.data()) = heap;
+      setDataPtr(heap);
     }
   }
 
@@ -147,7 +147,7 @@ class AnyBase : public AnyBaseAll {
       _ACTS_ANY_VERBOSE("Construct heap (this=" << this << ") at: " << heap);
       _ACTS_ANY_VERBOSE_BUFFER("-> buffer before", m_data);
       _ACTS_ANY_TRACK_ALLOCATION(T, heap);
-      *reinterpret_cast<U**>(m_data.data()) = heap;
+      setDataPtr(heap);
       _ACTS_ANY_VERBOSE_BUFFER("-> buffer after", m_data);
     }
   }
@@ -162,7 +162,7 @@ class AnyBase : public AnyBaseAll {
 
     _ACTS_ANY_VERBOSE("Get as " << (m_handler->heap ? "heap" : "local"));
 
-    return *reinterpret_cast<T*>(data());
+    return *reinterpret_cast<T*>(dataPtr());
   }
 
   template <typename T>
@@ -175,7 +175,7 @@ class AnyBase : public AnyBaseAll {
 
     _ACTS_ANY_VERBOSE("Get as " << (m_handler->heap ? "heap" : "local"));
 
-    return *reinterpret_cast<const T*>(data());
+    return *reinterpret_cast<const T*>(dataPtr());
   }
 
   ~AnyBase() { destroy(); }
@@ -255,14 +255,17 @@ class AnyBase : public AnyBaseAll {
   operator bool() const { return m_handler != nullptr; }
 
  private:
-  void* data() {
+  void* dataPtr() {
     if (m_handler->heap) {
       return *reinterpret_cast<void**>(m_data.data());
     } else {
       return reinterpret_cast<void*>(m_data.data());
     }
   }
-  const void* data() const {
+
+  void setDataPtr(void* ptr) { *reinterpret_cast<void**>(m_data.data()) = ptr; }
+
+  const void* dataPtr() const {
     if (m_handler->heap) {
       return *reinterpret_cast<void* const*>(m_data.data());
     } else {
@@ -321,7 +324,7 @@ class AnyBase : public AnyBaseAll {
   void destroy() {
     _ACTS_ANY_VERBOSE("Destructor this=" << this << " handler: " << m_handler);
     if (m_handler != nullptr && m_handler->destroy != nullptr) {
-      m_handler->destroy(data());
+      m_handler->destroy(dataPtr());
       m_handler = nullptr;
     }
   }
@@ -331,11 +334,11 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = m_data.data();
-    void* from = fromAny.m_data.data();
+    void* to = dataPtr();
+    void* from = fromAny.dataPtr();
     if (m_handler->heap) {
       // stored on heap: just copy the pointer
-      *reinterpret_cast<void**>(m_data.data()) = fromAny.data();
+      setDataPtr(fromAny.dataPtr());
       // do not delete in moved-from any
       fromAny.m_handler = nullptr;
       return;
@@ -354,13 +357,13 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = m_data.data();
-    void* from = fromAny.m_data.data();
+    void* to = dataPtr();
+    void* from = fromAny.dataPtr();
     if (m_handler->heap) {
       // stored on heap: just copy the pointer
       // need to delete existing pointer
-      m_handler->destroy(data());
-      *reinterpret_cast<void**>(m_data.data()) = fromAny.data();
+      m_handler->destroy(dataPtr());
+      setDataPtr(fromAny.dataPtr());
       // do not delete in moved-from any
       fromAny.m_handler = nullptr;
       return;
@@ -379,8 +382,8 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = data();
-    const void* from = fromAny.data();
+    void* to = dataPtr();
+    const void* from = fromAny.dataPtr();
 
     if (m_handler->copyConstruct == nullptr) {
       // trivially copy constructible
@@ -390,7 +393,7 @@ class AnyBase : public AnyBaseAll {
       if (to == nullptr) {
         assert(copyAt != nullptr);
         // copy allocated, store pointer
-        *reinterpret_cast<void**>(m_data.data()) = copyAt;
+        setDataPtr(copyAt);
       }
     }
   }
@@ -400,8 +403,8 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = data();
-    const void* from = fromAny.data();
+    void* to = dataPtr();
+    const void* from = fromAny.dataPtr();
 
     if (m_handler->copy == nullptr) {
       // trivially copyable

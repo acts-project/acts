@@ -445,8 +445,8 @@ BOOST_AUTO_TEST_CASE(LifeCycleHeap) {
       Any _a3 = a;
       incCopyConstruct(1);
       b = std::move(_a3);
-      incDestroy(1);
       // no actual move
+      incDestroy(1);
     }
     incDestroy(1);
   }
