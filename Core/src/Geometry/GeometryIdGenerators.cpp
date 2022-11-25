@@ -36,9 +36,10 @@ void Acts::Experimental::detail::VolumeCounter::generateIds(
         sPtr->assignGeometryId(
             (GeometryIdentifier(volumeID).setSensitive(++sensitiveCounter)));
       } else if (surfaceID.passive() == 0u and
-                 sPtr->associatedDetectorElement() == nullptr)
+                 sPtr->associatedDetectorElement() == nullptr) {
         sPtr->assignGeometryId(
             (GeometryIdentifier(volumeID).setPassive(++passiveCounter)));
+      }
     }
 
     // Set to the portal if not yet claimed by another volume
@@ -163,15 +164,15 @@ void Acts::Experimental::detail::UnsetIdChecker::generateIds(
   // Check the volume itself
   check(volume.geometryId());
   // Check the surfaces
-  for (auto s : volume.surfaces()) {
+  for (const auto& s : volume.surfaces()) {
     check(s->geometryId());
   }
   // Check the portals
-  for (auto p : volume.portals()) {
+  for (const auto& p : volume.portals()) {
     check(p->surface().geometryId());
   }
   // Recursively step down
-  for (auto v : volume.volumePtrs()) {
+  for (auto& v : volume.volumePtrs()) {
     generateIds(*v);
   }
 }
