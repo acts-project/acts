@@ -3,7 +3,7 @@ add_library(
   src/DD4hepDetector.cpp
   src/DD4hepDetectorHelper.cpp
   src/DD4hepGeometryService.cpp
-  src/GeoIDHooks.cpp
+  src/GeometryIdentifierHooks.cpp
   src/DetUtils.cpp)
 
 

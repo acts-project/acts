@@ -6,10 +6,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/DD4hepDetector/GeoIDHooks.hpp"
+#include "ActsExamples/DD4hepDetector/GeometryIdentifierHooks.hpp"
 
 namespace det {
-namespace geoIDHook {
+namespace GeometryIdentifierHooks {
 
 Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
                                         const Acts::Surface& surface) {
@@ -25,5 +25,5 @@ Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
   return identifier;
 }
 
-}  // namespace geoIDHook
+}  // namespace GeometryIdentifierHooks
 }  // namespace det
