@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/detail/SmallObjectCache.hpp"
+#include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <any>
@@ -26,7 +27,7 @@ using geometry_id_t = decltype(std::declval<T>().geometryId());
 }  // namespace detail_sl
 
 class SourceLink final {
-  using any_type = std::any;
+  using any_type = AnyBase<16>;
 
  public:
   /// Getter for the geometry identifier
@@ -77,11 +78,7 @@ class SourceLink final {
   /// @return Reference to the stored source link
   template <typename T>
   T& get() {
-    T* val = std::any_cast<T>(&m_upstream);
-    if (val == nullptr) {
-      throw std::bad_any_cast{};
-    }
-    return *val;
+    return m_upstream.as<T>();
   }
 
   /// Concrete source link class getter, const version
@@ -89,11 +86,7 @@ class SourceLink final {
   /// @return Const reference to the stored source link
   template <typename T>
   const T& get() const {
-    const T* val = std::any_cast<const T>(&m_upstream);
-    if (val == nullptr) {
-      throw std::bad_any_cast{};
-    }
-    return *val;
+    return m_upstream.as<T>();
   }
 
  private:
