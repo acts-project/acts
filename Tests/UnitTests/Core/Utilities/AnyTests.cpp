@@ -326,13 +326,13 @@ struct LifecycleHandle {
   LifecycleHandle() : counters{}, inner{&counters} {}
 };
 
-#define checkCounters()                                                    \
-  do {                                                                     \
-    BOOST_CHECK_EQUAL(l.counters.nCopy, counters.nCopy);                   \
-    BOOST_CHECK_EQUAL(l.counters.nCopyConstruct, counters.nCopyConstruct); \
-    BOOST_CHECK_EQUAL(l.counters.nMove, counters.nMove);                   \
-    BOOST_CHECK_EQUAL(l.counters.nMoveConstruct, counters.nMoveConstruct); \
-    BOOST_CHECK_EQUAL(l.counters.nDestroy, counters.nDestroy);             \
+#define checkCounters()                                                      \
+  do {                                                                       \
+    BOOST_REQUIRE_EQUAL(l.counters.nCopy, counters.nCopy);                   \
+    BOOST_REQUIRE_EQUAL(l.counters.nCopyConstruct, counters.nCopyConstruct); \
+    BOOST_REQUIRE_EQUAL(l.counters.nMove, counters.nMove);                   \
+    BOOST_REQUIRE_EQUAL(l.counters.nMoveConstruct, counters.nMoveConstruct); \
+    BOOST_REQUIRE_EQUAL(l.counters.nDestroy, counters.nDestroy);             \
   } while (0)
 
 #define makeCounter(counter, n) \
@@ -436,14 +436,16 @@ BOOST_AUTO_TEST_CASE(LifeCycleHeap) {
     incDestroy(1);
 
     {
-      auto _a2 = a;
+      Any _a2 = a;
       incCopyConstruct(1);
       Any b;
       b = std::move(_a2);
       // no actual move
-      auto _a3 = a;
+
+      Any _a3 = a;
       incCopyConstruct(1);
       b = std::move(_a3);
+      incDestroy(1);
       // no actual move
     }
     incDestroy(1);

@@ -15,11 +15,11 @@
 #include <memory>
 #include <utility>
 
-// #define _ENABLE_ACTS_ANY_VERBOSE
-// #define _ENABLE_ACTS_ANY_DEBUG
-// #define _ACTS_ANY_TRACK_ALLOCATIONS
+// #define _ACTS_ANY_ENABLE_VERBOSE
+// #define _ACTS_ANY_ENABLE_DEBUG
+// #define _ACTS_ANY_ENABLE_TRACK_ALLOCATIONS
 
-#if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
+#if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
 #include <iostream>
 #include <mutex>
 #include <set>
@@ -27,18 +27,18 @@
 #include <typeinfo>
 #endif
 
-#if defined(_ENABLE_ACTS_ANY_VERBOSE) || defined(_ENABLE_ACTS_ANY_DEBUG)
+#if defined(_ACTS_ANY_ENABLE_VERBOSE) || defined(_ACTS_ANY_ENABLE_DEBUG)
 #include <iomanip>
 #include <iostream>
 #endif
 
-#if defined(_ENABLE_ACTS_ANY_DEBUG)
+#if defined(_ACTS_ANY_ENABLE_DEBUG)
 #define _ACTS_ANY_DEBUG(x) std::cout << x << std::endl;
 #else
 #define _ACTS_ANY_DEBUG(x)
 #endif
 
-#if defined(_ENABLE_ACTS_ANY_VERBOSE)
+#if defined(_ACTS_ANY_ENABLE_VERBOSE)
 #define _ACTS_ANY_VERBOSE(x) std::cout << x << std::endl;
 #define _ACTS_ANY_VERBOSE_BUFFER(s, b) \
   do {                                 \
@@ -55,9 +55,16 @@
 
 namespace Acts {
 
-#if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
+#if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
 static std::mutex _s_any_mutex;
 static std::set<std::pair<std::type_index, void*>> _s_any_allocations;
+
+#define _ACTS_ANY_TRACK_ALLOCATION(T, heap)                                  \
+  do {                                                                       \
+    std::lock_guard guard{_s_any_mutex};                                     \
+    _s_any_allocations.emplace(std::type_index(typeid(T)), heap);            \
+    _ACTS_ANY_DEBUG("Allocate type: " << typeid(T).name() << " at " << heap) \
+  } while (0)
 
 struct _AnyAllocationReporter {
   ~_AnyAllocationReporter() {
@@ -65,11 +72,16 @@ struct _AnyAllocationReporter {
 
     if (!_s_any_allocations.empty()) {
       std::cout << "Not all allocations have been released" << std::endl;
+      for (const auto& [idx, addr] : _s_any_allocations) {
+        std::cout << "- " << idx.name() << ": " << addr << std::endl;
+      }
       std::abort();
     }
   }
 };
 static _AnyAllocationReporter s_reporter;
+#else
+#define _ACTS_ANY_TRACK_ALLOCATION(T, heap)
 #endif
 
 class AnyBaseAll {};
@@ -80,37 +92,6 @@ class AnyBase : public AnyBaseAll {
   static_assert(sizeof(void*) <= SIZE, "Size is too small for a pointer");
 
  public:
-  template <typename T, typename... Args>
-  static AnyBase make(Args&&... args) {
-    AnyBase cache{};
-
-    using U = std::decay_t<T>;
-    static_assert(
-        std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
-        "Type needs to be move assignable and move constructible");
-    static_assert(
-        std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U>,
-        "Type needs to be copy assignable and copy constructible");
-
-    cache.m_handler = makeHandler<U>();
-    if constexpr (sizeof(U) <= SIZE) {
-      // construct into local buffer
-      /*U* ptr =*/new (cache.m_data.data()) U(std::forward<Args>(args)...);
-    } else {
-      // too large, heap allocate
-      U* heap = new U(std::forward<Args>(args)...);
-#if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
-      {
-        std::lock_guard guard{_s_any_mutex};
-        _s_any_allocations.emplace(std::type_index(typeid(T)), heap);
-      }
-#endif
-      *reinterpret_cast<U**>(cache.m_data.data()) = heap;
-    }
-
-    return cache;
-  }
-
   template <typename T, typename... Args>
   explicit AnyBase(std::in_place_type_t<T> /*unused*/, Args&&... args) {
     using U = std::decay_t<T>;
@@ -125,22 +106,19 @@ class AnyBase : public AnyBaseAll {
     if constexpr (sizeof(U) <= SIZE) {
       // construct into local buffer
       /*U* ptr =*/new (m_data.data()) U(std::forward<Args>(args)...);
+      _ACTS_ANY_VERBOSE(
+          "Construct local (this=" << this << ") at: " << (void*)m_data.data());
     } else {
       // too large, heap allocate
       U* heap = new U(std::forward<Args>(args)...);
-#if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
-      {
-        std::lock_guard guard{_s_any_mutex};
-        _s_any_allocations.emplace(std::type_index(typeid(T)), heap);
-      }
-#endif
+      _ACTS_ANY_TRACK_ALLOCATION(T, heap);
       *reinterpret_cast<U**>(m_data.data()) = heap;
     }
   }
 
   AnyBase() {
     m_data.fill(0);
-#if defined(_ENABLE_ACTS_ANY_VERBOSE)
+#if defined(_ACTS_ANY_ENABLE_VERBOSE)
     _ACTS_ANY_VERBOSE("Default construct this=" << this);
 #endif
   };
@@ -168,12 +146,7 @@ class AnyBase : public AnyBaseAll {
       U* heap = new U(std::move(value));
       _ACTS_ANY_VERBOSE("Construct heap (this=" << this << ") at: " << heap);
       _ACTS_ANY_VERBOSE_BUFFER("-> buffer before", m_data);
-#if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
-      {
-        std::lock_guard guard{_s_any_mutex};
-        _s_any_allocations.emplace(std::type_index(typeid(T)), heap);
-      }
-#endif
+      _ACTS_ANY_TRACK_ALLOCATION(T, heap);
       *reinterpret_cast<U**>(m_data.data()) = heap;
       _ACTS_ANY_VERBOSE_BUFFER("-> buffer after", m_data);
     }
@@ -213,12 +186,18 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
+    _ACTS_ANY_VERBOSE(
+        "Copy construct (this=" << this << ") at: " << (void*)m_data.data());
+
     m_handler = other.m_handler;
     assert(m_handler != nullptr && "Handler is null");
     copyConstruct(other);
   }
 
   AnyBase& operator=(const AnyBase& other) {
+    _ACTS_ANY_VERBOSE("Copy assign (this=" << this
+                                           << ") at: " << (void*)m_data.data());
+
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;
@@ -239,6 +218,8 @@ class AnyBase : public AnyBaseAll {
   }
 
   AnyBase(AnyBase&& other) {
+    _ACTS_ANY_VERBOSE(
+        "Move construct (this=" << this << ") at: " << (void*)m_data.data());
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return;
@@ -250,6 +231,8 @@ class AnyBase : public AnyBaseAll {
   }
 
   AnyBase& operator=(AnyBase&& other) {
+    _ACTS_ANY_VERBOSE("Move assign (this=" << this
+                                           << ") at: " << (void*)m_data.data());
     if (m_handler == nullptr && other.m_handler == nullptr) {
       // both are empty, noop
       return *this;
@@ -375,6 +358,8 @@ class AnyBase : public AnyBaseAll {
     void* from = fromAny.m_data.data();
     if (m_handler->heap) {
       // stored on heap: just copy the pointer
+      // need to delete existing pointer
+      m_handler->destroy(data());
       *reinterpret_cast<void**>(m_data.data()) = fromAny.data();
       // do not delete in moved-from any
       fromAny.m_handler = nullptr;
@@ -436,8 +421,9 @@ class AnyBase : public AnyBaseAll {
       obj->~T();
     } else {
       // stored on heap: delete
-      _ACTS_ANY_VERBOSE("Delete heap at: " << obj);
-#if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
+      _ACTS_ANY_DEBUG("Delete type: " << typeid(T).name()
+                                      << " heap at: " << obj);
+#if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
       {
         std::lock_guard guard{_s_any_mutex};
         auto it =
@@ -483,12 +469,7 @@ class AnyBase : public AnyBaseAll {
     if (to == nullptr) {
       assert(sizeof(T) > SIZE && "Received nullptr in local buffer case");
       to = new T(*_from);
-#if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
-      {
-        std::lock_guard guard{_s_any_mutex};
-        _s_any_allocations.emplace(std::type_index(typeid(T)), to);
-      }
-#endif
+      _ACTS_ANY_TRACK_ALLOCATION(T, to);
 
     } else {
       assert(sizeof(T) <= SIZE && "Received non-nullptr in heap case");
@@ -513,13 +494,13 @@ class AnyBase : public AnyBaseAll {
   const Handler* m_handler{nullptr};
 };
 
-#if defined(_ACTS_ANY_TRACK_ALLOCATIONS)
+#if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
 #endif
 
 using Any = AnyBase<sizeof(void*)>;
 
 #undef _ACTS_ANY_VERBOSE
 #undef _ACTS_ANY_VERBOSE_BUFFER
-#undef _ENABLE_ACTS_ANY_VERBOSE
+#undef _ACTS_ANY_ENABLE_VERBOSE
 
 }  // namespace Acts
