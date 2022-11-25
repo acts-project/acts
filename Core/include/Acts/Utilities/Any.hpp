@@ -150,7 +150,7 @@ class AnyBase {
       return *ptr;
     } else {
       // is heap allocated
-      const void* ptr = *reinterpret_cast<const void**>(m_data.data());
+      const void* ptr = *reinterpret_cast<void* const*>(m_data.data());
       _ACTS_ANY_DEBUG("As heap: " << ptr);
       return *reinterpret_cast<const T*>(ptr);
     }
