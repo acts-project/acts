@@ -117,7 +117,7 @@ class AnyBase : public AnyBaseAll {
   }
 
   AnyBase() {
-    m_data.fill(0);
+    m_data.fill(std::byte{0});
 #if defined(_ACTS_ANY_ENABLE_VERBOSE)
     _ACTS_ANY_VERBOSE("Default construct this=" << this);
 #endif
@@ -125,32 +125,8 @@ class AnyBase : public AnyBaseAll {
 
   template <typename T, typename = std::enable_if_t<
                             !std::is_same_v<std::decay_t<T>, AnyBase<SIZE>>>>
-  explicit AnyBase(T&& value) {
-    using U = std::decay_t<T>;
-    static_assert(
-        std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
-        "Type needs to be move assignable and move constructible");
-    static_assert(
-        std::is_copy_assignable_v<U> && std::is_copy_constructible_v<U>,
-        "Type needs to be copy assignable and copy constructible");
-
-    m_handler = makeHandler<U>();
-
-    if constexpr (sizeof(U) <= SIZE) {
-      // construct into local buffer
-      /*U* ptr =*/new (m_data.data()) U(std::move(value));
-      _ACTS_ANY_VERBOSE(
-          "Construct local (this=" << this << ") at: " << (void*)m_data.data());
-    } else {
-      // too large, heap allocate
-      U* heap = new U(std::move(value));
-      _ACTS_ANY_VERBOSE("Construct heap (this=" << this << ") at: " << heap);
-      _ACTS_ANY_VERBOSE_BUFFER("-> buffer before", m_data);
-      _ACTS_ANY_TRACK_ALLOCATION(T, heap);
-      setDataPtr(heap);
-      _ACTS_ANY_VERBOSE_BUFFER("-> buffer after", m_data);
-    }
-  }
+  explicit AnyBase(T&& value)
+      : AnyBase{std::in_place_type<T>, std::forward<T>(value)} {}
 
   template <typename T>
   T& as() {
@@ -493,7 +469,20 @@ class AnyBase : public AnyBaseAll {
     (*_to) = *_from;
   }
 
-  alignas(std::max_align_t) std::array<char, SIZE> m_data{};
+  static constexpr size_t kMaxAlignment = std::max(alignof(std::max_align_t),
+#if defined(__AVX512F__)
+                                                   size_t(64)
+#elif defined(__AVX__)
+                                                   size_t(32)
+#elif defined(__SSE__)
+                                                   size_t(16)
+#else
+                                                   size_t(0)  // Neutral element
+                                                              // for maximum
+#endif
+  );
+
+  alignas(kMaxAlignment) std::array<std::byte, SIZE> m_data{};
   const Handler* m_handler{nullptr};
 };
 
