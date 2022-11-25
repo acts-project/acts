@@ -167,6 +167,44 @@ BOOST_AUTO_TEST_CASE(AnyDestroy) {
   }
 }
 
+BOOST_AUTO_TEST_CASE(AnyDestroyCopy) {
+  {  // small type
+    bool destroyed = false;
+
+    {
+      Any b;
+      {
+        Any a{std::in_place_type<D>, &destroyed};
+        BOOST_CHECK(!destroyed);
+        b = a;
+        BOOST_CHECK(!destroyed);
+      }
+      BOOST_CHECK(destroyed);  // a destroyed, should be true
+      destroyed = false;
+      BOOST_CHECK(!destroyed);
+    }
+    BOOST_CHECK(destroyed);  // b destroyed, should be true again
+  }
+
+  {  // large type
+    bool destroyed = false;
+
+    {
+      Any b;
+      {
+        Any a{std::in_place_type<D2>, &destroyed};
+        BOOST_CHECK(!destroyed);
+        b = a;
+        BOOST_CHECK(!destroyed);
+      }
+      BOOST_CHECK(destroyed);  // a destroyed, should be true
+      destroyed = false;
+      BOOST_CHECK(!destroyed);
+    }
+    BOOST_CHECK(destroyed);  // b destroyed, should be true again
+  }
+}
+
 BOOST_AUTO_TEST_CASE(AnyDestroyInPlace) {
   {  // small type
     bool destroyed = false;
@@ -210,6 +248,188 @@ BOOST_AUTO_TEST_CASE(LeakCheck) {
     }
     BOOST_CHECK_EQUAL(destroyed, i + 1);
   }
+}
+
+struct LifecycleCounters {
+  size_t nDestroy = 0;
+  size_t nCopyConstruct = 0;
+  size_t nCopy = 0;
+  size_t nMoveConstruct = 0;
+  size_t nMove = 0;
+};
+
+template <size_t PADDING>
+struct Lifecycle;
+
+template <>
+struct Lifecycle<0> {
+  LifecycleCounters* counters;
+
+  Lifecycle(LifecycleCounters* _counters) : counters{_counters} {}
+
+  Lifecycle(Lifecycle&& o) {
+    counters = o.counters;
+    counters->nMoveConstruct++;
+  }
+
+  Lifecycle& operator=(Lifecycle&& o) {
+    counters = o.counters;
+    counters->nMove++;
+    return *this;
+  }
+
+  Lifecycle(const Lifecycle& o) {
+    counters = o.counters;
+    counters->nCopyConstruct++;
+  }
+
+  Lifecycle& operator=(const Lifecycle& o) {
+    counters = o.counters;
+    counters->nCopy++;
+    return *this;
+  }
+
+  ~Lifecycle() { counters->nDestroy++; }
+};
+
+template <size_t PADDING>
+struct Lifecycle : public Lifecycle<0> {
+  std::array<char, PADDING> m_padding{};
+};
+
+template <size_t PADDING>
+struct LifecycleHandle {
+  LifecycleCounters counters;
+  Lifecycle<PADDING> inner;
+
+  LifecycleHandle() : counters{}, inner{&counters} {}
+};
+
+#define checkCounters()                                                    \
+  do {                                                                     \
+    BOOST_CHECK_EQUAL(l.counters.nCopy, counters.nCopy);                   \
+    BOOST_CHECK_EQUAL(l.counters.nCopyConstruct, counters.nCopyConstruct); \
+    BOOST_CHECK_EQUAL(l.counters.nMove, counters.nMove);                   \
+    BOOST_CHECK_EQUAL(l.counters.nMoveConstruct, counters.nMoveConstruct); \
+    BOOST_CHECK_EQUAL(l.counters.nDestroy, counters.nDestroy);             \
+  } while (0)
+
+#define makeCounter(counter, n) \
+  do {                          \
+    counter += n;               \
+    checkCounters();            \
+  } while (0)
+
+#define incCopyConstruct(n) makeCounter(counters.nCopyConstruct, n)
+#define incCopy(n) makeCounter(counters.nCopy, n)
+#define incMoveConstruct(n) makeCounter(counters.nMoveConstruct, n)
+#define incMove(n) makeCounter(counters.nMove, n)
+#define incDestroy(n) makeCounter(counters.nDestroy, n)
+
+BOOST_AUTO_TEST_CASE(LifeCycleSmall) {
+  LifecycleCounters counters;
+  LifecycleHandle<0> l;
+
+  checkCounters();
+
+  {
+    const auto& o = l.inner;  // force copy
+    Any a{o};
+    incCopyConstruct(1);
+
+    const auto& _a = a;  // force copy later
+    {
+      Any b{_a};
+      incCopyConstruct(1);
+    }
+    incDestroy(1);
+
+    {
+      Any b;
+      b = _a;
+      incCopyConstruct(1);
+      b = _a;
+      incCopy(1);
+    }
+    incDestroy(1);
+
+    {
+      Any b{a};
+      incCopyConstruct(1);
+      b = a;
+      incCopy(1);
+    }
+    incDestroy(1);
+
+    {
+      auto _a2 = a;
+      incCopyConstruct(1);
+      Any b;
+      b = std::move(_a2);
+      incMoveConstruct(1);
+      auto _a3 = a;
+      incCopyConstruct(1);
+      b = std::move(_a3);
+      incMove(1);
+    }
+    incDestroy(3);
+  }
+  incDestroy(1);
+
+  checkCounters();
+}
+
+BOOST_AUTO_TEST_CASE(LifeCycleHeap) {
+  LifecycleCounters counters;
+  LifecycleHandle<512> l;
+
+  checkCounters();
+
+  {
+    const auto& o = l.inner;  // force copy
+    Any a{o};
+    incCopyConstruct(1);
+
+    const auto& _a = a;  // force copy later
+    {
+      Any b{_a};
+      incCopyConstruct(1);
+    }
+    incDestroy(1);
+
+    {
+      Any b;
+      b = _a;
+      incCopyConstruct(1);
+      b = _a;
+      incCopy(1);
+    }
+    incDestroy(1);
+
+    {
+      Any b{a};
+      incCopyConstruct(1);
+      b = a;
+      incCopy(1);
+    }
+    incDestroy(1);
+
+    {
+      auto _a2 = a;
+      incCopyConstruct(1);
+      Any b;
+      b = std::move(_a2);
+      // no actual move
+      auto _a3 = a;
+      incCopyConstruct(1);
+      b = std::move(_a3);
+      // no actual move
+    }
+    incDestroy(1);
+  }
+  incDestroy(1);
+
+  checkCounters();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
