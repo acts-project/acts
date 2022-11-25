@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/DD4hepDetector/GeoIDHooks.h"
+#include "ActsExamples/DD4hepDetector/GeoIDHooks.hpp"
 
 namespace det {
 namespace geoIDHook {
@@ -21,7 +21,6 @@ Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
     } else {
       identifier.setExtra(2);
     }
-    std::cout << identifier << std::endl;
   }
   return identifier;
 }
