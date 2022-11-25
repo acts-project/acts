@@ -217,7 +217,7 @@ class AnyBase {
     void (*move)(void* from, void* to) = nullptr;
     void (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
-    std::size_t typeSize;
+    std::size_t typeSize{0};
   };
 
   template <typename T>
