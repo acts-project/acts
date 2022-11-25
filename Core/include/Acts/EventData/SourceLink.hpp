@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/MagneticField/detail/SmallObjectCache.hpp"
+#include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <any>
@@ -26,7 +27,7 @@ using geometry_id_t = decltype(std::declval<T>().geometryId());
 }  // namespace detail_sl
 
 class SourceLink final {
-  using SBO = detail::SmallObjectCacheBase<32>;
+  using SBO = AnyBase<16>;
 
  public:
   /// Getter for the geometry identifier
@@ -77,7 +78,7 @@ class SourceLink final {
   /// @return Reference to the stored source link
   template <typename T>
   T& get() {
-    return m_upstream.get<T>();
+    return m_upstream.as<T>();
     // T* val = boost::any_cast<T>(&m_upstream);
     // if (val == nullptr) {
     // throw boost::bad_any_cast{};
@@ -90,7 +91,7 @@ class SourceLink final {
   /// @return Const reference to the stored source link
   template <typename T>
   const T& get() const {
-    return m_upstream.get<T>();
+    return m_upstream.as<T>();
     // const T* val = boost::any_cast<const T>(&m_upstream);
     // if (val == nullptr) {
     // throw boost::bad_any_cast{};

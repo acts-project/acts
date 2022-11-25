@@ -17,44 +17,32 @@ namespace Acts {
 
 namespace detail {
 /// Small opaque cache type which uses small buffer optimization
-template <size_t SIZE>
-class SmallObjectCacheBase {
+class SmallObjectCache {
  public:
   template <typename T, typename... Args>
-  static SmallObjectCacheBase make(Args&&... args) {
-    SmallObjectCacheBase cache{};
+  static SmallObjectCache make(Args&&... args) {
+    SmallObjectCache cache{};
 
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    static_assert(sizeof(T) <= SIZE, "Passed type is too large");
+    static_assert(sizeof(T) <= sizeof(cache.m_data),
+                  "Passed type is too large");
     static_assert(
         std::is_move_assignable_v<T> && std::is_move_constructible_v<T>,
         "Type needs to be move assignable and move constructible");
 
     /*T* ptr =*/new (cache.m_data.data()) T(std::forward<Args>(args)...);
-    cache.m_handler = &makeHandler<T>();
+    static Handler<T> static_handler{};
+    cache.m_handler = &static_handler;
 
     return cache;
-  }
-
-  template <typename T>
-  explicit SmallObjectCacheBase(T&& value) {
-    using U = std::decay_t<T>;
-    static_assert(sizeof(T) <= SIZE, "Passed type is too large");
-    static_assert(
-        std::is_move_assignable_v<U> && std::is_move_constructible_v<U>,
-        "Type needs to be move assignable and move constructible");
-
-    // move construct into data block by move construct with placement new
-    /*T* ptr =*/new (m_data.data()) U(std::move(value));
-    m_handler = &makeHandler<U>();
   }
 
   template <typename T>
   T& get() {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    static_assert(sizeof(T) <= SIZE, "Passed type is too large");
+    static_assert(sizeof(T) <= sizeof(m_data), "Passed type is too large");
     return *reinterpret_cast<T*>(m_data.data());
   }
 
@@ -62,145 +50,67 @@ class SmallObjectCacheBase {
   const T& get() const {
     static_assert(std::is_same_v<T, std::decay_t<T>>,
                   "Please pass the raw type, no const or ref");
-    static_assert(sizeof(T) <= SIZE, "Passed type is too large");
+    static_assert(sizeof(T) <= sizeof(m_data), "Passed type is too large");
     return *reinterpret_cast<const T*>(m_data.data());
   }
 
-  ~SmallObjectCacheBase() {
+  ~SmallObjectCache() {
     assert(m_handler && "Handler cannot be dead");
-    if (m_handler != nullptr) {
-      m_handler->destroy(m_data.data());
-    }
+    m_handler->destroy(m_data.data());
   }
 
-  SmallObjectCacheBase(const SmallObjectCacheBase& other) {
-    if (m_handler == nullptr) {
-      m_handler = other.m_handler;
-      assert(m_handler != nullptr && "Handler is null");
-      m_handler->copyConstruct(other.m_data.data(), m_data.data());
-    } else {
-      assert(m_handler == other.m_handler);
-      m_handler->copy(other.m_data.data(), m_data.data());
-    }
+  SmallObjectCache(SmallObjectCache&& other) {
+    m_handler = other.m_handler;
+    assert(m_handler && "Handler is null");
+    m_handler->moveConstruct(other.m_data.data(), m_data.data());
   }
 
-  SmallObjectCacheBase& operator=(const SmallObjectCacheBase& other) {
-    if (m_handler == nullptr) {
-      m_handler = other.m_handler;
-      assert(m_handler && "Handler is null");
-      m_handler->copyConstruct(other.m_data.data(), m_data.data());
-    } else {
-      assert(m_handler == other.m_handler);
-      m_handler->copy(other.m_data.data(), m_data.data());
-    }
+  SmallObjectCache& operator=(SmallObjectCache&& other) {
+    m_handler = other.m_handler;
+    assert(m_handler && "Handler is null");
+    m_handler->move(other.m_data.data(), m_data.data());
     return *this;
   }
-
-  SmallObjectCacheBase(SmallObjectCacheBase&& other) {
-    if (m_handler == nullptr) {
-      m_handler = other.m_handler;
-      assert(m_handler != nullptr && "Handler is null");
-      m_handler->moveConstruct(other.m_data.data(), m_data.data());
-    } else {
-      assert(m_handler == other.m_handler);
-      m_handler->move(other.m_data.data(), m_data.data());
-    }
-  }
-
-  SmallObjectCacheBase& operator=(SmallObjectCacheBase&& other) {
-    if (m_handler == nullptr) {
-      m_handler = other.m_handler;
-      assert(m_handler && "Handler is null");
-      m_handler->moveConstruct(other.m_data.data(), m_data.data());
-    } else {
-      assert(m_handler == other.m_handler);
-      m_handler->move(other.m_data.data(), m_data.data());
-    }
-    return *this;
-  }
-
-  SmallObjectCacheBase() = default;
 
  private:
-  struct Handler {
-    void (*destroy)(void* ptr);
-    void (*moveConstruct)(void* from, void* to);
-    void (*move)(void* from, void* to);
-    void (*copyConstruct)(const void* from, void* to);
-    void (*copy)(const void* from, void* to);
+  SmallObjectCache() = default;
 
-    // virtual void destroy(void* ptr) const = 0;
-    // virtual void moveConstruct(void* from, void* to) const = 0;
-    // virtual void move(void* from, void* to) const = 0;
-    // virtual void copyConstruct(const void* from, void* to) const = 0;
-    // virtual void copy(const void* from, void* to) const = 0;
-    // virtual ~HandlerBase() = default;
+  struct HandlerBase {
+    virtual void destroy(void* ptr) const = 0;
+    virtual void moveConstruct(void* from, void* to) const = 0;
+    virtual void move(void* from, void* to) const = 0;
+    virtual ~HandlerBase() = default;
   };
 
   template <typename T>
-  static Handler& makeHandler() {
-    static Handler static_handler = []() {
-      Handler h;
-      h.destroy = &destroy<T>;
-      h.moveConstruct = &moveConstruct<T>;
-      h.move = &move<T>;
-      h.copyConstruct = &copyConstruct<T>;
-      h.copy = &copy<T>;
-      return h;
-    }();
-    return static_handler;
-  }
+  struct Handler final : public HandlerBase {
+    void destroy(void* ptr) const override {
+      assert(ptr != nullptr && "Address to destroy is nullptr");
+      T* obj = static_cast<T*>(ptr);
+      obj->~T();
+    }
 
-  template <typename T>
-  static void destroy(void* ptr) {
-    assert(ptr != nullptr && "Address to destroy is nullptr");
-    T* obj = static_cast<T*>(ptr);
-    obj->~T();
-  }
+    void moveConstruct(void* from, void* to) const override {
+      assert(from != nullptr && "Source is null");
+      assert(to != nullptr && "Target is null");
+      T* _from = static_cast<T*>(from);
+      /*T* ptr =*/new (to) T(std::move(*_from));
+    }
 
-  template <typename T>
-  static void moveConstruct(void* from, void* to) {
-    assert(from != nullptr && "Source is null");
-    assert(to != nullptr && "Target is null");
-    T* _from = static_cast<T*>(from);
-    /*T* ptr =*/new (to) T(std::move(*_from));
-  }
+    void move(void* from, void* to) const override {
+      assert(from != nullptr && "Source is null");
+      assert(to != nullptr && "Target is null");
 
-  template <typename T>
-  static void move(void* from, void* to) {
-    assert(from != nullptr && "Source is null");
-    assert(to != nullptr && "Target is null");
+      T* _from = static_cast<T*>(from);
+      T* _to = static_cast<T*>(to);
 
-    T* _from = static_cast<T*>(from);
-    T* _to = static_cast<T*>(to);
+      (*_to) = std::move(*_from);
+    }
+  };
 
-    (*_to) = std::move(*_from);
-  }
-
-  template <typename T>
-  static void copyConstruct(const void* from, void* to) {
-    assert(from != nullptr && "Source is null");
-    assert(to != nullptr && "Target is null");
-    const T* _from = static_cast<const T*>(from);
-    /*T* ptr =*/new (to) T(*_from);
-  }
-
-  template <typename T>
-  static void copy(const void* from, void* to) {
-    assert(from != nullptr && "Source is null");
-    assert(to != nullptr && "Target is null");
-
-    const T* _from = static_cast<const T*>(from);
-    T* _to = static_cast<T*>(to);
-
-    (*_to) = *_from;
-  }
-
-  alignas(std::max_align_t) std::array<char, SIZE> m_data{};
-  Handler* m_handler{nullptr};
+  alignas(std::max_align_t) std::array<char, 512> m_data{};
+  HandlerBase* m_handler{nullptr};
 };
-
-using SmallObjectCache = SmallObjectCacheBase<512>;
 
 }  // namespace detail
 }  // namespace Acts
