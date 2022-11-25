@@ -186,16 +186,10 @@ class AnyBase : public AnyBaseAll {
     if (makeHandler<T>() != m_handler) {
       throw std::bad_any_cast{};
     }
-    if (!m_handler->heap) {
-      T* ptr = reinterpret_cast<T*>(m_data.data());
-      _ACTS_ANY_VERBOSE("As local: " << ptr);
-      return *ptr;
-    } else {
-      // is heap allocated
-      void* ptr = *reinterpret_cast<void**>(m_data.data());
-      _ACTS_ANY_VERBOSE("As heap: " << ptr);
-      return *reinterpret_cast<T*>(ptr);
-    }
+
+    _ACTS_ANY_VERBOSE("Get as " << (m_handler->heap ? "heap" : "local"));
+
+    return *reinterpret_cast<T*>(data());
   }
 
   template <typename T>
@@ -205,16 +199,10 @@ class AnyBase : public AnyBaseAll {
     if (makeHandler<T>() != m_handler) {
       throw std::bad_any_cast{};
     }
-    if (!m_handler->heap) {
-      const T* ptr = reinterpret_cast<const T*>(m_data.data());
-      _ACTS_ANY_VERBOSE("As local: " << ptr);
-      return *ptr;
-    } else {
-      // is heap allocated
-      const void* ptr = *reinterpret_cast<void* const*>(m_data.data());
-      _ACTS_ANY_VERBOSE("As heap: " << ptr);
-      return *reinterpret_cast<const T*>(ptr);
-    }
+
+    _ACTS_ANY_VERBOSE("Get as " << (m_handler->heap ? "heap" : "local"));
+
+    return *reinterpret_cast<const T*>(data());
   }
 
   ~AnyBase() { destroy(); }
@@ -284,6 +272,21 @@ class AnyBase : public AnyBaseAll {
   operator bool() const { return m_handler != nullptr; }
 
  private:
+  void* data() {
+    if (m_handler->heap) {
+      return *reinterpret_cast<void**>(m_data.data());
+    } else {
+      return reinterpret_cast<void*>(m_data.data());
+    }
+  }
+  const void* data() const {
+    if (m_handler->heap) {
+      return *reinterpret_cast<void* const*>(m_data.data());
+    } else {
+      return reinterpret_cast<const void*>(m_data.data());
+    }
+  }
+
   struct Handler {
     void (*destroy)(void* ptr) = nullptr;
     void (*moveConstruct)(void* from, void* to) = nullptr;
@@ -335,17 +338,7 @@ class AnyBase : public AnyBaseAll {
   void destroy() {
     _ACTS_ANY_VERBOSE("Destructor this=" << this << " handler: " << m_handler);
     if (m_handler != nullptr && m_handler->destroy != nullptr) {
-      void* ptr = m_data.data();
-      if (m_handler->heap) {
-        // stored on heap: interpret buffer as pointer
-        _ACTS_ANY_VERBOSE("Pre-destroy data: " << (void*)m_data.data());
-
-        _ACTS_ANY_VERBOSE_BUFFER("-> buffer pre-destroy", m_data);
-
-        ptr = *reinterpret_cast<void**>(m_data.data());
-        _ACTS_ANY_VERBOSE("Pre-destroy: " << ptr);
-      }
-      m_handler->destroy(ptr);
+      m_handler->destroy(data());
       m_handler = nullptr;
     }
   }
@@ -359,8 +352,7 @@ class AnyBase : public AnyBaseAll {
     void* from = fromAny.m_data.data();
     if (m_handler->heap) {
       // stored on heap: just copy the pointer
-      *reinterpret_cast<void**>(m_data.data()) =
-          *reinterpret_cast<void**>(fromAny.m_data.data());
+      *reinterpret_cast<void**>(m_data.data()) = fromAny.data();
       // do not delete in moved-from any
       fromAny.m_handler = nullptr;
       return;
@@ -383,8 +375,7 @@ class AnyBase : public AnyBaseAll {
     void* from = fromAny.m_data.data();
     if (m_handler->heap) {
       // stored on heap: just copy the pointer
-      *reinterpret_cast<void**>(m_data.data()) =
-          *reinterpret_cast<void**>(fromAny.m_data.data());
+      *reinterpret_cast<void**>(m_data.data()) = fromAny.data();
       // do not delete in moved-from any
       fromAny.m_handler = nullptr;
       return;
@@ -403,13 +394,8 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = m_data.data();
-    const void* from = fromAny.m_data.data();
-    if (m_handler->heap) {
-      // stored on heap: interpret buffer as pointer
-      to = *reinterpret_cast<void**>(m_data.data());
-      from = *reinterpret_cast<void* const*>(fromAny.m_data.data());
-    }
+    void* to = data();
+    const void* from = fromAny.data();
 
     if (m_handler->copyConstruct == nullptr) {
       // trivially copy constructible
@@ -429,13 +415,8 @@ class AnyBase : public AnyBaseAll {
       return;
     }
 
-    void* to = m_data.data();
-    const void* from = fromAny.m_data.data();
-    if (m_handler->heap) {
-      // stored on heap: interpret buffer as pointer
-      to = *reinterpret_cast<void**>(m_data.data());
-      from = *reinterpret_cast<void* const*>(fromAny.m_data.data());
-    }
+    void* to = data();
+    const void* from = fromAny.data();
 
     if (m_handler->copy == nullptr) {
       // trivially copyable
