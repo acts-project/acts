@@ -21,11 +21,12 @@ struct AlignedDetectorWithOptions : public ActsExamples::IBaseDetector {
   Contextual::AlignedDetector m_detector;
 
  public:
-  void addOptions(boost::program_options::options_description& opt) const;
+  void addOptions(
+      boost::program_options::options_description& opt) const override;
 
   auto finalize(const boost::program_options::variables_map& vm,
                 std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-      -> std::pair<TrackingGeometryPtr, ContextDecorators>;
+      -> std::pair<TrackingGeometryPtr, ContextDecorators> override;
 };
 
 }  // namespace ActsExamples
