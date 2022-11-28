@@ -590,9 +590,9 @@ class TrackStateProxy {
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setUncalibrated(SourceLink sourceLink) {
+  void setUncalibrated(const SourceLink& sourceLink) {
     component<std::optional<SourceLink>, hashString("uncalibrated")>() =
-        std::move(sourceLink);
+        sourceLink;
   }
 
   /// Check if the point has an associated uncalibrated measurement.
@@ -611,10 +611,10 @@ class TrackStateProxy {
   /// Set a calibrated source link
   /// @param sourceLink The source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setCalibratedSourceLink(SourceLink sourceLink) {
+  void setCalibratedSourceLink(const SourceLink& sourceLink) {
     assert(has<hashString("calibratedSourceLink")>());
     component<std::optional<SourceLink>, hashString("calibratedSourceLink")>() =
-        std::move(sourceLink);
+        sourceLink;
   }
 
   /// full calibrated measurement vector. might contain additional zeroed
