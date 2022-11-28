@@ -10,7 +10,7 @@ target_link_libraries(
     ActsCore
     ActsExamplesFramework ActsExamplesCommon
     ActsExamplesGenerators
-    ActsExamplesMagneticField ActsExamplesDetectorsCommon
+    ActsExamplesMagneticField
     ActsExamplesFatras
     ActsExamplesIoCsv ActsExamplesIoRoot
     Boost::program_options)

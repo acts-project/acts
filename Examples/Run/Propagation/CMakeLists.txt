@@ -15,7 +15,7 @@ add_executable(
   EmptyDetectorPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationEmpty
-  PRIVATE ${_common_libraries} ActsExamplesDetectorEmpty)
+  PRIVATE ${_common_libraries})
 
 # Generic detector
 add_executable(
@@ -23,7 +23,7 @@ add_executable(
   GenericPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationGeneric
-  PRIVATE ${_common_libraries} ActsExamplesDetectorGeneric)
+  PRIVATE ${_common_libraries})
 
 # Generic detector with alignment
 add_executable(
@@ -31,7 +31,7 @@ add_executable(
   AlignedPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationAligned
-  PRIVATE ${_common_libraries} ActsExamplesDetectorContextual)
+  PRIVATE ${_common_libraries})
 
 
 # TGeo detector
@@ -40,7 +40,7 @@ add_executable(
   TGeoPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationTGeo
-  PRIVATE ${_common_libraries} ActsExamplesDetectorTGeo)
+  PRIVATE ${_common_libraries})
 
 install(
   TARGETS
