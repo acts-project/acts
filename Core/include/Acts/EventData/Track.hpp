@@ -33,9 +33,14 @@ class TrackProxy {
   using ConstTrackStateProxy = typename Trajectory::ConstTrackStateProxy;
 
   using Parameters =
-      typename detail_lt::Types<eBoundSize, ReadOnly>::CoefficientsMap;
+      typename detail_lt::Types<eBoundSize, false>::CoefficientsMap;
+  using ConstParameters =
+      typename detail_lt::Types<eBoundSize, true>::CoefficientsMap;
+
   using Covariance =
-      typename detail_lt::Types<eBoundSize, ReadOnly>::CovarianceMap;
+      typename detail_lt::Types<eBoundSize, false>::CovarianceMap;
+  using ConstCovariance =
+      typename detail_lt::Types<eBoundSize, true>::CovarianceMap;
 
   using IndexType = typename Container::IndexType;
   static constexpr IndexType kInvalid = Container::kInvalid;
@@ -99,13 +104,17 @@ class TrackProxy {
     return m_container->template component<T>(hashString(key), m_index);
   }
 
-  constexpr Parameters parameters() const {
+  ConstParameters parameters() const {
     return m_container->parameters(m_index);
   }
 
-  constexpr Covariance covariance() const {
+  ConstCovariance covariance() const {
     return m_container->covariance(m_index);
   }
+
+  Parameters parameters() { return m_container->parameters(m_index); }
+
+  Covariance covariance() { return m_container->covariance(m_index); }
 
  private:
   TrackProxy(
@@ -121,35 +130,17 @@ class TrackProxy {
 template <typename T>
 struct isReadOnlyTrackContainer;
 
-// template <typename derived_t>
-// class TrackContainerBackend {
-// public:
-// using Derived = derived_t;
-
-// static constexpr bool ReadOnly = isReadOnlyTrackContainer<Derived>::value;
-
-// using IndexType = MultiTrajectoryTraits::IndexType;
-// static constexpr IndexType kInvalid = MultiTrajectoryTraits::kInvalid;
-
-// protected:
-// TrackContainerBackend() = default;  // pseudo abstract base class
-
-// private:
-// /// Helper to static cast this to the Derived class for CRTP
-// constexpr Derived& self() { return static_cast<Derived&>(*this); }
-// /// Helper to static cast this to the Derived class for CRTP. Const version.
-// constexpr const Derived& self() const {
-// return static_cast<const Derived&>(*this);
-// }
-
-// public:
-// };
-
 template <typename track_container_t, typename traj_t>
 class TrackContainer {
  public:
   static constexpr bool ReadOnly =
       isReadOnlyTrackContainer<track_container_t>::value;
+  static constexpr bool TrackStateReadOnly =
+      isReadOnlyMultiTrajectory<traj_t>::value;
+
+  static_assert(ReadOnly == TrackStateReadOnly,
+                "Either both track container and track state container need to "
+                "be readonly or both have to be readwrite");
 
   using IndexType = MultiTrajectoryTraits::IndexType;
   static constexpr IndexType kInvalid = MultiTrajectoryTraits::kInvalid;
@@ -161,8 +152,8 @@ class TrackContainer {
   friend TrackProxy;
   friend ConstTrackProxy;
 
-  TrackContainer(track_container_t container, traj_t traj)
-      : m_container{std::move(container)}, m_traj{std::move(traj)} {}
+  TrackContainer(track_container_t container, traj_t& traj)
+      : m_container{std::move(container)}, m_traj{&traj} {}
 
   ConstTrackProxy getTrack(IndexType itrack) const { return {*this, itrack}; }
 
@@ -234,7 +225,7 @@ class TrackContainer {
 
  private:
   track_container_t m_container;
-  traj_t m_traj;
+  traj_t* m_traj;
 };
 
 }  // namespace Acts

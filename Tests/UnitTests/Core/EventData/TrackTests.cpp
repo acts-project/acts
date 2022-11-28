@@ -27,8 +27,10 @@ namespace bd = boost::unit_test::data;
 BOOST_AUTO_TEST_SUITE(EventDataTrack)
 
 BOOST_AUTO_TEST_CASE(Build) {
-  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
-  auto t = tc.getTrack(tc.addTrack());
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{VectorTrackContainer{}, mtj};
+  auto idx = tc.addTrack();
+  auto t = tc.getTrack(idx);
   t.component<IndexType, "tipIndex"_hash>() = 5;
 
   BOOST_CHECK_EQUAL((t.component<IndexType, "tipIndex"_hash>()), 5);
@@ -42,10 +44,22 @@ BOOST_AUTO_TEST_CASE(Build) {
   cov.setRandom();
   t.covariance() = cov;
   BOOST_CHECK_EQUAL(t.covariance(), cov);
+
+  // const checks: should not compile
+  // const auto& ctc = tc;
+  // ctc.getTrack(idx).covariance().setRandom();
+  // const auto& ctp = t;
+  // ctp.covariance().setRandom();
+}
+
+BOOST_AUTO_TEST_CASE(BuildReadOnly) {
+  ConstVectorMultiTrajectory mtj{};
+  TrackContainer tc{ConstVectorTrackContainer{}, mtj};
 }
 
 BOOST_AUTO_TEST_CASE(DynamicColumns) {
-  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  VectorMultiTrajectory mtj{};
+  TrackContainer tc{VectorTrackContainer{}, mtj};
   BOOST_CHECK(!tc.hasColumn("col_a"_hash));
   tc.addColumn<float>("col_a");
   BOOST_CHECK(tc.hasColumn("col_a"_hash));
