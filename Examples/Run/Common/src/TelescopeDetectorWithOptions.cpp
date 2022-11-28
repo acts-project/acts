@@ -64,7 +64,7 @@ auto TelescopeDetectorWithOptions::finalize(
   cfg.surfaceType = vm["geo-tele-surface"].template as<int>();
   cfg.binValue = vm["geo-tele-alignaxis"].template as<int>();
 
-  return m_detector.finalize(cfg);
+  return m_detector.finalize(cfg, {});
 }
 
 }  // namespace ActsExamples

@@ -55,7 +55,9 @@ struct TelescopeDetector {
   /// The store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 
-  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(const Config& cfg, const std::shared_ptr<const Acts::IMaterialDecorator>& /*unused*/);
+  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
+      const Config& cfg,
+      const std::shared_ptr<const Acts::IMaterialDecorator>& /*unused*/);
 };
 
 }  // namespace Telescope

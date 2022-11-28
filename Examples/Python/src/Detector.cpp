@@ -59,7 +59,8 @@ void addDetector(Context& ctx) {
     using Config = TelescopeDetector::Config;
 
     auto td =
-        py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(mex, "TelescopeDetector")
+        py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(
+            mex, "TelescopeDetector")
             .def(py::init<>())
             .def("finalize",
                  py::overload_cast<
