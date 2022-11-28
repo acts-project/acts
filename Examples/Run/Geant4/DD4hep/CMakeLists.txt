@@ -5,7 +5,7 @@ target_link_libraries(
   ActsExampleGeant4DD4hep
   PRIVATE
     ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
+    ActsExamplesDD4hepDetectorWithOptions
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesGeant4Common
@@ -25,7 +25,7 @@ target_link_libraries(
   ActsExampleMaterialRecordingDD4hep
   PRIVATE
     ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
+    ActsExamplesDD4hepDetectorWithOptions
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesGeant4Common

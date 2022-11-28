@@ -48,8 +48,8 @@ target_link_libraries(
     ActsExamplesDetectorGeneric ActsExamplesDetectorContextual
     ActsExamplesDetectorTGeo)
 acts_target_link_libraries_system(
-  ActsExamplesCommon
-  PRIVATE dfelibs Boost::program_options)
+  ActsExamplesCommon Boost::program_options
+  PRIVATE dfelibs)
 
 install(
   TARGETS ActsExamplesCommon

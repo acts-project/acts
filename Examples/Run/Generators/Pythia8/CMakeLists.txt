@@ -20,7 +20,8 @@ target_link_libraries(
     ActsExamplesFramework ActsExamplesCommon
     ActsExamplesGenerators ActsExamplesGeneratorsPythia8
     ActsExamplesIoCsv ActsExamplesIoRoot ActsExamplesPrinters
-    ActsExamplesGeneratorsPythia8Options)
+    ActsExamplesGeneratorsPythia8Options
+    Boost::program_options)
 
 install(
   TARGETS ActsExamplePythia8

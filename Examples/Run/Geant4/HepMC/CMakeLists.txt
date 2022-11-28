@@ -5,7 +5,7 @@ target_link_libraries(
   ActsExampleEventRecording
   PRIVATE
     ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
+    ActsExamplesDD4hepDetectorWithOptions
     ActsExamplesEventRecording
     ActsExamplesFramework
     ActsExamplesGeant4

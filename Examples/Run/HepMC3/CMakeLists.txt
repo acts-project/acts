@@ -19,7 +19,8 @@ target_link_libraries(
   ActsExampleHepMC3Exe
   PRIVATE
     ActsCore ActsFatras 
-    ActsExamplesCommon ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC3Options)
+    ActsExamplesCommon ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC3Options
+    Boost::program_options)
 
 add_executable(
   ActsExampleHepMC3Histogram
