@@ -5,7 +5,8 @@ add_library(
 
 target_link_libraries(
     ActsExamplesDD4hepDetectorWithOptions PUBLIC
-    ActsExamplesCommon ActsExamplesDetectorDD4hep)
+    ActsExamplesCommon ActsExamplesDetectorDD4hep
+    Boost::program_options)
 
 target_include_directories(
     ActsExamplesDD4hepDetectorWithOptions
