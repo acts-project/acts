@@ -21,6 +21,7 @@
 #include <bitset>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <vector>
 
@@ -83,6 +84,10 @@ class TransitiveConstPointer {
 
   template <typename U>
   friend class TransitiveConstPointer;
+
+  const T& operator*() const { return *m_ptr; }
+
+  T& operator*() { return *m_ptr; }
 
  private:
   T* ptr() const { return m_ptr; }
@@ -980,6 +985,12 @@ class TrackStateProxy {
     return component<TrackStateType, hashString("typeFlags")>();
   }
 
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  MultiTrajectory<Trajectory>& trajectory() {
+    return *m_traj;
+  }
+  const MultiTrajectory<Trajectory>& trajectory() const { return *m_traj; }
+
  private:
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory<Trajectory>, ReadOnly>& trajectory,
@@ -1007,6 +1018,55 @@ class TrackStateProxy {
   friend class Acts::MultiTrajectory<Trajectory>;
   friend class TrackStateProxy<Trajectory, M, true>;
   friend class TrackStateProxy<Trajectory, M, false>;
+};
+
+/// Helper type that wraps two iterators
+template <typename trajectory_t, size_t M, bool ReadOnly>
+class TrackStateRange {
+ public:
+  using TrackStateProxy = TrackStateProxy<trajectory_t, M, ReadOnly>;
+
+  /// Iterator that wraps a track state proxy. The nullopt case signifies the
+  /// end of the range, i.e. the "past-the-end" iterator
+  struct Iterator {
+    std::optional<TrackStateProxy> proxy;
+
+    Iterator& operator++() {
+      if (!proxy) {
+        return *this;
+      }
+      if (proxy->hasPrevious()) {
+        proxy = proxy->trajectory().getTrackState(proxy->previous());
+        return *this;
+      } else {
+        proxy = std::nullopt;
+        return *this;
+      }
+    }
+
+    bool operator==(const Iterator& other) const {
+      if (!proxy && !other.proxy) {
+        return true;
+      }
+      if (proxy && other.proxy) {
+        return proxy->index() == other.proxy->index();
+      }
+      return false;
+    }
+
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
+
+    TrackStateProxy operator*() const { return *proxy; }
+    TrackStateProxy operator*() { return *proxy; }
+  };
+
+  TrackStateRange(TrackStateProxy _begin) : m_begin{_begin} {}
+
+  Iterator begin() { return m_begin; }
+  Iterator end() { return Iterator{std::nullopt}; }
+
+ private:
+  Iterator m_begin;
 };
 
 // implement track state visitor concept
@@ -1111,6 +1171,23 @@ class MultiTrajectory {
   /// @param callable   non-modifying functor to be called with each point
   template <typename F>
   void visitBackwards(IndexType iendpoint, F&& callable) const;
+
+  /// Range for the track states from @p iendpoint to the trajectory start
+  /// @param iendpoint Trajectory entry point to start from
+  /// @return Iterator pair to iterate over
+  /// @note Const version
+  auto trackStateRange(IndexType iendpoint) const {
+    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+  }
+
+  /// Range for the track states from @p iendpoint to the trajectory start
+  /// @param iendpoint Trajectory entry point to start from
+  /// @return Iterator pair to iterate over
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto trackStateRange(IndexType iendpoint) {
+    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+  }
 
   /// Apply a function to all previous states starting at a given endpoint.
   ///
