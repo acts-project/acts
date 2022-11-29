@@ -97,6 +97,8 @@ class VectorTrackContainerBase {
         return &instance.m_params[itrack];
       case "cov"_hash:
         return &instance.m_cov[itrack];
+      case "referenceSurface"_hash:
+        return &instance.m_referenceSurfaces[itrack];
       default:
         auto it = instance.m_dynamic.find(key);
         if (it == instance.m_dynamic.end()) {
@@ -121,6 +123,7 @@ class VectorTrackContainerBase {
   std::vector<IndexType> m_tipIndex;
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
+  std::vector<std::shared_ptr<Surface>> m_referenceSurfaces;
 
   std::unordered_map<HashedString, std::unique_ptr<DynamicColumnBase>>
       m_dynamic;

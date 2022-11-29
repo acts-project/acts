@@ -113,6 +113,17 @@ class TrackProxy {
     return component<IndexType>(hashString("tipIndex"));
   }
 
+  const Surface& referenceSurface() const {
+    return *component<std::shared_ptr<const Surface>,
+                      hashString("referenceSurface")>();
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setReferenceSurface(std::shared_ptr<const Surface> srf) {
+    component<std::shared_ptr<const Surface>,
+              hashString("referenceSurface")>() = std::move(srf);
+  }
+
   ConstParameters parameters() const {
     return m_container->parameters(m_index);
   }

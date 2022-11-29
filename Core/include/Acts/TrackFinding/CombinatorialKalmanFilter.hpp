@@ -16,6 +16,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/Track.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -35,6 +36,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <functional>
 #include <memory>
@@ -281,7 +283,7 @@ struct CombinatorialKalmanFilterResult {
 /// the navigation of the propagator.
 ///
 /// The void components are provided mainly for unit testing.
-template <typename propagator_t, typename traj_t>
+template <typename propagator_t, typename traj_t, typename track_container_t>
 class CombinatorialKalmanFilter {
  public:
   /// Default constructor is deleted
@@ -1252,11 +1254,12 @@ class CombinatorialKalmanFilter {
   template <typename source_link_iterator_t,
             typename start_parameters_container_t,
             typename parameters_t = BoundTrackParameters>
-  std::vector<Result<CombinatorialKalmanFilterResult<traj_t>>> findTracks(
-      const start_parameters_container_t& initialParameters,
-      const CombinatorialKalmanFilterOptions<source_link_iterator_t, traj_t>&
-          tfOptions,
-      std::shared_ptr<traj_t> trajectory = {}) const {
+  // std::vector<Result<CombinatorialKalmanFilterResult<traj_t>>>
+  std::pair<std::shared_ptr<traj_t>, TrackContainer<track_container_t, traj_t>>
+  findTracks(const start_parameters_container_t& initialParameters,
+             const CombinatorialKalmanFilterOptions<source_link_iterator_t,
+                                                    traj_t>& tfOptions,
+             std::shared_ptr<traj_t> trajectory = {}) const {
     const auto& logger = tfOptions.logger;
 
     using SourceLinkAccessor =
@@ -1292,8 +1295,8 @@ class CombinatorialKalmanFilter {
     // Run the CombinatorialKalmanFilter.
     // @todo The same target surface is used for all the initial track
     // parameters, which is not necessarily the case.
-    std::vector<Result<CombinatorialKalmanFilterResult<traj_t>>> ckfResults;
-    ckfResults.reserve(initialParameters.size());
+    // std::vector<Result<CombinatorialKalmanFilterResult<traj_t>>> ckfResults;
+    // ckfResults.reserve(initialParameters.size());
     // Loop over all initial track parameters. Return the results for all
     // initial track parameters including those failed ones.
 
@@ -1301,6 +1304,8 @@ class CombinatorialKalmanFilter {
       trajectory = std::make_shared<traj_t>();
     }
     auto stateBuffer = std::make_shared<traj_t>();
+
+    TrackContainer<track_container_t, traj_t> tracks{trajectory};
 
     for (size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
       const auto& sParameters = initialParameters[iseed];
@@ -1325,7 +1330,7 @@ class CombinatorialKalmanFilter {
                    << " with the initial parameters " << iseed << " : \n"
                    << sParameters.parameters());
         // Emplace back the failed result
-        ckfResults.emplace_back(result.error());
+        // ckfResults.emplace_back(result.error());
         continue;
       }
 
@@ -1354,15 +1359,26 @@ class CombinatorialKalmanFilter {
                    << " with the initial parameters " << iseed << " : \n"
                    << sParameters.parameters());
         // Emplace back the failed result
-        ckfResults.emplace_back(combKalmanResult.result.error());
+        // @TODO: What whould happen in this case? Store this in the track container?
+        // ckfResults.emplace_back(combKalmanResult.result.error());
         continue;
       }
 
       // Emplace back the successful result
-      ckfResults.emplace_back(std::move(combKalmanResult));
+      // Create tracks from tips
+      // ckfResults.emplace_back(std::move(combKalmanResult));
+      for (auto tip : combKalmanResult.lastMeasurementIndices) {
+        auto track = tracks.addTrack();
+        track.tipIndex() = tip;
+        const BoundTrackParameters& parameters =
+            combKalmanResult.fittedParameters[tip];
+        track.parameters() = parameters.parameters();
+        track.covariance() = parameters.covariance();
+        track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
+      }
     }
 
-    return ckfResults;
+    return {trajectory, tracks};
   }
 
 };  // namespace Acts
