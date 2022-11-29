@@ -11,8 +11,7 @@ target_link_libraries(
     ActsExamplesGeant4
     ActsExamplesIoHepMC3
     ActsExamplesHepMC3Options
-    ActsExamplesGeant4Common
-    Boost::program_options)
+    ActsExamplesGeant4Common)
     
 install(
   TARGETS ActsExampleEventRecording

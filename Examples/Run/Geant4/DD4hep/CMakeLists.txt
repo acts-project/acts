@@ -10,8 +10,7 @@ target_link_libraries(
     ActsExamplesGeant4
     ActsExamplesGeant4Common
     ActsExamplesMagneticField
-    ActsExamplesIoRoot
-    Boost::program_options)
+    ActsExamplesIoRoot)
 
 install(
   TARGETS ActsExampleGeant4DD4hep
@@ -29,8 +28,7 @@ target_link_libraries(
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesGeant4Common
-    ActsExamplesIoRoot
-    Boost::program_options)
+    ActsExamplesIoRoot)
 
 install(
   TARGETS ActsExampleMaterialRecordingDD4hep

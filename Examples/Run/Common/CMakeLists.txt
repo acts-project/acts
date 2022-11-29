@@ -47,9 +47,12 @@ target_link_libraries(
     ActsExamplesIoCsv ActsExamplesDetectorTelescope
     ActsExamplesDetectorGeneric ActsExamplesDetectorContextual
     ActsExamplesDetectorTGeo)
+
 acts_target_link_libraries_system(
-  ActsExamplesCommon Boost::program_options
-  PRIVATE dfelibs)
+  ActsExamplesCommon PRIVATE dfelibs)
+
+acts_target_link_libraries_system(
+  ActsExamplesCommon PUBLIC Boost::program_options)
 
 install(
   TARGETS ActsExamplesCommon

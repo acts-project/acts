@@ -8,8 +8,7 @@ target_link_libraries(
   PRIVATE
     ActsExamplesFramework
     ActsExamplesGenerators
-    ActsExamplesGeneratorsPythia8
-    Boost::program_options)
+    ActsExamplesGeneratorsPythia8)
 
 add_executable(
   ActsExamplePythia8
@@ -20,8 +19,7 @@ target_link_libraries(
     ActsExamplesFramework ActsExamplesCommon
     ActsExamplesGenerators ActsExamplesGeneratorsPythia8
     ActsExamplesIoCsv ActsExamplesIoRoot ActsExamplesPrinters
-    ActsExamplesGeneratorsPythia8Options
-    Boost::program_options)
+    ActsExamplesGeneratorsPythia8Options)
 
 install(
   TARGETS ActsExamplePythia8

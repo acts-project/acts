@@ -5,8 +5,7 @@ set(_common_libraries
   ActsExamplesIoObj
   ActsExamplesIoCsv
   ActsExamplesIoJson
-  ActsExamplesIoRoot
-  Boost::program_options)
+  ActsExamplesIoRoot)
 
 # Empty detector
 add_executable(

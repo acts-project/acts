@@ -6,8 +6,7 @@ set(_common_libraries
   ActsExamplesMagneticField
   ActsExamplesIoObj
   ActsExamplesIoJson
-  ActsExamplesIoRoot
-  Boost::program_options)
+  ActsExamplesIoRoot)
 
 # Empty detector
 add_executable(

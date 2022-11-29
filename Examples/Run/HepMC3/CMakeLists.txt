@@ -9,8 +9,7 @@ target_link_libraries(
   ActsExamplesHepMC3Options
   PRIVATE
     ActsExamplesFramework
-    ActsExamplesIoHepMC3
-    Boost::program_options)
+    ActsExamplesIoHepMC3)
 
 add_executable(
   ActsExampleHepMC3Exe
@@ -19,8 +18,7 @@ target_link_libraries(
   ActsExampleHepMC3Exe
   PRIVATE
     ActsCore ActsFatras 
-    ActsExamplesCommon ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC3Options
-    Boost::program_options)
+    ActsExamplesCommon ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC3Options)
 
 add_executable(
   ActsExampleHepMC3Histogram
@@ -29,8 +27,7 @@ target_link_libraries(
   ActsExampleHepMC3Histogram
   PRIVATE
     ActsCore ActsExamplesCommon
-    ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC3 ActsExamplesIoNuclearInteractions ActsExamplesHepMC3Options
-    Boost::program_options)
+    ActsExamplesFramework ActsExamplesIoHepMC3 ActsExamplesHepMC3 ActsExamplesIoNuclearInteractions ActsExamplesHepMC3Options)
     
 install(
   TARGETS ActsExampleHepMC3Exe ActsExampleHepMC3Histogram

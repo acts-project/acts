@@ -12,8 +12,7 @@ target_link_libraries(
     ActsExamplesGenerators
     ActsExamplesMagneticField
     ActsExamplesFatras
-    ActsExamplesIoCsv ActsExamplesIoRoot
-    Boost::program_options)
+    ActsExamplesIoCsv ActsExamplesIoRoot)
 
 install(
   TARGETS ActsExamplesFatrasCommon
