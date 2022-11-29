@@ -11,19 +11,14 @@
 #include <cmath>
 #include <numeric>
 #include <type_traits>
+#include <iostream> // TODO remove
 
 namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t>
 SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config)
-    : m_config(config.toInternalUnits()) {
-  // calculation of scattering using the highland formula
-  // convert pT to p once theta angle is known
-  m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
-                      (1 + 0.038 * std::log(m_config.radLengthPerSeed));
-  float maxScatteringAngle = m_config.highland / m_config.minPt;
-  m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
+    : m_config(config) {
 }
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -36,21 +31,14 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     const Acts::Range1D<float>& rMiddleSPRange) const {
-  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
-  // millimeter
-  // TODO: change using ACTS units
-  const double pTPerHelixRadius = 300. * options.bFieldInZ;
-  const double minHelixDiameter2 =
-      std::pow(m_config.minPt * 2 / pTPerHelixRadius, 2);
-  const double pT2perRadius = std::pow(m_config.highland / pTPerHelixRadius, 2);
-  const double sigmapT2perRadius =
-      pT2perRadius * std::pow(2 * m_config.sigmaScattering, 2);
 
+  std::cout << "TB Calling createSeedsFor Group " << "\n";
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
     float varianceZM = spM->varianceZ();
+    std::cout << "TB Calling createSeedsFor on SP z/r" << spM->z() << "/" << spM->radius() << std::endl;
 
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
@@ -92,6 +80,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
     }
+    std::cout << "TB good middle SP z/r " << spM->z() << "/" << spM->radius() << std::endl;
 
     state.compatTopSP.clear();
 
@@ -154,14 +143,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // the distance of the straight line from the origin (radius of the
           // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
           // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-          if ((bCoef * bCoef) > (1 + aCoef * aCoef) / minHelixDiameter2) {
+          if ((bCoef * bCoef) > (1 + aCoef * aCoef) / options.minHelixDiameter2) {
             continue;
           }
         }
       }
+      std::cout << "TB found conforming topSP z/r " << topSP->z() << "/" << topSP->radius() << std::endl;
+
       state.compatTopSP.push_back(topSP);
     }
-    // apply cut on the number of top SP if seedConfirmation is true
+    // apply cut on the number of top SP if seedConfirmation is true 
     SeedFilterState seedFilterState;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
@@ -243,11 +234,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // the distance of the straight line from the origin (radius of the
           // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
           // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-          if ((bCoef * bCoef) > (1 + aCoef * aCoef) / minHelixDiameter2) {
+          if ((bCoef * bCoef) > (1 + aCoef * aCoef) / options.minHelixDiameter2) {
             continue;
           }
         }
       }
+      std::cout << "TB found conforming bottomSP z/r " << bottomSP->z() << "/" << bottomSP->radius() << std::endl;
+
       state.compatBottomSP.push_back(bottomSP);
     }
     // no bottom SP found -> try next spM
@@ -472,7 +465,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         // sqrt(S2)/B = 2 * helixradius
         // calculated radius must not be smaller than minimum radius
-        if (S2 < B2 * minHelixDiameter2) {
+        if (S2 < B2 * options.minHelixDiameter2) {
           continue;
         }
 
@@ -481,10 +474,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // measured pT (p2scatterSigma)
         float iHelixDiameter2 = B2 / S2;
         // calculate scattering for p(T) calculated from seed curvature
-        float pT2scatterSigma = iHelixDiameter2 * sigmapT2perRadius;
+        float pT2scatterSigma = iHelixDiameter2 * options.sigmapT2perRadius;
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
-        float pT = pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+        float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
         if (pT > m_config.maxPtScattering) {
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *

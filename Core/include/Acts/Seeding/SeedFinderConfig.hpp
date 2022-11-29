@@ -144,10 +144,6 @@ struct SeedFinderConfig {
   // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
-  float pTPerHelixRadius = 0;
-  float minHelixDiameter2 = 0;
-  float pT2perRadius = 0;
-  float sigmapT2perRadius = 0;
 
   // only for Cuda plugin
   int maxBlockSize = 1024;
@@ -203,6 +199,17 @@ struct SeedFinderConfig {
 
     return config;
   }
+  SeedFinderConfig calculateDerivedQuantities() const { 
+    SeedFinderConfig config = *this;
+    // calculation of scattering using the highland formula
+    // convert pT to p once theta angle is known
+    config.highland = 13.6 * std::sqrt(radLengthPerSeed) *
+                        (1 + 0.038 * std::log(radLengthPerSeed));
+    const float maxScatteringAngle = config.highland / minPt;
+    config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;    
+    return config;
+  }
+
 };
 
 struct SeedFinderOptions {
@@ -213,16 +220,38 @@ struct SeedFinderOptions {
 
   float bFieldInZ = 2.08 * Acts::UnitConstants::T;
 
+  // derived quantities
+  double pTPerHelixRadius;
+  double minHelixDiameter2;
+  double pT2perRadius;
+  double sigmapT2perRadius;
+
   SeedFinderOptions toInternalUnits() const {
     using namespace Acts::UnitLiterals;
     SeedFinderOptions options = *this;
     options.beamPos[0] /= 1_mm;
     options.beamPos[1] /= 1_mm;
 
-    options.bFieldInZ /= 1000. * 1_T;
-
+    options.bFieldInZ /= 1000. * 1_T;    
     return options;
   }
+  template <typename SpacePoint>
+  SeedFinderOptions calculateDerivedQuantities(const SeedFinderConfig<SpacePoint>& config ) const { 
+    SeedFinderOptions options = *this;
+
+    // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
+    // millimeter
+    // TODO: change using ACTS units
+    options.pTPerHelixRadius = 300. * bFieldInZ;
+    options.minHelixDiameter2 =
+      std::pow(config.minPt * 2 / pTPerHelixRadius, 2);
+    options.pT2perRadius = std::pow(config.highland / pTPerHelixRadius, 2);
+    options.sigmapT2perRadius =
+      pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
+    return options;
+  }
+
+
 };
 
 }  // namespace Acts
