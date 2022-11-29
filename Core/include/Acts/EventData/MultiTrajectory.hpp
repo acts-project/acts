@@ -57,30 +57,37 @@ using ConstIf = std::conditional_t<select, const T, T>;
 
 /// Helper type to make a member pointers constness transitive.
 template <typename T>
-struct TransitiveConstPointer {
+class TransitiveConstPointer {
+ public:
   TransitiveConstPointer() = default;
-  TransitiveConstPointer(T* _ptr) : ptr{_ptr} {}
+  TransitiveConstPointer(T* ptr) : m_ptr{ptr} {}
 
   template <typename U>
   TransitiveConstPointer(const TransitiveConstPointer<U>& other)
-      : ptr{other.ptr} {}
+      : m_ptr{other.ptr()} {}
 
   template <typename U>
   TransitiveConstPointer& operator=(const TransitiveConstPointer<U>& other) {
-    ptr = other.ptr;
+    m_ptr = other.m_ptr;
     return *this;
   }
 
   template <typename U>
   bool operator==(const TransitiveConstPointer<U>& other) const {
-    return ptr == other.ptr;
+    return m_ptr == other.m_ptr;
   }
 
-  const T* operator->() const { return ptr; }
+  const T* operator->() const { return m_ptr; }
 
-  T* operator->() { return ptr; }
+  T* operator->() { return m_ptr; }
 
-  T* ptr;
+  template <typename U>
+  friend class TransitiveConstPointer;
+
+ private:
+  T* ptr() const { return m_ptr; }
+
+  T* m_ptr;
 };
 
 /// Type construction helper for coefficients and associated covariances.
