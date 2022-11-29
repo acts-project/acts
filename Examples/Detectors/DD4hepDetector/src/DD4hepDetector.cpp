@@ -10,7 +10,6 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
@@ -18,21 +17,6 @@
 
 namespace ActsExamples {
 namespace DD4hep {
-
-void DD4hepDetector::addOptions(
-    boost::program_options::options_description& opt) const {
-  ActsExamples::Options::addDD4hepOptions(opt);
-}
-
-auto DD4hepDetector::finalize(
-    const boost::program_options::variables_map& vm,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  // read the detector config & dd4hep detector
-  auto dd4HepDetectorConfig =
-      ActsExamples::Options::readDD4hepConfig<po::variables_map>(vm);
-  return finalize(dd4HepDetectorConfig, mdecorator);
-}
 
 auto DD4hepDetector::finalize(
     ActsExamples::DD4hep::DD4hepGeometryService::Config config,
