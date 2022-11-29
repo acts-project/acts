@@ -129,9 +129,8 @@ BOOST_AUTO_TEST_CASE(ConstCorrectness) {
     static_cast<void>(ctsp);
 
     tsp.predicted().setRandom();
-    const auto& tsp_const = tsp;
+    // const auto& tsp_const = tsp;
     // tsp_const.predicted().setRandom();
-
     // ctsp.predicted().setRandom();
   }
 
