@@ -49,7 +49,7 @@ Ambiguity resolution: {{ make_url("seeded", "ambi_seeded.html") }}, {{ make_url(
     "seeding_orthogonal_plots",
 ) else ":x: "}}
 
-{% for mode in ["seeded", "truth_smeared", "truth_estimated", "orthogonal"] %}
+{% for mode in ["seeded", "truth_estimated", "orthogonal"] %}
 
 {% call detail_block("Seeding "+mode, "seeding_"+mode+"_plots") %}
     
