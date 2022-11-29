@@ -94,14 +94,21 @@ BOOST_AUTO_TEST_CASE(TrackStateAccess) {
   auto ts4 = mkts(ts3);
   auto ts5 = mkts(ts4);
 
-  VectorMultiTrajectory mtj{};
   VectorTrackContainer vtc{};
-  TrackContainer tc{vtc, mtj};
+  TrackContainer tc{vtc, traj};
 
   auto t = tc.getTrack(tc.addTrack());
   t.tipIndex() = ts5.index();
 
-  t.visitTrackStates([](const auto& state) {});
+  std::vector<IndexType> act;
+  for (auto ts : t.trackStates()) {
+    act.push_back(ts.index());
+  }
+
+  std::vector<IndexType> exp;
+  exp.resize(5);
+  std::iota(exp.rbegin(), exp.rend(), 0);
+  BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 }
 
 BOOST_AUTO_TEST_CASE(BuildReadOnly) {

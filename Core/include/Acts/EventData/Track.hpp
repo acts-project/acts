@@ -131,6 +131,13 @@ class TrackProxy {
     return m_container->covariance(m_index);
   }
 
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto trackStates() {
+    return m_container->trackStateRange(m_index);
+  }
+
+  auto trackStates() const { return m_container->trackStateRange(m_index); }
+
  private:
   TrackProxy(
       ConstIf<TrackContainer<Container, Trajectory>, ReadOnly>& container,
@@ -238,6 +245,17 @@ class TrackContainer {
   constexpr typename ConstTrackProxy::Covariance covariance(
       IndexType itrack) const {
     return m_container->covariance(itrack);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto trackStateRange(IndexType itrack) {
+    auto tip = component<IndexType>(hashString("tipIndex"), itrack);
+    return m_traj->trackStateRange(tip);
+  }
+
+  auto trackStateRange(IndexType itrack) const {
+    auto tip = component<IndexType>(hashString("tipIndex"), itrack);
+    return m_traj->trackStateRange(tip);
   }
 
  private:
