@@ -33,8 +33,7 @@ BOOST_AUTO_TEST_SUITE(EventDataTrack)
 
 BOOST_AUTO_TEST_CASE(Build) {
   VectorMultiTrajectory mtj{};
-  VectorTrackContainer vtc{};
-  TrackContainer tc{vtc, mtj};
+  TrackContainer tc{VectorTrackContainer{}, mtj};
 
   static_assert(
       std::is_same_v<decltype(tc), TrackContainer<VectorTrackContainer,
@@ -94,8 +93,7 @@ BOOST_AUTO_TEST_CASE(TrackStateAccess) {
   auto ts4 = mkts(ts3);
   auto ts5 = mkts(ts4);
 
-  VectorTrackContainer vtc{};
-  TrackContainer tc{vtc, traj};
+  TrackContainer tc{VectorTrackContainer{}, traj};
 
   auto t = tc.getTrack(tc.addTrack());
   t.tipIndex() = ts5.index();
@@ -113,8 +111,7 @@ BOOST_AUTO_TEST_CASE(TrackStateAccess) {
 
 BOOST_AUTO_TEST_CASE(BuildReadOnly) {
   ConstVectorMultiTrajectory mtj{};
-  ConstVectorTrackContainer vtc{};
-  TrackContainer tc{vtc, mtj};
+  TrackContainer tc{ConstVectorTrackContainer{}, mtj};
 
   static_assert(
       std::is_same_v<decltype(tc), TrackContainer<ConstVectorTrackContainer,
@@ -126,8 +123,7 @@ BOOST_AUTO_TEST_CASE(BuildReadOnly) {
 
 BOOST_AUTO_TEST_CASE(DynamicColumns) {
   VectorMultiTrajectory mtj{};
-  VectorTrackContainer vtc{};
-  TrackContainer tc{vtc, mtj};
+  TrackContainer tc{VectorTrackContainer{}, mtj};
   BOOST_CHECK(!tc.hasColumn("col_a"_hash));
   tc.addColumn<float>("col_a");
   BOOST_CHECK(tc.hasColumn("col_a"_hash));

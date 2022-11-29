@@ -176,8 +176,10 @@ class TrackContainer {
   friend TrackProxy;
   friend ConstTrackProxy;
 
-  TrackContainer(track_container_t& container, traj_t& traj)
-      : m_container{&container}, m_traj{&traj} {}
+  TrackContainer(track_container_t container, traj_t& traj)
+      : m_container{std::move(container)}, m_traj{&traj} {}
+
+  TrackContainer(traj_t& traj) : m_container{}, m_traj{&traj} {}
 
   ConstTrackProxy getTrack(IndexType itrack) const { return {*this, itrack}; }
 
@@ -186,65 +188,65 @@ class TrackContainer {
     return {*this, itrack};
   }
 
-  constexpr IndexType size() const { return m_container->size_impl(); }
+  constexpr IndexType size() const { return m_container.size_impl(); }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexType addTrack() {
-    return m_container->addTrack_impl();
+    return m_container.addTrack_impl();
   }
 
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr void addColumn(const std::string& key) {
-    m_container->template addColumn_impl<T>(key);
+    m_container.template addColumn_impl<T>(key);
   }
 
   constexpr bool hasColumn(HashedString key) const {
-    return m_container->hasColumn_impl(key);
+    return m_container.hasColumn_impl(key);
   }
 
  protected:
   template <typename T, HashedString key, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   constexpr T& component(IndexType itrack) {
-    return *std::any_cast<T*>(m_container->component_impl(key, itrack));
+    return *std::any_cast<T*>(m_container.component_impl(key, itrack));
   }
 
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr T& component(HashedString key, IndexType istate) {
-    return *std::any_cast<T*>(m_container->component_impl(key, istate));
+    return *std::any_cast<T*>(m_container.component_impl(key, istate));
   }
 
   template <typename T, HashedString key>
   constexpr const T& component(IndexType itrack) const {
-    return *std::any_cast<const T*>(m_container->component_impl(key, itrack));
+    return *std::any_cast<const T*>(m_container.component_impl(key, itrack));
   }
 
   template <typename T>
   constexpr const T& component(HashedString key, IndexType itrack) const {
-    return *std::any_cast<const T*>(m_container->component_impl(key, itrack));
+    return *std::any_cast<const T*>(m_container.component_impl(key, itrack));
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
-    return m_container->parameters(itrack);
+    return m_container.parameters(itrack);
   }
 
   constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
-    return m_container->parameters(itrack);
+    return m_container.parameters(itrack);
   }
 
   constexpr typename ConstTrackProxy::Parameters parameters(
       IndexType itrack) const {
-    return m_container->parameters(itrack);
+    return m_container.parameters(itrack);
   }
 
   constexpr typename TrackProxy::Covariance covariance(IndexType itrack) {
-    return m_container->covariance(itrack);
+    return m_container.covariance(itrack);
   }
 
   constexpr typename ConstTrackProxy::Covariance covariance(
       IndexType itrack) const {
-    return m_container->covariance(itrack);
+    return m_container.covariance(itrack);
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
@@ -259,9 +261,7 @@ class TrackContainer {
   }
 
  private:
-  detail_lt::TransitiveConstPointer<
-      detail_tc::ConstIf<track_container_t, ReadOnly>>
-      m_container;
+  track_container_t m_container;
 
   detail_lt::TransitiveConstPointer<detail_tc::ConstIf<traj_t, ReadOnly>>
       m_traj;
