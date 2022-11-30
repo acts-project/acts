@@ -24,7 +24,7 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
                                               id.sensitive(), id.extra()};
 
   bool writeSeparator = false;
-  for (auto i = 0u; i < sizeof(levels); ++i) {
+  for (auto i = 0u; i < (sizeof(levels) / sizeof(levels[0])); ++i) {
     if (levels[i] != 0u) {
       if (writeSeparator) {
         os << '|';
