@@ -245,7 +245,7 @@ class Chi2Fitter {
     /// Whether to consider energy loss.
     bool energyLoss = false;  // TODO: add later
 
-    int updateNumber;
+    int updateNumber = SIZE_MAX;
     /// Whether to include non-linear correction during global to local
     /// transformation
     FreeToBoundCorrection freeToBoundCorrection;
@@ -350,7 +350,7 @@ class Chi2Fitter {
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
 
-        size_t currentTrackIndex;
+        size_t currentTrackIndex = SIZE_MAX;
         if (updateNumber == 0) {
           result.lastTrackIndex =
               result.fittedStates
