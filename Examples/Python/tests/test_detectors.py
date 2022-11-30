@@ -22,9 +22,10 @@ def count_surfaces(geo):
 
     return nSurfaces
 
+
 def check_extra_odd(srf):
-    if (srf.volumeId() == 28 or srf.volumeId() == 30):
-        if (srf.sensitiveId() != 28):
+    if srf.volumeId() == 28 or srf.volumeId() == 30:
+        if srf.sensitiveId() != 28:
             assert srf.extraId() != 0
     return
 
