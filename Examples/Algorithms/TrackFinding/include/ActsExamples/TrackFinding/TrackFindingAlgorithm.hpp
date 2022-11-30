@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilter.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
@@ -34,8 +35,12 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
                                              Acts::VectorMultiTrajectory>;
-  using TrackFinderResult = std::vector<Acts::Result<
-      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>;
+  // using TrackFinderResult = std::vector<Acts::Result<
+  // Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>;
+  using TrackFinderResult =
+      std::pair<std::shared_ptr<Acts::VectorMultiTrajectory>,
+                Acts::TrackContainer<Acts::VectorTrackContainer,
+                                     Acts::VectorMultiTrajectory>>;
 
   /// Find function that takes the above parameters
   /// @note This is separated into a virtual interface to keep compilation units

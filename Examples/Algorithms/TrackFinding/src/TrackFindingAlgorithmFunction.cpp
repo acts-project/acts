@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -27,7 +28,8 @@ using Stepper = Acts::EigenStepper<>;
 using Navigator = Acts::Navigator;
 using Propagator = Acts::Propagator<Stepper, Navigator>;
 using CKF =
-    Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory>;
+    Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory,
+                                    Acts::VectorTrackContainer>;
 
 struct TrackFinderFunctionImpl
     : public ActsExamples::TrackFindingAlgorithm::TrackFinderFunction {
