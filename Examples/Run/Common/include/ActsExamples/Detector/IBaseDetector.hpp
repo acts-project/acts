@@ -17,6 +17,9 @@
 namespace Acts {
 class TrackingGeometry;
 class IMaterialDecorator;
+namespace Experimental {
+class Detector;
+};
 }  // namespace Acts
 
 namespace ActsExamples {
@@ -30,12 +33,14 @@ class IBaseDetector {
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
   using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
+  using DetectorPtr = std::shared_ptr<const Acts::Experimental::Detector>;
+
   virtual ~IBaseDetector() = default;
   virtual void addOptions(
       boost::program_options::options_description& opt) const = 0;
 
   virtual std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
       const boost::program_options::variables_map& vm,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) = 0;
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) = 0;      
 };
 }  // namespace ActsExamples
