@@ -175,6 +175,11 @@ void MultiTrajectory<D>::visitBackwards(IndexType iendpoint,
   static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
 
+  if (iendpoint == MultiTrajectoryTraits::kInvalid) {
+    throw std::runtime_error(
+        "Cannot visit backwards with kInvalid as endpoint");
+  }
+
   while (true) {
     auto ts = getTrackState(iendpoint);
     if constexpr (std::is_same_v<std::invoke_result_t<F, ConstTrackStateProxy>,
