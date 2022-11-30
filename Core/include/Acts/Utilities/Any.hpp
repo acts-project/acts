@@ -103,7 +103,7 @@ class AnyBase : public AnyBaseAll {
         "Type needs to be copy assignable and copy constructible");
 
     m_handler = makeHandler<U>();
-    if constexpr (sizeof(U) <= SIZE) {
+    if constexpr (not heapAllocated<U>()) {
       // construct into local buffer
       /*U* ptr =*/new (m_data.data()) U(std::forward<Args>(args)...);
       _ACTS_ANY_VERBOSE(
@@ -116,12 +116,11 @@ class AnyBase : public AnyBaseAll {
     }
   }
 
-  AnyBase() {
-    m_data.fill(std::byte{0});
 #if defined(_ACTS_ANY_ENABLE_VERBOSE)
-    _ACTS_ANY_VERBOSE("Default construct this=" << this);
+  AnyBase() { _ACTS_ANY_VERBOSE("Default construct this=" << this); };
+#else
+  AnyBase() = default;
 #endif
-  };
 
   template <typename T, typename = std::enable_if_t<
                             !std::is_same_v<std::decay_t<T>, AnyBase<SIZE>>>>
@@ -166,7 +165,6 @@ class AnyBase : public AnyBaseAll {
         "Copy construct (this=" << this << ") at: " << (void*)m_data.data());
 
     m_handler = other.m_handler;
-    assert(m_handler != nullptr && "Handler is null");
     copyConstruct(other);
   }
 
@@ -181,7 +179,6 @@ class AnyBase : public AnyBaseAll {
 
     if (m_handler == nullptr) {  // this object is empty
       m_handler = other.m_handler;
-      assert(m_handler && "Handler is null");
       copyConstruct(other);
     } else {
       // @TODO: Support assigning between different types
@@ -202,7 +199,6 @@ class AnyBase : public AnyBaseAll {
     }
 
     m_handler = other.m_handler;
-    assert(m_handler != nullptr && "Handler is null");
     moveConstruct(std::move(other));
   }
 
@@ -216,7 +212,6 @@ class AnyBase : public AnyBaseAll {
 
     if (m_handler == nullptr) {  // this object is empty
       m_handler = other.m_handler;
-      assert(m_handler && "Handler is null");
       moveConstruct(std::move(other));
     } else {
       // @TODO: Support assigning between different types
@@ -232,7 +227,7 @@ class AnyBase : public AnyBaseAll {
 
  private:
   void* dataPtr() {
-    if (m_handler->heap) {
+    if (m_handler->heapAllocated) {
       return *reinterpret_cast<void**>(m_data.data());
     } else {
       return reinterpret_cast<void*>(m_data.data());
@@ -242,7 +237,7 @@ class AnyBase : public AnyBaseAll {
   void setDataPtr(void* ptr) { *reinterpret_cast<void**>(m_data.data()) = ptr; }
 
   const void* dataPtr() const {
-    if (m_handler->heap) {
+    if (m_handler->heapAllocated) {
       return *reinterpret_cast<void* const*>(m_data.data());
     } else {
       return reinterpret_cast<const void*>(m_data.data());
@@ -255,34 +250,35 @@ class AnyBase : public AnyBaseAll {
     void (*move)(void* from, void* to) = nullptr;
     void* (*copyConstruct)(const void* from, void* to) = nullptr;
     void (*copy)(const void* from, void* to) = nullptr;
-    bool heap{false};
+    bool heapAllocated{false};
   };
 
   template <typename T>
-  static Handler* makeHandler() {
+  static const Handler* makeHandler() {
     static_assert(!std::is_same_v<T, AnyBase<SIZE>>, "Cannot wrap any in any");
-    static Handler static_handler = []() {
+    static const Handler static_handler = []() {
       Handler h;
-      if constexpr (!std::is_trivially_destructible_v<T> || sizeof(T) > SIZE) {
+      h.heapAllocated = heapAllocated<T>();
+      if constexpr (!std::is_trivially_destructible_v<T> ||
+                    heapAllocated<T>()) {
         h.destroy = &destroyImpl<T>;
       }
       if constexpr (!std::is_trivially_move_constructible_v<T> ||
-                    sizeof(T) > SIZE) {
+                    heapAllocated<T>()) {
         h.moveConstruct = &moveConstructImpl<T>;
       }
       if constexpr (!std::is_trivially_move_assignable_v<T> ||
-                    sizeof(T) > SIZE) {
+                    heapAllocated<T>()) {
         h.move = &moveImpl<T>;
       }
       if constexpr (!std::is_trivially_copy_constructible_v<T> ||
-                    sizeof(T) > SIZE) {
+                    heapAllocated<T>()) {
         h.copyConstruct = &copyConstructImpl<T>;
       }
       if constexpr (!std::is_trivially_copy_assignable_v<T> ||
-                    sizeof(T) > SIZE) {
+                    heapAllocated<T>()) {
         h.copy = &copyImpl<T>;
       }
-      h.heap = sizeof(T) > SIZE;
 
       _ACTS_ANY_DEBUG("Type: " << typeid(T).name());
       _ACTS_ANY_DEBUG(" -> destroy: " << h.destroy);
@@ -290,11 +286,17 @@ class AnyBase : public AnyBaseAll {
       _ACTS_ANY_DEBUG(" -> move: " << h.move);
       _ACTS_ANY_DEBUG(" -> copyConstruct: " << h.copyConstruct);
       _ACTS_ANY_DEBUG(" -> copy: " << h.copy);
-      _ACTS_ANY_DEBUG(" -> heap: " << (h.heap ? "yes" : "no"));
+      _ACTS_ANY_DEBUG(
+          " -> heapAllocated: " << (h.heapAllocated ? "yes" : "no"));
 
       return h;
     }();
     return &static_handler;
+  }
+
+  template <typename T>
+  static constexpr bool heapAllocated() {
+    return sizeof(T) > SIZE;
   }
 
   void destroy() {
@@ -312,7 +314,7 @@ class AnyBase : public AnyBaseAll {
 
     void* to = dataPtr();
     void* from = fromAny.dataPtr();
-    if (m_handler->heap) {
+    if (m_handler->heapAllocated) {
       // stored on heap: just copy the pointer
       setDataPtr(fromAny.dataPtr());
       // do not delete in moved-from any
@@ -335,7 +337,7 @@ class AnyBase : public AnyBaseAll {
 
     void* to = dataPtr();
     void* from = fromAny.dataPtr();
-    if (m_handler->heap) {
+    if (m_handler->heapAllocated) {
       // stored on heap: just copy the pointer
       // need to delete existing pointer
       m_handler->destroy(dataPtr());
@@ -394,7 +396,7 @@ class AnyBase : public AnyBaseAll {
   static void destroyImpl(void* ptr) {
     assert(ptr != nullptr && "Address to destroy is nullptr");
     T* obj = static_cast<T*>(ptr);
-    if constexpr (sizeof(T) <= SIZE) {
+    if constexpr (!heapAllocated<T>()) {
       // stored in place: just call the destructor
       _ACTS_ANY_VERBOSE("Destroy local at: " << ptr);
       obj->~T();
@@ -443,15 +445,14 @@ class AnyBase : public AnyBaseAll {
   static void* copyConstructImpl(const void* from, void* to) {
     _ACTS_ANY_VERBOSE("copy const: " << from << " -> " << to);
     assert(from != nullptr && "Source is null");
-    // assert(to != nullptr && "Target is null");
     const T* _from = static_cast<const T*>(from);
     if (to == nullptr) {
-      assert(sizeof(T) > SIZE && "Received nullptr in local buffer case");
+      assert(heapAllocated<T>() && "Received nullptr in local buffer case");
       to = new T(*_from);
       _ACTS_ANY_TRACK_ALLOCATION(T, to);
 
     } else {
-      assert(sizeof(T) <= SIZE && "Received non-nullptr in heap case");
+      assert(!heapAllocated<T>() && "Received non-nullptr in heap case");
       /*T* ptr =*/new (to) T(*_from);
     }
     return to;
