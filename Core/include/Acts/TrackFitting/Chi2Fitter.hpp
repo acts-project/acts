@@ -350,7 +350,7 @@ class Chi2Fitter {
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
 
-        size_t index;
+        size_t currentTrackIndex;
         if (updateNumber == 0) {
           result.lastTrackIndex =
               result.fittedStates
@@ -358,18 +358,19 @@ class Chi2Fitter {
                       ~(TrackStatePropMask::Smoothed |
                         TrackStatePropMask::Filtered),
                       result.lastTrackIndex);
-          index = result.lastTrackIndex;
+          currentTrackIndex = result.lastTrackIndex;
         } else {
           result.fittedStates->visitBackwards(
               result.lastTrackIndex, [&](auto proxy) {
                 if (&proxy.referenceSurface() == surface) {
-                  index = proxy.index();
+                  currentTrackIndex = proxy.index();
                 }
               });
         }
 
         // now get track state proxy back
-        auto trackStateProxy = result.fittedStates->getTrackState(index);
+        auto trackStateProxy =
+            result.fittedStates->getTrackState(currentTrackIndex);
 
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
