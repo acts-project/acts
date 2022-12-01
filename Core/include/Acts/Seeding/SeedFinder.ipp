@@ -11,7 +11,6 @@
 #include <cmath>
 #include <numeric>
 #include <type_traits>
-#include <iostream> // TODO remove
 
 namespace Acts {
 
@@ -19,6 +18,9 @@ template <typename external_spacepoint_t, typename platform_t>
 SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config)
     : m_config(config) {
+  if (not config.isInInternalUnits)
+    throw std::runtime_error(
+        "SeedFinderConfig not in ACTS internal units in SeedFinder");
 }
 
 template <typename external_spacepoint_t, typename platform_t>
@@ -31,15 +33,15 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     const Acts::Range1D<float>& rMiddleSPRange) const {
+  if (not options.isInInternalUnits)
+    throw std::runtime_error(
+        "SeedFinderOptions not in ACTS internal units in SeedFinder");
 
-  std::cout << "TB Calling createSeedsFor Group " << "\n";
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
     float varianceRM = spM->varianceR();
     float varianceZM = spM->varianceZ();
-    std::cout << "TB Calling createSeedsFor on SP z/r" << spM->z() << "/" << spM->radius() << std::endl;
-
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
       if (rM < rMiddleSPRange.min()) {
@@ -80,7 +82,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
     }
-    std::cout << "TB good middle SP z/r " << spM->z() << "/" << spM->radius() << std::endl;
 
     state.compatTopSP.clear();
 
@@ -143,16 +144,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // the distance of the straight line from the origin (radius of the
           // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
           // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-          if ((bCoef * bCoef) > (1 + aCoef * aCoef) / options.minHelixDiameter2) {
+          if ((bCoef * bCoef) >
+              (1 + aCoef * aCoef) / options.minHelixDiameter2) {
             continue;
           }
         }
       }
-      std::cout << "TB found conforming topSP z/r " << topSP->z() << "/" << topSP->radius() << std::endl;
 
       state.compatTopSP.push_back(topSP);
     }
-    // apply cut on the number of top SP if seedConfirmation is true 
+    // apply cut on the number of top SP if seedConfirmation is true
     SeedFilterState seedFilterState;
     if (m_config.seedConfirmation == true) {
       // check if middle SP is in the central or forward region
@@ -179,6 +180,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     for (auto bottomSP : bottomSPs) {
       float rB = bottomSP->radius();
       float deltaR = rM - rB;
+
       // this condition is the opposite of the condition for top SP
       if (deltaR > m_config.deltaRMaxBottomSP) {
         continue;
@@ -234,12 +236,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
           // the distance of the straight line from the origin (radius of the
           // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
           // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-          if ((bCoef * bCoef) > (1 + aCoef * aCoef) / options.minHelixDiameter2) {
+          if ((bCoef * bCoef) >
+              (1 + aCoef * aCoef) / options.minHelixDiameter2) {
             continue;
           }
         }
       }
-      std::cout << "TB found conforming bottomSP z/r " << bottomSP->z() << "/" << bottomSP->radius() << std::endl;
 
       state.compatBottomSP.push_back(bottomSP);
     }
@@ -465,6 +467,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         // sqrt(S2)/B = 2 * helixradius
         // calculated radius must not be smaller than minimum radius
+
         if (S2 < B2 * options.minHelixDiameter2) {
           continue;
         }
