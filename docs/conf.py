@@ -47,6 +47,8 @@ numfig = True
 myst_enable_extensions = ["dollarmath", "colon_fence", "amsmath"]
 myst_heading_anchors = 3
 
+linkcheck_retries = 5
+
 # -- Options for HTML output --------------------------------------------------
 
 # ensure we use the RTD them when building locally
