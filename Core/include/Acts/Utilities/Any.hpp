@@ -135,7 +135,8 @@ class AnyBase : public AnyBaseAll {
       throw std::bad_any_cast{};
     }
 
-    _ACTS_ANY_VERBOSE("Get as " << (m_handler->heap ? "heap" : "local"));
+    _ACTS_ANY_VERBOSE("Get as "
+                      << (m_handler->heapAllocated ? "heap" : "local"));
 
     return *reinterpret_cast<T*>(dataPtr());
   }
