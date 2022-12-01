@@ -165,7 +165,7 @@ struct Chi2FitterResult {
   // This correspond to the last state in the multitrajectory.
   // Since this GX2F only stores one trajectory, it is unambiguous.
   // SIZE_MAX is the start of a trajectory.
-  size_t lastTrackIndex = SIZE_MAX;
+  size_t lastTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
 
   // The optional Parameters at the provided surface
   std::optional<BoundTrackParameters> fittedParameters;
@@ -350,22 +350,33 @@ class Chi2Fitter {
         // add a full TrackState entry multi trajectory
         // (this allocates storage for all components, we will set them later)
 
-        size_t currentTrackIndex = SIZE_MAX;
+        size_t currentTrackIndex = Acts::MultiTrajectoryTraits::kInvalid;
+        bool foundExistingSurface =
+            false;  // Checks if during the update an existing surface is found.
+                    // If not, there will be a new index generated afterwards
+
         if (updateNumber == 0) {
-          result.lastTrackIndex =
-              result.fittedStates
-                  ->addTrackState(  // which lastTrackIndex is this?
-                      ~(TrackStatePropMask::Smoothed |
-                        TrackStatePropMask::Filtered),
-                      result.lastTrackIndex);
+          result.lastTrackIndex = result.fittedStates->addTrackState(
+              ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
+              result.lastTrackIndex);
           currentTrackIndex = result.lastTrackIndex;
         } else {
           result.fittedStates->visitBackwards(
               result.lastTrackIndex, [&](auto proxy) {
                 if (&proxy.referenceSurface() == surface) {
                   currentTrackIndex = proxy.index();
+                  foundExistingSurface = true;
                 }
               });
+
+          if (!foundExistingSurface) {
+            ACTS_VERBOSE(
+                "chi2 |    processSurface: Found new surface during update.");
+            result.lastTrackIndex = result.fittedStates->addTrackState(
+                ~(TrackStatePropMask::Smoothed | TrackStatePropMask::Filtered),
+                result.lastTrackIndex);
+            currentTrackIndex = result.lastTrackIndex;
+          }
         }
 
         // now get track state proxy back
@@ -608,12 +619,10 @@ class Chi2Fitter {
   /// the fit.
   ///
   /// @return the output as an output track
-  template <typename source_link_iterator_t,
-            typename parameters_t = BoundTrackParameters>
+  template <typename source_link_iterator_t>
   Result<Chi2FitterResult<traj_t>> fit(
       source_link_iterator_t it, source_link_iterator_t end,
       const BoundTrackParameters& sParameters,
-      //      const start_parameters_t& sParameters,
       const Chi2FitterOptions<traj_t>& chi2FitterOptions,
       std::shared_ptr<traj_t> trajectory = {}) const {
     const auto& logger = chi2FitterOptions.logger;
@@ -634,8 +643,8 @@ class Chi2Fitter {
     // propagation. Use dynamic Matrix instead? Performance?
 
     // Create the ActionList and AbortList
-    using Chi2Aborter = Aborter<parameters_t>;
-    using Chi2Actor = Actor<parameters_t>;
+    using Chi2Aborter = Aborter<BoundTrackParameters>;
+    using Chi2Actor = Actor<BoundTrackParameters>;
 
     using Chi2Result = typename Chi2Actor::result_type;
     using Actors = ActionList<Chi2Actor>;
@@ -644,14 +653,12 @@ class Chi2Fitter {
     // the result object which will be returned. Overridden every iteration.
     Chi2Result c2r;
 
-    if (not trajectory) {
-      trajectory = std::make_shared<traj_t>();
-    };
+    trajectory = std::make_shared<traj_t>();
 
     using paramType = typename std::conditional<
-        std::is_same<BoundTrackParameters, parameters_t>::value,
+        std::is_same<BoundTrackParameters, BoundTrackParameters>::value,
         std::variant<BoundTrackParameters>,
-        std::variant<BoundTrackParameters, parameters_t>>::type;
+        std::variant<BoundTrackParameters, BoundTrackParameters>>::type;
 
     paramType vParams = sParameters;
     auto updatedStartParameters = sParameters;
@@ -718,11 +725,11 @@ class Chi2Fitter {
                                         c2rCurrent.collectorCovariance.size());
       c2rCurrent.covariance = variance.asDiagonal();
 
+      // calculate the global chisquare
       c2rCurrent.chisquare = c2rCurrent.residuals.transpose() *
                              c2rCurrent.covariance.inverse() *
                              c2rCurrent.residuals;
       ACTS_VERBOSE("chi2 | it=" << i << " | χ² = " << c2rCurrent.chisquare);
-      // chisquare is here the global chisquare
 
       // copy over data from previous runs (namely chisquares vector)
       c2rCurrent.chisquares.reserve(c2r.chisquares.size() + 1);
