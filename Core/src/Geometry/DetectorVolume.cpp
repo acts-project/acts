@@ -13,10 +13,15 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/detail/DetectorVolumeUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cassert>
+
+using BoundingBox =
+    Acts::AxisAlignedBoundingBox<Acts::Experimental::DetectorVolume,
+                                 Acts::ActsScalar, 3>;
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& gctx, const std::string& name,
@@ -46,7 +51,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const GeometryContext& /*unused*/, const std::string& name,
+    const GeometryContext&, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : m_name(name),
@@ -70,7 +75,7 @@ void Acts::Experimental::DetectorVolume::updatePortal(
     throw std::invalid_argument(
         "DetectorVolume: trying to update a portal that does not exist.");
   }
-  m_portals.internal[pIndex] = std::move(portal);
+  m_portals.internal[pIndex] = portal;
   m_portals = ObjectStore<std::shared_ptr<Portal>>(m_portals.internal);
 }
 
@@ -80,6 +85,7 @@ void Acts::Experimental::DetectorVolume::construct(
   auto portalSurfaces =
       portalGenerator(transform(gctx), *(m_bounds.get()), getSharedPtr());
   m_portals = ObjectStore<std::shared_ptr<Portal>>(portalSurfaces);
+  setBoundingBox(gctx);
 }
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
@@ -190,4 +196,35 @@ void Acts::Experimental::DetectorVolume::closePortals() {
   for (auto& v : m_volumes.internal) {
     v->closePortals();
   }
+}
+
+void Acts::Experimental::DetectorVolume::boundingBox(
+    const GeometryContext& gctx) {
+  std::vector<Vector3> vertices;
+  for (auto p : m_portals.external) {
+    auto surface = p->surface().polyhedronRepresentation(gctx, 1);
+    auto pVertices = surface.vertices;
+    for (auto v : pVertices) {
+      vertices.push_back(v);
+    }
+  }
+  Acts::Vector3 vmin;
+  Acts::Vector3 vmax;
+  for (auto v : vertices) {
+    vmin = vmin.cwiseMin(v);
+    vmax = vmax.cwiseMax(v);
+  }
+  std::shared_ptr<BoundingBox> box =
+      std::make_shared<BoundingBox>(this, vmin, vmax);
+  m_boundingBox = box;
+}
+
+void Acts::Experimental::DetectorVolume::setBoundingBox(
+    const GeometryContext& gctx) {
+  boundingBox(gctx);
+}
+
+const std::shared_ptr<BoundingBox>
+Acts::Experimental::DetectorVolume::getBoundingBox() const {
+  return m_boundingBox;
 }
