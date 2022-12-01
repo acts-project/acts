@@ -10,8 +10,7 @@ target_link_libraries(
   ActsExamplesDetectorTGeo
   PUBLIC
     ActsCore ActsPluginIdentification ActsPluginTGeo ActsPluginJson
-    ActsExamplesFramework ActsExamplesDetectorsCommon
-    ActsExamplesDetectorGeneric)
+    ActsExamplesFramework ActsExamplesDetectorGeneric)
 
 install(
   TARGETS ActsExamplesDetectorTGeo
