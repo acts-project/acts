@@ -1023,13 +1023,13 @@ class TrackStateProxy {
 /// Helper type that wraps two iterators
 template <typename trajectory_t, size_t M, bool ReadOnly>
 class TrackStateRange {
- public:
-  using TrackStateProxy = TrackStateProxy<trajectory_t, M, ReadOnly>;
+  using ProxyType = TrackStateProxy<trajectory_t, M, ReadOnly>;
 
+ public:
   /// Iterator that wraps a track state proxy. The nullopt case signifies the
   /// end of the range, i.e. the "past-the-end" iterator
   struct Iterator {
-    std::optional<TrackStateProxy> proxy;
+    std::optional<ProxyType> proxy;
 
     Iterator& operator++() {
       if (!proxy) {
@@ -1056,11 +1056,11 @@ class TrackStateRange {
 
     bool operator!=(const Iterator& other) const { return !(*this == other); }
 
-    TrackStateProxy operator*() const { return *proxy; }
-    TrackStateProxy operator*() { return *proxy; }
+    ProxyType operator*() const { return *proxy; }
+    ProxyType operator*() { return *proxy; }
   };
 
-  TrackStateRange(TrackStateProxy _begin) : m_begin{_begin} {}
+  TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
 
   Iterator begin() { return m_begin; }
   Iterator end() { return Iterator{std::nullopt}; }
