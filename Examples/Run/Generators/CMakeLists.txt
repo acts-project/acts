@@ -5,8 +5,7 @@ target_link_libraries(
   ActsExampleParticleGun
   PRIVATE
     ActsExamplesFramework ActsExamplesGenerators ActsExamplesCommon
-    ActsExamplesIoCsv ActsExamplesIoRoot ActsExamplesPrinters
-    Boost::program_options)
+    ActsExamplesIoCsv ActsExamplesIoRoot ActsExamplesPrinters)
 
 install(
   TARGETS ActsExampleParticleGun
