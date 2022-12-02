@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(Build) {
   const auto& ct = t;
   std::vector<BoundVector> predicteds;
   // mutation in this loop works!
-  for (const auto& p : t.trackStateRange(i2b)) {
+  for (auto p : t.trackStateRange(i2b)) {
     predicteds.push_back(BoundVector::Random());
     p.predicted() = predicteds.back();
   }
