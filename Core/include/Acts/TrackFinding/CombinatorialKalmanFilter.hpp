@@ -1244,22 +1244,20 @@ class CombinatorialKalmanFilter {
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
-  /// @param trajectory Optional input track state container to use
+  /// @param trajectory Input track state container to use
   /// @note The input measurements are given in the form of @c SourceLinks.
   ///       It's @c calibrator_t's job to turn them into calibrated measurements
   ///       used in the track finding.
   ///
   /// @return a container of track finding result for all the initial track
   /// parameters
-  template <typename source_link_iterator_t,
-            typename start_parameters_container_t,
+  template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters>
-  // std::vector<Result<CombinatorialKalmanFilterResult<traj_t>>>
   std::pair<std::shared_ptr<traj_t>, TrackContainer<track_container_t, traj_t>>
-  findTracks(const start_parameters_container_t& initialParameters,
+  findTracks(const start_parameters_t& initialParameters,
              const CombinatorialKalmanFilterOptions<source_link_iterator_t,
                                                     traj_t>& tfOptions,
-             std::shared_ptr<traj_t> trajectory = {}) const {
+             std::shared_ptr<traj_t> trajectory) const {
     const auto& logger = tfOptions.logger;
 
     using SourceLinkAccessor =
@@ -1293,92 +1291,72 @@ class CombinatorialKalmanFilter {
     combKalmanActor.m_extensions = tfOptions.extensions;
 
     // Run the CombinatorialKalmanFilter.
-    // @todo The same target surface is used for all the initial track
-    // parameters, which is not necessarily the case.
-    // std::vector<Result<CombinatorialKalmanFilterResult<traj_t>>> ckfResults;
-    // ckfResults.reserve(initialParameters.size());
-    // Loop over all initial track parameters. Return the results for all
-    // initial track parameters including those failed ones.
-
-    if (!trajectory) {
-      trajectory = std::make_shared<traj_t>();
-    }
     auto stateBuffer = std::make_shared<traj_t>();
 
     TrackContainer<track_container_t, traj_t> tracks{trajectory};
 
-    for (size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
-      const auto& sParameters = initialParameters[iseed];
+    auto stateBuffer = std::make_shared<traj_t>();
 
-      typename propagator_t::template action_list_t_result_t<
-          CurvilinearTrackParameters, Actors>
-          inputResult;
+    typename propagator_t::template action_list_t_result_t<
+        CurvilinearTrackParameters, Actors>
+        inputResult;
 
-      auto& r =
-          inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>();
+    auto& r =
+        inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>();
 
-      r.fittedStates = trajectory;
-      r.stateBuffer = stateBuffer;
-      r.stateBuffer->clear();
+    r.fittedStates = trajectory;
+    r.stateBuffer = stateBuffer;
+    r.stateBuffer->clear();
 
-      auto result = m_propagator.template propagate(sParameters, propOptions,
-                                                    std::move(inputResult));
+    auto result = m_propagator.template propagate(
+        initialParameters, propOptions, std::move(inputResult));
 
-      if (!result.ok()) {
-        ACTS_ERROR("Propapation failed: "
-                   << result.error() << " " << result.error().message()
-                   << " with the initial parameters " << iseed << " : \n"
-                   << sParameters.parameters());
-        // Emplace back the failed result
-        // ckfResults.emplace_back(result.error());
-        continue;
-      }
-
-      auto& propRes = *result;
-
-      /// Get the result of the CombinatorialKalmanFilter
-      auto combKalmanResult = std::move(
-          propRes.template get<CombinatorialKalmanFilterResult<traj_t>>());
-
-      /// The propagation could already reach max step size
-      /// before the track finding is finished during two phases:
-      // -> filtering for track finding;
-      // -> surface targeting to get fitted parameters at target surface.
-      // This is regarded as a failure.
-      // @TODO: Implement distinguishment between the above two cases if
-      // necessary
-      if (combKalmanResult.result.ok() and not combKalmanResult.finished) {
-        combKalmanResult.result = Result<void>(
-            CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
-      }
-
-      if (!combKalmanResult.result.ok()) {
-        ACTS_ERROR("CombinatorialKalmanFilter failed: "
-                   << combKalmanResult.result.error() << " "
-                   << combKalmanResult.result.error().message()
-                   << " with the initial parameters " << iseed << " : \n"
-                   << sParameters.parameters());
-        // Emplace back the failed result
-        // @TODO: What whould happen in this case? Store this in the track container?
-        // ckfResults.emplace_back(combKalmanResult.result.error());
-        continue;
-      }
-
-      // Emplace back the successful result
-      // Create tracks from tips
-      // ckfResults.emplace_back(std::move(combKalmanResult));
-      for (auto tip : combKalmanResult.lastMeasurementIndices) {
-        auto track = tracks.addTrack();
-        track.tipIndex() = tip;
-        const BoundTrackParameters& parameters =
-            combKalmanResult.fittedParameters[tip];
-        track.parameters() = parameters.parameters();
-        track.covariance() = parameters.covariance();
-        track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
-      }
+    if (!result.ok()) {
+      ACTS_ERROR("Propapation failed: " << result.error() << " "
+                                        << result.error().message()
+                                        << " with the initial parameters: \n"
+                                        << initialParameters.parameters());
+      return result.error();
     }
 
-    return {trajectory, tracks};
+    auto& propRes = *result;
+
+    /// Get the result of the CombinatorialKalmanFilter
+    auto combKalmanResult = std::move(
+        propRes.template get<CombinatorialKalmanFilterResult<traj_t>>());
+
+    /// The propagation could already reach max step size
+    /// before the track finding is finished during two phases:
+    // -> filtering for track finding;
+    // -> surface targeting to get fitted parameters at target surface.
+    // This is regarded as a failure.
+    // @TODO: Implement distinguishment between the above two cases if
+    // necessary
+    if (combKalmanResult.result.ok() and not combKalmanResult.finished) {
+      combKalmanResult.result = Result<void>(
+          CombinatorialKalmanFilterError::PropagationReachesMaxSteps);
+    }
+
+    if (!combKalmanResult.result.ok()) {
+      ACTS_ERROR("CombinatorialKalmanFilter failed: "
+                 << combKalmanResult.result.error() << " "
+                 << combKalmanResult.result.error().message()
+                 << " with the initial parameters: \n"
+                 << initialParameters.parameters());
+      return combKalmanResult.result.error();
+    }
+
+    for (auto tip : combKalmanResult.lastMeasurementIndices) {
+      auto track = tracks.addTrack();
+      track.tipIndex() = tip;
+      const BoundTrackParameters& parameters =
+          combKalmanResult.fittedParameters[tip];
+      track.parameters() = parameters.parameters();
+      track.covariance() = parameters.covariance();
+      track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
+    }
+
+    return {trajectory, std::move(tracks)};
   }
 
 };  // namespace Acts
