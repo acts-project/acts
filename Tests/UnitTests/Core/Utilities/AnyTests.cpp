@@ -316,6 +316,8 @@ struct Lifecycle<0> {
 template <size_t PADDING>
 struct Lifecycle : public Lifecycle<0> {
   std::array<char, PADDING> m_padding{};
+
+  Lifecycle(LifecycleCounters* _counters) : Lifecycle<0>(_counters) {}
 };
 
 template <size_t PADDING>
