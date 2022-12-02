@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE(Build) {
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 
   act.clear();
-  for (auto p : t.trackStateRange(i2a)) {
+  for (const auto& p : t.trackStateRange(i2a)) {
     act.push_back(p.index());
   }
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(Build) {
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 
   act.clear();
-  for (auto p : t.trackStateRange(i2b)) {
+  for (const auto& p : t.trackStateRange(i2b)) {
     act.push_back(p.index());
   }
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
