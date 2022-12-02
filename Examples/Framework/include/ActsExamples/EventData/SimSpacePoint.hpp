@@ -146,17 +146,15 @@ inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
   //   that the same measurement index always produces the same space point?
   // no need to check r since it is fully defined by x/y
 
-  return (
-      // (lhs.sourceLinks() == rhs.sourceLinks())
-      std::equal(lhs.sourceLinks().begin(), lhs.sourceLinks().end(),
-                 rhs.sourceLinks().begin(),
-                 [](const auto& lsl, const auto& rsl) {
-                   return lsl.template get<IndexSourceLink>() ==
-                          rsl.template get<IndexSourceLink>();
-                 }) and
-      (lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and (lhs.z() == rhs.z()) and
-      (lhs.varianceR() == rhs.varianceR()) and
-      (lhs.varianceZ() == rhs.varianceZ()));
+  return (std::equal(lhs.sourceLinks().begin(), lhs.sourceLinks().end(),
+                     rhs.sourceLinks().begin(),
+                     [](const auto& lsl, const auto& rsl) {
+                       return lsl.template get<IndexSourceLink>() ==
+                              rsl.template get<IndexSourceLink>();
+                     }) and
+          (lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and
+          (lhs.z() == rhs.z()) and (lhs.varianceR() == rhs.varianceR()) and
+          (lhs.varianceZ() == rhs.varianceZ()));
 }
 
 /// Container of space points.

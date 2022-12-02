@@ -48,7 +48,6 @@ class MeasurementCalibrator {
           trackState) const {
     const IndexSourceLink& sourceLink =
         trackState.uncalibrated().get<IndexSourceLink>();
-    // static_cast<const IndexSourceLink&>(trackState.uncalibrated());
     assert(m_measurements and
            "Undefined measurement container in DigitizedCalibrator");
     assert((sourceLink.index() < m_measurements->size()) and

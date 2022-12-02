@@ -617,7 +617,7 @@ class TrackStateProxy {
         sourceLink;
   }
 
-  /// full calibrated measurement vector. might contain additional zeroed
+  /// Full calibrated measurement vector. Might contain additional zeroed
   /// dimensions.
   /// @return The measurement vector
   template <size_t measdim>
@@ -697,11 +697,6 @@ class TrackStateProxy {
     calibratedSize() = kMeasurementSize;
 
     assert(has<hashString("calibratedSourceLink")>());
-    // component<const SourceLink*, hashString("calibratedSourceLink")>() =
-    // &meas.sourceLink();
-    // assert(
-    // (component<const SourceLink*, hashString("calibratedSourceLink")>() !=
-    // nullptr));
 
     setCalibratedSourceLink(meas.sourceLink());
 
