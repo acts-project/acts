@@ -66,6 +66,18 @@ static std::set<std::pair<std::type_index, void*>> _s_any_allocations;
     _ACTS_ANY_DEBUG("Allocate type: " << typeid(T).name() << " at " << heap) \
   } while (0)
 
+#define _ACTS_ANY_TRACK_DEALLOCATION(T, heap)                                 \
+  do {                                                                        \
+    std::lock_guard guard{_s_any_mutex};                                      \
+    auto it =                                                                 \
+        _s_any_allocations.find(std::pair{std::type_index(typeid(T)), heap}); \
+    if (it == _s_any_allocations.end()) {                                     \
+      throw std::runtime_error{                                               \
+          "Trying to deallocate heap address that we didn't allocate"};       \
+    }                                                                         \
+    _s_any_allocations.erase(it);                                             \
+  } while (0)
+
 struct _AnyAllocationReporter {
   ~_AnyAllocationReporter() {
     std::lock_guard guard{_s_any_mutex};
@@ -82,6 +94,7 @@ struct _AnyAllocationReporter {
 static _AnyAllocationReporter s_reporter;
 #else
 #define _ACTS_ANY_TRACK_ALLOCATION(T, heap)
+#define _ACTS_ANY_TRACK_DEALLOCATION(T, heap)
 #endif
 
 class AnyBaseAll {};
@@ -405,18 +418,7 @@ class AnyBase : public AnyBaseAll {
       // stored on heap: delete
       _ACTS_ANY_DEBUG("Delete type: " << typeid(T).name()
                                       << " heap at: " << obj);
-#if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
-      {
-        std::lock_guard guard{_s_any_mutex};
-        auto it =
-            _s_any_allocations.find(std::pair{std::type_index(typeid(T)), obj});
-        if (it == _s_any_allocations.end()) {
-          throw std::runtime_error{
-              "Trying to deallocate heap address that we didn't allocate"};
-        }
-        _s_any_allocations.erase(it);
-      }
-#endif
+      _ACTS_ANY_TRACK_DEALLOCATION(T, obj);
       delete obj;
     }
   }
