@@ -13,7 +13,7 @@ target_link_libraries(
   ActsExamplesDetectorDD4hep
   PUBLIC
     ActsCore ActsPluginDD4hep
-    ActsExamplesFramework ActsExamplesDetectorsCommon
+    ActsExamplesFramework
     ROOT::Geom ROOT::GenVector)
 
 if(${DD4hep_VERSION} VERSION_LESS 1.11)

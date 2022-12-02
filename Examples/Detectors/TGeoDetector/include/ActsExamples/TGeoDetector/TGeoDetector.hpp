@@ -11,7 +11,6 @@
 #include "Acts/Plugins/TGeo/TGeoLayerBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 
 #include <map>
@@ -22,13 +21,23 @@
 
 namespace Acts {
 class TGeoDetectorElement;
-}
+class TrackingGeometry;
+class IMaterialDecorator;
+}  // namespace Acts
+
+namespace ActsExamples {
+class IContextDecorator;
+}  // namespace ActsExamples
 
 namespace ActsExamples {
 
-struct TGeoDetector : public ActsExamples::IBaseDetector {
+struct TGeoDetector {
   using DetectorElementPtr = std::shared_ptr<const Acts::TGeoDetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;
+
+  using ContextDecorators =
+      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   /// The Store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
@@ -129,16 +138,12 @@ struct TGeoDetector : public ActsExamples::IBaseDetector {
     std::vector<Volume> volumes;
   };
 
-  void addOptions(
-      boost::program_options::options_description& opt) const override;
+  static void readTGeoLayerBuilderConfigsFile(const std::string& path,
+                                              Config& config);
 
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const boost::program_options::variables_map& vm,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
-
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const Config& cfg,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
+      const Config& cfg,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };
 
 }  // namespace ActsExamples
