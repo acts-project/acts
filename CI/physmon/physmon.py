@@ -209,7 +209,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
             TrackSelectorRanges(
                 removeNeutral=True,
-                loc0=(None, 4.0 * u.mm),
+                loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
             ),
             outputDirRoot=tp,
