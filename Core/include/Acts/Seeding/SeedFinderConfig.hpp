@@ -225,10 +225,10 @@ struct SeedFinderOptions {
   float bFieldInZ = 2.08 * Acts::UnitConstants::T;
 
   // derived quantities
-  double pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
-  double minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
-  double pT2perRadius = std::numeric_limits<float>::quiet_NaN();
-  double sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  float pTPerHelixRadius = std::numeric_limits<float>::quiet_NaN();
+  float minHelixDiameter2 = std::numeric_limits<float>::quiet_NaN();
+  float pT2perRadius = std::numeric_limits<float>::quiet_NaN();
+  float sigmapT2perRadius = std::numeric_limits<float>::quiet_NaN();
 
   bool isInInternalUnits = false;
 
