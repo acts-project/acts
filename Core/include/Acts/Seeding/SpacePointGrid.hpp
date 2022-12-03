@@ -19,24 +19,24 @@ namespace Acts {
 
 struct SpacePointGridConfig {
   // magnetic field
-  float bFieldInZ;
+  float bFieldInZ = 0;
   // minimum pT to be found by seedFinder
-  float minPt;
+  float minPt = 0;
   // maximum extension of sensitive detector layer relevant for seeding as
   // distance from x=y=0 (i.e. in r)
-  float rMax;
+  float rMax = 0;
   // maximum extension of sensitive detector layer relevant for seeding in
   // positive direction in z
-  float zMax;
+  float zMax = 0;
   // maximum extension of sensitive detector layer relevant for seeding in
   // negative direction in z
-  float zMin;
+  float zMin = 0;
   // maximum distance in r from middle space point to bottom or top spacepoint
-  float deltaRMax;
+  float deltaRMax = 0;
   // maximum forward direction expressed as cot(theta)
-  float cotThetaMax;
+  float cotThetaMax = 0;
   // maximum impact parameter in mm
-  float impactMax;
+  float impactMax = 0;
   // minimum phi value for phiAxis construction
   float phiMin = -M_PI;
   // maximum phi value for phiAxis construction

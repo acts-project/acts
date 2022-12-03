@@ -30,8 +30,8 @@ ActsExamples::SensitiveSurfaceMapper::SensitiveSurfaceMapper(
 }
 
 void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
-    G4VPhysicalVolume* g4PhysicalVolume, Acts::Transform3 motherTransform,
-    int& sCounter) const {
+    G4VPhysicalVolume* g4PhysicalVolume,
+    const Acts::Transform3& motherTransform, int& sCounter) const {
   auto g4LogicalVolume = g4PhysicalVolume->GetLogicalVolume();
   auto g4SensitiveDetector = g4LogicalVolume->GetSensitiveDetector();
 

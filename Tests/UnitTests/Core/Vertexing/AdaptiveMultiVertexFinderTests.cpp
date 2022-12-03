@@ -212,7 +212,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrack
   std::function<BoundTrackParameters(InputTrack)> extractParameters =
-      [](InputTrack params) { return params.parameters(); };
+      [](const InputTrack& params) { return params.parameters(); };
 
   // IP 3D Estimator
   using IPEstimator = ImpactPointEstimator<InputTrack, Propagator>;
@@ -461,7 +461,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
   std::vector<bool> vtxFound(expNRecoVertices, false);
 
-  for (auto vtx : allVertices) {
+  for (const auto& vtx : allVertices) {
     double vtxZ = vtx.position()[2];
     double diffZ = 1e5;
     int foundVtxIdx = -1;
@@ -608,7 +608,7 @@ BOOST_AUTO_TEST_CASE(
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
   std::vector<bool> vtxFound(expNRecoVertices, false);
 
-  for (auto vtx : allVertices) {
+  for (const auto& vtx : allVertices) {
     double vtxZ = vtx.position()[2];
     double diffZ = 1e5;
     int foundVtxIdx = -1;

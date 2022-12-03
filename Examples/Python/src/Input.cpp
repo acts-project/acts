@@ -12,6 +12,7 @@
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacePointReader.hpp"
+#include "ActsExamples/Io/Csv/CsvTrackParameterReader.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackReader.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
@@ -68,5 +69,9 @@ void addInput(Context& ctx) {
   ACTS_PYTHON_DECLARE_READER(
       ActsExamples::CsvSpacePointReader, mex, "CsvSpacePointReader", inputDir,
       inputStem, inputCollection, outputSpacePoints, extendCollection);
+
+  ACTS_PYTHON_DECLARE_READER(ActsExamples::CsvTrackParameterReader, mex,
+                             "CsvTrackParameterReader", inputDir, inputStem,
+                             outputTrackParameters, beamspot);
 }
 }  // namespace Acts::Python

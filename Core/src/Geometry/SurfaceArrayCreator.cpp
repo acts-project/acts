@@ -238,7 +238,7 @@ Acts::SurfaceArrayCreator::surfaceArrayOnDisc(
 
     std::transform(
         phiModules.begin(), phiModules.end(), std::back_inserter(nPhiModules),
-        [&equal, this](std::vector<const Surface*> surfaces_) -> size_t {
+        [&equal, this](const std::vector<const Surface*>& surfaces_) -> size_t {
           return this->findKeySurfaces(surfaces_, equal).size();
         });
 
@@ -411,7 +411,8 @@ size_t Acts::SurfaceArrayCreator::determineBinCount(
 Acts::SurfaceArrayCreator::ProtoAxis
 Acts::SurfaceArrayCreator::createVariableAxis(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-    BinningValue bValue, ProtoLayer protoLayer, Transform3& transform) const {
+    BinningValue bValue, const ProtoLayer& protoLayer,
+    Transform3& transform) const {
   if (surfaces.empty()) {
     throw std::logic_error(
         "No surfaces handed over for creating arbitrary bin utility!");
@@ -550,7 +551,7 @@ Acts::SurfaceArrayCreator::createVariableAxis(
 Acts::SurfaceArrayCreator::ProtoAxis
 Acts::SurfaceArrayCreator::createEquidistantAxis(
     const GeometryContext& gctx, const std::vector<const Surface*>& surfaces,
-    BinningValue bValue, ProtoLayer protoLayer, Transform3& transform,
+    BinningValue bValue, const ProtoLayer& protoLayer, Transform3& transform,
     size_t nBins) const {
   if (surfaces.empty()) {
     throw std::logic_error(
@@ -568,7 +569,7 @@ Acts::SurfaceArrayCreator::createEquidistantAxis(
   // direction
   std::vector<const Acts::Surface*> keys;
 
-  size_t binNumber;
+  size_t binNumber = 0;
   if (nBins == 0) {
     // determine bin count
     binNumber = determineBinCount(gctx, surfaces, bValue);

@@ -72,7 +72,7 @@ class WhiteBoard {
     T value;
 
     HolderT(T&& v) : value(std::move(v)) {}
-    const std::type_info& type() const { return typeid(T); }
+    const std::type_info& type() const override { return typeid(T); }
   };
 
   std::unique_ptr<const Acts::Logger> m_logger;

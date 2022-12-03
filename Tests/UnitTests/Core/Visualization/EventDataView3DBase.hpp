@@ -145,8 +145,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Construct layer configs
   std::vector<CuboidVolumeBuilder::LayerConfig> lConfs;
   lConfs.reserve(6);
-  unsigned int i;
-  for (i = 0; i < translations.size(); i++) {
+  for (unsigned int i = 0; i < translations.size(); i++) {
     CuboidVolumeBuilder::SurfaceConfig sConf;
     sConf.position = translations[i];
     sConf.rotation = rotation;
@@ -156,7 +155,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     sConf.thickness = 1._um;
     sConf.detElementConstructor =
         [](const Transform3& trans,
-           std::shared_ptr<const RectangleBounds> bounds, double thickness) {
+           const std::shared_ptr<const RectangleBounds>& bounds,
+           double thickness) {
           return new Test::DetectorElementStub(trans, bounds, thickness);
         };
     CuboidVolumeBuilder::LayerConfig lConf;
@@ -194,7 +194,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   std::vector<const Surface*> surfaces;
   surfaces.reserve(6);
   detector->visitSurfaces([&](const Surface* surface) {
-    if (surface and surface->associatedDetectorElement()) {
+    if (surface != nullptr && surface->associatedDetectorElement() != nullptr) {
       std::cout << "surface " << surface->geometryId() << " placed at: ("
                 << surface->center(tgContext).transpose() << " )" << std::endl;
       surfaces.push_back(surface);

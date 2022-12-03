@@ -133,14 +133,14 @@ class VectorMultiTrajectoryBase {
     IndexType iprojector = kInvalid;
 
     double chi2 = 0;
-    double pathLength;
+    double pathLength = 0;
     TrackStateType typeFlags;
 
     IndexType iuncalibrated = kInvalid;
     IndexType icalibratedsourcelink = kInvalid;
     IndexType measdim = 0;
 
-    TrackStatePropMask allocMask;
+    TrackStatePropMask allocMask = TrackStatePropMask::None;
   };
 
   VectorMultiTrajectoryBase() = default;

@@ -48,7 +48,7 @@ class Geant4Decay {
   ///
   /// @return Vector containing decay products
   template <typename generator_t>
-  std::vector<Particle> run(generator_t&, Particle& particle) const;
+  std::vector<Particle> run(generator_t& /*unused*/, Particle& particle) const;
 
  private:
   /// This function evaluates the decay products of a given particle
@@ -70,8 +70,9 @@ Particle::Scalar Geant4Decay::generateProperTimeLimit(
   // Get the particle properties
   const Acts::PdgParticle pdgCode = particle.pdg();
   // Keep muons stable
-  if (makeAbsolutePdgParticle(pdgCode) == Acts::PdgParticle::eMuon)
+  if (makeAbsolutePdgParticle(pdgCode) == Acts::PdgParticle::eMuon) {
     return std::numeric_limits<Scalar>::infinity();
+  }
 
   // Get the Geant4 particle
   G4ParticleDefinition* pDef = m_pdgToG4Conv.getParticleDefinition(pdgCode);
@@ -91,7 +92,8 @@ Particle::Scalar Geant4Decay::generateProperTimeLimit(
 }
 
 template <typename generator_t>
-std::vector<Particle> Geant4Decay::run(generator_t&, Particle& particle) const {
+std::vector<Particle> Geant4Decay::run(generator_t& /*unused*/,
+                                       Particle& particle) const {
   return decayParticle(particle);
 }
 }  // namespace ActsFatras

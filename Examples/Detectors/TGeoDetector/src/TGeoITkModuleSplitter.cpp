@@ -75,7 +75,7 @@ ActsExamples::TGeoITkModuleSplitter::split(
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
 ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
     const Acts::GeometryContext& gctx,
-    std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
+    const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     unsigned int nSegments) const {
   // Retrive the surface
   auto identifier = detElement->identifier();
@@ -132,7 +132,7 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
 inline std::vector<std::shared_ptr<const Acts::TGeoDetectorElement>>
 ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
     const Acts::GeometryContext& gctx,
-    std::shared_ptr<const Acts::TGeoDetectorElement> detElement,
+    const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     const std::vector<ActsExamples::TGeoITkModuleSplitter::SplitRange>&
         splitRanges) const {
   // Retrive the surface
@@ -143,7 +143,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   // Check annulus bounds origin
   auto printOrigin = [&](const Acts::Surface& sf) {
     Acts::Vector3 discOrigin =
-        sf.localToGlobal(gctx, Acts::Vector2(0., 0.), {});
+        sf.localToGlobal(gctx, Acts::Vector2(0., 0.), Acts::Vector3::Zero());
     std::string out =
         "Disc surface origin at: " + std::to_string(discOrigin[0]) + ", " +
         std::to_string(discOrigin[1]) + ", " + std::to_string(discOrigin[2]);
@@ -169,7 +169,7 @@ ActsExamples::TGeoITkModuleSplitter::splitDiscModule(
   double thickness = detElement->thickness();
   const Acts::Transform3& transform = surface.transform(gctx);
   const std::vector<double> boundsValues = bounds.values();
-  std::array<double, Acts::AnnulusBounds::eSize> values;
+  std::array<double, Acts::AnnulusBounds::eSize> values{};
   std::copy_n(boundsValues.begin(), Acts::AnnulusBounds::eSize, values.begin());
 
   for (size_t i = 0; i < nSegments; i++) {

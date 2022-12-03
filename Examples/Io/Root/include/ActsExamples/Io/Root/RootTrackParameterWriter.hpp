@@ -59,7 +59,7 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   ~RootTrackParameterWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -68,9 +68,8 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trackParams are parameters to write
-  ProcessCode writeT(
-      const AlgorithmContext& ctx,
-      const TrackParametersContainer& trackParams) final override;
+  ProcessCode writeT(const AlgorithmContext& ctx,
+                     const TrackParametersContainer& trackParams) override;
 
  private:
   Config m_cfg;             ///< The config class

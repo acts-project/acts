@@ -249,8 +249,8 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     // create the planar cluster
     Acts::PlanarModuleCluster cluster(
         surface->getSharedPtr(),
-        Acts::DigitizationSourceLink(geoId, std::move(simHitIndices)),
-        std::move(cov), local[0], local[1], time, std::move(digitizationCells));
+        Acts::DigitizationSourceLink(geoId, std::move(simHitIndices)), cov,
+        local[0], local[1], time, std::move(digitizationCells));
 
     // due to the previous sorting of the raw hit data by geometry id, new
     // clusters should always end up at the end of the container. previous
