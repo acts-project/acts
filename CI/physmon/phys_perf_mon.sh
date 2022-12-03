@@ -113,13 +113,6 @@ run \
     -o $outdir/ambi_orthogonal.html \
     -p $outdir/ambi_orthogonal_plots
 
-run \
-    $outdir/acts_analysis_residuals_and_pulls.root \
-    $refdir/acts_analysis_residuals_and_pulls.root \
-    --title "analysis_residuals_and_pulls" \
-#    -o $outdir/analysis_residuals_and_pulls.html \
-#    -p $outdir/analysis_residuals_and_pulls
-    
 Examples/Scripts/vertex_mu_scan.py \
     $outdir/performance_vertexing_*mu*.root \
     $outdir/vertexing_mu_scan.pdf

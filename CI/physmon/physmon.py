@@ -129,11 +129,7 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
 ]:
     # TODO There seems to be a difference to the reference files when using
     # multithreading ActsAnalysisResidualsAndPulls
-    s = acts.examples.Sequencer(
-        events=500,
-        numThreads=1 if label in ["seeded", "orthogonal"] else -1,
-        logLevel=acts.logging.INFO,
-    )
+    s = acts.examples.Sequencer(events=500, numThreads=-1, logLevel=acts.logging.INFO)
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
@@ -251,25 +247,6 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
             perf_file = tp / f"{stem}.root"
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
-
-        if label == "seeded":
-            residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"
-            # @TODO: Add try/except
-            subprocess.check_call(
-                [
-                    str(residual_app),
-                    "--predicted",
-                    "--filtered",
-                    "--smoothed",
-                    "--silent",
-                    "-i",
-                    str(tp / "trackstates_ckf.root"),
-                    "-o",
-                    str(outdir / "acts_analysis_residuals_and_pulls.root"),
-                    "--save",
-                    "",
-                ]
-            )
 
 ### VERTEX MU SCAN
 
