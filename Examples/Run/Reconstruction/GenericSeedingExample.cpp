@@ -7,10 +7,11 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/Detector/GenericDetectorWithOptions.hpp"
 
 #include "SeedingExample.hpp"
 
 int main(int argc, char* argv[]) {
-  return runSeedingExample(argc, argv, std::make_shared<GenericDetector>());
+  return runSeedingExample(
+      argc, argv, std::make_shared<ActsExamples::GenericDetectorWithOptions>());
 }

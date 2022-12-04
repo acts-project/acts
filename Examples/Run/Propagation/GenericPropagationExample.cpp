@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/Detector/GenericDetectorWithOptions.hpp"
 #include "ActsExamples/Propagation/PropagationExampleBase.hpp"
 
 /// @brief main executable
@@ -15,7 +15,7 @@
 /// @param argv The argument list
 int main(int argc, char* argv[]) {
   // --------------------------------------------------------------------------------
-  GenericDetector detector;
+  ActsExamples::GenericDetectorWithOptions detector;
 
   // now process it
   return propagationExample(argc, argv, detector);
