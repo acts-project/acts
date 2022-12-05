@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
-#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -304,13 +303,6 @@ int ActsExamples::Sequencer::run() {
     tbbWrap::parallel_for(
         tbb::blocked_range<size_t>(eventsRange.first, eventsRange.second),
         [&](const tbb::blocked_range<size_t>& r) {
-          // std::optional<Acts::FpeMonitor> fpeMonitor;
-
-          // fpeMonitor.emplace();
-
-          // volatile float v;
-          // volatile double w = std::numeric_limits<double>::max();
-          // v = 2 * w;
 
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
