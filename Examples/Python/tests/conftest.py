@@ -27,8 +27,10 @@ import acts.examples
 
 try:
     import ROOT
+
     ROOT.gSystem.ResetSignals()
-except ImportError: pass
+except ImportError:
+    pass
 
 try:
     if acts.logging.getFailureThreshold() != acts.logging.WARNING:
@@ -411,4 +413,3 @@ def fpe_monitoring():
     with acts.FpeMonitor():
         yield
     print("Disabling FPE monitoring")
-

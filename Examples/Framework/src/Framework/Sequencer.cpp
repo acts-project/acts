@@ -303,7 +303,6 @@ int ActsExamples::Sequencer::run() {
     tbbWrap::parallel_for(
         tbb::blocked_range<size_t>(eventsRange.first, eventsRange.second),
         [&](const tbb::blocked_range<size_t>& r) {
-
           std::vector<Duration> localClocksAlgorithms(names.size(),
                                                       Duration::zero());
 
