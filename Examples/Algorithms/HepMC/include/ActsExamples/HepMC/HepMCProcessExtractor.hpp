@@ -48,10 +48,10 @@ class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
   /// @param config the configuration
   /// @param level the log level
   HepMCProcessExtractor(Config config, Acts::Logging::Level level);
-  ~HepMCProcessExtractor();
+  ~HepMCProcessExtractor() override;
 
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

@@ -87,7 +87,11 @@ class HelicalTrackLinearizer {
   /// @brief Constructor
   ///
   /// @param config Configuration object
-  HelicalTrackLinearizer(const Config& config) : m_cfg(config) {}
+  /// @param _logger a logger instance
+  HelicalTrackLinearizer(const Config& config,
+                         std::unique_ptr<const Logger> _logger =
+                             getDefaultLogger("HelTrkLinProp", Logging::INFO))
+      : m_cfg(config), m_logger{std::move(_logger)} {}
 
   /// @brief Function that linearizes BoundTrackParameters at
   /// given linearization point
@@ -108,6 +112,10 @@ class HelicalTrackLinearizer {
  private:
   /// Configuration object
   const Config m_cfg;
+
+  std::unique_ptr<const Logger> m_logger;
+
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

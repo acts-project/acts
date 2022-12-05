@@ -68,7 +68,7 @@ class RootMaterialTrackWriter
   ~RootMaterialTrackWriter() override;
 
   /// Framework intialize method
-  ActsExamples::ProcessCode endRun() final override;
+  ActsExamples::ProcessCode endRun() override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -82,7 +82,7 @@ class RootMaterialTrackWriter
   ProcessCode writeT(
       const AlgorithmContext& ctx,
       const std::unordered_map<size_t, Acts::RecordedMaterialTrack>&
-          materialtracks) final override;
+          materialtracks) override;
 
  private:
   /// The config class
@@ -90,23 +90,23 @@ class RootMaterialTrackWriter
   /// mutex used to protect multi-threaded writes
   std::mutex m_writeMutex;
   /// The output file name
-  TFile* m_outputFile;
+  TFile* m_outputFile = nullptr;
   /// The output tree name
-  TTree* m_outputTree;
+  TTree* m_outputTree = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId;
+  uint32_t m_eventId = 0;
 
-  float m_v_x;    ///< start global x
-  float m_v_y;    ///< start global y
-  float m_v_z;    ///< start global z
-  float m_v_px;   ///< start global momentum x
-  float m_v_py;   ///< start global momentum y
-  float m_v_pz;   ///< start global momentum z
-  float m_v_phi;  ///< start phi direction
-  float m_v_eta;  ///< start eta direction
-  float m_tX0;    ///< thickness in X0/L0
-  float m_tL0;    ///< thickness in X0/L0
+  float m_v_x = 0;    ///< start global x
+  float m_v_y = 0;    ///< start global y
+  float m_v_z = 0;    ///< start global z
+  float m_v_px = 0;   ///< start global momentum x
+  float m_v_py = 0;   ///< start global momentum y
+  float m_v_pz = 0;   ///< start global momentum z
+  float m_v_phi = 0;  ///< start phi direction
+  float m_v_eta = 0;  ///< start eta direction
+  float m_tX0 = 0;    ///< thickness in X0/L0
+  float m_tL0 = 0;    ///< thickness in X0/L0
 
   std::vector<float> m_step_sx;      ///< step x (start) position (optional)
   std::vector<float> m_step_sy;      ///< step y (start) position (optional)

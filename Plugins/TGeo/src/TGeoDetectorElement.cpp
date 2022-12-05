@@ -95,8 +95,8 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
-    const Transform3& tgTransform, std::shared_ptr<const PlanarBounds> tgBounds,
-    double tgThickness)
+    const Transform3& tgTransform,
+    const std::shared_ptr<const PlanarBounds>& tgBounds, double tgThickness)
     : Acts::IdentifiedDetectorElement(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),
@@ -108,8 +108,8 @@ Acts::TGeoDetectorElement::TGeoDetectorElement(
 
 Acts::TGeoDetectorElement::TGeoDetectorElement(
     const Identifier& identifier, const TGeoNode& tGeoNode,
-    const Transform3& tgTransform, std::shared_ptr<const DiscBounds> tgBounds,
-    double tgThickness)
+    const Transform3& tgTransform,
+    const std::shared_ptr<const DiscBounds>& tgBounds, double tgThickness)
     : Acts::IdentifiedDetectorElement(),
       m_detElement(&tGeoNode),
       m_transform(tgTransform),

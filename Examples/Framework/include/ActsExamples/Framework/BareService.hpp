@@ -32,7 +32,7 @@ class BareService : public IService {
               Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// The service name.
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Default noop implementation for the start-of-run hook.
   void startRun() override;

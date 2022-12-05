@@ -112,7 +112,7 @@ struct GsfActor {
   /// Stores meta information about the components
   struct MetaCache {
     /// Where to find the parent component in the MultiTrajectory
-    MultiTrajectoryTraits::IndexType parentIndex;
+    MultiTrajectoryTraits::IndexType parentIndex = 0;
 
     /// Other quantities TODO are they really needed here? seems they are
     /// reinitialized to Identity etc.
@@ -122,12 +122,12 @@ struct GsfActor {
     FreeVector derivative;
 
     /// We need to preserve the path length
-    ActsScalar pathLength;
+    ActsScalar pathLength = 0;
   };
 
   /// Stores parameters of a gaussian component
   struct ParameterCache {
-    ActsScalar weight;
+    ActsScalar weight = 0;
     BoundVector boundPars;
     std::optional<BoundSymMatrix> boundCov;
   };
@@ -406,10 +406,11 @@ struct GsfActor {
       auto new_pars = old_bound.parameters();
 
       const auto delta_p = [&]() {
-        if (state.stepping.navDir == NavigationDirection::Forward)
+        if (state.stepping.navDir == NavigationDirection::Forward) {
           return p_prev * (gaussian.mean - 1.);
-        else
+        } else {
           return p_prev * (1. / gaussian.mean - 1.);
+        }
       }();
 
       throw_assert(p_prev + delta_p > 0.,
@@ -419,7 +420,7 @@ struct GsfActor {
       new_pars[eBoundQOverP] = old_bound.charge() / (p_prev + delta_p);
 
       // compute inverse variance of p from mixture and update covariance
-      auto new_cov = std::move(old_bound.covariance());
+      auto new_cov = old_bound.covariance();
 
       if (new_cov.has_value()) {
         const auto varInvP = [&]() {
@@ -523,7 +524,7 @@ struct GsfActor {
       const auto& [weight, pars, cov] = pcache;
 
       // Add the component to the stepper
-      const BoundTrackParameters bound(surface.getSharedPtr(), pars, cov);
+      BoundTrackParameters bound(surface.getSharedPtr(), pars, cov);
 
       auto res = stepper.addComponent(state.stepping, std::move(bound), weight);
 

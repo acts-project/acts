@@ -3,7 +3,7 @@ add_executable(
   DD4hepFatrasExample.cpp)
 target_link_libraries(
   ActsExampleFatrasDD4hep
-  PRIVATE ActsExamplesFatrasCommon ActsExamplesDetectorDD4hep)
+  PRIVATE ActsExamplesFatrasCommon ActsExamplesDD4hepDetectorWithOptions)
 
 install(
   TARGETS ActsExampleFatrasDD4hep

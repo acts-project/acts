@@ -40,12 +40,12 @@ class MaterialSteppingAction final : public G4UserSteppingAction {
                          std::unique_ptr<const Acts::Logger> logger =
                              Acts::getDefaultLogger("SimParticleTranslation",
                                                     Acts::Logging::INFO));
-  ~MaterialSteppingAction() final override;
+  ~MaterialSteppingAction() override;
 
   /// @brief Action per step to be performed
   ///
   /// @param step is the Geant4 step of the particle
-  void UserSteppingAction(const G4Step* step) final override;
+  void UserSteppingAction(const G4Step* step) override;
 
  private:
   /// Config struct

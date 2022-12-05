@@ -59,7 +59,7 @@ class SpacePointUtility {
   using Measurement = Acts::BoundVariantMeasurement;
 
   /// Constructor
-  SpacePointUtility(SpacePointBuilderConfig cfg) : m_config(cfg) {}
+  SpacePointUtility(SpacePointBuilderConfig cfg) : m_config(std::move(cfg)) {}
 
   /// @brief Getter method for the global coordinates of a measurement
   ///

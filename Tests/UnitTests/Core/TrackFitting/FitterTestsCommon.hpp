@@ -78,21 +78,21 @@ struct TestReverseFilteringLogic {
 
 // Construct a straight-line propagator.
 auto makeStraightPropagator(std::shared_ptr<const Acts::TrackingGeometry> geo) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg);
   Acts::StraightLineStepper stepper;
   return Acts::Propagator<Acts::StraightLineStepper, Acts::Navigator>(
-      std::move(stepper), std::move(navigator));
+      stepper, std::move(navigator));
 }
 
 // Construct a propagator using a constant magnetic field along z.
 template <typename stepper_t>
 auto makeConstantFieldPropagator(
     std::shared_ptr<const Acts::TrackingGeometry> geo, double bz) {
-  Acts::Navigator::Config cfg{geo};
+  Acts::Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

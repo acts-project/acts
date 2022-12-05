@@ -71,17 +71,19 @@ with acts.FpeMonitor():
     detector, trackingGeometry, decorators = getOpenDataDetector(
         getOpenDataDetectorDirectory(), matDeco
     )
-    digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+    digiConfig = (
+        srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
+    )
     geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 
-
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
 
     ### Truth tracking with Kalman Filter
 
     with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
+        s = acts.examples.Sequencer(
+            events=10000, numThreads=-1, logLevel=acts.logging.INFO
+        )
         tp = Path(temp)
         runTruthTrackingKalman(
             trackingGeometry,
@@ -98,11 +100,12 @@ with acts.FpeMonitor():
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(perf_file, outdir / "performance_truth_tracking.root")
 
-
     ### GSF
 
     with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(events=500, numThreads=-1, logLevel=acts.logging.INFO)
+        s = acts.examples.Sequencer(
+            events=500, numThreads=-1, logLevel=acts.logging.INFO
+        )
 
         tp = Path(temp)
         runTruthTrackingGsf(
@@ -120,20 +123,18 @@ with acts.FpeMonitor():
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(perf_file, outdir / "performance_gsf.root")
 
-
     ### CKF track finding variations
 
     for truthSmearedSeeded, truthEstimatedSeeded, label in [
         (True, False, "truth_smeared"),  # if first is true, second is ignored
         (False, True, "truth_estimated"),
         (False, False, "seeded"),
+        (False, False, "orthogonal"),
     ]:
         # TODO There seems to be a difference to the reference files when using
         # multithreading ActsAnalysisResidualsAndPulls
         s = acts.examples.Sequencer(
-            events=500,
-            numThreads=1 if label == "seeded" else -1,
-            logLevel=acts.logging.INFO,
+            events=500, numThreads=-1, logLevel=acts.logging.INFO
         )
 
         with tempfile.TemporaryDirectory() as temp:
@@ -199,7 +200,9 @@ with acts.FpeMonitor():
                 if truthSmearedSeeded
                 else SeedingAlgorithm.TruthEstimated
                 if truthEstimatedSeeded
-                else SeedingAlgorithm.Default,
+                else SeedingAlgorithm.Default
+                if label == "seeded"
+                else SeedingAlgorithm.Orthogonal,
                 geoSelectionConfigFile=geoSel,
                 rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
                 outputDirRoot=tp,
@@ -212,14 +215,14 @@ with acts.FpeMonitor():
                 CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
                 TrackSelectorRanges(
                     removeNeutral=True,
-                    loc0=(None, 4.0 * u.mm),
+                    loc0=(-4.0 * u.mm, 4.0 * u.mm),
                     pt=(500 * u.MeV, None),
                 ),
                 outputDirRoot=tp,
                 outputDirCsv=None,
             )
 
-            if label == "seeded":
+            if label in ["seeded", "orthogonal"]:
                 addAmbiguityResolution(
                     s,
                     AmbiguityResolutionConfig(maximumSharedHits=3),
@@ -230,7 +233,9 @@ with acts.FpeMonitor():
             addVertexFitting(
                 s,
                 field,
-                associatedParticles=None if label == "seeded" else "particles_input",
+                associatedParticles=None
+                if label in ["seeded", "orthogonal"]
+                else "particles_input",
                 vertexFinder=VertexFinder.Iterative,
                 outputDirRoot=tp,
             )
@@ -239,37 +244,24 @@ with acts.FpeMonitor():
             del s
 
             for stem in ["performance_ckf", "performance_vertexing"] + (
-                ["performance_ambi"] if label == "seeded" else []
+                ["performance_seeding_hists", "performance_ambi"]
+                if label in ["seeded", "orthogonal"]
+                else ["performance_seeding_hists"]
+                if label == "truth_estimated"
+                else []
             ):
                 perf_file = tp / f"{stem}.root"
                 assert perf_file.exists(), "Performance file not found"
                 shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
-
-            if label == "seeded":
-                residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"
-                # @TODO: Add try/except
-                subprocess.check_call(
-                    [
-                        str(residual_app),
-                        "--predicted",
-                        "--filtered",
-                        "--smoothed",
-                        "--silent",
-                        "-i",
-                        str(tp / "trackstates_ckf.root"),
-                        "-o",
-                        str(outdir / "acts_analysis_residuals_and_pulls.root"),
-                        "--save",
-                        "",
-                    ]
-                )
 
     ### VERTEX MU SCAN
 
     for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
         for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
             start = datetime.datetime.now()
-            s = acts.examples.Sequencer(events=5, numThreads=-1, logLevel=acts.logging.INFO)
+            s = acts.examples.Sequencer(
+                events=5, numThreads=-1, logLevel=acts.logging.INFO
+            )
 
             with tempfile.TemporaryDirectory() as temp:
                 tp = Path(temp)
@@ -373,7 +365,8 @@ with acts.FpeMonitor():
                 perf_file = tp / f"performance_vertexing.root"
                 assert perf_file.exists(), "Performance file not found"
                 shutil.copy(
-                    perf_file, outdir / f"performance_vertexing_{fitter.name}_mu{mu}.root"
+                    perf_file,
+                    outdir / f"performance_vertexing_{fitter.name}_mu{mu}.root",
                 )
 
                 (

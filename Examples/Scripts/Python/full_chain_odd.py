@@ -115,7 +115,10 @@ with acts.FpeMonitor():
             ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6
         ),
         TrackSelectorRanges(
-            pt=(1.0 * u.GeV, None), absEta=(None, 3.0), removeNeutral=True
+            pt=(1.0 * u.GeV, None),
+            absEta=(None, 3.0),
+            loc0=(-4.0 * u.mm, 4.0 * u.mm),
+            removeNeutral=True,
         ),
         outputDirRoot=outputDir,
     )

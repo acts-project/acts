@@ -48,10 +48,10 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   RootParticleWriter(const Config& cfg, Acts::Logging::Level lvl);
 
   /// Ensure underlying file is closed.
-  ~RootParticleWriter() final override;
+  ~RootParticleWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -62,7 +62,7 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   /// @param[in] ctx is the algorithm context
   /// @param[in] particles are the particle to be written
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const SimParticleContainer& particles) final override;
+                     const SimParticleContainer& particles) override;
 
  private:
   Config m_cfg;
@@ -70,7 +70,7 @@ class RootParticleWriter final : public WriterT<SimParticleContainer> {
   TFile* m_outputFile = nullptr;
   TTree* m_outputTree = nullptr;
   /// Event identifier.
-  uint32_t m_eventId;
+  uint32_t m_eventId = 0;
   /// Event-unique particle identifier a.k.a barcode.
   std::vector<uint64_t> m_particleId;
   /// Particle type a.k.a. PDG particle number

@@ -38,7 +38,7 @@ void to_json(nlohmann::json& j, const SurfaceBounds& bounds);
 template <typename bounds_t>
 std::shared_ptr<const bounds_t> surfaceBoundsFromJson(const nlohmann::json& j) {
   const size_t kValues = bounds_t::BoundValues::eSize;
-  std::array<ActsScalar, kValues> bValues;
+  std::array<ActsScalar, kValues> bValues{};
   std::vector<ActsScalar> bVector = j["values"];
   std::copy_n(bVector.begin(), kValues, bValues.begin());
   return std::make_shared<const bounds_t>(bValues);

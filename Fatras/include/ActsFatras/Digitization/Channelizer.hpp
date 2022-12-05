@@ -49,7 +49,7 @@ struct Channelizer {
     ChannelStep(BinDelta2D delta_, Acts::Vector2 intersect_,
                 const Acts::Vector2& start)
         : delta(delta_),
-          intersect(intersect_),
+          intersect(std::move(intersect_)),
           path((intersect - start).norm()) {}
 
     /// Smaller operator for sorting the ChannelStep objects.
@@ -76,9 +76,7 @@ struct Channelizer {
     /// @param path2D_ The start/end 2D position of the segement
     /// @param activation_ The segment activation (clean: length) for this bin
     ChannelSegment(Bin2D bin_, Segment2D path2D_, double activation_)
-        : bin(std::move(bin_)),
-          path2D(std::move(path2D_)),
-          activation(activation_) {}
+        : bin(bin_), path2D(std::move(path2D_)), activation(activation_) {}
   };
 
   /// Divide the surface segment into channel segments.

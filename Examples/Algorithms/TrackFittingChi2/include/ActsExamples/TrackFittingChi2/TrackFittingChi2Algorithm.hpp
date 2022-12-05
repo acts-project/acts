@@ -61,7 +61,7 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
     /// Output fitted trajectories collection.
     std::string outputTrajectories;
     /// number of update steps
-    unsigned int nUpdates;
+    unsigned int nUpdates = 0;
     /// Type erased fitter function.
     std::shared_ptr<TrackFitterChi2Function> fit;
     /// Tracking geometry for surface lookup

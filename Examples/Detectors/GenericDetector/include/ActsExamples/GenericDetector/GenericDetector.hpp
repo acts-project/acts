@@ -9,11 +9,18 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
 #include <memory>
 #include <vector>
+
+namespace Acts {
+class TrackingGeometry;
+class IMaterialDecorator;
+}  // namespace Acts
+
+namespace ActsExamples {
+class IContextDecorator;
+}  // namespace ActsExamples
 
 namespace ActsExamples {
 namespace Generic {
@@ -21,10 +28,14 @@ class GenericDetectorElement;
 }
 }  // namespace ActsExamples
 
-struct GenericDetector : public ActsExamples::IBaseDetector {
+struct GenericDetector {
   using DetectorElement = ActsExamples::Generic::GenericDetectorElement;
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
   using DetectorStore = std::vector<std::vector<DetectorElementPtr>>;
+
+  using ContextDecorators =
+      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config {
     size_t buildLevel{3};
@@ -37,14 +48,7 @@ struct GenericDetector : public ActsExamples::IBaseDetector {
   /// The Store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 
-  void addOptions(
-      boost::program_options::options_description& opt) const override;
-
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const boost::program_options::variables_map& vm,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
-
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const Config& cfg,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
+  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
+      const Config& cfg,
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator);
 };

@@ -67,7 +67,6 @@ struct MaterialHistograms {
   /// @param phi the phi value
   ///
   void fillAndClear(float eta, float phi) {
-    
     x0_vs_eta->Fill(eta, s_x0);
     l0_vs_eta->Fill(eta, s_l0);
 
@@ -81,7 +80,7 @@ struct MaterialHistograms {
   /// Write out the histograms, the TDirectory needs
   /// to be set before
   ///
-  /// Histrograms with no contribution will not be 
+  /// Histrograms with no contribution will not be
   /// written to file.
   void write() {
     if (x0_vs_eta->GetMaximum() > 0.) {
@@ -121,8 +120,8 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
 
     auto outputFile = TFile::Open(outFile.c_str(), "recreate");
 
-    float v_eta;
-    float v_phi;
+    float v_eta = 0;
+    float v_phi = 0;
     std::vector<float>* stepLength = new std::vector<float>;
     std::vector<float>* stepX0 = new std::vector<float>;
     std::vector<float>* stepL0 = new std::vector<float>;
