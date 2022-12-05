@@ -15,7 +15,8 @@
 
 namespace Acts {
 
-template <typename track_container_t, typename traj_t>
+template <typename track_container_t, typename traj_t,
+          template <typename> class holder_t>
 class TrackContainer;
 
 namespace detail_tc {
@@ -23,7 +24,7 @@ template <typename T, bool select>
 using ConstIf = std::conditional_t<select, const T, T>;
 
 template <typename track_container_t, typename trajectory_t,
-          bool ReadOnly = true>
+          template <typename> class holder_t, bool ReadOnly = true>
 class TrackProxy {
  public:
   using Container = track_container_t;
@@ -45,7 +46,7 @@ class TrackProxy {
   using IndexType = typename Container::IndexType;
   static constexpr IndexType kInvalid = Container::kInvalid;
 
-  friend TrackContainer<Container, Trajectory>;
+  friend TrackContainer<Container, Trajectory, holder_t>;
 
   /// Retrieve a mutable reference to a component
   /// @tparam T The type of the component to access
@@ -150,22 +151,58 @@ class TrackProxy {
   auto trackStates() const { return m_container->trackStateRange(m_index); }
 
  private:
-  TrackProxy(
-      ConstIf<TrackContainer<Container, Trajectory>, ReadOnly>& container,
-      IndexType itrack)
+  TrackProxy(ConstIf<TrackContainer<Container, Trajectory, holder_t>, ReadOnly>&
+                 container,
+             IndexType itrack)
       : m_container{&container}, m_index{itrack} {}
 
   detail_lt::TransitiveConstPointer<
-      ConstIf<TrackContainer<Container, Trajectory>, ReadOnly>>
+      ConstIf<TrackContainer<Container, Trajectory, holder_t>, ReadOnly>>
       m_container;
   IndexType m_index;
 };
+
+template <typename T>
+struct RefHolder {
+  T* ptr;
+
+  RefHolder(T* _ptr) : ptr{_ptr} {}
+  RefHolder(T& ref) : ptr{&ref} {}
+
+  const T& operator*() const { return *ptr; }
+  T& operator*() { return *ptr; }
+
+  const T* operator->() const { return ptr; }
+  T* operator->() { return ptr; }
+};
+
+template <typename T>
+struct ValueHolder {
+  T val;
+
+  ValueHolder(T& _val) : val{_val} {}
+  ValueHolder(T&& _val) : val{std::move(_val)} {}
+
+  const T& operator*() const { return val; }
+  T& operator*() { return val; }
+
+  const T* operator->() const { return &val; }
+  T* operator->() { return &val; }
+};
+
+template <template <typename...> class, template <typename...> class>
+struct is_same_template : std::false_type {};
+
+template <template <typename...> class T>
+struct is_same_template<T, T> : std::true_type {};
+
 }  // namespace detail_tc
 
 template <typename T>
 struct isReadOnlyTrackContainer;
 
-template <typename track_container_t, typename traj_t>
+template <typename track_container_t, typename traj_t,
+          template <typename> class holder_t = detail_tc::RefHolder>
 class TrackContainer {
  public:
   static constexpr bool ReadOnly =
@@ -180,17 +217,22 @@ class TrackContainer {
   using IndexType = MultiTrajectoryTraits::IndexType;
   static constexpr IndexType kInvalid = MultiTrajectoryTraits::kInvalid;
 
-  using TrackProxy = detail_tc::TrackProxy<track_container_t, traj_t, false>;
+  using TrackProxy =
+      detail_tc::TrackProxy<track_container_t, traj_t, holder_t, false>;
   using ConstTrackProxy =
-      detail_tc::TrackProxy<track_container_t, traj_t, true>;
+      detail_tc::TrackProxy<track_container_t, traj_t, holder_t, true>;
 
   friend TrackProxy;
   friend ConstTrackProxy;
 
-  TrackContainer(track_container_t container, traj_t& traj)
-      : m_container{std::move(container)}, m_traj{&traj} {}
+  TrackContainer(holder_t<track_container_t> container, holder_t<traj_t> traj)
+      : m_container{std::move(container)}, m_traj{std::move(traj)} {}
 
-  TrackContainer(traj_t& traj) : m_container{}, m_traj{&traj} {}
+  template <template <typename> class H = holder_t,
+            typename = std::enable_if_t<
+                detail_tc::is_same_template<H, detail_tc::RefHolder>::value>>
+  TrackContainer(track_container_t& container, traj_t& traj)
+      : m_container{&container}, m_traj{&traj} {}
 
   ConstTrackProxy getTrack(IndexType itrack) const { return {*this, itrack}; }
 
@@ -199,65 +241,79 @@ class TrackContainer {
     return {*this, itrack};
   }
 
-  constexpr IndexType size() const { return m_container.size_impl(); }
+  constexpr IndexType size() const { return m_container->size_impl(); }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexType addTrack() {
-    return m_container.addTrack_impl();
+    return m_container->addTrack_impl();
   }
 
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr void addColumn(const std::string& key) {
-    m_container.template addColumn_impl<T>(key);
+    m_container->template addColumn_impl<T>(key);
   }
 
   constexpr bool hasColumn(HashedString key) const {
-    return m_container.hasColumn_impl(key);
+    return m_container->hasColumn_impl(key);
   }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto& container() {
+    return *m_container;
+  }
+
+  const auto& container() const { return *m_container; }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto& trackStateContainer() {
+    return *m_traj;
+  }
+
+  const auto& trackStateContainer() const { return *m_traj; }
 
  protected:
   template <typename T, HashedString key, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   constexpr T& component(IndexType itrack) {
-    return *std::any_cast<T*>(m_container.component_impl(key, itrack));
+    return *std::any_cast<T*>(m_container->component_impl(key, itrack));
   }
 
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr T& component(HashedString key, IndexType istate) {
-    return *std::any_cast<T*>(m_container.component_impl(key, istate));
+    return *std::any_cast<T*>(m_container->component_impl(key, istate));
   }
 
   template <typename T, HashedString key>
   constexpr const T& component(IndexType itrack) const {
-    return *std::any_cast<const T*>(m_container.component_impl(key, itrack));
+    return *std::any_cast<const T*>(m_container->component_impl(key, itrack));
   }
 
   template <typename T>
   constexpr const T& component(HashedString key, IndexType itrack) const {
-    return *std::any_cast<const T*>(m_container.component_impl(key, itrack));
+    return *std::any_cast<const T*>(m_container->component_impl(key, itrack));
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
-    return m_container.parameters(itrack);
+    return m_container->parameters(itrack);
   }
 
   constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
-    return m_container.parameters(itrack);
+    return m_container->parameters(itrack);
   }
 
   constexpr typename ConstTrackProxy::Parameters parameters(
       IndexType itrack) const {
-    return m_container.parameters(itrack);
+    return m_container->parameters(itrack);
   }
 
   constexpr typename TrackProxy::Covariance covariance(IndexType itrack) {
-    return m_container.covariance(itrack);
+    return m_container->covariance(itrack);
   }
 
   constexpr typename ConstTrackProxy::Covariance covariance(
       IndexType itrack) const {
-    return m_container.covariance(itrack);
+    return m_container->covariance(itrack);
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
@@ -272,14 +328,16 @@ class TrackContainer {
   }
 
  private:
-  track_container_t m_container;
-
-  detail_lt::TransitiveConstPointer<detail_tc::ConstIf<traj_t, ReadOnly>>
-      m_traj;
+  detail_tc::ConstIf<holder_t<track_container_t>, ReadOnly> m_container;
+  detail_tc::ConstIf<holder_t<traj_t>, ReadOnly> m_traj;
 };
 
-// template <typename T, typename U>
-// TrackContainer(T& container, U& traj)
-// -> TrackContainer<typename T::raw_type, typename U::raw_type>;
+template <typename track_container_t, typename traj_t>
+TrackContainer(track_container_t& container, traj_t& traj)
+    -> TrackContainer<track_container_t, traj_t, detail_tc::RefHolder>;
+
+template <typename track_container_t, typename traj_t>
+TrackContainer(track_container_t&& container, traj_t&& traj)
+    -> TrackContainer<track_container_t, traj_t, detail_tc::ValueHolder>;
 
 }  // namespace Acts
