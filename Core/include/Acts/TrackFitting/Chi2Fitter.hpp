@@ -655,12 +655,7 @@ class Chi2Fitter {
 
     trajectory = std::make_shared<traj_t>();
 
-    using paramType = typename std::conditional<
-        std::is_same<BoundTrackParameters, BoundTrackParameters>::value,
-        std::variant<BoundTrackParameters>,
-        std::variant<BoundTrackParameters, BoundTrackParameters>>::type;
-
-    paramType vParams = sParameters;
+    std::variant<BoundTrackParameters> vParams = sParameters;
     auto updatedStartParameters = sParameters;
 
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
