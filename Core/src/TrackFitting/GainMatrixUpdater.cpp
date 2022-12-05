@@ -18,30 +18,6 @@
 
 namespace Acts {
 
-template <typename Derived>
-std::optional<Derived> safeInverse(
-    const Eigen::MatrixBase<Derived>& m) noexcept {
-  constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
-  constexpr int cols = Eigen::MatrixBase<Derived>::ColsAtCompileTime;
-  // if constexpr (rows == cols && rows <= 4) {
-  // ActsSymMatrix<rows> inverse;
-  // bool invertible{true};
-  // m.computeInverseWithCheck(inverse, invertible);
-  // if (!invertible) {
-  // return std::nullopt;
-  // } else {
-  // return inverse;
-  // }
-  // } else {
-  Eigen::FullPivLU<ActsSymMatrix<rows>> lu(m);
-  if (lu.isInvertible()) {
-    return m.inverse();
-  } else {
-    return std::nullopt;
-  }
-  // }
-}
-
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     InternalTrackState trackState, NavigationDirection direction,
     LoggerWrapper logger) const {
@@ -108,19 +84,8 @@ std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
 
     static constexpr double epsilon = 1e-13;
     m.diagonal().array() += epsilon;
-    // auto regularization = CovarianceMatrix::Identity() * epsilon;
-    // m += regularization;
 
     chi2 = (residual.transpose() * (m.inverse()) * residual).value();
-
-    // if (auto inv = safeInverse(m); inv.has_value()) {
-    // chi2 = (residual.transpose() * (*inv) * residual).value();
-    // } else {
-    // error = (direction == NavigationDirection::Forward)
-    // ? KalmanFitterError::ForwardUpdateFailed
-    // : KalmanFitterError::BackwardUpdateFailed;  // set to error
-    // return false;
-    // }
 
     ACTS_VERBOSE("Chi2: " << chi2);
     return true;  // continue execution
