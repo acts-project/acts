@@ -66,14 +66,25 @@ FpeMonitor::~FpeMonitor() {
 }
 
 void FpeMonitor::enable(int excepts) {
+#if defined(__APPLE__)
+  std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
+  (void)excepts;
+  (void)handle_fpe;
+#else
   std::feclearexcept(FE_ALL_EXCEPT);
   feenableexcept(excepts);
 
   std::signal(SIGFPE, handle_fpe);
+#endif
 }
 void FpeMonitor::disable(int excepts) {
+#if defined(__APPLE__)
+  std::cerr << "FPE monitoring currently not supported on Apple" << std::endl;
+  (void)excepts;
+#else
   fedisableexcept(excepts);
   std::signal(SIGFPE, SIG_DFL);
+#endif
 }
 
 }  // namespace Acts
