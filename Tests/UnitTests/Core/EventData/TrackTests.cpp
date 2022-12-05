@@ -107,6 +107,10 @@ BOOST_AUTO_TEST_CASE(BuildDefaultHolder) {
   BOOST_CHECK_EQUAL(&mtj, &tc.trackStateContainer());
   BOOST_CHECK_EQUAL(&vtc, &tc.container());
   tc.addTrack();
+
+  std::decay_t<decltype(tc)> copy = tc;
+  BOOST_CHECK_EQUAL(&mtj, &copy.trackStateContainer());
+  BOOST_CHECK_EQUAL(&vtc, &copy.container());
 }
 
 BOOST_AUTO_TEST_CASE(BuildValueHolder) {
@@ -119,6 +123,9 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
                                                     VectorMultiTrajectory,
                                                     detail_tc::ValueHolder>>,
         "Incorrect deduced type");
+    std::decay_t<decltype(tc)> copy = tc;
+    BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
+    BOOST_CHECK_NE(&tc.container(), &copy.container());
   }
   {
     TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
@@ -129,6 +136,9 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
                                                     detail_tc::ValueHolder>>,
         "Incorrect deduced type");
     tc.addTrack();
+    std::decay_t<decltype(tc)> copy = tc;
+    BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
+    BOOST_CHECK_NE(&tc.container(), &copy.container());
   }
   {
     VectorMultiTrajectory mtj{};
@@ -139,6 +149,9 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
     BOOST_CHECK_NE(&mtj, &tc.trackStateContainer());
     BOOST_CHECK_NE(&vtc, &tc.container());
     tc.addTrack();
+    std::decay_t<decltype(tc)> copy = tc;
+    BOOST_CHECK_NE(&mtj, &copy.trackStateContainer());
+    BOOST_CHECK_NE(&vtc, &copy.container());
   }
 }
 
@@ -157,6 +170,9 @@ BOOST_AUTO_TEST_CASE(BuildRefHolder) {
   BOOST_CHECK_EQUAL(&mtj, &tc.trackStateContainer());
   BOOST_CHECK_EQUAL(&vtc, &tc.container());
   tc.addTrack();
+  std::decay_t<decltype(tc)> copy = tc;
+  BOOST_CHECK_EQUAL(&mtj, &copy.trackStateContainer());
+  BOOST_CHECK_EQUAL(&vtc, &copy.container());
 }
 
 BOOST_AUTO_TEST_CASE(BuildSharedPtr) {
@@ -173,6 +189,9 @@ BOOST_AUTO_TEST_CASE(BuildSharedPtr) {
   BOOST_CHECK_EQUAL(mtj.get(), &tc.trackStateContainer());
   BOOST_CHECK_EQUAL(vtc.get(), &tc.container());
   tc.addTrack();
+  std::decay_t<decltype(tc)> copy = tc;
+  BOOST_CHECK_EQUAL(mtj.get(), &copy.trackStateContainer());
+  BOOST_CHECK_EQUAL(vtc.get(), &copy.container());
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
