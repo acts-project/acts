@@ -655,7 +655,7 @@ class Chi2Fitter {
 
     trajectory = std::make_shared<traj_t>();
 
-    std::variant<BoundTrackParameters> vParams = sParameters;
+    BoundTrackParameters vParams = sParameters;
     auto updatedStartParameters = sParameters;
 
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
@@ -738,13 +738,9 @@ class Chi2Fitter {
 
       if (i == chi2FitterOptions.nUpdates) {
         // don't update parameters in last iteration
-        c2r.fittedParameters = std::visit(
-            [](auto&& prevParams) {
-              return BoundTrackParameters(
-                  prevParams.referenceSurface().getSharedPtr(),
-                  prevParams.parameters(), prevParams.covariance());
-            },
-            vParams);
+        c2r.fittedParameters =
+            BoundTrackParameters(vParams.referenceSurface().getSharedPtr(),
+                                 vParams.parameters(), vParams.covariance());
         break;
 
         // TODO: verify if another step would be useful, e.g. by comparing the
@@ -756,18 +752,12 @@ class Chi2Fitter {
           c2r.collectorDerive2Chi2Sum.colPivHouseholderQr().solve(
               c2r.collectorDerive1Chi2Sum);
 
-      c2r.fittedParameters = std::visit(
-          [delta_start_parameters, logger, i](auto&& prevParams) {
-            BoundVector newParamsVec =
-                prevParams.parameters() - delta_start_parameters;
-            ACTS_VERBOSE("chi2 | it=" << i << " | updated parameters = "
-                                      << newParamsVec.transpose());
-
-            return BoundTrackParameters(
-                prevParams.referenceSurface().getSharedPtr(), newParamsVec,
-                prevParams.covariance());
-          },
-          vParams);
+      BoundVector newParamsVec = vParams.parameters() - delta_start_parameters;
+      ACTS_VERBOSE("chi2 | it=" << i << " | updated parameters = "
+                                << newParamsVec.transpose());
+      c2r.fittedParameters =
+          BoundTrackParameters(vParams.referenceSurface().getSharedPtr(),
+                               newParamsVec, vParams.covariance());
 
       vParams = c2r.fittedParameters.value();  // passed to next iteration
       updatedStartParameters = c2r.fittedParameters.value();
