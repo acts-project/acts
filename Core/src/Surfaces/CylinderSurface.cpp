@@ -247,7 +247,8 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
       double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc1];
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + tolerance;
-      return std::abs(cZ) < std::abs(hZ) ? status : Intersection3D::Status::missed;
+      return std::abs(cZ) < std::abs(hZ) ? status
+                                         : Intersection3D::Status::missed;
     }
     return (isOnSurface(gctx, solution, direction, bcheck)
                 ? status

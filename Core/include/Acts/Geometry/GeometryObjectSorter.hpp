@@ -110,7 +110,7 @@ class DistanceSorterT {
       case binX: {
         double diffOneX = one.x() - m_reference.x();
         double diffTwoX = two.x() - m_reference.x();
-        return std:abs(diffOneX) < std::abs(diffTwoX);
+        return std::abs(diffOneX) < std::abs(diffTwoX);
       }
       // compare on diff y
       case binY: {
@@ -122,7 +122,7 @@ class DistanceSorterT {
       case binZ: {
         double diffOneZ = one.z() - m_reference.z();
         double diffTwoZ = two.z() - m_reference.z();
-        return std:abs(diffOneZ) < std::abs(diffTwoZ);
+        return std::abs(diffOneZ) < std::abs(diffTwoZ);
       }
       // compare on r
       case binR: {
