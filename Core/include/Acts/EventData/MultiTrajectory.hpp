@@ -989,6 +989,7 @@ class TrackStateProxy {
   MultiTrajectory<Trajectory>& trajectory() {
     return *m_traj;
   }
+
   const MultiTrajectory<Trajectory>& trajectory() const { return *m_traj; }
 
  private:
