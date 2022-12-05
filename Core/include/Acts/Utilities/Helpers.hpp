@@ -394,7 +394,7 @@ template <template <size_t> class Callable, size_t N, size_t NMAX,
 auto template_switch(size_t v, Args&&... args) {
   if (v == 0) {
     std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
-	      << ") is not valid (v == 0)" << std::endl;
+              << ") is not valid (v == 0)" << std::endl;
     std::abort();
   }
   if (v == N) {
@@ -422,7 +422,7 @@ auto template_switch_lambda(size_t v, Lambda&& func, Args&&... args) {
     std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
               << ") is not valid (v == 0)" << std::endl;
     std::abort();
-  } 
+  }
   if (v == N) {
     return func(std::integral_constant<size_t, N>{},
                 std::forward<Args>(args)...);
