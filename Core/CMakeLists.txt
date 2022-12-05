@@ -20,8 +20,8 @@ target_link_libraries(
   PUBLIC Boost::boost Eigen3::Eigen)
 
 find_library (dl_LIBRARY dl)
+find_package(Backtrace)
 find_program(addr2line_EXECUTABLE addr2line)
-message(STATUS ${dl_LIBRARY} ", " ${addr2line_EXECUTABLE})
 if(dl_LIBRARY)
   target_link_libraries(ActsCore PUBLIC ${dl_LIBRARY})
   if(addr2line_EXECUTABLE)
@@ -29,6 +29,12 @@ if(dl_LIBRARY)
       BOOST_STACKTRACE_USE_ADDR2LINE
       BOOST_STACKTRACE_ADDR2LINE_LOCATION=${addr2line_EXECUTABLE}
     )
+  elseif(Backtrace_FOUND)
+    target_compile_definitions(ActsCore PUBLIC 
+      BOOST_STACKTRACE_USE_BACKTRACE)
+    target_link_libraries(ActsCore PUBLIC ${Backtrace_LIBRARY})
+  else()
+    target_compile_definitions(ActsCore PUBLIC BOOST_STACKTRACE_USE_NOOP)
   endif()
 else()
   target_compile_definitions(ActsCore PUBLIC BOOST_STACKTRACE_USE_NOOP)

@@ -18,6 +18,9 @@ class FpeMonitor {
   explicit FpeMonitor(int excepts);
   ~FpeMonitor();
 
+  static void enable(int excepts);
+  static void disable(int excepts);
+
  private:
   int m_excepts;
 };

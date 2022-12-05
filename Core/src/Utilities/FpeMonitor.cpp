@@ -18,10 +18,7 @@
 #include <string_view>
 
 #include <boost/stacktrace.hpp>
-#include <cxxabi.h>    // for demangling
-#include <execinfo.h>  // for backtrace
 #include <fenv.h>
-#include <link.h>  // for following code in shared libraries
 #include <signal.h>
 
 namespace Acts {
@@ -31,11 +28,11 @@ void handle_fpe(int except) {
   auto check = [except](int mask) { return ACTS_CHECK_BIT(except, mask); };
 
   if (check(FE_OVERFLOW)) {
-    std::cout << "Floating point overflow" << std::endl;
+    std::cout << "FE_OVERFLOW" << std::endl;
   }
 
   if (check(FE_DIVBYZERO)) {
-    std::cout << "Floating point divide by zero" << std::endl;
+    std::cout << "FE_DIVBYZERO" << std::endl;
   }
 
   if (check(FE_INVALID)) {
@@ -61,14 +58,22 @@ FpeMonitor::FpeMonitor()
     : FpeMonitor{FE_DIVBYZERO | FE_INVALID | FE_OVERFLOW} {}
 
 FpeMonitor::FpeMonitor(int excepts) : m_excepts(excepts) {
-  std::feclearexcept(FE_ALL_EXCEPT);
-  feenableexcept(m_excepts);
-
-  std::signal(SIGFPE, handle_fpe);
+  enable(m_excepts);
 }
 
 FpeMonitor::~FpeMonitor() {
-  fedisableexcept(m_excepts);
+  disable(m_excepts);
+}
+
+void FpeMonitor::enable(int excepts) {
+  std::feclearexcept(FE_ALL_EXCEPT);
+  feenableexcept(excepts);
+
+  std::signal(SIGFPE, handle_fpe);
+}
+void FpeMonitor::disable(int excepts) {
+  fedisableexcept(excepts);
+  std::signal(SIGFPE, SIG_DFL);
 }
 
 }  // namespace Acts
