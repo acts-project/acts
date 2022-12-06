@@ -324,11 +324,11 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     for (int priVtxId : contributingTruthVertices) {
       fmap[priVtxId]++;
     }
+    int maxOccurrence = -1;
     int maxOccurrenceId = -1;
-    int maxOccurence = -1;
     for (auto it : fmap) {
-      if (it.second > maxOccurence) {
-        maxOccurence = it.second;
+      if (it.second > maxOccurrence) {
+        maxOccurrence = it.second;
         maxOccurrenceId = it.first;
       }
     }
