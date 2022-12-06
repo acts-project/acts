@@ -107,9 +107,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
-  
-  ACTS_INFO("Wrote estimated parameters from seed to tree '"
-            << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
 
   ACTS_INFO("Wrote estimated parameters from seed to tree '"
             << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
