@@ -150,6 +150,15 @@ class TrackProxy {
 
   auto trackStates() const { return m_container->trackStateRange(m_index); }
 
+  IndexType index() const { return m_index; }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto& container() {
+    return *m_container;
+  }
+
+  const auto& container() const { return *m_container; }
+
  private:
   TrackProxy(ConstIf<TrackContainer<Container, Trajectory, holder_t>, ReadOnly>&
                  container,
@@ -195,6 +204,47 @@ struct is_same_template : std::false_type {};
 
 template <template <typename...> class T>
 struct is_same_template<T, T> : std::true_type {};
+
+template <typename container_t, typename proxy_t, bool ReadOnly>
+class TrackProxyIterator {
+  using ProxyType = proxy_t;
+  using IndexType = typename ProxyType::IndexType;
+  using ContainerType = container_t;
+
+ public:
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  TrackProxyIterator(container_t& container, IndexType itrack)
+      : m_container(&container), m_itrack(itrack) {}
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<RO>>
+  TrackProxyIterator(const container_t& container, IndexType itrack)
+      : m_container(&container), m_itrack(itrack) {}
+
+  TrackProxyIterator& operator++() {
+    m_itrack++;
+    return *this;
+  }
+
+  bool operator==(const TrackProxyIterator& other) const {
+    return m_container == other.m_container && m_itrack == other.m_itrack;
+  }
+
+  bool operator!=(const TrackProxyIterator& other) const {
+    return !(*this == other);
+  }
+
+  ProxyType operator*() const { return m_container->getTrack(m_itrack); }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  ProxyType operator*() {
+    return m_container->getTrack(m_itrack);
+  }
+
+ private:
+  detail_lt::TransitiveConstPointer<ConstIf<ContainerType, ReadOnly>>
+      m_container;
+  IndexType m_itrack;
+};
 
 }  // namespace detail_tc
 
@@ -270,6 +320,27 @@ class TrackContainer {
   }
 
   const auto& trackStateContainer() const { return *m_traj; }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto begin() {
+    return detail_tc::TrackProxyIterator<std::decay_t<decltype(*this)>,
+                                         TrackProxy, false>{*this, 0};
+  }
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto end() {
+    return detail_tc::TrackProxyIterator<std::decay_t<decltype(*this)>,
+                                         TrackProxy, false>{*this, size()};
+  }
+
+  auto begin() const {
+    return detail_tc::TrackProxyIterator<std::decay_t<decltype(*this)>,
+                                         ConstTrackProxy, true>{*this, 0};
+  }
+
+  auto end() const {
+    return detail_tc::TrackProxyIterator<std::decay_t<decltype(*this)>,
+                                         ConstTrackProxy, true>{*this, size()};
+  }
 
  protected:
   template <typename T, HashedString key, bool RO = ReadOnly,

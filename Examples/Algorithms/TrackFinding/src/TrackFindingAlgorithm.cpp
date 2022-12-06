@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -96,19 +97,22 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
 
-  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
-  std::vector<TrackFinderResult> results;
-  results.reserve(initialParameters.size());
+  auto tracks = std::make_unique<TrackContainer>(Acts::VectorTrackContainer{},
+                                                 Acts::VectorMultiTrajectory{});
+
+  // TrackFinderResult results;
+  // results.reserve(initialParameters.size());
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
-    results.push_back(
-        (*m_cfg.findTracks)(initialParameters.at(iseed), options, mtj));
+    auto tracksForSeed =
+        (*m_cfg.findTracks)(initialParameters.at(iseed), options, *tracks);
   }
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {
-    computeSharedHits(sourceLinks, results);
+    computeSharedHits(sourceLinks, *tracks);
   }
 
+#if 0
   // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     m_nTotalSeeds++;
@@ -137,6 +141,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   m_memoryStatistics.local().hist += mtj->statistics().hist;
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+#endif
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

@@ -36,11 +36,17 @@ class VectorTrackContainerBase {
  protected:
   VectorTrackContainerBase() = default;
 
-  VectorTrackContainerBase(const VectorTrackContainerBase& other) {
+  VectorTrackContainerBase(const VectorTrackContainerBase& other)
+      : m_tipIndex{other.m_tipIndex},
+        m_params{other.m_params},
+        m_cov{other.m_cov},
+        m_referenceSurfaces{other.m_referenceSurfaces} {
     for (const auto& [key, value] : other.m_dynamic) {
       m_dynamic.insert({key, value->clone()});
     }
   };
+
+  VectorTrackContainerBase(VectorTrackContainerBase&& other) = default;
 
   struct DynamicColumnBase {
     virtual ~DynamicColumnBase() = 0;
@@ -118,6 +124,8 @@ class VectorTrackContainerBase {
         return m_dynamic.find(key) != m_dynamic.end();
     }
   }
+
+  std::size_t size_impl() const { return m_tipIndex.size(); }
   // END INTERFACE HELPER
 
   std::vector<IndexType> m_tipIndex;
@@ -137,13 +145,9 @@ struct isReadOnlyTrackContainer<VectorTrackContainer> : std::false_type {};
 
 class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
  public:
-  VectorTrackContainer() = default;
-  VectorTrackContainer(const VectorTrackContainer& other)
-      : VectorTrackContainerBase{other} {}
-
+  VectorTrackContainer() : VectorTrackContainerBase{} {}
+  VectorTrackContainer(const VectorTrackContainer& other) = default;
   VectorTrackContainer(VectorTrackContainer&&) = default;
-  VectorTrackContainer& operator=(const VectorTrackContainer&) = default;
-  VectorTrackContainer& operator=(VectorTrackContainer&&) = default;
 
  public:
   // BEGIN INTERFACE
@@ -203,18 +207,15 @@ struct isReadOnlyTrackContainer<ConstVectorTrackContainer> : std::true_type {};
 class ConstVectorTrackContainer final
     : public detail_vtc::VectorTrackContainerBase {
  public:
-  ConstVectorTrackContainer() = default;
+  ConstVectorTrackContainer() : VectorTrackContainerBase{} {}
 
-  ConstVectorTrackContainer(const ConstVectorTrackContainer& other)
-      : VectorTrackContainerBase{other} {}
-
+  ConstVectorTrackContainer(const ConstVectorTrackContainer& other) = default;
   ConstVectorTrackContainer(const VectorTrackContainer& other)
       : VectorTrackContainerBase{other} {}
 
   ConstVectorTrackContainer(ConstVectorTrackContainer&&) = default;
-  ConstVectorTrackContainer& operator=(const ConstVectorTrackContainer&) =
-      default;
-  ConstVectorTrackContainer& operator=(ConstVectorTrackContainer&&) = default;
+  ConstVectorTrackContainer(VectorTrackContainer&& other)
+      : VectorTrackContainerBase{std::move(other)} {}
 
  public:
   // BEGIN INTERFACE

@@ -214,7 +214,7 @@ struct CombinatorialKalmanFilterOptions {
 template <typename traj_t>
 struct CombinatorialKalmanFilterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<traj_t> fittedStates;
+  traj_t* fittedStates;
 
   // These is used internally to store candidate trackstates
   std::shared_ptr<traj_t> stateBuffer;
@@ -1252,14 +1252,18 @@ class CombinatorialKalmanFilter {
   /// @return a container of track finding result for all the initial track
   /// parameters
   template <typename source_link_iterator_t, typename start_parameters_t,
+            template <typename> class holder_t,
             typename parameters_t = BoundTrackParameters>
-  std::pair<std::shared_ptr<traj_t>, TrackContainer<track_container_t, traj_t>>
-  findTracks(const start_parameters_t& initialParameters,
-             const CombinatorialKalmanFilterOptions<source_link_iterator_t,
-                                                    traj_t>& tfOptions,
-             std::shared_ptr<traj_t> trajectory) const {
+  auto findTracks(
+      const start_parameters_t& initialParameters,
+      const CombinatorialKalmanFilterOptions<source_link_iterator_t, traj_t>&
+          tfOptions,
+      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
+      -> Result<std::vector<
+          typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
     const auto& logger = tfOptions.logger;
 
+    using TrackContainer = typename std::decay_t<decltype(trackContainer)>;
     using SourceLinkAccessor =
         SourceLinkAccessorDelegate<source_link_iterator_t>;
 
@@ -1293,10 +1297,6 @@ class CombinatorialKalmanFilter {
     // Run the CombinatorialKalmanFilter.
     auto stateBuffer = std::make_shared<traj_t>();
 
-    TrackContainer<track_container_t, traj_t> tracks{trajectory};
-
-    auto stateBuffer = std::make_shared<traj_t>();
-
     typename propagator_t::template action_list_t_result_t<
         CurvilinearTrackParameters, Actors>
         inputResult;
@@ -1304,7 +1304,7 @@ class CombinatorialKalmanFilter {
     auto& r =
         inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>();
 
-    r.fittedStates = trajectory;
+    r.fittedStates = &trackContainer.trackStateContainer();
     r.stateBuffer = stateBuffer;
     r.stateBuffer->clear();
 
@@ -1346,17 +1346,20 @@ class CombinatorialKalmanFilter {
       return combKalmanResult.result.error();
     }
 
+    std::vector<typename TrackContainer::TrackProxy> tracks;
+
     for (auto tip : combKalmanResult.lastMeasurementIndices) {
-      auto track = tracks.addTrack();
+      auto track = trackContainer.getTrack(trackContainer.addTrack());
       track.tipIndex() = tip;
       const BoundTrackParameters& parameters =
-          combKalmanResult.fittedParameters[tip];
+          combKalmanResult.fittedParameters.find(tip)->second;
       track.parameters() = parameters.parameters();
-      track.covariance() = parameters.covariance();
+      track.covariance() = *parameters.covariance();
       track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
+      tracks.push_back(track);
     }
 
-    return {trajectory, std::move(tracks)};
+    return tracks;
   }
 
 };  // namespace Acts

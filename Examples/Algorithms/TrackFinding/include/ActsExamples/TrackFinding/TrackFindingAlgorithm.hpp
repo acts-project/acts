@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/Track.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -35,10 +36,11 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
                                              Acts::VectorMultiTrajectory>;
+  using TrackContainer = Acts::TrackContainer<Acts::VectorTrackContainer,
+                                              Acts::VectorMultiTrajectory,
+                                              Acts::detail_tc::ValueHolder>;
   using TrackFinderResult =
-      std::pair<std::shared_ptr<Acts::VectorMultiTrajectory>,
-                Acts::TrackContainer<Acts::VectorTrackContainer,
-                                     Acts::VectorMultiTrajectory>>;
+      Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 
   /// Find function that takes the above parameters
   /// @note This is separated into a virtual interface to keep compilation units
@@ -46,9 +48,9 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   class TrackFinderFunction {
    public:
     virtual ~TrackFinderFunction() = default;
-    virtual TrackFinderResult operator()(
-        const TrackParameters&, const TrackFinderOptions&,
-        std::shared_ptr<Acts::VectorMultiTrajectory>) const = 0;
+    virtual TrackFinderResult operator()(const TrackParameters&,
+                                         const TrackFinderOptions&,
+                                         TrackContainer&) const = 0;
   };
 
   /// Create the track finder function implementation.
@@ -95,7 +97,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
  private:
   template <typename source_link_accessor_container_t>
   void computeSharedHits(const source_link_accessor_container_t& sourcelinks,
-                         std::vector<TrackFinderResult>& result) const;
+                         TrackContainer& tracks) const;
 
   ActsExamples::ProcessCode finalize() const override;
 
@@ -117,7 +119,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
 template <typename source_link_accessor_container_t>
 void TrackFindingAlgorithm::computeSharedHits(
     const source_link_accessor_container_t& sourceLinks,
-    std::vector<TrackFinderResult>& results) const {
+    TrackContainer& tracks) const {
   // Compute shared hits from all the reconstructed tracks
   // Compute nSharedhits and Update ckf results
   // hit index -> list of multi traj indexes [traj, meas]
@@ -127,6 +129,59 @@ void TrackFindingAlgorithm::computeSharedHits(
   std::vector<std::size_t> firstStateOnTheHit(
       sourceLinks.size(), std::numeric_limits<std::size_t>::max());
 
+  for (auto track : tracks) {
+    for (auto state : track.trackStates()) {
+      if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        break;
+      }
+
+      std::size_t hitIndex =
+          static_cast<const IndexSourceLink&>(state.uncalibrated()).index();
+
+      // Check if hit not already used
+      if (firstTrackOnTheHit.at(hitIndex) ==
+          std::numeric_limits<std::size_t>::max()) {
+        firstTrackOnTheHit.at(hitIndex) = track.index();
+        firstStateOnTheHit.at(hitIndex) = state.index();
+        break;
+      }
+
+      // if already used, control if first track state has been marked
+      // as shared
+      int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
+      int indexFirstState = firstStateOnTheHit.at(hitIndex);
+
+      auto firstState = tracks.getTrack(indexFirstTrack)
+                            .container()
+                            .trackStateContainer()
+                            .getTrackState(indexFirstState);
+      // if (not results.at(indexFirstTrack)
+      // .value()
+      // .fittedStates->getTrackState(indexFirstState)
+      // .typeFlags()
+      // .test(Acts::TrackStateFlag::SharedHitFlag)) {
+      if (not firstState.typeFlags().test(
+              Acts::TrackStateFlag::SharedHitFlag)) {
+        // results.at(indexFirstTrack)
+        // .value()
+        // .fittedStates->getTrackState(indexFirstState)
+        // .typeFlags()
+        // .set(Acts::TrackStateFlag::SharedHitFlag);
+        firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+      }
+
+      // Decorate this track
+      // results.at(iresult)
+      // .value()
+      // .fittedStates->getTrackState(state.index())
+      // .typeFlags()
+      // .set(Acts::TrackStateFlag::SharedHitFlag);
+      state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
+
+      break;
+    }
+  }
+#if 0
   for (unsigned int iresult(0); iresult < results.size(); iresult++) {
     if (not results.at(iresult).ok()) {
       continue;
@@ -179,6 +234,7 @@ void TrackFindingAlgorithm::computeSharedHits(
       });
     }
   }
+#endif
 }
 
 }  // namespace ActsExamples

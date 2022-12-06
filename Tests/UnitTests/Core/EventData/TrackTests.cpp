@@ -275,6 +275,63 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 }
 
+BOOST_AUTO_TEST_CASE_TEMPLATE(TrackIterator, factory_t, holder_types) {
+  factory_t factory;
+  auto& tc = factory.trackContainer();
+
+  for (unsigned int i = 0; i < 10; i++) {
+    auto t = tc.getTrack(tc.addTrack());
+    t.tipIndex() = i;
+  }
+
+  unsigned int i = 0;
+  for (auto track : tc) {
+    BOOST_CHECK_EQUAL(i, track.tipIndex());
+    track.parameters().setRandom();
+    i++;
+  }
+}
+
+BOOST_AUTO_TEST_CASE(ConstCorrectness) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  {
+    TrackContainer tc{vtc, mtj};
+
+    for (unsigned int i = 0; i < 10; i++) {
+      auto t = tc.getTrack(tc.addTrack());
+      t.tipIndex() = i;
+    }
+
+    unsigned int i = 0;
+    for (auto track : tc) {
+      BOOST_CHECK_EQUAL(i, track.tipIndex());
+      track.parameters().setRandom();
+      i++;
+    }
+
+    for (const auto track : tc) {
+      (void)track;
+      // does not compile
+      // track.parameters().setRandom();
+    }
+  }
+
+  ConstVectorTrackContainer cvtc{std::move(vtc)};
+  ConstVectorMultiTrajectory cmtj{std::move(mtj)};
+  {
+    TrackContainer tc{cvtc, cmtj};
+
+    unsigned int i = 0;
+    for (auto track : tc) {
+      BOOST_CHECK_EQUAL(i, track.tipIndex());
+      i++;
+      // does not compile
+      // track.parameters().setRandom();
+    }
+  }
+}
+
 BOOST_AUTO_TEST_CASE_TEMPLATE(BuildReadOnly, factory_t, const_holder_types) {
   factory_t factory;
   auto& tc = factory.trackContainer();
