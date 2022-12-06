@@ -131,7 +131,7 @@ class VectorTrackContainerBase {
   std::vector<IndexType> m_tipIndex;
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
-  std::vector<std::shared_ptr<Surface>> m_referenceSurfaces;
+  std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
   std::unordered_map<HashedString, std::unique_ptr<DynamicColumnBase>>
       m_dynamic;
@@ -167,6 +167,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
     m_params.emplace_back();
     m_cov.emplace_back();
+    m_referenceSurfaces.emplace_back();
 
     // dynamic columns
     for (auto& [key, vec] : m_dynamic) {

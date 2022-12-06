@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include <boost/test/data/test_case.hpp>
+#include <boost/test/tools/old/interface.hpp>
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/MultiTrajectory.hpp"
@@ -16,7 +17,11 @@
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Tests/CommonHelpers/TestTrackState.hpp"
 
+#include <iterator>
+
 namespace {
+
+using namespace Acts::UnitLiterals;
 
 using namespace Acts;
 using namespace Acts::HashedStringLiteral;
@@ -82,8 +87,9 @@ using holder_types_t =
     std::tuple<Factory<track_container_t, traj_t, holders>...>;
 
 using holder_types = holder_types_t<VectorTrackContainer, VectorMultiTrajectory,
-                                    detail_tc::ValueHolder,
-                                    detail_tc::RefHolder, std::shared_ptr>;
+                                    // detail_tc::ValueHolder,
+                                    // detail_tc::RefHolder,
+                                    std::shared_ptr>;
 
 using const_holder_types =
     holder_types_t<ConstVectorTrackContainer, ConstVectorMultiTrajectory,
@@ -226,6 +232,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t.covariance() = cov;
   BOOST_CHECK_EQUAL(t.covariance(), cov);
 
+  auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      Acts::Vector3{-3_m, 0., 0.}, Acts::Vector3{1., 0., 0});
+
+  t.setReferenceSurface(surface);
+  BOOST_CHECK_EQUAL(surface.get(), &t.referenceSurface());
+
   // const checks: should not compile
   // const auto& ctc = tc;
   // ctc.getTrack(idx).covariance().setRandom();
@@ -273,6 +285,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   exp.resize(5);
   std::iota(exp.rbegin(), exp.rend(), 0);
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
+
+  const auto& ct = t;
+
+  for (auto ts : ct.trackStates()) {
+    (void)ts;
+  }
+
+  BOOST_CHECK_EQUAL(t.nTrackStates(), 5);
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(TrackIterator, factory_t, holder_types) {
@@ -283,12 +303,76 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackIterator, factory_t, holder_types) {
     auto t = tc.getTrack(tc.addTrack());
     t.tipIndex() = i;
   }
+  BOOST_CHECK_EQUAL(tc.size(), 10);
 
   unsigned int i = 0;
   for (auto track : tc) {
     BOOST_CHECK_EQUAL(i, track.tipIndex());
     track.parameters().setRandom();
     i++;
+  }
+
+  BOOST_CHECK_EQUAL(std::distance(tc.begin(), tc.end()), tc.size());
+}
+
+BOOST_AUTO_TEST_CASE(IteratorConcept) {
+  VectorTrackContainer vtc;
+  VectorMultiTrajectory mtj;
+  TrackContainer tc{vtc, mtj};
+
+  for (unsigned int i = 0; i < 10; i++) {
+    auto t = tc.getTrack(tc.addTrack());
+    t.tipIndex() = i;
+  }
+  BOOST_CHECK_EQUAL(tc.size(), 10);
+  BOOST_CHECK_EQUAL(std::distance(tc.begin(), tc.end()), tc.size());
+
+  {
+    auto it = tc.begin();
+    BOOST_CHECK(*it == tc.getTrack(0));
+    ++it;
+    BOOST_CHECK(*it == tc.getTrack(1));
+    it += 1;
+    BOOST_CHECK(*it == tc.getTrack(2));
+    it -= 1;
+    BOOST_CHECK(*it == tc.getTrack(1));
+    ++it;
+    ++it;
+    --it;
+    BOOST_CHECK(*it == tc.getTrack(2));
+  }
+  {
+    auto it = tc.begin();
+    BOOST_CHECK(*it == tc.getTrack(0));
+    std::advance(it, 4);
+    BOOST_CHECK(*it == tc.getTrack(4));
+    BOOST_CHECK(*(it[-1]) == tc.getTrack(3));
+    BOOST_CHECK(*(it[0]) == tc.getTrack(4));
+    BOOST_CHECK(*(it[1]) == tc.getTrack(5));
+    BOOST_CHECK(*(it - 2) == tc.getTrack(2));
+  }
+
+  {
+    auto it = tc.begin();
+    auto it4 = it + 4;
+    auto it5 = it + 5;
+    auto it6 = it + 6;
+
+    BOOST_CHECK(it4 < it5);
+    BOOST_CHECK(it5 < it6);
+    BOOST_CHECK(it4 < it6);
+
+    BOOST_CHECK(it6 > it5);
+    BOOST_CHECK(it5 > it4);
+    BOOST_CHECK(it6 > it4);
+
+    BOOST_CHECK(it4 <= it4);
+    BOOST_CHECK(it4 <= it5);
+    BOOST_CHECK(it5 <= it5);
+    BOOST_CHECK(it5 <= it6);
+
+    BOOST_CHECK(it6 >= it6);
+    BOOST_CHECK(it6 >= it5);
   }
 }
 

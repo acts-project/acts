@@ -36,9 +36,9 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
                                              Acts::VectorMultiTrajectory>;
-  using TrackContainer = Acts::TrackContainer<Acts::VectorTrackContainer,
-                                              Acts::VectorMultiTrajectory,
-                                              Acts::detail_tc::ValueHolder>;
+  using TrackContainer =
+      Acts::TrackContainer<Acts::VectorTrackContainer,
+                           Acts::VectorMultiTrajectory, std::shared_ptr>;
   using TrackFinderResult =
       Acts::Result<std::vector<TrackContainer::TrackProxy>>;
 

@@ -12,6 +12,8 @@
 #include "Acts/Utilities/HashedString.hpp"
 
 #include <any>
+#include <cstddef>
+#include <iterator>
 
 namespace Acts {
 
@@ -150,6 +152,13 @@ class TrackProxy {
 
   auto trackStates() const { return m_container->trackStateRange(m_index); }
 
+  std::size_t nTrackStates() const {
+    // @TODO: This should probably be cached, distance is expensive
+    //        without random access
+    auto tsRange = trackStates();
+    return std::distance(tsRange.begin(), tsRange.end());
+  }
+
   IndexType index() const { return m_index; }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
@@ -158,6 +167,10 @@ class TrackProxy {
   }
 
   const auto& container() const { return *m_container; }
+
+  bool operator==(const TrackProxy& other) const {
+    return &(*m_container) == &(*other.m_container) && m_index == other.m_index;
+  }
 
  private:
   TrackProxy(ConstIf<TrackContainer<Container, Trajectory, holder_t>, ReadOnly>&
@@ -212,6 +225,12 @@ class TrackProxyIterator {
   using ContainerType = container_t;
 
  public:
+  using iterator_category = std::random_access_iterator_tag;
+  using value_type = ProxyType;
+  using difference_type = std::ptrdiff_t;
+  using pointer = void;
+  using reference = void;
+
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   TrackProxyIterator(container_t& container, IndexType itrack)
       : m_container(&container), m_itrack(itrack) {}
@@ -224,6 +243,10 @@ class TrackProxyIterator {
     m_itrack++;
     return *this;
   }
+  TrackProxyIterator& operator--() {
+    m_itrack--;
+    return *this;
+  }
 
   bool operator==(const TrackProxyIterator& other) const {
     return m_container == other.m_container && m_itrack == other.m_itrack;
@@ -233,11 +256,70 @@ class TrackProxyIterator {
     return !(*this == other);
   }
 
+  bool operator<(const TrackProxyIterator& other) const {
+    return m_itrack < other.m_itrack;
+  }
+
+  bool operator>(const TrackProxyIterator& other) const {
+    return m_itrack > other.m_itrack;
+  }
+
+  bool operator<=(const TrackProxyIterator& other) const {
+    return m_itrack <= other.m_itrack;
+  }
+
+  bool operator>=(const TrackProxyIterator& other) const {
+    return m_itrack >= other.m_itrack;
+  }
+
   ProxyType operator*() const { return m_container->getTrack(m_itrack); }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   ProxyType operator*() {
     return m_container->getTrack(m_itrack);
+  }
+
+  TrackProxyIterator operator[](difference_type n) const {
+    TrackProxyIterator copy = *this;
+    copy += n;
+    return copy;
+  };
+
+  TrackProxyIterator& operator+=(difference_type n) {
+    m_itrack += n;
+    return *this;
+  }
+
+  TrackProxyIterator operator-=(difference_type n) {
+    m_itrack -= n;
+    return *this;
+  }
+
+  friend difference_type operator-(const TrackProxyIterator& lhs,
+                                   const TrackProxyIterator& rhs) {
+    return lhs.m_itrack - rhs.m_itrack;
+  }
+
+  friend TrackProxyIterator operator+(const TrackProxyIterator& lhs,
+                                      difference_type rhs) {
+    TrackProxyIterator copy = lhs;
+    copy += rhs;
+    return copy;
+  }
+
+  friend TrackProxyIterator operator+(difference_type lhs,
+                                      const TrackProxyIterator& rhs) {
+    return rhs + lhs;
+  }
+
+  friend TrackProxyIterator operator-(const TrackProxyIterator& lhs,
+                                      difference_type rhs) {
+    return lhs + (-rhs);
+  }
+
+  friend TrackProxyIterator operator-(difference_type lhs,
+                                      const TrackProxyIterator& rhs) {
+    return rhs + (-lhs);
   }
 
  private:
@@ -346,55 +428,55 @@ class TrackContainer {
   template <typename T, HashedString key, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   constexpr T& component(IndexType itrack) {
-    return *std::any_cast<T*>(m_container->component_impl(key, itrack));
+    return *std::any_cast<T*>(container().component_impl(key, itrack));
   }
 
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  constexpr T& component(HashedString key, IndexType istate) {
-    return *std::any_cast<T*>(m_container->component_impl(key, istate));
+  constexpr T& component(HashedString key, IndexType itrack) {
+    return *std::any_cast<T*>(container().component_impl(key, itrack));
   }
 
   template <typename T, HashedString key>
   constexpr const T& component(IndexType itrack) const {
-    return *std::any_cast<const T*>(m_container->component_impl(key, itrack));
+    return *std::any_cast<const T*>(container().component_impl(key, itrack));
   }
 
   template <typename T>
   constexpr const T& component(HashedString key, IndexType itrack) const {
-    return *std::any_cast<const T*>(m_container->component_impl(key, itrack));
+    return *std::any_cast<const T*>(container().component_impl(key, itrack));
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
-    return m_container->parameters(itrack);
+    return container().parameters(itrack);
   }
 
   constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
-    return m_container->parameters(itrack);
+    return container().parameters(itrack);
   }
 
   constexpr typename ConstTrackProxy::Parameters parameters(
       IndexType itrack) const {
-    return m_container->parameters(itrack);
+    return container().parameters(itrack);
   }
 
   constexpr typename TrackProxy::Covariance covariance(IndexType itrack) {
-    return m_container->covariance(itrack);
+    return container().covariance(itrack);
   }
 
   constexpr typename ConstTrackProxy::Covariance covariance(
       IndexType itrack) const {
-    return m_container->covariance(itrack);
+    return container().covariance(itrack);
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStateRange(IndexType itrack) {
-    auto tip = component<IndexType>(hashString("tipIndex"), itrack);
+    auto tip = component<IndexType, hashString("tipIndex")>(itrack);
     return m_traj->trackStateRange(tip);
   }
 
   auto trackStateRange(IndexType itrack) const {
-    auto tip = component<IndexType>(hashString("tipIndex"), itrack);
+    auto tip = component<IndexType, hashString("tipIndex")>(itrack);
     return m_traj->trackStateRange(tip);
   }
 

@@ -32,9 +32,9 @@ using CKF =
     Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory,
                                     Acts::VectorTrackContainer>;
 
-using TrackContainer = Acts::TrackContainer<Acts::VectorTrackContainer,
-                                            Acts::VectorMultiTrajectory,
-                                            Acts::detail_tc::ValueHolder>;
+using TrackContainer =
+    Acts::TrackContainer<Acts::VectorTrackContainer,
+                         Acts::VectorMultiTrajectory, std::shared_ptr>;
 
 struct TrackFinderFunctionImpl
     : public ActsExamples::TrackFindingAlgorithm::TrackFinderFunction {
