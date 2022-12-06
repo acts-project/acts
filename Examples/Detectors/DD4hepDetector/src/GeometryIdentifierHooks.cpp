@@ -13,10 +13,11 @@ namespace GeometryIdentifierHooks {
 
 Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
                                         const Acts::Surface& surface) {
-  // @TODO : This implementation hardcode the parameters for the ODD, 
-  // ideally a more generic implementation (using the python binding would be preferable)
+  // @TODO : This implementation hardcode the parameters for the ODD,
+  // ideally a more generic implementation (using the python binding would be
+  // preferable)
 
-  // Define the spliting parameters for the ODD. 
+  // Define the spliting parameters for the ODD.
   // In case of geometry change please edit those accordingly
   std::vector<int> volumes = {28, 30};
   std::vector<double> radialCuts = {580};
