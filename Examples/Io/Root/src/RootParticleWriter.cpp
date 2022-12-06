@@ -75,6 +75,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
+
   ACTS_INFO("Wrote particles to tree '" << m_cfg.treeName << "' in '"
                                         << m_cfg.filePath << "'");
 

@@ -72,9 +72,10 @@ ActsExamples::RootSimHitWriter::~RootSimHitWriter() {
 ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::endRun() {
   m_outputFile->cd();
   m_outputTree->Write();
+  m_outputFile->Close();
+
   ACTS_VERBOSE("Wrote hits to tree '" << m_cfg.treeName << "' in '"
                                       << m_cfg.filePath << "'");
-  m_outputFile->Close();
 
   return ProcessCode::SUCCESS;
 }
