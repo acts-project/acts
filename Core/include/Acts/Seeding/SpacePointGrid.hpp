@@ -52,9 +52,10 @@ struct SpacePointGridConfig {
   std::vector<float> zBinEdges;
   bool isInInternalUnits = false;
   SpacePointGridConfig toInternalUnits() const {
-    if (isInInternalUnits)
+    if (isInInternalUnits) {
       throw std::runtime_error(
           "Repeated conversion to internal units for SpacePointGridConfig");
+    }
     using namespace Acts::UnitLiterals;
     SpacePointGridConfig config = *this;
     config.isInInternalUnits = true;

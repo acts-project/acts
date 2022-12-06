@@ -70,9 +70,10 @@ struct SeedFilterConfig {
 
   bool isInInternalUnits = false;
   SeedFilterConfig toInternalUnits() const {
-    if (isInInternalUnits)
+    if (isInInternalUnits) {
       throw std::runtime_error(
           "Repeated conversion to internal units for SeedFilterConfig");
+    }
     using namespace Acts::UnitLiterals;
     SeedFilterConfig config = *this;
     config.isInInternalUnits = true;

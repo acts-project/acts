@@ -16,12 +16,14 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     Acts::Extent rRangeSPExtent,
     const SeedFinderConfig<external_spacepoint_t>& config,
     const SeedFinderOptions& options) {
-  if (not config.isInInternalUnits)
+  if (not config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
-  if (not options.isInInternalUnits)
+  }
+  if (not options.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
+  }
   static_assert(
       std::is_same<
           typename std::iterator_traits<spacepoint_iterator_t>::value_type,

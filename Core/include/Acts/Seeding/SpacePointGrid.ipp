@@ -14,10 +14,11 @@ template <typename SpacePoint>
 std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
 Acts::SpacePointGridCreator::createGrid(
     const Acts::SpacePointGridConfig& config) {
-  if (not config.isInInternalUnits)
+  if (not config.isInInternalUnits) {
     throw std::runtime_error(
         "SpacePointGridConfig not in ACTS internal units in "
         "SpacePointGridCreator::createGrid");
+  }
   using AxisScalar = Acts::Vector3::Scalar;
 
   int phiBins = 0;

@@ -18,13 +18,11 @@ template <typename external_spacepoint_t, typename platform_t>
 SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config)
     : m_config(config) {
-  if (not config.isInInternalUnits)
+  if (not config.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in SeedFinder");
+  }
 }
-
-template <typename external_spacepoint_t, typename platform_t>
-SeedFinder<external_spacepoint_t, platform_t>::SeedFinder() {}
 
 template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>

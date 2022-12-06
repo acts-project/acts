@@ -58,8 +58,14 @@ class SeedFinder {
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the SeedFinder
   SeedFinder(const Acts::SeedFinderConfig<external_spacepoint_t>& config);
-  SeedFinder();
   ~SeedFinder() = default;
+  /**    @name Disallow default instantiation, copy, assignment */
+  //@{
+  SeedFinder() = default;
+  SeedFinder(const SeedFinder<external_spacepoint_t, platform_t>&) = delete;
+  SeedFinder<external_spacepoint_t, platform_t>& operator=(
+      const SeedFinder<external_spacepoint_t, platform_t>&) = default;
+  //@}
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation

@@ -233,9 +233,10 @@ struct SeedFinderOptions {
   bool isInInternalUnits = false;
 
   SeedFinderOptions toInternalUnits() const {
-    if (isInInternalUnits)
+    if (isInInternalUnits) {
       throw std::runtime_error(
           "Repeated conversion to internal units for SeedFinderOptions");
+    }
     using namespace Acts::UnitLiterals;
     SeedFinderOptions options = *this;
     options.isInInternalUnits = true;
@@ -248,10 +249,11 @@ struct SeedFinderOptions {
   template <typename SpacePoint>
   SeedFinderOptions calculateDerivedQuantities(
       const SeedFinderConfig<SpacePoint>& config) const {
-    if (!isInInternalUnits)
+    if (!isInInternalUnits) {
       throw std::runtime_error(
           "Derived quantities in SeedFinderOptions can only be calculated from "
           "Acts internal units");
+    }
     SeedFinderOptions options = *this;
     // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
     // millimeter
