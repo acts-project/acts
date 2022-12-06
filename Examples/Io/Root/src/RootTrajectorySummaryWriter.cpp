@@ -137,7 +137,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
   m_outputTree->Write();
   m_outputFile->Close();
 
-  ACTS_INFO("Write parameters of trajectories to tree '"
+  ACTS_INFO("Wrote parameters of trajectories to tree '"
             << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
 
   return ProcessCode::SUCCESS;
