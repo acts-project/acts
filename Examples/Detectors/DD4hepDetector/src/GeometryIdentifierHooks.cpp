@@ -13,13 +13,24 @@ namespace GeometryIdentifierHooks {
 
 Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
                                         const Acts::Surface& surface) {
-  if (identifier.volume() == 28 || identifier.volume() == 30) {
+  // @TODO : This implementation hardcode the parameters for the ODD, 
+  // ideally a more generic implementation (using the python binding would be preferable)
+
+  // Define the spliting parameters for the ODD. 
+  // In case of geometry change please edit those accordingly
+  std::vector<int> volumes = {28, 30};
+  std::vector<double> radialCuts = {580};
+  std::vector<std::vector<double>> cut = {radialCuts, radialCuts};
+
+  auto it = std::find(volumes.begin(), volumes.end(), identifier.volume());
+  if (it != volumes.end()) {
+    std::vector<double> layercut = cut[it - volumes.begin()];
     Acts::Vector3 center = surface.center(Acts::GeometryContext());
     double radius = sqrt(center[0] * center[0] + center[1] * center[1]);
-    if (radius < 850) {
-      identifier.setExtra(1);
-    } else {
-      identifier.setExtra(2);
+    for (unsigned i = 0; i < layercut.size(); i++) {
+      if (radius < layercut[i]) {
+        identifier.setExtra(i + 1);
+      }
     }
   }
   return identifier;
