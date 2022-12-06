@@ -109,6 +109,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
+
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

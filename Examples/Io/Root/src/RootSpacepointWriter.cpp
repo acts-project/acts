@@ -63,6 +63,7 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::endRun() {
   ACTS_VERBOSE("Wrote hits to tree '" << m_cfg.treeName << "' in '"
                                       << m_cfg.filePath << "'");
   m_outputFile->Close();
+
   return ProcessCode::SUCCESS;
 }
 

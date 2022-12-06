@@ -92,6 +92,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   ACTS_INFO("Wrote clusters to tree '" << m_cfg.treeName << "' in '"
                                        << m_cfg.filePath << "'");
   m_outputFile->Close();
+
   return ProcessCode::SUCCESS;
 }
 

@@ -104,13 +104,12 @@ ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write estimated parameters from seed to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
-    m_outputFile->Close();
-  }
+  m_outputFile->cd();
+  m_outputTree->Write();
+  ACTS_INFO("Write estimated parameters from seed to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+  m_outputFile->Close();
+
   return ProcessCode::SUCCESS;
 }
 
@@ -119,10 +118,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     const TrackParametersContainer& trackParams) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
 
   // Read additional input collections
   const auto& protoTracks =
