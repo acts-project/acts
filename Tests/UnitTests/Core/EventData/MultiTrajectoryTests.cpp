@@ -97,6 +97,9 @@ BOOST_AUTO_TEST_CASE(Build) {
   t.applyBackwards(i2b, collect);
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 
+  auto r = t.trackStateRange(i2b);
+  BOOST_CHECK_EQUAL(std::distance(r.begin(), r.end()), 3);
+
   // check const-correctness
   const auto& ct = t;
   std::vector<BoundVector> predicteds;

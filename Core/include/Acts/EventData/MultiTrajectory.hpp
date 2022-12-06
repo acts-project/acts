@@ -19,7 +19,9 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <type_traits>
@@ -1031,6 +1033,12 @@ class TrackStateRange {
   /// end of the range, i.e. the "past-the-end" iterator
   struct Iterator {
     std::optional<ProxyType> proxy;
+
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ProxyType;
+    using difference_type = std::ptrdiff_t;
+    using pointer = void;
+    using reference = void;
 
     Iterator& operator++() {
       if (!proxy) {
