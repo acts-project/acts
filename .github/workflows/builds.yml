@@ -241,7 +241,7 @@ jobs:
           && source build/python/setup.sh
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest -rFsv
+          && pytest -rFsv -v
 
   linux_physmon:
     runs-on: ubuntu-latest
