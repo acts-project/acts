@@ -93,8 +93,8 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   VertexSeeder::Config seederCfg(ipEst);
   VertexSeeder seeder(seederCfg);
   // Set up the actual vertex finder
-  VertexFinder::Config finderCfg(vertexFitter, linearizer, std::move(seeder),
-                                 ipEst);
+  VertexFinder::Config finderCfg(vertexFitter, std::move(linearizer),
+                                 std::move(seeder), ipEst);
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);

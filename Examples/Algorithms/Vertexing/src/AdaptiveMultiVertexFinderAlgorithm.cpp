@@ -104,7 +104,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer, m_cfg.bField);
+                              std::move(linearizer), m_cfg.bField);
   // We do not want to use a beamspot constraint here
   finderConfig.useBeamSpotConstraint = false;
 
