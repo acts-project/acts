@@ -142,30 +142,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     computeSharedHits(sourceLinks, *tracks);
   }
 
-#if 0
-  // Loop over the track finding results for all initial parameters
-  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
-    m_nTotalSeeds++;
-    // The result for this seed
-    auto& result = results[iseed];
-    if (result.ok()) {
-      // Get the track finding output object
-      auto& trackFindingOutput = result.value();
-      // Create a Trajectories result struct
-      trajectories.emplace_back(trackFindingOutput.fittedStates,
-                                trackFindingOutput.lastMeasurementIndices,
-                                trackFindingOutput.fittedParameters);
-    } else {
-      ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
-                                                    << result.error());
-      m_nFailedSeeds++;
-      // Track finding failed. Add an empty result so the output container has
-      // the same number of entries as the input.
-      trajectories.push_back(Trajectories());
-    }
-  }
-#endif
-
   ACTS_DEBUG("Finalized track finding with " << trajectories.size()
                                              << " track candidates.");
 

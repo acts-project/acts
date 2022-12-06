@@ -155,86 +155,17 @@ void TrackFindingAlgorithm::computeSharedHits(
                             .container()
                             .trackStateContainer()
                             .getTrackState(indexFirstState);
-      // if (not results.at(indexFirstTrack)
-      // .value()
-      // .fittedStates->getTrackState(indexFirstState)
-      // .typeFlags()
-      // .test(Acts::TrackStateFlag::SharedHitFlag)) {
       if (not firstState.typeFlags().test(
               Acts::TrackStateFlag::SharedHitFlag)) {
-        // results.at(indexFirstTrack)
-        // .value()
-        // .fittedStates->getTrackState(indexFirstState)
-        // .typeFlags()
-        // .set(Acts::TrackStateFlag::SharedHitFlag);
         firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
       }
 
       // Decorate this track
-      // results.at(iresult)
-      // .value()
-      // .fittedStates->getTrackState(state.index())
-      // .typeFlags()
-      // .set(Acts::TrackStateFlag::SharedHitFlag);
       state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
 
       break;
     }
   }
-#if 0
-  for (unsigned int iresult(0); iresult < results.size(); iresult++) {
-    if (not results.at(iresult).ok()) {
-      continue;
-    }
-
-    auto& ckfResult = results.at(iresult).value();
-    auto& measIndexes = ckfResult.lastMeasurementIndices;
-
-    for (auto measIndex : measIndexes) {
-      ckfResult.fittedStates->visitBackwards(measIndex, [&](const auto& state) {
-        if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          return true;
-        }
-
-        std::size_t hitIndex =
-            static_cast<const IndexSourceLink&>(state.uncalibrated()).index();
-
-        // Check if hit not already used
-        if (firstTrackOnTheHit.at(hitIndex) ==
-            std::numeric_limits<std::size_t>::max()) {
-          firstTrackOnTheHit.at(hitIndex) = iresult;
-          firstStateOnTheHit.at(hitIndex) = state.index();
-          return true;
-        }
-
-        // if already used, control if first track state has been marked
-        // as shared
-        int indexFirstTrack = firstTrackOnTheHit.at(hitIndex);
-        int indexFirstState = firstStateOnTheHit.at(hitIndex);
-        if (not results.at(indexFirstTrack)
-                    .value()
-                    .fittedStates->getTrackState(indexFirstState)
-                    .typeFlags()
-                    .test(Acts::TrackStateFlag::SharedHitFlag)) {
-          results.at(indexFirstTrack)
-              .value()
-              .fittedStates->getTrackState(indexFirstState)
-              .typeFlags()
-              .set(Acts::TrackStateFlag::SharedHitFlag);
-        }
-
-        // Decorate this track
-        results.at(iresult)
-            .value()
-            .fittedStates->getTrackState(state.index())
-            .typeFlags()
-            .set(Acts::TrackStateFlag::SharedHitFlag);
-
-        return true;
-      });
-    }
-  }
-#endif
 }
 
 }  // namespace ActsExamples
