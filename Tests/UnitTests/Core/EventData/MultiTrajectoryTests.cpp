@@ -183,13 +183,42 @@ BOOST_AUTO_TEST_CASE(Build) {
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 
   act.clear();
+  for (const auto& p : t.trackStateRange(i2a)) {
+    act.push_back(p.index());
+  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
+
+  act.clear();
   exp = {i2b, i1b, i0};
   t.visitBackwards(i2b, collect);
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 
   act.clear();
+  for (const auto& p : t.trackStateRange(i2b)) {
+    act.push_back(p.index());
+  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
+
+  act.clear();
   t.applyBackwards(i2b, collect);
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
+
+  // check const-correctness
+  const auto& ct = t;
+  std::vector<BoundVector> predicteds;
+  // mutation in this loop works!
+  for (auto p : t.trackStateRange(i2b)) {
+    predicteds.push_back(BoundVector::Random());
+    p.predicted() = predicteds.back();
+  }
+  std::vector<BoundVector> predictedsAct;
+  for (const auto& p : ct.trackStateRange(i2b)) {
+    predictedsAct.push_back(p.predicted());
+    // mutation in this loop doesn't work: does not compile
+    // p.predicted() = BoundVector::Random();
+  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(predictedsAct.begin(), predictedsAct.end(),
+                                predicteds.begin(), predicteds.end());
 }
 
 BOOST_AUTO_TEST_CASE(AsReadOnly) {
