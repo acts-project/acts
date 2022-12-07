@@ -79,7 +79,7 @@ static std::set<std::pair<std::type_index, void*>> _s_any_allocations;
   } while (0)
 
 struct _AnyAllocationReporter {
-  ~_AnyAllocationReporter() {
+  static void checkAllocations() {
     std::lock_guard guard{_s_any_mutex};
 
     if (!_s_any_allocations.empty()) {
@@ -87,14 +87,27 @@ struct _AnyAllocationReporter {
       for (const auto& [idx, addr] : _s_any_allocations) {
         std::cout << "- " << idx.name() << ": " << addr << std::endl;
       }
-      std::abort();
+      throw std::runtime_error{"AnyCheckAllocations failed"};
     }
   }
+
+  ~_AnyAllocationReporter() noexcept { checkAllocations(); }
 };
+#define _ACTS_ANY_CHECK_ALLOCATIONS()           \
+  do {                                          \
+    _AnyAllocationReporter::checkAllocations(); \
+  } while (0)
 static _AnyAllocationReporter s_reporter;
 #else
-#define _ACTS_ANY_TRACK_ALLOCATION(T, heap)
-#define _ACTS_ANY_TRACK_DEALLOCATION(T, heap)
+#define _ACTS_ANY_TRACK_ALLOCATION(T, heap) \
+  do {                                      \
+  } while (0)
+#define _ACTS_ANY_TRACK_DEALLOCATION(T, heap) \
+  do {                                        \
+  } while (0)
+#define _ACTS_ANY_CHECK_ALLOCATIONS() \
+  do {                                \
+  } while (0)
 #endif
 
 class AnyBaseAll {};

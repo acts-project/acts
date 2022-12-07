@@ -15,6 +15,17 @@
 
 using namespace Acts;
 
+#if defined(_ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)
+#define CHECK_ANY_ALLOCATIONS()                 \
+  do {                                          \
+    _AnyAllocationReporter::checkAllocations(); \
+  } while (0)
+#else
+#define CHECK_ANY_ALLOCATIONS() \
+  do {                          \
+  } while (0)
+#endif
+
 BOOST_AUTO_TEST_SUITE(AnyTests)
 
 BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
@@ -33,6 +44,7 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
     BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
     BOOST_CHECK_THROW(a = Any{0.5f}, std::bad_any_cast);
   }
+  CHECK_ANY_ALLOCATIONS();
 
   {
     // type that is large
@@ -49,6 +61,7 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
     BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
     BOOST_CHECK_THROW(a = Any{0.5f}, std::bad_any_cast);
   }
+  CHECK_ANY_ALLOCATIONS();
 
   {
     // type that is large
@@ -65,6 +78,7 @@ BOOST_AUTO_TEST_CASE(AnyConstructPrimitive) {
     BOOST_CHECK_THROW(a.as<float>(), std::bad_any_cast);
     BOOST_CHECK_THROW(a = Any{0.5f}, std::bad_any_cast);
   }
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_CASE(AnyAssignConstructEmpty) {
@@ -79,6 +93,8 @@ BOOST_AUTO_TEST_CASE(AnyAssignConstructEmpty) {
   BOOST_CHECK(!b);
   BOOST_CHECK(!c);
   BOOST_CHECK(!d);
+
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_CASE(AnyConstructCustom) {
@@ -94,6 +110,8 @@ BOOST_AUTO_TEST_CASE(AnyConstructCustom) {
   BOOST_CHECK(!!a);
 
   BOOST_CHECK_EQUAL(a.as<A>().value, 76);
+
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_CASE(AnyConstructCustomInPlace) {
@@ -105,6 +123,8 @@ BOOST_AUTO_TEST_CASE(AnyConstructCustomInPlace) {
   Any a{std::in_place_type<A>, 42};
   BOOST_CHECK(!!a);
   BOOST_CHECK_EQUAL(a.as<A>().value, 42);
+
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_CASE(AnyMove) {
@@ -126,6 +146,8 @@ BOOST_AUTO_TEST_CASE(AnyMove) {
     BOOST_CHECK(!!c);
     BOOST_CHECK_EQUAL(c.as<int>(), 5);
   }
+
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_CASE(AnyCopy) {
@@ -147,6 +169,7 @@ BOOST_AUTO_TEST_CASE(AnyCopy) {
     BOOST_CHECK(!!c);
     BOOST_CHECK_EQUAL(c.as<int>(), 5);
   }
+  CHECK_ANY_ALLOCATIONS();
 }
 
 struct D {
@@ -175,6 +198,7 @@ BOOST_AUTO_TEST_CASE(AnyDestroy) {
     }
     BOOST_CHECK(destroyed);
   }
+  CHECK_ANY_ALLOCATIONS();
 
   {  // large type
     bool destroyed = false;
@@ -186,6 +210,7 @@ BOOST_AUTO_TEST_CASE(AnyDestroy) {
     }
     BOOST_CHECK(destroyed);
   }
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_CASE(AnyDestroyCopy) {
@@ -206,6 +231,7 @@ BOOST_AUTO_TEST_CASE(AnyDestroyCopy) {
     }
     BOOST_CHECK(destroyed);  // b destroyed, should be true again
   }
+  CHECK_ANY_ALLOCATIONS();
 
   {  // large type
     bool destroyed = false;
@@ -224,6 +250,7 @@ BOOST_AUTO_TEST_CASE(AnyDestroyCopy) {
     }
     BOOST_CHECK(destroyed);  // b destroyed, should be true again
   }
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_CASE(AnyDestroyInPlace) {
@@ -236,6 +263,7 @@ BOOST_AUTO_TEST_CASE(AnyDestroyInPlace) {
     }
     BOOST_CHECK(destroyed);
   }
+  CHECK_ANY_ALLOCATIONS();
 
   {  // large type
     bool destroyed = false;
@@ -246,6 +274,7 @@ BOOST_AUTO_TEST_CASE(AnyDestroyInPlace) {
     }
     BOOST_CHECK(destroyed);
   }
+  CHECK_ANY_ALLOCATIONS();
 }
 
 struct D3 {
@@ -269,6 +298,7 @@ BOOST_AUTO_TEST_CASE(LeakCheck) {
     }
     BOOST_CHECK_EQUAL(destroyed, i + 1);
   }
+  CHECK_ANY_ALLOCATIONS();
 }
 
 struct LifecycleCounters {
@@ -400,6 +430,8 @@ BOOST_AUTO_TEST_CASE(LifeCycleSmall) {
   incDestroy(1);
 
   checkCounters();
+
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_CASE(LifeCycleHeap) {
@@ -455,6 +487,8 @@ BOOST_AUTO_TEST_CASE(LifeCycleHeap) {
   incDestroy(1);
 
   checkCounters();
+
+  CHECK_ANY_ALLOCATIONS();
 }
 
 BOOST_AUTO_TEST_SUITE_END()
