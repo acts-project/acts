@@ -499,7 +499,10 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
   double zEstFromLayerEnv = 0.5 * ((layerZmax) + (layerZmin));
   double halflengthFromLayer = 0.5 * std::abs((layerZmax) - (layerZmin));
 
-  bool concentric = std::abs(zEstFromLayerEnv) < 0.031622777;
+  // using `sqrt(0.001)` because previously it compared to `zEstFromLayerEnv *
+  // zEstFromLayerEnv`
+  constexpr double sqrtEps = std::sqrt(0.001);
+  bool concentric = std::abs(zEstFromLayerEnv) < sqrtEps;
 
   bool idTrf = transform.isApprox(Transform3::Identity());
 
