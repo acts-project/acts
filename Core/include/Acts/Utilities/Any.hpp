@@ -93,10 +93,6 @@ struct _AnyAllocationReporter {
 
   ~_AnyAllocationReporter() noexcept { checkAllocations(); }
 };
-#define _ACTS_ANY_CHECK_ALLOCATIONS()           \
-  do {                                          \
-    _AnyAllocationReporter::checkAllocations(); \
-  } while (0)
 static _AnyAllocationReporter s_reporter;
 #else
 #define _ACTS_ANY_TRACK_ALLOCATION(T, heap) \
@@ -104,9 +100,6 @@ static _AnyAllocationReporter s_reporter;
   } while (0)
 #define _ACTS_ANY_TRACK_DEALLOCATION(T, heap) \
   do {                                        \
-  } while (0)
-#define _ACTS_ANY_CHECK_ALLOCATIONS() \
-  do {                                \
   } while (0)
 #endif
 
