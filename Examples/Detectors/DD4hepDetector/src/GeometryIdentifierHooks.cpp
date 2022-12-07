@@ -23,7 +23,7 @@ Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
   // volume where the spliting should be performed (strip endcaps)
   std::vector<int> volumes = {28, 30};
   // list of the radial cutoff point (smallest to largest)
-  std::vector<double> radialCuts = {580};
+  std::vector<double> radialCuts = {850};
   // list of the radial cutoff point for each volumes
   std::vector<std::vector<double>> cut = {radialCuts, radialCuts};
 

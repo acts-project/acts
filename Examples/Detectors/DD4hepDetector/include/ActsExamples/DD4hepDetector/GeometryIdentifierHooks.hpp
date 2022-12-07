@@ -12,11 +12,12 @@
 #include "Acts/Surfaces/Surface.hpp"
 
 /// Geometry identifiers hooks to be used with DD4Hep detectors
-/// to had some extra identifier to sensitives surfaces.
+/// to add some extra identifier to sensitives surfaces.
 namespace det {
 namespace GeometryIdentifierHooks {
 
-/// Use the extra identifier in the endcap to separate the two row of modules
+/// Use the extra identifier in the ODD endcap to separate the two row of
+/// modules in R
 /// @param identifier geometry identifier
 /// @param surface coresponding surface
 Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
