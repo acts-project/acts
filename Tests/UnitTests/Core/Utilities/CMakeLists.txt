@@ -36,3 +36,7 @@ if (ACTS_BUILD_CUDA_FEATURES)
   add_unittest(Cuda CudaTests.cu)
   add_unittest(CudaMostSimplified CudaMostSimplifiedTests.cu)
 endif()
+
+add_unittest(Any AnyTests.cpp)
+add_unittest(AnyDebug AnyTests.cpp)
+target_compile_definitions(ActsUnitTestAnyDebug PRIVATE _ACTS_ANY_ENABLE_VERBOSE _ACTS_ANY_ENABLE_DEBUG _ACTS_ANY_ENABLE_TRACK_ALLOCATIONS)

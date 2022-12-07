@@ -219,18 +219,17 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
 }
 
 ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  m_outputFile->Close();
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write states of trajectories to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
-  }
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  ACTS_INFO("Wrote states of trajectories to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
+
   return ProcessCode::SUCCESS;
 }
 
@@ -238,10 +237,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
 
   auto& gctx = ctx.geoContext;
   // Read additional input collections
