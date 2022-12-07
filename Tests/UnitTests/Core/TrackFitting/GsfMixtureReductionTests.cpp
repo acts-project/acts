@@ -14,9 +14,9 @@ using namespace Acts;
 using namespace Acts::UnitLiterals;
 
 struct DummyComponent {
-  double weight;
-  BoundVector boundPars;
-  std::optional<BoundSymMatrix> boundCov;
+  double weight = 0.0;
+  BoundVector boundPars = BoundVector::Zero();
+  std::optional<BoundSymMatrix> boundCov = BoundSymMatrix::Identity();
 };
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
@@ -30,8 +30,8 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
   detail::SymmetricKLDistanceMatrix mat(cmps, proj);
 
   const auto [i, j] = mat.minDistancePair();
-  BOOST_CHECK(std::min(i,j) == 1);
-  BOOST_CHECK(std::max(i,j) == 2);
+  BOOST_CHECK(std::min(i, j) == 1);
+  BOOST_CHECK(std::max(i, j) == 2);
 }
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
@@ -47,7 +47,7 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_masking) {
   detail::SymmetricKLDistanceMatrix mat_full(cmps, proj);
   mat_full.maskAssociatedDistances(cmp_to_mask);
 
-  cmps.erase(cmps.begin()+cmp_to_mask);
+  cmps.erase(cmps.begin() + cmp_to_mask);
   detail::SymmetricKLDistanceMatrix mat_small(cmps, proj);
 
   const auto [full_i, full_j] = mat_full.minDistancePair();
@@ -71,8 +71,8 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
 
   {
     const auto [i, j] = mat.minDistancePair();
-    BOOST_CHECK(std::min(i,j) == 1);
-    BOOST_CHECK(std::max(i,j) == 2);
+    BOOST_CHECK(std::min(i, j) == 1);
+    BOOST_CHECK(std::max(i, j) == 2);
   }
 
   cmps[3].boundPars = BoundVector::Constant(0.1);
@@ -80,8 +80,8 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
 
   {
     const auto [i, j] = mat.minDistancePair();
-    BOOST_CHECK(std::min(i,j) == 1);
-    BOOST_CHECK(std::max(i,j) == 3);
+    BOOST_CHECK(std::min(i, j) == 1);
+    BOOST_CHECK(std::max(i, j) == 3);
   }
 
   cmps[0].boundPars = BoundVector::Constant(1.01);
@@ -89,8 +89,8 @@ BOOST_AUTO_TEST_CASE(test_distance_matrix_recompute_distance) {
 
   {
     const auto [i, j] = mat.minDistancePair();
-    BOOST_CHECK(std::min(i,j) == 0);
-    BOOST_CHECK(std::max(i,j) == 2);
+    BOOST_CHECK(std::min(i, j) == 0);
+    BOOST_CHECK(std::max(i, j) == 2);
   }
 }
 

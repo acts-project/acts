@@ -160,7 +160,8 @@ class SymmetricKLDistanceMatrix {
       os << std::setw(width) << j << "  ";
     }
     os << "\n";
-    os << std::string((width + 3) + (width + 2) * (m.m_numberComponents - 1), '-');
+    os << std::string((width + 3) + (width + 2) * (m.m_numberComponents - 1),
+                      '-');
     os << "\n";
 
     for (auto i = 1ul; i < m.m_numberComponents; ++i) {
