@@ -11,8 +11,6 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     const std::vector<const InputTrack_t*>& trackVector,
     const VertexingOptions<InputTrack_t>& vertexingOptions, State& state) const
     -> Result<std::vector<Vertex<InputTrack_t>>> {
-  std::cout << "tracks " << trackVector.size() << std::endl;
-
   // Original tracks
   const std::vector<const InputTrack_t*>& origTracks = trackVector;
   // Tracks for seeding
@@ -32,9 +30,6 @@ auto Acts::IterativeVertexFinder<vfitter_t, sfinder_t>::find(
     // retrieve the seed vertex as the last element in
     // the seed vertexCollection
     Vertex<InputTrack_t>& seedVertex = *seedRes;
-
-    std::cout << "vertex seed " << seedVertex.fullPosition().transpose()
-              << std::endl;
 
     if (seedVertex.fullPosition()[eZ] ==
         vertexingOptions.vertexConstraint.position().z()) {
