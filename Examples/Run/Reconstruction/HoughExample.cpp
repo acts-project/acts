@@ -9,8 +9,9 @@
 #include "HoughExample.hpp"
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/GenericDetector/GenericDetector.hpp"
+#include "ActsExamples/Detector/GenericDetectorWithOptions.hpp"
 
 int main(int argc, char* argv[]) {
-  return runHoughExample(argc, argv, std::make_shared<GenericDetector>());
+  return runHoughExample(
+      argc, argv, std::make_shared<ActsExamples::GenericDetectorWithOptions>());
 }

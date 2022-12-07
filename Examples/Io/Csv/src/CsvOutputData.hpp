@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2019-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -260,6 +260,29 @@ struct SpacepointData {
   float var_r, var_z;
   DFE_NAMEDTUPLE(SpacepointData, measurement_id, geometry_id, x, y, z, var_r,
                  var_z);
+};
+
+struct TrackParameterData {
+  double d0;
+  double z0;
+  double phi;
+  double theta;
+  double qop;
+
+  double var_d0, var_z0, var_phi, var_theta, var_qop;
+
+  double cov_d0z0, cov_d0phi, cov_d0theta, cov_d0qop;
+  double cov_z0d0, cov_z0phi, cov_z0theta, cov_z0qop;
+  double cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop;
+  double cov_thetad0, cov_thetaz0, cov_thetaphi, cov_thetaqop;
+  double cov_qopd0, cov_qopz0, cov_qopphi, cov_qoptheta;
+
+  DFE_NAMEDTUPLE(TrackParameterData, d0, z0, phi, theta, qop, var_d0, var_z0,
+                 var_phi, var_theta, var_qop, cov_d0z0, cov_d0phi, cov_d0theta,
+                 cov_d0qop, cov_z0d0, cov_z0phi, cov_z0theta, cov_z0qop,
+                 cov_phid0, cov_phiz0, cov_phitheta, cov_phiqop, cov_thetad0,
+                 cov_thetaz0, cov_thetaphi, cov_thetaqop, cov_qopd0, cov_qopz0,
+                 cov_qopphi, cov_qoptheta);
 };
 
 }  // namespace ActsExamples

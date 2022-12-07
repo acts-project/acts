@@ -10,9 +10,9 @@
 ///
 /// This examples shows how to use the framework CSV I/O and printer algorithms.
 
+#include "ActsExamples/Detector/GenericDetectorWithOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvPlanarClusterReader.hpp"
@@ -29,7 +29,7 @@ using namespace ActsExamples;
 using boost::program_options::value;
 
 int main(int argc, char* argv[]) {
-  GenericDetector detector;
+  GenericDetectorWithOptions detector;
 
   // setup and parse options
   auto desc = Options::makeDefaultOptions("Read and print Fatras CSV files");

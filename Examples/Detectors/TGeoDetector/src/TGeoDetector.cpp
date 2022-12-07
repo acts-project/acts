@@ -325,9 +325,11 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   return trackingGeometry;
 }
 
+}  // namespace
+
 /// Read the TGeo layer builder configurations from the user configuration.
-void readTGeoLayerBuilderConfigsFile(const std::string& path,
-                                     TGeoDetector::Config& config) {
+void TGeoDetector::readTGeoLayerBuilderConfigsFile(const std::string& path,
+                                                   Config& config) {
   if (path.empty()) {
     return;
   }
@@ -351,148 +353,6 @@ void readTGeoLayerBuilderConfigsFile(const std::string& path,
     auto& vol = config.volumes.emplace_back();
     vol = volume;
   }
-}
-
-/// Read the TGeo layer builder configurations from the user configuration
-/// specified with --geo-tgeo-jsonconfig.
-void readTGeoLayerBuilderConfigs(const Variables& vm,
-                                 TGeoDetector::Config& config) {
-  const auto path = vm["geo-tgeo-jsonconfig"].template as<std::string>();
-  readTGeoLayerBuilderConfigsFile(path, config);
-}
-
-/// Dump TGeo Detector config to file.
-void writeTGeoDetectorConfig(const Variables& vm,
-                             TGeoDetector::Config& config) {
-  const auto path = vm["geo-tgeo-dump-jsonconfig"].template as<std::string>();
-  nlohmann::json djson;
-  if (path.empty()) {
-    return;
-  }
-  std::ofstream outfile(path, std::ofstream::out | std::ofstream::binary);
-
-  djson["geo-tgeo-unit-scalor"] = config.unitScalor;
-  djson["geo-tgeo-build-beampipe"] = config.buildBeamPipe;
-  djson["geo-tgeo-beampipe-parameters"] =
-      std::array<double, 3>{config.beamPipeRadius, config.beamPipeHalflengthZ,
-                            config.beamPipeLayerThickness};
-
-  // Enable empty volume dump
-  if (config.volumes.empty()) {
-    config.volumes.emplace_back();
-  }
-  djson["Volumes"] = config.volumes;
-
-  outfile << djson.dump(2) << std::endl;
-}
-
-}  // namespace
-
-void TGeoDetector::addOptions(
-    boost::program_options::options_description& opt) const {
-  using boost::program_options::value;
-
-  // The options are encoded in a json file, where an empty version containing
-  // the required structure can be dumped.
-  //
-  //   # Unit scalor from ROOT to Acts.
-  //   "geo-tgeo-unit-scalor": 1,
-  //   # Beam pipe parameters {r, z, t} in [mm]. Beam pipe is automatically
-  //     created if the parameters are present.
-  //   "geo-tgeo-beampipe-parameters": [29.0,3000.0,0.8]
-  //
-  // Each detector volume configuration is one logical block which can
-  // be repeated as many times as there are usable detector volumes.
-  //
-  // required per-volume options:
-  // In case intervals are required, a lower and an upper value must be passed.
-  //
-  //  # Detector volume name
-  //  "geo-tgeo-volume": "InnerPixels",
-  //  # vTolerance interval in r [mm] for automated surface binninng.
-  //  "geo-tgeo-sfbin-r-tolerance": {"lower": 5, "upper": 5},
-  //  # Tolerance interval in phi [rad] for automated surface binning.
-  //  "geo-tgeo-sfbin-phi-tolerance": {"lower": 0.025, "upper": 0.025},
-  //  # Tolerance interval in z [mm] for automated surface binning.
-  //  "geo-tgeo-sfbin-z-tolerance": {"lower": 5, "upper": 5},
-  //
-  // optional per-volume layer options that can be present once.
-  // `geo-tgeo-{n,c,p}-layers` must be present for each volume and if it is
-  // non-zero, all other layer options with the same tag ("negative",
-  // "central", "positive") must be set as well.
-  //
-  //  # boolean switch whether there are negative/central/positive layers
-  //  "geo-tgeo-volume-layers":
-  //    {
-  //      "negative": true,
-  //      "central": true,
-  //      "positive": true
-  //    },
-  //  #
-  //  "geo-tgeo-subvolume-names": { "negative": , "central": , "positive": },
-  //  # Name identifier of the volume for searching n,c,p layers
-  //  "geo-tgeo-sensitive-names": { ... }
-  //  # Axes definition for n,c,p sensitive objects
-  //  "geo-tgeo-sensitive-axes": { ... }
-  //  # Radial range(s) for n,c,p layers to restrict the module parsing
-  //  "geo-tgeo-layer-r-ranges": { ... }
-  //  # Longitudinal range(s) for n,c,p layers to restrict the module parsing
-  //  "geo-tgeo-layer-z-ranges": { ... }
-  //  # R-tolerances (if > 0.) that triggers splitting of collected surfaces
-  //  # into different negative layers
-  //  "geo-tgeo-layer-r-split": { ... }
-  //  # Z-tolerances (if > 0.) that triggers splitting of collected surfaces
-  //  # into different negative layers
-  //  "geo-tgeo-layer-z-split": { ... }
-  //
-  //  In case cylinder / disc splitting is turned on:
-  //
-  //   "geo-tgeo-cyl-nz-segs"    # number of z segments for cylinder splitting
-  //   "geo-tgeo-cyl-nphi-segs"  # number of phi segments for cylinder splitting
-  //   "geo-tgeo-disc-nr-segs"   # number of r segments for disc splitting
-  //   "geo-tgeo-disc-nphi-segs" # number of phi segments for disc splitting
-
-  auto tmp = opt.add_options();
-  // required global options
-  tmp("geo-tgeo-filename", value<std::string>()->default_value(""),
-      "Root file name.");
-  tmp("geo-tgeo-jsonconfig", value<std::string>()->default_value(""),
-      "Json config file name.");
-  tmp("geo-tgeo-dump-jsonconfig",
-      value<std::string>()->default_value("tgeo_empty_config.json"),
-      "Json file to dump empty config into.");
-}
-
-auto TGeoDetector::finalize(
-    const boost::program_options::variables_map& vm,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  Config config;
-
-  config.fileName = vm["geo-tgeo-filename"].as<std::string>();
-
-  config.surfaceLogLevel =
-      Acts::Logging::Level(vm["geo-surface-loglevel"].template as<size_t>());
-  config.layerLogLevel =
-      Acts::Logging::Level(vm["geo-layer-loglevel"].template as<size_t>());
-  config.volumeLogLevel =
-      Acts::Logging::Level(vm["geo-volume-loglevel"].template as<size_t>());
-
-  // No valid geometry configuration. Stop
-  if (vm["geo-tgeo-jsonconfig"].as<std::string>().empty()) {
-    writeTGeoDetectorConfig(vm, config);
-    std::exit(EXIT_SUCCESS);
-  }
-  // Enable dump from full config
-  else if (not(vm["geo-tgeo-dump-jsonconfig"].as<std::string>().compare(
-                   "tgeo_empty_cofig.json") == 0)) {
-    readTGeoLayerBuilderConfigs(vm, config);
-    writeTGeoDetectorConfig(vm, config);
-  } else {
-    readTGeoLayerBuilderConfigs(vm, config);
-  }
-
-  return finalize(config, std::move(mdecorator));
 }
 
 auto TGeoDetector::finalize(

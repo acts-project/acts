@@ -72,27 +72,18 @@ ActsExamples::RootParticleWriter::~RootParticleWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Wrote particles to tree '" << m_cfg.treeName << "' in '"
-                                          << m_cfg.filePath << "'");
-  }
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
 
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  ACTS_INFO("Wrote particles to tree '" << m_cfg.treeName << "' in '"
+                                        << m_cfg.filePath << "'");
 
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootParticleWriter::writeT(
     const AlgorithmContext& ctx, const SimParticleContainer& particles) {
-  if (m_outputFile == nullptr) {
-    ACTS_ERROR("Missing output file");
-    return ProcessCode::ABORT;
-  }
-
   // ensure exclusive access to tree/file while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);
 
