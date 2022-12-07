@@ -29,8 +29,7 @@ using Stepper = Acts::EigenStepper<>;
 using Navigator = Acts::Navigator;
 using Propagator = Acts::Propagator<Stepper, Navigator>;
 using CKF =
-    Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory,
-                                    Acts::VectorTrackContainer>;
+    Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory>;
 
 using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,

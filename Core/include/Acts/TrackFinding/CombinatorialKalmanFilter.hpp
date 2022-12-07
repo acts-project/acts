@@ -283,7 +283,7 @@ struct CombinatorialKalmanFilterResult {
 /// the navigation of the propagator.
 ///
 /// The void components are provided mainly for unit testing.
-template <typename propagator_t, typename traj_t, typename track_container_t>
+template <typename propagator_t, typename traj_t>
 class CombinatorialKalmanFilter {
  public:
   /// Default constructor is deleted
@@ -418,6 +418,8 @@ class CombinatorialKalmanFilter {
                     TrackStateFlag::MeasurementFlag);
               }
               result.lastMeasurementIndices.emplace_back(lastMeasurementIndex);
+              // @TODO: Keep information on tip state around so we don't have to
+              //        recalculate it later
             }
             // Remove the tip from list of active tips
             result.activeTips.erase(result.activeTips.end() - 1);
@@ -1252,7 +1254,7 @@ class CombinatorialKalmanFilter {
   /// @return a container of track finding result for all the initial track
   /// parameters
   template <typename source_link_iterator_t, typename start_parameters_t,
-            template <typename> class holder_t,
+            typename track_container_t, template <typename> class holder_t,
             typename parameters_t = BoundTrackParameters>
   auto findTracks(
       const start_parameters_t& initialParameters,
