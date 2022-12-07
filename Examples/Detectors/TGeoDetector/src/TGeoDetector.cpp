@@ -122,6 +122,7 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
       itkConfig.barrelMap = volume.barrelMap;
       itkConfig.discMap = volume.discMap;
+      itkConfig.splitPatterns = volume.splitPatterns;
       layerBuilderConfig.detectorElementSplitter =
           std::make_shared<ActsExamples::TGeoITkModuleSplitter>(itkConfig);
     }
