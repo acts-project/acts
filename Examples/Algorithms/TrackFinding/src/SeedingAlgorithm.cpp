@@ -21,7 +21,7 @@
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("SeedingAlgorithm", lvl), m_cfg(cfg) {
+    : ActsExamples::BareAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
   m_cfg.seedFinderOptions =

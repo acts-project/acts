@@ -171,9 +171,10 @@ struct SeedFinderConfig {
 
   bool isInInternalUnits = false;
   SeedFinderConfig toInternalUnits() const {
-    if (isInInternalUnits)
+    if (isInInternalUnits) {
       throw std::runtime_error(
           "Repeated conversion to internal units for SeedFinderConfig");
+    }
     using namespace Acts::UnitLiterals;
     SeedFinderConfig config = *this;
     config.isInInternalUnits = true;

@@ -31,10 +31,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
     const Acts::Range1D<float>& rMiddleSPRange) const {
-  if (not options.isInInternalUnits)
+  if (not options.isInInternalUnits) {
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in SeedFinder");
-
+  }
   for (auto spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
