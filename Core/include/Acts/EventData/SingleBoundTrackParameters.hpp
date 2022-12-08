@@ -156,9 +156,7 @@ class SingleBoundTrackParameters {
   /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
 
-  void setParameters(const ParametersVector& params) {
-    m_params = params;
-  }
+  void setParameters(const ParametersVector& params) { m_params = params; }
 
   /// Set optional covariance matrix.
   void setCovariance(const std::optional<CovarianceMatrix>& cov) {
