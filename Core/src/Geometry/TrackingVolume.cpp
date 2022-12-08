@@ -484,6 +484,14 @@ Acts::TrackingVolume::compatibleBoundaries(
       return BoundaryIntersection();
     }
 
+    if (not options.forceIntersectBoundaries) {
+      ACTS_VERBOSE("Forcing intersection with surface "
+                 << bSurface->surfaceRepresentation().geometryId());
+      sIntersection.intersection.pathLength *= options.navDir;
+      return BoundaryIntersection(sIntersection.intersection, bSurface,
+                                  sIntersection.object);
+    }
+
     ACTS_VERBOSE("Check intersection with surface "
                  << bSurface->surfaceRepresentation().geometryId());
     if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
