@@ -341,6 +341,15 @@ for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
                 outputDirRoot=None,
             )
 
+            mod = acts.examples.TrackModifier(
+                inputTrajectories="trajectories",
+                outputTrajectories="trajectories_mod",
+                killTime=True,
+                level=acts.logging.Level.VERBOSE,
+            )
+            s.addAlgorithm(mod)
+            s.addWhiteboardAlias("trajectories", mod.config.outputTrajectories)
+
             addVertexFitting(
                 s,
                 field,

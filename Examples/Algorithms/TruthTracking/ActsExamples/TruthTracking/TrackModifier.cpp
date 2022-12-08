@@ -67,7 +67,7 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
         if (m_cfg.killTime) {
           cov.row(Acts::eBoundTime).setZero();
           cov.col(Acts::eBoundTime).setZero();
-          cov(Acts::eBoundTime, Acts::eBoundTime) = 0;
+          cov(Acts::eBoundTime, Acts::eBoundTime) = 1;
         }
       }
 

@@ -21,18 +21,9 @@
 ActsExamples::TrackSelector::TrackSelector(const Config& config,
                                            Acts::Logging::Level level)
     : BareAlgorithm("TrackSelector", level), m_cfg(config) {
-  if (m_cfg.inputTrajectories.empty() == m_cfg.inputTrackParameters.empty()) {
+  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument(
-        "Exactly one of trajectories or track parameters input must be set");
-  }
-  if (m_cfg.outputTrajectories.empty() == m_cfg.outputTrackParameters.empty()) {
-    throw std::invalid_argument(
-        "Exactly one of trajectories or track parameters output must be set");
-  }
-  if (m_cfg.inputTrajectories.empty() != m_cfg.outputTrajectories.empty()) {
-    throw std::invalid_argument(
-        "Input and output for trajectories and track parameters have to be "
-        "used consistently");
+        "Exactly one of track parameters or trajectories input must be set");
   }
 }
 
@@ -86,7 +77,9 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
 
     ctx.eventStore.add(m_cfg.outputTrackParameters,
                        std::move(outputTrackParameters));
-  } else if (!m_cfg.inputTrajectories.empty()) {
+  }
+
+  if (!m_cfg.inputTrajectories.empty()) {
     const auto& inputTrajectories =
         ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
     TrajectoriesContainer outputTrajectories;

@@ -173,8 +173,8 @@ void addTruthTracking(Context& ctx) {
       outputProtoVertices, excludeSecondaries, separateSecondaries);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackModifier, mex, "TrackModifier", inputTrackParameters,
-      outputTrackParameters, dropCovariance, covScale, killTime);
+      ActsExamples::TrackModifier, mex, "TrackModifier", inputTrajectories, inputTrackParameters,
+      outputTrajectories, outputTrackParameters, dropCovariance, covScale, killTime);
 }
 
 }  // namespace Acts::Python
