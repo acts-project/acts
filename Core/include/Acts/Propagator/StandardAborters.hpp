@@ -52,8 +52,8 @@ struct PathLimitReached {
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
-    const auto& logger = state.options.logger;
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const Logger& logger) const {
     if (state.navigation.targetReached) {
       return true;
     }
@@ -92,8 +92,9 @@ struct SurfaceReached {
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
-    return (*this)(state, stepper, *state.navigation.targetSurface);
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const Logger& logger) const {
+    return (*this)(state, stepper, *state.navigation.targetSurface, logger);
   }
 
   /// boolean operator for abort condition without using the result
@@ -106,8 +107,7 @@ struct SurfaceReached {
   /// @param [in] targetSurface The target surface
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const Surface& targetSurface) const {
-    const auto& logger = state.options.logger;
+                  const Surface& targetSurface, const Logger& logger) const {
     if (state.navigation.targetReached) {
       return true;
     }
@@ -176,8 +176,8 @@ struct EndOfWorldReached {
   ///
   /// @param [in,out] state The propagation state object
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state,
-                  const stepper_t& /*unused*/) const {
+  bool operator()(propagator_state_t& state, const stepper_t& /*unused*/,
+                  const Logger& /*logger*/) const {
     if (state.navigation.currentVolume != nullptr) {
       return false;
     }
@@ -198,7 +198,8 @@ struct ParticleStopped {
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper The stepper object
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const Logger& /*logger*/) const {
     if (stepper.momentum(state.stepping) > 0) {
       return false;
     }

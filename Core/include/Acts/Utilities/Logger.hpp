@@ -684,6 +684,8 @@ class Logger {
     return clone(name() + suffix, _level.value_or(level()));
   }
 
+  const Logger& operator()() const { return *this; }
+
  private:
   /// policy object for printing debug messages
   std::unique_ptr<Logging::OutputPrintPolicy> m_printPolicy;
@@ -701,7 +703,7 @@ class LoggerWrapper {
   /// @brief Constructor ensuring a logger instance is given
   ///
   /// @param logger
-  explicit LoggerWrapper(const Logger& logger);
+  LoggerWrapper(const Logger& logger);
 
   /// Directly expose whether the contained logger will print at a level.
   ///
@@ -747,6 +749,6 @@ std::unique_ptr<const Logger> getDefaultLogger(
     const std::string& name, const Logging::Level& lvl,
     std::ostream* log_stream = &std::cout);
 
-LoggerWrapper getDummyLogger();
+const Logger& getDummyLogger();
 
 }  // namespace Acts

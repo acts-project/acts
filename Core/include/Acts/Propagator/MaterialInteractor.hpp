@@ -49,8 +49,7 @@ struct MaterialInteractor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
-    const auto& logger = state.options.logger;
+                  result_type& result, const Logger& logger) const {
     // In case of Volume material update the result of the previous step
     if (recordInteractions && !result.materialInteractions.empty() &&
         result.materialInteractions.back().volume != nullptr &&

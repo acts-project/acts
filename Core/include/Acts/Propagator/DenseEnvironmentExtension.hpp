@@ -35,9 +35,8 @@ struct DenseStepperPropagatorOptions
   /// @param mctx The current magnetic fielc context object
   /// @param logger_ An instance of @c LoggerWrapper
   DenseStepperPropagatorOptions(const GeometryContext& gctx,
-                                const MagneticFieldContext& mctx,
-                                LoggerWrapper logger_)
-      : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx, logger_) {}
+                                const MagneticFieldContext& mctx)
+      : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx) {}
 
   /// Toggle between mean and mode evaluation of energy loss
   bool meanEnergyLoss = true;
@@ -57,7 +56,7 @@ struct DenseStepperPropagatorOptions
   DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t> extend(
       extended_aborter_list_t aborters) const {
     DenseStepperPropagatorOptions<action_list_t, extended_aborter_list_t>
-        eoptions(this->geoContext, this->magFieldContext, this->logger);
+        eoptions(this->geoContext, this->magFieldContext);
     // Copy the options over
     eoptions.direction = this->direction;
     eoptions.absPdgCode = this->absPdgCode;

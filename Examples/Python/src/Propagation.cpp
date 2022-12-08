@@ -35,7 +35,13 @@ void addStepper(const std::string& prefix, py::module_& m, py::module_& prop) {
 
   using propagator_t = Acts::Propagator<stepper_t, Acts::Navigator>;
   py::class_<propagator_t>(prop, (prefix + "Propagator").c_str())
-      .def(py::init<stepper_t, Acts::Navigator>());
+      .def(py::init<>(
+          [=](stepper_t stepper, Acts::Navigator navigator,
+              Acts::Logging::Level level = Acts::Logging::Level::INFO) {
+            return propagator_t{
+                std::move(stepper), std::move(navigator),
+                Acts::getDefaultLogger(prefix + "Propagator", level)};
+          }));
 
   using prop_if_t = ActsExamples::ConcretePropagator<propagator_t>;
   py::class_<prop_if_t, ActsExamples::PropagatorInterface,
@@ -52,9 +58,13 @@ void addPropagation(Context& ctx) {
 
   {
     using Config = Acts::Navigator::Config;
-    auto nav = py::class_<Acts::Navigator, std::shared_ptr<Acts::Navigator>>(
-                   m, "Navigator")
-                   .def(py::init<Config>());
+    auto nav =
+        py::class_<Acts::Navigator, std::shared_ptr<Acts::Navigator>>(
+            m, "Navigator")
+            .def(py::init<>(
+                [](Config cfg, Logging::Level level = Logging::Level::INFO) {
+                  return Navigator{cfg, getDefaultLogger("Navigator", level)};
+                }));
 
     auto c = py::class_<Config>(nav, "Config").def(py::init<>());
 

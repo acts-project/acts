@@ -72,8 +72,7 @@ struct KalmanFitterFunctionImpl
 
     Acts::KalmanFitterOptions<Acts::VectorMultiTrajectory> kfOptions(
         options.geoContext, options.magFieldContext, options.calibrationContext,
-        extensions, options.logger, options.propOptions,
-        &(*options.referenceSurface));
+        extensions, options.propOptions, &(*options.referenceSurface));
 
     kfOptions.multipleScattering = multipleScattering;
     kfOptions.energyLoss = energyLoss;
@@ -133,7 +132,7 @@ ActsExamples::makeKalmanFitterFunction(
 
   // Direct fitter
   Acts::DirectNavigator directNavigator;
-  DirectPropagator directPropagator(stepper, directNavigator);
+  DirectPropagator directPropagator(stepper, std::move(directNavigator));
   DirectFitter directTrackFitter(std::move(directPropagator));
 
   // build the fitter function. owns the fitter object.

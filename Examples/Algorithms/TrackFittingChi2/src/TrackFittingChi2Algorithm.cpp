@@ -71,8 +71,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
 
   Acts::Experimental::Chi2FitterOptions chi2Options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
-      Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), false,
-      false, m_cfg.nUpdates, true);  // mScattering=false, eLoss=false
+      Acts::PropagatorPlainOptions(), false, false, m_cfg.nUpdates,
+      true);  // mScattering=false, eLoss=false
 
   // kfOptions.multipleScattering = m_cfg.multipleScattering;
   // kfOptions.energyLoss = m_cfg.energyLoss;
