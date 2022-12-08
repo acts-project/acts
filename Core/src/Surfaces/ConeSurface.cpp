@@ -292,7 +292,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
   Intersection3D::Status status1 =
-      (qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance)
+      std::abs(qe.first) < std::abs(s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
           : Intersection3D::Status::reachable;
 
@@ -303,7 +303,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.first * direction;
   Intersection3D::Status status2 =
-      (qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance)
+      std::abs(qe.second) < std::abs(s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
           : Intersection3D::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
@@ -320,7 +320,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
                 (status1 == Intersection3D::Status::missed and
                  status2 == Intersection3D::Status::missed);
   // Check and (eventually) go with the first solution
-  if ((check1 and qe.first * qe.first < qe.second * qe.second) or
+  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
       status2 == Intersection3D::Status::missed) {
     // And add the alternative
     if (qe.solutions > 1) {
