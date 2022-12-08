@@ -30,8 +30,7 @@ class AnnealingUtility {
   /// @brief The configuration struct
   struct Config {
     // Config constructor with default temperature list: {64.,16.,4.,2.,1.5,1.}
-    Config(const std::vector<double>& temperatures = {64., 16., 4., 2., 1.5,
-                                                      1.})
+    Config(const std::vector<double>& temperatures = {1.})
         : setOfTemperatures(temperatures) {}
 
     // Insensitivity of calculated weight at cutoff
