@@ -43,17 +43,15 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
     auto newTrk = trk;
 
     {
-      auto params = trk.parameters();
+      auto& params = trk.parameters();
 
       if (m_cfg.killTime) {
         params[Acts::eBoundTime] = 0;
       }
-
-      newTrk.setParameters(params);
     }
 
     {
-      auto optCov = trk.covariance();
+      auto& optCov = trk.covariance();
 
       if (optCov) {
         auto& cov = *optCov;
@@ -70,8 +68,6 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
           cov(Acts::eBoundTime, Acts::eBoundTime) = 1;
         }
       }
-
-      newTrk.setCovariance(optCov);
     }
 
     return newTrk;

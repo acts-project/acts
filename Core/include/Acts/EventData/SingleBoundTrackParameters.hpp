@@ -152,16 +152,13 @@ class SingleBoundTrackParameters {
   SingleBoundTrackParameters& operator=(SingleBoundTrackParameters&&) = default;
 
   /// Parameters vector.
+  ParametersVector& parameters() { return m_params; }
+  /// Parameters vector.
   const ParametersVector& parameters() const { return m_params; }
   /// Optional covariance matrix.
+  std::optional<CovarianceMatrix>& covariance() { return m_cov; }
+  /// Optional covariance matrix.
   const std::optional<CovarianceMatrix>& covariance() const { return m_cov; }
-
-  void setParameters(const ParametersVector& params) { m_params = params; }
-
-  /// Set optional covariance matrix.
-  void setCovariance(const std::optional<CovarianceMatrix>& cov) {
-    m_cov = cov;
-  }
 
   /// Access a single parameter value indentified by its index.
   ///
