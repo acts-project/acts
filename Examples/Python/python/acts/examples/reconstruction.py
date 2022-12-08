@@ -129,6 +129,23 @@ TrackSelectorRanges = namedtuple(
     defaults=[(None, None)] * 7 + [None] * 2,
 )
 
+CKFPerformanceConfig = namedtuple(
+    "CKFPerformanceConfig",
+    ["truthMatchProbMin", "nMeasurementsMin", "ptMin"],
+    defaults=[None] * 3,
+)
+
+AmbiguityResolutionConfig = namedtuple(
+    "AmbiguityResolutionConfig",
+    ["maximumSharedHits"],
+    defaults=[None] * 1,
+)
+
+class VertexFinder(Enum):
+    Truth = (1,)
+    AMVF = (2,)
+    Iterative = (3,)
+
 
 @acts.examples.NamedTypeArgs(
     seedingAlgorithm=SeedingAlgorithm,
@@ -577,12 +594,20 @@ def addSeeding(
     return s
 
 
+@acts.examples.NamedTypeArgs(
+    ckfPerformanceConfig=CKFPerformanceConfig,
+)
 def addKalmanTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
+    selectedParticles: str = "truth_seeds_selected",
+    ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
@@ -634,6 +659,18 @@ def addKalmanTracks(
 
     s.addWhiteboardAlias("trajectories", fitAlg.config.outputTrajectories)
 
+    addTrajectoryWriters(
+        s,
+        name="kf",
+        trajectories=fitAlg.config.outputTrajectories,
+        selectedParticles=selectedParticles,
+        ckfPerformanceConfig=ckfPerformanceConfig,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeTrajectories=writeTrajectories,
+        logLevel=logLevel,
+    )
+
     return s
 
 
@@ -673,26 +710,19 @@ def addTruthTrackingGsf(
     return s
 
 
-CKFPerformanceConfig = namedtuple(
-    "CKFPerformanceConfig",
-    ["truthMatchProbMin", "nMeasurementsMin", "ptMin"],
-    defaults=[None] * 3,
-)
-
-
 @acts.examples.NamedTypeArgs(
-    CKFPerformanceConfigArg=CKFPerformanceConfig,
+    ckfPerformanceConfig=CKFPerformanceConfig,
     trackSelectorRanges=TrackSelectorRanges,
 )
 def addCKFTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    CKFPerformanceConfigArg: CKFPerformanceConfig = CKFPerformanceConfig(),
+    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
+    selectedParticles: str = "truth_seeds_selected",
+    ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    selectedParticles: str = "truth_seeds_selected",
-    trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -704,7 +734,7 @@ def addCKFTracks(
         the sequencer module to which we add the Seeding steps (returned from addSeeding)
     trackingGeometry : tracking geometry
     field : magnetic field
-    CKFPerformanceConfigArg : CKFPerformanceConfig(truthMatchProbMin, nMeasurementsMin, ptMin)
+    ckfPerformanceConfigArg : CKFPerformanceConfig(truthMatchProbMin, nMeasurementsMin, ptMin)
         CKFPerformanceWriter configuration.
         Defaults specified in Examples/Io/Performance/ActsExamples/Io/Performance/CKFPerformanceWriter.hpp
     outputDirCsv : Path|str, path, None
@@ -721,7 +751,6 @@ def addCKFTracks(
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-    logger = acts.logging.getLogger("addCKFTracks")
 
     # Setup the track finding algorithm with CKF
     # It takes all the source links created from truth hit smearing, seeds from
@@ -754,6 +783,38 @@ def addCKFTracks(
 
         s.addWhiteboardAlias("trajectories", trackSelector.config.outputTrajectories)
 
+    addTrajectoryWriters(
+        s,
+        name="ckf",
+        trajectories=trackFinder.config.outputTrajectories,
+        selectedParticles=selectedParticles,
+        ckfPerformanceConfig=ckfPerformanceConfig,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeTrajectories=writeTrajectories,
+        logLevel=logLevel,
+    )
+
+    return s
+
+
+@acts.examples.NamedTypeArgs(
+    ckfPerformanceConfig=CKFPerformanceConfig,
+    trackSelectorRanges=TrackSelectorRanges,
+)
+def addTrajectoryWriters(
+    s: acts.examples.Sequencer,
+    name: str,
+    trajectories: str = "trajectories",
+    selectedParticles: str = "truth_seeds_selected",
+    ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    writeTrajectories: bool = True,
+    logLevel: Optional[acts.logging.Level] = None,
+):
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
     if outputDirRoot is not None:
         outputDirRoot = Path(outputDirRoot)
         if not outputDirRoot.exists():
@@ -763,7 +824,7 @@ def addCKFTracks(
             # write track states from CKF
             trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
                 level=customLogLevel(),
-                inputTrajectories=trackFinder.config.outputTrajectories,
+                inputTrajectories=trajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
                 # filtered particle collection. This could be avoided when a seperate track
@@ -772,7 +833,7 @@ def addCKFTracks(
                 inputSimHits="simhits",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
-                filePath=str(outputDirRoot / "trackstates_ckf.root"),
+                filePath=str(outputDirRoot / f"trackstates_{name}.root"),
                 treeName="trackstates",
             )
             s.addWriter(trackStatesWriter)
@@ -780,14 +841,14 @@ def addCKFTracks(
             # write track summary from CKF
             trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
                 level=customLogLevel(),
-                inputTrajectories=trackFinder.config.outputTrajectories,
+                inputTrajectories=trajectories,
                 # @note The full particles collection is used here to avoid lots of warnings
                 # since the unselected CKF track might have a majority particle not in the
                 # filtered particle collection. This could be avoided when a seperate track
                 # selection algorithm is used.
                 inputParticles="particles_selected",
                 inputMeasurementParticlesMap="measurement_particles_map",
-                filePath=str(outputDirRoot / "tracksummary_ckf.root"),
+                filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
                 treeName="tracksummary",
             )
             s.addWriter(trackSummaryWriter)
@@ -796,15 +857,15 @@ def addCKFTracks(
         ckfPerfWriter = acts.examples.CKFPerformanceWriter(
             level=customLogLevel(),
             inputParticles=selectedParticles,
-            inputTrajectories=trackFinder.config.outputTrajectories,
+            inputTrajectories=trajectories,
             inputMeasurementParticlesMap="measurement_particles_map",
             **acts.examples.defaultKWArgs(
                 # The bottom seed could be the first, second or third hits on the truth track
-                nMeasurementsMin=CKFPerformanceConfigArg.nMeasurementsMin,
-                ptMin=CKFPerformanceConfigArg.ptMin,
-                truthMatchProbMin=CKFPerformanceConfigArg.truthMatchProbMin,
+                nMeasurementsMin=ckfPerformanceConfig.nMeasurementsMin,
+                ptMin=ckfPerformanceConfig.ptMin,
+                truthMatchProbMin=ckfPerformanceConfig.truthMatchProbMin,
             ),
-            filePath=str(outputDirRoot / "performance_ckf.root"),
+            filePath=str(outputDirRoot / f"performance_{name}.root"),
         )
         s.addWriter(ckfPerfWriter)
 
@@ -812,16 +873,13 @@ def addCKFTracks(
         outputDirCsv = Path(outputDirCsv)
         if not outputDirCsv.exists():
             outputDirCsv.mkdir()
-        logger.info("Writing CSV files")
         csvMTJWriter = acts.examples.CsvMultiTrajectoryWriter(
             level=customLogLevel(),
-            inputTrajectories=trackFinder.config.outputTrajectories,
+            inputTrajectories=trajectories,
             inputMeasurementParticlesMap="measurement_particles_map",
             outputDir=str(outputDirCsv),
         )
         s.addWriter(csvMTJWriter)
-
-    return s
 
 
 @acts.examples.NamedTypeArgs(
@@ -958,22 +1016,18 @@ def addExaTrkX(
     return s
 
 
-AmbiguityResolutionConfig = namedtuple(
-    "AmbiguityResolutionConfig",
-    ["maximumSharedHits"],
-    defaults=[None] * 1,
-)
-
-
 @acts.examples.NamedTypeArgs(
     config=AmbiguityResolutionConfig,
-    ckfPerformanceConfigArg=CKFPerformanceConfig,
+    ckfPerformanceConfig=CKFPerformanceConfig,
 )
 def addAmbiguityResolution(
     s,
     config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
-    ckfPerformanceConfigArg: CKFPerformanceConfig = CKFPerformanceConfig(),
+    selectedParticles: str = "truth_seeds_selected",
+    ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
+    outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
+    writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
@@ -994,32 +1048,19 @@ def addAmbiguityResolution(
 
     s.addWhiteboardAlias("trajectories", alg.config.outputTrajectories)
 
-    if outputDirRoot is not None:
-        outputDirRoot = Path(outputDirRoot)
-        if not outputDirRoot.exists():
-            outputDirRoot.mkdir()
-
-        perfWriter = acts.examples.CKFPerformanceWriter(
-            level=customLogLevel(),
-            inputParticles="truth_seeds_selected",
-            inputTrajectories=alg.config.inputTrajectories,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            **acts.examples.defaultKWArgs(
-                nMeasurementsMin=ckfPerformanceConfigArg.nMeasurementsMin,
-                ptMin=ckfPerformanceConfigArg.ptMin,
-                truthMatchProbMin=ckfPerformanceConfigArg.truthMatchProbMin,
-            ),
-            filePath=str(outputDirRoot / "performance_ambi.root"),
-        )
-        s.addWriter(perfWriter)
+    addTrajectoryWriters(
+        s,
+        name="ambi",
+        trajectories=alg.config.outputTrajectories,
+        selectedParticles=selectedParticles,
+        ckfPerformanceConfig=ckfPerformanceConfig,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeTrajectories=writeTrajectories,
+        logLevel=logLevel,
+    )
 
     return s
-
-
-class VertexFinder(Enum):
-    Truth = (1,)
-    AMVF = (2,)
-    Iterative = (3,)
 
 
 @acts.examples.NamedTypeArgs(
