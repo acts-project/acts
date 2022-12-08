@@ -141,6 +141,7 @@ AmbiguityResolutionConfig = namedtuple(
     defaults=[None] * 1,
 )
 
+
 class VertexFinder(Enum):
     Truth = (1,)
     AMVF = (2,)
