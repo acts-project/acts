@@ -14,8 +14,8 @@
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvSpacepointWriter.hpp"
-#include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackParameterWriter.hpp"
+#include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/NuclearInteractions/RootNuclearInteractionParametersWriter.hpp"
 #include "ActsExamples/Io/Performance/CKFPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/SeedingPerformanceWriter.hpp"
@@ -345,8 +345,9 @@ void addOutput(Context& ctx) {
       nSimulatedEvents);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvTrackParameterWriter, mex,
-                             "CsvTrackParameterWriter", inputTrackParameters, inputTrajectories,
-                             outputDir, outputStem, outputPrecision);
+                             "CsvTrackParameterWriter", inputTrackParameters,
+                             inputTrajectories, outputDir, outputStem,
+                             outputPrecision);
 
   {
     using Writer = ActsExamples::CsvBFieldWriter;
