@@ -937,7 +937,8 @@ class Navigator {
       navOpts.pathLimit =
           stepper.getStepSize(state.stepping, ConstrainedStep::aborter);
       navOpts.overstepLimit = stepper.overstepLimit(state.stepping);
-      navOpts.forceIntersectBoundaries = state.navigation.forceIntersectBoundaries;
+      navOpts.forceIntersectBoundaries =
+          state.navigation.forceIntersectBoundaries;
 
       // Exclude the current surface in case it's a boundary
       navOpts.startObject = state.navigation.currentSurface;
@@ -1008,10 +1009,10 @@ class Navigator {
     // We have to leave the volume somehow, so try again
     state.navigation.navBoundaries.clear();
     ACTS_VERBOSE(volInfo(state) << "Boundary navigation lost, re-targetting.");
-    state.navigation.forceIntersectBoundaries=true;
+    state.navigation.forceIntersectBoundaries = true;
     if (findBoundaries()) {
       // Resetting intersection check for boundary surfaces
-      state.navigation.forceIntersectBoundaries=false;
+      state.navigation.forceIntersectBoundaries = false;
       return true;
     }
 
