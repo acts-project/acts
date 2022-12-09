@@ -484,7 +484,8 @@ Acts::TrackingVolume::compatibleBoundaries(
       return BoundaryIntersection();
     }
 
-    if (options.forceIntersectBoundaries) {
+    if (options.forceIntersectBoundaries and
+        sIntersection.intersection.pathLength * options.navDir > 0) {
       const bool cpCriterion = std::abs(sIntersection.intersection.pathLength) <
                                std::abs(pLimit) + s_onSurfaceTolerance;
       ACTS_VERBOSE("Forcing intersection with surface "
@@ -496,6 +497,7 @@ Acts::TrackingVolume::compatibleBoundaries(
                                     sIntersection.object);
       }
       ACTS_VERBOSE("Intersection still OUTSIDE limit");
+      return BoundaryIntersection();
     }
 
     ACTS_VERBOSE("Check intersection with surface "
