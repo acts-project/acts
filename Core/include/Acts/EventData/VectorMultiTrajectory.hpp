@@ -199,6 +199,34 @@ class VectorMultiTrajectoryBase {
     std::vector<T> m_vector;
   };
 
+  template <>
+  struct DynamicColumn<bool> : public DynamicColumnBase {
+    struct Wrapper {
+      bool value;
+    };
+
+    ~DynamicColumn() override = default;
+
+    std::any get(size_t i) override {
+      assert(i < m_vector.size() && "DynamicColumn out of bounds");
+      return &m_vector[i].value;
+    }
+
+    std::any get(size_t i) const override {
+      assert(i < m_vector.size() && "DynamicColumn out of bounds");
+      return &m_vector[i].value;
+    }
+
+    void add() override { m_vector.emplace_back(); }
+    void clear() override { m_vector.clear(); }
+
+    std::unique_ptr<DynamicColumnBase> clone() const override {
+      return std::make_unique<DynamicColumn<bool>>(*this);
+    }
+
+    std::vector<Wrapper> m_vector;
+  };
+
   // BEGIN INTERFACE HELPER
   template <typename T>
   static constexpr bool has_impl(T& instance, HashedString key,
@@ -282,7 +310,9 @@ class VectorMultiTrajectoryBase {
         if (it == instance.m_dynamic.end()) {
           throw std::runtime_error("Unable to handle this component");
         }
-        auto& col = it->second;
+        std::conditional_t<EnsureConst, const DynamicColumnBase*,
+                           DynamicColumnBase*>
+            col = it->second.get();
         assert(col && "Dynamic column is null");
         return col->get(istate);
     }
