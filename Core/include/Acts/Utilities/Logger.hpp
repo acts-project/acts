@@ -662,6 +662,7 @@ class Logger {
   std::unique_ptr<Logger> clone(
       std::optional<std::string> _name = std::nullopt,
       std::optional<Logging::Level> _level = std::nullopt) const {
+    (void)_name;
     return std::make_unique<Logger>(
         m_printPolicy->clone(_name.value_or(name())),
         m_filterPolicy->clone(_level.value_or(level())));
