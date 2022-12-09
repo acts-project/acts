@@ -36,8 +36,6 @@ class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
   AdaptiveMultiVertexFinderAlgorithm(const Config& config,
                                      Acts::Logging::Level level);
 
-  ProcessCode initialize() override;
-
   /// Find vertices using the adapative multi vertex finder algorithm.
   ///
   /// @param ctx is the algorithm context with event information
@@ -47,13 +45,8 @@ class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
-  ~AdaptiveMultiVertexFinderAlgorithm() override;
-
  private:
   Config m_cfg;
-
-  struct Impl;
-  std::unique_ptr<Impl> m_impl;
 };
 
 }  // namespace ActsExamples
