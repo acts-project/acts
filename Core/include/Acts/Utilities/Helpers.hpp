@@ -392,13 +392,13 @@ std::vector<const T*> unpack_shared_const_vector(
 template <template <size_t> class Callable, size_t N, size_t NMAX,
           typename... Args>
 auto template_switch(size_t v, Args&&... args) {
-  if (v == 0) {
-    std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
-              << ") is not valid (v == 0)" << std::endl;
-    std::abort();
-  }
   if (v == N) {
     return Callable<N>::invoke(std::forward<Args>(args)...);
+  }
+  if (v == 0) {
+    std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
+              << ") is not valid (v == 0 and N != 0)" << std::endl;
+    std::abort();
   }
   if constexpr (N < NMAX) {
     return template_switch<Callable, N + 1, NMAX>(v,
@@ -418,14 +418,14 @@ auto template_switch(size_t v, Args&&... args) {
 /// @param args Additional arguments passed to @p func
 template <size_t N, size_t NMAX, typename Lambda, typename... Args>
 auto template_switch_lambda(size_t v, Lambda&& func, Args&&... args) {
-  if (v == 0) {
-    std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
-              << ") is not valid (v == 0)" << std::endl;
-    std::abort();
-  }
   if (v == N) {
     return func(std::integral_constant<size_t, N>{},
                 std::forward<Args>(args)...);
+  }
+  if (v == 0) {
+    std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
+              << ") is not valid (v == 0 and N != 0)" << std::endl;
+    std::abort();
   }
   if constexpr (N < NMAX) {
     return template_switch_lambda<N + 1, NMAX>(v, func,
