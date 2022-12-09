@@ -81,12 +81,14 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
-  ACTS_VERBOSE("Wrote particles to tree '" << m_cfg.treeName << "' in '"
-                                           << m_cfg.filePath << "'");
   /// Close the file if it's yours
   if (m_cfg.rootFile == nullptr) {
     m_outputFile->Close();
   }
+
+  ACTS_VERBOSE("Wrote particles to tree '" << m_cfg.treeName << "' in '"
+                                           << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 

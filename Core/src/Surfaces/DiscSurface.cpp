@@ -85,7 +85,7 @@ Acts::Result<Acts::Vector2> Acts::DiscSurface::globalToLocal(
     const Vector3& /*gmom*/, double tolerance) const {
   // transport it to the globalframe
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
-  if (loc3Dframe.z() * loc3Dframe.z() > tolerance * tolerance) {
+  if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Acts::Vector2>::success({perp(loc3Dframe), phi(loc3Dframe)});

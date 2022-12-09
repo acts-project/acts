@@ -20,11 +20,10 @@ namespace Acts {
 namespace detail {
 
 /// Computes the Kullback-Leibler distance between two components as shown in
-/// https://arxiv.org/abs/2001.00727v1, while ignoring the weights as done in
-/// Athena
+/// https://arxiv.org/abs/2001.00727v1 but ignoring the weights
 template <typename component_t, typename component_projector_t>
-auto computeKLDistance(const component_t &a, const component_t &b,
-                       const component_projector_t &proj) {
+auto computeSymmetricKlDivergence(const component_t &a, const component_t &b,
+                                  const component_projector_t &proj) {
   const auto parsA = proj(a).boundPars[eBoundQOverP];
   const auto parsB = proj(b).boundPars[eBoundQOverP];
   const auto covA = (*proj(a).boundCov)(eBoundQOverP, eBoundQOverP);
@@ -70,83 +69,111 @@ auto mergeComponents(const component_t &a, const component_t &b,
 
 /// @brief Class representing a symmetric distance matrix
 class SymmetricKLDistanceMatrix {
-  Eigen::VectorXd m_data;
+  using Array = Eigen::Array<ActsScalar, Eigen::Dynamic, 1>;
+  using Mask = Eigen::Array<bool, Eigen::Dynamic, 1>;
+
+  Array m_distances;
+  Mask m_mask;
   std::vector<std::pair<std::size_t, std::size_t>> m_mapToPair;
-  std::size_t m_N;
+  std::size_t m_numberComponents;
+
+  template <typename array_t, typename setter_t>
+  void setAssociated(std::size_t n, array_t &array, setter_t &&setter) {
+    const auto indexConst = (n - 1) * n / 2;
+
+    // Rows
+    for (auto i = 0ul; i < n; ++i) {
+      array[indexConst + i] = setter(n, i);
+    }
+
+    // Columns
+    for (auto i = n + 1; i < m_numberComponents; ++i) {
+      array[(i - 1) * i / 2 + n] = setter(n, i);
+    }
+  }
 
  public:
   template <typename component_t, typename projector_t>
   SymmetricKLDistanceMatrix(const std::vector<component_t> &cmps,
                             const projector_t &proj)
-      : m_data(cmps.size() * (cmps.size() - 1) / 2),
-        m_mapToPair(m_data.size()),
-        m_N(cmps.size()) {
-    for (auto i = 1ul; i < m_N; ++i) {
+      : m_distances(Array::Zero(cmps.size() * (cmps.size() - 1) / 2)),
+        m_mask(Mask::Ones(cmps.size() * (cmps.size() - 1) / 2)),
+        m_mapToPair(m_distances.size()),
+        m_numberComponents(cmps.size()) {
+    for (auto i = 1ul; i < m_numberComponents; ++i) {
       const auto indexConst = (i - 1) * i / 2;
       for (auto j = 0ul; j < i; ++j) {
         m_mapToPair.at(indexConst + j) = {i, j};
-        m_data[indexConst + j] = computeKLDistance(cmps[i], cmps[j], proj);
+        m_distances[indexConst + j] =
+            computeSymmetricKlDivergence(cmps[i], cmps[j], proj);
       }
     }
   }
 
   auto at(std::size_t i, std::size_t j) const {
-    return m_data[i * (i - 1) / 2 + j];
+    return m_distances[i * (i - 1) / 2 + j];
   }
 
   template <typename component_t, typename projector_t>
   void recomputeAssociatedDistances(std::size_t n,
                                     const std::vector<component_t> &cmps,
                                     const projector_t &proj) {
-    const auto indexConst = (n - 1) * n / 2;
+    assert(cmps.size() == m_numberComponents && "size mismatch");
 
-    throw_assert(cmps.size() == m_N, "size mismatch");
-
-    // Rows
-    for (auto i = 0ul; i < n; ++i) {
-      m_data[indexConst + i] = computeKLDistance(cmps[n], cmps[i], proj);
-    }
-
-    // Columns
-    for (auto i = n + 1; i < cmps.size(); ++i) {
-      m_data[(i - 1) * i / 2 + n] = computeKLDistance(cmps[n], cmps[i], proj);
-    }
+    setAssociated(n, m_distances, [&](std::size_t i, std::size_t j) {
+      return computeSymmetricKlDivergence(cmps[i], cmps[j], proj);
+    });
   }
 
-  void resetAssociatedDistances(std::size_t n, double value) {
-    const auto indexConst = (n - 1) * n / 2;
+  void maskAssociatedDistances(std::size_t n) {
+    setAssociated(n, m_mask, [&](std::size_t, std::size_t) { return false; });
+  }
 
-    // Rows
-    for (auto i = 0ul; i < n; ++i) {
-      m_data[indexConst + i] = value;
-    }
-
-    // Columns
-    for (auto i = n + 1; i < m_N; ++i) {
-      m_data[(i - 1) * i / 2 + n] = value;
-    }
+  void setAssociatedDistances(std::size_t n, ActsScalar value) {
+    setAssociated(n, m_mask, [&](std::size_t, std::size_t) { return value; });
   }
 
   auto minDistancePair() const {
-    // TODO Eigen minCoeff does not work for some reason??
-    // return m_mapToPair.at(m_data.minCoeff());
-    return m_mapToPair.at(std::distance(
-        &m_data[0],
-        std::min_element(m_data.data(), m_data.data() + m_data.size())));
+    ActsScalar min = std::numeric_limits<ActsScalar>::max();
+    std::size_t idx = 0;
+
+    for (auto i = 0l; i < m_distances.size(); ++i) {
+      if (auto new_min = std::min(min, m_distances[i]);
+          m_mask[i] && new_min < min) {
+        min = new_min;
+        idx = i;
+      }
+    }
+
+    return m_mapToPair.at(idx);
   }
 
   friend std::ostream &operator<<(std::ostream &os,
                                   const SymmetricKLDistanceMatrix &m) {
-    for (auto i = 1ul; i < m.m_N; ++i) {
-      const auto indexConst = (i - 1) * i / 2;
-      Eigen::RowVectorXd vals;
-      vals.resize(i);
-      for (auto j = 0ul; j < i; ++j) {
-        vals[j] = m.m_data[indexConst + j];
-      }
-      os << vals << "\n";
-    }
+    const auto prev_precision = os.precision();
+    const int width = 8;
+    const int prec = 2;
 
+    os << "\n";
+    os << std::string(width, ' ') << " | ";
+    for (auto j = 0ul; j < m.m_numberComponents - 1; ++j) {
+      os << std::setw(width) << j << "  ";
+    }
+    os << "\n";
+    os << std::string((width + 3) + (width + 2) * (m.m_numberComponents - 1),
+                      '-');
+    os << "\n";
+
+    for (auto i = 1ul; i < m.m_numberComponents; ++i) {
+      const auto indexConst = (i - 1) * i / 2;
+      os << std::setw(width) << i << " | ";
+      for (auto j = 0ul; j < i; ++j) {
+        os << std::setw(width) << std::setprecision(prec)
+           << m.m_distances[indexConst + j] << "  ";
+      }
+      os << "\n";
+    }
+    os << std::setprecision(prev_precision);
     return os;
   }
 };
@@ -168,20 +195,17 @@ void reduceWithKLDistance(std::vector<component_t> &cmpCache,
   while (remainingComponents > maxCmpsAfterMerge) {
     const auto [minI, minJ] = distances.minDistancePair();
 
+    // Set one component and compute associated distances
     cmpCache[minI] =
         mergeComponents(cmpCache[minI], cmpCache[minJ], proj, angle_desc);
     distances.recomputeAssociatedDistances(minI, cmpCache, proj);
-    remainingComponents--;
 
-    // Reset removed components so that it won't have the shortest distance
-    // ever, and so that we can sort them by weight in the end to remove them
+    // Set weight of the other component to -1 so we can remove it later and
+    // mask its distances
     proj(cmpCache[minJ]).weight = -1.0;
-    proj(cmpCache[minJ]).boundPars[eBoundQOverP] =
-        std::numeric_limits<double>::max();
-    (*proj(cmpCache[minJ]).boundCov)(eBoundQOverP, eBoundQOverP) =
-        std::numeric_limits<double>::max();
-    distances.resetAssociatedDistances(minJ,
-                                       std::numeric_limits<double>::max());
+    distances.maskAssociatedDistances(minJ);
+
+    remainingComponents--;
   }
 
   // Remove all components which are labled with weight -1
