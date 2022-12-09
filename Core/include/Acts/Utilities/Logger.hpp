@@ -590,7 +590,8 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// @param name the new name
   /// @return the copy
   std::unique_ptr<OutputPrintPolicy> clone(
-      const std::string& /*name*/) const override {
+      const std::string& name) const override {
+    (void)name;
     return std::make_unique<DefaultPrintPolicy>(m_out);
   };
 
