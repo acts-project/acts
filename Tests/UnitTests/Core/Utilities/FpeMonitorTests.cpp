@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(FpeMonitorTestDivByZero) {
 
   {
     FpeMonitor mon;
-    volatile float v;
+    volatile float v = 0;
     volatile double w = std::numeric_limits<double>::max();
     v = 2 * w;
     std::cout << v << std::endl;
