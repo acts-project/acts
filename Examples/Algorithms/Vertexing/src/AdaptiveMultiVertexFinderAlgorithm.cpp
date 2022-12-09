@@ -81,7 +81,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // Set up the helical track linearizer
   using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   Linearizer::Config ltConfig(m_cfg.bField, propagator);
-  Linearizer linearizer(ltConfig);
+  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
   // Set up deterministic annealing with user-defined temperatures
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
@@ -93,7 +93,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
       Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
   Fitter::Config fitterCfg(ipEstimator);
   fitterCfg.annealingTool = annealingUtility;
-  Fitter fitter(fitterCfg);
+  Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
 
   // Set up the vertex seed finder
   using SeedFinder = Acts::TrackDensityVertexFinder<
