@@ -485,11 +485,17 @@ Acts::TrackingVolume::compatibleBoundaries(
     }
 
     if (options.forceIntersectBoundaries) {
+      const bool cpCriterion = std::abs(sIntersection.intersection.pathLength) <
+                               std::abs(pLimit) + s_onSurfaceTolerance;
       ACTS_VERBOSE("Forcing intersection with surface "
                    << bSurface->surfaceRepresentation().geometryId());
-      sIntersection.intersection.pathLength *= options.navDir;
-      return BoundaryIntersection(sIntersection.intersection, bSurface,
-                                  sIntersection.object);
+      if (cpCriterion) {
+        ACTS_VERBOSE("Intersection forced");
+        sIntersection.intersection.pathLength *= options.navDir;
+        return BoundaryIntersection(sIntersection.intersection, bSurface,
+                                    sIntersection.object);
+      }
+      ACTS_VERBOSE("Intersection still OUTSIDE limit");
     }
 
     ACTS_VERBOSE("Check intersection with surface "
