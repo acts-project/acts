@@ -84,6 +84,34 @@ class VectorTrackContainerBase {
     std::vector<T> m_vector;
   };
 
+  template <>
+  struct DynamicColumn<bool> : public DynamicColumnBase {
+    struct Wrapper {
+      bool value;
+    };
+
+    ~DynamicColumn() override = default;
+
+    std::any get(size_t i) override {
+      assert(i < m_vector.size() && "DynamicColumn out of bounds");
+      return &m_vector[i].value;
+    }
+
+    std::any get(size_t i) const override {
+      assert(i < m_vector.size() && "DynamicColumn out of bounds");
+      return &m_vector[i].value;
+    }
+
+    void add() override { m_vector.emplace_back(); }
+    void clear() override { m_vector.clear(); }
+
+    std::unique_ptr<DynamicColumnBase> clone() const override {
+      return std::make_unique<DynamicColumn<bool>>(*this);
+    }
+
+    std::vector<Wrapper> m_vector;
+  };
+
   // BEGIN INTERFACE HELPER
 
   template <bool EnsureConst, typename T>
@@ -105,12 +133,19 @@ class VectorTrackContainerBase {
         return &instance.m_cov[itrack];
       case "referenceSurface"_hash:
         return &instance.m_referenceSurfaces[itrack];
+      case "nMeasurements"_hash:
+        return &instance.m_nMeasurements[itrack];
+      case "nHoles"_hash:
+        return &instance.m_nHoles[itrack];
       default:
         auto it = instance.m_dynamic.find(key);
         if (it == instance.m_dynamic.end()) {
           throw std::runtime_error("Unable to handle this component");
         }
-        auto& col = it->second;
+
+        std::conditional_t<EnsureConst, const DynamicColumnBase*,
+                           DynamicColumnBase*>
+            col = it->second.get();
         assert(col && "Dynamic column is null");
         return col->get(itrack);
     }
@@ -132,6 +167,9 @@ class VectorTrackContainerBase {
   std::vector<typename detail_lt::Types<eBoundSize>::Coefficients> m_params;
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_cov;
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
+
+  std::vector<unsigned int> m_nMeasurements;
+  std::vector<unsigned int> m_nHoles;
 
   std::unordered_map<HashedString, std::unique_ptr<DynamicColumnBase>>
       m_dynamic;
@@ -168,6 +206,9 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
     m_params.emplace_back();
     m_cov.emplace_back();
     m_referenceSurfaces.emplace_back();
+
+    m_nMeasurements.emplace_back();
+    m_nHoles.emplace_back();
 
     // dynamic columns
     for (auto& [key, vec] : m_dynamic) {

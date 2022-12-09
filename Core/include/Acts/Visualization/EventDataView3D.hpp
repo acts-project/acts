@@ -189,6 +189,7 @@ struct EventDataView3D {
   /// parameters
   /// @param smoothedConfig The visualization options for the smoothed
   /// parameters
+  /// @TODO: Refactor based on Track class
   template <typename D>
   static void drawMultiTrajectory(
       IVisualization3D& helper, const Acts::MultiTrajectory<D>& multiTraj,

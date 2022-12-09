@@ -34,7 +34,7 @@ namespace detail {
 template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
-  std::shared_ptr<traj_t> fittedStates;
+  traj_t* fittedStates;
 
   /// The current top index of the MultiTrajectory
   MultiTrajectoryTraits::IndexType currentTip = MultiTrajectoryTraits::kInvalid;

@@ -215,6 +215,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
 
   auto idx = tc.addTrack();
   auto t = tc.getTrack(idx);
+  auto t2 = tc.getTrack(idx);
   t.template component<IndexType, "tipIndex"_hash>() = 5;
 
   BOOST_CHECK_EQUAL((t.template component<IndexType, "tipIndex"_hash>()), 5);
@@ -237,6 +238,22 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
 
   t.setReferenceSurface(surface);
   BOOST_CHECK_EQUAL(surface.get(), &t.referenceSurface());
+
+  TrackAccessor<unsigned int> accNMeasuements("nMeasurements");
+  ConstTrackAccessor<unsigned int> caccNMeasuements("nMeasurements");
+
+  t.nMeasurements() = 42;
+  BOOST_CHECK_EQUAL(t2.nMeasurements(), 42);
+  BOOST_CHECK_EQUAL(accNMeasuements(t), 42);
+  accNMeasuements(t) = 89;
+  BOOST_CHECK_EQUAL(t2.nMeasurements(), 89);
+  BOOST_CHECK_EQUAL(caccNMeasuements(t), 89);
+
+  // does not compile
+  // caccNMeasuements(t) = 66;
+
+  t2.nHoles() = 67;
+  BOOST_CHECK_EQUAL(t.nHoles(), 67);
 
   // const checks: should not compile
   // const auto& ctc = tc;

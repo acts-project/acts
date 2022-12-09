@@ -28,6 +28,7 @@ using namespace ActsExamples;
 
 namespace {
 
+
 using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
@@ -38,6 +39,9 @@ using Fitter =
 using DirectFitter =
     Acts::Experimental::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
                                           Acts::VectorMultiTrajectory>;
+using TrackContainer =
+    Acts::TrackContainer<Acts::VectorTrackContainer,
+                         Acts::VectorMultiTrajectory, std::shared_ptr>;
 
 struct GsfFitterFunctionImpl
     : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
@@ -87,10 +91,10 @@ struct GsfFitterFunctionImpl
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
-                      gsfOptions, trajectory);
+                      gsfOptions, tracks);
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
@@ -99,11 +103,11 @@ struct GsfFitterFunctionImpl
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfaceSequence,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options);
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                             initialParameters, gsfOptions, surfaceSequence,
-                            trajectory);
+                            tracks);
   }
 };
 

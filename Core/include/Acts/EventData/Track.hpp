@@ -15,6 +15,8 @@
 #include <cstddef>
 #include <iterator>
 
+#include <unistd.h>
+
 namespace Acts {
 
 template <typename track_container_t, typename traj_t,
@@ -26,11 +28,17 @@ template <typename T, bool select>
 using ConstIf = std::conditional_t<select, const T, T>;
 
 template <typename track_container_t, typename trajectory_t,
-          template <typename> class holder_t, bool ReadOnly = true>
+          template <typename> class holder_t, bool read_only = true>
 class TrackProxy {
  public:
+  static constexpr bool ReadOnly = read_only;
   using Container = track_container_t;
   using Trajectory = trajectory_t;
+
+  using MutableTrackProxy =
+      TrackProxy<track_container_t, trajectory_t, holder_t, false>;
+  using ConstTrackProxy =
+      TrackProxy<track_container_t, trajectory_t, holder_t, true>;
 
   using TrackStateProxy = typename Trajectory::TrackStateProxy;
   using ConstTrackStateProxy = typename Trajectory::ConstTrackStateProxy;
@@ -49,6 +57,17 @@ class TrackProxy {
   static constexpr IndexType kInvalid = Container::kInvalid;
 
   friend TrackContainer<Container, Trajectory, holder_t>;
+  friend MutableTrackProxy;
+  friend ConstTrackProxy;
+
+  TrackProxy(const MutableTrackProxy& other)
+      : m_container{other.m_container}, m_index{other.m_index} {}
+
+  TrackProxy& operator=(const MutableTrackProxy& other) {
+    m_container = other.m_container;
+    m_index = other.m_index;
+    return *this;
+  }
 
   /// Retrieve a mutable reference to a component
   /// @tparam T The type of the component to access
@@ -127,6 +146,11 @@ class TrackProxy {
               hashString("referenceSurface")>() = std::move(srf);
   }
 
+  bool hasReferenceSurface() const {
+    return !!component<std::shared_ptr<const Surface>,
+                       hashString("referenceSurface")>();
+  }
+
   ConstParameters parameters() const {
     return m_container->parameters(m_index);
   }
@@ -152,11 +176,29 @@ class TrackProxy {
 
   auto trackStates() const { return m_container->trackStateRange(m_index); }
 
-  std::size_t nTrackStates() const {
+  unsigned int nTrackStates() const {
     // @TODO: This should probably be cached, distance is expensive
     //        without random access
     auto tsRange = trackStates();
     return std::distance(tsRange.begin(), tsRange.end());
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  unsigned int& nMeasurements() {
+    return component<unsigned int>(hashString("nMeasurements"));
+  }
+
+  unsigned int nMeasurements() const {
+    return component<unsigned int>(hashString("nMeasurements"));
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  unsigned int& nHoles() {
+    return component<unsigned int>(hashString("nHoles"));
+  }
+
+  unsigned int nHoles() const {
+    return component<unsigned int>(hashString("nHoles"));
   }
 
   IndexType index() const { return m_index; }
@@ -385,6 +427,10 @@ class TrackContainer {
     m_container->template addColumn_impl<T>(key);
   }
 
+  constexpr bool hasColumn(const std::string& key) const {
+    return m_container->hasColumn_impl(hashString(key));
+  }
+
   constexpr bool hasColumn(HashedString key) const {
     return m_container->hasColumn_impl(key);
   }
@@ -451,20 +497,17 @@ class TrackContainer {
     return container().parameters(itrack);
   }
 
-  constexpr typename TrackProxy::Parameters parameters(IndexType itrack) {
-    return container().parameters(itrack);
-  }
-
-  constexpr typename ConstTrackProxy::Parameters parameters(
+  constexpr typename ConstTrackProxy::ConstParameters parameters(
       IndexType itrack) const {
     return container().parameters(itrack);
   }
 
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr typename TrackProxy::Covariance covariance(IndexType itrack) {
     return container().covariance(itrack);
   }
 
-  constexpr typename ConstTrackProxy::Covariance covariance(
+  constexpr typename ConstTrackProxy::ConstCovariance covariance(
       IndexType itrack) const {
     return container().covariance(itrack);
   }
@@ -492,5 +535,37 @@ TrackContainer(track_container_t& container, traj_t& traj)
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
     -> TrackContainer<track_container_t, traj_t, detail_tc::ValueHolder>;
+
+template <typename T, bool ReadOnly>
+struct TrackAccessorBase {
+  HashedString key;
+
+  TrackAccessorBase(HashedString _key) : key{_key} {}
+  TrackAccessorBase(const std::string& _key) : key{hashString(_key)} {}
+
+  template <typename track_proxy_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  T& operator()(track_proxy_t track) {
+    static_assert(!track_proxy_t::ReadOnly,
+                  "Cannot get mutable ref for const track proxy");
+    return track.template component<T>(key);
+  }
+
+  template <typename track_proxy_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<RO>>
+  const T& operator()(track_proxy_t track) {
+    if constexpr (track_proxy_t::ReadOnly) {
+      return track.template component<T>(key);
+    } else {
+      typename track_proxy_t::ConstTrackProxy ctrack{track};
+      return ctrack.template component<T>(key);
+    }
+  }
+};
+
+template <typename T>
+using TrackAccessor = TrackAccessorBase<T, false>;
+template <typename T>
+using ConstTrackAccessor = TrackAccessorBase<T, true>;
 
 }  // namespace Acts

@@ -29,6 +29,10 @@ using DirectPropagator = Acts::Propagator<Stepper, Acts::DirectNavigator>;
 using DirectFitter =
     Acts::KalmanFitter<DirectPropagator, Acts::VectorMultiTrajectory>;
 
+using TrackContainer =
+    Acts::TrackContainer<Acts::VectorTrackContainer,
+                         Acts::VectorMultiTrajectory, std::shared_ptr>;
+
 struct SimpleReverseFilteringLogic {
   double momentumThreshold = 0;
 
@@ -90,10 +94,10 @@ struct KalmanFitterFunctionImpl
           const ActsExamples::IndexSourceLink>>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      TrackContainer& tracks) const override {
     const auto kfOptions = makeKfOptions(options);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
-                      kfOptions, trajectory);
+                      kfOptions, tracks);
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
@@ -102,11 +106,11 @@ struct KalmanFitterFunctionImpl
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfaceSequence,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      TrackContainer& tracks) const override {
     const auto kfOptions = makeKfOptions(options);
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                             initialParameters, kfOptions, surfaceSequence,
-                            trajectory);
+                            tracks);
   }
 };
 
