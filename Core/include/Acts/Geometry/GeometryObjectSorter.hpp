@@ -43,31 +43,31 @@ class ObjectSorterT {
     switch (m_binningValue) {
       // compare on x
       case binX: {
-        return (one.x() < two.x());
+        return one.x() < two.x();
       }
       // compare on y
       case binY: {
-        return (one.y() < two.y());
+        return one.y() < two.y();
       }
       // compare on z
       case binZ: {
-        return (one.z() < two.z());
+        return one.z() < two.z();
       }
       // compare on r
       case binR: {
-        return (perp(one) < perp(two));
+        return perp(one) < perp(two);
       }
       // compare on phi
       case binPhi: {
-        return (phi(one) < phi(two));
+        return phi(one) < phi(two);
       }
       // compare on eta
       case binEta: {
-        return (eta(one) < eta(two));
+        return eta(one) < eta(two);
       }
       // default for the moment
       default: {
-        return (one.norm() < two.norm());
+        return one.norm() < two.norm();
       }
     }
   }
@@ -110,43 +110,43 @@ class DistanceSorterT {
       case binX: {
         double diffOneX = one.x() - m_reference.x();
         double diffTwoX = two.x() - m_reference.x();
-        return (diffOneX * diffOneX < diffTwoX * diffTwoX);
+        return std::abs(diffOneX) < std::abs(diffTwoX);
       }
       // compare on diff y
       case binY: {
         double diffOneY = one.y() - m_reference.y();
         double diffTwoY = two.y() - m_reference.y();
-        return (diffOneY * diffOneY < diffTwoY * diffTwoY);
+        return std::abs(diffOneY) < std::abs(diffTwoY);
       }
       // compare on diff z
       case binZ: {
         double diffOneZ = one.z() - m_reference.z();
         double diffTwoZ = two.z() - m_reference.z();
-        return (diffOneZ * diffOneZ < diffTwoZ * diffTwoZ);
+        return std::abs(diffOneZ) < std::abs(diffTwoZ);
       }
       // compare on r
       case binR: {
         double diffOneR = perp(one) - m_refR;
         double diffTwoR = perp(two) - m_refR;
-        return (diffOneR * diffOneR < diffTwoR * diffTwoR);
+        return std::abs(diffOneR) < std::abs(diffTwoR);
       }
       // compare on phi /// @todo add cyclic value
       case binPhi: {
         double diffOnePhi = phi(one) - m_refPhi;
         double diffTwoPhi = phi(two) - m_refPhi;
-        return (diffOnePhi * diffOnePhi < diffTwoPhi * diffTwoPhi);
+        return std::abs(diffOnePhi) < std::abs(diffTwoPhi);
       }
       // compare on eta
       case binEta: {
         double diffOneEta = eta(one) - m_refEta;
         double diffTwoEta = eta(two) - m_refEta;
-        return (diffOneEta * diffOneEta < diffTwoEta * diffTwoEta);
+        return std::abs(diffOneEta) < std::abs(diffTwoEta);
       }
       // default for the moment
       default: {
         T diffOne(one - m_reference);
         T diffTwo(two - m_reference);
-        return (diffOne.mag2() < diffTwo.mag2());
+        return diffOne.mag2() < diffTwo.mag2();
       }
     }
   }
