@@ -257,7 +257,9 @@ class KalmanFitter {
   KalmanFitter(propagator_t pPropagator,
                std::unique_ptr<const Logger> _logger =
                    getDefaultLogger("KalmanFitter", Logging::INFO))
-      : m_propagator(std::move(pPropagator)), m_logger{std::move(_logger)} {}
+      : m_propagator(std::move(pPropagator)),
+        m_logger{std::move(_logger)},
+        m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
 
  private:
   /// The propgator for the transport and material update
@@ -265,6 +267,7 @@ class KalmanFitter {
 
   /// The logger instance
   std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_actorLogger;
 
   const Logger& logger() const { return *m_logger; }
 
@@ -310,7 +313,7 @@ class KalmanFitter {
     std::shared_ptr<MultiTrajectory<traj_t>> outputStates;
 
     /// The logger instance
-    std::shared_ptr<const Logger> m_logger;
+    const Logger* m_logger;
 
     /// Logger helper
     const Logger& logger() const { return *m_logger; }
@@ -1053,7 +1056,7 @@ class KalmanFitter {
         kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
     kalmanActor.extensions = kfOptions.extensions;
-    kalmanActor.m_logger = logger().cloneWithSuffix("Actor");
+    kalmanActor.m_logger = m_actorLogger.get();
 
     typename propagator_t::template action_list_t_result_t<
         CurvilinearTrackParameters, Actors>
@@ -1162,7 +1165,7 @@ class KalmanFitter {
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.extensions = kfOptions.extensions;
-    kalmanActor.m_logger = logger().cloneWithSuffix("Actor");
+    kalmanActor.m_logger = m_actorLogger.get();
 
     // Set the surface sequence
     auto& dInitializer =

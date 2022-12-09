@@ -328,7 +328,7 @@ void test_components_modifying_accessors() {
       [](auto &cmp) -> decltype(auto) { return cmp.jacToGlobal(); });
 
   std::apply(
-      [&](const auto &... projs) {
+      [&](const auto &...projs) {
         // clang-format off
         ( [&]() { modify(projs); check(projs); }(), ...);
         // clang-format on
@@ -706,7 +706,7 @@ void propagator_instatiation_test_function() {
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
-  PropagatorOptions options(geoCtx, magCtx, Acts::getDummyLogger());
+  PropagatorOptions options(geoCtx, magCtx);
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, BoundVector::Ones().eval(),

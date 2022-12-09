@@ -211,7 +211,12 @@ class Chi2Fitter {
   using Chi2Navigator = typename propagator_t::Navigator;
 
  public:
-  Chi2Fitter(propagator_t pPropagator) : m_propagator(std::move(pPropagator)) {}
+  Chi2Fitter(propagator_t pPropagator,
+             std::unique_ptr<const Logger> _logger =
+                 getDefaultLogger("Chi2Fitter", Logging::INFO))
+      : m_propagator(std::move(pPropagator)),
+        m_logger{std::move(_logger)},
+        m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
 
  private:
   /// The propgator for the transport and material update
@@ -219,6 +224,7 @@ class Chi2Fitter {
 
   /// A logger instance
   std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_actorLogger;
 
   const Logger& logger() const { return *m_logger; }
 
@@ -254,7 +260,7 @@ class Chi2Fitter {
     Chi2FitterExtensions<traj_t> extensions;
 
     /// A logger instance
-    std::shared_ptr<const Logger> m_logger;
+    const Logger* m_logger;
 
     const Logger& logger() const { return *m_logger; }
 
@@ -671,7 +677,7 @@ class Chi2Fitter {
       chi2Actor.freeToBoundCorrection = chi2FitterOptions.freeToBoundCorrection;
       chi2Actor.extensions = chi2FitterOptions.extensions;
       chi2Actor.updateNumber = i;
-      chi2Actor.m_logger = logger().cloneWithSuffix("Actor");
+      chi2Actor.m_logger = m_actorLogger.get();
 
       typename propagator_t::template action_list_t_result_t<
           CurvilinearTrackParameters, Actors>

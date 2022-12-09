@@ -286,7 +286,9 @@ class CombinatorialKalmanFilter {
   CombinatorialKalmanFilter(propagator_t pPropagator,
                             std::unique_ptr<const Logger> _logger =
                                 getDefaultLogger("CKF", Logging::INFO))
-      : m_propagator(std::move(pPropagator)), m_logger(std::move(_logger)) {}
+      : m_propagator(std::move(pPropagator)),
+        m_logger(std::move(_logger)),
+        m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
 
  private:
   using KalmanNavigator = typename propagator_t::Navigator;
@@ -295,6 +297,7 @@ class CombinatorialKalmanFilter {
   propagator_t m_propagator;
 
   std::unique_ptr<const Logger> m_logger;
+  std::shared_ptr<const Logger> m_actorLogger;
 
   const Logger& logger() const { return *m_logger; }
 
@@ -1210,7 +1213,7 @@ class CombinatorialKalmanFilter {
     SurfaceReached targetReached;
 
     /// Logger instance
-    std::shared_ptr<const Logger> m_logger;
+    const Logger* m_logger;
 
     const Logger& logger() const { return *m_logger; }
   };
@@ -1286,7 +1289,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.smoothing = tfOptions.smoothing;
-    combKalmanActor.m_logger = logger().cloneWithSuffix("Actor");
+    combKalmanActor.m_logger = m_actorLogger.get();
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;

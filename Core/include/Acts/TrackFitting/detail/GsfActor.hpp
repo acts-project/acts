@@ -108,7 +108,7 @@ struct GsfActor {
     /// be started backwards in the first pass
     bool inReversePass = false;
 
-    std::shared_ptr<const Logger> logger;
+    const Logger* logger;
   } m_cfg;
 
   const Logger& logger() const { return *m_cfg.logger; }

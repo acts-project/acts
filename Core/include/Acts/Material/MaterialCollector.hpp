@@ -59,8 +59,7 @@ struct MaterialCollector {
   /// @param result is the result object to be filled
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
-    const auto& logger = state.options.logger;
+                  result_type& result, const Logger& logger) const {
     if (state.navigation.currentSurface) {
       if (state.navigation.currentSurface == state.navigation.targetSurface and
           not state.navigation.targetReached) {

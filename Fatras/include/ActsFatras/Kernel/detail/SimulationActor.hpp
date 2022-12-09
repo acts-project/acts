@@ -193,8 +193,8 @@ struct SimulationActor {
 
   /// Pure observer interface. Does not apply to the Fatras simulator.
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t & /*unused*/,
-                  stepper_t & /*unused*/) const {}
+  void operator()(propagator_state_t & /*unused*/, stepper_t & /*unused*/,
+                  const Acts::Logger & /*logger*/) const {}
 
   /// Construct the current particle state from the stepper state.
   template <typename stepper_t>

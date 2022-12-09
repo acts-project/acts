@@ -63,7 +63,8 @@ struct GaussianSumFitter {
                         getDefaultLogger("GSF", Logging::INFO))
       : m_propagator(std::move(propagator)),
         m_betheHeitlerApproximation(std::move(bha)),
-        m_logger{std::move(_logger)} {}
+        m_logger{std::move(_logger)},
+        m_actorLogger(m_logger->cloneWithSuffix("Actor")) {}
 
   /// The propagator instance used by the fit function
   propagator_t m_propagator;
@@ -73,6 +74,7 @@ struct GaussianSumFitter {
 
   /// The logger
   std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_actorLogger;
 
   const Logger& logger() const { return *m_logger; }
 
@@ -257,6 +259,7 @@ struct GaussianSumFitter {
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
       actor.m_cfg.inReversePass = false;
+      actor.m_cfg.logger = m_actorLogger.get();
 
       fwdPropOptions.direction = gsfForward;
 
@@ -322,6 +325,7 @@ struct GaussianSumFitter {
       actor.setOptions(options);
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.inReversePass = true;
+      actor.m_cfg.logger = m_actorLogger.get();
       actor.setOptions(options);
 
       bwdPropOptions.direction = gsfBackward;
