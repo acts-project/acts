@@ -8,13 +8,14 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
-#include "Acts/TrackFitting/detail/KLMixtureReduction.hpp"
+#include "Acts/Utilities/detail/gaussian_mixture_helpers.hpp"
 
 #include <random>
 
@@ -341,72 +342,4 @@ BOOST_AUTO_TEST_CASE(test_perigee_surface) {
 
   // Here we expect a very bad approximation
   test_surface(*surface, desc, p, 1.);
-}
-
-BOOST_AUTO_TEST_CASE(test_kl_mixture_reduction) {
-  auto meanAndSumOfWeights = [](const auto &cmps) {
-    const auto mean = std::accumulate(
-        cmps.begin(), cmps.end(), Acts::BoundVector::Zero().eval(),
-        [](auto sum, const auto &cmp) -> Acts::BoundVector {
-          return sum + cmp.weight * cmp.boundPars;
-        });
-
-    const double sumOfWeights = std::accumulate(
-        cmps.begin(), cmps.end(), 0.0,
-        [](auto sum, const auto &cmp) { return sum + cmp.weight; });
-
-    return std::make_tuple(mean, sumOfWeights);
-  };
-
-  // Do not bother with circular angles in this test
-  const auto desc = std::tuple<>{};
-
-  // Need this projection, since we need to write to the lvalue references which
-  // isn't possible through Identity / std::identity due to perfect forwarding
-  const auto proj = [](auto &a) -> decltype(auto) { return a; };
-
-  const std::size_t NComps = 4;
-  std::vector<DummyComponent<eBoundSize>> cmps;
-
-  for (auto i = 0ul; i < NComps; ++i) {
-    DummyComponent<eBoundSize> a;
-    a.boundPars = Acts::BoundVector::Zero();
-    a.boundCov = Acts::BoundSymMatrix::Identity();
-    a.weight = 1.0 / NComps;
-    cmps.push_back(a);
-  }
-
-  cmps[0].boundPars[eBoundQOverP] = 0.5_GeV;
-  cmps[1].boundPars[eBoundQOverP] = 1.5_GeV;
-  cmps[2].boundPars[eBoundQOverP] = 3.5_GeV;
-  cmps[3].boundPars[eBoundQOverP] = 4.5_GeV;
-
-  // Check start properties
-  const auto [mean0, sumOfWeights0] = meanAndSumOfWeights(cmps);
-
-  BOOST_CHECK_CLOSE(mean0[eBoundQOverP], 2.5_GeV, 1.e-8);
-  BOOST_CHECK_CLOSE(sumOfWeights0, 1.0, 1.e-8);
-
-  // Reduce by factor of 2 and check if weights and QoP are correct
-  Acts::detail::reduceWithKLDistance(cmps, 2, proj, desc);
-
-  BOOST_CHECK(cmps.size() == 2);
-
-  std::sort(cmps.begin(), cmps.end(), [](const auto &a, const auto &b) {
-    return a.boundPars[eBoundQOverP] < b.boundPars[eBoundQOverP];
-  });
-  BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 1.0_GeV, 1.e-8);
-  BOOST_CHECK_CLOSE(cmps[1].boundPars[eBoundQOverP], 4.0_GeV, 1.e-8);
-
-  const auto [mean1, sumOfWeights1] = meanAndSumOfWeights(cmps);
-
-  BOOST_CHECK_CLOSE(mean1[eBoundQOverP], 2.5_GeV, 1.e-8);
-  BOOST_CHECK_CLOSE(sumOfWeights1, 1.0, 1.e-8);
-
-  // Reduce by factor of 2 and check if weights and QoP are correct
-  Acts::detail::reduceWithKLDistance(cmps, 1, proj, desc);
-
-  BOOST_CHECK(cmps.size() == 1);
-  BOOST_CHECK_CLOSE(cmps[0].boundPars[eBoundQOverP], 2.5_GeV, 1.e-8);
-  BOOST_CHECK_CLOSE(cmps[0].weight, 1.0, 1.e-8);
 }
