@@ -141,10 +141,10 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
   double denom = 1 - eaTeb * eaTeb;
   // validity parameter
   Intersection3D::Status status = Intersection3D::Status::unreachable;
-  if (denom * denom > s_onSurfaceTolerance * s_onSurfaceTolerance) {
+  if (std::abs(denom) > std::abs(s_onSurfaceTolerance)) {
     double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
     // Check if we are on the surface already
-    status = (u * u < s_onSurfaceTolerance * s_onSurfaceTolerance)
+    status = std::abs(u) < std::abs(s_onSurfaceTolerance)
                  ? Intersection3D::Status::onSurface
                  : Intersection3D::Status::reachable;
     Vector3 result = (ma + u * ea);
@@ -156,7 +156,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
       double cZ = vecLocal.dot(eb);
       double hZ =
           m_bounds->get(LineBounds::eHalfLengthZ) + s_onSurfaceTolerance;
-      if ((cZ * cZ > hZ * hZ) or
+      if ((std::abs(cZ) > std::abs(hZ)) or
           ((vecLocal - cZ * eb).norm() >
            m_bounds->get(LineBounds::eR) + s_onSurfaceTolerance)) {
         status = Intersection3D::Status::missed;
