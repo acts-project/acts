@@ -125,15 +125,6 @@ the following way (tested under Unix)
 $ LD_PRELOAD=<YOUR_SHARED_LIBRARY> path/to/your/exectuable
 ```
 
-For an example have a look at [`CustomDefaultLogger.cpp`](https://github.com/acts-project/acts/blob/main/Examples/Run/Misc/CustomDefaultLogger.cpp) which you can use as
-follows:
-
-```console
-$ cd <ACTS/INSTALL/DIRECTORY>
-$ source bin/setup.sh
-$ LD_PRELOAD=lib/libActsCustomLogger.so bin/Examples/ActsGenericDetector
-```
-
 ## Logging thresholds
 
 Generally, log levels in ACTS are only of informative value: even
