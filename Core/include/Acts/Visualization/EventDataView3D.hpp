@@ -189,7 +189,6 @@ struct EventDataView3D {
   /// parameters
   /// @param smoothedConfig The visualization options for the smoothed
   /// parameters
-  /// @TODO: Refactor based on Track class
   template <typename D>
   static void drawMultiTrajectory(
       IVisualization3D& helper, const Acts::MultiTrajectory<D>& multiTraj,
@@ -201,6 +200,8 @@ struct EventDataView3D {
       const ViewConfig& predictedConfig = s_viewPredicted,
       const ViewConfig& filteredConfig = s_viewFiltered,
       const ViewConfig& smoothedConfig = s_viewSmoothed) {
+    // @TODO: Refactor based on Track class
+
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states

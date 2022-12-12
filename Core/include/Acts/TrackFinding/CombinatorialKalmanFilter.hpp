@@ -1241,12 +1241,14 @@ class CombinatorialKalmanFilter {
   ///                                      container
   /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam measurement_selector_t Type of the measurement selector
+  /// @tparam track_container_t Type of the track container backend
+  /// @tparam holder_t Type defining track container backend ownership
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
-  /// @param trajectory Input track state container to use
+  /// @param trackContainer Input track container to use
   /// @note The input measurements are given in the form of @c SourceLinks.
   ///       It's @c calibrator_t's job to turn them into calibrated measurements
   ///       used in the track finding.
