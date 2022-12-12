@@ -214,7 +214,7 @@ struct CombinatorialKalmanFilterOptions {
 template <typename traj_t>
 struct CombinatorialKalmanFilterResult {
   // Fitted states that the actor has handled.
-  traj_t* fittedStates;
+  traj_t* fittedStates{nullptr};
 
   // These is used internally to store candidate trackstates
   std::shared_ptr<traj_t> stateBuffer;

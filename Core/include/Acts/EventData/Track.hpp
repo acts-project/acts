@@ -56,9 +56,11 @@ class TrackProxy {
   using IndexType = typename Container::IndexType;
   static constexpr IndexType kInvalid = Container::kInvalid;
 
+#ifndef DOXYGEN
   friend TrackContainer<Container, Trajectory, holder_t>;
   friend MutableTrackProxy;
   friend ConstTrackProxy;
+#endif
 
   TrackProxy(const MutableTrackProxy& other)
       : m_container{other.m_container}, m_index{other.m_index} {}
@@ -141,9 +143,9 @@ class TrackProxy {
   }
 
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setReferenceSurface(std::shared_ptr<const Surface> srf) {
+  void setReferenceSurface(const std::shared_ptr<const Surface>& srf) {
     component<std::shared_ptr<const Surface>,
-              hashString("referenceSurface")>() = std::move(srf);
+              hashString("referenceSurface")>() = srf;
   }
 
   bool hasReferenceSurface() const {

@@ -181,7 +181,7 @@ struct KalmanFitterOptions {
 template <typename traj_t>
 struct KalmanFitterResult {
   // Fitted states that the actor has handled.
-  traj_t* fittedStates;
+  traj_t* fittedStates{nullptr};
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.

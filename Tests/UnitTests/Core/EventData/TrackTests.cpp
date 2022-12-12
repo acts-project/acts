@@ -294,7 +294,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   t.tipIndex() = ts5.index();
 
   std::vector<IndexType> act;
-  for (auto ts : t.trackStates()) {
+  for (const auto& ts : t.trackStates()) {
     act.push_back(ts.index());
   }
 
@@ -305,7 +305,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
 
   const auto& ct = t;
 
-  for (auto ts : ct.trackStates()) {
+  for (const auto& ts : ct.trackStates()) {
     (void)ts;
   }
 
