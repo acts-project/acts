@@ -47,6 +47,7 @@ struct MaterialInteractor {
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
   /// @param result is the mutable result state object
+  /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result, const Logger& logger) const {

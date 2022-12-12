@@ -105,7 +105,6 @@ struct KalmanFitterOptions {
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
   /// @param extensions_ The KF extensions
-  /// @param logger_ The logger wrapper
   /// @param pOptions The plain propagator options
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
@@ -331,7 +330,6 @@ class KalmanFitter {
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
-    /// @param logger a logger instance
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result, const Logger& /*logger*/) const {

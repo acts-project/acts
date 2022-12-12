@@ -84,7 +84,6 @@ struct Chi2FitterOptions {
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
   /// @param extensions_ The chi2 extensions
-  /// @param logger_ The logger wrapper
   /// @param pOptions The plain propagator options
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss

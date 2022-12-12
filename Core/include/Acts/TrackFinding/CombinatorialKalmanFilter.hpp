@@ -339,7 +339,6 @@ class CombinatorialKalmanFilter {
     /// @param state is the mutable propagator state object
     /// @param stepper is the stepper in use
     /// @param result is the mutable result state object
-    /// @param logger a logger instance
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     result_type& result, const Logger& /*logger*/) const {
@@ -862,7 +861,6 @@ class CombinatorialKalmanFilter {
     /// @param isOutlier If this track state is a single outlier one
     /// @param prevTipState Tip state prior to this surface
     /// @param [in,out] nBranchesOnSurface Number of branches on surface, will be updated
-    /// @param logger A logging instance
     Result<void> processSelectedTrackStates(
         const Acts::GeometryContext& gctx,
         typename std::vector<

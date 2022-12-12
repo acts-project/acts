@@ -33,7 +33,6 @@ struct DenseStepperPropagatorOptions
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param mctx The current magnetic fielc context object
-  /// @param logger_ An instance of @c LoggerWrapper
   DenseStepperPropagatorOptions(const GeometryContext& gctx,
                                 const MagneticFieldContext& mctx)
       : PropagatorOptions<action_list_t, aborter_list_t>(gctx, mctx) {}

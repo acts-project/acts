@@ -242,6 +242,7 @@ class Propagator final {
   ///
   /// @param stepper The stepper implementation is moved to a private member
   /// @param navigator The navigator implementation, moved to a private member
+  /// @param _logger a logger instance
   explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t(),
                       std::shared_ptr<const Logger> _logger =
                           getDefaultLogger("Propagator", Acts::Logging::INFO))

@@ -57,6 +57,7 @@ struct MaterialCollector {
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
   /// @param result is the result object to be filled
+  /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result, const Logger& logger) const {

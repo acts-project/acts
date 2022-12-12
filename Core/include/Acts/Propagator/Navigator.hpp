@@ -257,6 +257,7 @@ class Navigator {
   /// Constructor with configuration object
   ///
   /// @param cfg The navigator configuration
+  /// @param _logger a logger instance
   explicit Navigator(Config cfg,
                      std::shared_ptr<const Logger> _logger =
                          getDefaultLogger("Navigator", Logging::Level::INFO))

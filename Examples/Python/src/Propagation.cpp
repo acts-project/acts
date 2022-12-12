@@ -36,10 +36,10 @@ void addStepper(const std::string& prefix, py::module_& m, py::module_& prop) {
   using propagator_t = Acts::Propagator<stepper_t, Acts::Navigator>;
   py::class_<propagator_t>(prop, (prefix + "Propagator").c_str())
       .def(py::init<>(
-          [=](stepper_t stepper, Acts::Navigator navigator,
+          [=](stepper_t _stepper, Acts::Navigator navigator,
               Acts::Logging::Level level = Acts::Logging::Level::INFO) {
             return propagator_t{
-                std::move(stepper), std::move(navigator),
+                std::move(_stepper), std::move(navigator),
                 Acts::getDefaultLogger(prefix + "Propagator", level)};
           }));
 

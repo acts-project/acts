@@ -51,6 +51,7 @@ struct PathLimitReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
+  /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const Logger& logger) const {
@@ -91,6 +92,7 @@ struct SurfaceReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
+  /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const Logger& logger) const {
@@ -105,6 +107,7 @@ struct SurfaceReached {
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for the progation
   /// @param [in] targetSurface The target surface
+  /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const Surface& targetSurface, const Logger& logger) const {
