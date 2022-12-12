@@ -14,6 +14,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -251,8 +252,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     ProtoTrack& protoTrack = protoTracks.emplace_back();
     protoTrack.reserve(seed.sp().size());
     for (auto spacePointPtr : seed.sp()) {
-      for (const auto slink : spacePointPtr->sourceLinks()) {
-        const auto islink = static_cast<const IndexSourceLink&>(*slink);
+      for (const auto& slink : spacePointPtr->sourceLinks()) {
+        const IndexSourceLink& islink = slink.get<IndexSourceLink>();
         protoTrack.emplace_back(islink.index());
       }
     }

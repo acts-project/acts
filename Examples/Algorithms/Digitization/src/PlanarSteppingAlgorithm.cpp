@@ -28,8 +28,8 @@
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <list>
 #include <stdexcept>
+#include <vector>
 
 ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
     ActsExamples::PlanarSteppingAlgorithm::Config config,
@@ -104,11 +104,9 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
   // prepare output containers
   ClusterContainer clusters;
 
-  // These are lists because we need stable addresses
-  std::list<IndexSourceLink> sourceLinkStorage;
-  std::list<Acts::DigitizationSourceLink> digiSourceLinks;
+  std::vector<Acts::DigitizationSourceLink> digiSourceLinks;
 
-  GeometryIdMultiset<std::reference_wrapper<IndexSourceLink>> sourceLinks;
+  GeometryIdMultiset<IndexSourceLink> sourceLinks;
   MeasurementContainer measurements;
   IndexMultimap<ActsFatras::Barcode> hitParticlesMap;
   IndexMultimap<Index> hitSimHitsMap;
@@ -195,20 +193,20 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
                                    std::vector<std::size_t>{simHitIdx});
       Acts::DigitizationSourceLink& digiSourceLink = digiSourceLinks.back();
 
-      Acts::PlanarModuleCluster cluster(dg.surface->getSharedPtr(),
-                                        digiSourceLink, cov, localX, localY,
-                                        simHit.time(), std::move(usedCells));
+      Acts::PlanarModuleCluster cluster(
+          dg.surface->getSharedPtr(), Acts::SourceLink{digiSourceLink}, cov,
+          localX, localY, simHit.time(), std::move(usedCells));
 
       // the measurement container is unordered and the index under which
       // the measurement will be stored is known before adding it.
       Index hitIdx = measurements.size();
-      sourceLinkStorage.emplace_back(moduleGeoId, hitIdx);
-      IndexSourceLink& sourceLink = sourceLinkStorage.back();
+      IndexSourceLink sourceLink{moduleGeoId, hitIdx};
 
       sourceLinks.insert(sourceLinks.end(), sourceLink);
 
-      auto meas = Acts::makeMeasurement(sourceLink, par, cov, Acts::eBoundLoc0,
-                                        Acts::eBoundLoc1, Acts::eBoundTime);
+      auto meas = Acts::makeMeasurement(Acts::SourceLink{sourceLink}, par, cov,
+                                        Acts::eBoundLoc0, Acts::eBoundLoc1,
+                                        Acts::eBoundTime);
 
       // add to output containers. since the input is already geometry-order,
       // new elements in geometry containers can just be appended at the end.
@@ -226,8 +224,6 @@ ActsExamples::ProcessCode ActsExamples::PlanarSteppingAlgorithm::execute(
 
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-  ctx.eventStore.add(m_cfg.outputSourceLinks + "__storage",
-                     std::move(sourceLinkStorage));
   ctx.eventStore.add(m_cfg.outputDigiSourceLinks, std::move(digiSourceLinks));
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,

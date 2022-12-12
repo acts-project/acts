@@ -57,8 +57,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
 
     // For now just take the first index since does require one single index per
     // spacepoint
-    const auto islink =
-        static_cast<const IndexSourceLink&>(*sp.sourceLinks().front());
+    const auto& islink = sp.sourceLinks()[0].template get<IndexSourceLink>();
     spacepointIDs.push_back(islink.index());
   }
 
