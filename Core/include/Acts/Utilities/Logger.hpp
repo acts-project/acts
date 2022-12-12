@@ -590,7 +590,12 @@ class DefaultPrintPolicy final : public OutputPrintPolicy {
   /// @param name the new name
   /// @return the copy
   std::unique_ptr<OutputPrintPolicy> clone(
+<<<<<<< HEAD
       const std::string& /*name*/) const override {
+=======
+      const std::string& name) const override {
+    (void)name;
+>>>>>>> origin/main
     return std::make_unique<DefaultPrintPolicy>(m_out);
   };
 
@@ -660,22 +665,22 @@ class Logger {
   /// @param _level the optional new level
   std::unique_ptr<Logger> clone(
       const std::optional<std::string>& _name = std::nullopt,
-      std::optional<Logging::Level> _level = std::nullopt) const {
+      const std::optional<Logging::Level>& _level = std::nullopt) const {
     return std::make_unique<Logger>(
         m_printPolicy->clone(_name.value_or(name())),
         m_filterPolicy->clone(_level.value_or(level())));
   }
 
-  /// Make a copy of the logger, with a new level. Convenience function for if
-  /// you only want to change the level but not the name.
+  /// Make a copy of the logger, with a new level. Convenience function for
+  /// if you only want to change the level but not the name.
   /// @param _level the new level
   /// @return the new logger
   std::unique_ptr<Logger> clone(Logging::Level _level) const {
     return clone(std::nullopt, _level);
   }
 
-  /// Make a copy of the logger, with a suffix added to the end of it's name.
-  /// You can also optionally supply a new level
+  /// Make a copy of the logger, with a suffix added to the end of it's
+  /// name. You can also optionally supply a new level
   /// @param suffix the suffix to add to the end of the name
   /// @param _level the optional new level
   std::unique_ptr<Logger> cloneWithSuffix(
@@ -684,6 +689,8 @@ class Logger {
     return clone(name() + suffix, _level.value_or(level()));
   }
 
+  /// Helper function so a logger reference can be used as is with the logging
+  /// macros
   const Logger& operator()() const { return *this; }
 
  private:
@@ -720,8 +727,8 @@ class LoggerWrapper {
   void log(const Logging::Level& lvl, const std::string& input) const;
 
   /// Call operator that returns the contained logger instance.
-  /// Enables using the logging macros `ACTS_*` when an instance of this class
-  /// is assigned to a local variable `logger`.
+  /// Enables using the logging macros `ACTS_*` when an instance of this
+  /// class is assigned to a local variable `logger`.
   /// @return Reference to the logger instance.
   const Logger& operator()() const {
     assert(m_logger != nullptr);
