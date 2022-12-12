@@ -22,9 +22,6 @@
 
 namespace Acts {
 
-detail_vmt::VectorMultiTrajectoryBase::DynamicColumnBase::~DynamicColumnBase() =
-    default;
-
 auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
                                                IndexType iprevious)
     -> IndexType {
