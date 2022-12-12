@@ -10,33 +10,62 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 
 #include "G4Box.hh"
+#include "G4LogicalVolume.hh"
 #include "G4Trap.hh"
 #include "G4Trd.hh"
 #include "G4Tubs.hh"
+#include "G4VPhysicalVolume.hh"
 #include "G4VSolid.hh"
 
 Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
-    const G4ThreeVector& trans) {
+    const G4ThreeVector& g4Trans) {
   Transform3 gTransform = Transform3::Identity();
   Vector3 scaledTrans =
-      Vector3(scale * trans[0], scale * trans[1], scale * trans[2]);
+      Vector3(scale * g4Trans[0], scale * g4Trans[1], scale * g4Trans[2]);
   gTransform.pretranslate(scaledTrans);
   return gTransform;
 }
 
 Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
-    const G4RotationMatrix& rot, const G4ThreeVector& trans) {
-  auto gTransform = transform(trans);
-  RotationMatrix3 gRot;
-  gRot << rot.xx(), rot.xy(), rot.xz(), rot.yx(), rot.yy(), rot.yz(), rot.zx(),
-      rot.zy(), rot.zz();
-  gTransform.prerotate(gRot);
-  return gTransform;
+    const G4RotationMatrix& g4Rot, const G4ThreeVector& g4Trans) {
+  // Create the translation
+  Vector3 translation(scale * g4Trans[0], scale * g4Trans[1],
+                      scale * g4Trans[2]);
+  // And the rotation to it
+  RotationMatrix3 rotation;
+  rotation << g4Rot.xx(), g4Rot.yx(), g4Rot.zx(), g4Rot.xy(), g4Rot.yy(),
+      g4Rot.zy(), g4Rot.xz(), g4Rot.yz(), g4Rot.zz();
+  Transform3 transform = Transform3::Identity();
+  transform.matrix().block(0, 0, 3, 1) = rotation.col(0);
+  transform.matrix().block(0, 1, 3, 1) = rotation.col(1);
+  transform.matrix().block(0, 2, 3, 1) = rotation.col(2);
+  transform.matrix().block(0, 3, 3, 1) = translation;
+  return transform;
+}
+
+Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
+    const G4Transform3D& g4Trf) {
+  // Create the translation
+  Vector3 translation(scale * g4Trf.dx(), scale * g4Trf.dy(),
+                      scale * g4Trf.dz());
+  // And the rotation to it
+  RotationMatrix3 rotation;
+  rotation << g4Trf.xx(), g4Trf.yx(), g4Trf.zx(), g4Trf.xy(), g4Trf.yy(),
+      g4Trf.zy(), g4Trf.xz(), g4Trf.yz(), g4Trf.zz();
+  Transform3 transform = Transform3::Identity();
+  transform.matrix().block(0, 0, 3, 1) = rotation.col(0);
+  transform.matrix().block(0, 1, 3, 1) = rotation.col(1);
+  transform.matrix().block(0, 2, 3, 1) = rotation.col(2);
+  transform.matrix().block(0, 3, 3, 1) = translation;
+  return transform;
 }
 
 std::shared_ptr<Acts::CylinderBounds>
@@ -147,7 +176,6 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
 
 std::tuple<std::shared_ptr<Acts::PlanarBounds>, std::array<int, 2u>>
 Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
-
   const G4Box* box = dynamic_cast<const G4Box*>(&g4Solid);
   if (box != nullptr) {
     auto [rBounds, axes] = rectangleBounds(*box);
@@ -163,4 +191,50 @@ Acts::Geant4ShapeConverter::planarBounds(const G4VSolid& g4Solid) {
   std::shared_ptr<Acts::PlanarBounds> pBounds = nullptr;
   std::array<int, 2u> rAxes = {};
   return std::tie(pBounds, rAxes);
+}
+
+namespace {
+Acts::Transform3 axesOriented(const Acts::Transform3& toGlobalOriginal,
+                              const std::array<int, 2u>& axes) {
+  auto originalRotation = toGlobalOriginal.rotation();
+  auto colX = originalRotation.col(std::abs(axes[0u]));
+  auto colY = originalRotation.col(std::abs(axes[1u]));
+  colX *= std::copysign(1, axes[0u]);
+  colY *= std::copysign(1, axes[1u]);
+  Acts::Vector3 colZ = colX.cross(colY);
+
+  Acts::Transform3 orientedTransform = Acts::Transform3::Identity();
+  orientedTransform.matrix().block(0, 0, 3, 1) = colX;
+  orientedTransform.matrix().block(0, 1, 3, 1) = colY;
+  orientedTransform.matrix().block(0, 2, 3, 1) = colZ;
+  orientedTransform.matrix().block(0, 3, 3, 1) = toGlobalOriginal.translation();
+
+  return orientedTransform;
+}
+}  // namespace
+
+std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
+    const G4VPhysicalVolume& g4PhysVol, const Transform3& toGlobal) {
+  // Get the logical volume
+  auto g4LogVol = g4PhysVol.GetLogicalVolume();
+  auto g4Solid = g4LogVol->GetSolid();
+
+  // Dynamic cast chain & conversion
+  auto g4Box = dynamic_cast<const G4Box*>(g4Solid);
+  if (g4Box != nullptr) {
+    auto [bounds, axes] = Geant4ShapeConverter{}.rectangleBounds(*g4Box);
+    auto orientedToGlobal = axesOriented(toGlobal, axes);
+    return Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
+                                                   std::move(bounds));
+  }
+
+  auto g4Trd = dynamic_cast<const G4Trd*>(g4Solid);
+  if (g4Trd != nullptr) {
+    auto [bounds, axes] = Geant4ShapeConverter{}.trapezoidBounds(*g4Trd);
+    auto orientedToGlobal = axesOriented(toGlobal, axes);
+    return Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
+                                                   std::move(bounds));
+  }
+
+  return nullptr;
 }

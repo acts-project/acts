@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,21 +8,29 @@
 
 #pragma once
 
-#include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
+#include "ActsExamples/Geant4Detector/Geant4DetectorService.hpp"
 
 #include <memory>
 #include <vector>
 
-struct Geant4Detector : public ActsExamples::IBaseDetector {
-  void addOptions(
-      boost::program_options::options_description& opt) const override;
+namespace Acts {
+namespace Experimental {
+class Detector;
+}
+}  // namespace Acts
 
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const boost::program_options::variables_map& vm,
-           std::shared_ptr<const Acts::IMaterialDecorator> /*unused*/) override;
+namespace ActsExamples {
+class IContextDecorator;
 
-  std::pair<ActsExamples::IBaseDetector::DetectorPtr, ContextDecorators>
-  construct();
+namespace Geant4 {
+struct Geant4Detector {
+  using ContextDecorators =
+      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
 
+  using DetectorPtr = std::shared_ptr<Acts::Experimental::Detector>;
+
+  std::pair<DetectorPtr, ContextDecorators> constructDetector(
+      const Geant4DetectorService::Config& cfg);
 };
+}  // namespace Geant4
+}  // namespace ActsExamples

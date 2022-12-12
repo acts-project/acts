@@ -4,7 +4,7 @@ add_library(
   ActsPluginGeant4 SHARED
   src/Geant4Converters.cpp
   src/Geant4DetectorElement.cpp
-  src/Geant4DetectorElementFactory.cpp)
+  src/Geant4DetectorSurfaceFactory.cpp)
 target_include_directories(
     ActsPluginGeant4
   PUBLIC

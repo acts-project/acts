@@ -32,7 +32,7 @@ class Geant4DetectorElement : public DetectorElementBase {
   /// @param thickness the thickness of this detector element
   /// @param g4phys the physical volume representing this detector element
   Geant4DetectorElement(std::shared_ptr<Surface> surface, ActsScalar thickness,
-                        const G4VPhysicalVolume* g4phys);
+                        const G4VPhysicalVolume& g4phys);
 
   /// Return local to global transform associated with this identifier
   ///

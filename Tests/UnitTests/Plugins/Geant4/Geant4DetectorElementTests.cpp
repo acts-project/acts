@@ -29,16 +29,16 @@ BOOST_AUTO_TEST_CASE(Geant4DetectorElement_construction) {
   auto rBounds = std::make_shared<Acts::RectangleBounds>(10., 10.);
   auto rTransform = Acts::Transform3::Identity();
   rTransform.pretranslate(Acts::Vector3(0., 0., 10));
-  auto rSurface =
-      Acts::Surface::makeShared<Acts::PlaneSurface>(rTransform, std::move(rBounds));
+  auto rSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
+      rTransform, std::move(rBounds));
   // A detector element
-  Acts::Geant4DetectorElement g4DetElement(rSurface, 0.1, g4physVol.get());
+  Acts::Geant4DetectorElement g4DetElement(rSurface, 0.1, *g4physVol.get());
 
   BOOST_CHECK(g4DetElement.thickness() == 0.1);
   BOOST_CHECK(&g4DetElement.surface() == rSurface.get());
   BOOST_CHECK(&g4DetElement.g4PhysicalVolume() == g4physVol.get());
-  BOOST_CHECK(g4DetElement.transform(tContext).isApprox(rSurface->transform(tContext)));
-
+  BOOST_CHECK(
+      g4DetElement.transform(tContext).isApprox(rSurface->transform(tContext)));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

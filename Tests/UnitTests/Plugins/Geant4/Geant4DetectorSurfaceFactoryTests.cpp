@@ -11,22 +11,17 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
-#include "Acts/Plugins/Geant4/Geant4DetectorElementFactory.hpp"
+#include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 
 #include "G4Box.hh"
-#include "G4Tubs.hh"
 #include "G4LogicalVolume.hh"
+#include "G4Tubs.hh"
 #include "G4VPhysicalVolume.hh"
 
 Acts::GeometryContext tContext;
 
-
 BOOST_AUTO_TEST_SUITE(Geant4Plugin)
 
-BOOST_AUTO_TEST_CASE(Geant4DetectorElementFactory_box) {
-
-
-
-}
+BOOST_AUTO_TEST_CASE(Geant4DetectorSurfaceFactory_box) {}
 
 BOOST_AUTO_TEST_SUITE_END()

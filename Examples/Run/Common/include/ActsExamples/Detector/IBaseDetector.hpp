@@ -41,6 +41,6 @@ class IBaseDetector {
 
   virtual std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
       const boost::program_options::variables_map& vm,
-      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) = 0;      
+      std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) = 0;
 };
 }  // namespace ActsExamples

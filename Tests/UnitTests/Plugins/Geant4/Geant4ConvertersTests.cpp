@@ -186,15 +186,16 @@ BOOST_AUTO_TEST_CASE(Geant4TrapzoidConversion) {
 
 BOOST_AUTO_TEST_CASE(Geant4PlanarConversion) {
   G4Box boxXY("boxXY", 23., 34., 1.);
-  auto pBoundsBox = std::get<0u>(Acts::Geant4ShapeConverter{}.planarBounds(boxXY));
+  auto pBoundsBox =
+      std::get<0u>(Acts::Geant4ShapeConverter{}.planarBounds(boxXY));
   auto rBounds = dynamic_cast<const Acts::RectangleBounds*>(pBoundsBox.get());
   BOOST_CHECK(rBounds != nullptr);
 
   G4Trd trdXY("trdXY", 100, 150, 200, 200, 2);
-  auto pBoundsTrd = std::get<0u>(Acts::Geant4ShapeConverter{}.planarBounds(trdXY));
+  auto pBoundsTrd =
+      std::get<0u>(Acts::Geant4ShapeConverter{}.planarBounds(trdXY));
   auto tBounds = dynamic_cast<const Acts::TrapezoidBounds*>(pBoundsTrd.get());
   BOOST_CHECK(tBounds != nullptr);
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

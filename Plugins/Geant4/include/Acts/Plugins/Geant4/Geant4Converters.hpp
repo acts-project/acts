@@ -16,12 +16,14 @@
 
 #include "G4RotationMatrix.hh"
 #include "G4ThreeVector.hh"
+#include "G4Transform3D.hh"
 
 class G4Box;
 class G4Trd;
 class G4Trap;
 class G4Tubs;
 class G4VSolid;
+class G4VPhysicalVolume;
 
 namespace Acts {
 
@@ -31,18 +33,26 @@ struct Geant4AlgebraConverter {
 
   /// @brief  Translate a geometry transform: translation only
   ///
-  /// @param trans the translation of the Geant4 object
+  /// @param g4Trans the translation of the Geant4 object
   ///
   /// @return a Acts transform
-  Transform3 transform(const G4ThreeVector& trans);
+  Transform3 transform(const G4ThreeVector& g4Trans);
 
   /// @brief  Translate a geometry transform
   ///
-  /// @param rot the rotation of the Geant4 object
-  /// @param trans the translation of the Geant4 object
+  /// @param g4Rot the rotation of the Geant4 object
+  /// @param g4Trans the translation of the Geant4 object
   ///
   /// @return a Acts transform
-  Transform3 transform(const G4RotationMatrix& rot, const G4ThreeVector& trans);
+  Transform3 transform(const G4RotationMatrix& g4Rot,
+                       const G4ThreeVector& g4Trans);
+
+  /// @brief  Translate a geometry transform
+  ///
+  /// @param g4Trf theGeant4 transform object
+  ///
+  /// @return a Acts transform
+  Transform3 transform(const G4Transform3D& g4Trf);
 };
 
 class AnnulusBounds;
@@ -103,6 +113,19 @@ struct Geant4ShapeConverter {
   /// @return an ACTS Planar bounds object
   std::tuple<std::shared_ptr<PlanarBounds>, std::array<int, 2u>> planarBounds(
       const G4VSolid& g4Solid);
+};
+
+class Surface;
+
+struct Geant4PhysicalVolumeConverter {
+  /// @brief Convert a Geant4 phsyical volume to a surface
+  ///
+  /// @param g4PhysVol the physical volume to be constructed
+  /// @param toGlobal the global transformation before the volume
+  ///
+  /// @return a shared surface object
+  std::shared_ptr<Surface> surface(const G4VPhysicalVolume& g4PhysVol,
+                                   const Transform3& toGlobal);
 };
 
 }  // namespace Acts

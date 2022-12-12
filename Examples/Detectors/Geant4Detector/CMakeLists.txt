@@ -7,7 +7,7 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
     ActsExamplesDetectorGeant4
-  PUBLIC ActsCore ActsExamplesFramework ActsExamplesDetectorsCommon ActsExamplesGeant4)
+  PUBLIC ActsCore ActsExamplesFramework ActsExamplesGeant4 ActsPluginGeant4)
 
 install(
   TARGETS ActsExamplesDetectorGeant4

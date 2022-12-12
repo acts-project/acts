@@ -8,9 +8,9 @@
 
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 
-Acts::Geant4DetectorElement::Geant4DetectorElement(std::shared_ptr<Acts::Surface> surface, Acts::ActsScalar thickness, const G4VPhysicalVolume* g4physVol) :
- m_surface(std::move(surface)),
- m_thickness(thickness),
- m_g4physVol(g4physVol)
-{}
-
+Acts::Geant4DetectorElement::Geant4DetectorElement(
+    std::shared_ptr<Acts::Surface> surface, Acts::ActsScalar thickness,
+    const G4VPhysicalVolume& g4physVol)
+    : m_surface(std::move(surface)),
+      m_thickness(thickness),
+      m_g4physVol(&g4physVol) {}

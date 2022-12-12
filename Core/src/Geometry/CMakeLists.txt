@@ -12,6 +12,7 @@ target_sources(
     CylinderVolumeBuilder.cpp
     CylinderVolumeHelper.cpp
     Extent.cpp
+    KDTreeTrackingGeometryBuilder.cpp
     Detector.cpp
     DetectorVolume.cpp
     DiscLayer.cpp
@@ -28,6 +29,7 @@ target_sources(
     Polyhedron.cpp
     Portal.cpp
     ProtoLayer.cpp
+    ProtoDetector.cpp
     ProtoLayerHelper.cpp
     SurfaceArrayCreator.cpp
     TrackingGeometry.cpp
