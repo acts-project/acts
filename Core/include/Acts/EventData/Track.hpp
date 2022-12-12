@@ -398,8 +398,10 @@ class TrackContainer {
   using ConstTrackProxy =
       detail_tc::TrackProxy<track_container_t, traj_t, holder_t, true>;
 
+#ifndef DOXYGEN
   friend TrackProxy;
   friend ConstTrackProxy;
+#endif
 
   TrackContainer(holder_t<track_container_t> container, holder_t<traj_t> traj)
       : m_container{std::move(container)}, m_traj{std::move(traj)} {}
