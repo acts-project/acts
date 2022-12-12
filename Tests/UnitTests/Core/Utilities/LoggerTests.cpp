@@ -27,7 +27,7 @@ std::unique_ptr<const Logger> create_logger(const std::string& logger_name,
                                             Logging::Level lvl) {
   auto output = std::make_unique<LevelOutputDecorator>(
       std::make_unique<NamedOutputDecorator>(
-          std::make_unique<DefaultPrintPolicy>(logfile), logger_name));
+          std::make_unique<DefaultPrintPolicy>(logfile), logger_name, 30));
   auto print = std::make_unique<DefaultFilterPolicy>(lvl);
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
@@ -56,43 +56,57 @@ void debug_level_test(const char* output_file, Logging::Level lvl) {
     return;
   }
 
-  // Set up local logger
-  auto log = detail::create_logger("TestLogger", &logfile, lvl);
-  ACTS_LOCAL_LOGGER(std::move(log));
+  auto test = [&](std::unique_ptr<const Logger> log, const std::string& name) {
+    // Set up local logger
+    ACTS_LOCAL_LOGGER(std::move(log));
 
-  // Test logging at a certain debug level
-  auto test_logging = [](auto&& test_operation, Logging::Level test_lvl) {
-    if (test_lvl >= Logging::getFailureThreshold()) {
-      BOOST_CHECK_THROW(test_operation(), std::runtime_error);
-    } else {
-      test_operation();
+    // Test logging at a certain debug level
+    auto test_logging = [](auto&& test_operation, Logging::Level test_lvl) {
+      if (test_lvl >= Logging::getFailureThreshold()) {
+        BOOST_CHECK_THROW(test_operation(), std::runtime_error);
+      } else {
+        test_operation();
+      }
+    };
+
+    // Test logging at all debug levels
+    test_logging([&] { ACTS_FATAL("fatal level"); }, FATAL);
+    test_logging([&] { ACTS_ERROR("error level"); }, ERROR);
+    test_logging([&] { ACTS_WARNING("warning level"); }, WARNING);
+    test_logging([&] { ACTS_INFO("info level"); }, INFO);
+    test_logging([&] { ACTS_DEBUG("debug level"); }, DEBUG);
+    test_logging([&] { ACTS_VERBOSE("verbose level"); }, VERBOSE);
+    logfile.close();
+
+    std::string padded_name = name;
+    padded_name.resize(30, ' ');
+
+    // Compute expected output for current debug levels
+    std::vector<std::string> lines{padded_name + "FATAL     fatal level",
+                                   padded_name + "ERROR     error level",
+                                   padded_name + "WARNING   warning level",
+                                   padded_name + "INFO      info level",
+                                   padded_name + "DEBUG     debug level",
+                                   padded_name + "VERBOSE   verbose level"};
+    lines.resize(static_cast<int>(Logging::Level::MAX) - static_cast<int>(lvl));
+
+    // Check output
+    std::ifstream infile(output_file, std::ios::in);
+    size_t i = 0;
+    for (std::string line; std::getline(infile, line); ++i) {
+      BOOST_CHECK_EQUAL(line, lines.at(i));
     }
   };
 
-  // Test logging at all debug levels
-  test_logging([&] { ACTS_FATAL("fatal level"); }, FATAL);
-  test_logging([&] { ACTS_ERROR("error level"); }, ERROR);
-  test_logging([&] { ACTS_WARNING("warning level"); }, WARNING);
-  test_logging([&] { ACTS_INFO("info level"); }, INFO);
-  test_logging([&] { ACTS_DEBUG("debug level"); }, DEBUG);
-  test_logging([&] { ACTS_VERBOSE("verbose level"); }, VERBOSE);
-  logfile.close();
+  auto log = detail::create_logger("TestLogger", &logfile, lvl);
+  BOOST_CHECK_EQUAL(log->name(), "TestLogger");
+  auto copy = log->clone("TestLoggerClone");
+  test(std::move(copy), "TestLoggerClone");
+  BOOST_CHECK_EQUAL(log->name(), "TestLogger");
 
-  // Compute expected output for current debug levels
-  std::vector<std::string> lines{"TestLogger     FATAL     fatal level",
-                                 "TestLogger     ERROR     error level",
-                                 "TestLogger     WARNING   warning level",
-                                 "TestLogger     INFO      info level",
-                                 "TestLogger     DEBUG     debug level",
-                                 "TestLogger     VERBOSE   verbose level"};
-  lines.resize(static_cast<int>(Logging::Level::MAX) - static_cast<int>(lvl));
+  logfile = std::ofstream{output_file};  // clear output
 
-  // Check output
-  std::ifstream infile(output_file, std::ios::in);
-  size_t i = 0;
-  for (std::string line; std::getline(infile, line); ++i) {
-    BOOST_CHECK_EQUAL(line, lines.at(i));
-  }
+  test(std::move(log), "TestLogger");
 }
 
 /// @brief unit test for FATAL debug level
