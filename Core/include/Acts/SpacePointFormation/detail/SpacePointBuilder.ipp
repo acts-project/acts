@@ -10,9 +10,8 @@ namespace Acts {
 template <typename spacepoint_t>
 SpacePointBuilder<spacepoint_t>::SpacePointBuilder(
     const SpacePointBuilderConfig& cfg,
-    std::function<
-        spacepoint_t(Acts::Vector3, Acts::Vector2,
-                     boost::container::static_vector<const SourceLink*, 2>)>
+    std::function<spacepoint_t(Acts::Vector3, Acts::Vector2,
+                               boost::container::static_vector<SourceLink, 2>)>
         func,
     std::unique_ptr<const Logger> logger)
     : m_config(cfg), m_spConstructor(func), m_logger(std::move(logger)) {
@@ -84,10 +83,10 @@ void SpacePointBuilder<spacepoint_t>::buildSpacePoint(
     ACTS_ERROR("More than 2 measurements are given for a space point.");
   }
 
-  boost::container::static_vector<const SourceLink*, 2> slinks;
+  boost::container::static_vector<SourceLink, 2> slinks;
   for (const auto& meas : measurements) {
     const auto& slink =
-        std::visit([](const auto& x) { return &x.sourceLink(); }, *meas);
+        std::visit([](const auto& x) { return x.sourceLink(); }, *meas);
     slinks.emplace_back(slink);
   }
 

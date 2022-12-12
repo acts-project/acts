@@ -33,8 +33,7 @@ struct TrackFitterChi2FunctionImpl
   TrackFitterChi2FunctionImpl(Fitter&& f) : trackFitterChi2(std::move(f)) {}
 
   ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Result operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Options&
           options,

@@ -44,8 +44,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::writeT(
 
   SpacepointData spData{};
   for (const auto& sp : spacepoints) {
-    const auto slink =
-        static_cast<const IndexSourceLink&>(*(sp.sourceLinks()[0]));
+    const auto slink = sp.sourceLinks()[0].get<IndexSourceLink>();
 
     spData.measurement_id = slink.index();
     spData.geometry_id = slink.geometryId().value();
