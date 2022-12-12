@@ -85,6 +85,12 @@ class NeverFilterPolicy final : public OutputFilterPolicy {
   ~NeverFilterPolicy() override = default;
 
   bool doPrint(const Level& /*lvl*/) const override { return false; }
+
+  Level level() const override { return Level::MAX; }
+
+  std::unique_ptr<OutputFilterPolicy> clone(Level /*level*/) const override {
+    return std::make_unique<NeverFilterPolicy>();
+  }
 };
 
 std::unique_ptr<const Logger> makeDummyLogger() {
