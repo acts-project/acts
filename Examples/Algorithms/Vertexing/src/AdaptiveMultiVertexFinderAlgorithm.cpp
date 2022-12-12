@@ -16,6 +16,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
@@ -27,11 +28,29 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <chrono>
 
 #include "VertexingHelpers.hpp"
+
+using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+using IPEstimator =
+    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
+using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
+using Fitter =
+    Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+using SeedFinder = Acts::TrackDensityVertexFinder<
+    Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+
+struct ActsExamples::AdaptiveMultiVertexFinderAlgorithm::Impl {
+  Finder finder;
+};
+
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
+    ~AdaptiveMultiVertexFinderAlgorithm() = default;
 
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
     AdaptiveMultiVertexFinderAlgorithm(const Config& config,
@@ -54,6 +73,48 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
 }
 
 ActsExamples::ProcessCode
+ActsExamples::AdaptiveMultiVertexFinderAlgorithm::initialize() {
+  // Set up EigenStepper
+  Acts::EigenStepper<> stepper(m_cfg.bField);
+
+  // Set up the propagator
+  auto propagator = std::make_shared<Propagator>(stepper);
+
+  // Set up ImpactPointEstimator
+  IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
+  IPEstimator ipEstimator(ipEstimatorCfg);
+
+  // Set up the helical track linearizer
+  Linearizer::Config ltConfig(m_cfg.bField, propagator);
+  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
+
+  // Set up deterministic annealing with user-defined temperatures
+  Acts::AnnealingUtility::Config annealingConfig;
+  annealingConfig.setOfTemperatures = {8.0,       4.0,       2.0,
+                                       1.4142136, 1.2247449, 1.0};
+  Acts::AnnealingUtility annealingUtility(annealingConfig);
+
+  // Set up the vertex fitter with user-defined annealing
+  Fitter::Config fitterCfg(ipEstimator);
+  fitterCfg.annealingTool = annealingUtility;
+  Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
+
+  // Set up the vertex seed finder
+  SeedFinder seedFinder;
+
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
+                              std::move(linearizer), m_cfg.bField);
+  // We do not want to use a beamspot constraint here
+  finderConfig.useBeamSpotConstraint = false;
+
+  // Instantiate the finder
+  m_impl = std::make_unique<Impl>(
+      Impl{Finder{finderConfig, logger().cloneWithSuffix("AMVFinder")}});
+
+  return ProcessCode::SUCCESS;
+}
+
+ActsExamples::ProcessCode
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // retrieve input tracks and convert into the expected format
@@ -65,54 +126,6 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   /* Full tutorial example code for reference */
   //////////////////////////////////////////////
 
-  // Set up EigenStepper
-  Acts::EigenStepper<> stepper(m_cfg.bField);
-
-  // Set up the propagator
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  auto propagator = std::make_shared<Propagator>(stepper);
-
-  // Set up ImpactPointEstimator
-  using IPEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-  IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
-  IPEstimator ipEstimator(ipEstimatorCfg);
-
-  // Set up the helical track linearizer
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  Linearizer::Config ltConfig(m_cfg.bField, propagator);
-  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
-
-  // Set up deterministic annealing with user-defined temperatures
-  Acts::AnnealingUtility::Config annealingConfig;
-  annealingConfig.setOfTemperatures = {1.};
-  Acts::AnnealingUtility annealingUtility(annealingConfig);
-
-  // Set up the vertex fitter with user-defined annealing
-  using Fitter =
-      Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  Fitter::Config fitterCfg(ipEstimator);
-  fitterCfg.annealingTool = annealingUtility;
-  fitterCfg.minWeight = 0.001;
-  fitterCfg.doSmoothing = true;
-  Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
-
-  // Set up the vertex seed finder
-  using SeedFinder = Acts::TrackDensityVertexFinder<
-      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
-  SeedFinder seedFinder;
-
-  // The vertex finder type
-  using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
-
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              std::move(linearizer), m_cfg.bField);
-  // We do not want to use a beamspot constraint here
-  finderConfig.useBeamSpotConstraint = false;
-  finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
-
-  // Instantiate the finder
-  Finder finder(finderConfig);
   // The vertex finder state
   Finder::State state;
 
@@ -130,7 +143,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     ACTS_DEBUG("Have " << inputTrackParameters.size()
                        << " input track parameters, running vertexing");
     // find vertices and measure elapsed time
-    auto result = finder.find(inputTrackPointers, finderOpts, state);
+    auto result = m_impl->finder.find(inputTrackPointers, finderOpts, state);
 
     if (result.ok()) {
       vertices = std::move(result.value());

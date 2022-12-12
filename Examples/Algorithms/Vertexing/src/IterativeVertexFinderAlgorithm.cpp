@@ -37,6 +37,26 @@
 
 #include "VertexingHelpers.hpp"
 
+using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+using PropagatorOptions = Acts::PropagatorOptions<>;
+using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
+using VertexFitter =
+    Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+using ImpactPointEstimator =
+    Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
+using VertexSeeder = Acts::ZScanVertexFinder<VertexFitter>;
+using VertexFinder = Acts::IterativeVertexFinder<VertexFitter, VertexSeeder>;
+using VertexFinderOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
+
+struct ActsExamples::IterativeVertexFinderAlgorithm::Impl {
+  VertexFinder vertexFinder;
+
+  Impl(Impl&&) = default;
+};
+
+ActsExamples::IterativeVertexFinderAlgorithm::
+    ~IterativeVertexFinderAlgorithm() = default;
+
 ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
     const Config& config, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("IterativeVertexFinder", level),
@@ -56,32 +76,14 @@ ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
-  // retrieve input tracks and convert into the expected format
-
-  auto [inputTrackParameters, inputTrackPointers] =
-      makeParameterContainers(m_cfg, ctx);
-
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using VertexFitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using ImpactPointEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-  using VertexSeeder = Acts::ZScanVertexFinder<VertexFitter>;
-  using VertexFinder = Acts::IterativeVertexFinder<VertexFitter, VertexSeeder>;
-  using VertexFinderOptions =
-      Acts::VertexingOptions<Acts::BoundTrackParameters>;
-
+ActsExamples::ProcessCode
+ActsExamples::IterativeVertexFinderAlgorithm::initialize() {
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Set up propagator with void navigator
   auto propagator = std::make_shared<Propagator>(
       stepper, Acts::detail::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(vertexFitterCfg);
@@ -98,13 +100,26 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
                                  std::move(seeder), ipEst);
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
-  VertexFinder finder(finderCfg);
+
+  m_impl = std::make_unique<Impl>(Impl{VertexFinder{finderCfg}});
+  return ProcessCode::SUCCESS;
+}
+
+ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
+  // retrieve input tracks and convert into the expected format
+
+  auto [inputTrackParameters, inputTrackPointers] =
+      makeParameterContainers(m_cfg, ctx);
+
+  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   VertexFinder::State state(*m_cfg.bField, ctx.magFieldContext);
   VertexFinderOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
   // find vertices and measure elapsed time
   auto t1 = std::chrono::high_resolution_clock::now();
-  auto result = finder.find(inputTrackPointers, finderOpts, state);
+  auto result =
+      m_impl->vertexFinder.find(inputTrackPointers, finderOpts, state);
   auto t2 = std::chrono::high_resolution_clock::now();
 
   std::vector<Acts::Vertex<Acts::BoundTrackParameters>> vertices;

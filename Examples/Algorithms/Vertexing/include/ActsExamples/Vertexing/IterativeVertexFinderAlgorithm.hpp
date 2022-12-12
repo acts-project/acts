@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
 
@@ -36,17 +37,24 @@ class IterativeVertexFinderAlgorithm final : public BareAlgorithm {
   IterativeVertexFinderAlgorithm(const Config& config,
                                  Acts::Logging::Level level);
 
+  ~IterativeVertexFinderAlgorithm();
+
   /// Find vertices using iterative vertex finder algorithm.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
+  ProcessCode initialize() final;
+
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  struct Impl;
+  std::unique_ptr<Impl> m_impl;
 };
 
 }  // namespace ActsExamples

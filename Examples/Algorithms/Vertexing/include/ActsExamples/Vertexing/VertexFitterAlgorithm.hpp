@@ -45,17 +45,24 @@ class VertexFitterAlgorithm final : public BareAlgorithm {
 
   VertexFitterAlgorithm(const Config& cfg, Acts::Logging::Level lvl);
 
+  ~VertexFitterAlgorithm();
+
   /// Fit the input vertices.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 
+  ProcessCode initialize() final;
+
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
+
+  struct Impl;
+  std::unique_ptr<Impl> m_impl;
 };
 
 }  // namespace ActsExamples

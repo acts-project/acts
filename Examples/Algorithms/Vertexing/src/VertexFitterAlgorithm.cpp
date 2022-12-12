@@ -21,11 +21,26 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
 
 #include "VertexingHelpers.hpp"
+
+using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+using PropagatorOptions = Acts::PropagatorOptions<>;
+using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
+using VertexFitter =
+    Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+using VertexFitterOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
+
+struct ActsExamples::VertexFitterAlgorithm::Impl {
+  VertexFitter vertexFitter;
+  Linearizer linearizer;
+};
+
+ActsExamples::VertexFitterAlgorithm::~VertexFitterAlgorithm() = default;
 
 ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
@@ -39,30 +54,30 @@ ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
-    const ActsExamples::AlgorithmContext& ctx) const {
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using VertexFitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using VertexFitterOptions =
-      Acts::VertexingOptions<Acts::BoundTrackParameters>;
-
+ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::initialize() {
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Setup the propagator with void navigator
   auto propagator = std::make_shared<Propagator>(
       stepper, Acts::detail::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
-  VertexFitter vertexFitter(vertexFitterCfg);
-  VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
   // Setup the linearizer
   Linearizer::Config ltConfig(m_cfg.bField, propagator);
   Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
+
+  m_impl = std::make_unique<Impl>(
+      Impl{VertexFitter(vertexFitterCfg), std::move(linearizer)});
+
+  return ProcessCode::SUCCESS;
+}
+
+ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
+    const ActsExamples::AlgorithmContext& ctx) const {
+  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
+
+  VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
 
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
@@ -103,8 +118,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     if (!m_cfg.doConstrainedFit) {
       VertexFitterOptions vfOptions(ctx.geoContext, ctx.magFieldContext);
 
-      auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
-                                     vfOptions, state);
+      auto fitRes = m_impl->vertexFitter.fit(
+          inputTrackPtrCollection, m_impl->linearizer, vfOptions, state);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {
@@ -121,8 +136,8 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
       VertexFitterOptions vfOptionsConstr(ctx.geoContext, ctx.magFieldContext,
                                           theConstraint);
 
-      auto fitRes = vertexFitter.fit(inputTrackPtrCollection, linearizer,
-                                     vfOptionsConstr, state);
+      auto fitRes = m_impl->vertexFitter.fit(
+          inputTrackPtrCollection, m_impl->linearizer, vfOptionsConstr, state);
       if (fitRes.ok()) {
         fittedVertices.push_back(*fitRes);
       } else {

@@ -165,7 +165,7 @@ class IterativeVertexFinder {
 
  private:
   /// Configuration object
-  const Config m_cfg;
+  Config m_cfg;
 
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
