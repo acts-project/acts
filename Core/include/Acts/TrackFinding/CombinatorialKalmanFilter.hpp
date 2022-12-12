@@ -1213,7 +1213,7 @@ class CombinatorialKalmanFilter {
     SurfaceReached targetReached;
 
     /// Logger instance
-    const Logger* m_logger;
+    const Logger* m_logger{nullptr};
 
     const Logger& logger() const { return *m_logger; }
   };

@@ -313,7 +313,7 @@ class KalmanFitter {
     std::shared_ptr<MultiTrajectory<traj_t>> outputStates;
 
     /// The logger instance
-    const Logger* m_logger;
+    const Logger* m_logger{nullptr};
 
     /// Logger helper
     const Logger& logger() const { return *m_logger; }
