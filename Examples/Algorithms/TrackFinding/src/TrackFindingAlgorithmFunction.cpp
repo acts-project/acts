@@ -36,7 +36,7 @@ struct TrackFinderFunctionImpl
   TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const ActsExamples::TrackParametersContainer& initialParameters,
+      const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options,
       std::shared_ptr<Acts::VectorMultiTrajectory> trajectory) const override {
     return trackFinder.findTracks(initialParameters, options,
