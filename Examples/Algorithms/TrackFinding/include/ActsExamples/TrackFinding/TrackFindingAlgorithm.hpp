@@ -34,8 +34,8 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   using TrackFinderOptions =
       Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
                                              Acts::VectorMultiTrajectory>;
-  using TrackFinderResult = std::vector<Acts::Result<
-      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>;
+  using TrackFinderResult = Acts::Result<
+      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>;
 
   /// Find function that takes the above parameters
   /// @note This is separated into a virtual interface to keep compilation units
@@ -44,7 +44,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
    public:
     virtual ~TrackFinderFunction() = default;
     virtual TrackFinderResult operator()(
-        const TrackParametersContainer&, const TrackFinderOptions&,
+        const TrackParameters&, const TrackFinderOptions&,
         std::shared_ptr<Acts::VectorMultiTrajectory>) const = 0;
   };
 
@@ -92,7 +92,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
  private:
   template <typename source_link_accessor_container_t>
   void computeSharedHits(const source_link_accessor_container_t& sourcelinks,
-                         TrackFinderResult& /*result*/) const;
+                         std::vector<TrackFinderResult>& result) const;
 
   ActsExamples::ProcessCode finalize() const override;
 
@@ -114,7 +114,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
 template <typename source_link_accessor_container_t>
 void TrackFindingAlgorithm::computeSharedHits(
     const source_link_accessor_container_t& sourceLinks,
-    TrackFinderResult& results) const {
+    std::vector<TrackFinderResult>& results) const {
   // Compute shared hits from all the reconstructed tracks
   // Compute nSharedhits and Update ckf results
   // hit index -> list of multi traj indexes [traj, meas]
