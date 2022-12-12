@@ -94,7 +94,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldNoSurfaceForward(kfZero, kfOptions, start, rng,
-                                        expected_reversed, expected_smoothed, true);
+                                        expected_reversed, expected_smoothed,
+                                        true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
