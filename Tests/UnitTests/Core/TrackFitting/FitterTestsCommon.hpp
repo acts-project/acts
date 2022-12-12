@@ -148,7 +148,8 @@ struct FitterTester {
                                       fitter_options_t options,
                                       const parameters_t& start, Rng& rng,
                                       const bool expected_reversed,
-                                      const bool expected_smoothed) const {
+                                      const bool expected_smoothed,
+                                      const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -188,7 +189,9 @@ struct FitterTester {
       }
     };
 
-    doTest(true);   // with reversed & smoothed columns
+    if (doDiag) {
+      doTest(true);
+    }               // with reversed & smoothed columns
     doTest(false);  // without the extra columns
   }
 
@@ -197,7 +200,8 @@ struct FitterTester {
                                         fitter_options_t options,
                                         const parameters_t& start, Rng& rng,
                                         const bool expected_reversed,
-                                        const bool expected_smoothed) const {
+                                        const bool expected_smoothed,
+                                        const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -232,8 +236,10 @@ struct FitterTester {
     Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
 
     // check the output status flags
-    BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
-    BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    if (doDiag) {
+      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    }
 
     // count the number of `smoothed` states
     if (expected_reversed && expected_smoothed) {
@@ -250,7 +256,8 @@ struct FitterTester {
                                          fitter_options_t options,
                                          const parameters_t& start, Rng& rng,
                                          const bool expected_reversed,
-                                         const bool expected_smoothed) const {
+                                         const bool expected_smoothed,
+                                         const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -285,8 +292,10 @@ struct FitterTester {
     Acts::ConstTrackAccessor<bool> reversed{"reversed"};
     Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
     // check the output status flags
-    BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
-    BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    if (doDiag) {
+      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    }
 
     // count the number of `smoothed` states
     if (expected_reversed && expected_smoothed) {
@@ -303,7 +312,8 @@ struct FitterTester {
                                        fitter_options_t options,
                                        const parameters_t& start, Rng& rng,
                                        const bool expected_reversed,
-                                       const bool expected_smoothed) const {
+                                       const bool expected_smoothed,
+                                       const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -336,15 +346,18 @@ struct FitterTester {
     Acts::ConstTrackAccessor<bool> smoothed{"smoothed"};
 
     // check the output status flags
-    BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
-    BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    if (doDiag) {
+      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    }
   }
 
   template <typename fitter_t, typename fitter_options_t, typename parameters_t>
   void test_ZeroFieldShuffled(const fitter_t& fitter, fitter_options_t options,
                               const parameters_t& start, Rng& rng,
                               const bool expected_reversed,
-                              const bool expected_smoothed) const {
+                              const bool expected_smoothed,
+                              const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -376,8 +389,10 @@ struct FitterTester {
       BOOST_CHECK_EQUAL(track.nHoles(), 0u);
 
       // check the output status flags
-      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
-      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      if (doDiag) {
+        BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+        BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      }
     }
     // fit w/ all hits in random order
     {
@@ -394,8 +409,10 @@ struct FitterTester {
       CHECK_CLOSE_ABS(track.parameters(), parameters, 1e-5);
       BOOST_CHECK_EQUAL(track.nMeasurements(), sourceLinks.size());
       // check the output status flags
-      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
-      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      if (doDiag) {
+        BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+        BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      }
     }
   }
 
@@ -403,7 +420,8 @@ struct FitterTester {
   void test_ZeroFieldWithHole(const fitter_t& fitter, fitter_options_t options,
                               const parameters_t& start, Rng& rng,
                               const bool expected_reversed,
-                              const bool expected_smoothed) const {
+                              const bool expected_smoothed,
+                              const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -435,8 +453,10 @@ struct FitterTester {
       BOOST_REQUIRE(!track.hasReferenceSurface());
       BOOST_CHECK_EQUAL(track.nMeasurements(), withHole.size());
       // check the output status flags
-      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
-      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      if (doDiag) {
+        BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+        BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      }
       BOOST_CHECK_EQUAL(track.nHoles(), 1u);
     }
     BOOST_CHECK_EQUAL(tracks.size(), sourceLinks.size() - 2);
@@ -447,7 +467,8 @@ struct FitterTester {
                                   fitter_options_t options,
                                   const parameters_t& start, Rng& rng,
                                   const bool expected_reversed,
-                                  const bool expected_smoothed) const {
+                                  const bool expected_smoothed,
+                                  const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
     const auto& sourceLinks = measurements.sourceLinks;
@@ -485,8 +506,10 @@ struct FitterTester {
       BOOST_REQUIRE(!track.hasReferenceSurface());
       BOOST_CHECK_EQUAL(track.nMeasurements(), withOutlier.size() - 1u);
       // check the output status flags
-      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
-      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      if (doDiag) {
+        BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+        BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+      }
       BOOST_CHECK_EQUAL(track.nHoles(), 0u);
     }
     BOOST_CHECK_EQUAL(tracks.size(), sourceLinks.size());
@@ -497,7 +520,8 @@ struct FitterTester {
                                           fitter_options_t options,
                                           const parameters_t& start, Rng& rng,
                                           const bool expected_reversed,
-                                          const bool expected_smoothed) const {
+                                          const bool expected_smoothed,
+                                          const bool doDiag) const {
     auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                            resolutions, rng);
 
@@ -528,8 +552,10 @@ struct FitterTester {
 
     // Track of 1 GeV with a threshold set at 0.1 GeV, reversed filtering should
     // not be used
-    BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
-    BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    if (doDiag) {
+      BOOST_CHECK_EQUAL(smoothed(track), expected_smoothed);
+      BOOST_CHECK_EQUAL(reversed(track), expected_reversed);
+    }
   }
 
   // TODO this is not really Kalman fitter specific. is probably better tested
