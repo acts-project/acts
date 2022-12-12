@@ -97,7 +97,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                                           << " seeds.");
 
   auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
-  auto results = (*m_cfg.findTracks)(initialParameters, options, mtj);
+  std::vector<TrackFinderResult> results;
+  results.reserve(initialParameters.size());
+  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    results.push_back(
+        (*m_cfg.findTracks)(initialParameters.at(iseed), options, mtj));
+  }
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {

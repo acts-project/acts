@@ -282,7 +282,15 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
       &slAccessor);
 
   // run the CKF for all initial track states
-  auto results = f.ckf.findTracks(f.startParameters, options);
+  std::vector<Acts::Result<
+      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>
+      results;
+  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+    results.push_back(
+        f.ckf.findTracks(f.startParameters.at(trackId), options, mtj));
+  }
+
   // There should be three track finding results with three initial track states
   BOOST_CHECK_EQUAL(results.size(), 3u);
 
@@ -339,7 +347,14 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
       &slAccessor);
 
   // run the CKF for all initial track states
-  auto results = f.ckf.findTracks(f.endParameters, options);
+  std::vector<Acts::Result<
+      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>
+      results;
+  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+    results.push_back(
+        f.ckf.findTracks(f.endParameters.at(trackId), options, mtj));
+  }
   // There should be three found tracks with three initial track states
   BOOST_CHECK_EQUAL(results.size(), 3u);
 
