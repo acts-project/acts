@@ -88,8 +88,7 @@ mockupVolumes(std::vector<std::shared_ptr<Acts::TestDetectorElement>>& store) {
 
   Acts::ActsScalar hLength = 100.;
 
-  std::array<std::shared_ptr<Acts::Experimental::DetectorVolume>, 6u> mVolumes =
-      {nullptr, nullptr, nullptr, nullptr, nullptr, nullptr};
+  std::array<std::shared_ptr<Acts::Experimental::DetectorVolume>, 6u> mVolumes;
   std::shared_ptr<Acts::Experimental::DetectorVolume> lastVolume = nullptr;
 
   std::vector<std::string> volumeNames = {"A", "Bs", "C", "Dsp", "Ep", "Fv"};
