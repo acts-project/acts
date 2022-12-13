@@ -128,9 +128,9 @@ class DisjointSets {
 
 template <size_t BufSize>
 struct ConnectionsBase {
-  size_t nconn;
+  size_t nconn{0};
   std::array<Label, BufSize> buf;
-  ConnectionsBase() : nconn{0} { std::fill(buf.begin(), buf.end(), NO_LABEL); }
+  ConnectionsBase() { std::fill(buf.begin(), buf.end(), NO_LABEL); }
 };
 
 template <size_t GridDim>
@@ -205,9 +205,9 @@ ClusterCollection mergeClustersImpl(CellCollection& cells) {
 }  // namespace internal
 
 template <typename Cell>
-ConnectResult Connect2D<Cell>::operator()(const Cell& a, const Cell& b) {
-  int deltaRow = std::abs(getCellRow(a) - getCellRow(b));
-  int deltaCol = std::abs(getCellColumn(a) - getCellColumn(b));
+ConnectResult Connect2D<Cell>::operator()(const Cell& ref, const Cell& iter) {
+  int deltaRow = std::abs(getCellRow(ref) - getCellRow(iter));
+  int deltaCol = std::abs(getCellColumn(ref) - getCellColumn(iter));
   // Iteration is column-wise, so if too far in column, can
   // safely stop
   if (deltaCol > 1) {
@@ -227,8 +227,8 @@ ConnectResult Connect2D<Cell>::operator()(const Cell& a, const Cell& b) {
 }
 
 template <typename Cell>
-ConnectResult Connect1D<Cell>::operator()(const Cell& a, const Cell& b) {
-  int deltaCol = std::abs(getCellColumn(a) - getCellColumn(b));
+ConnectResult Connect1D<Cell>::operator()(const Cell& ref, const Cell& iter) {
+  int deltaCol = std::abs(getCellColumn(ref) - getCellColumn(iter));
   return deltaCol == 1 ? ConnectResult::eConn : ConnectResult::eNoConnStop;
 }
 
@@ -261,8 +261,9 @@ void labelClusters(CellCollection& cells, Connect connect) {
         // Sanity check: since connection lookup is always backward
         // while iteration is forward, all connected cells found here
         // should have a label
-        if (seen.buf[i] == NO_LABEL)
+        if (seen.buf[i] == NO_LABEL) {
           throw std::logic_error("i < seen.nconn but see.buf[i] == NO_LABEL");
+	}
         // Only record equivalence if needed
         if (seen.buf[0] != seen.buf[i]) {
           ds.unionSet(seen.buf[0], seen.buf[i]);
