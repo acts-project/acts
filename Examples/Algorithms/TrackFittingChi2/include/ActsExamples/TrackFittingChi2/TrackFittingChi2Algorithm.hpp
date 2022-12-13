@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/Chi2Fitter.hpp"
@@ -44,8 +45,8 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
    public:
     virtual ~TrackFitterChi2Function() = default;
     virtual TrackFitterChi2Result operator()(
-        const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const TrackFitterChi2Options&,
+        const std::vector<Acts::SourceLink>&, const TrackParameters&,
+        const TrackFitterChi2Options&,
         std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
   };
 
@@ -100,8 +101,7 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
  private:
   /// Helper function to call correct FitterFunction
   TrackFitterChi2Result fitTrack(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>&
           options,
@@ -113,8 +113,7 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
 
 inline ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Result
 ActsExamples::TrackFittingChi2Algorithm::fitTrack(
-    const std::vector<std::reference_wrapper<
-        const ActsExamples::IndexSourceLink>>& sourceLinks,
+    const std::vector<Acts::SourceLink>& sourceLinks,
     const ActsExamples::TrackParameters& initialParameters,
     const Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>&
         options,

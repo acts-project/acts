@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -98,7 +99,10 @@ struct TestContainerAccessor {
 
     bool operator!=(const Iterator& other) const { return !(*this == other); }
 
-    const Value& operator*() const { return m_iterator->second; }
+    Acts::SourceLink operator*() const {
+      const auto& sl = m_iterator->second;
+      return Acts::SourceLink{sl};
+    }
 
     BaseIterator m_iterator;
   };
@@ -283,7 +287,15 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
       &slAccessor);
 
   // run the CKF for all initial track states
-  auto results = f.ckf.findTracks(f.startParameters, options);
+  std::vector<Acts::Result<
+      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>
+      results;
+  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+    results.push_back(
+        f.ckf.findTracks(f.startParameters.at(trackId), options, mtj));
+  }
+
   // There should be three track finding results with three initial track states
   BOOST_CHECK_EQUAL(results.size(), 3u);
 
@@ -313,7 +325,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
           const auto& sl =
-              static_cast<const TestSourceLink&>(trackState.uncalibrated());
+              trackState.uncalibrated().template get<TestSourceLink>();
           nummismatchedHits += (trackId != sl.sourceId);
         });
 
@@ -340,7 +352,14 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
       &slAccessor);
 
   // run the CKF for all initial track states
-  auto results = f.ckf.findTracks(f.endParameters, options);
+  std::vector<Acts::Result<
+      Acts::CombinatorialKalmanFilterResult<Acts::VectorMultiTrajectory>>>
+      results;
+  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+    results.push_back(
+        f.ckf.findTracks(f.endParameters.at(trackId), options, mtj));
+  }
   // There should be three found tracks with three initial track states
   BOOST_CHECK_EQUAL(results.size(), 3u);
 
@@ -368,8 +387,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     val.fittedStates->visitBackwards(
         val.lastMeasurementIndices.front(), [&](const auto& trackState) {
           numHits += 1u;
-          nummismatchedHits += (trackId != static_cast<const TestSourceLink&>(
-                                               trackState.uncalibrated())
+          nummismatchedHits += (trackId != trackState.uncalibrated()
+                                               .template get<TestSourceLink>()
                                                .sourceId);
         });
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);

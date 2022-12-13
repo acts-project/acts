@@ -38,8 +38,7 @@ class AlignmentAlgorithm final : public BareAlgorithm {
    public:
     virtual ~AlignmentFunction() = default;
     virtual AlignmentResult operator()(
-        const std::vector<
-            std::vector<std::reference_wrapper<const IndexSourceLink>>>&,
+        const std::vector<std::vector<IndexSourceLink>>&,
         const TrackParametersContainer&,
         const ActsAlignment::AlignmentOptions<TrackFitterOptions>&) const = 0;
   };

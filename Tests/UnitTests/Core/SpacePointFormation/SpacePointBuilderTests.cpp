@@ -81,9 +81,9 @@ std::pair<Vector3, Vector3> stripEnds(
     const double stripFrac = 0.4) {
   const auto lpos = getLocalPos(meas);
   Vector3 globalFakeMom(1, 1, 1);
-  const SourceLink* slink =
-      std::visit([](const auto& x) { return &x.sourceLink(); }, *meas);
-  const auto geoId = slink->geometryId();
+  const SourceLink& slink =
+      std::visit([](const auto& x) { return x.sourceLink(); }, *meas);
+  const auto geoId = slink.geometryId();
   const Surface* surface = geo->findSurface(geoId);
 
   const double stripLength = 40.;
@@ -179,15 +179,17 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
     const auto volumeId = geoId.volume();
     if (volumeId == 2) {  // pixel type detector
 
-      const TestMeasurement* meas = new TestMeasurement(makeMeasurement(
-          sl, sl.parameters, sl.covariance, sl.indices[0], sl.indices[1]));
+      const TestMeasurement* meas = new TestMeasurement(
+          makeMeasurement(SourceLink{sl}, sl.parameters, sl.covariance,
+                          sl.indices[0], sl.indices[1]));
       singleHitMeasurements.emplace_back(meas);
     } else if (volumeId == 3) {  // strip type detector
 
       const auto layerId = geoId.layer();
 
-      const TestMeasurement* meas = new TestMeasurement(makeMeasurement(
-          sl, sl.parameters, sl.covariance, sl.indices[0], sl.indices[1]));
+      const TestMeasurement* meas = new TestMeasurement(
+          makeMeasurement(SourceLink{sl}, sl.parameters, sl.covariance,
+                          sl.indices[0], sl.indices[1]));
 
       if (layerId == 2 || layerId == 6) {
         frontMeasurements.emplace_back(meas);
@@ -202,12 +204,9 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
 
   Acts::Vector3 vertex = Vector3(-3_m, 0., 0.);
 
-  std::function<TestSpacePoint(
-      Acts::Vector3, Acts::Vector2,
-      boost::container::static_vector<const Acts::SourceLink*, 2>)>
-      spConstructor =
-          [](const Acts::Vector3& pos, const Acts::Vector2& cov,
-             boost::container::static_vector<const Acts::SourceLink*, 2> slinks)
+  auto spConstructor =
+      [](const Acts::Vector3& pos, const Acts::Vector2& cov,
+         boost::container::static_vector<Acts::SourceLink, 2> slinks)
       -> TestSpacePoint {
     return TestSpacePoint(pos, cov[0], cov[1], std::move(slinks));
   };
