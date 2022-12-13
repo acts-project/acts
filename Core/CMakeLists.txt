@@ -22,7 +22,7 @@ target_link_libraries(
 # Fpe flags
 set(_fpe_options "")
 
-find_library (dl_LIBRARY dl)
+find_library(dl_LIBRARY dl)
 find_package(Backtrace)
 find_program(addr2line_EXECUTABLE addr2line)
 if(APPLE)

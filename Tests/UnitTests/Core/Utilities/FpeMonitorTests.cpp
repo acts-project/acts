@@ -14,24 +14,34 @@
 
 namespace utf = boost::unit_test;
 
-namespace Acts {
+namespace Acts::Test {
 
-namespace Test {
+BOOST_AUTO_TEST_SUITE(FpeMonitorTest)
 
-// BOOST_AUTO_TEST_CASE(FpeMonitorTest) {
-// FpeMonitor mon;
-// volatile const double x = -1;
-// printf("y = %f\n", sqrt(x));
-// }
+#if defined(_FE_INVALID)
+BOOST_AUTO_TEST_CASE(Invalid) {
+  {
+    FpeMonitor mon;
+    volatile const double x = -1;
+    printf("y = %f\n", sqrt(x));
+  }
+}
+#endif
 
-BOOST_AUTO_TEST_CASE(FpeMonitorTestDivByZero) {
-  // {
-  // FpeMonitor mon;
-  // volatile double z = 0;
-  // volatile double x = 1 / z;
-  // std::cout << "x: " << x << std::endl;
-  // }
+#if defined(_FE_DIVBYZERO)
+#error _FPE_TEST
+BOOST_AUTO_TEST_CASE(DivByZero) {
+  {
+    FpeMonitor mon;
+    volatile double z = 0;
+    volatile double x = 1 / z;
+    std::cout << "x: " << x << std::endl;
+  }
+}
+#endif
 
+#if defined(_FE_OVERFLOW)
+BOOST_AUTO_TEST_CASE(Overflow) {
   {
     FpeMonitor mon;
     volatile float v = 0;
@@ -39,8 +49,9 @@ BOOST_AUTO_TEST_CASE(FpeMonitorTestDivByZero) {
     v = 2 * w;
     std::cout << v << std::endl;
   }
-}  // namespace Test
+}
+#endif
 
-}  // namespace Test
+BOOST_AUTO_TEST_SUITE_END()
 
-}  // namespace Acts
+}  // namespace Acts::Test

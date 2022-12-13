@@ -36,11 +36,19 @@ if (ACTS_BUILD_CUDA_FEATURES)
   add_unittest(Cuda CudaTests.cu)
   add_unittest(CudaMostSimplified CudaMostSimplifiedTests.cu)
 endif()
-add_unittest(FpeMonitor FpeMonitorTests.cpp)
-if(NOT APPLE)
-# On macOS, this test won't fail as expected since FpeMonitoring is not implemented yet
-set_tests_properties(FpeMonitor PROPERTIES WILL_FAIL TRUE)
-endif()
+
+set(_fpe_modes "Invalid;DivByZero;Overflow")
+foreach(mode ${_fpe_modes})
+  add_unittest("FpeMonitor${mode}" FpeMonitorTests.cpp)
+  string(TOUPPER ${mode} mode_upper)
+  target_compile_definitions("ActsUnitTestFpeMonitor${mode}" PRIVATE -D_FE_${mode_upper})
+
+  if(NOT APPLE)
+  # On macOS, this test won't fail as expected since FpeMonitoring is not implemented yet
+  set_tests_properties("FpeMonitor${mode}" PROPERTIES WILL_FAIL TRUE)
+  endif()
+
+endforeach()
 
 add_unittest(Any AnyTests.cpp)
 add_unittest(AnyDebug AnyTests.cpp)

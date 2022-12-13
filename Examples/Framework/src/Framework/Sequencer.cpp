@@ -22,10 +22,6 @@
 #include <numeric>
 #include <stdexcept>
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif

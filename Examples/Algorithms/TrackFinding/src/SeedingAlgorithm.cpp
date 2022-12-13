@@ -58,21 +58,25 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config deltaRMax");
   }
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
-                "Value of deltaRMaxTopSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
+      "Value of deltaRMaxTopSP must support NaN values");
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
-                "Value of deltaRMinTopSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
+      "Value of deltaRMinTopSP must support NaN values");
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
-                "Value of deltaRMaxBottomSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
+      "Value of deltaRMaxBottomSP must support NaN values");
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
-                "Value of deltaRMinBottomSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
+      "Value of deltaRMinBottomSP must support NaN values");
 
   if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxTopSP)) {
     m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.seedFinderConfig.deltaRMax;
@@ -178,8 +182,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  Acts::FpeMonitor fpeMonitor;
-
   // construct the combined input container of space point pointers from all
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
