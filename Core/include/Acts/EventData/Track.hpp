@@ -140,11 +140,14 @@ class TrackProxy {
                       hashString("referenceSurface")>();
   }
 
+  // NOLINTBEGIN(performance-unnecessary-value-param)
+  // looks like a false-positive. clang-tidy believes `srf` is not movable.
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setReferenceSurface(const std::shared_ptr<const Surface>& srf) {
+  void setReferenceSurface(std::shared_ptr<const Surface> srf) {
     component<std::shared_ptr<const Surface>,
-              hashString("referenceSurface")>() = srf;
+              hashString("referenceSurface")>() = std::move(srf);
   }
+  // NOLINTEND(performance-unnecessary-value-param)
 
   bool hasReferenceSurface() const {
     return !!component<std::shared_ptr<const Surface>,
