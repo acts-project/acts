@@ -284,9 +284,7 @@ class KalmanFitter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    const std::map<GeometryIdentifier,
-                   std::reference_wrapper<const SourceLink>>*
-        inputMeasurements = nullptr;
+    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -1017,12 +1015,11 @@ class KalmanFitter {
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     // for (const auto& sl : sourcelinks) {
     for (; it != end; ++it) {
-      const SourceLink& sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), sl);
+      SourceLink sl = *it;
+      inputMeasurements.emplace(sl.geometryId(), std::move(sl));
     }
 
     // Create the ActionList and AbortList
@@ -1129,10 +1126,9 @@ class KalmanFitter {
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     for (; it != end; ++it) {
-      const SourceLink& sl = *it;
+      SourceLink sl = *it;
       inputMeasurements.emplace(sl.geometryId(), sl);
     }
 

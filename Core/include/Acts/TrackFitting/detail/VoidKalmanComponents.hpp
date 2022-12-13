@@ -37,7 +37,7 @@ template <typename traj_t>
 Result<void> voidKalmanSmoother(const GeometryContext& /*gctx*/,
                                 MultiTrajectory<traj_t>& trackStates,
                                 size_t entry, LoggerWrapper /*logger*/) {
-  trackStates.applyBackwards(entry, [](const auto trackState) {
+  trackStates.applyBackwards(entry, [](auto trackState) {
     trackState.smoothed() = trackState.filtered();
     trackState.smoothedCovariance() = trackState.filteredCovariance();
   });
