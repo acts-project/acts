@@ -29,7 +29,6 @@ BOOST_AUTO_TEST_CASE(Invalid) {
 #endif
 
 #if defined(_FE_DIVBYZERO)
-#error _FPE_TEST
 BOOST_AUTO_TEST_CASE(DivByZero) {
   {
     FpeMonitor mon;
