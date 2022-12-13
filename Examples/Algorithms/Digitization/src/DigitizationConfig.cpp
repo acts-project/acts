@@ -58,7 +58,7 @@ ActsExamples::DigitizationConfig::getBoundIndices() const {
                         dCfg.geometricDigiConfig.indices.begin(),
                         dCfg.geometricDigiConfig.indices.end());
     // we assume nobody will add multiple smearers to a single bound index
-    for (const auto &c : dCfg.smearingDigiConfig) {
+    for (const auto& c : dCfg.smearingDigiConfig) {
       boundIndices.push_back(c.index);
     }
     bIndexInput.push_back({geoID, boundIndices});
