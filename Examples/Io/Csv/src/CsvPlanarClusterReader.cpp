@@ -247,10 +247,11 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
     // TODO what to use as cluster uncertainty?
     Acts::ActsSymMatrix<3> cov = Acts::ActsSymMatrix<3>::Identity();
     // create the planar cluster
+    Acts::SourceLink sourceLink{
+        Acts::DigitizationSourceLink(geoId, std::move(simHitIndices))};
     Acts::PlanarModuleCluster cluster(
-        surface->getSharedPtr(),
-        Acts::DigitizationSourceLink(geoId, std::move(simHitIndices)), cov,
-        local[0], local[1], time, std::move(digitizationCells));
+        surface->getSharedPtr(), std::move(sourceLink), cov, local[0], local[1],
+        time, std::move(digitizationCells));
 
     // due to the previous sorting of the raw hit data by geometry id, new
     // clusters should always end up at the end of the container. previous

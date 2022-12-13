@@ -56,7 +56,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
     allVerticesPtr.push_back(&vtxCandidate);
 
     ACTS_DEBUG("Position of current vertex candidate after seeding: "
-               << vtxCandidate.fullPosition());
+               << vtxCandidate.fullPosition().transpose());
     if (vtxCandidate.position().z() ==
         vertexingOptions.vertexConstraint.position().z()) {
       ACTS_DEBUG(
@@ -93,7 +93,7 @@ auto Acts::AdaptiveMultiVertexFinder<vfitter_t, sfinder_t>::find(
       return fitResult.error();
     }
     ACTS_DEBUG("New position of current vertex candidate after fit: "
-               << vtxCandidate.fullPosition());
+               << vtxCandidate.fullPosition().transpose());
     // Check if vertex is good vertex
     auto [nCompatibleTracks, isGoodVertex] =
         checkVertexAndCompatibleTracks(vtxCandidate, seedTracks, fitterState);

@@ -35,8 +35,8 @@ struct AlignmentFunctionImpl
   AlignmentFunctionImpl(Alignment&& a) : align(std::move(a)) {}
 
   ActsExamples::AlignmentAlgorithm::AlignmentResult operator()(
-      const std::vector<std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>>& sourceLinks,
+      const std::vector<std::vector<ActsExamples::IndexSourceLink>>&
+          sourceLinks,
       const ActsExamples::TrackParametersContainer& initialParameters,
       const ActsAlignment::AlignmentOptions<
           ActsExamples::AlignmentAlgorithm::TrackFitterOptions>& options)
