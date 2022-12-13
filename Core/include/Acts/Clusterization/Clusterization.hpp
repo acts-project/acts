@@ -80,7 +80,6 @@ void labelClusters(CellCollection& cells, Connect connect = Connect());
 /// defined:
 ///   void clusterAddCell(Cluster&, const Cell&)
 ///
-/// @param [in] cells the labeled cell collection
 /// @return nothing
 template <typename CellCollection, typename ClusterCollection, size_t GridDim>
 typename std::enable_if<GridDim != 1 and GridDim != 2, ClusterCollection>::type
