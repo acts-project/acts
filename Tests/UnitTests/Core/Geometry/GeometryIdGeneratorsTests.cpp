@@ -171,7 +171,7 @@ void runRestrictedTest(
       decltype(rGen), decltype(vCounterAll), decltype(uic), decltype(dic)>
       idGenerator(std::tie(rGen, vCounterAll, uic, dic));
 
-  // That how they would be called in sequence
+  // That's how they would be called in sequence
   idGenerator.generateIds(*A);
   idGenerator.generateIds(*B);
   idGenerator.generateIds(*C);
