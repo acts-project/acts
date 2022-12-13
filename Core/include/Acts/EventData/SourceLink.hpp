@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/MagneticField/detail/SmallObjectCache.hpp"
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
