@@ -20,7 +20,9 @@
 Acts::KDTreeTrackingGeometryBuilder::KDTreeTrackingGeometryBuilder(
     const Acts::KDTreeTrackingGeometryBuilder::Config& cfg,
     std::unique_ptr<const Logger> logger)
-    : m_cfg(cfg), m_logger(std::move(logger)) {}
+    : m_cfg(cfg), m_logger(std::move(logger)) {
+  m_cfg.protoDetector.harmonize();
+}
 
 std::unique_ptr<const Acts::TrackingGeometry>
 Acts::KDTreeTrackingGeometryBuilder::trackingGeometry(
@@ -59,7 +61,6 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
     Cache& cCache, const GeometryContext& gctx, const SurfaceKDT& kdt,
     const ProtoVolume& ptVolume, const std::string& indent) const {
   ACTS_DEBUG(indent << "Processing ProtoVolume: " << ptVolume.name);
-
   std::vector<std::shared_ptr<const TrackingVolume>> translatedVolumes = {};
 
   if (not ptVolume.constituentVolumes.empty() and not ptVolume.layerContainer) {

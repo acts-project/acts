@@ -239,6 +239,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(name);
     ACTS_PYTHON_MEMBER(gdmlFile);
     ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_MEMBER(toolLogLevel);
     ACTS_PYTHON_MEMBER(detectorName);
     ACTS_PYTHON_MEMBER(protoDetector);
     ACTS_PYTHON_MEMBER(buildDetector);
@@ -257,7 +258,12 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         .def("constructDetector",
              py::overload_cast<
                  const ActsExamples::Geant4::Geant4DetectorService::Config&>(
-                 &ActsExamples::Geant4::Geant4Detector::constructDetector));
+                 &ActsExamples::Geant4::Geant4Detector::constructDetector))
+        .def("constructTrackingGeometry",
+             py::overload_cast<
+                 const ActsExamples::Geant4::Geant4DetectorService::Config&>(
+                 &ActsExamples::Geant4::Geant4Detector::
+                     constructTrackingGeometry));
   }
 
   Acts::Python::Context ctx;

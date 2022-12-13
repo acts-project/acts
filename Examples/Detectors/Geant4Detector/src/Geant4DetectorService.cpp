@@ -49,16 +49,18 @@ void ActsExamples::Geant4::Geant4DetectorService::startRun() {
   g4DetElementFactory.construct(g4DetElementCache, g4ToWorld, *g4WorldVolume,
                                 g4DetElementOptions);
 
-  ACTS_INFO("Found " << g4DetElementCache.matched
-                     << " matching Geant4 Physical volumes.");
+  ACTS_INFO("Found " << g4DetElementCache.matchedG4Volumes
+                     << " matching  Geant4 Physical volumes.");
 
-  ACTS_INFO("Found " << g4DetElementCache.converted
+  ACTS_INFO("Found " << g4DetElementCache.convertedSurfaces
                      << " converted Geant4 Physical volumes.");
+
+  ACTS_INFO("Found " << g4DetElementCache.convertedMaterials
+                     << " converted Geant4 Material slabs.");
 
   Acts::GeometryContext tContext;
 
-  if (m_cfg.buildTrackingGeometry and m_trackingGeometry != nullptr) {
-    // ------------ Proto description over ----------------------
+  if (m_cfg.buildTrackingGeometry and m_trackingGeometry == nullptr) {
     // Surface array creatorr
     auto surfaceArrayCreator =
         std::make_shared<const Acts::SurfaceArrayCreator>(
@@ -109,21 +111,6 @@ void ActsExamples::Geant4::Geant4DetectorService::startRun() {
         kdtgConfig, Acts::getDefaultLogger("KDTreeTrackingGeometryBuilder",
                                            m_cfg.toolLogLevel));
 
-    m_trackingGeometry = std::shared_ptr<const Acts::TrackingGeometry>(
-        kdtTrackingGeometryBuilder.trackingGeometry(tContext).release());
+    m_trackingGeometry = kdtTrackingGeometryBuilder.trackingGeometry(tContext);
   }
-
-  /// To be deleted, this is simply for testing -------------
-  Acts::ObjVisualization3D objVis(6, 1.);
-  Acts::ViewConfig sConfig = Acts::s_viewSensitive;
-  sConfig.triangulate = false;
-
-  for (const auto& e : g4DetElementCache.sensitiveSurfaces) {
-    Acts::GeometryView3D::drawSurface(
-        objVis, *std::get<std::shared_ptr<Acts::Surface>>(e), tContext,
-        Acts::Transform3::Identity(), sConfig);
-  }
-
-  objVis.write("odd-light-vol");
-  // ----------------------------------------------------------
 }

@@ -48,8 +48,14 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
 
   // Deal with the constituents
   if (not constituentVolumes.empty()) {
+    if (constituentBinning.empty()) {
+      std::string errorMsg = std::string("ProtoVolume '") + name +
+                             std::string("' with constituents, but no binning");
+      throw std::runtime_error(errorMsg);
+    }
+
     // For legacy volumes, check if layers are present
-    bool layersPresent = false;
+    bool layersPresent = layerContainer;
     for (const auto& cv : constituentVolumes) {
       layersPresent =
           layersPresent or cv.layerType != Surface::SurfaceType::Other;
@@ -57,6 +63,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         break;
       }
     }
+
     // If layers are present, it can't be a container in the legacy style
     layerContainer = layersPresent;
     auto binValue = constituentBinning[0].binvalue;
@@ -73,7 +80,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
       }
     }
 
-    // Legacy layer conversion - layers are kept untouched
+    // Legacy  conversion - layers are kept untouched
     if (not layerContainer) {
       // Set the outer boundaries
       fVolume.extent.set(binValue, extent.min(binValue),
@@ -81,18 +88,22 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
       lVolume.extent.set(binValue, lVolume.extent.min(binValue),
                          extent.max(binValue));
       // Align the containers
-      borders.push_back(
-          static_cast<float>(constituentVolumes.begin()->extent.min(binValue)));
+      borders.push_back(static_cast<float>(fVolume.extent.min(binValue)));
       for (unsigned int iv = 1; iv < constituentVolumes.size(); ++iv) {
         auto& lv = constituentVolumes[iv - 1u];
         ActsScalar zero = lv.extent.min(binValue);
         ActsScalar low = lv.extent.max(binValue);
+
         auto& hv = constituentVolumes[iv];
         ActsScalar high = hv.extent.min(binValue);
         ActsScalar mid = 0.5 * (low + high);
         ActsScalar max = hv.extent.max(binValue);
         lv.extent.set(binValue, zero, mid);
+        std::cout << " - Setting [ " << zero << ", " << mid << " ] - to "
+                  << lv.name << std::endl;
         hv.extent.set(binValue, mid, max);
+        std::cout << " - Setting [ " << mid << ", " << max << " ] - to "
+                  << hv.name << std::endl;
         borders.push_back(mid);
       }
       borders.push_back(constituentVolumes.back().extent.max(binValue));
@@ -142,6 +153,8 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         borders.push_back(static_cast<float>(containerMax));
       }
       constituentVolumes = updatedConstituents;
+    } else if (legacy and layerContainer) {
+      borders = {0., 1.};
     }
     constituentBinning = {
         BinningData(constituentBinning[0].option, binValue, borders)};

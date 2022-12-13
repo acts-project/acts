@@ -43,16 +43,21 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
   // Check if the volume is accepted
   if (option.selector(g4PhysVol)) {
     // Conversion and selection code
-    ++cache.matched;
+    ++cache.matchedG4Volumes;
     // Attempt the conversion
     auto surface = Acts::Geant4PhysicalVolumeConverter{}.surface(
-        g4PhysVol, Geant4AlgebraConverter{}.transform(newToGlobal));
+        g4PhysVol, Geant4AlgebraConverter{}.transform(newToGlobal),
+        m_cfg.convertMaterial, m_cfg.convertedMaterialThickness);
     if (surface != nullptr) {
-      ++cache.converted;
+      ++cache.convertedSurfaces;
       cache.sensitiveSurfaces.push_back(
           {std::make_shared<Acts::Geant4DetectorElement>(surface, 0.1,
                                                          g4PhysVol),
            surface});
+      // Count the material conversion
+      if (surface->surfaceMaterial() != nullptr) {
+        ++cache.convertedMaterials;
+      }
     }
     return;
   }

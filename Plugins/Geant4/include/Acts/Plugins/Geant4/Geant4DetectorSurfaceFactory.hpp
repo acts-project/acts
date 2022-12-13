@@ -33,6 +33,8 @@ class Geant4DetectorSurfaceFactory {
   /// global lifetime configuration
   struct Config {
     ActsScalar scaleConversion = 1.;
+    bool convertMaterial = true;
+    ActsScalar convertedMaterialThickness = -1;
   };
 
   using Geant4SensitiveSurface =
@@ -47,8 +49,9 @@ class Geant4DetectorSurfaceFactory {
     /// The created non-const surfaces - for further processing,
     std::vector<std::shared_ptr<Surface>> passiveSurfaces;
     /// matchint and conversion statistics
-    std::size_t matched = 0;
-    std::size_t converted = 0;
+    std::size_t matchedG4Volumes = 0;
+    std::size_t convertedSurfaces = 0;
+    std::size_t convertedMaterials = 0;
   };
 
   /// Nested option struct that allows

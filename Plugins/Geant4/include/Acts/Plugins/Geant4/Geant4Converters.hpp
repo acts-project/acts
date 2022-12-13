@@ -19,6 +19,7 @@
 #include "G4Transform3D.hh"
 
 class G4Box;
+class G4Material;
 class G4Trd;
 class G4Trap;
 class G4Tubs;
@@ -81,21 +82,23 @@ struct Geant4ShapeConverter {
   /// @param g4Tubs a Geant4 tube shape
   ///
   /// @return an Acts Cylinder bounds object
-  std::shared_ptr<CylinderBounds> cylinderBounds(const G4Tubs& g4Tubs);
+  std::tuple<std::shared_ptr<CylinderBounds>, ActsScalar> cylinderBounds(
+      const G4Tubs& g4Tubs);
 
   /// @brief Convert to radial bounds
   ///
   /// @param g4Tubs a Geant4 tube shape
   ///
   /// @return an Acts Radial bounds object
-  std::shared_ptr<RadialBounds> radialBounds(const G4Tubs& g4Tubs);
+  std::tuple<std::shared_ptr<RadialBounds>, ActsScalar> radialBounds(
+      const G4Tubs& g4Tubs);
 
   /// @brief Convert to rectangle bounds
   ///
   /// @param g4Box a Geant4 box shape
   ///
   /// @return an ACTS Rectangle bounds shape
-  std::tuple<std::shared_ptr<RectangleBounds>, std::array<int, 2u>>
+  std::tuple<std::shared_ptr<RectangleBounds>, std::array<int, 2u>, ActsScalar>
   rectangleBounds(const G4Box& g4Box);
 
   /// @brief Convert to trapezoid bounds - from Trap
@@ -103,16 +106,17 @@ struct Geant4ShapeConverter {
   /// @param g4Trd a Geant4 trapezoid shape
   ///
   /// @return an ACTS Trapezoid bounds object
-  std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>>
+  std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>, ActsScalar>
   trapezoidBounds(const G4Trd& g4Trd);
 
   /// @brief Convert to general solid into a planar shape
   ///
   /// @param g4Solid a Geant4 solid shape
   ///
-  /// @return an ACTS Planar bounds object
-  std::tuple<std::shared_ptr<PlanarBounds>, std::array<int, 2u>> planarBounds(
-      const G4VSolid& g4Solid);
+  /// @return an ACTS Planar bounds object,
+  /// the axes, and the thickness of the compressed dimension
+  std::tuple<std::shared_ptr<PlanarBounds>, std::array<int, 2u>, ActsScalar>
+  planarBounds(const G4VSolid& g4Solid);
 };
 
 class Surface;
@@ -122,10 +126,27 @@ struct Geant4PhysicalVolumeConverter {
   ///
   /// @param g4PhysVol the physical volume to be constructed
   /// @param toGlobal the global transformation before the volume
+  /// @param convertMaterial a material conversion flag
+  /// @param compressed the compressed thickness of the converted material
   ///
   /// @return a shared surface object
   std::shared_ptr<Surface> surface(const G4VPhysicalVolume& g4PhysVol,
-                                   const Transform3& toGlobal);
+                                   const Transform3& toGlobal,
+                                   bool convertMaterial = false,
+                                   ActsScalar compressed = 0.);
+};
+
+class HomogeneousSurfaceMaterial;
+
+struct Geant4MaterialConverter {
+  /// @brief Convert a Geant4 material to a surface material description
+  ///
+  /// @param g4Material the geant4 material descrition
+  /// @param original the original thickness
+  /// @param compressed the compressed thickness
+  ///
+  std::shared_ptr<HomogeneousSurfaceMaterial> surfaceMaterial(
+      const G4Material& g4Material, ActsScalar original, ActsScalar compressed);
 };
 
 }  // namespace Acts

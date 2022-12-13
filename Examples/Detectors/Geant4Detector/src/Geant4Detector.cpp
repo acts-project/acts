@@ -22,3 +22,14 @@ auto ActsExamples::Geant4::Geant4Detector::constructDetector(
 
   return std::make_pair<DetectorPtr, ContextDecorators>(nullptr, {});
 }
+
+auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
+    const ActsExamples::Geant4::Geant4DetectorService::Config& cfg)
+    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
+  auto g4DetectorService = ActsExamples::Geant4::Geant4DetectorService(cfg);
+
+  g4DetectorService.startRun();
+
+  return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
+      g4DetectorService.trackingGeometry(), {});
+}

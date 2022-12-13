@@ -14,6 +14,7 @@
 #include <vector>
 
 namespace Acts {
+class TrackingGeometry;
 namespace Experimental {
 class Detector;
 }
@@ -27,9 +28,14 @@ struct Geant4Detector {
   using ContextDecorators =
       std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
 
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
+
   using DetectorPtr = std::shared_ptr<Acts::Experimental::Detector>;
 
   std::pair<DetectorPtr, ContextDecorators> constructDetector(
+      const Geant4DetectorService::Config& cfg);
+
+  std::pair<TrackingGeometryPtr, ContextDecorators> constructTrackingGeometry(
       const Geant4DetectorService::Config& cfg);
 };
 }  // namespace Geant4
