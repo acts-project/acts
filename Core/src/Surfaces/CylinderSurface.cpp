@@ -224,7 +224,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
   Intersection3D::Status status1 =
-      qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance
+      std::abs(qe.first) < std::abs(s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
           : Intersection3D::Status::reachable;
 
@@ -247,7 +247,8 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
       double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc1];
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + tolerance;
-      return (cZ * cZ < hZ * hZ) ? status : Intersection3D::Status::missed;
+      return std::abs(cZ) < std::abs(hZ) ? status
+                                         : Intersection3D::Status::missed;
     }
     return (isOnSurface(gctx, solution, direction, bcheck)
                 ? status
@@ -264,7 +265,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
   Intersection3D::Status status2 =
-      qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance
+      std::abs(qe.second) < std::abs(s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
           : Intersection3D::Status::reachable;
   // Check first solution for boundary compatiblity
@@ -275,7 +276,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
                 (status1 == Intersection3D::Status::missed and
                  status2 == Intersection3D::Status::missed);
   // Check and (eventually) go with the first solution
-  if ((check1 and qe.first * qe.first < qe.second * qe.second) or
+  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
       status2 == Intersection3D::Status::missed) {
     // And add the alternative
     cIntersection.alternative = second;

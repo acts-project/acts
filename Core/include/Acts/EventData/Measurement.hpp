@@ -72,11 +72,13 @@ class Measurement {
   /// @note The indices must be ordered and must describe/match the content
   ///   of parameters and covariance.
   template <typename parameters_t, typename covariance_t>
-  Measurement(const SourceLink& source,
-              const std::array<indices_t, kSize>& indices,
+  Measurement(SourceLink source, const std::array<indices_t, kSize>& indices,
               const Eigen::MatrixBase<parameters_t>& params,
               const Eigen::MatrixBase<covariance_t>& cov)
-      : m_source(source), m_subspace(indices), m_params(params), m_cov(cov) {
+      : m_source(std::move(source)),
+        m_subspace(indices),
+        m_params(params),
+        m_cov(cov) {
     // TODO we should be able to support arbitrary ordering, by sorting the
     //   indices and reordering parameters/covariance. since the parameter order
     //   can be modified by the user, the user can not always know what the
@@ -144,7 +146,7 @@ class Measurement {
   }
 
  private:
-  std::reference_wrapper<const SourceLink> m_source;
+  SourceLink m_source;
   Subspace m_subspace;
   ParametersVector m_params;
   CovarianceMatrix m_cov;
@@ -175,13 +177,14 @@ class Measurement {
 ///   parameters and covariance.
 template <typename parameters_t, typename covariance_t, typename indices_t,
           typename... tail_indices_t>
-auto makeMeasurement(const SourceLink& source,
+auto makeMeasurement(SourceLink source,
                      const Eigen::MatrixBase<parameters_t>& params,
                      const Eigen::MatrixBase<covariance_t>& cov,
                      indices_t index0, tail_indices_t... tailIndices)
     -> Measurement<indices_t, 1u + sizeof...(tail_indices_t)> {
   using IndexContainer = std::array<indices_t, 1u + sizeof...(tail_indices_t)>;
-  return {source, IndexContainer{index0, tailIndices...}, params, cov};
+  return {std::move(source), IndexContainer{index0, tailIndices...}, params,
+          cov};
 }
 
 namespace detail {
