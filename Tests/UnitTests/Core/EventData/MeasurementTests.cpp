@@ -33,7 +33,8 @@ constexpr FreeIndices freeIndices[] = {
     eFreePos0, eFreePos1, eFreePos2, eFreeTime,
     eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP,
 };
-const TestSourceLink source;
+const TestSourceLink sourceOrig;
+const Acts::SourceLink source{sourceOrig};
 // fix seed for reproducible tests
 std::default_random_engine rng(123);
 }  // namespace
@@ -58,7 +59,8 @@ BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(&meas.sourceLink(), &source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
+                    sourceOrig);
 }
 
 BOOST_AUTO_TEST_CASE(FixedBoundAll) {
@@ -72,7 +74,7 @@ BOOST_AUTO_TEST_CASE(FixedBoundAll) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(&meas.sourceLink(), &source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
 }
 
 namespace {
@@ -130,7 +132,8 @@ BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(&meas.sourceLink(), &source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
+                    sourceOrig);
 
   // all free parameters are unrestricted and we know the expected residual.
   constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();
@@ -151,7 +154,7 @@ BOOST_AUTO_TEST_CASE(FixedFreeAll) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(&meas.sourceLink(), &source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
 
   // all free parameters are unrestricted and we know the expected residual.
   constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();

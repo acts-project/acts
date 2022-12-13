@@ -9,8 +9,7 @@ target_link_libraries(
   ActsExampleHelloWorld
   PRIVATE
     ActsCore
-    ActsExamplesFramework ActsExamplesCommon
-    Boost::program_options)
+    ActsExamplesFramework ActsExamplesCommon)
 
 install(
   TARGETS ActsExampleHelloWorld

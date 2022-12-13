@@ -11,6 +11,7 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonal.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -96,8 +97,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
         ACTS_WARNING("Missing sourcelink in space point");
         continue;
       }
-      const auto slink = static_cast<const IndexSourceLink &>(
-          *(spacePointPtr->sourceLinks()[0]));
+      const IndexSourceLink &slink =
+          spacePointPtr->sourceLinks()[0].get<IndexSourceLink>();
       protoTrack.push_back(slink.index());
     }
     protoTracks.push_back(std::move(protoTrack));

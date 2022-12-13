@@ -21,6 +21,7 @@
 #include <bitset>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <vector>
 
@@ -54,6 +55,45 @@ namespace detail_lt {
 /// Either type T or const T depending on the boolean.
 template <typename T, bool select>
 using ConstIf = std::conditional_t<select, const T, T>;
+
+/// Helper type to make a member pointers constness transitive.
+template <typename T>
+class TransitiveConstPointer {
+ public:
+  TransitiveConstPointer() = default;
+  TransitiveConstPointer(T* ptr) : m_ptr{ptr} {}
+
+  template <typename U>
+  TransitiveConstPointer(const TransitiveConstPointer<U>& other)
+      : m_ptr{other.ptr()} {}
+
+  template <typename U>
+  TransitiveConstPointer& operator=(const TransitiveConstPointer<U>& other) {
+    m_ptr = other.m_ptr;
+    return *this;
+  }
+
+  template <typename U>
+  bool operator==(const TransitiveConstPointer<U>& other) const {
+    return m_ptr == other.m_ptr;
+  }
+
+  const T* operator->() const { return m_ptr; }
+
+  T* operator->() { return m_ptr; }
+
+  template <typename U>
+  friend class TransitiveConstPointer;
+
+  const T& operator*() const { return *m_ptr; }
+
+  T& operator*() { return *m_ptr; }
+
+ private:
+  T* ptr() const { return m_ptr; }
+
+  T* m_ptr;
+};
 
 /// Type construction helper for coefficients and associated covariances.
 template <size_t Size, bool ReadOnlyMaps = true>
@@ -110,12 +150,19 @@ class TrackStateProxy {
  public:
   using Parameters = typename TrackStateTraits<M, ReadOnly>::Parameters;
   using Covariance = typename TrackStateTraits<M, ReadOnly>::Covariance;
+  using ConstParameters = typename TrackStateTraits<M, true>::Parameters;
+  using ConstCovariance = typename TrackStateTraits<M, true>::Covariance;
 
   template <size_t N>
   using Measurement = typename TrackStateTraits<N, ReadOnly>::Measurement;
   template <size_t N>
   using MeasurementCovariance =
       typename TrackStateTraits<N, ReadOnly>::MeasurementCovariance;
+  template <size_t N>
+  using ConstMeasurement = typename TrackStateTraits<N, true>::Measurement;
+  template <size_t N>
+  using ConstMeasurementCovariance =
+      typename TrackStateTraits<N, true>::MeasurementCovariance;
 
   using IndexType = typename TrackStateTraits<M, ReadOnly>::IndexType;
   static constexpr IndexType kInvalid = TrackStateTraits<M, ReadOnly>::kInvalid;
@@ -267,8 +314,8 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<const SourceLink*, hashString("uncalibrated")>() =
-          other.template component<const SourceLink*,
+      component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+          other.template component<std::optional<SourceLink>,
                                    hashString("uncalibrated")>();
 
       if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
@@ -277,8 +324,9 @@ class TrackStateProxy {
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
         // need to do it this way since other might be nullptr
-        component<const SourceLink*, hashString("calibratedSourceLink")>() =
-            other.template component<const SourceLink*,
+        component<std::optional<SourceLink>,
+                  hashString("calibratedSourceLink")>() =
+            other.template component<std::optional<SourceLink>,
                                      hashString("calibratedSourceLink")>();
         allocateCalibrated(other.calibratedSize());
 
@@ -316,8 +364,8 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<const SourceLink*, hashString("uncalibrated")>() =
-          other.template component<const SourceLink*,
+      component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+          other.template component<std::optional<SourceLink>,
                                    hashString("uncalibrated")>();
 
       if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
@@ -331,8 +379,9 @@ class TrackStateProxy {
           has<hashString("calibratedSourceLink")>() &&
           other.template has<hashString("calibratedSourceLink")>()) {
         // need to do it this way since other might be nullptr
-        component<const SourceLink*, hashString("calibratedSourceLink")>() =
-            other.template component<const SourceLink*,
+        component<std::optional<SourceLink>,
+                  hashString("calibratedSourceLink")>() =
+            other.template component<std::optional<SourceLink>,
                                      hashString("calibratedSourceLink")>();
 
         allocateCalibrated(other.calibratedSize());
@@ -483,11 +532,33 @@ class TrackStateProxy {
 
   /// Predicted track parameters vector
   /// @return The predicted parameters
-  Parameters predicted() const;
+  ConstParameters predicted() const {
+    assert(has<hashString("predicted")>());
+    return m_traj->self().parameters(
+        component<IndexType, hashString("predicted")>());
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  Parameters predicted() {
+    assert(has<hashString("predicted")>());
+    return m_traj->self().parameters(
+        component<IndexType, hashString("predicted")>());
+  }
 
   /// Predicted track parameters covariance matrix.
   /// @return The predicted track parameter covariance
-  Covariance predictedCovariance() const;
+  ConstCovariance predictedCovariance() const {
+    assert(has<hashString("predicted")>());
+    return m_traj->self().covariance(
+        component<IndexType, hashString("predicted")>());
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  Covariance predictedCovariance() {
+    assert(has<hashString("predicted")>());
+    return m_traj->self().covariance(
+        component<IndexType, hashString("predicted")>());
+  }
 
   /// Check whether the predicted parameters+covariance is set
   /// @return Whether it is set or not
@@ -495,11 +566,41 @@ class TrackStateProxy {
 
   /// Filtered track parameters vector
   /// @return The filtered parameters
-  Parameters filtered() const;
+  /// @note Const version
+  ConstParameters filtered() const {
+    assert(has<hashString("filtered")>());
+    return m_traj->self().parameters(
+        component<IndexType, hashString("filtered")>());
+  }
+
+  /// Filtered track parameters vector
+  /// @return The filtered parameters
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  Parameters filtered() {
+    assert(has<hashString("filtered")>());
+    return m_traj->self().parameters(
+        component<IndexType, hashString("filtered")>());
+  }
 
   /// Filtered track parameters covariance matrix
   /// @return The filtered parameters covariance
-  Covariance filteredCovariance() const;
+  /// @note Const version
+  ConstCovariance filteredCovariance() const {
+    assert(has<hashString("filtered")>());
+    return m_traj->self().covariance(
+        component<IndexType, hashString("filtered")>());
+  }
+
+  /// Filtered track parameters covariance matrix
+  /// @return The filtered parameters covariance
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  Covariance filteredCovariance() {
+    assert(has<hashString("filtered")>());
+    return m_traj->self().covariance(
+        component<IndexType, hashString("filtered")>());
+  }
 
   /// Return whether filtered parameters+covariance is set
   /// @return Whether it is set
@@ -507,11 +608,41 @@ class TrackStateProxy {
 
   /// Smoothed track parameters vector
   /// @return The smoothed parameters
-  Parameters smoothed() const;
+  /// @note Const version
+  ConstParameters smoothed() const {
+    assert(has<hashString("smoothed")>());
+    return m_traj->self().parameters(
+        component<IndexType, hashString("smoothed")>());
+  }
+
+  /// Smoothed track parameters vector
+  /// @return The smoothed parameters
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  Parameters smoothed() {
+    assert(has<hashString("smoothed")>());
+    return m_traj->self().parameters(
+        component<IndexType, hashString("smoothed")>());
+  }
 
   /// Smoothed track parameters covariance matrix
   /// @return the parameter covariance matrix
-  Covariance smoothedCovariance() const;
+  /// @note Const version
+  ConstCovariance smoothedCovariance() const {
+    assert(has<hashString("smoothed")>());
+    return m_traj->self().covariance(
+        component<IndexType, hashString("smoothed")>());
+  }
+
+  /// Smoothed track parameters covariance matrix
+  /// @return the parameter covariance matrix
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  Covariance smoothedCovariance() {
+    assert(has<hashString("smoothed")>());
+    return m_traj->self().covariance(
+        component<IndexType, hashString("smoothed")>());
+  }
 
   /// Return whether smoothed parameters+covariance is set
   /// @return Whether it is set
@@ -519,7 +650,22 @@ class TrackStateProxy {
 
   /// Returns the jacobian from the previous trackstate to this one
   /// @return The jacobian matrix
-  Covariance jacobian() const;
+  /// @note Const version
+  ConstCovariance jacobian() const {
+    assert(has<hashString("jacobian")>());
+    return m_traj->self().jacobian(
+        component<IndexType, hashString("jacobian")>());
+  }
+
+  /// Returns the jacobian from the previous trackstate to this one
+  /// @return The jacobian matrix
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  Covariance jacobian() {
+    assert(has<hashString("jacobian")>());
+    return m_traj->self().jacobian(
+        component<IndexType, hashString("jacobian")>());
+  }
 
   /// Returns whether a jacobian is set for this trackstate
   /// @return Whether it is set
@@ -588,12 +734,8 @@ class TrackStateProxy {
   /// @param sourceLink The uncalibrated source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setUncalibrated(const SourceLink& sourceLink) {
-    using T = const SourceLink*;
-    T& sl = component<const SourceLink*, hashString("uncalibrated")>();
-    sl = &sourceLink;
-
-    assert((component<const SourceLink*, hashString("uncalibrated")>() !=
-            nullptr));
+    component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+        sourceLink;
   }
 
   /// Check if the point has an associated uncalibrated measurement.
@@ -614,28 +756,61 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setCalibratedSourceLink(const SourceLink& sourceLink) {
     assert(has<hashString("calibratedSourceLink")>());
-    m_traj->self().template component<const SourceLink*>(
-        "calibratedSourceLink", m_istate) = &sourceLink;
-
-    assert(m_traj->self().template component<const SourceLink*>(
-               "calibratedSourceLink", m_istate) != nullptr);
+    component<std::optional<SourceLink>, hashString("calibratedSourceLink")>() =
+        sourceLink;
   }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
   /// dimensions.
   /// @return The measurement vector
+  /// @note Const version
   template <size_t measdim>
-  Measurement<measdim> calibrated() const;
+  ConstMeasurement<measdim> calibrated() const {
+    assert(has<hashString("calibrated")>());
+    return m_traj->self().template measurement<measdim>(
+        component<IndexType, hashString("calibrated")>());
+  }
+
+  /// Full calibrated measurement vector. Might contain additional zeroed
+  /// dimensions.
+  /// @return The measurement vector
+  /// @note Mutable version
+  template <size_t measdim, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  Measurement<measdim> calibrated() {
+    assert(has<hashString("calibrated")>());
+    return m_traj->self().template measurement<measdim>(
+        component<IndexType, hashString("calibrated")>());
+  }
 
   /// Full calibrated measurement covariance matrix. The effective covariance
   /// is located in the top left corner, everything else is zeroed.
   /// @return The measurement covariance matrix
+  /// @note Const version
   template <size_t measdim>
-  MeasurementCovariance<measdim> calibratedCovariance() const;
+  ConstMeasurementCovariance<measdim> calibratedCovariance() const {
+    assert(has<hashString("calibratedCov")>());
+    return m_traj->self().template measurementCovariance<measdim>(
+        component<IndexType, hashString("calibratedCov")>());
+  }
+
+  /// Full calibrated measurement covariance matrix. The effective covariance
+  /// is located in the top left corner, everything else is zeroed.
+  /// @return The measurement covariance matrix
+  /// @note Mutable version
+  template <size_t measdim, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  MeasurementCovariance<measdim> calibratedCovariance() {
+    assert(has<hashString("calibratedCov")>());
+    return m_traj->self().template measurementCovariance<measdim>(
+        component<IndexType, hashString("calibratedCov")>());
+  }
 
   /// Dynamic measurement vector with only the valid dimensions.
   /// @return The effective calibrated measurement vector
-  auto effectiveCalibrated() const {
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto effectiveCalibrated() {
     // repackage the data pointer to a dynamic map type
     // workaround for gcc8 bug:
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
@@ -648,9 +823,27 @@ class TrackStateProxy {
     });
   }
 
+  /// Dynamic measurement vector with only the valid dimensions.
+  /// @return The effective calibrated measurement vector
+  /// @note Const version
+  auto effectiveCalibrated() const {
+    // repackage the data pointer to a dynamic map type
+    // workaround for gcc8 bug:
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+    auto* self = this;
+    return visit_measurement(calibratedSize(), [&](auto N) {
+      constexpr int kMeasurementSize = decltype(N)::value;
+      return typename Types<M, true>::DynamicCoefficientsMap{
+          self->template calibrated<kMeasurementSize>().data(),
+          kMeasurementSize};
+    });
+  }
+
   /// Dynamic measurement covariance matrix with only the valid dimensions.
   /// @return The effective calibrated covariance matrix
-  auto effectiveCalibratedCovariance() const {
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto effectiveCalibratedCovariance() {
     // repackage the data pointer to a dynamic map type
     // workaround for gcc8 bug:
     // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
@@ -658,6 +851,22 @@ class TrackStateProxy {
     return visit_measurement(calibratedSize(), [&](auto N) {
       constexpr int kMeasurementSize = decltype(N)::value;
       return typename Types<M, ReadOnly>::DynamicCovarianceMap{
+          self->template calibratedCovariance<kMeasurementSize>().data(),
+          kMeasurementSize, kMeasurementSize};
+    });
+  }
+
+  /// Dynamic measurement covariance matrix with only the valid dimensions.
+  /// @return The effective calibrated covariance matrix
+  /// @note Const version
+  auto effectiveCalibratedCovariance() const {
+    // repackage the data pointer to a dynamic map type
+    // workaround for gcc8 bug:
+    // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=86594
+    auto* self = this;
+    return visit_measurement(calibratedSize(), [&](auto N) {
+      constexpr int kMeasurementSize = decltype(N)::value;
+      return typename Types<M, true>::DynamicCovarianceMap{
           self->template calibratedCovariance<kMeasurementSize>().data(),
           kMeasurementSize, kMeasurementSize};
     });
@@ -701,11 +910,8 @@ class TrackStateProxy {
     calibratedSize() = kMeasurementSize;
 
     assert(has<hashString("calibratedSourceLink")>());
-    component<const SourceLink*, hashString("calibratedSourceLink")>() =
-        &meas.sourceLink();
-    assert(
-        (component<const SourceLink*, hashString("calibratedSourceLink")>() !=
-         nullptr));
+
+    setCalibratedSourceLink(meas.sourceLink());
 
     allocateCalibrated(kMeasurementSize);
     assert(hasCalibrated());
@@ -771,6 +977,13 @@ class TrackStateProxy {
     return component<TrackStateType, hashString("typeFlags")>();
   }
 
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  MultiTrajectory<Trajectory>& trajectory() {
+    return *m_traj;
+  }
+
+  const MultiTrajectory<Trajectory>& trajectory() const { return *m_traj; }
+
  private:
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory<Trajectory>, ReadOnly>& trajectory,
@@ -792,12 +1005,61 @@ class TrackStateProxy {
     component<ProjectorBitset, hashString("projector")>() = proj;
   }
 
-  ConstIf<MultiTrajectory<Trajectory>, ReadOnly>* m_traj;
+  TransitiveConstPointer<ConstIf<MultiTrajectory<Trajectory>, ReadOnly>> m_traj;
   IndexType m_istate;
 
   friend class Acts::MultiTrajectory<Trajectory>;
   friend class TrackStateProxy<Trajectory, M, true>;
   friend class TrackStateProxy<Trajectory, M, false>;
+};
+
+/// Helper type that wraps two iterators
+template <typename trajectory_t, size_t M, bool ReadOnly>
+class TrackStateRange {
+  using ProxyType = TrackStateProxy<trajectory_t, M, ReadOnly>;
+
+ public:
+  /// Iterator that wraps a track state proxy. The nullopt case signifies the
+  /// end of the range, i.e. the "past-the-end" iterator
+  struct Iterator {
+    std::optional<ProxyType> proxy;
+
+    Iterator& operator++() {
+      if (!proxy) {
+        return *this;
+      }
+      if (proxy->hasPrevious()) {
+        proxy = proxy->trajectory().getTrackState(proxy->previous());
+        return *this;
+      } else {
+        proxy = std::nullopt;
+        return *this;
+      }
+    }
+
+    bool operator==(const Iterator& other) const {
+      if (!proxy && !other.proxy) {
+        return true;
+      }
+      if (proxy && other.proxy) {
+        return proxy->index() == other.proxy->index();
+      }
+      return false;
+    }
+
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
+
+    ProxyType operator*() const { return *proxy; }
+    ProxyType operator*() { return *proxy; }
+  };
+
+  TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+
+  Iterator begin() { return m_begin; }
+  Iterator end() { return Iterator{std::nullopt}; }
+
+ private:
+  Iterator m_begin;
 };
 
 // implement track state visitor concept
@@ -903,6 +1165,23 @@ class MultiTrajectory {
   template <typename F>
   void visitBackwards(IndexType iendpoint, F&& callable) const;
 
+  /// Range for the track states from @p iendpoint to the trajectory start
+  /// @param iendpoint Trajectory entry point to start from
+  /// @return Iterator pair to iterate over
+  /// @note Const version
+  auto trackStateRange(IndexType iendpoint) const {
+    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+  }
+
+  /// Range for the track states from @p iendpoint to the trajectory start
+  /// @param iendpoint Trajectory entry point to start from
+  /// @return Iterator pair to iterate over
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto trackStateRange(IndexType iendpoint) {
+    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+  }
+
   /// Apply a function to all previous states starting at a given endpoint.
   ///
   /// @param iendpoint  index of the last state
@@ -914,6 +1193,11 @@ class MultiTrajectory {
   void applyBackwards(IndexType iendpoint, F&& callable) {
     static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
                   "Callable needs to satisfy VisitorConcept");
+
+    if (iendpoint == MultiTrajectoryTraits::kInvalid) {
+      throw std::runtime_error(
+          "Cannot apply backwards with kInvalid as endpoint");
+    }
 
     while (true) {
       auto ts = getTrackState(iendpoint);

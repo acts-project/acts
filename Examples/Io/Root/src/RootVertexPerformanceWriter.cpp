@@ -98,11 +98,10 @@ ActsExamples::RootVertexPerformanceWriter::~RootVertexPerformanceWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    m_outputFile->Close();
-  }
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
   return ProcessCode::SUCCESS;
 }
 
@@ -163,9 +162,6 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   m_nrecoVtx = vertices.size();
 
   ACTS_DEBUG("Number of reco vertices in event: " << m_nrecoVtx);
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
 
   // Read truth particle input collection
   const auto& allTruthParticles =
@@ -328,11 +324,11 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     for (int priVtxId : contributingTruthVertices) {
       fmap[priVtxId]++;
     }
+    int maxOccurrence = -1;
     int maxOccurrenceId = -1;
-    int maxOccurence = -1;
     for (auto it : fmap) {
-      if (it.second > maxOccurence) {
-        maxOccurence = it.second;
+      if (it.second > maxOccurrence) {
+        maxOccurrence = it.second;
         maxOccurrenceId = it.first;
       }
     }

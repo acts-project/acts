@@ -6,6 +6,7 @@ add_library(
   src/SpacePointMaker.cpp
   src/TrackFindingAlgorithm.cpp
   src/TrackFindingAlgorithmFunction.cpp
+  src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp
   src/TrajectoriesToPrototracks.cpp)
 target_include_directories(
