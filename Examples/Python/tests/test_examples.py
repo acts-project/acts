@@ -11,6 +11,7 @@ from helpers import (
     rootEnabled,
     dd4hepEnabled,
     hepmc3Enabled,
+    pythia8Enabled,
     AssertCollectionExistsAlg,
     isCI,
     doHashChecks,
@@ -65,6 +66,7 @@ def assert_entries(root_file, tree_name, exp):
 
 
 @pytest.mark.slow
+@pytest.mark.skipif(not pythia8Enabled, reason="Pythia8 not set up")
 def test_pythia8(tmp_path, seq, assert_root_hash):
     from pythia8 import runPythia8
 
