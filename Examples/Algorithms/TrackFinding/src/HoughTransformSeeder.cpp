@@ -13,6 +13,8 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -437,8 +439,8 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
         continue;
       }
       std::vector<Index> indices;
-      for (const auto slink : sp.sourceLinks()) {
-        const auto islink = static_cast<const IndexSourceLink&>(*slink);
+      for (const auto& slink : sp.sourceLinks()) {
+        const auto& islink = slink.get<IndexSourceLink>();
         indices.push_back(islink.index());
       }
 
@@ -493,7 +495,7 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
                   cov.block<2, 2>(Acts::eBoundLoc0, Acts::eBoundLoc0);
               return std::make_pair(lpar, lcov);
             },
-            measurements[sourceLink.get().index()]);
+            measurements[sourceLink.index()]);
 
         // transform local position to global coordinates
         Acts::Vector3 globalFakeMom(1, 1, 1);
@@ -505,7 +507,7 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
         ResultUnsigned hitlayer = m_cfg.layerIDFinder(r);
         if (hitlayer.ok()) {
           std::vector<Index> index;
-          index.push_back(sourceLink.get().index());
+          index.push_back(sourceLink.index());
           auto meas = std::shared_ptr<HoughMeasurementStruct>(
               new HoughMeasurementStruct(hitlayer.value(), phi, r, z, index,
                                          HoughHitType::MEASUREMENT));
