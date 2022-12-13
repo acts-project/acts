@@ -1093,6 +1093,7 @@ def test_ckf_tracks_example(
 
 
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.skipif(not pythia8Enabled, reason="Pythia8 not set up")
 @pytest.mark.slow
 @pytest.mark.filterwarnings("ignore::UserWarning")
 def test_vertex_fitting(tmp_path):
