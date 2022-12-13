@@ -45,16 +45,18 @@ std::vector<Rectangle> segment(int x0, int y0, int x1, int y1, RNG& rng) {
   int ymax = y1 - 3;
 
   // terminal case 1
-  if (xmax < xmin or ymax < ymin)
+  if (xmax < xmin or ymax < ymin) {
     return {{x0, y0, x1, y1}};
+  }
 
   std::bernoulli_distribution cointoss;
   bool splitx = cointoss(rng);
   bool splity = cointoss(rng);
 
   // terminal case 2
-  if (not(splitx or splity))
+  if (not(splitx or splity)) {
     return {{x0, y0, x1, y1}};
+  }
 
   int x_ = std::uniform_int_distribution(xmin, xmax)(rng);
   int y_ = std::uniform_int_distribution(ymin, ymax)(rng);
@@ -71,9 +73,9 @@ std::vector<Rectangle> segment(int x0, int y0, int x1, int y1, RNG& rng) {
 }
 
 struct Cell2D {
-  Cell2D(int rowv, int colv) : row(rowv), col(colv), label(0) {}
+  Cell2D(int rowv, int colv) : row(rowv), col(colv) {}
   int row, col;
-  Ccl::Label label;
+  Ccl::Label label{Ccl::NO_LABEL};
 };
 
 int getCellRow(const Cell2D& cell) {
@@ -97,9 +99,8 @@ bool cellComp(const Cell2D& left, const Cell2D& right) {
 }
 
 struct Cluster2D {
-  Cluster2D() : cells(), hash(0) {}
   std::vector<Cell2D> cells;
-  size_t hash;
+  size_t hash{0};
 };
 
 void clusterAddCell(Cluster2D& cl, const Cell2D& cell) {
@@ -109,8 +110,9 @@ void clusterAddCell(Cluster2D& cl, const Cell2D& cell) {
 void hash(Cluster2D& cl) {
   std::sort(cl.cells.begin(), cl.cells.end(), cellComp);
   cl.hash = 0;
-  for (const Cell2D& c : cl.cells)
+  for (const Cell2D& c : cl.cells) {
     boost::hash_combine(cl.hash, c.col);
+  }
 }
 
 bool clHashComp(const Cluster2D& left, const Cluster2D& right) {
@@ -133,33 +135,42 @@ void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
   };
 
   // NORTH
-  if (y < y1)
+  if (y < y1) {
     maybe_add(x, y + 1);
+  }
   // NORTHEAST
-  if (x < x1 and y < y1)
+  if (x < x1 and y < y1) {
     maybe_add(x + 1, y + 1);
+  }
   // EAST
-  if (x < x1)
+  if (x < x1) {
     maybe_add(x + 1, y);
+  }
   // SOUTHEAST
-  if (x < x1 and y > y0)
+  if (x < x1 and y > y0) {
     maybe_add(x + 1, y - 1);
+  }
   // SOUTH
-  if (y > y0)
+  if (y > y0) {
     maybe_add(x, y - 1);
+  }
   // SOUTHWEST
-  if (x > x0 and y > y0)
+  if (x > x0 and y > y0) {
     maybe_add(x - 1, y - 1);
+  }
   // WEST
-  if (x > x0)
+  if (x > x0) {
     maybe_add(x - 1, y);
+  }
   // NORTHWEST
-  if (x > x0 and y < y1)
+  if (x > x0 and y < y1) {
     maybe_add(x - 1, y + 1);
+  }
 
-  for (Cell2D& c : add)
+  for (Cell2D& c : add) {
     genclusterw(c.row, c.col, x0, y0, x1, y1, cells, rng, startp * decayp,
                 decayp);
+  }
 }
 
 template <typename RNG>
@@ -199,7 +210,7 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
   std::cout << " startSeed = " << startSeed << std::endl;
   std::cout << " ntries = " << ntries << std::endl;
 
-  while (ntries--) {
+  while (ntries-- > 0) {
     std::mt19937_64 rnd(startSeed++);
 
     std::vector<Cluster> cls;
@@ -216,8 +227,9 @@ BOOST_AUTO_TEST_CASE(Grid_2D_rand) {
 
     ClusterC newCls = Ccl::createClusters<CellC, ClusterC>(cells);
 
-    for (Cluster& cl : newCls)
+    for (Cluster& cl : newCls) {
       hash(cl);
+    }
 
     std::sort(cls.begin(), cls.end(), clHashComp);
     std::sort(newCls.begin(), newCls.end(), clHashComp);

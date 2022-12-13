@@ -17,9 +17,9 @@ namespace Acts {
 namespace Test {
 
 struct Cell1D {
-  Cell1D(int colv) : col(colv), label(0) {}
+  Cell1D(int colv) : col(colv) {}
   int col;
-  Ccl::Label label;
+  Ccl::Label label{Ccl::NO_LABEL};
 };
 
 bool cellComp(const Cell1D& left, const Cell1D& right) {
@@ -35,9 +35,8 @@ int getCellColumn(const Cell1D& cell) {
 }
 
 struct Cluster1D {
-  Cluster1D() : cells(), hash(0) {}
   std::vector<Cell1D> cells;
-  size_t hash;
+  size_t hash{};
 };
 
 void clusterAddCell(Cluster1D& cl, const Cell1D& cell) {
@@ -51,8 +50,9 @@ bool clHashComp(const Cluster1D& left, const Cluster1D& right) {
 void hash(Cluster1D& cl) {
   std::sort(cl.cells.begin(), cl.cells.end(), cellComp);
   cl.hash = 0;
-  for (const Cell1D& c : cl.cells)
+  for (const Cell1D& c : cl.cells) {
     boost::hash_combine(cl.hash, c.col);
+  }
 }
 
 BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
   std::cout << "  startSeed = " << startSeed << std::endl;
   std::cout << "  ntries = " << ntries << std::endl;
 
-  while (ntries--) {
+  while (ntries-- > 0) {
     std::mt19937_64 rnd(startSeed++);
     std::uniform_int_distribution<size_t> distr_size(minsize, maxsize);
     std::uniform_int_distribution<size_t> distr_space(minspace, maxspace);
@@ -98,15 +98,17 @@ BOOST_AUTO_TEST_CASE(Grid_1D_rand) {
       }
       clusters.push_back(std::move(cl));
     }
-    for (Cluster& cl : clusters)
+    for (Cluster& cl : clusters) {
       hash(cl);
+    }
 
     std::shuffle(cells.begin(), cells.end(), rnd);
 
     ClusterC newCls = Ccl::createClusters<CellC, ClusterC, 1>(cells);
 
-    for (Cluster& cl : newCls)
+    for (Cluster& cl : newCls) {
       hash(cl);
+    }
 
     std::sort(clusters.begin(), clusters.end(), clHashComp);
     std::sort(newCls.begin(), newCls.end(), clHashComp);
