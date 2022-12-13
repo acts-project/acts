@@ -116,7 +116,7 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   ts.chi2() = pc.chi2;
   ts.pathLength() = pc.pathLength;
   // source link defines the uncalibrated measurement
-  ts.setUncalibrated(pc.sourceLink);
+  ts.setUncalibrated(Acts::SourceLink{pc.sourceLink});
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
     testSourceLinkCalibrator<VectorMultiTrajectory>(Acts::GeometryContext{},

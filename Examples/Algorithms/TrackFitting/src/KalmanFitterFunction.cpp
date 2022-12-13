@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -90,8 +91,7 @@ struct KalmanFitterFunctionImpl
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       TrackContainer& tracks) const override {
@@ -101,8 +101,7 @@ struct KalmanFitterFunctionImpl
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfaceSequence,

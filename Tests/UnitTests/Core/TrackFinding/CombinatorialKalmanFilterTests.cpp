@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -99,7 +100,10 @@ struct TestContainerAccessor {
 
     bool operator!=(const Iterator& other) const { return !(*this == other); }
 
-    const Value& operator*() const { return m_iterator->second; }
+    Acts::SourceLink operator*() const {
+      const auto& sl = m_iterator->second;
+      return Acts::SourceLink{sl};
+    }
 
     BaseIterator m_iterator;
   };
@@ -312,8 +316,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     size_t nummismatchedHits = 0u;
     for (const auto trackState : track.trackStates()) {
       numHits += 1u;
-      const auto& sl =
-          static_cast<const TestSourceLink&>(trackState.uncalibrated());
+      const auto& sl = trackState.uncalibrated().template get<TestSourceLink>();
       if (trackId != sl.sourceId) {
         nummismatchedHits++;
       }
@@ -369,8 +372,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     size_t nummismatchedHits = 0u;
     for (const auto trackState : track.trackStates()) {
       numHits += 1u;
-      const auto& sl =
-          static_cast<const TestSourceLink&>(trackState.uncalibrated());
+      const auto& sl = trackState.uncalibrated().template get<TestSourceLink>();
       if (trackId != sl.sourceId) {
         nummismatchedHits++;
       }

@@ -97,12 +97,11 @@ class VectorMultiTrajectoryBase {
         h("parSmth", isMeas, weight(par_size));
         h("covSmth", isMeas, weight(cov_size));
       }
-      h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+      h("sourceLinks", isMeas, weight(sizeof(SourceLink)));
       h("measOffset", isMeas,
         weight(sizeof(decltype(m_measOffset)::value_type)));
       h("measCovOffset", isMeas,
         weight(sizeof(decltype(m_measCovOffset)::value_type)));
-
       if (ts.hasCalibrated() &&
           ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Calibrated)) {
         size_t meas_size = ts.calibratedSize() * sizeof(scalar);
@@ -111,7 +110,7 @@ class VectorMultiTrajectoryBase {
 
         h("meas", isMeas, weight(meas_size));
         h("measCov", isMeas, weight(meas_cov_size));
-        h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+        h("sourceLinks", isMeas, weight(sizeof(const SourceLink)));
         h("projectors", isMeas, weight(sizeof(ProjectorBitset)));
       }
 
@@ -184,11 +183,9 @@ class VectorMultiTrajectoryBase {
         return instance.m_index[istate].ijacobian != kInvalid;
       case "projector"_hash:
         return instance.m_index[istate].iprojector != kInvalid;
-      case "uncalibrated"_hash: {
-        const auto& sl =
-            instance.m_sourceLinks[instance.m_index[istate].iuncalibrated];
-        return sl != nullptr;
-      }
+      case "uncalibrated"_hash:
+        return instance.m_sourceLinks[instance.m_index[istate].iuncalibrated]
+            .has_value();
       case "previous"_hash:
       case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
@@ -294,7 +291,7 @@ class VectorMultiTrajectoryBase {
   std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
 
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_jac;
-  std::vector<const SourceLink*> m_sourceLinks;
+  std::vector<std::optional<SourceLink>> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 
   // owning vector of shared pointers to surfaces

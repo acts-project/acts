@@ -23,9 +23,13 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
   Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                               Acts::VectorMultiTrajectory{}};
 
+  // Convert to Acts::SourceLink during iteration
+  Acts::SourceLinkAdapterIterator begin{sourcelinks.begin()};
+  Acts::SourceLinkAdapterIterator end{sourcelinks.end()};
+
   // Perform the fit
-  auto fitRes = m_fitter.fit(sourcelinks.begin(), sourcelinks.end(),
-                             sParameters, fitOptions, tracks);
+  auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
+
   if (not fitRes.ok()) {
     ACTS_WARNING("Fit failure");
     return fitRes.error();
