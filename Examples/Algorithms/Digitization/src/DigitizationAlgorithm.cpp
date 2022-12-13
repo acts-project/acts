@@ -117,7 +117,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
   // Prepare output containers
   // need list here for stable addresses
-  std::list<IndexSourceLink> sourceLinkStorage;
   IndexSourceLinkContainer sourceLinks;
   MeasurementContainer measurements;
   ClusterContainer clusters;
@@ -224,8 +223,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             // The measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index measurementIdx = measurements.size();
-            sourceLinkStorage.emplace_back(moduleGeoId, measurementIdx);
-            IndexSourceLink& sourceLink = sourceLinkStorage.back();
+            IndexSourceLink sourceLink{moduleGeoId, measurementIdx};
 
             // Add to output containers:
             // index map and source link container are geometry-ordered.
@@ -251,8 +249,6 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   }
 
   ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-  ctx.eventStore.add(m_cfg.outputSourceLinks + "__storage",
-                     std::move(sourceLinkStorage));
   ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
   ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
   ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,

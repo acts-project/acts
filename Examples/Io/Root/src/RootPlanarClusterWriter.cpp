@@ -167,8 +167,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       }
       // write hit-particle truth association
       // each hit can have multiple particles, e.g. in a dense environment
-      const auto& sl = static_cast<const Acts::DigitizationSourceLink&>(
-          cluster.sourceLink());
+      const auto& sl = cluster.sourceLink().get<Acts::DigitizationSourceLink>();
       for (auto idx : sl.indices()) {
         auto it = simHits.nth(idx);
         if (it == simHits.end()) {

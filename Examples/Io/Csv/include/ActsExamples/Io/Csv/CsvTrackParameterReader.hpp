@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include <Acts/Utilities/Logger.hpp>
 
 #include <array>
 #include <memory>
