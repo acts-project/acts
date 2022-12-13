@@ -104,7 +104,7 @@ class DuplicateIdChecker {
 };
 
 /// @brief Checks for unset Geometry Ids and throws exception
-/// in case on eis found
+/// in case one is found
 class UnsetIdChecker {
  public:
   /// @brief Checks the geometry ids of all objects and fills
