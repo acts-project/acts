@@ -23,47 +23,47 @@ np.set_printoptions(linewidth=np.inf)
 
 
 def cmp(a, b):
-  if np.isscalar(a):
-    if a != b:
-      return False
-  elif type(a) == np.ndarray:
-    if not np.array_equal(a, b, equal_nan=True):
-      return False
-  else:
-    for aa, bb in zip(a, b):
-      if not cmp(aa, bb):
-        return False
-  return True
+    if np.isscalar(a):
+        if a != b:
+            return False
+    elif type(a) == np.ndarray:
+        if not np.array_equal(a, b, equal_nan=True):
+            return False
+    else:
+        for aa, bb in zip(a, b):
+            if not cmp(aa, bb):
+                return False
+    return True
 
 
 failed_events = set()
 failed_keys = set()
 for key in a_data.keys():
-  if key == event_nr:
-    continue
+    if key == event_nr:
+        continue
 
-  a_vals = a_data[key].array(library="np")
-  a_vals = a_vals[a_sort_index]
+    a_vals = a_data[key].array(library="np")
+    a_vals = a_vals[a_sort_index]
 
-  b_vals = b_data[key].array(library="np")
-  b_vals = b_vals[b_sort_index]
+    b_vals = b_data[key].array(library="np")
+    b_vals = b_vals[b_sort_index]
 
-  for event, (a, b) in enumerate(zip(a_vals, b_vals)):
-    if not cmp(a, b):
-      print(f"event {event} failed for {key}")
-      print(f"a {a}")
-      print(f"b {b}")
-      print()
+    for event, (a, b) in enumerate(zip(a_vals, b_vals)):
+        if not cmp(a, b):
+            print(f"event {event} failed for {key}")
+            print(f"a {a}")
+            print(f"b {b}")
+            print()
 
-      if fail_fast:
-        sys.exit(1)
-      failed_events.add(event)
-      failed_keys.add(key)
+            if fail_fast:
+                sys.exit(1)
+            failed_events.add(event)
+            failed_keys.add(key)
 
 if failed_events or failed_keys:
-  print("summary")
-  print("failed events: " + " ".join(map(str, sorted(failed_events))))
-  print("failed keys: " + " ".join(failed_keys))
-  sys.exit(1)
+    print("summary")
+    print("failed events: " + " ".join(map(str, sorted(failed_events))))
+    print("failed keys: " + " ".join(failed_keys))
+    sys.exit(1)
 
 sys.exit(0)
