@@ -138,7 +138,7 @@ void fillTrackState(const TestTrackState& pc, TrackStatePropMask mask,
   ts.chi2() = pc.chi2;
   ts.pathLength() = pc.pathLength;
   // source link defines the uncalibrated measurement
-  ts.setUncalibrated(pc.sourceLink);
+  ts.setUncalibrated(SourceLink{pc.sourceLink});
   // create calibrated measurements from source link
   if (ACTS_CHECK_BIT(mask, TrackStatePropMask::Calibrated)) {
     testSourceLinkCalibrator<VectorMultiTrajectory>(Acts::GeometryContext{},
@@ -183,13 +183,42 @@ BOOST_AUTO_TEST_CASE(Build) {
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 
   act.clear();
+  for (const auto& p : t.trackStateRange(i2a)) {
+    act.push_back(p.index());
+  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
+
+  act.clear();
   exp = {i2b, i1b, i0};
   t.visitBackwards(i2b, collect);
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
 
   act.clear();
+  for (const auto& p : t.trackStateRange(i2b)) {
+    act.push_back(p.index());
+  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
+
+  act.clear();
   t.applyBackwards(i2b, collect);
   BOOST_CHECK_EQUAL_COLLECTIONS(act.begin(), act.end(), exp.begin(), exp.end());
+
+  // check const-correctness
+  const auto& ct = t;
+  std::vector<BoundVector> predicteds;
+  // mutation in this loop works!
+  for (auto p : t.trackStateRange(i2b)) {
+    predicteds.push_back(BoundVector::Random());
+    p.predicted() = predicteds.back();
+  }
+  std::vector<BoundVector> predictedsAct;
+  for (const auto& p : ct.trackStateRange(i2b)) {
+    predictedsAct.push_back(p.predicted());
+    // mutation in this loop doesn't work: does not compile
+    // p.predicted() = BoundVector::Random();
+  }
+  BOOST_CHECK_EQUAL_COLLECTIONS(predictedsAct.begin(), predictedsAct.end(),
+                                predicteds.begin(), predicteds.end());
 }
 
 BOOST_AUTO_TEST_CASE(AsReadOnly) {
@@ -478,11 +507,12 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
   {
     // create a new (invalid) source link
     TestSourceLink invalid;
-    BOOST_CHECK_NE(&tsa.uncalibrated(), &invalid);
-    BOOST_CHECK_NE(&tsb.uncalibrated(), &invalid);
-    tsb.setUncalibrated(invalid);
-    BOOST_CHECK_EQUAL(&tsa.uncalibrated(), &invalid);
-    BOOST_CHECK_EQUAL(&tsb.uncalibrated(), &invalid);
+    invalid.sourceId = -1;
+    BOOST_CHECK_NE(tsa.uncalibrated().get<TestSourceLink>(), invalid);
+    BOOST_CHECK_NE(tsb.uncalibrated().get<TestSourceLink>(), invalid);
+    tsb.setUncalibrated(SourceLink{invalid});
+    BOOST_CHECK_EQUAL(tsa.uncalibrated().get<TestSourceLink>(), invalid);
+    BOOST_CHECK_EQUAL(tsb.uncalibrated().get<TestSourceLink>(), invalid);
   }
   {
     // reset measurements w/ full parameters
@@ -546,7 +576,7 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
 
   // use temporary measurement to reset calibrated data
   TestTrackState ttsb(rng, 2u);
-  ts.setUncalibrated(ttsb.sourceLink);
+  ts.setUncalibrated(SourceLink{ttsb.sourceLink});
   auto meas = testSourceLinkCalibratorReturn<VectorMultiTrajectory>(gctx, ts);
   auto m2 = std::get<Measurement<BoundIndices, 2u>>(meas);
 
@@ -593,11 +623,12 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   BOOST_CHECK_EQUAL(ts.chi2(), pc.chi2);
 
   // check that the uncalibrated source link is set
-  BOOST_CHECK_EQUAL(&ts.uncalibrated(), &pc.sourceLink);
+  BOOST_CHECK_EQUAL(ts.uncalibrated().get<TestSourceLink>(), pc.sourceLink);
 
   // check that the calibrated measurement is set
   BOOST_CHECK(ts.hasCalibrated());
-  BOOST_CHECK_EQUAL(&ts.calibratedSourceLink(), &pc.sourceLink);
+  BOOST_CHECK_EQUAL(ts.calibratedSourceLink().get<TestSourceLink>(),
+                    pc.sourceLink);
   BOOST_CHECK_EQUAL(ts.effectiveCalibrated(),
                     pc.sourceLink.parameters.head(nMeasurements));
   BOOST_CHECK_EQUAL(
@@ -837,9 +868,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_NE(ts1.smoothed(), ts2.smoothed());
   BOOST_CHECK_NE(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
-  BOOST_CHECK_NE(&ts1.uncalibrated(), &ts2.uncalibrated());
+  BOOST_CHECK_NE(ts1.uncalibrated().get<TestSourceLink>(),
+                 ts2.uncalibrated().get<TestSourceLink>());
 
-  BOOST_CHECK_NE(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
+  BOOST_CHECK_NE(ts1.calibratedSourceLink().get<TestSourceLink>(),
+                 ts2.calibratedSourceLink().get<TestSourceLink>());
 
   visit_measurement(ts1.calibratedSize(), [&](auto N) {
     constexpr size_t measdim = decltype(N)::value;
@@ -865,9 +898,11 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_EQUAL(ts1.smoothed(), ts2.smoothed());
   BOOST_CHECK_EQUAL(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
-  BOOST_CHECK_EQUAL(&ts1.uncalibrated(), &ts2.uncalibrated());
+  BOOST_CHECK_EQUAL(ts1.uncalibrated().get<TestSourceLink>(),
+                    ts2.uncalibrated().get<TestSourceLink>());
 
-  BOOST_CHECK_EQUAL(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
+  BOOST_CHECK_EQUAL(ts1.calibratedSourceLink().get<TestSourceLink>(),
+                    ts2.calibratedSourceLink().get<TestSourceLink>());
 
   visit_measurement(ts1.calibratedSize(), [&](auto N) {
     constexpr size_t measdim = decltype(N)::value;
@@ -893,7 +928,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_NE(ts1.predicted(), ts2.predicted());
   BOOST_CHECK_NE(ts1.predictedCovariance(), ts2.predictedCovariance());
 
-  BOOST_CHECK_NE(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
+  BOOST_CHECK_NE(ts1.calibratedSourceLink().get<TestSourceLink>(),
+                 ts2.calibratedSourceLink().get<TestSourceLink>());
 
   visit_measurement(ts1.calibratedSize(), [&](auto N) {
     constexpr size_t measdim = decltype(N)::value;
@@ -916,7 +952,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_EQUAL(ts1.predicted(), ts2.predicted());
   BOOST_CHECK_EQUAL(ts1.predictedCovariance(), ts2.predictedCovariance());
 
-  BOOST_CHECK_EQUAL(&ts1.calibratedSourceLink(), &ts2.calibratedSourceLink());
+  BOOST_CHECK_EQUAL(ts1.calibratedSourceLink().get<TestSourceLink>(),
+                    ts2.calibratedSourceLink().get<TestSourceLink>());
 
   visit_measurement(ts1.calibratedSize(), [&](auto N) {
     constexpr size_t measdim = decltype(N)::value;

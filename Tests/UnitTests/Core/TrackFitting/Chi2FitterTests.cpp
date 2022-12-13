@@ -179,14 +179,19 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto start = makeParameters();
   auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                          resolutions, rng);
-  const auto& sourceLinks = measurements.sourceLinks;
+  std::vector<Acts::SourceLink> sourceLinks;
+  std::transform(measurements.sourceLinks.begin(),
+                 measurements.sourceLinks.end(),
+                 std::back_inserter(sourceLinks),
+                 [](const auto& sl) { return Acts::SourceLink{sl}; });
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
   Chi2FitterOptions chi2Options(geoCtx, magCtx, calCtx, getExtensions(),
                                 LoggerWrapper{*chi2Logger},
                                 PropagatorPlainOptions());
 
-  // chi2Options.nUpdates = 2; //  χ² = 17.9695 -> 11.0035 -> 11.0035 ...
+  chi2Options.nUpdates = 5;
+  // χ² = 9.14513 -> 6.34088 -> 6.34088 ...
 
   // BOOST_TEST_INFO("Test Case ZeroFieldNoSurfaceForward: running .fit()...");
 
