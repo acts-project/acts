@@ -27,8 +27,6 @@ struct DynamicColumnBase {
 
 template <typename T>
 struct DynamicColumn : public DynamicColumnBase {
-  ~DynamicColumn() override = default;
-
   std::any get(size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");
     return &m_vector[i];
@@ -54,8 +52,6 @@ struct DynamicColumn<bool> : public DynamicColumnBase {
   struct Wrapper {
     bool value;
   };
-
-  ~DynamicColumn() override = default;
 
   std::any get(size_t i) override {
     assert(i < m_vector.size() && "DynamicColumn out of bounds");

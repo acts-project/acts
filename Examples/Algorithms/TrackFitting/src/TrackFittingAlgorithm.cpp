@@ -149,7 +149,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       // The fitted parameters container. One element (at most) here.
       Trajectories::IndexedParameters indexedParams;
       if (track.hasReferenceSurface()) {
-        // const auto& params = fitOutput.fittedParameters.value();
         ACTS_VERBOSE("Fitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << track.parameters().transpose());
         // Push the fitted parameters to the container
