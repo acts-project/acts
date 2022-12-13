@@ -13,7 +13,6 @@
 #include "Acts/Utilities/Any.hpp"
 #include "Acts/Utilities/TypeTraits.hpp"
 
-#include <any>
 #include <cassert>
 #include <iostream>
 #include <type_traits>
