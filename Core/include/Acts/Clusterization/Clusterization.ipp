@@ -263,7 +263,7 @@ void labelClusters(CellCollection& cells, Connect connect) {
         // should have a label
         if (seen.buf[i] == NO_LABEL) {
           throw std::logic_error("i < seen.nconn but see.buf[i] == NO_LABEL");
-	}
+        }
         // Only record equivalence if needed
         if (seen.buf[0] != seen.buf[i]) {
           ds.unionSet(seen.buf[0], seen.buf[i]);
