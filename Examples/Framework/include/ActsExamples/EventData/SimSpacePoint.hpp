@@ -43,7 +43,7 @@ class SimSpacePoint {
   template <typename position_t>
   SimSpacePoint(
       const Eigen::MatrixBase<position_t>& pos, float varRho, float varZ,
-      boost::container::static_vector<const Acts::SourceLink*, 2> sourceLinks,
+      boost::container::static_vector<Acts::SourceLink, 2> sourceLinks,
       const float topHalfStripLength, const float bottomHalfStripLength,
       const Acts::Vector3& topStripDirection,
       const Acts::Vector3& bottomStripDirection,
@@ -76,7 +76,7 @@ class SimSpacePoint {
   template <typename position_t>
   SimSpacePoint(
       const Eigen::MatrixBase<position_t>& pos, Scalar varRho, Scalar varZ,
-      boost::container::static_vector<const Acts::SourceLink*, 2> sourceLinks)
+      boost::container::static_vector<Acts::SourceLink, 2> sourceLinks)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
         m_z(pos[Acts::ePos2]),
@@ -94,8 +94,8 @@ class SimSpacePoint {
   constexpr Scalar varianceR() const { return m_varianceRho; }
   constexpr Scalar varianceZ() const { return m_varianceZ; }
 
-  const boost::container::static_vector<const Acts::SourceLink*, 2>
-  sourceLinks() const {
+  const boost::container::static_vector<Acts::SourceLink, 2>& sourceLinks()
+      const {
     return m_sourceLinks;
   }
 
@@ -124,7 +124,7 @@ class SimSpacePoint {
   Scalar m_varianceZ;
   // SourceLinks of the corresponding measurements. A Pixel (strip) SP has one
   // (two) sourceLink(s).
-  boost::container::static_vector<const Acts::SourceLink*, 2> m_sourceLinks;
+  boost::container::static_vector<Acts::SourceLink, 2> m_sourceLinks;
 
   // half of the length of the top strip
   float m_topHalfStripLength = 0;
@@ -146,9 +146,14 @@ inline bool operator==(const SimSpacePoint& lhs, const SimSpacePoint& rhs) {
   //   that the same measurement index always produces the same space point?
   // no need to check r since it is fully defined by x/y
 
-  return ((lhs.sourceLinks() == rhs.sourceLinks()) and (lhs.x() == rhs.x()) and
-          (lhs.y() == rhs.y()) and (lhs.z() == rhs.z()) and
-          (lhs.varianceR() == rhs.varianceR()) and
+  return (std::equal(lhs.sourceLinks().begin(), lhs.sourceLinks().end(),
+                     rhs.sourceLinks().begin(),
+                     [](const auto& lsl, const auto& rsl) {
+                       return lsl.template get<IndexSourceLink>() ==
+                              rsl.template get<IndexSourceLink>();
+                     }) and
+          (lhs.x() == rhs.x()) and (lhs.y() == rhs.y()) and
+          (lhs.z() == rhs.z()) and (lhs.varianceR() == rhs.varianceR()) and
           (lhs.varianceZ() == rhs.varianceZ()));
 }
 
