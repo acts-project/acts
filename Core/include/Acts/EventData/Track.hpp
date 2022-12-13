@@ -375,16 +375,16 @@ class TrackProxyIterator {
 }  // namespace detail_tc
 
 template <typename T>
-struct isReadOnlyTrackContainer;
+struct IsReadOnlyTrackContainer;
 
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t = detail_tc::RefHolder>
 class TrackContainer {
  public:
   static constexpr bool ReadOnly =
-      isReadOnlyTrackContainer<track_container_t>::value;
+      IsReadOnlyTrackContainer<track_container_t>::value;
   static constexpr bool TrackStateReadOnly =
-      isReadOnlyMultiTrajectory<traj_t>::value;
+      IsReadOnlyMultiTrajectory<traj_t>::value;
 
   static_assert(ReadOnly == TrackStateReadOnly,
                 "Either both track container and track state container need to "

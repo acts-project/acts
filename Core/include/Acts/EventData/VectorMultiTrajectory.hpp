@@ -377,7 +377,7 @@ class VectorMultiTrajectoryBase {
 
 class VectorMultiTrajectory;
 template <>
-struct isReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
+struct IsReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
 
 class VectorMultiTrajectory final
     : public detail_vmt::VectorMultiTrajectoryBase,
@@ -505,7 +505,7 @@ class VectorMultiTrajectory final
 
 class ConstVectorMultiTrajectory;
 template <>
-struct isReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
+struct IsReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
 };
 
 class ConstVectorMultiTrajectory final

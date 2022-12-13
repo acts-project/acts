@@ -181,7 +181,7 @@ class VectorTrackContainerBase {
 
 class VectorTrackContainer;
 template <>
-struct isReadOnlyTrackContainer<VectorTrackContainer> : std::false_type {};
+struct IsReadOnlyTrackContainer<VectorTrackContainer> : std::false_type {};
 
 class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
  public:
@@ -247,7 +247,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
 
 class ConstVectorTrackContainer;
 template <>
-struct isReadOnlyTrackContainer<ConstVectorTrackContainer> : std::true_type {};
+struct IsReadOnlyTrackContainer<ConstVectorTrackContainer> : std::true_type {};
 
 class ConstVectorTrackContainer final
     : public detail_vtc::VectorTrackContainerBase {

@@ -1100,7 +1100,7 @@ constexpr IndexType kInvalid =
 }  // namespace MultiTrajectoryTraits
 
 template <typename T>
-struct isReadOnlyMultiTrajectory;
+struct IsReadOnlyMultiTrajectory;
 
 /// Store a trajectory of track states with multiple components.
 ///
@@ -1115,7 +1115,7 @@ class MultiTrajectory {
  public:
   using Derived = derived_t;
 
-  static constexpr bool ReadOnly = isReadOnlyMultiTrajectory<Derived>::value;
+  static constexpr bool ReadOnly = IsReadOnlyMultiTrajectory<Derived>::value;
 
   // Pull out type alias and re-expose them for ease of use.
   //
@@ -1239,7 +1239,7 @@ class MultiTrajectory {
   auto&& convertToReadOnly() const {
     auto&& cv = self().convertToReadOnly_impl();
     static_assert(
-        isReadOnlyMultiTrajectory<decltype(cv)>::value,
+        IsReadOnlyMultiTrajectory<decltype(cv)>::value,
         "convertToReadOnly_impl does not return something that reports "
         "being ReadOnly.");
     return cv;
