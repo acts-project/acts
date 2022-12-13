@@ -49,9 +49,9 @@ except ImportError:
 
 
 try:
-    import acts.examples.pythia8
+    import acts.examples
 
-    pythia8Enabled = True
+    pythia8Enabled = hasattr(acts.examples, "pythia8")
 except ImportError:
     pythia8Enabled = False
 
