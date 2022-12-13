@@ -15,8 +15,6 @@
 #include <cstddef>
 #include <iterator>
 
-#include <unistd.h>
-
 namespace Acts {
 
 template <typename track_container_t, typename traj_t,
