@@ -40,8 +40,6 @@ ActsExamples::TrackModifier::TrackModifier(const Config& config,
 ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   auto modifyTrack = [this](auto trk) {
-    auto newTrk = trk;
-
     {
       auto& params = trk.parameters();
 
@@ -70,7 +68,7 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
       }
     }
 
-    return newTrk;
+    return trk;
   };
 
   if (!m_cfg.inputTrackParameters.empty()) {
