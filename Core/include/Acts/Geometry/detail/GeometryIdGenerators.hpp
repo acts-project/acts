@@ -42,10 +42,6 @@ class VolumeCounter {
 /// volumeId fixed and increases the layer counting instead of
 /// increasing each time the volume id.
 ///
-/// if `processSurfacesPortals` is set to true, it will also
-/// recursively set surface and portal geometry ids, more complicated
-/// geometry id setting can be done by chaining different prescriptors
-///
 /// This allows the geometry id in all layer type volumes of a
 /// dedicated sub detector have the same volume id but differ
 /// in layer id.
