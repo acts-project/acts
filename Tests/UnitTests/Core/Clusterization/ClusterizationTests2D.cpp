@@ -125,7 +125,7 @@ void genclusterw(int x, int y, int x0, int y0, int x1, int y1,
 
   auto maybe_add = [&](int x_, int y_) {
     Cell2D c(x_, y_);
-    if (std::uniform_real_distribution()(rng) < startp and
+    if (std::uniform_real_distribution<double>()(rng) < startp and
         std::find(cells.begin(), cells.end(), c) == cells.end()) {
       cells.push_back(c);
       add.push_back(c);
