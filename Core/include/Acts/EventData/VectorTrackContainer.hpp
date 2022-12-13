@@ -9,78 +9,13 @@
 #pragma once
 
 #include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/detail/DynamicColumn.hpp"
 
 #include <unordered_map>
 
 namespace Acts {
 
 namespace detail_vtc {
-
-struct DynamicColumnBase {
-  virtual ~DynamicColumnBase() = 0;
-
-  virtual std::any get(size_t i) = 0;
-  virtual std::any get(size_t i) const = 0;
-
-  virtual void add() = 0;
-  virtual void clear() = 0;
-
-  virtual std::unique_ptr<DynamicColumnBase> clone() const = 0;
-};
-
-template <typename T>
-struct DynamicColumn : public DynamicColumnBase {
-  ~DynamicColumn() override = default;
-
-  std::any get(size_t i) override {
-    assert(i < m_vector.size() && "DynamicColumn out of bounds");
-    return &m_vector[i];
-  }
-
-  std::any get(size_t i) const override {
-    assert(i < m_vector.size() && "DynamicColumn out of bounds");
-    return &m_vector[i];
-  }
-
-  void add() override { m_vector.emplace_back(); }
-  void clear() override { m_vector.clear(); }
-
-  std::unique_ptr<DynamicColumnBase> clone() const override {
-    return std::make_unique<DynamicColumn<T>>(*this);
-  }
-
-  std::vector<T> m_vector;
-};
-
-template <>
-struct DynamicColumn<bool> : public DynamicColumnBase {
-  struct Wrapper {
-    bool value;
-  };
-
-  ~DynamicColumn() override = default;
-
-  std::any get(size_t i) override {
-    assert(i < m_vector.size() && "DynamicColumn out of bounds");
-    return &m_vector[i].value;
-  }
-
-  std::any get(size_t i) const override {
-    assert(i < m_vector.size() && "DynamicColumn out of bounds");
-    return &m_vector[i].value;
-  }
-
-  void add() override { m_vector.emplace_back(); }
-  void clear() override { m_vector.clear(); }
-
-  std::unique_ptr<DynamicColumnBase> clone() const override {
-    return std::make_unique<DynamicColumn<bool>>(*this);
-  }
-
-  std::vector<Wrapper> m_vector;
-};
-
-inline DynamicColumnBase::~DynamicColumnBase() = default;
 
 class VectorTrackContainerBase {
  public:
@@ -145,8 +80,8 @@ class VectorTrackContainerBase {
           throw std::runtime_error("Unable to handle this component");
         }
 
-        std::conditional_t<EnsureConst, const DynamicColumnBase*,
-                           DynamicColumnBase*>
+        std::conditional_t<EnsureConst, const detail::DynamicColumnBase*,
+                           detail::DynamicColumnBase*>
             col = it->second.get();
         assert(col && "Dynamic column is null");
         return col->get(itrack);
@@ -173,7 +108,7 @@ class VectorTrackContainerBase {
   std::vector<unsigned int> m_nMeasurements;
   std::vector<unsigned int> m_nHoles;
 
-  std::unordered_map<HashedString, std::unique_ptr<DynamicColumnBase>>
+  std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
 };
 
@@ -223,7 +158,7 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
     m_dynamic.insert(
-        {hashString(key), std::make_unique<detail_vtc::DynamicColumn<T>>()});
+        {hashString(key), std::make_unique<detail::DynamicColumn<T>>()});
   }
 
   Parameters parameters(IndexType itrack) {
