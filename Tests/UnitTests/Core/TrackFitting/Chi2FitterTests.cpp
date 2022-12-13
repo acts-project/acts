@@ -179,7 +179,11 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto start = makeParameters();
   auto measurements = createMeasurements(simPropagator, geoCtx, magCtx, start,
                                          resolutions, rng);
-  const auto& sourceLinks = measurements.sourceLinks;
+  std::vector<Acts::SourceLink> sourceLinks;
+  std::transform(measurements.sourceLinks.begin(),
+                 measurements.sourceLinks.end(),
+                 std::back_inserter(sourceLinks),
+                 [](const auto& sl) { return Acts::SourceLink{sl}; });
   BOOST_REQUIRE_EQUAL(sourceLinks.size(), nMeasurements);
 
   Chi2FitterOptions chi2Options(geoCtx, magCtx, calCtx, getExtensions(),

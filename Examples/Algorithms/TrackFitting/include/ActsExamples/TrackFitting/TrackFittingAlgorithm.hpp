@@ -56,14 +56,13 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
    public:
     virtual ~TrackFitterFunction() = default;
     virtual TrackFitterResult operator()(
-        const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const GeneralFitterOptions&,
+        const std::vector<Acts::SourceLink>&, const TrackParameters&,
+        const GeneralFitterOptions&,
         std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
 
     virtual TrackFitterResult operator()(
-        const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const GeneralFitterOptions&,
-        const std::vector<const Acts::Surface*>&,
+        const std::vector<Acts::SourceLink>&, const TrackParameters&,
+        const GeneralFitterOptions&, const std::vector<const Acts::Surface*>&,
         std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
   };
 
