@@ -419,7 +419,7 @@ get3DLifetimeSignOfTrack(
   // Create propagator options
   auto logger = getDefaultLogger("IPEstProp",Logging::INFO);
   propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
-  pOptions.directon = NavigationDirection::Backward;
+  pOptions.direction = NavigationDirection::Backward;
   
   // Do the propagation to the perigeee
   auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
