@@ -84,9 +84,8 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   Linearizer linearizer(ltConfig);
 
   // Set up deterministic annealing with user-defined temperatures
-  std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
   Acts::AnnealingUtility::Config annealingConfig;
-  annealingConfig.temperature = {1.};
+  annealingConfig.setOfTemperatures = {1.};
   Acts::AnnealingUtility annealingUtility(annealingConfig);
 
   // Set up the vertex fitter with user-defined annealing
