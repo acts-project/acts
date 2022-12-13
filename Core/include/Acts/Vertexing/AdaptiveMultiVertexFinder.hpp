@@ -96,7 +96,7 @@ class AdaptiveMultiVertexFinder {
     // reliable, but the fit would be still able to converge
     // towards the right vertex. If you cut too soft, you
     // consider a lot of tracks which just slow down the fit.
-    double tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
+    double tracksMaxZinterval = 3. * Acts::UnitConstants::mm;
 
     // Maximum allowed significance of track position to vertex seed
     // to consider track as compatible track for vertex fit

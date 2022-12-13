@@ -128,13 +128,13 @@ class AdaptiveMultiVertexFitter {
     double maxDistToLinPoint{0.5};
 
     // Minimum track weight needed for track to be considered
-    double minWeight{0.001};
+    double minWeight{0.0001};
 
     // Max relative shift of vertex during one iteration
     double maxRelativeShift{0.01};
 
     // Do smoothing after multivertex fit
-    bool doSmoothing{true};
+    bool doSmoothing{false};
   };
 
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
@@ -147,7 +147,7 @@ class AdaptiveMultiVertexFitter {
   AdaptiveMultiVertexFitter(Config& cfg,
                             std::unique_ptr<const Logger> logger =
                                 getDefaultLogger("AdaptiveMultiVertexFitter",
-                                                 Logging::VERBOSE))
+                                                 Logging::INFO))
       : m_cfg(std::move(cfg)),
         m_extractParameters([](T params) { return params; }),
         m_logger(std::move(logger)) {}
