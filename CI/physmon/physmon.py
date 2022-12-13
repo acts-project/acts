@@ -69,12 +69,11 @@ matDeco = acts.IMaterialDecorator.fromFile(
 detector, trackingGeometry, decorators = getOpenDataDetector(
     getOpenDataDetectorDirectory(), matDeco
 )
-digiConfig = (
-    srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
-)
+digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
 geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 
 field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
 
 def truth_tracking_kalman():
     with tempfile.TemporaryDirectory() as temp:
@@ -96,6 +95,7 @@ def truth_tracking_kalman():
         perf_file = tp / "performance_track_fitter.root"
         assert perf_file.exists(), "Performance file not found"
         shutil.copy(perf_file, outdir / "performance_truth_tracking.root")
+
 
 def truth_tracking_gsf():
     with tempfile.TemporaryDirectory() as temp:
@@ -121,9 +121,7 @@ def truth_tracking_gsf():
 
 
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
-    s = acts.examples.Sequencer(
-        events=500, numThreads=-1, logLevel=acts.logging.INFO
-    )
+    s = acts.examples.Sequencer(events=500, numThreads=-1, logLevel=acts.logging.INFO)
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
@@ -242,10 +240,9 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             assert perf_file.exists(), "Performance file not found"
             shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
 
+
 def run_vertexing(fitter, mu):
-    s = acts.examples.Sequencer(
-        events=5, numThreads=-1, logLevel=acts.logging.INFO
-    )
+    s = acts.examples.Sequencer(events=5, numThreads=-1, logLevel=acts.logging.INFO)
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
@@ -351,6 +348,7 @@ def run_vertexing(fitter, mu):
             outdir / f"performance_vertexing_{fitter.name}_mu{mu}.root",
         )
 
+
 with acts.FpeMonitor():
 
     ### Truth tracking with Kalman Filter
@@ -386,4 +384,3 @@ with acts.FpeMonitor():
             (
                 outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
             ).write_text(str(duration))
-
