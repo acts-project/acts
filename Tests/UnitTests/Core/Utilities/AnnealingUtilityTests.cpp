@@ -18,8 +18,8 @@ namespace Acts {
 namespace Test {
 
 BOOST_AUTO_TEST_CASE(annealing_tool_singleChi2_tests) {
-  std::vector<double> temperatures{64., 16., 4., 2., 1.5, 1.};
-  AnnealingUtility::Config config(temperatures);
+  AnnealingUtility::Config config;
+  config.setOfTemperatures = {64., 16., 4., 2., 1.5, 1.};
   AnnealingUtility annealingTool(config);
 
   AnnealingUtility::State state;
@@ -111,8 +111,8 @@ BOOST_AUTO_TEST_CASE(annealing_tool_multiChi2_tests) {
   std::vector<double> allChi2{1.3, 4.5, 8.4,  0.4, 10.3, 12.3,
                               3.5, 5.8, 11.0, 1.1, 3.5,  6.7};
 
-  std::vector<double> temperatures{64., 16., 4., 2., 1.5, 1.};
-  AnnealingUtility::Config config(temperatures);
+  AnnealingUtility::Config config;
+  config.setOfTemperatures = {64., 16., 4., 2., 1.5, 1.};
   AnnealingUtility annealingTool(config);
 
   AnnealingUtility::State state;
