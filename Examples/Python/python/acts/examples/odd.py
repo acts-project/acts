@@ -44,11 +44,20 @@ def getOpenDataDetector(
             )
             raise RuntimeError(msg)
 
+    volumeRadiusCutsMap = {
+        28: [850.],       # LStrip negative z
+        30: [850.],       # LStrip positive z
+        23: [400., 550.], # SStrip negative z
+        25: [400., 550.], # SStrip positive z
+        16: [100.],       # Pixels negative z
+        18: [100.],       # Pixels positive z
+    }
+
     dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
         xmlFileNames=[str(odd_xml)],
         logLevel=customLogLevel(),
         dd4hepLogLevel=customLogLevel(),
-        geometryIdentifierHook=acts.examples.dd4hep.stripEndcapODD,
+        geometryIdentifierHook=acts.examples.dd4hep.makeRadiusGeometryIdentifierDecorator(volumeRadiusCutsMap),
     )
     detector = acts.examples.dd4hep.DD4hepDetector()
 

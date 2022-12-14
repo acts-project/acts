@@ -11,27 +11,14 @@
 namespace det {
 namespace GeometryIdentifierHooks {
 
-Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
-                                        const Acts::Surface& surface) {
-  // @TODO : This implementation hardcode the parameters for the ODD,
-  // ideally a more generic implementation (using the python binding would be
-  // preferable)
-
-  // Define the spliting parameters for the ODD.
-  // In case of geometry change please edit those accordingly
-
-  // volume where the spliting should be performed (strip endcaps)
-  std::vector<int> volumes = {28, 30};
-  // list of the radial cutoff point (smallest to largest)
-  std::vector<double> radialCuts = {850};
-  // list of the radial cutoff point for each volumes
-  std::vector<std::vector<double>> cut = {radialCuts, radialCuts};
-
-  auto it = std::find(volumes.begin(), volumes.end(), identifier.volume());
-  if (it != volumes.end()) {
-    std::vector<double> layercut = cut[it - volumes.begin()];
+Acts::GeometryIdentifier RadiusGeometryIdentifierDecorator::decorateIdentifier(
+    Acts::GeometryIdentifier identifier, const Acts::Surface& surface) const {
+  auto it = volumeToRadialCuts.find(identifier.volume());
+  if (it != volumeToRadialCuts.end()) {
+    const std::vector<double> &layercut = volumeToRadialCuts.at(identifier.volume());
     Acts::Vector3 center = surface.center(Acts::GeometryContext());
     double radius = sqrt(center[0] * center[0] + center[1] * center[1]);
+    std::cout << "HOOK " << radius << " " << it->first << "\n";
     identifier.setExtra(1);
     for (unsigned i = 0; i < layercut.size(); i++) {
       if (radius > layercut[i]) {

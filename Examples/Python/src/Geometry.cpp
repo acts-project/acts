@@ -45,6 +45,10 @@ void addGeometry(Context& ctx) {
                self.visitSurfaces(func);
              });
   }
+  {
+    py::class_<Acts::GeometryIdentifierHook, std::shared_ptr<Acts::GeometryIdentifierHook>>(
+        m, "GeometryIdentifierHook");
+  }
 }
 
 }  // namespace Acts::Python

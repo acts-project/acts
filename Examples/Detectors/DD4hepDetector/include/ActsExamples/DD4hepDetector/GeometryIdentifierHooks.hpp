@@ -11,16 +11,24 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <map>
+#include <vector>
+
 /// Geometry identifiers hooks to be used with DD4Hep detectors
 /// to add some extra identifier to sensitives surfaces.
 namespace det {
 namespace GeometryIdentifierHooks {
 
-/// Use the extra identifier in the ODD endcap to separate the two row of
-/// modules in R
-/// @param identifier geometry identifier
-/// @param surface coresponding surface
-Acts::GeometryIdentifier stripEndcapODD(Acts::GeometryIdentifier identifier,
-                                        const Acts::Surface& surface);
+struct RadiusGeometryIdentifierDecorator : Acts::GeometryIdentifierHook {
+  std::map<int, std::vector<double>> volumeToRadialCuts;
+
+  /// Use the extra identifier in the ODD endcap to separate the two row of
+  /// modules in R
+  /// @param identifier geometry identifier
+  /// @param surface coresponding surface
+  Acts::GeometryIdentifier decorateIdentifier(
+      Acts::GeometryIdentifier id, const Acts::Surface&) const override;
+};
+
 }  // namespace GeometryIdentifierHooks
 }  // namespace det

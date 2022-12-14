@@ -99,7 +99,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
         sortSubDetectors = sortDetElementsByID,
     const GeometryContext& gctx = GeometryContext(),
     std::shared_ptr<const IMaterialDecorator> matDecorator = nullptr,
-    GeometryIdentifierHook geometryIdentifierHook = {});
+    const GeometryIdentifierHook &geometryIdentifierHook = {});
 
 /// @brief Method internally used to create an Acts::CylinderVolumeBuilder
 ///

@@ -58,5 +58,10 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                                std::shared_ptr<const Acts::IMaterialDecorator>>(
                  &DD4hep::DD4hepDetector::finalize));
   }
-  m.def("stripEndcapODD", &det::GeometryIdentifierHooks::stripEndcapODD);
+
+  m.def("makeRadiusGeometryIdentifierDecorator", [](const std::map<int, std::vector<double>> &map) -> std::shared_ptr<Acts::GeometryIdentifierHook>{
+    auto hook = std::make_shared<det::GeometryIdentifierHooks::RadiusGeometryIdentifierDecorator>();
+    hook->volumeToRadialCuts = map;
+    return hook;
+  });
 }

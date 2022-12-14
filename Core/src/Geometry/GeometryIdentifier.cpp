@@ -9,6 +9,7 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
 #include <ostream>
+#include <iostream>
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   // zero represents an invalid/undefined identifier
@@ -34,4 +35,9 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
     }
   }
   return os;
+}
+
+Acts::GeometryIdentifier Acts::GeometryIdentifierHook::decorateIdentifier(
+    Acts::GeometryIdentifier identifier, const Acts::Surface&) const {
+  return identifier;
 }
