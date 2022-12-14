@@ -90,11 +90,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zAlign);
     ACTS_PYTHON_MEMBER(rAlign);
     ACTS_PYTHON_MEMBER(sigmaError);
-    ACTS_PYTHON_MEMBER(highland);
-    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
-    ACTS_PYTHON_MEMBER(pTPerHelixRadius);
-    ACTS_PYTHON_MEMBER(minHelixDiameter2);
-    ACTS_PYTHON_MEMBER(pT2perRadius);
     ACTS_PYTHON_MEMBER(maxBlockSize);
     ACTS_PYTHON_MEMBER(nTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
