@@ -99,11 +99,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         ActsScalar mid = 0.5 * (low + high);
         ActsScalar max = hv.extent.max(binValue);
         lv.extent.set(binValue, zero, mid);
-        std::cout << " - Setting [ " << zero << ", " << mid << " ] - to "
-                  << lv.name << std::endl;
         hv.extent.set(binValue, mid, max);
-        std::cout << " - Setting [ " << mid << ", " << max << " ] - to "
-                  << hv.name << std::endl;
         borders.push_back(mid);
       }
       borders.push_back(constituentVolumes.back().extent.max(binValue));

@@ -239,22 +239,22 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   lstripNec.extent.set(Acts::binZ, -3100., -1200);
   Acts::ProtoVolume lstripNecD5;
   lstripNecD5.name = "odd-lstrip-nec-d5";
-  lstripNecD5.extent.set(Acts::binZ, -3000, -2900.);
+  lstripNecD5.extent.set(Acts::binZ, -3050, -2900.);
   Acts::ProtoVolume lstripNecD4;
   lstripNecD4.name = "odd-lstrip-nec-d4";
-  lstripNecD4.extent.set(Acts::binZ, -2600., -2500.);
+  lstripNecD4.extent.set(Acts::binZ, -2650., -2500.);
   Acts::ProtoVolume lstripNecD3;
   lstripNecD3.name = "odd-lstrip-nec-d3";
-  lstripNecD3.extent.set(Acts::binZ, -2250, -2150.);
+  lstripNecD3.extent.set(Acts::binZ, -2300, -2150.);
   Acts::ProtoVolume lstripNecD2;
   lstripNecD2.name = "odd-lstrip-nec-d2";
-  lstripNecD2.extent.set(Acts::binZ, -1900, -1800.);
+  lstripNecD2.extent.set(Acts::binZ, -1950, -1800.);
   Acts::ProtoVolume lstripNecD1;
   lstripNecD1.name = "odd-lstrip-nec-d1";
-  lstripNecD1.extent.set(Acts::binZ, -1600., -1500.);
+  lstripNecD1.extent.set(Acts::binZ, -1650., -1500.);
   Acts::ProtoVolume lstripNecD0;
   lstripNecD0.name = "odd-lstrip-nec-d0";
-  lstripNecD0.extent.set(Acts::binZ, -1350., -1250.);
+  lstripNecD0.extent.set(Acts::binZ, -1400., -1250.);
 
   lstripNec.constituentVolumes = {lstripNecD5, lstripNecD4, lstripNecD3,
                                   lstripNecD2, lstripNecD1, lstripNecD0};
@@ -289,22 +289,22 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
 
   Acts::ProtoVolume lstripPecD0;
   lstripPecD0.name = "odd-lstrip-pec-d0";
-  lstripPecD0.extent.set(Acts::binZ, 1250., 1350);
+  lstripPecD0.extent.set(Acts::binZ, 1250., 1400);
   Acts::ProtoVolume lstripPecD1;
   lstripPecD1.name = "odd-lstrip-pec-d1";
-  lstripPecD1.extent.set(Acts::binZ, 1500., 1600.);
+  lstripPecD1.extent.set(Acts::binZ, 1500., 1650.);
   Acts::ProtoVolume lstripPecD2;
   lstripPecD2.name = "odd-lstrip-pec-d2";
-  lstripPecD2.extent.set(Acts::binZ, 1800., 1900.);
+  lstripPecD2.extent.set(Acts::binZ, 1800., 1950.);
   Acts::ProtoVolume lstripPecD3;
   lstripPecD3.name = "odd-lstrip-pec-d3";
-  lstripPecD3.extent.set(Acts::binZ, 2150., 2250.);
+  lstripPecD3.extent.set(Acts::binZ, 2150., 2300.);
   Acts::ProtoVolume lstripPecD4;
   lstripPecD4.name = "odd-lstrip-pec-d4";
-  lstripPecD4.extent.set(Acts::binZ, 2500., 2600.);
+  lstripPecD4.extent.set(Acts::binZ, 2500., 2650.);
   Acts::ProtoVolume lstripPecD5;
   lstripPecD5.name = "odd-lstrip-pec-d5";
-  lstripPecD5.extent.set(Acts::binZ, 2900., 3000.);
+  lstripPecD5.extent.set(Acts::binZ, 2900., 3050.);
 
   lstripPec.constituentVolumes = {lstripPecD0, lstripPecD1, lstripPecD2,
                                   lstripPecD3, lstripPecD4, lstripPecD5};

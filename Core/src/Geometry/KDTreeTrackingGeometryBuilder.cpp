@@ -68,12 +68,16 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
                         << ptVolume.constituentVolumes.size()
                         << " constituents.");
     for (auto& cVolume : ptVolume.constituentVolumes) {
-      translatedVolumes.push_back(translateVolume(
-          cCache, gctx, kdt, cVolume, indent + m_cfg.hierarchyIndent));
+      auto dtVolume = translateVolume(cCache, gctx, kdt, cVolume,
+                                      indent + m_cfg.hierarchyIndent);
+      translatedVolumes.push_back(dtVolume);
     }
     // Make a container volume
-    return m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
+    auto tVolume = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
         gctx, translatedVolumes);
+    ACTS_DEBUG(indent << "> translated into container volume bounds: "
+                      << tVolume->volumeBounds());
+    return tVolume;
   }
 
   std::vector<std::shared_ptr<const Layer>> layers = {};
@@ -90,9 +94,12 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
     auto rangeR = ptVolume.extent.range(Acts::binR);
     auto rangeZ = ptVolume.extent.range(Acts::binZ);
     // Create a new tracking volume with those layers
-    return m_cfg.trackingVolumeHelper->createTrackingVolume(
+    auto tVolume = m_cfg.trackingVolumeHelper->createTrackingVolume(
         gctx, layers, {}, nullptr, rangeR.min(), rangeR.max(), rangeZ.min(),
         rangeZ.max(), ptVolume.name);
+    ACTS_DEBUG(indent << "> translated into bounds: "
+                      << tVolume->volumeBounds());
+    return tVolume;
   }
   return nullptr;
 }
@@ -121,15 +128,26 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
     cLayerSurfaces.push_back(s.second);
   }
 
+  std::shared_ptr<const Acts::Layer> tLayer = nullptr;
+  Acts::ProtoLayer pLayer(gctx, cLayerSurfaces);
   if (plVolume.layerType == Acts::Surface::SurfaceType::Cylinder) {
     ACTS_VERBOSE(indent + ">> creating cylinder layer.");
-    return m_cfg.layerCreator->cylinderLayer(
-        gctx, cLayerSurfaces, Acts::equidistant, Acts::equidistant);
+    pLayer.envelope[binR] = {1., 1.};
+    pLayer.envelope[binZ] = {2., 2.};
+    tLayer = m_cfg.layerCreator->cylinderLayer(
+        gctx, cLayerSurfaces, Acts::equidistant, Acts::equidistant, pLayer);
+
   } else if (plVolume.layerType == Acts::Surface::SurfaceType::Disc) {
     ACTS_VERBOSE(indent + ">> creating disc layer.");
-    return m_cfg.layerCreator->discLayer(gctx, cLayerSurfaces,
-                                         Acts::equidistant, Acts::equidistant);
+    pLayer.envelope[binR] = {2., 2.};
+    pLayer.envelope[binZ] = {1., 1.};
+    tLayer = m_cfg.layerCreator->discLayer(
+        gctx, cLayerSurfaces, Acts::equidistant, Acts::equidistant, pLayer);
+  }
+  if (tLayer != nullptr and tLayer->representingVolume() != nullptr) {
+    ACTS_DEBUG(indent << "> translated into layer bounds: "
+                      << tLayer->representingVolume()->volumeBounds());
   }
 
-  return nullptr;
+  return tLayer;
 }
