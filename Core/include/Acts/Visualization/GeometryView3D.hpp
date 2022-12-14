@@ -85,7 +85,7 @@ struct GeometryView3D {
   /// Helper method to draw portals objects
   ///
   /// @param [in,out] helper The visualization helper
-  /// @param volume The volume to be drawn
+  /// @param portal The portal to be drawn
   /// @param gctx The geometry context for which it is drawn
   /// @param transform An option additional transform
   static void drawPortal(IVisualization3D& helper,
