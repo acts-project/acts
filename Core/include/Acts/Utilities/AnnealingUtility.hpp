@@ -29,7 +29,7 @@ class AnnealingUtility {
 
   /// @brief The configuration struct
   struct Config {
-    Config() {}
+    Config();
 
     // Insensitivity of calculated weight at cutoff
     double cutOff{9.};
