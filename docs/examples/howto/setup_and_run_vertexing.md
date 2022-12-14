@@ -58,7 +58,8 @@ Now, for the sake of this example, let's specify a user-defined annealing scheme
 ```cpp
 // Set up deterministic annealing with user-defined temperatures
 std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
-Acts::AnnealingUtility::Config annealingConfig(temperatures);
+Acts::AnnealingUtility::Config annealingConfig;
+annealingConfig.setOfTemperatures = temperatures;
 Acts::AnnealingUtility annealingUtility(annealingConfig);
 ```
 The AMVF strongly interplays with its dedicated vertex fitter, the *Adaptive Multi-Vertex Fitter*. Let's configure and set it up with the annealing utility defined above:
