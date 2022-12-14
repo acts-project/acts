@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/AbstractVolume.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ViewConfig.hpp"
@@ -80,6 +81,29 @@ struct GeometryView3D {
                          const GeometryContext& gctx,
                          const Transform3& transform = Transform3::Identity(),
                          const ViewConfig& viewConfig = s_viewVolume);
+
+  /// Helper method to draw portals objects
+  ///
+  /// @param [in,out] helper The visualization helper
+  /// @param volume The volume to be drawn
+  /// @param gctx The geometry context for which it is drawn
+  /// @param transform An option additional transform
+  static void drawPortal(IVisualization3D& helper,
+                         const Experimental::Portal& portal,
+                         const GeometryContext& gctx,
+                         const Transform3& transform = Transform3::Identity());
+
+  /// Helper method to draw DetectorVolume objects
+  ///
+  /// @param [in,out] helper The visualization helper
+  /// @param volume The DetectorVolume to be drawn
+  /// @param gctx The geometry context for which it is drawn
+  /// @param transform An option additional transform
+  static void drawDetectorVolume(
+      IVisualization3D& helper,
+      const Acts::Experimental::DetectorVolume& volume,
+      const GeometryContext& gctx,
+      const Transform3& transform = Transform3::Identity());
 
   /// Helper method to draw AbstractVolume objects
   ///

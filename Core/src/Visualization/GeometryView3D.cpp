@@ -9,8 +9,10 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -167,6 +169,45 @@ void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
   for (const auto& bs : bSurfaces) {
     drawSurface(helper, bs->surfaceRepresentation(), gctx, transform,
                 viewConfig);
+  }
+}
+
+void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
+                                      const Experimental::Portal& portal,
+                                      const GeometryContext& gctx,
+                                      const Transform3& transform) {
+  // color the portal based on if it contains two links(green)
+  // or one link(red)
+  const ViewConfig good = ViewConfig({0, 255, 0});
+  const ViewConfig bad = ViewConfig({255, 0, 0});
+  auto surface = &(portal.surface());
+  auto links = &(portal.detectorVolumeUpdators());
+  if (links->size() == 2) {
+    drawSurface(helper, *surface, gctx, transform, good);
+  } else {
+    drawSurface(helper, *surface, gctx, transform, bad);
+  }
+}
+
+void Acts::GeometryView3D::drawDetectorVolume(
+    IVisualization3D& helper, const Experimental::DetectorVolume& volume,
+    const GeometryContext& gctx, const Transform3& transform) {
+  // draw the envelope first
+  auto portals = volume.portals();
+  for (auto portal : portals) {
+    drawPortal(helper, *portal, gctx, transform);
+  }
+  // recurse if there are subvolumes, otherwise draw the portals
+  auto subvolumes = volume.volumes();
+  for (auto subvolume : subvolumes) {
+    if (subvolume->volumes().size() != 0) {
+      drawDetectorVolume(helper, *subvolume, gctx, transform);
+    } else {
+      auto sub_portals = subvolume->portals();
+      for (auto sub_portal : sub_portals) {
+        drawPortal(helper, *sub_portal, gctx, transform);
+      }
+    }
   }
 }
 
