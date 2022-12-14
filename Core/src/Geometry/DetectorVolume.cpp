@@ -46,7 +46,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const GeometryContext&, const std::string& name,
+    const GeometryContext& /*unused*/, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : m_name(name),
@@ -199,13 +199,13 @@ void Acts::Experimental::DetectorVolume::createBoundingBox(
   for (auto p : m_portals.external) {
     auto surface = p->surface().polyhedronRepresentation(gctx, 1);
     auto pVertices = surface.vertices;
-    for (auto v : pVertices) {
+    for (const auto& v : pVertices) {
       vertices.push_back(v);
     }
   }
   Acts::Vector3 vmin;
   Acts::Vector3 vmax;
-  for (auto v : vertices) {
+  for (const auto& v : vertices) {
     vmin = vmin.cwiseMin(v);
     vmax = vmax.cwiseMax(v);
   }
