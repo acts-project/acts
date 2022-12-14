@@ -513,7 +513,7 @@ def addSeeding(
                 outputProtoTracks="prototracks",
                 seedFilterConfig=seedFilterConfig,
                 seedFinderConfig=seedFinderConfig,
-                seedFinderOptions=seedFinderOptions
+                seedFinderOptions=seedFinderOptions,
             )
             s.addAlgorithm(seedingAlg)
             inputProtoTracks = seedingAlg.config.outputProtoTracks
