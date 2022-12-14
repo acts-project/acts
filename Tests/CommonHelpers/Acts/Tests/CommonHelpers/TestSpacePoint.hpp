@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 
 #include <cmath>
 #include <vector>
@@ -31,7 +32,7 @@ class TestSpacePoint {
   template <typename position_t>
   TestSpacePoint(
       const Eigen::MatrixBase<position_t>& pos, float varRho, float varZ,
-      boost::container::static_vector<const Acts::SourceLink*, 2> sourceLinks)
+      boost::container::static_vector<Acts::SourceLink, 2> sourceLinks)
       : m_x(pos[Acts::ePos0]),
         m_y(pos[Acts::ePos1]),
         m_z(pos[Acts::ePos2]),
@@ -49,8 +50,8 @@ class TestSpacePoint {
   constexpr float varianceR() const { return m_varianceRho; }
   constexpr float varianceZ() const { return m_varianceZ; }
 
-  const boost::container::static_vector<const Acts::SourceLink*, 2>
-  sourceLinks() const {
+  const boost::container::static_vector<Acts::SourceLink, 2>& sourceLinks()
+      const {
     return m_sourceLinks;
   }
 
@@ -64,11 +65,17 @@ class TestSpacePoint {
   float m_varianceRho = 0;
   float m_varianceZ = 0;
   // source links. A Pixel (strip) SP has one (two) sourceLink(s).
-  boost::container::static_vector<const Acts::SourceLink*, 2> m_sourceLinks;
+  boost::container::static_vector<Acts::SourceLink, 2> m_sourceLinks;
 };
 
 inline bool operator==(const TestSpacePoint& lhs, const TestSpacePoint& rhs) {
-  return ((lhs.sourceLinks() == rhs.sourceLinks()) and lhs.x() == rhs.x()) and
+  return (std::equal(lhs.sourceLinks().begin(), lhs.sourceLinks().end(),
+                     rhs.sourceLinks().begin(),
+                     [](const auto& lsl, const auto& rsl) {
+                       return lsl.template get<TestSourceLink>() ==
+                              rsl.template get<TestSourceLink>();
+                     }) and
+          lhs.x() == rhs.x()) and
          (lhs.y() == rhs.y()) and (lhs.z() == rhs.z()) and
          (lhs.varianceR() == rhs.varianceR()) and
          (lhs.varianceZ() == rhs.varianceZ());
