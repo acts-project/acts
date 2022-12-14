@@ -428,6 +428,10 @@ class Chi2Fitter {
           result.collectorDerive1Chi2Sum += derive1Chi2;
           result.collectorDerive2Chi2Sum += derive2Chi2;
 
+          double localChi2 =
+              (residuals.transpose() * covInv * residuals).eval()(0);
+          trackStateProxy.chi2() = localChi2;
+
           for (int i = 0; i < localMeasurements.rows(); ++i) {
             result.collectorMeasurements.push_back(localMeasurements(i));
             result.collectorResiduals.push_back(residuals(i));

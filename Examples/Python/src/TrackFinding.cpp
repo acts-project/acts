@@ -10,6 +10,7 @@
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -223,6 +224,13 @@ void addTrackFinding(Context& ctx) {
       ActsExamples::SeedingOrthogonalAlgorithm, mex,
       "SeedingOrthogonalAlgorithm", inputSpacePoints, outputSeeds,
       outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
+      inputSpacePoints, outputSeeds, outputProtoTracks, inputSourceLinks,
+      trackingGeometry, geometrySelection, inputMeasurements, subRegions,
+      nLayers, xMin, xMax, yMin, yMax, houghHistSize_x, houghHistSize_y,
+      hitExtend_x, threshold, localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
