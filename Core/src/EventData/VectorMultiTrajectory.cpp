@@ -22,9 +22,6 @@
 
 namespace Acts {
 
-detail_vmt::VectorMultiTrajectoryBase::DynamicColumnBase::~DynamicColumnBase() =
-    default;
-
 auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
                                                IndexType iprevious)
     -> IndexType {
@@ -70,14 +67,14 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
     p.ijacobian = m_jac.size() - 1;
   }
 
-  m_sourceLinks.push_back(nullptr);
+  m_sourceLinks.emplace_back(std::nullopt);
   p.iuncalibrated = m_sourceLinks.size() - 1;
 
   m_measOffset.push_back(kInvalid);
   m_measCovOffset.push_back(kInvalid);
 
   if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
-    m_sourceLinks.push_back(nullptr);
+    m_sourceLinks.emplace_back(std::nullopt);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
     m_projectors.emplace_back();
