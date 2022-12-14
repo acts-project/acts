@@ -41,10 +41,6 @@ using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
     const Transform3&, const VolumeBounds&,
     const std::shared_ptr<DetectorVolume>&)>;
 
-using BoundingBox =
-    Acts::AxisAlignedBoundingBox<Acts::Experimental::DetectorVolume,
-                                 Acts::ActsScalar, 3>;
-
 /// A detector volume description which can be:
 ///
 /// @note A detector volume holds non-const objects internally
@@ -60,6 +56,10 @@ using BoundingBox =
 /// object ownership is done by shared/unique pointers.
 class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
  public:
+  using BoundingBox =
+      Acts::AxisAlignedBoundingBox<Acts::Experimental::DetectorVolume,
+                                   Acts::ActsScalar, 3>;
+
   friend class DetectorVolumeFactory;
 
   /// Nested object store that holds the internal (non-const),
@@ -315,7 +315,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// Const access to the detector
   const Detector* detector() const;
 
-  const std::shared_ptr<BoundingBox> getBoundingBox() const;
+  const BoundingBox& getBoundingBox() const;
 
  private:
   /// Internal construction method that calls the portal generator
@@ -337,11 +337,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
 
   /// build the bounding box
   ///
-  void boundingBox(const GeometryContext& gctx);
-
-  /// Retrieve bounding box
-  ///
-  void setBoundingBox(const GeometryContext& gctx);
+  void createBoundingBox(const GeometryContext& gctx);
 
   /// Name of the volume
   std::string m_name = "Unnamed";
@@ -362,7 +358,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;
 
   /// BoundingBox
-  std::shared_ptr<BoundingBox> m_boundingBox;
+  std::shared_ptr<const BoundingBox> m_boundingBox;
 
   /// The navigation state updator
   SurfaceCandidatesUpdator m_surfaceCandidatesUpdator;

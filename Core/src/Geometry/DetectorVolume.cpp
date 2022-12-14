@@ -13,15 +13,10 @@
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/detail/DetectorVolumeUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
-#include "Acts/Utilities/BoundingBox.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <cassert>
-
-using BoundingBox =
-    Acts::AxisAlignedBoundingBox<Acts::Experimental::DetectorVolume,
-                                 Acts::ActsScalar, 3>;
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& gctx, const std::string& name,
@@ -85,7 +80,7 @@ void Acts::Experimental::DetectorVolume::construct(
   auto portalSurfaces =
       portalGenerator(transform(gctx), *(m_bounds.get()), getSharedPtr());
   m_portals = ObjectStore<std::shared_ptr<Portal>>(portalSurfaces);
-  setBoundingBox(gctx);
+  createBoundingBox(gctx);
 }
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
@@ -198,7 +193,7 @@ void Acts::Experimental::DetectorVolume::closePortals() {
   }
 }
 
-void Acts::Experimental::DetectorVolume::boundingBox(
+void Acts::Experimental::DetectorVolume::createBoundingBox(
     const GeometryContext& gctx) {
   std::vector<Vector3> vertices;
   for (auto p : m_portals.external) {
@@ -214,17 +209,12 @@ void Acts::Experimental::DetectorVolume::boundingBox(
     vmin = vmin.cwiseMin(v);
     vmax = vmax.cwiseMax(v);
   }
-  std::shared_ptr<BoundingBox> box =
-      std::make_shared<BoundingBox>(this, vmin, vmax);
+  std::shared_ptr<Acts::Experimental::DetectorVolume::BoundingBox> box =
+      std::make_shared<Acts::Experimental::DetectorVolume::BoundingBox>(this, vmin, vmax);
   m_boundingBox = box;
 }
 
-void Acts::Experimental::DetectorVolume::setBoundingBox(
-    const GeometryContext& gctx) {
-  boundingBox(gctx);
-}
-
-const std::shared_ptr<BoundingBox>
+const Acts::Experimental::DetectorVolume::BoundingBox&
 Acts::Experimental::DetectorVolume::getBoundingBox() const {
-  return m_boundingBox;
+  return *m_boundingBox;
 }
