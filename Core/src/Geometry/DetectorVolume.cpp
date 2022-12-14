@@ -210,7 +210,8 @@ void Acts::Experimental::DetectorVolume::createBoundingBox(
     vmax = vmax.cwiseMax(v);
   }
   std::shared_ptr<Acts::Experimental::DetectorVolume::BoundingBox> box =
-      std::make_shared<Acts::Experimental::DetectorVolume::BoundingBox>(this, vmin, vmax);
+      std::make_shared<Acts::Experimental::DetectorVolume::BoundingBox>(
+          this, vmin, vmax);
   m_boundingBox = box;
 }
 
