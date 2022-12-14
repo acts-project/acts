@@ -604,11 +604,6 @@ def addKalmanTracks(
     field: acts.MagneticFieldProvider,
     directNavigation=False,
     reverseFilteringMomThreshold=0 * u.GeV,
-    selectedParticles: str = "truth_seeds_selected",
-    ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
-    outputDirCsv: Optional[Union[Path, str]] = None,
-    outputDirRoot: Optional[Union[Path, str]] = None,
-    writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
@@ -659,18 +654,6 @@ def addKalmanTracks(
     s.addAlgorithm(fitAlg)
 
     s.addWhiteboardAlias("trajectories", fitAlg.config.outputTrajectories)
-
-    addTrajectoryWriters(
-        s,
-        name="kf",
-        trajectories=fitAlg.config.outputTrajectories,
-        selectedParticles=selectedParticles,
-        ckfPerformanceConfig=ckfPerformanceConfig,
-        outputDirCsv=outputDirCsv,
-        outputDirRoot=outputDirRoot,
-        writeTrajectories=writeTrajectories,
-        logLevel=logLevel,
-    )
 
     return s
 
@@ -788,11 +771,14 @@ def addCKFTracks(
         s,
         name="ckf",
         trajectories=trackFinder.config.outputTrajectories,
-        selectedParticles=selectedParticles,
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeTrajectories=writeTrajectories,
+        writeStates=writeTrajectories,
+        writeSummary=writeTrajectories,
+        writeCKFperformance=True,
+        writeFinderPerformance=False,
+        writeFitterPerformance=False,
         logLevel=logLevel,
     )
 
@@ -807,11 +793,14 @@ def addTrajectoryWriters(
     s: acts.examples.Sequencer,
     name: str,
     trajectories: str = "trajectories",
-    selectedParticles: str = "truth_seeds_selected",
     ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    writeTrajectories: bool = True,
+    writeStates: bool = True,
+    writeSummary: bool = True,
+    writeCKFperformance: bool = True,
+    writeFinderPerformance: bool = True,
+    writeFitterPerformance: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ):
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -821,7 +810,7 @@ def addTrajectoryWriters(
         if not outputDirRoot.exists():
             outputDirRoot.mkdir()
 
-        if writeTrajectories:
+        if writeStates:
             # write track states from CKF
             trackStatesWriter = acts.examples.RootTrajectoryStatesWriter(
                 level=customLogLevel(),
@@ -839,6 +828,7 @@ def addTrajectoryWriters(
             )
             s.addWriter(trackStatesWriter)
 
+        if writeSummary:
             # write track summary from CKF
             trackSummaryWriter = acts.examples.RootTrajectorySummaryWriter(
                 level=customLogLevel(),
@@ -854,33 +844,62 @@ def addTrajectoryWriters(
             )
             s.addWriter(trackSummaryWriter)
 
-        # Write CKF performance data
-        ckfPerfWriter = acts.examples.CKFPerformanceWriter(
-            level=customLogLevel(),
-            inputParticles=selectedParticles,
-            inputTrajectories=trajectories,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            **acts.examples.defaultKWArgs(
-                # The bottom seed could be the first, second or third hits on the truth track
-                nMeasurementsMin=ckfPerformanceConfig.nMeasurementsMin,
-                ptMin=ckfPerformanceConfig.ptMin,
-                truthMatchProbMin=ckfPerformanceConfig.truthMatchProbMin,
-            ),
-            filePath=str(outputDirRoot / f"performance_{name}.root"),
-        )
-        s.addWriter(ckfPerfWriter)
+        if writeCKFperformance:
+            # Write CKF performance data
+            ckfPerfWriter = acts.examples.CKFPerformanceWriter(
+                level=customLogLevel(),
+                inputParticles="truth_seeds_selected",
+                inputTrajectories=trajectories,
+                inputMeasurementParticlesMap="measurement_particles_map",
+                **acts.examples.defaultKWArgs(
+                    # The bottom seed could be the first, second or third hits on the truth track
+                    nMeasurementsMin=ckfPerformanceConfig.nMeasurementsMin,
+                    ptMin=ckfPerformanceConfig.ptMin,
+                    truthMatchProbMin=ckfPerformanceConfig.truthMatchProbMin,
+                ),
+                filePath=str(outputDirRoot / f"performance_{name}.root"),
+            )
+            s.addWriter(ckfPerfWriter)
+
+        if writeFinderPerformance:
+            s.addWriter(
+                acts.examples.TrackFinderPerformanceWriter(
+                    level=acts.logging.INFO,
+                    inputProtoTracks="prototracks",
+                    inputParticles="truth_seeds_selected",
+                    inputMeasurementParticlesMap="measurement_particles_map",
+                    filePath=str(
+                        outputDirRoot / f"performance_track_finder_{name}.root"
+                    ),
+                )
+            )
+
+        if writeFitterPerformance:
+            s.addWriter(
+                acts.examples.TrackFitterPerformanceWriter(
+                    level=acts.logging.INFO,
+                    inputTrajectories="trajectories",
+                    inputParticles="truth_seeds_selected",
+                    inputMeasurementParticlesMap="measurement_particles_map",
+                    filePath=str(
+                        outputDirRoot / f"performance_track_fitter_{name}.root"
+                    ),
+                )
+            )
 
     if outputDirCsv is not None:
         outputDirCsv = Path(outputDirCsv)
         if not outputDirCsv.exists():
             outputDirCsv.mkdir()
-        csvMTJWriter = acts.examples.CsvMultiTrajectoryWriter(
-            level=customLogLevel(),
-            inputTrajectories=trajectories,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputDir=str(outputDirCsv),
-        )
-        s.addWriter(csvMTJWriter)
+
+        if trackSummaryWriter:
+            csvMTJWriter = acts.examples.CsvMultiTrajectoryWriter(
+                level=customLogLevel(),
+                inputTrajectories=trajectories,
+                inputMeasurementParticlesMap="measurement_particles_map",
+                outputDir=str(outputDirCsv),
+            )
+            s.addWriter(csvMTJWriter)
 
 
 @acts.examples.NamedTypeArgs(
@@ -1053,11 +1072,14 @@ def addAmbiguityResolution(
         s,
         name="ambi",
         trajectories=alg.config.outputTrajectories,
-        selectedParticles=selectedParticles,
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
-        writeTrajectories=writeTrajectories,
+        writeStates=writeTrajectories,
+        writeSummary=writeTrajectories,
+        writeCKFperformance=True,
+        writeFinderPerformance=False,
+        writeFitterPerformance=False,
         logLevel=logLevel,
     )
 
