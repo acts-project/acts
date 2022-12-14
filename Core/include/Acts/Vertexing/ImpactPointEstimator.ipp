@@ -388,7 +388,7 @@ getLifetimesSignOfTrack(
   const double phi   = params[BoundIndices::eBoundPhi];
   const double theta = params[BoundIndices::eBoundTheta];
   
-  double vs      = std::sin(std::atan2(direction[0],direction[1]) - phi) * d0;
+  double vs      = std::sin(std::atan2(direction[1],direction[0]) - phi) * d0;
   double eta     = -std::log(std::tan(theta/2.));
   double dir_eta = VectorHelpers::eta(direction);
   
