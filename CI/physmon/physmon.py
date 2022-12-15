@@ -241,8 +241,8 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
 
 
-def run_vertexing(fitter, mu):
-    s = acts.examples.Sequencer(events=5, numThreads=-1, logLevel=acts.logging.INFO)
+def run_vertexing(fitter, mu, events):
+    s = acts.examples.Sequencer(events=events, numThreads=-1, logLevel=acts.logging.INFO)
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
@@ -375,11 +375,12 @@ with acts.FpeMonitor():
         for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
             start = datetime.datetime.now()
 
-            run_vertexing(fitter, mu)
+            events = 5
+            run_vertexing(fitter, mu, events)
 
             delta = datetime.datetime.now() - start
 
-            duration = delta.total_seconds() / s.config.events
+            duration = delta.total_seconds() / events
 
             (
                 outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
