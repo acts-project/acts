@@ -162,7 +162,8 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::SeedFinder<SpacePoint> a(config, options);
+  Acts::SeedFinder<SpacePoint> a;  // test creation of unconfigured finder
+  a = Acts::SeedFinder<SpacePoint>(config);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,
@@ -195,8 +196,9 @@ int main(int argc, char** argv) {
   auto endOfGroups = spGroup.end();
   for (; !(groupIt == endOfGroups); ++groupIt) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
-                          groupIt.middle(), groupIt.top(), rMiddleSPRange);
+    a.createSeedsForGroup(options, state, std::back_inserter(v),
+                          groupIt.bottom(), groupIt.middle(), groupIt.top(),
+                          rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
