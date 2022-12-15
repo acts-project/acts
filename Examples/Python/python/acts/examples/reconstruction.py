@@ -595,9 +595,6 @@ def addSeeding(
     return s
 
 
-@acts.examples.NamedTypeArgs(
-    ckfPerformanceConfig=CKFPerformanceConfig,
-)
 def addKalmanTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
