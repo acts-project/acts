@@ -186,10 +186,12 @@ int main(int argc, char** argv) {
 
   config.minPt = 500._MeV;
   config.impactMax = 10._mm;
+  config = config.toInternalUnits();
 
   Acts::SeedFinderOptions options;
   options.bFieldInZ = 1.99724_T;
   options.beamPos = {-.5_mm, -.5_mm};
+  options = options.toInternalUnits().calculateDerivedQuantities(config);
 
   int numPhiNeighbors = 1;
 
@@ -219,7 +221,7 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::SeedFinder<SpacePoint> seedFinder_cpu(config, options);
+  Acts::SeedFinder<SpacePoint> seedFinder_cpu(config);
   Acts::SeedFinder<SpacePoint, Acts::Cuda> seedFinder_cuda(config, options);
 
   // covariance tool, sets covariances per spacepoint as required
@@ -271,7 +273,7 @@ int main(int argc, char** argv) {
       ++groupIt;
     for (; !(groupIt == spGroup.end()); ++groupIt) {
       seedFinder_cpu.createSeedsForGroup(
-          state, std::back_inserter(seedVector_cpu.emplace_back()),
+          options, state, std::back_inserter(seedVector_cpu.emplace_back()),
           groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
       group_count++;
       if (allgroup == false) {

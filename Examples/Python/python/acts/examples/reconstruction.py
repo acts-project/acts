@@ -183,13 +183,13 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, bFieldInZ, impactMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, forceRadialSorting, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, beamPos)
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, forceRadialSorting, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z)
         SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFilterConfigArg : SeedFilterConfigArg(compatSeedWeight, compatSeedLimit, numSeedIncrement, seedWeightIncrement, seedConfirmation, curvatureSortingInFilter, maxSeedsPerSpMConf, maxQualitySeedsPerSpMConf, useDeltaRorTopRadius)
-                                Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
+                                Defaults specified in Core/include/Acts/Seeding/SeedFilterConfig.hpp
     spacePointGridConfigArg : SpacePointGridConfigArg(rMax, zBinEdges, phiBinDeflectionCoverage, phi, impactMax)
                                 SpacePointGridConfigArg settings. phi is specified as a tuple of (min,max).
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp

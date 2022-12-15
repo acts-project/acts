@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -68,6 +69,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+  Acts::SeedFinder<SimSpacePoint> m_seedFinder;
   Config m_cfg;
 };
 
