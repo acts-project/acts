@@ -150,7 +150,7 @@ class ImpactPointEstimator {
   ///
   /// @param track Track to estimate the IP from
   /// @param vtx   Vertex the track belongs to
-  /// @param dir   The direction 
+  /// @param direction   The direction 
   /// @param gctx  The geometry context
   /// @param mctx  The magnetic field context
   ///
@@ -165,7 +165,7 @@ class ImpactPointEstimator {
   ///
   /// @param track Track to estimate the IP from
   /// @param vtx   Vertex the track belongs to
-  /// @param dir   The direction 
+  /// @param direction   The direction 
   /// @param gctx  The geometry context
   /// @param mctx  The magnetic field context
   ///
