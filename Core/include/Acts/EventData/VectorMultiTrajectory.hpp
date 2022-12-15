@@ -490,6 +490,8 @@ class VectorMultiTrajectory final
       return;
     }
 
+    m_index[istate].measdim = measdim;
+
     m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
     m_meas.resize(m_meas.size() + measdim);
 

@@ -475,12 +475,14 @@ def addSeeding(
                     forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
                 ),
             )
-            seedFinderOptions = SeedFinderOptionsArg(
+            seedFinderOptions = acts.SeedFinderOptions(
                 **acts.examples.defaultKWArgs(
-                    bFieldInZ=seedFinderOptionsArg.bFieldInZ,
                     beamPos=acts.Vector2(0.0, 0.0)
                     if seedFinderOptionsArg.beamPos == (None, None)
-                    else seedFinderOptionsArg.beamPos,
+                    else acts.Vector2(
+                        seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+                    ),
+                    bFieldInZ=seedFinderOptionsArg.bFieldInZ,
                 )
             )
             seedFilterConfig = acts.SeedFilterConfig(
@@ -511,6 +513,7 @@ def addSeeding(
                 outputProtoTracks="prototracks",
                 seedFilterConfig=seedFilterConfig,
                 seedFinderConfig=seedFinderConfig,
+                seedFinderOptions=seedFinderOptions,
             )
             s.addAlgorithm(seedingAlg)
             inputProtoTracks = seedingAlg.config.outputProtoTracks
