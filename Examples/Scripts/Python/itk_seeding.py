@@ -73,7 +73,7 @@ def addITkSeedingCsv(
 
     seedFinderOptions = acts.SeedFinderOptions(
         **acts.examples.defaultKWArgs(
-            bFieldInZ=seedFinderConfigArg.bFieldInZ,
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
             beamPos=acts.Vector2(0.0, 0.0)
             if seedFinderOptionsArg.beamPos is (None, None)
             else acts.Vector2(
@@ -94,7 +94,7 @@ def addITkSeedingCsv(
             seedConfirmation=seedFilterConfigArg.seedConfirmation,
             centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
             forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
-            curvatureSortingInFilter=seedFilterConfigArg.curvatxureSortingInFilter,
+            curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
             maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
             maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
             useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
@@ -103,7 +103,7 @@ def addITkSeedingCsv(
 
     gridConfig = acts.SpacePointGridConfig(
         **acts.examples.defaultKWArgs(
-            bFieldInZ=seedFinderConfig.bFieldInZ,
+            bFieldInZ=seedFinderOptions.bFieldInZ,
             minPt=seedFinderConfig.minPt,
             rMax=seedFinderConfig.rMax
             if spacePointGridConfigArg.rMax == None
