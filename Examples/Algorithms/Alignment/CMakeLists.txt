@@ -15,4 +15,6 @@ install(
   TARGETS ActsExamplesAlignment
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
-install(DIRECTORY include/ActsExamples DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
+install(
+  DIRECTORY include/ActsExamples 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
