@@ -18,7 +18,6 @@ Acts::GeometryIdentifier RadiusGeometryIdentifierDecorator::decorateIdentifier(
     const std::vector<double> &layercut = volumeToRadialCuts.at(identifier.volume());
     Acts::Vector3 center = surface.center(Acts::GeometryContext());
     double radius = sqrt(center[0] * center[0] + center[1] * center[1]);
-    std::cout << "HOOK " << radius << " " << it->first << "\n";
     identifier.setExtra(1);
     for (unsigned i = 0; i < layercut.size(); i++) {
       if (radius > layercut[i]) {

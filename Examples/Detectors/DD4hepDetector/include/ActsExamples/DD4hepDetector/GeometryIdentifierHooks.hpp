@@ -19,14 +19,14 @@
 namespace det {
 namespace GeometryIdentifierHooks {
 
-struct RadiusGeometryIdentifierDecorator : Acts::GeometryIdentifierHook {
+struct RadiusGeometryIdentifierDecorator final : Acts::GeometryIdentifierHook {
   std::map<int, std::vector<double>> volumeToRadialCuts;
 
   /// Use the extra identifier in the ODD endcap to separate the two row of
   /// modules in R
   /// @param identifier geometry identifier
   /// @param surface coresponding surface
-  Acts::GeometryIdentifier decorateIdentifier(
+  virtual Acts::GeometryIdentifier decorateIdentifier(
       Acts::GeometryIdentifier id, const Acts::Surface&) const override;
 };
 
