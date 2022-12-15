@@ -35,28 +35,24 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
     const SeedFilterConfig& seedFilterConfig,
     const TripletFilterConfig& tripletFilterConfig, int device,
     std::unique_ptr<const Logger> incomingLogger)
-    : m_commonConfig(commonConfig.toInternalUnits()),
-      m_seedFinderOptions(seedFinderOptions.toInternalUnits()),
-      m_seedFilterConfig(seedFilterConfig.toInternalUnits()),
+    : m_commonConfig(commonConfig),
+      m_seedFinderOptions(seedFinderOptions),
+      m_seedFilterConfig(seedFilterConfig),
       m_tripletFilterConfig(tripletFilterConfig),
       m_device(device),
       m_logger(std::move(incomingLogger)) {
-  // calculation of scattering using the highland formula
-  // convert pT to p once theta angle is known
-  m_commonConfig.highland =
-      13.6 * std::sqrt(m_commonConfig.radLengthPerSeed) *
-      (1 + 0.038 * std::log(m_commonConfig.radLengthPerSeed));
-  float maxScatteringAngle = m_commonConfig.highland / m_commonConfig.minPt;
-  m_commonConfig.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-
-  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
-  // millimeter
-  // TODO: change using ACTS units
-  m_commonConfig.pTPerHelixRadius = 300. * m_seedFinderOptions.bFieldInZ;
-  m_commonConfig.minHelixDiameter2 =
-      std::pow(m_commonConfig.minPt * 2 / m_commonConfig.pTPerHelixRadius, 2);
-  m_commonConfig.pT2perRadius =
-      std::pow(m_commonConfig.highland / m_commonConfig.pTPerHelixRadius, 2);
+  if (not m_commonConfig.isInInternalUnits)
+    throw std::runtime_error(
+        "SeedFinderConfig not in ACTS internal units in "
+        "Cuda/Seeding2/SeedFinder");
+  if (not m_seedFinderOptions.isInInternalUnits)
+    throw std::runtime_error(
+        "SeedFinderConfig not in ACTS internal units in "
+        "Cuda/Seeding2/SeedFinder");
+  if (not m_seedFilterConfig.isInInternalUnits)
+    throw std::runtime_error(
+        "SeedFilterConfig not in ACTS internal units in "
+        "Cuda/Seeding2/SeedFinder");
 
   // Tell the user what CUDA device will be used by the object.
   if (static_cast<std::size_t>(m_device) < Info::instance().devices().size()) {
@@ -183,8 +179,8 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
       middleSPDeviceArray, topSPVec.size(), topSPDeviceArray,
       middleBottomCounts, middleBottomDublets, middleTopCounts,
       middleTopDublets, m_commonConfig.maxScatteringAngle2,
-      m_commonConfig.sigmaScattering, m_commonConfig.minHelixDiameter2,
-      m_commonConfig.pT2perRadius, m_commonConfig.impactMax);
+      m_commonConfig.sigmaScattering, m_seedFinderOptions.minHelixDiameter2,
+      m_seedFinderOptions.pT2perRadius, m_commonConfig.impactMax);
   assert(tripletCandidates.size() == middleSPVec.size());
 
   // Perform the final step of the filtering.
