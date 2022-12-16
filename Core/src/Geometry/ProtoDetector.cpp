@@ -163,17 +163,18 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
   }
 }
 
-bool Acts::ProtoVolume::operator==(const Acts::ProtoVolume& pv) const {
+bool Acts::ProtoVolume::operator==(const Acts::ProtoVolume& ptVolume) const {
   // Simple checks
-  if (name != pv.name or extent != pv.extent or
-      layerContainer != pv.layerContainer or layerType != pv.layerType) {
+  if (name != ptVolume.name or extent != ptVolume.extent or
+      layerContainer != ptVolume.layerContainer or
+      layerType != ptVolume.layerType) {
     return false;
   }
-  if (layerSurfaceBinning != pv.layerSurfaceBinning) {
+  if (layerSurfaceBinning != ptVolume.layerSurfaceBinning) {
     return false;
   }
-  if (constituentVolumes != pv.constituentVolumes or
-      constituentBinning != pv.constituentBinning) {
+  if (constituentVolumes != ptVolume.constituentVolumes or
+      constituentBinning != ptVolume.constituentBinning) {
     return false;
   }
   return true;
