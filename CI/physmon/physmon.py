@@ -242,7 +242,9 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
 
 def run_vertexing(fitter, mu, events):
-    s = acts.examples.Sequencer(events=events, numThreads=-1, logLevel=acts.logging.INFO)
+    s = acts.examples.Sequencer(
+        events=events, numThreads=-1, logLevel=acts.logging.INFO
+    )
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
