@@ -38,8 +38,8 @@ struct ProtoVolume {
 
   /// Define an operator==
   ///
-  /// @param pv the proto volume to be checked
-  bool operator==(const ProtoVolume& pv) const;
+  /// @param ptVolume the proto volume to be checked
+  bool operator==(const ProtoVolume& ptVolume) const;
 
   /// Harmonize the detector information, this can run in two
   /// modes, steered by the @param legacy boolean
@@ -51,8 +51,8 @@ struct ProtoVolume {
   /// Extend the tracking volume with the its own constituents,
   /// upwards here means that extens are promoted to the mother
   ///
-  /// @param pVolume the protoVolume
-  void extendUp(ProtoVolume& pVolume);
+  /// @param ptVolume the protoVolume
+  void extendUp(ProtoVolume& ptVolume);
 
   /// Extend the tracking volume with the its own constituents
   /// @param bValue the binning value that is propagated
@@ -64,9 +64,9 @@ struct ProtoVolume {
 
   /// Constrain the daughter volumes with this volume
   ///
-  /// @param pVolume is the proto volume from which the constrain
+  /// @param ptVolume is the proto volume from which the constrain
   /// is taken
-  void constrainDown(const ProtoVolume& pVolume);
+  void constrainDown(const ProtoVolume& ptVolume);
 
   /// Write the tracking volume to screen
   /// @param indent the current indentation

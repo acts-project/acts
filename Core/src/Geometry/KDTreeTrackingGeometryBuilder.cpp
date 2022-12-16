@@ -170,7 +170,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
     std::size_t bins0 = 0;
     std::size_t bins1 = 0;
     // In case explicit binning is given
-    if (plVolume.layerSurfaceBinning.size()) {
+    if (plVolume.layerSurfaceBinning.size() == 2u) {
       bType0 = plVolume.layerSurfaceBinning[0u].type;
       bType1 = plVolume.layerSurfaceBinning[1u].type;
       // In case explicit bin numbers are given in addition
