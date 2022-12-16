@@ -161,7 +161,7 @@ void TrackFindingAlgorithm::computeSharedHits(
         firstState.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
       }
 
-      // Decorate this track
+      // Decorate this track state
       state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
 
       break;
