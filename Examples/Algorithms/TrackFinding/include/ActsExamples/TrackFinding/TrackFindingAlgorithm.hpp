@@ -133,7 +133,7 @@ void TrackFindingAlgorithm::computeSharedHits(
   for (auto track : tracks) {
     for (auto state : track.trackStates()) {
       if (not state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        break;
+        continue;
       }
 
       std::size_t hitIndex =
@@ -144,7 +144,7 @@ void TrackFindingAlgorithm::computeSharedHits(
           std::numeric_limits<std::size_t>::max()) {
         firstTrackOnTheHit.at(hitIndex) = track.index();
         firstStateOnTheHit.at(hitIndex) = state.index();
-        break;
+        continue;
       }
 
       // if already used, control if first track state has been marked
@@ -163,8 +163,6 @@ void TrackFindingAlgorithm::computeSharedHits(
 
       // Decorate this track state
       state.typeFlags().set(Acts::TrackStateFlag::SharedHitFlag);
-
-      break;
     }
   }
 }
