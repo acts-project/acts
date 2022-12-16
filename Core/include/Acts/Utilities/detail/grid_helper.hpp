@@ -48,8 +48,9 @@ class GlobalNeighborHoodIndices {
       std::array<NeighborHoodIndices, DIM>& neighborIndices,
       const std::array<size_t, DIM>& nBinsArray)
       : m_localIndices(neighborIndices) {
-    if (DIM == 1)
+    if (DIM == 1) {
       return;
+    }
     size_t globalStride = 1;
     for (long i = DIM - 2; i >= 0; --i) {
       globalStride *= (nBinsArray[i + 1] + 2);
@@ -67,8 +68,9 @@ class GlobalNeighborHoodIndices {
 
     size_t operator*() const {
       size_t globalIndex = *m_localIndicesIter[DIM - 1];
-      if (DIM == 1)
+      if (DIM == 1) {
         return globalIndex;
+      }
       for (size_t i = 0; i < DIM - 1; ++i) {
         globalIndex += m_parent->m_globalStrides[i] * (*m_localIndicesIter[i]);
       }
@@ -83,8 +85,9 @@ class GlobalNeighborHoodIndices {
       // - If it reaches the end, reset it and increment the previous one...
       for (long i = DIM - 1; i > 0; --i) {
         ++m_localIndicesIter[i];
-        if (m_localIndicesIter[i] != localIndices[i].end())
+        if (m_localIndicesIter[i] != localIndices[i].end()) {
           return *this;
+        }
         m_localIndicesIter[i] = localIndices[i].begin();
       }
 
@@ -185,7 +188,7 @@ struct grid_helper_impl {
                                  const std::tuple<Axes...>& axes,
                                  std::array<size_t, sizeof...(Axes)>& indices) {
     const auto& thisAxis = std::get<N>(axes);
-    indices.at(N) = thisAxis.getBin(point[N]);
+    indices.at(N) = static_cast<size_t>(thisAxis.getBin(point[N]));
     grid_helper_impl<N - 1>::getLocalBinIndices(point, axes, indices);
   }
 

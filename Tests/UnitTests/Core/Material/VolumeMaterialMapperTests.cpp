@@ -195,9 +195,9 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(gc);
 
   // Set up the grid axes
-  std::array<double, 3> xAxis{0_m, 3_m, 7};
-  std::array<double, 3> yAxis{-0.5_m, 0.5_m, 7};
-  std::array<double, 3> zAxis{-0.5_m, 0.5_m, 7};
+  Acts::MaterialGridAxisData xAxis{0_m, 3_m, 7};
+  Acts::MaterialGridAxisData yAxis{-0.5_m, 0.5_m, 7};
+  Acts::MaterialGridAxisData zAxis{-0.5_m, 0.5_m, 7};
 
   // Set up a random engine for sampling material
   std::random_device rd;

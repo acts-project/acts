@@ -446,7 +446,7 @@ class KDTree {
         for (std::size_t j = 0; j < Dims; ++j) {
           Scalar value = (i->first[j] - this->m_range[j].min()) /
                          (this->m_range[j].max() - this->m_range[j].min());
-          sqe_v[j] += std::pow(value - mean_v[j], 2.0);
+          sqe_v[j] += static_cast<Scalar>(std::pow(value - mean_v[j], 2.0));
         }
       }
 
@@ -477,7 +477,8 @@ class KDTree {
         // find the true median might be too expensive. Therefore, we will just
         // use the middle value between the minimum and maximum. This is not
         // nearly as accurate as using the median, but it's a nice cheat.
-        m_mid = 0.5 * (this->m_range[m_dim].max() + this->m_range[m_dim].min());
+        m_mid = static_cast<Scalar>(
+            0.5 * (this->m_range[m_dim].max() + this->m_range[m_dim].min()));
       } else {
         // If the number of elements is fairly small, we will just calculate
         // the median exactly. We do this by finding the values in the
