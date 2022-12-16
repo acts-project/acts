@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -205,7 +206,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<Test::TestSourceLink> sourcelinks;
+  std::vector<Acts::SourceLink> sourcelinks;
   sourcelinks.reserve(6);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
@@ -215,8 +216,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(eBoundLoc0, eBoundLoc1, loc, cov2D,
-                             surface->geometryId());
+    sourcelinks.emplace_back(Test::TestSourceLink{
+        eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
   // The KalmanFitter - we use the eigen stepper for covariance transport

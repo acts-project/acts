@@ -85,12 +85,9 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   auto spBuilderConfig = Acts::SpacePointBuilderConfig();
   spBuilderConfig.trackingGeometry = m_cfg.trackingGeometry;
 
-  std::function<SimSpacePoint(
-      Acts::Vector3, Acts::Vector2,
-      boost::container::static_vector<const Acts::SourceLink*, 2>)>
-      spConstructor =
-          [](const Acts::Vector3& pos, const Acts::Vector2& cov,
-             boost::container::static_vector<const Acts::SourceLink*, 2> slinks)
+  auto spConstructor =
+      [](const Acts::Vector3& pos, const Acts::Vector2& cov,
+         boost::container::static_vector<Acts::SourceLink, 2> slinks)
       -> SimSpacePoint {
     return SimSpacePoint(pos, cov[0], cov[1], std::move(slinks));
   };
@@ -118,7 +115,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
 
     for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
       for (auto& sourceLink : moduleSourceLinks) {
-        const auto& meas = measurements[sourceLink.get().index()];
+        const auto& meas = measurements[sourceLink.index()];
 
         m_spacePointBuilder.buildSpacePoint(ctx.geoContext, {&meas}, spOpt,
                                             std::back_inserter(spacePoints));

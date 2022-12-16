@@ -85,7 +85,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
 
   // Perform the fit for each input track
-  std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
+  std::vector<Acts::SourceLink> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
@@ -120,7 +120,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       if (auto it = sourceLinks.nth(hitIndex); it != sourceLinks.end()) {
         const IndexSourceLink& sourceLink = *it;
         auto geoId = sourceLink.geometryId();
-        trackSourceLinks.push_back(std::cref(sourceLink));
+        trackSourceLinks.push_back(Acts::SourceLink{sourceLink});
         surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
       } else {
         ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"

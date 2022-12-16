@@ -21,6 +21,7 @@
 #include <bitset>
 #include <cstdint>
 #include <memory>
+#include <optional>
 #include <type_traits>
 #include <vector>
 
@@ -83,6 +84,10 @@ class TransitiveConstPointer {
 
   template <typename U>
   friend class TransitiveConstPointer;
+
+  const T& operator*() const { return *m_ptr; }
+
+  T& operator*() { return *m_ptr; }
 
  private:
   T* ptr() const { return m_ptr; }
@@ -309,8 +314,8 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<const SourceLink*, hashString("uncalibrated")>() =
-          other.template component<const SourceLink*,
+      component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+          other.template component<std::optional<SourceLink>,
                                    hashString("uncalibrated")>();
 
       if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
@@ -319,8 +324,9 @@ class TrackStateProxy {
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
         // need to do it this way since other might be nullptr
-        component<const SourceLink*, hashString("calibratedSourceLink")>() =
-            other.template component<const SourceLink*,
+        component<std::optional<SourceLink>,
+                  hashString("calibratedSourceLink")>() =
+            other.template component<std::optional<SourceLink>,
                                      hashString("calibratedSourceLink")>();
         allocateCalibrated(other.calibratedSize());
 
@@ -358,8 +364,8 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<const SourceLink*, hashString("uncalibrated")>() =
-          other.template component<const SourceLink*,
+      component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+          other.template component<std::optional<SourceLink>,
                                    hashString("uncalibrated")>();
 
       if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
@@ -373,8 +379,9 @@ class TrackStateProxy {
           has<hashString("calibratedSourceLink")>() &&
           other.template has<hashString("calibratedSourceLink")>()) {
         // need to do it this way since other might be nullptr
-        component<const SourceLink*, hashString("calibratedSourceLink")>() =
-            other.template component<const SourceLink*,
+        component<std::optional<SourceLink>,
+                  hashString("calibratedSourceLink")>() =
+            other.template component<std::optional<SourceLink>,
                                      hashString("calibratedSourceLink")>();
 
         allocateCalibrated(other.calibratedSize());
@@ -727,12 +734,8 @@ class TrackStateProxy {
   /// @param sourceLink The uncalibrated source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setUncalibrated(const SourceLink& sourceLink) {
-    using T = const SourceLink*;
-    T& sl = component<const SourceLink*, hashString("uncalibrated")>();
-    sl = &sourceLink;
-
-    assert((component<const SourceLink*, hashString("uncalibrated")>() !=
-            nullptr));
+    component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+        sourceLink;
   }
 
   /// Check if the point has an associated uncalibrated measurement.
@@ -753,11 +756,8 @@ class TrackStateProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setCalibratedSourceLink(const SourceLink& sourceLink) {
     assert(has<hashString("calibratedSourceLink")>());
-    m_traj->self().template component<const SourceLink*>(
-        "calibratedSourceLink", m_istate) = &sourceLink;
-
-    assert(m_traj->self().template component<const SourceLink*>(
-               "calibratedSourceLink", m_istate) != nullptr);
+    component<std::optional<SourceLink>, hashString("calibratedSourceLink")>() =
+        sourceLink;
   }
 
   /// Full calibrated measurement vector. Might contain additional zeroed
@@ -880,16 +880,6 @@ class TrackStateProxy {
     return component<IndexType, hashString("measdim")>();
   }
 
-  /// Return reference to the (dynamic) number of dimensions stored for this
-  /// measurement.
-  /// @note The underlying storage is overallocated to MeasurementSizeMax
-  /// regardless of this value
-  /// @return The number of dimensions
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexType& calibratedSize() {
-    return component<IndexType, hashString("measdim")>();
-  }
-
   /// Overwrite existing measurement data.
   ///
   /// @tparam kMeasurementSize Size of the calibrated measurement
@@ -907,14 +897,9 @@ class TrackStateProxy {
     static_assert(kMeasurementSize <= M,
                   "Input measurement must be within the allowed size");
 
-    calibratedSize() = kMeasurementSize;
-
     assert(has<hashString("calibratedSourceLink")>());
-    component<const SourceLink*, hashString("calibratedSourceLink")>() =
-        &meas.sourceLink();
-    assert(
-        (component<const SourceLink*, hashString("calibratedSourceLink")>() !=
-         nullptr));
+
+    setCalibratedSourceLink(meas.sourceLink());
 
     allocateCalibrated(kMeasurementSize);
     assert(hasCalibrated());
@@ -931,7 +916,6 @@ class TrackStateProxy {
 
   void allocateCalibrated(size_t measdim) {
     m_traj->allocateCalibrated(m_istate, measdim);
-    calibratedSize() = measdim;
   }
 
   /// Getter/setter for chi2 value associated with the track state
@@ -980,6 +964,13 @@ class TrackStateProxy {
     return component<TrackStateType, hashString("typeFlags")>();
   }
 
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  MultiTrajectory<Trajectory>& trajectory() {
+    return *m_traj;
+  }
+
+  const MultiTrajectory<Trajectory>& trajectory() const { return *m_traj; }
+
  private:
   // Private since it can only be created by the trajectory.
   TrackStateProxy(ConstIf<MultiTrajectory<Trajectory>, ReadOnly>& trajectory,
@@ -1007,6 +998,55 @@ class TrackStateProxy {
   friend class Acts::MultiTrajectory<Trajectory>;
   friend class TrackStateProxy<Trajectory, M, true>;
   friend class TrackStateProxy<Trajectory, M, false>;
+};
+
+/// Helper type that wraps two iterators
+template <typename trajectory_t, size_t M, bool ReadOnly>
+class TrackStateRange {
+  using ProxyType = TrackStateProxy<trajectory_t, M, ReadOnly>;
+
+ public:
+  /// Iterator that wraps a track state proxy. The nullopt case signifies the
+  /// end of the range, i.e. the "past-the-end" iterator
+  struct Iterator {
+    std::optional<ProxyType> proxy;
+
+    Iterator& operator++() {
+      if (!proxy) {
+        return *this;
+      }
+      if (proxy->hasPrevious()) {
+        proxy = proxy->trajectory().getTrackState(proxy->previous());
+        return *this;
+      } else {
+        proxy = std::nullopt;
+        return *this;
+      }
+    }
+
+    bool operator==(const Iterator& other) const {
+      if (!proxy && !other.proxy) {
+        return true;
+      }
+      if (proxy && other.proxy) {
+        return proxy->index() == other.proxy->index();
+      }
+      return false;
+    }
+
+    bool operator!=(const Iterator& other) const { return !(*this == other); }
+
+    ProxyType operator*() const { return *proxy; }
+    ProxyType operator*() { return *proxy; }
+  };
+
+  TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+
+  Iterator begin() { return m_begin; }
+  Iterator end() { return Iterator{std::nullopt}; }
+
+ private:
+  Iterator m_begin;
 };
 
 // implement track state visitor concept
@@ -1111,6 +1151,23 @@ class MultiTrajectory {
   /// @param callable   non-modifying functor to be called with each point
   template <typename F>
   void visitBackwards(IndexType iendpoint, F&& callable) const;
+
+  /// Range for the track states from @p iendpoint to the trajectory start
+  /// @param iendpoint Trajectory entry point to start from
+  /// @return Iterator pair to iterate over
+  /// @note Const version
+  auto trackStateRange(IndexType iendpoint) const {
+    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+  }
+
+  /// Range for the track states from @p iendpoint to the trajectory start
+  /// @param iendpoint Trajectory entry point to start from
+  /// @return Iterator pair to iterate over
+  /// @note Mutable version
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto trackStateRange(IndexType iendpoint) {
+    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+  }
 
   /// Apply a function to all previous states starting at a given endpoint.
   ///

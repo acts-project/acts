@@ -79,21 +79,17 @@ template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::uncalibrated() const
     -> const SourceLink& {
   assert(has<hashString("uncalibrated")>());
-  using T = const SourceLink*;
-  const T& sl = component<const SourceLink*, hashString("uncalibrated")>();
-  assert(sl != nullptr);
-  return *sl;
+  return component<std::optional<SourceLink>, hashString("uncalibrated")>()
+      .value();
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::calibratedSourceLink() const
     -> const SourceLink& {
   assert(has<hashString("calibratedSourceLink")>());
-  using T = const SourceLink*;
-  const T& sl =
-      component<const SourceLink*, hashString("calibratedSourceLink")>();
-  assert(sl != nullptr);
-  return *sl;
+  return component<std::optional<SourceLink>,
+                   hashString("calibratedSourceLink")>()
+      .value();
 }
 
 }  // namespace detail_lt

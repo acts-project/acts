@@ -94,7 +94,8 @@ using LayerIDFinder = Acts::Delegate<ResultUnsigned(
     double)>;  // (double r) this function will map the r of a measurement to a
                // layer.
 using SliceTester = Acts::Delegate<ResultBool(
-    double, unsigned, int)>;  // (double z,unsigned layer, int slice)
+    double, unsigned, int)>;  // (double z,unsigned layer, int slice) returns
+                              // true if measurement in slice
 
 namespace Acts {
 class TrackingGeometry;
