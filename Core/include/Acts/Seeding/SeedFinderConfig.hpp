@@ -247,9 +247,9 @@ struct SeedFinderOptions {
     options.bFieldInZ /= 1000. * 1_T;
     return options;
   }
-  template <typename SpacePoint>
-  SeedFinderOptions calculateDerivedQuantities(
-      const SeedFinderConfig<SpacePoint>& config) const {
+
+  template <typename Config>
+  SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
     if (!isInInternalUnits) {
       throw std::runtime_error(
           "Derived quantities in SeedFinderOptions can only be calculated from "

@@ -13,7 +13,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
-#include "Acts/Utilities/KDTree.hpp"
+#include "Acts/Seeding/SeedFinderOrthogonal.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
@@ -62,6 +62,7 @@ class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+  Acts::SeedFinderOrthogonal<SimSpacePoint> m_finder;
 };
 
 }  // namespace ActsExamples

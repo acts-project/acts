@@ -10,7 +10,6 @@
 
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "Acts/Seeding/SeedFinderOrthogonal.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
@@ -22,6 +21,11 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     : ActsExamples::BareAlgorithm("SeedingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
+  m_cfg.seedFinderConfig =
+      m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
+  m_cfg.seedFinderOptions =
+      m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
+          m_cfg.seedFinderConfig);
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
   }
@@ -46,28 +50,8 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
 
-  // calculation of scattering using the highland formula
-  // convert pT to p once theta angle is known
-  m_cfg.seedFinderConfig.highland =
-      13.6 * std::sqrt(m_cfg.seedFinderConfig.radLengthPerSeed) *
-      (1 + 0.038 * std::log(m_cfg.seedFinderConfig.radLengthPerSeed));
-  float maxScatteringAngle =
-      m_cfg.seedFinderConfig.highland / m_cfg.seedFinderConfig.minPt;
-  m_cfg.seedFinderConfig.maxScatteringAngle2 =
-      maxScatteringAngle * maxScatteringAngle;
-  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
-  // millimeter
-  // TODO: change using ACTS units
-  m_cfg.seedFinderConfig.pTPerHelixRadius =
-      300. * m_cfg.seedFinderOptions.bFieldInZ;
-  m_cfg.seedFinderConfig.minHelixDiameter2 =
-      std::pow(m_cfg.seedFinderConfig.minPt * 2 /
-                   m_cfg.seedFinderConfig.pTPerHelixRadius,
-               2);
+  m_finder = Acts::SeedFinderOrthogonal<SimSpacePoint>(m_cfg.seedFinderConfig);
 
-  m_cfg.seedFinderConfig.pT2perRadius = std::pow(
-      m_cfg.seedFinderConfig.highland / m_cfg.seedFinderConfig.pTPerHelixRadius,
-      2);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
@@ -81,10 +65,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     }
   }
 
-  Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig,
-                                                   m_cfg.seedFinderOptions);
 
-  SimSeedContainer seeds = finder.createSeeds(spacePoints);
+  SimSeedContainer seeds =
+      m_finder.createSeeds(m_cfg.seedFinderOptions, spacePoints);
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
   size_t nSeeds = seeds.size();
