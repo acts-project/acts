@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
+#include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/BinUtility.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
@@ -166,6 +167,18 @@ BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   from_json(jtransformIn, test);
 
   BOOST_CHECK(isEqual(reference, test, 0.0001));
+}
+
+BOOST_AUTO_TEST_CASE(Range1DRoundTrip) {
+  Range1D<ActsScalar> r(-10., 100.);
+
+  nlohmann::json jrange;
+  jrange["range"] = r;
+
+  Range1D<ActsScalar> rIn = jrange["range"];
+
+  CHECK_CLOSE_ABS(rIn.min(), -10., 10e-5);
+  CHECK_CLOSE_ABS(rIn.max(), 100., 10e-5);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
