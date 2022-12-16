@@ -44,8 +44,12 @@ void ActsExamples::Geant4::Geant4DetectorService::startRun() {
   Acts::Geant4DetectorSurfaceFactory::Options g4DetElementOptions;
 
   G4Transform3D g4ToWorld;
-  g4DetElementOptions.selector =
-      Acts::Geant4PhysicalVolumeSelectors::generateNameSelector("phys_vol_");
+
+  g4DetElementOptions.sensitiveSelector =
+      Acts::Geant4PhysicalVolumeSelectors::generateNameSelector("sens_vol");
+  g4DetElementOptions.passiveSelector =
+      Acts::Geant4PhysicalVolumeSelectors::generateNameSelector("pass_vol");
+
   g4DetElementFactory.construct(g4DetElementCache, g4ToWorld, *g4WorldVolume,
                                 g4DetElementOptions);
 
@@ -95,14 +99,20 @@ void ActsExamples::Geant4::Geant4DetectorService::startRun() {
     Acts::KDTreeTrackingGeometryBuilder::Config kdtgConfig;
     kdtgConfig.layerCreator = layerCreator;
     kdtgConfig.trackingVolumeHelper = cylinderVolumeHelper;
-    // Strip the surfaces from elements and passive structures
+    // Reserve the right amount of surfaces
     std::vector<std::shared_ptr<Acts::Surface>> surfaces;
     kdtgConfig.surfaces.reserve(g4DetElementCache.sensitiveSurfaces.size() +
                                 g4DetElementCache.passiveSurfaces.size());
+    // Add the sensitive surfaces
     for (const auto& e : g4DetElementCache.sensitiveSurfaces) {
       kdtgConfig.surfaces.push_back(
           std::get<std::shared_ptr<Acts::Surface>>(e));
     }
+    // Add the passive surfaces
+    kdtgConfig.surfaces.insert(kdtgConfig.surfaces.end(),
+                               g4DetElementCache.passiveSurfaces.begin(),
+                               g4DetElementCache.passiveSurfaces.end());
+
     // Assign the proto detector
     kdtgConfig.protoDetector = m_cfg.protoDetector;
 

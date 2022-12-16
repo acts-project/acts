@@ -13,6 +13,8 @@
 #include "Acts/Material/Material.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/CylinderSurface.hpp"
+#include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
@@ -251,24 +253,53 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
   };
 
   // Dynamic cast chain & conversion
+  std::shared_ptr<Surface> surface = nullptr;
+
+  // Into a rectangle
   auto g4Box = dynamic_cast<const G4Box*>(g4Solid);
   if (g4Box != nullptr) {
     auto [bounds, axes, original] =
         Geant4ShapeConverter{}.rectangleBounds(*g4Box);
     auto orientedToGlobal = axesOriented(toGlobal, axes);
-    auto surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
-                                                           std::move(bounds));
+    surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
+                                                      std::move(bounds));
     assignMaterial(*surface.get(), original, compressed);
     return surface;
   }
 
+  // Into a Trapezoid
   auto g4Trd = dynamic_cast<const G4Trd*>(g4Solid);
   if (g4Trd != nullptr) {
     auto [bounds, axes, original] =
         Geant4ShapeConverter{}.trapezoidBounds(*g4Trd);
     auto orientedToGlobal = axesOriented(toGlobal, axes);
-    auto surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
+    surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
+                                                      std::move(bounds));
+    assignMaterial(*surface.get(), original, compressed);
+    return surface;
+  }
+
+  // Into a Cylinder or disc
+  auto g4Tubs = dynamic_cast<const G4Tubs*>(g4Solid);
+  if (g4Tubs != nullptr) {
+    ActsScalar diffR = g4Tubs->GetOuterRadius() - g4Tubs->GetInnerRadius();
+    ActsScalar diffZ = 2 * g4Tubs->GetZHalfLength();
+    // Detect if cylinder or disc case
+    ActsScalar original = 0.;
+    if (diffR < diffZ) {
+      auto [bounds, originalT] = Geant4ShapeConverter{}.cylinderBounds(*g4Tubs);
+
+      std::cout << "Creating cylinder with " << *bounds << std::endl;
+
+      original = originalT;
+      surface = Acts::Surface::makeShared<CylinderSurface>(toGlobal,
                                                            std::move(bounds));
+    } else {
+      auto [bounds, originalT] = Geant4ShapeConverter{}.radialBounds(*g4Tubs);
+      original = originalT;
+      surface =
+          Acts::Surface::makeShared<DiscSurface>(toGlobal, std::move(bounds));
+    }
     assignMaterial(*surface.get(), original, compressed);
     return surface;
   }

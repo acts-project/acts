@@ -41,7 +41,9 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
   }
 
   // Check if the volume is accepted
-  if (option.selector(g4PhysVol)) {
+  bool sensitive = option.sensitiveSelector(g4PhysVol);
+  bool passive = option.passiveSelector(g4PhysVol);
+  if (sensitive or passive) {
     // Conversion and selection code
     ++cache.matchedG4Volumes;
     // Attempt the conversion
@@ -50,10 +52,14 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
         m_cfg.convertMaterial, m_cfg.convertedMaterialThickness);
     if (surface != nullptr) {
       ++cache.convertedSurfaces;
-      cache.sensitiveSurfaces.push_back(
-          {std::make_shared<Acts::Geant4DetectorElement>(surface, 0.1,
-                                                         g4PhysVol),
-           surface});
+      if (sensitive) {
+        cache.sensitiveSurfaces.push_back(
+            {std::make_shared<Acts::Geant4DetectorElement>(surface, 0.1,
+                                                           g4PhysVol),
+             surface});
+      } else {
+        cache.passiveSurfaces.push_back(surface);
+      }
       // Count the material conversion
       if (surface->surfaceMaterial() != nullptr) {
         ++cache.convertedMaterials;

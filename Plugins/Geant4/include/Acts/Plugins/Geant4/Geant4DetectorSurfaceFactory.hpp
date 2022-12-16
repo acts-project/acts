@@ -37,9 +37,13 @@ class Geant4DetectorSurfaceFactory {
     ActsScalar convertedMaterialThickness = -1;
   };
 
+  // Collect the senstive surfaces
   using Geant4SensitiveSurface =
       std::tuple<std::shared_ptr<Geant4DetectorElement>,
                  std::shared_ptr<Surface>>;
+
+  // Collect the passive surfaces
+  using Geant4PassiveSurface = std::shared_ptr<Surface>;
 
   /// Nested cache that collects the current
   ///
@@ -57,7 +61,11 @@ class Geant4DetectorSurfaceFactory {
   /// Nested option struct that allows
   /// per call changable configuration
   struct Options {
-    Geant4PhysicalVolumeSelector selector =
+    /// A selector for senstivie surfaces - is checked first
+    Geant4PhysicalVolumeSelector sensitiveSelector =
+        Geant4PhysicalVolumeSelectors::generateAllSelector();
+    /// A selector for passive surfaces
+    Geant4PhysicalVolumeSelector passiveSelector =
         Geant4PhysicalVolumeSelectors::generateAllSelector();
   };
 

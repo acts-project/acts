@@ -21,10 +21,23 @@ using namespace Acts;
 BOOST_AUTO_TEST_SUITE(ProtoDetectorJsonConverter)
 
 BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
+  // Beam Pipe container
+  Acts::ProtoVolume beamPipeContainer;
+  beamPipeContainer.name = "odd-beam-pipe";
+  beamPipeContainer.extent.set(Acts::binR, 0., 25);
+  Acts::ProtoVolume beamPipe;
+  beamPipe.name = "odd-beam-pipe-l";
+  beamPipe.extent.set(Acts::binR, 2., 24.);
+  beamPipe.layerType = Acts::Surface::SurfaceType::Cylinder;
+  beamPipeContainer.constituentVolumes = {beamPipe};
+  beamPipeContainer.constituentBinning = {
+      Acts::BinningData(Acts::open, Acts::binR, {0., 1.})};
+  beamPipeContainer.layerContainer = true;
+
   // Pixel section
   Acts::ProtoVolume pixelContainer;
   pixelContainer.name = "odd-pixel";
-  pixelContainer.extent.set(Acts::binR, 0., 200);
+  pixelContainer.extent.set(Acts::binR, 25., 200);
 
   Acts::ProtoVolume pixelNec;
   pixelNec.name = "odd-pixel-nec";
@@ -53,10 +66,17 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   pixNecD0.extent.set(Acts::binZ, -640., -600);
   pixelNec.constituentVolumes = {pixNecD6, pixNecD5, pixNecD4, pixNecD3,
                                  pixNecD2, pixNecD1, pixNecD0};
+
+  Acts::BinningData pixEcBinningR =
+      Acts::BinningData(Acts::open, Acts::binR, 2., 0., 1.);
+  Acts::BinningData pixEcBinningPhi =
+      Acts::BinningData(Acts::closed, Acts::binPhi, 30., -M_PI, M_PI);
+
   pixelNec.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1.})};
   for (auto& cv : pixelNec.constituentVolumes) {
     cv.layerType = Acts::Surface::SurfaceType::Disc;
+    cv.layerSurfaceBinning = {pixEcBinningR, pixEcBinningPhi};
   }
   pixelNec.layerContainer = true;
 
@@ -123,6 +143,7 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
   for (auto& cv : pixelPec.constituentVolumes) {
     cv.layerType = Acts::Surface::SurfaceType::Disc;
+    cv.layerSurfaceBinning = {pixEcBinningR, pixEcBinningPhi};
   }
   pixelPec.layerContainer = true;
 
@@ -131,9 +152,27 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
       Acts::BinningData(Acts::open, Acts::binZ, {-3100., -580., 580., 3100.})};
 
   // Short Strip section
+  Acts::ProtoVolume pstContainer;
+  pstContainer.name = "odd-pst";
+  pstContainer.extent.set(Acts::binR, 200., 210.);
+  Acts::ProtoVolume pst;
+  pst.name = "odd-pst-l";
+  pst.extent.set(Acts::binR, 201., 209.);
+  pst.layerType = Acts::Surface::SurfaceType::Cylinder;
+  pstContainer.constituentVolumes = {pst};
+  pstContainer.constituentBinning = {
+      Acts::BinningData(Acts::open, Acts::binR, {0., 1.})};
+  pstContainer.layerContainer = true;
+
+  // Short Strip section
   Acts::ProtoVolume sstripContainer;
   sstripContainer.name = "odd-sstrip";
-  sstripContainer.extent.set(Acts::binR, 200., 720);
+  sstripContainer.extent.set(Acts::binR, 210., 720);
+
+  Acts::BinningData sstripEcBinningR =
+      Acts::BinningData(Acts::open, Acts::binR, 3., 0., 1.);
+  Acts::BinningData sstripEcBinningPhi =
+      Acts::BinningData(Acts::closed, Acts::binPhi, 42., -M_PI, M_PI);
 
   Acts::ProtoVolume sstripNec;
   sstripNec.name = "odd-sstrip-nec";
@@ -163,6 +202,7 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
   for (auto& cv : sstripNec.constituentVolumes) {
     cv.layerType = Acts::Surface::SurfaceType::Disc;
+    cv.layerSurfaceBinning = {sstripEcBinningR, sstripEcBinningPhi};
   }
   sstripNec.layerContainer = true;
 
@@ -222,6 +262,7 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
   for (auto& cv : sstripPec.constituentVolumes) {
     cv.layerType = Acts::Surface::SurfaceType::Disc;
+    cv.layerSurfaceBinning = {sstripEcBinningR, sstripEcBinningPhi};
   }
   sstripPec.layerContainer = true;
 
@@ -324,10 +365,11 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   detectorContainer.name = "odd-light-world";
   detectorContainer.extent.set(Acts::binR, 0., 1100.);
   detectorContainer.extent.set(Acts::binZ, -3100., 3100.);
-  detectorContainer.constituentVolumes = {pixelContainer, sstripContainer,
+  detectorContainer.constituentVolumes = {beamPipeContainer, pixelContainer,
+                                          pstContainer, sstripContainer,
                                           lstripContainer};
-  detectorContainer.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binR, {0., 200., 720., 1100.})};
+  detectorContainer.constituentBinning = {Acts::BinningData(
+      Acts::open, Acts::binR, {0., 25., 200., 210., 720., 1100.})};
 
   // ----------------------------------------------------------
   Acts::ProtoDetector detector;

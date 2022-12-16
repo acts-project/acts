@@ -8,11 +8,15 @@
 
 #include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
 
+#include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DiscLayer.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <functional>
@@ -39,6 +43,7 @@ Acts::KDTreeTrackingGeometryBuilder::trackingGeometry(
   }
 
   // Create the KDTree
+  ACTS_INFO("Full KDTTree has " << surfacesMeasured.size() << " surfaces.");
   SurfaceKDT surfaceKDT(std::move(surfacesMeasured));
 
   // Walk through the proto builder
@@ -121,28 +126,90 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
                                     << " surfaces in the KDTree.");
   cCache.surfaceCounter += layerSurfaces.size();
 
-  // Make a const collection out of the surfaces
-  std::vector<std::shared_ptr<const Surface>> cLayerSurfaces;
-  cLayerSurfaces.reserve(layerSurfaces.size());
-  for (const auto& s : layerSurfaces) {
-    cLayerSurfaces.push_back(s.second);
-  }
-
   std::shared_ptr<const Acts::Layer> tLayer = nullptr;
-  Acts::ProtoLayer pLayer(gctx, cLayerSurfaces);
-  if (plVolume.layerType == Acts::Surface::SurfaceType::Cylinder) {
-    ACTS_VERBOSE(indent + ">> creating cylinder layer.");
-    pLayer.envelope[binR] = {1., 1.};
-    pLayer.envelope[binZ] = {2., 2.};
-    tLayer = m_cfg.layerCreator->cylinderLayer(
-        gctx, cLayerSurfaces, Acts::equidistant, Acts::equidistant, pLayer);
 
-  } else if (plVolume.layerType == Acts::Surface::SurfaceType::Disc) {
-    ACTS_VERBOSE(indent + ">> creating disc layer.");
-    pLayer.envelope[binR] = {2., 2.};
-    pLayer.envelope[binZ] = {1., 1.};
-    tLayer = m_cfg.layerCreator->discLayer(
-        gctx, cLayerSurfaces, Acts::equidistant, Acts::equidistant, pLayer);
+  if (layerSurfaces.size() == 1u) {
+    auto surface = layerSurfaces[0u].second;
+    const auto& transform = surface->transform(gctx);
+    if (plVolume.layerType == Acts::Surface::SurfaceType::Cylinder) {
+      ACTS_VERBOSE(indent +
+                   ">> creating cylinder layer from a single surface.");
+      // Get the bounds
+      auto cylinderBounds =
+          dynamic_cast<const CylinderBounds*>(&(surface->bounds()));
+      auto cylinderBoundsClone =
+          std::make_shared<const CylinderBounds>(*cylinderBounds);
+      auto cylinderLayer =
+          CylinderLayer::create(transform, cylinderBoundsClone, nullptr, 1.);
+      cylinderLayer->assignSurfaceMaterial(surface->surfaceMaterialSharedPtr());
+      tLayer = cylinderLayer;
+    } else if (plVolume.layerType == Acts::Surface::SurfaceType::Disc) {
+      ACTS_VERBOSE(indent +
+                   ">> creating cylinder layer from a single surface.");
+      // Get the bounds
+      auto radialBounds =
+          dynamic_cast<const RadialBounds*>(&(surface->bounds()));
+      auto radialBoundsClone =
+          std::make_shared<const RadialBounds>(*radialBounds);
+      auto discLayer =
+          DiscLayer::create(transform, radialBoundsClone, nullptr, 1.);
+      discLayer->assignSurfaceMaterial(surface->surfaceMaterialSharedPtr());
+      tLayer = discLayer;
+    }
+
+  } else if (layerSurfaces.size() > 1u) {
+    // Make a const collection out of the surfaces
+    std::vector<std::shared_ptr<const Surface>> cLayerSurfaces;
+    cLayerSurfaces.reserve(layerSurfaces.size());
+    for (const auto& s : layerSurfaces) {
+      cLayerSurfaces.push_back(s.second);
+    }
+
+    Acts::BinningType bType0 = Acts::equidistant;
+    Acts::BinningType bType1 = Acts::equidistant;
+    std::size_t bins0 = 0;
+    std::size_t bins1 = 0;
+    // In case explicit binning is given
+    if (plVolume.layerSurfaceBinning.size()) {
+      bType0 = plVolume.layerSurfaceBinning[0u].type;
+      bType1 = plVolume.layerSurfaceBinning[1u].type;
+      // In case explicit bin numbers are given in addition
+      if (bType0 == Acts::equidistant and bType1 == Acts::equidistant and
+          plVolume.layerSurfaceBinning[0u].bins() > 1u and
+          plVolume.layerSurfaceBinning[1u].bins() > 1u) {
+        bins0 = plVolume.layerSurfaceBinning[0u].bins();
+        bins1 = plVolume.layerSurfaceBinning[1u].bins();
+        ACTS_VERBOSE(indent + ">> binning provided externally to be "
+                     << bins0 << " x " << bins1 << ".");
+      }
+    }
+
+    Acts::ProtoLayer pLayer(gctx, cLayerSurfaces);
+    if (plVolume.layerType == Acts::Surface::SurfaceType::Cylinder) {
+      ACTS_VERBOSE(indent + ">> creating cylinder layer with "
+                   << cLayerSurfaces.size() << " surfaces.");
+      pLayer.envelope[binR] = {1., 1.};
+      pLayer.envelope[binZ] = {2., 2.};
+      // Forced equidistant or auto-binned
+      tLayer = (bins0 * bins1 > 0)
+                   ? m_cfg.layerCreator->cylinderLayer(gctx, cLayerSurfaces,
+                                                       bins0, bins1, pLayer)
+                   : m_cfg.layerCreator->cylinderLayer(gctx, cLayerSurfaces,
+                                                       bType0, bType1, pLayer);
+
+    } else if (plVolume.layerType == Acts::Surface::SurfaceType::Disc) {
+      ACTS_VERBOSE(indent + ">> creating disc layer with "
+                   << cLayerSurfaces.size() << " surfaces.");
+      pLayer.envelope[binR] = {2., 2.};
+      pLayer.envelope[binZ] = {1., 1.};
+      // Forced equidistant or auto-binned
+      tLayer = (bins0 * bins1 > 0)
+                   ? m_cfg.layerCreator->discLayer(gctx, cLayerSurfaces, bins0,
+                                                   bins1, pLayer)
+
+                   : m_cfg.layerCreator->discLayer(gctx, cLayerSurfaces, bType0,
+                                                   bType1, pLayer);
+    }
   }
   if (tLayer != nullptr and tLayer->representingVolume() != nullptr) {
     ACTS_DEBUG(indent << "> translated into layer bounds: "
