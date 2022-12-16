@@ -51,7 +51,6 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
 
   m_finder = Acts::SeedFinderOrthogonal<SimSpacePoint>(m_cfg.seedFinderConfig);
-
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
@@ -64,7 +63,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
       spacePoints.push_back(&spacePoint);
     }
   }
-
 
   SimSeedContainer seeds =
       m_finder.createSeeds(m_cfg.seedFinderOptions, spacePoints);
