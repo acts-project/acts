@@ -194,7 +194,7 @@ std::string Acts::ProtoVolume::toString(const std::string& indent) const {
       ss << cb.toString(indent) << '\n';
     }
     ss << indent << "  constituents are:" << '\n';
-    for (auto cv : constituentVolumes) {
+    for (const auto& cv : constituentVolumes) {
       ss << cv.toString(indent + subIndent) << '\n';
     }
   }

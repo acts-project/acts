@@ -100,8 +100,8 @@ class Extent {
   /// - values not constrained by @param rhs are not touched
   /// - values that are constrained by the external one, but not
   /// by the current one, are touched
-  /// @param envelope an envelope applied to the constrained value
   ///
+  /// @param envelope an envelope applied to the constrained value
   void addConstrain(const Extent& rhs,
                     const ExtentEnvelope& envelope = zeroEnvelopes);
 
