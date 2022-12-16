@@ -90,16 +90,16 @@ ActsExamples::makeMagneticFieldMapXyzFromRoot(
   }
   Int_t entries = tree->GetEntries();
 
-  double x, y, z;
-  double Bx, By, Bz;
+  float x, y, z;
+  float Bx, By, Bz;
 
   tree->SetBranchAddress("x", &x);
   tree->SetBranchAddress("y", &y);
   tree->SetBranchAddress("z", &z);
 
-  tree->SetBranchAddress("Bx", &Bx);
-  tree->SetBranchAddress("By", &By);
-  tree->SetBranchAddress("Bz", &Bz);
+  tree->SetBranchAddress("bx", &Bx);
+  tree->SetBranchAddress("by", &By);
+  tree->SetBranchAddress("bz", &Bz);
 
   // reserve size
   xPos.reserve(entries);

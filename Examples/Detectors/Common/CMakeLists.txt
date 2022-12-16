@@ -9,3 +9,5 @@ target_link_libraries(
   INTERFACE Boost::program_options)
 
 # interface libraries do not exist in the filesystem; no installation needed
+
+install(DIRECTORY include/ActsExamples DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})
