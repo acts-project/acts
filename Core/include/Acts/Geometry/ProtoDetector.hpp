@@ -31,7 +31,6 @@ struct ProtoVolume {
   Acts::Surface::SurfaceType layerType = Acts::Surface::SurfaceType::Other;
   /// The surface binninng fo the layer
   std::vector<BinningData> layerSurfaceBinning = {};
-
   /// Internal structure container
   std::vector<ProtoVolume> constituentVolumes = {};
   /// The constituent binning if this a container

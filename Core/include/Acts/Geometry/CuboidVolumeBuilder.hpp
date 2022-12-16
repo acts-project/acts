@@ -72,7 +72,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     // Bins in Z direction
     size_t binsZ = 1;
     // Envelope in X (along layer normal)
-    std::pair<double, double> envelopeX{0, 0};
+    std::array<ActsScalar, 2u> envelopeX{0, 0};
     std::optional<RotationMatrix3> rotation{std::nullopt};
   };
 

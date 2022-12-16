@@ -185,11 +185,10 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
     }
 
     Acts::ProtoLayer pLayer(gctx, cLayerSurfaces);
+    pLayer.envelope = plVolume.extent.envelope();
     if (plVolume.layerType == Acts::Surface::SurfaceType::Cylinder) {
       ACTS_VERBOSE(indent + ">> creating cylinder layer with "
                    << cLayerSurfaces.size() << " surfaces.");
-      pLayer.envelope[binR] = {1., 1.};
-      pLayer.envelope[binZ] = {2., 2.};
       // Forced equidistant or auto-binned
       tLayer = (bins0 * bins1 > 0)
                    ? m_cfg.layerCreator->cylinderLayer(gctx, cLayerSurfaces,
@@ -200,8 +199,6 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
     } else if (plVolume.layerType == Acts::Surface::SurfaceType::Disc) {
       ACTS_VERBOSE(indent + ">> creating disc layer with "
                    << cLayerSurfaces.size() << " surfaces.");
-      pLayer.envelope[binR] = {2., 2.};
-      pLayer.envelope[binZ] = {1., 1.};
       // Forced equidistant or auto-binned
       tLayer = (bins0 * bins1 > 0)
                    ? m_cfg.layerCreator->discLayer(gctx, cLayerSurfaces, bins0,
