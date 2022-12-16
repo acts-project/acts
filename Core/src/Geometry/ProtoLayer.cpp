@@ -35,7 +35,7 @@ ProtoLayer::ProtoLayer(
 
 double ProtoLayer::min(BinningValue bval, bool addenv) const {
   if (addenv) {
-    return extent.min(bval) - envelope[bval].first;
+    return extent.min(bval) - std::abs(envelope[bval].first);
   }
   return extent.min(bval);
 }
@@ -57,7 +57,7 @@ double ProtoLayer::range(BinningValue bval, bool addenv) const {
 
 std::ostream& ProtoLayer::toStream(std::ostream& sl) const {
   sl << "ProtoLayer with dimensions (min/max)" << std::endl;
-  extent.toStream(sl);
+  sl << extent.toString();
   return sl;
 }
 
