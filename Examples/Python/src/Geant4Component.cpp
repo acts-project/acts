@@ -6,9 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/Detector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
@@ -18,6 +20,8 @@
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
+#include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
+#include "ActsExamples/Geant4Detector/Geant4DetectorService.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include <memory>
@@ -220,6 +224,46 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
           return new DetectorConstruction(detector.config);
         },
         py::return_value_policy::reference);
+  }
+
+  {
+    using Config = ActsExamples::Geant4::Geant4DetectorService::Config;
+    auto s = py::class_<
+                 ActsExamples::Geant4::Geant4DetectorService,
+                 std::shared_ptr<ActsExamples::Geant4::Geant4DetectorService>>(
+                 mod, "Geant4DetectorService")
+                 .def(py::init<const Config&>());
+
+    auto c = py::class_<Config>(s, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(name);
+    ACTS_PYTHON_MEMBER(gdmlFile);
+    ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_MEMBER(toolLogLevel);
+    ACTS_PYTHON_MEMBER(detectorName);
+    ACTS_PYTHON_MEMBER(protoDetector);
+    ACTS_PYTHON_MEMBER(buildDetector);
+    ACTS_PYTHON_MEMBER(buildTrackingGeometry);
+    ACTS_PYTHON_STRUCT_END();
+
+    Acts::Python::patchKwargsConstructor(c);
+  }
+
+  {
+    using Geant4Detector = ActsExamples::Geant4::Geant4Detector;
+
+    py::class_<Geant4Detector, std::shared_ptr<Geant4Detector>>(
+        mod, "Geant4Detector")
+        .def(py::init<>())
+        .def("constructDetector",
+             py::overload_cast<
+                 const ActsExamples::Geant4::Geant4DetectorService::Config&>(
+                 &ActsExamples::Geant4::Geant4Detector::constructDetector))
+        .def("constructTrackingGeometry",
+             py::overload_cast<
+                 const ActsExamples::Geant4::Geant4DetectorService::Config&>(
+                 &ActsExamples::Geant4::Geant4Detector::
+                     constructTrackingGeometry));
   }
 
   Acts::Python::Context ctx;

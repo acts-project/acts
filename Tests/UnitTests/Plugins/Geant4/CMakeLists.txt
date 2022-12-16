@@ -1,0 +1,4 @@
+set(unittest_extra_libraries ActsPluginGeant4)
+
+add_unittest(Geant4Converters Geant4ConvertersTests.cpp)
+add_unittest(Geant4DetectorElement Geant4DetectorElementTests.cpp)
