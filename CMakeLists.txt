@@ -181,18 +181,16 @@ set(_acts_tbb_version 2020.1)
 # required packages
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
-    set(BOOST_COMPONENTS "")
-
-    if( ACTS_BUILD_EXAMPLES_BINARIES OR ACTS_BUILD_ANALYSIS_APPS )
-      list(APPEND BOOST_COMPONENTS "program_options")
-    endif()
-
-    if( ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
-      list(APPEND BOOST_COMPONENTS "unit_test_framework")
-    endif()
 
     # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
-    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS ${BOOST_COMPONENTS})
+    # Enable both program_options and unit_test_framework to reduce complexity
+    # Also Cuda tests seem to use program_options
+    if( ACTS_BUILD_EXAMPLES_BINARIES OR ACTS_BUILD_ANALYSIS_APPS OR
+        ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
+      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
+    else()
+      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+    endif()
   else()
     add_subdirectory(thirdparty/boost)
   endif()
