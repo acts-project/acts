@@ -259,9 +259,9 @@ class Chi2Fitter {
     Chi2FitterExtensions<traj_t> extensions;
 
     /// A logger instance
-    const Logger* m_logger{nullptr};
+    const Logger* actorLogger{nullptr};
 
-    const Logger& logger() const { return *m_logger; }
+    const Logger& logger() const { return *actorLogger; }
 
     /// @brief Chi square actor operation
     ///
@@ -680,7 +680,7 @@ class Chi2Fitter {
       chi2Actor.freeToBoundCorrection = chi2FitterOptions.freeToBoundCorrection;
       chi2Actor.extensions = chi2FitterOptions.extensions;
       chi2Actor.updateNumber = i;
-      chi2Actor.m_logger = m_actorLogger.get();
+      chi2Actor.actorLogger = m_actorLogger.get();
 
       typename propagator_t::template action_list_t_result_t<
           CurvilinearTrackParameters, Actors>

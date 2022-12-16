@@ -1211,9 +1211,9 @@ class CombinatorialKalmanFilter {
     SurfaceReached targetReached;
 
     /// Logger instance
-    const Logger* m_logger{nullptr};
+    const Logger* actorLogger{nullptr};
 
-    const Logger& logger() const { return *m_logger; }
+    const Logger& logger() const { return *actorLogger; }
   };
 
   template <typename source_link_accessor_t, typename parameters_t>
@@ -1286,7 +1286,7 @@ class CombinatorialKalmanFilter {
     combKalmanActor.multipleScattering = tfOptions.multipleScattering;
     combKalmanActor.energyLoss = tfOptions.energyLoss;
     combKalmanActor.smoothing = tfOptions.smoothing;
-    combKalmanActor.m_logger = m_actorLogger.get();
+    combKalmanActor.actorLogger = m_actorLogger.get();
 
     // copy source link accessor, calibrator and measurement selector
     combKalmanActor.m_sourcelinkAccessor = tfOptions.sourcelinkAccessor;

@@ -310,10 +310,10 @@ class KalmanFitter {
     std::shared_ptr<MultiTrajectory<traj_t>> outputStates;
 
     /// The logger instance
-    const Logger* m_logger{nullptr};
+    const Logger* actorLogger{nullptr};
 
     /// Logger helper
-    const Logger& logger() const { return *m_logger; }
+    const Logger& logger() const { return *actorLogger; }
 
     KalmanFitterExtensions<traj_t> extensions;
 
@@ -1051,7 +1051,7 @@ class KalmanFitter {
         kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
     kalmanActor.extensions = kfOptions.extensions;
-    kalmanActor.m_logger = m_actorLogger.get();
+    kalmanActor.actorLogger = m_actorLogger.get();
 
     typename propagator_t::template action_list_t_result_t<
         CurvilinearTrackParameters, Actors>
@@ -1159,7 +1159,7 @@ class KalmanFitter {
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.extensions = kfOptions.extensions;
-    kalmanActor.m_logger = m_actorLogger.get();
+    kalmanActor.actorLogger = m_actorLogger.get();
 
     // Set the surface sequence
     auto& dInitializer =
