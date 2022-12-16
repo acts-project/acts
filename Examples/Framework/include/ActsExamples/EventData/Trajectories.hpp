@@ -56,6 +56,11 @@ struct Trajectories final {
   /// Access the underlying multi trajectory.
   const MultiTrajectory& multiTrajectory() const { return *m_multiTrajectory; }
 
+  /// Access the underlying multi trajectory pointer.
+  const std::shared_ptr<MultiTrajectory>& multiTrajectoryPtr() const {
+    return m_multiTrajectory;
+  }
+
   /// Access the tip indices that identify valid trajectories.
   const std::vector<Acts::MultiTrajectoryTraits::IndexType>& tips() const {
     return m_trackTips;

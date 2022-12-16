@@ -36,7 +36,7 @@ struct TrackFinderFunctionImpl
   TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const ActsExamples::TrackParametersContainer& initialParameters,
+      const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options,
       std::shared_ptr<Acts::VectorMultiTrajectory> trajectory) const override {
     return trackFinder.findTracks(initialParameters, options,
@@ -51,7 +51,7 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   Stepper stepper(std::move(magneticField));
-  Navigator::Config cfg{trackingGeometry};
+  Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

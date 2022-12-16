@@ -120,8 +120,7 @@ struct TelescopeDetector {
     auto length = positions.back() - positions.front();
 
     std::vector<LayerPtr> layers(nLayers);
-    unsigned int i;
-    for (i = 0; i < nLayers; ++i) {
+    for (unsigned int i = 0; i < nLayers; ++i) {
       // The transform
       Translation3 trans(0., 0., positions[i]);
       Transform3 trafo(rotation * trans);
@@ -151,7 +150,7 @@ struct TelescopeDetector {
     LayerArrayCreator layArrCreator(
         lacConfig, getDefaultLogger("LayerArrayCreator", Logging::INFO));
     LayerVector layVec;
-    for (i = 0; i < nLayers; i++) {
+    for (unsigned int i = 0; i < nLayers; i++) {
       layVec.push_back(layers[i]);
     }
 
@@ -180,7 +179,7 @@ struct TelescopeDetector {
 // Construct a straight-line propagator.
 StraightPropagator makeStraightPropagator(
     std::shared_ptr<const TrackingGeometry> geo) {
-  Navigator::Config cfg{geo};
+  Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -192,7 +191,7 @@ StraightPropagator makeStraightPropagator(
 // Construct a propagator using a constant magnetic field along z.
 ConstantFieldPropagator makeConstantFieldPropagator(
     std::shared_ptr<const TrackingGeometry> geo, double bz) {
-  Navigator::Config cfg{geo};
+  Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -247,7 +246,7 @@ struct KalmanFitterInputTrajectory {
 std::vector<KalmanFitterInputTrajectory> createTrajectories(
     std::shared_ptr<const TrackingGeometry> geo, size_t nTrajectories) {
   // simulation propagator
-  const auto simPropagator = makeStraightPropagator(geo);
+  const auto simPropagator = makeStraightPropagator(std::move(geo));
 
   std::vector<KalmanFitterInputTrajectory> trajectories;
   trajectories.reserve(nTrajectories);

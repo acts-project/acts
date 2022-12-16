@@ -23,7 +23,7 @@
 namespace ActsExamples {
 
 ActsFatras::Particle EDM4hepUtil::readParticle(
-    edm4hep::MCParticle from, MapParticleIdFrom particleMapper) {
+    const edm4hep::MCParticle& from, const MapParticleIdFrom& particleMapper) {
   ActsFatras::Barcode particleId = particleMapper(from);
 
   ActsFatras::Particle to(particleId,
@@ -64,9 +64,9 @@ void EDM4hepUtil::writeParticle(const ActsFatras::Particle& from,
                   static_cast<float>(from.fourMomentum().z())});
 }
 
-ActsFatras::Hit EDM4hepUtil::readSimHit(const edm4hep::SimTrackerHit& from,
-                                        MapParticleIdFrom particleMapper,
-                                        MapGeometryIdFrom geometryMapper) {
+ActsFatras::Hit EDM4hepUtil::readSimHit(
+    const edm4hep::SimTrackerHit& from, const MapParticleIdFrom& particleMapper,
+    const MapGeometryIdFrom& geometryMapper) {
   ActsFatras::Barcode particleId = particleMapper(from.getMCParticle());
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
@@ -108,8 +108,8 @@ ActsFatras::Hit EDM4hepUtil::readSimHit(const edm4hep::SimTrackerHit& from,
 
 void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
                               edm4hep::MutableSimTrackerHit to,
-                              MapParticleIdTo particleMapper,
-                              MapGeometryIdTo geometryMapper) {
+                              const MapParticleIdTo& particleMapper,
+                              const MapGeometryIdTo& geometryMapper) {
   const Acts::Vector4& globalPos4 = from.fourPosition();
   const Acts::Vector4& momentum4Before = from.momentum4Before();
   const auto delta4 = from.momentum4After() - momentum4Before;
@@ -144,9 +144,9 @@ void EDM4hepUtil::writeSimHit(const ActsFatras::Hit& from,
 }
 
 Measurement EDM4hepUtil::readMeasurement(
-    edm4hep::TrackerHitPlane from,
+    const edm4hep::TrackerHitPlane& from,
     const edm4hep::TrackerHitCollection* fromClusters, Cluster* toCluster,
-    MapGeometryIdFrom geometryMapper) {
+    const MapGeometryIdFrom& geometryMapper) {
   // no need for digitization as we only want to identify the sensor
   Acts::GeometryIdentifier geometryId = geometryMapper(from.getCellID());
 
@@ -197,7 +197,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
                                    edm4hep::MutableTrackerHitPlane to,
                                    const Cluster* fromCluster,
                                    edm4hep::TrackerHitCollection& toClusters,
-                                   MapGeometryIdTo geometryMapper) {
+                                   const MapGeometryIdTo& geometryMapper) {
   std::visit(
       [&](const auto& m) {
         Acts::GeometryIdentifier geoId = m.sourceLink().geometryId();

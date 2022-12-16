@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
@@ -30,7 +31,7 @@ using DirectFitter =
     Acts::KalmanFitter<DirectPropagator, Acts::VectorMultiTrajectory>;
 
 struct SimpleReverseFilteringLogic {
-  double momentumThreshold;
+  double momentumThreshold = 0;
 
   bool doBackwardFiltering(
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::ConstTrackStateProxy
@@ -49,8 +50,8 @@ struct KalmanFitterFunctionImpl
   Acts::GainMatrixSmoother kfSmoother;
   SimpleReverseFilteringLogic reverseFilteringLogic;
 
-  bool multipleScattering;
-  bool energyLoss;
+  bool multipleScattering = false;
+  bool energyLoss = false;
   Acts::FreeToBoundCorrection freeToBoundCorrection;
 
   KalmanFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
@@ -86,8 +87,7 @@ struct KalmanFitterFunctionImpl
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
@@ -97,8 +97,7 @@ struct KalmanFitterFunctionImpl
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfaceSequence,
@@ -123,7 +122,7 @@ ActsExamples::makeKalmanFitterFunction(
   const Stepper stepper(std::move(magneticField));
 
   // Standard fitter
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

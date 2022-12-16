@@ -27,8 +27,9 @@ namespace {
 /// Continuous process that does not trigger a break
 struct SterileContinuousProcess {
   template <typename generator_t>
-  bool operator()(generator_t &, const MaterialSlab &, Particle &,
-                  std::vector<Particle> &) const {
+  bool operator()(generator_t & /*unused*/, const MaterialSlab & /*unused*/,
+                  Particle & /*unused*/,
+                  std::vector<Particle> & /*unused*/) const {
     return false;
   }
 };
@@ -41,8 +42,9 @@ static_assert(!detail::IsPointLikeProcess<SterileContinuousProcess>::value,
 /// Continuous process that DOES trigger a break
 struct FatalContinuousProcess {
   template <typename generator_t>
-  bool operator()(generator_t &, const MaterialSlab &, Particle &,
-                  std::vector<Particle> &) const {
+  bool operator()(generator_t & /*unused*/, const MaterialSlab & /*unused*/,
+                  Particle & /*unused*/,
+                  std::vector<Particle> & /*unused*/) const {
     return true;
   }
 };
@@ -56,13 +58,13 @@ static_assert(!detail::IsPointLikeProcess<FatalContinuousProcess>::value,
 /// Each run call creates one descendant particle.
 struct X0PointLikeProcess {
   template <typename generator_t>
-  std::pair<Scalar, Scalar> generatePathLimits(generator_t &,
-                                               const Particle &) const {
+  std::pair<Scalar, Scalar> generatePathLimits(
+      generator_t & /*unused*/, const Particle & /*unused*/) const {
     return {0.5, std::numeric_limits<Scalar>::infinity()};
   }
 
   template <typename generator_t>
-  bool run(generator_t &, Particle &particle,
+  bool run(generator_t & /*unused*/, Particle &particle,
            std::vector<Particle> &generated) const {
     auto pid0 = particle.particleId().makeDescendant(0);
     generated.emplace_back(particle.withParticleId(pid0));
@@ -80,13 +82,13 @@ static_assert(detail::IsPointLikeProcess<X0PointLikeProcess>::value,
 /// Each run call creates two descendant particles.
 struct L0PointLikeProcess {
   template <typename generator_t>
-  std::pair<Scalar, Scalar> generatePathLimits(generator_t &,
-                                               const Particle &) const {
+  std::pair<Scalar, Scalar> generatePathLimits(
+      generator_t & /*unused*/, const Particle & /*unused*/) const {
     return {std::numeric_limits<Scalar>::infinity(), 1.5};
   }
 
   template <typename generator_t>
-  bool run(generator_t &, Particle &particle,
+  bool run(generator_t & /*unused*/, Particle &particle,
            std::vector<Particle> &generated) const {
     auto pid0 = particle.particleId().makeDescendant(0);
     auto pid1 = particle.particleId().makeDescendant(1);

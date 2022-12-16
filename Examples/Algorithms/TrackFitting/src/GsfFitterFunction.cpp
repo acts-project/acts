@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFitting/GsfFitterFunction.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
@@ -46,10 +47,10 @@ struct GsfFitterFunctionImpl
 
   Acts::GainMatrixUpdater updater;
 
-  std::size_t maxComponents;
-  double weightCutoff;
-  bool abortOnError;
-  bool disableAllMaterialHandling;
+  std::size_t maxComponents = 0;
+  double weightCutoff = 0;
+  bool abortOnError = false;
+  bool disableAllMaterialHandling = false;
 
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
       : fitter(std::move(f)), directFitter(std::move(df)) {}
@@ -83,8 +84,7 @@ struct GsfFitterFunctionImpl
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
@@ -94,8 +94,7 @@ struct GsfFitterFunctionImpl
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfaceSequence,
@@ -119,7 +118,7 @@ ActsExamples::makeGsfFitterFunction(
   MultiStepper stepper(std::move(magneticField), finalReductionMethod);
 
   // Standard fitter
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

@@ -128,7 +128,7 @@ struct Uniform {
   /// Constructor with a binning data in order to get the bin borders.
   ///
   /// @param bu the binning data
-  Uniform(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
+  Uniform(Acts::BinningData&& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -165,7 +165,7 @@ struct Digital {
   /// Constructor with a bin utility in order to get the bin borders.
   ///
   /// @param bu the bin utility within hich the parameter is allowed
-  Digital(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
+  Digital(Acts::BinningData&& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///

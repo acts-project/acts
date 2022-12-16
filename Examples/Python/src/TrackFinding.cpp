@@ -10,6 +10,7 @@
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -85,17 +86,10 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
-    ACTS_PYTHON_MEMBER(bFieldInZ);
-    ACTS_PYTHON_MEMBER(beamPos);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(zAlign);
     ACTS_PYTHON_MEMBER(rAlign);
     ACTS_PYTHON_MEMBER(sigmaError);
-    ACTS_PYTHON_MEMBER(highland);
-    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
-    ACTS_PYTHON_MEMBER(pTPerHelixRadius);
-    ACTS_PYTHON_MEMBER(minHelixDiameter2);
-    ACTS_PYTHON_MEMBER(pT2perRadius);
     ACTS_PYTHON_MEMBER(maxBlockSize);
     ACTS_PYTHON_MEMBER(nTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
@@ -105,10 +99,12 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
     ACTS_PYTHON_MEMBER(zBinsCustomLooping);
-    ACTS_PYTHON_MEMBER(rRangeMiddleSP);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
+    ACTS_PYTHON_MEMBER(rRangeMiddleSP);
+    ACTS_PYTHON_MEMBER(rMinMiddle);
+    ACTS_PYTHON_MEMBER(rMaxMiddle);
     ACTS_PYTHON_MEMBER(binSizeR);
     ACTS_PYTHON_MEMBER(forceRadialSorting);
     ACTS_PYTHON_MEMBER(seedConfirmation);
@@ -119,7 +115,15 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
-
+  {
+    using seedOptions = Acts::SeedFinderOptions;
+    auto c = py::class_<seedOptions>(m, "SeedFinderOptions").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, seedOptions);
+    ACTS_PYTHON_MEMBER(beamPos);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
   {
     using Config = Acts::SeedFinderOrthogonalConfig<SimSpacePoint>;
     auto c =
@@ -144,20 +148,22 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zMax);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(rMin);
-    ACTS_PYTHON_MEMBER(bFieldInZ);
-    ACTS_PYTHON_MEMBER(beamPos);
     ACTS_PYTHON_MEMBER(radLengthPerSeed);
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(skipPreviousTopSP);
     ACTS_PYTHON_MEMBER(interactionPointCut);
-    ACTS_PYTHON_MEMBER(rMinMiddle);
-    ACTS_PYTHON_MEMBER(rMaxMiddle);
     ACTS_PYTHON_MEMBER(deltaPhiMax);
     ACTS_PYTHON_MEMBER(highland);
     ACTS_PYTHON_MEMBER(maxScatteringAngle2);
     ACTS_PYTHON_MEMBER(pTPerHelixRadius);
     ACTS_PYTHON_MEMBER(minHelixDiameter2);
     ACTS_PYTHON_MEMBER(pT2perRadius);
+    ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
+    ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
+    ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
+    ACTS_PYTHON_MEMBER(rRangeMiddleSP);
+    ACTS_PYTHON_MEMBER(rMinMiddle);
+    ACTS_PYTHON_MEMBER(rMaxMiddle);
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
@@ -206,13 +212,20 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig,
-      gridConfig, allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom,
-      numPhiNeighbors);
+      seedFinderOptions, gridConfig, allowSeparateRMax, zBinNeighborsTop,
+      zBinNeighborsBottom, numPhiNeighbors);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
-                                "SeedingOrthogonalAlgorithm", inputSpacePoints,
-                                outputSeeds, outputProtoTracks,
-                                seedFilterConfig, seedFinderConfig);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SeedingOrthogonalAlgorithm, mex,
+      "SeedingOrthogonalAlgorithm", inputSpacePoints, outputSeeds,
+      outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
+      inputSpacePoints, outputSeeds, outputProtoTracks, inputSourceLinks,
+      trackingGeometry, geometrySelection, inputMeasurements, subRegions,
+      nLayers, xMin, xMax, yMin, yMax, houghHistSize_x, houghHistSize_y,
+      hitExtend_x, threshold, localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
@@ -245,8 +258,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
     ACTS_PYTHON_MEMBER(outputTrajectories);
-    ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrackParametersTips);
     ACTS_PYTHON_MEMBER(findTracks);
     ACTS_PYTHON_MEMBER(measurementSelectorCfg);
     ACTS_PYTHON_STRUCT_END();
@@ -271,12 +282,11 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    auto constructor = [](std::vector<
+    auto constructor = [](const std::vector<
                            std::pair<GeometryIdentifier,
                                      std::tuple<std::vector<double>,
                                                 std::vector<double>,
-                                                std::vector<size_t>>>>
-                              input) {
+                                                std::vector<size_t>>>>& input) {
       std::vector<std::pair<GeometryIdentifier, MeasurementSelectorCuts>>
           converted;
       converted.reserve(input.size());
@@ -304,11 +314,10 @@ void addTrackFinding(Context& ctx) {
             .def(py::init(constructor));
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AmbiguityResolutionAlgorithm, mex,
-      "AmbiguityResolutionAlgorithm", inputSourceLinks, inputTrajectories,
-      inputTrackParameters, inputTrackParametersTips, outputTrackParameters,
-      outputTrackParametersTips, maximumSharedHits);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionAlgorithm, mex,
+                                "AmbiguityResolutionAlgorithm",
+                                inputSourceLinks, inputTrajectories,
+                                outputTrajectories, maximumSharedHits);
 }
 
 }  // namespace Acts::Python

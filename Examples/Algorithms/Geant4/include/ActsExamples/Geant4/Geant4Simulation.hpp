@@ -99,13 +99,13 @@ class Geant4Simulation final : public BareAlgorithm {
   /// @param level is the logging level to be used
   Geant4Simulation(const Config& config,
                    Acts::Logging::Level level = Acts::Logging::INFO);
-  ~Geant4Simulation();
+  ~Geant4Simulation() override;
 
   /// Algorithm execute method, called once per event with context
   ///
   /// @param ctx the AlgorithmContext for this event
   ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final override;
+      const ActsExamples::AlgorithmContext& ctx) const final;
 
   /// Readonly access to the configuration
   const Config& config() const { return m_cfg; }

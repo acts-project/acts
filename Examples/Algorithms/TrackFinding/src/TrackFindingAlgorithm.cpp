@@ -40,15 +40,6 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing trajectories output collection");
   }
-
-  if (m_cfg.outputTrackParameters.empty()) {
-    throw std::invalid_argument(
-        "Missing track parameter tips output collection");
-  }
-
-  if (m_cfg.outputTrackParametersTips.empty()) {
-    throw std::invalid_argument("Missing track parameters output collection");
-  }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
@@ -64,10 +55,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Prepare the output data with MultiTrajectory
   TrajectoriesContainer trajectories;
   trajectories.reserve(initialParameters.size());
-
-  // Prepare the output data with TrackParameters
-  TrackParametersContainer trackParametersContainer;
-  std::vector<std::pair<size_t, size_t>> trackParametersTips;
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
@@ -110,7 +97,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
                                           << " seeds.");
 
   auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
-  auto results = (*m_cfg.findTracks)(initialParameters, options, mtj);
+  std::vector<TrackFinderResult> results;
+  results.reserve(initialParameters.size());
+  for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    results.push_back(
+        (*m_cfg.findTracks)(initialParameters.at(iseed), options, mtj));
+  }
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {
@@ -129,14 +121,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       trajectories.emplace_back(trackFindingOutput.fittedStates,
                                 trackFindingOutput.lastMeasurementIndices,
                                 trackFindingOutput.fittedParameters);
-
-      const auto& traj = trajectories.back();
-      for (const auto tip : traj.tips()) {
-        if (traj.hasTrackParameters(tip)) {
-          trackParametersContainer.push_back(traj.trackParameters(tip));
-          trackParametersTips.push_back({trajectories.size() - 1, tip});
-        }
-      }
     } else {
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());
@@ -153,10 +137,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   m_memoryStatistics.local().hist += mtj->statistics().hist;
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
-  ctx.eventStore.add(m_cfg.outputTrackParameters,
-                     std::move(trackParametersContainer));
-  ctx.eventStore.add(m_cfg.outputTrackParametersTips,
-                     std::move(trackParametersTips));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

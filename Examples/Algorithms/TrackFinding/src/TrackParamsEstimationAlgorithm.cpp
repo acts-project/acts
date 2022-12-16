@@ -85,7 +85,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
       continue;
     }
     for (const auto& slink : sp.sourceLinks()) {
-      const auto islink = static_cast<const IndexSourceLink&>(*slink);
+      const IndexSourceLink& islink = slink.get<IndexSourceLink>();
       spMap.emplace(islink.index(), &sp);
     }
   }
@@ -122,7 +122,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::createSeeds(
     // betweent the bottom and top space point
     // @todo add the check of deltaZ
     bool seedFound = false;
-    std::array<size_t, 3> bestSPIndices;
+    std::array<size_t, 3> bestSPIndices{};
     double maxDeltaR = std::numeric_limits<double>::min();
     for (size_t ib = 0; ib < spacePointsOnTrack.size() - 2; ++ib) {
       for (size_t im = ib + 1; im < spacePointsOnTrack.size() - 1; ++im) {
@@ -189,8 +189,8 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
       ACTS_WARNING("Missing source link in the space point")
       continue;
     }
-    const auto sourceLink = bottomSP->sourceLinks()[0];
-    auto geoId = sourceLink->geometryId();
+    const auto& sourceLink = bottomSP->sourceLinks()[0];
+    auto geoId = sourceLink.geometryId();
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
       ACTS_WARNING("surface with geoID "
@@ -228,8 +228,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
           ACTS_WARNING("Missing source link in the space point")
           continue;
         }
-        const auto slink =
-            static_cast<const IndexSourceLink&>(*(sp->sourceLinks()[0]));
+        const auto slink = sp->sourceLinks()[0].get<IndexSourceLink>();
         track.push_back(slink.index());
       }
       tracks.emplace_back(track);

@@ -17,9 +17,12 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const std::unordered_map<const Acts::Surface*, size_t>& idxedAlignSurfaces,
     const ActsAlignment::AlignmentMask& alignMask,
     Acts::LoggerWrapper logger) const {
+  // Convert to Acts::SourceLink during iteration
+  Acts::SourceLinkAdapterIterator begin{sourcelinks.begin()};
+  Acts::SourceLinkAdapterIterator end{sourcelinks.end()};
+
   // Perform the fit
-  auto fitRes = m_fitter.fit(sourcelinks.begin(), sourcelinks.end(),
-                             sParameters, fitOptions);
+  auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions);
   if (not fitRes.ok()) {
     ACTS_WARNING("Fit failure");
     return fitRes.error();
@@ -301,7 +304,6 @@ ActsAlignment::Alignment<fitter_t>::align(
   // Screen out the final aligned parameters
   // @todo
   if (alignmentParametersUpdated) {
-    unsigned int iDetElement = 0;
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
       const auto& transform =
@@ -318,7 +320,6 @@ ActsAlignment::Alignment<fitter_t>::align(
       ACTS_VERBOSE(
           "Euler angles (rotZ, rotY, rotX) = " << rotAngles.transpose());
       ACTS_VERBOSE("Rotation marix = \n" << rotation);
-      iDetElement++;
     }
   } else {
     ACTS_DEBUG("Alignment parameters is not updated.");

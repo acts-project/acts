@@ -65,7 +65,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   IPEstimator ipEstimator(ipEstimatorCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
-  AnnealingUtility::Config annealingConfig(temperatures);
+  AnnealingUtility::Config annealingConfig;
+  annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
   using Fitter = AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>;
@@ -92,7 +93,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_test) {
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer, bField);
+                              std::move(linearizer), bField);
 
   // TODO: test this as well!
   // finderConfig.useBeamSpotConstraint = false;
@@ -212,7 +213,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   // Create a custom std::function to extract BoundTrackParameters from
   // user-defined InputTrack
   std::function<BoundTrackParameters(InputTrack)> extractParameters =
-      [](InputTrack params) { return params.parameters(); };
+      [](const InputTrack& params) { return params.parameters(); };
 
   // IP 3D Estimator
   using IPEstimator = ImpactPointEstimator<InputTrack, Propagator>;
@@ -221,7 +222,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   IPEstimator ipEstimator(ipEstimatorCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
-  AnnealingUtility::Config annealingConfig(temperatures);
+  AnnealingUtility::Config annealingConfig;
+  annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
   using Fitter = AdaptiveMultiVertexFitter<InputTrack, Linearizer>;
@@ -247,7 +249,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_usertype_test) {
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
-                              linearizer, bField);
+                              std::move(linearizer), bField);
   Finder::State state;
 
   Finder finder(finderConfig, extractParameters);
@@ -360,7 +362,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   IPEstimator ipEst(ipEstCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
-  AnnealingUtility::Config annealingConfig(temperatures);
+  AnnealingUtility::Config annealingConfig;
+  annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
   using Fitter = AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>;
@@ -386,8 +389,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst, linearizer,
-                              bField);
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+                              std::move(linearizer), bField);
 
   // TODO: test this as well!
   // finderConfig.useBeamSpotConstraint = false;
@@ -461,7 +464,7 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_finder_grid_seed_finder_test) {
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
   std::vector<bool> vtxFound(expNRecoVertices, false);
 
-  for (auto vtx : allVertices) {
+  for (const auto& vtx : allVertices) {
     double vtxZ = vtx.position()[2];
     double diffZ = 1e5;
     int foundVtxIdx = -1;
@@ -510,7 +513,8 @@ BOOST_AUTO_TEST_CASE(
   IPEstimator ipEst(ipEstCfg);
 
   std::vector<double> temperatures{8.0, 4.0, 2.0, 1.4142136, 1.2247449, 1.0};
-  AnnealingUtility::Config annealingConfig(temperatures);
+  AnnealingUtility::Config annealingConfig;
+  annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
   using Fitter = AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>;
@@ -536,8 +540,8 @@ BOOST_AUTO_TEST_CASE(
 
   using Finder = AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
-  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst, linearizer,
-                              bField);
+  Finder::Config finderConfig(std::move(fitter), seedFinder, ipEst,
+                              std::move(linearizer), bField);
 
   Finder finder(finderConfig);
   Finder::State state;
@@ -608,7 +612,7 @@ BOOST_AUTO_TEST_CASE(
   BOOST_CHECK_EQUAL(allVertices.size(), expNRecoVertices);
   std::vector<bool> vtxFound(expNRecoVertices, false);
 
-  for (auto vtx : allVertices) {
+  for (const auto& vtx : allVertices) {
     double vtxZ = vtx.position()[2];
     double diffZ = 1e5;
     int foundVtxIdx = -1;

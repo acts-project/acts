@@ -219,18 +219,17 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
 }
 
 ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  m_outputFile->Close();
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write states of trajectories to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
-  }
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  ACTS_INFO("Wrote states of trajectories to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
+
   return ProcessCode::SUCCESS;
 }
 
@@ -238,10 +237,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
 
   auto& gctx = ctx.geoContext;
   // Read additional input collections
@@ -265,11 +260,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
   // Loop over the trajectories
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
-
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
-      continue;
-    }
 
     // The trajectory index
     m_multiTrajNr = itraj;
@@ -323,8 +313,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
-        const auto& sl =
-            static_cast<const IndexSourceLink&>(state.uncalibrated());
+        const auto& sl = state.uncalibrated().template get<IndexSourceLink>();
         const auto hitIdx = sl.index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =

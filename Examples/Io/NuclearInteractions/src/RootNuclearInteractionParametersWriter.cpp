@@ -87,8 +87,7 @@ buildNotNormalisedMap(TH1F const* hist) {
   // Fill the cumulative histogram
   double integral = 0.;
   std::vector<double> temp_HistoContents(nBins);
-  int iBin;
-  for (iBin = 0; iBin < nBins; iBin++) {
+  for (int iBin = 0; iBin < nBins; iBin++) {
     float binval = hist->GetBinContent(iBin + 1);
     // Avoid negative bin values
     if (binval < 0) {
@@ -107,7 +106,7 @@ buildNotNormalisedMap(TH1F const* hist) {
   }
 
   // Set the bin borders
-  for (iBin = 1; iBin <= nBins; iBin++) {
+  for (int iBin = 1; iBin <= nBins; iBin++) {
     histoBorders[iBin - 1] = hist->GetXaxis()->GetBinLowEdge(iBin);
   }
   histoBorders[nBins] = hist->GetXaxis()->GetXmax();

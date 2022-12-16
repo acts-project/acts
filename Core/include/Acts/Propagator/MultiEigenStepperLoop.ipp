@@ -44,7 +44,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       }
     }
 
-    if (states.size() == 0) {
+    if (states.empty()) {
       return MultiStepperError::AllComponentsConversionToBoundFailed;
     }
 
@@ -221,7 +221,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   }
 
   // Return error if there is no ok result
-  if (errorSteps == results.size()) {
+  if (stepping.components.empty()) {
     return MultiStepperError::AllComponentsSteppingError;
   }
 

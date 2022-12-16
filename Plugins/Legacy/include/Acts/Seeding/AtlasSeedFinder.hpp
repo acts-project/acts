@@ -57,7 +57,7 @@ class AtlasSeedFinder {
   ///////////////////////////////////////////////////////////////////
 
   template <class RandIter>
-  void newEvent(int, RandIter, RandIter);
+  void newEvent(int /*iteration*/, RandIter /*spBegin*/, RandIter /*spEnd*/);
 
   //////////////////////////////////////////////////////////////////
   // Method to initialize seeds production
@@ -88,89 +88,90 @@ class AtlasSeedFinder {
   // Protected data and methods
   ///////////////////////////////////////////////////////////////////
 
-  bool m_endlist;
-  bool m_checketa;
-  bool m_isvertex;
-  int m_nprint;
-  int m_nlist;
-  int m_maxsize;
-  int m_state;
+  bool m_endlist = false;
+  bool m_checketa = false;
+  bool m_isvertex = false;
+  int m_nprint = 0;
+  int m_nlist = 0;
+  int m_maxsize = 0;
+  int m_state = 0;
   // event number since tool init
-  int m_iteration;
-  float m_etamin, m_etamax;
-  float m_drmin, m_drminv;
-  float m_drmax;
-  float m_dzdrmin0;
-  float m_dzdrmax0;
-  float m_dzdrmin;
-  float m_dzdrmax;
-  float m_zmin;
-  float m_zmax;
-  float m_zminU;
-  float m_zmaxU;
-  float m_zminB;
-  float m_zmaxB;
-  float m_ftrig;
-  float m_ftrigW;
+  int m_iteration = 0;
+  float m_etamin = 0, m_etamax = 0;
+  float m_drmin = 0, m_drminv = 0;
+  float m_drmax = 0;
+  float m_dzdrmin0 = 0;
+  float m_dzdrmax0 = 0;
+  float m_dzdrmin = 0;
+  float m_dzdrmax = 0;
+  float m_zmin = 0;
+  float m_zmax = 0;
+  float m_zminU = 0;
+  float m_zmaxU = 0;
+  float m_zminB = 0;
+  float m_zmaxB = 0;
+  float m_ftrig = 0;
+  float m_ftrigW = 0;
   // maximum radius of outermost detector element
-  float r_rmax;
+  float r_rmax = 0;
   // size of one r-slice
-  float r_rstep;
+  float r_rstep = 0;
 
-  float m_dzver;
-  float m_dzdrver;
-  float m_diver;
-  float m_diverpps;
-  float m_diversss;
-  float m_divermax;
-  float m_dazmax;
-  float m_ptmin;
-  float m_ipt;
-  float m_ipt2;
-  float m_COF;
-  float m_K;
-  float m_ipt2K;
-  float m_ipt2C;
-  float m_COFK;
-  float m_umax;
+  float m_dzver = 0;
+  float m_dzdrver = 0;
+  float m_diver = 0;
+  float m_diverpps = 0;
+  float m_diversss = 0;
+  float m_divermax = 0;
+  float m_dazmax = 0;
+  float m_ptmin = 0;
+  float m_ipt = 0;
+  float m_ipt2 = 0;
+  float m_COF = 0;
+  float m_K = 0;
+  float m_ipt2K = 0;
+  float m_ipt2C = 0;
+  float m_COFK = 0;
+  float m_umax = 0;
   // number of r-slices
-  int r_size;
-  int r_first;
-  int rf_size;
-  int rfz_size;
-  std::list<SPForSeed<SpacePoint>*>* r_Sorted;
+  int r_size = 0;
+  int r_first = 0;
+  int rf_size = 0;
+  int rfz_size = 0;
+  std::list<SPForSeed<SpacePoint>*>* r_Sorted = nullptr;
   std::list<SPForSeed<SpacePoint>*> rfz_Sorted[583];
   std::list<SPForSeed<SpacePoint>*> l_spforseed;
   typename std::list<SPForSeed<SpacePoint>*>::iterator i_spforseed;
   typename std::list<SPForSeed<SpacePoint>*>::iterator m_rMin;
 
-  int m_nsaz, m_nsazv;
-  int m_fNmax, m_fvNmax;
-  int m_fNmin, m_fvNmin;
-  int m_zMin;
+  int m_nsaz = 0, m_nsazv = 0;
+  int m_fNmax = 0, m_fvNmax = 0;
+  int m_fNmin = 0, m_fvNmin = 0;
+  int m_zMin = 0;
   // m_nr: number of bins used in r_Sorted; r_index: index of all used bins in
   // r_Sorted; r_map is number of SP in each bin in r_Sorted
-  int m_nr;
-  int* r_index;
-  int* r_map;
-  int m_nrfz, rfz_index[583], rfz_map[583];
-  int rfz_b[583], rfz_t[593], rfz_ib[583][9], rfz_it[583][9];
-  float m_sF;
+  int m_nr = 0;
+  int* r_index = nullptr;
+  int* r_map = nullptr;
+  int m_nrfz = 0, rfz_index[583] = {}, rfz_map[583] = {};
+  int rfz_b[583] = {}, rfz_t[593] = {}, rfz_ib[583][9] = {},
+      rfz_it[583][9] = {};
+  float m_sF = 0;
 
   ///////////////////////////////////////////////////////////////////
   // Tables for 3 space points seeds search
   ///////////////////////////////////////////////////////////////////
 
-  int m_maxsizeSP;
-  SPForSeed<SpacePoint>** m_SP;
-  float* m_Zo;
-  float* m_Tz;
-  float* m_R;
-  float* m_U;
-  float* m_V;
-  float* m_Er;
+  int m_maxsizeSP = 0;
+  SPForSeed<SpacePoint>** m_SP = nullptr;
+  float* m_Zo = nullptr;
+  float* m_Tz = nullptr;
+  float* m_R = nullptr;
+  float* m_U = nullptr;
+  float* m_V = nullptr;
+  float* m_Er = nullptr;
 
-  Seed<SpacePoint>* m_seedOutput;
+  Seed<SpacePoint>* m_seedOutput = nullptr;
 
   std::list<InternalSeed<SpacePoint>*> l_seeds;
   typename std::list<InternalSeed<SpacePoint>*>::iterator i_seed;
@@ -180,19 +181,19 @@ class AtlasSeedFinder {
   typename std::multimap<float, InternalSeed<SpacePoint>*>::iterator m_seed;
 
   std::multimap<float, InternalSeed<SpacePoint>*> m_mapOneSeeds;
-  InternalSeed<SpacePoint>* m_OneSeeds;
-  int m_maxOneSize;
-  int m_nOneSeeds;
-  int m_fillOneSeeds;
+  InternalSeed<SpacePoint>* m_OneSeeds = nullptr;
+  int m_maxOneSize = 0;
+  int m_nOneSeeds = 0;
+  int m_fillOneSeeds = 0;
   std::vector<std::pair<float, SPForSeed<SpacePoint>*>> m_CmSp;
 
   ///////////////////////////////////////////////////////////////////
   // Beam geometry
   ///////////////////////////////////////////////////////////////////
 
-  float m_xbeam;  // x-center of beam-axis
-  float m_ybeam;  // y-center of beam-axis
-  float m_zbeam;  // z-center of beam-axis
+  float m_xbeam = 0;  // x-center of beam-axis
+  float m_ybeam = 0;  // y-center of beam-axis
+  float m_zbeam = 0;  // z-center of beam-axis
 
   ///////////////////////////////////////////////////////////////////
   // Protected methods
@@ -201,27 +202,30 @@ class AtlasSeedFinder {
   void buildFrameWork();
   void buildBeamFrameWork();
 
-  SPForSeed<SpacePoint>* newSpacePoint(SpacePoint* const&);
+  SPForSeed<SpacePoint>* newSpacePoint(SpacePoint* const& /*sp*/);
 
-  void newOneSeed(SPForSeed<SpacePoint>*&, SPForSeed<SpacePoint>*&,
-                  SPForSeed<SpacePoint>*&, float, float);
+  void newOneSeed(SPForSeed<SpacePoint>*& /*p1*/,
+                  SPForSeed<SpacePoint>*& /*p2*/,
+                  SPForSeed<SpacePoint>*& /*p3*/, float /*z*/, float /*q*/);
 
-  void newOneSeedWithCurvaturesComparison(SPForSeed<SpacePoint>*&,
-                                          SPForSeed<SpacePoint>*&, float);
+  void newOneSeedWithCurvaturesComparison(SPForSeed<SpacePoint>*& /*SPb*/,
+                                          SPForSeed<SpacePoint>*& /*SP0*/,
+                                          float /*Zob*/);
 
   void fillSeeds();
   void fillLists();
   void erase();
   void production3Sp();
-  void production3Sp(typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-                     typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-                     typename std::list<SPForSeed<SpacePoint>*>::iterator*,
-                     typename std::list<SPForSeed<SpacePoint>*>::iterator*, int,
-                     int, int&);
+  void production3Sp(
+      typename std::list<SPForSeed<SpacePoint>*>::iterator* /*rb*/,
+      typename std::list<SPForSeed<SpacePoint>*>::iterator* /*rbe*/,
+      typename std::list<SPForSeed<SpacePoint>*>::iterator* /*rt*/,
+      typename std::list<SPForSeed<SpacePoint>*>::iterator* /*rte*/, int /*NB*/,
+      int /*NT*/, int& /*nseed*/);
 
   void findNext();
-  bool isZCompatible(float&);
-  void convertToBeamFrameWork(SpacePoint* const&, float*);
+  bool isZCompatible(float& /*Zv*/);
+  void convertToBeamFrameWork(SpacePoint* const& /*sp*/, float* /*r*/);
 };
 
 ///////////////////////////////////////////////////////////////////
@@ -234,7 +238,7 @@ inline const Seed<SpacePoint>* AtlasSeedFinder<SpacePoint>::next() {
     if (i_seed == i_seede) {
       findNext();
       if (i_seed == i_seede) {
-        return 0;
+        return nullptr;
       }
     }
     ++i_seed;
@@ -258,7 +262,7 @@ inline bool AtlasSeedFinder<SpacePoint>::isZCompatible(float& Zv) {
 template <typename SpacePoint>
 inline SPForSeed<SpacePoint>* AtlasSeedFinder<SpacePoint>::newSpacePoint(
     SpacePoint* const& sp) {
-  SPForSeed<SpacePoint>* sps;
+  SPForSeed<SpacePoint>* sps = nullptr;
 
   float r[3];
   convertToBeamFrameWork(sp, r);
@@ -269,7 +273,7 @@ inline SPForSeed<SpacePoint>* AtlasSeedFinder<SpacePoint>::newSpacePoint(
     float x = r[0] * m_dzdrmin;
     float y = r[1] * m_dzdrmin;
     if ((z * z) < (x * x + y * y)) {
-      return 0;
+      return nullptr;
     }
   }
 

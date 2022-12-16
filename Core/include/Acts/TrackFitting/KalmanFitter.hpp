@@ -127,7 +127,7 @@ struct KalmanFitterOptions {
       : geoContext(gctx),
         magFieldContext(mctx),
         calibrationContext(cctx),
-        extensions(std::move(extensions_)),
+        extensions(extensions_),
         propagatorPlainOptions(pOptions),
         referenceSurface(rSurface),
         multipleScattering(mScattering),
@@ -284,9 +284,7 @@ class KalmanFitter {
     const Surface* targetSurface = nullptr;
 
     /// Allows retrieving measurements for a surface
-    const std::map<GeometryIdentifier,
-                   std::reference_wrapper<const SourceLink>>*
-        inputMeasurements = nullptr;
+    const std::map<GeometryIdentifier, SourceLink>* inputMeasurements = nullptr;
 
     /// Whether to consider multiple scattering.
     bool multipleScattering = true;
@@ -1017,12 +1015,11 @@ class KalmanFitter {
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     // for (const auto& sl : sourcelinks) {
     for (; it != end; ++it) {
-      const SourceLink& sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), sl);
+      SourceLink sl = *it;
+      inputMeasurements.emplace(sl.geometryId(), std::move(sl));
     }
 
     // Create the ActionList and AbortList
@@ -1049,9 +1046,8 @@ class KalmanFitter {
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
-    kalmanActor.freeToBoundCorrection =
-        std::move(kfOptions.freeToBoundCorrection);
-    kalmanActor.extensions = std::move(kfOptions.extensions);
+    kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
+    kalmanActor.extensions = kfOptions.extensions;
 
     typename propagator_t::template action_list_t_result_t<
         CurvilinearTrackParameters, Actors>
@@ -1130,10 +1126,9 @@ class KalmanFitter {
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
-        inputMeasurements;
+    std::map<GeometryIdentifier, SourceLink> inputMeasurements;
     for (; it != end; ++it) {
-      const SourceLink& sl = *it;
+      SourceLink sl = *it;
       inputMeasurements.emplace(sl.geometryId(), sl);
     }
 
@@ -1161,7 +1156,7 @@ class KalmanFitter {
     kalmanActor.reversedFiltering = kfOptions.reversedFiltering;
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
-    kalmanActor.extensions = std::move(kfOptions.extensions);
+    kalmanActor.extensions = kfOptions.extensions;
 
     // Set the surface sequence
     auto& dInitializer =

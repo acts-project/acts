@@ -101,7 +101,7 @@ Acts::MaterialSlab Acts::detail::combineSlabs(const MaterialSlab& slab1,
 
   double thicknessWeight1 = slab1.thickness() / thickness;
   double thicknessWeight2 = slab2.thickness() / thickness;
-  float z;
+  float z = 0;
   if (mat1.Z() != 0 && mat2.Z() != 0) {
     z = exp(thicknessWeight1 * log(mat1.Z()) +
             thicknessWeight2 * log(mat2.Z()));

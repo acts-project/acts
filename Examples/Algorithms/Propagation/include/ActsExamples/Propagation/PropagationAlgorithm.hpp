@@ -119,15 +119,15 @@ class PropagationAlgorithm : public BareAlgorithm {
   };
 
   /// Constructor
-  /// @param [in] cnf is the configuration struct
+  /// @param [in] config is the configuration struct
   /// @param [in] loglevel is the loggin level
-  PropagationAlgorithm(const Config& cnf, Acts::Logging::Level level);
+  PropagationAlgorithm(const Config& config, Acts::Logging::Level level);
 
   /// Framework execute method
   /// @param [in] the algorithm context for event consistency
   /// @return is a process code indicating succes or not
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }

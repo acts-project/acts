@@ -19,8 +19,8 @@
 namespace {
 std::pair<std::vector<float>, std::vector<uint32_t>> readHistogram(
     const std::string&& binBordersName, const std::string&& binContentsName) {
-  std::vector<float>* binBorders;
-  std::vector<uint32_t>* binContents;
+  std::vector<float>* binBorders = nullptr;
+  std::vector<uint32_t>* binContents = nullptr;
   // Get the decomposed histogram
   binBorders = (std::vector<float>*)gDirectory->Get(binBordersName.c_str());
   binContents =
@@ -33,7 +33,7 @@ std::pair<std::vector<float>, std::vector<uint32_t>> readHistogram(
 }
 
 Acts::ActsDynamicVector readVector(const std::string&& vectorName) {
-  std::vector<float>* vector;
+  std::vector<float>* vector = nullptr;
   // Get the vector
   vector = (std::vector<float>*)gDirectory->Get(vectorName.c_str());
   // Return the vector if available

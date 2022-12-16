@@ -8,8 +8,8 @@ add_executable(
 target_link_libraries(
   ActsExampleDigitizationConfigGeneric
   PRIVATE
+    ActsExamplesCommon
     ActsExamplesDigitizationCommon
-    ActsExamplesDetectorGeneric
 )
 
 install(
@@ -23,8 +23,8 @@ add_executable(
 target_link_libraries(
   ActsExampleDigitizationGeneric
   PRIVATE
+    ActsExamplesCommon
     ActsExamplesDigitizationCommon
-    ActsExamplesDetectorGeneric
 )
 
 install(
@@ -39,8 +39,8 @@ add_executable(
 target_link_libraries(
   ActsExampleDigitizationConfigTGeo
   PRIVATE
+    ActsExamplesCommon
     ActsExamplesDigitizationCommon
-    ActsExamplesDetectorTGeo
 )
 
 install(
@@ -54,8 +54,8 @@ add_executable(
 target_link_libraries(
   ActsExampleDigitizationTGeo
   PRIVATE
+    ActsExamplesCommon
     ActsExamplesDigitizationCommon
-    ActsExamplesDetectorTGeo
 )
 
 install(

@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/ThrowAssert.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <cmath>
@@ -20,11 +21,9 @@
 ActsExamples::TrackSelector::TrackSelector(const Config& config,
                                            Acts::Logging::Level level)
     : BareAlgorithm("TrackSelector", level), m_cfg(config) {
-  if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing input track parameters collection");
-  }
-  if (m_cfg.outputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing output track parameters collection");
+  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
+    throw std::invalid_argument(
+        "Exactly one of track parameters or trajectories input must be set");
   }
 }
 
@@ -55,49 +54,65 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
                   m_cfg.timeMax);
   };
 
-  // prepare input and output containers
-  const auto& inputTrackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
-  std::optional<std::vector<std::pair<size_t, size_t>>>
-      inputTrackParametersTips;
-  if (!m_cfg.inputTrackParametersTips.empty()) {
-    inputTrackParametersTips =
-        ctx.eventStore.get<std::vector<std::pair<size_t, size_t>>>(
-            m_cfg.inputTrackParametersTips);
-    throw_assert(
-        inputTrackParameters.size() == inputTrackParametersTips->size(),
-        "Track parameters tips count does not match track parameters count");
-  }
+  if (!m_cfg.inputTrackParameters.empty()) {
+    const auto& inputTrackParameters =
+        ctx.eventStore.get<TrackParametersContainer>(
+            m_cfg.inputTrackParameters);
+    TrackParametersContainer outputTrackParameters;
+    outputTrackParameters.reserve(inputTrackParameters.size());
 
-  TrackParametersContainer outputTrackParameters;
-  std::vector<std::pair<size_t, size_t>> outputTrackParametersTips;
-  outputTrackParameters.reserve(inputTrackParameters.size());
-  if (inputTrackParametersTips) {
-    outputTrackParametersTips.reserve(inputTrackParametersTips->size());
-  }
-
-  // copy selected tracks and record initial track index
-  for (uint32_t i = 0; i < inputTrackParameters.size(); ++i) {
-    const auto& trk = inputTrackParameters[i];
-    if (isValidTrack(trk)) {
-      outputTrackParameters.push_back(trk);
-      if (inputTrackParametersTips) {
-        outputTrackParametersTips.push_back((*inputTrackParametersTips)[i]);
+    // copy selected tracks and record initial track index
+    for (uint32_t i = 0; i < inputTrackParameters.size(); ++i) {
+      const auto& trk = inputTrackParameters[i];
+      if (isValidTrack(trk)) {
+        outputTrackParameters.push_back(trk);
       }
     }
-  }
-  outputTrackParameters.shrink_to_fit();
-  outputTrackParametersTips.shrink_to_fit();
+    outputTrackParameters.shrink_to_fit();
 
-  ACTS_DEBUG("event " << ctx.eventNumber << " selected "
-                      << outputTrackParameters.size() << " from "
-                      << inputTrackParameters.size() << " tracks");
+    ACTS_DEBUG("event " << ctx.eventNumber << " selected "
+                        << outputTrackParameters.size() << " from "
+                        << inputTrackParameters.size()
+                        << " tracks in track parameters");
 
-  ctx.eventStore.add(m_cfg.outputTrackParameters,
-                     std::move(outputTrackParameters));
-  if (inputTrackParametersTips) {
-    ctx.eventStore.add(m_cfg.outputTrackParametersTips,
-                       std::move(outputTrackParametersTips));
+    ctx.eventStore.add(m_cfg.outputTrackParameters,
+                       std::move(outputTrackParameters));
   }
+
+  if (!m_cfg.inputTrajectories.empty()) {
+    const auto& inputTrajectories =
+        ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+    TrajectoriesContainer outputTrajectories;
+    outputTrajectories.reserve(inputTrajectories.size());
+
+    std::size_t inputCount = 0;
+    std::size_t outputCount = 0;
+    for (const auto& trajectories : inputTrajectories) {
+      std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
+      Trajectories::IndexedParameters parameters;
+
+      for (auto tip : trajectories.tips()) {
+        if (!trajectories.hasTrackParameters(tip)) {
+          continue;
+        }
+        ++inputCount;
+        if (!isValidTrack(trajectories.trackParameters(tip))) {
+          continue;
+        }
+        tips.push_back(tip);
+        parameters.emplace(tip, trajectories.trackParameters(tip));
+        ++outputCount;
+      }
+
+      outputTrajectories.emplace_back(trajectories.multiTrajectoryPtr(), tips,
+                                      parameters);
+    }
+
+    ACTS_DEBUG("event " << ctx.eventNumber << " selected " << outputCount
+                        << " from " << inputCount << " tracks in trajectories");
+
+    ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));
+  }
+
   return ProcessCode::SUCCESS;
 }

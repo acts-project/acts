@@ -68,7 +68,7 @@ void setFailureThreshold(Level level) {
 
 #else
 
-void setFailureThreshold(Level) {
+void setFailureThreshold(Level /*lvl*/) {
   throw std::logic_error{
       "Compile-time log failure threshold defined (ACTS_LOG_FAILURE_THRESHOLD "
       "is set or ACTS_ENABLE_LOG_FAILURE_THRESHOLD is OFF), unable to "
@@ -85,6 +85,12 @@ class NeverFilterPolicy final : public OutputFilterPolicy {
   ~NeverFilterPolicy() override = default;
 
   bool doPrint(const Level& /*lvl*/) const override { return false; }
+
+  Level level() const override { return Level::MAX; }
+
+  std::unique_ptr<OutputFilterPolicy> clone(Level /*level*/) const override {
+    return std::make_unique<NeverFilterPolicy>();
+  }
 };
 
 std::unique_ptr<const Logger> makeDummyLogger() {

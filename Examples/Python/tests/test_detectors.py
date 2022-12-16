@@ -32,6 +32,22 @@ def test_generic_geometry():
     assert count_surfaces(geo) == 18728
 
 
+def test_telescope_geometry():
+    n_surfaces = 10
+
+    detector, geo, contextDecorators = acts.examples.TelescopeDetector.create(
+        bounds=[100, 100],
+        positions=[10 * i for i in range(n_surfaces)],
+        binValue=0,
+    )
+
+    assert detector is not None
+    assert geo is not None
+    assert contextDecorators is not None
+
+    assert count_surfaces(geo) == n_surfaces
+
+
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep is not set up")
 def test_odd():
     config = acts.MaterialMapJsonConverter.Config()
