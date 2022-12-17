@@ -880,16 +880,6 @@ class TrackStateProxy {
     return component<IndexType, hashString("measdim")>();
   }
 
-  /// Return reference to the (dynamic) number of dimensions stored for this
-  /// measurement.
-  /// @note The underlying storage is overallocated to MeasurementSizeMax
-  /// regardless of this value
-  /// @return The number of dimensions
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexType& calibratedSize() {
-    return component<IndexType, hashString("measdim")>();
-  }
-
   /// Overwrite existing measurement data.
   ///
   /// @tparam kMeasurementSize Size of the calibrated measurement
@@ -906,8 +896,6 @@ class TrackStateProxy {
       const Acts::Measurement<BoundIndices, kMeasurementSize>& meas) {
     static_assert(kMeasurementSize <= M,
                   "Input measurement must be within the allowed size");
-
-    calibratedSize() = kMeasurementSize;
 
     assert(has<hashString("calibratedSourceLink")>());
 
@@ -928,7 +916,6 @@ class TrackStateProxy {
 
   void allocateCalibrated(size_t measdim) {
     m_traj->allocateCalibrated(m_istate, measdim);
-    calibratedSize() = measdim;
   }
 
   /// Getter/setter for chi2 value associated with the track state

@@ -68,9 +68,15 @@ struct SeedFilterConfig {
   // compatible SPs
   bool useDeltaRorTopRadius = false;
 
+  bool isInInternalUnits = false;
   SeedFilterConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for SeedFilterConfig");
+    }
     using namespace Acts::UnitLiterals;
     SeedFilterConfig config = *this;
+    config.isInInternalUnits = true;
     config.deltaRMin /= 1_mm;
     config.deltaInvHelixDiameter /= 1. / 1_mm;
 
