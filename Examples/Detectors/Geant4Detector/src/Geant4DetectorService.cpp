@@ -42,10 +42,10 @@ void ActsExamples::Geant4::Geant4DetectorService::startRun() {
 
   g4DetElementOptions.sensitiveSelector =
       Acts::Geant4PhysicalVolumeSelectors::generateNameSelector(
-          m_cfg.sensitiveSelectionName);
+          m_cfg.sensitiveSelections);
   g4DetElementOptions.passiveSelector =
       Acts::Geant4PhysicalVolumeSelectors::generateNameSelector(
-          m_cfg.passiveSelectionName);
+          m_cfg.passiveSelections);
 
   g4DetElementFactory.construct(g4DetElementCache, g4ToWorld, *g4WorldVolume,
                                 g4DetElementOptions);

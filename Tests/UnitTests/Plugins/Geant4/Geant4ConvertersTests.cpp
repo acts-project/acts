@@ -18,12 +18,9 @@
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include "G4Box.hh"
-#include "G4LogicalVolume.hh"
-#include "G4RotationMatrix.hh"
 #include "G4ThreeVector.hh"
 #include "G4Trd.hh"
 #include "G4Tubs.hh"
-#include "G4VPhysicalVolume.hh"
 
 Acts::GeometryContext tContext;
 

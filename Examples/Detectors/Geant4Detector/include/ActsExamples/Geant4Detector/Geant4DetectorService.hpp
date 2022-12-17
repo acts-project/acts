@@ -43,9 +43,9 @@ class Geant4DetectorService final : public BareService {
     /// Indicate if the tracking geometry instance should be built
     bool buildTrackingGeometry = true;
     /// Name for sensitive seleciton
-    std::string sensitiveSelectionName = "sens_vol";
+    std::vector<std::string> sensitiveSelections = {"sens_vol"};
     /// Name for passive selection
-    std::string passiveSelectionName = "pass_vol";
+    std::vector<std::string> passiveSelections = {"pass_vol"};
     /// Logging level of the master tool
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
     /// Logging level of the child tools
