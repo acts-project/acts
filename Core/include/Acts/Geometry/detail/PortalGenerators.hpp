@@ -13,6 +13,7 @@
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Geometry/detail/DetectorVolumeUpdators.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <exception>

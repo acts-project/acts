@@ -53,6 +53,9 @@ BOOST_AUTO_TEST_CASE(ExtentTest) {
   CHECK_CLOSE_ABS(gExt.min(binPhi), phiMin, 1e-6);
   CHECK_CLOSE_ABS(gExt.max(binPhi), phiMax, 1e-6);
 
+  // Check the span method
+  CHECK_CLOSE_ABS(gExt.span(binX), 3_mm, 1e-6);
+
   // Call with histogram filling
   Extent gExtHist;
   for (const auto& v : vertices) {

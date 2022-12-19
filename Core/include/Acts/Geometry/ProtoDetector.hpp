@@ -12,10 +12,23 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 
+#include <functional>
 #include <string>
 
 namespace Acts {
+
+struct ProtoVolume;
+
+namespace Experimental {
+
+struct DetectorShell;
+
+/// The detector builder function
+using DetectorVolumeBuilder =
+    std::function<void(DetectorShell& dShell, const GeometryContext&)>;
+}  // namespace Experimental
 
 /// A proto volume description being used to define an overall
 /// structure of either a TrackingVolume or Experimental::DetectorVolume
@@ -35,6 +48,9 @@ struct ProtoVolume {
   std::vector<ProtoVolume> constituentVolumes = {};
   /// The constituent binning if this a container
   std::vector<BinningData> constituentBinning = {};
+
+  /// An attached Detector volume Builder
+  Experimental::DetectorVolumeBuilder dvBuilder;
 
   /// Define an operator==
   ///

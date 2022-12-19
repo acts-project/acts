@@ -17,9 +17,11 @@
 
 namespace Acts {
 
+/// @brief  An interface that allows to create
+/// Delegates that could be casted into their type if needed
 class IGeant4PhysicalVolumeSelector {
  public:
-  virtual ~IGeant4PhysicalVolumeSelector(){};
+  virtual ~IGeant4PhysicalVolumeSelector() = default;
 };
 
 /// The selector delegate for G4VPhysical volumes
