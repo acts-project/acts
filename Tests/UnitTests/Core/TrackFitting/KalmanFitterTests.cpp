@@ -79,8 +79,7 @@ auto makeDefaultKalmanFitterOptions() {
       .connect<&KalmanSmoother::operator()<VectorMultiTrajectory>>(&kfSmoother);
 
   return KalmanFitterOptions(tester.geoCtx, tester.magCtx, tester.calCtx,
-                             extensions, LoggerWrapper{*kfLogger},
-                             PropagatorPlainOptions());
+                             extensions, PropagatorPlainOptions());
 }
 
 }  // namespace
