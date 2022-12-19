@@ -12,8 +12,8 @@
 #include "Acts/Geometry/GeometryDelegates.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
+#include <set>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace Acts {
@@ -88,11 +88,11 @@ class PassiveCounter {
 class DuplicateIdChecker {
  public:
   // The already 'seen' geometry Ids
-  std::unordered_map<GeometryIdentifier, bool> m_geometryIdMap;
+  std::set<GeometryIdentifier> m_geometryIdMap;
   // The already 'seen' volumes
-  std::unordered_map<const DetectorVolume*, bool> m_processedVolumes;
+  std::set<const DetectorVolume*> m_processedVolumes;
   // The already 'seen' portals
-  std::unordered_map<const Portal*, bool> m_processedPortals;
+  std::set<const Portal*> m_processedPortals;
 
   /// @brief Checks the geometry ids of all objects and fills
   /// them into a map, throws an exception if a geometry id is
