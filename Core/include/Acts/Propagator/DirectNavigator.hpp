@@ -38,8 +38,9 @@ class DirectNavigator {
   using SurfaceSequence = std::vector<const Surface*>;
   using SurfaceIter = std::vector<const Surface*>::iterator;
 
-  /// Defaulted Constructed
-  DirectNavigator() = default;
+  DirectNavigator(std::unique_ptr<const Logger> _logger =
+                      getDefaultLogger("DirectNavigator", Logging::INFO))
+      : m_logger{std::move(_logger)} {}
 
   /// The tolerance used to define "surface reached"
   double tolerance = s_onSurfaceTolerance;
@@ -69,7 +70,7 @@ class DirectNavigator {
     /// @param r the result of this Actor
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& /*unused*/,
-                    result_type& r) const {
+                    result_type& r, const Logger& /*logger*/) const {
       // Only act once
       if (not r.initialized) {
         // Initialize the surface sequence
@@ -81,8 +82,8 @@ class DirectNavigator {
 
     /// Actor operator call - resultless, unused
     template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& /*unused*/,
-                    const stepper_t& /*unused*/) const {}
+    void operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
+                    const Logger& /*logger*/) const {}
   };
 
   /// Nested State struct
@@ -150,7 +151,6 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void status(propagator_state_t& state, const stepper_t& stepper) const {
-    const auto& logger = state.options.logger;
     // Screen output
     ACTS_VERBOSE("Entering navigator::status.");
 
@@ -196,7 +196,6 @@ class DirectNavigator {
   /// @param [in] stepper Stepper in use
   template <typename propagator_state_t, typename stepper_t>
   void target(propagator_state_t& state, const stepper_t& stepper) const {
-    const auto& logger = state.options.logger;
     // Screen output
     ACTS_VERBOSE("Entering navigator::target.");
 
@@ -233,6 +232,11 @@ class DirectNavigator {
       }
     }
   }
+
+ private:
+  const Logger& logger() const { return *m_logger; }
+
+  std::unique_ptr<const Logger> m_logger;
 };
 
 }  // namespace Acts

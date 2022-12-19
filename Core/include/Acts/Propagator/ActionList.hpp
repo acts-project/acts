@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Propagator/detail/action_list_implementation.hpp"
-#include "Acts/Propagator/detail/action_signature_check.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
@@ -81,17 +80,12 @@ struct ActionList : public detail::Extendable<actors_t...> {
   /// @param [in,out] state This is the propagator state object
   /// @param [in] stepper The stepper in use
   /// @param [in,out] result This is the result object from actions
-  template <typename propagator_state_t, typename stepper_t, typename result_t>
+  template <typename propagator_state_t, typename stepper_t, typename result_t,
+            typename... Args>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_t& result) const {
-    // clang-format off
-    static_assert(detail::all_of_v<detail::action_signature_check_v<actors_t,
-                                      propagator_state_t, stepper_t>...>,
-                  "not all actors support the method signature");
-    // clang-format on
-
+                  result_t& result, Args&&... args) const {
     using impl = detail::action_list_impl<actors_t...>;
-    impl::action(tuple(), state, stepper, result);
+    impl::action(tuple(), state, stepper, result, std::forward<Args>(args)...);
   }
 };
 

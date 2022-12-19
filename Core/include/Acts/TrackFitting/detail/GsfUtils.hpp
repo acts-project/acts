@@ -75,8 +75,9 @@ class ScopedGsfInfoPrinterAndChecker {
   const stepper_t &m_stepper;
   double m_p_initial;
   std::size_t m_missedCount;
+  const Logger &m_logger;
 
-  const auto &logger() const { return m_state.options.logger(); }
+  const Logger &logger() const { return m_logger; }
 
   void print_component_stats() const {
     std::size_t i = 0;
@@ -112,11 +113,12 @@ class ScopedGsfInfoPrinterAndChecker {
  public:
   ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
                                  const stepper_t &stepper,
-                                 std::size_t missedCount)
+                                 std::size_t missedCount, const Logger &_logger)
       : m_state(state),
         m_stepper(stepper),
         m_p_initial(stepper.momentum(state.stepping)),
-        m_missedCount(missedCount) {
+        m_missedCount(missedCount),
+        m_logger{_logger} {
     // Some initial printing
     checks("start");
     ACTS_VERBOSE("Gsf step "
