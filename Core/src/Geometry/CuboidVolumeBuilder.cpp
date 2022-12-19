@@ -95,6 +95,8 @@ std::shared_ptr<const Acts::Layer> Acts::CuboidVolumeBuilder::buildLayer(
   LayerCreator layerCreator(lCfg);
   ProtoLayer pl{gctx, cfg.surfaces};
   pl.envelope[binX] = cfg.envelopeX;
+  pl.envelope[binY] = cfg.envelopeY;
+  pl.envelope[binZ] = cfg.envelopeZ;
   return layerCreator.planeLayer(gctx, cfg.surfaces, cfg.binsY, cfg.binsZ,
                                  BinningValue::binX, pl, trafo);
 }
