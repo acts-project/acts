@@ -200,7 +200,7 @@ void Acts::GeometryView3D::drawDetectorVolume(
   // recurse if there are subvolumes, otherwise draw the portals
   auto subvolumes = volume.volumes();
   for (auto subvolume : subvolumes) {
-    if (subvolume->volumes().size() != 0) {
+    if (!subvolume->volumes().empty()) {
       drawDetectorVolume(helper, *subvolume, gctx, transform);
     } else {
       auto sub_portals = subvolume->portals();
