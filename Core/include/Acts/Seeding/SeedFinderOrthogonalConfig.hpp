@@ -112,8 +112,7 @@ struct SeedFinderOrthogonalConfig {
     // convert pT to p once theta angle is known
     config.highland = 13.6 * std::sqrt(radLengthPerSeed) *
                       (1 + 0.038 * std::log(radLengthPerSeed));
-    const float maxScatteringAngle = config.highland / minPt;
-    config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
+    config.maxScatteringAngle2 = std::pow(config.highland / config.minPt, 2);
     return config;
   }
 
