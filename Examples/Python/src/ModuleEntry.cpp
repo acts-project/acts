@@ -42,12 +42,12 @@ class PyIAlgorithm : public IAlgorithm {
     PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
   }
 
-  ProcessCode initialize() const override {
+  ProcessCode initialize() override {
     py::gil_scoped_acquire acquire{};
     PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, initialize);
   }
 
-  ProcessCode finalize() const override {
+  ProcessCode finalize() override {
     py::gil_scoped_acquire acquire{};
     PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, finalize);
   }

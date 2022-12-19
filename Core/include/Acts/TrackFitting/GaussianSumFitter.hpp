@@ -15,6 +15,7 @@
 #include "Acts/TrackFitting/GsfOptions.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "Acts/TrackFitting/detail/GsfActor.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <fstream>
 
@@ -57,15 +58,25 @@ namespace Experimental {
 template <typename propagator_t, typename bethe_heitler_approx_t,
           typename traj_t>
 struct GaussianSumFitter {
-  GaussianSumFitter(propagator_t&& propagator, bethe_heitler_approx_t&& bha)
+  GaussianSumFitter(propagator_t&& propagator, bethe_heitler_approx_t&& bha,
+                    std::unique_ptr<const Logger> _logger =
+                        getDefaultLogger("GSF", Logging::INFO))
       : m_propagator(std::move(propagator)),
-        m_betheHeitlerApproximation(std::move(bha)) {}
+        m_betheHeitlerApproximation(std::move(bha)),
+        m_logger{std::move(_logger)},
+        m_actorLogger(m_logger->cloneWithSuffix("Actor")) {}
 
   /// The propagator instance used by the fit function
   propagator_t m_propagator;
 
   /// The fitter holds the instance of the bethe heitler approx
   bethe_heitler_approx_t m_betheHeitlerApproximation;
+
+  /// The logger
+  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_actorLogger;
+
+  const Logger& logger() const { return *m_logger; }
 
   /// The navigator type
   using GsfNavigator = typename propagator_t::Navigator;
@@ -85,13 +96,12 @@ struct GaussianSumFitter {
         std::is_same_v<DirectNavigator, typename propagator_t::Navigator>);
 
     // Initialize the forward propagation with the DirectNavigator
-    auto fwdPropInitializer = [&sSequence, this](const auto& opts,
-                                                 const auto& logger) {
+    auto fwdPropInitializer = [&sSequence, this](const auto& opts) {
       using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
-      PropagatorOptions<Actors, Aborters> propOptions(
-          opts.geoContext, opts.magFieldContext, logger);
+      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
+                                                      opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -104,8 +114,7 @@ struct GaussianSumFitter {
     };
 
     // Initialize the backward propagation with the DirectNavigator
-    auto bwdPropInitializer = [&sSequence, this](const auto& opts,
-                                                 const auto& logger) {
+    auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
       using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
@@ -113,8 +122,8 @@ struct GaussianSumFitter {
           std::next(sSequence.rbegin()), sSequence.rend());
       backwardSequence.push_back(opts.referenceSurface);
 
-      PropagatorOptions<Actors, Aborters> propOptions(
-          opts.geoContext, opts.magFieldContext, logger);
+      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
+                                                      opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -144,12 +153,12 @@ struct GaussianSumFitter {
     static_assert(std::is_same_v<Navigator, typename propagator_t::Navigator>);
 
     // Initialize the forward propagation with the DirectNavigator
-    auto fwdPropInitializer = [this](const auto& opts, const auto& logger) {
+    auto fwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
-      PropagatorOptions<Actors, Aborters> propOptions(
-          opts.geoContext, opts.magFieldContext, logger);
+      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
+                                                      opts.magFieldContext);
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
       propOptions.actionList.template get<GsfActor>()
           .m_cfg.bethe_heitler_approx = &m_betheHeitlerApproximation;
@@ -158,12 +167,12 @@ struct GaussianSumFitter {
     };
 
     // Initialize the backward propagation with the DirectNavigator
-    auto bwdPropInitializer = [this](const auto& opts, const auto& logger) {
+    auto bwdPropInitializer = [this](const auto& opts) {
       using Actors = ActionList<GsfActor>;
       using Aborters = AbortList<EndOfWorldReached>;
 
-      PropagatorOptions<Actors, Aborters> propOptions(
-          opts.geoContext, opts.magFieldContext, logger);
+      PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
+                                                      opts.magFieldContext);
 
       propOptions.setPlainOptions(opts.propagatorPlainOptions);
 
@@ -198,9 +207,6 @@ struct GaussianSumFitter {
       }
       return error;
     };
-
-    // The logger
-    const auto& logger = options.logger;
 
     // Define directions based on input propagation direction. This way we can
     // refer to 'forward' and 'backward' regardless of the actual direction.
@@ -245,7 +251,7 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("+-----------------------------+");
 
     auto fwdResult = [&]() {
-      auto fwdPropOptions = fwdPropInitializer(options, logger);
+      auto fwdPropOptions = fwdPropInitializer(options);
 
       // Catch the actor and set the measurements
       auto& actor = fwdPropOptions.actionList.template get<GsfActor>();
@@ -253,6 +259,7 @@ struct GaussianSumFitter {
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.numberMeasurements = inputMeasurements.size();
       actor.m_cfg.inReversePass = false;
+      actor.m_cfg.logger = m_actorLogger.get();
 
       fwdPropOptions.direction = gsfForward;
 
@@ -312,12 +319,13 @@ struct GaussianSumFitter {
     ACTS_VERBOSE("+------------------------------+");
 
     auto bwdResult = [&]() {
-      auto bwdPropOptions = bwdPropInitializer(options, logger);
+      auto bwdPropOptions = bwdPropInitializer(options);
 
       auto& actor = bwdPropOptions.actionList.template get<GsfActor>();
       actor.setOptions(options);
       actor.m_cfg.inputMeasurements = inputMeasurements;
       actor.m_cfg.inReversePass = true;
+      actor.m_cfg.logger = m_actorLogger.get();
       actor.setOptions(options);
 
       bwdPropOptions.direction = gsfBackward;

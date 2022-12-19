@@ -72,8 +72,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       Surface::makeShared<PlaneSurface>(thePlane);
 
   // Create propagator options
-  auto logger = getDefaultLogger("IPEstProp", Logging::INFO);
-  propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
+  propagator_options_t pOptions(gctx, mctx);
   pOptions.direction = NavigationDirection::Backward;
 
   // Do the propagation to linPointPos
@@ -267,8 +266,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  auto logger = getDefaultLogger("IPEstProp", Logging::INFO);
-  propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
+  propagator_options_t pOptions(gctx, mctx);
   pOptions.direction = NavigationDirection::Backward;
 
   // Do the propagation to linPoint
