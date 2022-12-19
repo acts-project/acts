@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Utilities/Logger.hpp"
+
 namespace Acts {
 
 template <typename E, typename R, typename A>
