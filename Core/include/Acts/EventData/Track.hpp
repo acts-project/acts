@@ -25,6 +25,11 @@ namespace detail_tc {
 template <typename T, bool select>
 using ConstIf = std::conditional_t<select, const T, T>;
 
+/// Proxy class representing a single track
+/// @tparam track_container_t the container backend
+/// @tparam trajectory_t the track state container backend
+/// @tparam holder_t ownership management class for the backend
+/// @tparam read_only true if this track container is not mutable
 template <typename track_container_t, typename trajectory_t,
           template <typename> class holder_t, bool read_only = true>
 class TrackProxy {
@@ -60,9 +65,15 @@ class TrackProxy {
   friend ConstTrackProxy;
 #endif
 
+  /// Copy constructor from a mutable track proxy. This is always valid, either
+  /// mutable to mutable or mutable to const
+  /// @param other the other track state proxy
   TrackProxy(const MutableTrackProxy& other)
       : m_container{other.m_container}, m_index{other.m_index} {}
 
+  /// Copy assignment operator from mutable track proxy. This is always valid,
+  /// either mutable to mutable or mutable to const
+  /// @param other the other track state proxy
   TrackProxy& operator=(const MutableTrackProxy& other) {
     m_container = other.m_container;
     m_index = other.m_index;
@@ -126,15 +137,22 @@ class TrackProxy {
     return m_container->template component<T>(hashString(key), m_index);
   }
 
+  /// Get the tip index, i.e. the entry point into the track state container
+  /// @return the tip index by value
   IndexType tipIndex() const {
     return component<IndexType>(hashString("tipIndex"));
   }
 
+  /// Get a mutable reference to the tip index, i.e. the entry point into the
+  /// track container
+  /// @return mutable reference to the tip index
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexType& tipIndex() {
     return component<IndexType>(hashString("tipIndex"));
   }
 
+  /// Get the reference surface of the track (e.g. the perigee)
+  /// @return the reference surface
   const Surface& referenceSurface() const {
     return *component<std::shared_ptr<const Surface>,
                       hashString("referenceSurface")>();
@@ -142,6 +160,8 @@ class TrackProxy {
 
   // NOLINTBEGIN(performance-unnecessary-value-param)
   // looks like a false-positive. clang-tidy believes `srf` is not movable.
+  /// Set a new reference surface for this track
+  /// @param srf The surface to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   void setReferenceSurface(std::shared_ptr<const Surface> srf) {
     component<std::shared_ptr<const Surface>,
@@ -149,36 +169,61 @@ class TrackProxy {
   }
   // NOLINTEND(performance-unnecessary-value-param)
 
+  /// Return whether a reference surface is associated to this track
+  /// @return whether a surface exists or not
   bool hasReferenceSurface() const {
     return !!component<std::shared_ptr<const Surface>,
                        hashString("referenceSurface")>();
   }
 
+  /// Get the parameters of the track at the reference surface (e.g. perigee).
+  /// Const version
+  /// @return Proxy vector for the parameters
   ConstParameters parameters() const {
     return m_container->parameters(m_index);
   }
 
+  /// Get the covariance of the track at the reference surface (e.g. perigee).
+  /// Const version
+  /// @return Proxy matrix for the covariance
   ConstCovariance covariance() const {
     return m_container->covariance(m_index);
   }
 
+  /// Get the parameters of the track at the reference surface (e.g. perigee).
+  /// Mutable version
+  /// @return Proxy vector for the parameters
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   Parameters parameters() {
     return m_container->parameters(m_index);
   }
 
+  /// Get the covariance of the track at the reference surface (e.g. perigee).
+  /// Mutable version
+  /// @return Proxy matrix for the covariance
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   Covariance covariance() {
     return m_container->covariance(m_index);
   }
 
+  /// Get a range over the track states of this track. Return value is
+  /// compatible with range based for loop. Const version
+  /// @return Track state range to iterate over
+  auto trackStates() const { return m_container->trackStateRange(m_index); }
+
+  /// Get a range over the track states of this track. Return value is
+  /// compatible with range based for loop. Mutable version
+  /// @return Track state range to iterate over
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStates() {
     return m_container->trackStateRange(m_index);
   }
 
-  auto trackStates() const { return m_container->trackStateRange(m_index); }
-
+  /// Return the number of track states associated to this track
+  /// @note This is calculated by iterating over the track states which is
+  ///       somewhat expensive. Consider caching this value if you need It
+  ///       more than once.
+  /// @return The number of track states
   unsigned int nTrackStates() const {
     // @TODO: This should probably be cached, distance is expensive
     //        without random access
@@ -186,33 +231,53 @@ class TrackProxy {
     return std::distance(tsRange.begin(), tsRange.end());
   }
 
+  /// Return the number of measurements for the track. Const version
+  /// @return The number of measurements
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nMeasurements() {
     return component<unsigned int>(hashString("nMeasurements"));
   }
 
+  /// Return a mutable reference to the number of measurements for the track.
+  /// Mutable version
+  /// @return The number of measurements
   unsigned int nMeasurements() const {
     return component<unsigned int>(hashString("nMeasurements"));
   }
 
+  /// Return a mutable reference to the number of holes for the track.
+  /// Mutable version
+  /// @return The number of holes
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nHoles() {
     return component<unsigned int>(hashString("nHoles"));
   }
 
+  /// Return the number of measurements for the track. Const version
+  /// @return The number of measurements
   unsigned int nHoles() const {
     return component<unsigned int>(hashString("nHoles"));
   }
 
+  /// Return the index of this track in the track container
+  /// @note This is separate from the tip index
+  /// @return the track index
   IndexType index() const { return m_index; }
 
+  /// Return a reference to the track container backend, mutable version.
+  /// @return reference to the track container backend
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto& container() {
     return *m_container;
   }
 
+  /// Return a reference to the track container backend, const version.
+  /// @return reference to the track container backend
   const auto& container() const { return *m_container; }
 
+  /// Equality operator with another track proxy
+  /// Checks the container identity and the track index
+  /// @return True if the track proxies refer to the same track
   bool operator==(const TrackProxy& other) const {
     return &(*m_container) == &(*other.m_container) && m_index == other.m_index;
   }
@@ -229,6 +294,7 @@ class TrackProxy {
   IndexType m_index;
 };
 
+/// Internal holder type for referencing a backend without ownership
 template <typename T>
 struct RefHolder {
   T* ptr;
@@ -243,6 +309,7 @@ struct RefHolder {
   T* operator->() { return ptr; }
 };
 
+/// Internal holder type holding a backend container by value
 template <typename T>
 struct ValueHolder {
   T val;
@@ -263,6 +330,7 @@ struct is_same_template : std::false_type {};
 template <template <typename...> class T>
 struct is_same_template<T, T> : std::true_type {};
 
+/// Helper iterator to allow iteration over tracks via track proxies.
 template <typename container_t, typename proxy_t, bool ReadOnly>
 class TrackProxyIterator {
   using ProxyType = proxy_t;
@@ -378,6 +446,12 @@ class TrackProxyIterator {
 template <typename T>
 struct IsReadOnlyTrackContainer;
 
+/// Track container interface class. This type represents a collections of
+/// tracks. It uses a backend to store bothe the actual tracks and the
+/// associated track states.
+/// @tparam track_container_t the track container backend
+/// @tparam traj_t the track state container backend
+/// @tparam holder_t ownership management class for the backend
 template <typename track_container_t, typename traj_t,
           template <typename> class holder_t = detail_tc::RefHolder>
 class TrackContainer {
@@ -404,72 +478,116 @@ class TrackContainer {
   friend ConstTrackProxy;
 #endif
 
+  /// Constructor from a track container backend and a track state container
+  /// backend
+  /// @param container the track container backend
+  /// @param traj the track state container backend
   TrackContainer(holder_t<track_container_t> container, holder_t<traj_t> traj)
       : m_container{std::move(container)}, m_traj{std::move(traj)} {}
 
+  /// Constructor from references to a track container backend and to a track
+  /// state container backend
+  /// @note The track container will not assume ownership over the backends in this case.
+  ///       You need to ensure suitable lifetime
+  /// @param container the track container backend
+  /// @param traj the track state container backend
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<
                 detail_tc::is_same_template<H, detail_tc::RefHolder>::value>>
   TrackContainer(track_container_t& container, traj_t& traj)
       : m_container{&container}, m_traj{&traj} {}
 
+  /// Get a const track proxy for a track index
+  /// @param itrack the track index in the container
+  /// @return A const track proxy for the index
   ConstTrackProxy getTrack(IndexType itrack) const { return {*this, itrack}; }
 
+  /// Get a mutable track proxy for a track index
+  /// @param itrack the track index in the container
+  /// @return A mutable track proxy for the index
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   TrackProxy getTrack(IndexType itrack) {
     return {*this, itrack};
   }
 
+  /// Get the size of the track container
+  /// @return the sixe
   constexpr IndexType size() const { return m_container->size_impl(); }
 
+  /// Add a track to the container. Note this only creates the logical track and
+  /// allocates memory. You can combine this with @c getTrack to obtain a track proxy
+  /// @return the index to the newly added track
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexType addTrack() {
     return m_container->addTrack_impl();
   }
 
+  /// Add a dymanic column to the track container
+  /// @param key the name of the column to be added
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   constexpr void addColumn(const std::string& key) {
     m_container->template addColumn_impl<T>(key);
   }
 
+  /// Check if this track container has a specific dynamic column
+  /// @param key the key to check for
   constexpr bool hasColumn(const std::string& key) const {
     return m_container->hasColumn_impl(hashString(key));
   }
 
+  /// Check if a this track container has a specific dynamic column
+  /// @param key the key to check for
   constexpr bool hasColumn(HashedString key) const {
     return m_container->hasColumn_impl(key);
   }
 
+  /// Get a mutable reference to the track container backend
+  /// @return a mutable reference to the backend
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto& container() {
     return *m_container;
   }
 
+  /// Get a const reference to the track container backend
+  /// @return a const reference to the backend
   const auto& container() const { return *m_container; }
 
+  /// Get a mutable reference to the track state container backend
+  /// @return a mutable reference to the backend
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto& trackStateContainer() {
     return *m_traj;
   }
 
+  /// Get a const reference to the track state container backend
+  /// @return a const reference to the backend
   const auto& trackStateContainer() const { return *m_traj; }
 
+  /// Get a mutable iterator to the first track in the container
+  /// @return a mutable iterator to the first track
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto begin() {
     return detail_tc::TrackProxyIterator<std::decay_t<decltype(*this)>,
                                          TrackProxy, false>{*this, 0};
   }
+
+  /// Get a past-the-end iterator for this container
+  /// @return a past-the-end iterator
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto end() {
     return detail_tc::TrackProxyIterator<std::decay_t<decltype(*this)>,
                                          TrackProxy, false>{*this, size()};
   }
 
+  /// Get an const iterator to the first track in the container
+  /// @return a const iterator to the first track
   auto begin() const {
     return detail_tc::TrackProxyIterator<std::decay_t<decltype(*this)>,
                                          ConstTrackProxy, true>{*this, 0};
   }
 
+  /// Get a past-the-end iterator for this container
+  /// @return a past-the-end iterator
   auto end() const {
     return detail_tc::TrackProxyIterator<std::decay_t<decltype(*this)>,
                                          ConstTrackProxy, true>{*this, size()};
@@ -541,13 +659,24 @@ template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
     -> TrackContainer<track_container_t, traj_t, detail_tc::ValueHolder>;
 
+/// Utility class that eases accessing dynamic columns in track containers
+/// @tparam T the type of the value to access
+/// @tparam ReadOnly true if this is a const accessor
 template <typename T, bool ReadOnly>
 struct TrackAccessorBase {
   HashedString key;
 
+  /// Create the accessor from an already-hashed string key
+  /// @param _key the key
   TrackAccessorBase(HashedString _key) : key{_key} {}
+  /// Create the accessor from a string key
+  /// @param _key the key
   TrackAccessorBase(const std::string& _key) : key{hashString(_key)} {}
 
+  /// Access the stored key on the track given as an argument. Mutable version
+  /// @tparam track_proxy_t the type of the track proxy
+  /// @param track the track to access
+  /// @return mutable reference to the column behind the key
   template <typename track_proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
   T& operator()(track_proxy_t track) {
@@ -556,6 +685,10 @@ struct TrackAccessorBase {
     return track.template component<T>(key);
   }
 
+  /// Access the stored key on the track given as an argument. COnst version
+  /// @tparam track_proxy_t the type of the track proxy
+  /// @param track the track to access
+  /// @return const reference to the column behind the key
   template <typename track_proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<RO>>
   const T& operator()(track_proxy_t track) {
