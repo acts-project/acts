@@ -17,22 +17,15 @@ template <typename external_spacepoint_t>
 SeedFinder<external_spacepoint_t, Acts::Cuda>::SeedFinder(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::SeedFinderOptions& options)
-    : m_config(config.toInternalUnits()), m_options(options.toInternalUnits()) {
-  // calculation of scattering using the highland formula
-  // convert pT to p once theta angle is known
-  m_config.highland = 13.6 * std::sqrt(m_config.radLengthPerSeed) *
-                      (1 + 0.038 * std::log(m_config.radLengthPerSeed));
-  float maxScatteringAngle = m_config.highland / m_config.minPt;
-  m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-
-  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
-  // millimeter
-  // TODO: change using ACTS units
-  m_config.pTPerHelixRadius = 300. * m_options.bFieldInZ;
-  m_config.minHelixDiameter2 =
-      std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
-  m_config.pT2perRadius =
-      std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
+    : m_config(config), m_options(options) {
+  if (not m_config.isInInternalUnits)
+    throw std::runtime_error(
+        "SeedFinderConfig not in ACTS internal units in "
+        "Cuda/Seeding/SeedFinder");
+  if (not m_options.isInInternalUnits)
+    throw std::runtime_error(
+        "SeedFinderOptions not in ACTS internal units in "
+        "Cuda/Seeding/SeedFinder");
 }
 
 // CUDA seed finding
@@ -51,8 +44,8 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   CudaScalar<float> collisionRegionMax_cuda(&m_config.collisionRegionMax);
   CudaScalar<float> maxScatteringAngle2_cuda(&m_config.maxScatteringAngle2);
   CudaScalar<float> sigmaScattering_cuda(&m_config.sigmaScattering);
-  CudaScalar<float> minHelixDiameter2_cuda(&m_config.minHelixDiameter2);
-  CudaScalar<float> pT2perRadius_cuda(&m_config.pT2perRadius);
+  CudaScalar<float> minHelixDiameter2_cuda(&m_options.minHelixDiameter2);
+  CudaScalar<float> pT2perRadius_cuda(&m_options.pT2perRadius);
   CudaScalar<float> impactMax_cuda(&m_config.impactMax);
   const auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
   CudaScalar<float> deltaInvHelixDiameter_cuda(

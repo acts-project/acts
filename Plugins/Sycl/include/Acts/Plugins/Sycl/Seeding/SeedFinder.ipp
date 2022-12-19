@@ -30,23 +30,12 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
     const Acts::Sycl::DeviceExperimentCuts& cuts,
     Acts::Sycl::QueueWrapper wrappedQueue, vecmem::memory_resource& resource,
     vecmem::memory_resource* device_resource)
-    : m_config(config.toInternalUnits()),
-      m_options(options.toInternalUnits()),
+    : m_config(config),
+      m_options(options),
       m_deviceCuts(cuts),
       m_wrappedQueue(std::move(wrappedQueue)),
       m_resource(&resource),
       m_device_resource(device_resource) {
-  // init m_config
-  m_config.highland = 13.6f * std::sqrt(m_config.radLengthPerSeed) *
-                      (1 + 0.038f * std::log(m_config.radLengthPerSeed));
-  float maxScatteringAngle = m_config.highland / m_config.minPt;
-  m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-  m_config.pTPerHelixRadius = 300.f * m_options.bFieldInZ;
-  m_config.minHelixDiameter2 =
-      std::pow(m_config.minPt * 2 / m_config.pTPerHelixRadius, 2);
-  m_config.pT2perRadius =
-      std::pow(m_config.highland / m_config.pTPerHelixRadius, 2);
-
   auto seedFilterConfig = m_config.seedFilter->getSeedFilterConfig();
 
   // init m_deviceConfig
@@ -58,8 +47,8 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
       m_config.collisionRegionMax,
       m_config.maxScatteringAngle2,
       m_config.sigmaScattering,
-      m_config.minHelixDiameter2,
-      m_config.pT2perRadius,
+      m_options.minHelixDiameter2,
+      m_options.pT2perRadius,
       seedFilterConfig.deltaInvHelixDiameter,
       seedFilterConfig.impactWeightFactor,
       seedFilterConfig.deltaRMin,

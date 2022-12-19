@@ -92,6 +92,8 @@ int main(int argc, char* argv[]) {
   // with the kind of branching that is present in the CUDA code.)
   sfConfig.maxBlockSize = 256;
 
+  sfConfig = sfConfig.toInternalUnits().calculateDerivedQuantities();
+
   // Set up the spacepoint grid configuration.
   Acts::SpacePointGridConfig gridConfig;
   gridConfig.bFieldInZ = sfOptions.bFieldInZ;
@@ -101,6 +103,7 @@ int main(int argc, char* argv[]) {
   gridConfig.zMin = sfConfig.zMin;
   gridConfig.deltaRMax = sfConfig.deltaRMax;
   gridConfig.cotThetaMax = sfConfig.cotThetaMax;
+  gridConfig = gridConfig.toInternalUnits();
 
   // Covariance tool, sets covariances per spacepoint as required.
   auto ct = [=](const TestSpacePoint& sp, float, float,
@@ -149,12 +152,13 @@ int main(int argc, char* argv[]) {
   // Set up the seedFinder configuration objects.
   TestHostCuts hostCuts;
   Acts::SeedFilterConfig filterConfig;
+  filterConfig = filterConfig.toInternalUnits();
   sfConfig.seedFilter = std::make_unique<Acts::SeedFilter<TestSpacePoint>>(
       filterConfig, &hostCuts);
   auto deviceCuts = testDeviceCuts();
 
   // Set up the seedFinder objects.
-  Acts::SeedFinder<TestSpacePoint> seedFinder_host(sfConfig, sfOptions);
+  Acts::SeedFinder<TestSpacePoint> seedFinder_host(sfConfig);
   Acts::Cuda::SeedFinder<TestSpacePoint> seedFinder_device(
       sfConfig, sfOptions, filterConfig, deviceCuts, cmdl.cudaDevice);
 
@@ -176,7 +180,7 @@ int main(int argc, char* argv[]) {
          ++i, ++spGroup_itr) {
       auto& group = seeds_host.emplace_back();
       seedFinder_host.createSeedsForGroup(
-          state, std::back_inserter(group), spGroup_itr.bottom(),
+          sfOptions, state, std::back_inserter(group), spGroup_itr.bottom(),
           spGroup_itr.middle(), spGroup_itr.top(), rMiddleSPRange);
     }
   }
