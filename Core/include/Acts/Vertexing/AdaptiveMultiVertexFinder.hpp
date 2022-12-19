@@ -196,6 +196,8 @@ class AdaptiveMultiVertexFinder {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
+  AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
+
   /// @brief Function that performs the adaptive
   /// multi-vertex finding
   ///
