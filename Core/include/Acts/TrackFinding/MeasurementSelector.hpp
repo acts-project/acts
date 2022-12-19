@@ -78,7 +78,7 @@ class MeasurementSelector {
                        traj_t>::TrackStateProxy>::iterator>>
   select(std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>&
              candidates,
-         bool& isOutlier, LoggerWrapper logger) const {
+         bool& isOutlier, const Logger& logger) const {
     using Result =
         Result<std::pair<typename std::vector<typename MultiTrajectory<
                              traj_t>::TrackStateProxy>::iterator,
