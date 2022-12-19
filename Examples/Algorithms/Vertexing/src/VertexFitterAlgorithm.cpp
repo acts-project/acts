@@ -53,16 +53,16 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Setup the propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext,
-                                   Acts::LoggerWrapper{logger()});
+  auto propagator = std::make_shared<Propagator>(
+      stepper, Acts::detail::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
+  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(vertexFitterCfg);
   VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
   // Setup the linearizer
   Linearizer::Config ltConfig(m_cfg.bField, propagator);
-  Linearizer linearizer(ltConfig);
+  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");

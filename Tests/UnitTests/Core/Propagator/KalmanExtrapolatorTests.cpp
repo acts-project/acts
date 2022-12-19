@@ -63,7 +63,7 @@ struct StepWiseActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  result_type& result, const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
@@ -92,8 +92,8 @@ struct StepWiseActor {
   /// @param state is the mutable propagator state object
   /// @param stepper Stepper used by the propagation
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*state*/,
-                  const stepper_t& /*unused*/) const {}
+  void operator()(propagator_state_t& /*state*/, const stepper_t& /*unused*/,
+                  const Logger& /*logger*/) const {}
 };
 
 ///
@@ -134,11 +134,11 @@ BOOST_AUTO_TEST_CASE(kalman_extrapolator) {
 
   // Create some options
   using StepWiseOptions = PropagatorOptions<StepWiseActors, Aborters>;
-  StepWiseOptions swOptions(tgContext, mfContext, getDummyLogger());
+  StepWiseOptions swOptions(tgContext, mfContext);
 
   using PlainActors = ActionList<>;
   using PlainOptions = PropagatorOptions<PlainActors, Aborters>;
-  PlainOptions pOptions(tgContext, mfContext, getDummyLogger());
+  PlainOptions pOptions(tgContext, mfContext);
 
   // Run the standard propagation
   const auto& pResult = propagator.propagate(start, pOptions).value();

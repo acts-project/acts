@@ -667,16 +667,16 @@ class Logger {
         m_filterPolicy->clone(_level.value_or(level())));
   }
 
-  /// Make a copy of the logger, with a new level. Convenience function for if
-  /// you only want to change the level but not the name.
+  /// Make a copy of the logger, with a new level. Convenience function for
+  /// if you only want to change the level but not the name.
   /// @param _level the new level
   /// @return the new logger
   std::unique_ptr<Logger> clone(Logging::Level _level) const {
     return clone(std::nullopt, _level);
   }
 
-  /// Make a copy of the logger, with a suffix added to the end of it's name.
-  /// You can also optionally supply a new level
+  /// Make a copy of the logger, with a suffix added to the end of it's
+  /// name. You can also optionally supply a new level
   /// @param suffix the suffix to add to the end of the name
   /// @param _level the optional new level
   std::unique_ptr<Logger> cloneWithSuffix(
@@ -684,6 +684,10 @@ class Logger {
       std::optional<Logging::Level> _level = std::nullopt) const {
     return clone(name() + suffix, _level.value_or(level()));
   }
+
+  /// Helper function so a logger reference can be used as is with the logging
+  /// macros
+  const Logger& operator()() const { return *this; }
 
  private:
   /// policy object for printing debug messages
@@ -702,7 +706,7 @@ class LoggerWrapper {
   /// @brief Constructor ensuring a logger instance is given
   ///
   /// @param logger
-  explicit LoggerWrapper(const Logger& logger);
+  LoggerWrapper(const Logger& logger);
 
   /// Directly expose whether the contained logger will print at a level.
   ///
@@ -719,8 +723,8 @@ class LoggerWrapper {
   void log(const Logging::Level& lvl, const std::string& input) const;
 
   /// Call operator that returns the contained logger instance.
-  /// Enables using the logging macros `ACTS_*` when an instance of this class
-  /// is assigned to a local variable `logger`.
+  /// Enables using the logging macros `ACTS_*` when an instance of this
+  /// class is assigned to a local variable `logger`.
   /// @return Reference to the logger instance.
   const Logger& operator()() const {
     assert(m_logger != nullptr);
@@ -748,6 +752,6 @@ std::unique_ptr<const Logger> getDefaultLogger(
     const std::string& name, const Logging::Level& lvl,
     std::ostream* log_stream = &std::cout);
 
-LoggerWrapper getDummyLogger();
+const Logger& getDummyLogger();
 
 }  // namespace Acts
