@@ -142,7 +142,7 @@ struct PointwiseMaterialInteraction {
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
     // minimum momentum below which we will not push particles via material
     // update
-    static constexpr double minP = 50 * Acts::UnitConstants::MeV;
+    static constexpr double minP = 10 * Acts::UnitConstants::MeV;
     nextP = std::max(minP, nextP);
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextP, time);
