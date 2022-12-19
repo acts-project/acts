@@ -95,7 +95,7 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
   void computeSharedHits(const source_link_accessor_container_t& sourcelinks,
                          std::vector<TrackFinderResult>& result) const;
 
-  ActsExamples::ProcessCode finalize() const override;
+  ActsExamples::ProcessCode finalize() override;
 
  private:
   Config m_cfg;

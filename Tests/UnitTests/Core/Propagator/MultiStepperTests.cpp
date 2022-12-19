@@ -706,20 +706,24 @@ void propagator_instatiation_test_function() {
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});
-  PropagatorOptions options(geoCtx, magCtx, Acts::getDummyLogger());
+  PropagatorOptions options(geoCtx, magCtx);
 
   std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
       cmps(4, {0.25, BoundVector::Ones().eval(),
                BoundSymMatrix::Identity().eval()});
   MultiComponentBoundTrackParameters<SinglyCharged> pars(surface, cmps);
 
+  // This only checks that this compiles, not that it runs without errors
+  // @TODO: Add test that checks the target aborter works corretly
+
   // Instantiate with target
-  propagator.template propagate<decltype(pars), decltype(options),
-                                MultiStepperSurfaceReached>(pars, *surface,
-                                                            options);
+  using type_a =
+      decltype(propagator.template propagate<decltype(pars), decltype(options),
+                                             MultiStepperSurfaceReached>(
+          pars, *surface, options));
 
   // Instantiate without target
-  propagator.propagate(pars, options);
+  using tybe_b = decltype(propagator.propagate(pars, options));
 }
 
 BOOST_AUTO_TEST_CASE(propagator_instatiation_test) {
