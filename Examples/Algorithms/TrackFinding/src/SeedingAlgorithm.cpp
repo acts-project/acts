@@ -13,11 +13,14 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/FpeMonitor.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <csignal>
+#include <limits>
 #include <stdexcept>
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
@@ -228,12 +231,15 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
 
-  // variable middle SP radial region of interest
+  // safely clamp double to float
+  float up = Acts::clampValue<float>(
+      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
+
+  /// variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
       std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
           m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
-      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
-          m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
+      up);
 
   // run the seeding
   static thread_local SimSeedContainer seeds;
