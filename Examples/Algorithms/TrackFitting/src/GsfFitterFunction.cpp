@@ -129,7 +129,7 @@ ActsExamples::makeGsfFitterFunction(
 
   // Direct fitter
   Acts::DirectNavigator directNavigator;
-  DirectPropagator directPropagator(stepper, directNavigator);
+  DirectPropagator directPropagator(stepper, std::move(directNavigator));
   DirectFitter directTrackFitter(std::move(directPropagator),
                                  BetheHeitlerApprox(betheHeitlerApprox));
 

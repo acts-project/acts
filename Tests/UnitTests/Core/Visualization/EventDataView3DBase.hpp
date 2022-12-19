@@ -267,7 +267,6 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
           &kfSmoother);
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
-                                LoggerWrapper{*logger},
                                 PropagatorPlainOptions(), rSurface);
 
   // Fit the track

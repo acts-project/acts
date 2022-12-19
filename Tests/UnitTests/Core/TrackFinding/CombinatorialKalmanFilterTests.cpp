@@ -260,8 +260,7 @@ struct Fixture {
             TestSourceLinkAccessor::Iterator>{},  // leave the accessor empty,
                                                   // this will have to be set
                                                   // before running the CKF
-        getExtensions(), Acts::LoggerWrapper{*logger},
-        Acts::PropagatorPlainOptions());
+        getExtensions(), Acts::PropagatorPlainOptions());
   }
 };
 

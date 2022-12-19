@@ -116,11 +116,10 @@ std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
 
-LoggerWrapper getDummyLogger() {
+const Logger& getDummyLogger() {
   static const std::unique_ptr<const Logger> logger =
       Logging::makeDummyLogger();
-  static const LoggerWrapper loggerWrapper{*logger};
 
-  return loggerWrapper;
+  return *logger;
 }
 }  // namespace Acts

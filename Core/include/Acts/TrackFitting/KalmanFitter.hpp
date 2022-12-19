@@ -105,7 +105,6 @@ struct KalmanFitterOptions {
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
   /// @param extensions_ The KF extensions
-  /// @param logger_ The logger wrapper
   /// @param pOptions The plain propagator options
   /// @param rSurface The reference surface for the fit to be expressed at
   /// @param mScattering Whether to include multiple scattering
@@ -117,7 +116,6 @@ struct KalmanFitterOptions {
                       const MagneticFieldContext& mctx,
                       std::reference_wrapper<const CalibrationContext> cctx,
                       KalmanFitterExtensions<traj_t> extensions_,
-                      LoggerWrapper logger_,
                       const PropagatorPlainOptions& pOptions,
                       const Surface* rSurface = nullptr,
                       bool mScattering = true, bool eLoss = true,
@@ -134,8 +132,7 @@ struct KalmanFitterOptions {
         energyLoss(eLoss),
         reversedFiltering(rFiltering),
         reversedFilteringCovarianceScaling(rfScaling),
-        freeToBoundCorrection(freeToBoundCorrection_),
-        logger(logger_) {}
+        freeToBoundCorrection(freeToBoundCorrection_) {}
   /// Contexts are required and the options must not be default-constructible.
   KalmanFitterOptions() = delete;
 
@@ -173,9 +170,6 @@ struct KalmanFitterOptions {
   /// Whether to include non-linear correction during global to local
   /// transformation
   FreeToBoundCorrection freeToBoundCorrection;
-
-  /// Logger
-  LoggerWrapper logger;
 };
 
 template <typename traj_t>
@@ -259,12 +253,22 @@ class KalmanFitter {
       std::is_same<KalmanNavigator, DirectNavigator>::value;
 
  public:
-  KalmanFitter(propagator_t pPropagator)
-      : m_propagator(std::move(pPropagator)) {}
+  KalmanFitter(propagator_t pPropagator,
+               std::unique_ptr<const Logger> _logger =
+                   getDefaultLogger("KalmanFitter", Logging::INFO))
+      : m_propagator(std::move(pPropagator)),
+        m_logger{std::move(_logger)},
+        m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
 
  private:
   /// The propgator for the transport and material update
   propagator_t m_propagator;
+
+  /// The logger instance
+  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_actorLogger;
+
+  const Logger& logger() const { return *m_logger; }
 
   /// @brief Propagator Actor plugin for the KalmanFilter
   ///
@@ -305,6 +309,17 @@ class KalmanFitter {
     /// Input MultiTrajectory
     std::shared_ptr<MultiTrajectory<traj_t>> outputStates;
 
+    /// The logger instance
+    const Logger* actorLogger{nullptr};
+
+    /// Logger helper
+    const Logger& logger() const { return *actorLogger; }
+
+    KalmanFitterExtensions<traj_t> extensions;
+
+    /// The Surface beeing
+    SurfaceReached targetReached;
+
     /// @brief Kalman actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -315,9 +330,8 @@ class KalmanFitter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result) const {
+                    result_type& result, const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
-      const auto& logger = state.options.logger;
 
       if (result.finished) {
         return;
@@ -433,7 +447,7 @@ class KalmanFitter {
             // Remember the track fitting is done
             result.finished = true;
           }
-        } else if (targetReached(state, stepper, *targetSurface)) {
+        } else if (targetReached(state, stepper, *targetSurface, logger())) {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
           auto res = stepper.boundState(state.stepping, *targetSurface, true,
@@ -480,8 +494,6 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> reverse(propagator_state_t& state, stepper_t& stepper,
                          result_type& result) const {
-      const auto& logger = state.options.logger;
-
       // Check if there is a measurement on track
       if (result.lastMeasurementIndex == SIZE_MAX) {
         ACTS_ERROR("No point to reverse for a track without measurements.");
@@ -528,7 +540,8 @@ class KalmanFitter {
 
       // Update material effects for last measurement state in reversed
       // direction
-      materialInteractor(state.navigation.currentSurface, state, stepper);
+      materialInteractor(state.navigation.currentSurface, state, stepper,
+                         MaterialUpdateStage::FullUpdate);
 
       return Result<void>::success();
     }
@@ -545,7 +558,6 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> filter(const Surface* surface, propagator_state_t& state,
                         const stepper_t& stepper, result_type& result) const {
-      const auto& logger = state.options.logger;
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements->find(surface->geometryId());
       if (sourcelink_it != inputMeasurements->end()) {
@@ -564,7 +576,7 @@ class KalmanFitter {
         // point in performing globalToLocal correction)
         auto trackStateProxyRes = detail::kalmanHandleMeasurement(
             state, stepper, extensions, *surface, sourcelink_it->second,
-            *result.fittedStates, result.lastTrackIndex, false);
+            *result.fittedStates, result.lastTrackIndex, false, logger());
 
         if (!trackStateProxyRes.ok()) {
           return trackStateProxyRes.error();
@@ -610,7 +622,7 @@ class KalmanFitter {
             surface->surfaceMaterial() != nullptr) {
           auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
               state, stepper, *surface, *result.fittedStates,
-              result.lastTrackIndex, true, freeToBoundCorrection);
+              result.lastTrackIndex, true, logger(), freeToBoundCorrection);
 
           if (!trackStateProxyRes.ok()) {
             return trackStateProxyRes.error();
@@ -649,7 +661,6 @@ class KalmanFitter {
                                 propagator_state_t& state,
                                 const stepper_t& stepper,
                                 result_type& result) const {
-      const auto& logger = state.options.logger;
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements->find(surface->geometryId());
       if (sourcelink_it != inputMeasurements->end()) {
@@ -661,7 +672,8 @@ class KalmanFitter {
         // No reversed filtering for last measurement state, but still update
         // with material effects
         if (result.reversed and surface == state.navigation.startSurface) {
-          materialInteractor(surface, state, stepper);
+          materialInteractor(surface, state, stepper,
+                             MaterialUpdateStage::FullUpdate);
           return Result<void>::success();
         }
 
@@ -708,7 +720,7 @@ class KalmanFitter {
 
         // If the update is successful, set covariance and
         auto updateRes = extensions.updater(state.geoContext, trackStateProxy,
-                                            state.stepping.navDir, logger);
+                                            state.stepping.navDir, logger());
         if (!updateRes.ok()) {
           ACTS_ERROR("Backward update step failed: " << updateRes.error());
           return updateRes.error();
@@ -767,7 +779,8 @@ class KalmanFitter {
         stepper.setIdentityJacobian(state.stepping);
         if (surface->surfaceMaterial() != nullptr) {
           // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper);
+          materialInteractor(surface, state, stepper,
+                             MaterialUpdateStage::FullUpdate);
         }
       }
 
@@ -787,9 +800,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,
                             stepper_t& stepper,
-                            const MaterialUpdateStage& updateStage =
-                                MaterialUpdateStage::FullUpdate) const {
-      const auto& logger = state.options.logger;
+                            const MaterialUpdateStage& updateStage) const {
       // Indicator if having material
       bool hasMaterial = false;
 
@@ -841,7 +852,6 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t>
     Result<void> finalize(propagator_state_t& state, const stepper_t& stepper,
                           result_type& result) const {
-      const auto& logger = state.options.logger;
       // Remember you smoothed the track states
       result.smoothed = true;
 
@@ -875,7 +885,7 @@ class KalmanFitter {
       // Smooth the track states
       auto smoothRes =
           extensions.smoother(state.geoContext, *result.fittedStates,
-                              result.lastMeasurementIndex, logger);
+                              result.lastMeasurementIndex, logger());
       if (!smoothRes.ok()) {
         ACTS_ERROR("Smoothing step failed: " << smoothRes.error());
         return smoothRes.error();
@@ -959,11 +969,6 @@ class KalmanFitter {
 
       return Result<void>::success();
     }
-
-    KalmanFitterExtensions<traj_t> extensions;
-
-    /// The Surface beeing
-    SurfaceReached targetReached;
   };
 
   template <typename parameters_t>
@@ -975,7 +980,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const result_t& result) const {
+                    const result_t& result, const Logger& /*logger*/) const {
       if (!result.result.ok() or result.finished) {
         return true;
       }
@@ -1009,8 +1014,6 @@ class KalmanFitter {
            const KalmanFitterOptions<traj_t>& kfOptions,
            std::shared_ptr<traj_t> trajectory = {}) const
       -> std::enable_if_t<!_isdn, Result<KalmanFitterResult<traj_t>>> {
-    const auto& logger = kfOptions.logger;
-
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -1032,7 +1035,7 @@ class KalmanFitter {
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext, logger);
+        kfOptions.geoContext, kfOptions.magFieldContext);
 
     // // Set the trivial propagator options
     kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
@@ -1048,6 +1051,7 @@ class KalmanFitter {
         kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.freeToBoundCorrection = kfOptions.freeToBoundCorrection;
     kalmanActor.extensions = kfOptions.extensions;
+    kalmanActor.actorLogger = m_actorLogger.get();
 
     typename propagator_t::template action_list_t_result_t<
         CurvilinearTrackParameters, Actors>
@@ -1120,8 +1124,6 @@ class KalmanFitter {
            const std::vector<const Surface*>& sSequence,
            std::shared_ptr<traj_t> trajectory = {}) const
       -> std::enable_if_t<_isdn, Result<KalmanFitterResult<traj_t>>> {
-    const auto& logger = kfOptions.logger;
-
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -1142,7 +1144,7 @@ class KalmanFitter {
 
     // Create relevant options for the propagation options
     PropagatorOptions<Actors, Aborters> kalmanOptions(
-        kfOptions.geoContext, kfOptions.magFieldContext, logger);
+        kfOptions.geoContext, kfOptions.magFieldContext);
 
     // Set the trivial propagator options
     kalmanOptions.setPlainOptions(kfOptions.propagatorPlainOptions);
@@ -1157,6 +1159,7 @@ class KalmanFitter {
     kalmanActor.reversedFilteringCovarianceScaling =
         kfOptions.reversedFilteringCovarianceScaling;
     kalmanActor.extensions = kfOptions.extensions;
+    kalmanActor.actorLogger = m_actorLogger.get();
 
     // Set the surface sequence
     auto& dInitializer =

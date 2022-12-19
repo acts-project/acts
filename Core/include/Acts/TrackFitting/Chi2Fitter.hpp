@@ -84,7 +84,6 @@ struct Chi2FitterOptions {
   /// @param mctx The magnetic context for this fit
   /// @param cctx The calibration context for this fit
   /// @param extensions_ The chi2 extensions
-  /// @param logger_ The logger wrapper
   /// @param pOptions The plain propagator options
   /// @param mScattering Whether to include multiple scattering
   /// @param eLoss Whether to include energy loss
@@ -97,7 +96,6 @@ struct Chi2FitterOptions {
                     const MagneticFieldContext& mctx,
                     std::reference_wrapper<const CalibrationContext> cctx,
                     Chi2FitterExtensions<traj_t> extensions_,
-                    LoggerWrapper logger_,
                     const PropagatorPlainOptions& pOptions,
                     bool mScattering = false, bool eLoss = false, int nIter = 1,
                     bool calcFinalChi2_ = true,
@@ -112,8 +110,7 @@ struct Chi2FitterOptions {
         energyLoss(eLoss),
         nUpdates(nIter),
         calcFinalChi2(calcFinalChi2_),
-        freeToBoundCorrection(freeToBoundCorrection_),
-        logger(logger_) {}
+        freeToBoundCorrection(freeToBoundCorrection_) {}
   /// Contexts are required and the options must not be default-constructible.
   Chi2FitterOptions() = delete;
 
@@ -145,9 +142,6 @@ struct Chi2FitterOptions {
   /// Whether to include non-linear correction during global to local
   /// transformation
   FreeToBoundCorrection freeToBoundCorrection;
-
-  /// Logger
-  LoggerWrapper logger;
 };
 
 template <typename traj_t>
@@ -216,11 +210,22 @@ class Chi2Fitter {
   using Chi2Navigator = typename propagator_t::Navigator;
 
  public:
-  Chi2Fitter(propagator_t pPropagator) : m_propagator(std::move(pPropagator)) {}
+  Chi2Fitter(propagator_t pPropagator,
+             std::unique_ptr<const Logger> _logger =
+                 getDefaultLogger("Chi2Fitter", Logging::INFO))
+      : m_propagator(std::move(pPropagator)),
+        m_logger{std::move(_logger)},
+        m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
 
  private:
   /// The propgator for the transport and material update
   propagator_t m_propagator;
+
+  /// A logger instance
+  std::unique_ptr<const Logger> m_logger;
+  std::unique_ptr<const Logger> m_actorLogger;
+
+  const Logger& logger() const { return *m_logger; }
 
   /// @brief Propagator Actor plugin for the Chi2Fitter
   ///
@@ -253,6 +258,11 @@ class Chi2Fitter {
     /// Extension struct
     Chi2FitterExtensions<traj_t> extensions;
 
+    /// A logger instance
+    const Logger* actorLogger{nullptr};
+
+    const Logger& logger() const { return *actorLogger; }
+
     /// @brief Chi square actor operation
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
@@ -263,9 +273,7 @@ class Chi2Fitter {
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result) const {
-      const auto& logger = state.options.logger;
-
+                    result_type& result, const Logger& /*logger*/) const {
       if (result.finished) {
         return;
       }
@@ -317,8 +325,6 @@ class Chi2Fitter {
                                 propagator_state_t& state,
                                 const stepper_t& stepper,
                                 result_type& result) const {
-      const auto& logger = state.options.logger;
-
       // We need the full jacobianFromStart, so we'll need to calculate it no
       // matter if we have a measurement or not.
 
@@ -544,9 +550,7 @@ class Chi2Fitter {
     template <typename propagator_state_t, typename stepper_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,
                             stepper_t& stepper,
-                            const MaterialUpdateStage& updateStage =
-                                MaterialUpdateStage::FullUpdate) const {
-      const auto& logger = state.options.logger;
+                            const MaterialUpdateStage& updateStage) const {
       // Indicator if having material
       bool hasMaterial = false;
 
@@ -597,7 +601,7 @@ class Chi2Fitter {
     template <typename propagator_state_t, typename stepper_t,
               typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const result_t& result) const {
+                    const result_t& result, const Logger& /*logger*/) const {
       // const auto& logger = state.options.logger;
       if (!result.result.ok() or result.finished) {
         return true;
@@ -629,8 +633,6 @@ class Chi2Fitter {
       const BoundTrackParameters& sParameters,
       const Chi2FitterOptions<traj_t>& chi2FitterOptions,
       std::shared_ptr<traj_t> trajectory = {}) const {
-    const auto& logger = chi2FitterOptions.logger;
-
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("chi2 | preparing " << std::distance(it, end)
@@ -665,8 +667,7 @@ class Chi2Fitter {
     for (int i = 0; i <= chi2FitterOptions.nUpdates; ++i) {
       // Create relevant options for the propagation options
       PropagatorOptions<Actors, Aborters> propOptions(
-          chi2FitterOptions.geoContext, chi2FitterOptions.magFieldContext,
-          logger);
+          chi2FitterOptions.geoContext, chi2FitterOptions.magFieldContext);
 
       // Set the trivial propagator options
       propOptions.setPlainOptions(chi2FitterOptions.propagatorPlainOptions);
@@ -679,6 +680,7 @@ class Chi2Fitter {
       chi2Actor.freeToBoundCorrection = chi2FitterOptions.freeToBoundCorrection;
       chi2Actor.extensions = chi2FitterOptions.extensions;
       chi2Actor.updateNumber = i;
+      chi2Actor.actorLogger = m_actorLogger.get();
 
       typename propagator_t::template action_list_t_result_t<
           CurvilinearTrackParameters, Actors>

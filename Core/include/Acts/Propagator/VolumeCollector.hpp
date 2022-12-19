@@ -86,10 +86,10 @@ struct VolumeCollector {
   /// @param [in,out] state is the mutable stepper state object
   /// @param [in] stepper The stepper in use
   /// @param [in,out] result is the mutable result object
+  /// @param logger the logger object
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
-    const auto& logger = state.options.logger;
+                  result_type& result, const Logger& logger) const {
     // The current volume has been assigned by the navigator
     if (state.navigation.currentVolume &&
         selector(*state.navigation.currentVolume)) {
@@ -119,8 +119,8 @@ struct VolumeCollector {
   /// Pure observer interface
   /// - this does not apply to the volume collector
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*state*/,
-                  const stepper_t& /*unused*/) const {}
+  void operator()(propagator_state_t& /*state*/, const stepper_t& /*unused*/,
+                  const Logger& /*logger*/) const {}
 };
 
 }  // namespace Acts
