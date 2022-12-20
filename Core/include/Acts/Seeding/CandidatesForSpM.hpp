@@ -48,8 +48,7 @@ namespace Acts {
 			std::size_t n_high);
     void setMediumSp(sp_type);
     void setBottomSp(sp_type);
-    const std::vector<value_type>& storage(bool isQuality) const;
-    std::vector< output_type > extendedStorage() const;
+    std::vector< output_type > storage() const;
     const sp_type& spM() const;
     
     void push(sp_type& SpT, float weight, float zOrigin, bool isQuality);
@@ -94,12 +93,6 @@ namespace Acts {
     // storage for candidates with low quality
     std::vector< value_type > m_storage_low;
   };
-
-  template<typename external_space_point_t>
-  inline
-  const std::vector<typename CandidatesForSpM<external_space_point_t>::value_type>&
-  CandidatesForSpM<external_space_point_t>::storage(bool isQuality) const
-  { return isQuality ? m_storage_high : m_storage_low; }
 
   template<typename external_space_point_t>
   inline

@@ -154,7 +154,7 @@ namespace Acts {
 
   template<typename external_space_point_t>
   std::vector< typename CandidatesForSpM<external_space_point_t>::output_type >
-  CandidatesForSpM<external_space_point_t>::extendedStorage() const
+  CandidatesForSpM<external_space_point_t>::storage() const
   {
     // this will retrieve the entire storage, first high and then low quality
     // the resulting vector is not sorted!

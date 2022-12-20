@@ -239,7 +239,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // retrieve all candidates
   // this collection is alredy sorted
   // higher weights first
-  auto extended_collection = candidates_collector.extendedStorage(); 
+  auto extended_collection = candidates_collector.storage(); 
 
   if (m_experimentCuts != nullptr) {
     extended_collection = m_experimentCuts->cutPerMiddleSP(std::move(extended_collection));
