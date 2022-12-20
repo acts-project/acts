@@ -11,6 +11,7 @@
 #include <memory>
 #include <tuple>
 #include <vector>
+#include <algorithm>
 
 namespace Acts {
 
