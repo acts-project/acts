@@ -68,7 +68,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
     layerContainer = layersPresent;
     auto binValue = constituentBinning[0].binvalue;
     // Set the first last
-    auto& fVolume = *constituentVolumes.begin();
+    auto& fVolume = constituentVolumes.front();
     auto& lVolume = constituentVolumes.back();
 
     std::vector<float> borders = {};

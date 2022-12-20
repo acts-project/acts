@@ -61,9 +61,6 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
       std::unique_ptr<const Logger> logger =
           getDefaultLogger("KDTreeTrackingGeometryBuilder", Logging::INFO));
 
-  /// Destructor
-  ~KDTreeTrackingGeometryBuilder() override = default;
-
   /// TrackingGeometry Interface method
   ///
   /// @param gctx geometry context of that building call
