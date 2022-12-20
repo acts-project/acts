@@ -35,7 +35,7 @@ ProtoLayer::ProtoLayer(
 
 double ProtoLayer::min(BinningValue bval, bool addenv) const {
   if (addenv) {
-    return extent.min(bval) - std::abs(envelope[bval][0u]);
+    return extent.min(bval) - envelope[bval][0u];
   }
   return extent.min(bval);
 }
