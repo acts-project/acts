@@ -257,6 +257,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       return;
     }
   }
+  std::cout << "Filter candidates 1 " << std::endl;
 
   std::vector<internal_sp_t *> top_valid;
   std::vector<float> curvatures;
@@ -291,6 +292,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     tanMT.push_back(std::atan2(top[t]->radius() - middle.radius(),
                                top[t]->z() - middle.z()));
   }
+  std::cout << "Filter candidates 2 " << tanLM.size() << " " << tanMT.size() << std::endl;
 
   size_t t0 = 0;
 
@@ -334,6 +336,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (std::abs(tanLM[b] - tanMT[t]) > 0.005) {
         continue;
       }
+      std::cout << "Filter candidates 3 " << std::endl;
 
       // add errors of spB-spM and spM-spT pairs and add the correlation term
       // for errors on spM
@@ -366,6 +369,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         }
         continue;
       }
+      std::cout << "Filter candidates 4 " << std::endl;
 
       float dU = lt.U - Ub;
 
@@ -380,6 +384,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       if (S2 < B2 * options.minHelixDiameter2) {
         continue;
       }
+      std::cout << "Filter candidates 5 " << options.minHelixDiameter2 << std::endl;
+
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
       float iHelixDiameter2 = B2 / S2;
       // calculate scattering for p(T) calculated from seed curvature
@@ -405,6 +411,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         }
         continue;
       }
+      std::cout << "Filter candidates 6 " << m_config.sigmaScattering << std::endl;
 
       // A and B allow calculation of impact params in U/V plane with linear
       // function
@@ -582,7 +589,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
                      protoseeds);
   }
-
+  std::cout << "Protoseeds 1 " << protoseeds.size() << std::endl;
   /*
    * Try to combine candidates for decreasing z tracks.
    */
@@ -590,7 +597,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
                      protoseeds);
   }
-
+  std::cout << "Protoseeds 2 " << protoseeds.size() << std::endl;
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
@@ -659,7 +666,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     // store x,y,z values in extent
     rRangeSPExtent.extend({p->x(), p->y(), p->z()});
   }
-
+  std::cout << "SPs size " << internalSpacePoints.size() << std::endl;
   // variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
       std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
@@ -672,7 +679,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * take ownership of the points.
    */
   tree_t tree = createTree(internalSpacePoints);
-
+  std::cout << "Tree size " << tree.size() << std::endl;
   /*
    * Run the seeding algorithm by iterating over all the points in the tree and
    * seeing what happens if we take them to be our middle spacepoint.
@@ -715,7 +722,7 @@ SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   std::vector<seed_t> r;
 
   createSeeds(options, spacePoints, r);
-
+  std::cout << "Out Cont size " << r.size() << std::endl;
   return r;
 }
 

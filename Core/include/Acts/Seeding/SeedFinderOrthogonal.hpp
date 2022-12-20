@@ -23,6 +23,7 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 namespace Acts {
 template <typename external_spacepoint_t>
