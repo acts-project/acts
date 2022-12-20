@@ -96,4 +96,3 @@ ATLASCuts<SpacePoint>::cutPerMiddleSP(
   return newSeedsVector;
 }
 }  // namespace Acts
-OB
