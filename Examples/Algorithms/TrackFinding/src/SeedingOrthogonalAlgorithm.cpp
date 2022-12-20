@@ -15,6 +15,44 @@
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+void printOptions( const Acts::SeedFinderOptions& options) {
+  std::cout << "SeedFinderOptions\n"; 
+  std::cout << "beamPos           "  << options.beamPos << std::endl;
+  // field induction
+  std::cout << "bFieldInZ         "  << options.bFieldInZ << std::endl;
+  // derived quantities
+  std::cout << "pTPerHelixRadius  "  << options.pTPerHelixRadius << std::endl;
+  std::cout << "minHelixDiameter2 "  << options.minHelixDiameter2 << std::endl;
+  std::cout << "pT2perRadius      "  << options.pT2perRadius << std::endl;
+  std::cout << "sigmapT2perRadius "  << options.sigmapT2perRadius << std::endl;
+  std::cout << "...\n"; 
+
+}
+
+template<typename sp>
+void printConfig( const Acts::SeedFinderOrthogonalConfig<sp>& config ) {
+  std::cout << "SeedFinderOrthogonalConfig\n"; 
+
+    std::cout << "minPt                 " << config.minPt  << std::endl;
+    std::cout << "deltaRMinTopSP        " << config.deltaRMinTopSP << std::endl;
+    std::cout << "deltaRMaxTopSP        " << config.deltaRMaxTopSP << std::endl;
+    std::cout << "deltaRMinBottomSP     " << config.deltaRMinBottomSP << std::endl;
+    std::cout << "deltaRMaxBottomSP     " << config.deltaRMaxBottomSP << std::endl;
+    std::cout << "impactMax             " << config.impactMax << std::endl;
+    std::cout << "maxPtScattering       " << config.maxPtScattering  << std::endl;
+    std::cout << "collisionRegionMin    " << config.collisionRegionMin << std::endl;
+    std::cout << "collisionRegionMax    " << config.collisionRegionMax << std::endl;
+    std::cout << "zMin                  " << config.zMin << std::endl;
+    std::cout << "zMax                  " << config.zMax << std::endl;
+    std::cout << "rMax                  " << config.rMax << std::endl;
+    std::cout << "rMin                  " << config.rMin << std::endl;
+
+    std::cout << "highland              " << config.highland << std::endl;
+    std::cout << "maxScatteringAngle2   " << config.maxScatteringAngle2 << std::endl;
+  std::cout << "...\n"; 
+
+}
+
 ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     ActsExamples::SeedingOrthogonalAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
@@ -26,6 +64,10 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
   m_cfg.seedFinderOptions =
       m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
           m_cfg.seedFinderConfig);
+
+  printOptions(m_cfg.seedFinderOptions);
+  printConfig(m_cfg.seedFinderConfig);
+
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
   }

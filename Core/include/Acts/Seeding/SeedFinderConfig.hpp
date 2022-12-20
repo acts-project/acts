@@ -170,6 +170,7 @@ struct SeedFinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
   bool isInInternalUnits = false;
+
   SeedFinderConfig toInternalUnits() const {
     if (isInInternalUnits) {
       throw std::runtime_error(
