@@ -65,12 +65,12 @@ bool ATLASCuts<SpacePoint>::singleSeedCut(
   return !(b.radius() > 150. && weight < 380.);
 }
 
-template <typename SpacePoint>
-std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
+std::vector<
+    typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
 ATLASCuts<SpacePoint>::cutPerMiddleSP(
     std::vector<
-        std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-        seeds) const {
+        typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
+        seedCandidates) const {
   std::vector<
       typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
       newSeedsVector;
