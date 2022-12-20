@@ -35,6 +35,8 @@ namespace Acts {
       return;
     }
 
+    if (current_max_size == 0) return;
+
     // if no space, replace one if quality is enough
     // compare to element with lower weight
     const auto& lower_weight = top(storage);
