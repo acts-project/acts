@@ -37,11 +37,8 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// space
   /// point
   /// @return vector of seeds that pass the cut
-  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-  cutPerMiddleSP(
-      std::vector<
-          std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-          seeds) const override;
+  std::vector< typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type >
+  cutPerMiddleSP(std::vector< typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type > seedCandidates) const override;
 };
 
 template <typename SpacePoint>
@@ -68,24 +65,23 @@ bool ATLASCuts<SpacePoint>::singleSeedCut(
 }
 
 template <typename SpacePoint>
-std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-ATLASCuts<SpacePoint>::cutPerMiddleSP(
-    std::vector<
-        std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-        seeds) const {
-  std::vector<std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-      newSeedsVector;
-  if (seeds.size() > 1) {
-    newSeedsVector.push_back(std::move(seeds[0]));
-    size_t itLength = std::min(seeds.size(), size_t(5));
-    // don't cut first element
-    for (size_t i = 1; i < itLength; i++) {
-      if (seeds[i].first > 200. || seeds[i].second->sp[0]->radius() > 43.) {
-        newSeedsVector.push_back(std::move(seeds[i]));
-      }
+std::vector< typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type >
+ATLASCuts<SpacePoint>::cutPerMiddleSP(std::vector< typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type > seedCandidates) const
+{
+  std::vector< typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type > newSeedsVector;
+  if (seedCandidates <= 1) return seedCandidates;
+
+  newSeedsVector.push_back( std::move(seedCandidates[0]) );
+  std::size_t itLength = std::min(seedCandidates.size(), std::size_t(5));
+  // don't cut first element
+  for (std::size_t i(1); i <itLength; i++) {
+    float weight = std::get< CandidatesForSpM<SpacePoint>::Components::WEIGHT >(seedCandidates[i]);
+    const auto& bottom = std::get< CandidatesForSpM<SpacePoint>::Components::BSP >(seedCandidates[i]);
+    if (weight > 200. or bottom->radius() > 43.) {
+      newSeedsVector.push_back( std::move(seedCandidates[i]) );
     }
-    return newSeedsVector;
   }
-  return seeds;
+  return newSeedsVector;
 }
 }  // namespace Acts
+OB

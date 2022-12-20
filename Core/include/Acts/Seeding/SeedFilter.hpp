@@ -17,8 +17,11 @@
 #include <mutex>
 #include <queue>
 #include <vector>
+#include <tuple>
 
-namespace Acts {
+#include "Acts/Seeding/CandidatesForSpM.hpp"
+
+namespace Acts {  
 struct SeedFilterState {
   // longitudinal impact parameter as defined by bottom and middle space point
   float zOrigin = 0;
@@ -59,9 +62,7 @@ class SeedFilter {
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
-      std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
-          outCont) const;
+      CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>& candidates_collector) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param seedsPerSpM vector of pairs containing weight and seed for all
@@ -69,29 +70,10 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
-      std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
-          seedsPerSpM,
+      CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>& candidates_collector,
       int& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
-
-  /// Check if there is a lower quality seed that can be replaced
-  /// @param bottomSP fixed bottom space point
-  /// @param middleSP fixed middle space point
-  /// @param topSp fixed top space point
-  /// @param zOrigin on the z axis as defined by bottom and middle space point
-  /// @param isQualitySeed information whether the seed is quality confirmed or not
-  /// @param weight weight of the seed
-  /// @param outCont container for the seeds
-  virtual void checkReplaceSeeds(
-      InternalSpacePoint<external_spacepoint_t>& bottomSP,
-      InternalSpacePoint<external_spacepoint_t>& middleSP,
-      InternalSpacePoint<external_spacepoint_t>& topSp, float zOrigin,
-      bool isQualitySeed, float weight,
-      std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>&
-          outCont) const;
 
   const SeedFilterConfig getSeedFilterConfig() const { return m_cfg; }
   const IExperimentCuts<external_spacepoint_t>* getExperimentCuts() const {
