@@ -54,7 +54,7 @@ class SeedFilter {
   /// @param invHelixDiameterVec vector containing 1/(2*r) values where r is the helix radius
   /// @param impactParametersVec vector containing the impact parameters
   /// @param seedFilterState holds quantities used in seed filter
-  /// @param outCont Output container for the seeds
+  /// @param candidates_collector container for the seed candidates
   virtual void filterSeeds_2SpFixed(
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
       InternalSpacePoint<external_spacepoint_t>& middleSP,
@@ -65,7 +65,7 @@ class SeedFilter {
           candidates_collector) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
-  /// @param seedsPerSpM vector of pairs containing weight and seed for all
+  /// @param candidates_collector collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point

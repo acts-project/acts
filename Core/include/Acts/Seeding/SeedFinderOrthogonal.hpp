@@ -193,13 +193,12 @@ class SeedFinderOrthogonal {
    * @brief Filter potential candidate pairs, and output seeds into an
    * iterator.
    *
-   * @tparam output_container_t The type of the output container.
-   *
    * @param middle The (singular) middle spacepoint.
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
    * @param seedFilterState  holds quantities used in seed filter
-   * @param cont The container to write the resulting seeds to.
+   * @param candidates_collector The container to write the resulting 
+   * seed caandidates to.
    */
   void filterCandidates(
       internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,

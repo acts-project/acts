@@ -42,10 +42,9 @@ class IExperimentCuts {
       const InternalSpacePoint<SpacePoint>& middle,
       const InternalSpacePoint<SpacePoint>& top) const = 0;
 
-  /// @param seeds contains pairs of weight and seed created for one middle
-  /// space
-  /// point
-  /// @return vector of seeds that pass the cut
+  /// @param seedCandidates contains collection of seed candidates created for one middle
+  /// space point in a std::tuple format
+  /// @return vector of seed candidates that pass the cut
   virtual std::vector<
       typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
   cutPerMiddleSP(std::vector<typename CandidatesForSpM<

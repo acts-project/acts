@@ -75,7 +75,6 @@ std::vector<std::size_t> transformCoordinates(
 /// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
-/// @param[in] toleranceParam Parameter used to evaluate if spacepointPosition is inside the detector elements.
 /// @param[out] outputCoordinates The output vector to write to.
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
 template <typename external_spacepoint_t, typename sp_range_t>
