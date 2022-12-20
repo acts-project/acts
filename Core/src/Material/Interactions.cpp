@@ -9,6 +9,7 @@
 #include "Acts/Material/Interactions.hpp"
 
 #include "Acts/Material/Material.hpp"
+#include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 
 #include <cassert>
@@ -324,7 +325,8 @@ float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
   //           = (1/p)^4 * (q/beta)² * var(E)
   // do not need to care about the sign since it is only used squared
   const auto pInv = qOverP / q;
-  return std::sqrt(rq.q2OverBeta2) * pInv * pInv * sigmaE;
+  assert(rq.q2OverBeta2 >= 0 && "Negative q2OverBeta2");
+  return clampValue<float>(std::sqrt(rq.q2OverBeta2) * pInv * pInv * sigmaE);
 }
 
 namespace {
