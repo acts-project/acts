@@ -19,15 +19,15 @@ namespace Acts {
 
 namespace Experimental {
 class Detector;
-}
 
-/// A Tracking Geometry builder restricted to cylindrical geometries
+/// A Detector builder following a blueprint from a ProtoDetector
 ///
 /// It takes some helper tools and a vector of surface objects,
 /// together with a ProtoDetector description that is used to query a
 /// KDTree for contained surfaces in structures defined by the proto
 /// volume.
-class BlueprintDetectorBuilder {
+///
+class DetectorBuilder {
  public:
   /// Nested Configuration for this TrackingGeometryBuilder
   struct Config {
@@ -38,13 +38,12 @@ class BlueprintDetectorBuilder {
   ///
   /// @param [in] cfg is the configuration struct for this builder
   /// @param [in] logger logging instance
-  BlueprintDetectorBuilder(const Config& cfg,
-                           std::unique_ptr<const Logger> logger =
-                               getDefaultLogger("BlueprintDetectorBuilder",
-                                                Logging::INFO));
+  DetectorBuilder(const Config& cfg,
+                  std::unique_ptr<const Logger> logger =
+                      getDefaultLogger("DetectorBuilder", Logging::INFO));
 
   /// Destructor
-  ~BlueprintDetectorBuilder() = default;
+  ~DetectorBuilder() = default;
 
   /// Detector building method
   ///
@@ -65,4 +64,5 @@ class BlueprintDetectorBuilder {
   std::unique_ptr<const Logger> m_logger;
 };
 
+}  // namespace Experimental
 }  // namespace Acts

@@ -2,7 +2,6 @@ target_sources(
   ActsCore
   PRIVATE
     AbstractVolume.cpp
-    BlueprintDetectorBuilder.cpp
     ConeLayer.cpp
     ConeVolumeBounds.cpp
     CuboidVolumeBounds.cpp
@@ -15,6 +14,7 @@ target_sources(
     Extent.cpp
     KDTreeTrackingGeometryBuilder.cpp
     Detector.cpp
+    DetectorBuilder.cpp
     DetectorVolume.cpp
     DiscLayer.cpp
     GenericApproachDescriptor.cpp

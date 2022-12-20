@@ -9,12 +9,12 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
-#include "Acts/Geometry/BlueprintDetector.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/NavigationDelegates.hpp"
+#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Geometry/detail/NavigationStateUpdators.hpp"
 #include "Acts/Geometry/detail/PortalGenerators.hpp"
 #include "Acts/Geometry/detail/SurfaceCandidatesUpdators.hpp"
@@ -101,7 +101,10 @@ struct DefaultPortalsConverter {
 
 /// Definition of a shell builder, it builds a detector volume and
 /// applies its shell to it
-struct SingleProtoVolumeBlockBuilder {
+template <typename Volume = ConcentricCylinderConverter,
+          typename Portals = DefaultPortalsConverter,
+          typename Internals = EmptyInternals>
+struct SingleBlockBuilder {
   /// The proto volume that needs to be converted
   ProtoVolume protoVolume;
 
@@ -116,10 +119,9 @@ struct SingleProtoVolumeBlockBuilder {
   /// @param protoVolume
   ///
   /// @return a newly created DetectorVolume
-  template <typename Volume = ConcentricCylinderConverter,
-            typename Portals = DefaultPortalsConverter,
-            typename Internals = EmptyInternals>
-  BlueprintBlock& build(BlueprintBlock& bpBlock, const GeometryContext& gctx) {
+  void operator()(DetectorBlock& dBlock, const GeometryContext& gctx) {
+    auto& dVolumes = std::get<0>(dBlock);
+    auto& dPortals = std::get<1>(dBlock);
     // Externals
     auto [transform, bounds] = Volume{protoVolume}.create(gctx);
     // Internals
@@ -130,13 +132,14 @@ struct SingleProtoVolumeBlockBuilder {
     auto dVolume = DetectorVolumeFactory::construct(
         portals, gctx, protoVolume.name, transform, std::move(bounds), surfaces,
         volumes, std::move(updator));
-    // Return a new detector shell
-    bpBlock = BlueprintBlock(*dVolume.get());
-    return bpBlock;
+    // Update the detector block
+    dVolumes.push_back(dVolume);
+    dPortals.insert(dPortals.end(), dVolume->portalPtrs().begin(),
+                    dVolume->portalPtrs().end());
   }
 };
 
-struct ContainerVolumeBlockBuilder {
+struct ContainerBlockBuilder {
   /// The proto volume that needs to be converted
   ProtoVolume protoVolume;
 
@@ -146,24 +149,22 @@ struct ContainerVolumeBlockBuilder {
   /// @tparam Portals how the portals are handled
   /// @tparam InternalsHandling how the internals are handled
   ///
-  /// @param shell The input shell
+  /// @param dBlock The detector block to be built
   /// @param gctx The geometry context
-  /// @param protoVolume
   ///
   /// @return a newly created DetectorVolume
-  template <typename Volume = ConcentricCylinderConverter,
-            typename Portals = DefaultPortalsConverter,
-            typename Internals = EmptyInternals> {
-
-     for (auto pv : protoVolume.contituents){
-
-
-     }
-
-  };
-
+  void operator()(DetectorBlock& dBlock, const GeometryContext& gctx) {
+    auto& dVolumes = std::get<0>(dBlock);
+    auto& dPortals = std::get<1>(dBlock);
+    for (auto& cv : protoVolume.constituentVolumes) {
+      // Collect the constituent volumes
+      DetectorBlock cBlock;
+      cv.blockBuilder(cBlock, gctx);
+      const auto& cVolumes = std::get<0u>(cBlock);
+      dVolumes.insert(dVolumes.end(), cVolumes.begin(), cVolumes.end());
+    }
+  }
 };
-
 
 }  // namespace Experimental
 

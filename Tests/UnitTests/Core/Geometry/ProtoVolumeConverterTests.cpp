@@ -116,8 +116,13 @@ BOOST_AUTO_TEST_CASE(EmptyVolumeTest) {
   cylinder.extent.set(binR, 0., 200.);
   cylinder.extent.set(binZ, -300., 300.);
 
-  BlueprintBlock bpBlock;
-  bpBlock = SingleProtoVolumeBlockBuilder{cylinder}.build(bpBlock, tContext);
+  DetectorBlock dBlock;
+  SingleBlockBuilder<>{cylinder}(dBlock, tContext);
+
+  // One volume contained 
+  BOOST_CHECK(std::get<0>(dBlock).size() == 1u);
+  // Three bounding surfaces define the shell/skin
+  BOOST_CHECK(std::get<1>(dBlock).size() == 3u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

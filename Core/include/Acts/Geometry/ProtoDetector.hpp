@@ -15,7 +15,9 @@
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <functional>
+#include <memory>
 #include <string>
+#include <tuple>
 
 namespace Acts {
 
@@ -23,11 +25,16 @@ struct ProtoVolume;
 
 namespace Experimental {
 
-struct DetectorShell;
+class DetectorVolume;
+class Portal;
+
+/// Current volumes (connected), current skin
+using DetectorBlock = std::tuple<std::vector<std::shared_ptr<DetectorVolume>>,
+                                 std::vector<std::shared_ptr<Portal>>>;
 
 /// The detector builder function
-using DetectorVolumeBuilder =
-    std::function<void(DetectorShell& dShell, const GeometryContext&)>;
+using DetectorBlockBuilder =
+    std::function<void(DetectorBlock&, const GeometryContext&)>;
 }  // namespace Experimental
 
 /// A proto volume description being used to define an overall
@@ -50,7 +57,7 @@ struct ProtoVolume {
   std::vector<BinningData> constituentBinning = {};
 
   /// An attached Detector volume Builder
-  Experimental::DetectorVolumeBuilder dvBuilder;
+  Experimental::DetectorBlockBuilder blockBuilder;
 
   /// Define an operator==
   ///
