@@ -33,9 +33,8 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
       const InternalSpacePoint<SpacePoint>& /*unused*/,
       const InternalSpacePoint<SpacePoint>& /*unused*/) const override;
 
-  /// @param seeds contains pairs of weight and seed created for one middle
-  /// space
-  /// point
+  /// @param seedCandidates contains collection of seed candidates created for one middle
+  /// space point in a std::tuple format
   /// @return vector of seeds that pass the cut
   std::vector<
       typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
