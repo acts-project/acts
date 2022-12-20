@@ -32,8 +32,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
     std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
-    CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>& candidates_collector) const {
-
+    CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>&
+        candidates_collector) const {
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
   if (m_cfg.seedConfirmation) {
@@ -189,11 +189,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // if we have not yet reached our max number of quality seeds we add the
         // new seed to outCont
 
-	candidates_collector.push(topSpVec[topSPIndex], weight, zOrigin, true);
+        candidates_collector.push(topSpVec[topSPIndex], weight, zOrigin, true);
         if (seedFilterState.numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
           // fill high quality seed
           seedFilterState.numQualitySeeds++;
-        } 
+        }
 
       } else if (weight > weightMax) {
         // store weight and index of the best "lower quality" seed
@@ -210,9 +210,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
         // fill seed
         seedFilterState.numSeeds++;
-      } 
+      }
     }
-  } // loop on tops
+  }  // loop on tops
   // if no high quality seed was found for a certain middle+bottom SP pair,
   // lower quality seeds can be accepted
   if (m_cfg.seedConfirmation and maxWeightSeed and
@@ -220,43 +220,45 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
 
-    candidates_collector.push(topSpVec[maxWeightSeedIndex], weightMax, zOrigin, false);
+    candidates_collector.push(topSpVec[maxWeightSeedIndex], weightMax, zOrigin,
+                              false);
     if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
       // fill seed
       seedFilterState.numSeeds++;
-    }     
-  } 
+    }
+  }
 }
 
 // after creating all seeds with a common middle space point, filter again
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>& candidates_collector,
+    CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>&
+        candidates_collector,
     int& numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
-    
   // retrieve all candidates
   // this collection is alredy sorted
   // higher weights first
-  auto extended_collection = candidates_collector.storage(); 
+  auto extended_collection = candidates_collector.storage();
 
   if (m_experimentCuts != nullptr) {
-    extended_collection = m_experimentCuts->cutPerMiddleSP(std::move(extended_collection));
+    extended_collection =
+        m_experimentCuts->cutPerMiddleSP(std::move(extended_collection));
   }
-  
+
   unsigned int maxSeeds = extended_collection.size();
 
   if (maxSeeds > m_cfg.maxSeedsPerSpM) {
     maxSeeds = m_cfg.maxSeedsPerSpM + 1;
   }
 
-
   // default filter removes the last seeds if maximum amount exceeded
   // ordering by weight by filterSeeds_2SpFixed means these are the lowest
   // weight seeds
   unsigned int numTotalSeeds = 0;
-  for (auto& [bottom, medium, top, bestSeedQuality, zOrigin, qualitySeed] : extended_collection) {
+  for (auto& [bottom, medium, top, bestSeedQuality, zOrigin, qualitySeed] :
+       extended_collection) {
     // stop if we reach the maximum number of seeds
     if (numTotalSeeds >= maxSeeds) {
       break;
@@ -279,9 +281,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     medium->setQuality(bestSeedQuality);
     top->setQuality(bestSeedQuality);
 
-    outIt = Seed<external_spacepoint_t>{
-        bottom->sp(), medium->sp(), top->sp(),
-	zOrigin, bestSeedQuality};
+    outIt = Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),
+                                        zOrigin, bestSeedQuality};
     ++numTotalSeeds;
   }
 }

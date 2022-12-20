@@ -62,9 +62,9 @@ std::vector<std::size_t> transformCoordinates(
     std::vector<LinCircle>& linCircleVec);
 
 template <typename external_spacepoint_t, typename callable_t>
-std::vector<std::size_t> transformCoordinates(std::vector<external_spacepoint_t*>& vec,
-    const external_spacepoint_t& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec,
+std::vector<std::size_t> transformCoordinates(
+    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
+    bool bottom, std::vector<LinCircle>& linCircleVec,
     callable_t&& extractFunction);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
@@ -81,7 +81,7 @@ std::vector<std::size_t> transformCoordinates(std::vector<external_spacepoint_t*
 template <typename external_spacepoint_t, typename sp_range_t>
 bool xyzCoordinateCheck(Acts::SeedFinderConfig<external_spacepoint_t> config,
                         sp_range_t sp, const double* spacepointPosition,
-			double* outputCoordinates);
+                        double* outputCoordinates);
 
 }  // namespace Acts
 

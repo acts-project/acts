@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Seeding/CandidatesForSpM.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/CandidatesForSpM.hpp" 
 
 #include <memory>
 
@@ -46,7 +46,10 @@ class IExperimentCuts {
   /// space
   /// point
   /// @return vector of seeds that pass the cut
-  virtual std::vector< typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type >
-  cutPerMiddleSP(std::vector< typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type > seedCandidates) const = 0;
+  virtual std::vector<
+      typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
+  cutPerMiddleSP(std::vector<typename CandidatesForSpM<
+                     InternalSpacePoint<SpacePoint>>::output_type>
+                     seedCandidates) const = 0;
 };
 }  // namespace Acts

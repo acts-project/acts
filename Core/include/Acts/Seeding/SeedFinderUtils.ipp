@@ -76,13 +76,13 @@ std::vector<std::size_t> transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-std::vector<std::size_t> transformCoordinates(std::vector<external_spacepoint_t*>& vec,
-                          const external_spacepoint_t& spM, bool bottom,
-                          std::vector<LinCircle>& linCircleVec,
-                          callable_t&& extractFunction) {
+std::vector<std::size_t> transformCoordinates(
+    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
+    bool bottom, std::vector<LinCircle>& linCircleVec,
+    callable_t&& extractFunction) {
   std::vector<std::size_t> indexes(vec.size());
-  for (unsigned int i(0); i<indexes.size(); i++)
-     indexes[i] = i;
+  for (unsigned int i(0); i < indexes.size(); i++)
+    indexes[i] = i;
 
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
@@ -138,16 +138,16 @@ std::vector<std::size_t> transformCoordinates(std::vector<external_spacepoint_t*
   }
   // sort the SP in order of cotTheta
   std::sort(indexes.begin(), indexes.end(),
-            [&linCircleVec] (const std::size_t& a, std::size_t& b) -> bool {
-	      return (linCircleVec[a].cotTheta < linCircleVec[b].cotTheta);
-	    });
+            [&linCircleVec](const std::size_t& a, std::size_t& b) -> bool {
+              return (linCircleVec[a].cotTheta < linCircleVec[b].cotTheta);
+            });
   return indexes;
 }
 
 template <typename external_spacepoint_t, typename sp_range_t>
 bool xyzCoordinateCheck(Acts::SeedFinderConfig<external_spacepoint_t> m_config,
                         sp_range_t sp, const double* spacepointPosition,
-			double* outputCoordinates) {
+                        double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 
