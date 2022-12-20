@@ -65,6 +65,7 @@ bool ATLASCuts<SpacePoint>::singleSeedCut(
   return !(b.radius() > 150. && weight < 380.);
 }
 
+template <typename SpacePoint>
 std::vector<
     typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
 ATLASCuts<SpacePoint>::cutPerMiddleSP(
