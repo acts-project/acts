@@ -408,7 +408,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         seedConfirmationFilter = True
         impactWeightFactor = 100
         compatSeedLimit = 3
-        numSeedIncrement = 10**100  # inf
+        numSeedIncrement = float("inf")
         seedWeightIncrement = 0
         useDetailedDoubleMeasurementInfo = False
         maxSeedsPerSpMConf = 5

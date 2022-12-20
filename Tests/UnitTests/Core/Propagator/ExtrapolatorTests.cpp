@@ -105,7 +105,7 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
                                    cov);
 
-  PropagatorOptions<> options(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<> options(tgContext, mfContext);
   options.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
 
@@ -151,8 +151,7 @@ BOOST_DATA_TEST_CASE(
   // A PlaneSelector for the SurfaceCollector
   using PlaneCollector = SurfaceCollector<PlaneSelector>;
 
-  PropagatorOptions<ActionList<PlaneCollector>> options(tgContext, mfContext,
-                                                        getDummyLogger());
+  PropagatorOptions<ActionList<PlaneCollector>> options(tgContext, mfContext);
 
   options.maxStepSize = 10_cm;
   options.pathLimit = 25_cm;
@@ -161,7 +160,7 @@ BOOST_DATA_TEST_CASE(
   auto collector_result = result.get<PlaneCollector::result_type>();
 
   // step through the surfaces and go step by step
-  PropagatorOptions<> optionsEmpty(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<> optionsEmpty(tgContext, mfContext);
 
   optionsEmpty.maxStepSize = 25_cm;
   // Try propagation from start to each surface
@@ -215,8 +214,8 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, time), phi, theta, p, q,
                                    cov);
 
-  PropagatorOptions<ActionList<MaterialInteractor>> options(
-      tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
+                                                            mfContext);
   options.maxStepSize = 25_cm;
   options.pathLimit = 25_cm;
 
@@ -264,8 +263,8 @@ BOOST_DATA_TEST_CASE(
                                    cov);
 
   // Action list and abort list
-  PropagatorOptions<ActionList<MaterialInteractor>> options(
-      tgContext, mfContext, getDummyLogger());
+  PropagatorOptions<ActionList<MaterialInteractor>> options(tgContext,
+                                                            mfContext);
   options.maxStepSize = 25_cm;
   options.pathLimit = 1500_mm;
 
