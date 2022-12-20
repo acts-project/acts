@@ -77,6 +77,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     std::array<ActsScalar, 2u> envelopeY{0, 0};
     // Envelope in Z
     std::array<ActsScalar, 2u> envelopeZ{0, 0};
+    // An optional rotation fo this
     std::optional<RotationMatrix3> rotation{std::nullopt};
   };
 
