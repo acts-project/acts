@@ -136,6 +136,35 @@ struct SingleProtoVolumeBlockBuilder {
   }
 };
 
+struct ContainerVolumeBlockBuilder {
+  /// The proto volume that needs to be converted
+  ProtoVolume protoVolume;
+
+  /// Convert a proto volume into a detector volume
+  ///
+  /// @tparam Volume how the volume is handled (bounds, position)
+  /// @tparam Portals how the portals are handled
+  /// @tparam InternalsHandling how the internals are handled
+  ///
+  /// @param shell The input shell
+  /// @param gctx The geometry context
+  /// @param protoVolume
+  ///
+  /// @return a newly created DetectorVolume
+  template <typename Volume = ConcentricCylinderConverter,
+            typename Portals = DefaultPortalsConverter,
+            typename Internals = EmptyInternals> {
+
+     for (auto pv : protoVolume.contituents){
+
+
+     }
+
+  };
+
+};
+
+
 }  // namespace Experimental
 
 }  // namespace Acts
