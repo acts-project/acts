@@ -150,31 +150,30 @@ class ImpactPointEstimator {
   ///
   /// @param track Track to estimate the IP from
   /// @param vtx   Vertex the track belongs to
-  /// @param direction   The direction 
+  /// @param direction   The direction
   /// @param gctx  The geometry context
   /// @param mctx  The magnetic field context
   ///
   /// @return A pair holding the sign for the 2D an Z lifetimes
-  Result<std::pair<double,double>>  getLifetimesSignOfTrack(
+  Result<std::pair<double, double>> getLifetimesSignOfTrack(
       const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
-      const Acts::Vector3& direction,
-      const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
+      const Acts::Vector3& direction, const GeometryContext& gctx,
+      const MagneticFieldContext& mctx) const;
 
   /// @brief Estimates the sign of the 3D lifetime of a given track
   /// w.r.t. a vertex and a direction (e.g. a jet direction)
   ///
   /// @param track Track to estimate the IP from
   /// @param vtx   Vertex the track belongs to
-  /// @param direction   The direction 
+  /// @param direction   The direction
   /// @param gctx  The geometry context
   /// @param mctx  The magnetic field context
   ///
   /// @return The value of the 3D lifetime
-  Result<double>  get3DLifetimeSignOfTrack(
+  Result<double> get3DLifetimeSignOfTrack(
       const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
-      const Acts::Vector3& direction,
-      const GeometryContext& gctx, const MagneticFieldContext& mctx) const; 
-  
+      const Acts::Vector3& direction, const GeometryContext& gctx,
+      const MagneticFieldContext& mctx) const;
 
  private:
   /// Configuration object
