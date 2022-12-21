@@ -277,6 +277,10 @@ class VectorMultiTrajectoryBase {
     }
   }
 
+  IndexType calibratedSize_impl(IndexType istate) const {
+    return m_index[istate].measdim;
+  }
+
   // END INTERFACE HELPER
 
   /// index to map track states to the corresponding
