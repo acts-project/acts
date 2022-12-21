@@ -60,7 +60,7 @@ auto kalmanHandleMeasurement(
   trackStateProxy.setReferenceSurface(surface.getSharedPtr());
 
   // assign the source link to the track state
-  trackStateProxy.setUncalibrated(source_link);
+  trackStateProxy.setUncalibratedSourceLink(source_link);
 
   // Fill the track state
   trackStateProxy.predicted() = std::move(boundParams.parameters());

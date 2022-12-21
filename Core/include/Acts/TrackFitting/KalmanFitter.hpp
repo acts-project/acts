@@ -703,7 +703,7 @@ class KalmanFitter {
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
         // Assign the source link to the detached track state
-        trackStateProxy.setUncalibrated(sourcelink_it->second);
+        trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
