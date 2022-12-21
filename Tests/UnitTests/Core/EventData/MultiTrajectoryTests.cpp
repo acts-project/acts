@@ -410,11 +410,13 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
     // create a new (invalid) source link
     TestSourceLink invalid;
     invalid.sourceId = -1;
-    BOOST_CHECK_NE(tsa.uncalibrated().get<TestSourceLink>(), invalid);
-    BOOST_CHECK_NE(tsb.uncalibrated().get<TestSourceLink>(), invalid);
-    tsb.setUncalibrated(SourceLink{invalid});
-    BOOST_CHECK_EQUAL(tsa.uncalibrated().get<TestSourceLink>(), invalid);
-    BOOST_CHECK_EQUAL(tsb.uncalibrated().get<TestSourceLink>(), invalid);
+    BOOST_CHECK_NE(tsa.uncalibratedSourceLink().get<TestSourceLink>(), invalid);
+    BOOST_CHECK_NE(tsb.uncalibratedSourceLink().get<TestSourceLink>(), invalid);
+    tsb.setUncalibratedSourceLink(SourceLink{invalid});
+    BOOST_CHECK_EQUAL(tsa.uncalibratedSourceLink().get<TestSourceLink>(),
+                      invalid);
+    BOOST_CHECK_EQUAL(tsb.uncalibratedSourceLink().get<TestSourceLink>(),
+                      invalid);
   }
   {
     // reset measurements w/ full parameters
@@ -478,7 +480,7 @@ BOOST_AUTO_TEST_CASE(TrackStateReassignment) {
 
   // use temporary measurement to reset calibrated data
   TestTrackState ttsb(rng, 2u);
-  ts.setUncalibrated(SourceLink{ttsb.sourceLink});
+  ts.setUncalibratedSourceLink(SourceLink{ttsb.sourceLink});
   auto meas = testSourceLinkCalibratorReturn<VectorMultiTrajectory>(gctx, ts);
   auto m2 = std::get<Measurement<BoundIndices, 2u>>(meas);
 
@@ -524,8 +526,9 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   // check that chi2 is set
   BOOST_CHECK_EQUAL(ts.chi2(), pc.chi2);
 
-  // check that the uncalibrated source link is set
-  BOOST_CHECK_EQUAL(ts.uncalibrated().get<TestSourceLink>(), pc.sourceLink);
+  // check that the uncalibratedSourceLink source link is set
+  BOOST_CHECK_EQUAL(ts.uncalibratedSourceLink().get<TestSourceLink>(),
+                    pc.sourceLink);
 
   // check that the calibrated measurement is set
   BOOST_CHECK(ts.hasCalibrated());
@@ -600,7 +603,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   BOOST_CHECK(!tsnone.has<"calibrated"_hash>());
   BOOST_CHECK(!tsnone.has<"projector"_hash>());
   BOOST_CHECK(
-      !tsnone.has<"uncalibrated"_hash>());  // separate optional mechanism
+      !tsnone.has<"uncalibratedSourceLink"_hash>());  // separate optional
+                                                      // mechanism
   BOOST_CHECK(tsnone.has<"calibratedSourceLink"_hash>());
   BOOST_CHECK(tsnone.has<"referenceSurface"_hash>());
   BOOST_CHECK(tsnone.has<"measdim"_hash>());
@@ -617,8 +621,9 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyAllocations) {
   tsall.allocateCalibrated(5);
   BOOST_CHECK(tsall.has<"calibrated"_hash>());
   BOOST_CHECK(tsall.has<"projector"_hash>());
-  BOOST_CHECK(!tsall.has<"uncalibrated"_hash>());  // separate optional
-                                                   // mechanism: nullptr
+  BOOST_CHECK(
+      !tsall.has<"uncalibratedSourceLink"_hash>());  // separate optional
+                                                     // mechanism: nullptr
   BOOST_CHECK(tsall.has<"calibratedSourceLink"_hash>());
   BOOST_CHECK(tsall.has<"referenceSurface"_hash>());
   BOOST_CHECK(tsall.has<"measdim"_hash>());
@@ -770,8 +775,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_NE(ts1.smoothed(), ts2.smoothed());
   BOOST_CHECK_NE(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
-  BOOST_CHECK_NE(ts1.uncalibrated().get<TestSourceLink>(),
-                 ts2.uncalibrated().get<TestSourceLink>());
+  BOOST_CHECK_NE(ts1.uncalibratedSourceLink().get<TestSourceLink>(),
+                 ts2.uncalibratedSourceLink().get<TestSourceLink>());
 
   BOOST_CHECK_NE(ts1.calibratedSourceLink().get<TestSourceLink>(),
                  ts2.calibratedSourceLink().get<TestSourceLink>());
@@ -800,8 +805,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_EQUAL(ts1.smoothed(), ts2.smoothed());
   BOOST_CHECK_EQUAL(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
-  BOOST_CHECK_EQUAL(ts1.uncalibrated().get<TestSourceLink>(),
-                    ts2.uncalibrated().get<TestSourceLink>());
+  BOOST_CHECK_EQUAL(ts1.uncalibratedSourceLink().get<TestSourceLink>(),
+                    ts2.uncalibratedSourceLink().get<TestSourceLink>());
 
   BOOST_CHECK_EQUAL(ts1.calibratedSourceLink().get<TestSourceLink>(),
                     ts2.calibratedSourceLink().get<TestSourceLink>());

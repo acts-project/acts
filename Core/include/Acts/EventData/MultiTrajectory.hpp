@@ -316,9 +316,10 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+      component<std::optional<SourceLink>,
+                hashString("uncalibratedSourceLink")>() =
           other.template component<std::optional<SourceLink>,
-                                   hashString("uncalibrated")>();
+                                   hashString("uncalibratedSourceLink")>();
 
       if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
         jacobian() = other.jacobian();
@@ -366,9 +367,10 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+      component<std::optional<SourceLink>,
+                hashString("uncalibratedSourceLink")>() =
           other.template component<std::optional<SourceLink>,
-                                   hashString("uncalibrated")>();
+                                   hashString("uncalibratedSourceLink")>();
 
       if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
           other.template has<hashString("jacobian")>()) {
@@ -730,19 +732,21 @@ class TrackStateProxy {
 
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
-  const SourceLink& uncalibrated() const;
+  const SourceLink& uncalibratedSourceLink() const;
 
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setUncalibrated(const SourceLink& sourceLink) {
-    component<std::optional<SourceLink>, hashString("uncalibrated")>() =
-        sourceLink;
+  void setUncalibratedSourceLink(const SourceLink& sourceLink) {
+    component<std::optional<SourceLink>,
+              hashString("uncalibratedSourceLink")>() = sourceLink;
   }
 
   /// Check if the point has an associated uncalibrated measurement.
   /// @return Whether it is set
-  bool hasUncalibrated() const { return has<hashString("uncalibrated")>(); }
+  bool hasUncalibratedSourceLink() const {
+    return has<hashString("uncalibratedSourceLink")>();
+  }
 
   /// Check if the point has an associated calibrated measurement.
   /// @return Whether it is set
