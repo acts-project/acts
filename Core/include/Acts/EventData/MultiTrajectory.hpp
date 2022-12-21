@@ -878,9 +878,7 @@ class TrackStateProxy {
   /// @note The underlying storage is overallocated to MeasurementSizeMax
   /// regardless of this value
   /// @return The number of dimensions
-  IndexType calibratedSize() const {
-    return component<IndexType, hashString("measdim")>();
-  }
+  IndexType calibratedSize() const { return m_traj->calibratedSize(m_istate); }
 
   /// Overwrite existing measurement data.
   ///
@@ -1374,6 +1372,13 @@ class MultiTrajectory {
     return self().template measurementCovariance_impl<measdim>(covIdx);
   }
 
+  /// Get the calibrated measurement size for a track state
+  /// @param istate The track state
+  /// @return the calibrated size
+  IndexType calibratedSize(IndexType istate) const {
+    return self().calibratedSize_impl(istate);
+  }
+
   /// Share a shareable component from between track state.
   /// @param iself The track state index to share "into"
   /// @param iother The track state index to share from
@@ -1444,6 +1449,11 @@ class MultiTrajectory {
     return *std::any_cast<const T*>(self().component_impl(key, istate));
   }
 
+  /// Allocate storage for a calibrated measurement of specified dimension
+  /// @param istate The track state to store for
+  /// @param measdim the dimension of the measurement to store
+  /// @note Is a noop if the track state already has an allocation
+  ///       an the dimension is the same.
   void allocateCalibrated(IndexType istate, size_t measdim) {
     self().allocateCalibrated_impl(istate, measdim);
   }
