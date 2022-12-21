@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/DetectorHelper.hpp"
+
 #include "Acts/Geometry/CylindricalDetectorHelper.hpp"
 
 #include <exception>
@@ -28,8 +29,9 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectDetectorVolumes(
       return connectDetectorVolumesInZ(gctx, volumes, selectedOnly, logLevel);
     };
     default: {
-      throw std::invalid_argument("DetectorHelper: connector mode not implemented.");
-    }; 
+      throw std::invalid_argument(
+          "DetectorHelper: connector mode not implemented.");
+    };
   }
   return ProtoContainer{};
 }
@@ -48,8 +50,9 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainers(
       return connectContainersInZ(gctx, containers, selectedOnly, logLevel);
     };
     default: {
-      throw std::invalid_argument("DetectorHelper: connector mode not implemented.");
-    }; 
+      throw std::invalid_argument(
+          "DetectorHelper: connector mode not implemented.");
+    };
   }
   return ProtoContainer{};
 }

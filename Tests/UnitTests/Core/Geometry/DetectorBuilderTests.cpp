@@ -28,14 +28,14 @@ BOOST_AUTO_TEST_CASE(DetectorBuilderSimpleVolume) {
   cylinder.extent.set(Acts::binZ, -200., 200.);
   cylinder.blockBuilder = SingleBlockBuilder<>{cylinder};
 
-  Acts::ProtoDetector cylinderDetector;
-  cylinderDetector.name = "cylinder-detector";
-  cylinderDetector.worldVolume = cylinder;
+  Acts::ProtoDetector protoDetector;
+  protoDetector.name = "cylinder-detector";
+  protoDetector.worldVolume = cylinder;
 
-  DetectorBuilder::Config dCfg{cylinderDetector, Acts::Logging::VERBOSE};
+  DetectorBuilder::Config dCfg{Acts::Logging::VERBOSE};
   DetectorBuilder dBuilder(dCfg);
 
-  auto detector = dBuilder.construct(tContext);
+  auto detector = dBuilder.construct(tContext, protoDetector);
 
   // Check that we have one volume
   BOOST_CHECK(detector->name() == "cylinder-detector");
@@ -70,19 +70,48 @@ BOOST_AUTO_TEST_CASE(DetectorBuilderContainerVolume) {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1.})};
   system.blockBuilder = ContainerBlockBuilder{system};
 
-  Acts::ProtoDetector cylinderDetector;
-  cylinderDetector.name = "cylinder-detector";
-  cylinderDetector.worldVolume = system;
+  Acts::ProtoDetector protoDetector;
+  protoDetector.name = "cylinder-detector";
+  protoDetector.worldVolume = system;
 
-  Acts::Experimental::DetectorBuilder::Config dCfg{cylinderDetector,
-                                                   Acts::Logging::VERBOSE};
+  Acts::Experimental::DetectorBuilder::Config dCfg{Acts::Logging::VERBOSE};
   Acts::Experimental::DetectorBuilder dBuilder(dCfg);
 
-  auto detector = dBuilder.construct(tContext);
+  auto detector = dBuilder.construct(tContext, protoDetector);
 
   // Check that we have one volume
   BOOST_CHECK(detector->name() == "cylinder-detector");
   BOOST_CHECK(detector->volumes().size() == 3u);
+
+  Acts::ProtoVolume beamPipe;
+  beamPipe.name = "beampipe";
+  beamPipe.extent.set(Acts::binR, 0., 20.);
+  beamPipe.extent.set(Acts::binZ, -600, 600.);
+  beamPipe.blockBuilder = SingleBlockBuilder<>{beamPipe};
+  // Slightly changed with beam pipe
+  nec.extent.set(Acts::binR, 20., 200.);
+  nec.blockBuilder = SingleBlockBuilder<>{nec};
+  barrel.extent.set(Acts::binR, 20., 200.);
+  barrel.blockBuilder = SingleBlockBuilder<>{barrel};
+  pec.extent.set(Acts::binR, 20., 200.);
+  pec.blockBuilder = SingleBlockBuilder<>{pec};
+  // Re-assign the system
+  system.constituentVolumes = {nec, barrel, pec};
+  system.blockBuilder = ContainerBlockBuilder{system};
+  // System with beam pipe
+  Acts::ProtoVolume bpsystem;
+  bpsystem.name = "beampipe-nec-barrel-pec";
+  bpsystem.constituentVolumes = {beamPipe, system};
+  bpsystem.constituentBinning = {
+      Acts::BinningData(Acts::open, Acts::binR, {0., 1.})};
+  bpsystem.blockBuilder = ContainerBlockBuilder{bpsystem};
+
+  protoDetector.name = "cylinder-detector-beam-pipe";
+  protoDetector.worldVolume = bpsystem;
+
+  detector = dBuilder.construct(tContext, protoDetector);
+  BOOST_CHECK(detector->name() == "cylinder-detector-beam-pipe");
+  BOOST_CHECK(detector->volumes().size() == 4u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

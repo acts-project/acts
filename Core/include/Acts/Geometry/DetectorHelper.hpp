@@ -59,7 +59,7 @@ ProtoContainer connectDetectorVolumes(
 ///
 /// @returns the proto container surfaces of a Proto container
 ProtoContainer connectContainers(
-    const GeometryContext& gctx, BinningValue bValue, 
+    const GeometryContext& gctx, BinningValue bValue,
     const std::vector<ProtoContainer>& containers,
     const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);

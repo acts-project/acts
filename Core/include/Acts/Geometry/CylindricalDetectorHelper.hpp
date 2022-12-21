@@ -101,7 +101,6 @@ ProtoContainer connectContainersInZ(
     const std::vector<unsigned int>& selectedOnly = {},
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
-
 /// @brief Helper method to extract r,z,phi boundaries for
 /// eventual grid volume search
 ///
@@ -114,7 +113,6 @@ std::array<std::vector<ActsScalar>, 3u> rzphiBoundaries(
     const GeometryContext& gctx,
     const std::vector<const DetectorVolume*>& volumes,
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
-    
 
 }  // namespace Experimental
 }  // namespace Acts

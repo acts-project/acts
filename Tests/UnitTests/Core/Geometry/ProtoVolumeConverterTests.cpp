@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(EmptyVolumeTest) {
   DetectorBlock dBlock;
   SingleBlockBuilder<>{cylinder}(dBlock, tContext);
 
-  // One volume contained 
+  // One volume contained
   BOOST_CHECK(std::get<0>(dBlock).size() == 1u);
   // Three bounding surfaces define the shell/skin
   BOOST_CHECK(std::get<1>(dBlock).size() == 3u);

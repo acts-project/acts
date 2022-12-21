@@ -165,7 +165,10 @@ std::map<unsigned int,
 stripSideVolumes(
     const std::vector<Acts::Experimental::ProtoContainer>& containers,
     const std::vector<unsigned int>& sides,
-    const std::vector<unsigned int>& selectedOnly = {}) {
+    const std::vector<unsigned int>& selectedOnly = {},
+    Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+  ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("::stripSideVolumes", logLevel));
+
   // Thes are the aripped out side volumes
   std::map<unsigned int,
            std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
@@ -323,7 +326,7 @@ Acts::Experimental::connectDetectorVolumesInZ(
   // The local logger
   ACTS_LOCAL_LOGGER(getDefaultLogger("CylindricalDetectorHelper", logLevel));
 
-  ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in z.");
+  ACTS_DEBUG("Connect " << volumes.size() << " detector volumes in Z.");
 
   // Return proto container
   ProtoContainer protoContainer;
@@ -334,6 +337,14 @@ Acts::Experimental::connectDetectorVolumesInZ(
                       selectedOnly.end();
   // Reference z axis
   const auto rotation = volumes[0]->transform(gctx).rotation();
+
+  ACTS_VERBOSE(" - connection in Z is " << (connectZ ? "" : "not")
+                                        << " happening.");
+  if (not selectedOnly.empty()) {
+    ACTS_VERBOSE(" - instead this is restriced to a selection of "
+                 << selectedOnly.size() << " sides.");
+  }
+
   std::vector<Vector3> zBoundaries3D = {};
 
   /// @brief  Add the z boundary
@@ -359,6 +370,8 @@ Acts::Experimental::connectDetectorVolumesInZ(
     if (connectZ) {
       auto& keepDisc = volumes[iv - 1]->portalPtrs()[1u];
       auto& wasteDisc = volumes[iv]->portalPtrs()[0u];
+      ACTS_VERBOSE("Connect volume '" << volumes[iv - 1]->name() << "' to "
+                                      << volumes[iv]->name() << "'.");
       keepDisc->fuse(wasteDisc);
       volumes[iv]->updatePortal(keepDisc, 0u);
     }
@@ -373,6 +386,9 @@ Acts::Experimental::connectDetectorVolumesInZ(
   // Centre of gravity
   Vector3 combinedCenter =
       0.5 * (zBoundaries3D[zBoundaries3D.size() - 1u] + zBoundaries3D[0u]);
+
+  ACTS_VERBOSE("New combined center calculated at "
+               << toString(combinedCenter));
 
   std::vector<ActsScalar> zBoundaries = {};
   for (const auto& zb3D : zBoundaries3D) {
@@ -411,8 +427,11 @@ Acts::Experimental::connectDetectorVolumesInZ(
   // Cylinder radii
   std::vector<Acts::ActsScalar> cylinderR = {maxR};
   if (innerPresent) {
+    ACTS_VERBOSE("Inner surface present, tube geometry detected.");
     cylinderDirs.push_back(NavigationDirection::Forward);
     cylinderR.push_back(minR);
+  } else {
+    ACTS_VERBOSE("No inner surface present, solid cylinder geometry detected.");
   }
   // Tube/cylinder offset
   unsigned int iSecOffset = innerPresent ? 4u : 3u;
@@ -429,6 +448,7 @@ Acts::Experimental::connectDetectorVolumesInZ(
 
   // Prepare the sector side replacements
   if (sectorsPresent) {
+    ACTS_VERBOSE("Sector planes are present, they need replacement.");
     // Sector assignmenta are forward backward
     std::vector<Acts::NavigationDirection> sectorDirs = {
         Acts::NavigationDirection::Forward,
@@ -445,13 +465,18 @@ Acts::Experimental::connectDetectorVolumesInZ(
                                     zBoundaries, Acts::binZ, iu + 4u, idir));
       }
     }
+  } else {
+    ACTS_VERBOSE(
+        "No sector planes present, full 2 * M_PI cylindrical geometry.")
   }
 
   // Attach the new volume multi links
   detail::attachDetectorVolumeUpdators(gctx, volumes, pReplacements);
 
   // Exchange the portals of the volumes
+  ACTS_VERBOSE("Portals of " << volumes.size() << " volumes need updating.");
   for (auto& iv : volumes) {
+    ACTS_VERBOSE("- update portals of volume '" << iv->name() << "'.");
     for (auto& [p, i, dir, boundaries, binning] : pReplacements) {
       // Potential offset for tube vs/ cylinder
       int iOffset = (i > 2u and not innerPresent) ? -1 : 0;
@@ -539,7 +564,7 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInR(
   protoContainer[2u] = containers[containers.size() - 1u].find(2u)->second;
 
   auto sideVolumes =
-      stripSideVolumes(containers, {0u, 1u, 4u, 5u}, selectedOnly);
+      stripSideVolumes(containers, {0u, 1u, 4u, 5u}, selectedOnly, logLevel);
 
   for (auto [s, volumes] : sideVolumes) {
     auto pR = connectDetectorVolumesInR(gctx, volumes, {s});
@@ -571,19 +596,18 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInZ(
     if (formerContainer.find(1u) == formerContainer.end()) {
       throw std::invalid_argument(
           "CylindricalDetectorHelper: proto container has no negative disc, "
-          "can "
-          "not be connected in Z");
+          "can not be connected in Z");
     }
     if (currentContainer.find(0u) == currentContainer.end()) {
       throw std::invalid_argument(
           "CylindricalDetectorHelper: proto container has no positive disc, "
-          "can "
-          "not be connected in Z");
+          "can not be connected in Z");
     }
     std::shared_ptr<Portal> keepDisc = formerContainer.find(1u)->second;
     std::shared_ptr<Portal> wasteDisc = currentContainer.find(0u)->second;
     keepDisc->fuse(wasteDisc);
     for (auto& av : wasteDisc->attachedDetectorVolumes()[1u]) {
+      ACTS_VERBOSE("Update portal of detector volume '" << av->name() << "'.");
       av->updatePortal(keepDisc, 0u);
     }
   }
@@ -592,16 +616,21 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInZ(
   protoContainer[0u] = containers[0u].find(0u)->second;
   protoContainer[1u] = containers[containers.size() - 1u].find(1u)->second;
 
+  // Check if this is a tube or a cylinder container (check done on 1st)
   std::vector<unsigned int> nominalSides = {2u, 4u, 5u};
   if (containers[0u].find(3u) != containers[0u].end()) {
     nominalSides.push_back(3u);
   }
 
-  // Set the sides
-  auto sideVolumes = stripSideVolumes(containers, nominalSides, selectedOnly);
+  // Strip the side volumes
+  auto sideVolumes =
+      stripSideVolumes(containers, nominalSides, selectedOnly, logLevel);
 
+  ACTS_VERBOSE("There remain " << sideVolumes.size()
+                               << " side volume packs to be connected");
   for (auto [s, volumes] : sideVolumes) {
-    auto pR = connectDetectorVolumesInZ(gctx, volumes, {s});
+    ACTS_VERBOSE(" - connect " << volumes.size() << " at selected side " << s);
+    auto pR = connectDetectorVolumesInZ(gctx, volumes, {s}, logLevel);
     if (pR.find(s) != pR.end()) {
       protoContainer[s] = pR.find(s)->second;
     }
@@ -610,7 +639,6 @@ Acts::Experimental::ProtoContainer Acts::Experimental::connectContainersInZ(
   // Done.
   return protoContainer;
 }
-
 
 std::array<std::vector<Acts::ActsScalar>, 3u>
 Acts::Experimental::rzphiBoundaries(

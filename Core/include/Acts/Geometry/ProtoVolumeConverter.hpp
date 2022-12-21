@@ -181,7 +181,7 @@ struct ContainerBlockBuilder {
       // Run the block builders
       std::vector<ProtoContainer> dContainers = {};
       ACTS_VERBOSE(" - this container has "
-                  << protoVolume.constituentVolumes.size() << " constituents");
+                   << protoVolume.constituentVolumes.size() << " constituents");
       for (auto& cv : protoVolume.constituentVolumes) {
         // Collect the constituent volumes
         DetectorBlock cBlock;
@@ -195,6 +195,8 @@ struct ContainerBlockBuilder {
       }
       auto& dContainer = std::get<ProtoContainer>(dBlock);
       dContainer = connectContainers(gctx, bValue, dContainers, {}, logLevel);
+      // A succesful return
+      return;
     }
 
     // throw exception

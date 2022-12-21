@@ -31,7 +31,6 @@ class DetectorBuilder {
  public:
   /// Nested Configuration for this TrackingGeometryBuilder
   struct Config {
-    ProtoDetector protoDetector;
     /// Screen logging level for helper functions
     Logging::Level logLevel = Logging::INFO;
   };
@@ -50,10 +49,11 @@ class DetectorBuilder {
   /// Detector building method
   ///
   /// @param gctx geometry context of that building call
+  /// @param protoDetector the proto detector description (blue print)
   ///
   /// @return a shared pointer to the newly built detecots
   std::shared_ptr<Experimental::Detector> construct(
-      const GeometryContext& gctx) const;
+      const GeometryContext& gctx, const ProtoDetector& protoDetector) const;
 
  private:
   /// Configuration member

@@ -9,15 +9,15 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/CylindricalDetectorHelper.hpp"
 #include "Acts/Geometry/Detector.hpp"
 #include "Acts/Geometry/DetectorVolume.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/detail/DetectorVolumeFinders.hpp"
 #include "Acts/Geometry/detail/NavigationStateUpdators.hpp"
 #include "Acts/Geometry/detail/PortalGenerators.hpp"
 #include "Acts/Geometry/detail/SurfaceCandidatesUpdators.hpp"
-#include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -157,7 +157,6 @@ BOOST_AUTO_TEST_CASE(PerfectFitPhiAttachment) {
 }
 
 BOOST_AUTO_TEST_CASE(ProtoContainerRZ) {
-
   auto transform = Acts::Transform3::Identity();
 
   std::vector<Acts::ActsScalar> innerMostRadii = {0., 2.};
@@ -272,7 +271,7 @@ BOOST_AUTO_TEST_CASE(ProtoContainerRZ) {
 
     auto detector = Detector::makeShared("DetectorFromProtoContainer", dVolumes,
                                          detail::tryAllVolumes());
-  } // test with different innermost radii
+  }  // test with different innermost radii
 }
 
 BOOST_AUTO_TEST_SUITE_END()

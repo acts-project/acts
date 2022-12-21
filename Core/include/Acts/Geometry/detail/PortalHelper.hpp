@@ -81,8 +81,6 @@ using PortalReplacement =
                NavigationDirection, std::vector<ActsScalar>, BinningValue>;
 
 /// @brief Create and attach the multi link updator
-
-/// @brief Create and attach the multi link updator
 ///
 /// @param gctx the geometry context
 /// @param volumes are the volumes that are pointed to
@@ -106,7 +104,7 @@ void attachDetectorVolumeUpdators(
     DetectorVolumeUpdator dVolumeUpdator;
     dVolumeUpdator.connect<&BoundVolumesGrid1Impl::update>(
         std::move(volumes1D));
-    p->assignDetectorVolumeUpdator(std::move(dVolumeUpdator), volumes);
+    p->assignDetectorVolumeUpdator(dir, std::move(dVolumeUpdator), volumes);
   }
 }
 
