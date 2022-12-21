@@ -272,10 +272,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
                 float seed1_sum = 0;
                 float seed2_sum = 0;
                 for (int i = 0; i < 3; i++) {
-                  seed1_sum += pow(i1.second->sp[i]->sp().y(), 2) +
-                               pow(i1.second->sp[i]->sp().z(), 2);
-                  seed2_sum += pow(i2.second->sp[i]->sp().y(), 2) +
-                               pow(i2.second->sp[i]->sp().z(), 2);
+                  seed1_sum += pow(i1.second->sp[i]->y(), 2) +
+                               pow(i1.second->sp[i]->z(), 2);
+                  seed2_sum += pow(i2.second->sp[i]->y(), 2) +
+                               pow(i2.second->sp[i]->z(), 2);
                 }
                 return seed1_sum > seed2_sum;
               }
