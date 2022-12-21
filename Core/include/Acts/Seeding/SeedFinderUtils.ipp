@@ -81,8 +81,9 @@ std::vector<std::size_t> transformCoordinates(
     bool bottom, std::vector<LinCircle>& linCircleVec,
     callable_t&& extractFunction) {
   std::vector<std::size_t> indexes(vec.size());
-  for (unsigned int i(0); i < indexes.size(); i++)
+  for (unsigned int i(0); i < indexes.size(); i++) {
     indexes[i] = i;
+  }
 
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 

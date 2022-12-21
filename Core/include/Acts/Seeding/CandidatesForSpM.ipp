@@ -10,11 +10,7 @@ namespace Acts {
 
 template <typename external_space_point_t>
 CandidatesForSpM<external_space_point_t>::CandidatesForSpM()
-    : m_max_size_high(0),
-      m_max_size_low(0),
-      m_n_high(0),
-      m_n_low(0),
-      m_SpB(CandidatesForSpM<external_space_point_t>::default_value),
+    : m_SpB(CandidatesForSpM<external_space_point_t>::default_value),
       m_SpM(CandidatesForSpM<external_space_point_t>::default_value) {}
 
 template <typename external_space_point_t>
@@ -32,14 +28,16 @@ void CandidatesForSpM<external_space_point_t>::push(
     return;
   }
 
-  if (current_max_size == 0)
+  if (current_max_size == 0) {
     return;
+  }
 
   // if no space, replace one if quality is enough
   // compare to element with lower weight
   const auto& lower_weight = top(storage);
-  if (weight <= lower_weight)
+  if (weight <= lower_weight) {
     return;
+  }
 
   // remove element with lower weight and add this one
   pop(storage, current_size);
@@ -87,8 +85,9 @@ void CandidatesForSpM<external_space_point_t>::bubbledw(
   std::size_t right_child = 2 * n + 2;
 
   // no left child, we stop
-  if (not exists(left_child, actual_size))
+  if (not exists(left_child, actual_size)) {
     return;
+  }
 
   float weight_left_child = weight(storage, left_child);
 
@@ -120,8 +119,9 @@ void CandidatesForSpM<external_space_point_t>::bubbledw(
 template <typename external_space_point_t>
 void CandidatesForSpM<external_space_point_t>::bubbleup(
     std::vector<value_type>& storage, std::size_t n) {
-  if (n == 0)
+  if (n == 0) {
     return;
+  }
 
   // parent: (n - 1) / 2;
   // this works because it is an integer operation
@@ -180,8 +180,9 @@ bool CandidatesForSpM<external_space_point_t>::greaterSort(
   const auto& [bottom_l2, medium_l2, top_l2, weight_l2, zOrigin_l2,
                isQuality_l2] = i2;
 
-  if (weight_l1 != weight_l2)
+  if (weight_l1 != weight_l2) {
     return weight_l1 > weight_l2;
+  }
 
   // This is for the case when the weights from different seeds
   // are same. This makes cpu & cuda results same

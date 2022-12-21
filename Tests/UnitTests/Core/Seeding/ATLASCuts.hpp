@@ -76,8 +76,9 @@ ATLASCuts<SpacePoint>::cutPerMiddleSP(
   std::vector<
       typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
       newSeedsVector;
-  if (seedCandidates.size() <= 1)
+  if (seedCandidates.size() <= 1) {
     return seedCandidates;
+  }
 
   newSeedsVector.push_back(std::move(seedCandidates[0]));
   std::size_t itLength = std::min(seedCandidates.size(), std::size_t(5));

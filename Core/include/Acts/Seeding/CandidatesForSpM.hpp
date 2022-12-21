@@ -34,8 +34,8 @@ class CandidatesForSpM {
   ~CandidatesForSpM() = default;
 
   void setMaxElements(std::size_t n_low, std::size_t n_high);
-  void setMediumSp(sp_type);
-  void setBottomSp(sp_type);
+  void setMediumSp(sp_type idx);
+  void setBottomSp(sp_type idx);
   std::vector<output_type> storage() const;
   const sp_type& spM() const;
 
@@ -45,26 +45,29 @@ class CandidatesForSpM {
   static bool greaterSort(const output_type& i1, const output_type& i2);
 
  private:
-  bool exists(std::size_t, std::size_t) const;
+  bool exists(std::size_t n, std::size_t max_size) const;
 
-  void pop(std::vector<value_type>&, std::size_t&);
-  float top(const std::vector<value_type>&) const;
-  float weight(const std::vector<value_type>&, std::size_t) const;
+  void pop(std::vector<value_type>& storage, std::size_t& current_size);
+  float top(const std::vector<value_type>& storage) const;
+  float weight(const std::vector<value_type>& storage, std::size_t n) const;
 
-  void bubbleup(std::vector<value_type>&, std::size_t);
-  void bubbledw(std::vector<value_type>&, std::size_t, std::size_t);
+  void bubbleup(std::vector<value_type>& storage, std::size_t n);
+  void bubbledw(std::vector<value_type>& storage, std::size_t n,
+                std::size_t actual_size);
 
-  void addToCollection(std::vector<value_type>&, sp_type& SpB, sp_type& SpT,
-                       float weight, float zOrigin, bool isQuality);
-  void insertToCollection(std::vector<value_type>&, sp_type& SpB, sp_type& SpT,
-                          float weight, float zOrigin, bool isQuality);
+  void addToCollection(std::vector<value_type>& storage, sp_type& SpB,
+                       sp_type& SpT, float weight, float zOrigin,
+                       bool isQuality);
+  void insertToCollection(std::vector<value_type>& storage, sp_type& SpB,
+                          sp_type& SpT, float weight, float zOrigin,
+                          bool isQuality);
 
  public:
   // sizes
-  std::size_t m_max_size_high;
-  std::size_t m_max_size_low;
-  std::size_t m_n_high;
-  std::size_t m_n_low;
+  std::size_t m_max_size_high{0};
+  std::size_t m_max_size_low{0};
+  std::size_t m_n_high{0};
+  std::size_t m_n_low{0};
 
   // space points
   sp_type m_SpB;
@@ -91,10 +94,12 @@ CandidatesForSpM<external_space_point_t>::spM() const {
 template <typename external_space_point_t>
 inline void CandidatesForSpM<external_space_point_t>::setMaxElements(
     std::size_t n_low, std::size_t n_high) {
-  if (m_storage_high.capacity() < n_high)
+  if (m_storage_high.capacity() < n_high) {
     m_storage_high.reserve(n_high);
-  if (m_storage_low.capacity() < n_low)
+  }
+  if (m_storage_low.capacity() < n_low) {
     m_storage_low.reserve(n_low);
+  }
   m_max_size_high = n_high;
   m_max_size_low = n_low;
 }

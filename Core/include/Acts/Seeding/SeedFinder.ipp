@@ -90,8 +90,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.compatTopSP.clear();
     for (auto topSP : topSPs) {
-      if (not isCompatibleDoublet(options, topSP, spM, false))
+      if (not isCompatibleDoublet(options, topSP, spM, false)) {
         continue;
+      }
       state.compatTopSP.push_back(topSP);
     }
 
@@ -121,8 +122,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.compatBottomSP.clear();
     for (auto bottomSP : bottomSPs) {
-      if (not isCompatibleDoublet(options, bottomSP, spM, true))
+      if (not isCompatibleDoublet(options, bottomSP, spM, true)) {
         continue;
+      }
       state.compatBottomSP.push_back(bottomSP);
     }
 
@@ -156,39 +158,46 @@ bool SeedFinder<external_spacepoint_t, platform_t>::isCompatibleDoublet(
   float deltaR = sign * (rO - rM);
 
   // if r-distance is too small, try next SP in bin
-  if (deltaR < deltaRMinSP)
+  if (deltaR < deltaRMinSP) {
     return false;
+  }
 
   // if r-distance is too big, try next SP in bin
-  if (deltaR > deltaRMaxSP)
+  if (deltaR > deltaRMaxSP) {
     return false;
+  }
 
   const float zM = mediumSP->z();
   const float zO = otherSP->z();
   float deltaZ = sign * (zO - zM);
   // ratio Z/R (forward angle) of space point duplet
   float cotTheta = deltaZ / deltaR;
-  if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax)
+  if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
     return false;
+  }
 
   // check if duplet origin on z axis within collision region
   float zOrigin = zM - rM * cotTheta;
   if (zOrigin < m_config.collisionRegionMin ||
-      zOrigin > m_config.collisionRegionMax)
+      zOrigin > m_config.collisionRegionMax) {
     return false;
+  }
 
-  if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax)
+  if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
     return false;
-  if (not m_config.interactionPointCut)
+  }
+  if (not m_config.interactionPointCut) {
     return true;
+  }
 
   const float xVal = (otherSP->x() - mediumSP->x()) * (mediumSP->x() / rM) +
                      (otherSP->y() - mediumSP->y()) * (mediumSP->y() / rM);
   const float yVal = (otherSP->y() - mediumSP->y()) * (mediumSP->x() / rM) -
                      (otherSP->x() - mediumSP->x()) * (mediumSP->y() / rM);
 
-  if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal)
+  if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
     return true;
+  }
 
   // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
   // circle into straight lines in the u/v plane the line equation can
@@ -211,8 +220,9 @@ bool SeedFinder<external_spacepoint_t, platform_t>::isCompatibleDoublet(
   // the distance of the straight line from the origin (radius of the
   // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
   // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-  if ((bCoef * bCoef) > (1 + aCoef * aCoef) / options.minHelixDiameter2)
+  if ((bCoef * bCoef) > (1 + aCoef * aCoef) / options.minHelixDiameter2) {
     return false;
+  }
 
   return true;
 }
@@ -409,12 +419,14 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // fair for scattering and measurement uncertainties)
       if (deltaCotTheta2 > (error2 + scatteringInRegion2)) {
         // skip top SPs based on cotTheta sorting when producing triplets
-        if (not m_config.skipPreviousTopSP)
+        if (not m_config.skipPreviousTopSP) {
           continue;
+        }
         // break if cotTheta from bottom SP < cotTheta from top SP because
         // the SP are sorted by cotTheta
-        if (cotThetaB - cotThetaT < 0)
+        if (cotThetaB - cotThetaT < 0) {
           break;
+        }
         t0 = index_t + 1;
         continue;
       }
@@ -475,10 +487,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       float p2scatterSigma = pT2scatterSigma * iSinTheta2;
       // if deltaTheta larger than allowed scattering for calculated pT, skip
       if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
-        if (not m_config.skipPreviousTopSP)
+        if (not m_config.skipPreviousTopSP) {
           continue;
-        if (cotThetaB - cotThetaT < 0)
+        }
+        if (cotThetaB - cotThetaT < 0) {
           break;
+        }
         t0 = index_t;
         continue;
       }
@@ -489,8 +503,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
                      ? std::abs((A - B * rMxy) * rMxy)
                      : std::abs((A - B * rM) * rM);
 
-      if (Im > m_config.impactMax)
+      if (Im > m_config.impactMax) {
         continue;
+      }
 
       state.topSpVec.push_back(state.compatTopSP[t]);
       // inverse diameter is signed depending if the curvature is
@@ -506,8 +521,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       state.ptVec.push_back(pT);
     }  // loop on tops
 
-    if (state.topSpVec.empty())
+    if (state.topSpVec.empty()) {
       continue;
+    }
 
     state.candidates_collector.setBottomSp(state.compatBottomSP[b]);
 
