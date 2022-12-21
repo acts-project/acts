@@ -32,6 +32,8 @@ class DetectorBuilder {
   /// Nested Configuration for this TrackingGeometryBuilder
   struct Config {
     ProtoDetector protoDetector;
+    /// Screen logging level for helper functions
+    Logging::Level logLevel = Logging::INFO;
   };
 
   /// Constructor

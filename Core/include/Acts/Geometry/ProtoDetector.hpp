@@ -13,10 +13,12 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <functional>
 #include <memory>
 #include <string>
+#include <map>
 #include <tuple>
 
 namespace Acts {
@@ -28,13 +30,16 @@ namespace Experimental {
 class DetectorVolume;
 class Portal;
 
-/// Current volumes (connected), current skin
-using DetectorBlock = std::tuple<std::vector<std::shared_ptr<DetectorVolume>>,
-                                 std::vector<std::shared_ptr<Portal>>>;
+/// Current volumes (connected)
+using DetectorVolumes = std::vector<std::shared_ptr<DetectorVolume>>;
+/// Current skin (outside volumes)
+using ProtoContainer = std::map<unsigned int, std::shared_ptr<Portal>>;
+/// Current blok (volumes and skin)
+using DetectorBlock = std::tuple<DetectorVolumes,ProtoContainer>;
 
 /// The detector builder function
 using DetectorBlockBuilder =
-    std::function<void(DetectorBlock&, const GeometryContext&)>;
+    std::function<void(DetectorBlock&, const GeometryContext&, Acts::Logging::Level)>;
 }  // namespace Experimental
 
 /// A proto volume description being used to define an overall

@@ -23,10 +23,10 @@ Acts::Experimental::DetectorBuilder::construct(
   auto& worldVolume = m_cfg.protoDetector.worldVolume;
 
   DetectorBlock dBlock;
-  worldVolume.blockBuilder(dBlock, gctx);
+  worldVolume.blockBuilder(dBlock, gctx, m_cfg.logLevel);
 
   // Get the volumes that build this detector
-  auto volumes = std::get<0>(dBlock);
+  auto volumes = std::get<DetectorVolumes>(dBlock);
 
   return Detector::makeShared(m_cfg.protoDetector.name, volumes,
                               detail::tryAllVolumes());

@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DetectorHelper.hpp"
 #include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -21,6 +22,8 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Delegate.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <tuple>
@@ -116,12 +119,18 @@ struct SingleBlockBuilder {
   ///
   /// @param shell The input shell
   /// @param gctx The geometry context
-  /// @param protoVolume
+  /// @param logLevel is a screen output log level
   ///
   /// @return a newly created DetectorVolume
-  void operator()(DetectorBlock& dBlock, const GeometryContext& gctx) {
-    auto& dVolumes = std::get<0>(dBlock);
-    auto& dPortals = std::get<1>(dBlock);
+  void operator()(DetectorBlock& dBlock, const GeometryContext& gctx,
+                  Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+    // Screen output
+    ACTS_LOCAL_LOGGER(getDefaultLogger(
+        "SingleBlockBuilder   [ " + protoVolume.name + " ]", logLevel));
+
+    ACTS_DEBUG("Building single volume '" << protoVolume.name << "'.");
+    auto& dVolumes = std::get<DetectorVolumes>(dBlock);
+    auto& dContainer = std::get<ProtoContainer>(dBlock);
     // Externals
     auto [transform, bounds] = Volume{protoVolume}.create(gctx);
     // Internals
@@ -134,8 +143,11 @@ struct SingleBlockBuilder {
         volumes, std::move(updator));
     // Update the detector block
     dVolumes.push_back(dVolume);
-    dPortals.insert(dPortals.end(), dVolume->portalPtrs().begin(),
-                    dVolume->portalPtrs().end());
+    for (auto [ip, p] : enumerate(dVolume->portalPtrs())) {
+      ACTS_VERBOSE(" - adding portal " << ip << " to the proto container.");
+      dContainer[ip] = p;
+    }
+    ACTS_VERBOSE(" - total number of portals added: " << dContainer.size());
   }
 };
 
@@ -151,18 +163,43 @@ struct ContainerBlockBuilder {
   ///
   /// @param dBlock The detector block to be built
   /// @param gctx The geometry context
+  /// @param logLevel is a sreen output log level
   ///
   /// @return a newly created DetectorVolume
-  void operator()(DetectorBlock& dBlock, const GeometryContext& gctx) {
-    auto& dVolumes = std::get<0>(dBlock);
-    auto& dPortals = std::get<1>(dBlock);
-    for (auto& cv : protoVolume.constituentVolumes) {
-      // Collect the constituent volumes
-      DetectorBlock cBlock;
-      cv.blockBuilder(cBlock, gctx);
-      const auto& cVolumes = std::get<0u>(cBlock);
-      dVolumes.insert(dVolumes.end(), cVolumes.begin(), cVolumes.end());
+  void operator()(DetectorBlock& dBlock, const GeometryContext& gctx,
+                  Acts::Logging::Level logLevel = Acts::Logging::INFO) {
+    // Screen output
+    ACTS_LOCAL_LOGGER(getDefaultLogger(
+        "ContainerBlockBuilder [ " + protoVolume.name + " ]", logLevel));
+
+    ACTS_DEBUG("Building container volume '" << protoVolume.name << "'.");
+    auto& dVolumes = std::get<DetectorVolumes>(dBlock);
+    // Only one dimensional connection so far possible
+    if (protoVolume.constituentBinning.size() == 1u) {
+      // Get the binning value
+      BinningValue bValue = protoVolume.constituentBinning.front().binvalue;
+      // Run the block builders
+      std::vector<ProtoContainer> dContainers = {};
+      ACTS_VERBOSE(" - this container has "
+                  << protoVolume.constituentVolumes.size() << " constituents");
+      for (auto& cv : protoVolume.constituentVolumes) {
+        // Collect the constituent volumes
+        DetectorBlock cBlock;
+        cv.blockBuilder(cBlock, gctx, logLevel);
+        // Collect the detector volumes & container of the constituent
+        const auto& cVolumes = std::get<DetectorVolumes>(cBlock);
+        auto& cContainer = std::get<ProtoContainer>(cBlock);
+        dVolumes.insert(dVolumes.end(), cVolumes.begin(), cVolumes.end());
+        // Collect the proto containers
+        dContainers.push_back(cContainer);
+      }
+      auto& dContainer = std::get<ProtoContainer>(dBlock);
+      dContainer = connectContainers(gctx, bValue, dContainers, {}, logLevel);
     }
+
+    // throw exception
+    throw std::invalid_argument(
+        "ContainerBlockBuilder: no binning value provided.");
   }
 };
 
