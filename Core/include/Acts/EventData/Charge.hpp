@@ -77,7 +77,10 @@ struct Neutral {
   ///
   /// This is always `true` as `Neutral` has no internal state.
   /// Must be available to provide a consistent interface.
-  friend constexpr bool operator==(Neutral, Neutral) noexcept { return true; }
+  friend constexpr bool operator==(Neutral /*unused*/,
+                                   Neutral /*unused*/) noexcept {
+    return true;
+  }
 };
 
 /// Charge and momentum interpretation for particles with +-e charge.
@@ -107,7 +110,8 @@ struct SinglyCharged {
   ///
   /// This is always `true` as `SinglyCharged` has no internal state.
   /// Must be available to provide a consistent interface.
-  friend constexpr bool operator==(SinglyCharged, SinglyCharged) noexcept {
+  friend constexpr bool operator==(SinglyCharged /*unused*/,
+                                   SinglyCharged /*unused*/) noexcept {
     return true;
   }
 };

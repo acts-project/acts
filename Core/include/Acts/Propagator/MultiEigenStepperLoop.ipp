@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Logger.hpp"
+
 namespace Acts {
 
 template <typename E, typename R, typename A>
@@ -44,7 +46,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       }
     }
 
-    if (states.size() == 0) {
+    if (states.empty()) {
       return MultiStepperError::AllComponentsConversionToBoundFailed;
     }
 
@@ -111,17 +113,10 @@ template <typename E, typename R, typename A>
 template <typename propagator_state_t>
 Result<double> MultiEigenStepperLoop<E, R, A>::step(
     propagator_state_t& state) const {
-  const auto& logger = state.options.logger;
   State& stepping = state.stepping;
 
-  // It is not possible to remove components from the vector, since the
-  // GSF actor relies on the fact that the ordering and number of
-  // components does not change
-  auto invalidateComponent = [](auto& cmp) {
-    cmp.status = Intersection3D::Status::missed;
-    cmp.weight = 0.0;
-    cmp.state.pars.template segment<3>(eFreeDir0) = Vector3::Zero();
-  };
+  // @TODO: This needs to be a real logger
+  const Logger& logger = getDummyLogger();
 
   // Lambda for reweighting the components
   auto reweight = [](auto& cmps) {
@@ -147,10 +142,11 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
         m_stepLimitAfterFirstComponentOnSurface) {
       for (auto& cmp : stepping.components) {
         if (cmp.status != Intersection3D::Status::onSurface) {
-          invalidateComponent(cmp);
+          cmp.status = Intersection3D::Status::missed;
         }
       }
 
+      removeMissedComponents(stepping);
       reweight(stepping.components);
 
       ACTS_VERBOSE("Stepper performed "
@@ -194,12 +190,13 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
       accumulatedPathLength += component.weight * results.back()->value();
     } else {
       ++errorSteps;
-      invalidateComponent(component);
+      component.status = Intersection3D::Status::missed;
     }
   }
 
   // Since we have invalidated some components, we need to reweight
   if (errorSteps > 0) {
+    removeMissedComponents(stepping);
     reweight(stepping.components);
   }
 
@@ -228,7 +225,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   }
 
   // Return error if there is no ok result
-  if (errorSteps == results.size()) {
+  if (stepping.components.empty()) {
     return MultiStepperError::AllComponentsSteppingError;
   }
 

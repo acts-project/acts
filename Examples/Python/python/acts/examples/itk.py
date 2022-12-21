@@ -7,6 +7,7 @@ from acts.examples import TGeoDetector
 
 from acts.examples.reconstruction import (
     SeedFinderConfigArg,
+    SeedFinderOptionsArg,
     SeedFilterConfigArg,
     SpacePointGridConfigArg,
     SeedingAlgorithmConfigArg,
@@ -407,7 +408,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         seedConfirmationFilter = True
         impactWeightFactor = 100
         compatSeedLimit = 3
-        numSeedIncrement = 10**100  # inf
+        numSeedIncrement = float("inf")
         seedWeightIncrement = 0
         useDetailedDoubleMeasurementInfo = False
         maxSeedsPerSpMConf = 5
@@ -473,7 +474,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         sigmaScattering=sigmaScattering,
         radLengthPerSeed=radLengthPerSeed,
         minPt=minPt,
-        bFieldInZ=bFieldInZ,
         impactMax=impactMax,
         interactionPointCut=interactionPointCut,
         arithmeticAverageCotTheta=arithmeticAverageCotTheta,
@@ -496,8 +496,10 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         collisionRegion=(collisionRegionMin, collisionRegionMax),
         r=(None, rMaxSeedFinderConfig),
         z=(zMin, zMax),
-        beamPos=beamPos,
     )
+
+    seedFinderOptionsArg = SeedFinderOptionsArg(bFieldInZ=bFieldInZ, beamPos=beamPos)
+
     seedFilterConfigArg = SeedFilterConfigArg(
         impactWeightFactor=impactWeightFactor,
         zOriginWeightFactor=zOriginWeightFactor,
@@ -527,6 +529,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
 
     return (
         seedFinderConfigArg,
+        seedFinderOptionsArg,
         seedFilterConfigArg,
         spacePointGridConfigArg,
         seedingAlgorithmConfigArg,

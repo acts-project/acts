@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -111,10 +112,10 @@ double theta(const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
-    static_assert(rows >= 3, "Theta function not valid for non-3D vectors.");
+    static_assert(rows == 3, "Theta function not valid for non-3D vectors.");
   } else {
     // dynamic size
-    if (v.rows() < 3) {
+    if (v.rows() != 3) {
       std::cerr << "Theta function not valid for non-3D vectors." << std::endl;
       std::abort();
     }
@@ -154,10 +155,10 @@ double eta(const Eigen::MatrixBase<Derived>& v) noexcept {
   constexpr int rows = Eigen::MatrixBase<Derived>::RowsAtCompileTime;
   if constexpr (rows != -1) {
     // static size, do compile time check
-    static_assert(rows >= 3, "Eta function not valid for non-3D vectors.");
+    static_assert(rows == 3, "Eta function not valid for non-3D vectors.");
   } else {
     // dynamic size
-    if (v.rows() < 3) {
+    if (v.rows() != 3) {
       std::cerr << "Eta function not valid for non-3D vectors." << std::endl;
       std::abort();
     }
@@ -356,6 +357,22 @@ std::vector<const T*> unpack_shared_vector(
   return rawPtrs;
 }
 
+/// Helper function to unpack a vector of @c shared_ptr into a vector of raw
+/// pointers
+/// @tparam T the stored type
+/// @param items The vector of @c shared_ptr
+/// @return The unpacked vector
+template <typename T>
+std::vector<const T*> unpack_shared_const_vector(
+    const std::vector<std::shared_ptr<T>>& items) {
+  std::vector<const T*> rawPtrs;
+  rawPtrs.reserve(items.size());
+  for (const std::shared_ptr<T>& item : items) {
+    rawPtrs.push_back(item.get());
+  }
+  return rawPtrs;
+}
+
 /// @brief Dispatch a call based on a runtime value on a function taking the
 /// value at compile time.
 ///
@@ -379,6 +396,11 @@ auto template_switch(size_t v, Args&&... args) {
   if (v == N) {
     return Callable<N>::invoke(std::forward<Args>(args)...);
   }
+  if (v == 0) {
+    std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
+              << ") is not valid (v == 0 and N != 0)" << std::endl;
+    std::abort();
+  }
   if constexpr (N < NMAX) {
     return template_switch<Callable, N + 1, NMAX>(v,
                                                   std::forward<Args>(args)...);
@@ -400,6 +422,11 @@ auto template_switch_lambda(size_t v, Lambda&& func, Args&&... args) {
   if (v == N) {
     return func(std::integral_constant<size_t, N>{},
                 std::forward<Args>(args)...);
+  }
+  if (v == 0) {
+    std::cerr << "template_switch<Fn, " << N << ", " << NMAX << ">(v=" << v
+              << ") is not valid (v == 0 and N != 0)" << std::endl;
+    std::abort();
   }
   if constexpr (N < NMAX) {
     return template_switch_lambda<N + 1, NMAX>(v, func,
@@ -559,4 +586,16 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
     return r;
   }
 }
+
+/// Clamp a numeric value to another type, respecting range of the target type
+/// @tparam T the target type
+/// @tparam U the source type
+/// @param value the value to clamp
+/// @return the clamped value
+template <typename T, typename U>
+T clampValue(U value) {
+  return std::clamp(value, static_cast<U>(std::numeric_limits<T>::lowest()),
+                    static_cast<U>(std::numeric_limits<T>::max()));
+}
+
 }  // namespace Acts

@@ -19,6 +19,7 @@ import acts.examples
 acts.logging.setFailureThreshold(acts.logging.FATAL)
 
 from truth_tracking_kalman import runTruthTrackingKalman
+from truth_tracking_gsf import runTruthTrackingGsf
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 from acts.examples.simulation import (
@@ -34,6 +35,7 @@ from acts.examples.reconstruction import (
     TruthSeedRanges,
     ParticleSmearingSigmas,
     SeedFinderConfigArg,
+    SeedFinderOptionsArg,
     SeedingAlgorithm,
     TrackParamsEstimationConfig,
     addCKFTracks,
@@ -70,43 +72,56 @@ detector, trackingGeometry, decorators = getOpenDataDetector(
 digiConfig = srcdir / "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json"
 geoSel = srcdir / "thirdparty/OpenDataDetector/config/odd-seeding-config.json"
 
-
 field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
-s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
 
-with tempfile.TemporaryDirectory() as temp:
-    tp = Path(temp)
-    runTruthTrackingKalman(
-        trackingGeometry,
-        field,
-        digiConfigFile=digiConfig,
-        outputDir=tp,
-        s=s,
-    )
+def truth_tracking_kalman():
+    with tempfile.TemporaryDirectory() as temp:
+        s = acts.examples.Sequencer(
+            events=10000, numThreads=-1, logLevel=acts.logging.INFO
+        )
+        tp = Path(temp)
+        runTruthTrackingKalman(
+            trackingGeometry,
+            field,
+            digiConfigFile=digiConfig,
+            outputDir=tp,
+            s=s,
+        )
 
-    s.run()
-    del s
+        s.run()
+        del s
 
-    perf_file = tp / "performance_track_fitter.root"
-    assert perf_file.exists(), "Performance file not found"
-    shutil.copy(perf_file, outdir / "performance_truth_tracking.root")
+        perf_file = tp / "performance_track_fitter.root"
+        assert perf_file.exists(), "Performance file not found"
+        shutil.copy(perf_file, outdir / "performance_truth_tracking.root")
 
 
-### CKF track finding variations
+def truth_tracking_gsf():
+    with tempfile.TemporaryDirectory() as temp:
+        s = acts.examples.Sequencer(
+            events=500, numThreads=-1, logLevel=acts.logging.INFO
+        )
 
-for truthSmearedSeeded, truthEstimatedSeeded, label in [
-    (True, False, "truth_smeared"),  # if first is true, second is ignored
-    (False, True, "truth_estimated"),
-    (False, False, "seeded"),
-]:
-    # TODO There seems to be a difference to the reference files when using
-    # multithreading ActsAnalysisResidualsAndPulls
-    s = acts.examples.Sequencer(
-        events=500,
-        numThreads=1 if label == "seeded" else -1,
-        logLevel=acts.logging.INFO,
-    )
+        tp = Path(temp)
+        runTruthTrackingGsf(
+            trackingGeometry,
+            digiConfig,
+            field,
+            outputDir=tp,
+            s=s,
+        )
+
+        s.run()
+        del s
+
+        perf_file = tp / "performance_gsf.root"
+        assert perf_file.exists(), "Performance file not found"
+        shutil.copy(perf_file, outdir / "performance_gsf.root")
+
+
+def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
+    s = acts.examples.Sequencer(events=500, numThreads=-1, logLevel=acts.logging.INFO)
 
     with tempfile.TemporaryDirectory() as temp:
         tp = Path(temp)
@@ -163,18 +178,137 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
                 sigmaScattering=5,
                 radLengthPerSeed=0.1,
                 minPt=500 * u.MeV,
-                bFieldInZ=1.99724 * u.T,
                 impactMax=3 * u.mm,
             ),
+            SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
             TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.TruthSmeared
             if truthSmearedSeeded
             else SeedingAlgorithm.TruthEstimated
             if truthEstimatedSeeded
-            else SeedingAlgorithm.Default,
+            else SeedingAlgorithm.Default
+            if label == "seeded"
+            else SeedingAlgorithm.Orthogonal,
             geoSelectionConfigFile=geoSel,
-            outputDirRoot=tp,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
+            outputDirRoot=tp,
+        )
+
+        addCKFTracks(
+            s,
+            trackingGeometry,
+            field,
+            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+            TrackSelectorRanges(
+                removeNeutral=True,
+                loc0=(-4.0 * u.mm, 4.0 * u.mm),
+                pt=(500 * u.MeV, None),
+            ),
+            outputDirRoot=tp,
+            outputDirCsv=None,
+        )
+
+        if label in ["seeded", "orthogonal"]:
+            addAmbiguityResolution(
+                s,
+                AmbiguityResolutionConfig(maximumSharedHits=3),
+                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+                outputDirRoot=tp,
+            )
+
+        addVertexFitting(
+            s,
+            field,
+            associatedParticles=None
+            if label in ["seeded", "orthogonal"]
+            else "particles_input",
+            vertexFinder=VertexFinder.Iterative,
+            outputDirRoot=tp,
+        )
+
+        s.run()
+        del s
+
+        for stem in ["performance_ckf", "performance_vertexing"] + (
+            ["performance_seeding_hists", "performance_ambi"]
+            if label in ["seeded", "orthogonal"]
+            else ["performance_seeding_hists"]
+            if label == "truth_estimated"
+            else []
+        ):
+            perf_file = tp / f"{stem}.root"
+            assert perf_file.exists(), "Performance file not found"
+            shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
+
+
+def run_vertexing(fitter, mu, events):
+    s = acts.examples.Sequencer(
+        events=events, numThreads=-1, logLevel=acts.logging.INFO
+    )
+
+    with tempfile.TemporaryDirectory() as temp:
+        tp = Path(temp)
+
+        for d in decorators:
+            s.addContextDecorator(d)
+
+        rnd = acts.examples.RandomNumbers(seed=42)
+
+        vtxGen = acts.examples.GaussianVertexGenerator(
+            stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
+            mean=acts.Vector4(0, 0, 0, 0),
+        )
+
+        addParticleGun(
+            s,
+            EtaConfig(-4.0, 4.0),
+            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            PhiConfig(0.0, 360.0 * u.degree),
+            vtxGen=vtxGen,
+            multiplicity=mu,
+            rnd=rnd,
+        )
+
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            rnd=rnd,
+        )
+
+        addDigitization(
+            s,
+            trackingGeometry,
+            field,
+            digiConfigFile=digiConfig,
+            rnd=rnd,
+        )
+
+        addSeeding(
+            s,
+            trackingGeometry,
+            field,
+            TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
+            ParticleSmearingSigmas(
+                pRel=0.01
+            ),  # only used by SeedingAlgorithm.TruthSmeared
+            SeedFinderConfigArg(
+                r=(None, 200 * u.mm),  # rMin=default, 33mm
+                deltaR=(1 * u.mm, 60 * u.mm),
+                collisionRegion=(-250 * u.mm, 250 * u.mm),
+                z=(-2000 * u.mm, 2000 * u.mm),
+                maxSeedsPerSpM=1,
+                sigmaScattering=5,
+                radLengthPerSeed=0.1,
+                minPt=500 * u.MeV,
+                impactMax=3 * u.mm,
+            ),
+            SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
+            TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
+            seedingAlgorithm=SeedingAlgorithm.Default,
+            geoSelectionConfigFile=geoSel,
+            rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
+            outputDirRoot=None,
         )
 
         addCKFTracks(
@@ -187,169 +321,69 @@ for truthSmearedSeeded, truthEstimatedSeeded, label in [
                 loc0=(None, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
             ),
-            outputDirRoot=tp,
+            outputDirRoot=None,
             outputDirCsv=None,
         )
 
-        if label == "seeded":
-            addAmbiguityResolution(
-                s,
-                AmbiguityResolutionConfig(maximumSharedHits=3),
-                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-                outputDirRoot=tp,
-            )
+        addAmbiguityResolution(
+            s,
+            AmbiguityResolutionConfig(maximumSharedHits=3),
+            CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
+            outputDirRoot=None,
+        )
 
         addVertexFitting(
             s,
             field,
-            associatedParticles=None if label == "seeded" else "particles_input",
-            vertexFinder=VertexFinder.Iterative,
+            vertexFinder=fitter,
             outputDirRoot=tp,
         )
 
         s.run()
+
         del s
 
-        for stem in ["performance_ckf", "performance_vertexing"] + (
-            ["performance_ambi"] if label == "seeded" else []
-        ):
-            perf_file = tp / f"{stem}.root"
-            assert perf_file.exists(), "Performance file not found"
-            shutil.copy(perf_file, outdir / f"{stem}_{label}.root")
+        perf_file = tp / f"performance_vertexing.root"
+        assert perf_file.exists(), "Performance file not found"
+        shutil.copy(
+            perf_file,
+            outdir / f"performance_vertexing_{fitter.name}_mu{mu}.root",
+        )
 
-        if label == "seeded":
-            residual_app = srcdir / "build/bin/ActsAnalysisResidualsAndPulls"
-            # @TODO: Add try/except
-            subprocess.check_call(
-                [
-                    str(residual_app),
-                    "--predicted",
-                    "--filtered",
-                    "--smoothed",
-                    "--silent",
-                    "-i",
-                    str(tp / "trackstates_ckf.root"),
-                    "-o",
-                    str(outdir / "acts_analysis_residuals_and_pulls.root"),
-                    "--save",
-                    "",
-                ]
-            )
 
-### VERTEX MU SCAN
+with acts.FpeMonitor():
 
-for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
-    for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
-        start = datetime.datetime.now()
-        s = acts.examples.Sequencer(events=5, numThreads=-1, logLevel=acts.logging.INFO)
+    ### Truth tracking with Kalman Filter
 
-        with tempfile.TemporaryDirectory() as temp:
-            tp = Path(temp)
+    truth_tracking_kalman()
 
-            for d in decorators:
-                s.addContextDecorator(d)
+    ### GSF
 
-            rnd = acts.examples.RandomNumbers(seed=42)
+    truth_tracking_gsf()
 
-            vtxGen = acts.examples.GaussianVertexGenerator(
-                stddev=acts.Vector4(10 * u.um, 10 * u.um, 50 * u.mm, 0),
-                mean=acts.Vector4(0, 0, 0, 0),
-            )
+    ### CKF track finding variations
 
-            addParticleGun(
-                s,
-                EtaConfig(-4.0, 4.0),
-                ParticleConfig(4, acts.PdgParticle.eMuon, True),
-                PhiConfig(0.0, 360.0 * u.degree),
-                vtxGen=vtxGen,
-                multiplicity=mu,
-                rnd=rnd,
-            )
+    for truthSmearedSeeded, truthEstimatedSeeded, label in [
+        (True, False, "truth_smeared"),  # if first is true, second is ignored
+        (False, True, "truth_estimated"),
+        (False, False, "seeded"),
+        (False, False, "orthogonal"),
+    ]:
+        run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label)
 
-            addFatras(
-                s,
-                trackingGeometry,
-                field,
-                rnd=rnd,
-            )
+    ### VERTEX MU SCAN
 
-            addDigitization(
-                s,
-                trackingGeometry,
-                field,
-                digiConfigFile=digiConfig,
-                rnd=rnd,
-            )
+    for fitter in (VertexFinder.Iterative, VertexFinder.AMVF):
+        for mu in (1, 10, 25, 50, 75, 100, 125, 150, 175, 200):
+            start = datetime.datetime.now()
 
-            addSeeding(
-                s,
-                trackingGeometry,
-                field,
-                TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-                ParticleSmearingSigmas(
-                    pRel=0.01
-                ),  # only used by SeedingAlgorithm.TruthSmeared
-                SeedFinderConfigArg(
-                    r=(None, 200 * u.mm),  # rMin=default, 33mm
-                    deltaR=(1 * u.mm, 60 * u.mm),
-                    collisionRegion=(-250 * u.mm, 250 * u.mm),
-                    z=(-2000 * u.mm, 2000 * u.mm),
-                    maxSeedsPerSpM=1,
-                    sigmaScattering=5,
-                    radLengthPerSeed=0.1,
-                    minPt=500 * u.MeV,
-                    bFieldInZ=1.99724 * u.T,
-                    impactMax=3 * u.mm,
-                ),
-                TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
-                seedingAlgorithm=SeedingAlgorithm.Default,
-                geoSelectionConfigFile=geoSel,
-                outputDirRoot=None,
-                rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
-            )
-
-            addCKFTracks(
-                s,
-                trackingGeometry,
-                field,
-                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-                TrackSelectorRanges(
-                    removeNeutral=True,
-                    loc0=(None, 4.0 * u.mm),
-                    pt=(500 * u.MeV, None),
-                ),
-                outputDirRoot=None,
-                outputDirCsv=None,
-            )
-
-            addAmbiguityResolution(
-                s,
-                AmbiguityResolutionConfig(maximumSharedHits=3),
-                CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
-                outputDirRoot=None,
-            )
-
-            addVertexFitting(
-                s,
-                field,
-                vertexFinder=fitter,
-                outputDirRoot=tp,
-            )
-
-            s.run()
+            events = 5
+            run_vertexing(fitter, mu, events)
 
             delta = datetime.datetime.now() - start
 
-            duration = delta.total_seconds() / s.config.events
-
-            perf_file = tp / f"performance_vertexing.root"
-            assert perf_file.exists(), "Performance file not found"
-            shutil.copy(
-                perf_file, outdir / f"performance_vertexing_{fitter.name}_mu{mu}.root"
-            )
+            duration = delta.total_seconds() / events
 
             (
                 outdir / f"performance_vertexing_{fitter.name}_mu{mu}_time.txt"
             ).write_text(str(duration))
-
-            del s

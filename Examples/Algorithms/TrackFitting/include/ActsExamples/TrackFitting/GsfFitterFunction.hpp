@@ -31,7 +31,7 @@ makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
-    Acts::FinalReductionMethod finalReductionMethod, bool abortOnError,
-    bool disableAllMaterialHandling);
+    double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
+    bool abortOnError, bool disableAllMaterialHandling);
 
 }  // namespace ActsExamples

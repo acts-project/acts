@@ -33,8 +33,7 @@ struct TrackFitterChi2FunctionImpl
   TrackFitterChi2FunctionImpl(Fitter&& f) : trackFitterChi2(std::move(f)) {}
 
   ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Result operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Options&
           options,
@@ -52,7 +51,7 @@ ActsExamples::TrackFittingChi2Algorithm::makeTrackFitterChi2Function(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   Stepper stepper(std::move(magneticField));
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;

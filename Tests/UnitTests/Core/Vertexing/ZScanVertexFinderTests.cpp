@@ -279,7 +279,7 @@ BOOST_AUTO_TEST_CASE(zscan_finder_usertrack_test) {
     // Create a custom std::function to extract BoundTrackParameters from
     // user-defined InputTrack
     std::function<BoundTrackParameters(InputTrack)> extractParameters =
-        [](InputTrack params) { return params.parameters(); };
+        [](const InputTrack& params) { return params.parameters(); };
 
     VertexFinder finder(cfg, extractParameters);
     VertexFinder::State state;

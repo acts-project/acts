@@ -60,9 +60,12 @@ Acts::Grid3D Acts::createGrid(std::array<double, 3> gridAxis1,
   // calculate maxima (add one last bin, because bin value always corresponds
   // to
   // left boundary)
-  double stepAxis1 = std::fabs(maxAxis1 - minAxis1) / (nBinsAxis1 - 1);
-  double stepAxis2 = std::fabs(maxAxis2 - minAxis2) / (nBinsAxis2 - 1);
-  double stepAxis3 = std::fabs(maxAxis3 - minAxis3) / (nBinsAxis3 - 1);
+  double stepAxis1 =
+      std::fabs(maxAxis1 - minAxis1) / std::max(nBinsAxis1 - 1, size_t(1));
+  double stepAxis2 =
+      std::fabs(maxAxis2 - minAxis2) / std::max(nBinsAxis2 - 1, size_t(1));
+  double stepAxis3 =
+      std::fabs(maxAxis3 - minAxis3) / std::max(nBinsAxis3 - 1, size_t(1));
   maxAxis1 += stepAxis1;
   maxAxis2 += stepAxis2;
   maxAxis3 += stepAxis3;
@@ -83,31 +86,31 @@ std::function<double(Acts::Vector3)> Acts::globalToLocalFromBin(
 
   switch (type) {
     case Acts::binX:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.x());
       };
       break;
 
     case Acts::binY:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.y());
       };
       break;
 
     case Acts::binR:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (Acts::VectorHelpers::perp(pos));
       };
       break;
 
     case Acts::binPhi:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (Acts::VectorHelpers::phi(pos));
       };
       break;
 
     case Acts::binZ:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.z());
       };
       break;
@@ -128,8 +131,8 @@ Acts::Grid2D Acts::createGrid2D(
     std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
   // First we nee to create the 2 axis
-  std::array<double, 3> gridAxis1;
-  std::array<double, 3> gridAxis2;
+  std::array<double, 3> gridAxis1{};
+  std::array<double, 3> gridAxis2{};
 
   bool isCartesian = false;
   bool isCylindrical = false;
@@ -172,9 +175,9 @@ Acts::Grid3D Acts::createGrid3D(
     std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
   // First we nee to create the 3 axis
-  std::array<double, 3> gridAxis1;
-  std::array<double, 3> gridAxis2;
-  std::array<double, 3> gridAxis3;
+  std::array<double, 3> gridAxis1{};
+  std::array<double, 3> gridAxis2{};
+  std::array<double, 3> gridAxis3{};
 
   bool isCartesian = false;
   bool isCylindrical = false;

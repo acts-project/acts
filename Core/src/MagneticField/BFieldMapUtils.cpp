@@ -109,7 +109,7 @@ Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   auto transformBField = [](const Acts::Vector2& field,
                             const Acts::Vector3& pos) {
     double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
-    double cos_phi, sin_phi;
+    double cos_phi = 0, sin_phi = 0;
     if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
       double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
       cos_phi = pos.x() * inv_r_sin_theta;
@@ -250,11 +250,11 @@ Acts::solenoidFieldMap(std::pair<double, double> rlim,
                        std::pair<double, double> zlim,
                        std::pair<size_t, size_t> nbins,
                        const SolenoidBField& field) {
-  double rMin, rMax, zMin, zMax;
+  double rMin = 0, rMax = 0, zMin = 0, zMax = 0;
   std::tie(rMin, rMax) = rlim;
   std::tie(zMin, zMax) = zlim;
 
-  size_t nBinsR, nBinsZ;
+  size_t nBinsR = 0, nBinsZ = 0;
   std::tie(nBinsR, nBinsZ) = nbins;
 
   double stepZ = std::abs(zMax - zMin) / (nBinsZ - 1);
@@ -284,7 +284,7 @@ Acts::solenoidFieldMap(std::pair<double, double> rlim,
   auto transformBField = [](const Acts::Vector2& bfield,
                             const Acts::Vector3& pos) {
     double r_sin_theta_2 = pos.x() * pos.x() + pos.y() * pos.y();
-    double cos_phi, sin_phi;
+    double cos_phi = 0, sin_phi = 0;
     if (r_sin_theta_2 > std::numeric_limits<double>::min()) {
       double inv_r_sin_theta = 1. / sqrt(r_sin_theta_2);
       cos_phi = pos.x() * inv_r_sin_theta;

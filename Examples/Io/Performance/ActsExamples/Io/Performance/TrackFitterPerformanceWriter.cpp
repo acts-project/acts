@@ -105,14 +105,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
-      continue;
-    }
-
     // The trajectory entry indices and the multiTrajectory
     const auto& trackTips = traj.tips();
     const auto& mj = traj.multiTrajectory();
+
+    if (trackTips.empty()) {
+      ACTS_WARNING("No trajectory found for entry " << itraj);
+      continue;
+    }
 
     // Check the size of the trajectory entry indices. For track fitting, there
     // should be at most one trajectory

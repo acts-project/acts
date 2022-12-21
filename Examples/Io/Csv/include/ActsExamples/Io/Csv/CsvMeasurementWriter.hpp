@@ -60,10 +60,10 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
   CsvMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~CsvMeasurementWriter() final override;
+  ~CsvMeasurementWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -75,7 +75,7 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const MeasurementContainer& measurements) final override;
+                     const MeasurementContainer& measurements) override;
 
  private:
   Config m_cfg;

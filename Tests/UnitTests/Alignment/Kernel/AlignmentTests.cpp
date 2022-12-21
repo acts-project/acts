@@ -120,8 +120,7 @@ struct TelescopeDetector {
     auto length = positions.back() - positions.front();
 
     std::vector<LayerPtr> layers(nLayers);
-    unsigned int i;
-    for (i = 0; i < nLayers; ++i) {
+    for (unsigned int i = 0; i < nLayers; ++i) {
       // The transform
       Translation3 trans(0., 0., positions[i]);
       Transform3 trafo(rotation * trans);
@@ -151,7 +150,7 @@ struct TelescopeDetector {
     LayerArrayCreator layArrCreator(
         lacConfig, getDefaultLogger("LayerArrayCreator", Logging::INFO));
     LayerVector layVec;
-    for (i = 0; i < nLayers; i++) {
+    for (unsigned int i = 0; i < nLayers; i++) {
       layVec.push_back(layers[i]);
     }
 
@@ -180,7 +179,7 @@ struct TelescopeDetector {
 // Construct a straight-line propagator.
 StraightPropagator makeStraightPropagator(
     std::shared_ptr<const TrackingGeometry> geo) {
-  Navigator::Config cfg{geo};
+  Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -191,15 +190,17 @@ StraightPropagator makeStraightPropagator(
 
 // Construct a propagator using a constant magnetic field along z.
 ConstantFieldPropagator makeConstantFieldPropagator(
-    std::shared_ptr<const TrackingGeometry> geo, double bz) {
-  Navigator::Config cfg{geo};
+    std::shared_ptr<const TrackingGeometry> geo, double bz,
+    std::unique_ptr<const Logger> logger) {
+  Navigator::Config cfg{std::move(geo)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Navigator navigator(cfg);
+  Navigator navigator(cfg, logger->cloneWithSuffix("Nav"));
   auto field = std::make_shared<ConstantBField>(Vector3(0.0, 0.0, bz));
   ConstantFieldStepper stepper(std::move(field));
-  return ConstantFieldPropagator(std::move(stepper), std::move(navigator));
+  return ConstantFieldPropagator(std::move(stepper), std::move(navigator),
+                                 logger->cloneWithSuffix("Prop"));
 }
 
 // Construct initial track parameters.
@@ -247,7 +248,7 @@ struct KalmanFitterInputTrajectory {
 std::vector<KalmanFitterInputTrajectory> createTrajectories(
     std::shared_ptr<const TrackingGeometry> geo, size_t nTrajectories) {
   // simulation propagator
-  const auto simPropagator = makeStraightPropagator(geo);
+  const auto simPropagator = makeStraightPropagator(std::move(geo));
 
   std::vector<KalmanFitterInputTrajectory> trajectories;
   trajectories.reserve(nTrajectories);
@@ -278,13 +279,14 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   const auto geometry = detector();
 
   // reconstruction propagator and fitter
-  const auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
-  const auto kfZeroPropagator = makeConstantFieldPropagator(geometry, 0_T);
-  const auto kfZero = KalmanFitterType(kfZeroPropagator);
+  auto kfLogger = getDefaultLogger("KalmanFilter", Logging::INFO);
+  const auto kfZeroPropagator =
+      makeConstantFieldPropagator(geometry, 0_T, std::move(kfLogger));
+  auto kfZero = KalmanFitterType(kfZeroPropagator);
 
   // alignment
   const auto alignLogger = getDefaultLogger("Alignment", Logging::INFO);
-  const auto alignZero = Alignment(kfZero);
+  const auto alignZero = Alignment(std::move(kfZero));
 
   // Create 10 trajectories
   const auto& trajectories = createTrajectories(geometry, 10);
@@ -292,7 +294,6 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   // Construct the KalmanFitter options
 
   KalmanFitterOptions kfOptions(geoCtx, magCtx, calCtx, getExtensions(),
-                                LoggerWrapper{*kfLogger},
                                 PropagatorPlainOptions());
 
   // Construct an non-updating alignment updater
