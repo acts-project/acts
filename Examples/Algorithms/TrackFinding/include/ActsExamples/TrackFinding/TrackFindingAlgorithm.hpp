@@ -136,8 +136,9 @@ void TrackFindingAlgorithm::computeSharedHits(
         continue;
       }
 
-      std::size_t hitIndex =
-          state.uncalibrated().template get<IndexSourceLink>().index();
+      std::size_t hitIndex = state.uncalibratedSourceLink()
+                                 .template get<IndexSourceLink>()
+                                 .index();
 
       // Check if hit not already used
       if (firstTrackOnTheHit.at(hitIndex) ==
