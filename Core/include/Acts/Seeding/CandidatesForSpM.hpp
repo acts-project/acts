@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include <algorithm>
 #include <memory>
 #include <tuple>
 #include <vector>
-#include <algorithm>
 
 namespace Acts {
 
@@ -41,6 +41,8 @@ class CandidatesForSpM {
 
   void push(sp_type& SpT, float weight, float zOrigin, bool isQuality);
   void clear();
+
+  static bool greaterSort(const output_type& i1, const output_type& i2);
 
  private:
   bool exists(std::size_t, std::size_t) const;

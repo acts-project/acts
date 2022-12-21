@@ -166,38 +166,42 @@ CandidatesForSpM<external_space_point_t>::storage() const {
 
   // sort output according to weight and sps
   // should we collect inputs according to this criterion instead?
-  std::sort(
-      output.begin(), output.end(), [](const auto& i1, const auto& i2) -> bool {
-        const auto& [bottom_l1, medium_l1, top_l1, weight_l1, zOrigin_l1,
-                     isQuality_l1] = i1;
-        const auto& [bottom_l2, medium_l2, top_l2, weight_l2, zOrigin_l2,
-                     isQuality_l2] = i2;
-
-        if (weight_l1 != weight_l2)
-          return weight_l1 > weight_l2;
-
-        // This is for the case when the weights from different seeds
-        // are same. This makes cpu & cuda results same
-
-        // medium is the same for all candidates
-        float sum_medium =
-            medium_l1->y() * medium_l1->y() + medium_l1->z() * medium_l1->z();
-
-        float seed1_sum = sum_medium;
-        float seed2_sum = sum_medium;
-
-        seed1_sum +=
-            bottom_l1->y() * bottom_l1->y() + bottom_l1->z() * bottom_l1->z();
-        seed1_sum += top_l1->y() * top_l1->y() + top_l1->z() * top_l1->z();
-
-        seed2_sum +=
-            bottom_l2->y() * bottom_l2->y() + bottom_l2->z() * bottom_l2->z();
-        seed2_sum += top_l2->y() * top_l2->y() + top_l2->z() * top_l2->z();
-
-        return seed1_sum > seed2_sum;
-      });
-
+  std::sort(output.begin(), output.end(),
+            CandidatesForSpM<external_space_point_t>::greaterSort);
   return output;
+}
+
+template <typename external_space_point_t>
+bool CandidatesForSpM<external_space_point_t>::greaterSort(
+    const typename CandidatesForSpM<external_space_point_t>::output_type& i1,
+    const typename CandidatesForSpM<external_space_point_t>::output_type& i2) {
+  const auto& [bottom_l1, medium_l1, top_l1, weight_l1, zOrigin_l1,
+               isQuality_l1] = i1;
+  const auto& [bottom_l2, medium_l2, top_l2, weight_l2, zOrigin_l2,
+               isQuality_l2] = i2;
+
+  if (weight_l1 != weight_l2)
+    return weight_l1 > weight_l2;
+
+  // This is for the case when the weights from different seeds
+  // are same. This makes cpu & cuda results same
+
+  // medium is the same for all candidates
+  float sum_medium =
+      medium_l1->y() * medium_l1->y() + medium_l1->z() * medium_l1->z();
+
+  float seed1_sum = sum_medium;
+  float seed2_sum = sum_medium;
+
+  seed1_sum +=
+      bottom_l1->y() * bottom_l1->y() + bottom_l1->z() * bottom_l1->z();
+  seed1_sum += top_l1->y() * top_l1->y() + top_l1->z() * top_l1->z();
+
+  seed2_sum +=
+      bottom_l2->y() * bottom_l2->y() + bottom_l2->z() * bottom_l2->z();
+  seed2_sum += top_l2->y() * top_l2->y() + top_l2->z() * top_l2->z();
+
+  return seed1_sum > seed2_sum;
 }
 
 }  // namespace Acts

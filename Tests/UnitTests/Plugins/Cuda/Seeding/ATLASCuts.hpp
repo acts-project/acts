@@ -36,7 +36,7 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// space point in a std::tuple format
   /// @return vector of seed candidates that pass the cut
   std::vector<
-    typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
+      typename CandidatesForSpM<InternalSpacePoint<SpacePoint>>::output_type>
   cutPerMiddleSP(std::vector<typename CandidatesForSpM<
                      InternalSpacePoint<SpacePoint>>::output_type>
                      seedCandidates) const override;

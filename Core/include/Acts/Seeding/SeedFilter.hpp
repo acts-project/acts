@@ -76,12 +76,12 @@ class SeedFilter {
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 
+
   /// Filter seeds once all seeds for one middle space point have been created
   /// @param candidates collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
-
   virtual void filterSeeds_1SpFixed(
       std::vector<typename CandidatesForSpM<
           InternalSpacePoint<external_spacepoint_t>>::output_type>& candidates,

@@ -197,7 +197,7 @@ class SeedFinderOrthogonal {
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
    * @param seedFilterState  holds quantities used in seed filter
-   * @param candidates_collector The container to write the resulting 
+   * @param candidates_collector The container to write the resulting
    * seed caandidates to.
    */
   void filterCandidates(

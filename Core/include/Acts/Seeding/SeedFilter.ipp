@@ -230,6 +230,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 }
 
 // after creating all seeds with a common middle space point, filter again
+
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>&
@@ -241,13 +242,21 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // this collection is alredy sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
+  filterSeeds_1SpFixed(extended_collection, numQualitySeeds, outIt);
+}
 
+template <typename external_spacepoint_t>
+void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+    std::vector<typename CandidatesForSpM<
+        InternalSpacePoint<external_spacepoint_t>>::output_type>& candidates,
+    int& numQualitySeeds,
+    std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
+    const {
   if (m_experimentCuts != nullptr) {
-    extended_collection =
-        m_experimentCuts->cutPerMiddleSP(std::move(extended_collection));
+    candidates = m_experimentCuts->cutPerMiddleSP(std::move(candidates));
   }
 
-  unsigned int maxSeeds = extended_collection.size();
+  unsigned int maxSeeds = candidates.size();
 
   if (maxSeeds > m_cfg.maxSeedsPerSpM) {
     maxSeeds = m_cfg.maxSeedsPerSpM + 1;
@@ -258,7 +267,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // weight seeds
   unsigned int numTotalSeeds = 0;
   for (auto& [bottom, medium, top, bestSeedQuality, zOrigin, qualitySeed] :
-       extended_collection) {
+       candidates) {
     // stop if we reach the maximum number of seeds
     if (numTotalSeeds >= maxSeeds) {
       break;
