@@ -17,6 +17,7 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/EventData/Track.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -36,6 +37,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
+#include "Acts/Utilities/Zip.hpp"
 
 #include <functional>
 #include <memory>
@@ -208,7 +210,7 @@ struct CombinatorialKalmanFilterOptions {
 template <typename traj_t>
 struct CombinatorialKalmanFilterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<traj_t> fittedStates;
+  traj_t* fittedStates{nullptr};
 
   // These is used internally to store candidate trackstates
   std::shared_ptr<traj_t> stateBuffer;
@@ -420,6 +422,8 @@ class CombinatorialKalmanFilter {
                     TrackStateFlag::MeasurementFlag);
               }
               result.lastMeasurementIndices.emplace_back(lastMeasurementIndex);
+              // @TODO: Keep information on tip state around so we don't have to
+              //        recalculate it later
             }
             // Remove the tip from list of active tips
             result.activeTips.erase(result.activeTips.end() - 1);
@@ -1242,12 +1246,14 @@ class CombinatorialKalmanFilter {
   ///                                      container
   /// @tparam calibrator_t Type of the source link calibrator
   /// @tparam measurement_selector_t Type of the measurement selector
+  /// @tparam track_container_t Type of the track container backend
+  /// @tparam holder_t Type defining track container backend ownership
   /// @tparam parameters_t Type of parameters used for local parameters
   ///
   /// @param initialParameters The initial track parameters
   /// @param tfOptions CombinatorialKalmanFilterOptions steering the track
   ///                  finding
-  /// @param trajectory Input track state container to use
+  /// @param trackContainer Input track container to use
   /// @note The input measurements are given in the form of @c SourceLinks.
   ///       It's @c calibrator_t's job to turn them into calibrated measurements
   ///       used in the track finding.
@@ -1255,12 +1261,16 @@ class CombinatorialKalmanFilter {
   /// @return a container of track finding result for all the initial track
   /// parameters
   template <typename source_link_iterator_t, typename start_parameters_t,
+            typename track_container_t, template <typename> class holder_t,
             typename parameters_t = BoundTrackParameters>
-  Result<CombinatorialKalmanFilterResult<traj_t>> findTracks(
+  auto findTracks(
       const start_parameters_t& initialParameters,
       const CombinatorialKalmanFilterOptions<source_link_iterator_t, traj_t>&
           tfOptions,
-      std::shared_ptr<traj_t> trajectory) const {
+      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
+      -> Result<std::vector<
+          typename std::decay_t<decltype(trackContainer)>::TrackProxy>> {
+    using TrackContainer = typename std::decay_t<decltype(trackContainer)>;
     using SourceLinkAccessor =
         SourceLinkAccessorDelegate<source_link_iterator_t>;
 
@@ -1293,7 +1303,6 @@ class CombinatorialKalmanFilter {
     combKalmanActor.m_extensions = tfOptions.extensions;
 
     // Run the CombinatorialKalmanFilter.
-
     auto stateBuffer = std::make_shared<traj_t>();
 
     typename propagator_t::template action_list_t_result_t<
@@ -1303,7 +1312,7 @@ class CombinatorialKalmanFilter {
     auto& r =
         inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>();
 
-    r.fittedStates = trajectory;
+    r.fittedStates = &trackContainer.trackStateContainer();
     r.stateBuffer = stateBuffer;
     r.stateBuffer->clear();
 
@@ -1345,7 +1354,20 @@ class CombinatorialKalmanFilter {
       return combKalmanResult.result.error();
     }
 
-    return combKalmanResult;
+    std::vector<typename TrackContainer::TrackProxy> tracks;
+
+    for (auto tip : combKalmanResult.lastMeasurementIndices) {
+      auto track = trackContainer.getTrack(trackContainer.addTrack());
+      track.tipIndex() = tip;
+      const BoundTrackParameters& parameters =
+          combKalmanResult.fittedParameters.find(tip)->second;
+      track.parameters() = parameters.parameters();
+      track.covariance() = *parameters.covariance();
+      track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
+      tracks.push_back(track);
+    }
+
+    return tracks;
   }
 };
 
