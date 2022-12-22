@@ -30,14 +30,14 @@ bool TestHostCuts::singleSeedCut(
   return !(b.radius() > 150. && weight < 380.);
 }
 
-std::vector<typename Acts::CandidatesForSpM<
-    Acts::InternalSpacePoint<TestSpacePoint>>::output_type>
+std::vector<typename Acts::CandidatesForMiddleSp<
+    Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
 TestHostCuts::cutPerMiddleSP(
-    std::vector<typename Acts::CandidatesForSpM<
-        Acts::InternalSpacePoint<TestSpacePoint>>::output_type>
+    std::vector<typename Acts::CandidatesForMiddleSp<
+        Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
         seedCandidates) const {
-  std::vector<typename Acts::CandidatesForSpM<
-      Acts::InternalSpacePoint<TestSpacePoint>>::output_type>
+  std::vector<typename Acts::CandidatesForMiddleSp<
+      Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
       newSeedsVector;
   if (seedCandidates.size() <= 1) {
     return seedCandidates;
@@ -47,10 +47,10 @@ TestHostCuts::cutPerMiddleSP(
   std::size_t itLength = std::min(seedCandidates.size(), std::size_t(5));
   // don't cut first element
   for (std::size_t i(1); i < itLength; i++) {
-    float weight = std::get<Acts::CandidatesForSpM<
+    float weight = std::get<Acts::CandidatesForMiddleSp<
         Acts::InternalSpacePoint<TestSpacePoint>>::Components::WEIGHT>(
         seedCandidates[i]);
-    const auto& bottom = std::get<Acts::CandidatesForSpM<
+    const auto& bottom = std::get<Acts::CandidatesForMiddleSp<
         Acts::InternalSpacePoint<TestSpacePoint>>::Components::BSP>(
         seedCandidates[i]);
     if (weight > 200. or bottom->radius() > 43.) {

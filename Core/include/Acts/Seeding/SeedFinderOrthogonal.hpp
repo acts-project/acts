@@ -203,7 +203,7 @@ class SeedFinderOrthogonal {
   void filterCandidates(
       internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
       std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
-      CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>
+      CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
           &candidates_collector) const;
 
   /**

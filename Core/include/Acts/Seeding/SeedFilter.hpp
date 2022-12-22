@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Seeding/CandidatesForSpM.hpp"
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
@@ -61,7 +61,7 @@ class SeedFilter {
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       std::vector<float>& invHelixDiameterVec,
       std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
-      CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>&
+      CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
@@ -70,7 +70,7 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
-      CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>&
+      CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
       int& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
@@ -83,8 +83,8 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
-      std::vector<typename CandidatesForSpM<
-          InternalSpacePoint<external_spacepoint_t>>::output_type>& candidates,
+      std::vector<typename CandidatesForMiddleSp<
+          InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
       int& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;

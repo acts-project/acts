@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Seeding/CandidatesForSpM.hpp"
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -250,8 +250,8 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
 
     if (i_m > 0) {
       const auto m_experimentCuts = m_config.seedFilter->getExperimentCuts();
-      std::vector<typename CandidatesForSpM<
-          InternalSpacePoint<external_spacepoint_t>>::output_type>
+      std::vector<typename CandidatesForMiddleSp<
+          InternalSpacePoint<external_spacepoint_t>>::value_type>
           candidates;
 
       for (int i = 0; i < *nTrplPerSpM_cpu.get(i_m - 1); i++) {
@@ -282,7 +282,7 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
       }
 
       std::sort(candidates.begin(), candidates.end(),
-                CandidatesForSpM<
+                CandidatesForMiddleSp<
                     InternalSpacePoint<external_spacepoint_t>>::greaterSort);
       int numQualitySeeds = 0;  // not used but needs to be fixed
       m_config.seedFilter->filterSeeds_1SpFixed(candidates, numQualitySeeds,

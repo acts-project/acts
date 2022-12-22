@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
-#include "Acts/Seeding/CandidatesForSpM.hpp"
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
@@ -53,7 +53,7 @@ class SeedFinder {
     std::vector<float> ptVec;
 
     // managing seed candidates for SpM
-    CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>
+    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
         candidates_collector;
   };
 

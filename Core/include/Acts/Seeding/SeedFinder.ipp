@@ -255,7 +255,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   // clear previous results and then loop on bottoms and tops
   state.candidates_collector.clear();
   // candidates per sp medium
-  state.candidates_collector.setMediumSp(&spM);
+  state.candidates_collector.setMiddleSp(&spM);
 
   for (const std::size_t b : sorted_bottoms) {
     // break if we reached the last top SP

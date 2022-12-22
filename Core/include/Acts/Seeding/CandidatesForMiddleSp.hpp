@@ -16,33 +16,28 @@
 namespace Acts {
 
 template <typename external_space_point_t>
-class CandidatesForSpM {
-  // Internal collection, we store only the components that are different and
-  // useful
-  enum InternalComponents : int { I_BSP = 0, I_TSP, I_WEIGHT, I_ZORIGIN };
-
+class CandidatesForMiddleSp {
  public:
-  // more complete collection of variables, used by external seeding code
+  // variables contained in the collection of variables, used by external
+  // seeding code
   enum Components : int { BSP = 0, MSP, TSP, WEIGHT, ZORIGIN, QUALITY };
 
   using sp_type = external_space_point_t*;
-  using value_type = std::tuple<sp_type, sp_type, float, float>;
-  using output_type = std::tuple<sp_type, sp_type, sp_type, float, float, bool>;
+  using value_type = std::tuple<sp_type, sp_type, sp_type, float, float, bool>;
   static constexpr sp_type default_value = nullptr;
 
-  CandidatesForSpM();
-  ~CandidatesForSpM() = default;
+  CandidatesForMiddleSp();
+  ~CandidatesForMiddleSp() = default;
 
   void setMaxElements(std::size_t n_low, std::size_t n_high);
-  void setMediumSp(sp_type idx);
+  void setMiddleSp(sp_type idx);
   void setBottomSp(sp_type idx);
-  std::vector<output_type> storage() const;
-  const sp_type& spM() const;
+  std::vector<value_type> storage() const;
 
   void push(sp_type& SpT, float weight, float zOrigin, bool isQuality);
   void clear();
 
-  static bool greaterSort(const output_type& i1, const output_type& i2);
+  static bool greaterSort(const value_type& i1, const value_type& i2);
 
  private:
   bool exists(std::size_t n, std::size_t max_size) const;
@@ -62,7 +57,7 @@ class CandidatesForSpM {
                           sp_type& SpT, float weight, float zOrigin,
                           bool isQuality);
 
- public:
+ private:
   // sizes
   std::size_t m_max_size_high{0};
   std::size_t m_max_size_low{0};
@@ -86,18 +81,15 @@ class CandidatesForSpM {
 };
 
 template <typename external_space_point_t>
-inline const typename CandidatesForSpM<external_space_point_t>::sp_type&
-CandidatesForSpM<external_space_point_t>::spM() const {
-  return m_SpM;
-}
-
-template <typename external_space_point_t>
-inline void CandidatesForSpM<external_space_point_t>::setMaxElements(
+inline void CandidatesForMiddleSp<external_space_point_t>::setMaxElements(
     std::size_t n_low, std::size_t n_high) {
-  if (m_storage_high.capacity() < n_high) {
+  // protection against default numbers
+  if (m_storage_high.capacity() < n_high and
+      n_high != std::numeric_limits<int>::max()) {
     m_storage_high.reserve(n_high);
   }
-  if (m_storage_low.capacity() < n_low) {
+  if (m_storage_low.capacity() < n_low and
+      n_low != std::numeric_limits<int>::max()) {
     m_storage_low.reserve(n_low);
   }
   m_max_size_high = n_high;
@@ -105,37 +97,37 @@ inline void CandidatesForSpM<external_space_point_t>::setMaxElements(
 }
 
 template <typename external_space_point_t>
-inline void CandidatesForSpM<external_space_point_t>::setMediumSp(
-    typename CandidatesForSpM<external_space_point_t>::sp_type idx) {
+inline void CandidatesForMiddleSp<external_space_point_t>::setMiddleSp(
+    typename CandidatesForMiddleSp<external_space_point_t>::sp_type idx) {
   m_SpM = idx;
 }
 
 template <typename external_space_point_t>
-inline void CandidatesForSpM<external_space_point_t>::setBottomSp(
-    typename CandidatesForSpM<external_space_point_t>::sp_type idx) {
+inline void CandidatesForMiddleSp<external_space_point_t>::setBottomSp(
+    typename CandidatesForMiddleSp<external_space_point_t>::sp_type idx) {
   m_SpB = idx;
 }
 
 template <typename external_space_point_t>
-inline float CandidatesForSpM<external_space_point_t>::top(
+inline float CandidatesForMiddleSp<external_space_point_t>::top(
     const std::vector<value_type>& storage) const {
   return weight(storage, 0);
 }
 
 template <typename external_space_point_t>
-inline bool CandidatesForSpM<external_space_point_t>::exists(
+inline bool CandidatesForMiddleSp<external_space_point_t>::exists(
     std::size_t n, std::size_t max_size) const {
   return n < max_size;
 }
 
 template <typename external_space_point_t>
-inline float CandidatesForSpM<external_space_point_t>::weight(
+inline float CandidatesForMiddleSp<external_space_point_t>::weight(
     const std::vector<value_type>& storage, std::size_t n) const {
-  return std::get<InternalComponents::I_WEIGHT>(storage[n]);
+  return std::get<Components::WEIGHT>(storage[n]);
 }
 
 template <typename external_space_point_t>
-inline void CandidatesForSpM<external_space_point_t>::clear() {
+inline void CandidatesForMiddleSp<external_space_point_t>::clear() {
   // do not clear max size, this is set only once
   m_n_high = 0;
   m_n_low = 0;
@@ -149,4 +141,4 @@ inline void CandidatesForSpM<external_space_point_t>::clear() {
 
 }  // namespace Acts
 
-#include "Acts/Seeding/CandidatesForSpM.ipp"
+#include "Acts/Seeding/CandidatesForMiddleSp.ipp"

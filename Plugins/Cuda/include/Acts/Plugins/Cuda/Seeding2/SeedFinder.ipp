@@ -18,7 +18,7 @@
 #include "Acts/Plugins/Cuda/Utilities/MemoryManager.hpp"
 
 // Acts include(s).
-#include "Acts/Seeding/CandidatesForSpM.hpp"
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 
@@ -189,8 +189,8 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   auto triplet_itr = tripletCandidates.begin();
   auto triplet_end = tripletCandidates.end();
   for (; triplet_itr != triplet_end; ++triplet_itr, ++middleIndex) {
-    std::vector<typename CandidatesForSpM<
-        InternalSpacePoint<external_spacepoint_t>>::output_type>
+    std::vector<typename CandidatesForMiddleSp<
+        InternalSpacePoint<external_spacepoint_t>>::value_type>
         candidates;
 
     auto& middleSP = *(middleSPVec[middleIndex]);
@@ -203,7 +203,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
                               false);
     }
     std::sort(candidates.begin(), candidates.end(),
-              CandidatesForSpM<
+              CandidatesForMiddleSp<
                   InternalSpacePoint<external_spacepoint_t>>::greaterSort);
     int numQualitySeeds = 0;  // not used but needs to be fixed
     m_commonConfig.seedFilter->filterSeeds_1SpFixed(

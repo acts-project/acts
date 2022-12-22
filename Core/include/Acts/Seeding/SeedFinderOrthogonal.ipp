@@ -246,7 +246,7 @@ template <typename external_spacepoint_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
     std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
-    CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>
+    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
         &candidates_collector) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
@@ -472,11 +472,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   std::size_t max_num_seeds_per_spm =
       m_config.seedFilter->getSeedFilterConfig().maxSeedsPerSpMConf;
 
-  CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>
+  CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
       candidates_collector;
   candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                       max_num_quality_seeds_per_spm);
-  candidates_collector.setMediumSp(&middle);
+  candidates_collector.setMiddleSp(&middle);
 
   /*
    * Calculate the search ranges for bottom and top candidates for this middle

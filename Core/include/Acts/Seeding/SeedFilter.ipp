@@ -32,7 +32,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     std::vector<float>& invHelixDiameterVec,
     std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
-    CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>&
+    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector) const {
   // seed confirmation
   SeedConfirmationRangeConfig seedConfRange;
@@ -233,7 +233,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    CandidatesForSpM<InternalSpacePoint<external_spacepoint_t>>&
+    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
     int& numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
@@ -247,8 +247,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
 
 template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
-    std::vector<typename CandidatesForSpM<
-        InternalSpacePoint<external_spacepoint_t>>::output_type>& candidates,
+    std::vector<typename CandidatesForMiddleSp<
+        InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
     int& numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {

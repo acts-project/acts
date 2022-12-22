@@ -6,16 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <iostream>
+
 namespace Acts {
 
 template <typename external_space_point_t>
-CandidatesForSpM<external_space_point_t>::CandidatesForSpM()
-    : m_SpB(CandidatesForSpM<external_space_point_t>::default_value),
-      m_SpM(CandidatesForSpM<external_space_point_t>::default_value) {}
+CandidatesForMiddleSp<external_space_point_t>::CandidatesForMiddleSp()
+    : m_SpB(CandidatesForMiddleSp<external_space_point_t>::default_value),
+      m_SpM(CandidatesForMiddleSp<external_space_point_t>::default_value) {}
 
 template <typename external_space_point_t>
-void CandidatesForSpM<external_space_point_t>::push(
-    typename CandidatesForSpM<external_space_point_t>::sp_type& SpT,
+void CandidatesForMiddleSp<external_space_point_t>::push(
+    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpT,
     float weight, float zOrigin, bool isQuality) {
   auto& storage = isQuality ? m_storage_high : m_storage_low;
   const std::size_t& current_max_size =
@@ -45,14 +47,14 @@ void CandidatesForSpM<external_space_point_t>::push(
 }
 
 template <typename external_space_point_t>
-void CandidatesForSpM<external_space_point_t>::addToCollection(
+void CandidatesForMiddleSp<external_space_point_t>::addToCollection(
     std::vector<value_type>& storage,
-    typename CandidatesForSpM<external_space_point_t>::sp_type& SpB,
-    typename CandidatesForSpM<external_space_point_t>::sp_type& SpT,
+    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpB,
+    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpT,
     float weight, float zOrigin, bool isQuality) {
   // adds elements to the end of the collection
   // function called when space in storage is not full
-  auto toAdd = std::make_tuple(SpB, SpT, weight, zOrigin);
+  auto toAdd = std::make_tuple(SpB, m_SpM, SpT, weight, zOrigin, isQuality);
   storage.push_back(toAdd);
   std::size_t& added_index = isQuality ? m_n_high : m_n_low;
   bubbleup(storage, added_index);
@@ -60,15 +62,15 @@ void CandidatesForSpM<external_space_point_t>::addToCollection(
 }
 
 template <typename external_space_point_t>
-void CandidatesForSpM<external_space_point_t>::insertToCollection(
+void CandidatesForMiddleSp<external_space_point_t>::insertToCollection(
     std::vector<value_type>& storage,
-    typename CandidatesForSpM<external_space_point_t>::sp_type& SpB,
-    typename CandidatesForSpM<external_space_point_t>::sp_type& SpT,
+    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpB,
+    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpT,
     float weight, float zOrigin, bool isQuality) {
   // inserts elements to the end of the collection
   // function called when space in storage is full
   // before this a pop is called
-  auto toAdd = std::make_tuple(SpB, SpT, weight, zOrigin);
+  auto toAdd = std::make_tuple(SpB, m_SpM, SpT, weight, zOrigin, isQuality);
   std::size_t& added_index = isQuality ? m_n_high : m_n_low;
   storage[added_index] = toAdd;
   bubbleup(storage, added_index);
@@ -76,7 +78,7 @@ void CandidatesForSpM<external_space_point_t>::insertToCollection(
 }
 
 template <typename external_space_point_t>
-void CandidatesForSpM<external_space_point_t>::bubbledw(
+void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
     std::vector<value_type>& storage, std::size_t n, std::size_t actual_size) {
   // left child : 2 * n + 1
   // right child: 2 * n + 2
@@ -117,7 +119,7 @@ void CandidatesForSpM<external_space_point_t>::bubbledw(
 }
 
 template <typename external_space_point_t>
-void CandidatesForSpM<external_space_point_t>::bubbleup(
+void CandidatesForMiddleSp<external_space_point_t>::bubbleup(
     std::vector<value_type>& storage, std::size_t n) {
   if (n == 0) {
     return;
@@ -139,7 +141,7 @@ void CandidatesForSpM<external_space_point_t>::bubbleup(
 }
 
 template <typename external_space_point_t>
-void CandidatesForSpM<external_space_point_t>::pop(
+void CandidatesForMiddleSp<external_space_point_t>::pop(
     std::vector<value_type>& storage, std::size_t& current_size) {
   storage[0] = storage[current_size - 1];
   --current_size;
@@ -147,34 +149,35 @@ void CandidatesForSpM<external_space_point_t>::pop(
 }
 
 template <typename external_space_point_t>
-std::vector<typename CandidatesForSpM<external_space_point_t>::output_type>
-CandidatesForSpM<external_space_point_t>::storage() const {
+std::vector<typename CandidatesForMiddleSp<external_space_point_t>::value_type>
+CandidatesForMiddleSp<external_space_point_t>::storage() const {
   // this will retrieve the entire storage, first high and then low quality
   // the resulting vector is not sorted!
-  std::vector<output_type> output;
+  std::vector<value_type> output;
   output.reserve(m_n_high + m_n_low);
 
   for (std::size_t idx(0); idx < m_n_high; idx++) {
-    const auto& [bottom, top, weight, zOrigin] = m_storage_high[idx];
-    output.emplace_back(bottom, m_SpM, top, weight, zOrigin, true);
+    const auto& [bottom, middle, top, weight, zOrigin, isQuality] =
+        m_storage_high[idx];
+    output.emplace_back(bottom, middle, top, weight, zOrigin, isQuality);
   }
 
   for (std::size_t idx(0); idx < m_n_low; idx++) {
-    const auto& [bottom, top, weight, zOrigin] = m_storage_low[idx];
-    output.emplace_back(bottom, m_SpM, top, weight, zOrigin, false);
+    const auto& [bottom, middle, top, weight, zOrigin, isQuality] =
+        m_storage_low[idx];
+    output.emplace_back(bottom, middle, top, weight, zOrigin, isQuality);
   }
 
   // sort output according to weight and sps
   // should we collect inputs according to this criterion instead?
   std::sort(output.begin(), output.end(),
-            CandidatesForSpM<external_space_point_t>::greaterSort);
+            CandidatesForMiddleSp<external_space_point_t>::greaterSort);
   return output;
 }
 
 template <typename external_space_point_t>
-bool CandidatesForSpM<external_space_point_t>::greaterSort(
-    const typename CandidatesForSpM<external_space_point_t>::output_type& i1,
-    const typename CandidatesForSpM<external_space_point_t>::output_type& i2) {
+bool CandidatesForMiddleSp<external_space_point_t>::greaterSort(
+    const value_type& i1, const value_type& i2) {
   const auto& [bottom_l1, medium_l1, top_l1, weight_l1, zOrigin_l1,
                isQuality_l1] = i1;
   const auto& [bottom_l2, medium_l2, top_l2, weight_l2, zOrigin_l2,
