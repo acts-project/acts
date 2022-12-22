@@ -200,51 +200,42 @@ BOOST_AUTO_TEST_CASE(SingleTrackDistanceParametersAthenaRegression) {
 // on a single track.
 
 BOOST_AUTO_TEST_CASE(Lifetimes2d3d) {
-
   Estimator ipEstimator = makeEstimator(2_T);
-  
+
   // Create a track from a decay
   BoundVector trk_par;
-  trk_par[eBoundLoc0]  = 200_um;
-  trk_par[eBoundLoc1]  = 300_um;
-  trk_par[eBoundTime]  = 1_ns;
-  trk_par[eBoundPhi]   = 45_degree;
+  trk_par[eBoundLoc0] = 200_um;
+  trk_par[eBoundLoc1] = 300_um;
+  trk_par[eBoundTime] = 1_ns;
+  trk_par[eBoundPhi] = 45_degree;
   trk_par[eBoundTheta] = 45_degree;
   trk_par[eBoundQOverP] = 1_e / 10_GeV;
-  
-  Vector4 ip_pos{0.,0.,0.,0.};
-  Vertex<BoundTrackParameters> ip_vtx(ip_pos, makeVertexCovariance(),{});
-  
+
+  Vector4 ip_pos{0., 0., 0., 0.};
+  Vertex<BoundTrackParameters> ip_vtx(ip_pos, makeVertexCovariance(), {});
+
   // Form the bound track parameters at the ip
   auto perigeeSurface = Surface::makeShared<PerigeeSurface>(ip_pos.head<3>());
   BoundTrackParameters track(perigeeSurface, trk_par,
                              makeBoundParametersCovariance());
-  
-  
-  Vector3 direction{0.,1.,0.};
-  auto lifetimes_signs = ipEstimator.getLifetimesSignOfTrack(track,
-                                                             ip_vtx,
-                                                             direction,
-                                                             geoContext,
-                                                             magFieldContext);
-  
+
+  Vector3 direction{0., 1., 0.};
+  auto lifetimes_signs = ipEstimator.getLifetimesSignOfTrack(
+      track, ip_vtx, direction, geoContext, magFieldContext);
+
   // Check if the result is OK
   BOOST_CHECK(lifetimes_signs.ok());
-  
+
   // Check that d0 sign is positive
   BOOST_CHECK((*lifetimes_signs).first > 0.);
 
   // Check that z0 sign is negative
   BOOST_CHECK((*lifetimes_signs).second < 0.);
 
-
   // Check the 3d sign
 
-  auto sign3d = ipEstimator.get3DLifetimeSignOfTrack(track,
-                                                     ip_vtx,
-                                                     direction,
-                                                     geoContext,
-                                                     magFieldContext);
+  auto sign3d = ipEstimator.get3DLifetimeSignOfTrack(
+      track, ip_vtx, direction, geoContext, magFieldContext);
 
   // Check result is OK
   BOOST_CHECK(sign3d.ok());
