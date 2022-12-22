@@ -159,6 +159,9 @@ class Navigator {
 
     /// The tolerance used to defined "reached"
     double tolerance = s_onSurfaceTolerance;
+    
+    /// Wether to perform boundary checks for layer resolving (improves navigation for bended tracks)
+    bool boundaryCheckLayerResolving = true;
   };
 
   /// Nested State struct
@@ -1206,7 +1209,7 @@ class Navigator {
     // Create the navigation options
     // - and get the compatible layers, start layer will be excluded
     NavigationOptions<Layer> navOpts(
-        state.stepping.navDir, true, m_cfg.resolveSensitive,
+        state.stepping.navDir, m_cfg.boundaryCheckLayerResolving, m_cfg.resolveSensitive,
         m_cfg.resolveMaterial, m_cfg.resolvePassive, startLayer, nullptr);
     // Set also the target surface
     navOpts.targetSurface = state.navigation.targetSurface;
