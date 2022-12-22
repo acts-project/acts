@@ -212,74 +212,17 @@ def addSeeding(
     logger = acts.logging.getLogger("addSeeding")
 
     if truthSeedRanges is not None:
-        selAlg = acts.examples.TruthSeedSelector(
-            **acts.examples.defaultKWArgs(
-                ptMin=truthSeedRanges.pt[0],
-                ptMax=truthSeedRanges.pt[1],
-                etaMin=truthSeedRanges.eta[0],
-                etaMax=truthSeedRanges.eta[1],
-                nHitsMin=truthSeedRanges.nHits[0],
-                nHitsMax=truthSeedRanges.nHits[1],
-                rhoMin=truthSeedRanges.rho[0],
-                rhoMax=truthSeedRanges.rho[1],
-                zMin=truthSeedRanges.z[0],
-                zMax=truthSeedRanges.z[1],
-                phiMin=truthSeedRanges.phi[0],
-                phiMax=truthSeedRanges.phi[1],
-                absEtaMin=truthSeedRanges.absEta[0],
-                absEtaMax=truthSeedRanges.absEta[1],
-            ),
-            level=customLogLevel(),
-            inputParticles=inputParticles,
-            inputMeasurementParticlesMap="measurement_particles_map",
-            outputParticles="truth_seeds_selected",
-        )
-        s.addAlgorithm(selAlg)
-        selectedParticles = selAlg.config.outputParticles
+        selectedParticles = addSeedingTruthSelection(s, inputParticles, truthSeedRanges, customLogLevel())
     else:
         selectedParticles = inputParticles
 
     # Create starting parameters from either particle smearing or combined seed
     # finding and track parameters estimation
     if seedingAlgorithm == SeedingAlgorithm.TruthSmeared:
-        rnd = rnd or acts.examples.RandomNumbers(seed=42)
         logger.info("Using smeared truth particles for seeding")
-        # Run particle smearing
-        ptclSmear = acts.examples.ParticleSmearing(
-            level=customLogLevel(),
-            inputParticles=selectedParticles,
-            outputTrackParameters="estimatedparameters",
-            randomNumbers=rnd,
-            # gaussian sigmas to smear particle parameters
-            **acts.examples.defaultKWArgs(
-                sigmaD0=particleSmearingSigmas.d0,
-                sigmaD0PtA=particleSmearingSigmas.d0PtA,
-                sigmaD0PtB=particleSmearingSigmas.d0PtB,
-                sigmaZ0=particleSmearingSigmas.z0,
-                sigmaZ0PtA=particleSmearingSigmas.z0PtA,
-                sigmaZ0PtB=particleSmearingSigmas.z0PtB,
-                sigmaT0=particleSmearingSigmas.t0,
-                sigmaPhi=particleSmearingSigmas.phi,
-                sigmaTheta=particleSmearingSigmas.theta,
-                sigmaPRel=particleSmearingSigmas.pRel,
-                initialVarInflation=initialVarInflation,
-            ),
-        )
-        s.addAlgorithm(ptclSmear)
+        addTruthSmearing(s, selectedParticles, particleSmearingSigmas, initialVarInflation, customLogLevel())
     else:
-
-        spAlg = acts.examples.SpacePointMaker(
-            level=customLogLevel(),
-            inputSourceLinks="sourcelinks",
-            inputMeasurements="measurements",
-            outputSpacePoints="spacepoints",
-            trackingGeometry=trackingGeometry,
-            geometrySelection=acts.examples.readJsonGeometryList(
-                str(geoSelectionConfigFile)
-            ),
-        )
-        s.addAlgorithm(spAlg)
-
+        spacePoints = addSpacePointsMaking(s, trackingGeometry, geoSelectionConfigFile, customLogLevel())
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
@@ -411,7 +354,7 @@ def addSeeding(
 
             seedingAlg = acts.examples.SeedingAlgorithm(
                 level=customLogLevel(),
-                inputSpacePoints=[spAlg.config.outputSpacePoints],
+                inputSpacePoints=[spacePoints],
                 outputSeeds="seeds",
                 outputProtoTracks="prototracks",
                 **acts.examples.defaultKWArgs(
@@ -525,8 +468,8 @@ def addSeeding(
             level=customLogLevel(),
             inputSeeds=inputSeeds,
             inputProtoTracks=inputProtoTracks,
-            inputSpacePoints=[spAlg.config.outputSpacePoints],
-            inputSourceLinks=spAlg.config.inputSourceLinks,
+            inputSpacePoints=[spacePoints],
+            inputSourceLinks="sourcelinks",
             outputTrackParameters="estimatedparameters",
             outputProtoTracks="prototracks_estimated",
             trackingGeometry=trackingGeometry,
@@ -578,6 +521,73 @@ def addSeeding(
             )
 
     return s
+
+
+def addSeedingTruthSelection(s, inputParticles, truthSeedRanges, logLevel):
+    selAlg = acts.examples.TruthSeedSelector(
+        **acts.examples.defaultKWArgs(
+            ptMin=truthSeedRanges.pt[0],
+            ptMax=truthSeedRanges.pt[1],
+            etaMin=truthSeedRanges.eta[0],
+            etaMax=truthSeedRanges.eta[1],
+            nHitsMin=truthSeedRanges.nHits[0],
+            nHitsMax=truthSeedRanges.nHits[1],
+            rhoMin=truthSeedRanges.rho[0],
+            rhoMax=truthSeedRanges.rho[1],
+            zMin=truthSeedRanges.z[0],
+            zMax=truthSeedRanges.z[1],
+            phiMin=truthSeedRanges.phi[0],
+            phiMax=truthSeedRanges.phi[1],
+            absEtaMin=truthSeedRanges.absEta[0],
+            absEtaMax=truthSeedRanges.absEta[1],
+        ),
+        level=logLevel,
+        inputParticles=inputParticles,
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputParticles="truth_seeds_selected",
+    )
+    s.addAlgorithm(selAlg)
+    return selAlg.config.outputParticles
+
+def addTruthSmearing(s, selectedParticles, particleSmearingSigmas, initialVarInflation, logLevel):
+    rnd = rnd or acts.examples.RandomNumbers(seed=42)
+    # Run particle smearing
+    ptclSmear = acts.examples.ParticleSmearing(
+        level=logLevel,
+        inputParticles=selectedParticles,
+        outputTrackParameters="estimatedparameters",
+        randomNumbers=rnd,
+        # gaussian sigmas to smear particle parameters
+        **acts.examples.defaultKWArgs(
+            sigmaD0=particleSmearingSigmas.d0,
+            sigmaD0PtA=particleSmearingSigmas.d0PtA,
+            sigmaD0PtB=particleSmearingSigmas.d0PtB,
+            sigmaZ0=particleSmearingSigmas.z0,
+            sigmaZ0PtA=particleSmearingSigmas.z0PtA,
+            sigmaZ0PtB=particleSmearingSigmas.z0PtB,
+            sigmaT0=particleSmearingSigmas.t0,
+            sigmaPhi=particleSmearingSigmas.phi,
+            sigmaTheta=particleSmearingSigmas.theta,
+            sigmaPRel=particleSmearingSigmas.pRel,
+            initialVarInflation=initialVarInflation,
+        ),
+    )
+    s.addAlgorithm(ptclSmear)
+
+
+def addSpacePointsMaking(s, trackingGeometry, geoSelectionConfigFile, logLevel):
+    spAlg = acts.examples.SpacePointMaker(
+        level=logLevel,
+        inputSourceLinks="sourcelinks",
+        inputMeasurements="measurements",
+        outputSpacePoints="spacepoints",
+        trackingGeometry=trackingGeometry,
+        geometrySelection=acts.examples.readJsonGeometryList(
+            str(geoSelectionConfigFile)
+        ),
+    )
+    s.addAlgorithm(spAlg)
+    return spAlg.config.outputSpacePoints
 
 
 def addKalmanTracks(
