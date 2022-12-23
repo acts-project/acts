@@ -213,10 +213,8 @@ def addSeeding(
 
     if truthSeedRanges is not None:
         selectedParticles = addSeedingTruthSelection(
-            s,
-            inputParticles,
-            truthSeedRanges,
-            logLevel)
+            s, inputParticles, truthSeedRanges, logLevel
+        )
     else:
         selectedParticles = inputParticles
 
@@ -230,13 +228,12 @@ def addSeeding(
             selectedParticles,
             particleSmearingSigmas,
             initialVarInflation,
-            logLevel)
+            logLevel,
+        )
     else:
         spacePoints = addSpacePointsMaking(
-            s,
-            trackingGeometry,
-            geoSelectionConfigFile,
-            logLevel)
+            s, trackingGeometry, geoSelectionConfigFile, logLevel
+        )
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
@@ -260,8 +257,9 @@ def addSeeding(
                 seedFinderOptionsArg,
                 seedFilterConfigArg,
                 spacePointGridConfigArg,
-                logLevel)
-  
+                logLevel,
+            )
+
         elif seedingAlgorithm == SeedingAlgorithm.Orthogonal:
             logger.info("Using orthogonal seeding")
             inputProtoTracks, inputSeeds = addOrthogonalSeeding(
@@ -269,8 +267,9 @@ def addSeeding(
                 spacePoints,
                 seedFinderConfigArg,
                 seedFinderOptionsArg,
-                seedFilterConfigArg, 
-                logLevel)
+                seedFilterConfigArg,
+                logLevel,
+            )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
 
@@ -301,7 +300,8 @@ def addSeeding(
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
                 parEstimateAlg.config.outputProtoTracks,
-                logLevel)
+                logLevel,
+            )
     return s
 
 
@@ -309,8 +309,9 @@ def addSeedingTruthSelection(
     s: acts.examples.Sequencer,
     inputParticles: str,
     truthSeedRanges: str,
-    logLevel: acts.logging.Level = None):
-    """ adds truth particles filtering before filtering
+    logLevel: acts.logging.Level = None,
+):
+    """adds truth particles filtering before filtering
     For parameters description see addSeeding
     """
     selAlg = acts.examples.TruthSeedSelector(
@@ -338,14 +339,16 @@ def addSeedingTruthSelection(
     s.addAlgorithm(selAlg)
     return selAlg.config.outputParticles
 
+
 def addTruthSmearing(
     sequence: acts.examples.Sequencer,
     rnd: acts.examples.RandomNumbers,
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialVarInflation: float,
-    logLevel: acts.logging.Level = None):
-    """ adds algorithm that would mimic detector response uncertainties for truth seeding
+    logLevel: acts.logging.Level = None,
+):
+    """adds algorithm that would mimic detector response uncertainties for truth seeding
     For parameters description see addSeeding
     """
 
@@ -378,8 +381,9 @@ def addSpacePointsMaking(
     sequence: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     geoSelectionConfigFile: Union[Path, str],
-    logLevel: acts.logging.Level = None):
-    """ adds space points making
+    logLevel: acts.logging.Level = None,
+):
+    """adds space points making
     For parameters description see addSeeding
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
@@ -396,6 +400,7 @@ def addSpacePointsMaking(
     sequence.addAlgorithm(spAlg)
     return spAlg.config.outputSpacePoints
 
+
 def addStandardSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
@@ -404,8 +409,9 @@ def addStandardSeeding(
     seedFinderOptionsArg: SeedFinderOptionsArg,
     seedFilterConfigArg: SeedFilterConfigArg,
     spacePointGridConfigArg: SpacePointGridConfigArg,
-    logLevel : acts.logging.Level = None):
-    """ adds standard seeding
+    logLevel: acts.logging.Level = None,
+):
+    """adds standard seeding
     For parameters description see addSeeding
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
@@ -542,14 +548,16 @@ def addStandardSeeding(
     sequence.addAlgorithm(seedingAlg)
     return seedingAlg.config.outputProtoTracks, seedingAlg.config.outputSeeds
 
+
 def addOrthogonalSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedFinderConfigArg: SeedFinderConfigArg,
     seedFinderOptionsArg: SeedFinderOptionsArg,
     seedFilterConfigArg: SeedFilterConfigArg,
-    logLevel: acts.logging.Level = None):
-    """ adds orthogonal seeding algorithm
+    logLevel: acts.logging.Level = None,
+):
+    """adds orthogonal seeding algorithm
     For parameters description see addSeeding
     """
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
@@ -649,7 +657,8 @@ def addSeedPerformanceWriters(
     inputParticles: str,
     outputTrackParameters: str,
     outputProtoTracks: str,
-    logLevel: acts.logging.Level=None):
+    logLevel: acts.logging.Level = None,
+):
     """Writes seeding related performance output"""
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     outputDirRoot = Path(outputDirRoot)
