@@ -129,12 +129,12 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
       auto& topSP = *(topSPvec[seeds[mi][j].top]);
       float weight = seeds[mi][j].weight;
 
-      candidates.emplace_back(&bottomSP, &middleSP, &topSP, weight, 0, false);
+      candidates.emplace_back(bottomSP, middleSP, topSP, weight, 0, false);
     }
     std::sort(candidates.begin(), candidates.end(),
               CandidatesForMiddleSp<
                   InternalSpacePoint<external_spacepoint_t>>::greaterSort);
-    int numQualitySeeds = 0;  // not used but needs to be fixed
+    std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_config.seedFilter->filterSeeds_1SpFixed(candidates, numQualitySeeds,
                                               std::back_inserter(outputVec));
   }

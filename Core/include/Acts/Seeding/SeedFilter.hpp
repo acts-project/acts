@@ -27,11 +27,11 @@ struct SeedFilterState {
   // number of minimum top SPs in seed confirmation
   size_t nTopSeedConf = 0;
   // number of high quality seeds in seed confirmation
-  int numQualitySeeds = 0;
+  std::size_t numQualitySeeds = 0;
   // number of seeds that did not pass the quality confirmation but were still
   // accepted, if quality confirmation is not used this is the total number of
   // seeds
-  int numSeeds = 0;
+  std::size_t numSeeds = 0;
 };
 
 /// Filter seeds at various stages with the currently
@@ -72,7 +72,7 @@ class SeedFilter {
   virtual void filterSeeds_1SpFixed(
       CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
-      int& numQualitySeeds,
+      std::size_t& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 
@@ -85,7 +85,7 @@ class SeedFilter {
   virtual void filterSeeds_1SpFixed(
       std::vector<typename CandidatesForMiddleSp<
           InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
-      int& numQualitySeeds,
+      std::size_t& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 

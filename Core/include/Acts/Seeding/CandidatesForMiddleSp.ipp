@@ -6,146 +6,189 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include <iostream>
-
 namespace Acts {
 
 template <typename external_space_point_t>
-CandidatesForMiddleSp<external_space_point_t>::CandidatesForMiddleSp()
-    : m_SpB(CandidatesForMiddleSp<external_space_point_t>::default_value),
-      m_SpM(CandidatesForMiddleSp<external_space_point_t>::default_value) {}
+CandidatesForMiddleSp<external_space_point_t>::CandidatesForMiddleSp() {}
 
 template <typename external_space_point_t>
-void CandidatesForMiddleSp<external_space_point_t>::push(
-    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpT,
-    float weight, float zOrigin, bool isQuality) {
-  auto& storage = isQuality ? m_storage_high : m_storage_low;
-  const std::size_t& current_max_size =
-      isQuality ? m_max_size_high : m_max_size_low;
-  std::size_t& current_size = isQuality ? m_n_high : m_n_low;
+inline void CandidatesForMiddleSp<external_space_point_t>::setMaxElements(
+    std::size_t n_low, std::size_t n_high) {
+  m_max_size_high = n_high;
+  m_max_size_low = n_low;
 
-  // if there is still space, add anything
-  if (current_size < current_max_size) {
-    addToCollection(storage, m_SpB, SpT, weight, zOrigin, isQuality);
+  // protection against default numbers
+  // it may cause std::bad_alloc if we don't protect
+  if (n_high == std::numeric_limits<std::size_t>::max() or
+      n_low == std::numeric_limits<std::size_t>::max()) {
     return;
   }
 
-  if (current_max_size == 0) {
+  // Reserve enough memory for both collections
+  m_storage_high.reserve(n_high);
+  m_storage_low.reserve(n_low);
+}
+
+template <typename external_space_point_t>
+inline void CandidatesForMiddleSp<external_space_point_t>::pop(
+    std::vector<value_type>& storage, std::size_t& current_size) {
+  // Remove the candidate with the lowest weight in the collection
+  // By construction, this element is always the first element in the
+  // collection.
+  // The removal works this way: the first element of the collection
+  // is overwritten with the last element of the collection.
+  // The number of stored elements (current_size) is lowered by 1
+  // The new first element is moved down in the tree to its correct position
+  storage[0] = storage[current_size - 1];
+  bubbledw(storage, 0, --current_size);
+}
+
+template <typename external_space_point_t>
+inline bool CandidatesForMiddleSp<external_space_point_t>::exists(
+    const std::size_t& n, const std::size_t& max_size) const {
+  // If the element exists, it's index is lower than the current number
+  // of stored elements
+  return n < max_size;
+}
+
+template <typename external_space_point_t>
+inline float CandidatesForMiddleSp<external_space_point_t>::weight(
+    const std::vector<value_type>& storage, std::size_t n) const {
+  // Get the weight of the n-th element
+  return storage[n].weight;
+}
+
+template <typename external_space_point_t>
+inline void CandidatesForMiddleSp<external_space_point_t>::clear() {
+  // do not clear max size, this is set only once
+  // reset to 0 the number of stored elements
+  m_n_high = 0;
+  m_n_low = 0;
+  // We do not take ownership, so we can simply clean the collection
+  // without deleting anything
+  m_storage_high.clear();
+  m_storage_low.clear();
+}
+
+template <typename external_space_point_t>
+void CandidatesForMiddleSp<external_space_point_t>::push(
+    external_space_point_t& SpB, external_space_point_t& SpM,
+    external_space_point_t& SpT, float weight, float zOrigin, bool isQuality) {
+  // Decide in which collection this candidate may be added to according to the
+  // isQuality boolean
+  if (isQuality) {
+    return push(m_storage_high, m_n_high, m_max_size_high, SpB, SpM, SpT,
+                weight, zOrigin, isQuality);
+  }
+  return push(m_storage_low, m_n_low, m_max_size_low, SpB, SpM, SpT, weight,
+              zOrigin, isQuality);
+}
+
+template <typename external_space_point_t>
+void CandidatesForMiddleSp<external_space_point_t>::push(
+    std::vector<value_type>& storage, std::size_t& n, const std::size_t& n_max,
+    external_space_point_t& SpB, external_space_point_t& SpM,
+    external_space_point_t& SpT, float weight, float zOrigin, bool isQuality) {
+  // If we do not want to store candidates, returns
+  if (n_max == 0) {
+    return;
+  }
+
+  // if there is still space, add anything
+  if (n < n_max) {
+    addToCollection(storage, n, n_max,
+                    value_type(SpB, SpM, SpT, weight, zOrigin, isQuality));
     return;
   }
 
   // if no space, replace one if quality is enough
   // compare to element with lower weight
-  const auto& lower_weight = top(storage);
+  const auto& lower_weight = this->weight(storage, 0);
   if (weight <= lower_weight) {
     return;
   }
 
   // remove element with lower weight and add this one
-  pop(storage, current_size);
-  insertToCollection(storage, m_SpB, SpT, weight, zOrigin, isQuality);
+  pop(storage, n);
+  addToCollection(storage, n, n_max,
+                  value_type(SpB, SpM, SpT, weight, zOrigin, isQuality));
 }
 
 template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::addToCollection(
-    std::vector<value_type>& storage,
-    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpB,
-    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpT,
-    float weight, float zOrigin, bool isQuality) {
+    std::vector<value_type>& storage, std::size_t& n, const std::size_t& n_max,
+    value_type&& element) {
   // adds elements to the end of the collection
   // function called when space in storage is not full
-  auto toAdd = std::make_tuple(SpB, m_SpM, SpT, weight, zOrigin, isQuality);
-  storage.push_back(toAdd);
-  std::size_t& added_index = isQuality ? m_n_high : m_n_low;
-  bubbleup(storage, added_index);
-  ++added_index;
-}
-
-template <typename external_space_point_t>
-void CandidatesForMiddleSp<external_space_point_t>::insertToCollection(
-    std::vector<value_type>& storage,
-    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpB,
-    typename CandidatesForMiddleSp<external_space_point_t>::sp_type& SpT,
-    float weight, float zOrigin, bool isQuality) {
-  // inserts elements to the end of the collection
-  // function called when space in storage is full
-  // before this a pop is called
-  auto toAdd = std::make_tuple(SpB, m_SpM, SpT, weight, zOrigin, isQuality);
-  std::size_t& added_index = isQuality ? m_n_high : m_n_low;
-  storage[added_index] = toAdd;
-  bubbleup(storage, added_index);
-  ++added_index;
+  if (storage.size() == n_max) {
+    storage[n] = std::move(element);
+  } else {
+    storage.push_back(std::move(element));
+  }
+  // Move the added element up in the tree to its correct position
+  bubbleup(storage, n++);
 }
 
 template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
     std::vector<value_type>& storage, std::size_t n, std::size_t actual_size) {
-  // left child : 2 * n + 1
-  // right child: 2 * n + 2
-  float current = weight(storage, n);
-  std::size_t left_child = 2 * n + 1;
-  std::size_t right_child = 2 * n + 2;
+  while (n < actual_size) {
+    // left child : 2 * n + 1
+    // right child: 2 * n + 2
+    float current = weight(storage, n);
+    std::size_t left_child = 2 * n + 1;
+    std::size_t right_child = 2 * n + 2;
 
-  // no left child, we stop
-  if (not exists(left_child, actual_size)) {
-    return;
-  }
-
-  float weight_left_child = weight(storage, left_child);
-
-  // no right child, left wins
-  if (not exists(right_child, actual_size)) {
-    if (weight_left_child < current) {
-      std::swap(storage[n], storage[left_child]);
-      return bubbledw(storage, left_child, actual_size);
+    // no left child, we do nothing
+    if (not exists(left_child, actual_size)) {
+      break;
     }
-  }
 
-  float weight_right_child = weight(storage, right_child);
+    float weight_left_child = weight(storage, left_child);
 
-  // both childs
-  // left is smaller
-  if (weight_left_child < weight_right_child) {
-    if (weight_left_child < current) {
-      std::swap(storage[n], storage[left_child]);
-      return bubbledw(storage, left_child, actual_size);
+    std::size_t selected_child = left_child;
+    float selected_weight = weight_left_child;
+
+    // Check which child has the lower weight
+    if (exists(right_child, actual_size)) {
+      float weight_right_child = weight(storage, right_child);
+      if (weight_right_child <= weight_left_child) {
+        selected_child = right_child;
+        selected_weight = weight_right_child;
+      }
     }
-  }
-  // right is smaller
-  if (weight_right_child < current) {
-    std::swap(storage[n], storage[right_child]);
-    return bubbledw(storage, right_child, actual_size);
-  }
+
+    // If weight of the childs is higher we stop
+    if (selected_weight >= current) {
+      break;
+    }
+
+    // swap and repeat the process
+    std::swap(storage[n], storage[selected_child]);
+    n = selected_child;
+  }  // while loop
 }
 
 template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::bubbleup(
     std::vector<value_type>& storage, std::size_t n) {
-  if (n == 0) {
-    return;
+  while (n != 0) {
+    // parent: (n - 1) / 2;
+    // this works because it is an integer operation
+    std::size_t parent_idx = (n - 1) / 2;
+
+    float weight_current = weight(storage, n);
+    float weight_parent = weight(storage, parent_idx);
+
+    // If weight of the parent is lower than this one, we stop
+    if (weight_parent <= weight_current) {
+      break;
+    }
+
+    // swap and repeat the process
+    std::swap(storage[n], storage[parent_idx]);
+    n = parent_idx;
   }
-
-  // parent: (n - 1) / 2;
-  // this works because it is an integer operation
-  std::size_t parent_idx = (n - 1) / 2;
-
-  float weight_current = weight(storage, n);
-  float weight_parent = weight(storage, parent_idx);
-
-  if (weight_parent <= weight_current) {
-    return;
-  }
-
-  std::swap(storage[n], storage[parent_idx]);
-  bubbleup(storage, parent_idx);
-}
-
-template <typename external_space_point_t>
-void CandidatesForMiddleSp<external_space_point_t>::pop(
-    std::vector<value_type>& storage, std::size_t& current_size) {
-  storage[0] = storage[current_size - 1];
-  --current_size;
-  bubbledw(storage, 0, current_size);
 }
 
 template <typename external_space_point_t>
@@ -156,53 +199,48 @@ CandidatesForMiddleSp<external_space_point_t>::storage() const {
   std::vector<value_type> output;
   output.reserve(m_n_high + m_n_low);
 
-  for (std::size_t idx(0); idx < m_n_high; idx++) {
-    const auto& [bottom, middle, top, weight, zOrigin, isQuality] =
-        m_storage_high[idx];
-    output.emplace_back(bottom, middle, top, weight, zOrigin, isQuality);
+  for (std::size_t idx(0); idx < m_n_high; ++idx) {
+    output.push_back(std::move(m_storage_high[idx]));
   }
 
-  for (std::size_t idx(0); idx < m_n_low; idx++) {
-    const auto& [bottom, middle, top, weight, zOrigin, isQuality] =
-        m_storage_low[idx];
-    output.emplace_back(bottom, middle, top, weight, zOrigin, isQuality);
+  for (std::size_t idx(0); idx < m_n_low; ++idx) {
+    output.push_back(std::move(m_storage_low[idx]));
   }
 
-  // sort output according to weight and sps
-  // should we collect inputs according to this criterion instead?
-  std::sort(output.begin(), output.end(),
-            CandidatesForMiddleSp<external_space_point_t>::greaterSort);
   return output;
 }
 
 template <typename external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::greaterSort(
     const value_type& i1, const value_type& i2) {
-  const auto& [bottom_l1, medium_l1, top_l1, weight_l1, zOrigin_l1,
-               isQuality_l1] = i1;
-  const auto& [bottom_l2, medium_l2, top_l2, weight_l2, zOrigin_l2,
-               isQuality_l2] = i2;
-
-  if (weight_l1 != weight_l2) {
-    return weight_l1 > weight_l2;
+  if (i1.weight != i2.weight) {
+    return i1.weight > i2.weight;
   }
 
   // This is for the case when the weights from different seeds
   // are same. This makes cpu & cuda results same
 
-  // medium is the same for all candidates
-  float sum_medium =
-      medium_l1->y() * medium_l1->y() + medium_l1->z() * medium_l1->z();
+  const auto& bottom_l1 = i1.bottom;
+  const auto& middle_l1 = i1.middle;
+  const auto& top_l1 = i1.top;
 
-  float seed1_sum = sum_medium;
-  float seed2_sum = sum_medium;
+  const auto& bottom_l2 = i2.bottom;
+  const auto& middle_l2 = i2.middle;
+  const auto& top_l2 = i2.top;
+
+  float seed1_sum = 0.;
+  float seed2_sum = 0.;
 
   seed1_sum +=
       bottom_l1->y() * bottom_l1->y() + bottom_l1->z() * bottom_l1->z();
+  seed1_sum +=
+      middle_l1->y() * middle_l1->y() + middle_l1->z() * middle_l1->z();
   seed1_sum += top_l1->y() * top_l1->y() + top_l1->z() * top_l1->z();
 
   seed2_sum +=
       bottom_l2->y() * bottom_l2->y() + bottom_l2->z() * bottom_l2->z();
+  seed2_sum +=
+      middle_l2->y() * middle_l2->y() + middle_l2->z() * middle_l2->z();
   seed2_sum += top_l2->y() * top_l2->y() + top_l2->z() * top_l2->z();
 
   return seed1_sum > seed2_sum;

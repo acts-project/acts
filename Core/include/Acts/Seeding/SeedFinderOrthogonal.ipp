@@ -435,7 +435,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
     }
 
-    candidates_collector.setBottomSp(bottom[b]);
     if (!top_valid.empty()) {
       m_config.seedFilter->filterSeeds_2SpFixed(
           *bottom[b], middle, top_valid, curvatures, impactParameters,
@@ -476,7 +475,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
       candidates_collector;
   candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                       max_num_quality_seeds_per_spm);
-  candidates_collector.setMiddleSp(&middle);
 
   /*
    * Calculate the search ranges for bottom and top candidates for this middle

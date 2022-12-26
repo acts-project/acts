@@ -58,12 +58,14 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
   // initialize original index locations
   std::vector<size_t> topSPIndexVec(topSpVec.size());
-  std::iota(topSPIndexVec.begin(), topSPIndexVec.end(), 0);
+  for (std::size_t i(0); i < topSPIndexVec.size(); ++i) {
+    topSPIndexVec[i] = i;
+  }
 
   if (m_cfg.curvatureSortingInFilter and topSpVec.size() > 2) {
     // sort indexes based on comparing values in invHelixDiameterVec
     std::sort(topSPIndexVec.begin(), topSPIndexVec.end(),
-              [&invHelixDiameterVec](size_t i1, size_t i2) {
+              [&invHelixDiameterVec](const size_t& i1, const size_t& i2) {
                 return invHelixDiameterVec[i1] < invHelixDiameterVec[i2];
               });
   }
@@ -189,7 +191,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
         // if we have not yet reached our max number of quality seeds we add the
         // new seed to outCont
 
-        candidates_collector.push(topSpVec[topSPIndex], weight, zOrigin, true);
+        candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
+                                  weight, zOrigin, true);
         if (seedFilterState.numQualitySeeds < m_cfg.maxQualitySeedsPerSpMConf) {
           // fill high quality seed
           seedFilterState.numQualitySeeds++;
@@ -206,7 +209,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
       // if we have not yet reached our max number of seeds we add the new seed
       // to outCont
 
-      candidates_collector.push(topSpVec[topSPIndex], weight, zOrigin, false);
+      candidates_collector.push(bottomSP, middleSP, *topSpVec[topSPIndex],
+                                weight, zOrigin, false);
       if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
         // fill seed
         seedFilterState.numSeeds++;
@@ -220,8 +224,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     // if we have not yet reached our max number of seeds we add the new seed to
     // outCont
 
-    candidates_collector.push(topSpVec[maxWeightSeedIndex], weightMax, zOrigin,
-                              false);
+    candidates_collector.push(bottomSP, middleSP, *topSpVec[maxWeightSeedIndex],
+                              weightMax, zOrigin, false);
     if (seedFilterState.numSeeds < m_cfg.maxSeedsPerSpMConf) {
       // fill seed
       seedFilterState.numSeeds++;
@@ -235,13 +239,20 @@ template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
-    int& numQualitySeeds,
+    std::size_t& numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
   // retrieve all candidates
   // this collection is alredy sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
+
+  // sort output according to weight and sps
+  // should we collect inputs according to this criterion instead?
+  std::sort(extended_collection.begin(), extended_collection.end(),
+            CandidatesForMiddleSp<
+                InternalSpacePoint<external_spacepoint_t>>::greaterSort);
+
   filterSeeds_1SpFixed(extended_collection, numQualitySeeds, outIt);
 }
 
@@ -249,7 +260,7 @@ template <typename external_spacepoint_t>
 void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
     std::vector<typename CandidatesForMiddleSp<
         InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
-    int& numQualitySeeds,
+    std::size_t& numQualitySeeds,
     std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
     const {
   if (m_experimentCuts != nullptr) {

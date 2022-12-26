@@ -138,17 +138,19 @@ std::vector<std::size_t> transformCoordinates(
     sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
   // sort the SP in order of cotTheta
-  std::sort(indexes.begin(), indexes.end(),
-            [&linCircleVec](const std::size_t& a, std::size_t& b) -> bool {
-              return (linCircleVec[a].cotTheta < linCircleVec[b].cotTheta);
-            });
+  std::sort(
+      indexes.begin(), indexes.end(),
+      [&linCircleVec](const std::size_t& a, const std::size_t& b) -> bool {
+        return linCircleVec[a].cotTheta < linCircleVec[b].cotTheta;
+      });
   return indexes;
 }
 
 template <typename external_spacepoint_t, typename sp_range_t>
-bool xyzCoordinateCheck(Acts::SeedFinderConfig<external_spacepoint_t> m_config,
-                        sp_range_t sp, const double* spacepointPosition,
-                        double* outputCoordinates) {
+bool xyzCoordinateCheck(
+    const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
+    sp_range_t sp, const double* spacepointPosition,
+    double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 

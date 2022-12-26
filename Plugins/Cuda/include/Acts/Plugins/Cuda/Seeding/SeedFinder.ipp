@@ -277,14 +277,14 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
         float Zob = 0;  // It is not used in the seed filter but needs to be
                         // fixed anyway...
 
-        candidates.emplace_back(&bottomSP, &middleSP, &middleSP, triplet.weight,
-                                Zob, false);
+        candidates.emplace_back(bottomSP, middleSP, topSP, triplet.weight, Zob,
+                                false);
       }
 
       std::sort(candidates.begin(), candidates.end(),
                 CandidatesForMiddleSp<
                     InternalSpacePoint<external_spacepoint_t>>::greaterSort);
-      int numQualitySeeds = 0;  // not used but needs to be fixed
+      std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
       m_config.seedFilter->filterSeeds_1SpFixed(candidates, numQualitySeeds,
                                                 std::back_inserter(outputVec));
     }

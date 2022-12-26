@@ -83,12 +83,8 @@ ATLASCuts<SpacePoint>::cutPerMiddleSP(
   std::size_t itLength = std::min(seedCandidates.size(), std::size_t(5));
   // don't cut first element
   for (std::size_t i(1); i < itLength; i++) {
-    float weight =
-        std::get<CandidatesForMiddleSp<SpacePoint>::Components::WEIGHT>(
-            seedCandidates[i]);
-    const auto& bottom =
-        std::get<CandidatesForMiddleSp<SpacePoint>::Components::BSP>(
-            seedCandidates[i]);
+    float weight = seedCandidates[i].weight;
+    const auto& bottom = seedCandidates[i].bottom;
     if (weight > 200. or bottom->radius() > 43.) {
       newSeedsVector.push_back(std::move(seedCandidates[i]));
     }
