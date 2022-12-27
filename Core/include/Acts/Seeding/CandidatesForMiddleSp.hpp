@@ -18,6 +18,9 @@ namespace Acts {
 /// @tparam external_space_point_t  The external spacepoint type.
 template <typename external_space_point_t>
 struct TripletCandidate {
+  /// @brief Default Constructor
+  TripletCandidate() = default;
+
   /// @brief constructor
   /// @param b The bottom space point
   /// @param m The middle space point
@@ -29,12 +32,12 @@ struct TripletCandidate {
                    external_space_point_t& t, float w, float z, bool q)
       : bottom(&b), middle(&m), top(&t), weight(w), zOrigin(z), isQuality(q){};
 
-  external_space_point_t* bottom;
-  external_space_point_t* middle;
-  external_space_point_t* top;
-  float weight;
-  float zOrigin;
-  bool isQuality;
+  external_space_point_t* bottom{nullptr};
+  external_space_point_t* middle{nullptr};
+  external_space_point_t* top{nullptr};
+  float weight{0.};
+  float zOrigin{0.};
+  bool isQuality{false};
 };
 
 /// @class CandidatesForMiddleSp
@@ -50,7 +53,7 @@ class CandidatesForMiddleSp {
   using value_type = TripletCandidate<external_space_point_t>;
 
   /// @brief constructor
-  CandidatesForMiddleSp();
+  CandidatesForMiddleSp() = default;
   /// @brief Destructor
   ~CandidatesForMiddleSp() = default;
 
@@ -59,9 +62,10 @@ class CandidatesForMiddleSp {
   /// @param n_high Maximum number of candidates in the high-quality collection
   void setMaxElements(std::size_t n_low, std::size_t n_high);
 
-  /// @brief Retrieve the triplet candidates
+  /// @brief Retrieve the triplet candidates, the resulting vector is already sorted,
+  /// elements with higher quality first
   /// @returns Vector of triplet candidates
-  std::vector<value_type> storage() const;
+  std::vector<value_type> storage();
 
   /// @brief Adding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
@@ -96,7 +100,7 @@ class CandidatesForMiddleSp {
   /// @param weight The quality of the triplet candidate
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality
-  void push(std::vector<value_type>& storage, std::size_t& n,
+  void push(std::vector<std::size_t>& storage, std::size_t& n,
             const std::size_t& n_max, external_space_point_t& SpB,
             external_space_point_t& SpM, external_space_point_t& SpT,
             float weight, float zOrigin, bool isQuality);
@@ -115,20 +119,20 @@ class CandidatesForMiddleSp {
   /// @param storage The collection
   /// @param current_size The current number of element stored in the collection. The function will
   /// diminish this value by 1
-  void pop(std::vector<value_type>& storage, std::size_t& current_size);
+  void pop(std::vector<std::size_t>& storage, std::size_t& current_size);
 
   /// @brief Return the weight for a candidate
   /// @param storage The collection in which the element is stored
   /// @param n Index of the element in the collection
   /// @returns The weight of the candidate
-  float weight(const std::vector<value_type>& storage, std::size_t n) const;
+  float weight(const std::vector<std::size_t>& storage, std::size_t n) const;
 
   /// @brief Move an element up in the min heap tree. The function checks whether the element's
   /// weight is lower of it's parent's weight. If so, it swaps them. Reiterate
   /// the process untill the element is in the correct position on the tree
   /// @param storage The collection
   /// @param n The index of the element to place in the correct position
-  void bubbleup(std::vector<value_type>& storage, std::size_t n);
+  void bubbleup(std::vector<std::size_t>& storage, std::size_t n);
 
   /// @brief Move an element down in the min heap tree. The function checks whether the elements's
   /// weight is lower of it's child's weights. If so, it swaps the element with
@@ -137,7 +141,7 @@ class CandidatesForMiddleSp {
   /// @param storage The collection
   /// @param n The index of the element to place in the correct position
   /// @param actual_size The current number of elements stored in the collection
-  void bubbledw(std::vector<value_type>& storage, std::size_t n,
+  void bubbledw(std::vector<std::size_t>& storage, std::size_t n,
                 std::size_t actual_size);
 
   /// @brief Sdding a new triplet candidate to the collection. The function is called after the candidate has satisfied
@@ -146,7 +150,7 @@ class CandidatesForMiddleSp {
   /// @param n Current number of stored elements in the collection
   /// @param n_max The maximum number of elements that can be stored in the collection
   /// @param element The element that must be added to the collection
-  void addToCollection(std::vector<value_type>& storage, std::size_t& n,
+  void addToCollection(std::vector<std::size_t>& storage, std::size_t& n,
                        const std::size_t& n_max, value_type&& element);
 
  private:
@@ -160,8 +164,11 @@ class CandidatesForMiddleSp {
   std::size_t m_n_high{0};
   std::size_t m_n_low{0};
 
-  // storage
-  // These vectors are sorted as a min heap tree
+  // storage contains the collection of the candidates
+  std::vector<value_type> m_storage{};
+
+  // The following vectors store indexes to elements in the storage
+  // They are sorted as a min heap tree, in which
   // Each node is lower then its childs
   // Thus, it is guaranteed that the lower elements is at the front
   // Sorting criteria is the seed quality
@@ -170,9 +177,9 @@ class CandidatesForMiddleSp {
   // and std::priority_queue  were tried and found slower.
 
   // storage for candidates with high quality
-  std::vector<value_type> m_storage_high{};
+  std::vector<std::size_t> m_storage_high{};
   // storage for candidates with low quality
-  std::vector<value_type> m_storage_low{};
+  std::vector<std::size_t> m_storage_low{};
 };
 
 }  // namespace Acts

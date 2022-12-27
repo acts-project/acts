@@ -246,13 +246,6 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // this collection is alredy sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
-
-  // sort output according to weight and sps
-  // should we collect inputs according to this criterion instead?
-  std::sort(extended_collection.begin(), extended_collection.end(),
-            CandidatesForMiddleSp<
-                InternalSpacePoint<external_spacepoint_t>>::greaterSort);
-
   filterSeeds_1SpFixed(extended_collection, numQualitySeeds, outIt);
 }
 

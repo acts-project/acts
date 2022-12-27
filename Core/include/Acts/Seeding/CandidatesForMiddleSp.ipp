@@ -9,9 +9,6 @@
 namespace Acts {
 
 template <typename external_space_point_t>
-CandidatesForMiddleSp<external_space_point_t>::CandidatesForMiddleSp() {}
-
-template <typename external_space_point_t>
 inline void CandidatesForMiddleSp<external_space_point_t>::setMaxElements(
     std::size_t n_low, std::size_t n_high) {
   m_max_size_high = n_high;
@@ -24,14 +21,15 @@ inline void CandidatesForMiddleSp<external_space_point_t>::setMaxElements(
     return;
   }
 
-  // Reserve enough memory for both collections
+  // Reserve enough memory for all collections
+  m_storage.reserve(n_low + n_high);
   m_storage_high.reserve(n_high);
   m_storage_low.reserve(n_low);
 }
 
 template <typename external_space_point_t>
 inline void CandidatesForMiddleSp<external_space_point_t>::pop(
-    std::vector<value_type>& storage, std::size_t& current_size) {
+    std::vector<std::size_t>& storage, std::size_t& current_size) {
   // Remove the candidate with the lowest weight in the collection
   // By construction, this element is always the first element in the
   // collection.
@@ -39,7 +37,7 @@ inline void CandidatesForMiddleSp<external_space_point_t>::pop(
   // is overwritten with the last element of the collection.
   // The number of stored elements (current_size) is lowered by 1
   // The new first element is moved down in the tree to its correct position
-  storage[0] = storage[current_size - 1];
+  std::swap(storage[0], storage[current_size - 1]);
   bubbledw(storage, 0, --current_size);
 }
 
@@ -53,9 +51,9 @@ inline bool CandidatesForMiddleSp<external_space_point_t>::exists(
 
 template <typename external_space_point_t>
 inline float CandidatesForMiddleSp<external_space_point_t>::weight(
-    const std::vector<value_type>& storage, std::size_t n) const {
+    const std::vector<std::size_t>& storage, std::size_t n) const {
   // Get the weight of the n-th element
-  return storage[n].weight;
+  return m_storage[storage[n]].weight;
 }
 
 template <typename external_space_point_t>
@@ -64,8 +62,8 @@ inline void CandidatesForMiddleSp<external_space_point_t>::clear() {
   // reset to 0 the number of stored elements
   m_n_high = 0;
   m_n_low = 0;
-  // We do not take ownership, so we can simply clean the collection
-  // without deleting anything
+  // Reset all values to default
+  m_storage.clear();
   m_storage_high.clear();
   m_storage_low.clear();
 }
@@ -86,7 +84,7 @@ void CandidatesForMiddleSp<external_space_point_t>::push(
 
 template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::push(
-    std::vector<value_type>& storage, std::size_t& n, const std::size_t& n_max,
+    std::vector<std::size_t>& storage, std::size_t& n, const std::size_t& n_max,
     external_space_point_t& SpB, external_space_point_t& SpM,
     external_space_point_t& SpT, float weight, float zOrigin, bool isQuality) {
   // If we do not want to store candidates, returns
@@ -116,14 +114,15 @@ void CandidatesForMiddleSp<external_space_point_t>::push(
 
 template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::addToCollection(
-    std::vector<value_type>& storage, std::size_t& n, const std::size_t& n_max,
+    std::vector<std::size_t>& storage, std::size_t& n, const std::size_t& n_max,
     value_type&& element) {
   // adds elements to the end of the collection
   // function called when space in storage is not full
   if (storage.size() == n_max) {
-    storage[n] = std::move(element);
+    m_storage[storage[n]] = std::move(element);
   } else {
-    storage.push_back(std::move(element));
+    m_storage.push_back(std::move(element));
+    storage.push_back(m_storage.size() - 1);
   }
   // Move the added element up in the tree to its correct position
   bubbleup(storage, n++);
@@ -131,7 +130,7 @@ void CandidatesForMiddleSp<external_space_point_t>::addToCollection(
 
 template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
-    std::vector<value_type>& storage, std::size_t n, std::size_t actual_size) {
+    std::vector<std::size_t>& storage, std::size_t n, std::size_t actual_size) {
   while (n < actual_size) {
     // left child : 2 * n + 1
     // right child: 2 * n + 2
@@ -171,7 +170,7 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
 
 template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::bubbleup(
-    std::vector<value_type>& storage, std::size_t n) {
+    std::vector<std::size_t>& storage, std::size_t n) {
   while (n != 0) {
     // parent: (n - 1) / 2;
     // this works because it is an integer operation
@@ -193,20 +192,49 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbleup(
 
 template <typename external_space_point_t>
 std::vector<typename CandidatesForMiddleSp<external_space_point_t>::value_type>
-CandidatesForMiddleSp<external_space_point_t>::storage() const {
-  // this will retrieve the entire storage, first high and then low quality
-  // the resulting vector is not sorted!
-  std::vector<value_type> output;
-  output.reserve(m_n_high + m_n_low);
+CandidatesForMiddleSp<external_space_point_t>::storage() {
+  // this will retrieve the entire storage
+  // the resulting vector is already sorted from high to low quality
+  std::vector<value_type> output(m_n_high + m_n_low);
+  std::size_t out_idx = output.size() - 1;
 
-  for (std::size_t idx(0); idx < m_n_high; ++idx) {
-    output.push_back(std::move(m_storage_high[idx]));
-  }
+  // rely on the fact that m_storage_* are both min heap trees
+  // Sorting comes noturally by popping elements one by one and
+  // placing this element at the end of the output vector
+  while (m_n_high != 0 or m_n_low != 0) {
+    // no entries in collection high, we attach the entire low collection
+    if (m_n_high == 0) {
+      std::size_t idx = m_n_low;
+      for (std::size_t i(0); i < idx; i++) {
+        output[out_idx--] = std::move(m_storage[m_storage_low[0]]);
+        pop(m_storage_low, m_n_low);
+      }
+      break;
+    }
 
-  for (std::size_t idx(0); idx < m_n_low; ++idx) {
-    output.push_back(std::move(m_storage_low[idx]));
-  }
+    // no entries in collection low, we attach the entire high collection
+    if (m_n_low == 0) {
+      std::size_t idx = m_n_high;
+      for (std::size_t i(0); i < idx; i++) {
+        output[out_idx--] = std::move(m_storage[m_storage_high[0]]);
+        pop(m_storage_high, m_n_high);
+      }
+      break;
+    }
 
+    // Both have entries, get the minimum
+    if (greaterSort(m_storage[m_storage_low[0]],
+                    m_storage[m_storage_high[0]])) {
+      output[out_idx--] = std::move(m_storage[m_storage_high[0]]);
+      pop(m_storage_high, m_n_high);
+    } else {
+      output[out_idx--] = std::move(m_storage[m_storage_low[0]]);
+      pop(m_storage_low, m_n_low);
+    }
+
+  }  // while loop
+
+  clear();
   return output;
 }
 
