@@ -11,8 +11,8 @@
 #include "Acts/Utilities/Range1D.hpp"
 
 #include <algorithm>
-#include <limits>
 #include <array>
+#include <limits>
 
 namespace Acts {
 /// @brief An orthogonal range in an arbitrary number of dimensions
