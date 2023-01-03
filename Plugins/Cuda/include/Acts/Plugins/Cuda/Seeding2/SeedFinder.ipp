@@ -202,9 +202,10 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
       candidates.emplace_back(bottomSP, middleSP, topSP, triplet.weight, 0,
                               false);
     }
-    std::sort(candidates.begin(), candidates.end(),
-              CandidatesForMiddleSp<
-                  InternalSpacePoint<external_spacepoint_t>>::descendingByQuality);
+    std::sort(
+        candidates.begin(), candidates.end(),
+        CandidatesForMiddleSp<
+            InternalSpacePoint<external_spacepoint_t>>::descendingByQuality);
     std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_commonConfig.seedFilter->filterSeeds_1SpFixed(
         candidates, numQualitySeeds, std::back_inserter(outputVec));

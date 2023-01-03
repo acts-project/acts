@@ -225,7 +225,7 @@ CandidatesForMiddleSp<external_space_point_t>::storage() {
 
     // Both have entries, get the minimum
     if (descendingByQuality(m_storage[m_indices_low[0]],
-			    m_storage[m_indices_high[0]])) {
+                            m_storage[m_indices_high[0]])) {
       output[out_idx--] = std::move(m_storage[m_indices_high[0]]);
       pop(m_indices_high, m_n_high);
     } else {
@@ -275,11 +275,10 @@ bool CandidatesForMiddleSp<external_space_point_t>::descendingByQuality(
   return seed1_sum > seed2_sum;
 }
 
-
 template <typename external_space_point_t>
 bool CandidatesForMiddleSp<external_space_point_t>::ascendingByQuality(
     const value_type& i1, const value_type& i2) {
   return not descendingByQuality(i1, i2);
 }
-    
+
 }  // namespace Acts

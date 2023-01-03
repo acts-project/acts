@@ -1,4 +1,4 @@
-// This file is part of the AActs project.
+// This file is part of the Acts project.
 //
 // Copyright (C) 2018-2022 CERN for the benefit of the Acts project
 //
@@ -94,7 +94,7 @@ class CandidatesForMiddleSp {
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
   static bool ascendingByQuality(const value_type& i1, const value_type& i2);
-  
+
  private:
   /// @brief dding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
@@ -186,7 +186,7 @@ class CandidatesForMiddleSp {
 
   // list of indeces of candidates with high quality in the storage
   std::vector<std::size_t> m_indices_high{};
-  // list of indeces of candidates with low quality in the storage 
+  // list of indeces of candidates with low quality in the storage
   std::vector<std::size_t> m_indices_low{};
 };
 
