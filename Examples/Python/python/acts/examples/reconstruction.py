@@ -409,8 +409,8 @@ def addSeeding(
             )
 
             gridOptions = acts.SpacePointGridOptions(
-                    **acts.examples.defaultKWArgs(
-                        bFieldInZ=seedFinderOptions.bFieldInZ,
+                **acts.examples.defaultKWArgs(
+                    bFieldInZ=seedFinderOptions.bFieldInZ,
                 )
             )
 
