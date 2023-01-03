@@ -121,7 +121,8 @@ template <typename external_spacepoint_t>
 std::pair<Acts::SpacePointGridConfig, Acts::SpacePointGridOptions>
 setupSpacePointGridConfig(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const Acts::SeedFinderOptions& options) -> std::pair<Acts::SpacePointGridConfig, Acts::SpacePointGridOptions> {
+    const Acts::SeedFinderOptions& options)
+    ->std::pair<Acts::SpacePointGridConfig, Acts::SpacePointGridOptions> {
   Acts::SpacePointGridConfig gridConf{};
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
