@@ -55,6 +55,7 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
+/// @returns Vector of sorted indexes for the vectors (vec and linCircleVec)
 template <typename external_spacepoint_t>
 std::vector<std::size_t> transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,

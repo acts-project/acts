@@ -1,4 +1,4 @@
-// This file is part of the Acts project.
+// This file is part of the AActs project.
 //
 // Copyright (C) 2018-2022 CERN for the benefit of the Acts project
 //
@@ -75,7 +75,8 @@ class CandidatesForMiddleSp {
   /// @param weight The quality of the triplet candidate
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality
-  void push(external_space_point_t& SpB, external_space_point_t& SpM,
+  /// @returns whether the triplet candidate has been added or not to the collection
+  bool push(external_space_point_t& SpB, external_space_point_t& SpM,
             external_space_point_t& SpT, float weight, float zOrigin,
             bool isQuality);
 
@@ -86,12 +87,18 @@ class CandidatesForMiddleSp {
   /// @param i1 First triplet candidate
   /// @param i2 Second triplet candidate
   /// @returns The comparison result
-  static bool greaterSort(const value_type& i1, const value_type& i2);
+  static bool descendingByQuality(const value_type& i1, const value_type& i2);
 
+  /// @brief A function for sorting the triplet candidates from lower to higher quality
+  /// @param i1 First triplet candidate
+  /// @param i2 Second triplet candidate
+  /// @returns The comparison result
+  static bool ascendingByQuality(const value_type& i1, const value_type& i2);
+  
  private:
   /// @brief dding a new triplet candidate to the collection, should it satisfy the
   /// selection criteria
-  /// @param storage The collection into which the candidate should be stored
+  /// @param indices The collection into which the candidate should be stored
   /// @param n The current number of stored elements in the container
   /// @param n_max The maximum number of elements that can be stored in the container
   /// @param SpB The bottom space point
@@ -100,7 +107,8 @@ class CandidatesForMiddleSp {
   /// @param weight The quality of the triplet candidate
   /// @param zOrigin The z-coordinate of the origin
   /// @param isQuality Whether the triplet candidate is high or low quality
-  void push(std::vector<std::size_t>& storage, std::size_t& n,
+  /// @returns whether the triplet candidate has been added or not to the collection
+  bool push(std::vector<std::size_t>& indices, std::size_t& n,
             const std::size_t& n_max, external_space_point_t& SpB,
             external_space_point_t& SpM, external_space_point_t& SpT,
             float weight, float zOrigin, bool isQuality);
@@ -116,50 +124,50 @@ class CandidatesForMiddleSp {
   /// does not imply its destruction. In fact, the number of stored elements is
   /// simply diminished by 1. The popped element is tecnically still available
   /// at the end of the collection.
-  /// @param storage The collection
+  /// @param indices The collection
   /// @param current_size The current number of element stored in the collection. The function will
   /// diminish this value by 1
-  void pop(std::vector<std::size_t>& storage, std::size_t& current_size);
+  void pop(std::vector<std::size_t>& indices, std::size_t& current_size);
 
   /// @brief Return the weight for a candidate
-  /// @param storage The collection in which the element is stored
+  /// @param indices The collection in which the element is stored
   /// @param n Index of the element in the collection
   /// @returns The weight of the candidate
-  float weight(const std::vector<std::size_t>& storage, std::size_t n) const;
+  float weight(const std::vector<std::size_t>& indices, std::size_t n) const;
 
   /// @brief Move an element up in the min heap tree. The function checks whether the element's
   /// weight is lower of it's parent's weight. If so, it swaps them. Reiterate
   /// the process untill the element is in the correct position on the tree
-  /// @param storage The collection
+  /// @param indices The collection
   /// @param n The index of the element to place in the correct position
-  void bubbleup(std::vector<std::size_t>& storage, std::size_t n);
+  void bubbleup(std::vector<std::size_t>& indices, std::size_t n);
 
   /// @brief Move an element down in the min heap tree. The function checks whether the elements's
   /// weight is lower of it's child's weights. If so, it swaps the element with
   /// the child with the lowest weight. Reiterate the process untill the element
   /// is in the correct position on the tree
-  /// @param storage The collection
+  /// @param indices The collection
   /// @param n The index of the element to place in the correct position
   /// @param actual_size The current number of elements stored in the collection
-  void bubbledw(std::vector<std::size_t>& storage, std::size_t n,
+  void bubbledw(std::vector<std::size_t>& indices, std::size_t n,
                 std::size_t actual_size);
 
-  /// @brief Sdding a new triplet candidate to the collection. The function is called after the candidate has satisfied
+  /// @brief Adding a new triplet candidate to the collection. The function is called after the candidate has satisfied
   /// all the selection criteria
-  /// @param storage The collection
+  /// @param indices The collection
   /// @param n Current number of stored elements in the collection
   /// @param n_max The maximum number of elements that can be stored in the collection
   /// @param element The element that must be added to the collection
-  void addToCollection(std::vector<std::size_t>& storage, std::size_t& n,
+  void addToCollection(std::vector<std::size_t>& indices, std::size_t& n,
                        const std::size_t& n_max, value_type&& element);
 
  private:
   // sizes
-  // m_max_size_* is the maximum size of the storage collection. These values
+  // m_max_size_* is the maximum size of the indices collections. These values
   // are set by the user once
   std::size_t m_max_size_high{0};
   std::size_t m_max_size_low{0};
-  // m_n_* is the corrent size of the storage collection [0, m_max_size_*).
+  // m_n_* is the corrent size of the indices collections [0, m_max_size_*).
   // These values are set internally by the class
   std::size_t m_n_high{0};
   std::size_t m_n_low{0};
@@ -176,10 +184,10 @@ class CandidatesForMiddleSp {
   // This is in effect faster sorted container - implementation with std::set
   // and std::priority_queue  were tried and found slower.
 
-  // storage for candidates with high quality
-  std::vector<std::size_t> m_storage_high{};
-  // storage for candidates with low quality
-  std::vector<std::size_t> m_storage_low{};
+  // list of indeces of candidates with high quality in the storage
+  std::vector<std::size_t> m_indices_high{};
+  // list of indeces of candidates with low quality in the storage 
+  std::vector<std::size_t> m_indices_low{};
 };
 
 }  // namespace Acts
