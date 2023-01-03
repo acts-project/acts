@@ -122,14 +122,16 @@ auto setupSpacePointGridConfig(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::SeedFinderOptions& options) -> Acts::SpacePointGridConfig {
   Acts::SpacePointGridConfig gridConf{};
-  gridConf.bFieldInZ = options.bFieldInZ;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
   gridConf.zMin = config.zMin;
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
-  return gridConf;
+
+  Acts::SpacePointGridOptions gridOpts{};
+  gridOpts.bFieldInZ = options.bFieldInZ;
+  return std::make_pair(gridConf, gridOpts);
 }
 
 auto main(int argc, char** argv) -> int {
@@ -186,10 +188,12 @@ auto main(int argc, char** argv) -> int {
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
     return std::make_pair(position, covariance);
   };
-  auto gridConfig =
-      setupSpacePointGridConfig(config, options).toInternalUnits();
+  auto [gridConfig, gridOpts] =
+    setupSpacePointGridConfig(config, options);
+  gridConfig = gridConfig.toInternalUnits();
+  gridOpts = gridOpts.toInternalUnits();
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig);
+    Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
 
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,
