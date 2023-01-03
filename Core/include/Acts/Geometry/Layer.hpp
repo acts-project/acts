@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <utility>
@@ -281,9 +282,12 @@ class Layer : public virtual GeometryObject {
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
   /// @param hook Identifier hook to be applied to surfaces
+  /// @param logger A @c LoggerWrapper instance
+  ///
   void closeGeometry(const IMaterialDecorator* materialDecorator,
                      const GeometryIdentifier& layerID,
-                     const GeometryIdentifierHook& hook);
+                     const GeometryIdentifierHook& hook,
+                     LoggerWrapper logger = getDummyLogger());
 };
 
 /// Layers are constructedd with shared_ptr factories, hence the layer array is
