@@ -68,13 +68,13 @@ struct SpacePointGridConfig {
 };
 
 struct SpacePointGridOptions {
-    // magnetic field
+  // magnetic field
   float bFieldInZ = 0;
   bool isInInternalUnits = false;
   SpacePointGridOptions toInternalUnits() const {
     if (isInInternalUnits) {
       throw std::runtime_error(
-          "Repeated conversion to internal units for SpacePointGridConfig");
+          "Repeated conversion to internal units for SpacePointGridOptions");
     }
     using namespace Acts::UnitLiterals;
     SpacePointGridOptions options = *this;
@@ -84,7 +84,7 @@ struct SpacePointGridOptions {
     return options;
   }
 };
-  
+
 template <typename external_spacepoint_t>
 using SpacePointGrid = detail::Grid<
     std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>,

@@ -22,8 +22,8 @@ Acts::SpacePointGridCreator::createGrid(
   }
   if (not options.isInInternalUnits) {
     throw std::runtime_error(
-    	  "SpacePointGridOptions not in ACTS internal units in "
-	  "SpacePointGridCreator::createGrid");
+        "SpacePointGridOptions not in ACTS internal units in "
+        "SpacePointGridCreator::createGrid");
   }
   using AxisScalar = Acts::Vector3::Scalar;
 
@@ -35,8 +35,8 @@ Acts::SpacePointGridCreator::createGrid(
     // calculate circle intersections of helix and max detector radius
     float minHelixRadius =
         config.minPt /
-        (300. * options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T]) =
-                                    // pT[MeV] / (300 *Bz[kT])
+        (300. * options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
+                                     // = pT[MeV] / (300 *Bz[kT])
 
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < config.rMax / 2) {

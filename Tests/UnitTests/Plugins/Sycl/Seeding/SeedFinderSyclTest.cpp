@@ -188,12 +188,11 @@ auto main(int argc, char** argv) -> int {
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
     return std::make_pair(position, covariance);
   };
-  auto [gridConfig, gridOpts] =
-    setupSpacePointGridConfig(config, options);
+  auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
   gridConfig = gridConfig.toInternalUnits();
   gridOpts = gridOpts.toInternalUnits();
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-    Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
+      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
 
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,

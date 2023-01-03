@@ -225,8 +225,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsTop,
                                      m_cfg.numPhiNeighbors));
-  auto grid =
-    Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig, m_cfg.gridOptions);
+  auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
+      m_cfg.gridConfig, m_cfg.gridOptions);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,

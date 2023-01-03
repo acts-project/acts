@@ -1,4 +1,4 @@
-// This file is part of the Acts project.A
+// This file is part of the Acts project.
 //
 // Copyright (C) 2021-2022 CERN for the benefit of the Acts project
 //
@@ -220,8 +220,8 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig,
-      seedFinderOptions, gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
-      zBinNeighborsBottom, numPhiNeighbors);
+      seedFinderOptions, gridConfig, gridOptions, allowSeparateRMax,
+      zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingOrthogonalAlgorithm, mex,
