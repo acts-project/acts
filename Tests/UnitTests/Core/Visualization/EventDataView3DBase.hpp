@@ -13,6 +13,8 @@
 #include "Acts/EventData/MeasurementHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -267,17 +269,19 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
           &kfSmoother);
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
-                                LoggerWrapper{*logger},
                                 PropagatorPlainOptions(), rSurface);
 
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
   // Fit the track
-  auto fitRes =
-      kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart, kfOptions);
+  auto fitRes = kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart,
+                            kfOptions, tracks);
   if (not fitRes.ok()) {
     std::cout << "Fit failed" << std::endl;
     return ss.str();
   }
-  auto& fittedTrack = *fitRes;
+  auto& track = *fitRes;
 
   // Draw the track
   std::cout << "Draw the fitted track" << std::endl;
@@ -296,9 +300,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   spcolor.offset = -0.04;
 
   EventDataView3D::drawMultiTrajectory(
-      helper, *fittedTrack.fittedStates, fittedTrack.lastMeasurementIndex,
-      tgContext, momentumScale, localErrorScale, directionErrorScale, scolor,
-      mcolor, ppcolor, fpcolor, spcolor);
+      helper, tracks.trackStateContainer(), track.tipIndex(), tgContext,
+      momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
+      ppcolor, fpcolor, spcolor);
 
   helper.write("EventData_MultiTrajectory");
   helper.write(ss);

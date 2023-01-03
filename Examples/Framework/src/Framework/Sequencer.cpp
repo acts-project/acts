@@ -8,14 +8,17 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <algorithm>
 #include <atomic>
+#include <cfenv>
 #include <chrono>
 #include <exception>
+#include <limits>
 #include <numeric>
 #include <stdexcept>
 

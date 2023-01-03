@@ -53,7 +53,7 @@ struct MaterialCollector {
 
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  result_type& result, const Logger& /*logger*/) const {
     if (state.navigation.currentVolume != nullptr) {
       auto position = stepper.position(state.stepping);
       result.matTrue.push_back(
@@ -255,7 +255,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   MagneticFieldContext mc;
   // Launch propagation and gather result
   PropagatorOptions<ActionList<MaterialCollector>, AbortList<EndOfWorldReached>>
-      po(gc, mc, getDummyLogger());
+      po(gc, mc);
   po.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
 
