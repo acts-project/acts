@@ -55,17 +55,16 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
     }
 
     // For legacy volumes, check if layers are present
-    bool layersPresent = layerContainer;
+    bool layersPresent = legacyLayerType != Surface::SurfaceType::Other;
     for (const auto& cv : constituentVolumes) {
       layersPresent =
-          layersPresent or cv.layerType != Surface::SurfaceType::Other;
+          layersPresent or cv.legacyLayerType != Surface::SurfaceType::Other;
       if (layersPresent) {
         break;
       }
     }
 
     // If layers are present, it can't be a container in the legacy style
-    layerContainer = layersPresent;
     auto binValue = constituentBinning[0].binvalue;
     // Set the first last
     auto& fVolume = constituentVolumes.front();
@@ -80,8 +79,8 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
       }
     }
 
-    // Legacy  conversion - layers are kept untouched
-    if (not layerContainer) {
+    // Legacy conversion - layers are kept untouched
+    if (not layersPresent) {
       // Set the outer boundaries
       fVolume.extent.set(binValue, extent.min(binValue),
                          fVolume.extent.max(binValue));
@@ -104,7 +103,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
       }
       borders.push_back(constituentVolumes.back().extent.max(binValue));
 
-    } else if (layerContainer and not legacy) {
+    } else if (layersPresent and not legacy) {
       // Count the gaps
       std::size_t gaps = 0;
       std::vector<float> boundaries = {};
@@ -149,7 +148,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         borders.push_back(static_cast<float>(containerMax));
       }
       constituentVolumes = updatedConstituents;
-    } else if (legacy and layerContainer) {
+    } else if (legacy and layersPresent) {
       borders = {0., 1.};
     }
     constituentBinning = {
@@ -164,13 +163,13 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
 }
 
 bool Acts::ProtoVolume::operator==(const Acts::ProtoVolume& ptVolume) const {
-  // Simple checks
-  if (name != ptVolume.name or extent != ptVolume.extent or
-      layerContainer != ptVolume.layerContainer or
-      layerType != ptVolume.layerType) {
+  if (name != ptVolume.name or extent != ptVolume.extent) {
     return false;
   }
-  if (layerSurfaceBinning != ptVolume.layerSurfaceBinning) {
+  if (legacyLayerType != ptVolume.legacyLayerType) {
+    return false;
+  }
+  if (surfaceBinning != ptVolume.surfaceBinning) {
     return false;
   }
   if (constituentVolumes != ptVolume.constituentVolumes or

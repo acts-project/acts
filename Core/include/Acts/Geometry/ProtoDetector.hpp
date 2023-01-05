@@ -13,7 +13,9 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
+#include <optional>
 #include <string>
+#include <vector>
 
 namespace Acts {
 
@@ -22,15 +24,15 @@ namespace Acts {
 struct ProtoVolume {
   /// Name of the proto volume
   std::string name = "";
-  /// The extent of this layer
+  /// The extent of this volume
   Extent extent;
-  /// Boolean to indicate this is a container, needed for legacy
-  bool layerContainer = false;
 
-  /// Set the layer type to indicate the layer volume
-  Acts::Surface::SurfaceType layerType = Acts::Surface::SurfaceType::Other;
-  /// The surface binninng fo the layer
-  std::vector<BinningData> layerSurfaceBinning = {};
+  /// Information for legacy type building
+  Acts::Surface::SurfaceType legacyLayerType =
+      Acts::Surface::SurfaceType::Other;
+
+  /// The surface binninng for internal surfaces (optional)
+  std::vector<BinningData> surfaceBinning = {};
   /// Internal structure container
   std::vector<ProtoVolume> constituentVolumes = {};
   /// The constituent binning if this a container
@@ -48,17 +50,17 @@ struct ProtoVolume {
   /// if off it creates a description for `Acts::Detector`.
   void harmonize(bool legacy = true);
 
-  /// Extend the tracking volume with the its own constituents,
-  /// upwards here means that extens are promoted to the mother
+  /// Extend the tracking volume with its own constituents,
+  /// upwards here means that extents are promoted to the mother
   ///
   /// @param ptVolume the protoVolume
   void extendUp(ProtoVolume& ptVolume);
 
-  /// Extend the tracking volume with the its own constituents
+  /// Extend the tracking volume with its own constituents
   /// @param bValue the binning value that is propagated
   void propagateMinDown(BinningValue bValue);
 
-  /// Extend the tracking volume with the its own constituents
+  /// Extend the tracking volume with its own constituents
   /// @param bValue the binning value that is propagated
   void propagateMaxDown(BinningValue bValue);
 
