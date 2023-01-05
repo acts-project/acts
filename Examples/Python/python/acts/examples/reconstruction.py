@@ -660,13 +660,13 @@ def addSeedPerformanceWriters(
     logLevel: acts.logging.Level = None,
 ):
     """Writes seeding related performance output"""
-    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    customLogLevel = acts.examples.defaultLogging(sequence, logLevel)
     outputDirRoot = Path(outputDirRoot)
     if not outputDirRoot.exists():
         outputDirRoot.mkdir()
     sequence.addWriter(
         acts.examples.TrackFinderPerformanceWriter(
-            level=logLevel,
+            level=customLogLevel(),
             inputProtoTracks=inputProtoTracks,
             inputParticles=selectedParticles,  # the original selected particles after digitization
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -676,7 +676,7 @@ def addSeedPerformanceWriters(
 
     sequence.addWriter(
         acts.examples.SeedingPerformanceWriter(
-            level=logLevel,
+            level=customLogLevel(minLevel=acts.logging.DEBUG),
             inputProtoTracks=inputProtoTracks,
             inputParticles=selectedParticles,
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -686,7 +686,7 @@ def addSeedPerformanceWriters(
 
     sequence.addWriter(
         acts.examples.RootTrackParameterWriter(
-            level=logLevel,
+            level=customLogLevel(),
             inputTrackParameters=outputTrackParameters,
             inputProtoTracks=outputProtoTracks,
             inputParticles=inputParticles,
