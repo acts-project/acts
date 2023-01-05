@@ -95,11 +95,10 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   Acts::ProtoVolume beamPipe;
   beamPipe.name = "odd-beam-pipe-l";
   beamPipe.extent.set(Acts::binR, 2., 16.);
-  beamPipe.layerType = Acts::Surface::SurfaceType::Cylinder;
+  beamPipe.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
   beamPipeContainer.constituentVolumes = {beamPipe};
   beamPipeContainer.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binR, {0., 1.})};
-  beamPipeContainer.layerContainer = true;
 
   // Pixel section
   Acts::ProtoVolume pixelContainer;
@@ -121,9 +120,8 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   pixelNec.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1.})};
   for (auto& cv : pixelNec.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Disc;
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
   }
-  pixelNec.layerContainer = true;
 
   Acts::ProtoVolume pixelBarrel;
   pixelBarrel.name = "odd-pixel-barrel";
@@ -133,28 +131,27 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   pixBarrelL0.name = "odd-pixel-barrel-l0";
   pixBarrelL0.extent.set(Acts::binR, 28., 48.);
   pixBarrelL0.extent.set(Acts::binZ, -580., 580);
-  pixBarrelL0.layerType = Acts::Surface::SurfaceType::Cylinder;
+  pixBarrelL0.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
   Acts::ProtoVolume pixBarrelL1;
   pixBarrelL1.name = "odd-pixel-barrel-l1";
   pixBarrelL1.extent.set(Acts::binR, 62., 76);
   pixBarrelL1.extent.set(Acts::binZ, -580., 580);
-  pixBarrelL1.layerType = Acts::Surface::SurfaceType::Cylinder;
+  pixBarrelL1.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
   Acts::ProtoVolume pixBarrelL2;
   pixBarrelL2.name = "odd-pixel-barrel-l2";
   pixBarrelL2.extent.set(Acts::binR, 100., 120.);
   pixBarrelL2.extent.set(Acts::binZ, -580., 580);
-  pixBarrelL2.layerType = Acts::Surface::SurfaceType::Cylinder;
+  pixBarrelL2.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
   Acts::ProtoVolume pixBarrelL3;
   pixBarrelL3.name = "odd-pixel-barrel-l3";
   pixBarrelL3.extent.set(Acts::binR, 160., 180.);
   pixBarrelL3.extent.set(Acts::binZ, -580., 580);
-  pixBarrelL3.layerType = Acts::Surface::SurfaceType::Cylinder;
+  pixBarrelL3.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
 
   pixelBarrel.constituentVolumes = {pixBarrelL0, pixBarrelL1, pixBarrelL2,
                                     pixBarrelL3};
   pixelBarrel.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binR, {0., 1})};
-  pixelBarrel.layerContainer = true;
 
   Acts::ProtoVolume pixelPec;
   pixelPec.name = "odd-pixel-pec";
@@ -171,9 +168,8 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   pixelPec.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
   for (auto& cv : pixelPec.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Disc;
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
   }
-  pixelPec.layerContainer = true;
 
   pixelContainer.constituentVolumes = {pixelNec, pixelBarrel, pixelPec};
   pixelContainer.constituentBinning = {

@@ -53,12 +53,12 @@ Acts::ProtoDetector createProtoDetector() {
   Acts::ProtoVolume pixelBarrelL0;
   pixelBarrelL0.name = "pixel-barrel-l0";
   pixelBarrelL0.extent.set(Acts::binR, 45., 50.);
-  pixelBarrelL0.layerType = Acts::Surface::SurfaceType::Cylinder;
+  pixelBarrelL0.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
 
   Acts::ProtoVolume pixelBarrelL1;
   pixelBarrelL1.name = "pixel-barrel-l1";
   pixelBarrelL1.extent.set(Acts::binR, 70., 80.);
-  pixelBarrelL1.layerType = Acts::Surface::SurfaceType::Cylinder;
+  pixelBarrelL1.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
 
   pixelBarrel.constituentVolumes = {pixelBarrelL0, pixelBarrelL1};
   pixelBarrel.constituentBinning = {
@@ -99,9 +99,6 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   // Get the top detector volume
   auto& detectorVolume = detector.worldVolume;
 
-  // Check the container is NOT a layer Container
-  BOOST_CHECK(detectorVolume.layerContainer == false);
-
   // The detector volume should have received maximum dimensions
   CHECK_CLOSE_ABS(detectorVolume.extent.min(Acts::binR), 0,
                   std::numeric_limits<ActsScalar>::epsilon());
@@ -140,7 +137,6 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   // The second volume is the pixel detector
   auto& pixelContainer = detectorVolume.constituentVolumes[1u];
   BOOST_CHECK(pixelContainer.name == "pixel-container");
-  BOOST_CHECK(pixelContainer.layerContainer == false);
 
   // Pixel contaienr should have fitting boundaries
   CHECK_CLOSE_ABS(pixelContainer.extent.min(Acts::binR), 35.,
@@ -177,15 +173,6 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
                   std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(binBoundariesZ[3u], 2000.,
                   std::numeric_limits<ActsScalar>::epsilon());
-
-  auto& pixelNec = pixelContainer.constituentVolumes[0u];
-  BOOST_CHECK(pixelNec.layerContainer == false);
-
-  auto& pixelBarrel = pixelContainer.constituentVolumes[1u];
-  BOOST_CHECK(pixelBarrel.layerContainer == true);
-
-  auto& pixelPec = pixelContainer.constituentVolumes[2u];
-  BOOST_CHECK(pixelPec.layerContainer == false);
 }
 
 BOOST_AUTO_TEST_CASE(ProtoDetectorTests) {
