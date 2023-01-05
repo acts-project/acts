@@ -15,8 +15,9 @@
 void Acts::to_json(nlohmann::json& j, const Acts::ProtoVolume& pv) {
   j["name"] = pv.name;
   j["extent"] = pv.extent;
-  j["layerContainer"] = pv.layerContainer;
-  j["layerType"] = static_cast<int>(pv.layerType);
+  if (pv.legacyLayerType != Surface::SurfaceType::Other) {
+    j["layerType"] = static_cast<int>(pv.legacyLayerType);
+  }
 
   // Helper m ethod to write binnings
   auto writeBinning = [&](const std::vector<BinningData>& binning,
@@ -27,7 +28,7 @@ void Acts::to_json(nlohmann::json& j, const Acts::ProtoVolume& pv) {
     }
     j[key] = jbinning;
   };
-  writeBinning(pv.layerSurfaceBinning, "layerSurfaceBinning");
+  writeBinning(pv.surfaceBinning, "surfaceBinning");
   nlohmann::json constituents;
   for (const auto& pvc : pv.constituentVolumes) {
     constituents.push_back(pvc);
@@ -39,8 +40,9 @@ void Acts::to_json(nlohmann::json& j, const Acts::ProtoVolume& pv) {
 void Acts::from_json(const nlohmann::json& j, Acts::ProtoVolume& pv) {
   pv.name = j["name"];
   pv.extent = j["extent"];
-  pv.layerContainer = j["layerContainer"];
-  pv.layerType = static_cast<Surface::SurfaceType>(j["layerType"]);
+  if (j.find("layerType") != j.end()) {
+    pv.legacyLayerType = static_cast<Surface::SurfaceType>(j["layerType"]);
+  }
 
   // Helper method to read binnings
   auto readBinning = [&](std::vector<BinningData>& binning,
@@ -49,7 +51,7 @@ void Acts::from_json(const nlohmann::json& j, Acts::ProtoVolume& pv) {
       binning.push_back(jbinning);
     }
   };
-  readBinning(pv.layerSurfaceBinning, "layerSurfaceBinning");
+  readBinning(pv.surfaceBinning, "surfaceBinning");
   for (const auto& jc : j["constituents"]) {
     pv.constituentVolumes.push_back(jc);
   }

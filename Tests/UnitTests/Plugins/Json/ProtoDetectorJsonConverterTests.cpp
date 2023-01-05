@@ -36,11 +36,10 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   Acts::ProtoVolume beamPipe;
   beamPipe.name = "odd-beam-pipe-l";
   beamPipe.extent.set(Acts::binR, 2., 24.);
-  beamPipe.layerType = Acts::Surface::SurfaceType::Cylinder;
+  beamPipe.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
   beamPipeContainer.constituentVolumes = {beamPipe};
   beamPipeContainer.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binR, {0., 1.})};
-  beamPipeContainer.layerContainer = true;
 
   // Pixel section
   Acts::ProtoVolume pixelContainer;
@@ -83,11 +82,10 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   pixelNec.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1.})};
   for (auto& cv : pixelNec.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Disc;
-    cv.layerSurfaceBinning = {pixEcBinningR, pixEcBinningPhi};
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
+    cv.surfaceBinning = {pixEcBinningR, pixEcBinningPhi};
     cv.extent.setEnvelope(discLayerEnvelope);
   }
-  pixelNec.layerContainer = true;
 
   Acts::ProtoVolume pixelBarrel;
   pixelBarrel.name = "odd-pixel-barrel";
@@ -113,13 +111,12 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   pixelBarrel.constituentVolumes = {pixBarrelL0, pixBarrelL1, pixBarrelL2,
                                     pixBarrelL3};
   for (auto& cv : pixelBarrel.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Cylinder;
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
     cv.extent.setEnvelope(cylinderLayerEnvelope);
   }
 
   pixelBarrel.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binR, {0., 1})};
-  pixelBarrel.layerContainer = true;
 
   Acts::ProtoVolume pixelPec;
   pixelPec.name = "odd-pixel-pec";
@@ -152,11 +149,10 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   pixelPec.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
   for (auto& cv : pixelPec.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Disc;
-    cv.layerSurfaceBinning = {pixEcBinningR, pixEcBinningPhi};
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
+    cv.surfaceBinning = {pixEcBinningR, pixEcBinningPhi};
     cv.extent.setEnvelope(discLayerEnvelope);
   }
-  pixelPec.layerContainer = true;
 
   pixelContainer.constituentVolumes = {pixelNec, pixelBarrel, pixelPec};
   pixelContainer.constituentBinning = {
@@ -169,11 +165,10 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   Acts::ProtoVolume pst;
   pst.name = "odd-pst-l";
   pst.extent.set(Acts::binR, 201., 209.);
-  pst.layerType = Acts::Surface::SurfaceType::Cylinder;
+  pst.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
   pstContainer.constituentVolumes = {pst};
   pstContainer.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binR, {0., 1.})};
-  pstContainer.layerContainer = true;
 
   // Short Strip section
   Acts::ProtoVolume sstripContainer;
@@ -212,11 +207,10 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   sstripNec.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
   for (auto& cv : sstripNec.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Disc;
-    cv.layerSurfaceBinning = {sstripEcBinningR, sstripEcBinningPhi};
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
+    cv.surfaceBinning = {sstripEcBinningR, sstripEcBinningPhi};
     cv.extent.setEnvelope(discLayerEnvelope);
   }
-  sstripNec.layerContainer = true;
 
   Acts::ProtoVolume sstripBarrel;
   sstripBarrel.name = "odd-sstrip-barrel";
@@ -238,13 +232,12 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   sstripBarrel.constituentVolumes = {sstripBarrelL0, sstripBarrelL1,
                                      sstripBarrelL2, sstripBarrelL3};
   for (auto& cv : sstripBarrel.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Cylinder;
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
     cv.extent.setEnvelope(cylinderLayerEnvelope);
   }
 
   sstripBarrel.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binR, {0., 1})};
-  sstripBarrel.layerContainer = true;
 
   Acts::ProtoVolume sstripPec;
   sstripPec.name = "odd-sstrip-pec";
@@ -274,11 +267,10 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   sstripPec.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
   for (auto& cv : sstripPec.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Disc;
-    cv.layerSurfaceBinning = {sstripEcBinningR, sstripEcBinningPhi};
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
+    cv.surfaceBinning = {sstripEcBinningR, sstripEcBinningPhi};
     cv.extent.setEnvelope(discLayerEnvelope);
   }
-  sstripPec.layerContainer = true;
 
   sstripContainer.constituentBinning = {Acts::BinningData(
       Acts::open, Acts::binZ, {-3100., -1200., 1200., 3100.})};
@@ -316,10 +308,9 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   lstripNec.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
   for (auto& cv : lstripNec.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Disc;
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
     cv.extent.setEnvelope(discLayerEnvelope);
   }
-  lstripNec.layerContainer = true;
 
   Acts::ProtoVolume lstripBarrel;
   lstripBarrel.name = "odd-lstrip-barrel";
@@ -334,13 +325,12 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
 
   lstripBarrel.constituentVolumes = {lstripBarrelL0, lstripBarrelL1};
   for (auto& cv : lstripBarrel.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Cylinder;
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
     cv.extent.setEnvelope(cylinderLayerEnvelope);
   }
 
   lstripBarrel.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binR, {0., 1})};
-  lstripBarrel.layerContainer = true;
 
   Acts::ProtoVolume lstripPec;
   lstripPec.name = "odd-lstrip-pec";
@@ -370,11 +360,9 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   lstripPec.constituentBinning = {
       Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
   for (auto& cv : lstripPec.constituentVolumes) {
-    cv.layerType = Acts::Surface::SurfaceType::Disc;
+    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
     cv.extent.setEnvelope(discLayerEnvelope);
   }
-  lstripPec.layerContainer = true;
-
   lstripContainer.constituentVolumes = {lstripNec, lstripBarrel, lstripPec};
   lstripContainer.constituentBinning = {Acts::BinningData(
       Acts::open, Acts::binZ, {-3100., -1200., 1200., 3100.})};
