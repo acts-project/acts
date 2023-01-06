@@ -91,7 +91,10 @@ struct GeometryView3D {
   static void drawPortal(IVisualization3D& helper,
                          const Experimental::Portal& portal,
                          const GeometryContext& gctx,
-                         const Transform3& transform = Transform3::Identity());
+                         const Transform3& transform = Transform3::Identity(),
+                         const ViewConfig& connected = ViewConfig({0, 255, 0}),
+                         const ViewConfig& unconnected = ViewConfig({255, 0,
+                                                                     0}));
 
   /// Helper method to draw DetectorVolume objects
   ///
@@ -103,7 +106,9 @@ struct GeometryView3D {
       IVisualization3D& helper,
       const Acts::Experimental::DetectorVolume& volume,
       const GeometryContext& gctx,
-      const Transform3& transform = Transform3::Identity());
+      const Transform3& transform = Transform3::Identity(),
+      const ViewConfig& connected = ViewConfig({0, 255, 0}),
+      const ViewConfig& unconnected = ViewConfig({255, 0, 0}));
 
   /// Helper method to draw AbstractVolume objects
   ///

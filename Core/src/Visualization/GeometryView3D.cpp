@@ -175,37 +175,40 @@ void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
 void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
                                       const Experimental::Portal& portal,
                                       const GeometryContext& gctx,
-                                      const Transform3& transform) {
+                                      const Transform3& transform,
+                                      const ViewConfig& connected,
+                                      const ViewConfig& disconnected) {
   // color the portal based on if it contains two links(green)
   // or one link(red)
-  const ViewConfig good = ViewConfig({0, 255, 0});
-  const ViewConfig bad = ViewConfig({255, 0, 0});
   auto surface = &(portal.surface());
   auto links = &(portal.detectorVolumeUpdators());
   if (links->size() == 2) {
-    drawSurface(helper, *surface, gctx, transform, good);
+    drawSurface(helper, *surface, gctx, transform, connected);
   } else {
-    drawSurface(helper, *surface, gctx, transform, bad);
+    drawSurface(helper, *surface, gctx, transform, disconnected);
   }
 }
 
 void Acts::GeometryView3D::drawDetectorVolume(
     IVisualization3D& helper, const Experimental::DetectorVolume& volume,
-    const GeometryContext& gctx, const Transform3& transform) {
+    const GeometryContext& gctx, const Transform3& transform,
+    const ViewConfig& connected, const ViewConfig& unconnected) {
   // draw the envelope first
   auto portals = volume.portals();
   for (auto portal : portals) {
-    drawPortal(helper, *portal, gctx, transform);
+    drawPortal(helper, *portal, gctx, transform, connected, unconnected);
   }
   // recurse if there are subvolumes, otherwise draw the portals
   auto subvolumes = volume.volumes();
   for (auto subvolume : subvolumes) {
     if (!subvolume->volumes().empty()) {
-      drawDetectorVolume(helper, *subvolume, gctx, transform);
+      drawDetectorVolume(helper, *subvolume, gctx, transform, connected,
+                         unconnected);
     } else {
       auto sub_portals = subvolume->portals();
       for (auto sub_portal : sub_portals) {
-        drawPortal(helper, *sub_portal, gctx, transform);
+        drawPortal(helper, *sub_portal, gctx, transform, connected,
+                   unconnected);
       }
     }
   }
