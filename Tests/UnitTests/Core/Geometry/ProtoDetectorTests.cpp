@@ -53,28 +53,31 @@ Acts::ProtoDetector createProtoDetector() {
   Acts::ProtoVolume pixelBarrelL0;
   pixelBarrelL0.name = "pixel-barrel-l0";
   pixelBarrelL0.extent.set(Acts::binR, 45., 50.);
-  pixelBarrelL0.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
+  pixelBarrelL0.internal = Acts::ProtoVolume::InternalStructure{
+      Acts::Surface::SurfaceType::Cylinder};
 
   Acts::ProtoVolume pixelBarrelL1;
   pixelBarrelL1.name = "pixel-barrel-l1";
   pixelBarrelL1.extent.set(Acts::binR, 70., 80.);
-  pixelBarrelL1.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
+  pixelBarrelL1.internal = Acts::ProtoVolume::InternalStructure{
+      Acts::Surface::SurfaceType::Cylinder};
 
-  pixelBarrel.constituentVolumes = {pixelBarrelL0, pixelBarrelL1};
-  pixelBarrel.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binR, {0., 1.})};
+  pixelBarrel.container = Acts::ProtoVolume::ContainerStructure{
+      {pixelBarrelL0, pixelBarrelL1},
+      {Acts::BinningData(Acts::open, Acts::binR, {0., 1.})},
+      true};
 
   Acts::ProtoVolume pixelPec;
   pixelPec.name = "pixel-pec";
   pixelPec.extent.set(Acts::binZ, 600., 1900.);
 
-  pixelContainer.constituentVolumes = {pixelNec, pixelBarrel, pixelPec};
-  pixelContainer.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
+  pixelContainer.container = Acts::ProtoVolume::ContainerStructure{
+      {pixelNec, pixelBarrel, pixelPec},
+      {Acts::BinningData(Acts::open, Acts::binZ, {0., 1})}};
 
-  detectorVolume.constituentVolumes = {beamPipe, pixelContainer};
-  detectorVolume.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binR, {0., 1})};
+  detectorVolume.container = Acts::ProtoVolume::ContainerStructure{
+      {beamPipe, pixelContainer},
+      {Acts::BinningData(Acts::open, Acts::binR, {0., 1})}};
 
   Acts::ProtoDetector detector;
   detector.name = "detector";
@@ -107,10 +110,16 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
                   std::numeric_limits<ActsScalar>::epsilon());
 
   // The detector cotainer should have binning in R
-  BOOST_CHECK(detectorVolume.constituentBinning[0].type == Acts::arbitrary);
-  BOOST_CHECK(detectorVolume.constituentBinning[0].binvalue == Acts::binR);
+  BOOST_CHECK(detectorVolume.container.has_value());
+  BOOST_CHECK(not detectorVolume.internal.has_value());
 
-  const auto& binBoundaries = detectorVolume.constituentBinning[0].boundaries();
+  auto& cts = detectorVolume.container.value();
+
+  BOOST_CHECK(cts.constituentBinning.size() == 1u);
+  BOOST_CHECK(cts.constituentBinning[0].type == Acts::arbitrary);
+  BOOST_CHECK(cts.constituentBinning[0].binvalue == Acts::binR);
+
+  const auto& binBoundaries = cts.constituentBinning[0].boundaries();
   BOOST_CHECK(binBoundaries.size() == 3u);
   CHECK_CLOSE_ABS(binBoundaries[0u], 0.,
                   std::numeric_limits<ActsScalar>::epsilon());
@@ -121,7 +130,7 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
 
   // The first volume is the beam pipe, it should have gotten the
   // the z dimension
-  auto& beamPipe = detectorVolume.constituentVolumes[0u];
+  auto& beamPipe = cts.constituentVolumes[0u];
 
   BOOST_CHECK(beamPipe.name == "beam-pipe");
   CHECK_CLOSE_ABS(beamPipe.extent.min(Acts::binZ), -2000.,
@@ -135,7 +144,7 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
                   std::numeric_limits<ActsScalar>::epsilon());
 
   // The second volume is the pixel detector
-  auto& pixelContainer = detectorVolume.constituentVolumes[1u];
+  auto& pixelContainer = cts.constituentVolumes[1u];
   BOOST_CHECK(pixelContainer.name == "pixel-container");
 
   // Pixel contaienr should have fitting boundaries
@@ -148,9 +157,13 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   CHECK_CLOSE_ABS(pixelContainer.extent.max(Acts::binZ), 2000.,
                   std::numeric_limits<ActsScalar>::epsilon());
 
+  // The Pixel container has constituents
+  BOOST_CHECK(pixelContainer.container.has_value());
+  auto& cts1 = pixelContainer.container.value();
+
   // All of the internal containers should now have synchronized
   // inner & outer boundaries
-  for (auto& pv : pixelContainer.constituentVolumes) {
+  for (auto& pv : cts1.constituentVolumes) {
     CHECK_CLOSE_ABS(pv.extent.min(Acts::binR), 35.,
                     std::numeric_limits<ActsScalar>::epsilon());
 
@@ -159,11 +172,11 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   }
 
   // The binning should have been estimated
-  BOOST_CHECK(pixelContainer.constituentBinning[0].type == Acts::arbitrary);
-  BOOST_CHECK(pixelContainer.constituentBinning[0].binvalue == Acts::binZ);
+  BOOST_CHECK(cts1.constituentBinning.size() == 1u);
+  BOOST_CHECK(cts1.constituentBinning[0].type == Acts::arbitrary);
+  BOOST_CHECK(cts1.constituentBinning[0].binvalue == Acts::binZ);
 
-  const auto& binBoundariesZ =
-      pixelContainer.constituentBinning[0].boundaries();
+  const auto& binBoundariesZ = cts1.constituentBinning[0].boundaries();
   BOOST_CHECK(binBoundariesZ.size() == 4u);
   CHECK_CLOSE_ABS(binBoundariesZ[0u], -2000.,
                   std::numeric_limits<ActsScalar>::epsilon());
@@ -173,13 +186,25 @@ BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
                   std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(binBoundariesZ[3u], 2000.,
                   std::numeric_limits<ActsScalar>::epsilon());
+
+  // The second volume is the pixel barrel
+  auto& pixelBarrel = cts1.constituentVolumes[1u];
+  BOOST_CHECK(pixelBarrel.name == "pixel-barrel");
+
+  // It is a container volume value
+  BOOST_CHECK(pixelBarrel.container.has_value());
+  auto& cts2 = pixelBarrel.container.value();
+  // It is, however, a layer container
+  BOOST_CHECK(cts2.layerContainer);
+  for (auto& lVolume : cts2.constituentVolumes) {
+    BOOST_CHECK(lVolume.internal.has_value());
+  }
 }
 
 BOOST_AUTO_TEST_CASE(ProtoDetectorTests) {
   // Get the raw proto detector description
   auto detector = createProtoDetector();
   detector.harmonize(false);
-
   std::cout << detector.toString() << std::endl;
 }
 
