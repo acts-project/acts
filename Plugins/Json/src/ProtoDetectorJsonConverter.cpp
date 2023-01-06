@@ -15,47 +15,97 @@
 void Acts::to_json(nlohmann::json& j, const Acts::ProtoVolume& pv) {
   j["name"] = pv.name;
   j["extent"] = pv.extent;
-  if (pv.legacyLayerType != Surface::SurfaceType::Other) {
-    j["layerType"] = static_cast<int>(pv.legacyLayerType);
-  }
 
-  // Helper m ethod to write binnings
-  auto writeBinning = [&](const std::vector<BinningData>& binning,
+  /// Helper m ethod to write binnings
+  ///
+  /// @param root the json root into which this is written
+  /// @param binning the vector of binning data
+  /// @param key the key for the root writing
+  auto writeBinning = [&](nlohmann::json& root,
+                          const std::vector<BinningData>& binning,
                           const std::string& key) -> void {
     nlohmann::json jbinning;
     for (const auto& bd : binning) {
       jbinning.push_back(bd);
     }
-    j[key] = jbinning;
+    root[key] = jbinning;
   };
-  writeBinning(pv.surfaceBinning, "surfaceBinning");
-  nlohmann::json constituents;
-  for (const auto& pvc : pv.constituentVolumes) {
-    constituents.push_back(pvc);
+
+  // The internal structure
+  if (pv.internal.has_value()) {
+    auto& its = pv.internal.value();
+    nlohmann::json jinternal;
+    if (its.layerType != Surface::SurfaceType::Other) {
+      jinternal["layerType"] = static_cast<int>(its.layerType);
+    }
+    if (not its.surfaceBinning.empty()) {
+      writeBinning(jinternal, its.surfaceBinning, "surfaceBinning");
+    }
+    j["internalStructure"] = jinternal;
   }
-  j["constituents"] = constituents;
-  writeBinning(pv.constituentBinning, "constituentBinning");
+
+  // The container structure
+  if (pv.container.has_value()) {
+    auto& cts = pv.container.value();
+    nlohmann::json jcontainer;
+    nlohmann::json jconstituents;
+    for (const auto& pvc : cts.constituentVolumes) {
+      jconstituents.push_back(pvc);
+    }
+    jcontainer["constituents"] = jconstituents;
+    writeBinning(jcontainer, cts.constituentBinning, "constituentBinning");
+    jcontainer["layerContainer"] = cts.layerContainer;
+    j["containerStructure"] = jcontainer;
+  }
 }
 
 void Acts::from_json(const nlohmann::json& j, Acts::ProtoVolume& pv) {
   pv.name = j["name"];
   pv.extent = j["extent"];
-  if (j.find("layerType") != j.end()) {
-    pv.legacyLayerType = static_cast<Surface::SurfaceType>(j["layerType"]);
-  }
 
-  // Helper method to read binnings
-  auto readBinning = [&](std::vector<BinningData>& binning,
+  /// Helper method to read binnings
+  ///
+  /// @param root is the json root
+  /// @param binning is the vector of binning data to be filled
+  /// @param key is the lookup key
+  auto readBinning = [&](const nlohmann::json& root,
+                         std::vector<BinningData>& binning,
                          const std::string& key) -> void {
-    for (const auto& jbinning : j[key]) {
+    // return if no surface binning in json
+    if (root.find(key) == root.end() or root[key].is_null()) {
+      return;
+    }
+
+    for (const auto& jbinning : root[key]) {
       binning.push_back(jbinning);
     }
   };
-  readBinning(pv.surfaceBinning, "surfaceBinning");
-  for (const auto& jc : j["constituents"]) {
-    pv.constituentVolumes.push_back(jc);
+
+  // The internal structure
+  if (j.find("internalStructure") != j.end() and
+      not j["internalStructure"].is_null()) {
+    auto& jinternal = j["internalStructure"];
+    Surface::SurfaceType layerType =
+        static_cast<Surface::SurfaceType>(jinternal["layerType"]);
+    std::vector<BinningData> surfaceBinning;
+    readBinning(jinternal, surfaceBinning, "surfaceBinning");
+    pv.internal = ProtoVolume::InternalStructure{layerType, surfaceBinning};
   }
-  readBinning(pv.constituentBinning, "constituentBinning");
+
+  // The container structure
+  if (j.find("containerStructure") != j.end() and
+      not j["containerStructure"].is_null()) {
+    std::vector<ProtoVolume> constituentVolumes;
+    auto& jcontainer = j["containerStructure"];
+    for (const auto& jc : jcontainer["constituents"]) {
+      constituentVolumes.push_back(jc);
+    }
+    std::vector<BinningData> constituentBinning;
+    readBinning(jcontainer, constituentBinning, "constituentBinning");
+    bool layerContainer = jcontainer["layerContainer"];
+    pv.container = ProtoVolume::ContainerStructure{
+        constituentVolumes, constituentBinning, layerContainer};
+  }
 }
 
 void Acts::to_json(nlohmann::json& j, const Acts::ProtoDetector& pd) {
