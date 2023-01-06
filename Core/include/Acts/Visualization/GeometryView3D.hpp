@@ -88,6 +88,8 @@ struct GeometryView3D {
   /// @param portal The portal to be drawn
   /// @param gctx The geometry context for which it is drawn
   /// @param transform An option additional transform
+  /// @param connected The config for connected portals
+  /// @param unconnected The config for unconnected portals
   static void drawPortal(IVisualization3D& helper,
                          const Experimental::Portal& portal,
                          const GeometryContext& gctx,
@@ -102,6 +104,8 @@ struct GeometryView3D {
   /// @param volume The DetectorVolume to be drawn
   /// @param gctx The geometry context for which it is drawn
   /// @param transform An option additional transform
+  /// @param connected The config for connected portals
+  /// @param unconnected The config for unconnected portals
   static void drawDetectorVolume(
       IVisualization3D& helper,
       const Acts::Experimental::DetectorVolume& volume,
