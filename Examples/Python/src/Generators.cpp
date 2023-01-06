@@ -25,6 +25,7 @@ namespace py = pybind11;
 
 namespace {
 double thetaToEta(double theta) {
+  assert(theta != 0);
   return -1 * std::log(std::tan(theta / 2.));
 }
 double etaToTheta(double eta) {
