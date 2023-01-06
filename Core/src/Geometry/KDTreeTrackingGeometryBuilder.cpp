@@ -68,45 +68,68 @@ Acts::KDTreeTrackingGeometryBuilder::translateVolume(
   ACTS_DEBUG(indent << "Processing ProtoVolume: " << ptVolume.name);
   std::vector<std::shared_ptr<const TrackingVolume>> translatedVolumes = {};
 
-  if (not ptVolume.constituentVolumes.empty() and
-      ptVolume.legacyLayerType == Surface::SurfaceType::Other) {
-    ACTS_VERBOSE(indent << "> container volume with "
-                        << ptVolume.constituentVolumes.size()
-                        << " constituents.");
-    for (auto& cVolume : ptVolume.constituentVolumes) {
-      auto dtVolume = translateVolume(cCache, gctx, kdt, cVolume,
-                                      indent + m_cfg.hierarchyIndent);
-      translatedVolumes.push_back(dtVolume);
-    }
-    // Make a container volume
-    auto tVolume = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
-        gctx, translatedVolumes);
-    ACTS_DEBUG(indent << "> translated into container volume bounds: "
+  // Volume extent
+  auto rangeR = ptVolume.extent.range(Acts::binR);
+  auto rangeZ = ptVolume.extent.range(Acts::binZ);
+
+  // Simple gap volume
+  if (not ptVolume.container.has_value()) {
+    ACTS_VERBOSE(indent << "> empty volume to be built");
+    MutableTrackingVolumeVector mtv = {};
+    auto tVolume = m_cfg.trackingVolumeHelper->createGapTrackingVolume(
+        gctx, mtv, nullptr, rangeR.min(), rangeR.max(), rangeZ.min(),
+        rangeZ.max(), 0, false, ptVolume.name);
+    ACTS_DEBUG(indent << "> translated into gap volume bounds: "
                       << tVolume->volumeBounds());
     return tVolume;
+  } else {
+    // Get the container information
+    auto& cts = ptVolume.container.value();
+
+    // Container information must be present
+    if (cts.constituentVolumes.empty()) {
+      throw std::invalid_argument(
+          "KDTreeTrackingGeometryBuilder: no consituents given.");
+    }
+
+    // This volume is a volume container
+    if (not cts.layerContainer) {
+      ACTS_VERBOSE(indent << "> volume container with "
+                          << cts.constituentVolumes.size() << " constituents.");
+      for (auto& cVolume : cts.constituentVolumes) {
+        auto dtVolume = translateVolume(cCache, gctx, kdt, cVolume,
+                                        indent + m_cfg.hierarchyIndent);
+        translatedVolumes.push_back(dtVolume);
+      }
+      auto tVolume = m_cfg.trackingVolumeHelper->createContainerTrackingVolume(
+          gctx, translatedVolumes);
+      ACTS_DEBUG(indent << "> translated into container volume bounds: "
+                        << tVolume->volumeBounds());
+      return tVolume;
+    } else {
+      // This volume is a layer container
+      std::vector<std::shared_ptr<const Layer>> layers = {};
+      ACTS_VERBOSE(indent << "> layer container with "
+                          << cts.constituentVolumes.size() << " layers.");
+      for (auto& plVolume : cts.constituentVolumes) {
+        if (plVolume.internal.has_value()) {
+          layers.push_back(translateLayer(cCache, gctx, kdt, plVolume,
+                                          indent + m_cfg.hierarchyIndent));
+        } else {
+          ACTS_WARNING(indent << "> layer type volume has no internal "
+                                 "description, layer not built.");
+        }
+      }
+      // Create a new tracking volume with those layers
+      auto tVolume = m_cfg.trackingVolumeHelper->createTrackingVolume(
+          gctx, layers, {}, nullptr, rangeR.min(), rangeR.max(), rangeZ.min(),
+          rangeZ.max(), ptVolume.name);
+      ACTS_DEBUG(indent << "> translated into bounds: "
+                        << tVolume->volumeBounds());
+      return tVolume;
+    }
   }
 
-  std::vector<std::shared_ptr<const Layer>> layers = {};
-  if (not ptVolume.constituentVolumes.empty()) {
-    ACTS_VERBOSE(indent << "> layer volume with "
-                        << ptVolume.constituentVolumes.size()
-                        << " layer volumes.");
-    for (auto& plVolume : ptVolume.constituentVolumes) {
-      layers.push_back(translateLayer(cCache, gctx, kdt, plVolume,
-                                      indent + m_cfg.hierarchyIndent));
-    }
-    ACTS_VERBOSE("> translated into " << layers.size() << " layers.");
-    // Create a volume
-    auto rangeR = ptVolume.extent.range(Acts::binR);
-    auto rangeZ = ptVolume.extent.range(Acts::binZ);
-    // Create a new tracking volume with those layers
-    auto tVolume = m_cfg.trackingVolumeHelper->createTrackingVolume(
-        gctx, layers, {}, nullptr, rangeR.min(), rangeR.max(), rangeZ.min(),
-        rangeZ.max(), ptVolume.name);
-    ACTS_DEBUG(indent << "> translated into bounds: "
-                      << tVolume->volumeBounds());
-    return tVolume;
-  }
   return nullptr;
 }
 
@@ -116,6 +139,10 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
     Cache& cCache, const GeometryContext& gctx, const SurfaceKDT& kdt,
     const ProtoVolume& plVolume, const std::string& indent) const {
   ACTS_DEBUG(indent + "Processing ProtoVolume: " << plVolume.name);
+
+  // This is only called if the volume has internal structure
+  auto& its = plVolume.internal.value();
+
   // Try to pull from the kd tree
   RangeXD<2u, ActsScalar> zrRange;
   zrRange[0u] = plVolume.extent.range(Acts::binZ);
@@ -132,7 +159,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
   if (layerSurfaces.size() == 1u) {
     auto surface = layerSurfaces[0u].second;
     const auto& transform = surface->transform(gctx);
-    if (plVolume.legacyLayerType == Acts::Surface::SurfaceType::Cylinder) {
+    if (its.layerType == Acts::Surface::SurfaceType::Cylinder) {
       ACTS_VERBOSE(indent +
                    ">> creating cylinder layer from a single surface.");
       // Get the bounds
@@ -144,7 +171,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
           CylinderLayer::create(transform, cylinderBoundsClone, nullptr, 1.);
       cylinderLayer->assignSurfaceMaterial(surface->surfaceMaterialSharedPtr());
       tLayer = cylinderLayer;
-    } else if (plVolume.legacyLayerType == Acts::Surface::SurfaceType::Disc) {
+    } else if (its.layerType == Acts::Surface::SurfaceType::Disc) {
       ACTS_VERBOSE(indent +
                    ">> creating cylinder layer from a single surface.");
       // Get the bounds
@@ -156,6 +183,10 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
           DiscLayer::create(transform, radialBoundsClone, nullptr, 1.);
       discLayer->assignSurfaceMaterial(surface->surfaceMaterialSharedPtr());
       tLayer = discLayer;
+    } else {
+      throw std::invalid_argument(
+          "KDTreeTrackingGeometryBuilder: layer type is neither cylinder nor "
+          "disk.");
     }
 
   } else if (layerSurfaces.size() > 1u) {
@@ -171,15 +202,15 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
     std::size_t bins0 = 0;
     std::size_t bins1 = 0;
     // In case explicit binning is given
-    if (plVolume.surfaceBinning.size() == 2u) {
-      bType0 = plVolume.surfaceBinning[0u].type;
-      bType1 = plVolume.surfaceBinning[1u].type;
+    if (its.surfaceBinning.size() == 2u) {
+      bType0 = its.surfaceBinning[0u].type;
+      bType1 = its.surfaceBinning[1u].type;
       // In case explicit bin numbers are given in addition
       if (bType0 == Acts::equidistant and bType1 == Acts::equidistant and
-          plVolume.surfaceBinning[0u].bins() > 1u and
-          plVolume.surfaceBinning[1u].bins() > 1u) {
-        bins0 = plVolume.surfaceBinning[0u].bins();
-        bins1 = plVolume.surfaceBinning[1u].bins();
+          its.surfaceBinning[0u].bins() > 1u and
+          its.surfaceBinning[1u].bins() > 1u) {
+        bins0 = its.surfaceBinning[0u].bins();
+        bins1 = its.surfaceBinning[1u].bins();
         ACTS_VERBOSE(indent + ">> binning provided externally to be "
                      << bins0 << " x " << bins1 << ".");
       }
@@ -187,7 +218,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
 
     Acts::ProtoLayer pLayer(gctx, cLayerSurfaces);
     pLayer.envelope = plVolume.extent.envelope();
-    if (plVolume.legacyLayerType == Acts::Surface::SurfaceType::Cylinder) {
+    if (its.layerType == Acts::Surface::SurfaceType::Cylinder) {
       ACTS_VERBOSE(indent + ">> creating cylinder layer with "
                    << cLayerSurfaces.size() << " surfaces.");
       // Forced equidistant or auto-binned
@@ -197,7 +228,7 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
                    : m_cfg.layerCreator->cylinderLayer(gctx, cLayerSurfaces,
                                                        bType0, bType1, pLayer);
 
-    } else if (plVolume.legacyLayerType == Acts::Surface::SurfaceType::Disc) {
+    } else if (its.layerType == Acts::Surface::SurfaceType::Disc) {
       ACTS_VERBOSE(indent + ">> creating disc layer with "
                    << cLayerSurfaces.size() << " surfaces.");
       // Forced equidistant or auto-binned
@@ -207,11 +238,18 @@ Acts::KDTreeTrackingGeometryBuilder::translateLayer(
 
                    : m_cfg.layerCreator->discLayer(gctx, cLayerSurfaces, bType0,
                                                    bType1, pLayer);
+    } else {
+      throw std::invalid_argument(
+          "KDTreeTrackingGeometryBuilder: layer type is neither cylinder nor "
+          "disk.");
     }
   }
   if (tLayer != nullptr and tLayer->representingVolume() != nullptr) {
     ACTS_DEBUG(indent << "> translated into layer bounds: "
                       << tLayer->representingVolume()->volumeBounds());
+  } else {
+    throw std::runtime_error(
+        "KDTreeTrackingGeometryBuilder: layer was not built.");
   }
 
   return tLayer;

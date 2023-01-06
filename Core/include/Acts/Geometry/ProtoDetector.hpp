@@ -22,21 +22,34 @@ namespace Acts {
 /// A proto volume description being used to define an overall
 /// structure of either a TrackingVolume or Experimental::DetectorVolume
 struct ProtoVolume {
+  // Internal structure information
+  struct InternalStructure {
+    /// Possibility to provide a layer type information
+    Surface::SurfaceType layerType = Surface::SurfaceType::Other;
+    /// Possibility to provide a surface binning
+    std::vector<BinningData> surfaceBinning = {};
+  };
+
+  // Container structure information
+  struct ContainerStructure {
+    /// Internal structure container
+    std::vector<ProtoVolume> constituentVolumes = {};
+    /// The constituent binning if this a container
+    std::vector<BinningData> constituentBinning = {};
+    /// Layer container flag
+    bool layerContainer = false;
+  };
+
   /// Name of the proto volume
   std::string name = "";
   /// The extent of this volume
   Extent extent;
 
-  /// Information for legacy type building
-  Acts::Surface::SurfaceType legacyLayerType =
-      Acts::Surface::SurfaceType::Other;
+  /// Information about internal structure
+  std::optional<InternalStructure> internal = std::nullopt;
 
-  /// The surface binninng for internal surfaces (optional)
-  std::vector<BinningData> surfaceBinning = {};
-  /// Internal structure container
-  std::vector<ProtoVolume> constituentVolumes = {};
-  /// The constituent binning if this a container
-  std::vector<BinningData> constituentBinning = {};
+  /// Information about container structure
+  std::optional<ContainerStructure> container = std::nullopt;
 
   /// Define an operator==
   ///
@@ -91,13 +104,6 @@ struct ProtoDetector {
     worldVolume.extendUp(worldVolume);
     worldVolume.constrainDown(worldVolume);
     worldVolume.harmonize(legacy);
-  }
-
-  /// Define an operator==
-  ///
-  /// @param pd the proto detector to be checked
-  bool operator==(const ProtoDetector& pd) const {
-    return (name == pd.name and worldVolume == pd.worldVolume);
   }
 
   /// Write the tracking volume to screen

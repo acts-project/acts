@@ -15,31 +15,38 @@
 
 void Acts::ProtoVolume::extendUp(Acts::ProtoVolume& ptVolume) {
   ptVolume.extent.extend(extent);
-
-  for (auto& cv : constituentVolumes) {
-    ptVolume.extent.extend(cv.extent);
-    cv.extendUp(ptVolume);
+  if (container.has_value()) {
+    for (auto& cv : container.value().constituentVolumes) {
+      ptVolume.extent.extend(cv.extent);
+      cv.extendUp(ptVolume);
+    }
   }
 }
 
 void Acts::ProtoVolume::propagateMinDown(BinningValue bValue) {
-  for (auto& cv : constituentVolumes) {
-    cv.extent.set(bValue, extent.min(bValue), cv.extent.max(bValue));
-    cv.propagateMinDown(bValue);
+  if (container.has_value()) {
+    for (auto& cv : container.value().constituentVolumes) {
+      cv.extent.set(bValue, extent.min(bValue), cv.extent.max(bValue));
+      cv.propagateMinDown(bValue);
+    }
   }
 }
 
 void Acts::ProtoVolume::propagateMaxDown(BinningValue bValue) {
-  for (auto& cv : constituentVolumes) {
-    cv.extent.set(bValue, cv.extent.min(bValue), extent.max(bValue));
-    cv.propagateMaxDown(bValue);
+  if (container.has_value()) {
+    for (auto& cv : container.value().constituentVolumes) {
+      cv.extent.set(bValue, cv.extent.min(bValue), extent.max(bValue));
+      cv.propagateMaxDown(bValue);
+    }
   }
 }
 
 void Acts::ProtoVolume::constrainDown(const Acts::ProtoVolume& ptVolume) {
   extent.addConstrain(ptVolume.extent);
-  for (auto& cv : constituentVolumes) {
-    cv.extent.addConstrain(extent);
+  if (container.has_value()) {
+    for (auto& cv : container.value().constituentVolumes) {
+      cv.extent.addConstrain(extent);
+    }
   }
 }
 
@@ -47,28 +54,30 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
   std::vector<BinningValue> otherConstrains;
 
   // Deal with the constituents
-  if (not constituentVolumes.empty()) {
-    if (constituentBinning.empty()) {
+  if (container.has_value() and
+      not container.value().constituentVolumes.empty()) {
+    auto& cts = container.value();
+
+    if (cts.constituentBinning.empty()) {
       std::string errorMsg = std::string("ProtoVolume '") + name +
                              std::string("' with constituents, but no binning");
       throw std::runtime_error(errorMsg);
     }
 
-    // For legacy volumes, check if layers are present
-    bool layersPresent = legacyLayerType != Surface::SurfaceType::Other;
-    for (const auto& cv : constituentVolumes) {
-      layersPresent =
-          layersPresent or cv.legacyLayerType != Surface::SurfaceType::Other;
-      if (layersPresent) {
+    // Check if there are any layers present
+    bool layersPresent = false;
+    for (const auto& cv : cts.constituentVolumes) {
+      if (cv.internal.has_value()) {
+        layersPresent = true;
         break;
       }
     }
 
     // If layers are present, it can't be a container in the legacy style
-    auto binValue = constituentBinning[0].binvalue;
+    auto binValue = cts.constituentBinning[0].binvalue;
     // Set the first last
-    auto& fVolume = constituentVolumes.front();
-    auto& lVolume = constituentVolumes.back();
+    auto& fVolume = cts.constituentVolumes.front();
+    auto& lVolume = cts.constituentVolumes.back();
 
     std::vector<float> borders = {};
 
@@ -88,12 +97,12 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
                          extent.max(binValue));
       // Align the containers
       borders.push_back(static_cast<float>(fVolume.extent.min(binValue)));
-      for (unsigned int iv = 1; iv < constituentVolumes.size(); ++iv) {
-        auto& lv = constituentVolumes[iv - 1u];
+      for (unsigned int iv = 1; iv < cts.constituentVolumes.size(); ++iv) {
+        auto& lv = cts.constituentVolumes[iv - 1u];
         ActsScalar zero = lv.extent.min(binValue);
         ActsScalar low = lv.extent.max(binValue);
 
-        auto& hv = constituentVolumes[iv];
+        auto& hv = cts.constituentVolumes[iv];
         ActsScalar high = hv.extent.min(binValue);
         ActsScalar mid = 0.5 * (low + high);
         ActsScalar max = hv.extent.max(binValue);
@@ -101,7 +110,7 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         hv.extent.set(binValue, mid, max);
         borders.push_back(mid);
       }
-      borders.push_back(constituentVolumes.back().extent.max(binValue));
+      borders.push_back(cts.constituentVolumes.back().extent.max(binValue));
 
     } else if (layersPresent and not legacy) {
       // Count the gaps
@@ -118,14 +127,14 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         borders.push_back(static_cast<float>(containerMin));
       }
       // Fill the gaps
-      for (unsigned int iv = 1; iv < constituentVolumes.size(); ++iv) {
-        auto& lv = constituentVolumes[iv - 1u];
+      for (unsigned int iv = 1; iv < cts.constituentVolumes.size(); ++iv) {
+        auto& lv = cts.constituentVolumes[iv - 1u];
         // This volume is one to save
         updatedConstituents.push_back(lv);
         borders.push_back(static_cast<float>(lv.extent.min(binValue)));
         // check if a gap to the next is needed
         ActsScalar low = lv.extent.max(binValue);
-        auto& hv = constituentVolumes[iv];
+        auto& hv = cts.constituentVolumes[iv];
         ActsScalar high = hv.extent.min(binValue);
         if (high > low) {
           ProtoVolume gap;
@@ -147,36 +156,19 @@ void Acts::ProtoVolume::harmonize(bool legacy) {
         updatedConstituents.push_back(gap);
         borders.push_back(static_cast<float>(containerMax));
       }
-      constituentVolumes = updatedConstituents;
+      cts.constituentVolumes = updatedConstituents;
     } else if (legacy and layersPresent) {
       borders = {0., 1.};
     }
-    constituentBinning = {
-        BinningData(constituentBinning[0].option, binValue, borders)};
-  }
+    cts.constituentBinning = {
+        BinningData(cts.constituentBinning[0].option, binValue, borders)};
 
-  // Harmonize downwards
-  for (auto& cv : constituentVolumes) {
-    cv.extent.extend(extent, otherConstrains);
-    cv.harmonize(legacy);
+    // Harmonize downwards
+    for (auto& cv : cts.constituentVolumes) {
+      cv.extent.extend(extent, otherConstrains);
+      cv.harmonize(legacy);
+    }
   }
-}
-
-bool Acts::ProtoVolume::operator==(const Acts::ProtoVolume& ptVolume) const {
-  if (name != ptVolume.name or extent != ptVolume.extent) {
-    return false;
-  }
-  if (legacyLayerType != ptVolume.legacyLayerType) {
-    return false;
-  }
-  if (surfaceBinning != ptVolume.surfaceBinning) {
-    return false;
-  }
-  if (constituentVolumes != ptVolume.constituentVolumes or
-      constituentBinning != ptVolume.constituentBinning) {
-    return false;
-  }
-  return true;
 }
 
 std::string Acts::ProtoVolume::toString(const std::string& indent) const {
@@ -185,16 +177,19 @@ std::string Acts::ProtoVolume::toString(const std::string& indent) const {
   ss << indent << "> volume: " << name << '\n';
   ss << indent << "  extent: ";
   ss << extent.toString(indent) << '\n';
-  if (not constituentVolumes.empty()) {
-    ss << indent << "  container of " << constituentVolumes.size()
-       << " constituents. " << '\n';
-    ss << indent << "  constituent binning:" << '\n';
-    for (const auto& cb : constituentBinning) {
-      ss << cb.toString(indent) << '\n';
-    }
-    ss << indent << "  constituents are:" << '\n';
-    for (const auto& cv : constituentVolumes) {
-      ss << cv.toString(indent + subIndent) << '\n';
+  if (container.has_value()) {
+    auto& cts = container.value();
+    if (not cts.constituentVolumes.empty()) {
+      ss << indent << "  container of " << cts.constituentVolumes.size()
+         << " constituents. " << '\n';
+      ss << indent << "  constituent binning:" << '\n';
+      for (const auto& cb : cts.constituentBinning) {
+        ss << cb.toString(indent) << '\n';
+      }
+      ss << indent << "  constituents are:" << '\n';
+      for (const auto& cv : cts.constituentVolumes) {
+        ss << cv.toString(indent + subIndent) << '\n';
+      }
     }
   }
   return ss.str();

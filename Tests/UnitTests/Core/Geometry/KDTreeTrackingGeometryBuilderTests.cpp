@@ -95,10 +95,10 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   Acts::ProtoVolume beamPipe;
   beamPipe.name = "odd-beam-pipe-l";
   beamPipe.extent.set(Acts::binR, 2., 16.);
-  beamPipe.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
-  beamPipeContainer.constituentVolumes = {beamPipe};
-  beamPipeContainer.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binR, {0., 1.})};
+  beamPipe.internal = Acts::ProtoVolume::InternalStructure{
+      Acts::Surface::SurfaceType::Cylinder};
+  beamPipeContainer.container = Acts::ProtoVolume::ContainerStructure{
+      {beamPipe}, {Acts::BinningData(Acts::open, Acts::binR, {0., 1.})}, true};
 
   // Pixel section
   Acts::ProtoVolume pixelContainer;
@@ -115,12 +115,13 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   Acts::ProtoVolume pixNecD0;
   pixNecD0.name = "odd-pixel-nec-d0";
   pixNecD0.extent.set(Acts::binZ, -620., -580);
-  pixelNec.constituentVolumes = {pixNecD1, pixNecD0};
-
-  pixelNec.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binZ, {0., 1.})};
-  for (auto& cv : pixelNec.constituentVolumes) {
-    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
+  pixelNec.container = Acts::ProtoVolume::ContainerStructure{
+      {pixNecD1, pixNecD0},
+      {Acts::BinningData(Acts::open, Acts::binZ, {0., 1.})},
+      true};
+  for (auto& cv : pixelNec.container.value().constituentVolumes) {
+    cv.internal =
+        Acts::ProtoVolume::InternalStructure{Acts::Surface::SurfaceType::Disc};
   }
 
   Acts::ProtoVolume pixelBarrel;
@@ -131,27 +132,31 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   pixBarrelL0.name = "odd-pixel-barrel-l0";
   pixBarrelL0.extent.set(Acts::binR, 28., 48.);
   pixBarrelL0.extent.set(Acts::binZ, -580., 580);
-  pixBarrelL0.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
+  pixBarrelL0.internal = Acts::ProtoVolume::InternalStructure{
+      Acts::Surface::SurfaceType::Cylinder};
   Acts::ProtoVolume pixBarrelL1;
   pixBarrelL1.name = "odd-pixel-barrel-l1";
   pixBarrelL1.extent.set(Acts::binR, 62., 76);
   pixBarrelL1.extent.set(Acts::binZ, -580., 580);
-  pixBarrelL1.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
+  pixBarrelL1.internal = Acts::ProtoVolume::InternalStructure{
+      Acts::Surface::SurfaceType::Cylinder};
   Acts::ProtoVolume pixBarrelL2;
   pixBarrelL2.name = "odd-pixel-barrel-l2";
   pixBarrelL2.extent.set(Acts::binR, 100., 120.);
   pixBarrelL2.extent.set(Acts::binZ, -580., 580);
-  pixBarrelL2.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
+  pixBarrelL2.internal = Acts::ProtoVolume::InternalStructure{
+      Acts::Surface::SurfaceType::Cylinder};
   Acts::ProtoVolume pixBarrelL3;
   pixBarrelL3.name = "odd-pixel-barrel-l3";
   pixBarrelL3.extent.set(Acts::binR, 160., 180.);
   pixBarrelL3.extent.set(Acts::binZ, -580., 580);
-  pixBarrelL3.legacyLayerType = Acts::Surface::SurfaceType::Cylinder;
+  pixBarrelL3.internal = Acts::ProtoVolume::InternalStructure{
+      Acts::Surface::SurfaceType::Cylinder};
 
-  pixelBarrel.constituentVolumes = {pixBarrelL0, pixBarrelL1, pixBarrelL2,
-                                    pixBarrelL3};
-  pixelBarrel.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binR, {0., 1})};
+  pixelBarrel.container = Acts::ProtoVolume::ContainerStructure{
+      {pixBarrelL0, pixBarrelL1, pixBarrelL2, pixBarrelL3},
+      {Acts::BinningData(Acts::open, Acts::binR, {0., 1})},
+      true};
 
   Acts::ProtoVolume pixelPec;
   pixelPec.name = "odd-pixel-pec";
@@ -164,56 +169,59 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
   pixPecD1.name = "odd-pixel-pec-d1";
   pixPecD1.extent.set(Acts::binZ, 680., 720);
 
-  pixelPec.constituentVolumes = {pixPecD0, pixPecD1};
-  pixelPec.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binZ, {0., 1})};
-  for (auto& cv : pixelPec.constituentVolumes) {
-    cv.legacyLayerType = Acts::Surface::SurfaceType::Disc;
+  pixelPec.container = Acts::ProtoVolume::ContainerStructure{
+      {pixPecD0, pixPecD1},
+      {Acts::BinningData(Acts::open, Acts::binZ, {0., 1})},
+      true};
+  for (auto& cv : pixelPec.container.value().constituentVolumes) {
+    cv.internal =
+        Acts::ProtoVolume::InternalStructure{Acts::Surface::SurfaceType::Disc};
   }
 
-  pixelContainer.constituentVolumes = {pixelNec, pixelBarrel, pixelPec};
-  pixelContainer.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binZ, {-1000., -580., 580., 1000.})};
+  pixelContainer.container = Acts::ProtoVolume::ContainerStructure{
+      {pixelNec, pixelBarrel, pixelPec},
+      {Acts::BinningData(Acts::open, Acts::binZ,
+                         {-1000., -580., 580., 1000.})}};
 
   Acts::ProtoVolume detectorContainer;
   detectorContainer.name = "odd-detector";
   detectorContainer.extent.set(Acts::binR, 0., 200);
-  detectorContainer.constituentVolumes = {beamPipeContainer, pixelContainer};
-  detectorContainer.constituentBinning = {
-      Acts::BinningData(Acts::open, Acts::binR, {0., 17.5, 200.})};
+  detectorContainer.container = Acts::ProtoVolume::ContainerStructure{
+      {beamPipeContainer, pixelContainer},
+      {Acts::BinningData(Acts::open, Acts::binR, {0., 17.5, 200.})}};
 
   Acts::ProtoDetector detector;
   detector.name = "odd";
   detector.worldVolume = detectorContainer;
 
+  auto logLevel = Acts::Logging::VERBOSE;
+
   // Surface array creatorr
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
       Acts::SurfaceArrayCreator::Config(),
-      Acts::getDefaultLogger("SurfaceArrayCreator", Acts::Logging::INFO));
+      Acts::getDefaultLogger("SurfaceArrayCreator", logLevel));
   // Layer Creator
   Acts::LayerCreator::Config lcConfig;
   lcConfig.surfaceArrayCreator = surfaceArrayCreator;
   auto layerCreator = std::make_shared<Acts::LayerCreator>(
-      lcConfig, Acts::getDefaultLogger("LayerCreator", Acts::Logging::INFO));
+      lcConfig, Acts::getDefaultLogger("LayerCreator", logLevel));
   // Layer array creator
   Acts::LayerArrayCreator::Config lacConfig;
   auto layerArrayCreator = std::make_shared<const Acts::LayerArrayCreator>(
-      lacConfig,
-      Acts::getDefaultLogger("LayerArrayCreator", Acts::Logging::INFO));
+      lacConfig, Acts::getDefaultLogger("LayerArrayCreator", logLevel));
   // Tracking volume array creator
   Acts::TrackingVolumeArrayCreator::Config tvacConfig;
   auto tVolumeArrayCreator =
       std::make_shared<const Acts::TrackingVolumeArrayCreator>(
-          tvacConfig, Acts::getDefaultLogger("TrackingVolumeArrayCreator",
-                                             Acts::Logging::INFO));
+          tvacConfig,
+          Acts::getDefaultLogger("TrackingVolumeArrayCreator", logLevel));
   // configure the cylinder volume helper
   Acts::CylinderVolumeHelper::Config cvhConfig;
   cvhConfig.layerArrayCreator = layerArrayCreator;
   cvhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
   auto cylinderVolumeHelper =
       std::make_shared<const Acts::CylinderVolumeHelper>(
-          cvhConfig,
-          Acts::getDefaultLogger("CylinderVolumeHelper", Acts::Logging::INFO));
+          cvhConfig, Acts::getDefaultLogger("CylinderVolumeHelper", logLevel));
 
   // The KDT tracking geometry builder
   Acts::KDTreeTrackingGeometryBuilder::Config kdtgConfig;
@@ -227,8 +235,8 @@ BOOST_AUTO_TEST_CASE(KDTreeTrackingGeometryBuilder_simple) {
 
   // Make the builder
   auto kdtTrackingGeometryBuilder = Acts::KDTreeTrackingGeometryBuilder(
-      kdtgConfig, Acts::getDefaultLogger("KDTreeTrackingGeometryBuilder",
-                                         Acts::Logging::INFO));
+      kdtgConfig,
+      Acts::getDefaultLogger("KDTreeTrackingGeometryBuilder", logLevel));
 
   auto trackingGeometry = kdtTrackingGeometryBuilder.trackingGeometry(tContext);
   BOOST_CHECK(trackingGeometry != nullptr);
