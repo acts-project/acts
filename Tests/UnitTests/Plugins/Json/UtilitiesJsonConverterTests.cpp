@@ -18,63 +18,11 @@
 #include <fstream>
 #include <iostream>
 
+#include "EqualityHelpers.hpp"
+
 using namespace Acts;
 
 BOOST_AUTO_TEST_SUITE(UtilitiesJsonConverter)
-
-namespace {
-/// Check whether the BinningData objects are equal
-///
-/// @param ba The first BinningData object
-/// @param bb The second BinningData object
-/// @param tolerance a tolerance parameter
-///
-/// @return a boolean
-bool isEqual(const BinningData& ba, const BinningData& bb, float tolerance) {
-  bool equalBool = (ba.type == bb.type) and (ba.option == bb.option) and
-                   (ba.binvalue == bb.binvalue) and (ba.zdim == bb.zdim) and
-                   (ba.subBinningAdditive == bb.subBinningAdditive);
-
-  bool equalRange = (std::abs(ba.min - bb.min) < tolerance) and
-                    (std::abs(ba.max - bb.max) < tolerance) and
-                    (std::abs(ba.step - bb.step) < tolerance);
-
-  bool euqalStructure =
-      (ba.subBinningData != nullptr)
-          ? isEqual(*ba.subBinningData, *bb.subBinningData, tolerance)
-          : (bb.subBinningData == nullptr);
-
-  bool equalBoundaries = (ba.boundaries().size() == bb.boundaries().size());
-  if (equalBoundaries) {
-    for (size_t ib = 0; ib < ba.boundaries().size(); ++ib) {
-      equalBoundaries =
-          (std::abs(ba.boundaries()[ib] - bb.boundaries()[ib]) < tolerance);
-      if (not equalBoundaries) {
-        break;
-      }
-    }
-  }
-  return equalBool and equalRange and euqalStructure;
-}
-
-/// Check whether the BinUtility ojbects are equal
-///
-/// @param ba The first BinUtility object
-/// @param bb the second BinUtility object
-/// @param tolerance a tolerance parameter
-///
-/// @return a bollean if equal
-bool isEqual(const BinUtility& ba, const BinUtility& bb, float tolerance) {
-  bool equal = (ba.binningData().size() == bb.binningData().size());
-  if (equal) {
-    for (size_t ib = 0; ib < ba.binningData().size(); ++ib) {
-      equal = isEqual(ba.binningData()[ib], bb.binningData()[ib], tolerance);
-    }
-  }
-  return equal;
-}
-
-}  // namespace
 
 BOOST_AUTO_TEST_CASE(BinUtilityRoundTripTests) {
   BinUtility reference(2, 0., 4., open, binR);
