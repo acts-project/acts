@@ -95,7 +95,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldNoSurfaceForward(kfZero, kfOptions, start, rng,
-                                        expected_reversed, expected_smoothed);
+                                        expected_reversed, expected_smoothed,
+                                        true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
@@ -108,7 +109,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
-                                          expected_reversed, expected_smoothed);
+                                          expected_reversed, expected_smoothed,
+                                          true);
 
   // reverse filtering instead of smoothing
   kfOptions.reversedFiltering = true;
@@ -116,7 +118,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   expected_reversed = true;
   expected_smoothed = false;
   tester.test_ZeroFieldWithSurfaceForward(kfZero, kfOptions, start, rng,
-                                          expected_reversed, expected_smoothed);
+                                          expected_reversed, expected_smoothed,
+                                          true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
@@ -128,16 +131,18 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
   kfOptions.reversedFiltering = false;
   bool expected_reversed = false;
   bool expected_smoothed = true;
-  tester.test_ZeroFieldWithSurfaceBackward(
-      kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
+  tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
+                                           expected_reversed, expected_smoothed,
+                                           true);
 
   // reverse filtering instead of smoothing
   kfOptions.reversedFiltering = true;
   kfOptions.reversedFilteringCovarianceScaling = 100.0;
   expected_reversed = true;
   expected_smoothed = false;
-  tester.test_ZeroFieldWithSurfaceBackward(
-      kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
+  tester.test_ZeroFieldWithSurfaceBackward(kfZero, kfOptions, start, rng,
+                                           expected_reversed, expected_smoothed,
+                                           true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
@@ -148,7 +153,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithSurfaceAtExit(kfZero, kfOptions, start, rng,
-                                         expected_reversed, expected_smoothed);
+                                         expected_reversed, expected_smoothed,
+                                         true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
@@ -159,7 +165,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldShuffled(kfZero, kfOptions, start, rng,
-                                expected_reversed, expected_smoothed);
+                                expected_reversed, expected_smoothed, true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
@@ -170,7 +176,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithHole(kfZero, kfOptions, start, rng,
-                                expected_reversed, expected_smoothed);
+                                expected_reversed, expected_smoothed, true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
@@ -188,7 +194,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
   bool expected_reversed = false;
   bool expected_smoothed = true;
   tester.test_ZeroFieldWithOutliers(kfZero, kfOptions, start, rng,
-                                    expected_reversed, expected_smoothed);
+                                    expected_reversed, expected_smoothed, true);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
@@ -207,8 +213,9 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithReverseFiltering) {
     kfOptions.reversedFiltering = reverse;
     kfOptions.reversedFilteringCovarianceScaling = 100.0;
 
-    tester.test_ZeroFieldWithReverseFiltering(
-        kfZero, kfOptions, start, rng, expected_reversed, expected_smoothed);
+    tester.test_ZeroFieldWithReverseFiltering(kfZero, kfOptions, start, rng,
+                                              expected_reversed,
+                                              expected_smoothed, true);
   };
 
   // Track of 1 GeV with a threshold set at 0.1 GeV, reversed filtering should
