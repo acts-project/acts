@@ -14,6 +14,7 @@
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 
 #include <array>
+#include <functional>
 #include <list>
 #include <map>
 #include <memory>
@@ -21,7 +22,6 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <functional>
 
 namespace Acts {
 template <typename external_spacepoint_t>
@@ -105,9 +105,10 @@ class SeedFinderOrthogonal {
    * covariance of the external space point
    */
   template <typename input_container_t, typename output_container_t>
-  void createSeeds(const input_container_t &spacePoints,
-                   output_container_t &out_cont,
-		   std::function<std::pair<Acts::Vector3, Acts::Vector2>(typename input_container_t::value_type)>& extract_coordinates) const;
+  void createSeeds(
+      const input_container_t &spacePoints, output_container_t &out_cont,
+      std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+          typename input_container_t::value_type)> &extract_coordinates) const;
 
   /**
    * @brief Perform seed finding, returning a new container of seeds.
@@ -126,8 +127,10 @@ class SeedFinderOrthogonal {
    * @return A vector of seeds.
    */
   template <typename input_container_t>
-  std::vector<seed_t> createSeeds(const input_container_t &spacePoints,
-				  std::function<std::pair<Acts::Vector3, Acts::Vector2>(typename input_container_t::value_type)>& extract_coordinates) const;
+  std::vector<seed_t> createSeeds(
+      const input_container_t &spacePoints,
+      std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+          typename input_container_t::value_type)> &extract_coordinates) const;
 
  private:
   /**

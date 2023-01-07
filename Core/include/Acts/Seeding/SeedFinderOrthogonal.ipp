@@ -637,7 +637,8 @@ template <typename external_spacepoint_t>
 template <typename input_container_t, typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const input_container_t &spacePoints, output_container_t &out_cont,
-    std::function<std::pair<Acts::Vector3, Acts::Vector2>(typename input_container_t::value_type)>& extract_coordinates) const {
+    std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+        typename input_container_t::value_type)> &extract_coordinates) const {
   /*
    * The template parameters we accept are a little too generic, so we want to
    * run some basic checks to make sure the containers have the correct value
@@ -717,7 +718,8 @@ template <typename input_container_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     const input_container_t &spacePoints,
-    std::function<std::pair<Acts::Vector3, Acts::Vector2>(typename input_container_t::value_type)>& extract_coordinates) const {
+    std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+        typename input_container_t::value_type)> &extract_coordinates) const {
   std::vector<seed_t> r;
 
   createSeeds(spacePoints, r, extract_coordinates);

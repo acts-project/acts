@@ -84,14 +84,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
   Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig,
                                                    m_cfg.seedFinderOptions);
 
-  std::function<std::pair<Acts::Vector3, Acts::Vector2>(const SimSpacePoint* sp)> create_coordinates =
-    [] (const SimSpacePoint* sp)
-    {
-      Acts::Vector3 position(sp->x(), sp->y(), sp->z());
-      Acts::Vector2 variance(sp->varianceR(), sp->varianceZ());
-      return std::make_pair(position, variance);
-    };
-  
+  std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+      const SimSpacePoint *sp)>
+      create_coordinates = [](const SimSpacePoint *sp) {
+        Acts::Vector3 position(sp->x(), sp->y(), sp->z());
+        Acts::Vector2 variance(sp->varianceR(), sp->varianceZ());
+        return std::make_pair(position, variance);
+      };
+
   SimSeedContainer seeds = finder.createSeeds(spacePoints, create_coordinates);
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
