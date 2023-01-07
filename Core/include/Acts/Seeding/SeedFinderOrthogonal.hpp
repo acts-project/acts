@@ -1,4 +1,4 @@
-// This file is part of the Acts pAAroject.
+// This file is part of the Acts project.
 //
 // Copyright (C) 2022 CERN for the benefit of the Acts project
 //
