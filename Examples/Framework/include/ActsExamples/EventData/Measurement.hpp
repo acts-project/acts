@@ -47,7 +47,7 @@ class MeasurementCalibrator {
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
           trackState) const {
     const IndexSourceLink& sourceLink =
-        trackState.uncalibrated().get<IndexSourceLink>();
+        trackState.uncalibratedSourceLink().get<IndexSourceLink>();
     assert(m_measurements and
            "Undefined measurement container in DigitizedCalibrator");
     assert((sourceLink.index() < m_measurements->size()) and
