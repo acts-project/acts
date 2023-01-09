@@ -10,6 +10,8 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <sstream>
+
 Acts::Extent::Extent(
     const std::array<std::array<ActsScalar, 2>, binValues>& envelope)
     : m_constrains(0), m_envelope(envelope) {
@@ -68,6 +70,18 @@ void Acts::Extent::extend(const Extent& rhs,
       // Only an envelope given, but value is not contraint -> apply envelope
       m_range[bValue].expand(m_range[bValue].min() - rhs.envelope()[bValue][0],
                              m_range[bValue].max() + rhs.envelope()[bValue][1]);
+      m_constrains.set(bValue);
+    }
+  }
+}
+
+void Acts::Extent::addConstrain(const Acts::Extent& rhs,
+                                const ExtentEnvelope& envelope) {
+  for (const auto& bValue : s_binningValues) {
+    if (rhs.constrains(bValue) and not constrains(bValue)) {
+      const auto& cRange = rhs.range(bValue);
+      m_range[bValue].setMin(cRange.min() + envelope[bValue][0u]);
+      m_range[bValue].setMax(cRange.max() + envelope[bValue][1u]);
       m_constrains.set(bValue);
     }
   }
@@ -137,19 +151,37 @@ bool Acts::Extent::constrains(BinningValue bValue) const {
   return m_constrains.test(size_t(bValue));
 }
 
-std::ostream& Acts::Extent::toStream(std::ostream& sl) const {
-  sl << "Extent in space : " << std::endl;
+bool Acts::Extent::operator==(const Extent& e) const {
+  if (m_constrains != e.m_constrains) {
+    return false;
+  }
+  if (m_envelope != e.m_envelope) {
+    return false;
+  }
+  if (not(m_range == e.m_range)) {
+    return false;
+  }
+  if (m_valueHistograms != e.m_valueHistograms) {
+    return false;
+  }
+  return true;
+}
+
+std::string Acts::Extent::toString(const std::string& indent) const {
+  std::stringstream sl;
+  sl << indent << "Extent in space : " << std::endl;
   for (size_t ib = 0; ib < static_cast<size_t>(binValues); ++ib) {
     if (constrains((BinningValue)ib)) {
-      sl << "  - value :" << std::setw(10) << binningValueNames()[ib]
+      sl << indent << "  - value :" << std::setw(10) << binningValueNames()[ib]
          << " | range = [" << m_range[ib].min() << ", " << m_range[ib].max()
          << "]" << std::endl;
     }
   }
-  return sl;
+  return sl.str();
 }
 
 // Overload of << operator for std::ostream for debug output
 std::ostream& Acts::operator<<(std::ostream& sl, const Extent& rhs) {
-  return rhs.toStream(sl);
+  sl << rhs.toString();
+  return sl;
 }
