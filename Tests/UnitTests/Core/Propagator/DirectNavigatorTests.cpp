@@ -54,7 +54,7 @@ Stepper estepper(bField);
 Stepper dstepper(bField);
 
 ReferencePropagator rpropagator(std::move(estepper), std::move(navigator));
-DirectPropagator dpropagator(std::move(dstepper), dnavigator);
+DirectPropagator dpropagator(std::move(dstepper), std::move(dnavigator));
 
 const int ntests = 1000;
 const int skip = 0;
@@ -98,7 +98,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
   // Options definition
   using Options = PropagatorOptions<RefereceActionList, ReferenceAbortList>;
-  Options pOptions(tgContext, mfContext, getDummyLogger());
+  Options pOptions(tgContext, mfContext);
   if (oversteppingTest) {
     pOptions.maxStepSize = oversteppingMaxStepSize;
   }
@@ -131,7 +131,7 @@ void runTest(const rpropagator_t& rprop, const dpropagator_t& dprop, double pT,
 
     // Direct options definition
     using DirectOptions = PropagatorOptions<DirectActionList, AbortList<>>;
-    DirectOptions dOptions(tgContext, mfContext, getDummyLogger());
+    DirectOptions dOptions(tgContext, mfContext);
     // Set the surface sequence
     auto& dInitializer =
         dOptions.actionList.get<DirectNavigator::Initializer>();
