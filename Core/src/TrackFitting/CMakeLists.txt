@@ -7,4 +7,5 @@ target_sources(
     GainMatrixSmoother.cpp
     GsfError.cpp
     GsfUtils.cpp
+    BetheHeitlerApprox.cpp
 )
