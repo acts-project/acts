@@ -27,7 +27,7 @@ void Acts::from_json(const nlohmann::json& j, Acts::Extent& e) {
   const auto bValueNames = binningValueNames();
   for (auto [ib, bvn] : enumerate(bValueNames)) {
     if (j.find(bvn) != j.end()) {
-      e.range(static_cast<BinningValue>(ib)) = j[bvn];
+      e.set(static_cast<BinningValue>(ib), j[bvn]["min"], j[bvn]["max"]);
     }
   }
 }
