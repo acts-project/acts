@@ -39,6 +39,5 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
 
 Acts::GeometryIdentifier Acts::GeometryIdentifierHook::decorateIdentifier(
     Acts::GeometryIdentifier identifier, const Acts::Surface&) const {
-  std::cout << "NO-HOOK\n";
   return identifier;
 }
