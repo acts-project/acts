@@ -23,7 +23,7 @@ struct TripletCandidate {
 
   /// @brief Default Destructor
   ~TripletCandidate() = default;
-  
+
   /// @brief constructor
   /// @param b The bottom space point
   /// @param m The middle space point
@@ -36,13 +36,13 @@ struct TripletCandidate {
       : bottom(&b), middle(&m), top(&t), weight(w), zOrigin(z), isQuality(q){};
 
   /// @brief Copy operations
-  TripletCandidate( const TripletCandidate& ) = default;
-  TripletCandidate& operator=( const TripletCandidate& ) = default;
+  TripletCandidate(const TripletCandidate&) = default;
+  TripletCandidate& operator=(const TripletCandidate&) = default;
 
   /// @brief Move operations
-  TripletCandidate( TripletCandidate&& ) = default;
-  TripletCandidate& operator=( TripletCandidate&& ) = default;
-  
+  TripletCandidate(TripletCandidate&&) = default;
+  TripletCandidate& operator=(TripletCandidate&&) = default;
+
   external_space_point_t* bottom{nullptr};
   external_space_point_t* middle{nullptr};
   external_space_point_t* top{nullptr};
