@@ -51,7 +51,8 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
     std::shared_ptr<const IMaterialDecorator> materialDecorator = nullptr;
 
     /// Optional geometry identfier hook to be used during closure
-    std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook = std::make_shared<GeometryIdentifierHook>();
+    std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook =
+        std::make_shared<GeometryIdentifierHook>();
   };
 
   /// Constructor
