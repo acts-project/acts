@@ -32,7 +32,6 @@ const Acts::GeometryContext geoCtx;
 const Acts::MagneticFieldContext magCtx;
 
 std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
-                                               Acts::LoggerWrapper logger,
                                                double bz) {
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Acts::Test::CubicTrackingGeometry cubicBuilder(geoCtx);
@@ -75,7 +74,7 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_no_bfield) {
 
   auto navCfg = Acts::Navigator::Config{};
   const auto xPositions =
-      xPositionsOfPassedSurfaces(navCfg, Acts::LoggerWrapper{*logger}, 0.0_T);
+      xPositionsOfPassedSurfaces(navCfg, 0.0_T);
 
   // without bfield we exit at the side so we don't hit the surfaces at x ~
   // 2000 and also not the boundary surface at x = 3000, regardless of the
@@ -93,7 +92,7 @@ BOOST_AUTO_TEST_CASE(without_boundary_check_no_bfield) {
   auto navCfg = Acts::Navigator::Config{};
   navCfg.boundaryCheckLayerResolving = false;
   const auto xPositions =
-      xPositionsOfPassedSurfaces(navCfg, Acts::LoggerWrapper{*logger}, 0.0_T);
+      xPositionsOfPassedSurfaces(navCfg, 0.0_T);
 
   // without befield we exit at the side so we don't hit the surfaces at x ~
   // 2000 and also not the boundary surface at x = 3000, regardless of the
@@ -110,7 +109,7 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_with_bfield) {
 
   auto navCfg = Acts::Navigator::Config{};
   const auto xPositions =
-      xPositionsOfPassedSurfaces(navCfg, Acts::LoggerWrapper{*logger}, 0.5_T);
+      xPositionsOfPassedSurfaces(navCfg, 0.5_T);
 
   // With default navigation config we miss the surfaces at x ~ 2000, but hit
   // the boundary surface at x = 3000
@@ -122,12 +121,10 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_with_bfield) {
 }
 
 BOOST_AUTO_TEST_CASE(no_boundary_check_with_bfield) {
-  auto logger = Acts::getDefaultLogger("test", Acts::Logging::FATAL);
-
   auto navCfg = Acts::Navigator::Config{};
   navCfg.boundaryCheckLayerResolving = false;
   const auto xPositions =
-      xPositionsOfPassedSurfaces(navCfg, Acts::LoggerWrapper{*logger}, 0.5_T);
+      xPositionsOfPassedSurfaces(navCfg, 0.5_T);
 
   // Without boundary check at layer resolving, we also hit the surfaces at x ~
   // 2000
