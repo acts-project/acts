@@ -53,7 +53,6 @@ class Geant4DetectorService final : public BareService {
   };
 
   Geant4DetectorService(const Config& cfg);
-  ~Geant4DetectorService() final = default;
 
   /// Start-of-run hook to be called before any events are processed.
   ///
@@ -75,16 +74,6 @@ class Geant4DetectorService final : public BareService {
   std::shared_ptr<Acts::Experimental::Detector> m_detector = nullptr;
   std::shared_ptr<const Acts::TrackingGeometry> m_trackingGeometry = nullptr;
 };
-
-inline std::shared_ptr<Acts::Experimental::Detector>
-Geant4DetectorService::detector() const {
-  return m_detector;
-}
-
-inline std::shared_ptr<const Acts::TrackingGeometry>
-Geant4DetectorService::trackingGeometry() const {
-  return m_trackingGeometry;
-}
 
 }  // namespace Geant4
 }  // namespace ActsExamples

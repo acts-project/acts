@@ -65,6 +65,5 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
         ++cache.convertedMaterials;
       }
     }
-    return;
   }
 }

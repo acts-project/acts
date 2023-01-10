@@ -81,7 +81,7 @@ struct Geant4ShapeConverter {
   ///
   /// @param g4Tubs a Geant4 tube shape
   ///
-  /// @return an Acts Cylinder bounds object
+  /// @return an Acts Cylinder bounds object, and thickness
   std::tuple<std::shared_ptr<CylinderBounds>, ActsScalar> cylinderBounds(
       const G4Tubs& g4Tubs);
 
@@ -89,7 +89,7 @@ struct Geant4ShapeConverter {
   ///
   /// @param g4Tubs a Geant4 tube shape
   ///
-  /// @return an Acts Radial bounds object
+  /// @return an Acts Radial bounds object and thickness
   std::tuple<std::shared_ptr<RadialBounds>, ActsScalar> radialBounds(
       const G4Tubs& g4Tubs);
 
@@ -97,7 +97,7 @@ struct Geant4ShapeConverter {
   ///
   /// @param g4Box a Geant4 box shape
   ///
-  /// @return an ACTS Rectangle bounds shape
+  /// @return an ACTS Rectangle bounds shape,  axis orientation, and thickness
   std::tuple<std::shared_ptr<RectangleBounds>, std::array<int, 2u>, ActsScalar>
   rectangleBounds(const G4Box& g4Box);
 
@@ -105,7 +105,7 @@ struct Geant4ShapeConverter {
   ///
   /// @param g4Trd a Geant4 trapezoid shape
   ///
-  /// @return an ACTS Trapezoid bounds object
+  /// @return an ACTS Trapezoid bounds object, axis orientation, and thickness
   std::tuple<std::shared_ptr<TrapezoidBounds>, std::array<int, 2u>, ActsScalar>
   trapezoidBounds(const G4Trd& g4Trd);
 

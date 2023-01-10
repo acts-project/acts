@@ -59,19 +59,9 @@ Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
 
 Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
     const G4Transform3D& g4Trf) {
-  // Create the translation
-  Vector3 translation(scale * g4Trf.dx(), scale * g4Trf.dy(),
-                      scale * g4Trf.dz());
-  // And the rotation to it
-  RotationMatrix3 rotation;
-  rotation << g4Trf.xx(), g4Trf.yx(), g4Trf.zx(), g4Trf.xy(), g4Trf.yy(),
-      g4Trf.zy(), g4Trf.xz(), g4Trf.yz(), g4Trf.zz();
-  Transform3 transform = Transform3::Identity();
-  transform.matrix().block(0, 0, 3, 1) = rotation.col(0);
-  transform.matrix().block(0, 1, 3, 1) = rotation.col(1);
-  transform.matrix().block(0, 2, 3, 1) = rotation.col(2);
-  transform.matrix().block(0, 3, 3, 1) = translation;
-  return transform;
+  auto g4Rot = g4Trf.getRotation();
+  auto g4Trans = g4Trf.getTranslation();
+  return transform(g4Rot, g4Trans);
 }
 
 std::tuple<std::shared_ptr<Acts::CylinderBounds>, Acts::ActsScalar>

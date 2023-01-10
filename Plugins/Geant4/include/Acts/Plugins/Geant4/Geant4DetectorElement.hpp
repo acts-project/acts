@@ -57,22 +57,4 @@ class Geant4DetectorElement : public DetectorElementBase {
   const G4VPhysicalVolume* m_g4physVol{nullptr};
 };
 
-inline const Transform3& Geant4DetectorElement::transform(
-    const GeometryContext& gctx) const {
-  return m_surface->transform(gctx);
-}
-
-inline const Surface& Geant4DetectorElement::surface() const {
-  return (*m_surface);
-}
-
-inline ActsScalar Geant4DetectorElement::thickness() const {
-  return m_thickness;
-}
-
-inline const G4VPhysicalVolume& Geant4DetectorElement::g4PhysicalVolume()
-    const {
-  return (*m_g4physVol);
-}
-
 }  // namespace Acts

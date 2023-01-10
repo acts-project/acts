@@ -14,3 +14,20 @@ Acts::Geant4DetectorElement::Geant4DetectorElement(
     : m_surface(std::move(surface)),
       m_thickness(thickness),
       m_g4physVol(&g4physVol) {}
+
+const Acts::Transform3& Acts::Geant4DetectorElement::transform(
+    const GeometryContext& gctx) const {
+  return m_surface->transform(gctx);
+}
+
+const Acts::Surface& Acts::Geant4DetectorElement::surface() const {
+  return (*m_surface);
+}
+
+Acts::ActsScalar Acts::Geant4DetectorElement::thickness() const {
+  return m_thickness;
+}
+
+const G4VPhysicalVolume& Acts::Geant4DetectorElement::g4PhysicalVolume() const {
+  return (*m_g4physVol);
+}

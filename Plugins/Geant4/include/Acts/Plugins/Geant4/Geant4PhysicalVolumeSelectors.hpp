@@ -19,7 +19,7 @@ namespace Acts {
 
 class IGeant4PhysicalVolumeSelector {
  public:
-  virtual ~IGeant4PhysicalVolumeSelector(){};
+  virtual ~IGeant4PhysicalVolumeSelector() = default;
 };
 
 /// The selector delegate for G4VPhysical volumes

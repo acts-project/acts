@@ -11,8 +11,6 @@
 #include "Acts/Geometry/Detector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
-#include <boost/program_options.hpp>
-
 auto ActsExamples::Geant4::Geant4Detector::constructDetector(
     const ActsExamples::Geant4::Geant4DetectorService::Config& cfg)
     -> std::pair<DetectorPtr, ContextDecorators> {

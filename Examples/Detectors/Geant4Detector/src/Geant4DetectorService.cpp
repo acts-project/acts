@@ -120,3 +120,13 @@ void ActsExamples::Geant4::Geant4DetectorService::startRun() {
     m_trackingGeometry = kdtTrackingGeometryBuilder.trackingGeometry(tContext);
   }
 }
+
+std::shared_ptr<Acts::Experimental::Detector>
+ActsExamples::Geant4::Geant4DetectorService::detector() const {
+  return m_detector;
+}
+
+std::shared_ptr<const Acts::TrackingGeometry>
+ActsExamples::Geant4::Geant4DetectorService::trackingGeometry() const {
+  return m_trackingGeometry;
+}
