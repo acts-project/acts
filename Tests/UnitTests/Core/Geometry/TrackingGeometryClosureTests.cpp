@@ -184,11 +184,11 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
   check_vol(*ioVolumes[1], 5);
 }
 
-template<typename Callable>
+template <typename Callable>
 struct CallableHook : public Acts::GeometryIdentifierHook {
   Callable callable;
-  
-  CallableHook(const Callable &callable) : callable(callable) {}
+
+  CallableHook(const Callable& callable) : callable(callable) {}
 
   Acts::GeometryIdentifier decorateIdentifier(
       Acts::GeometryIdentifier identifier,
