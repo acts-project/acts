@@ -52,7 +52,7 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
 
   Acts::PropagatorOptions<Acts::ActionList<Acts::detail::SteppingLogger>,
                           Acts::AbortList<Acts::EndOfWorldReached>>
-      opts(geoCtx, magCtx, logger);
+      opts(geoCtx, magCtx);
 
   auto res = propagator.propagate(start, opts);
 
