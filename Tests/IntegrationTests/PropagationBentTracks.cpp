@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2020 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -70,8 +70,6 @@ std::vector<double> xPositionsOfPassedSurfaces(Acts::Navigator::Config navCfg,
 }
 
 BOOST_AUTO_TEST_CASE(with_boundary_check_no_bfield) {
-  auto logger = Acts::getDefaultLogger("test", Acts::Logging::FATAL);
-
   auto navCfg = Acts::Navigator::Config{};
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.0_T);
 
@@ -86,8 +84,6 @@ BOOST_AUTO_TEST_CASE(with_boundary_check_no_bfield) {
 }
 
 BOOST_AUTO_TEST_CASE(without_boundary_check_no_bfield) {
-  auto logger = Acts::getDefaultLogger("test", Acts::Logging::FATAL);
-
   auto navCfg = Acts::Navigator::Config{};
   navCfg.boundaryCheckLayerResolving = false;
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.0_T);
@@ -103,8 +99,6 @@ BOOST_AUTO_TEST_CASE(without_boundary_check_no_bfield) {
 }
 
 BOOST_AUTO_TEST_CASE(with_boundary_check_with_bfield) {
-  auto logger = Acts::getDefaultLogger("test", Acts::Logging::FATAL);
-
   auto navCfg = Acts::Navigator::Config{};
   const auto xPositions = xPositionsOfPassedSurfaces(navCfg, 0.5_T);
 
