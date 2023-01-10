@@ -45,25 +45,25 @@ def getOpenDataDetector(
             raise RuntimeError(msg)
 
     volumeRadiusCutsMap = {
-        28: [850.],       # LStrip negative z
-        30: [850.],       # LStrip positive z
-        23: [400., 550.], # SStrip negative z
-        25: [400., 550.], # SStrip positive z
-        16: [100.],       # Pixels negative z
-        18: [100.],       # Pixels positive z
+        28: [850.0],  # LStrip negative z
+        30: [850.0],  # LStrip positive z
+        23: [400.0, 550.0],  # SStrip negative z
+        25: [400.0, 550.0],  # SStrip positive z
+        16: [100.0],  # Pixels negative z
+        18: [100.0],  # Pixels positive z
     }
-    
+
     def geoid_hook(geoid, surface):
         if geoid.volume() in volumeRadiusCutsMap:
-            r = sqrt(surface.center()[0]**2 + surface.center()[1]**2)
+            r = sqrt(surface.center()[0] ** 2 + surface.center()[1] ** 2)
             cuts = volumeRadiusCutsMap[geoid.volume()]
-            
+
             geoid.setExtra(1)
-            
+
             for cut in cuts:
                 if r > cut:
                     geoid.setExtra(geoid.extra() + 1)
-            
+
         return geoid
 
     dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
