@@ -72,8 +72,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       Surface::makeShared<PlaneSurface>(thePlane);
 
   // Create propagator options
-  auto logger = getDefaultLogger("IPEstProp", Logging::INFO);
-  propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
+  propagator_options_t pOptions(gctx, mctx);
   pOptions.direction = NavigationDirection::Backward;
 
   // Do the propagation to linPointPos
@@ -267,8 +266,7 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
       Surface::makeShared<PerigeeSurface>(vtx.position());
 
   // Create propagator options
-  auto logger = getDefaultLogger("IPEstProp", Logging::INFO);
-  propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
+  propagator_options_t pOptions(gctx, mctx);
   pOptions.direction = NavigationDirection::Backward;
 
   // Do the propagation to linPoint
@@ -356,4 +354,82 @@ Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
   }
 
   return newIPandSigma;
+}
+
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
+Acts::Result<std::pair<double, double>>
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+    getLifetimesSignOfTrack(const BoundTrackParameters& track,
+                            const Vertex<input_track_t>& vtx,
+                            const Acts::Vector3& direction,
+                            const GeometryContext& gctx,
+                            const MagneticFieldContext& mctx) const {
+  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(vtx.position());
+
+  // Create propagator options
+  propagator_options_t pOptions(gctx, mctx);
+  pOptions.direction = NavigationDirection::Backward;
+
+  // Do the propagation to the perigeee
+  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+
+  if (!result.ok()) {
+    return result.error();
+  }
+
+  const auto& propRes = *result;
+  const auto& params = propRes.endParameters->parameters();
+  const double d0 = params[BoundIndices::eBoundLoc0];
+  const double z0 = params[BoundIndices::eBoundLoc1];
+  const double phi = params[BoundIndices::eBoundPhi];
+  const double theta = params[BoundIndices::eBoundTheta];
+
+  double vs = std::sin(std::atan2(direction[1], direction[0]) - phi) * d0;
+  double eta = -std::log(std::tan(theta / 2.));
+  double dir_eta = VectorHelpers::eta(direction);
+
+  double zs = (dir_eta - eta) * z0;
+
+  std::pair<double, double> vszs;
+
+  vszs.first = vs >= 0. ? 1. : -1.;
+  vszs.second = zs >= 0. ? 1. : -1.;
+
+  return vszs;
+}
+
+template <typename input_track_t, typename propagator_t,
+          typename propagator_options_t>
+Acts::Result<double>
+Acts::ImpactPointEstimator<input_track_t, propagator_t, propagator_options_t>::
+    get3DLifetimeSignOfTrack(const BoundTrackParameters& track,
+                             const Vertex<input_track_t>& vtx,
+                             const Acts::Vector3& direction,
+                             const GeometryContext& gctx,
+                             const MagneticFieldContext& mctx) const {
+  const std::shared_ptr<PerigeeSurface> perigeeSurface =
+      Surface::makeShared<PerigeeSurface>(vtx.position());
+
+  // Create propagator options
+  propagator_options_t pOptions(gctx, mctx);
+  pOptions.direction = NavigationDirection::Backward;
+
+  // Do the propagation to the perigeee
+  auto result = m_cfg.propagator->propagate(track, *perigeeSurface, pOptions);
+
+  if (!result.ok()) {
+    return result.error();
+  }
+
+  const auto& propRes = *result;
+  const auto& params = propRes.endParameters;
+  const Vector3 trkpos = params->position(gctx);
+  const Vector3 trkmom = params->momentum();
+
+  double sign =
+      (direction.cross(trkmom)).dot(trkmom.cross(vtx.position() - trkpos));
+
+  return sign >= 0. ? 1. : -1.;
 }
