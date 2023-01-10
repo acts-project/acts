@@ -1,6 +1,6 @@
 from pathlib import Path
+from math import sqrt
 import sys, os
-
 import acts
 import acts.examples
 
@@ -52,12 +52,25 @@ def getOpenDataDetector(
         16: [100.],       # Pixels negative z
         18: [100.],       # Pixels positive z
     }
+    
+    def geoid_hook(geoid, surface):
+        if geoid.volume() in volumeRadiusCutsMap:
+            r = sqrt(surface.center()[0]**2 + surface.center()[1]**2)
+            cuts = volumeRadiusCutsMap[geoid.volume()]
+            
+            geoid.setExtra(1)
+            
+            for cut in cuts:
+                if r > cut:
+                    geoid.setExtra(geoid.extra() + 1)
+            
+        return geoid
 
     dd4hepConfig = acts.examples.dd4hep.DD4hepGeometryService.Config(
         xmlFileNames=[str(odd_xml)],
         logLevel=customLogLevel(),
         dd4hepLogLevel=customLogLevel(),
-        geometryIdentifierHook=acts.examples.dd4hep.makeRadiusGeometryIdentifierDecorator(volumeRadiusCutsMap),
+        geometryIdentifierHook=acts.GeometryIdentifierHook(geoid_hook),
     )
     detector = acts.examples.dd4hep.DD4hepDetector()
 

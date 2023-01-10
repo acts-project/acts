@@ -10,7 +10,6 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
-#include "ActsExamples/DD4hepDetector/GeometryIdentifierHooks.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
 #include <memory>
@@ -58,10 +57,4 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
                                std::shared_ptr<const Acts::IMaterialDecorator>>(
                  &DD4hep::DD4hepDetector::finalize));
   }
-
-  m.def("makeRadiusGeometryIdentifierDecorator", [](const std::map<int, std::vector<double>> &map) -> std::shared_ptr<Acts::GeometryIdentifierHook>{
-    auto hook = std::make_shared<det::GeometryIdentifierHooks::RadiusGeometryIdentifierDecorator>();
-    hook->volumeToRadialCuts = map;
-    return hook;
-  });
 }

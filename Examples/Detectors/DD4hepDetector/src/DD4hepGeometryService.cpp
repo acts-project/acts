@@ -97,7 +97,6 @@ TGeoNode* ActsExamples::DD4hep::DD4hepGeometryService::tgeoGeometry() {
 ActsExamples::ProcessCode
 ActsExamples::DD4hep::DD4hepGeometryService::buildTrackingGeometry(
     const Acts::GeometryContext& gctx) {
-  std::cout << "HOOK VALID? " << std::boolalpha << bool(m_cfg.geometryIdentifierHook) << "\n";
   // Set the tracking geometry
   m_trackingGeometry = Acts::convertDD4hepDetector(
       dd4hepGeometry(), m_cfg.logLevel, m_cfg.bTypePhi, m_cfg.bTypeR,
