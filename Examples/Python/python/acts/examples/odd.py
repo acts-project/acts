@@ -56,11 +56,9 @@ def getOpenDataDetector(
     def geoid_hook(geoid, surface):
         if geoid.volume() in volumeRadiusCutsMap:
             r = sqrt(surface.center()[0] ** 2 + surface.center()[1] ** 2)
-            cuts = volumeRadiusCutsMap[geoid.volume()]
 
             geoid.setExtra(1)
-
-            for cut in cuts:
+            for cut in volumeRadiusCutsMap[geoid.volume()]:
                 if r > cut:
                     geoid.setExtra(geoid.extra() + 1)
 
