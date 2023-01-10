@@ -104,10 +104,10 @@ class SeedFinderOrthogonal {
    * covariance of the external space point
    */
   template <typename input_container_t, typename output_container_t,
-	    typename callable_t>
-  void createSeeds(
-      const input_container_t &spacePoints, output_container_t &out_cont,
-      callable_t&& extract_coordinates) const;
+            typename callable_t>
+  void createSeeds(const input_container_t &spacePoints,
+                   output_container_t &out_cont,
+                   callable_t &&extract_coordinates) const;
 
   /**
    * @brief Perform seed finding, returning a new container of seeds.
@@ -126,9 +126,8 @@ class SeedFinderOrthogonal {
    * @return A vector of seeds.
    */
   template <typename input_container_t, typename callable_t>
-  std::vector<seed_t> createSeeds(
-      const input_container_t &spacePoints,
-      callable_t&& extract_coordinates) const;
+  std::vector<seed_t> createSeeds(const input_container_t &spacePoints,
+                                  callable_t &&extract_coordinates) const;
 
  private:
   /**
