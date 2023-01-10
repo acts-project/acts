@@ -16,6 +16,7 @@
 
 #include <array>
 #include <cmath>
+#include <limits>
 
 namespace ActsExamples {
 
@@ -40,8 +41,8 @@ class ParametricParticleGenerator : public EventGenerator::ParticlesGenerator {
     /// classification, where a flat distribution in eta can be useful,
     /// this can be set by the etaUniform flag;
     ///
-    double thetaMin = 0.0;
-    double thetaMax = M_PI;
+    double thetaMin = std::numeric_limits<double>::min();
+    double thetaMax = M_PI - std::numeric_limits<double>::epsilon();
     bool etaUniform = false;
     /// Low, high (exclusive) for absolute/transverse momentum.
     double pMin = 1 * Acts::UnitConstants::GeV;

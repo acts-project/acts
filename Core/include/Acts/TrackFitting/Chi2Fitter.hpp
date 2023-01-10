@@ -392,7 +392,7 @@ class Chi2Fitter {
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
         // assign the source link to the track state
-        trackStateProxy.setUncalibrated(sourcelink_it->second);
+        trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());

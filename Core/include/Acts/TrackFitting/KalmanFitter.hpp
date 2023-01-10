@@ -175,7 +175,7 @@ struct KalmanFitterOptions {
 template <typename traj_t>
 struct KalmanFitterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<traj_t> fittedStates;
+  traj_t* fittedStates{nullptr};
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurment state in the multitrajectory.
@@ -703,7 +703,7 @@ class KalmanFitter {
         trackStateProxy.setReferenceSurface(surface->getSharedPtr());
 
         // Assign the source link to the detached track state
-        trackStateProxy.setUncalibrated(sourcelink_it->second);
+        trackStateProxy.setUncalibratedSourceLink(sourcelink_it->second);
 
         // Fill the track state
         trackStateProxy.predicted() = std::move(boundParams.parameters());
@@ -995,12 +995,14 @@ class KalmanFitter {
   /// @tparam source_link_iterator_t Iterator type used to pass source links
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam parameters_t Type of parameters used for local parameters
+  /// @tparam track_container_t Type of the track container backend
+  /// @tparam holder_t Type defining track container backend ownership
   ///
   /// @param it Begin iterator for the fittable uncalibrated measurements
   /// @param end End iterator for the fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param kfOptions KalmanOptions steering the fit
-  /// @param trajectory Input trajectory storage to append into
+  /// @param trackContainer Input track container storage to append into
   /// @note The input measurements are given in the form of @c SourceLink s.
   /// It's the calibrators job to turn them into calibrated measurements used in
   /// the fit.
@@ -1008,12 +1010,15 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
+            typename track_container_t, template <typename> class holder_t,
             bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<traj_t>& kfOptions,
-           std::shared_ptr<traj_t> trajectory = {}) const
-      -> std::enable_if_t<!_isdn, Result<KalmanFitterResult<traj_t>>> {
+           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
+      const -> std::enable_if_t<
+          !_isdn, Result<typename TrackContainer<track_container_t, traj_t,
+                                                 holder_t>::TrackProxy>> {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -1059,11 +1064,7 @@ class KalmanFitter {
 
     auto& r = inputResult.template get<KalmanFitterResult<traj_t>>();
 
-    if (trajectory) {
-      r.fittedStates = std::move(trajectory);
-    } else {
-      r.fittedStates = std::make_shared<traj_t>();
-    }
+    r.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions,
@@ -1092,8 +1093,27 @@ class KalmanFitter {
       return kalmanResult.result.error();
     }
 
+    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    track.tipIndex() = kalmanResult.lastMeasurementIndex;
+    if (kalmanResult.fittedParameters) {
+      const auto& params = kalmanResult.fittedParameters.value();
+      track.parameters() = params.parameters();
+      track.covariance() = params.covariance().value();
+      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+    }
+    track.nMeasurements() = kalmanResult.measurementStates;
+    track.nHoles() = kalmanResult.measurementHoles;
+    if (trackContainer.hasColumn(hashString("smoothed"))) {
+      track.template component<bool, hashString("smoothed")>() =
+          kalmanResult.smoothed;
+    }
+    if (trackContainer.hasColumn(hashString("reversed"))) {
+      track.template component<bool, hashString("reversed")>() =
+          kalmanResult.reversed;
+    }
+
     // Return the converted Track
-    return kalmanResult;
+    return track;
   }
 
   /// Fit implementation of the foward filter, calls the
@@ -1102,13 +1122,15 @@ class KalmanFitter {
   /// @tparam source_link_iterator_t Iterator type used to pass source links
   /// @tparam start_parameters_t Type of the initial parameters
   /// @tparam parameters_t Type of parameters used for local parameters
+  /// @tparam track_container_t Type of the track container backend
+  /// @tparam holder_t Type defining track container backend ownership
   ///
   /// @param it Begin iterator for the fittable uncalibrated measurements
   /// @param end End iterator for the fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param kfOptions KalmanOptions steering the fit
   /// @param sSequence surface sequence used to initialize a DirectNavigator
-  /// @param trajectory Optional input track state container
+  /// @param trackContainer Input track container storage to append into
   /// @note The input measurements are given in the form of @c SourceLinks.
   /// It's
   /// @c calibrator_t's job to turn them into calibrated measurements used in
@@ -1117,13 +1139,16 @@ class KalmanFitter {
   /// @return the output as an output track
   template <typename source_link_iterator_t, typename start_parameters_t,
             typename parameters_t = BoundTrackParameters,
+            typename track_container_t, template <typename> class holder_t,
             bool _isdn = isDirectNavigator>
   auto fit(source_link_iterator_t it, source_link_iterator_t end,
            const start_parameters_t& sParameters,
            const KalmanFitterOptions<traj_t>& kfOptions,
            const std::vector<const Surface*>& sSequence,
-           std::shared_ptr<traj_t> trajectory = {}) const
-      -> std::enable_if_t<_isdn, Result<KalmanFitterResult<traj_t>>> {
+           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
+      const -> std::enable_if_t<
+          _isdn, Result<typename TrackContainer<track_container_t, traj_t,
+                                                holder_t>::TrackProxy>> {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(it, end)
@@ -1172,11 +1197,7 @@ class KalmanFitter {
 
     auto& r = inputResult.template get<KalmanFitterResult<traj_t>>();
 
-    if (trajectory) {
-      r.fittedStates = std::move(trajectory);
-    } else {
-      r.fittedStates = std::make_shared<traj_t>();
-    }
+    r.fittedStates = &trackContainer.trackStateContainer();
 
     // Run the fitter
     auto result = m_propagator.template propagate(sParameters, kalmanOptions,
@@ -1205,8 +1226,27 @@ class KalmanFitter {
       return kalmanResult.result.error();
     }
 
+    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    track.tipIndex() = kalmanResult.lastMeasurementIndex;
+    if (kalmanResult.fittedParameters) {
+      const auto& params = kalmanResult.fittedParameters.value();
+      track.parameters() = params.parameters();
+      track.covariance() = params.covariance().value();
+      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+    }
+    track.nMeasurements() = kalmanResult.measurementStates;
+    track.nHoles() = kalmanResult.measurementHoles;
+    if (trackContainer.hasColumn(hashString("smoothed"))) {
+      track.template component<bool, hashString("smoothed")>() =
+          kalmanResult.smoothed;
+    }
+    if (trackContainer.hasColumn(hashString("reversed"))) {
+      track.template component<bool, hashString("reversed")>() =
+          kalmanResult.reversed;
+    }
+
     // Return the converted Track
-    return kalmanResult;
+    return track;
   }
 };
 

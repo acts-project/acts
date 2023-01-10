@@ -19,6 +19,7 @@
 #include <array>
 #include <bitset>
 #include <ostream>
+#include <string>
 #include <vector>
 
 namespace Acts {
@@ -41,6 +42,12 @@ class Extent {
  public:
   /// Constructor with (optional) @param envelope
   Extent(const ExtentEnvelope& envelope = zeroEnvelopes);
+
+  /// Define a comparison operator
+  bool operator==(const Extent& e) const;
+
+  /// Define a comparison operator
+  bool operator!=(const Extent& e) const { return (not operator==(e)); }
 
   /// Extend with a position vertex
   ///
@@ -87,6 +94,16 @@ class Extent {
   void extend(const Extent& rhs,
               const std::vector<BinningValue>& bValues = s_binningValues,
               bool applyEnv = true);
+
+  /// Constrain an extent by another one, this is
+  /// - values that are already constrained are not touched
+  /// - values not constrained by @param rhs are not touched
+  /// - values that are constrained by the external one, but not
+  /// by the current one, are touched
+  ///
+  /// @param envelope an envelope applied to the constrained value
+  void addConstrain(const Extent& rhs,
+                    const ExtentEnvelope& envelope = zeroEnvelopes);
 
   /// Set a range for a dedicated binning value
   ///
@@ -181,8 +198,9 @@ class Extent {
   bool constrains(BinningValue bValue = binValues) const;
 
   /// Convert to output stream for screen output
-  /// @param sl [in,out] The output stream
-  std::ostream& toStream(std::ostream& sl) const;
+  ///
+  /// @param indent indentation for the screen display
+  std::string toString(const std::string& indent = "") const;
 
  private:
   /// A bitset that remembers the constraint values
