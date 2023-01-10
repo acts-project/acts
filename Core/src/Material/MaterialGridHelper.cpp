@@ -60,9 +60,12 @@ Acts::Grid3D Acts::createGrid(std::array<double, 3> gridAxis1,
   // calculate maxima (add one last bin, because bin value always corresponds
   // to
   // left boundary)
-  double stepAxis1 = std::fabs(maxAxis1 - minAxis1) / (nBinsAxis1 - 1);
-  double stepAxis2 = std::fabs(maxAxis2 - minAxis2) / (nBinsAxis2 - 1);
-  double stepAxis3 = std::fabs(maxAxis3 - minAxis3) / (nBinsAxis3 - 1);
+  double stepAxis1 =
+      std::fabs(maxAxis1 - minAxis1) / std::max(nBinsAxis1 - 1, size_t(1));
+  double stepAxis2 =
+      std::fabs(maxAxis2 - minAxis2) / std::max(nBinsAxis2 - 1, size_t(1));
+  double stepAxis3 =
+      std::fabs(maxAxis3 - minAxis3) / std::max(nBinsAxis3 - 1, size_t(1));
   maxAxis1 += stepAxis1;
   maxAxis2 += stepAxis2;
   maxAxis3 += stepAxis3;
