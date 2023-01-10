@@ -484,6 +484,27 @@ Acts::TrackingVolume::compatibleBoundaries(
       return BoundaryIntersection();
     }
 
+    if (options.forceIntersectBoundaries and
+        sIntersection.intersection.pathLength * options.navDir > 0) {
+      const bool coCriterion =
+          std::abs(sIntersection.intersection.pathLength) < std::abs(oLimit);
+      ACTS_VERBOSE("Forcing intersection with surface "
+                   << bSurface->surfaceRepresentation().geometryId());
+      if (coCriterion) {
+        ACTS_VERBOSE("Intersection forced successfully ");
+        ACTS_VERBOSE("- intersection path length "
+                     << std::abs(sIntersection.intersection.pathLength)
+                     << " < overstep limit " << std::abs(oLimit));
+        sIntersection.intersection.pathLength *= options.navDir;
+        return BoundaryIntersection(sIntersection.intersection, bSurface,
+                                    sIntersection.object);
+      }
+      ACTS_VERBOSE("Can't force intersection: ");
+      ACTS_VERBOSE("- intersection path length "
+                   << std::abs(sIntersection.intersection.pathLength)
+                   << " > overstep limit " << std::abs(oLimit));
+    }
+
     ACTS_VERBOSE("Check intersection with surface "
                  << bSurface->surfaceRepresentation().geometryId());
     if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
@@ -608,8 +629,7 @@ Acts::TrackingVolume::compatibleLayers(
         auto atIntersection =
             tLayer->surfaceOnApproach(gctx, position, direction, options);
         auto path = atIntersection.intersection.pathLength;
-        bool withinLimit =
-            (path * path <= options.pathLimit * options.pathLimit);
+        bool withinLimit = std::abs(path) <= std::abs(options.pathLimit);
         // Intersection is ok - take it (move to surface on appraoch)
         if (atIntersection &&
             (atIntersection.object != options.targetSurface) && withinLimit) {

@@ -46,9 +46,9 @@ class BareAlgorithm : public IAlgorithm {
   ProcessCode execute(const AlgorithmContext& context) const override = 0;
 
   /// Initialize the algorithm
-  ProcessCode initialize() const override { return ProcessCode::SUCCESS; }
+  ProcessCode initialize() override { return ProcessCode::SUCCESS; }
   /// Finalize the algorithm
-  ProcessCode finalize() const override { return ProcessCode::SUCCESS; }
+  ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 
  protected:
   const Acts::Logger& logger() const { return *m_logger; }

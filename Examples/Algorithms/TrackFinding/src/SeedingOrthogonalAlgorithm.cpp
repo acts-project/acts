@@ -11,6 +11,7 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonal.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -20,6 +21,7 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     Acts::Logging::Level lvl)
     : ActsExamples::BareAlgorithm("SeedingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
+  m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
   }
@@ -96,8 +98,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
         ACTS_WARNING("Missing sourcelink in space point");
         continue;
       }
-      const auto slink = static_cast<const IndexSourceLink &>(
-          *(spacePointPtr->sourceLinks()[0]));
+      const IndexSourceLink &slink =
+          spacePointPtr->sourceLinks()[0].get<IndexSourceLink>();
       protoTrack.push_back(slink.index());
     }
     protoTracks.push_back(std::move(protoTrack));

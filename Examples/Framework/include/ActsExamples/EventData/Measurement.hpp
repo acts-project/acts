@@ -46,8 +46,8 @@ class MeasurementCalibrator {
       const Acts::GeometryContext& /*gctx*/,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
           trackState) const {
-    const auto& sourceLink =
-        static_cast<const IndexSourceLink&>(trackState.uncalibrated());
+    const IndexSourceLink& sourceLink =
+        trackState.uncalibratedSourceLink().get<IndexSourceLink>();
     assert(m_measurements and
            "Undefined measurement container in DigitizedCalibrator");
     assert((sourceLink.index() < m_measurements->size()) and

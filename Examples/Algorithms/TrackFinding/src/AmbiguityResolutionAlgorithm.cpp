@@ -56,8 +56,8 @@ std::vector<std::size_t> computeSharedHits(
       }
 
       const std::size_t indexHit =
-          static_cast<const ActsExamples::IndexSourceLink&>(
-              state.uncalibrated())
+          state.uncalibratedSourceLink()
+              .template get<ActsExamples::IndexSourceLink>()
               .index();
 
       ++hitCountPerMeasurement[indexHit];
@@ -79,8 +79,8 @@ std::vector<std::size_t> computeSharedHits(
       }
 
       const std::size_t indexHit =
-          static_cast<const ActsExamples::IndexSourceLink&>(
-              state.uncalibrated())
+          state.uncalibratedSourceLink()
+              .template get<ActsExamples::IndexSourceLink>()
               .index();
 
       if (hitCountPerMeasurement[indexHit] > 1) {

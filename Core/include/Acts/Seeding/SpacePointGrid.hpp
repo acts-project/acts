@@ -50,11 +50,15 @@ struct SpacePointGridConfig {
   int phiBinDeflectionCoverage = 1;
   // enable non equidistant binning in z
   std::vector<float> zBinEdges;
-
+  bool isInInternalUnits = false;
   SpacePointGridConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for SpacePointGridConfig");
+    }
     using namespace Acts::UnitLiterals;
     SpacePointGridConfig config = *this;
-
+    config.isInInternalUnits = true;
     config.bFieldInZ /= 1000_T;
     config.minPt /= 1_MeV;
     config.rMax /= 1_mm;

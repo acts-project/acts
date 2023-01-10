@@ -107,8 +107,7 @@ class ConcretePropagator : public PropagatorInterface {
       using PropagatorOptions =
           Acts::DenseStepperPropagatorOptions<ActionList, AbortList>;
 
-      PropagatorOptions options(context.geoContext, context.magFieldContext,
-                                Acts::LoggerWrapper{logger()});
+      PropagatorOptions options(context.geoContext, context.magFieldContext);
       options.pathLimit = pathLength;
 
       // Activate loop protection at some pt value

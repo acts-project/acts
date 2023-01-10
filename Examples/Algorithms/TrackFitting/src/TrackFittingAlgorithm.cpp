@@ -82,10 +82,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
                                Acts::LoggerWrapper{logger()},
                                Acts::PropagatorPlainOptions()};
 
-  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+  auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+  auto tracks =
+      std::make_unique<TrackContainer>(trackContainer, trackStateContainer);
 
   // Perform the fit for each input track
-  std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
+  std::vector<Acts::SourceLink> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
@@ -120,7 +123,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
       if (auto it = sourceLinks.nth(hitIndex); it != sourceLinks.end()) {
         const IndexSourceLink& sourceLink = *it;
         auto geoId = sourceLink.geometryId();
-        trackSourceLinks.push_back(std::cref(sourceLink));
+        trackSourceLinks.push_back(Acts::SourceLink{sourceLink});
         surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
       } else {
         ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
@@ -133,29 +136,31 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     auto result =
         m_cfg.directNavigation
             ? (*m_cfg.fit)(trackSourceLinks, initialParams, options,
-                           surfSequence, mtj)
-            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, mtj);
+                           surfSequence, *tracks)
+            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, *tracks);
 
     if (result.ok()) {
       // Get the fit output object
-      auto& fitOutput = result.value();
+      auto& track = result.value();
       // The track entry indices container. One element here.
       std::vector<Acts::MultiTrajectoryTraits::IndexType> trackTips;
       trackTips.reserve(1);
-      trackTips.emplace_back(fitOutput.lastMeasurementIndex);
+      trackTips.emplace_back(track.tipIndex());
       // The fitted parameters container. One element (at most) here.
       Trajectories::IndexedParameters indexedParams;
-      if (fitOutput.fittedParameters) {
-        const auto& params = fitOutput.fittedParameters.value();
+      if (track.hasReferenceSurface()) {
         ACTS_VERBOSE("Fitted parameters for track " << itrack);
-        ACTS_VERBOSE("  " << params.parameters().transpose());
+        ACTS_VERBOSE("  " << track.parameters().transpose());
         // Push the fitted parameters to the container
-        indexedParams.emplace(fitOutput.lastMeasurementIndex, params);
+        indexedParams.emplace(
+            std::pair{track.tipIndex(),
+                      TrackParameters{track.referenceSurface().getSharedPtr(),
+                                      track.parameters(), track.covariance()}});
       } else {
         ACTS_DEBUG("No fitted parameters for track " << itrack);
       }
       // store the result
-      trajectories.emplace_back(fitOutput.fittedStates, std::move(trackTips),
+      trajectories.emplace_back(trackStateContainer, std::move(trackTips),
                                 std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track "
@@ -168,7 +173,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   }
 
   std::stringstream ss;
-  mtj->statistics().toStream(ss);
+  trackStateContainer->statistics().toStream(ss);
   ACTS_DEBUG(ss.str());
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
