@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/BinningType.hpp"
+#include "Acts/Utilities/Enumerate.hpp"
 
 #include <array>
 #include <cstddef>
@@ -303,29 +304,29 @@ class BinUtility {
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
   /// @param sl is the ostream to be dumped into
-  std::ostream& toStream(std::ostream& sl) const {
-    sl << "BinUtility for " << m_binningData.size()
+  /// @param indent the current indentation
+  ///
+  /// @return the input stream
+  std::ostream& toStream(std::ostream& sl,
+                         const std::string& indent = "") const {
+    sl << indent << "BinUtility for " << m_binningData.size()
        << "- dimensional array:" << std::endl;
-    std::vector<BinningData>::const_iterator bdIter = m_binningData.begin();
-    for (size_t ibd = 0; bdIter != m_binningData.end(); ++bdIter, ++ibd) {
-      sl << "dimension     : " << ibd << std::endl;
-      sl << " - type       : " << size_t((*bdIter).type) << std::endl;
-      sl << " - option     : " << size_t((*bdIter).option) << std::endl;
-      sl << " - value      : " << size_t((*bdIter).binvalue) << std::endl;
-      sl << " - bins       : " << (*bdIter).bins() << std::endl;
-      sl << " - min/max    : " << (*bdIter).min << " / " << (*bdIter).max
-         << std::endl;
-      if ((*bdIter).type == equidistant) {
-        sl << " - step       : " << (*bdIter).step << std::endl;
-      }
-      sl << " - boundaries : | ";
-      std::vector<float>::const_iterator bIter = (*bdIter).boundaries().begin();
-      for (; bIter != (*bdIter).boundaries().end(); ++bIter) {
-        sl << (*bIter) << " | ";
-      }
-      sl << std::endl;
+    for (auto [ibd, bd] : enumerate(m_binningData)) {
+      sl << indent << "dimension     : " << ibd << std::endl;
+      sl << bd.toString(indent) << std::endl;
     }
     return sl;
+  }
+
+  /// Output into a string
+  ///
+  /// @param indent the current indentation
+  ///
+  /// @return a string with the stream information
+  std::string toString(const std::string& indent = "") const {
+    std::stringstream ss;
+    toStream(ss, indent);
+    return ss.str();
   }
 
  private:

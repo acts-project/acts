@@ -14,8 +14,9 @@
 
 #include <algorithm>
 #include <cmath>
-#include <iostream>
 #include <memory>
+#include <sstream>
+#include <string>
 #include <utility>
 #include <vector>
 
@@ -522,6 +523,29 @@ class BinningData {
                                bData.m_boundaries.end(), value);
     return static_cast<size_t>(std::distance(bData.m_boundaries.begin(), lb) -
                                1);
+  }
+
+ public:
+  /// String screen output methd
+  /// @param indent the current indentation
+  /// @return a string containing the screen information
+  std::string toString(const std::string& indent) const {
+    std::stringstream sl;
+    sl << indent << "BinngingData object:" << '\n';
+    sl << indent << "  - type       : " << size_t(type) << '\n';
+    sl << indent << "  - option     : " << size_t(option) << '\n';
+    sl << indent << "  - value      : " << size_t(binvalue) << '\n';
+    sl << indent << "  - bins       : " << bins() << '\n';
+    sl << indent << "  - min/max    : " << min << " / " << max << '\n';
+    if (type == equidistant) {
+      sl << indent << "  - step       : " << step << '\n';
+    }
+    sl << indent << "  - boundaries : | ";
+    for (const auto& b : boundaries()) {
+      sl << b << " | ";
+    }
+    sl << '\n';
+    return sl.str();
   }
 };
 }  // namespace Acts

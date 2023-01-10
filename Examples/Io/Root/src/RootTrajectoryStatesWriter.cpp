@@ -24,6 +24,7 @@
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <ios>
+#include <limits>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -313,7 +314,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
-        const auto& sl = state.uncalibrated().template get<IndexSourceLink>();
+        const auto& sl =
+            state.uncalibratedSourceLink().template get<IndexSourceLink>();
         const auto hitIdx = sl.index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =
@@ -494,9 +496,12 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
             m_pull_eQOP[ipar].push_back(
                 (parameters[Acts::eBoundQOverP] - truthQOP) /
                 sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+            double sigmaTime =
+                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
             m_pull_eT[ipar].push_back(
-                (parameters[Acts::eBoundTime] - truthTIME) /
-                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+                sigmaTime == 0.0
+                    ? std::numeric_limits<double>::quiet_NaN()
+                    : (parameters[Acts::eBoundTime] - truthTIME) / sigmaTime);
 
             // further track parameter info
             Acts::FreeVector freeParams =

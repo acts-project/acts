@@ -21,6 +21,7 @@
 #include <cstdlib>
 #include <iomanip>
 #include <iostream>
+#include <limits>
 #include <memory>
 #include <string>
 #include <type_traits>
@@ -585,4 +586,16 @@ inline ActsMatrix<A::RowsAtCompileTime, B::ColsAtCompileTime> blockedMult(
     return r;
   }
 }
+
+/// Clamp a numeric value to another type, respecting range of the target type
+/// @tparam T the target type
+/// @tparam U the source type
+/// @param value the value to clamp
+/// @return the clamped value
+template <typename T, typename U>
+T clampValue(U value) {
+  return std::clamp(value, static_cast<U>(std::numeric_limits<T>::lowest()),
+                    static_cast<U>(std::numeric_limits<T>::max()));
+}
+
 }  // namespace Acts
