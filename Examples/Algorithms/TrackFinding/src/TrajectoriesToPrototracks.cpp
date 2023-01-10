@@ -32,7 +32,7 @@ ProcessCode TrajectoriesToPrototracks::execute(
         }
 
         const auto& source_link =
-            state.uncalibrated().template get<IndexSourceLink>();
+            state.uncalibratedSourceLink().template get<IndexSourceLink>();
         track.push_back(source_link.index());
 
         return true;

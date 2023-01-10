@@ -110,7 +110,6 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   // Set the KalmanFitter options
   TrackFitterOptions kfOptions(ctx.geoContext, ctx.magFieldContext,
                                ctx.calibContext, extensions,
-                               Acts::LoggerWrapper{logger()},
                                Acts::PropagatorPlainOptions(), &(*pSurface));
 
   // Set the alignment options

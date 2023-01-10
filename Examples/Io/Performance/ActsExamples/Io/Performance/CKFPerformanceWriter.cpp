@@ -149,6 +149,7 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     const auto& traj = trajectories[iTraj];
     const auto& mj = traj.multiTrajectory();
     for (auto trackTip : traj.tips()) {
+      // @TODO: Switch to using this directly from the track
       auto trajState =
           Acts::MultiTrajectoryHelpers::trajectoryState(mj, trackTip);
 
