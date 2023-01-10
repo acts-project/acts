@@ -335,7 +335,8 @@ BOOST_AUTO_TEST_CASE(adaptive_multi_vertex_fitter_test_athena) {
   IPEstimator ip3dEst(ip3dEstCfg);
 
   std::vector<double> temperatures(1, 3.);
-  AnnealingUtility::Config annealingConfig(temperatures);
+  AnnealingUtility::Config annealingConfig;
+  annealingConfig.setOfTemperatures = temperatures;
   AnnealingUtility annealingUtility(annealingConfig);
 
   AdaptiveMultiVertexFitter<BoundTrackParameters, Linearizer>::Config fitterCfg(

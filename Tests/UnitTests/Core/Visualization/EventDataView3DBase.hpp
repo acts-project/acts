@@ -11,7 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/MeasurementHelpers.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/CuboidVolumeBuilder.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -205,7 +208,7 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   // Create measurements (assuming they are for a linear track parallel to
   // global x-axis)
   std::cout << "Creating measurements:" << std::endl;
-  std::vector<Test::TestSourceLink> sourcelinks;
+  std::vector<Acts::SourceLink> sourcelinks;
   sourcelinks.reserve(6);
   Vector2 lPosCenter{5_mm, 5_mm};
   Vector2 resolution{200_um, 150_um};
@@ -215,8 +218,8 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
     Vector2 loc = lPosCenter;
     loc[0] += resolution[0] * gauss(generator);
     loc[1] += resolution[1] * gauss(generator);
-    sourcelinks.emplace_back(eBoundLoc0, eBoundLoc1, loc, cov2D,
-                             surface->geometryId());
+    sourcelinks.emplace_back(Test::TestSourceLink{
+        eBoundLoc0, eBoundLoc1, loc, cov2D, surface->geometryId()});
   }
 
   // The KalmanFitter - we use the eigen stepper for covariance transport
@@ -266,17 +269,19 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
           &kfSmoother);
 
   KalmanFitterOptions kfOptions(tgContext, mfContext, calContext, extensions,
-                                LoggerWrapper{*logger},
                                 PropagatorPlainOptions(), rSurface);
 
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
   // Fit the track
-  auto fitRes =
-      kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart, kfOptions);
+  auto fitRes = kFitter.fit(sourcelinks.begin(), sourcelinks.end(), rStart,
+                            kfOptions, tracks);
   if (not fitRes.ok()) {
     std::cout << "Fit failed" << std::endl;
     return ss.str();
   }
-  auto& fittedTrack = *fitRes;
+  auto& track = *fitRes;
 
   // Draw the track
   std::cout << "Draw the fitted track" << std::endl;
@@ -295,9 +300,9 @@ static inline std::string testMultiTrajectory(IVisualization3D& helper) {
   spcolor.offset = -0.04;
 
   EventDataView3D::drawMultiTrajectory(
-      helper, *fittedTrack.fittedStates, fittedTrack.lastMeasurementIndex,
-      tgContext, momentumScale, localErrorScale, directionErrorScale, scolor,
-      mcolor, ppcolor, fpcolor, spcolor);
+      helper, tracks.trackStateContainer(), track.tipIndex(), tgContext,
+      momentumScale, localErrorScale, directionErrorScale, scolor, mcolor,
+      ppcolor, fpcolor, spcolor);
 
   helper.write("EventData_MultiTrajectory");
   helper.write(ss);

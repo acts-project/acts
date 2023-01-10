@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFitting/GsfFitterFunction.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
@@ -38,6 +39,9 @@ using Fitter =
 using DirectFitter =
     Acts::Experimental::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
                                           Acts::VectorMultiTrajectory>;
+using TrackContainer =
+    Acts::TrackContainer<Acts::VectorTrackContainer,
+                         Acts::VectorMultiTrajectory, std::shared_ptr>;
 
 struct GsfFitterFunctionImpl
     : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
@@ -83,27 +87,25 @@ struct GsfFitterFunctionImpl
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
-                      gsfOptions, trajectory);
+                      gsfOptions, tracks);
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfaceSequence,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options);
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                             initialParameters, gsfOptions, surfaceSequence,
-                            trajectory);
+                            tracks);
   }
 };
 
@@ -130,7 +132,7 @@ ActsExamples::makeGsfFitterFunction(
 
   // Direct fitter
   Acts::DirectNavigator directNavigator;
-  DirectPropagator directPropagator(stepper, directNavigator);
+  DirectPropagator directPropagator(stepper, std::move(directNavigator));
   DirectFitter directTrackFitter(std::move(directPropagator),
                                  BetheHeitlerApprox(betheHeitlerApprox));
 

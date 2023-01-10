@@ -16,8 +16,12 @@ template <typename external_spacepoint_t>
 SeedFilter<external_spacepoint_t>::SeedFilter(
     SeedFilterConfig config,
     IExperimentCuts<external_spacepoint_t>* expCuts /* = 0*/)
-    : m_cfg(config.toInternalUnits()), m_experimentCuts(expCuts) {}
-
+    : m_cfg(config), m_experimentCuts(expCuts) {
+  if (not config.isInInternalUnits) {
+    throw std::runtime_error(
+        "SeedFilterConfig not in ACTS internal units in SeedFilter");
+  }
+}
 // function to filter seeds based on all seeds with same bottom- and
 // middle-spacepoint.
 // return vector must contain weight of each seed
@@ -268,10 +272,10 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
                 float seed1_sum = 0;
                 float seed2_sum = 0;
                 for (int i = 0; i < 3; i++) {
-                  seed1_sum += pow(i1.second->sp[i]->sp().y(), 2) +
-                               pow(i1.second->sp[i]->sp().z(), 2);
-                  seed2_sum += pow(i2.second->sp[i]->sp().y(), 2) +
-                               pow(i2.second->sp[i]->sp().z(), 2);
+                  seed1_sum += pow(i1.second->sp[i]->y(), 2) +
+                               pow(i1.second->sp[i]->z(), 2);
+                  seed2_sum += pow(i2.second->sp[i]->y(), 2) +
+                               pow(i2.second->sp[i]->z(), 2);
                 }
                 return seed1_sum > seed2_sum;
               }

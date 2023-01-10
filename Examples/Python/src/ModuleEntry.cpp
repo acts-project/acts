@@ -9,6 +9,7 @@
 #include "Acts/ActsVersion.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -17,6 +18,7 @@
 
 #include <pybind11/functional.h>
 #include <pybind11/pybind11.h>
+#include <pybind11/pytypes.h>
 #include <pybind11/stl.h>
 
 namespace py = pybind11;
@@ -42,12 +44,12 @@ class PyIAlgorithm : public IAlgorithm {
     PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
   }
 
-  ProcessCode initialize() const override {
+  ProcessCode initialize() override {
     py::gil_scoped_acquire acquire{};
     PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, initialize);
   }
 
-  ProcessCode finalize() const override {
+  ProcessCode finalize() override {
     py::gil_scoped_acquire acquire{};
     PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, finalize);
   }
@@ -219,6 +221,19 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def_readwrite("numThreads", &Config::numThreads)
       .def_readwrite("outputDir", &Config::outputDir)
       .def_readwrite("outputTimingFile", &Config::outputTimingFile);
+
+  struct PyFpeMonitor {
+    std::optional<Acts::FpeMonitor> mon;
+  };
+
+  py::class_<PyFpeMonitor>(m, "FpeMonitor")
+      .def(py::init([]() { return std::make_unique<PyFpeMonitor>(); }))
+      .def("__enter__", [](PyFpeMonitor& fm) { fm.mon.emplace(); })
+      .def("__exit__", [](PyFpeMonitor& fm, py::object /*exc_type*/,
+                          py::object /*exc_value*/,
+                          py::object /*traceback*/) { fm.mon.reset(); })
+      .def_static("enable", &Acts::FpeMonitor::enable)
+      .def_static("disable", &Acts::FpeMonitor::disable);
 
   using ActsExamples::RandomNumbers;
   auto randomNumbers =
