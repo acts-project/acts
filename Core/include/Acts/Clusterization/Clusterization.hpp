@@ -27,14 +27,36 @@ enum ConnectResult {
   eConn         // Found connection
 };
 
-// Default connection type: 4- or 8-cell connectivity
+// Default connection type for 2-D grids: 4- or 8-cell connectivity
 template <typename Cell>
-struct DefaultConnect {
+struct Connect2D {
   bool conn8;
-  DefaultConnect() : conn8{true} {}
-  DefaultConnect(bool commonCorner) : conn8{commonCorner} {}
+  Connect2D() : conn8{true} {}
+  Connect2D(bool commonCorner) : conn8{commonCorner} {}
   ConnectResult operator()(const Cell& ref, const Cell& iter);
 };
+
+// Default connection type for 1-D grids: 2-cell connectivity
+template <typename Cell>
+struct Connect1D {
+  ConnectResult operator()(const Cell& ref, const Cell& iter);
+};
+
+// Default connection type based on GridDim
+template <typename Cell, size_t GridDim = 2>
+struct DefaultConnect {
+  static_assert(GridDim != 1 && GridDim != 2,
+                "Only grid dimensions of 1 or 2 are supported");
+};
+
+template <typename Cell>
+struct DefaultConnect<Cell, 2> : public Connect2D<Cell> {
+  DefaultConnect(bool commonCorner) : Connect2D<Cell>(commonCorner) {}
+  DefaultConnect() : DefaultConnect(true) {}
+};
+
+template <typename Cell>
+struct DefaultConnect<Cell, 1> : public Connect1D<Cell> {};
 
 /// @brief labelClusters
 ///
@@ -46,8 +68,9 @@ struct DefaultConnect {
 ///
 /// @param [in] cells the cell collection to be labeled
 /// @param [in] connect the connection type (see DefaultConnect)
-template <typename CellCollection, typename Connect = DefaultConnect<
-                                       typename CellCollection::value_type>>
+template <typename CellCollection, size_t GridDim = 2,
+          typename Connect =
+              DefaultConnect<typename CellCollection::value_type, GridDim>>
 void labelClusters(CellCollection& cells, Connect connect = Connect());
 
 /// @brief mergeClusters
@@ -57,16 +80,21 @@ void labelClusters(CellCollection& cells, Connect connect = Connect());
 /// defined:
 ///   void clusterAddCell(Cluster&, const Cell&)
 ///
-/// @param [in] cells the labeled cell collection
 /// @return nothing
-template <typename CellCollection, typename ClusterCollection>
-ClusterCollection mergeClusters(CellCollection& cells);
+template <typename CellCollection, typename ClusterCollection, size_t GridDim>
+typename std::enable_if<GridDim != 1 and GridDim != 2, ClusterCollection>::type
+mergeClusters(CellCollection& /*cells*/) {
+  static_assert(GridDim == 1 and GridDim == 2,
+                "mergeClusters is only defined for grid dimensions of 1 or 2. "
+                "These variants are defined in Clusterization.ipp");
+}
 
 /// @brief createClusters
 /// Conveniance function which runs both labelClusters and createClusters.
-template <
-    typename CellCollection, typename ClusterCollection,
-    typename Connect = DefaultConnect<typename CellCollection::value_type>>
+template <typename CellCollection, typename ClusterCollection,
+          size_t GridDim = 2,
+          typename Connect =
+              DefaultConnect<typename CellCollection::value_type, GridDim>>
 ClusterCollection createClusters(CellCollection& cells,
                                  Connect connect = Connect());
 

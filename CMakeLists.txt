@@ -61,6 +61,7 @@ option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
+option(ACTS_BUILD_EXAMPLES_BINARIES "Build the examples binaries (deprecated)" OFF)
 option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
 option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examples" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
@@ -111,6 +112,7 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
   OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
+  OR ACTS_BUILD_EXAMPLES_BINARIES
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
 set_option_if(
@@ -184,7 +186,15 @@ set(_acts_tbb_version 2020.1)
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
     # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
-    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
+
+    # Enable both program_options and unit_test_framework to reduce complexity
+    # Also Cuda tests seem to use program_options
+    if( ACTS_BUILD_EXAMPLES_BINARIES OR ACTS_BUILD_ANALYSIS_APPS OR
+        ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
+      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
+    else()
+      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+    endif()
   else()
     add_subdirectory(thirdparty/boost)
   endif()
