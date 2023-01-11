@@ -80,7 +80,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
 
   // Check if current track does affect grid density
   // in central bins at z-axis
-  if (std::abs(dOffset) > trkGridSize - 1) {
+  if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
     // Current track is too far away to contribute
     // to track density at z-axis bins
     return {-1, TrackGridVector::Zero()};
