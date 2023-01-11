@@ -14,10 +14,6 @@
 #include "G4LogicalVolume.hh"
 #include "G4VPhysicalVolume.hh"
 
-Acts::Geant4DetectorSurfaceFactory::Geant4DetectorSurfaceFactory(
-    Geant4DetectorSurfaceFactory::Config cfg)
-    : m_cfg(cfg) {}
-
 void Acts::Geant4DetectorSurfaceFactory::construct(
     Cache& cache, const G4Transform3D& g4ToGlobal,
     const G4VPhysicalVolume& g4PhysVol, const Options& option) {
@@ -40,16 +36,18 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
     construct(cache, newToGlobal, *daughter, option);
   }
 
-  // Check if the volume is accepted
-  bool sensitive = option.sensitiveSelector(g4PhysVol);
-  bool passive = option.passiveSelector(g4PhysVol);
+  // Check if the volume is accepted by a sensitive or passive selector
+  bool sensitive = option.sensitiveSurfaceSelector != nullptr and
+                   option.sensitiveSurfaceSelector->select(g4PhysVol);
+  bool passive = option.passiveSurfaceSelector != nullptr and
+                 option.passiveSurfaceSelector->select(g4PhysVol);
   if (sensitive or passive) {
     // Conversion and selection code
     ++cache.matchedG4Volumes;
     // Attempt the conversion
     auto surface = Acts::Geant4PhysicalVolumeConverter{}.surface(
         g4PhysVol, Geant4AlgebraConverter{}.transform(newToGlobal),
-        m_cfg.convertMaterial, m_cfg.convertedMaterialThickness);
+        option.convertMaterial, option.convertedMaterialThickness);
     if (surface != nullptr) {
       ++cache.convertedSurfaces;
       if (sensitive) {

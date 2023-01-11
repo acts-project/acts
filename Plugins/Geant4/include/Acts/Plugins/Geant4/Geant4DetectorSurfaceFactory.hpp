@@ -31,11 +31,7 @@ class Geant4DetectorSurfaceFactory {
  public:
   /// Nested configuration struct that holds
   /// global lifetime configuration
-  struct Config {
-    ActsScalar scaleConversion = 1.;
-    bool convertMaterial = true;
-    ActsScalar convertedMaterialThickness = -1;
-  };
+  struct Config {};
 
   // Collect the senstive surfaces
   using Geant4SensitiveSurface =
@@ -45,8 +41,7 @@ class Geant4DetectorSurfaceFactory {
   // Collect the passive surfaces
   using Geant4PassiveSurface = std::shared_ptr<Surface>;
 
-  /// Nested cache that collects the current
-  ///
+  /// Nested cache that records the conversion status
   struct Cache {
     /// The created detector elements - for the detector store
     std::vector<Geant4SensitiveSurface> sensitiveSurfaces;
@@ -60,21 +55,26 @@ class Geant4DetectorSurfaceFactory {
     std::size_t convertedMaterials = 0;
   };
 
-  /// Nested option struct that allows
-  /// per call changable configuration
+  /// Nested option struct that allows per call changable configuration
   struct Options {
-    /// A selector for senstivie surfaces - is checked first
-    Geant4PhysicalVolumeSelector sensitiveSelector =
-        Geant4PhysicalVolumeSelectors::generateAllSelector();
+    /// Convert the length scale
+    ActsScalar scaleConversion = 1.;
+    /// Convert the material
+    bool convertMaterial = true;
+    /// Converted material thickness (< 0 indicates keeping original thickness)
+    ActsScalar convertedMaterialThickness = -1;
+    /// A selector for sensitive surfaces
+    std::shared_ptr<IGeant4PhysicalVolumeSelector> sensitiveSurfaceSelector =
+        nullptr;
     /// A selector for passive surfaces
-    Geant4PhysicalVolumeSelector passiveSelector =
-        Geant4PhysicalVolumeSelectors::generateAllSelector();
+    std::shared_ptr<IGeant4PhysicalVolumeSelector> passiveSurfaceSelector =
+        nullptr;
   };
 
   /// The Geant4 detector element factory
   ///
   /// @param cfg the configuration struct
-  Geant4DetectorSurfaceFactory(Config cfg);
+  Geant4DetectorSurfaceFactory() = default;
 
   /// Construction method of the detector elements
   ///
@@ -85,10 +85,5 @@ class Geant4DetectorSurfaceFactory {
   ///
   void construct(Cache& cache, const G4Transform3D& g4ToGlobal,
                  const G4VPhysicalVolume& g4PhysVol, const Options& option);
-
- private:
-  /// Configuration struct
-  Config m_cfg;
 };
-
 }  // namespace Acts

@@ -17,31 +17,24 @@
 
 namespace Acts {
 
+/// Interface class for selectors from physical volumes
 class IGeant4PhysicalVolumeSelector {
  public:
   virtual ~IGeant4PhysicalVolumeSelector() = default;
+  /// @brief  The main interface method
+  /// @param g4Phys the physical volume to be checked
+  /// @return a boolen indicating if it should be selected or not
+  virtual bool select(const G4VPhysicalVolume& g4Phys) const = 0;
 };
-
-/// The selector delegate for G4VPhysical volumes
-using Geant4PhysicalVolumeSelector =
-    OwningDelegate<bool(const G4VPhysicalVolume&),
-                   IGeant4PhysicalVolumeSelector>;
 
 namespace Geant4PhysicalVolumeSelectors {
 
 /// @brief  Struct that selects all G4VPhysicalVolume objects
 struct AllSelector : public IGeant4PhysicalVolumeSelector {
-  bool select(const G4VPhysicalVolume& /*unused*/) const { return true; }
+  bool select(const G4VPhysicalVolume& /*unused*/) const final { return true; }
 };
 
-static inline Geant4PhysicalVolumeSelector generateAllSelector() {
-  Geant4PhysicalVolumeSelector allSelector;
-  auto all = std::make_unique<const AllSelector>();
-  allSelector.connect<&AllSelector::select>(std::move(all));
-  return allSelector;
-}
-
-/// @brief  Struct that selects G4VPhysicalVolume objects
+/// @brief Struct that selects G4VPhysicalVolume objects
 /// that match one of the provided names, exact or partially
 struct NameSelector : public IGeant4PhysicalVolumeSelector {
   std::vector<std::string> names = {};
@@ -56,7 +49,7 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
   /// Secect function for the volume
   /// @param g4PhysVol the volume that is checked
   /// @return a boolean indicating the selection
-  bool select(const G4VPhysicalVolume& g4PhysVol) const {
+  bool select(const G4VPhysicalVolume& g4PhysVol) const final {
     std::string volumeName = g4PhysVol.GetName();
     bool matched = false;
     for (const auto& name : names) {
@@ -69,14 +62,6 @@ struct NameSelector : public IGeant4PhysicalVolumeSelector {
     return matched;
   }
 };
-
-static inline Geant4PhysicalVolumeSelector generateNameSelector(
-    const std::vector<std::string>& names, bool exact = false) {
-  Geant4PhysicalVolumeSelector nameSelector;
-  auto nsel = std::make_unique<const NameSelector>(names, exact);
-  nameSelector.connect<&NameSelector::select>(std::move(nsel));
-  return nameSelector;
-}
 
 }  // namespace Geant4PhysicalVolumeSelectors
 }  // namespace Acts
