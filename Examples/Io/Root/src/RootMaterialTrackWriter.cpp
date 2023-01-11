@@ -106,9 +106,11 @@ ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
 ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
   // write the tree and close the file
   ACTS_INFO("Writing ROOT output File : " << m_cfg.filePath);
+
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
+
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

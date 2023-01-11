@@ -23,6 +23,7 @@
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <ios>
+#include <limits>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -129,28 +130,23 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
 }
 
 ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  m_outputFile->Close();
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write parameters of trajectories to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
-  }
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  ACTS_INFO("Wrote parameters of trajectories to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
 
   // Read additional input collections
   const auto& particles =
@@ -338,7 +334,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           const auto& covariance = *boundParam.covariance();
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
             error[i] = std::sqrt(covariance(i, i));
-            pull[i] = res[i] / error[i];
+            if (error[i] != 0.0) {
+              pull[i] = res[i] / error[i];
+            } else {
+              pull[i] = std::numeric_limits<double>::quiet_NaN();
+            }
           }
         }
       }

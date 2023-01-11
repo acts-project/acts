@@ -8,7 +8,9 @@
 
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -53,6 +55,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       m_cfg.inputInitialTrackParameters);
 
   // Prepare the output data with MultiTrajectory
+  // @TODO: Refactor to remove Trajectories
   TrajectoriesContainer trajectories;
   trajectories.reserve(initialParameters.size());
 
@@ -90,53 +93,66 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   // Set the CombinatorialKalmanFilter options
   ActsExamples::TrackFindingAlgorithm::TrackFinderOptions options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, slAccessorDelegate,
-      extensions, Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+      extensions, pOptions, &(*pSurface));
 
   // Perform the track finding for all initial parameters
   ACTS_DEBUG("Invoke track finding with " << initialParameters.size()
                                           << " seeds.");
 
-  auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
-  auto results = (*m_cfg.findTracks)(initialParameters, options, mtj);
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+  auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+  auto tracks =
+      std::make_unique<TrackContainer>(trackContainer, trackStateContainer);
 
-  // Compute shared hits from all the reconstructed tracks
-  if (m_cfg.computeSharedHits) {
-    computeSharedHits(sourceLinks, results);
-  }
-
-  // Loop over the track finding results for all initial parameters
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
+    auto result =
+        (*m_cfg.findTracks)(initialParameters.at(iseed), options, *tracks);
     m_nTotalSeeds++;
-    // The result for this seed
-    auto& result = results[iseed];
-    if (result.ok()) {
-      // Get the track finding output object
-      auto& trackFindingOutput = result.value();
-      // Create a Trajectories result struct
-      trajectories.emplace_back(trackFindingOutput.fittedStates,
-                                trackFindingOutput.lastMeasurementIndices,
-                                trackFindingOutput.fittedParameters);
-    } else {
+    if (!result.ok()) {
+      m_nFailedSeeds++;
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());
-      m_nFailedSeeds++;
       // Track finding failed. Add an empty result so the output container has
       // the same number of entries as the input.
       trajectories.push_back(Trajectories());
+      continue;
     }
+
+    auto& tracksForSeed = result.value();
+    std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
+    tips.reserve(tracksForSeed.size());
+    Trajectories::IndexedParameters parameters;
+    parameters.reserve(tracksForSeed.size());
+
+    for (auto& track : tracksForSeed) {
+      tips.push_back(track.tipIndex());
+      parameters.emplace(
+          std::pair{track.tipIndex(),
+                    TrackParameters{track.referenceSurface().getSharedPtr(),
+                                    track.parameters(), track.covariance()}});
+    }
+
+    // Create a Trajectories result struct
+    trajectories.emplace_back(trackStateContainer, std::move(tips),
+                              std::move(parameters));
+  }
+
+  // Compute shared hits from all the reconstructed tracks
+  if (m_cfg.computeSharedHits) {
+    computeSharedHits(sourceLinks, *tracks);
   }
 
   ACTS_DEBUG("Finalized track finding with " << trajectories.size()
                                              << " track candidates.");
 
-  m_memoryStatistics.local().hist += mtj->statistics().hist;
+  m_memoryStatistics.local().hist +=
+      tracks->trackStateContainer().statistics().hist;
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize()
-    const {
+ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::finalize() {
   ACTS_INFO("TrackFindingAlgorithm statistics:");
   ACTS_INFO("- total seeds: " << m_nTotalSeeds);
   ACTS_INFO("- failed seeds: " << m_nFailedSeeds);

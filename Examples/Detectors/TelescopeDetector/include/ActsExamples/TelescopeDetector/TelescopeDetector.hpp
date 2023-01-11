@@ -10,14 +10,22 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 
+#include <array>
 #include <memory>
 #include <vector>
 
 using namespace Acts::UnitLiterals;
+
+namespace Acts {
+class TrackingGeometry;
+class IMaterialDecorator;
+}  // namespace Acts
+
+namespace ActsExamples {
+class IContextDecorator;
+}  // namespace ActsExamples
 
 namespace ActsExamples {
 namespace Telescope {
@@ -25,10 +33,14 @@ namespace Telescope {
 class TelescopeDetectorElement;
 class TelescopeG4DetectorConstruction;
 
-struct TelescopeDetector : public IBaseDetector {
+struct TelescopeDetector {
   using DetectorElement = ActsExamples::Telescope::TelescopeDetectorElement;
   using DetectorElementPtr = std::shared_ptr<DetectorElement>;
   using DetectorStore = std::vector<DetectorElementPtr>;
+
+  using ContextDecorators =
+      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
 
   struct Config {
     std::vector<double> positions{{0, 30, 60, 120, 150, 180}};
@@ -43,14 +55,9 @@ struct TelescopeDetector : public IBaseDetector {
   /// The store of the detector elements (lifetime: job)
   DetectorStore detectorStore;
 
-  void addOptions(ActsExamples::Options::Description& desc) const override;
-
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const boost::program_options::variables_map& vm,
-           std::shared_ptr<const Acts::IMaterialDecorator> mdecorator) override;
-
-  std::pair<ActsExamples::IBaseDetector::TrackingGeometryPtr, ContextDecorators>
-  finalize(const Config& cfg);
+  std::pair<TrackingGeometryPtr, ContextDecorators> finalize(
+      const Config& cfg,
+      const std::shared_ptr<const Acts::IMaterialDecorator>& /*unused*/);
 };
 
 }  // namespace Telescope

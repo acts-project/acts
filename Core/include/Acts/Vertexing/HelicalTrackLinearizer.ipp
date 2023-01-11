@@ -23,8 +23,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
                                                 params.unitDirection(), false);
 
   // Create propagator options
-  auto logger = getDefaultLogger("HelTrkLinProp", Logging::INFO);
-  propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
+  propagator_options_t pOptions(gctx, mctx);
   pOptions.direction = intersection.intersection.pathLength >= 0
                            ? NavigationDirection::Forward
                            : NavigationDirection::Backward;

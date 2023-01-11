@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "Acts/Propagator/detail/abort_condition_signature_check.hpp"
 #include "Acts/Propagator/detail/abort_list_implementation.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
@@ -102,18 +101,12 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   /// @param [in] result is the result object from a certain action
   /// @param [in,out] state is the state object from the propagator
   /// @param [in] stepper Stepper used for the propagation
-  template <typename result_t, typename propagator_state_t, typename stepper_t>
+  template <typename result_t, typename propagator_state_t, typename stepper_t,
+            typename... Args>
   bool operator()(const result_t& result, propagator_state_t& state,
-                  const stepper_t& stepper) const {
-    // clang-format off
-    static_assert(detail::all_of_v<Concepts::abort_condition_signature_check_v<
-                        aborters_t,
-                        propagator_state_t, stepper_t>...>,
-                  "not all aborters support the specified input");
-    // clang-format on
-
-    return detail::abort_list_impl<aborters_t...>::check(tuple(), result, state,
-                                                         stepper);
+                  const stepper_t& stepper, Args&&... args) const {
+    return detail::abort_list_impl<aborters_t...>::check(
+        tuple(), result, state, stepper, std::forward<Args>(args)...);
   }
 };
 

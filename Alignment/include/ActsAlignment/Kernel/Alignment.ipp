@@ -6,6 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+
 template <typename fitter_t>
 template <typename source_link_t, typename start_parameters_t,
           typename fit_options_t>
@@ -17,22 +20,29 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const std::unordered_map<const Acts::Surface*, size_t>& idxedAlignSurfaces,
     const ActsAlignment::AlignmentMask& alignMask,
     Acts::LoggerWrapper logger) const {
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  // Convert to Acts::SourceLink during iteration
+  Acts::SourceLinkAdapterIterator begin{sourcelinks.begin()};
+  Acts::SourceLinkAdapterIterator end{sourcelinks.end()};
+
   // Perform the fit
-  auto fitRes = m_fitter.fit(sourcelinks.begin(), sourcelinks.end(),
-                             sParameters, fitOptions);
+  auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
+
   if (not fitRes.ok()) {
     ACTS_WARNING("Fit failure");
     return fitRes.error();
   }
   // The fit results
-  const auto& fitOutput = fitRes.value();
+  const auto& track = fitRes.value();
   // Calculate the global track parameters covariance with the fitted track
   const auto& globalTrackParamsCov =
       Acts::detail::globalTrackParametersCovariance(
-          *fitOutput.fittedStates, fitOutput.lastMeasurementIndex);
+          tracks.trackStateContainer(), track.tipIndex());
   // Calculate the alignment state
   const auto alignState = detail::trackAlignmentState(
-      gctx, *fitOutput.fittedStates, fitOutput.lastMeasurementIndex,
+      gctx, tracks.trackStateContainer(), track.tipIndex(),
       globalTrackParamsCov, idxedAlignSurfaces, alignMask);
   if (alignState.alignmentDof == 0) {
     ACTS_VERBOSE("No alignment dof on track!");

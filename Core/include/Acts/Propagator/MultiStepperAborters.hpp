@@ -34,9 +34,11 @@ struct MultiStepperSurfaceReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
+  /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
-    return (*this)(state, stepper, *state.navigation.targetSurface);
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const Logger& logger) const {
+    return (*this)(state, stepper, *state.navigation.targetSurface, logger);
   }
 
   /// boolean operator for abort condition without using the result
@@ -47,10 +49,10 @@ struct MultiStepperSurfaceReached {
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for the progation
   /// @param [in] targetSurface The target surface
+  /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const Surface& targetSurface) const {
-    const auto& logger = state.options.logger;
+                  const Surface& targetSurface, const Logger& logger) const {
     bool reached = true;
     const auto oldCurrentSurface = state.navigation.currentSurface;
 
@@ -58,7 +60,8 @@ struct MultiStepperSurfaceReached {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      if (!SurfaceReached{}(singleState, singleStepper, targetSurface)) {
+      if (!SurfaceReached{}(singleState, singleStepper, targetSurface,
+                            logger)) {
         reached = false;
       }
     }

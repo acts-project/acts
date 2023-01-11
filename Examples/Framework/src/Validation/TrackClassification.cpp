@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 
 #include <algorithm>
@@ -74,7 +75,8 @@ void ActsExamples::identifyContributingParticles(
       return true;
     }
     // register all particles that generated this hit
-    const auto& sl = static_cast<const IndexSourceLink&>(state.uncalibrated());
+    const IndexSourceLink& sl =
+        state.uncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
     for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
       increaseHitCount(particleHitCounts, hitParticle.second);

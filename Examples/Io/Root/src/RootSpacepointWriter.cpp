@@ -9,6 +9,7 @@
 #include "ActsExamples/Io/Root/RootSpacepointWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <ios>
 #include <stdexcept>
@@ -60,9 +61,11 @@ ActsExamples::RootSpacepointWriter::~RootSpacepointWriter() {
 ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::endRun() {
   m_outputFile->cd();
   m_outputTree->Write();
+  m_outputFile->Close();
+
   ACTS_VERBOSE("Wrote hits to tree '" << m_cfg.treeName << "' in '"
                                       << m_cfg.filePath << "'");
-  m_outputFile->Close();
+
   return ProcessCode::SUCCESS;
 }
 
@@ -75,14 +78,9 @@ ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::writeT(
   // Get the event number
   m_eventId = ctx.eventNumber;
   for (const auto& sp : spacepoints) {
-    const auto slinkPtr =
-        dynamic_cast<const IndexSourceLink*>(sp.sourceLinks()[0]);
-    if (slinkPtr == nullptr) {
-      ACTS_ERROR("Missing source link for a space point");
-      return ProcessCode::ABORT;
-    }
-    m_measurementId = slinkPtr->index();
-    m_geometryId = slinkPtr->geometryId().value();
+    const auto& slinkPtr = sp.sourceLinks()[0].get<IndexSourceLink>();
+    m_measurementId = slinkPtr.index();
+    m_geometryId = slinkPtr.geometryId().value();
     // write sp position
     m_x = sp.x() / Acts::UnitConstants::mm;
     m_y = sp.y() / Acts::UnitConstants::mm;

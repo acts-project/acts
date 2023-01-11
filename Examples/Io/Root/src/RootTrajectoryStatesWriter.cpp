@@ -24,6 +24,7 @@
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <ios>
+#include <limits>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -219,18 +220,17 @@ ActsExamples::RootTrajectoryStatesWriter::RootTrajectoryStatesWriter(
 }
 
 ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->Close();
-  }
+  m_outputFile->Close();
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write states of trajectories to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
-  }
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  ACTS_INFO("Wrote states of trajectories to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.treeName << "'");
+
   return ProcessCode::SUCCESS;
 }
 
@@ -238,10 +238,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
 
   auto& gctx = ctx.geoContext;
   // Read additional input collections
@@ -319,7 +315,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
         const auto& sl =
-            static_cast<const IndexSourceLink&>(state.uncalibrated());
+            state.uncalibratedSourceLink().template get<IndexSourceLink>();
         const auto hitIdx = sl.index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =
@@ -500,9 +496,12 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
             m_pull_eQOP[ipar].push_back(
                 (parameters[Acts::eBoundQOverP] - truthQOP) /
                 sqrt(covariance(Acts::eBoundQOverP, Acts::eBoundQOverP)));
+            double sigmaTime =
+                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime));
             m_pull_eT[ipar].push_back(
-                (parameters[Acts::eBoundTime] - truthTIME) /
-                sqrt(covariance(Acts::eBoundTime, Acts::eBoundTime)));
+                sigmaTime == 0.0
+                    ? std::numeric_limits<double>::quiet_NaN()
+                    : (parameters[Acts::eBoundTime] - truthTIME) / sigmaTime);
 
             // further track parameter info
             Acts::FreeVector freeParams =

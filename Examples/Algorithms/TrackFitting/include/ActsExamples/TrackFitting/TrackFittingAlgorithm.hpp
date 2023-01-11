@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
@@ -34,8 +35,12 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   // All track fitter functions must return the same type. For now this is the
   // KalmanFitterResult, but maybe in the future it makes sense to generalize
   // this
-  using TrackFitterResult =
-      Acts::Result<Acts::KalmanFitterResult<Acts::VectorMultiTrajectory>>;
+
+  using TrackContainer =
+      Acts::TrackContainer<Acts::VectorTrackContainer,
+                           Acts::VectorMultiTrajectory, std::shared_ptr>;
+
+  using TrackFitterResult = Acts::Result<TrackContainer::TrackProxy>;
 
   /// General options that do not depend on the fitter type, but need to be
   /// handed over by the algorithm
@@ -55,16 +60,15 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   class TrackFitterFunction {
    public:
     virtual ~TrackFitterFunction() = default;
-    virtual TrackFitterResult operator()(
-        const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const GeneralFitterOptions&,
-        std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
+    virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
+                                         const TrackParameters&,
+                                         const GeneralFitterOptions&,
+                                         TrackContainer&) const = 0;
 
     virtual TrackFitterResult operator()(
-        const std::vector<std::reference_wrapper<const IndexSourceLink>>&,
-        const TrackParameters&, const GeneralFitterOptions&,
-        const std::vector<const Acts::Surface*>&,
-        std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
+        const std::vector<Acts::SourceLink>&, const TrackParameters&,
+        const GeneralFitterOptions&, const std::vector<const Acts::Surface*>&,
+        TrackContainer&) const = 0;
   };
 
   struct Config {
