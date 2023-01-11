@@ -47,6 +47,7 @@ class TrackingGeometry {
   /// @param materialDecorator is a dediated decorator that can assign
   ///        surface or volume based material to the TrackingVolume
   /// @param hook Identifier hook to be applied to surfaces
+  /// @param logger instance of a logger (defaulting to the "silent" one)
   TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
                    const IMaterialDecorator* materialDecorator = nullptr,
                    const GeometryIdentifierHook& hook = {},
