@@ -53,7 +53,8 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
   if (materialDecorator != nullptr) {
     materialDecorator->decorate(*rSurface);
   }
-  ACTS_INFO("layerID: " << layerID);
+  ACTS_DEBUG("layerID: " << layerID);
+
   rSurface->assignGeometryId(layerID);
 
   // also find out how the sub structure is defined

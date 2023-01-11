@@ -367,7 +367,7 @@ void Acts::TrackingVolume::closeGeometry(
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
   thisVolume->assignGeometryId(volumeID);
-  ACTS_INFO("volumeID: " << volumeID << ", name: " << volumeName());
+  ACTS_DEBUG("volumeID: " << volumeID << ", name: " << volumeName());
   // insert the volume into the map
   volumeMap[volumeID] = thisVolume;
 

@@ -290,7 +290,7 @@ class Layer : public virtual GeometryObject {
                      LoggerWrapper logger = getDummyLogger());
 };
 
-/// Layers are constructedd with shared_ptr factories, hence the layer array is
+/// Layers are constructed with shared_ptr factories, hence the layer array is
 /// describes as:
 using LayerArray = BinnedArray<LayerPtr>;
 

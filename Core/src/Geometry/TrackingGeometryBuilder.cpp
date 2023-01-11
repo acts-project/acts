@@ -52,8 +52,9 @@ Acts::TrackingGeometryBuilder::trackingGeometry(
     const IMaterialDecorator* materialDecorator =
         m_cfg.materialDecorator ? m_cfg.materialDecorator.get() : nullptr;
     // build and set the TrackingGeometry
-    trackingGeometry.reset(new TrackingGeometry(
-        highestVolume, materialDecorator, m_cfg.geometryIdentifierHook));
+    trackingGeometry.reset(
+        new TrackingGeometry(highestVolume, materialDecorator,
+                             m_cfg.geometryIdentifierHook, logger()));
   }
   // return the geometry to the service
   return (trackingGeometry);

@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <string>
@@ -48,7 +49,8 @@ class TrackingGeometry {
   /// @param hook Identifier hook to be applied to surfaces
   TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
                    const IMaterialDecorator* materialDecorator = nullptr,
-                   const GeometryIdentifierHook& hook = {});
+                   const GeometryIdentifierHook& hook = {},
+                   const Logger& logger = getDummyLogger());
 
   /// Destructor
   ~TrackingGeometry();
