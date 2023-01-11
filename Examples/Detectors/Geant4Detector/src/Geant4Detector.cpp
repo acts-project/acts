@@ -121,8 +121,10 @@ auto ActsExamples::Geant4::Geant4Detector::convertGeant4Volumes(
 
   ACTS_INFO("Found " << g4SurfaceCache.matchedG4Volumes
                      << " matching  Geant4 Physical volumes.");
-  ACTS_INFO("Found " << g4SurfaceCache.convertedSurfaces
-                     << " converted Geant4 Physical volumes.");
+  ACTS_INFO("Found " << g4SurfaceCache.sensitiveSurfaces.size()
+                     << " converted sensitive Geant4 Physical volumes.");
+  ACTS_INFO("Found " << g4SurfaceCache.passiveSurfaces.size()
+                     << " converted passive Geant4 Physical volumes.");
   ACTS_INFO("Found " << g4SurfaceCache.convertedMaterials
                      << " converted Geant4 Material slabs.");
 

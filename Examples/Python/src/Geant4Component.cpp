@@ -58,7 +58,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
   // This is the actual class we're binding
   py::class_<GdmlDetectorConstruction, G4VUserDetectorConstruction>(
-      mod, "GdmlDetectorConstructionImpl");
+      mod, "GdmlDetectorConstructionImpl")
+      .def("Construct", &GdmlDetectorConstruction::Construct);
 
   // This is a python-only factory method that returns the above class.
   // We can apply a return value policy here so that python does NOT assume
@@ -241,7 +242,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
                   .def(py::init<const std::vector<std::string>&, bool>());
 
     using Factory = Acts::Geant4DetectorSurfaceFactory;
-    auto o = py::class_<Factory::Options>(mod, "Options").def(py::init<>());
+    auto o = py::class_<Factory::Options>(mod, "SurfaceFactoryOptions")
+                 .def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(o, Factory::Options);
     ACTS_PYTHON_MEMBER(scaleConversion);
     ACTS_PYTHON_MEMBER(convertMaterial);
@@ -251,6 +253,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_STRUCT_END();
   }
   {
+    py::class_<Acts::Geant4DetectorElement,
+               std::shared_ptr<Acts::Geant4DetectorElement>>
+        å(mod, "Geant4DetectorElement");
+
     using Geant4Detector = ActsExamples::Geant4::Geant4Detector;
 
     auto g =
