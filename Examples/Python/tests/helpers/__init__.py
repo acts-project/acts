@@ -47,6 +47,14 @@ try:
 except ImportError:
     edm4hepEnabled = False
 
+
+try:
+    import acts.examples
+
+    pythia8Enabled = hasattr(acts.examples, "pythia8")
+except ImportError:
+    pythia8Enabled = False
+
 isCI = os.environ.get("CI", "false") == "true"
 
 

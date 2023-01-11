@@ -6,9 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
+#include "Acts/Utilities/BinningType.hpp"
 
 #include <cmath>
 #include <functional>
@@ -634,9 +636,11 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::createTree(
 }
 
 template <typename external_spacepoint_t>
-template <typename input_container_t, typename output_container_t>
+template <typename input_container_t, typename output_container_t,
+          typename callable_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
-    const input_container_t &spacePoints, output_container_t &out_cont) const {
+    const input_container_t &spacePoints, output_container_t &out_cont,
+    callable_t &&extract_coordinates) const {
   /*
    * The template parameters we accept are a little too generic, so we want to
    * run some basic checks to make sure the containers have the correct value
@@ -658,11 +662,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   Acts::Extent rRangeSPExtent;
   std::vector<internal_sp_t *> internalSpacePoints;
   for (const external_spacepoint_t *p : spacePoints) {
+    auto [position, variance] = extract_coordinates(p);
     internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
-        *p, {p->x(), p->y(), p->z()}, {0.0, 0.0},
-        {p->varianceR(), p->varianceZ()}));
+        *p, position, m_options.beamPos, variance));
     // store x,y,z values in extent
-    rRangeSPExtent.extend({p->x(), p->y(), p->z()});
+    rRangeSPExtent.extend(position);
   }
 
   // variable middle SP radial region of interest
@@ -712,13 +716,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
 }
 
 template <typename external_spacepoint_t>
-template <typename input_container_t>
+template <typename input_container_t, typename callable_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
-    const input_container_t &spacePoints) const {
+    const input_container_t &spacePoints,
+    callable_t &&extract_coordinates) const {
   std::vector<seed_t> r;
 
-  createSeeds(spacePoints, r);
+  createSeeds(spacePoints, r, std::forward<callable_t>(extract_coordinates));
 
   return r;
 }

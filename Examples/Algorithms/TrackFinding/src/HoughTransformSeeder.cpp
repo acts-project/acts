@@ -19,6 +19,7 @@
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/TrackFinding/DefaultHoughFunctions.hpp"
 
 #include <stdexcept>
 
@@ -45,28 +46,28 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
   }
 
   if (!foundInput) {
-    ACTS_ERROR("Missing some kind of input");
+    throw std::invalid_argument("Missing some kind of input");
   }
 
   if (m_cfg.outputProtoTracks.empty()) {
-    ACTS_ERROR("Missing hough tracks output collection");
+    throw std::invalid_argument("Missing hough tracks output collection");
   }
   if (m_cfg.inputSourceLinks.empty()) {
-    ACTS_ERROR("Missing source link input collection");
+    throw std::invalid_argument("Missing source link input collection");
   }
 
   if (not m_cfg.trackingGeometry) {
-    ACTS_ERROR("Missing tracking geometry");
+    throw std::invalid_argument("Missing tracking geometry");
   }
 
   if (m_cfg.geometrySelection.empty()) {
-    ACTS_ERROR("Missing geometry selection");
+    throw std::invalid_argument("Missing geometry selection");
   }
   // ensure geometry selection contains only valid inputs
   for (const auto& geoId : m_cfg.geometrySelection) {
     if ((geoId.approach() != 0u) or (geoId.boundary() != 0u) or
         (geoId.sensitive() != 0u)) {
-      ACTS_ERROR(
+      throw std::invalid_argument(
           "Invalid geometry selection: only volume and layer are allowed to be "
           "set");
     }
@@ -116,6 +117,13 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
     m_bins_y.push_back(
         unquant(m_cfg.yMin, m_cfg.yMax, m_cfg.houghHistSize_y, i));
   }
+
+  m_cfg.fieldCorrector
+      .connect<&ActsExamples::DefaultHoughFunctions::fieldCorrectionDefault>();
+  m_cfg.layerIDFinder
+      .connect<&ActsExamples::DefaultHoughFunctions::findLayerIDDefault>();
+  m_cfg.sliceTester
+      .connect<&ActsExamples::DefaultHoughFunctions::inSliceDefault>();
 }
 
 ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
@@ -133,7 +141,8 @@ ActsExamples::ProcessCode ActsExamples::HoughTransformSeeder::execute(
   protoTracks.clear();
 
   // loop over our subregions and run the Hough Transform on each
-  for (auto subregion : m_cfg.subRegions) {
+  for (int subregion : m_cfg.subRegions) {
+    ACTS_DEBUG("Processing subregion " << subregion);
     ActsExamples::HoughHist m_houghHist = createHoughHist(subregion);
 
     for (unsigned y = 0; y < m_cfg.houghHistSize_y; y++) {
@@ -430,7 +439,10 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
   // construct the combined input container of space point pointers from all
   // configured input sources.
   for (const auto& isp : m_cfg.inputSpacePoints) {
-    for (auto& sp : ctx.eventStore.get<SimSpacePointContainer>(isp)) {
+    auto spContainer = ctx.eventStore.get<SimSpacePointContainer>(isp);
+    ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
+                            << isp);
+    for (auto& sp : spContainer) {
       double r = std::hypot(sp.x(), sp.y());
       double z = sp.z();
       float phi = std::atan2(sp.y(), sp.x());
@@ -458,6 +470,9 @@ void ActsExamples::HoughTransformSeeder::addMeasurements(
       ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
   const auto& sourceLinks =
       ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
+
+  ACTS_DEBUG("Inserting " << measurements.size() << " space points from "
+                          << m_cfg.inputMeasurements);
 
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id

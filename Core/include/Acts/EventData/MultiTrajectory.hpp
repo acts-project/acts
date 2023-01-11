@@ -19,7 +19,9 @@
 #include "Acts/Utilities/TypeTraits.hpp"
 
 #include <bitset>
+#include <cstddef>
 #include <cstdint>
+#include <iterator>
 #include <memory>
 #include <optional>
 #include <type_traits>
@@ -271,7 +273,7 @@ class TrackStateProxy {
   ///       not allocated in the source track state proxy.
   template <bool RO = ReadOnly, bool ReadOnlyOther,
             typename = std::enable_if_t<!RO>>
-  void copyFrom(const TrackStateProxy<Trajectory, M, ReadOnlyOther>& other,
+  void copyFrom(TrackStateProxy<Trajectory, M, ReadOnlyOther> other,
                 TrackStatePropMask mask = TrackStatePropMask::All,
                 bool onlyAllocated = true) {
     using PM = TrackStatePropMask;
@@ -314,9 +316,10 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+      component<std::optional<SourceLink>,
+                hashString("uncalibratedSourceLink")>() =
           other.template component<std::optional<SourceLink>,
-                                   hashString("uncalibrated")>();
+                                   hashString("uncalibratedSourceLink")>();
 
       if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
         jacobian() = other.jacobian();
@@ -364,9 +367,10 @@ class TrackStateProxy {
       }
 
       // need to do it this way since other might be nullptr
-      component<std::optional<SourceLink>, hashString("uncalibrated")>() =
+      component<std::optional<SourceLink>,
+                hashString("uncalibratedSourceLink")>() =
           other.template component<std::optional<SourceLink>,
-                                   hashString("uncalibrated")>();
+                                   hashString("uncalibratedSourceLink")>();
 
       if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
           other.template has<hashString("jacobian")>()) {
@@ -728,19 +732,21 @@ class TrackStateProxy {
 
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
-  const SourceLink& uncalibrated() const;
+  const SourceLink& uncalibratedSourceLink() const;
 
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setUncalibrated(const SourceLink& sourceLink) {
-    component<std::optional<SourceLink>, hashString("uncalibrated")>() =
-        sourceLink;
+  void setUncalibratedSourceLink(const SourceLink& sourceLink) {
+    component<std::optional<SourceLink>,
+              hashString("uncalibratedSourceLink")>() = sourceLink;
   }
 
   /// Check if the point has an associated uncalibrated measurement.
   /// @return Whether it is set
-  bool hasUncalibrated() const { return has<hashString("uncalibrated")>(); }
+  bool hasUncalibratedSourceLink() const {
+    return has<hashString("uncalibratedSourceLink")>();
+  }
 
   /// Check if the point has an associated calibrated measurement.
   /// @return Whether it is set
@@ -876,19 +882,7 @@ class TrackStateProxy {
   /// @note The underlying storage is overallocated to MeasurementSizeMax
   /// regardless of this value
   /// @return The number of dimensions
-  IndexType calibratedSize() const {
-    return component<IndexType, hashString("measdim")>();
-  }
-
-  /// Return reference to the (dynamic) number of dimensions stored for this
-  /// measurement.
-  /// @note The underlying storage is overallocated to MeasurementSizeMax
-  /// regardless of this value
-  /// @return The number of dimensions
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  IndexType& calibratedSize() {
-    return component<IndexType, hashString("measdim")>();
-  }
+  IndexType calibratedSize() const { return m_traj->calibratedSize(m_istate); }
 
   /// Overwrite existing measurement data.
   ///
@@ -906,8 +900,6 @@ class TrackStateProxy {
       const Acts::Measurement<BoundIndices, kMeasurementSize>& meas) {
     static_assert(kMeasurementSize <= M,
                   "Input measurement must be within the allowed size");
-
-    calibratedSize() = kMeasurementSize;
 
     assert(has<hashString("calibratedSourceLink")>());
 
@@ -928,7 +920,6 @@ class TrackStateProxy {
 
   void allocateCalibrated(size_t measdim) {
     m_traj->allocateCalibrated(m_istate, measdim);
-    calibratedSize() = measdim;
   }
 
   /// Getter/setter for chi2 value associated with the track state
@@ -1024,6 +1015,12 @@ class TrackStateRange {
   struct Iterator {
     std::optional<ProxyType> proxy;
 
+    using iterator_category = std::forward_iterator_tag;
+    using value_type = ProxyType;
+    using difference_type = std::ptrdiff_t;
+    using pointer = void;
+    using reference = void;
+
     Iterator& operator++() {
       if (!proxy) {
         return *this;
@@ -1084,7 +1081,7 @@ constexpr IndexType kInvalid =
 }  // namespace MultiTrajectoryTraits
 
 template <typename T>
-struct isReadOnlyMultiTrajectory;
+struct IsReadOnlyMultiTrajectory;
 
 /// Store a trajectory of track states with multiple components.
 ///
@@ -1099,7 +1096,7 @@ class MultiTrajectory {
  public:
   using Derived = derived_t;
 
-  static constexpr bool ReadOnly = isReadOnlyMultiTrajectory<Derived>::value;
+  static constexpr bool ReadOnly = IsReadOnlyMultiTrajectory<Derived>::value;
 
   // Pull out type alias and re-expose them for ease of use.
   //
@@ -1223,7 +1220,7 @@ class MultiTrajectory {
   auto&& convertToReadOnly() const {
     auto&& cv = self().convertToReadOnly_impl();
     static_assert(
-        isReadOnlyMultiTrajectory<decltype(cv)>::value,
+        IsReadOnlyMultiTrajectory<decltype(cv)>::value,
         "convertToReadOnly_impl does not return something that reports "
         "being ReadOnly.");
     return cv;
@@ -1379,6 +1376,13 @@ class MultiTrajectory {
     return self().template measurementCovariance_impl<measdim>(covIdx);
   }
 
+  /// Get the calibrated measurement size for a track state
+  /// @param istate The track state
+  /// @return the calibrated size
+  IndexType calibratedSize(IndexType istate) const {
+    return self().calibratedSize_impl(istate);
+  }
+
   /// Share a shareable component from between track state.
   /// @param iself The track state index to share "into"
   /// @param iother The track state index to share from
@@ -1449,6 +1453,11 @@ class MultiTrajectory {
     return *std::any_cast<const T*>(self().component_impl(key, istate));
   }
 
+  /// Allocate storage for a calibrated measurement of specified dimension
+  /// @param istate The track state to store for
+  /// @param measdim the dimension of the measurement to store
+  /// @note Is a noop if the track state already has an allocation
+  ///       an the dimension is the same.
   void allocateCalibrated(IndexType istate, size_t measdim) {
     self().allocateCalibrated_impl(istate, measdim);
   }
