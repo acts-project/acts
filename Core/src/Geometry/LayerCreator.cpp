@@ -64,15 +64,15 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   ACTS_VERBOSE(" - from R min/max   = " << protoLayer.min(binR, false) << " / "
                                         << protoLayer.max(binR, false));
   ACTS_VERBOSE(" - with R thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binR].first
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binR][0u]
                                         << " / "
-                                        << protoLayer.envelope[binR].second);
+                                        << protoLayer.envelope[binR][1u]);
 
   ACTS_VERBOSE(" - with z min/max   = "
                << protoLayer.min(binZ, false) << " (-"
-               << protoLayer.envelope[binZ].first << ") / "
+               << protoLayer.envelope[binZ][0u] << ") / "
                << protoLayer.max(binZ, false) << " (+"
-               << protoLayer.envelope[binZ].second << ")");
+               << protoLayer.envelope[binZ][1u] << ")");
 
   ACTS_VERBOSE(" - z center         = " << layerZ);
   ACTS_VERBOSE(" - halflength z     = " << layerHalfZ);
@@ -138,14 +138,14 @@ Acts::MutableLayerPtr Acts::LayerCreator::cylinderLayer(
   ACTS_VERBOSE(" - from R min/max   = " << protoLayer.min(binR, false) << " / "
                                         << protoLayer.max(binR, false));
   ACTS_VERBOSE(" - with R thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binR].first
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binR][0u]
                                         << " / "
-                                        << protoLayer.envelope[binR].second);
+                                        << protoLayer.envelope[binR][1u]);
   ACTS_VERBOSE(" - with z min/max   = "
                << protoLayer.min(binZ, false) << " (-"
-               << protoLayer.envelope[binZ].first << ") / "
+               << protoLayer.envelope[binZ][0u] << ") / "
                << protoLayer.max(binZ, false) << " (+"
-               << protoLayer.envelope[binZ].second << ")");
+               << protoLayer.envelope[binZ][1u] << ")");
   ACTS_VERBOSE(" - z center         = " << layerZ);
   ACTS_VERBOSE(" - halflength z     = " << layerHalfZ);
 
@@ -208,14 +208,14 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   ACTS_VERBOSE(" - from Z min/max   = " << protoLayer.min(binZ, false) << " / "
                                         << protoLayer.max(binZ, false));
   ACTS_VERBOSE(" - with Z thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binZ].first
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binZ][0u]
                                         << " / "
-                                        << protoLayer.envelope[binZ].second);
+                                        << protoLayer.envelope[binZ][1u]);
   ACTS_VERBOSE(" - with R min/max   = "
                << protoLayer.min(binR, false) << " (-"
-               << protoLayer.envelope[binR].first << ") / "
+               << protoLayer.envelope[binR][0u] << ") / "
                << protoLayer.max(binR, false) << " (+"
-               << protoLayer.envelope[binR].second << ")");
+               << protoLayer.envelope[binR][1u] << ")");
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.min(binPhi, false)
                                         << " / "
                                         << protoLayer.max(binPhi, false));
@@ -272,14 +272,14 @@ Acts::MutableLayerPtr Acts::LayerCreator::discLayer(
   ACTS_VERBOSE(" - from Z min/max   = " << protoLayer.min(binZ, false) << " / "
                                         << protoLayer.max(binZ, false));
   ACTS_VERBOSE(" - with Z thickness = " << layerThickness);
-  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binZ].first
+  ACTS_VERBOSE("   - incl envelope  = " << protoLayer.envelope[binZ][0u]
                                         << " / "
-                                        << protoLayer.envelope[binZ].second);
+                                        << protoLayer.envelope[binZ][1u]);
   ACTS_VERBOSE(" - with R min/max   = "
                << protoLayer.min(binR, false) << " (-"
-               << protoLayer.envelope[binR].first << ") / "
+               << protoLayer.envelope[binR][0u] << ") / "
                << protoLayer.max(binR, false) << " (+"
-               << protoLayer.envelope[binR].second << ")");
+               << protoLayer.envelope[binR][1u] << ")");
   ACTS_VERBOSE(" - with phi min/max = " << protoLayer.min(binPhi, false)
                                         << " / "
                                         << protoLayer.max(binPhi, false));

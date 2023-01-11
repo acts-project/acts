@@ -23,6 +23,7 @@
 #include "ActsExamples/Validation/TrackClassification.hpp"
 
 #include <ios>
+#include <limits>
 #include <stdexcept>
 
 #include <TFile.h>
@@ -333,7 +334,11 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           const auto& covariance = *boundParam.covariance();
           for (unsigned int i = 0; i < Acts::eBoundSize; ++i) {
             error[i] = std::sqrt(covariance(i, i));
-            pull[i] = res[i] / error[i];
+            if (error[i] != 0.0) {
+              pull[i] = res[i] / error[i];
+            } else {
+              pull[i] = std::numeric_limits<double>::quiet_NaN();
+            }
           }
         }
       }

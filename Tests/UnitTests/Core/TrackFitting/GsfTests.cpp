@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
   auto options = makeDefaultGsfOptions();
 
   tester.test_ZeroFieldNoSurfaceForward(gsfZero, options, multi_pars, rng, true,
-                                        false);
+                                        false, false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
@@ -135,7 +135,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceForward) {
   auto options = makeDefaultGsfOptions();
 
   tester.test_ZeroFieldWithSurfaceForward(gsfZero, options, multi_pars, rng,
-                                          true, false);
+                                          true, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceBackward) {
   auto options = makeDefaultGsfOptions();
 
   tester.test_ZeroFieldWithSurfaceBackward(gsfZero, options, multi_pars, rng,
-                                           true, false);
+                                           true, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
@@ -151,21 +151,23 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithSurfaceAtExit) {
   auto options = makeDefaultGsfOptions();
 
   tester.test_ZeroFieldWithSurfaceBackward(gsfZero, options, multi_pars, rng,
-                                           true, false);
+                                           true, false, false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldShuffled) {
   auto multi_pars = makeParameters();
   auto options = makeDefaultGsfOptions();
 
-  tester.test_ZeroFieldShuffled(gsfZero, options, multi_pars, rng, true, false);
+  tester.test_ZeroFieldShuffled(gsfZero, options, multi_pars, rng, true, false,
+                                false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithHole) {
   auto options = makeDefaultGsfOptions();
   auto multi_pars = makeParameters();
 
-  tester.test_ZeroFieldWithHole(gsfZero, options, multi_pars, rng, true, false);
+  tester.test_ZeroFieldWithHole(gsfZero, options, multi_pars, rng, true, false,
+                                false);
 }
 
 BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
@@ -179,7 +181,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
   auto multi_pars = makeParameters();
 
   tester.test_ZeroFieldWithOutliers(gsfZero, options, multi_pars, rng, true,
-                                    false);
+                                    false, false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
