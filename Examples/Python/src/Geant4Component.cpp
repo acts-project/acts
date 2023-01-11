@@ -254,8 +254,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   }
   {
     py::class_<Acts::Geant4DetectorElement,
-               std::shared_ptr<Acts::Geant4DetectorElement>>
-        å(mod, "Geant4DetectorElement");
+               std::shared_ptr<Acts::Geant4DetectorElement>>(
+        mod, "Geant4DetectorElement");
 
     using Geant4Detector = ActsExamples::Geant4::Geant4Detector;
 
