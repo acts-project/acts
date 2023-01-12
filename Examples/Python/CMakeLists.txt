@@ -109,7 +109,7 @@ endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   pybind11_add_module(ActsPythonBindingsGeant4 src/Geant4Component.cpp)
   target_link_libraries(ActsPythonBindingsGeant4 PUBLIC 
-    ActsExamplesGeant4
+    ActsExamplesGeant4 ActsExamplesDetectorGeant4
     ActsPythonUtilities)
   add_dependencies(ActsPythonBindings ActsPythonBindingsGeant4)
 

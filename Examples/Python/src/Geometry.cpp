@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -32,6 +34,11 @@ void addGeometry(Context& ctx) {
              [](Acts::TrackingGeometry& self, py::function& func) {
                self.visitSurfaces(func);
              });
+  }
+
+  {
+    py::class_<Acts::Experimental::Detector,
+               std::shared_ptr<Acts::Experimental::Detector>>(m, "Detector");
   }
 }
 
