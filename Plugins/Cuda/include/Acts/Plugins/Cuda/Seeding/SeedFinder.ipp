@@ -26,6 +26,20 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::SeedFinder(
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in "
         "Cuda/Seeding/SeedFinder");
+  if (std::numeric_limits<decltype(m_config.deltaRMaxTopSP)>::has_quiet_NaN) {
+        throw std::runtime_error(("Value of deltaRMaxTopSP was not initialised");
+  }
+  if (std::numeric_limits<decltype(m_config.deltaRMinTopSP)>::has_quiet_NaN) {
+        throw std::runtime_error(("Value of deltaRMinTopSP was not initialised");
+  }
+  if (std::numeric_limits<decltype(
+          m_config.deltaRMaxBottomSP)>::has_quiet_NaN) {
+                throw std::runtime_error(("Value of deltaRMaxBottomSP was not initialised");
+  }
+  if (std::numeric_limits<decltype(
+          m_config.deltaRMinBottomSP)>::has_quiet_NaN) {
+        throw std::runtime_error(("Value of deltaRMinBottomSP was not initialised");
+  }
 }
 
 // CUDA seed finding
