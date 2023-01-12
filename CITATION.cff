@@ -67,6 +67,25 @@ authors:
   family-names: Garg
   name-particle: Bala
   affiliation: Stanford University
+- given-names: Andreas
+  family-names: Stefl
+  affiliation: CERN / TU Wien
+- given-names: Luis Falda
+  family-names: Coelho
+  affiliation: CERN / University of Coimbra
+  orcid: https://orcid.org/0000-0002-2298-3605
+- given-names: Alexander J.
+  family-names: Pfleger
+  affiliation: CERN / University of Graz
+  orcid: https://orcid.org/0000-0001-5524-7738
+- given-names: Guilherme
+  family-names: Almeida
+  affiliation: University of Lisbon
+  orcid: https://orcid.org/0000-0002-4257-4278
+- given-names: Stephen Nicholas
+  family-names: Swatman
+  affiliation: CERN / University of Amsterdam
+  orcid: https://orcid.org/0000-0002-3747-3229
 version: 10.0.0
 date-released: 2021-07-28
 repository-code: https://github.com/acts-project/acts

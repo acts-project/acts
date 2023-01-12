@@ -1,0 +1,82 @@
+// This file is part of the Acts project.
+//
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
+//
+// This Source Code Form is subject to the terms of the Mozilla Public
+// License, v. 2.0. If a copy of the MPL was not distributed with this
+// file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#pragma once
+
+#include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
+#include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
+
+#include <memory>
+#include <tuple>
+#include <vector>
+
+class G4VPhysicalVolume;
+
+namespace Acts {
+class TrackingGeometry;
+namespace Experimental {
+class Detector;
+}
+}  // namespace Acts
+
+namespace ActsExamples {
+class IContextDecorator;
+
+namespace Geant4 {
+struct Geant4Detector {
+  /// Nested configuration struct
+  struct Config {
+    /// The detector/geometry name
+    std::string name = "";
+    /// The Geant4 world volume
+    const G4VPhysicalVolume* g4World = nullptr;
+    /// The Converter options: detector surfaces
+    Acts::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
+    /// The corresponding ProtoDetector
+    Acts::ProtoDetector protoDetector;
+    /// Logging level of the child tools
+    Acts::Logging::Level logLevel = Acts::Logging::INFO;
+  };
+
+  using ContextDecorators =
+      std::vector<std::shared_ptr<ActsExamples::IContextDecorator>>;
+
+  using TrackingGeometryPtr = std::shared_ptr<const Acts::TrackingGeometry>;
+
+  using DetectorPtr = std::shared_ptr<Acts::Experimental::Detector>;
+
+  using Surfaces = std::vector<std::shared_ptr<Acts::Surface>>;
+
+  using DetectorElements =
+      std::vector<std::shared_ptr<Acts::Geant4DetectorElement>>;
+
+  /// @brief Construct an Acts::Detector from a Geant4 world volume
+  /// @param cfg the configuration of the Geant4 detector
+  /// @return a tuple of an Acts::Detector object, a ContextDecorator & the created detector elements
+  std::tuple<DetectorPtr, ContextDecorators, DetectorElements>
+  constructDetector(const Geant4Detector::Config& cfg);
+
+  /// @brief Construct a TrackingGeometry from a Geant4 world volume using the KDTreeTrackingGeometryBuilder builder
+  ///
+  /// @param cfg the configuration of the Geant4 detector
+  /// @param kdtCfg the configuration of the KDTreeTrackingGeometryBuilder
+  ///
+  /// @return a tuple of an Acts::TrackingGeometry object,  a ContextDecorator & the created detector elements
+  std::tuple<TrackingGeometryPtr, ContextDecorators, DetectorElements>
+  constructTrackingGeometry(const Geant4Detector::Config& cfg);
+
+  /// @brief Convert Geant4VPhysicalVolume objects into Acts components
+  ///
+  /// @param cfg the configuration of the Geant4 detector
+  ///
+  /// @return a tuple of surfaces and detector elements
+  std::tuple<Surfaces, DetectorElements> convertGeant4Volumes(
+      const Geant4Detector::Config& cfg) const;
+};
+}  // namespace Geant4
+}  // namespace ActsExamples
