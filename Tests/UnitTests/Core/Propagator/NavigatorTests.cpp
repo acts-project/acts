@@ -118,7 +118,7 @@ struct PropagatorState {
     Intersection3D::Status updateSurfaceStatus(State& state,
                                                const Surface& surface,
                                                const BoundaryCheck& bcheck,
-                                               LoggerWrapper logger) const {
+                                               const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
                                                         bcheck, logger);
     }
