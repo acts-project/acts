@@ -87,7 +87,7 @@ Acts::AdaptiveGridTrackDensity<trkGridSize>::addTrack(
 
   // Check if current track does affect grid density
   // in central bins at z-axis
-  if (std::abs(dOffset) > trkGridSize - 1) {
+  if (std::abs(dOffset) > (trkGridSize - 1) / 2.) {
     return {0, trackGrid};
   }
 
