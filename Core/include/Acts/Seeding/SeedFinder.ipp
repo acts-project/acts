@@ -23,16 +23,16 @@ SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
         "SeedFinderConfig not in ACTS internal units in SeedFinder");
   }
   if (std::numeric_limits<decltype(config.deltaRMaxTopSP)>::has_quiet_NaN) {
-    throw std::runtime_error(("Value of deltaRMaxTopSP was not initialised");
+    throw std::runtime_error("Value of deltaRMaxTopSP was not initialised");
   }
   if (std::numeric_limits<decltype(config.deltaRMinTopSP)>::has_quiet_NaN) {
-    throw std::runtime_error(("Value of deltaRMinTopSP was not initialised");
+    throw std::runtime_error("Value of deltaRMinTopSP was not initialised");
   }
   if (std::numeric_limits<decltype(config.deltaRMaxBottomSP)>::has_quiet_NaN) {
-    throw std::runtime_error(("Value of deltaRMaxBottomSP was not initialised");
+    throw std::runtime_error("Value of deltaRMaxBottomSP was not initialised");
   }
   if (std::numeric_limits<decltype(config.deltaRMinBottomSP)>::has_quiet_NaN) {
-    throw std::runtime_error(("Value of deltaRMinBottomSP was not initialised");
+    throw std::runtime_error("Value of deltaRMinBottomSP was not initialised");
   }
 }
 

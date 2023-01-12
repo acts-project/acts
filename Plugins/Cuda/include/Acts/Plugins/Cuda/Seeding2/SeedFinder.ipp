@@ -55,19 +55,19 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
         "Cuda/Seeding2/SeedFinder");
   if (std::numeric_limits<decltype(
           m_commonConfig.deltaRMaxTopSP)>::has_quiet_NaN) {
-                throw std::runtime_error(("Value of deltaRMaxTopSP was not initialised");
+    throw std::runtime_error("Value of deltaRMaxTopSP was not initialised");
   }
   if (std::numeric_limits<decltype(
           m_commonConfig.deltaRMinTopSP)>::has_quiet_NaN) {
-                throw std::runtime_error(("Value of deltaRMinTopSP was not initialised");
+    throw std::runtime_error("Value of deltaRMinTopSP was not initialised");
   }
   if (std::numeric_limits<decltype(
           m_commonConfig.deltaRMaxBottomSP)>::has_quiet_NaN) {
-                throw std::runtime_error(("Value of deltaRMaxBottomSP was not initialised");
+    throw std::runtime_error("Value of deltaRMaxBottomSP was not initialised");
   }
   if (std::numeric_limits<decltype(
           m_commonConfig.deltaRMinBottomSP)>::has_quiet_NaN) {
-                throw std::runtime_error(("Value of deltaRMinBottomSP was not initialised");
+    throw std::runtime_error("Value of deltaRMinBottomSP was not initialised");
   }
 
   // Tell the user what CUDA device will be used by the object.
