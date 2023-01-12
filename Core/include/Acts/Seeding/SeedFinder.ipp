@@ -22,8 +22,7 @@ SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in SeedFinder");
   }
-	float a = std::numeric_limits<float>::quiet_NaN();
-  if (isnan(a)) {
+  if (isnan(config.deltaRMaxTopSP)) {
     throw std::runtime_error("Value of deltaRMaxTopSP was not initialised");
   }
   if (isnan(config.deltaRMinTopSP)) {
