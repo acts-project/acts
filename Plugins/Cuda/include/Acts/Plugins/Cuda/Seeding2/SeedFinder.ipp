@@ -56,10 +56,10 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
   if (std::isnan(m_commonConfig.deltaRMaxTopSP)) {
     throw std::runtime_error("Value of deltaRMaxTopSP was not initialised");
   }
-  if (std::isnan(m_commonConfig.deltaRMinTopSP) {
+  if (std::isnan(m_commonConfig.deltaRMinTopSP)) {
     throw std::runtime_error("Value of deltaRMinTopSP was not initialised");
   }
-  if (std::isnan(m_commonConfig.deltaRMaxBottomSP) {
+  if (std::isnan(m_commonConfig.deltaRMaxBottomSP)) {
     throw std::runtime_error("Value of deltaRMaxBottomSP was not initialised");
   }
   if (std::isnan(m_commonConfig.deltaRMinBottomSP)) {
