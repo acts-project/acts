@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Check if position of maximum is correct
   auto maxRes = grid.getMaxZPosition(mainGrid);
-  int maxBin = (*maxRes / binSize) + mainGridSize / 2;
+  int maxBin = static_cast<int>((*maxRes / binSize) + mainGridSize / 2);
   BOOST_CHECK_EQUAL(maxBin, 0);
 
   // Check if error is thrown for empty grid
