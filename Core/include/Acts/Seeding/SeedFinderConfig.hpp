@@ -21,6 +21,9 @@ namespace Acts {
 template <typename T>
 class SeedFilter;
 
+template<typename T>
+class SeedFinderOrthogonalConfig;
+
 template <typename SpacePoint>
 struct SeedFinderConfig {
   std::shared_ptr<Acts::SeedFilter<SpacePoint>> seedFilter;
@@ -266,6 +269,27 @@ struct SeedFinderOptions {
         std::pow(config.highland / options.pTPerHelixRadius, 2);
     options.sigmapT2perRadius =
         options.pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
+    return options;
+  }
+  template <typename SpacePoint>
+  SeedFinderOptions calculateDerivedQuantities(
+      const SeedFinderOrthogonalConfig<SpacePoint>& config) {
+    if (!isInInternalUnits) {
+      throw std::runtime_error(
+			       "Derived quantities in SeedFinderOptions can only be calculated from "
+			       "Acts internal units");
+    }
+    SeedFinderOptions options = *this;
+    // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
+    // millimeter
+    // TODO: change using ACTS units
+    options.pTPerHelixRadius = 300. * options.bFieldInZ;
+    options.minHelixDiameter2 =
+      std::pow(config.minPt * 2 / options.pTPerHelixRadius, 2);
+    options.pT2perRadius =
+      std::pow(config.highland / options.pTPerHelixRadius, 2);
+    options.sigmapT2perRadius =
+      options.pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
     return options;
   }
 };

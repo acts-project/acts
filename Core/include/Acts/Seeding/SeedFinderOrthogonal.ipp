@@ -212,7 +212,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
       // the distance of the straight line from the origin (radius of the
       // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
       // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-      if ((bCoef * bCoef) > (1 + aCoef * aCoef) / m_config.minHelixDiameter2) {
+      if ((bCoef * bCoef) > (1 + aCoef * aCoef) / m_options.minHelixDiameter2) {
         return false;
       }
     }
@@ -225,23 +225,7 @@ template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
     const SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
     const SeedFinderOptions &options)
-    : m_config(config.toInternalUnits()), m_options(options.toInternalUnits()) {
-  // calculation of scattering using the highland formula
-  // convert pT to p once theta angle is known
-  m_config.highland = 13.6 * std::sqrt(config.radLengthPerSeed) *
-                      (1 + 0.038 * std::log(config.radLengthPerSeed));
-  float maxScatteringAngle = config.highland / config.minPt;
-  m_config.maxScatteringAngle2 = maxScatteringAngle * maxScatteringAngle;
-  // helix radius in homogeneous magnetic field. Units are Kilotesla, MeV and
-  // millimeter
-  // TODO: change using ACTS units
-  m_config.pTPerHelixRadius = 300. * m_options.bFieldInZ;
-  m_config.minHelixDiameter2 =
-      std::pow(config.minPt * 2 / config.pTPerHelixRadius, 2);
-  m_config.pT2perRadius =
-      std::pow(config.highland / config.pTPerHelixRadius, 2);
-  m_config.sigmapT2perRadius =
-      config.pT2perRadius * std::pow(2 * config.sigmaScattering, 2);
+    : m_config(config), m_options(options) {
 }
 
 template <typename external_spacepoint_t>
@@ -391,16 +375,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       float B2 = B * B;
       // sqrt(S2)/B = 2 * helixradius
       // calculated radius must not be smaller than minimum radius
-      if (S2 < B2 * m_config.minHelixDiameter2) {
+      if (S2 < B2 * m_options.minHelixDiameter2) {
         continue;
       }
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
       float iHelixDiameter2 = B2 / S2;
       // calculate scattering for p(T) calculated from seed curvature
-      float pT2scatter = 4 * iHelixDiameter2 * m_config.pT2perRadius;
+      float pT2scatter = 4 * iHelixDiameter2 * m_options.pT2perRadius;
       // if pT > maxPtScattering, calculate allowed scattering angle using
       // maxPtScattering instead of pt.
-      float pT = m_config.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+      float pT = m_options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
       if (pT > m_config.maxPtScattering) {
         float pTscatter = m_config.highland / m_config.maxPtScattering;
         pT2scatter = pTscatter * pTscatter;
