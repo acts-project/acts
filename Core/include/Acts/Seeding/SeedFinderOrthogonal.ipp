@@ -225,8 +225,7 @@ template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
     const SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
     const SeedFinderOptions &options)
-    : m_config(config), m_options(options) {
-}
+    : m_config(config), m_options(options) {}
 
 template <typename external_spacepoint_t>
 template <typename output_container_t>

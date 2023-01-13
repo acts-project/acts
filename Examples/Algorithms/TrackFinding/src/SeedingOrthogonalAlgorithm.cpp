@@ -46,8 +46,11 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
       std::make_unique<Acts::SeedFilter<SimSpacePoint>>(
           Acts::SeedFilter<SimSpacePoint>(m_cfg.seedFilterConfig));
 
-  m_cfg.seedFinderConfig = m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
-  m_cfg.seedFinderOptions = m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(m_cfg.seedFinderConfig);
+  m_cfg.seedFinderConfig =
+      m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
+  m_cfg.seedFinderOptions =
+      m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
+          m_cfg.seedFinderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
