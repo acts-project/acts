@@ -13,24 +13,30 @@
 template <typename SpacePoint>
 std::unique_ptr<Acts::SpacePointGrid<SpacePoint>>
 Acts::SpacePointGridCreator::createGrid(
-    const Acts::SpacePointGridConfig& config) {
+    const Acts::SpacePointGridConfig& config,
+    const Acts::SpacePointGridOptions& options) {
   if (not config.isInInternalUnits) {
     throw std::runtime_error(
         "SpacePointGridConfig not in ACTS internal units in "
+        "SpacePointGridCreator::createGrid");
+  }
+  if (not options.isInInternalUnits) {
+    throw std::runtime_error(
+        "SpacePointGridOptions not in ACTS internal units in "
         "SpacePointGridCreator::createGrid");
   }
   using AxisScalar = Acts::Vector3::Scalar;
 
   int phiBins = 0;
   // for no magnetic field, create 100 phi-bins
-  if (config.bFieldInZ == 0) {
+  if (options.bFieldInZ == 0) {
     phiBins = 100;
   } else {
     // calculate circle intersections of helix and max detector radius
     float minHelixRadius =
         config.minPt /
-        (300. * config.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T]) =
-                                    // pT[MeV] / (300 *Bz[kT])
+        (300. * options.bFieldInZ);  // in mm -> R[mm] =pT[GeV] / (3·10−4×B[T])
+                                     // = pT[MeV] / (300 *Bz[kT])
 
     // sanity check: if yOuter takes the square root of a negative number
     if (minHelixRadius < config.rMax / 2) {

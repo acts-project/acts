@@ -277,7 +277,6 @@ def addSeeding(
                 spacePointGridConfigArg,
                 logLevel,
             )
-
         elif seedingAlgorithm == SeedingAlgorithm.Orthogonal:
             logger.info("Using orthogonal seeding")
             inputProtoTracks, inputSeeds = addOrthogonalSeeding(
@@ -524,7 +523,6 @@ def addStandardSeeding(
 
     gridConfig = acts.SpacePointGridConfig(
         **acts.examples.defaultKWArgs(
-            bFieldInZ=seedFinderOptions.bFieldInZ,
             minPt=seedFinderConfig.minPt,
             rMax=(
                 seedFinderConfig.rMax
@@ -547,6 +545,12 @@ def addStandardSeeding(
         )
     )
 
+    gridOptions = acts.SpacePointGridOptions(
+        **acts.examples.defaultKWArgs(
+            bFieldInZ=seedFinderOptions.bFieldInZ,
+        )
+    )
+
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
@@ -559,6 +563,7 @@ def addStandardSeeding(
             numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
         ),
         gridConfig=gridConfig,
+        gridOptions=gridOptions,
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
