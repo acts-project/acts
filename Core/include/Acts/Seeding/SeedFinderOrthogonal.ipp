@@ -225,7 +225,23 @@ template <typename external_spacepoint_t>
 SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
     const SeedFinderOrthogonalConfig<external_spacepoint_t> &config,
     const SeedFinderOptions &options)
-    : m_config(config), m_options(options) {}
+    : m_config(config), m_options(options) {
+  // Oblige the user to pass objects already in Internal Units
+  // This is beacuse the config object can be set during initialization
+  // and then never changed again during the entire execution.
+  // Thus it will already have derived variables computed, and be a constant
+  // object
+  if (not m_config.isInInternalUnits) {
+    throw std::runtime_error(
+        "SeedFinderOrthogonalConfig not in ACTS internal units in "
+        "SeedFinderOrthogonal");
+  }
+  if (not m_options.isInInternalUnits) {
+    throw std::runtime_error(
+        "SeedfinderOptions is not in ACTS internal units in "
+        "SeedFinderOrthogonal");
+  }
+}
 
 template <typename external_spacepoint_t>
 template <typename output_container_t>

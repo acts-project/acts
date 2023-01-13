@@ -22,7 +22,7 @@ template <typename T>
 class SeedFilter;
 
 template <typename T>
-class SeedFinderOrthogonalConfig;
+struct SeedFinderOrthogonalConfig;
 
 template <typename SpacePoint>
 struct SeedFinderConfig {
@@ -209,6 +209,11 @@ struct SeedFinderConfig {
     return config;
   }
   SeedFinderConfig calculateDerivedQuantities() const {
+    if (!isInInternalUnits) {
+      throw std::runtime_error(
+          "Derived quantities in SeedFinderConfig can only be calculated from "
+          "Acts internal units");
+    }
     SeedFinderConfig config = *this;
     // calculation of scattering using the highland formula
     // convert pT to p once theta angle is known
