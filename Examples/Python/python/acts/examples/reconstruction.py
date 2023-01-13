@@ -404,7 +404,6 @@ def addSeeding(
 
             gridConfig = acts.SpacePointGridConfig(
                 **acts.examples.defaultKWArgs(
-                    bFieldInZ=seedFinderOptions.bFieldInZ,
                     minPt=seedFinderConfig.minPt,
                     rMax=(
                         seedFinderConfig.rMax
@@ -427,6 +426,12 @@ def addSeeding(
                 )
             )
 
+            gridOptions = acts.SpacePointGridOptions(
+                **acts.examples.defaultKWArgs(
+                    bFieldInZ=seedFinderOptions.bFieldInZ,
+                )
+            )
+
             seedingAlg = acts.examples.SeedingAlgorithm(
                 level=customLogLevel(),
                 inputSpacePoints=[spAlg.config.outputSpacePoints],
@@ -439,6 +444,7 @@ def addSeeding(
                     numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
                 ),
                 gridConfig=gridConfig,
+                gridOptions=gridOptions,
                 seedFilterConfig=seedFilterConfig,
                 seedFinderConfig=seedFinderConfig,
                 seedFinderOptions=seedFinderOptions,
