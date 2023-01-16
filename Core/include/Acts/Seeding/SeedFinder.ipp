@@ -20,6 +20,18 @@ SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
     throw std::runtime_error(
         "SeedFinderConfig not in ACTS internal units in SeedFinder");
   }
+  if (std::isnan(config.deltaRMaxTopSP)) {
+    throw std::runtime_error("Value of deltaRMaxTopSP was not initialised");
+  }
+  if (std::isnan(config.deltaRMinTopSP)) {
+    throw std::runtime_error("Value of deltaRMinTopSP was not initialised");
+  }
+  if (std::isnan(config.deltaRMaxBottomSP)) {
+    throw std::runtime_error("Value of deltaRMaxBottomSP was not initialised");
+  }
+  if (std::isnan(config.deltaRMinBottomSP)) {
+    throw std::runtime_error("Value of deltaRMinBottomSP was not initialised");
+  }
 }
 
 template <typename external_spacepoint_t, typename platform_t>
