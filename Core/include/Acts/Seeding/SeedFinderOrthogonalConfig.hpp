@@ -109,7 +109,8 @@ struct SeedFinderOrthogonalConfig {
   SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
     if (not isInInternalUnits) {
       throw std::runtime_error(
-          "SeedFinderOrthogonalConfig not in ACTS internal units in calculateDerivedQuantities");
+          "SeedFinderOrthogonalConfig not in ACTS internal units in "
+          "calculateDerivedQuantities");
     }
     SeedFinderOrthogonalConfig config = *this;
     // calculation of scattering using the highland formula
@@ -123,7 +124,8 @@ struct SeedFinderOrthogonalConfig {
   SeedFinderOrthogonalConfig toInternalUnits() const {
     if (isInInternalUnits) {
       throw std::runtime_error(
-          "SeedFinderOrthogonalConfig already in ACTS internal units in toInternalUnits");
+          "SeedFinderOrthogonalConfig already in ACTS internal units in "
+          "toInternalUnits");
     }
     using namespace Acts::UnitLiterals;
     SeedFinderOrthogonalConfig config = *this;

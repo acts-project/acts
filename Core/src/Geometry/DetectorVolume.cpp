@@ -80,6 +80,7 @@ void Acts::Experimental::DetectorVolume::construct(
   auto portalSurfaces =
       portalGenerator(transform(gctx), *(m_bounds.get()), getSharedPtr());
   m_portals = ObjectStore<std::shared_ptr<Portal>>(portalSurfaces);
+  createBoundingBox(gctx);
 }
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
@@ -190,4 +191,31 @@ void Acts::Experimental::DetectorVolume::closePortals() {
   for (auto& v : m_volumes.internal) {
     v->closePortals();
   }
+}
+
+void Acts::Experimental::DetectorVolume::createBoundingBox(
+    const GeometryContext& gctx) {
+  std::vector<Vector3> vertices;
+  for (auto p : m_portals.external) {
+    auto surface = p->surface().polyhedronRepresentation(gctx, 1);
+    auto pVertices = surface.vertices;
+    for (const auto& v : pVertices) {
+      vertices.push_back(v);
+    }
+  }
+  Acts::Vector3 vmin = Acts::Vector3::Zero();
+  Acts::Vector3 vmax = Acts::Vector3::Zero();
+  for (const auto& v : vertices) {
+    vmin = vmin.cwiseMin(v);
+    vmax = vmax.cwiseMax(v);
+  }
+  std::shared_ptr<Acts::Experimental::DetectorVolume::BoundingBox> box =
+      std::make_shared<Acts::Experimental::DetectorVolume::BoundingBox>(
+          this, vmin, vmax);
+  m_boundingBox = box;
+}
+
+const Acts::Experimental::DetectorVolume::BoundingBox&
+Acts::Experimental::DetectorVolume::getBoundingBox() const {
+  return *m_boundingBox;
 }

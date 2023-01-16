@@ -34,7 +34,7 @@ namespace detail {
 template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
-  std::shared_ptr<traj_t> fittedStates;
+  traj_t* fittedStates{nullptr};
 
   /// The current top index of the MultiTrajectory
   MultiTrajectoryTraits::IndexType currentTip = MultiTrajectoryTraits::kInvalid;
@@ -107,7 +107,11 @@ struct GsfActor {
     /// checking the navigation direction, because in principle the fitter can
     /// be started backwards in the first pass
     bool inReversePass = false;
+
+    const Logger* logger{nullptr};
   } m_cfg;
+
+  const Logger& logger() const { return *m_cfg.logger; }
 
   /// Stores meta information about the components
   struct MetaCache {
@@ -151,9 +155,8 @@ struct GsfActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  result_type& result, const Logger& /*unused*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
-    const auto& logger = state.options.logger;
 
     // Return is we found an error earlier
     if (not result.result.ok()) {
@@ -192,8 +195,8 @@ struct GsfActor {
 
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
-                                                         missed_count);
+    const detail::ScopedGsfInfoPrinterAndChecker printer(
+        state, stepper, missed_count, logger());
 
     // There seem to be cases where this is not always after initializing the
     // navigation from a surface. Some later functions assume this criterium
@@ -359,7 +362,6 @@ struct GsfActor {
                          const BoundTrackParameters& old_bound,
                          const double old_weight, const MetaCache& metaCache,
                          std::vector<ComponentCache>& componentCaches) const {
-    const auto& logger = state.options.logger;
     const auto& surface = *state.navigation.currentSurface;
     const auto p_prev = old_bound.absoluteMomentum();
 
@@ -514,7 +516,6 @@ struct GsfActor {
   void updateStepper(propagator_state_t& state, const stepper_t& stepper,
                      const std::vector<ComponentCache>& componentCache) const {
     const auto& surface = *state.navigation.currentSurface;
-    const auto& logger = state.options.logger;
 
     // Clear components before adding new ones
     stepper.clearComponents(state.stepping);
@@ -565,7 +566,7 @@ struct GsfActor {
 
       auto trackStateProxyRes = detail::kalmanHandleMeasurement(
           singleState, singleStepper, m_cfg.extensions, surface, source_link,
-          tmpStates.traj, MultiTrajectoryTraits::kInvalid, false);
+          tmpStates.traj, MultiTrajectoryTraits::kInvalid, false, logger());
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -646,7 +647,7 @@ struct GsfActor {
       // now until we measure this is significant
       auto trackStateProxyRes = detail::kalmanHandleNoMeasurement(
           singleState, singleStepper, surface, tmpStates.traj,
-          MultiTrajectoryTraits::kInvalid, doCovTransport);
+          MultiTrajectoryTraits::kInvalid, doCovTransport, logger());
 
       if (!trackStateProxyRes.ok()) {
         return trackStateProxyRes.error();
@@ -681,7 +682,6 @@ struct GsfActor {
                                const stepper_t& stepper,
                                const MaterialUpdateStage& updateStage =
                                    MaterialUpdateStage::FullUpdate) const {
-    const auto& logger = state.options.logger;
     const auto& surface = *state.navigation.currentSurface;
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {

@@ -55,14 +55,17 @@ class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
   ///
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext &ctx) const override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Const access to the config
-  const Config &config() const { return m_cfg; }
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;
   Acts::SeedFinderOrthogonal<SimSpacePoint> m_finder;
+  void printOptions() const;
+  template <typename sp>
+  void printConfig() const;
 };
 
 }  // namespace ActsExamples

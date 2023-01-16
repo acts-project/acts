@@ -13,11 +13,14 @@
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/FpeMonitor.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <csignal>
+#include <limits>
 #include <stdexcept>
 
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
@@ -31,6 +34,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
           m_cfg.seedFinderConfig);
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.gridConfig = m_cfg.gridConfig.toInternalUnits();
+  m_cfg.gridOptions = m_cfg.gridOptions.toInternalUnits();
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
   }
@@ -115,7 +119,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config minPt");
   }
 
-  if (m_cfg.gridConfig.bFieldInZ != m_cfg.seedFinderOptions.bFieldInZ) {
+  if (m_cfg.gridOptions.bFieldInZ != m_cfg.seedFinderOptions.bFieldInZ) {
     throw std::invalid_argument("Inconsistent config bFieldInZ");
   }
 
@@ -221,19 +225,22 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
       Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsTop,
                                      m_cfg.numPhiNeighbors));
-  auto grid =
-      Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(m_cfg.gridConfig);
+  auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
+      m_cfg.gridConfig, m_cfg.gridOptions);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
 
-  // variable middle SP radial region of interest
+  // safely clamp double to float
+  float up = Acts::clampValue<float>(
+      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
+
+  /// variable middle SP radial region of interest
   const Acts::Range1D<float> rMiddleSPRange(
       std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
           m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
-      std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2 -
-          m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
+      up);
 
   // run the seeding
   static thread_local SimSeedContainer seeds;

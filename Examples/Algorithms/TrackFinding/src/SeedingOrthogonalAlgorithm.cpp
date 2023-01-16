@@ -15,44 +15,6 @@
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-void printOptions( const Acts::SeedFinderOptions& options) {
-  std::cout << "SeedFinderOptions\n"; 
-  std::cout << "beamPos           "  << options.beamPos << std::endl;
-  // field induction
-  std::cout << "bFieldInZ         "  << options.bFieldInZ << std::endl;
-  // derived quantities
-  std::cout << "pTPerHelixRadius  "  << options.pTPerHelixRadius << std::endl;
-  std::cout << "minHelixDiameter2 "  << options.minHelixDiameter2 << std::endl;
-  std::cout << "pT2perRadius      "  << options.pT2perRadius << std::endl;
-  std::cout << "sigmapT2perRadius "  << options.sigmapT2perRadius << std::endl;
-  std::cout << "...\n"; 
-
-}
-
-template<typename sp>
-void printConfig( const Acts::SeedFinderOrthogonalConfig<sp>& config ) {
-  std::cout << "SeedFinderOrthogonalConfig\n"; 
-
-    std::cout << "minPt                 " << config.minPt  << std::endl;
-    std::cout << "deltaRMinTopSP        " << config.deltaRMinTopSP << std::endl;
-    std::cout << "deltaRMaxTopSP        " << config.deltaRMaxTopSP << std::endl;
-    std::cout << "deltaRMinBottomSP     " << config.deltaRMinBottomSP << std::endl;
-    std::cout << "deltaRMaxBottomSP     " << config.deltaRMaxBottomSP << std::endl;
-    std::cout << "impactMax             " << config.impactMax << std::endl;
-    std::cout << "maxPtScattering       " << config.maxPtScattering  << std::endl;
-    std::cout << "collisionRegionMin    " << config.collisionRegionMin << std::endl;
-    std::cout << "collisionRegionMax    " << config.collisionRegionMax << std::endl;
-    std::cout << "zMin                  " << config.zMin << std::endl;
-    std::cout << "zMax                  " << config.zMax << std::endl;
-    std::cout << "rMax                  " << config.rMax << std::endl;
-    std::cout << "rMin                  " << config.rMin << std::endl;
-
-    std::cout << "highland              " << config.highland << std::endl;
-    std::cout << "maxScatteringAngle2   " << config.maxScatteringAngle2 << std::endl;
-  std::cout << "...\n"; 
-
-}
-
 ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     ActsExamples::SeedingOrthogonalAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
@@ -65,8 +27,8 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
       m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
           m_cfg.seedFinderConfig);
 
-  printOptions(m_cfg.seedFinderOptions);
-  printConfig(m_cfg.seedFinderConfig);
+  printOptions();
+  printConfig<SimSpacePoint>();
 
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
@@ -106,8 +68,18 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     }
   }
 
-  SimSeedContainer seeds =
-      m_finder.createSeeds(m_cfg.seedFinderOptions, spacePoints);
+  Acts::SeedFinderOrthogonal<SimSpacePoint> finder(m_cfg.seedFinderConfig);
+
+  std::function<std::pair<Acts::Vector3, Acts::Vector2>(
+      const SimSpacePoint *sp)>
+      create_coordinates = [](const SimSpacePoint *sp) {
+        Acts::Vector3 position(sp->x(), sp->y(), sp->z());
+        Acts::Vector2 variance(sp->varianceR(), sp->varianceZ());
+        return std::make_pair(position, variance);
+      };
+
+  SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
+                                              spacePoints, create_coordinates);
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
   size_t nSeeds = seeds.size();
@@ -135,4 +107,44 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
   ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;
+}
+
+void ActsExamples::SeedingOrthogonalAlgorithm::printOptions() const {
+  ACTS_DEBUG("SeedFinderOptions")
+  ACTS_DEBUG("beamPos           " << m_cfg.seedFinderOptions.beamPos);
+  // field induction
+  ACTS_DEBUG("bFieldInZ         " << m_cfg.seedFinderOptions.bFieldInZ);
+  // derived quantities
+  ACTS_DEBUG("pTPerHelixRadius  " << m_cfg.seedFinderOptions.pTPerHelixRadius);
+  ACTS_DEBUG("minHelixDiameter2 " << m_cfg.seedFinderOptions.minHelixDiameter2);
+  ACTS_DEBUG("pT2perRadius      " << m_cfg.seedFinderOptions.pT2perRadius);
+  ACTS_DEBUG("sigmapT2perRadius " << m_cfg.seedFinderOptions.sigmapT2perRadius);
+  ACTS_DEBUG("...\n")
+}
+
+template <typename sp>
+void ActsExamples::SeedingOrthogonalAlgorithm::printConfig() const {
+  ACTS_DEBUG("SeedFinderOrthogonalConfig")
+  ACTS_DEBUG("minPt                 " << m_cfg.seedFinderConfig.minPt);
+  ACTS_DEBUG("deltaRMinTopSP        " << m_cfg.seedFinderConfig.deltaRMinTopSP);
+  ACTS_DEBUG("deltaRMaxTopSP        " << m_cfg.seedFinderConfig.deltaRMaxTopSP);
+  ACTS_DEBUG("deltaRMinBottomSP     "
+             << m_cfg.seedFinderConfig.deltaRMinBottomSP);
+  ACTS_DEBUG("deltaRMaxBottomSP     "
+             << m_cfg.seedFinderConfig.deltaRMaxBottomSP);
+  ACTS_DEBUG("impactMax             " << m_cfg.seedFinderConfig.impactMax);
+  ACTS_DEBUG("maxPtScattering       "
+             << m_cfg.seedFinderConfig.maxPtScattering);
+  ACTS_DEBUG("collisionRegionMin    "
+             << m_cfg.seedFinderConfig.collisionRegionMin);
+  ACTS_DEBUG("collisionRegionMax    "
+             << m_cfg.seedFinderConfig.collisionRegionMax);
+  ACTS_DEBUG("zMin                  " << m_cfg.seedFinderConfig.zMin);
+  ACTS_DEBUG("zMax                  " << m_cfg.seedFinderConfig.zMax);
+  ACTS_DEBUG("rMax                  " << m_cfg.seedFinderConfig.rMax);
+  ACTS_DEBUG("rMin                  " << m_cfg.seedFinderConfig.rMin);
+  ACTS_DEBUG("highland              " << m_cfg.seedFinderConfig.highland);
+  ACTS_DEBUG("maxScatteringAngle2   "
+             << m_cfg.seedFinderConfig.maxScatteringAngle2);
+  ACTS_DEBUG("...\n")
 }

@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <vector>
@@ -56,7 +57,7 @@ struct SteppingLogger {
   /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  result_type& result, const Logger& /*logger*/) const {
     // don't log if you have reached the target
     if (sterile or state.navigation.targetReached) {
       return;
@@ -80,8 +81,8 @@ struct SteppingLogger {
   /// Pure observer interface
   /// - this does not apply to the logger
   template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/,
-                  const stepper_t& /*unused*/) const {}
+  void operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
+                  const Logger& /*logger*/) const {}
 };
 
 }  // namespace detail

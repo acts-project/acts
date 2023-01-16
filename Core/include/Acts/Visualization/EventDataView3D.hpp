@@ -200,6 +200,8 @@ struct EventDataView3D {
       const ViewConfig& predictedConfig = s_viewPredicted,
       const ViewConfig& filteredConfig = s_viewFiltered,
       const ViewConfig& smoothedConfig = s_viewSmoothed) {
+    // @TODO: Refactor based on Track class
+
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states
