@@ -193,7 +193,7 @@ class CandidatesForMiddleSp {
   // Sorting criteria is the seed quality
   //
   // This is in effect faster sorted container - implementation with std::set
-  // and std::priority_queue  were tried and found slower.
+  // and std::priority_queue were tried and were found to be slower.
 
   // list of indexes of candidates with high quality in the storage
   std::vector<std::size_t> m_indices_high{};
