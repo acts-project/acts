@@ -193,7 +193,6 @@ void addTrackFinding(Context& ctx) {
     auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(bFieldInZ);
     ACTS_PYTHON_MEMBER(minPt);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(zMax);
@@ -208,12 +207,21 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
+  {
+    using Options = Acts::SpacePointGridOptions;
+    auto c = py::class_<Options>(m, "SpacePointGridOptions").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Options);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig,
-      seedFinderOptions, gridConfig, allowSeparateRMax, zBinNeighborsTop,
-      zBinNeighborsBottom, numPhiNeighbors);
+      seedFinderOptions, gridConfig, gridOptions, allowSeparateRMax,
+      zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingOrthogonalAlgorithm, mex,
