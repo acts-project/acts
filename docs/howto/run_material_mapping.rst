@@ -96,22 +96,6 @@ To help you visualising the geometry and understand the hierarchical structure o
 
    $ python3 <source>/Examples/Scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py --help
 
-   usage: GeometryVisualisationAndMaterialHandling.py [-h] [--geometry GEOMETRY] [--plot]
-                                                   [--output_folder OUTPUT_FOLDER] [--dump_steering] [--edit]
-                                                   [--steering_file STEERING_FILE] [--output_map OUTPUT_MAP]
-   options:
-   -h, --help            show this help message and exit
-   --geometry GEOMETRY   Specify the input file for geometry visualisation
-   --plot                Enable plot creation for geometry visualisation (Default : True)
-   --output_folder OUTPUT_FOLDER
-                         Specify the output folder for plots (Default : plots)
-   --dump_steering       Enable production of steering file for material mapping (Default : False)
-   --edit                Enable editing of input file for creation of json for material mapping (Default : False)
-   --steering_file STEERING_FILE
-                         Specify the steering file to guide editing of json for material mapping
-   --output_map OUTPUT_MAP
-                         Specify the output json for material mapping
-
 The first thing you can do, is to visualise your geometry with:
 
 .. code-block:: console

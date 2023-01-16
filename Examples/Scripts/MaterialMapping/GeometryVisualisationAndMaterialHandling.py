@@ -30,6 +30,18 @@ class index_info(object):
                      self.passiveCylinderBinningZ, self.passiveCylinderBinningPhi,
                      self.activeBinningRorZ, self.activeBinningPhi))
 
+def append_index_if_missing(dictionary, name, index):
+    if name not in dictionary:
+        dictionary[name] = index_info(index)
+
+def extract_coords(coords, is_disc):
+    x_values = [coords[1], coords[2]]
+    y_values = [coords[0], coords[0]]
+    if is_disc:
+        x_values = [coords[2], coords[2]]
+        y_values = [coords[1], coords[0]]
+    return x_values, y_values
+
 def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
     f = open(filename)
     data = json.load(f)
@@ -68,18 +80,11 @@ def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
     #    -- they indicate boundaries between volumes. You are interested in boundaries between volumes
     #       containing at least an active layer.
 
-    index_to_extends_layers_approach_cylinders = [[] for _ in range(len(index_to_names))]
-    index_to_extends_layers_approach_discs = [[] for _ in range(len(index_to_names))]
-
     index_to_extends_layers_bounds_cylinders = [[] for _ in range(len(index_to_names))]
     index_to_extends_layers_bounds_discs = [[] for _ in range(len(index_to_names))]
 
-    index_to_extends_layers_approach_with_material = [[] for _ in range(len(index_to_names))]
-
     index_to_extends_layers_cylinders = [[] for _ in range(len(index_to_names))]
     index_to_extends_layers_discs = [[] for _ in range(len(index_to_names))]
-
-    volume_shift = [0] * len(index_to_names)
 
     for entry in data['Surfaces']['entries']:
         if "layer" in entry:
@@ -89,107 +94,101 @@ def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
             if "sensitive" in entry:
                 continue
 
+            # Filling extends with the following quantities:
+            # for cylinders:
+            #     radius, z min, z max, approach index, layer index
+            # for discs:
+            #     inner radius, outer radius, z position, approach index, layer index
+
             z_shift = 0.
             if entry['value']['transform']['translation'] != None:
                 z_shift = entry['value']['transform']['translation'][2]
 
-            if entry['value']['type'] == "CylinderSurface":
-                extends = [0., entry['value']['bounds']['values'][0],
-                           z_shift-entry['value']['bounds']['values'][1], z_shift+entry['value']['bounds']['values'][1]]
-            else:
-                extends = [entry['value']['bounds']['values'][0], entry['value']['bounds']['values'][1],z_shift]
-
+            approach_index = -1
             if "approach" in entry:
-                extends.append(entry["approach"])
-            else:
-                extends.append(-1)
-            extends.append(entry["layer"])
+                approach_index = entry["approach"]
 
             if entry['value']['type'] == "CylinderSurface":
-                if "approach" in entry:
-                    index_to_extends_layers_approach_cylinders[vol-1].append(extends)
-                else:
-                    index_to_extends_layers_cylinders[vol-1].append(extends)
+                # radius, z min, z max, approach index, layer index
+                extends = [entry['value']['bounds']['values'][0], z_shift-entry['value']['bounds']['values'][1], z_shift+entry['value']['bounds']['values'][1],
+                           approach_index, entry["layer"]]
+                index_to_extends_layers_cylinders[vol-1].append(extends)
+            elif entry['value']['type'] == "DiscSurface":
+                # inner radius, outer radius, z position, approach index, layer index
+                extends = [entry['value']['bounds']['values'][0], entry['value']['bounds']['values'][1], z_shift,
+                           approach_index, entry["layer"]]
+                index_to_extends_layers_discs[vol-1].append(extends)
             else:
-                if "approach" in entry:
-                    index_to_extends_layers_approach_discs[vol-1].append(extends)
-                else:
-                    index_to_extends_layers_discs[vol-1].append(extends)
+                print ("WARNING: Processing surface with unkown type. Only CylinderSurface and DiscSurface are considered.")
 
         if "boundary" in entry:
             extends = []
             vol = entry['volume']
 
+            # Filling extends with the following quantities:
+            # for cylinders:
+            #     radius, z min, z max, boundary index
+            # for discs:
+            #     inner radius, outer radius, z position, boundary index
+
             z_shift = 0.
             if entry['value']['transform']['translation'] != None:
                 z_shift = entry['value']['transform']['translation'][2]
 
             if entry['value']['type'] == "CylinderSurface":
-                extends = [0., entry['value']['bounds']['values'][0],
-                           z_shift-entry['value']['bounds']['values'][1], z_shift+entry['value']['bounds']['values'][1],entry['boundary']]
+                extends = [entry['value']['bounds']['values'][0], z_shift-entry['value']['bounds']['values'][1],
+                           z_shift+entry['value']['bounds']['values'][1], entry['boundary']]
                 index_to_extends_layers_bounds_cylinders[vol-1].append(extends)
-            else:
-                extends = [entry['value']['bounds']['values'][0], entry['value']['bounds']['values'][1],z_shift,entry['boundary']]
+            elif entry['value']['type'] == "DiscSurface":
+                extends = [entry['value']['bounds']['values'][0], entry['value']['bounds']['values'][1], z_shift, entry['boundary']]
                 index_to_extends_layers_bounds_discs[vol-1].append(extends)
+            else:
+                print ("WARNING: Processing surface with unkown type. Only CylinderSurface and DiscSurface are considered.")
 
     # Steering the information and collect it into an output file if needed
-
+    from itertools import chain
     interesting_volumes = []
     v_index = 0
-    for elements in index_to_extends_layers_cylinders:
+    is_disc = False
+    for elements in chain(index_to_extends_layers_cylinders,index_to_extends_layers_discs):
         for coords in elements:
+            if coords[3] > 0:
+                continue
             if v_index not in interesting_volumes:
                 interesting_volumes.append(v_index)
-            if index_to_names[v_index] not in steering_map:
-                steering_map[index_to_names[v_index]] = index_info(v_index+1)
-            steering_map[index_to_names[v_index]].layers_no_approach.append(coords[5])
-        v_index = v_index+1
-
-    v_index = 0
-    for elements in index_to_extends_layers_discs:
-        for coords in elements:
-            if v_index not in interesting_volumes:
-                interesting_volumes.append(v_index)
-            if index_to_names[v_index] not in steering_map:
-                steering_map[index_to_names[v_index]] = index_info(v_index+1)
+            append_index_if_missing(steering_map, index_to_names[v_index], v_index+1)
             steering_map[index_to_names[v_index]].layers_no_approach.append(coords[4])
         v_index = v_index+1
+        if not is_disc and v_index==len(index_to_extends_layers_cylinders):
+                v_index=0
+                is_disc = True
 
     v_index = 0
-    for elements in index_to_extends_layers_bounds_cylinders:
+    is_disc = False
+    for elements in chain(index_to_extends_layers_bounds_cylinders, index_to_extends_layers_bounds_discs):
         for coords in elements:
             if v_index in interesting_volumes:
-                if index_to_names[v_index] not in steering_map:
-                    steering_map[index_to_names[v_index]] = index_info(v_index+1)
-                steering_map[index_to_names[v_index]].boundaries.append(coords[4])
-        v_index = v_index+1
-
-    v_index=0
-    for elements in index_to_extends_layers_bounds_discs:
-        for coords in elements:
-            if v_index in interesting_volumes:
-                if index_to_names[v_index] not in steering_map:
-                    steering_map[index_to_names[v_index]] = index_info(v_index+1)
+                append_index_if_missing(steering_map, index_to_names[v_index], v_index+1)
                 steering_map[index_to_names[v_index]].boundaries.append(coords[3])
         v_index = v_index+1
+        if not is_disc and v_index==len(index_to_extends_layers_bounds_cylinders):
+                v_index=0
+                is_disc = True
 
     v_index=0
-    for elements in index_to_extends_layers_approach_cylinders:
+    is_disc = False
+    for elements in chain(index_to_extends_layers_cylinders, index_to_extends_layers_discs):
         for coords in elements:
-            if coords[5] not in steering_map[index_to_names[v_index]].layers_with_approach:
-                steering_map[index_to_names[v_index]].layers_with_approach.append(coords[5])
-            if coords[4] not in steering_map[index_to_names[v_index]].approaches:
-                steering_map[index_to_names[v_index]].approaches.append(coords[4])
-        v_index = v_index+1
-
-    v_index = 0
-    for elements in index_to_extends_layers_approach_discs:
-        for coords in elements:
+            if coords[3] == -1:
+                continue
             if coords[4] not in steering_map[index_to_names[v_index]].layers_with_approach:
                 steering_map[index_to_names[v_index]].layers_with_approach.append(coords[4])
             if coords[3] not in steering_map[index_to_names[v_index]].approaches:
                 steering_map[index_to_names[v_index]].approaches.append(coords[3])
         v_index = v_index+1
+        if not is_disc and v_index==len(index_to_extends_layers_bounds_cylinders):
+                v_index=0
+                is_disc = True
 
     if dump_steering:
         output_map = { "SteeringField" : steering_map}
@@ -209,53 +208,37 @@ def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
         is_in_legend = []
 
         plt.figure(figsize=(20,10))
-        # Plot all layers (w/o approach layers)
+
+        # Plot all layers (w/o approach layers) + boundaries
         v_index = 0
-        for elements in index_to_extends_layers_cylinders:
+        is_disc = False
+        for elements in chain(index_to_extends_layers_cylinders,index_to_extends_layers_discs):
             for coords in elements:
-                A, B = [coords[3], coords[1]], [coords[2], coords[1]]
-                x_values = [B[0], A[0]]
-                y_values = [B[1], A[1]]
+                # skip approach layers
+                if coords[3] > 0:
+                    continue
+                x_values, y_values = extract_coords(coords, is_disc)
                 if index_to_names[v_index] not in is_in_legend:
                     plt.plot(x_values, y_values, c=color[v_index], label='v: '+str(v_index+1)+', '+index_to_names[v_index])
                     is_in_legend.append(index_to_names[v_index])
                 else:
                     plt.plot(x_values, y_values, c=color[v_index])
             v_index = v_index+1
+            if not is_disc and v_index==len(index_to_extends_layers_cylinders):
+                v_index=0
+                is_disc = True
 
-        v_index=0
-        for elements in index_to_extends_layers_discs:
-            for coords in elements:
-                A, B = [coords[2], coords[0]], [coords[2], coords[1]]
-                x_values = [B[0], A[0]]
-                y_values = [B[1], A[1]]
-                if index_to_names[v_index] not in is_in_legend:
-                    plt.plot(x_values, y_values, c=color[v_index], label='v: '+str(v_index+1)+', '+index_to_names[v_index])
-                    is_in_legend.append(index_to_names[v_index])
-                else:
-                    plt.plot(x_values, y_values, c=color[v_index])
-            v_index = v_index+1
-
-        # Plot boundaries
         v_index = 0
-        for elements in index_to_extends_layers_bounds_cylinders:
+        is_disc = False
+        for elements in chain(index_to_extends_layers_bounds_cylinders, index_to_extends_layers_bounds_discs):
             for coords in elements:
-                A, B = [coords[3], coords[1]], [coords[2], coords[1]]
-                x_values = [B[0], A[0]]
-                y_values = [B[1], A[1]]
                 if v_index in interesting_volumes:
+                    x_values, y_values = extract_coords(coords, is_disc)
                     plt.plot(x_values, y_values, c=color[v_index])
             v_index = v_index+1
-
-        v_index=0
-        for elements in index_to_extends_layers_bounds_discs:
-            for coords in elements:
-                A, B = [coords[2], coords[0]], [coords[2], coords[1]]
-                x_values = [B[0], A[0]]
-                y_values = [B[1], A[1]]
-                if v_index in interesting_volumes:
-                    plt.plot(x_values, y_values, c=color[v_index])
-            v_index = v_index+1
+            if not is_disc and v_index==len(index_to_extends_layers_bounds_cylinders):
+                v_index=0
+                is_disc = True
 
         plt.xlabel('z [mm]')
         plt.ylabel('R [mm]')
@@ -263,98 +246,64 @@ def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
         plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
         plt.savefig(output_folder+'/volumes_and_layers.png')
 
+        # Plot each volume: layers + approach layers
         v_index=0
+        is_disc = False
         approach_colors = ["black", "blue", "red", "green", "orange", "purple", "pink"]
-        for elements in index_to_extends_layers_cylinders:
+        for elements in chain(index_to_extends_layers_cylinders, index_to_extends_layers_discs):
             l_index=0
             if not elements:
                 v_index = v_index+1
                 continue
             plt.figure(figsize=(20,10))
             color_layers = cm.rainbow(np.linspace(0, 1, len(elements)))
+            has_elements = False
             for coords in elements:
-                C, D = [coords[3], coords[1]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
-                plt.plot(x_values, y_values, c=color_layers[l_index], label='l: '+str(coords[5]))
-                l_index=l_index+1
-
-                for a_coords in index_to_extends_layers_approach_cylinders[v_index]:
-                    if a_coords[5] == coords[5]:
-                        C, D = [a_coords[3], a_coords[1]], [a_coords[2], a_coords[1]]
-                        ax_values = [D[0], C[0]]
-                        ay_values = [D[1], C[1]]
-                        plt.plot(ax_values, ay_values, linestyle=(0, (5, 10)), c=approach_colors[a_coords[4]], label='l: '+str(coords[5])+', a: '+str(a_coords[4]))
-                for a_coords in index_to_extends_layers_approach_discs[v_index]:
-                    if a_coords[4] == coords[5]:
-                        C,D = [a_coords[2], a_coords[0]], [a_coords[2], a_coords[1]]
-                        ax_values = [D[0], C[0]]
-                        ay_values = [D[1], C[1]]
-                        plt.plot(ax_values, ay_values, linestyle=(0, (5, 10)), c=approach_colors[a_coords[3]], label='l: '+str(coords[5])+', a: '+str(a_coords[3]))
-
-            plt.xlabel('z [mm]')
-            plt.ylabel('R [mm]')
-            plt.title(index_to_names[v_index])
-            plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-            plt.savefig(output_folder+'/layers_for_volume_'+str(v_index+1)+'.png')
-            v_index = v_index+1
-
-        v_index=0
-        for elements in index_to_extends_layers_discs:
-            l_index=0
-            if not elements:
-                v_index = v_index+1
-                continue
-            plt.figure(figsize=(20,10))
-            color_layers = cm.rainbow(np.linspace(0, 1, len(elements)))
-            for coords in elements:
-                C,D = [coords[2], coords[0]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
+                if coords[3] > 0:
+                    continue
+                has_elements = True
+                x_values, y_values = extract_coords(coords, is_disc)
                 plt.plot(x_values, y_values, c=color_layers[l_index], label='l: '+str(coords[4]))
                 l_index=l_index+1
 
-                for a_coords in index_to_extends_layers_approach_discs[v_index]:
-                    if a_coords[4] == coords[4]:
-                        C,D = [a_coords[2], a_coords[0]], [a_coords[2], a_coords[1]]
-                        ax_values = [D[0], C[0]]
-                        ay_values = [D[1], C[1]]
+                a_is_disc = False
+                count = 0
+                for a_coords in chain(index_to_extends_layers_cylinders[v_index],index_to_extends_layers_discs[v_index]):
+                    if a_coords[4] == coords[4] and a_coords[3] > 0:
+                        ax_values, ay_values = extract_coords(a_coords, a_is_disc)
                         plt.plot(ax_values, ay_values, linestyle=(0, (5, 10)), c=approach_colors[a_coords[3]], label='l: '+str(coords[4])+', a: '+str(a_coords[3]))
-                for a_coords in index_to_extends_layers_approach_cylinders[v_index]:
-                    if a_coords[5] == coords[4]:
-                        C, D = [a_coords[3], a_coords[1]], [a_coords[2], a_coords[1]]
-                        ax_values = [D[0], C[0]]
-                        ay_values = [D[1], C[1]]
-                        plt.plot(ax_values, ay_values, linestyle=(0, (5, 10)), c=approach_colors[a_coords[4]], label='l: '+str(coords[4])+', a: '+str(a_coords[4]))
+                    count = count + 1
+                    if count == len(index_to_extends_layers_cylinders[v_index]):
+                        a_is_disc = True
+
+            v_index = v_index+1
+            if not is_disc and v_index==len(index_to_extends_layers_cylinders):
+                v_index = 0
+                is_disc = True
+
+            if not has_elements:
+                continue
 
             plt.xlabel('z [mm]')
             plt.ylabel('R [mm]')
-            plt.title(index_to_names[v_index])
+            plt.title(index_to_names[v_index-1])
             plt.legend(loc='center left', bbox_to_anchor=(1, 0.5))
-            plt.savefig(output_folder+'/layers_for_volume_'+str(v_index+1)+'.png')
-            v_index = v_index+1
+            plt.savefig(output_folder+'/layers_for_volume_'+str(v_index)+'.png')
 
         plt.figure(figsize=(20,10))
 
+        # Plot boundaries
         v_index=0
-        for elements in index_to_extends_layers_bounds_cylinders:
+        is_disc = False
+        for elements in chain(index_to_extends_layers_bounds_cylinders, index_to_extends_layers_bounds_discs):
             for coords in elements:
-                A, B = [coords[3], coords[1]], [coords[2], coords[1]]
-                x_values = [B[0], A[0]]
-                y_values = [B[1], A[1]]
-                if v_index in interesting_volumes:
-                    plt.plot(x_values, y_values, linestyle='--', c=color[v_index], label='v: '+str(v_index+1)+', b: '+str(coords[4]))
-            v_index = v_index+1
-
-        v_index=0
-        for elements in index_to_extends_layers_bounds_discs:
-            for coords in elements:
-                A, B = [coords[2], coords[0]], [coords[2], coords[1]]
-                x_values = [B[0], A[0]]
-                y_values = [B[1], A[1]]
+                x_values, y_values = extract_coords(coords, is_disc)
                 if v_index in interesting_volumes:
                     plt.plot(x_values, y_values, linestyle='--', c=color[v_index], label='v: '+str(v_index+1)+', b: '+str(coords[3]))
             v_index = v_index+1
+            if not is_disc and v_index==len(index_to_extends_layers_bounds_cylinders):
+                v_index = 0
+                is_disc = True
 
         plt.xlabel('z [mm]')
         plt.ylabel('R [mm]')
@@ -364,30 +313,18 @@ def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
 
         plt.figure(figsize=(20,10))
 
+        # Plot all approach layers
         v_index = 0
+        is_disc = False
         add_to_legend=[]
-        for elements in index_to_extends_layers_approach_cylinders:
+        for elements in chain(index_to_extends_layers_cylinders, index_to_extends_layers_discs):
+            if not elements:
+                v_index = v_index+1
+                continue
             for coords in elements:
-                C, D = [coords[3], coords[1]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
-                plt.plot(x_values, y_values, c=color[v_index])
-                if coords[4] not in add_to_legend:
-                    plt.plot(x_values, y_values, c=approach_colors[coords[4]],
-                             linestyle="--", label='approach index = '+str(coords[4]))
-                    add_to_legend.append(coords[4])
-                else:
-                    plt.plot(x_values, y_values, c=approach_colors[coords[4]],
-                             linestyle="--")
-            v_index = v_index+1
-
-        v_index = 0
-        for elements in index_to_extends_layers_approach_discs:
-            for coords in elements:
-                C,D = [coords[2], coords[0]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
-                plt.plot(x_values, y_values, c=color[v_index])
+                if coords[3] == -1 :
+                    continue
+                x_values, y_values = extract_coords(coords, is_disc)
                 if coords[3] not in add_to_legend:
                     plt.plot(x_values, y_values, c=approach_colors[coords[3]],
                              linestyle="--", label='approach index = '+str(coords[3]))
@@ -396,6 +333,9 @@ def dump_geo(filename, plot, output_folder, dump_steering, steering_file):
                     plt.plot(x_values, y_values, c=approach_colors[coords[3]],
                              linestyle="--")
             v_index = v_index+1
+            if not is_disc and v_index==len(index_to_extends_layers_bounds_cylinders):
+                v_index = 0
+                is_disc = True
 
         plt.xlabel('z [mm]')
         plt.ylabel('R [mm]')
@@ -423,40 +363,17 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
     for entry in data['Volumes']['entries']:
         index_to_names.append(entry['value']['NAME'])
 
+    # In case volume names are not found check in the volume names with dummy values
     if not index_to_names:
-        index_to_names.append("FullVolume")
-
-    index_to_extends_layers_approach_cylinders = [[] for _ in range(len(index_to_names))]
-    index_to_extends_layers_approach_discs = [[] for _ in range(len(index_to_names))]
-
-    index_to_extends_layers_bounds_cylinders = [[] for _ in range(len(index_to_names))]
-    index_to_extends_layers_bounds_discs = [[] for _ in range(len(index_to_names))]
-
-    index_to_extends_layers_approach_with_material = [[] for _ in range(len(index_to_names))]
-
-    index_to_extends_layers_cylinders = [[] for _ in range(len(index_to_names))]
-    index_to_extends_layers_discs = [[] for _ in range(len(index_to_names))]
+        for entry in data['Surfaces']['entries']:
+            if "volume" in entry:
+                vol = entry['volume']
+                if 'volume'+str(vol) not in index_to_names:
+                    index_to_names.append('volume'+str(vol))
 
     for entry in data['Surfaces']['entries']:
         if "layer" in entry:
-            extends = []
             vol = entry['volume']
-
-            z_shift = 0.
-            if entry['value']['transform']['translation'] != None:
-                z_shift = entry['value']['transform']['translation'][2]
-
-            if entry['value']['type'] == "CylinderSurface":
-                extends = [0., entry['value']['bounds']['values'][0],
-                           z_shift-entry['value']['bounds']['values'][1], z_shift+entry['value']['bounds']['values'][1]]
-            else:
-                extends = [entry['value']['bounds']['values'][0], entry['value']['bounds']['values'][1],z_shift]
-
-            if "approach" in entry:
-                extends.append(entry["approach"])
-            else:
-                extends.append(-1)
-            extends.append(entry["layer"])
 
             if index_to_names[vol-1] in layer_data:
                 if "approach" in entry:
@@ -476,32 +393,14 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                             print("ERROR!!! Using binning value == 0! Check you input for", index_to_names[vol-1])
                             return
 
-            if entry['value']['type'] == "CylinderSurface":
-                if "approach" in entry:
-                    index_to_extends_layers_approach_cylinders[vol-1].append(extends)
-                    if dump_binning_for_material and entry['value']['material']['mapMaterial']:
-                        print("Volume: ", entry['volume'], index_to_names[vol-1], " - Layer: ", entry['layer'], " - Approach:",entry['approach'])
-                        for val in entry['value']['material']['binUtility']['binningdata']:
-                            print("-->", val['value'], ": ", val['bins'])
-                else:
-                    index_to_extends_layers_cylinders[vol-1].append(extends)
-                    if dump_binning_for_material and entry['value']['material']['mapMaterial']:
-                        print("Volume: ", entry['volume'], index_to_names[vol-1], " - Layer: ", entry['layer'])
-                        for val in entry['value']['material']['binUtility']['binningdata']:
-                            print("-->", val['value'], ": ", val['bins'])
-            else:
-                if "approach" in entry:
-                    index_to_extends_layers_approach_discs[vol-1].append(extends)
-                    if dump_binning_for_material and entry['value']['material']['mapMaterial']:
-                        print("Volume: ", entry['volume'], index_to_names[vol-1], " - Layer: ", entry['layer'], " - Approach:",entry['approach'])
-                        for val in entry['value']['material']['binUtility']['binningdata']:
-                            print("-->", val['value'], ": ", val['bins'])
-                else:
-                    index_to_extends_layers_discs[vol-1].append(extends)
-                    if dump_binning_for_material and entry['value']['material']['mapMaterial']:
-                        print("Volume: ", entry['volume'], index_to_names[vol-1], " - Layer: ", entry['layer'])
-                        for val in entry['value']['material']['binUtility']['binningdata']:
-                            print("-->", val['value'], ": ", val['bins'])
+            approach_index = "None"
+            if "approach" in entry:
+                approach_index = entry['approach']
+
+            if dump_binning_for_material and entry['value']['material']['mapMaterial']:
+                print("Volume: ", entry['volume'], index_to_names[vol-1], " - Layer: ", entry['layer'], " - Approach:", approach_index)
+                for val in entry['value']['material']['binUtility']['binningdata']:
+                    print("-->", val['value'], ": ", val['bins'])
 
         if "boundary" in entry:
             extends = []
@@ -515,11 +414,13 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                             val['bins'] = layer_data[index_to_names[vol-1]]["passiveCylinderBinningZ"]
                         else:
                             val['bins'] = layer_data[index_to_names[vol-1]]["passiveCylinderBinningPhi"]
-                    else:
+                    elif entry['value']['type'] == "DiscSurface":
                         if val['value'] == 'binR':
                             val['bins'] = layer_data[index_to_names[vol-1]]["passiveDiscBinningR"]
                         else:
                             val['bins'] = layer_data[index_to_names[vol-1]]["passiveDiscBinningPhi"]
+                    else:
+                        print ("WARNING: Processing surface with unkown type. Only CylinderSurface and DiscSurface are considered.")
                     if val['bins']==0:
                         print("ERROR!!! Using binning value == 0! Check you input for", index_to_names[vol-1])
                         return
@@ -528,20 +429,6 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                 print("Volume: ", entry['volume'], index_to_names[vol-1], " - Boundary:",entry['boundary'])
                 for val in entry['value']['material']['binUtility']['binningdata']:
                     print("-->", val['value'], ": ", val['bins'])
-
-            z_shift = 0.
-            if entry['value']['transform']['translation'] != None:
-                z_shift = entry['value']['transform']['translation'][2]
-
-            if entry['value']['type'] == "CylinderSurface":
-                extends = [0., entry['value']['bounds']['values'][0],
-                           z_shift-entry['value']['bounds']['values'][1], z_shift+entry['value']['bounds']['values'][1],entry['boundary']]
-                index_to_extends_layers_bounds_cylinders[vol-1].append(extends)
-
-            else:
-                extends = [entry['value']['bounds']['values'][0], entry['value']['bounds']['values'][1],z_shift,entry['boundary']]
-
-                index_to_extends_layers_bounds_discs[vol-1].append(extends)
 
 # Once you have all the data in hands, you make a few nice plots to show volumes and surfaces
 
@@ -579,45 +466,49 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                 vol = entry['volume']
 
                 if entry['value']['type'] == "CylinderSurface":
-                    extends = [0., entry['value']['bounds']['values'][0],
+                    extends = [entry['value']['bounds']['values'][0],
                                z_shift-entry['value']['bounds']['values'][1],
                                z_shift+entry['value']['bounds']['values'][1]]
-
                     if "approach" in entry:
                         material_approach_cylinders[vol-1].append(extends)
                     else:
                         material_layer_cylinders[vol-1].append(extends)
-                else:
-                    extends = [entry['value']['bounds']['values'][0], entry['value']['bounds']['values'][1],z_shift]
 
+                elif entry['value']['type'] == "DiscSurface":
+                    extends = [entry['value']['bounds']['values'][0],
+                               entry['value']['bounds']['values'][1], z_shift]
                     if "approach" in entry:
                         material_approach_discs[vol-1].append(extends)
                     else:
                         material_layer_discs[vol-1].append(extends)
+                else:
+                    print ("WARNING: Processing surface with unkown type. Only CylinderSurface and DiscSurface are considered.")
 
             if "boundary" in entry:
                 extends = []
                 vol = entry['volume']
 
                 if entry['value']['type'] == "CylinderSurface":
-                    extends = [0., entry['value']['bounds']['values'][0],
+                    extends = [entry['value']['bounds']['values'][0],
                                z_shift-entry['value']['bounds']['values'][1],
                                z_shift+entry['value']['bounds']['values'][1]]
-
                     material_boundary_cylinders[vol-1].append(extends)
 
-                else:
-                    extends = [entry['value']['bounds']['values'][0], entry['value']['bounds']['values'][1],z_shift]
+                elif entry['value']['type'] == "DiscSurface":
+                    extends = [entry['value']['bounds']['values'][0],
+                               entry['value']['bounds']['values'][1], z_shift]
                     material_boundary_discs[vol-1].append(extends)
+                else:
+                    print ("WARNING: Processing surface with unkown type. Only CylinderSurface and DiscSurface are considered.")
 
+        from itertools import chain
         v_index=0
         is_first=True
-        for elements in material_layer_cylinders:
+        is_disc=False
+        for elements in chain(material_layer_cylinders, material_layer_discs):
             l_index = 0
             for coords in elements:
-                C, D = [coords[3], coords[1]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
+                x_values, y_values = extract_coords(coords, is_disc)
                 if is_first:
                     plt.plot(x_values, y_values, c="black", label="layer")
                     is_first=False
@@ -625,26 +516,17 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                     plt.plot(x_values, y_values, c="black")
                 l_index = l_index+1
             v_index = v_index+1
-
-        v_index=0
-        for elements in material_layer_discs:
-            l_index = 0
-            for coords in elements:
-                C,D = [coords[2], coords[0]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
-                plt.plot(x_values, y_values, c="black")
-                l_index = l_index+1
-            v_index = v_index+1
+            if not is_disc and v_index == len(material_layer_cylinders):
+                is_disc=True
+                v_index=0
 
         v_index=0
         is_first=True
-        for elements in material_approach_cylinders:
+        is_disc=False
+        for elements in chain(material_approach_cylinders, material_approach_discs):
             l_index = 0
             for coords in elements:
-                C, D = [coords[3], coords[1]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
+                x_values, y_values = extract_coords(coords, is_disc)
                 if is_first:
                     plt.plot(x_values, y_values, c="red", label="approach")
                     is_first=False
@@ -652,26 +534,17 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                     plt.plot(x_values, y_values, c="red")
                 l_index = l_index+1
             v_index = v_index+1
-
-        v_index=0
-        for elements in material_approach_discs:
-            l_index = 0
-            for coords in elements:
-                C,D = [coords[2], coords[0]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
-                plt.plot(x_values, y_values, c="red")
-                l_index = l_index+1
-            v_index = v_index+1
+            if not is_disc and v_index == len(material_approach_cylinders):
+                is_disc=True
+                v_index=0
 
         v_index=0
         is_first=True
-        for elements in material_boundary_cylinders:
+        is_disc=False
+        for elements in chain(material_boundary_cylinders, material_boundary_discs):
             l_index = 0
             for coords in elements:
-                C, D = [coords[3], coords[1]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
+                x_values, y_values = extract_coords(coords, is_disc)
                 if is_first:
                     plt.plot(x_values, y_values, c="blue", label="boundary")
                     is_first=False
@@ -679,17 +552,9 @@ def read_and_modify(filename, plot, output_folder, steering_file, output_file):
                     plt.plot(x_values, y_values, c="blue")
                 l_index = l_index+1
             v_index = v_index+1
-
-        v_index=0
-        for elements in material_boundary_discs:
-            l_index = 0
-            for coords in elements:
-                C,D = [coords[2], coords[0]], [coords[2], coords[1]]
-                x_values = [D[0], C[0]]
-                y_values = [D[1], C[1]]
-                plt.plot(x_values, y_values, c="blue")
-                l_index = l_index+1
-            v_index = v_index+1
+            if not is_disc and v_index == len(material_boundary_cylinders):
+                is_disc=True
+                v_index=0
 
         plt.xlabel('z [mm]')
         plt.ylabel('R [mm]')
@@ -744,6 +609,7 @@ if args.dump_steering and args.edit:
     print ("Error: Wrong job configuration. --dump_steering and --edit can't be \
         both true at the same time.")
     print ("\t Decide if you want to dump the steering file OR to read an existing file for editing the geometry file.")
+    exit()
 
 if args.dump_steering:
     if not args.steering_file:
