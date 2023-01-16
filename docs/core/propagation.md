@@ -79,6 +79,10 @@ Acts comes with two navigators: The standard navigator {class}`Acts::Navigator` 
 
 The navigators provide information about the current position inside the geometry in their state variable ({struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
 
+:::{tip}
+The {class}`Acts::Navigator` by default does a straight-line extrapolation to resolve layer candidates. In certain geometries (e.g., telescope) this can lead to the effect that bent tracks miss some layers. This can be mitigated by disabling the bound-check for layer resolval with the `boundaryCheckLayerResolving` option in {struct}`Acts::Navigator::Config`.
+:::
+
 ## Steppers
 
 Acts also provides a variety of stepper implementations. Since these in general can work very differently internally, the state itself is not the main interface to the steppers. Instead all steppers provide a common API, to that we can pass instances of the stepper state. This allows a generic and template-based design even for very different steppers:
