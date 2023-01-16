@@ -140,12 +140,13 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
     std::size_t right_child = 2 * n + 2;
 
     // We have to move the current node down the tree to its correct position.
-    // This is done by comparing its weight with the weights of its two children.
-    // Few things can happen:
+    // This is done by comparing its weight with the weights of its two
+    // children. Few things can happen:
     //   - there are no children
     //   - the current weight is lower then the weight of the children
     //   - at least one of the children has a lower weight
-    // In the first two cases we stop, since we are already in the correct position
+    // In the first two cases we stop, since we are already in the correct
+    // position
 
     // if there is no left child, that also means no right child is present.
     // We do nothing
@@ -153,10 +154,10 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
       break;
     }
 
-    // At least one of the child is present. Left child for sure, right child we have to check.
-    // We take the lowest weight of the children. By default this is the weight of the left child,
-    // and we then check for the right child
-    
+    // At least one of the child is present. Left child for sure, right child we
+    // have to check. We take the lowest weight of the children. By default this
+    // is the weight of the left child, and we then check for the right child
+
     float weight_left_child = weight(indices, left_child);
 
     std::size_t selected_child = left_child;
