@@ -44,7 +44,7 @@ inline void CandidatesForMiddleSp<external_space_point_t>::pop(
 template <typename external_space_point_t>
 inline bool CandidatesForMiddleSp<external_space_point_t>::exists(
     const std::size_t& n, const std::size_t& max_size) const {
-  // If the element exists, it's index is lower than the current number
+  // If the element exists, its index is lower than the current number
   // of stored elements
   return n < max_size;
 }
@@ -100,9 +100,9 @@ bool CandidatesForMiddleSp<external_space_point_t>::push(
   }
 
   // if no space, replace one if quality is enough
-  // compare to element with lower weight
-  const auto& lower_weight = this->weight(indices, 0);
-  if (weight <= lower_weight) {
+  // compare to element with lowest weight
+  const auto& lowest_weight = this->weight(indices, 0);
+  if (weight <= lowest_weight) {
     return false;
   }
 
@@ -118,7 +118,6 @@ void CandidatesForMiddleSp<external_space_point_t>::addToCollection(
     std::vector<std::size_t>& indices, std::size_t& n, const std::size_t& n_max,
     value_type&& element) {
   // adds elements to the end of the collection
-  // function called when space in storage is not full
   if (indices.size() == n_max) {
     m_storage[indices[n]] = std::move(element);
   } else {
@@ -133,17 +132,31 @@ template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
     std::vector<std::size_t>& indices, std::size_t n, std::size_t actual_size) {
   while (n < actual_size) {
+    // The collection of indexes are sorted as min heap trees
     // left child : 2 * n + 1
     // right child: 2 * n + 2
     float current = weight(indices, n);
     std::size_t left_child = 2 * n + 1;
     std::size_t right_child = 2 * n + 2;
 
-    // no left child, we do nothing
+    // We have to move the current node down the tree to its correct position.
+    // This is done by comparing its weight with the weights of its two children.
+    // Few things can happen:
+    //   - there are no children
+    //   - the current weight is lower then the weight of the children
+    //   - at least one of the children has a lower weight
+    // In the first two cases we stop, since we are already in the correct position
+
+    // if there is no left child, that also means no right child is present.
+    // We do nothing
     if (not exists(left_child, actual_size)) {
       break;
     }
 
+    // At least one of the child is present. Left child for sure, right child we have to check.
+    // We take the lowest weight of the children. By default this is the weight of the left child,
+    // and we then check for the right child
+    
     float weight_left_child = weight(indices, left_child);
 
     std::size_t selected_child = left_child;
@@ -158,7 +171,9 @@ void CandidatesForMiddleSp<external_space_point_t>::bubbledw(
       }
     }
 
-    // If weight of the childs is higher we stop
+    // At this point we have the minimum weight of the children
+    // We can compare this to the current weight
+    // If weight of the children is higher we stop
     if (selected_weight >= current) {
       break;
     }
@@ -173,6 +188,7 @@ template <typename external_space_point_t>
 void CandidatesForMiddleSp<external_space_point_t>::bubbleup(
     std::vector<std::size_t>& indices, std::size_t n) {
   while (n != 0) {
+    // The collection of indexes are sorted as min heap trees
     // parent: (n - 1) / 2;
     // this works because it is an integer operation
     std::size_t parent_idx = (n - 1) / 2;
@@ -200,7 +216,7 @@ CandidatesForMiddleSp<external_space_point_t>::storage() {
   std::size_t out_idx = output.size() - 1;
 
   // rely on the fact that m_indices_* are both min heap trees
-  // Sorting comes noturally by popping elements one by one and
+  // Sorting comes naturally by popping elements one by one and
   // placing this element at the end of the output vector
   while (m_n_high != 0 or m_n_low != 0) {
     // no entries in collection high, we attach the entire low collection

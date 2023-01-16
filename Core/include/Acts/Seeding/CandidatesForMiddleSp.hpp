@@ -147,14 +147,14 @@ class CandidatesForMiddleSp {
   float weight(const std::vector<std::size_t>& indices, std::size_t n) const;
 
   /// @brief Move an element up in the min heap tree. The function checks whether the element's
-  /// weight is lower of it's parent's weight. If so, it swaps them. Reiterate
+  /// weight is lower of its parent's weight. If so, it swaps them. Reiterate
   /// the process untill the element is in the correct position on the tree
   /// @param indices The collection
   /// @param n The index of the element to place in the correct position
   void bubbleup(std::vector<std::size_t>& indices, std::size_t n);
 
   /// @brief Move an element down in the min heap tree. The function checks whether the elements's
-  /// weight is lower of it's child's weights. If so, it swaps the element with
+  /// weight is lower of its child's weights. If so, it swaps the element with
   /// the child with the lowest weight. Reiterate the process untill the element
   /// is in the correct position on the tree
   /// @param indices The collection
@@ -178,7 +178,7 @@ class CandidatesForMiddleSp {
   // are set by the user once
   std::size_t m_max_size_high{0};
   std::size_t m_max_size_low{0};
-  // m_n_* is the corrent size of the indices collections [0, m_max_size_*).
+  // m_n_* is the current size of the indices collections [0, m_max_size_*).
   // These values are set internally by the class
   std::size_t m_n_high{0};
   std::size_t m_n_low{0};
@@ -195,9 +195,9 @@ class CandidatesForMiddleSp {
   // This is in effect faster sorted container - implementation with std::set
   // and std::priority_queue  were tried and found slower.
 
-  // list of indeces of candidates with high quality in the storage
+  // list of indexes of candidates with high quality in the storage
   std::vector<std::size_t> m_indices_high{};
-  // list of indeces of candidates with low quality in the storage
+  // list of indexes of candidates with low quality in the storage
   std::vector<std::size_t> m_indices_low{};
 };
 
