@@ -107,6 +107,10 @@ struct SeedFinderOrthogonalConfig {
   bool isInInternalUnits = false;
 
   SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
+    if (not isInInternalUnits) {
+      throw std::runtime_error(
+          "SeedFinderOrthogonalConfig not in ACTS internal units in calculateDerivedQuantities");
+    }
     SeedFinderOrthogonalConfig config = *this;
     // calculation of scattering using the highland formula
     // convert pT to p once theta angle is known
@@ -117,6 +121,10 @@ struct SeedFinderOrthogonalConfig {
   }
 
   SeedFinderOrthogonalConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "SeedFinderOrthogonalConfig already in ACTS internal units in toInternalUnits");
+    }
     using namespace Acts::UnitLiterals;
     SeedFinderOrthogonalConfig config = *this;
     config.isInInternalUnits = true;

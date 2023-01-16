@@ -226,7 +226,7 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
     : m_config(config) {
   if (not config.isInInternalUnits) {
     throw std::runtime_error(
-        "SeedFinderConfig not in ACTS internal units in SeedFinderOrthogonal");
+        "SeedFinderOrthogonalConfig not in ACTS internal units in SeedFinderOrthogonal");
   }
 }
 
