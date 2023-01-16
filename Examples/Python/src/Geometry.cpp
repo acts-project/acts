@@ -7,6 +7,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -72,6 +74,11 @@ void addGeometry(Context& ctx) {
           hook->callable = callable;
           return hook;
         }));
+  }
+ 
+  {
+    py::class_<Acts::Experimental::Detector,
+               std::shared_ptr<Acts::Experimental::Detector>>(m, "Detector");
   }
 }
 

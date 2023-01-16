@@ -2,9 +2,11 @@ include(ActsTargetLinkLibrariesSystem)
 
 add_library(
   ActsPluginJson SHARED
-  src/MaterialMapJsonConverter.cpp
   src/AlgebraJsonConverter.cpp
+  src/ExtentJsonConverter.cpp
+  src/MaterialMapJsonConverter.cpp
   src/MaterialJsonConverter.cpp
+  src/ProtoDetectorJsonConverter.cpp
   src/SurfaceBoundsJsonConverter.cpp
   src/SurfaceJsonConverter.cpp
   src/UtilitiesJsonConverter.cpp
