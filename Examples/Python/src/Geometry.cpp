@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
@@ -39,19 +39,9 @@ namespace Acts::Python {
 void addGeometry(Context& ctx) {
   auto m = ctx.get("main");
   {
-    py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surfaces")
-        .def("volumeId",
-             [](Acts::Surface& self) { return self.geometryId().volume(); })
-        .def("boundaryId",
-             [](Acts::Surface& self) { return self.geometryId().boundary(); })
-        .def("layerId",
-             [](Acts::Surface& self) { return self.geometryId().layer(); })
-        .def("approachId",
-             [](Acts::Surface& self) { return self.geometryId().approach(); })
-        .def("sensitiveId",
-             [](Acts::Surface& self) { return self.geometryId().sensitive(); })
-        .def("extraId",
-             [](Acts::Surface& self) { return self.geometryId().extra(); })
+    py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
+        .def("geometryId",
+             [](Acts::Surface& self) { return self.geometryId(); })
         .def("center", [](Acts::Surface& self) {
           return self.center(Acts::GeometryContext{});
         });
@@ -75,7 +65,7 @@ void addGeometry(Context& ctx) {
           return hook;
         }));
   }
- 
+
   {
     py::class_<Acts::Experimental::Detector,
                std::shared_ptr<Acts::Experimental::Detector>>(m, "Detector");
