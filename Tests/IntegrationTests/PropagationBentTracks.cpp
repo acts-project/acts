@@ -21,7 +21,7 @@ using namespace Acts::UnitLiterals;
 
 /// This tests intend to check the behaviour of the navigator in cases where the
 /// straight-line approach for the layer resolval can fail. This is in
-/// particular the case with bended tracks in telesocpe-like geometries, and can
+/// particular the case with bent tracks in telesocpe-like geometries, and can
 /// be fixed by not doing the bounds check in the initial resolving.
 
 using MagneticField = Acts::ConstantBField;
