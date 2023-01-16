@@ -158,9 +158,9 @@ int runSeedingExample(
   seedingCfg.gridConfig.minPt = 500._MeV;
   seedingCfg.seedFinderConfig.minPt = seedingCfg.gridConfig.minPt;
 
-  seedingCfg.gridConfig.bFieldInZ = 1.99724_T;
+  seedingCfg.gridOptions.bFieldInZ = 1.99724_T;
 
-  seedingCfg.seedFinderOptions.bFieldInZ = seedingCfg.gridConfig.bFieldInZ;
+  seedingCfg.seedFinderOptions.bFieldInZ = seedingCfg.gridOptions.bFieldInZ;
   seedingCfg.seedFinderOptions.beamPos = {0_mm, 0_mm};
 
   seedingCfg.seedFinderConfig.impactMax = 3._mm;
