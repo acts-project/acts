@@ -200,20 +200,18 @@ class SeedFinderOrthogonal {
    * @brief Filter potential candidate pairs, and output seeds into an
    * iterator.
    *
-   * @tparam output_container_t The type of the output container.
-   *
    * @param middle The (singular) middle spacepoint.
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
    * @param seedFilterState  holds quantities used in seed filter
-   * @param cont The container to write the resulting seeds to.
+   * @param candidates_collector The container to write the resulting
+   * seed caandidates to.
    */
-  template <typename output_container_t>
-  void filterCandidates(internal_sp_t &middle,
-                        std::vector<internal_sp_t *> &bottom,
-                        std::vector<internal_sp_t *> &top,
-                        SeedFilterState seedFilterState,
-                        output_container_t &cont) const;
+  void filterCandidates(
+      internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
+      std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
+      CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+          &candidates_collector) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.
