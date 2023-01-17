@@ -105,14 +105,14 @@ struct GeometryView3D {
   /// @param gctx The geometry context for which it is drawn
   /// @param transform An option additional transform
   /// @param connected The config for connected portals
-  /// @param disconnected The config for disconnected portals
+  /// @param unconnected The config for unconnected portals
   static void drawDetectorVolume(
       IVisualization3D& helper,
       const Acts::Experimental::DetectorVolume& volume,
       const GeometryContext& gctx,
       const Transform3& transform = Transform3::Identity(),
       const ViewConfig& connected = ViewConfig({0, 255, 0}),
-      const ViewConfig& disconnected = ViewConfig({255, 0, 0}));
+      const ViewConfig& unconnected = ViewConfig({255, 0, 0}));
 
   /// Helper method to draw AbstractVolume objects
   ///
