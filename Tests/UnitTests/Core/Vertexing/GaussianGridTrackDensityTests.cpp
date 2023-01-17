@@ -136,7 +136,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_density_test) {
 
   // Check if position of maximum is correct
   auto maxRes = grid.getMaxZPosition(mainGrid);
-  int maxBin = (*maxRes / binSize) + mainGridSize / 2;
+  int maxBin = static_cast<int>((*maxRes / binSize) + mainGridSize / 2);
   BOOST_CHECK_EQUAL(maxBin, 0);
 
   // Check if error is thrown for empty grid
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_sum_max_densitytest) {
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
   // Artifically add some more density around the peak of track 2
-  int maxZbin = (posZ2 / binSize + mainGridSize / 2.);
+  int maxZbin = static_cast<int>((posZ2 / binSize + mainGridSize / 2.));
   mainGrid(maxZbin - 1) += 1;
   mainGrid(maxZbin + 1) += 1;
 
@@ -270,7 +270,7 @@ BOOST_AUTO_TEST_CASE(gaussian_grid_seed_width_test) {
   binAndTrackGrid = grid.addTrack(params2, mainGrid);
 
   // Artifically add some more density around the peak of track 2
-  int maxZbin = (posZ2 / binSize + mainGridSize / 2.);
+  int maxZbin = static_cast<int>((posZ2 / binSize + mainGridSize / 2.));
   mainGrid(maxZbin - 1) += 1;
   mainGrid(maxZbin + 1) += 1;
 

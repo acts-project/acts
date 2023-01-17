@@ -157,8 +157,8 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(
   std::vector<uint32_t> normalisedHistoContents(nBins);
   const double invIntegral = 1. / std::get<2>(map);
   for (int iBin = 0; iBin < nBins; ++iBin) {
-    normalisedHistoContents[iBin] =
-        UINT32_MAX * (histoContents[iBin] * invIntegral);
+    normalisedHistoContents[iBin] = static_cast<unsigned int>(
+        UINT32_MAX * (histoContents[iBin] * invIntegral));
   }
 
   auto histoBorders = std::get<0>(map);
@@ -195,8 +195,8 @@ std::pair<std::vector<float>, std::vector<uint32_t>> buildMap(TH1F const* hist,
   std::vector<uint32_t> normalisedHistoContents(nBins);
   const double invIntegral = 1. / std::max(integral, std::get<2>(map));
   for (int iBin = 0; iBin < nBins; ++iBin) {
-    normalisedHistoContents[iBin] =
-        UINT32_MAX * (histoContents[iBin] * invIntegral);
+    normalisedHistoContents[iBin] = static_cast<unsigned int>(
+        UINT32_MAX * (histoContents[iBin] * invIntegral));
   }
 
   std::vector<float> histoBorders = std::get<0>(map);

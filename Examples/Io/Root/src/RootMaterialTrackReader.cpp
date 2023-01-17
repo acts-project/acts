@@ -66,7 +66,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
                               << "'.");
   }
 
-  m_events = m_inputChain->GetMaximum("event_id") + 1;
+  m_events = static_cast<size_t>(m_inputChain->GetMaximum("event_id") + 1);
   size_t nentries = m_inputChain->GetEntries();
   m_batchSize = nentries / m_events;
   ACTS_DEBUG("The full chain has "
