@@ -190,7 +190,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
       auto ip = particles.find(particleId);
       if (ip != particles.end()) {
         const auto& particle = *ip;
-        m_t_charge = particle.charge();
+        m_t_charge = static_cast<int>(particle.charge());
         m_t_qop = m_t_charge / p;
       } else {
         ACTS_WARNING("Truth particle with barcode = " << particleId

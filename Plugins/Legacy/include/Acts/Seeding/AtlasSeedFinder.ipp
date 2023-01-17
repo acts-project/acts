@@ -477,7 +477,7 @@ void Acts::Legacy::AtlasSeedFinder<SpacePoint>::fillLists() {
 
   r_first = 0;
   if (m_iteration != 0) {
-    r_first = m_config.SCT_rMin / r_rstep;
+    r_first = static_cast<int>(m_config.SCT_rMin / r_rstep);
   }
   for (int i = r_first; i != r_size; ++i) {
     if (r_map[i] == 0) {
