@@ -234,11 +234,12 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
 }
 
 template <typename external_spacepoint_t>
-template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
-    const SeedFinderOptions &options, internal_sp_t &middle,
-    std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
-    SeedFilterState seedFilterState, output_container_t &cont) const {
+    const SeedFinderOptions &options,
+    internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
+    std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
+    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+        &candidates_collector) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
@@ -273,8 +274,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<LinCircle> linCircleTop;
   linCircleTop.reserve(top.size());
 
-  transformCoordinates(bottom, middle, true, linCircleBottom);
-  transformCoordinates(top, middle, false, linCircleTop);
+  auto sorted_bottoms =
+      transformCoordinates(bottom, middle, true, linCircleBottom);
+  auto sorted_tops = transformCoordinates(top, middle, false, linCircleTop);
 
   std::vector<float> tanLM;
   std::vector<float> tanMT;
@@ -297,7 +299,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
   size_t t0 = 0;
 
-  for (size_t b = 0; b < numBotSP; b++) {
+  for (const std::size_t b : sorted_bottoms) {
     // break if we reached the last top SP
     if (t0 == numTopSP) {
       break;
@@ -330,7 +332,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     top_valid.clear();
     curvatures.clear();
     impactParameters.clear();
-    for (size_t t = t0; t < numTopSP; t++) {
+
+    for (size_t index_t = t0; index_t < numTopSP; index_t++) {
+      const std::size_t t = sorted_tops[index_t];
       auto lt = linCircleTop[t];
       float cotThetaT = lt.cotTheta;
 
@@ -365,7 +369,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
           if (cotThetaB - cotThetaT < 0) {
             break;
           }
-          t0 = t + 1;
+          t0 = index_t + 1;
         }
         continue;
       }
@@ -405,7 +409,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
           if (cotThetaB - cotThetaT < 0) {
             break;
           }
-          t0 = t;
+          t0 = index_t;
         }
         continue;
       }
@@ -423,12 +427,13 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
         impactParameters.push_back(Im);
       }
     }
+
     if (!top_valid.empty()) {
-      m_config.seedFilter->filterSeeds_2SpFixed(*bottom[b], middle, top_valid,
-                                                curvatures, impactParameters,
-                                                seedFilterState, cont);
+      m_config.seedFilter->filterSeeds_2SpFixed(
+          *bottom[b], middle, top_valid, curvatures, impactParameters,
+          seedFilterState, candidates_collector);
     }
-  }
+  }  // loop on bottoms
 }
 
 template <typename external_spacepoint_t>
@@ -451,6 +456,19 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * decreasing z track.
    */
   std::vector<internal_sp_t *> bottom_lh_v, bottom_hl_v, top_lh_v, top_hl_v;
+
+  /*
+   * Storage for seed candidates
+   */
+  std::size_t max_num_quality_seeds_per_spm =
+      m_config.seedFilter->getSeedFilterConfig().maxQualitySeedsPerSpMConf;
+  std::size_t max_num_seeds_per_spm =
+      m_config.seedFilter->getSeedFilterConfig().maxSeedsPerSpMConf;
+
+  CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+      candidates_collector;
+  candidates_collector.setMaxElements(max_num_seeds_per_spm,
+                                      max_num_quality_seeds_per_spm);
 
   /*
    * Calculate the search ranges for bottom and top candidates for this middle
@@ -570,13 +588,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                });
   }
 
-  /*
-   * Create a vector to contain protoseeds.
-   */
-  std::vector<std::pair<
-      float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-      protoseeds;
-
   // TODO: add seed confirmation
   SeedFilterState seedFilterState;
 
@@ -585,19 +596,19 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
     filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
-                     protoseeds);
+                     candidates_collector);
   }
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
     filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
-                     protoseeds);
+                     candidates_collector);
   }
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(protoseeds,
+  m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
                                             seedFilterState.numQualitySeeds,
                                             std::back_inserter(out_cont));
 }

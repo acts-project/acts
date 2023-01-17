@@ -466,7 +466,7 @@ BOOST_AUTO_TEST_CASE(frustum_intersect) {
 
     std::ofstream os;
 
-    BoundingBoxScalar w = 1000;
+    size_t w = 1000;
     size_t n = 10;
 
     // BEGIN VISUAL PARAMETER TEST
