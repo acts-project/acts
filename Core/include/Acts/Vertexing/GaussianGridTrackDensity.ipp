@@ -62,7 +62,7 @@ Acts::GaussianGridTrackDensity<mainGridSize, trkGridSize>::addTrack(
   float z0 = trk.parameters()[1];
 
   // Calculate offset in d direction to central bin at z-axis
-  int dOffset = std::floor(d0 / m_cfg.binSize - 0.5) + 1;
+  int dOffset = static_cast<int>(std::floor(d0 / m_cfg.binSize - 0.5) + 1);
   // Calculate bin in z
   int zBin = int(z0 / m_cfg.binSize + mainGridSize / 2.);
 

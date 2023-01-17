@@ -87,7 +87,7 @@ Acts::SpacePointGridCreator::createGrid(
 
     // divide 2pi by angle delta to get number of phi-bins
     // size is always 2pi even for regions of interest
-    phiBins = std::ceil(2 * M_PI / deltaPhi);
+    phiBins = static_cast<int>(std::ceil(2 * M_PI / deltaPhi));
     // need to scale the number of phi bins accordingly to the number of
     // consecutive phi bins in the seed making step.
     // Each individual bin should be approximately a fraction (depending on this

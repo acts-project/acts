@@ -35,7 +35,7 @@ class AlignedDetector {
 
   struct Config : public GenericDetector::Config {
     /// Seed for the decorator random numbers.
-    double seed = 1324354657;
+    size_t seed = 1324354657;
     /// Size of a valid IOV.
     size_t iovSize = 100;
     /// Span until garbage collection is active.
