@@ -244,7 +244,8 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   }
 
   // Computing the extra hits properties based on the mappingStep length
-  int volumeStep = floor(properties.thickness() / m_cfg.mappingStep);
+  int volumeStep =
+      static_cast<int>(std::floor(properties.thickness() / m_cfg.mappingStep));
   float remainder = properties.thickness() - m_cfg.mappingStep * volumeStep;
   properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
   direction = direction * (m_cfg.mappingStep / direction.norm());
