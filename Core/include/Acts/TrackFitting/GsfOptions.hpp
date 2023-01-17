@@ -62,8 +62,6 @@ struct GsfOptions {
 
   GsfExtensions<traj_t> extensions;
 
-  LoggerWrapper logger;
-
   PropagatorPlainOptions propagatorPlainOptions;
 
   const Surface* referenceSurface = nullptr;
