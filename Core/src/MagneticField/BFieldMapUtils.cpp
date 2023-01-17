@@ -56,7 +56,7 @@ Acts::fieldMapRZ(const std::function<size_t(std::array<size_t, 2> binsRZ,
   zMax += stepZ;
   if (firstQuadrant) {
     zMin = -zPos[nBinsZ - 1];
-    nBinsZ = 2. * nBinsZ - 1;
+    nBinsZ = static_cast<size_t>(2. * nBinsZ - 1);
   }
 
   // Create the axis for the grid
