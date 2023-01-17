@@ -8,8 +8,8 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
-#include <ostream>
 #include <array>
+#include <ostream>
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   // zero represents an invalid/undefined identifier
