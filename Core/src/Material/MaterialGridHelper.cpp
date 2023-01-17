@@ -15,17 +15,17 @@
 #include <stdexcept>
 #include <tuple>
 
-Acts::Grid2D Acts::createGrid(std::array<double, 3> gridAxis1,
-                              std::array<double, 3> gridAxis2) {
+Acts::Grid2D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
+                              Acts::MaterialGridAxisData gridAxis2) {
   // get the number of bins
-  size_t nBinsAxis1 = gridAxis1[2];
-  size_t nBinsAxis2 = gridAxis2[2];
+  size_t nBinsAxis1 = std::get<2>(gridAxis1);
+  size_t nBinsAxis2 = std::get<2>(gridAxis2);
 
   // get the minimum and maximum
-  double minAxis1 = gridAxis1[0];
-  double minAxis2 = gridAxis2[0];
-  double maxAxis1 = gridAxis1[1];
-  double maxAxis2 = gridAxis2[1];
+  double minAxis1 = std::get<0>(gridAxis1);
+  double minAxis2 = std::get<0>(gridAxis2);
+  double maxAxis1 = std::get<1>(gridAxis1);
+  double maxAxis2 = std::get<1>(gridAxis2);
   // calculate maxima (add one last bin, because bin value always corresponds
   // to
   // left boundary)
@@ -42,21 +42,21 @@ Acts::Grid2D Acts::createGrid(std::array<double, 3> gridAxis1,
   return Acts::Grid2D(std::make_tuple(std::move(axis1), std::move(axis2)));
 }
 
-Acts::Grid3D Acts::createGrid(std::array<double, 3> gridAxis1,
-                              std::array<double, 3> gridAxis2,
-                              std::array<double, 3> gridAxis3) {
+Acts::Grid3D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
+                              Acts::MaterialGridAxisData gridAxis2,
+                              Acts::MaterialGridAxisData gridAxis3) {
   // get the number of bins
-  size_t nBinsAxis1 = gridAxis1[2];
-  size_t nBinsAxis2 = gridAxis2[2];
-  size_t nBinsAxis3 = gridAxis3[2];
+  size_t nBinsAxis1 = std::get<2>(gridAxis1);
+  size_t nBinsAxis2 = std::get<2>(gridAxis2);
+  size_t nBinsAxis3 = std::get<2>(gridAxis3);
 
   // get the minimum and maximum
-  double minAxis1 = gridAxis1[0];
-  double minAxis2 = gridAxis2[0];
-  double minAxis3 = gridAxis3[0];
-  double maxAxis1 = gridAxis1[1];
-  double maxAxis2 = gridAxis2[1];
-  double maxAxis3 = gridAxis3[1];
+  double minAxis1 = std::get<0>(gridAxis1);
+  double minAxis2 = std::get<0>(gridAxis2);
+  double minAxis3 = std::get<0>(gridAxis3);
+  double maxAxis1 = std::get<1>(gridAxis1);
+  double maxAxis2 = std::get<1>(gridAxis2);
+  double maxAxis3 = std::get<1>(gridAxis3);
   // calculate maxima (add one last bin, because bin value always corresponds
   // to
   // left boundary)
@@ -130,9 +130,6 @@ Acts::Grid2D Acts::createGrid2D(
     const Acts::BinUtility& bins,
     std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
-  // First we nee to create the 2 axis
-  std::array<double, 3> gridAxis1{};
-  std::array<double, 3> gridAxis2{};
 
   bool isCartesian = false;
   bool isCylindrical = false;
@@ -149,13 +146,9 @@ Acts::Grid2D Acts::createGrid2D(
     throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
   }
 
-  gridAxis1[0] = bu[0].min;
-  gridAxis1[1] = bu[0].max;
-  gridAxis1[2] = bu[0].bins();
-
-  gridAxis2[0] = bu[1].min;
-  gridAxis2[1] = bu[1].max;
-  gridAxis2[2] = bu[1].bins();
+  // First we nee to create the 2 axis
+  MaterialGridAxisData gridAxis1{bu[0].min, bu[0].max, bu[0].bins()};
+  MaterialGridAxisData gridAxis2{bu[1].min, bu[1].max, bu[1].bins()};
 
   std::function<double(Acts::Vector3)> coord1 =
       globalToLocalFromBin(bu[0].binvalue);
@@ -167,7 +160,7 @@ Acts::Grid2D Acts::createGrid2D(
     pos = transfo * pos;
     return {coord1(pos), coord2(pos)};
   };
-  return (Acts::createGrid(gridAxis1, gridAxis2));
+  return Acts::createGrid(gridAxis1, gridAxis2);
 }
 
 Acts::Grid3D Acts::createGrid3D(
@@ -175,9 +168,6 @@ Acts::Grid3D Acts::createGrid3D(
     std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
   // First we nee to create the 3 axis
-  std::array<double, 3> gridAxis1{};
-  std::array<double, 3> gridAxis2{};
-  std::array<double, 3> gridAxis3{};
 
   bool isCartesian = false;
   bool isCylindrical = false;
@@ -194,17 +184,11 @@ Acts::Grid3D Acts::createGrid3D(
     throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
   }
 
-  gridAxis1[0] = bu[0].min;
-  gridAxis1[1] = bu[0].max;
-  gridAxis1[2] = bu[0].bins();
+  MaterialGridAxisData gridAxis1{bu[0].min, bu[0].max, bu[0].bins()};
 
-  gridAxis2[0] = bu[1].min;
-  gridAxis2[1] = bu[1].max;
-  gridAxis2[2] = bu[1].bins();
+  MaterialGridAxisData gridAxis2{bu[1].min, bu[1].max, bu[1].bins()};
 
-  gridAxis3[0] = bu[2].min;
-  gridAxis3[1] = bu[2].max;
-  gridAxis3[2] = bu[2].bins();
+  MaterialGridAxisData gridAxis3{bu[2].min, bu[2].max, bu[2].bins()};
 
   std::function<double(Acts::Vector3)> coord1 =
       globalToLocalFromBin(bu[0].binvalue);
@@ -219,7 +203,7 @@ Acts::Grid3D Acts::createGrid3D(
     pos = transfo * pos;
     return {coord1(pos), coord2(pos), coord3(pos)};
   };
-  return (Acts::createGrid(gridAxis1, gridAxis2, gridAxis3));
+  return Acts::createGrid(gridAxis1, gridAxis2, gridAxis3);
 }
 
 Acts::MaterialGrid2D Acts::mapMaterialPoints(Acts::Grid2D& grid) {

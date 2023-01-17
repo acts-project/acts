@@ -41,7 +41,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
   // binSizeR allows to increase or reduce numRBins if needed
-  size_t numRBins = (config.rMax + options.beamPos.norm()) / config.binSizeR;
+  size_t numRBins = static_cast<size_t>((config.rMax + options.beamPos.norm()) /
+                                        config.binSizeR);
   std::vector<
       std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
       rBins(numRBins);
@@ -72,7 +73,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
         sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    size_t rIndex = isp->radius() / config.binSizeR;
+    size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;

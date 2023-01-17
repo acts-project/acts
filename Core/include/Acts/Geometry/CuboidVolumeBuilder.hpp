@@ -71,7 +71,7 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
     size_t binsY = 1;
     // Bins in Z direction
     size_t binsZ = 1;
-    // Envelope in X (along layer normal)
+    // Envelope in X
     std::array<ActsScalar, 2u> envelopeX{0, 0};
     // Envelope in Y
     std::array<ActsScalar, 2u> envelopeY{0, 0};

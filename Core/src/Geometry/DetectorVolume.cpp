@@ -203,8 +203,8 @@ void Acts::Experimental::DetectorVolume::createBoundingBox(
       vertices.push_back(v);
     }
   }
-  Acts::Vector3 vmin;
-  Acts::Vector3 vmax;
+  Acts::Vector3 vmin = Acts::Vector3::Zero();
+  Acts::Vector3 vmax = Acts::Vector3::Zero();
   for (const auto& v : vertices) {
     vmin = vmin.cwiseMin(v);
     vmax = vmax.cwiseMax(v);
