@@ -235,9 +235,9 @@ SeedFinderOrthogonal<external_spacepoint_t>::SeedFinderOrthogonal(
 
 template <typename external_spacepoint_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
-    const SeedFinderOptions &options,
-    internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-    std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
+    const SeedFinderOptions &options, internal_sp_t &middle,
+    std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
+    SeedFilterState seedFilterState,
     CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
         &candidates_collector) const {
   float rM = middle.radius();

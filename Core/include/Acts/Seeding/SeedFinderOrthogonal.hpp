@@ -211,9 +211,10 @@ class SeedFinderOrthogonal {
    * @param candidates_collector The container to write the resulting
    * seed candidates to.
    */
-  void filterCandidates(const SeedFinderOptions &options,
-      internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
-      std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
+  void filterCandidates(
+      const SeedFinderOptions &options, internal_sp_t &middle,
+      std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
+      SeedFilterState seedFilterState,
       CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
           &candidates_collector) const;
 
