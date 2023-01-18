@@ -22,7 +22,7 @@ Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
 
 void Acts::TrackingGeometryBuilder::setConfiguration(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig) {
-  if (m_cfg.trackingVolumeBuilders.empty()) {
+  if (cgbConfig.trackingVolumeBuilders.empty()) {
     throw std::invalid_argument("Invalid configuration: no volume builders");
   }
   m_cfg = cgbConfig;
