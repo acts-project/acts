@@ -6,14 +6,18 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/JsonMaterialDecorator.hpp"
 #include "Acts/Plugins/Json/MaterialMapJsonConverter.hpp"
+#include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 
+#include <fstream>
 #include <memory>
+#include <string>
 
 #include <pybind11/pybind11.h>
 
@@ -114,6 +118,20 @@ void addJson(Context& ctx) {
     ACTS_PYTHON_MEMBER(writePerEvent);
     ACTS_PYTHON_MEMBER(writeOnlyNames);
     ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    py::class_<Acts::ProtoDetector>(mex, "ProtoDetector")
+        .def(py::init<>([](std::string pathName) {
+          nlohmann::json jDetector;
+          auto in = std::ifstream(pathName, std::ifstream::in);
+          if (in.good()) {
+            in >> jDetector;
+            in.close();
+          }
+          Acts::ProtoDetector pDetector = jDetector["detector"];
+          return pDetector;
+        }));
   }
 }
 }  // namespace Acts::Python

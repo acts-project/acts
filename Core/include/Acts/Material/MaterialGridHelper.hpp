@@ -35,6 +35,8 @@ using MaterialGrid2D =
 using MaterialGrid3D =
     Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
+using MaterialGridAxisData = std::tuple<double, double, size_t>;
+
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
 ///
@@ -44,8 +46,8 @@ using MaterialGrid3D =
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid2D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2);
+Grid2D createGrid(MaterialGridAxisData gridAxis1,
+                  MaterialGridAxisData gridAxis2);
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
@@ -57,9 +59,9 @@ Grid2D createGrid(std::array<double, 3> gridAxis1,
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid3D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2,
-                  std::array<double, 3> gridAxis3);
+Grid3D createGrid(MaterialGridAxisData gridAxis1,
+                  MaterialGridAxisData gridAxis2,
+                  MaterialGridAxisData gridAxis3);
 
 /// @brief return a function that return the coordinate corresponding to type of
 /// bin

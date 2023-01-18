@@ -4,17 +4,17 @@ TGeo plugin
 General
 -------
 
-
 The ``TGeo`` plugin connects a geometry described with the ``ROOT::Geom`` module with Acts. This is done by parsing the ROOT geometry and selecting ``TGeoNode`` objects that represent chosen geometrical objects. 
 Acts detector elements are represented by surfaces with dedicated shapes, hence a conversion of the volume based ``TGeoNode`` description into ``Acts::Surface`` objects needs to take place.
+
+An example use of the ``TGeo`` plugin can be found in the ``TGeoDetector`` example.
 
 Parsing the ROOT Geometry 
 -------------------------
 
-Once a geometry is imported in ROOT, it can be accessed via the ``gGeoManager``. The ``Acts::TGeoLayerBuilder`` relies on the fact that this ``gGeoManager`` is accessible, if it points to ``nullptr``, obviously no conversion is done.
-The ``Acts::TGeoLayerBuilder`` can hereby be configured to search within given parsing ranges for ``TGeoNode`` objects to be converted into ``Acts::Surface`` objects. A vector of search strings can be used for situations where multiple sensor types are used or additional objects are bound to be described. 
+Once a geometry is imported in ROOT, it can be accessed via the ``gGeoManager``. The ``Acts::TGeoLayerBuilder``, which implements an ``Acts::ILayerBuilder``, relies on the fact that this ``gGeoManager`` is accessible, if it points to ``nullptr``, obviously no conversion is done.
+The ``Acts::TGeoLayerBuilder`` can be configured to search within given parsing ranges for ``TGeoNode`` objects to be converted into ``Acts::Surface`` objects. A vector of search strings can be used for situations where multiple sensor types are used or additional objects are bound to be described. 
 A dedicated ``Acts::TGeoParser`` struct is then used to select the nodes from the ROOT geometry.
-
 
 Conversion of TGeoShapes to Acts::Surfaces
 ------------------------------------------
@@ -30,28 +30,37 @@ The nomenclature/convention is the following:
 
 In case a translation request is malformed, a ``std::exception`` is thrown, indicating the problem.
 
-Examples of supported ``TGeoShape`` transformations to ``Acts::Surface`` objects can be found in the ``Tests/UnitTests/Plugins/TGeo`` unit test suite, a summary of the output can be seen below:
+Examples of supported ``TGeoShape`` transformations to ``Acts::Surface`` objects can be found in the ``Tests/UnitTests/Plugins/TGeo`` unit test suite, a summary of the output can be seen below.
 
-.. image:: ../figures/plugins/tgeo/TGeoBBox_PlaneSurface.png
-  :width: 800
-  :alt: Conversion of a ``TGeoBBox`` shape into a ``Acts::PlaneSurface`` with ``Acts::RectangleBounds``. All axes iterations are allowed for this conversion.
+Additionally, an option exists to split surfaces after the transformation
+has taken place by adding a splitter implementation to the ``Acts::TGeoLayerBuilder``, like the ``Acts::TGeoCylinderDiscSplitter``. This can be useful to describe e.g. a cylindrical detector with tangential planar surfaces.
 
-.. image:: ../figures/plugins/tgeo/TGeoTrd1_PlaneSurface.png
+.. figure:: ../figures/plugins/tgeo/TGeoBBox_PlaneSurface.png
   :width: 800
-  :alt: Conversion of a ``TGeoTrd1`` shape into a ``Acts::PlaneSurface`` with ``Acts::TrapezoidBounds``. The axes definitions need to be ``(x/X)(z/Z)(*/*)``.
+  
+  Conversion of a ``TGeoBBox`` shape into a ``Acts::PlaneSurface`` with ``Acts::RectangleBounds``. All axes iterations are allowed for this conversion.
 
-.. image:: ../figures/plugins/tgeo/TGeoTrd2_PlaneSurface_xz.png
+.. figure:: ../figures/plugins/tgeo/TGeoTrd1_PlaneSurface.png
   :width: 800
-  :alt: Conversion of a ``TGeoTrd2`` shape into a ``Acts::PlaneSurface`` with ``Acts::TrapezoidBounds``. The axes definitions shown are ``(x/X)(z/Z)(*/*)``, the second coordinate has to be the z-axis.
+  
+  Conversion of a ``TGeoTrd1`` shape into a ``Acts::PlaneSurface`` with ``Acts::TrapezoidBounds``. The axes definitions need to be ``(x/X)(z/Z)(*/*)``.
 
-.. image:: ../figures/plugins/tgeo/TGeoTrd2_PlaneSurface_xz.png
+.. figure:: ../figures/plugins/tgeo/TGeoTrd2_PlaneSurface_xz.png
   :width: 800
-  :alt: Conversion of a ``TGeoTrd2`` shape into a ``Acts::PlaneSurface`` with ``Acts::TrapezoidBounds``. The axes definitions shown are ``(y/Y)(z/Z)(*/*)``, the second coordinate has to be the z-axis.
+  
+  Conversion of a ``TGeoTrd2`` shape into a ``Acts::PlaneSurface`` with ``Acts::TrapezoidBounds``. The axes definitions shown are ``(x/X)(z/Z)(*/*)``, the second coordinate has to be the z-axis.
 
-.. image:: ../figures/plugins/tgeo/TGeoTube_CylinderSurface.png
+.. figure:: ../figures/plugins/tgeo/TGeoTrd2_PlaneSurface_yz.png
   :width: 800
-  :alt: Conversion of a ``TGeoTube`` shape into a ``Acts::CylinderSurface`` with ``Acts::CylinderBounds``. The axes definitions has to be ``(x/X)(y/Y)(*/*)``.
+  
+  Conversion of a ``TGeoTrd2`` shape into a ``Acts::PlaneSurface`` with ``Acts::TrapezoidBounds``. The axes definitions shown are ``(y/Y)(z/Z)(*/*)``, the second coordinate has to be the z-axis.
 
-.. image:: ../figures/plugins/tgeo/TGeoTube_DiscSurface.png
+.. figure:: ../figures/plugins/tgeo/TGeoTube_CylinderSurface.png
   :width: 800
-  :alt: Conversion of a ``TGeoTube`` shape into a ``Acts::DiscSurface`` with ``Acts::DiscBounds``.The axes definitions has to be ``(x/X)(y/Y)(*/*)``.
+  
+  Conversion of a ``TGeoTube`` shape into a ``Acts::CylinderSurface`` with ``Acts::CylinderBounds``. The axes definitions has to be ``(x/X)(y/Y)(*/*)``.
+
+.. figure:: ../figures/plugins/tgeo/TGeoTube_DiscSurface.png
+  :width: 800
+  
+  Conversion of a ``TGeoTube`` shape into a ``Acts::DiscSurface`` with ``Acts::DiscBounds``.The axes definitions has to be ``(x/X)(y/Y)(*/*)``.

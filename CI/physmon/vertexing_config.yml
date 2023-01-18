@@ -19,26 +19,37 @@ histograms:
     min: -0.0001
     max: 0.0001
 
+  # fixed mu=50
   "^n.*$":
     nbins: 50
+    min: 0
+    max: 51
 
   "truthX|truthY|recoX|recoY":
-    min: -0.05
-    max: 0.05
+    min: -0.06
+    max: 0.06
+    nbins: 100
 
   "truthZ|recoZ":
     min: -200
     max: 200
+    nbins: 100
     
 
 extra_histograms:
   - expression: df["nRecoVtx"] / df["nTrueVtx"]
     name: "recoOverTrue"
     nbins: 50
+    min: 0.0
+    max: 1.0
   - expression: df["nRecoVtx"] / df["nVtxDetectorAcceptance"]
     name: "recoOverAcc"
     nbins: 50
+    min: 0.0
+    max: 1.0
   - expression: df["nRecoVtx"] / df["nVtxReconstructable"]
     name: "recoOverRecble"
     nbins: 50
+    min: 0.0
+    max: 1.0
 
