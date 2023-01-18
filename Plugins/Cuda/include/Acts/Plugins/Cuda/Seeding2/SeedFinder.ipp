@@ -18,6 +18,7 @@
 #include "Acts/Plugins/Cuda/Utilities/MemoryManager.hpp"
 
 // Acts include(s).
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 
@@ -53,6 +54,18 @@ SeedFinder<external_spacepoint_t>::SeedFinder(
     throw std::runtime_error(
         "SeedFilterConfig not in ACTS internal units in "
         "Cuda/Seeding2/SeedFinder");
+  if (std::isnan(m_commonConfig.deltaRMaxTopSP)) {
+    throw std::runtime_error("Value of deltaRMaxTopSP was not initialised");
+  }
+  if (std::isnan(m_commonConfig.deltaRMinTopSP)) {
+    throw std::runtime_error("Value of deltaRMinTopSP was not initialised");
+  }
+  if (std::isnan(m_commonConfig.deltaRMaxBottomSP)) {
+    throw std::runtime_error("Value of deltaRMaxBottomSP was not initialised");
+  }
+  if (std::isnan(m_commonConfig.deltaRMinBottomSP)) {
+    throw std::runtime_error("Value of deltaRMinBottomSP was not initialised");
+  }
 
   // Tell the user what CUDA device will be used by the object.
   if (static_cast<std::size_t>(m_device) < Info::instance().devices().size()) {
@@ -188,23 +201,26 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   auto triplet_itr = tripletCandidates.begin();
   auto triplet_end = tripletCandidates.end();
   for (; triplet_itr != triplet_end; ++triplet_itr, ++middleIndex) {
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-        seedsPerSPM;
+    std::vector<typename CandidatesForMiddleSp<
+        InternalSpacePoint<external_spacepoint_t>>::value_type>
+        candidates;
+
     auto& middleSP = *(middleSPVec[middleIndex]);
     for (const Details::Triplet& triplet : *triplet_itr) {
       assert(triplet.bottomIndex < bottomSPVec.size());
       auto& bottomSP = *(bottomSPVec[triplet.bottomIndex]);
       assert(triplet.topIndex < topSPVec.size());
       auto& topSP = *(topSPVec[triplet.topIndex]);
-      seedsPerSPM.emplace_back(std::make_pair(
-          triplet.weight,
-          std::make_unique<const InternalSeed<external_spacepoint_t>>(
-              bottomSP, middleSP, topSP, 0)));
+      candidates.emplace_back(bottomSP, middleSP, topSP, triplet.weight, 0,
+                              false);
     }
-    int numQualitySeeds = 0;  // not used but needs to be fixed
+    std::sort(
+        candidates.begin(), candidates.end(),
+        CandidatesForMiddleSp<
+            InternalSpacePoint<external_spacepoint_t>>::descendingByQuality);
+    std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_commonConfig.seedFilter->filterSeeds_1SpFixed(
-        seedsPerSPM, numQualitySeeds, std::back_inserter(outputVec));
+        candidates, numQualitySeeds, std::back_inserter(outputVec));
   }
 
   // Free up all allocated device memory.

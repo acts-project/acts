@@ -100,10 +100,14 @@ class SeedFinderOrthogonal {
    *
    * @param spacePoints The input spacepoints from which to create seeds.
    * @param out_cont The output container to write seeds to.
+   * @param extract_coordinates User-defined function for extracting global position and
+   * covariance of the external space point
    */
-  template <typename input_container_t, typename output_container_t>
+  template <typename input_container_t, typename output_container_t,
+            typename callable_t>
   void createSeeds(const input_container_t &spacePoints,
-                   output_container_t &out_cont) const;
+                   output_container_t &out_cont,
+                   callable_t &&extract_coordinates) const;
 
   /**
    * @brief Perform seed finding, returning a new container of seeds.
@@ -116,11 +120,14 @@ class SeedFinderOrthogonal {
    * @tparam input_container_t The type of the input spacepoint container.
    *
    * @param spacePoints The input spacepoints from which to create seeds.
+   * @param extract_coordinates User-defined function for extracting global position and
+   * covariance of the external space point
    *
    * @return A vector of seeds.
    */
-  template <typename input_container_t>
-  std::vector<seed_t> createSeeds(const input_container_t &spacePoints) const;
+  template <typename input_container_t, typename callable_t>
+  std::vector<seed_t> createSeeds(const input_container_t &spacePoints,
+                                  callable_t &&extract_coordinates) const;
 
  private:
   /**
@@ -193,20 +200,18 @@ class SeedFinderOrthogonal {
    * @brief Filter potential candidate pairs, and output seeds into an
    * iterator.
    *
-   * @tparam output_container_t The type of the output container.
-   *
    * @param middle The (singular) middle spacepoint.
    * @param bottom The (vector of) candidate bottom spacepoints.
    * @param top The (vector of) candidate top spacepoints.
    * @param seedFilterState  holds quantities used in seed filter
-   * @param cont The container to write the resulting seeds to.
+   * @param candidates_collector The container to write the resulting
+   * seed caandidates to.
    */
-  template <typename output_container_t>
-  void filterCandidates(internal_sp_t &middle,
-                        std::vector<internal_sp_t *> &bottom,
-                        std::vector<internal_sp_t *> &top,
-                        SeedFilterState seedFilterState,
-                        output_container_t &cont) const;
+  void filterCandidates(
+      internal_sp_t &middle, std::vector<internal_sp_t *> &bottom,
+      std::vector<internal_sp_t *> &top, SeedFilterState seedFilterState,
+      CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+          &candidates_collector) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.

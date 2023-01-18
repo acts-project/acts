@@ -61,8 +61,8 @@ struct TGeoDetector {
         Acts::TGeoLayerBuilder::defaultElementFactory;
 
     /// Optional geometry identfier hook to be used during closure
-    /// @note Will be @b copied when calling the geometry building
-    Acts::GeometryIdentifierHook geometryIdentifierHook;
+    std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
+        std::make_shared<Acts::GeometryIdentifierHook>();
 
     enum SubVolume : size_t { Negative = 0, Central, Positive };
 

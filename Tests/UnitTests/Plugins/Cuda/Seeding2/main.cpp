@@ -96,7 +96,6 @@ int main(int argc, char* argv[]) {
 
   // Set up the spacepoint grid configuration.
   Acts::SpacePointGridConfig gridConfig;
-  gridConfig.bFieldInZ = sfOptions.bFieldInZ;
   gridConfig.minPt = sfConfig.minPt;
   gridConfig.rMax = sfConfig.rMax;
   gridConfig.zMax = sfConfig.zMax;
@@ -104,6 +103,9 @@ int main(int argc, char* argv[]) {
   gridConfig.deltaRMax = sfConfig.deltaRMax;
   gridConfig.cotThetaMax = sfConfig.cotThetaMax;
   gridConfig = gridConfig.toInternalUnits();
+  // Set up the spacepoint grid options
+  Acts::SpacePointGridOptions gridOpts;
+  gridOpts.bFieldInZ = sfOptions.bFieldInZ;
 
   // Covariance tool, sets covariances per spacepoint as required.
   auto ct = [=](const TestSpacePoint& sp, float, float,
@@ -120,8 +122,8 @@ int main(int argc, char* argv[]) {
 
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
-  auto grid =
-      Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(gridConfig);
+  auto grid = Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(
+      gridConfig, gridOpts);
   auto spGroup = Acts::BinnedSPGroup<TestSpacePoint>(
       spView.begin(), spView.end(), ct, bottomBinFinder, topBinFinder,
       std::move(grid), rRangeSPExtent, sfConfig, sfOptions);

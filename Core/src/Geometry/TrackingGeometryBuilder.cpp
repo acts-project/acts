@@ -53,7 +53,7 @@ Acts::TrackingGeometryBuilder::trackingGeometry(
         m_cfg.materialDecorator ? m_cfg.materialDecorator.get() : nullptr;
     // build and set the TrackingGeometry
     trackingGeometry.reset(new TrackingGeometry(
-        highestVolume, materialDecorator, m_cfg.geometryIdentifierHook));
+        highestVolume, materialDecorator, *m_cfg.geometryIdentifierHook));
   }
   // return the geometry to the service
   return (trackingGeometry);
