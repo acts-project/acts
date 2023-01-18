@@ -85,9 +85,7 @@ void Acts::Layer::closeGeometry(const IMaterialDecorator* materialDecorator,
     GeometryIdentifier::Value issurface = 0;
     for (auto& sSurface : m_surfaceArray->surfaces()) {
       auto ssurfaceID = GeometryIdentifier(layerID).setSensitive(++issurface);
-      if (hook) {
-        ssurfaceID = hook(ssurfaceID, *sSurface);
-      }
+      ssurfaceID = hook.decorateIdentifier(ssurfaceID, *sSurface);
       auto mutableSSurface = const_cast<Surface*>(sSurface);
       mutableSSurface->assignGeometryId(ssurfaceID);
       if (materialDecorator != nullptr) {
