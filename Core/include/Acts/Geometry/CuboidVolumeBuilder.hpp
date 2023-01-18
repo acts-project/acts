@@ -13,6 +13,7 @@
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <array>
 #include <functional>
 #include <iosfwd>
 #include <memory>
