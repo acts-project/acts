@@ -12,7 +12,7 @@ Fatras consists of:
 ## Principle
 
 Fatras makes use of the geometry, navigation and propagation modules of ACTS. Given that the navigation module
-of ACTS is capable of predicting the particle trajectory through the detector geometry, it can be used - togehter with the transport/stepper code of the propagator module as a particle simulator through the detector.
+of ACTS is capable of predicting the particle trajectory through the detector geometry, it can be used - together with the transport/stepper code of the propagator module as a particle simulator through the detector.
 
 For Fatras, however, the material interaction of the particle is then changed to run using random numbers that are used for emulating physics processes. Technically, this is enabled with the `actor` mechanism of the propagator.
 
@@ -37,7 +37,7 @@ from Pythia8 input. Furthermore, a translation from `HepMC3` is shown.
 
 ## Particle Simulation
 
-Charged and neutral particles are handled by the Fatras simulation kernel, via two dedicated simulator. Dedicated particle selectors can be configured to select which particles are then further processed within the `Simulation` kernel.
+Charged and neutral particles are handled by the Fatras simulation kernel, via two dedicated simulators. Dedicated particle selectors can be configured to select which particles are then further processed within the `Simulation` kernel.
 
 Once a particle is accepted for further processing, it is propagated with an appropriated `Propagator` instance 
 through the detector geometry. Whenever detector material is passed, physics processes are evoked respecting particle type and kinematics, but also a given configuration. When a charged particle traverses sensitive detector material (i.e. in Acts terms a surface with sensitive definition)
