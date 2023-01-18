@@ -21,23 +21,23 @@ template <typename var_t>
 class CpuMatrix {
  public:
   CpuMatrix() = delete;
-  CpuMatrix(size_t nRows, size_t nCols, bool pinned = 0) {
+  CpuMatrix(size_t nRows, size_t nCols, bool pinned = false) {
     m_setSize(nRows, nCols);
     m_pinned = pinned;
-    if (pinned == 0) {
+    if (!pinned) {
       m_hostPtr = new var_t[m_size];
-    } else if (pinned == 1) {
+    } else if (pinned) {
       cudaMallocHost(&m_hostPtr, m_size * sizeof(var_t));
     }
   }
 
   CpuMatrix(size_t nRows, size_t nCols, CudaMatrix<var_t>* cuMat,
-            bool pinned = 0) {
+            bool pinned = false) {
     m_setSize(nRows, nCols);
     m_pinned = pinned;
-    if (pinned == 0) {
+    if (!pinned) {
       m_hostPtr = new var_t[m_size];
-    } else if (pinned == 1) {
+    } else if (pinned) {
       cudaMallocHost(&m_hostPtr, m_nRows * m_nCols * sizeof(var_t));
     }
     cudaMemcpy(m_hostPtr, cuMat->get(0, 0), m_size * sizeof(var_t),

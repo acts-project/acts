@@ -13,6 +13,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <utility>
 
 Acts::Surface::Surface(const Transform3& transform)
@@ -31,7 +32,6 @@ Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
                        const Transform3& shift)
     : GeometryObject(),
       m_transform(shift * other.transform(gctx)),
-      m_associatedLayer(nullptr),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
 Acts::Surface::~Surface() = default;
@@ -208,6 +208,12 @@ std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
   sl << "     Bounds  : " << bounds();
   sl << std::setprecision(-1);
   return sl;
+}
+
+std::string Acts::Surface::toString(const GeometryContext& gctx) const {
+  std::stringstream ss;
+  toStream(gctx, ss);
+  return ss.str();
 }
 
 bool Acts::Surface::operator!=(const Acts::Surface& sf) const {

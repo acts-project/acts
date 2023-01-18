@@ -36,8 +36,6 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   struct Config {
     /// Input (found) trajectories collection.
     std::string inputTrajectories;
-    /// Input track parameters tips w.r.t inputTrajectories.
-    std::string inputTrackParametersTips;
     /// Input particles collection.
     std::string inputParticles;
     /// Input hit-particles map collection.
@@ -63,17 +61,17 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
 
   /// Construct from configuration and log level.
   CKFPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
-  ~CKFPerformanceWriter() final override;
+  ~CKFPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.
@@ -90,7 +88,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   DuplicationPlotTool::DuplicationPlotCache m_duplicationPlotCache{};
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
 
   // Adding numbers for efficiency, fake, duplicate calculations
   size_t m_nTotalTracks = 0;

@@ -26,6 +26,7 @@ template <typename external_spacepoint_t>
 class SeedFinder {
  public:
   SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config,
+             const Acts::SeedFinderOptions& options,
              const Acts::Sycl::DeviceExperimentCuts& cuts,
              Acts::Sycl::QueueWrapper wrappedQueue,
              vecmem::memory_resource& resource,
@@ -51,6 +52,7 @@ class SeedFinder {
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderOptions m_options;
 
   /// Experiment specific cuts
   Acts::Sycl::DeviceExperimentCuts m_deviceCuts;

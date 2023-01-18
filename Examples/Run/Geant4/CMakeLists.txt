@@ -10,8 +10,7 @@ target_link_libraries(
     ActsExamplesFramework
     ActsExamplesGeant4
     ActsExamplesGeant4Common
-    ActsExamplesIoRoot
-    Boost::program_options)
+    ActsExamplesIoRoot)
 
 install(
   TARGETS 

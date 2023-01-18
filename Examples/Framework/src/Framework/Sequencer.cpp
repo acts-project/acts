@@ -8,19 +8,24 @@
 
 #include "ActsExamples/Framework/Sequencer.hpp"
 
+#include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <algorithm>
 #include <atomic>
+#include <cfenv>
 #include <chrono>
 #include <exception>
+#include <limits>
 #include <numeric>
+#include <stdexcept>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
+
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
@@ -81,6 +86,15 @@ void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   }
   m_writers.push_back(std::move(writer));
   ACTS_INFO("Added writer '" << m_writers.back()->name() << "'");
+}
+
+void ActsExamples::Sequencer::addWhiteboardAlias(
+    const std::string& aliasName, const std::string& objectName) {
+  auto [it, success] =
+      m_whiteboardObjectAliases.insert({objectName, aliasName});
+  if (!success) {
+    throw std::invalid_argument("Alias to '" + objectName + "' already set");
+  }
 }
 
 std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {
@@ -216,15 +230,15 @@ inline std::string perEvent(D duration, size_t numEvents) {
 // Store timing data
 struct TimingInfo {
   std::string identifier;
-  double time_total_s;
-  double time_perevent_s;
+  double time_total_s = 0;
+  double time_perevent_s = 0;
 
   DFE_NAMEDTUPLE(TimingInfo, identifier, time_total_s, time_perevent_s);
 };
 
 void storeTiming(const std::vector<std::string>& identifiers,
                  const std::vector<Duration>& durations, std::size_t numEvents,
-                 std::string path) {
+                 const std::string& path) {
   dfe::NamedTupleTsvWriter<TimingInfo> writer(path, 4);
   for (size_t i = 0; i < identifiers.size(); ++i) {
     TimingInfo info;
@@ -291,8 +305,10 @@ int ActsExamples::Sequencer::run() {
           for (size_t event = r.begin(); event != r.end(); ++event) {
             m_cfg.iterationCallback();
             // Use per-event store
-            WhiteBoard eventStore(Acts::getDefaultLogger(
-                "EventStore#" + std::to_string(event), m_cfg.logLevel));
+            WhiteBoard eventStore(
+                Acts::getDefaultLogger("EventStore#" + std::to_string(event),
+                                       m_cfg.logLevel),
+                m_whiteboardObjectAliases);
             // If we ever wanted to run algorithms in parallel, this needs to be
             // changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);

@@ -136,6 +136,8 @@ struct AlignmentResult {
 /// @tparam fitter_t Type of the fitter class
 template <typename fitter_t>
 struct Alignment {
+  // @TODO: Redefine in terms of Track object
+
   /// Default constructor is deleted
   Alignment() = delete;
 

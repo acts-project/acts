@@ -78,13 +78,13 @@ BOOST_DATA_TEST_CASE(
 
   Stepper stepper{};
   Navigator navigator({tg});
-  PropagatorType propagator(std::move(stepper), navigator);
+  PropagatorType propagator(stepper, navigator);
 
   using ActionList = Acts::ActionList<SteppingLogger>;
   using AbortConditions = Acts::AbortList<>;
 
-  Acts::PropagatorOptions<ActionList, AbortConditions> options(
-      tgContext, mfContext, Acts::getDummyLogger());
+  Acts::PropagatorOptions<ActionList, AbortConditions> options(tgContext,
+                                                               mfContext);
 
   options.pathLimit = 20_m;
 

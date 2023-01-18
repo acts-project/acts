@@ -2,7 +2,9 @@ add_library(
   ActsExamplesRecTracksCommon SHARED
   RecTruthTracks.cpp
   RecCKFTracks.cpp
+  RecChi2Tracks.cpp
   SeedingExample.cpp
+  HoughExample.cpp
   MeasurementsToSpacepoints.cpp
 )
 target_include_directories(

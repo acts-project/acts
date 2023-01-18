@@ -348,7 +348,7 @@ class Grid final {
     constexpr size_t nCorners = 1 << DIM;
 
     // construct vector of pairs of adjacent bin centers and values
-    std::array<value_type, nCorners> neighbors;
+    std::array<value_type, nCorners> neighbors{};
 
     // get local indices for current bin
     // value of bin is interpreted as being the field value at its lower left

@@ -38,7 +38,7 @@ struct SplitEnergyLoss {
   double splitMomentumMin = 5_GeV;
 
   template <typename generator_t>
-  bool operator()(generator_t&, const Acts::MaterialSlab&,
+  bool operator()(generator_t& /*unused*/, const Acts::MaterialSlab& /*unused*/,
                   ActsFatras::Particle& particle,
                   std::vector<ActsFatras::Particle>& generated) const {
     const auto p = particle.absoluteMomentum();

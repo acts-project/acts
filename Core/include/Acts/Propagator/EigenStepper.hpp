@@ -159,7 +159,7 @@ class EigenStepper {
       /// k_i of the RKN4 algorithm
       Vector3 k1, k2, k3, k4;
       /// k_i elements of the momenta
-      std::array<double, 4> kQoP;
+      std::array<double, 4> kQoP{};
     } stepData;
   };
 

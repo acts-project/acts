@@ -38,8 +38,7 @@ class AlignmentAlgorithm final : public BareAlgorithm {
    public:
     virtual ~AlignmentFunction() = default;
     virtual AlignmentResult operator()(
-        const std::vector<
-            std::vector<std::reference_wrapper<const IndexSourceLink>>>&,
+        const std::vector<std::vector<IndexSourceLink>>&,
         const TrackParametersContainer&,
         const ActsAlignment::AlignmentOptions<TrackFitterOptions>&) const = 0;
   };
@@ -92,7 +91,7 @@ class AlignmentAlgorithm final : public BareAlgorithm {
   /// @param ctx is the algorithm context that holds event-wise information
   /// @return a process code to steer the algporithm flow
   ActsExamples::ProcessCode execute(
-      const ActsExamples::AlgorithmContext& ctx) const final override;
+      const ActsExamples::AlgorithmContext& ctx) const override;
 
  private:
   Config m_cfg;

@@ -13,43 +13,10 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/TelescopeDetector/BuildTelescopeDetector.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeDetectorElement.hpp"
-#include "ActsExamples/TelescopeDetector/TelescopeDetectorOptions.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
-#include <boost/program_options.hpp>
-
-void TelescopeDetector::addOptions(
-    ActsExamples::Options::Description& desc) const {
-  ActsExamples::Options::addTelescopeGeometryOptions(desc);
-}
-
-auto TelescopeDetector::finalize(
-    const boost::program_options::variables_map& vm,
-    std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  Config cfg;
-
-  cfg.positions = vm["geo-tele-positions"]
-                      .template as<ActsExamples::Options::VariableReals>()
-                      .values;
-  cfg.offsets =
-      vm["geo-tele-offsets"].template as<ActsExamples::Options::Reals<2>>();
-  // The bounds values are taken as (halfX, halfY) for plane surface and
-  // (minR, maxR) for disc surface
-  cfg.bounds =
-      vm["geo-tele-bounds"].template as<ActsExamples::Options::Reals<2>>();
-  // Translate the thickness in unit of mm
-  cfg.thickness = vm["geo-tele-thickness"].template as<double>() * 0.001;
-  cfg.surfaceType = vm["geo-tele-surface"].template as<int>();
-  cfg.binValue = vm["geo-tele-alignaxis"].template as<int>();
-
-  return finalize(cfg, std::move(mdecorator));
-}
-
-auto TelescopeDetector::finalize(
-    const Config& cfg,
-    std::shared_ptr<const Acts::IMaterialDecorator> /* mdecorator */)
-    -> std::pair<TrackingGeometryPtr, ContextDecorators> {
+auto ActsExamples::Telescope::TelescopeDetector::finalize(
+    const Config& cfg, const std::shared_ptr<const Acts::IMaterialDecorator> &
+    /*unused*/) -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   DetectorElement::ContextType nominalContext;
 
   if (cfg.surfaceType > 1) {
@@ -65,6 +32,8 @@ auto TelescopeDetector::finalize(
     throw std::invalid_argument(
         "The minR should be smaller than the maxR for disc surface bounds.");
   }
+
+  config = cfg;
 
   // Sort the provided distances
   std::vector<double> positions = cfg.positions;

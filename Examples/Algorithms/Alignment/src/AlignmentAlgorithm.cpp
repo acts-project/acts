@@ -16,8 +16,8 @@
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 ActsExamples::AlignmentAlgorithm::AlignmentAlgorithm(Config cfg,
-                                                     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("AlignmentAlgorithm", level),
+                                                     Acts::Logging::Level lvl)
+    : ActsExamples::BareAlgorithm("AlignmentAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -63,10 +63,9 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   }
 
   // Prepare the input track collection
-  std::vector<std::vector<std::reference_wrapper<const IndexSourceLink>>>
-      sourceLinkTrackContainer;
+  std::vector<std::vector<IndexSourceLink>> sourceLinkTrackContainer;
   sourceLinkTrackContainer.reserve(numTracksUsed);
-  std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
+  std::vector<IndexSourceLink> trackSourceLinks;
   for (std::size_t itrack = 0; itrack < numTracksUsed; ++itrack) {
     // The list of hits and the initial start parameters
     const auto& protoTrack = protoTracks[itrack];
@@ -83,7 +82,7 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
                                   << hitIndex);
         return ProcessCode::ABORT;
       }
-      trackSourceLinks.push_back(std::ref(*sourceLink));
+      trackSourceLinks.push_back(*sourceLink);
     }
     sourceLinkTrackContainer.push_back(trackSourceLinks);
   }
@@ -111,7 +110,6 @@ ActsExamples::ProcessCode ActsExamples::AlignmentAlgorithm::execute(
   // Set the KalmanFitter options
   TrackFitterOptions kfOptions(ctx.geoContext, ctx.magFieldContext,
                                ctx.calibContext, extensions,
-                               Acts::LoggerWrapper{logger()},
                                Acts::PropagatorPlainOptions(), &(*pSurface));
 
   // Set the alignment options

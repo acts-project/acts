@@ -65,7 +65,7 @@ struct CovarianceCache {
   /// a bound matrix, remember the surface & establish the
   /// jacobian between bound and free parametrisation.
   CovarianceCache(const GeometryContext& gctx, const Surface& surface,
-                  const Vector3 position, const BoundVector& boundParameters,
+                  const Vector3& position, const BoundVector& boundParameters,
                   const BoundSymMatrix& boundCovariance);
 
   /// Constructor from curvilinear
@@ -77,7 +77,7 @@ struct CovarianceCache {
   /// This constructor will set the variant covariance type to
   /// a bound matrix, remember the surface & establish the
   /// jacobian between bound and free parametrisation.
-  CovarianceCache(const Vector3 position, const Vector3& direction,
+  CovarianceCache(const Vector3& position, const Vector3& direction,
                   const BoundSymMatrix& boundCovariance);
 
   /// Construction from free

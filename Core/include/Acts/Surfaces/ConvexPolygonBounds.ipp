@@ -24,7 +24,7 @@ void Acts::ConvexPolygonBoundsBase::convex_impl(
     const Vector2 normal = Vector2(ab.y(), -ab.x()).normalized();
 
     bool first = true;
-    bool ref;
+    bool ref = false;
     // loop over all other vertices
     for (size_t k = 0; k < N; k++) {
       if (k == i || k == j) {

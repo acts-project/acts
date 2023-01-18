@@ -10,6 +10,7 @@
 
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -39,6 +40,8 @@ class SeedingAlgorithm final : public BareAlgorithm {
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedFinderConfig<SimSpacePoint> seedFinderConfig;
     Acts::SpacePointGridConfig gridConfig;
+    Acts::SpacePointGridOptions gridOptions;
+    Acts::SeedFinderOptions seedFinderOptions;
 
     // allow for different values of rMax in gridConfig and seedFinderConfig
     bool allowSeparateRMax = false;
@@ -48,7 +51,7 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::vector<std::pair<int, int> > zBinNeighborsBottom;
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
-    int numPhiNeighbors;
+    int numPhiNeighbors = 0;
   };
 
   /// Construct the seeding algorithm.
@@ -61,12 +64,13 @@ class SeedingAlgorithm final : public BareAlgorithm {
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
 
  private:
+  Acts::SeedFinder<SimSpacePoint> m_seedFinder;
   Config m_cfg;
 };
 

@@ -24,7 +24,7 @@ class ParticlesPrinter : public BareAlgorithm {
 
   ParticlesPrinter(const Config& cfg, Acts::Logging::Level lvl);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   const Config& config() const { return m_cfg; }
 

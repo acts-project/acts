@@ -72,20 +72,23 @@ class GeometryHierarchyMapJsonConverter {
   static nlohmann::json encodeIdentifier(GeometryIdentifier id) {
     nlohmann::json encoded;
     // only store non-zero identifiers
-    if (id.volume()) {
+    if (id.volume() != 0u) {
       encoded["volume"] = id.volume();
     }
-    if (id.boundary()) {
+    if (id.boundary() != 0u) {
       encoded["boundary"] = id.boundary();
     }
-    if (id.layer()) {
+    if (id.layer() != 0u) {
       encoded["layer"] = id.layer();
     }
-    if (id.approach()) {
+    if (id.approach() != 0u) {
       encoded["approach"] = id.approach();
     }
-    if (id.sensitive()) {
+    if (id.sensitive() != 0u) {
       encoded["sensitive"] = id.sensitive();
+    }
+    if (id.extra() != 0u) {
+      encoded["extra"] = id.extra();
     }
     return encoded;
   }
@@ -95,8 +98,8 @@ class GeometryHierarchyMapJsonConverter {
         .setBoundary(encoded.value("boundary", GeometryIdentifier::Value(0u)))
         .setLayer(encoded.value("layer", GeometryIdentifier::Value(0u)))
         .setApproach(encoded.value("approach", GeometryIdentifier::Value(0u)))
-        .setSensitive(
-            encoded.value("sensitive", GeometryIdentifier::Value(0u)));
+        .setSensitive(encoded.value("sensitive", GeometryIdentifier::Value(0u)))
+        .setExtra(encoded.value("extra", GeometryIdentifier::Value(0u)));
   }
 };
 
@@ -147,7 +150,7 @@ auto GeometryHierarchyMapJsonConverter<value_t>::fromJson(
   for (const auto& entry : encoded.at(kEntriesKey)) {
     auto id = decodeIdentifier(entry);
     auto value = entry.at("value").get<Value>();
-    elements.emplace_back(std::move(id), std::move(value));
+    elements.emplace_back(id, std::move(value));
   }
   return elements;
 }

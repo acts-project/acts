@@ -32,14 +32,8 @@ class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
     std::string inputSourceLinks;
     /// Input trajectories collection.
     std::string inputTrajectories;
-    /// Input track parameters collection.
-    std::string inputTrackParameters;
-    /// Input track parameters tips w.r.t outputTrajectories.
-    std::string inputTrackParametersTips;
-    /// Output track parameters collection.
-    std::string outputTrackParameters;
-    /// Output track parameters tips w.r.t outputTrajectories.
-    std::string outputTrackParametersTips;
+    /// Output trajectories collection.
+    std::string outputTrajectories;
 
     /// Maximum amount of shared hits per track.
     std::uint32_t maximumSharedHits = 1;
@@ -55,7 +49,7 @@ class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
   ///
   /// @param cxt is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
