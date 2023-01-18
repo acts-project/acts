@@ -63,30 +63,30 @@ authors:
   family-names: Garg
   given-names: Rocky
   name-particle: Bala
-- given-names: Andreas
+- affiliation: CERN / TU Wien
   family-names: Stefl
-  affiliation: CERN / TU Wien
-- given-names: Luis Falda
+  given-names: Andreas
+- affiliation: CERN / University of Coimbra
   family-names: Coelho
-  affiliation: CERN / University of Coimbra
+  given-names: Luis Falda
   orcid: https://orcid.org/0000-0002-2298-3605
-- given-names: Alexander J.
+- affiliation: CERN / University of Graz
   family-names: Pfleger
-  affiliation: CERN / University of Graz
+  given-names: Alexander J.
   orcid: https://orcid.org/0000-0001-5524-7738
-- given-names: Guilherme
+- affiliation: University of Lisbon
   family-names: Almeida
-  affiliation: University of Lisbon
+  given-names: Guilherme
   orcid: https://orcid.org/0000-0002-4257-4278
-- given-names: Stephen Nicholas
+- affiliation: CERN / University of Amsterdam
   family-names: Swatman
-  affiliation: CERN / University of Amsterdam
+  given-names: Stephen Nicholas
   orcid: https://orcid.org/0000-0002-3747-3229
 cff-version: 1.1.0
-date-released: '2022-12-21'
+date-released: '2023-01-18'
 doi: 10.5281/zenodo.5141419
 license: MPL-2.0
 message: If you use this software, please cite it using these metadata.
 repository-code: https://github.com/acts-project/acts
 title: A Common Tracking Software Project
-version: v22.0.0
+version: v23.0.0
