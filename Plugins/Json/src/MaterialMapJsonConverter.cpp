@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -27,6 +27,44 @@
 
 #include <algorithm>
 #include <map>
+
+namespace Acts {
+// specialisations of decoration helper function
+// to pick correct objects from the contaier object
+template <>
+inline void decorateJson<Acts::SurfaceAndMaterialWithContext>(
+    const ITrackingGeometryJsonDecorator* decorator,
+    const Acts::SurfaceAndMaterialWithContext& src, nlohmann::json& dest) {
+  if (decorator != nullptr && std::get<0>(src) != nullptr) {
+    decorator->decorate(*std::get<0>(src), dest);
+  }
+}
+template <>
+inline void decorateJson<Acts::TrackingVolumeAndMaterial>(
+    const ITrackingGeometryJsonDecorator* decorator,
+    const Acts::TrackingVolumeAndMaterial& src, nlohmann::json& dest) {
+  if (decorator != nullptr && src.first != nullptr) {
+    decorator->decorate(*src.first, dest);
+  }
+}
+
+template <>
+inline void decorateJson<Acts::IVolumeMaterial>(
+    const IVolumeMaterialJsonDecorator* decorator,
+    const Acts::IVolumeMaterial* src, nlohmann::json& dest) {
+  if (decorator != nullptr && src != nullptr) {
+    decorator->decorate(*src, dest);
+  }
+}
+template <>
+inline void decorateJson<Acts::ISurfaceMaterial>(
+    const IVolumeMaterialJsonDecorator* decorator,
+    const Acts::ISurfaceMaterial* src, nlohmann::json& dest) {
+  if (decorator != nullptr && src != nullptr) {
+    decorator->decorate(*src, dest);
+  }
+}
+}  // namespace Acts
 
 namespace {
 
@@ -188,7 +226,8 @@ Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
 /// Convert method
 ///
 nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
-    const DetectorMaterialMaps& maps) {
+    const DetectorMaterialMaps& maps,
+    const IVolumeMaterialJsonDecorator* decorator) {
   VolumeMaterialMap volumeMap = maps.second;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
       mapVolumeInit;
@@ -198,7 +237,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap(
       mapVolumeInit);
   nlohmann::json materialVolume =
-      m_volumeMaterialConverter.toJson(hierarchyVolumeMap);
+      m_volumeMaterialConverter.toJson(hierarchyVolumeMap, decorator);
   SurfaceMaterialMap surfaceMap = maps.first;
   std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
       mapSurfaceInit;
@@ -208,7 +247,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap(
       mapSurfaceInit);
   nlohmann::json materialSurface =
-      m_surfaceMaterialConverter.toJson(hierarchySurfaceMap);
+      m_surfaceMaterialConverter.toJson(hierarchySurfaceMap, decorator);
   nlohmann::json materialMap;
   materialMap["Volumes"] = materialVolume;
   materialMap["Surfaces"] = materialSurface;
@@ -245,7 +284,8 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
 }
 
 nlohmann::json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
-    const Acts::TrackingGeometry& tGeometry) {
+    const Acts::TrackingGeometry& tGeometry,
+    const ITrackingGeometryJsonDecorator* decorator) {
   std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>
       volumeHierarchy;
   std::vector<
@@ -255,10 +295,12 @@ nlohmann::json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
                      tGeometry.highestTrackingVolume());
   GeometryHierarchyMap<Acts::TrackingVolumeAndMaterial> hierarchyVolumeMap(
       volumeHierarchy);
-  nlohmann::json jsonVolumes = m_volumeConverter.toJson(hierarchyVolumeMap);
+  nlohmann::json jsonVolumes =
+      m_volumeConverter.toJson(hierarchyVolumeMap, decorator);
   GeometryHierarchyMap<Acts::SurfaceAndMaterialWithContext> hierarchySurfaceMap(
       surfaceHierarchy);
-  nlohmann::json jsonSurfaces = m_surfaceConverter.toJson(hierarchySurfaceMap);
+  nlohmann::json jsonSurfaces =
+      m_surfaceConverter.toJson(hierarchySurfaceMap, decorator);
   nlohmann::json hierarchyMap;
   hierarchyMap["Volumes"] = jsonVolumes;
   hierarchyMap["Surfaces"] = jsonSurfaces;

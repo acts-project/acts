@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,7 @@
 
 #include <stdexcept>
 #include <string>
-
+#include <type_traits>
 namespace Acts {
 
 /// Convert a geometry hierarchy map to/from Json.
@@ -31,7 +31,8 @@ namespace Acts {
 /// checked for consistency when decoding the Json object.
 ///
 /// [1]: https://nlohmann.github.io/json/features/arbitrary_types/
-template <typename value_t>
+template <typename value_t,
+          class decorator_t = void /* e.g. ITrackingGeometryJsonDecorator */>
 class GeometryHierarchyMapJsonConverter {
  public:
   using Value = value_t;
@@ -50,8 +51,11 @@ class GeometryHierarchyMapJsonConverter {
   /// Encode the geometry hierarchy map into a Json object.
   ///
   /// @param container Geometry hierarchy map that should be encoded
+  /// @param decorator nullptr or a decorator to add extra values to the json
+  /// output
   /// @return Encoded Json object
-  nlohmann::json toJson(const Container& container) const;
+  nlohmann::json toJson(const Container& container,
+                        const decorator_t* decorator) const;
 
   /// Decode a Json object into a geometry hierarchy map.
   ///
@@ -105,9 +109,35 @@ class GeometryHierarchyMapJsonConverter {
 
 // implementations
 
-template <typename value_t>
-nlohmann::json GeometryHierarchyMapJsonConverter<value_t>::toJson(
-    const Container& container) const {
+// auxiliary struct to indicate a missing specialization of a template which
+// requires specialisation
+template <typename T, class decorator_t>
+struct missing_specialization : std::false_type {};
+
+// methods to adapt type decorations for the given decorator
+template <class T, class decorator_t>
+void decorateJson([[maybe_unused]] const decorator_t* decorator,
+                  [[maybe_unused]] const T& src,
+                  [[maybe_unused]] nlohmann::json& dest) {
+  // this needs to be specialised
+  static_assert(
+      missing_specialization<T, decorator_t>::value,
+      "Explicit specialization needed for each decorator_t and src T");
+}
+template <class T, class decorator_t>
+void decorateJson([[maybe_unused]] const decorator_t* decorator,
+                  [[maybe_unused]] const T* src,
+                  [[maybe_unused]] nlohmann::json& dest) {
+  // this needs to be specialised
+  static_assert(
+      missing_specialization<T, decorator_t>::value,
+      "Explicit specialization needed for each decorator_t and src T");
+}
+
+template <typename value_t, class decorator_t>
+nlohmann::json GeometryHierarchyMapJsonConverter<value_t, decorator_t>::toJson(
+    const Container& container,
+    [[maybe_unused]] const decorator_t* decorator) const {
   // encode header
   nlohmann::json encoded = nlohmann::json::object();
   encoded[kHeaderKey] = nlohmann::json::object();
@@ -117,15 +147,19 @@ nlohmann::json GeometryHierarchyMapJsonConverter<value_t>::toJson(
   nlohmann::json entries = nlohmann::json::array();
   for (std::size_t i = 0; i < container.size(); ++i) {
     auto entry = encodeIdentifier(container.idAt(i));
-    entry["value"] = nlohmann::json(container.valueAt(i));
+    auto value_json = nlohmann::json(container.valueAt(i));
+    if constexpr (not std::is_same<decorator_t, void>::value) {
+      decorateJson(decorator, container.valueAt(i), value_json);
+    }
+    entry["value"] = std::move(value_json);
     entries.push_back(std::move(entry));
   }
   encoded[kEntriesKey] = std::move(entries);
   return encoded;
 }
 
-template <typename value_t>
-auto GeometryHierarchyMapJsonConverter<value_t>::fromJson(
+template <typename value_t, class decorator_t>
+auto GeometryHierarchyMapJsonConverter<value_t, decorator_t>::fromJson(
     const nlohmann::json& encoded) const -> Container {
   // verify json format header
   auto header = encoded.find(kHeaderKey);
