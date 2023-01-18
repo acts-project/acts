@@ -59,9 +59,9 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-void transformCoordinates(
+std::vector<std::size_t> transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
-    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
@@ -76,10 +76,15 @@ void transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
-                          external_spacepoint_t& spM, bool bottom,
-                          std::vector<LinCircle>& linCircleVec,
-                          callable_t&& extractFunction) {
+std::vector<std::size_t> transformCoordinates(
+    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
+    bool bottom, std::vector<LinCircle>& linCircleVec,
+    callable_t&& extractFunction) {
+  std::vector<std::size_t> indexes(vec.size());
+  for (unsigned int i(0); i < indexes.size(); i++) {
+    indexes[i] = i;
+  }
+
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
   float cosPhiM = xM / rM;
@@ -133,20 +138,19 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
     sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
   // sort the SP in order of cotTheta
-  std::sort(vec.begin(), vec.end(),
-            [](external_spacepoint_t* a, external_spacepoint_t* b) -> bool {
-              return (a->cotTheta() < b->cotTheta());
-            });
-  std::sort(linCircleVec.begin(), linCircleVec.end(),
-            [](const LinCircle& a, const LinCircle& b) -> bool {
-              return (a.cotTheta < b.cotTheta);
-            });
+  std::sort(
+      indexes.begin(), indexes.end(),
+      [&linCircleVec](const std::size_t& a, const std::size_t& b) -> bool {
+        return linCircleVec[a].cotTheta < linCircleVec[b].cotTheta;
+      });
+  return indexes;
 }
 
 template <typename external_spacepoint_t, typename sp_range_t>
-bool xyzCoordinateCheck(Acts::SeedFinderConfig<external_spacepoint_t> m_config,
-                        sp_range_t sp, const double* spacepointPosition,
-                        const float toleranceParam, double* outputCoordinates) {
+bool xyzCoordinateCheck(
+    const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
+    sp_range_t sp, const double* spacepointPosition,
+    double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 
@@ -178,7 +182,7 @@ bool xyzCoordinateCheck(Acts::SeedFinderConfig<external_spacepoint_t> m_config,
   // spacepointPosition is inside the bottom detector element
   double s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
                stripCenterDistance[2] * d1[2]);
-  if (std::abs(s1) > std::abs(bd1) * toleranceParam) {
+  if (std::abs(s1) > std::abs(bd1) * m_config.toleranceParam) {
     return false;
   }
 
@@ -200,7 +204,7 @@ bool xyzCoordinateCheck(Acts::SeedFinderConfig<external_spacepoint_t> m_config,
   // spacepointPosition is inside the top detector element
   double s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
                stripCenterDistance[2] * d0[2]);
-  if (std::abs(s0) > std::abs(bd1) * toleranceParam) {
+  if (std::abs(s0) > std::abs(bd1) * m_config.toleranceParam) {
     return false;
   }
 

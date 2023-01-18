@@ -55,17 +55,18 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
+/// @returns Vector of sorted indexes for the vectors (vec and linCircleVec)
 template <typename external_spacepoint_t>
-void transformCoordinates(
+std::vector<std::size_t> transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
-    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec);
 
 template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
-                          external_spacepoint_t& spM, bool bottom,
-                          std::vector<LinCircle>& linCircleVec,
-                          callable_t&& extractFunction);
+std::vector<std::size_t> transformCoordinates(
+    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
+    bool bottom, std::vector<LinCircle>& linCircleVec,
+    callable_t&& extractFunction);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
@@ -75,13 +76,12 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
 /// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
-/// @param[in] toleranceParam Parameter used to evaluate if spacepointPosition is inside the detector elements.
 /// @param[out] outputCoordinates The output vector to write to.
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
 template <typename external_spacepoint_t, typename sp_range_t>
-bool xyzCoordinateCheck(Acts::SeedFinderConfig<external_spacepoint_t> config,
-                        sp_range_t sp, const double* spacepointPosition,
-                        const float toleranceParam, double* outputCoordinates);
+bool xyzCoordinateCheck(
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config, sp_range_t sp,
+    const double* spacepointPosition, double* outputCoordinates);
 
 }  // namespace Acts
 
