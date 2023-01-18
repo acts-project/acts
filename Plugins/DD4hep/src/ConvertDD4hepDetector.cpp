@@ -52,7 +52,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
         sortSubDetectors,
     const Acts::GeometryContext& gctx,
     std::shared_ptr<const IMaterialDecorator> matDecorator,
-    GeometryIdentifierHook geometryIdentifierHook) {
+    std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook) {
   // create local logger for conversion
   ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("DD4hepConversion", loggingLevel));
   ACTS_INFO("Translating DD4hep geometry into Acts geometry");
