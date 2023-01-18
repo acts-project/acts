@@ -41,6 +41,7 @@ PYBIND11_MODULE(ActsPythonBindingsDD4hep, m) {
     ACTS_PYTHON_MEMBER(envelopeR);
     ACTS_PYTHON_MEMBER(envelopeZ);
     ACTS_PYTHON_MEMBER(defaultLayerThickness);
+    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_STRUCT_END();
 
     patchKwargsConstructor(c);
