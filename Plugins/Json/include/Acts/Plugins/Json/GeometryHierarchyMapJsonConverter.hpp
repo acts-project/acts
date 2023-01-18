@@ -87,6 +87,9 @@ class GeometryHierarchyMapJsonConverter {
     if (id.sensitive() != 0u) {
       encoded["sensitive"] = id.sensitive();
     }
+    if (id.extra() != 0u) {
+      encoded["extra"] = id.extra();
+    }
     return encoded;
   }
   static GeometryIdentifier decodeIdentifier(const nlohmann::json& encoded) {
@@ -95,8 +98,8 @@ class GeometryHierarchyMapJsonConverter {
         .setBoundary(encoded.value("boundary", GeometryIdentifier::Value(0u)))
         .setLayer(encoded.value("layer", GeometryIdentifier::Value(0u)))
         .setApproach(encoded.value("approach", GeometryIdentifier::Value(0u)))
-        .setSensitive(
-            encoded.value("sensitive", GeometryIdentifier::Value(0u)));
+        .setSensitive(encoded.value("sensitive", GeometryIdentifier::Value(0u)))
+        .setExtra(encoded.value("extra", GeometryIdentifier::Value(0u)));
   }
 };
 
