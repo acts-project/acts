@@ -129,10 +129,6 @@ class SymmetricKLDistanceMatrix {
     setAssociated(n, m_mask, [&](std::size_t, std::size_t) { return false; });
   }
 
-  void setAssociatedDistances(std::size_t n, ActsScalar value) {
-    setAssociated(n, m_mask, [&](std::size_t, std::size_t) { return value; });
-  }
-
   auto minDistancePair() const {
     ActsScalar min = std::numeric_limits<ActsScalar>::max();
     std::size_t idx = 0;

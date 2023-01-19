@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 
+#include <array>
 #include <ostream>
 
 std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
@@ -16,15 +17,16 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
     return (os << "undefined");
   }
 
-  static const char* const names[] = {
+  static const std::array<const char*, 6> names = {
       "vol=", "bnd=", "lay=", "apr=", "sen=", "ext=",
   };
-  const GeometryIdentifier::Value levels[] = {id.volume(),    id.boundary(),
-                                              id.layer(),     id.approach(),
-                                              id.sensitive(), id.extra()};
+
+  const std::array<GeometryIdentifier::Value, 6> levels = {
+      id.volume(),   id.boundary(),  id.layer(),
+      id.approach(), id.sensitive(), id.extra()};
 
   bool writeSeparator = false;
-  for (auto i = 0u; i < 5u; ++i) {
+  for (auto i = 0u; i < levels.size(); ++i) {
     if (levels[i] != 0u) {
       if (writeSeparator) {
         os << '|';
@@ -34,4 +36,10 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
     }
   }
   return os;
+}
+
+Acts::GeometryIdentifier Acts::GeometryIdentifierHook::decorateIdentifier(
+    Acts::GeometryIdentifier identifier,
+    const Acts::Surface& /*unused*/) const {
+  return identifier;
 }

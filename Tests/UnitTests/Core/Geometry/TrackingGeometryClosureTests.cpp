@@ -184,6 +184,19 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test) {
   check_vol(*ioVolumes[1], 5);
 }
 
+template <typename Callable>
+struct CallableHook : public Acts::GeometryIdentifierHook {
+  Callable callable;
+
+  CallableHook(const Callable& c) : callable(c) {}
+
+  Acts::GeometryIdentifier decorateIdentifier(
+      Acts::GeometryIdentifier identifier,
+      const Acts::Surface& surface) const override {
+    return callable(identifier, surface);
+  }
+};
+
 BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
   size_t extra = 0;
   std::unordered_map<const Surface*, size_t> extraMap;
@@ -193,7 +206,8 @@ BOOST_AUTO_TEST_CASE(GeometryIdentifier_closeGeometry_test_extra) {
     orig.setExtra(extra);
     return orig;
   };
-  GeometryIdentifierHook hook{hookImpl};
+  CallableHook<decltype(hookImpl)> hook{hookImpl};
+
   TrackingGeometry tGeometry = makeTrackingGeometry(hook);
   auto world = tGeometry.highestTrackingVolume();
 

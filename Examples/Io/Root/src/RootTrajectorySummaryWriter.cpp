@@ -18,6 +18,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Utilities/Range.hpp"
 #include "ActsExamples/Validation/TrackClassification.hpp"
@@ -167,12 +168,17 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    // The trajectory index
-    m_multiTrajNr.push_back(itraj);
-
     // The trajectory entry indices and the multiTrajectory
     const auto& mj = traj.multiTrajectory();
     const auto& trackTips = traj.tips();
+
+    // Dont write empty MultiTrajectory
+    if (trackTips.empty()) {
+      continue;
+    }
+
+    // The trajectory index
+    m_multiTrajNr.push_back(itraj);
 
     // Loop over the entry indices for the subtrajectories
     for (unsigned int isubtraj = 0; isubtraj < trackTips.size(); ++isubtraj) {
@@ -205,9 +211,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                                   trajState.outlierLayer.end());
 
       // Initialize the truth particle info
-      uint64_t majorityParticleId = NaNint;
-      unsigned int nMajorityHits = NaNint;
-      float t_charge = NaNint;
+      uint64_t majorityParticleId = std::numeric_limits<size_t>::max();
+      unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
+      float t_charge = NaNfloat;
       float t_time = NaNfloat;
       float t_vx = NaNfloat;
       float t_vy = NaNfloat;
@@ -289,7 +295,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Always push back even if majority particle not found
       m_majorityParticleId.push_back(majorityParticleId);
       m_nMajorityHits.push_back(nMajorityHits);
-      m_t_charge.push_back(t_charge);
+      m_t_charge.push_back(static_cast<int>(t_charge));
       m_t_time.push_back(t_time);
       m_t_vx.push_back(t_vx);
       m_t_vy.push_back(t_vy);

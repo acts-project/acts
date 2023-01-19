@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <numeric>
@@ -26,6 +28,18 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::SeedFinder(
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in "
         "Cuda/Seeding/SeedFinder");
+  if (std::isnan(m_config.deltaRMaxTopSP)) {
+    throw std::runtime_error("Value of deltaRMaxTopSP was not initialised");
+  }
+  if (std::isnan(m_config.deltaRMinTopSP)) {
+    throw std::runtime_error("Value of deltaRMinTopSP was not initialised");
+  }
+  if (std::isnan(m_config.deltaRMaxBottomSP)) {
+    throw std::runtime_error("Value of deltaRMaxBottomSP was not initialised");
+  }
+  if (std::isnan(m_config.deltaRMinBottomSP)) {
+    throw std::runtime_error("Value of deltaRMinBottomSP was not initialised");
+  }
 }
 
 // CUDA seed finding
@@ -248,9 +262,9 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
 
     if (i_m > 0) {
       const auto m_experimentCuts = m_config.seedFilter->getExperimentCuts();
-      std::vector<std::pair<
-          float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-          seedsPerSpM;
+      std::vector<typename CandidatesForMiddleSp<
+          InternalSpacePoint<external_spacepoint_t>>::value_type>
+          candidates;
 
       for (int i = 0; i < *nTrplPerSpM_cpu.get(i_m - 1); i++) {
         auto& triplet = *TripletsPerSpM_cpu.get(i, i_m - 1);
@@ -275,13 +289,16 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
         float Zob = 0;  // It is not used in the seed filter but needs to be
                         // fixed anyway...
 
-        seedsPerSpM.push_back(std::make_pair(
-            triplet.weight,
-            std::make_unique<const InternalSeed<external_spacepoint_t>>(
-                bottomSP, middleSP, topSP, Zob)));
+        candidates.emplace_back(bottomSP, middleSP, topSP, triplet.weight, Zob,
+                                false);
       }
-      int numQualitySeeds = 0;  // not used but needs to be fixed
-      m_config.seedFilter->filterSeeds_1SpFixed(seedsPerSpM, numQualitySeeds,
+
+      std::sort(
+          candidates.begin(), candidates.end(),
+          CandidatesForMiddleSp<
+              InternalSpacePoint<external_spacepoint_t>>::descendingByQuality);
+      std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
+      m_config.seedFilter->filterSeeds_1SpFixed(candidates, numQualitySeeds,
                                                 std::back_inserter(outputVec));
     }
   }

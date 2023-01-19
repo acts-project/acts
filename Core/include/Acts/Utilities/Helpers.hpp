@@ -478,7 +478,7 @@ auto matrixToBitset(const Eigen::PlainObjectBase<Derived>& m) {
 
   auto* p = m.data();
   for (size_t i = 0; i < rows * cols; i++) {
-    res[rows * cols - 1 - i] = p[i];
+    res[rows * cols - 1 - i] = static_cast<bool>(p[i]);
   }
 
   return res;

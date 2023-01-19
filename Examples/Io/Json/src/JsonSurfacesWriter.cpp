@@ -112,7 +112,7 @@ ProcessCode JsonSurfacesWriter::write(const AlgorithmContext& ctx) {
   SurfaceContainer sContainer(cSurfaces);
 
   if (not m_cfg.writeOnlyNames) {
-    auto j = SurfaceConverter("surfaces").toJson(sContainer);
+    auto j = SurfaceConverter("surfaces").toJson(sContainer, nullptr);
     out << std::setprecision(m_cfg.outputPrecision) << j.dump(2);
     out.close();
   } else {
@@ -127,7 +127,7 @@ ProcessCode JsonSurfacesWriter::write(const AlgorithmContext& ctx) {
       namedEntries.push_back({geometryId, geoTypeName.str()});
     }
     NamedContainer nContainer(namedEntries);
-    auto j = NamedConverter("surface_types").toJson(nContainer);
+    auto j = NamedConverter("surface_types").toJson(nContainer, nullptr);
     out << j.dump(2);
     out.close();
   }
@@ -144,7 +144,7 @@ ProcessCode JsonSurfacesWriter::endRun() {
                   m_cfg.writeSensitive, m_cfg.writeBoundary);
   SurfaceContainer sContainer(cSurfaces);
 
-  auto j = SurfaceConverter("surfaces").toJson(sContainer);
+  auto j = SurfaceConverter("surfaces").toJson(sContainer, nullptr);
   out << std::setprecision(m_cfg.outputPrecision) << j.dump(2);
   out.close();
 
