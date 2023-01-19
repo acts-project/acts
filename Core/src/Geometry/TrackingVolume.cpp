@@ -359,9 +359,10 @@ void Acts::TrackingVolume::interlinkLayers() {
 }
 
 void Acts::TrackingVolume::closeGeometry(
-    const IMaterialDecorator* materialDecorator,
-    std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-    size_t& vol, const GeometryIdentifierHook& hook, LoggerWrapper logger) {
+  const IMaterialDecorator* materialDecorator,
+      std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
+      size_t& vol, const GeometryIdentifierHook& hook,
+      const Logger& logger) {
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
@@ -463,7 +464,7 @@ boost::container::small_vector<Acts::BoundaryIntersection, 4>
 Acts::TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Surface>& options,
-    LoggerWrapper logger) const {
+    const Logger& logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
   // Loop over boundarySurfaces and calculate the intersection
   auto excludeObject = options.startObject;

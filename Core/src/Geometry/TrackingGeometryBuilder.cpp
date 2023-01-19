@@ -54,7 +54,7 @@ Acts::TrackingGeometryBuilder::trackingGeometry(
     // build and set the TrackingGeometry
     trackingGeometry.reset(
         new TrackingGeometry(highestVolume, materialDecorator,
-                             m_cfg.geometryIdentifierHook, logger()));
+                             *m_cfg.geometryIdentifierHook, logger()));
   }
   // return the geometry to the service
   return (trackingGeometry);
