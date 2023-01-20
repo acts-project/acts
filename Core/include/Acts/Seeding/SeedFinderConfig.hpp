@@ -170,6 +170,7 @@ struct SeedFinderConfig {
   Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
   bool isInInternalUnits = false;
+
   SeedFinderConfig toInternalUnits() const {
     if (isInInternalUnits) {
       throw std::runtime_error(
@@ -247,9 +248,9 @@ struct SeedFinderOptions {
     options.bFieldInZ /= 1000. * 1_T;
     return options;
   }
-  template <typename SpacePoint>
-  SeedFinderOptions calculateDerivedQuantities(
-      const SeedFinderConfig<SpacePoint>& config) const {
+
+  template <typename Config>
+  SeedFinderOptions calculateDerivedQuantities(const Config& config) const {
     if (!isInInternalUnits) {
       throw std::runtime_error(
           "Derived quantities in SeedFinderOptions can only be calculated from "

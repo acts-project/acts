@@ -168,12 +168,17 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    // The trajectory index
-    m_multiTrajNr.push_back(itraj);
-
     // The trajectory entry indices and the multiTrajectory
     const auto& mj = traj.multiTrajectory();
     const auto& trackTips = traj.tips();
+
+    // Dont write empty MultiTrajectory
+    if (trackTips.empty()) {
+      continue;
+    }
+
+    // The trajectory index
+    m_multiTrajNr.push_back(itraj);
 
     // Loop over the entry indices for the subtrajectories
     for (unsigned int isubtraj = 0; isubtraj < trackTips.size(); ++isubtraj) {
