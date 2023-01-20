@@ -88,7 +88,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
       geantVerboseLevel);
 
   // Suppress the printing of physics information.
-  if( m_cfg.printPhysicsParameters ) {
+  if (m_cfg.printPhysicsParameters) {
     G4HadronicParameters::Instance()->SetVerboseLevel(geantVerboseLevel);
     G4HadronicProcessStore::Instance()->SetVerbose(geantVerboseLevel);
     G4EmParameters::Instance()->SetIsPrintedFlag(true);
