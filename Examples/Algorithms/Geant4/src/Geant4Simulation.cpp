@@ -17,7 +17,10 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <G4EmParameters.hh>
 #include <G4FieldManager.hh>
+#include <G4HadronicParameters.hh>
+#include <G4HadronicProcessStore.hh>
 #include <G4MagneticField.hh>
 #include <G4RunManager.hh>
 #include <G4TransportationManager.hh>
@@ -83,6 +86,11 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
       geantVerboseLevel);
   G4EventManager::GetEventManager()->GetStackManager()->SetVerboseLevel(
       geantVerboseLevel);
+
+  // Suppress the printing of physics information.
+  G4HadronicParameters::Instance()->SetVerboseLevel(geantVerboseLevel);
+  G4HadronicProcessStore::Instance()->SetVerbose(geantVerboseLevel);
+  G4EmParameters::Instance()->SetIsPrintedFlag(true);
 
   // Set the detector construction
   m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
