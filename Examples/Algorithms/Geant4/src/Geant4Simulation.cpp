@@ -92,7 +92,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
   if (m_cfg.printPhysicsParameters) {
     G4HadronicParameters::Instance()->SetVerboseLevel(0);
     G4HadronicProcessStore::Instance()->SetVerbose(0);
-#if G4VERSION_NUMBER > 1100
+#if G4VERSION_NUMBER >= 1100
     G4EmParameters::Instance()->SetIsPrintedFlag(true);
 #endif
   }
