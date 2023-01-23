@@ -78,7 +78,9 @@ field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
 
 def truth_tracking_kalman():
     with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(events=10000, numThreads=-1, logLevel=acts.logging.INFO)
+        s = acts.examples.Sequencer(
+            events=10000, numThreads=-1, logLevel=acts.logging.INFO
+        )
         tp = Path(temp)
         runTruthTrackingKalman(
             trackingGeometry,
@@ -98,7 +100,9 @@ def truth_tracking_kalman():
 
 def truth_tracking_gsf():
     with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(events=500, numThreads=-1, logLevel=acts.logging.INFO)
+        s = acts.examples.Sequencer(
+            events=500, numThreads=-1, logLevel=acts.logging.INFO
+        )
 
         tp = Path(temp)
         runTruthTrackingGsf(
@@ -119,7 +123,9 @@ def truth_tracking_gsf():
 
 def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
     with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(events=500, numThreads=-1, logLevel=acts.logging.INFO)
+        s = acts.examples.Sequencer(
+            events=500, numThreads=-1, logLevel=acts.logging.INFO
+        )
 
         tp = Path(temp)
 
@@ -237,7 +243,9 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
 
 def run_vertexing(fitter, mu, events):
     with tempfile.TemporaryDirectory() as temp:
-        s = acts.examples.Sequencer(events=events, numThreads=-1, logLevel=acts.logging.INFO)
+        s = acts.examples.Sequencer(
+            events=events, numThreads=-1, logLevel=acts.logging.INFO
+        )
 
         tp = Path(temp)
 
