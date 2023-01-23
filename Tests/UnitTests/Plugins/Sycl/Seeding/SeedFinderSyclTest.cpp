@@ -120,16 +120,19 @@ auto setupSeedFinderOptions() {
 template <typename external_spacepoint_t>
 auto setupSpacePointGridConfig(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
-    const Acts::SeedFinderOptions& options) -> Acts::SpacePointGridConfig {
+    const Acts::SeedFinderOptions& options)
+    -> std::pair<Acts::SpacePointGridConfig, Acts::SpacePointGridOptions> {
   Acts::SpacePointGridConfig gridConf{};
-  gridConf.bFieldInZ = options.bFieldInZ;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
   gridConf.zMin = config.zMin;
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
-  return gridConf;
+
+  Acts::SpacePointGridOptions gridOpts{};
+  gridOpts.bFieldInZ = options.bFieldInZ;
+  return std::make_pair(gridConf, gridOpts);
 }
 
 auto main(int argc, char** argv) -> int {
@@ -160,7 +163,9 @@ auto main(int argc, char** argv) -> int {
   auto topBinFinder = std::make_shared<Acts::BinFinder<SpacePoint>>(
       Acts::BinFinder<SpacePoint>(zBinNeighborsTop, numPhiNeighbors));
   auto config = setupSeedFinderConfiguration<SpacePoint>();
+  config = config.toInternalUnits().calculateDerivedQuantities();
   auto options = setupSeedFinderOptions();
+  options = options.toInternalUnits().calculateDerivedQuantities(config);
 
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   Acts::Sycl::DeviceExperimentCuts deviceAtlasCuts;
@@ -176,7 +181,7 @@ auto main(int argc, char** argv) -> int {
   vecmem::sycl::device_memory_resource device_resource(queue.getQueue());
   Acts::Sycl::SeedFinder<SpacePoint> syclSeedFinder(
       config, options, deviceAtlasCuts, queue, resource, &device_resource);
-  Acts::SeedFinder<SpacePoint> normalSeedFinder(config, options);
+  Acts::SeedFinder<SpacePoint> normalSeedFinder(config);
   auto globalTool =
       [=](const SpacePoint& sp, float /*unused*/, float /*unused*/,
           float_t /*unused*/) -> std::pair<Acts::Vector3, Acts::Vector2> {
@@ -184,10 +189,11 @@ auto main(int argc, char** argv) -> int {
     Acts::Vector2 covariance(sp.varianceR, sp.varianceZ);
     return std::make_pair(position, covariance);
   };
-
+  auto [gridConfig, gridOpts] = setupSpacePointGridConfig(config, options);
+  gridConfig = gridConfig.toInternalUnits();
+  gridOpts = gridOpts.toInternalUnits();
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(
-          setupSpacePointGridConfig(config, options));
+      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConfig, gridOpts);
 
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), globalTool, bottomBinFinder, topBinFinder,
@@ -217,7 +223,7 @@ auto main(int argc, char** argv) -> int {
     for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
          ++groupIt) {
       normalSeedFinder.createSeedsForGroup(
-          state, std::back_inserter(seedVector_cpu.emplace_back()),
+          options, state, std::back_inserter(seedVector_cpu.emplace_back()),
           groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {

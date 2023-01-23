@@ -10,6 +10,7 @@
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
+#include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
@@ -89,11 +90,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(zAlign);
     ACTS_PYTHON_MEMBER(rAlign);
     ACTS_PYTHON_MEMBER(sigmaError);
-    ACTS_PYTHON_MEMBER(highland);
-    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
-    ACTS_PYTHON_MEMBER(pTPerHelixRadius);
-    ACTS_PYTHON_MEMBER(minHelixDiameter2);
-    ACTS_PYTHON_MEMBER(pT2perRadius);
     ACTS_PYTHON_MEMBER(maxBlockSize);
     ACTS_PYTHON_MEMBER(nTrplPerSpBLimit);
     ACTS_PYTHON_MEMBER(nAvgTrplPerSpBLimit);
@@ -159,9 +155,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaPhiMax);
     ACTS_PYTHON_MEMBER(highland);
     ACTS_PYTHON_MEMBER(maxScatteringAngle2);
-    ACTS_PYTHON_MEMBER(pTPerHelixRadius);
-    ACTS_PYTHON_MEMBER(minHelixDiameter2);
-    ACTS_PYTHON_MEMBER(pT2perRadius);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
     ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
@@ -197,7 +190,6 @@ void addTrackFinding(Context& ctx) {
     auto c = py::class_<Config>(m, "SpacePointGridConfig").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(bFieldInZ);
     ACTS_PYTHON_MEMBER(minPt);
     ACTS_PYTHON_MEMBER(rMax);
     ACTS_PYTHON_MEMBER(zMax);
@@ -212,17 +204,33 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
     patchKwargsConstructor(c);
   }
+  {
+    using Options = Acts::SpacePointGridOptions;
+    auto c = py::class_<Options>(m, "SpacePointGridOptions").def(py::init<>());
+
+    ACTS_PYTHON_STRUCT_BEGIN(c, Options);
+    ACTS_PYTHON_MEMBER(bFieldInZ);
+    ACTS_PYTHON_STRUCT_END();
+    patchKwargsConstructor(c);
+  }
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
       outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig,
-      seedFinderOptions, gridConfig, allowSeparateRMax, zBinNeighborsTop,
-      zBinNeighborsBottom, numPhiNeighbors);
+      seedFinderOptions, gridConfig, gridOptions, allowSeparateRMax,
+      zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingOrthogonalAlgorithm, mex,
       "SeedingOrthogonalAlgorithm", inputSpacePoints, outputSeeds,
       outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
+      inputSpacePoints, outputSeeds, outputProtoTracks, inputSourceLinks,
+      trackingGeometry, geometrySelection, inputMeasurements, subRegions,
+      nLayers, xMin, xMax, yMin, yMax, houghHistSize_x, houghHistSize_y,
+      hitExtend_x, threshold, localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,

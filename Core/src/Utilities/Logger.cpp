@@ -85,6 +85,12 @@ class NeverFilterPolicy final : public OutputFilterPolicy {
   ~NeverFilterPolicy() override = default;
 
   bool doPrint(const Level& /*lvl*/) const override { return false; }
+
+  Level level() const override { return Level::MAX; }
+
+  std::unique_ptr<OutputFilterPolicy> clone(Level /*level*/) const override {
+    return std::make_unique<NeverFilterPolicy>();
+  }
 };
 
 std::unique_ptr<const Logger> makeDummyLogger() {
@@ -110,11 +116,10 @@ std::unique_ptr<const Logger> getDefaultLogger(const std::string& name,
   return std::make_unique<const Logger>(std::move(output), std::move(print));
 }
 
-LoggerWrapper getDummyLogger() {
+const Logger& getDummyLogger() {
   static const std::unique_ptr<const Logger> logger =
       Logging::makeDummyLogger();
-  static const LoggerWrapper loggerWrapper{*logger};
 
-  return loggerWrapper;
+  return *logger;
 }
 }  // namespace Acts

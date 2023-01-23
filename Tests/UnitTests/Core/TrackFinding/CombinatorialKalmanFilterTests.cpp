@@ -10,8 +10,10 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -98,7 +100,10 @@ struct TestContainerAccessor {
 
     bool operator!=(const Iterator& other) const { return !(*this == other); }
 
-    const Value& operator*() const { return m_iterator->second; }
+    Acts::SourceLink operator*() const {
+      const auto& sl = m_iterator->second;
+      return Acts::SourceLink{sl};
+    }
 
     BaseIterator m_iterator;
   };
@@ -256,8 +261,7 @@ struct Fixture {
             TestSourceLinkAccessor::Iterator>{},  // leave the accessor empty,
                                                   // this will have to be set
                                                   // before running the CKF
-        getExtensions(), Acts::LoggerWrapper{*logger},
-        Acts::PropagatorPlainOptions());
+        getExtensions(), Acts::PropagatorPlainOptions());
   }
 };
 
@@ -282,40 +286,41 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
   options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
       &slAccessor);
 
+  Acts::TrackContainer tc{Acts::VectorTrackContainer{},
+                          Acts::VectorMultiTrajectory{}};
+
   // run the CKF for all initial track states
-  auto results = f.ckf.findTracks(f.startParameters, options);
-  // There should be three track finding results with three initial track states
-  BOOST_CHECK_EQUAL(results.size(), 3u);
-
-  // check the found tracks
   for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
-    const auto& params = f.startParameters[trackId];
-    BOOST_TEST_INFO("initial parameters before detector:\n" << params);
-
-    auto& res = results[trackId];
+    auto res = f.ckf.findTracks(f.startParameters.at(trackId), options, tc);
     if (not res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());
+  }
 
-    auto val = *res;
-    BOOST_CHECK_EQUAL(val.fittedStates->size(),
-                      f.detector.numMeasurements * f.startParameters.size());
+  // There should be three track finding results with three initial track states
+  BOOST_CHECK_EQUAL(tc.size(), 3u);
 
-    // with the given measurement selection cuts, only one trajectory for the
-    // given input parameters should be found.
-    BOOST_CHECK_EQUAL(val.lastMeasurementIndices.size(), 1u);
+  // check the found tracks
+  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+    const auto track = tc.getTrack(trackId);
+    const auto& params = f.startParameters[trackId];
+    BOOST_TEST_INFO("initial parameters before detector:\n" << params);
+
+    BOOST_CHECK_EQUAL(track.nTrackStates(), f.detector.numMeasurements);
+
     // check purity of first found track
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    val.fittedStates->visitBackwards(
-        val.lastMeasurementIndices.front(), [&](const auto& trackState) {
-          numHits += 1u;
-          const auto& sl =
-              static_cast<const TestSourceLink&>(trackState.uncalibrated());
-          nummismatchedHits += (trackId != sl.sourceId);
-        });
+    for (const auto trackState : track.trackStates()) {
+      numHits += 1u;
+      const auto& sl =
+          trackState.uncalibratedSourceLink().template get<TestSourceLink>();
+      if (trackId != sl.sourceId) {
+        nummismatchedHits++;
+      }
+    }
 
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(nummismatchedHits, 0u);
@@ -339,39 +344,41 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
   options.sourcelinkAccessor.connect<&Fixture::TestSourceLinkAccessor::range>(
       &slAccessor);
 
+  Acts::TrackContainer tc{Acts::VectorTrackContainer{},
+                          Acts::VectorMultiTrajectory{}};
+
   // run the CKF for all initial track states
-  auto results = f.ckf.findTracks(f.endParameters, options);
-  // There should be three found tracks with three initial track states
-  BOOST_CHECK_EQUAL(results.size(), 3u);
-
-  // check the found tracks
-  for (size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
-    const auto& params = f.endParameters[trackId];
-    BOOST_TEST_INFO("initial parameters after detector:\n" << params);
-
-    auto& res = results[trackId];
+  for (size_t trackId = 0u; trackId < f.startParameters.size(); ++trackId) {
+    auto res = f.ckf.findTracks(f.endParameters.at(trackId), options, tc);
     if (not res.ok()) {
       BOOST_TEST_INFO(res.error() << " " << res.error().message());
     }
     BOOST_REQUIRE(res.ok());
+  }
+  // There should be three found tracks with three initial track states
+  BOOST_CHECK_EQUAL(tc.size(), 3u);
 
-    auto val = *res;
-    BOOST_CHECK_EQUAL(val.fittedStates->size(),
-                      f.detector.numMeasurements * f.endParameters.size());
-    // with the given measurement selection cuts, only one trajectory for the
-    // given input parameters should be found.
-    BOOST_CHECK_EQUAL(val.lastMeasurementIndices.size(), 1u);
+  // check the found tracks
+  for (size_t trackId = 0u; trackId < f.endParameters.size(); ++trackId) {
+    const auto track = tc.getTrack(trackId);
+    const auto& params = f.endParameters[trackId];
+    BOOST_TEST_INFO("initial parameters after detector:\n" << params);
+
+    BOOST_CHECK_EQUAL(track.nTrackStates(), f.detector.numMeasurements);
+
     // check purity of first found track
     // find the number of hits not originating from the right track
     size_t numHits = 0u;
     size_t nummismatchedHits = 0u;
-    val.fittedStates->visitBackwards(
-        val.lastMeasurementIndices.front(), [&](const auto& trackState) {
-          numHits += 1u;
-          nummismatchedHits += (trackId != static_cast<const TestSourceLink&>(
-                                               trackState.uncalibrated())
-                                               .sourceId);
-        });
+    for (const auto trackState : track.trackStates()) {
+      numHits += 1u;
+      const auto& sl =
+          trackState.uncalibratedSourceLink().template get<TestSourceLink>();
+      if (trackId != sl.sourceId) {
+        nummismatchedHits++;
+      }
+    }
+
     BOOST_CHECK_EQUAL(numHits, f.detector.numMeasurements);
     BOOST_CHECK_EQUAL(nummismatchedHits, 0u);
   }

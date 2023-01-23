@@ -71,15 +71,15 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
 
   Acts::Experimental::Chi2FitterOptions chi2Options(
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, extensions,
-      Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(), false,
-      false, m_cfg.nUpdates, true);  // mScattering=false, eLoss=false
+      Acts::PropagatorPlainOptions(), false, false, m_cfg.nUpdates,
+      true);  // mScattering=false, eLoss=false
 
   // kfOptions.multipleScattering = m_cfg.multipleScattering;
   // kfOptions.energyLoss = m_cfg.energyLoss;
   // TODO: pass options to constructor, or here?
 
   // Perform the fit for each input track
-  std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
+  std::vector<Acts::SourceLink> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
@@ -113,7 +113,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
       if (auto it = sourceLinks.nth(hitIndex); it != sourceLinks.end()) {
         const IndexSourceLink& sourceLink = *it;
         auto geoId = sourceLink.geometryId();
-        trackSourceLinks.push_back(std::cref(sourceLink));
+        trackSourceLinks.emplace_back(sourceLink);
         surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
       } else {
         ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"

@@ -10,8 +10,10 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/Extent.hpp"
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 
@@ -50,27 +52,26 @@ class SeedFinder {
     std::vector<float> etaVec;
     std::vector<float> ptVec;
 
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-        seedsPerSpM;
+    // managing seed candidates for SpM
+    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+        candidates_collector;
   };
 
   /// The only constructor. Requires a config object.
   /// @param config the configuration for the SeedFinder
-  /// @param options frequently changing configuration (like beam position)
-  SeedFinder(Acts::SeedFinderConfig<external_spacepoint_t> config,
-             const Acts::SeedFinderOptions& options);
+  SeedFinder(const Acts::SeedFinderConfig<external_spacepoint_t>& config);
   ~SeedFinder() = default;
   /**    @name Disallow default instantiation, copy, assignment */
   //@{
-  SeedFinder() = delete;
+  SeedFinder() = default;
   SeedFinder(const SeedFinder<external_spacepoint_t, platform_t>&) = delete;
   SeedFinder<external_spacepoint_t, platform_t>& operator=(
-      const SeedFinder<external_spacepoint_t, platform_t>&) = delete;
+      const SeedFinder<external_spacepoint_t, platform_t>&) = default;
   //@}
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
+  /// @param options frequently changing configuration (like beam position)
   /// @param state State object that holds memory used
   /// @param outIt Output iterator for the seeds in the group
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
@@ -81,7 +82,7 @@ class SeedFinder {
   /// @note Ranges must be separate objects for each parallel call.
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
-      SeedingState& state,
+      const Acts::SeedFinderOptions& options, SeedingState& state,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
       const Acts::Range1D<float>& rMiddleSPRange) const;
@@ -98,6 +99,7 @@ class SeedFinder {
   /// require backwards-compatibility.
   ///
   /// @tparam sp_range_t container type for the seed point collections.
+  /// @param options frequently changing configuration (like beam position)
   /// @param bottomSPs group of space points to be used as innermost SP in a
   /// seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
@@ -105,11 +107,24 @@ class SeedFinder {
   /// @returns a vector of seeds.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const;
+      const Acts::SeedFinderOptions& options, sp_range_t bottomSPs,
+      sp_range_t middleSPs, sp_range_t topSPs) const;
+
+ private:
+  template <typename sp_range_t, typename out_range_t>
+  void getCompatibleDoublets(
+      const Acts::SeedFinderOptions& options, sp_range_t& otherSPs,
+      const InternalSpacePoint<external_spacepoint_t>& mediumSP,
+      out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
+      bool isBottom) const;
+
+  void filterCandidates(InternalSpacePoint<external_spacepoint_t>& SpM,
+                        const Acts::SeedFinderOptions& options,
+                        SeedFilterState& seedFilterState,
+                        SeedingState& state) const;
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
-  Acts::SeedFinderOptions m_options;
 };
 
 }  // namespace Acts

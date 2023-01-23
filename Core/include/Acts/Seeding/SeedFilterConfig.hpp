@@ -58,19 +58,26 @@ struct SeedFilterConfig {
   SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // maximum number of lower quality seeds in seed confirmation
-  int maxSeedsPerSpMConf = std::numeric_limits<int>::max();
+  std::size_t maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
   // maximum number of quality seeds for each middle-bottom SP-duplet in seed
   // confirmation if the limit is reached we check if there is a lower quality
   // seed to be replaced
-  int maxQualitySeedsPerSpMConf = std::numeric_limits<int>::max();
+  std::size_t maxQualitySeedsPerSpMConf =
+      std::numeric_limits<std::size_t>::max();
 
   // use deltaR between top and middle SP instead of top radius to search for
   // compatible SPs
   bool useDeltaRorTopRadius = false;
 
+  bool isInInternalUnits = false;
   SeedFilterConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for SeedFilterConfig");
+    }
     using namespace Acts::UnitLiterals;
     SeedFilterConfig config = *this;
+    config.isInInternalUnits = true;
     config.deltaRMin /= 1_mm;
     config.deltaInvHelixDiameter /= 1. / 1_mm;
 

@@ -81,12 +81,14 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
-  ACTS_VERBOSE("Wrote particles to tree '" << m_cfg.treeName << "' in '"
-                                           << m_cfg.filePath << "'");
   /// Close the file if it's yours
   if (m_cfg.rootFile == nullptr) {
     m_outputFile->Close();
   }
+
+  ACTS_VERBOSE("Wrote particles to tree '" << m_cfg.treeName << "' in '"
+                                           << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 
@@ -167,27 +169,27 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       double actor = step.stepSize.value(Acts::ConstrainedStep::actor);
       double aborter = step.stepSize.value(Acts::ConstrainedStep::aborter);
       double user = step.stepSize.value(Acts::ConstrainedStep::user);
-      double act2 = actor * actor;
-      double acc2 = accuracy * accuracy;
-      double abo2 = aborter * aborter;
-      double usr2 = user * user;
+      double actAbs = std::abs(actor);
+      double accAbs = std::abs(accuracy);
+      double aboAbs = std::abs(aborter);
+      double usrAbs = std::abs(user);
 
       // todo - fold with direction
-      if (act2 < acc2 && act2 < abo2 && act2 < usr2) {
+      if (actAbs < accAbs && actAbs < aboAbs && actAbs < usrAbs) {
         m_step_type.push_back(0);
-      } else if (acc2 < abo2 && acc2 < usr2) {
+      } else if (accAbs < aboAbs && accAbs < usrAbs) {
         m_step_type.push_back(1);
-      } else if (abo2 < usr2) {
+      } else if (aboAbs < usrAbs) {
         m_step_type.push_back(2);
       } else {
         m_step_type.push_back(3);
       }
 
       // step size information
-      m_step_acc.push_back(accuracy);
-      m_step_act.push_back(actor);
-      m_step_abt.push_back(aborter);
-      m_step_usr.push_back(user);
+      m_step_acc.push_back(Acts::clampValue<float>(accuracy));
+      m_step_act.push_back(Acts::clampValue<float>(actor));
+      m_step_abt.push_back(Acts::clampValue<float>(aborter));
+      m_step_usr.push_back(Acts::clampValue<float>(user));
 
       // stepper efficiency
       m_nStepTrials.push_back(step.stepSize.nStepTrials);

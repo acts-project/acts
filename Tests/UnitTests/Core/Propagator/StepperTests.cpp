@@ -85,7 +85,8 @@ struct EndOfWorld {
   /// @param [in] stepper Stepper of the propagation
   /// @return Boolean statement if the particle is still in the detector
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const Logger& /*logger*/) const {
     const double tolerance = state.options.targetTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
@@ -122,7 +123,7 @@ struct StepCollector {
   /// @param [out] result Struct which is filled with the data
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  result_type& result, const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping) *
                               stepper.direction(state.stepping));
@@ -549,7 +550,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
@@ -589,7 +590,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Set options for propagator
   PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-      propOptsDef(tgContext, mfContext, getDummyLogger());
+      propOptsDef(tgContext, mfContext);
   propOptsDef.actionList = aListDef;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 100;
@@ -656,7 +657,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 10000;
@@ -703,7 +704,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOptsDense(tgContext, mfContext, getDummyLogger());
+      propOptsDense(tgContext, mfContext);
   propOptsDense.actionList = aList;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 1000;
@@ -817,7 +818,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.abortList = abortList;
   propOpts.maxSteps = 1000;
   propOpts.maxStepSize = 1.5_m;
@@ -873,7 +874,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set options for propagator
 
   PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-      propOptsDef(tgContext, mfContext, getDummyLogger());
+      propOptsDef(tgContext, mfContext);
   abortList.get<EndOfWorld>().maxX = 1_m;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 1000;
@@ -927,7 +928,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOptsDense(tgContext, mfContext, getDummyLogger());
+      propOptsDense(tgContext, mfContext);
   abortList.get<EndOfWorld>().maxX = 2_m;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 1000;
@@ -1056,7 +1057,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.abortList.get<EndOfWorld>().maxX = 3._m;
   propOpts.maxSteps = 10000;
 

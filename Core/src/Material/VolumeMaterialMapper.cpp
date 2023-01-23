@@ -244,7 +244,8 @@ void Acts::VolumeMaterialMapper::createExtraHits(
   }
 
   // Computing the extra hits properties based on the mappingStep length
-  int volumeStep = floor(properties.thickness() / m_cfg.mappingStep);
+  int volumeStep =
+      static_cast<int>(std::floor(properties.thickness() / m_cfg.mappingStep));
   float remainder = properties.thickness() - m_cfg.mappingStep * volumeStep;
   properties.scaleThickness(m_cfg.mappingStep / properties.thickness());
   direction = direction * (m_cfg.mappingStep / direction.norm());
@@ -368,8 +369,8 @@ void Acts::VolumeMaterialMapper::mapMaterialTrack(
   using AbortList = AbortList<EndOfWorldReached>;
 
   auto propLogger = getDefaultLogger("Propagator", Logging::INFO);
-  PropagatorOptions<ActionList, AbortList> options(
-      mState.geoContext, mState.magFieldContext, LoggerWrapper{*propLogger});
+  PropagatorOptions<ActionList, AbortList> options(mState.geoContext,
+                                                   mState.magFieldContext);
 
   // Now collect the material volume by using the straight line propagator
   const auto& result = m_propagator.propagate(start, options).value();

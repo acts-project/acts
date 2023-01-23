@@ -188,7 +188,7 @@ struct grid_helper_impl {
                                  const std::tuple<Axes...>& axes,
                                  std::array<size_t, sizeof...(Axes)>& indices) {
     const auto& thisAxis = std::get<N>(axes);
-    indices.at(N) = thisAxis.getBin(point[N]);
+    indices.at(N) = static_cast<size_t>(thisAxis.getBin(point[N]));
     grid_helper_impl<N - 1>::getLocalBinIndices(point, axes, indices);
   }
 

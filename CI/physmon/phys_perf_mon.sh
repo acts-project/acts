@@ -105,14 +105,14 @@ run \
     --title "Ambisolver seeded" \
     -o $outdir/ambi_seeded.html \
     -p $outdir/ambi_seeded_plots
-
-run \
-    $outdir/acts_analysis_residuals_and_pulls.root \
-    $refdir/acts_analysis_residuals_and_pulls.root \
-    --title "analysis_residuals_and_pulls" \
-#    -o $outdir/analysis_residuals_and_pulls.html \
-#    -p $outdir/analysis_residuals_and_pulls
     
+run \
+    $outdir/performance_ambi_orthogonal.root \
+    $refdir/performance_ambi_orthogonal.root \
+    --title "Ambisolver orthogonal" \
+    -o $outdir/ambi_orthogonal.html \
+    -p $outdir/ambi_orthogonal_plots
+
 Examples/Scripts/vertex_mu_scan.py \
     $outdir/performance_vertexing_*mu*.root \
     $outdir/vertexing_mu_scan.pdf

@@ -122,8 +122,8 @@ struct Uniform {
   /// Construct with a @param pitch standard deviation and @param range
   Uniform(double pitch, const std::pair<double, double>& range_)
       : binningData(Acts::open, Acts::binX,
-                    (range_.second - range_.first) / pitch, range_.first,
-                    range_.second) {}
+                    static_cast<size_t>((range_.second - range_.first) / pitch),
+                    range_.first, range_.second) {}
 
   /// Constructor with a binning data in order to get the bin borders.
   ///
@@ -159,8 +159,8 @@ struct Digital {
   /// Construct with a @param pitch standard deviation and @param range
   Digital(double pitch, const std::pair<double, double>& range_)
       : binningData(Acts::open, Acts::binX,
-                    (range_.second - range_.first) / pitch, range_.first,
-                    range_.second) {}
+                    static_cast<size_t>((range_.second - range_.first) / pitch),
+                    range_.first, range_.second) {}
 
   /// Constructor with a bin utility in order to get the bin borders.
   ///

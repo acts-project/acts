@@ -162,7 +162,8 @@ int main(int argc, char** argv) {
   Acts::ATLASCuts<SpacePoint> atlasCuts = Acts::ATLASCuts<SpacePoint>();
   config.seedFilter = std::make_unique<Acts::SeedFilter<SpacePoint>>(
       Acts::SeedFilter<SpacePoint>(sfconf, &atlasCuts));
-  Acts::SeedFinder<SpacePoint> a(config, options);
+  Acts::SeedFinder<SpacePoint> a;  // test creation of unconfigured finder
+  a = Acts::SeedFinder<SpacePoint>(config);
 
   // covariance tool, sets covariances per spacepoint as required
   auto ct = [=](const SpacePoint& sp, float, float,
@@ -174,16 +175,18 @@ int main(int argc, char** argv) {
 
   // setup spacepoint grid config
   Acts::SpacePointGridConfig gridConf;
-  gridConf.bFieldInZ = options.bFieldInZ;
   gridConf.minPt = config.minPt;
   gridConf.rMax = config.rMax;
   gridConf.zMax = config.zMax;
   gridConf.zMin = config.zMin;
   gridConf.deltaRMax = config.deltaRMax;
   gridConf.cotThetaMax = config.cotThetaMax;
+  // setup spacepoint grid options
+  Acts::SpacePointGridOptions gridOpts;
+  gridOpts.bFieldInZ = options.bFieldInZ;
   // create grid with bin sizes according to the configured geometry
   std::unique_ptr<Acts::SpacePointGrid<SpacePoint>> grid =
-      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf);
+      Acts::SpacePointGridCreator::createGrid<SpacePoint>(gridConf, gridOpts);
   auto spGroup = Acts::BinnedSPGroup<SpacePoint>(
       spVec.begin(), spVec.end(), ct, bottomBinFinder, topBinFinder,
       std::move(grid), rRangeSPExtent, config, options);
@@ -195,8 +198,9 @@ int main(int argc, char** argv) {
   auto endOfGroups = spGroup.end();
   for (; !(groupIt == endOfGroups); ++groupIt) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(state, std::back_inserter(v), groupIt.bottom(),
-                          groupIt.middle(), groupIt.top(), rMiddleSPRange);
+    a.createSeedsForGroup(options, state, std::back_inserter(v),
+                          groupIt.bottom(), groupIt.middle(), groupIt.top(),
+                          rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

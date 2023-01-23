@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Logger.hpp"
+
 namespace Acts {
 
 template <typename E, typename R, typename A>
@@ -111,8 +113,10 @@ template <typename E, typename R, typename A>
 template <typename propagator_state_t>
 Result<double> MultiEigenStepperLoop<E, R, A>::step(
     propagator_state_t& state) const {
-  const auto& logger = state.options.logger;
   State& stepping = state.stepping;
+
+  // @TODO: This needs to be a real logger
+  const Logger& logger = getDummyLogger();
 
   // Lambda for reweighting the components
   auto reweight = [](auto& cmps) {
@@ -221,7 +225,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   }
 
   // Return error if there is no ok result
-  if (errorSteps == results.size()) {
+  if (stepping.components.empty()) {
     return MultiStepperError::AllComponentsSteppingError;
   }
 

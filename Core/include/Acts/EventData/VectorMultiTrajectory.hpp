@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
+#include "Acts/EventData/detail/DynamicColumn.hpp"
 
 #include <unordered_map>
 
@@ -96,12 +97,11 @@ class VectorMultiTrajectoryBase {
         h("parSmth", isMeas, weight(par_size));
         h("covSmth", isMeas, weight(cov_size));
       }
-      h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+      h("sourceLinks", isMeas, weight(sizeof(SourceLink)));
       h("measOffset", isMeas,
         weight(sizeof(decltype(m_measOffset)::value_type)));
       h("measCovOffset", isMeas,
         weight(sizeof(decltype(m_measCovOffset)::value_type)));
-
       if (ts.hasCalibrated() &&
           ACTS_CHECK_BIT(index.allocMask, TrackStatePropMask::Calibrated)) {
         size_t meas_size = ts.calibratedSize() * sizeof(scalar);
@@ -110,7 +110,7 @@ class VectorMultiTrajectoryBase {
 
         h("meas", isMeas, weight(meas_size));
         h("measCov", isMeas, weight(meas_cov_size));
-        h("sourceLinks", isMeas, weight(sizeof(const SourceLink*)));
+        h("sourceLinks", isMeas, weight(sizeof(const SourceLink)));
         h("projectors", isMeas, weight(sizeof(ProjectorBitset)));
       }
 
@@ -163,42 +163,6 @@ class VectorMultiTrajectoryBase {
 
   VectorMultiTrajectoryBase(VectorMultiTrajectoryBase&& other) = default;
 
-  struct DynamicColumnBase {
-    virtual ~DynamicColumnBase() = 0;
-
-    virtual std::any get(size_t i) = 0;
-    virtual std::any get(size_t i) const = 0;
-
-    virtual void add() = 0;
-    virtual void clear() = 0;
-
-    virtual std::unique_ptr<DynamicColumnBase> clone() const = 0;
-  };
-
-  template <typename T>
-  struct DynamicColumn : public DynamicColumnBase {
-    ~DynamicColumn() override = default;
-
-    std::any get(size_t i) override {
-      assert(i < m_vector.size() && "DynamicColumn out of bounds");
-      return &m_vector[i];
-    }
-
-    std::any get(size_t i) const override {
-      assert(i < m_vector.size() && "DynamicColumn out of bounds");
-      return &m_vector[i];
-    }
-
-    void add() override { m_vector.emplace_back(); }
-    void clear() override { m_vector.clear(); }
-
-    std::unique_ptr<DynamicColumnBase> clone() const override {
-      return std::make_unique<DynamicColumn<T>>(*this);
-    }
-
-    std::vector<T> m_vector;
-  };
-
   // BEGIN INTERFACE HELPER
   template <typename T>
   static constexpr bool has_impl(T& instance, HashedString key,
@@ -219,11 +183,9 @@ class VectorMultiTrajectoryBase {
         return instance.m_index[istate].ijacobian != kInvalid;
       case "projector"_hash:
         return instance.m_index[istate].iprojector != kInvalid;
-      case "uncalibrated"_hash: {
-        const auto& sl =
-            instance.m_sourceLinks[instance.m_index[istate].iuncalibrated];
-        return sl != nullptr;
-      }
+      case "uncalibratedSourceLink"_hash:
+        return instance.m_sourceLinks[instance.m_index[istate].iuncalibrated]
+            .has_value();
       case "previous"_hash:
       case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
@@ -262,7 +224,7 @@ class VectorMultiTrajectoryBase {
         return &instance.m_index[istate].ijacobian;
       case "projector"_hash:
         return &instance.m_projectors[instance.m_index[istate].iprojector];
-      case "uncalibrated"_hash:
+      case "uncalibratedSourceLink"_hash:
         return &instance.m_sourceLinks[instance.m_index[istate].iuncalibrated];
       case "calibratedSourceLink"_hash:
         return &instance.m_sourceLinks[instance.m_index[istate]
@@ -282,7 +244,9 @@ class VectorMultiTrajectoryBase {
         if (it == instance.m_dynamic.end()) {
           throw std::runtime_error("Unable to handle this component");
         }
-        auto& col = it->second;
+        std::conditional_t<EnsureConst, const detail::DynamicColumnBase*,
+                           detail::DynamicColumnBase*>
+            col = it->second.get();
         assert(col && "Dynamic column is null");
         return col->get(istate);
     }
@@ -300,7 +264,7 @@ class VectorMultiTrajectoryBase {
       case "jacobian"_hash:
       case "projector"_hash:
       case "previous"_hash:
-      case "uncalibrated"_hash:
+      case "uncalibratedSourceLink"_hash:
       case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
@@ -311,6 +275,10 @@ class VectorMultiTrajectoryBase {
       default:
         return instance.m_dynamic.find(key) != instance.m_dynamic.end();
     }
+  }
+
+  IndexType calibratedSize_impl(IndexType istate) const {
+    return m_index[istate].measdim;
   }
 
   // END INTERFACE HELPER
@@ -327,7 +295,7 @@ class VectorMultiTrajectoryBase {
   std::vector<MultiTrajectoryTraits::IndexType> m_measCovOffset;
 
   std::vector<typename detail_lt::Types<eBoundSize>::Covariance> m_jac;
-  std::vector<const SourceLink*> m_sourceLinks;
+  std::vector<std::optional<SourceLink>> m_sourceLinks;
   std::vector<ProjectorBitset> m_projectors;
 
   // owning vector of shared pointers to surfaces
@@ -337,7 +305,7 @@ class VectorMultiTrajectoryBase {
   // be handled in a smart way by moving but not sure.
   std::vector<std::shared_ptr<const Surface>> m_referenceSurfaces;
 
-  std::unordered_map<HashedString, std::unique_ptr<DynamicColumnBase>>
+  std::unordered_map<HashedString, std::unique_ptr<detail::DynamicColumnBase>>
       m_dynamic;
 };
 
@@ -345,7 +313,7 @@ class VectorMultiTrajectoryBase {
 
 class VectorMultiTrajectory;
 template <>
-struct isReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
+struct IsReadOnlyMultiTrajectory<VectorMultiTrajectory> : std::false_type {};
 
 class VectorMultiTrajectory final
     : public detail_vmt::VectorMultiTrajectoryBase,
@@ -446,7 +414,8 @@ class VectorMultiTrajectory final
 
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
-    m_dynamic.insert({hashString(key), std::make_unique<DynamicColumn<T>>()});
+    m_dynamic.insert(
+        {hashString(key), std::make_unique<detail::DynamicColumn<T>>()});
   }
 
   constexpr bool hasColumn_impl(HashedString key) const {
@@ -460,6 +429,8 @@ class VectorMultiTrajectory final
       return;
     }
 
+    m_index[istate].measdim = measdim;
+
     m_measOffset[istate] = static_cast<IndexType>(m_meas.size());
     m_meas.resize(m_meas.size() + measdim);
 
@@ -472,7 +443,7 @@ class VectorMultiTrajectory final
 
 class ConstVectorMultiTrajectory;
 template <>
-struct isReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
+struct IsReadOnlyMultiTrajectory<ConstVectorMultiTrajectory> : std::true_type {
 };
 
 class ConstVectorMultiTrajectory final
