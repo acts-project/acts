@@ -32,6 +32,7 @@
 #include <G4UserTrackingAction.hh>
 #include <G4VUserDetectorConstruction.hh>
 #include <G4VUserPhysicsList.hh>
+#include <G4Version.hh>
 
 namespace {
 /// Helper method to add the user actions
@@ -89,9 +90,11 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
 
   // Suppress the printing of physics information.
   if (m_cfg.printPhysicsParameters) {
-    G4HadronicParameters::Instance()->SetVerboseLevel(geantVerboseLevel);
-    G4HadronicProcessStore::Instance()->SetVerbose(geantVerboseLevel);
+    G4HadronicParameters::Instance()->SetVerboseLevel(0);
+    G4HadronicProcessStore::Instance()->SetVerbose(0);
+#if G4VERSION_NUMBER > 1100
     G4EmParameters::Instance()->SetIsPrintedFlag(true);
+#endif
   }
 
   // Set the detector construction
