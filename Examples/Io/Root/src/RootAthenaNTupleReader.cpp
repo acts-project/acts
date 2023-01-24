@@ -58,8 +58,7 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
                                  &m_branches.track_var_theta);
   m_inputChain->SetBranchAddress("track_var_qOverP",
                                  &m_branches.track_var_qOverP);
-  m_inputChain->SetBranchAddress("track_cov_d0z0",
-                                 &m_branches.track_cov_d0z0);
+  m_inputChain->SetBranchAddress("track_cov_d0z0", &m_branches.track_cov_d0z0);
   m_inputChain->SetBranchAddress("track_cov_d0phi",
                                  &m_branches.track_cov_d0phi);
   m_inputChain->SetBranchAddress("track_cov_d0theta",
@@ -227,15 +226,13 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
 
   std::vector<Acts::Vector4> truthVertexContainer;
   for (unsigned int i = 0; i < nTruthVtx; i++) {
-    Acts::Vector4 vtx(
-        m_branches.truthvertex_x[i], m_branches.truthvertex_y[i],
-        m_branches.truthvertex_z[i], m_branches.truthvertex_t[i]);
+    Acts::Vector4 vtx(m_branches.truthvertex_x[i], m_branches.truthvertex_y[i],
+                      m_branches.truthvertex_z[i], m_branches.truthvertex_t[i]);
     truthVertexContainer.push_back(vtx);
   }
   std::vector<Acts::Vector4> recoVertexContainer;
   for (unsigned int i = 0; i < nRecoVtx; i++) {
-    Acts::Vector4 vtx(m_branches.recovertex_x[i],
-                      m_branches.recovertex_y[i],
+    Acts::Vector4 vtx(m_branches.recovertex_x[i], m_branches.recovertex_y[i],
                       m_branches.recovertex_z[i], 0);
     recoVertexContainer.push_back(vtx);
   }
@@ -246,8 +243,8 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
 
   beamspotPos << m_branches.beamspot_x, m_branches.beamspot_y,
       m_branches.beamspot_z;
-  beamspotCov << m_branches.beamspot_sigX * m_branches.beamspot_sigX, 0, 0,
-      0, m_branches.beamspot_sigY * m_branches.beamspot_sigY, 0, 0, 0,
+  beamspotCov << m_branches.beamspot_sigX * m_branches.beamspot_sigX, 0, 0, 0,
+      m_branches.beamspot_sigY * m_branches.beamspot_sigY, 0, 0, 0,
       m_branches.beamspot_sigZ * m_branches.beamspot_sigZ;
 
   beamspotConstraint.setPosition(beamspotPos);
