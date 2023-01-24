@@ -131,6 +131,7 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
 
   if (context.eventNumber >= m_events) {
     ACTS_ERROR("event out of bounds");
+    return ProcessCode::ABORT;
   }
 
   std::lock_guard<std::mutex> lock(m_read_mutex);
@@ -262,5 +263,5 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
                          std::move(beamspotConstraint));
 
   // Return success flag
-  return ActsExamples::ProcessCode::SUCCESS;
+  return ProcessCode::SUCCESS;
 }
