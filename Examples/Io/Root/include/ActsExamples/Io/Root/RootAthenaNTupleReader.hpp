@@ -22,7 +22,7 @@ class TChain;
 
 namespace ActsExamples {
 
-class RootNTupleReader : public ActsExamples::IReader {
+class RootAthenaNTupleReader : public ActsExamples::IReader {
  public:
   /// @brief The nested configuration struct
   struct Config {
@@ -167,22 +167,21 @@ class RootNTupleReader : public ActsExamples::IReader {
 
   /// Constructor
   /// @param config The Configuration struct
-  RootNTupleReader(const Config &config, Acts::Logging::Level level);
-
-  /// Destructor
-  ~RootNTupleReader();
+  RootAthenaNTupleReader(const Config &config, Acts::Logging::Level level);
 
   /// Framework name() method
-  std::string name() const final override { return "RootNTupleReader"; }
+  std::string name() const final { return "RootAthenaNTupleReader"; }
 
   /// Return the available events range.
-  std::pair<std::size_t, std::size_t> availableEvents() const final override;
+  std::pair<std::size_t, std::size_t> availableEvents() const final {
+    return {0u, m_events};
+  }
 
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
   ActsExamples::ProcessCode read(
-      const ActsExamples::AlgorithmContext &context) final override;
+      const ActsExamples::AlgorithmContext &context) final;
 
   /// Readonly access to the config
   const Config &config() const { return m_cfg; }
@@ -192,7 +191,7 @@ class RootNTupleReader : public ActsExamples::IReader {
 
  private:
   /// Private access to the logging instance
-  const Acts::Logger &logger() const { return logger; }
+  const Acts::Logger &logger() const { return *m_logger; }
 
   /// The config class
   Config m_cfg;
@@ -206,7 +205,7 @@ class RootNTupleReader : public ActsExamples::IReader {
   std::size_t m_events = 0;
 
   /// The input tree name
-  TChain inputChain = nullptr;
+  TChain *m_inputChain = nullptr;
 
   /// The handle to branches in current event
   BranchPointerWrapper m_branches;
