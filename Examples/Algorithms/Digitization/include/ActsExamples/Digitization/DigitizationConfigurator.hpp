@@ -75,8 +75,8 @@ struct DigitizationConfigurator {
               dInputConfig->geometricDigiConfig.drift;
           dOutputConfig.geometricDigiConfig.thickness =
               dInputConfig->geometricDigiConfig.thickness;
-          dOutputConfig.geometricDigiConfig.charge =
-              dInputConfig->geometricDigiConfig.charge;
+          dOutputConfig.geometricDigiConfig.chargeSmearer =
+              dInputConfig->geometricDigiConfig.chargeSmearer;
           dOutputConfig.geometricDigiConfig.digital =
               dInputConfig->geometricDigiConfig.digital;
           dOutputConfig.geometricDigiConfig.variances =

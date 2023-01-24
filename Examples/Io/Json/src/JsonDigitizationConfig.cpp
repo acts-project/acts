@@ -15,13 +15,10 @@
 #include <fstream>
 #include <functional>
 
-using namespace ActsExamples;
-
+namespace ActsExamples {
 namespace {
-void smearingDistToJson(
-    nlohmann::json& j,
-    const ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>&
-        f) {
+void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
+                                    ActsExamples::RandomEngine>& f) {
   // Gauss:
   const Digitization::Gauss* gauss = f.target<const Digitization::Gauss>();
   if (gauss != nullptr) {
@@ -64,7 +61,7 @@ void smearingDistToJson(
   }
 }
 
-void smearingDistFromJson(
+void from_json(
     const nlohmann::json& j,
     ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>& f) {
   std::string sType = j["type"];
@@ -91,17 +88,18 @@ void smearingDistFromJson(
 }
 
 }  // namespace
+}  // namespace ActsExamples
 
 void ActsExamples::to_json(nlohmann::json& j,
                            const ActsExamples::ParameterSmearingConfig& psc) {
   j["index"] = psc.index;
-  smearingDistToJson(j, psc.smearFunction);
+  to_json(j, psc.smearFunction);
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
                              ActsExamples::ParameterSmearingConfig& psc) {
   psc.index = static_cast<Acts::BoundIndices>(j["index"]);
-  smearingDistFromJson(j, psc.smearFunction);
+  from_json(j, psc.smearFunction);
 }
 
 void ActsExamples::to_json(nlohmann::json& j,
@@ -115,6 +113,7 @@ void ActsExamples::to_json(nlohmann::json& j,
   j["thickness"] = gdc.thickness;
   j["threshold"] = gdc.threshold;
   j["digital"] = gdc.digital;
+  to_json(j["charge-smearing"], gdc.chargeSmearer);
 }
 
 void ActsExamples::from_json(const nlohmann::json& j,
@@ -125,7 +124,8 @@ void ActsExamples::from_json(const nlohmann::json& j,
   from_json(j["segmentation"], gdc.segmentation);
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];
-  gdc.digital = j["digital"];
+  gdc.digital = j["digital"];   
+  from_json(j["charge-smearing"], gdc.chargeSmearer);
 }
 
 void ActsExamples::to_json(nlohmann::json& j,

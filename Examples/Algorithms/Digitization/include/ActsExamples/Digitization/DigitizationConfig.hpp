@@ -56,10 +56,22 @@ struct GeometricConfig {
   };
   double thickness = 0.;
   /// Charge generation
-  ChargeGenerator charge = [](Acts::ActsScalar path, Acts::ActsScalar,
-                              RandomEngine &) -> Acts::ActsScalar {
-    return path;
-  };
+  ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
+      chargeSmearer;
+
+  Acts::ActsScalar charge(Acts::ActsScalar path, Acts::ActsScalar,
+                          RandomEngine &rng) const {
+    if (!chargeSmearer) {
+      return path;
+    }
+
+    auto res = chargeSmearer(path, rng);
+    if (res.ok()) {
+      return res->first;
+    } else {
+      throw std::runtime_error(res.error().message());
+    }
+  }
   double threshold = 0.;
   /// Position and Covariance generation
   bool digital = false;
