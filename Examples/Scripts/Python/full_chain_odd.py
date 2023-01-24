@@ -74,21 +74,8 @@ with acts.FpeMonitor():
             rnd=rnd,
             outputDirRoot=outputDir,
         )
-    if not g4_simulation:
-        addFatras(
-            s,
-            trackingGeometry,
-            field,
-            ParticleSelectorConfig(
-                eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True
-            )
-            if ttbar_pu200
-            else ParticleSelectorConfig(),
-            outputDirRoot=outputDir,
-            rnd=rnd,
-        )
     if g4_simulation:
-        if Sequencer.config.numThreads != 1:
+        if s.config.numThreads != 1:
             raise ValueError("Geant 4 simulation does not support multi-threading")
 
         # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
@@ -106,6 +93,19 @@ with acts.FpeMonitor():
                 removeNeutral=True,
             ),
             outputDirCsv=outputDir,
+            rnd=rnd,
+        )
+    else:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            ParticleSelectorConfig(
+                eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True
+            )
+            if ttbar_pu200
+            else ParticleSelectorConfig(),
+            outputDirRoot=outputDir,
             rnd=rnd,
         )
 
