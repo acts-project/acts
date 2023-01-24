@@ -9,6 +9,7 @@
 #pragma once
 
 #include <Acts/Utilities/Logger.hpp>
+#include <boost/core/demangle.hpp>
 
 #include <memory>
 #include <stdexcept>
@@ -127,7 +128,8 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
 
   const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);
   if (castedHolder == nullptr) {
-    throw std::out_of_range("Type mismatch for object '" + name + "'");
+    throw std::out_of_range("Type mismatch for object '" + name 
+        + "' available: '" + boost::core::demangle(holder->type().name()) + "' requested '"+ boost::core::demangle(typeid(T()).name()) +"'");
   }
 
   ACTS_VERBOSE("Retrieved object '" << name << "'");

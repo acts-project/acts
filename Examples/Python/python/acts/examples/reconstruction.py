@@ -10,7 +10,7 @@ import acts.examples
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
-    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal"
+    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal HoughTransform"
 )
 
 TruthSeedRanges = namedtuple(
@@ -174,6 +174,7 @@ def addSeeding(
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
+    houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
     trackParamsEstimationConfig: TrackParamsEstimationConfig = TrackParamsEstimationConfig(),
     inputParticles: str = "particles_initial",
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -286,6 +287,19 @@ def addSeeding(
                 seedFinderOptionsArg,
                 seedFilterConfigArg,
                 logLevel,
+            )
+        elif seedingAlgorithm == SeedingAlgorithm.HoughTransform:
+            logger.info("Using Hough Transform seeding")
+            houghTransformConfig.inputSpacePoints=[spacePoints]
+            houghTransformConfig.inputMeasurements="measurements"
+            houghTransformConfig.inputSourceLinks="sourcelinks"
+            houghTransformConfig.outputProtoTracks="prototracks"
+            houghTransformConfig.outputSeeds="seeds"            
+            houghTransformConfig.trackingGeometry=trackingGeometry
+            inputProtoTracks, inputSeeds = addHoughTransformSeeding(
+                s,
+                houghTransformConfig,
+                logLevel
             )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
@@ -670,6 +684,21 @@ def addOrthogonalSeeding(
     )
     sequence.addAlgorithm(seedingAlg)
     return seedingAlg.config.outputProtoTracks, seedingAlg.config.outputSeeds
+
+
+def addHoughTransformSeeding(
+    sequence: acts.examples.Sequencer,
+    config: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
+    logLevel: acts.logging.Level = None,
+):
+    """
+    Configures HoughTransform (HT) for seeding, instead of extra proxy config objects it takes
+    directly the HT example algorithm config.
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    ht = acts.examples.HoughTransformSeeder(config=config, level=logLevel)
+    sequence.addAlgorithm(ht)
+    return config.outputProtoTracks, config.outputSeeds
 
 
 def addSeedPerformanceWriters(
