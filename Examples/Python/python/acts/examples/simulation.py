@@ -594,7 +594,7 @@ def addGeant4(
     g4conf = geant4SimulationConfig(
         level=customLogLevel(),
         detector=g4detectorConstruction,
-        inputParticles="particles_input",
+        inputParticles=particles_selected,
         trackingGeometry=trackingGeometry,
         magneticField=field,
         volumeMappings=volumeMappings,
