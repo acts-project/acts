@@ -37,6 +37,7 @@ def runMaterialMapping(
     mapSurface=True,
     mapVolume=True,
     readCachedSurfaceInformation=False,
+    mappingStep=1,
     s=None,
 ):
     s = s or Sequencer(numThreads=1)
@@ -91,7 +92,7 @@ def runMaterialMapping(
         )
         propagator = Propagator(stepper, navigator)
         mapper = VolumeMaterialMapper(
-            level=acts.logging.INFO, propagator=propagator, mappingStep=999
+            level=acts.logging.INFO, propagator=propagator, mappingStep=mappingStep
         )
         mmAlgCfg.materialVolumeMapper = mapper
 
