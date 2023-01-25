@@ -103,14 +103,33 @@ struct SeedFinderOrthogonalConfig {
   // derived values, set on SeedFinder construction
   float highland = 0;
   float maxScatteringAngle2 = 0;
-  float pTPerHelixRadius = 0;
-  float minHelixDiameter2 = 0;
-  float pT2perRadius = 0;
-  float sigmapT2perRadius = 0;
+
+  bool isInInternalUnits = false;
+
+  SeedFinderOrthogonalConfig calculateDerivedQuantities() const {
+    if (not isInInternalUnits) {
+      throw std::runtime_error(
+          "SeedFinderOrthogonalConfig not in ACTS internal units in "
+          "calculateDerivedQuantities");
+    }
+    SeedFinderOrthogonalConfig config = *this;
+    // calculation of scattering using the highland formula
+    // convert pT to p once theta angle is known
+    config.highland = 13.6 * std::sqrt(radLengthPerSeed) *
+                      (1 + 0.038 * std::log(radLengthPerSeed));
+    config.maxScatteringAngle2 = std::pow(config.highland / config.minPt, 2);
+    return config;
+  }
 
   SeedFinderOrthogonalConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "SeedFinderOrthogonalConfig already in ACTS internal units in "
+          "toInternalUnits");
+    }
     using namespace Acts::UnitLiterals;
     SeedFinderOrthogonalConfig config = *this;
+    config.isInInternalUnits = true;
     config.minPt /= 1_MeV;
     config.deltaRMinTopSP /= 1_mm;
     config.deltaRMaxTopSP /= 1_mm;

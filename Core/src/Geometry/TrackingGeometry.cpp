@@ -19,12 +19,11 @@ Acts::TrackingGeometry::TrackingGeometry(
     const GeometryIdentifierHook& hook, const Logger& logger)
     : m_world(highestVolume),
       m_beam(Surface::makeShared<PerigeeSurface>(Vector3::Zero())) {
-  std::unique_ptr<const Logger> mylogger = logger.clone("TrackingGeometry");
 
   // Close the geometry: assign geometryID and successively the material
   size_t volumeID = 0;
   highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID, hook,
-                               *(mylogger.get()));
+                               logger);
   m_volumesById.rehash(0);
   // fill surface lookup container
   m_world->visitSurfaces([this](const Acts::Surface* srf) {

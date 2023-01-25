@@ -77,7 +77,7 @@ ActsExamples::TGeoITkModuleSplitter::splitBarrelModule(
     const Acts::GeometryContext& gctx,
     const std::shared_ptr<const Acts::TGeoDetectorElement>& detElement,
     unsigned int nSegments) const {
-  // Retrive the surface
+  // Retrieve the surface
   auto identifier = detElement->identifier();
   const Acts::Surface& surface = detElement->surface();
   const Acts::SurfaceBounds& bounds = surface.bounds();

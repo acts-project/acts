@@ -73,6 +73,17 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     }
   }
 
+  // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
+  // 3 would be also possible, but that produces infinite amount of output.
+  const int geantVerboseLevel =
+      logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
+  m_cfg.runManager->SetVerboseLevel(geantVerboseLevel);
+  G4EventManager::GetEventManager()->SetVerboseLevel(geantVerboseLevel);
+  G4EventManager::GetEventManager()->GetTrackingManager()->SetVerboseLevel(
+      geantVerboseLevel);
+  G4EventManager::GetEventManager()->GetStackManager()->SetVerboseLevel(
+      geantVerboseLevel);
+
   // Set the detector construction
   m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
 

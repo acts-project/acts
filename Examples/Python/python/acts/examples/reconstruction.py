@@ -1016,7 +1016,7 @@ def addTrajectoryWriters(
         if not outputDirCsv.exists():
             outputDirCsv.mkdir()
 
-        if trackSummaryWriter:
+        if writeSummary:
             csvMTJWriter = acts.examples.CsvMultiTrajectoryWriter(
                 level=customLogLevel(),
                 inputTrajectories=trajectories,
