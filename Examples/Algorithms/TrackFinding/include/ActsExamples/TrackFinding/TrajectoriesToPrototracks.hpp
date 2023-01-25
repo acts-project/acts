@@ -22,13 +22,14 @@ class TrajectoriesToPrototracks final : public BareAlgorithm {
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
   TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl)
-      : BareAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(cfg) {}
+      : BareAlgorithm("TrajectoriesToPrototracks", lvl),
+        m_cfg(std::move(cfg)) {}
 
   /// Run the algorithm.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }

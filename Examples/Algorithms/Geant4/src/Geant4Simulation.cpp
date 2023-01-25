@@ -73,6 +73,17 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     }
   }
 
+  // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
+  // 3 would be also possible, but that produces infinite amount of output.
+  const int geantVerboseLevel =
+      logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
+  m_cfg.runManager->SetVerboseLevel(geantVerboseLevel);
+  G4EventManager::GetEventManager()->SetVerboseLevel(geantVerboseLevel);
+  G4EventManager::GetEventManager()->GetTrackingManager()->SetVerboseLevel(
+      geantVerboseLevel);
+  G4EventManager::GetEventManager()->GetStackManager()->SetVerboseLevel(
+      geantVerboseLevel);
+
   // Set the detector construction
   m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
 
@@ -114,7 +125,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     G4VPhysicalVolume* g4World = m_cfg.detectorConstruction->Construct();
     int sCounter = 0;
     m_cfg.sensitiveSurfaceMapper->remapSensitiveNames(
-        g4World, Acts::Vector3(0., 0., 0.), sCounter);
+        g4World, Acts::Transform3::Identity(), sCounter);
 
     ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
   }

@@ -57,7 +57,7 @@ struct SingleParticleSimulation {
   /// Alternatively construct the simulator with an external logger.
   SingleParticleSimulation(propagator_t &&propagator_,
                            std::shared_ptr<const Acts::Logger> localLogger_)
-      : propagator(propagator_), localLogger(localLogger_) {}
+      : propagator(propagator_), localLogger(std::move(localLogger_)) {}
 
   /// Provide access to the local logger instance, e.g. for logging macros.
   const Acts::Logger &logger() const { return *localLogger; }
@@ -87,8 +87,7 @@ struct SingleParticleSimulation {
     using PropagatorOptions = Acts::PropagatorOptions<Actions, Abort>;
 
     // Construct per-call options.
-    PropagatorOptions options(geoCtx, magCtx,
-                              Acts::LoggerWrapper{*localLogger});
+    PropagatorOptions options(geoCtx, magCtx);
     options.absPdgCode = Acts::makeAbsolutePdgParticle(particle.pdg());
     options.mass = particle.mass();
     // setup the interactor as part of the propagator options

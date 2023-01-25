@@ -25,6 +25,7 @@ namespace py = pybind11;
 
 namespace {
 double thetaToEta(double theta) {
+  assert(theta != 0);
   return -1 * std::log(std::tan(theta / 2.));
 }
 double etaToTheta(double eta) {
@@ -82,7 +83,7 @@ void addGenerators(Context& ctx) {
              std::shared_ptr<ActsExamples::GaussianVertexGenerator>>(
       mex, "GaussianVertexGenerator")
       .def(py::init<>())
-      .def(py::init([](Acts::Vector4 stddev, Acts::Vector4 mean) {
+      .def(py::init([](const Acts::Vector4& stddev, const Acts::Vector4& mean) {
              ActsExamples::GaussianVertexGenerator g;
              g.stddev = stddev;
              g.mean = mean;
@@ -97,7 +98,7 @@ void addGenerators(Context& ctx) {
              std::shared_ptr<ActsExamples::FixedVertexGenerator>>(
       mex, "FixedVertexGenerator")
       .def(py::init<>())
-      .def(py::init([](Acts::Vector4 v) {
+      .def(py::init([](const Acts::Vector4& v) {
              ActsExamples::FixedVertexGenerator g;
              g.fixed = v;
              return g;

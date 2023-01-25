@@ -36,7 +36,7 @@ BOOST_AUTO_TEST_CASE(LineBoundsRecreation) {
   LineBounds original(nominalRadius, nominalHalfLength);
   LineBounds recreated(original);
   auto valvector = original.values();
-  std::array<double, LineBounds::eSize> values;
+  std::array<double, LineBounds::eSize> values{};
   std::copy_n(valvector.begin(), LineBounds::eSize, values.begin());
   BOOST_CHECK_EQUAL(original, recreated);
 }

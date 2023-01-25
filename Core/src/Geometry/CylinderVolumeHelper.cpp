@@ -424,12 +424,12 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
   ACTS_VERBOSE("Parsing the " << layers.size()
                               << " layers to gather overall dimensions");
   if (cylinderVolumeBounds != nullptr) {
-    ACTS_DEBUG("Cylinder volume bounds are given: (rmin/rmax/dz) = "
-               << "(" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR)
-               << "/" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR)
-               << "/"
-               << cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ)
-               << ")");
+    ACTS_VERBOSE(
+        "Cylinder volume bounds are given: (rmin/rmax/dz) = "
+        << "(" << cylinderVolumeBounds->get(CylinderVolumeBounds::eMinR) << "/"
+        << cylinderVolumeBounds->get(CylinderVolumeBounds::eMaxR) << "/"
+        << cylinderVolumeBounds->get(CylinderVolumeBounds::eHalfLengthZ)
+        << ")");
   }
 
   // prepare for parsing the layers
@@ -496,10 +496,13 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
       "Estimate/check CylinderVolumeBounds from/w.r.t. enclosed "
       "layers + envelope covers");
   // the z from the layers w and w/o envelopes
-  double zEstFromLayerEnv = 0.5 * ((layerZmax) + (layerZmin));
-  double halflengthFromLayer = 0.5 * std::abs((layerZmax) - (layerZmin));
+  double zEstFromLayerEnv = 0.5 * (layerZmax + layerZmin);
+  double halflengthFromLayer = 0.5 * std::abs(layerZmax - layerZmin);
 
-  bool concentric = (zEstFromLayerEnv * zEstFromLayerEnv < 0.001);
+  // using `sqrt(0.001) = 0.031622777` because previously it compared to
+  // `zEstFromLayerEnv * zEstFromLayerEnv < 0.001` which was changed due to
+  // underflow/overflow concerns
+  bool concentric = std::abs(zEstFromLayerEnv) < 0.031622777;
 
   bool idTrf = transform.isApprox(Transform3::Identity());
 
@@ -633,8 +636,16 @@ bool Acts::CylinderVolumeHelper::interGlueTrackingVolume(
               std::const_pointer_cast<TrackingVolume>(*tVolIter);
           std::shared_ptr<TrackingVolume> tVol2 =
               std::const_pointer_cast<TrackingVolume>(*(++tVolIter));
+
+          // re-evalueate rGlueMin
+          ActsScalar rGlueR =
+              0.5 * (tVol1->volumeBounds()
+                         .values()[CylinderVolumeBounds::BoundValues::eMaxR] +
+                     tVol2->volumeBounds()
+                         .values()[CylinderVolumeBounds::BoundValues::eMinR]);
+
           glueTrackingVolumes(gctx, tVol1, tubeOuterCover, tVol2,
-                              tubeInnerCover, rMin, rGlueMin, rMax, zMin, zMax);
+                              tubeInnerCover, rMin, rGlueR, rMax, zMin, zMax);
         }
       }
     } else {

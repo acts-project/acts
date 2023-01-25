@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -37,11 +38,9 @@ auto kalmanHandleMeasurement(
     propagator_state_t &state, const stepper_t &stepper,
     const extensions_t &extensions, const Surface &surface,
     const SourceLink &source_link, MultiTrajectory<traj_t> &fittedStates,
-    const size_t lastTrackIndex, bool doCovTransport,
+    const size_t lastTrackIndex, bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
-  const auto &logger = state.options.logger;
-
   // Bind the transported state to the current surface
   auto res = stepper.boundState(state.stepping, surface, doCovTransport,
                                 freeToBoundCorrection);
@@ -61,7 +60,7 @@ auto kalmanHandleMeasurement(
   trackStateProxy.setReferenceSurface(surface.getSharedPtr());
 
   // assign the source link to the track state
-  trackStateProxy.setUncalibrated(source_link);
+  trackStateProxy.setUncalibratedSourceLink(source_link);
 
   // Fill the track state
   trackStateProxy.predicted() = std::move(boundParams.parameters());
@@ -127,11 +126,9 @@ template <typename propagator_state_t, typename stepper_t, typename traj_t>
 auto kalmanHandleNoMeasurement(
     propagator_state_t &state, const stepper_t &stepper, const Surface &surface,
     MultiTrajectory<traj_t> &fittedStates, const size_t lastTrackIndex,
-    bool doCovTransport,
+    bool doCovTransport, const Logger &logger,
     const FreeToBoundCorrection &freeToBoundCorrection = FreeToBoundCorrection(
         false)) -> Result<typename MultiTrajectory<traj_t>::TrackStateProxy> {
-  const auto &logger = state.options.logger;
-
   // No source links on surface, add either hole or passive material
   // TrackState entry multi trajectory. No storage allocation for
   // uncalibrated/calibrated measurement and filtered parameter

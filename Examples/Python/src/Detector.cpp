@@ -10,7 +10,6 @@
 #include "Acts/Material/IMaterialDecorator.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/ContextualDetector/AlignedDetector.hpp"
-#include "ActsExamples/Detector/IBaseDetector.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/GenericDetector.hpp"
 #include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
@@ -56,16 +55,18 @@ void addDetector(Context& ctx) {
   }
 
   {
+    using TelescopeDetector = Telescope::TelescopeDetector;
     using Config = TelescopeDetector::Config;
 
-    auto td = py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(
-                  mex, "TelescopeDetector")
-                  .def(py::init<>())
-                  .def("finalize",
-                       py::overload_cast<
-                           const Config&,
-                           std::shared_ptr<const Acts::IMaterialDecorator>>(
-                           &TelescopeDetector::finalize));
+    auto td =
+        py::class_<TelescopeDetector, std::shared_ptr<TelescopeDetector>>(
+            mex, "TelescopeDetector")
+            .def(py::init<>())
+            .def("finalize",
+                 py::overload_cast<
+                     const Config&,
+                     const std::shared_ptr<const Acts::IMaterialDecorator>&>(
+                     &TelescopeDetector::finalize));
 
     py::class_<Config>(td, "Config")
         .def(py::init<>())
@@ -78,7 +79,7 @@ void addDetector(Context& ctx) {
   }
 
   {
-    using AlignedDetector = ActsExamples::Contextual::AlignedDetector;
+    using AlignedDetector = Contextual::AlignedDetector;
     using Config = AlignedDetector::Config;
 
     auto d = py::class_<AlignedDetector, std::shared_ptr<AlignedDetector>>(

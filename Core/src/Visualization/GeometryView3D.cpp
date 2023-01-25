@@ -9,8 +9,10 @@
 #include "Acts/Visualization/GeometryView3D.hpp"
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
+#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/ConeBounds.hpp"
 #include "Acts/Surfaces/ConeSurface.hpp"
@@ -119,7 +121,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
                                0.5 * thickness);
       auto cvbOrientedSurfaces = cvb.orientedSurfaces();
       for (auto z : zValues) {
-        for (auto cvbSf : cvbOrientedSurfaces) {
+        for (const auto& cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
@@ -135,7 +137,7 @@ void Acts::GeometryView3D::drawSurfaceArray(
         CylinderVolumeBounds cvb(r - 0.5 * thickness, r + 0.5 * thickness,
                                  0.5 * thickness);
         auto cvbOrientedSurfaces = cvb.orientedSurfaces();
-        for (auto cvbSf : cvbOrientedSurfaces) {
+        for (const auto& cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
@@ -167,6 +169,48 @@ void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
   for (const auto& bs : bSurfaces) {
     drawSurface(helper, bs->surfaceRepresentation(), gctx, transform,
                 viewConfig);
+  }
+}
+
+void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
+                                      const Experimental::Portal& portal,
+                                      const GeometryContext& gctx,
+                                      const Transform3& transform,
+                                      const ViewConfig& connected,
+                                      const ViewConfig& disconnected) {
+  // color the portal based on if it contains two links(green)
+  // or one link(red)
+  auto surface = &(portal.surface());
+  auto links = &(portal.detectorVolumeUpdators());
+  if (links->size() == 2) {
+    drawSurface(helper, *surface, gctx, transform, connected);
+  } else {
+    drawSurface(helper, *surface, gctx, transform, disconnected);
+  }
+}
+
+void Acts::GeometryView3D::drawDetectorVolume(
+    IVisualization3D& helper, const Experimental::DetectorVolume& volume,
+    const GeometryContext& gctx, const Transform3& transform,
+    const ViewConfig& connected, const ViewConfig& unconnected) {
+  // draw the envelope first
+  auto portals = volume.portals();
+  for (auto portal : portals) {
+    drawPortal(helper, *portal, gctx, transform, connected, unconnected);
+  }
+  // recurse if there are subvolumes, otherwise draw the portals
+  auto subvolumes = volume.volumes();
+  for (auto subvolume : subvolumes) {
+    if (!subvolume->volumes().empty()) {
+      drawDetectorVolume(helper, *subvolume, gctx, transform, connected,
+                         unconnected);
+    } else {
+      auto sub_portals = subvolume->portals();
+      for (auto sub_portal : sub_portals) {
+        drawPortal(helper, *sub_portal, gctx, transform, connected,
+                   unconnected);
+      }
+    }
   }
 }
 
@@ -231,7 +275,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
   if (writeIt) {
     std::vector<std::string> repChar = {"::" /*, "|", " ", "{", "}"*/};
     // std::cout << "PRE: " << vname << std::endl;
-    for (auto rchar : repChar) {
+    for (const auto& rchar : repChar) {
       while (vname.find(rchar) != std::string::npos) {
         vname.replace(vname.find(rchar), rchar.size(), std::string("_"));
       }

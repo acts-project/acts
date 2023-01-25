@@ -6,9 +6,14 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Geometry/Detector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
+#include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
+#include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4/Geant4Simulation.hpp"
 #include "ActsExamples/Geant4/MagneticFieldWrapper.hpp"
@@ -18,6 +23,8 @@
 #include "ActsExamples/Geant4/SensitiveSteppingAction.hpp"
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
+#include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
+#include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include <memory>
 
@@ -28,6 +35,7 @@
 #include <G4UserRunAction.hh>
 #include <G4UserSteppingAction.hh>
 #include <G4UserTrackingAction.hh>
+#include <G4VPhysicalVolume.hh>
 #include <G4VUserDetectorConstruction.hh>
 #include <G4VUserPrimaryGeneratorAction.hh>
 #include <pybind11/pybind11.h>
@@ -46,9 +54,12 @@ void addGeant4HepMC3(Context& ctx);
 PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
   py::class_<G4VUserDetectorConstruction>(mod, "G4VUserDetectorConstruction");
 
+  py::class_<G4VPhysicalVolume>(mod, "G4VPhysicalVolume");
+
   // This is the actual class we're binding
   py::class_<GdmlDetectorConstruction, G4VUserDetectorConstruction>(
-      mod, "GdmlDetectorConstructionImpl");
+      mod, "GdmlDetectorConstructionImpl")
+      .def("Construct", &GdmlDetectorConstruction::Construct);
 
   // This is a python-only factory method that returns the above class.
   // We can apply a return value policy here so that python does NOT assume
@@ -84,7 +95,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         // Set the main Geant4 algorithm, primary generation, detector
         // construction
         Geant4Simulation::Config g4Cfg;
-        g4Cfg.randomNumbers = randomNumbers;
+        g4Cfg.randomNumbers = std::move(randomNumbers);
         g4Cfg.runManager = std::make_shared<G4RunManager>();
         g4Cfg.runManager->SetUserInitialization(new MaterialPhysicsList(
             Acts::getDefaultLogger("MaterialPhysicsList", level)));
@@ -125,8 +136,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       "geant4SimulationConfig",
       [](Acts::Logging::Level& level, G4VUserDetectorConstruction* detector,
          const std::string& inputParticles,
-         std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-         std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+         const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
+         const std::shared_ptr<const Acts::MagneticFieldProvider>&
+             magneticField,
          const std::vector<std::string>& volumeMappings,
          const std::vector<std::string>& materialMappings) {
         // The Geant4 actions needed
@@ -203,6 +215,73 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{});
+
+  {
+    using Detector = ActsExamples::Telescope::TelescopeDetector;
+    using DetectorConstruction =
+        ActsExamples::Telescope::TelescopeG4DetectorConstruction;
+
+    py::class_<DetectorConstruction, G4VUserDetectorConstruction>(
+        mod, "TelescopeG4DetectorConstructionImpl");
+
+    mod.def(
+        "TelescopeG4DetectorConstruction",
+        [](Detector& detector) {
+          return new DetectorConstruction(detector.config);
+        },
+        py::return_value_policy::reference);
+  }
+  {
+    using ISelector = Acts::IGeant4PhysicalVolumeSelector;
+    auto is = py::class_<ISelector, std::shared_ptr<ISelector>>(
+        mod, "IVolumeSelector");
+
+    using NameSelector = Acts::Geant4PhysicalVolumeSelectors::NameSelector;
+    auto ns = py::class_<NameSelector, std::shared_ptr<NameSelector>>(
+                  mod, "VolumeNameSelector", is)
+                  .def(py::init<const std::vector<std::string>&, bool>());
+
+    using Factory = Acts::Geant4DetectorSurfaceFactory;
+    auto o = py::class_<Factory::Options>(mod, "SurfaceFactoryOptions")
+                 .def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(o, Factory::Options);
+    ACTS_PYTHON_MEMBER(scaleConversion);
+    ACTS_PYTHON_MEMBER(convertMaterial);
+    ACTS_PYTHON_MEMBER(convertedMaterialThickness);
+    ACTS_PYTHON_MEMBER(sensitiveSurfaceSelector);
+    ACTS_PYTHON_MEMBER(passiveSurfaceSelector);
+    ACTS_PYTHON_STRUCT_END();
+  }
+  {
+    py::class_<Acts::Geant4DetectorElement,
+               std::shared_ptr<Acts::Geant4DetectorElement>>(
+        mod, "Geant4DetectorElement");
+
+    using Geant4Detector = ActsExamples::Geant4::Geant4Detector;
+
+    auto g =
+        py::class_<Geant4Detector, std::shared_ptr<Geant4Detector>>(
+            mod, "Geant4Detector")
+            .def(py::init<>())
+            .def("constructDetector",
+                 py::overload_cast<
+                     const ActsExamples::Geant4::Geant4Detector::Config&>(
+                     &ActsExamples::Geant4::Geant4Detector::constructDetector))
+            .def("constructTrackingGeometry",
+                 py::overload_cast<
+                     const ActsExamples::Geant4::Geant4Detector::Config&>(
+                     &ActsExamples::Geant4::Geant4Detector::
+                         constructTrackingGeometry));
+
+    auto c = py::class_<Geant4Detector::Config>(g, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Geant4Detector::Config);
+    ACTS_PYTHON_MEMBER(name);
+    ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_MEMBER(g4World);
+    ACTS_PYTHON_MEMBER(g4SurfaceOptions);
+    ACTS_PYTHON_MEMBER(protoDetector);
+    ACTS_PYTHON_STRUCT_END();
+  }
 
   Acts::Python::Context ctx;
   ctx.modules["geant4"] = &mod;

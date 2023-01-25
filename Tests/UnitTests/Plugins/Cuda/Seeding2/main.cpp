@@ -80,9 +80,10 @@ int main(int argc, char* argv[]) {
   sfConfig.cotThetaMax = 7.40627;
   sfConfig.sigmaScattering = 1.00000;
   sfConfig.minPt = 500._MeV;
-  sfConfig.bFieldInZ = 1.99724_T;
-  sfConfig.beamPos = {-.5_mm, -.5_mm};
   sfConfig.impactMax = 10._mm;
+  Acts::SeedFinderOptions sfOptions;
+  sfOptions.bFieldInZ = 1.99724_T;
+  sfOptions.beamPos = {-.5_mm, -.5_mm};
 
   // Use a size slightly smaller than what modern GPUs are capable of. This is
   // because for debugging we can't use all available threads in a block, and
@@ -91,15 +92,20 @@ int main(int argc, char* argv[]) {
   // with the kind of branching that is present in the CUDA code.)
   sfConfig.maxBlockSize = 256;
 
+  sfConfig = sfConfig.toInternalUnits().calculateDerivedQuantities();
+
   // Set up the spacepoint grid configuration.
   Acts::SpacePointGridConfig gridConfig;
-  gridConfig.bFieldInZ = sfConfig.bFieldInZ;
   gridConfig.minPt = sfConfig.minPt;
   gridConfig.rMax = sfConfig.rMax;
   gridConfig.zMax = sfConfig.zMax;
   gridConfig.zMin = sfConfig.zMin;
   gridConfig.deltaRMax = sfConfig.deltaRMax;
   gridConfig.cotThetaMax = sfConfig.cotThetaMax;
+  gridConfig = gridConfig.toInternalUnits();
+  // Set up the spacepoint grid options
+  Acts::SpacePointGridOptions gridOpts;
+  gridOpts.bFieldInZ = sfOptions.bFieldInZ;
 
   // Covariance tool, sets covariances per spacepoint as required.
   auto ct = [=](const TestSpacePoint& sp, float, float,
@@ -112,13 +118,15 @@ int main(int argc, char* argv[]) {
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
+  const Acts::Range1D<float> rMiddleSPRange;
+
   // Create a grid with bin sizes according to the configured geometry, and
   // split the spacepoints into groups according to that grid.
-  auto grid =
-      Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(gridConfig);
+  auto grid = Acts::SpacePointGridCreator::createGrid<TestSpacePoint>(
+      gridConfig, gridOpts);
   auto spGroup = Acts::BinnedSPGroup<TestSpacePoint>(
       spView.begin(), spView.end(), ct, bottomBinFinder, topBinFinder,
-      std::move(grid), rRangeSPExtent, sfConfig);
+      std::move(grid), rRangeSPExtent, sfConfig, sfOptions);
   // Make a convenient iterator that will be used multiple times later on.
   auto spGroup_end = spGroup.end();
 
@@ -146,6 +154,7 @@ int main(int argc, char* argv[]) {
   // Set up the seedFinder configuration objects.
   TestHostCuts hostCuts;
   Acts::SeedFilterConfig filterConfig;
+  filterConfig = filterConfig.toInternalUnits();
   sfConfig.seedFilter = std::make_unique<Acts::SeedFilter<TestSpacePoint>>(
       filterConfig, &hostCuts);
   auto deviceCuts = testDeviceCuts();
@@ -153,7 +162,7 @@ int main(int argc, char* argv[]) {
   // Set up the seedFinder objects.
   Acts::SeedFinder<TestSpacePoint> seedFinder_host(sfConfig);
   Acts::Cuda::SeedFinder<TestSpacePoint> seedFinder_device(
-      sfConfig, filterConfig, deviceCuts, cmdl.cudaDevice);
+      sfConfig, sfOptions, filterConfig, deviceCuts, cmdl.cudaDevice);
 
   //
   // Perform the seed finding on the host.
@@ -173,8 +182,8 @@ int main(int argc, char* argv[]) {
          ++i, ++spGroup_itr) {
       auto& group = seeds_host.emplace_back();
       seedFinder_host.createSeedsForGroup(
-          state, std::back_inserter(group), spGroup_itr.bottom(),
-          spGroup_itr.middle(), spGroup_itr.top(), rRangeSPExtent);
+          sfOptions, state, std::back_inserter(group), spGroup_itr.bottom(),
+          spGroup_itr.middle(), spGroup_itr.top(), rMiddleSPRange);
     }
   }
 

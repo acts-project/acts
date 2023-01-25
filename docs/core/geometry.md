@@ -272,3 +272,15 @@ possible, they are *attached*.
 
 For cylindrical detector setups, a dedicated `CylinderVolumeBuilder` is
 provided, which performs a variety of volume building, packing and gluing.
+
+
+## TrackingGeometry building using a KDTree and a Proto Description
+
+For cylindrical detectors there exist a generic tracking geometry building module,
+based on KDTree and a proto description.
+
+This building procedure uses a `ProtoDetector` description which provides a 
+high level description of layers and container volumes, together with some 
+binning and ordering information.
+This proto description is then used to assign surfaces that are provided to the 
+`KDTreeTrackingGeometryBuilder` using an internal query to the KD-tree structure.

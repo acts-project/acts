@@ -9,6 +9,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
+#include "ActsExamples/TruthTracking/TrackModifier.hpp"
 #include "ActsExamples/TruthTracking/TrackSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
@@ -137,9 +138,9 @@ void addTruthTracking(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputTrackParameters);
-    ACTS_PYTHON_MEMBER(inputTrackParametersTips);
+    ACTS_PYTHON_MEMBER(inputTrajectories);
     ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrackParametersTips);
+    ACTS_PYTHON_MEMBER(outputTrajectories);
     ACTS_PYTHON_MEMBER(loc0Min);
     ACTS_PYTHON_MEMBER(loc0Max);
     ACTS_PYTHON_MEMBER(loc1Min);
@@ -170,6 +171,11 @@ void addTruthTracking(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthVertexFinder, mex, "TruthVertexFinder", inputParticles,
       outputProtoVertices, excludeSecondaries, separateSecondaries);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TrackModifier, mex, "TrackModifier", inputTrajectories,
+      inputTrackParameters, outputTrajectories, outputTrackParameters,
+      dropCovariance, covScale, killTime);
 }
 
 }  // namespace Acts::Python

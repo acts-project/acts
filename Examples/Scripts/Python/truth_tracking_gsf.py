@@ -123,6 +123,16 @@ def runTruthTrackingGsf(
         )
     )
 
+    s.addWriter(
+        acts.examples.TrackFitterPerformanceWriter(
+            level=acts.logging.INFO,
+            inputTrajectories="gsf_trajectories",
+            inputParticles="truth_seeds_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            filePath=str(outputDir / "performance_gsf.root"),
+        )
+    )
+
     return s
 
 

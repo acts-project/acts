@@ -247,7 +247,7 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
   using Aborts = Acts::AbortList<>;
 
   // setup propagation options
-  options_t<Actions, Aborts> options(geoCtx, magCtx, Acts::getDummyLogger());
+  options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = (0 <= pathLength) ? Acts::NavigationDirection::Forward
                                         : Acts::NavigationDirection::Backward;
   options.pathLimit = pathLength;
@@ -275,7 +275,7 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
   using Aborts = Acts::AbortList<>;
 
   // setup propagation options
-  options_t<Actions, Aborts> options(geoCtx, magCtx, Acts::getDummyLogger());
+  options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = Acts::NavigationDirection::Forward;
   options.pathLimit = pathLimit;
   options.maxStepSize = 1_cm;

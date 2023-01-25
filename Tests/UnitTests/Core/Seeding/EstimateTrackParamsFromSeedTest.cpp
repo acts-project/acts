@@ -111,7 +111,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           std::map<GeometryIdentifier::Value, SpacePoint> spacePoints;
           const Surface* bottomSurface = nullptr;
           for (const auto& sl : measurements.sourceLinks) {
-            const auto& geoId = sl.geometryId();
+            const auto geoId = sl.geometryId();
             const auto& layer = geoId.layer();
             auto it = spacePoints.find(layer);
             // Avoid to use space point from the same layers
@@ -152,7 +152,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           double rho = expParams[eBoundQOverP] * 0.3 * 2. / UnitConstants::m;
 
           // The space point pointers
-          std::array<const SpacePoint*, 3> spacePointPtrs;
+          std::array<const SpacePoint*, 3> spacePointPtrs{};
           std::transform(spacePoints.begin(), std::next(spacePoints.begin(), 3),
                          spacePointPtrs.begin(),
                          [](const auto& sp) { return &sp.second; });

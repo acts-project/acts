@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/Detector/DD4hepDetectorWithOptions.hpp"
 #include "ActsExamples/Geometry/GeometryExampleBase.hpp"
 
 /// @brief main executable
@@ -15,7 +15,7 @@
 /// @param argv The argument list
 int main(int argc, char* argv[]) {
   // --------------------------------------------------------------------------------
-  ActsExamples::DD4hep::DD4hepDetector detector;
+  ActsExamples::DD4hepDetectorWithOptions detector;
   // now process it
   return processGeometry(argc, argv, detector);
 }

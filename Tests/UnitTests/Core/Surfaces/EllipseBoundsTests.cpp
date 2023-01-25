@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(EllipseBoundsRecreation) {
   EllipseBounds original(innerRx, innerRy, outerRx, outerRy, phiSector,
                          averagePhi);
   auto valvector = original.values();
-  std::array<double, EllipseBounds::eSize> values;
+  std::array<double, EllipseBounds::eSize> values{};
   std::copy_n(valvector.begin(), EllipseBounds::eSize, values.begin());
   EllipseBounds recreated(values);
   BOOST_CHECK_EQUAL(recreated, original);

@@ -104,13 +104,13 @@ ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() {
 }
 
 ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
-  if (m_outputFile != nullptr) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write estimated parameters from seed to tree '"
-              << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
-    m_outputFile->Close();
-  }
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  ACTS_INFO("Wrote estimated parameters from seed to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 
@@ -119,10 +119,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     const TrackParametersContainer& trackParams) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
 
   // Read additional input collections
   const auto& protoTracks =
@@ -194,7 +190,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
       auto ip = particles.find(particleId);
       if (ip != particles.end()) {
         const auto& particle = *ip;
-        m_t_charge = particle.charge();
+        m_t_charge = static_cast<int>(particle.charge());
         m_t_qop = m_t_charge / p;
       } else {
         ACTS_WARNING("Truth particle with barcode = " << particleId
