@@ -209,10 +209,6 @@ likely to stem from a particle than another seed using the same middle SP with
 smaller impact parameters. The number of compatible seeds ($N_t$) is used to increase the weight, as a higher number of measurements 
 will lead to higher quality tracks.  Finally, the weight can also be affected by optional detector-specific cuts.
 
-:::{note} 
-The $z_0$ term in the weight is not yet fully configurable, but this will change soon.
-:::
-
 The {func}`SeedFilter::filterSeeds_2SpFixed` function also includes a configurable {class}`Acts::SeedConfirmationRangeConfig` seed confirmation step that, when enabled,
 classifies higher quality seeds as "quality confined" seeds if they fall within a predefined range of parameters ($d_0$, $z_0$ and $N_t$) that also
 depends on the region of the detector (i.e., forward or central region). If the seed is not
@@ -223,7 +219,7 @@ The seed confirmation also sets a limit on the number of seeds produced for each
 which retains only the higher quality seeds. If this limit is exceeded, the algorithm
 checks if there is any low-quality seed in the seed container of this middle SP that can be removed.
 
-:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed
+:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&,std::size_t&,std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>>) const
 :outline:
 :::
 

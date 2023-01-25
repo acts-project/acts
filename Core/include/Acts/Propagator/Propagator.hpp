@@ -29,7 +29,7 @@
 
 #include <cmath>
 #include <functional>
-#include <memory>
+#include <optional>
 #include <type_traits>
 
 #include <boost/algorithm/string.hpp>
@@ -46,11 +46,11 @@ struct PropagatorResult : private detail::Extendable<result_list...> {
   /// Accessor to additional propagation quantities
   using detail::Extendable<result_list...>::get;
 
-  /// Final track parameters - initialized to null pointer
-  std::unique_ptr<parameters_t> endParameters = nullptr;
+  /// Final track parameters
+  std::optional<parameters_t> endParameters = std::nullopt;
 
   /// Full transport jacobian
-  std::unique_ptr<BoundMatrix> transportJacobian = nullptr;
+  std::optional<BoundMatrix> transportJacobian = std::nullopt;
 
   /// Number of propagation steps that were carried out
   unsigned int steps = 0;
@@ -121,8 +121,8 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 
   /// PropagatorOptions with context
   PropagatorOptions(const GeometryContext& gctx,
-                    const MagneticFieldContext& mctx, LoggerWrapper logger_)
-      : geoContext(gctx), magFieldContext(mctx), logger(logger_) {}
+                    const MagneticFieldContext& mctx)
+      : geoContext(gctx), magFieldContext(mctx) {}
 
   /// @brief Expand the Options with extended aborters
   ///
@@ -133,7 +133,7 @@ struct PropagatorOptions : public PropagatorPlainOptions {
   PropagatorOptions<action_list_t, extended_aborter_list_t> extend(
       extended_aborter_list_t aborters) const {
     PropagatorOptions<action_list_t, extended_aborter_list_t> eoptions(
-        geoContext, magFieldContext, logger);
+        geoContext, magFieldContext);
     // Copy the options over
     eoptions.direction = direction;
     eoptions.absPdgCode = absPdgCode;
@@ -186,8 +186,6 @@ struct PropagatorOptions : public PropagatorPlainOptions {
 
   /// The context object for the magnetic field
   std::reference_wrapper<const MagneticFieldContext> magFieldContext;
-
-  LoggerWrapper logger;
 };
 
 /// @brief Propagator for particles (optionally in a magnetic field)
@@ -244,8 +242,13 @@ class Propagator final {
   ///
   /// @param stepper The stepper implementation is moved to a private member
   /// @param navigator The navigator implementation, moved to a private member
-  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t())
-      : m_stepper(std::move(stepper)), m_navigator(std::move(navigator)) {}
+  /// @param _logger a logger instance
+  explicit Propagator(stepper_t stepper, navigator_t navigator = navigator_t(),
+                      std::shared_ptr<const Logger> _logger =
+                          getDefaultLogger("Propagator", Acts::Logging::INFO))
+      : m_stepper(std::move(stepper)),
+        m_navigator(std::move(navigator)),
+        m_logger{std::move(_logger)} {}
 
   /// @brief private Propagator state for navigation and debugging
   ///
@@ -457,11 +460,15 @@ class Propagator final {
           inputResult) const;
 
  private:
+  const Logger& logger() const { return *m_logger; }
+
   /// Implementation of propagation algorithm
   stepper_t m_stepper;
 
   /// Implementation of navigator
   navigator_t m_navigator;
+
+  std::shared_ptr<const Logger> m_logger;
 };
 
 }  // namespace Acts

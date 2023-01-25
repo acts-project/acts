@@ -49,14 +49,14 @@ void toJson(nlohmann::json& j, const Surface& surface,
 /// Non-contextual conversion of a surface
 ///
 /// @note it will take the default context
-void to_json(nlohmann::json& j, std::shared_ptr<const Surface> surface);
+void to_json(nlohmann::json& j, const std::shared_ptr<const Surface>& surface);
 
 /// Contextual conversion of a surface
 ///
 /// @param j the json to be filled
 /// @param surface the surface to be converted
 /// @param gctx the geometry context for this
-void toJson(nlohmann::json& j, std::shared_ptr<const Surface> surface,
+void toJson(nlohmann::json& j, const std::shared_ptr<const Surface>& surface,
             const Acts::GeometryContext& gctx);
 
 /// Converstion to Surface from jsonn

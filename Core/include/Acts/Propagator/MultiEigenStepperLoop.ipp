@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/Utilities/Logger.hpp"
+
 namespace Acts {
 
 template <typename E, typename R, typename A>
@@ -13,10 +15,19 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     State& state, const Surface& surface, bool transportCov,
     const FreeToBoundCorrection& freeToBoundCorrection) const
     -> Result<BoundState> {
+  assert(!state.components.empty());
+
   if (numberComponents(state) == 1) {
     return SingleStepper::boundState(state.components.front().state, surface,
                                      transportCov, freeToBoundCorrection);
-  } else {  // Do the combinatio
+  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
+    auto cmpIt = std::max_element(
+        state.components.begin(), state.components.end(),
+        [](const auto& a, const auto& b) { return a.weight < b.weight; });
+
+    return SingleStepper::boundState(cmpIt->state, surface, transportCov,
+                                     freeToBoundCorrection);
+  } else {
     SmallVector<std::pair<double, BoundTrackParameters>> states;
     double accumulatedPathLength = 0.0;
     int failedBoundTransforms = 0;
@@ -35,7 +46,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       }
     }
 
-    if (states.size() == 0) {
+    if (states.empty()) {
       return MultiStepperError::AllComponentsConversionToBoundFailed;
     }
 
@@ -43,16 +54,12 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       return MultiStepperError::SomeComponentsConversionToBoundFailed;
     }
 
-    // TODO At ATLAS, the final parameters seem to be computed with the mode of
-    // the mixture. At the moment, we use the mean of the mixture here, but
-    // there should be done a comparison sometimes in the future. This could
-    // also be configurable maybe...
     const auto proj = [&](const auto& wbs) {
       return std::tie(wbs.first, wbs.second.parameters(),
                       wbs.second.covariance());
     };
 
-    const auto [params, cov] =
+    auto [params, cov] =
         detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
           return detail::combineGaussianMixture(states, proj, desc);
         });
@@ -66,9 +73,17 @@ template <typename E, typename R, typename A>
 auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
                                                       bool transportCov) const
     -> CurvilinearState {
+  assert(!state.components.empty());
+
   if (numberComponents(state) == 1) {
     return SingleStepper::curvilinearState(state.components.front().state,
                                            transportCov);
+  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
+    auto cmpIt = std::max_element(
+        state.components.begin(), state.components.end(),
+        [](const auto& a, const auto& b) { return a.weight < b.weight; });
+
+    return SingleStepper::curvilinearState(cmpIt->state, transportCov);
   } else {
     Vector4 pos4 = Vector4::Zero();
     Vector3 dir = Vector3::Zero();
@@ -76,10 +91,6 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     BoundSymMatrix cov = BoundSymMatrix::Zero();
     ActsScalar pathLenth = 0.0;
 
-    // TODO At ATLAS, the final parameters seem to be computed with the mode of
-    // the mixture. At the moment, we use the mean of the mixture here, but
-    // there should be done a comparison sometimes in the future. This could
-    // also be configurable maybe...
     for (auto i = 0ul; i < numberComponents(state); ++i) {
       const auto [cp, jac, pl] = SingleStepper::curvilinearState(
           state.components[i].state, transportCov);
@@ -102,17 +113,10 @@ template <typename E, typename R, typename A>
 template <typename propagator_state_t>
 Result<double> MultiEigenStepperLoop<E, R, A>::step(
     propagator_state_t& state) const {
-  const auto& logger = state.options.logger;
   State& stepping = state.stepping;
 
-  // It is not possible to remove components from the vector, since the
-  // GSF actor relies on the fact that the ordering and number of
-  // components does not change
-  auto invalidateComponent = [](auto& cmp) {
-    cmp.status = Intersection3D::Status::missed;
-    cmp.weight = 0.0;
-    cmp.state.pars.template segment<3>(eFreeDir0) = Vector3::Zero();
-  };
+  // @TODO: This needs to be a real logger
+  const Logger& logger = getDummyLogger();
 
   // Lambda for reweighting the components
   auto reweight = [](auto& cmps) {
@@ -138,10 +142,11 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
         m_stepLimitAfterFirstComponentOnSurface) {
       for (auto& cmp : stepping.components) {
         if (cmp.status != Intersection3D::Status::onSurface) {
-          invalidateComponent(cmp);
+          cmp.status = Intersection3D::Status::missed;
         }
       }
 
+      removeMissedComponents(stepping);
       reweight(stepping.components);
 
       ACTS_VERBOSE("Stepper performed "
@@ -185,12 +190,13 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
       accumulatedPathLength += component.weight * results.back()->value();
     } else {
       ++errorSteps;
-      invalidateComponent(component);
+      component.status = Intersection3D::Status::missed;
     }
   }
 
   // Since we have invalidated some components, we need to reweight
   if (errorSteps > 0) {
+    removeMissedComponents(stepping);
     reweight(stepping.components);
   }
 
@@ -219,7 +225,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   }
 
   // Return error if there is no ok result
-  if (errorSteps == results.size()) {
+  if (stepping.components.empty()) {
     return MultiStepperError::AllComponentsSteppingError;
   }
 

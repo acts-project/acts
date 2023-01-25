@@ -1,5 +1,5 @@
 import sys, inspect
-from typing import Optional, Protocol, Dict
+from typing import Optional, Protocol
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -157,8 +157,9 @@ def NamedTypeArgs(**namedTypeArgs):
                 if k is None:
                     newargs.append(a)
                     if i > len(newargs):
+                        types = [type(a).__name__ for a in args]
                         raise TypeError(
-                            f"{func.__name__}() positional argument {i} follows named-type arguments, which were converted to keyword arguments"
+                            f"{func.__name__}() positional argument {i} of type {type(a)} follows named-type arguments, which were converted to keyword arguments. All argument types: {types}"
                         )
                 elif k in kwargs:
                     raise TypeError(f"{func.__name__}() keyword argument repeated: {k}")

@@ -49,8 +49,8 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
     SimParticleContainer::sequence_type unordered;
 
     for (const auto& mcParticle : *m_mcParticleCollection) {
-      auto particle =
-          EDM4hepUtil::readParticle(mcParticle, [](edm4hep::MCParticle p) {
+      auto particle = EDM4hepUtil::readParticle(
+          mcParticle, [](const edm4hep::MCParticle& p) {
             ActsFatras::Barcode result;
             // TODO dont use podio internal id
             result.setParticle(p.id());
@@ -81,15 +81,14 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
         try {
           auto hit = EDM4hepUtil::readSimHit(
               simTrackerHit,
-              [](edm4hep::MCParticle particle) {
+              [](const edm4hep::MCParticle& particle) {
                 ActsFatras::Barcode result;
                 // TODO dont use podio internal id
                 result.setParticle(particle.id());
                 return result;
               },
               [&](std::uint64_t cellId) {
-                auto detElement = m_cfg.dd4hepGeometryService->lcdd()
-                                      ->volumeManager()
+                auto detElement = m_cfg.dd4hepDetector->lcdd->volumeManager()
                                       .lookupDetElement(cellId);
                 Acts::GeometryIdentifier result = detElement.volumeID();
                 return result;

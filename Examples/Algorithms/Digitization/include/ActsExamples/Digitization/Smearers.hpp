@@ -122,13 +122,13 @@ struct Uniform {
   /// Construct with a @param pitch standard deviation and @param range
   Uniform(double pitch, const std::pair<double, double>& range_)
       : binningData(Acts::open, Acts::binX,
-                    (range_.second - range_.first) / pitch, range_.first,
-                    range_.second) {}
+                    static_cast<size_t>((range_.second - range_.first) / pitch),
+                    range_.first, range_.second) {}
 
   /// Constructor with a binning data in order to get the bin borders.
   ///
   /// @param bu the binning data
-  Uniform(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
+  Uniform(Acts::BinningData&& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///
@@ -159,13 +159,13 @@ struct Digital {
   /// Construct with a @param pitch standard deviation and @param range
   Digital(double pitch, const std::pair<double, double>& range_)
       : binningData(Acts::open, Acts::binX,
-                    (range_.second - range_.first) / pitch, range_.first,
-                    range_.second) {}
+                    static_cast<size_t>((range_.second - range_.first) / pitch),
+                    range_.first, range_.second) {}
 
   /// Constructor with a bin utility in order to get the bin borders.
   ///
   /// @param bu the bin utility within hich the parameter is allowed
-  Digital(Acts::BinningData&& bd) : binningData(std::move(bd)) {}
+  Digital(Acts::BinningData&& bd) : binningData(bd) {}
 
   /// Call operator for the SmearFunction caller interface.
   ///

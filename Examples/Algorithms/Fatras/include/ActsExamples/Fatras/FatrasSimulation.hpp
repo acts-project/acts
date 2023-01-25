@@ -49,15 +49,15 @@ class FatrasSimulation final : public BareAlgorithm {
     /// Minimal absolute momentum for particles to be simulated.
     double pMin = 0.5 * Acts::UnitConstants::GeV;
     /// Simulate (multiple) scattering for charged particles.
-    bool emScattering = false;
+    bool emScattering = true;
     /// Simulate ionisiation/excitation energy loss of charged particles.
-    bool emEnergyLossIonisation = false;
+    bool emEnergyLossIonisation = true;
     /// Simulate radiative energy loss of charged particles.
-    bool emEnergyLossRadiation = false;
+    bool emEnergyLossRadiation = true;
     /// Simulate electron-positron pair production by photon conversion.
-    bool emPhotonConversion = false;
+    bool emPhotonConversion = true;
     /// Generate simulation hits on sensitive surfaces.
-    bool generateHitsOnSensitive = false;
+    bool generateHitsOnSensitive = true;
     /// Generate simulation hits on surfaces with associated material.
     bool generateHitsOnMaterial = false;
     /// Generate simulation hits on passive surfaces, i.e neither sensitive nor
@@ -77,13 +77,12 @@ class FatrasSimulation final : public BareAlgorithm {
   /// @param cfg is the configuration struct
   /// @param lvl is the logging level
   FatrasSimulation(Config cfg, Acts::Logging::Level lvl);
-  ~FatrasSimulation() final override;
+  ~FatrasSimulation() override;
 
   /// Run the simulation for a single event.
   ///
   /// @param ctx the algorithm context containing all event information
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }

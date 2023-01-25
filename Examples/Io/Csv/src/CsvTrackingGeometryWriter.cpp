@@ -31,7 +31,6 @@ using namespace ActsExamples;
 CsvTrackingGeometryWriter::CsvTrackingGeometryWriter(
     const CsvTrackingGeometryWriter::Config& config, Acts::Logging::Level level)
     : m_cfg(config),
-      m_world(nullptr),
       m_logger(Acts::getDefaultLogger("CsvTrackingGeometryWriter", level))
 
 {
@@ -97,6 +96,28 @@ void fillSurfaceData(SurfaceData& data, const Acts::Surface& surface,
 
   for (size_t ipar = 0; ipar < boundValues.size(); ++ipar) {
     (*dataBoundParameters[ipar]) = boundValues[ipar];
+  }
+
+  if (surface.associatedDetectorElement() != nullptr) {
+    data.module_t = surface.associatedDetectorElement()->thickness() /
+                    Acts::UnitConstants::mm;
+
+    const auto* detElement =
+        dynamic_cast<const Acts::IdentifiedDetectorElement*>(
+            surface.associatedDetectorElement());
+
+    if (detElement != nullptr and detElement->digitizationModule()) {
+      auto dModule = detElement->digitizationModule();
+      // dynamic_cast to CartesianSegmentation
+      const auto* cSegmentation =
+          dynamic_cast<const Acts::CartesianSegmentation*>(
+              &(dModule->segmentation()));
+      if (cSegmentation != nullptr) {
+        auto pitch = cSegmentation->pitch();
+        data.pitch_u = pitch.first / Acts::UnitConstants::mm;
+        data.pitch_v = pitch.second / Acts::UnitConstants::mm;
+      }
+    }
   }
 }
 
@@ -252,7 +273,7 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
     }
 
     // Now loop over the layer and write them
-    for (auto layer : layers) {
+    for (const auto& layer : layers) {
       // We skip over navigation layers for layer volume writing
       // they will be written with the sensitive/passive parts for
       // synchronization
@@ -331,14 +352,14 @@ void writeVolume(SurfaceWriter& sfWriter, SurfaceGridWriter& sfGridWriter,
 
     // This is a navigation volume, write the boundaries
     if (writeBoundary) {
-      for (auto bsurface : volume.boundarySurfaces()) {
+      for (const auto& bsurface : volume.boundarySurfaces()) {
         writeBoundarySurface(sfWriter, *bsurface, geoCtx);
       }
     }
   }
   // step down into hierarchy to process all child volumnes
   if (volume.confinedVolumes()) {
-    for (auto confined : volume.confinedVolumes()->arrayObjects()) {
+    for (const auto& confined : volume.confinedVolumes()->arrayObjects()) {
       writeVolume(sfWriter, sfGridWriter, lvWriter, *confined.get(),
                   writeSensitive, writeBoundary, writeSurfaceGrid,
                   writeLayerVolume, geoCtx);

@@ -162,6 +162,7 @@ jobs:
           -DACTS_BUILD_EVERYTHING=ON
           -DACTS_BUILD_ODD=ON
           -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+          -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_BUILD_EXAMPLES_EDM4HEP=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
@@ -241,7 +242,7 @@ jobs:
           && source build/python/setup.sh
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
-          && pytest -rFsv
+          && pytest -rFsv -v
 
   linux_physmon:
     runs-on: ubuntu-latest
@@ -394,7 +395,7 @@ jobs:
       PRELOAD: export LD_PRELOAD=/opt/lcg/gcc/10/x86_64-centos8/lib64/libstdc++.so.6
       INSTALL_DIR: ${{ github.workspace }}/install
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Install dependencies
           # Install tbb-devel also to build the examples
         run: >
@@ -449,6 +450,7 @@ jobs:
           -DCMAKE_CXX_FLAGS=-Werror
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
+          -DACTS_BUILD_EXAMPLES_BINARIES=ON
           -DACTS_FORCE_ASSERTIONS=ON
           -DACTS_USE_SYSTEM_BOOST=OFF
           -DACTS_USE_SYSTEM_EIGEN3=OFF
@@ -530,7 +532,7 @@ jobs:
         run: cmake --build build --target integrationtests
       - name: Install
         run: cmake --build build --target install
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: acts-macos
           path: ${{ env.INSTALL_DIR }}
@@ -551,7 +553,7 @@ jobs:
     runs-on: ubuntu-latest
     container: ghcr.io/acts-project/ubuntu1804_cuda:v29
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache build
         uses: actions/cache@v3
@@ -584,7 +586,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Cache build
         uses: actions/cache@v3

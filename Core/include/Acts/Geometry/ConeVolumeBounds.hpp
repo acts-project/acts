@@ -50,13 +50,13 @@ class ConeVolumeBounds : public VolumeBounds {
   /// Constructor - for general cone-cone setups
   ///
   /// @param innerAlpha The opening angle of the inner cone (0 if no cone)
-  /// @param innerTipZ The tip  z position in of the inner cone, w.r.t center
+  /// @param innerOffsetZ The tip z position in of the inner cone, w.r.t center
   /// @param outerAlpha  The opening angle of the outer cone (0 if no cone)
-  /// @param outerOffsetZ The tip  z position in of the outer cone, w.r.t center
+  /// @param outerOffsetZ The tip z position in of the outer cone, w.r.t center
   /// @param halflengthZ The minimum z value of the inner and outer cones
   /// @param averagePhi The phi orientation of the sector
   /// @param halfPhiSector The opening angle phi sector
-  ConeVolumeBounds(double innerAlpha, double innerTipZ, double outerAlpha,
+  ConeVolumeBounds(double innerAlpha, double innerOffsetZ, double outerAlpha,
                    double outerOffsetZ, double halflengthZ, double averagePhi,
                    double halfPhiSector) noexcept(false);
 

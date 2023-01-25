@@ -49,7 +49,7 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
           "ExternalAlignmentDecorator", Acts::Logging::INFO));
 
   /// Virtual destructor
-  virtual ~ExternalAlignmentDecorator() = default;
+  ~ExternalAlignmentDecorator() override = default;
 
   /// @brief decorates (adds, modifies) the AlgorithmContext
   /// with a geometric rotation per event
@@ -58,10 +58,10 @@ class ExternalAlignmentDecorator : public AlignmentDecorator {
   /// added in order.
   ///
   /// @param context the bare (or at least non-const) Event context
-  ProcessCode decorate(AlgorithmContext& context) final override;
+  ProcessCode decorate(AlgorithmContext& context) override;
 
   /// @brief decorator name() for screen output
-  const std::string& name() const final override { return m_name; }
+  const std::string& name() const override { return m_name; }
 
  private:
   Config m_cfg;                                  ///< the configuration class

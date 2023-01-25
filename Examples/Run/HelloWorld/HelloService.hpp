@@ -27,9 +27,9 @@ class HelloService : public BareService {
 
   HelloService(const Config& cfg, Acts::Logging::Level level);
 
-  void startRun() final override;
+  void startRun() override;
 
-  void prepare(AlgorithmContext& ctx) final override;
+  void prepare(AlgorithmContext& ctx) override;
 
  private:
   Config m_cfg;

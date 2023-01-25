@@ -137,7 +137,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
         // vertices
         while (true) {
           bool sane = true;
-          for (auto v : event.vertices()) {
+          for (const auto& v : event.vertices()) {
             if (!v) {
               continue;
             }
@@ -146,7 +146,7 @@ ActsExamples::ProcessCode ActsExamples::EventRecording::execute(
               sane = false;
             }
           }
-          for (auto p : event.particles()) {
+          for (const auto& p : event.particles()) {
             if (!p) {
               continue;
             }

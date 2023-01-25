@@ -12,12 +12,15 @@ from acts.examples.simulation import (
 )
 from acts.examples.reconstruction import (
     addSeeding,
+    SeedingAlgorithm,
     TruthSeedRanges,
     addCKFTracks,
     CKFPerformanceConfig,
+    TrackSelectorRanges,
+    addAmbiguityResolution,
+    AmbiguityResolutionConfig,
     addVertexFitting,
     VertexFinder,
-    TrackSelectorRanges,
 )
 
 ttbar_pu200 = False
@@ -80,6 +83,7 @@ addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
     if ttbar_pu200
     else TruthSeedRanges(),
+    seedingAlgorithm=SeedingAlgorithm.Default,
     *acts.examples.itk.itkSeedingAlgConfig("PixelSpacePoints"),
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
@@ -90,16 +94,22 @@ addCKFTracks(
     trackingGeometry,
     field,
     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0), removeNeutral=True),
+    outputDirRoot=outputDir,
+)
+
+addAmbiguityResolution(
+    s,
+    AmbiguityResolutionConfig(maximumSharedHits=3),
+    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
     outputDirRoot=outputDir,
 )
 
 addVertexFitting(
     s,
     field,
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0), removeNeutral=True),
     vertexFinder=VertexFinder.Iterative,
     outputDirRoot=outputDir,
-    trajectories="trajectories",
 )
 
 s.run()

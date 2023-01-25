@@ -22,9 +22,6 @@
 
 namespace Acts {
 
-detail_vmt::VectorMultiTrajectoryBase::DynamicColumnBase::~DynamicColumnBase() =
-    default;
-
 auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
                                                IndexType iprevious)
     -> IndexType {
@@ -70,15 +67,14 @@ auto VectorMultiTrajectory::addTrackState_impl(TrackStatePropMask mask,
     p.ijacobian = m_jac.size() - 1;
   }
 
-  m_sourceLinks.push_back(nullptr);
+  m_sourceLinks.emplace_back(std::nullopt);
   p.iuncalibrated = m_sourceLinks.size() - 1;
 
-  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
-    m_meas.emplace_back();
-    m_measCov.emplace_back();
-    p.icalibrated = m_meas.size() - 1;
+  m_measOffset.push_back(kInvalid);
+  m_measCovOffset.push_back(kInvalid);
 
-    m_sourceLinks.push_back(nullptr);
+  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
+    m_sourceLinks.emplace_back(std::nullopt);
     p.icalibratedsourcelink = m_sourceLinks.size() - 1;
 
     m_projectors.emplace_back();
@@ -165,7 +161,8 @@ void VectorMultiTrajectory::unset_impl(TrackStatePropMask target,
       m_index[istate].ijacobian = kInvalid;
       break;
     case PM::Calibrated:
-      m_index[istate].icalibrated = kInvalid;
+      m_measOffset[istate] = kInvalid;
+      m_measCovOffset[istate] = kInvalid;
       break;
     default:
       throw std::domain_error{"Unable to unset this component"};

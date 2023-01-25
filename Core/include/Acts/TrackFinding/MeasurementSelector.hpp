@@ -78,7 +78,7 @@ class MeasurementSelector {
                        traj_t>::TrackStateProxy>::iterator>>
   select(std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>&
              candidates,
-         bool& isOutlier, LoggerWrapper logger) const {
+         bool& isOutlier, const Logger& logger) const {
     using Result =
         Result<std::pair<typename std::vector<typename MultiTrajectory<
                              traj_t>::TrackStateProxy>::iterator,
@@ -115,7 +115,16 @@ class MeasurementSelector {
       // const auto predictedCovariance = trackState.predictedCovariance();
 
       double chi2 = calculateChi2(
-          trackState.calibrated(), trackState.calibratedCovariance(),
+          // This abuses an incorrectly sized vector / matrix to access the
+          // data pointer! This works (don't use the matrix as is!), but be
+          // careful!
+          trackState
+              .template calibrated<MultiTrajectoryTraits::MeasurementSizeMax>()
+              .data(),
+          trackState
+              .template calibratedCovariance<
+                  MultiTrajectoryTraits::MeasurementSizeMax>()
+              .data(),
           trackState.predicted(), trackState.predictedCovariance(),
           trackState.projector(), trackState.calibratedSize());
 
@@ -211,10 +220,7 @@ class MeasurementSelector {
   }
 
   double calculateChi2(
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::Measurement fullCalibrated,
-      TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
-                       false>::MeasurementCovariance fullCalibratedCovariance,
+      double* fullCalibrated, double* fullCalibratedCovariance,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
                        false>::Parameters predicted,
       TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
