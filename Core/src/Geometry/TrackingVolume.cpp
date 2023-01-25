@@ -359,10 +359,9 @@ void Acts::TrackingVolume::interlinkLayers() {
 }
 
 void Acts::TrackingVolume::closeGeometry(
-  const IMaterialDecorator* materialDecorator,
-      std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-      size_t& vol, const GeometryIdentifierHook& hook,
-      const Logger& logger) {
+    const IMaterialDecorator* materialDecorator,
+    std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
+    size_t& vol, const GeometryIdentifierHook& hook, const Logger& logger) {
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
@@ -509,8 +508,10 @@ Acts::TrackingVolume::compatibleBoundaries(
 
     ACTS_VERBOSE("Check intersection with surface "
                  << bSurface->surfaceRepresentation().geometryId());
-    if (detail::checkIntersection<decltype(sIntersection.intersection), decltype(logger)>(sIntersection.intersection, pLimit, oLimit,
-                                  s_onSurfaceTolerance, logger)) {
+    if (detail::checkIntersection<decltype(sIntersection.intersection),
+                                  decltype(logger)>(
+            sIntersection.intersection, pLimit, oLimit, s_onSurfaceTolerance,
+            logger)) {
       sIntersection.intersection.pathLength *= options.navDir;
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
@@ -518,8 +519,10 @@ Acts::TrackingVolume::compatibleBoundaries(
 
     if (sIntersection.alternative) {
       ACTS_VERBOSE("Consider alternative");
-      if (detail::checkIntersection<decltype(sIntersection.alternative), decltype(logger)>(sIntersection.alternative, pLimit, oLimit,
-                                    s_onSurfaceTolerance, logger)) {
+      if (detail::checkIntersection<decltype(sIntersection.alternative),
+                                    decltype(logger)>(
+              sIntersection.alternative, pLimit, oLimit, s_onSurfaceTolerance,
+              logger)) {
         sIntersection.alternative.pathLength *= options.navDir;
         return BoundaryIntersection(sIntersection.alternative, bSurface,
                                     sIntersection.object);
