@@ -41,18 +41,18 @@ jobs:
 
   license:
     runs-on: ubuntu-latest
-    container: python:alpine3.6
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - name: Check
         run: >
-          apk add --no-cache git
+          sudo apt-get install -y git
           && CI/check_license.py . --exclude "*thirdparty/*"
   include_guards:
     runs-on: ubuntu-latest
-    container: python:alpine3.6
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - name: Check
         run: >
           CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
@@ -65,17 +65,17 @@ jobs:
           CI/check_boost_test_macro.sh
   smearing_config:
     runs-on: ubuntu-latest
-    container: python:alpine3.6
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - name: Check
         run: >
           CI/check_smearing_config.py .
   cmake_options:
     runs-on: ubuntu-latest
-    container: python:alpine3.10
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-python@v4
       - name: Check
         run: >
           docs/parse_cmake_options.py CMakeLists.txt --write docs/getting_started.md --verify
