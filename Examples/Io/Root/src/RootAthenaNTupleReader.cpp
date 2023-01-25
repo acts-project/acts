@@ -38,7 +38,7 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
   m_inputChain = new TChain(m_cfg.inputTreeName.c_str());
 
   // unused event identifier
-  std::int32_t eventNumber;
+  std::int32_t eventNumber = 0;
 
   // Set the branches
   m_inputChain->SetBranchAddress("EventNumber", &eventNumber);
