@@ -36,7 +36,7 @@ First we need to extract the list of all the surfaces and volumes in our detecto
 
    $ python3 <source>/Examples/Scripts/Python/geometry.py 
 
-Ideally the following options should be use in the python file :
+Ideally the following options should be used in the python file :
 
 .. code-block::
 
@@ -51,7 +51,7 @@ Ideally the following options should be use in the python file :
       outputRoot=False,
    ):
 
-For the following example we will be remapping the material of the ODD so we will get our detector via the following line :
+For the following example we will be remapping the material of the ODD, we will thus get our detector via the following line :
 
 .. code-block::  console
 
