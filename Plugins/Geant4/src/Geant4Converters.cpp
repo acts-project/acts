@@ -31,6 +31,8 @@
 #include "G4VPhysicalVolume.hh"
 #include "G4VSolid.hh"
 
+#include <cassert>
+
 Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
     const G4ThreeVector& g4Trans) {
   Transform3 gTransform = Transform3::Identity();
@@ -301,12 +303,14 @@ std::shared_ptr<Acts::HomogeneousSurfaceMaterial>
 Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
                                                ActsScalar original,
                                                ActsScalar compressed) {
+  assert(g4Material.GetNumberOfElements() == 1);
+
   ActsScalar compression = original / compressed;
 
   auto g4X0 = g4Material.GetRadlen();
   auto g4L0 = g4Material.GetNuclearInterLength();
   auto g4Z = g4Material.GetZ();
-  auto g4A = g4Material.GetZ();
+  auto g4A = (*g4Material.GetElementVector())[0]->GetN();
   auto g4Rho = g4Material.GetDensity();
 
   Material mat = Material::fromMassDensity(
