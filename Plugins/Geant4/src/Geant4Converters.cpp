@@ -22,6 +22,8 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <cassert>
+
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
 #include "G4Material.hh"
@@ -30,8 +32,6 @@
 #include "G4Tubs.hh"
 #include "G4VPhysicalVolume.hh"
 #include "G4VSolid.hh"
-
-#include <cassert>
 
 Acts::Transform3 Acts::Geant4AlgebraConverter::transform(
     const G4ThreeVector& g4Trans) {
