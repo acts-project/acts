@@ -60,6 +60,13 @@ struct MaterialHistograms {
 
   MaterialHistograms() = default;
 
+  ~MaterialHistograms() {
+    delete x0_vs_eta;
+    delete l0_vs_eta;
+    delete x0_vs_phi;
+    delete l0_vs_phi;
+  }
+
   /// This fills the event into the histograms
   /// and clears the cache accordingly
   ///
@@ -235,4 +242,19 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
   }
 
   outputFile->Close();
+
+  delete stepLength;
+  delete stepX0;
+  delete stepL0;
+  delete stepA;
+
+  delete startX;
+  delete startY;
+  delete startZ;
+
+  delete endX;
+  delete endY;
+  delete endZ;
+
+  delete materialCanvas;
 }
