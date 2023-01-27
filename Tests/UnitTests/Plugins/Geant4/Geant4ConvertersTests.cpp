@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
@@ -71,6 +72,14 @@ BOOST_AUTO_TEST_CASE(Geant4RadialConversion) {
   CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eAveragePhi), 0.,
                   10e-10);
   CHECK_CLOSE_ABS(thickness, 4., 10e-10);
+}
+
+BOOST_AUTO_TEST_CASE(Geant4LineConversion) {
+  G4Tubs line("line", 0., 20., 400., 0., 2 * M_PI);
+  auto bounds = Acts::Geant4ShapeConverter{}.lineBounds(line);
+  CHECK_CLOSE_ABS(bounds->get(Acts::LineBounds::BoundValues::eR), 30., 10e-10);
+  CHECK_CLOSE_ABS(bounds->get(Acts::LineBounds::BoundValues::eHalfLengthZ),
+                  400., 10e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4BoxConversion) {
