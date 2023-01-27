@@ -324,8 +324,8 @@ Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
     }
   }
 
-  Material mat = Material::fromMassDensity(
-      X0 / compression, L0 / compression, Ar, Z, compression * Rho);
+  Material mat = Material::fromMassDensity(X0 / compression, L0 / compression,
+                                           Ar, Z, compression * Rho);
 
   return std::make_shared<HomogeneousSurfaceMaterial>(
       MaterialSlab(mat, compressed));
