@@ -22,8 +22,6 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <cassert>
-
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
 #include "G4Material.hh"
@@ -303,18 +301,31 @@ std::shared_ptr<Acts::HomogeneousSurfaceMaterial>
 Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
                                                ActsScalar original,
                                                ActsScalar compressed) {
-  assert(g4Material.GetNumberOfElements() == 1);
-
   ActsScalar compression = original / compressed;
 
-  auto g4X0 = g4Material.GetRadlen();
-  auto g4L0 = g4Material.GetNuclearInterLength();
-  auto g4Z = g4Material.GetZ();
-  auto g4A = (*g4Material.GetElementVector())[0]->GetN();
-  auto g4Rho = g4Material.GetDensity();
+  auto X0 = g4Material.GetRadlen();
+  auto L0 = g4Material.GetNuclearInterLength();
+  auto Rho = g4Material.GetDensity();
+
+  // Get{A,Z} is only meaningful for single-element materials (according to
+  // the Geant4 docs). Need to compute average manually.
+  auto g4Elements = g4Material.GetElementVector();
+  auto g4Fraction = g4Material.GetFractionVector();
+  auto g4NElements = g4Material.GetNumberOfElements();
+  double Ar = 0;
+  double Z = 0;
+  if (g4NElements == 1) {
+    Ar = g4Elements->at(0)->GetN();
+    Z = g4Material.GetZ();
+  } else {
+    for (size_t i = 0; i < g4NElements; i++) {
+      Ar += g4Elements->at(i)->GetN() * g4Fraction[i];
+      Z += g4Elements->at(i)->GetZ() * g4Fraction[i];
+    }
+  }
 
   Material mat = Material::fromMassDensity(
-      g4X0 / compression, g4L0 / compression, g4A, g4Z, compression * g4Rho);
+      X0 / compression, L0 / compression, Ar, Z, compression * Rho);
 
   return std::make_shared<HomogeneousSurfaceMaterial>(
       MaterialSlab(mat, compressed));
