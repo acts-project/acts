@@ -30,13 +30,13 @@ Once Acts has been built we can start the mapping. The mapping is divided in two
 Mapping and configuration
 -------------------------
 
-First we need to extract the list of all the surfaces and volumes in our detector, to do so we will use the ``geometry.py`` script :
+First we need to extract the list of all the surfaces and volumes in our detector. To do so we will use the ``geometry.py`` script:
 
 .. code-block::
 
    $ python3 <source>/Examples/Scripts/Python/geometry.py 
 
-Ideally the following options should be used in the python file :
+Ideally the following options should be used in the python file:
 
 .. code-block::
 
@@ -51,7 +51,7 @@ Ideally the following options should be used in the python file :
       outputRoot=False,
    ):
 
-For the following example we will be remapping the material of the ODD, we will thus get our detector via the following line :
+For the following example we will be remapping the material of the ODD, we will thus get our detector via the following line:
 
 .. code-block::  console
 
@@ -232,4 +232,4 @@ Can be use with X,Y,Z is a list of volumes, this will plot the material ratio be
 Using a different detector
 --------------------------
 
-If you want to use a different type of detector, you will first need to ensure that the relevant packages were added during the compilation. After this you can just replace the detector initialisation in the different main function. For reference you can base your self on the Odd for DD4Hep detector and on the ITk for TGeo detector. 
+If you want to use a different type of detector, you will first need to ensure that the relevant packages were added during the compilation. After this you can just replace the detector initialisation in the different main function. For reference you can have a look on the Odd for DD4Hep detector and on the ITk for TGeo detector. 
