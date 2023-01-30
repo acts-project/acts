@@ -99,7 +99,7 @@ Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
 std::shared_ptr<Acts::LineBounds> Acts::Geant4ShapeConverter::lineBounds(
     const G4Tubs& g4Tubs) {
   auto r = static_cast<ActsScalar>(g4Tubs.GetOuterRadius());
-  auto hlZ = 0.5 * static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
+  auto hlZ = static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
   return std::make_shared<LineBounds>(r, hlZ);
 }
 
