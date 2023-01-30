@@ -14,7 +14,7 @@ clang_tidy:
         apt-get update
         && apt-get install -y g++-8 libstdc++-8-dev parallel software-properties-common 
         && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add
-        && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal main'
+        && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-16 main'
         && apt-get install -y clang-16 clang-tidy-16
         && ln -s /usr/bin/clang++-16 /usr/bin/clang++
         && ln -s /usr/bin/clang-16 /usr/bin/clang
