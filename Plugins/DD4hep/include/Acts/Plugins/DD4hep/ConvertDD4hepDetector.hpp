@@ -131,6 +131,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 /// in z of the layers contained to build the volume envelope around
 /// @param [in] defaultLayerThickness In case no surfaces (to be contained by
 /// the layer) are handed over, the layer thickness will be set to this value
+/// @param [in] logger A logger instance
 /// @note Layers containing surfaces per default are not allowed to be
 ///       attached to each other (navigation will fail at this point).
 ///       However, to allow material layers (not containing surfaces) to be
