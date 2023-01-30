@@ -31,7 +31,6 @@ QueueWrapper::QueueWrapper(const std::string& deviceNameSubstring,
       try {
         std::rethrow_exception(e);
       } catch (std::exception& e) {
-        LoggerWrapper logger(*log);
         ACTS_FATAL("Caught asynchronous (kernel) SYCL exception:\n" << e.what())
       }
     }
@@ -43,7 +42,6 @@ QueueWrapper::QueueWrapper(const std::string& deviceNameSubstring,
   m_ownsQueue = true;
 
   // See which device we are running on.
-  LoggerWrapper logger(*m_logger);
   ACTS_INFO("Running on: "
             << m_queue->get_device().get_info<cl::sycl::info::device::name>());
 }

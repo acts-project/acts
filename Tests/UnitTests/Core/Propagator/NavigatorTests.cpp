@@ -207,7 +207,7 @@ struct PropagatorState {
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
 
-    LoggerWrapper logger{getDummyLogger()};
+    const Acts::Logger& logger = Acts::getDummyLogger();
   };
 
   /// Navigation cache: the start surface
