@@ -474,6 +474,8 @@ class KalmanFitter {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.unset(TrackStatePropMask::Smoothed);
+		    // mark as outlier
+		    trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
                   }
                 });
           }
