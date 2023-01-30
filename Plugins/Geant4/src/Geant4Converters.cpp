@@ -22,6 +22,8 @@
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
+#include <cassert>
+
 #include "G4Box.hh"
 #include "G4LogicalVolume.hh"
 #include "G4Material.hh"
@@ -301,12 +303,14 @@ std::shared_ptr<Acts::HomogeneousSurfaceMaterial>
 Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
                                                ActsScalar original,
                                                ActsScalar compressed) {
+  assert(g4Material.GetNumberOfElements() == 1);
+
   ActsScalar compression = original / compressed;
 
   auto g4X0 = g4Material.GetRadlen();
   auto g4L0 = g4Material.GetNuclearInterLength();
   auto g4Z = g4Material.GetZ();
-  auto g4A = g4Material.GetZ();
+  auto g4A = (*g4Material.GetElementVector())[0]->GetN();
   auto g4Rho = g4Material.GetDensity();
 
   Material mat = Material::fromMassDensity(
