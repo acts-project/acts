@@ -49,7 +49,7 @@ Acts::TrackingGeometryBuilder::trackingGeometry(
     return std::make_unique<TrackingGeometry>(
         highestVolume,
         m_cfg.materialDecorator ? m_cfg.materialDecorator.get() : nullptr,
-        *m_cfg.geometryIdentifierHook);
+        *m_cfg.geometryIdentifierHook, logger());
   } else {
     throw std::runtime_error(
         "Unable to construct tracking geometry: no tracking volume");
