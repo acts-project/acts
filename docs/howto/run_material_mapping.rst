@@ -166,7 +166,8 @@ Depending on what you want to do there are three options you can change:
 
 - ``mapSurface``: determine if material is mapped onto surfaces
 - ``mapVolume``: determine if material is mapped onto volumes
-- ``mappingStep``: determine the step size used in the sampling of the volume. This should be small compared to the bin size.
+- ``mappingStep``: determine the step size used in the sampling of the volume in the volume mapping. By default, the material interaction point obtained from G4 is accumulated at the intersection between the track and the volume material. The mapping will be therefore incorrect if the material extends through the bin. To avoid this, additional material points are created every ``mappingStep``[mm] along the trajectory. The mapping step should be small compared to the bin size.
+
 - ``readCachedSurfaceInformation`` if added the material-surface association will be taken from the input material track file (doesn't work with geantino file, you need to use the material track file obtained from running the material mapping).
 
 In addition to root and JSON output, one can also output the material map to a Cbor file (Concise Binary Object Representation). Doing so results in a file about 10 time smaller than the JSON one, but that file is no longer human-readable. This should be done once the map has been optimised and you want to export it. 
