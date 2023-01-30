@@ -175,9 +175,9 @@ class Extent {
   }
 
   /// Access the maximum parameter
-   ///
-   /// @param bValue the binning identification
-   ActsScalar span(BinningValue bValue) const { return m_range[bValue].size(); }
+  ///
+  /// @param bValue the binning identification
+  ActsScalar span(BinningValue bValue) const { return m_range[bValue].size(); }
 
   /// Contains check
   ///
