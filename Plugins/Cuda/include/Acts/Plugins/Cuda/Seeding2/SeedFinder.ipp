@@ -18,6 +18,7 @@
 #include "Acts/Plugins/Cuda/Utilities/MemoryManager.hpp"
 
 // Acts include(s).
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 
@@ -200,23 +201,26 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   auto triplet_itr = tripletCandidates.begin();
   auto triplet_end = tripletCandidates.end();
   for (; triplet_itr != triplet_end; ++triplet_itr, ++middleIndex) {
-    std::vector<std::pair<
-        float, std::unique_ptr<const InternalSeed<external_spacepoint_t>>>>
-        seedsPerSPM;
+    std::vector<typename CandidatesForMiddleSp<
+        InternalSpacePoint<external_spacepoint_t>>::value_type>
+        candidates;
+
     auto& middleSP = *(middleSPVec[middleIndex]);
     for (const Details::Triplet& triplet : *triplet_itr) {
       assert(triplet.bottomIndex < bottomSPVec.size());
       auto& bottomSP = *(bottomSPVec[triplet.bottomIndex]);
       assert(triplet.topIndex < topSPVec.size());
       auto& topSP = *(topSPVec[triplet.topIndex]);
-      seedsPerSPM.emplace_back(std::make_pair(
-          triplet.weight,
-          std::make_unique<const InternalSeed<external_spacepoint_t>>(
-              bottomSP, middleSP, topSP, 0)));
+      candidates.emplace_back(bottomSP, middleSP, topSP, triplet.weight, 0,
+                              false);
     }
-    int numQualitySeeds = 0;  // not used but needs to be fixed
+    std::sort(
+        candidates.begin(), candidates.end(),
+        CandidatesForMiddleSp<
+            InternalSpacePoint<external_spacepoint_t>>::descendingByQuality);
+    std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_commonConfig.seedFilter->filterSeeds_1SpFixed(
-        seedsPerSPM, numQualitySeeds, std::back_inserter(outputVec));
+        candidates, numQualitySeeds, std::back_inserter(outputVec));
   }
 
   // Free up all allocated device memory.

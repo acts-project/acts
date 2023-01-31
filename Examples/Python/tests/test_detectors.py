@@ -23,6 +23,12 @@ def count_surfaces(geo):
     return nSurfaces
 
 
+def check_extra_odd(srf):
+    if srf.geometryId().volume() in [28, 30, 23, 25, 16, 18]:
+        assert srf.geometryId().extra() != 0
+    return
+
+
 def test_generic_geometry():
     detector, geo, contextDecorators = acts.examples.GenericDetector.create()
     assert detector is not None
@@ -60,6 +66,8 @@ def test_odd():
     )
 
     detector, geo, _ = getOpenDataDetector(getOpenDataDetectorDirectory(), matDeco)
+
+    geo.visitSurfaces(check_extra_odd)
 
     assert count_surfaces(geo) == 18824
 

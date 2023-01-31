@@ -58,7 +58,7 @@ struct TGeoParser {
   ///
   /// This contains the parsing configuration
   struct Options {
-    /// Identify the vlume by name
+    /// Identify the volume by name
     std::vector<std::string> volumeNames = {};
     /// Identify the sensor(s)/target(s) by name
     std::vector<std::string> targetNames = {};
