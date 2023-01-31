@@ -42,6 +42,7 @@ class ExaTrkXTrackFindingOnnx final : public ExaTrkXTrackFindingBase {
   /// Constructor of the track finding module
   ///
   /// @param config is the config struct to configure the module
+  /// @param _logger A logger instance
   ExaTrkXTrackFindingOnnx(const Config& config,
                           std::unique_ptr<const Logger> _logger =
                               Acts::getDefaultLogger("ETXTrkFnd",
