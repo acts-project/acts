@@ -98,7 +98,9 @@ BOOST_AUTO_TEST_CASE(DetectorBuilderContainerVolume) {
   pec.extent.set(Acts::binR, 20., 200.);
   pec.blockBuilder = SingleBlockBuilder<>{pec};
   // Re-assign the system
-  system.container = Acts::ProtoVolume::ContainerStructure{{nec, barrel, pec}};
+  system.container = Acts::ProtoVolume::ContainerStructure{
+      {nec, barrel, pec},
+      {Acts::BinningData(Acts::open, Acts::binZ, {0., 1.})}};
   system.blockBuilder = ContainerBlockBuilder{system};
   // System with beam pipe
   Acts::ProtoVolume bpsystem;
