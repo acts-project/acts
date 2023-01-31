@@ -21,8 +21,11 @@
 
 using namespace torch::indexing;
 
-Acts::ExaTrkXTrackFindingOnnx::ExaTrkXTrackFindingOnnx(const Config& config)
-    : Acts::ExaTrkXTrackFindingBase("ExaTrkXOnnx"), m_cfg(config) {
+Acts::ExaTrkXTrackFindingOnnx::ExaTrkXTrackFindingOnnx(
+    const Config& config, std::unique_ptr<const Logger> _logger)
+    : Acts::ExaTrkXTrackFindingBase("ExaTrkXOnnx"),
+      m_cfg(config),
+      m_logger{std::move(_logger)} {
   ACTS_INFO("Model input directory: " << m_cfg.modelDir);
   ACTS_INFO("Spacepoint features: " << m_cfg.spacepointFeatures);
   ACTS_INFO("Embedding Dimension: " << m_cfg.embeddingDim);
@@ -94,7 +97,7 @@ void Acts::ExaTrkXTrackFindingOnnx::buildEdges(
 
   stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
 
-  std::cout << "copy edges to std::vector" << std::endl;
+  ACTS_INFO("copy edges to std::vector");
   std::copy(stackedEdges.data_ptr<int64_t>(),
             stackedEdges.data_ptr<int64_t>() + stackedEdges.numel(),
             std::back_inserter(edgeList));
@@ -151,7 +154,7 @@ std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
   if (debug) {
     std::fstream out(embedding_outname, out.out);
     if (!out.is_open()) {
-      std::cout << "failed to open " << embedding_outname << '\n';
+      ACTS_ERROR("failed to open " << embedding_outname);
     } else {
       std::copy(eOutputData.begin(), eOutputData.end(),
                 std::ostream_iterator<float>(out, " "));
