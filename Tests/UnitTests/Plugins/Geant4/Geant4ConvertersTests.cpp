@@ -10,19 +10,30 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Material/HomogeneousSurfaceMaterial.hpp"
+#include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include "G4Box.hh"
+#include "G4LogicalVolume.hh"
+#include "G4Material.hh"
+#include "G4PVPlacement.hh"
+#include "G4RotationMatrix.hh"
 #include "G4ThreeVector.hh"
 #include "G4Trd.hh"
 #include "G4Tubs.hh"
+#include "G4VPhysicalVolume.hh"
 
 Acts::GeometryContext tContext;
+
+Acts::ActsScalar rho = 1.2345;
+G4Material* g4Material = new G4Material("Material", 6., 12., rho);
 
 BOOST_AUTO_TEST_SUITE(Geant4Plugin)
 
@@ -60,8 +71,8 @@ BOOST_AUTO_TEST_CASE(Geant4CylinderConversion) {
 }
 
 BOOST_AUTO_TEST_CASE(Geant4RadialConversion) {
-  G4Tubs disk("disk", 40., 400., 2., 0., 2 * M_PI);
-  auto [bounds, thickness] = Acts::Geant4ShapeConverter{}.radialBounds(disk);
+  G4Tubs disc("disc", 40., 400., 2., 0., 2 * M_PI);
+  auto [bounds, thickness] = Acts::Geant4ShapeConverter{}.radialBounds(disc);
   CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eMinR), 40.,
                   10e-10);
   CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eMaxR), 400.,
@@ -71,6 +82,14 @@ BOOST_AUTO_TEST_CASE(Geant4RadialConversion) {
   CHECK_CLOSE_ABS(bounds->get(Acts::RadialBounds::BoundValues::eAveragePhi), 0.,
                   10e-10);
   CHECK_CLOSE_ABS(thickness, 4., 10e-10);
+}
+
+BOOST_AUTO_TEST_CASE(Geant4LineConversion) {
+  G4Tubs line("line", 0., 20., 400., 0., 2 * M_PI);
+  auto bounds = Acts::Geant4ShapeConverter{}.lineBounds(line);
+  CHECK_CLOSE_ABS(bounds->get(Acts::LineBounds::BoundValues::eR), 20., 10e-10);
+  CHECK_CLOSE_ABS(bounds->get(Acts::LineBounds::BoundValues::eHalfLengthZ),
+                  400., 10e-10);
 }
 
 BOOST_AUTO_TEST_CASE(Geant4BoxConversion) {
@@ -195,6 +214,157 @@ BOOST_AUTO_TEST_CASE(Geant4PlanarConversion) {
       std::get<0u>(Acts::Geant4ShapeConverter{}.planarBounds(trdXY));
   auto tBounds = dynamic_cast<const Acts::TrapezoidBounds*>(pBoundsTrd.get());
   BOOST_CHECK(tBounds != nullptr);
+}
+
+BOOST_AUTO_TEST_CASE(Geant4BoxVPhysConversion) {
+  Acts::ActsScalar thickness = 2.;
+
+  G4Box* g4Box = new G4Box("Box", 23., 34., 0.5 * thickness);
+  G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 1.2);
+  G4LogicalVolume* g4BoxLog = new G4LogicalVolume(g4Box, g4Material, "BoxLog");
+
+  G4ThreeVector g4Trans(0., 0., 100.);
+  G4PVPlacement g4BoxPhys(g4Rot, g4Trans, g4BoxLog, "BoxPhys", nullptr, false,
+                          1);
+
+  auto planeSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
+      g4BoxPhys, Acts::Transform3::Identity(), true, thickness);
+  BOOST_CHECK(planeSurface != nullptr);
+  BOOST_CHECK(planeSurface->type() == Acts::Surface::SurfaceType::Plane);
+
+  auto material = planeSurface->surfaceMaterial();
+  BOOST_CHECK(material != nullptr);
+
+  auto materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
+  // Here it should be uncompressed material
+  CHECK_CLOSE_ABS(materialSlab.material().massDensity(), rho, 0.001);
+  CHECK_CLOSE_REL(thickness / g4Material->GetRadlen(),
+                  materialSlab.thicknessInX0(), 0.1);
+
+  // Convert with compression
+  Acts::ActsScalar compression = 4.;
+  planeSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
+      g4BoxPhys, Acts::Transform3::Identity(), true, thickness / compression);
+  BOOST_CHECK(planeSurface != nullptr);
+  BOOST_CHECK(planeSurface->type() == Acts::Surface::SurfaceType::Plane);
+
+  material = planeSurface->surfaceMaterial();
+  BOOST_CHECK(material != nullptr);
+  materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
+
+  // Here it should be uncompressed material
+  CHECK_CLOSE_ABS(materialSlab.material().massDensity(), compression * rho,
+                  0.001);
+  CHECK_CLOSE_REL(thickness / g4Material->GetRadlen(),
+                  materialSlab.thicknessInX0(), 0.01);
+
+  CHECK_CLOSE_ABS(materialSlab.thickness(), thickness / compression, 0.01);
+  CHECK_CLOSE_REL(materialSlab.material().X0() * compression,
+                  g4Material->GetRadlen(), 0.01);
+
+  delete g4Box;
+  delete g4Rot;
+  delete g4BoxLog;
+}
+
+BOOST_AUTO_TEST_CASE(Geant4CylVPhysConversion) {
+  Acts::ActsScalar radius = 45.;
+  Acts::ActsScalar thickness = 1.;
+  Acts::ActsScalar halfLengthZ = 200;
+
+  G4Tubs* g4Tube =
+      new G4Tubs("Tube", radius, radius + thickness, halfLengthZ, 0., 2 * M_PI);
+
+  G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 0.);
+  G4LogicalVolume* g4TubeLog =
+      new G4LogicalVolume(g4Tube, g4Material, "TubeLog");
+  G4ThreeVector g4Trans(0., 0., 100.);
+  G4PVPlacement g4CylinderPhys(g4Rot, g4Trans, g4TubeLog, "TubePhys", nullptr,
+                               false, 1);
+
+  auto cylinderSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
+      g4CylinderPhys, Acts::Transform3::Identity(), true, thickness);
+  BOOST_CHECK(cylinderSurface != nullptr);
+  BOOST_CHECK(cylinderSurface->type() == Acts::Surface::SurfaceType::Cylinder);
+
+  auto material = cylinderSurface->surfaceMaterial();
+  BOOST_CHECK(material != nullptr);
+
+  auto materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
+  CHECK_CLOSE_REL(thickness / g4Material->GetRadlen(),
+                  materialSlab.thicknessInX0(), 0.1);
+
+  // Here it should be uncompressed material
+  CHECK_CLOSE_ABS(materialSlab.material().massDensity(), rho, 0.001);
+
+  /// CHECK exception throwing
+  BOOST_CHECK_THROW(
+      Acts::Geant4PhysicalVolumeConverter{Acts::Surface::SurfaceType::Plane}
+          .surface(g4CylinderPhys, Acts::Transform3::Identity(), true,
+                   thickness),
+      std::runtime_error);
+
+  delete g4Tube;
+  delete g4Rot;
+  delete g4TubeLog;
+}
+
+BOOST_AUTO_TEST_CASE(Geant4VDiscVPhysConversion) {
+  Acts::ActsScalar innerRadius = 45.;
+  Acts::ActsScalar outerRadius = 75.;
+  Acts::ActsScalar thickness = 2.;
+
+  G4Tubs* g4Tube = new G4Tubs("Disc", innerRadius, outerRadius, 0.5 * thickness,
+                              0., 2 * M_PI);
+
+  G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 0.);
+  G4LogicalVolume* g4TubeLog =
+      new G4LogicalVolume(g4Tube, g4Material, "TubeLog");
+  G4ThreeVector g4Trans(0., 0., 100.);
+  G4PVPlacement g4discPhys(g4Rot, g4Trans, g4TubeLog, "TubePhys", nullptr,
+                           false, 1);
+
+  auto discSurface = Acts::Geant4PhysicalVolumeConverter{}.surface(
+      g4discPhys, Acts::Transform3::Identity(), true, thickness);
+  BOOST_CHECK(discSurface != nullptr);
+  BOOST_CHECK(discSurface->type() == Acts::Surface::SurfaceType::Disc);
+
+  auto material = discSurface->surfaceMaterial();
+  BOOST_CHECK(material != nullptr);
+
+  auto materialSlab = material->materialSlab(Acts::Vector3{0., 0., 0.});
+  // Here it should be uncompressed material
+  CHECK_CLOSE_ABS(materialSlab.material().massDensity(), rho, 0.001);
+
+  delete g4Tube;
+  delete g4Rot;
+  delete g4TubeLog;
+}
+
+BOOST_AUTO_TEST_CASE(Geant4LineVPhysConversion) {
+  Acts::ActsScalar innerRadius = 0.;
+  Acts::ActsScalar outerRadius = 20.;
+  Acts::ActsScalar thickness = 400.;
+
+  G4Tubs* g4Tube = new G4Tubs("Line", innerRadius, outerRadius, 0.5 * thickness,
+                              0., 2 * M_PI);
+
+  G4RotationMatrix* g4Rot = new G4RotationMatrix({0., 0., 1.}, 0.);
+  G4LogicalVolume* g4TubeLog =
+      new G4LogicalVolume(g4Tube, g4Material, "LineLog");
+  G4ThreeVector g4Trans(0., 0., 100.);
+  G4PVPlacement g4linePhys(g4Rot, g4Trans, g4TubeLog, "LinePhys", nullptr,
+                           false, 1);
+
+  auto lineSurface =
+      Acts::Geant4PhysicalVolumeConverter{Acts::Surface::SurfaceType::Straw}
+          .surface(g4linePhys, Acts::Transform3::Identity(), true, thickness);
+  BOOST_CHECK(lineSurface != nullptr);
+  BOOST_CHECK(lineSurface->type() == Acts::Surface::SurfaceType::Straw);
+
+  delete g4Tube;
+  delete g4Rot;
+  delete g4TubeLog;
 }
 
 BOOST_AUTO_TEST_SUITE_END()
