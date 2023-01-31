@@ -191,9 +191,9 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
                  (high.y() - low.y()) * (low.y() / rL);
     float yVal = (high.y() - low.y()) * (low.x() / rL) -
                  (high.x() - low.x()) * (low.y() / rL);
-      
+
     const int sign = isMiddleInverted ? -1 : 1;
-      
+
     if (std::abs(rL * yVal) > sign * m_config.impactMax * xVal) {
       // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
       // circle into straight lines in the u/v plane the line equation can
@@ -537,14 +537,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     /*
      * Search the trees for points that lie in the given search range.
      */
-    tree.rangeSearchMapDiscard(bottom_lh_r,
-                               [this, &options, &middle, &bottom_lh_v](
-                                   const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &bottom) {
-                                 if (validTuple(options, *bottom, middle, false)) {
-                                   bottom_lh_v.push_back(bottom);
-                                 }
-                               });
+    tree.rangeSearchMapDiscard(
+        bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
+                         const typename tree_t::coordinate_t &,
+                         const typename tree_t::value_t &bottom) {
+          if (validTuple(options, *bottom, middle, false)) {
+            bottom_lh_v.push_back(bottom);
+          }
+        });
   }
 
   /*
@@ -552,14 +552,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * monotonically decreasing z tracks.
    */
   if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
-    tree.rangeSearchMapDiscard(bottom_hl_r,
-                               [this, &options, &middle, &bottom_hl_v](
-                                   const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &bottom) {
-                                 if (validTuple(options, middle, *bottom, true)) {
-                                   bottom_hl_v.push_back(bottom);
-                                 }
-                               });
+    tree.rangeSearchMapDiscard(
+        bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
+                         const typename tree_t::coordinate_t &,
+                         const typename tree_t::value_t &bottom) {
+          if (validTuple(options, middle, *bottom, true)) {
+            bottom_hl_v.push_back(bottom);
+          }
+        });
   }
 
   /*
