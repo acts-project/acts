@@ -361,13 +361,13 @@ void Acts::TrackingVolume::interlinkLayers() {
 void Acts::TrackingVolume::closeGeometry(
     const IMaterialDecorator* materialDecorator,
     std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-    size_t& vol, const GeometryIdentifierHook& hook) {
+    size_t& vol, const GeometryIdentifierHook& hook, const Logger& logger) {
   // we can construct the volume ID from this
   auto volumeID = GeometryIdentifier().setVolume(++vol);
   // assign the Volume ID to the volume itself
   auto thisVolume = const_cast<TrackingVolume*>(this);
   thisVolume->assignGeometryId(volumeID);
-
+  ACTS_DEBUG("volumeID: " << volumeID << ", name: " << volumeName());
   // insert the volume into the map
   volumeMap[volumeID] = thisVolume;
 
@@ -415,7 +415,8 @@ void Acts::TrackingVolume::closeGeometry(
         auto layerID = GeometryIdentifier(volumeID).setLayer(++ilayer);
         // now close the geometry
         auto mutableLayerPtr = std::const_pointer_cast<Layer>(layerPtr);
-        mutableLayerPtr->closeGeometry(materialDecorator, layerID, hook);
+        mutableLayerPtr->closeGeometry(materialDecorator, layerID, hook,
+                                       logger);
       }
     } else if (m_bvhTop != nullptr) {
       GeometryIdentifier::Value isurface = 0;
@@ -441,8 +442,8 @@ void Acts::TrackingVolume::closeGeometry(
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->setMotherVolume(this);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol,
-                                        hook);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol, hook,
+                                        logger);
     }
   }
 
@@ -451,8 +452,8 @@ void Acts::TrackingVolume::closeGeometry(
       auto mutableVolumesIter =
           std::const_pointer_cast<TrackingVolume>(volumesIter);
       mutableVolumesIter->setMotherVolume(this);
-      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol,
-                                        hook);
+      mutableVolumesIter->closeGeometry(materialDecorator, volumeMap, vol, hook,
+                                        logger);
     }
   }
 }
@@ -462,7 +463,7 @@ boost::container::small_vector<Acts::BoundaryIntersection, 4>
 Acts::TrackingVolume::compatibleBoundaries(
     const GeometryContext& gctx, const Vector3& position,
     const Vector3& direction, const NavigationOptions<Surface>& options,
-    LoggerWrapper logger) const {
+    const Logger& logger) const {
   ACTS_VERBOSE("Finding compatibleBoundaries");
   // Loop over boundarySurfaces and calculate the intersection
   auto excludeObject = options.startObject;
@@ -507,8 +508,10 @@ Acts::TrackingVolume::compatibleBoundaries(
 
     ACTS_VERBOSE("Check intersection with surface "
                  << bSurface->surfaceRepresentation().geometryId());
-    if (detail::checkIntersection(sIntersection.intersection, pLimit, oLimit,
-                                  s_onSurfaceTolerance, logger)) {
+    if (detail::checkIntersection<decltype(sIntersection.intersection),
+                                  decltype(logger)>(
+            sIntersection.intersection, pLimit, oLimit, s_onSurfaceTolerance,
+            logger)) {
       sIntersection.intersection.pathLength *= options.navDir;
       return BoundaryIntersection(sIntersection.intersection, bSurface,
                                   sIntersection.object);
@@ -516,8 +519,10 @@ Acts::TrackingVolume::compatibleBoundaries(
 
     if (sIntersection.alternative) {
       ACTS_VERBOSE("Consider alternative");
-      if (detail::checkIntersection(sIntersection.alternative, pLimit, oLimit,
-                                    s_onSurfaceTolerance, logger)) {
+      if (detail::checkIntersection<decltype(sIntersection.alternative),
+                                    decltype(logger)>(
+              sIntersection.alternative, pLimit, oLimit, s_onSurfaceTolerance,
+              logger)) {
         sIntersection.alternative.pathLength *= options.navDir;
         return BoundaryIntersection(sIntersection.alternative, bSurface,
                                     sIntersection.object);

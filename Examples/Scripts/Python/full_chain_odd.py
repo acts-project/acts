@@ -25,6 +25,7 @@ from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
 ttbar_pu200 = False
+g4_simulation = False
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
@@ -73,19 +74,40 @@ with acts.FpeMonitor():
             rnd=rnd,
             outputDirRoot=outputDir,
         )
+    if g4_simulation:
+        if s.config.numThreads != 1:
+            raise ValueError("Geant 4 simulation does not support multi-threading")
 
-    addFatras(
-        s,
-        trackingGeometry,
-        field,
-        ParticleSelectorConfig(
-            eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True
+        # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
+        # Older version of G4 might not work, this as has been tested on version `geant4-11-00-patch-03`
+        # For more detail see issue #1578
+        addGeant4(
+            s,
+            detector,
+            trackingGeometry,
+            field,
+            preselectParticles=ParticleSelectorConfig(
+                eta=(-3.0, 3.0),
+                absZ=(0, 1e4),
+                pt=(150 * u.MeV, None),
+                removeNeutral=True,
+            ),
+            outputDirCsv=outputDir,
+            rnd=rnd,
         )
-        if ttbar_pu200
-        else ParticleSelectorConfig(),
-        outputDirRoot=outputDir,
-        rnd=rnd,
-    )
+    else:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            ParticleSelectorConfig(
+                eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True
+            )
+            if ttbar_pu200
+            else ParticleSelectorConfig(),
+            outputDirRoot=outputDir,
+            rnd=rnd,
+        )
 
     addDigitization(
         s,
