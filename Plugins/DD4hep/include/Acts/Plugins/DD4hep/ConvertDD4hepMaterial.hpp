@@ -27,7 +27,7 @@ class Layer;
 /// @param detElement the DD4hep detector element for which this material is
 ///                   assigned
 /// @param cylinderLayer is the target layer
-/// @param logger a @c Logger  for output
+/// @param logger a @c Logger for output
 void addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
                                    Layer& cylinderLayer,
                                    const Logger& logger = getDummyLogger());

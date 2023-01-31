@@ -209,21 +209,21 @@ bool checkIntersection(const intersection_t& intersection, double pLimit,
 
   const bool accept = coCriterion and cpCriterion;
 
-    if (accept) {
-      ACTS_VERBOSE("Intersection is WITHIN limit");
-    } else {
-      ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
-      if (not coCriterion) {
-        ACTS_VERBOSE("- intersection path length "
-                     << cLimit << " <= overstep limit " << oLimit);
-      }
-      if (not cpCriterion) {
-        ACTS_VERBOSE("- intersection path length "
-                     << std::abs(cLimit) << " is over the path limit "
-                     << (std::abs(pLimit) + tolerance)
-                     << " (including tolerance of " << tolerance << ")");
-      }
+  if (accept) {
+    ACTS_VERBOSE("Intersection is WITHIN limit");
+  } else {
+    ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
+    if (not coCriterion) {
+      ACTS_VERBOSE("- intersection path length "
+                   << cLimit << " <= overstep limit " << oLimit);
     }
+    if (not cpCriterion) {
+      ACTS_VERBOSE("- intersection path length "
+                   << std::abs(cLimit) << " is over the path limit "
+                   << (std::abs(pLimit) + tolerance)
+                   << " (including tolerance of " << tolerance << ")");
+    }
+  }
 
   return accept;
 }

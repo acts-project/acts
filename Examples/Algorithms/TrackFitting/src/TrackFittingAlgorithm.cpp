@@ -76,7 +76,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   GeneralFitterOptions options{
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-      calibrator,     &(*pSurface),        Acts::PropagatorPlainOptions()};
+      calibrator,     pSurface.get(),      Acts::PropagatorPlainOptions()};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
