@@ -89,8 +89,7 @@ inline void sortDetElementsByID(std::vector<dd4hep::DetElement>& det) {
 /// can provide their own function
 
 std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
-    dd4hep::DetElement worldDetElement,
-    Logging::Level loggingLevel = Logging::Level::INFO,
+    dd4hep::DetElement worldDetElement, const Logger& logger,
     BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
     BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
     double layerEnvelopeZ = UnitConstants::mm,
@@ -110,8 +109,7 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 ///
 ///
 /// @param [in] subDetector the DD4hep DetElement of the subdetector
-/// @param [in] loggingLevel is the debug logging level of the conversion and
-/// geometry building
+/// @param [in] logger A logger instance
 /// @param [in] bTypePhi is how the sensitive surfaces (modules) should be
 /// binned in a layer in phi direction.
 /// @note Possible binningtypes:
@@ -143,18 +141,16 @@ std::unique_ptr<const TrackingGeometry> convertDD4hepDetector(
 /// @return std::shared_ptr the Acts::CylinderVolumeBuilder which can be used to
 /// build the full tracking geometry
 std::shared_ptr<const CylinderVolumeBuilder> volumeBuilder_dd4hep(
-    dd4hep::DetElement subDetector,
-    Logging::Level loggingLevel = Logging::Level::INFO,
+    dd4hep::DetElement subDetector, const Logger& logger,
     BinningType bTypePhi = equidistant, BinningType bTypeR = equidistant,
     BinningType bTypeZ = equidistant, double layerEnvelopeR = UnitConstants::mm,
     double layerEnvelopeZ = UnitConstants::mm,
-    double defaultLayerThickness = UnitConstants::fm,
-    const Logger& logger = Acts::getDummyLogger());
+    double defaultLayerThickness = UnitConstants::fm);
 
 /// Helper method internally used to create a default
 /// Acts::CylinderVolumeBuilder
 std::shared_ptr<const CylinderVolumeHelper> cylinderVolumeHelper_dd4hep(
-    Logging::Level loggingLevel = Logging::Level::INFO);
+    const Logger& logger);
 
 /// Method internally used by convertDD4hepDetector to collect all sub detectors
 /// Sub detector means each 'compound' DetElement or DetElements which are
