@@ -27,7 +27,7 @@
 using namespace torch::indexing;
 
 namespace {
-void print_current_cuda_meminfo(Acts::LoggerWrapper& logger) {
+void print_current_cuda_meminfo(const Acts::Logger& logger) {
   constexpr int kb = 1024;
   constexpr int mb = kb * kb;
 
@@ -75,7 +75,7 @@ ExaTrkXTrackFindingTorch::~ExaTrkXTrackFindingTorch() {}
 
 std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates, LoggerWrapper logger,
+    std::vector<std::vector<int> >& trackCandidates, const Logger& logger,
     bool recordTiming) const {
   ExaTrkXTime timeInfo;
 

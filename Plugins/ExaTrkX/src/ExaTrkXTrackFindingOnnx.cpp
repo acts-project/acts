@@ -21,14 +21,17 @@
 
 using namespace torch::indexing;
 
-Acts::ExaTrkXTrackFindingOnnx::ExaTrkXTrackFindingOnnx(const Config& config)
-    : Acts::ExaTrkXTrackFindingBase("ExaTrkXOnnx"), m_cfg(config) {
-  std::cout << "Model input directory: " << m_cfg.modelDir << "\n";
-  std::cout << "Spacepoint features: " << m_cfg.spacepointFeatures << "\n";
-  std::cout << "Embedding Dimension: " << m_cfg.embeddingDim << "\n";
-  std::cout << "radius value       : " << m_cfg.rVal << "\n";
-  std::cout << "k-nearest neigbour : " << m_cfg.knnVal << "\n";
-  std::cout << "filtering cut      : " << m_cfg.filterCut << "\n";
+Acts::ExaTrkXTrackFindingOnnx::ExaTrkXTrackFindingOnnx(
+    const Config& config, std::unique_ptr<const Logger> _logger)
+    : Acts::ExaTrkXTrackFindingBase("ExaTrkXOnnx"),
+      m_cfg(config),
+      m_logger{std::move(_logger)} {
+  ACTS_INFO("Model input directory: " << m_cfg.modelDir);
+  ACTS_INFO("Spacepoint features: " << m_cfg.spacepointFeatures);
+  ACTS_INFO("Embedding Dimension: " << m_cfg.embeddingDim);
+  ACTS_INFO("radius value       : " << m_cfg.rVal);
+  ACTS_INFO("k-nearest neigbour : " << m_cfg.knnVal);
+  ACTS_INFO("filtering cut      : " << m_cfg.filterCut);
 
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING, "ExaTrkX");
 
@@ -58,7 +61,6 @@ void Acts::ExaTrkXTrackFindingOnnx::runSessionWithIoBinding(
     Ort::Session& sess, std::vector<const char*>& inputNames,
     std::vector<Ort::Value>& inputData, std::vector<const char*>& outputNames,
     std::vector<Ort::Value>& outputData) const {
-  // std::cout <<"In the runSessionWithIoBinding" << std::endl;
   if (inputNames.size() < 1) {
     throw std::runtime_error("Onnxruntime input data maping cannot be empty");
   }
@@ -95,7 +97,7 @@ void Acts::ExaTrkXTrackFindingOnnx::buildEdges(
 
   stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
 
-  std::cout << "copy edges to std::vector" << std::endl;
+  ACTS_INFO("copy edges to std::vector");
   std::copy(stackedEdges.data_ptr<int64_t>(),
             stackedEdges.data_ptr<int64_t>() + stackedEdges.numel(),
             std::back_inserter(edgeList));
@@ -103,7 +105,7 @@ void Acts::ExaTrkXTrackFindingOnnx::buildEdges(
 
 std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates, LoggerWrapper,
+    std::vector<std::vector<int> >& trackCandidates, const Logger& logger,
     bool recordTiming) const {
   ExaTrkXTime timeInfo;
   // hardcoded debugging information
@@ -117,10 +119,10 @@ std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
 
   // printout the r,phi,z of the first spacepoint
-  std::cout << "First spacepoint information: " << inputValues.size() << "\n\t";
-  std::copy(inputValues.begin(), inputValues.begin() + 3,
-            std::ostream_iterator<float>(std::cout, " "));
-  std::cout << std::endl;
+  ACTS_INFO("First spacepoint information: " << inputValues.size() << "\n\t");
+  for (size_t i = 0; i < 3; i++) {
+    ACTS_INFO("\t" << inputValues[i]);
+  }
 
   // ************
   // Embedding
@@ -145,14 +147,14 @@ std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
   runSessionWithIoBinding(*m_embeddingSession, eInputNames, eInputTensor,
                           eOutputNames, eOutputTensor);
 
-  std::cout << "Embedding space of the first SP: ";
-  std::copy(eOutputData.begin(), eOutputData.begin() + m_cfg.embeddingDim,
-            std::ostream_iterator<float>(std::cout, " "));
-  std::cout << std::endl;
+  ACTS_INFO("Embedding space of the first SP: ");
+  for (size_t i = 0; i < 3; i++) {
+    ACTS_INFO("\t" << eOutputData[i]);
+  }
   if (debug) {
     std::fstream out(embedding_outname, out.out);
     if (!out.is_open()) {
-      std::cout << "failed to open " << embedding_outname << '\n';
+      ACTS_ERROR("failed to open " << embedding_outname);
     } else {
       std::copy(eOutputData.begin(), eOutputData.end(),
                 std::ostream_iterator<float>(out, " "));
@@ -165,19 +167,19 @@ std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
   std::vector<int64_t> edgeList;
   buildEdges(eOutputData, edgeList, numSpacepoints);
   int64_t numEdges = edgeList.size() / 2;
-  std::cout << "Built " << numEdges << " edges." << std::endl;
+  ACTS_INFO("Built " << numEdges << " edges.");
 
-  std::copy(edgeList.begin(), edgeList.begin() + 10,
-            std::ostream_iterator<int64_t>(std::cout, " "));
-  std::cout << std::endl;
-  std::copy(edgeList.begin() + numEdges, edgeList.begin() + numEdges + 10,
-            std::ostream_iterator<int64_t>(std::cout, " "));
-  std::cout << std::endl;
+  for (size_t i = 0; i < 10; i++) {
+    ACTS_INFO(edgeList[i]);
+  }
+  for (size_t i = 0; i < 10; i++) {
+    ACTS_INFO(edgeList[numEdges + i]);
+  }
 
   if (debug) {
     std::fstream out(edgelist_outname, out.out);
     if (!out.is_open()) {
-      std::cout << "failed to open " << edgelist_outname << '\n';
+      ACTS_ERROR("failed to open " << edgelist_outname);
     } else {
       std::copy(edgeList.begin(), edgeList.end(),
                 std::ostream_iterator<int64_t>(out, " "));
@@ -206,7 +208,7 @@ std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
   runSessionWithIoBinding(*m_filterSession, fInputNames, fInputTensor,
                           fOutputNames, fOutputTensor);
 
-  std::cout << "Get scores for " << numEdges << " edges." << std::endl;
+  ACTS_INFO("Get scores for " << numEdges << " edges.");
   // However, I have to convert those numbers to a score by applying sigmoid!
   // Use torch::tensor
   torch::Tensor edgeListCTen = torch::tensor(edgeList, {torch::kInt64});
@@ -218,7 +220,7 @@ std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
   if (debug) {
     std::fstream out(filtering_outname, out.out);
     if (!out.is_open()) {
-      std::cout << "failed to open " << filtering_outname << '\n';
+      ACTS_ERROR("failed to open " << filtering_outname);
     } else {
       std::copy(fOutputCTen.data_ptr<float>(),
                 fOutputCTen.data_ptr<float>() + fOutputCTen.numel(),
@@ -235,7 +237,7 @@ std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
             std::back_inserter(edgesAfterFiltering));
 
   int64_t numEdgesAfterF = edgesAfterFiltering.size() / 2;
-  std::cout << "After filtering: " << numEdgesAfterF << " edges." << std::endl;
+  ACTS_INFO("After filtering: " << numEdgesAfterF << " edges.");
 
   // ************
   // GNN
@@ -256,14 +258,14 @@ std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
       memoryInfo, gOutputData.data(), gOutputData.size(), gOutputShape.data(),
       gOutputShape.size()));
 
-  std::cout << "run ONNX session\n";
+  ACTS_INFO("run ONNX session");
   runSessionWithIoBinding(*m_gnnSession, gInputNames, gInputTensor,
                           gOutputNames, gOutputTensor);
-  std::cout << "done with ONNX session\n";
+  ACTS_INFO("done with ONNX session");
 
   torch::Tensor gOutputCTen = torch::tensor(gOutputData, {torch::kFloat32});
   gOutputCTen = gOutputCTen.sigmoid();
-  std::cout << gOutputCTen.slice(0, 0, 3) << std::endl;
+  ACTS_INFO(gOutputCTen.slice(0, 0, 3));
 
   // ************
   // Track Labeling with cugraph::connected_components
@@ -281,13 +283,14 @@ std::optional<Acts::ExaTrkXTime> Acts::ExaTrkXTrackFindingOnnx::getTracks(
             gOutputCTen.data_ptr<float>() + numEdgesAfterF,
             std::back_insert_iterator(edgeWeights));
 
-  std::cout << "run weaklyConnectedComponents" << std::endl;
+  ACTS_INFO("run weaklyConnectedComponents");
   weaklyConnectedComponents<int32_t, int32_t, float>(rowIndices, colIndices,
                                                      edgeWeights, trackLabels);
 
-  std::cout << "size of components: " << trackLabels.size() << std::endl;
-  if (trackLabels.size() == 0)
+  ACTS_INFO("size of components: " << trackLabels.size());
+  if (trackLabels.size() == 0) {
     return timeInfo;
+  }
 
   trackCandidates.clear();
 

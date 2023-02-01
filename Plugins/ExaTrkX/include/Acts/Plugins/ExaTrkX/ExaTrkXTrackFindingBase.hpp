@@ -51,7 +51,7 @@ class ExaTrkXTrackFindingBase {
   virtual std::optional<ExaTrkXTime> getTracks(
       std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
       std::vector<std::vector<int> >& trackCandidates,
-      Acts::LoggerWrapper logger = Acts::getDummyLogger(),
+      const Acts::Logger& logger = Acts::getDummyLogger(),
       bool recordTiming = false) const = 0;
 
   /// Returns the name of the algorithm

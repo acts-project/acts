@@ -49,18 +49,13 @@ struct SingleParticleSimulation {
   interactions_t interactions;
   /// Selector for surfaces that should generate hits.
   hit_surface_selector_t selectHitSurface;
-  /// Wrapped logger for debug output.
-  Acts::LoggerWrapper loggerWrapper = Acts::getDummyLogger();
-  /// Local logger for debug output.
-  std::shared_ptr<const Acts::Logger> localLogger = nullptr;
+  /// Logger for debug output.
+  std::unique_ptr<const Acts::Logger> logger;
 
   /// Alternatively construct the simulator with an external logger.
   SingleParticleSimulation(propagator_t &&propagator_,
-                           std::shared_ptr<const Acts::Logger> localLogger_)
-      : propagator(propagator_), localLogger(std::move(localLogger_)) {}
-
-  /// Provide access to the local logger instance, e.g. for logging macros.
-  const Acts::Logger &logger() const { return *localLogger; }
+                           std::unique_ptr<const Acts::Logger> _logger)
+      : propagator(propagator_), logger(std::move(_logger)) {}
 
   /// Simulate a single particle without secondaries.
   ///
@@ -76,7 +71,6 @@ struct SingleParticleSimulation {
       const Acts::GeometryContext &geoCtx,
       const Acts::MagneticFieldContext &magCtx, generator_t &generator,
       const Particle &particle) const {
-    assert(localLogger and "Missing local logger");
     // propagator-related additional types
     using Actor = detail::SimulationActor<generator_t, decay_t, interactions_t,
                                           hit_surface_selector_t>;
