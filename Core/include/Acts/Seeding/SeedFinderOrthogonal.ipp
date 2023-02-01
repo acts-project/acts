@@ -148,7 +148,7 @@ auto SeedFinderOrthogonal<external_spacepoint_t>::validTupleOrthoRangeHL(
 template <typename external_spacepoint_t>
 bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
     const SeedFinderOptions &options, const internal_sp_t &low,
-    const internal_sp_t &high) const {
+    const internal_sp_t &high, bool isMiddleInverted) const {
   float rL = low.radius();
   float rH = high.radius();
 
@@ -191,7 +191,10 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
                  (high.y() - low.y()) * (low.y() / rL);
     float yVal = (high.y() - low.y()) * (low.x() / rL) -
                  (high.x() - low.x()) * (low.y() / rL);
-    if (std::abs(rL * yVal) > m_config.impactMax * xVal) {
+
+    const int sign = isMiddleInverted ? -1 : 1;
+
+    if (std::abs(rL * yVal) > sign * m_config.impactMax * xVal) {
       // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
       // circle into straight lines in the u/v plane the line equation can
       // be described in terms of aCoef and bCoef, where v = aCoef * u +
@@ -202,7 +205,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
       // and y ~= impactParam
       float uIP = -1. / rL;
       float vIP = m_config.impactMax / (rL * rL);
-      if (yVal > 0.) {
+      if (sign * yVal > 0.) {
         vIP = -vIP;
       }
       // we can obtain aCoef as the slope dv/du of the linear function,
@@ -534,14 +537,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     /*
      * Search the trees for points that lie in the given search range.
      */
-    tree.rangeSearchMapDiscard(bottom_lh_r,
-                               [this, &options, &middle, &bottom_lh_v](
-                                   const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &bottom) {
-                                 if (validTuple(options, *bottom, middle)) {
-                                   bottom_lh_v.push_back(bottom);
-                                 }
-                               });
+    tree.rangeSearchMapDiscard(
+        bottom_lh_r, [this, &options, &middle, &bottom_lh_v](
+                         const typename tree_t::coordinate_t &,
+                         const typename tree_t::value_t &bottom) {
+          if (validTuple(options, *bottom, middle, false)) {
+            bottom_lh_v.push_back(bottom);
+          }
+        });
   }
 
   /*
@@ -549,14 +552,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * monotonically decreasing z tracks.
    */
   if (!bottom_hl_r.degenerate() && !top_hl_r.degenerate()) {
-    tree.rangeSearchMapDiscard(bottom_hl_r,
-                               [this, &options, &middle, &bottom_hl_v](
-                                   const typename tree_t::coordinate_t &,
-                                   const typename tree_t::value_t &bottom) {
-                                 if (validTuple(options, middle, *bottom)) {
-                                   bottom_hl_v.push_back(bottom);
-                                 }
-                               });
+    tree.rangeSearchMapDiscard(
+        bottom_hl_r, [this, &options, &middle, &bottom_hl_v](
+                         const typename tree_t::coordinate_t &,
+                         const typename tree_t::value_t &bottom) {
+          if (validTuple(options, middle, *bottom, true)) {
+            bottom_hl_v.push_back(bottom);
+          }
+        });
   }
 
   /*
@@ -568,7 +571,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                [this, &options, &middle, &top_lh_v](
                                    const typename tree_t::coordinate_t &,
                                    const typename tree_t::value_t &top) {
-                                 if (validTuple(options, *top, middle)) {
+                                 if (validTuple(options, *top, middle, true)) {
                                    top_lh_v.push_back(top);
                                  }
                                });
@@ -582,7 +585,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
                                [this, &options, &middle, &top_hl_v](
                                    const typename tree_t::coordinate_t &,
                                    const typename tree_t::value_t &top) {
-                                 if (validTuple(options, middle, *top)) {
+                                 if (validTuple(options, middle, *top, false)) {
                                    top_hl_v.push_back(top);
                                  }
                                });
