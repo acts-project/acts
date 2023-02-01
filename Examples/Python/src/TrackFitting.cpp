@@ -8,6 +8,7 @@
 
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/TrackFitting/GsfFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
@@ -86,15 +87,23 @@ void addTrackFitting(Context& ctx) {
 
     mex.def(
         "makeGsfFitterFunction",
-        py::overload_cast<std::shared_ptr<const Acts::TrackingGeometry>,
-                          std::shared_ptr<const Acts::MagneticFieldProvider>,
-                          BetheHeitlerApprox, std::size_t, double,
-                          Acts::FinalReductionMethod, bool, bool>(
-            &ActsExamples::makeGsfFitterFunction),
+        [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+           BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+           double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
+           bool abortOnError, bool disableAllMaterialHandling,
+           Logging::Level level) {
+          return ActsExamples::makeGsfFitterFunction(
+              trackingGeometry, magneticField, betheHeitlerApprox,
+              maxComponents, weightCutoff, finalReductionMethod, abortOnError,
+              disableAllMaterialHandling,
+              *Acts::getDefaultLogger("GSFFunc", level));
+        },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("betheHeitlerApprox"), py::arg("maxComponents"),
         py::arg("weightCutoff"), py::arg("finalReductionMethod"),
-        py::arg("abortOnError"), py::arg("disableAllMaterialHandling"));
+        py::arg("abortOnError"), py::arg("disableAllMaterialHandling"),
+        py::arg("level"));
   }
 
   {
