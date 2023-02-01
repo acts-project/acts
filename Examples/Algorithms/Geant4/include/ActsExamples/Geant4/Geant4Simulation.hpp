@@ -91,9 +91,6 @@ class Geant4Simulation final : public BareAlgorithm {
     // The ACTS to Geant4 sensitive wrapper
     std::shared_ptr<const SensitiveSurfaceMapper> sensitiveSurfaceMapper =
         nullptr;
-
-    // Print Geant4 physics parameters at the start
-    bool printPhysicsParameters = false;
   };
 
   /// Constructor with arguments

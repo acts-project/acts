@@ -79,7 +79,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       outputParticlesInitial, outputParticlesFinal, outputMaterialTracks,
       randomNumbers, runManager, primaryGeneratorAction, runActions,
       eventActions, trackingActions, steppingActions, detectorConstruction,
-      magneticField, sensitiveSurfaceMapper, printPhysicsParameters);
+      magneticField, sensitiveSurfaceMapper);
 
   mod.def(
       "materialRecordingConfig",
