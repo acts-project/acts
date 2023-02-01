@@ -381,7 +381,7 @@ class AtlasStepper {
   /// @param [in] logger Logger instance to use
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      LoggerWrapper logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<AtlasStepper>(
         *this, state, surface, bcheck, logger);
   }
