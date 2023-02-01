@@ -798,6 +798,7 @@ def addTruthTrackingGsf(
         "disableAllMaterialHandling": False,
         "finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
         "weightCutoff": 1.0e-4,
+        "level": customLogLevel(),
     }
 
     gsfAlg = acts.examples.TrackFittingAlgorithm(

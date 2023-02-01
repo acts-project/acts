@@ -40,7 +40,7 @@ struct Options {
   double stepSizeCutOff = 0.0;
   std::size_t maxRungeKuttaStepTrials = 10;
   double mass = 1.0;
-  LoggerWrapper logger = Acts::getDummyLogger();
+  const Acts::Logger &logger = Acts::getDummyLogger();
 };
 
 struct Navigation {};
