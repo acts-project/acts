@@ -109,9 +109,14 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     // Retrieve the event data registry
     auto& eventData = EventStoreRegistry::eventData();
 
+    if (eventData.particleHitCount.count(particleID) == 0) {
+      eventData.particleHitCount[particleID] = 0;
+    } else {
+      eventData.particleHitCount[particleID]++;
+    }
     // Fill into the registry
     eventData.hits.emplace_back(geoID, particleID, particlePosition,
                                 beforeMomentum, afterMomentum,
-                                eventData.hits.size());
+                                eventData.particleHitCount[particleID]);
   }
 }
