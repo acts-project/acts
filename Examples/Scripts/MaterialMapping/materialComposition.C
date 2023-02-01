@@ -137,13 +137,9 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
   std::vector<float>* stepL0 = new std::vector<float>;
   std::vector<float>* stepA = new std::vector<float>;
 
-  std::vector<float>* startX = new std::vector<float>;
-  std::vector<float>* startY = new std::vector<float>;
-  std::vector<float>* startZ = new std::vector<float>;
-
-  std::vector<float>* endX = new std::vector<float>;
-  std::vector<float>* endY = new std::vector<float>;
-  std::vector<float>* endZ = new std::vector<float>;
+  std::vector<float>* stepX = new std::vector<float>;
+  std::vector<float>* stepY = new std::vector<float>;
+  std::vector<float>* stepZ = new std::vector<float>;
 
   inputTree->SetBranchAddress("v_eta", &v_eta);
   inputTree->SetBranchAddress("v_phi", &v_phi);
@@ -153,13 +149,9 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
   inputTree->SetBranchAddress("mat_L0", &stepL0);
   inputTree->SetBranchAddress("mat_A", &stepA);
 
-  inputTree->SetBranchAddress("mat_sx", &startX);
-  inputTree->SetBranchAddress("mat_sy", &startY);
-  inputTree->SetBranchAddress("mat_sz", &startZ);
-
-  inputTree->SetBranchAddress("mat_ex", &endX);
-  inputTree->SetBranchAddress("mat_ey", &endY);
-  inputTree->SetBranchAddress("mat_ez", &endZ);
+  inputTree->SetBranchAddress("mat_x", &stepX);
+  inputTree->SetBranchAddress("mat_y", &stepY);
+  inputTree->SetBranchAddress("mat_z", &stepZ);
 
   // Loop over all entries ---------------
   unsigned int entries = inputTree->GetEntries();
@@ -170,8 +162,8 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
 #endif
 
   // Loop of the regions
-  for (auto& r : regions) {
-    std::string rName = std::get<0>(r);
+  for (auto& region : regions) {
+    const auto [rName, minR, maxR, minZ, maxZ] = region;
 
     // The material histograms ordered by atomic mass
     std::map<unsigned int, MaterialHistograms> mCache;
@@ -195,22 +187,12 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
       // Accumulate the material per track
       size_t steps = stepLength->size();
       for (unsigned int is = 0; is < steps; ++is) {
-        float sX = startX->at(is);
-        float sY = startY->at(is);
-        float sZ = startZ->at(is);
-        float sR = sqrt(sX * sX + sY * sY);
+        float x = stepX->at(is);
+        float y = stepY->at(is);
+        float z = stepZ->at(is);
+        float r = sqrt(x * x + y * y);
 
-        float eX = endX->at(is);
-        float eY = endY->at(is);
-        float eZ = endZ->at(is);
-        float eR = sqrt(eX * eX + eY * eY);
-
-        float minR = std::get<1>(r);
-        float maxR = std::get<2>(r);
-        float minZ = std::get<3>(r);
-        float maxZ = std::get<4>(r);
-
-        if (minR > sR or minZ > sZ or maxR < eR or maxZ < eZ) {
+        if (minR > r or minZ > z or maxR < r or maxZ < z) {
           continue;
         }
 
@@ -248,13 +230,9 @@ void materialComposition(const std::string& inFile, const std::string& treeName,
   delete stepL0;
   delete stepA;
 
-  delete startX;
-  delete startY;
-  delete startZ;
-
-  delete endX;
-  delete endY;
-  delete endZ;
+  delete stepX;
+  delete stepY;
+  delete stepZ;
 
   delete materialCanvas;
 }
