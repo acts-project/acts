@@ -43,9 +43,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // binSizeR allows to increase or reduce numRBins if needed
   size_t numRBins = static_cast<size_t>((config.rMax + options.beamPos.norm()) /
                                         config.binSizeR);
-  std::vector<
-      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
-      rBins(numRBins);
+  std::vector<std::vector<InternalSpacePoint<external_spacepoint_t>>> rBins(
+      numRBins);
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
       continue;
@@ -68,12 +67,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     if (spPhi > phiMax || spPhi < phiMin) {
       continue;
     }
-
-    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        sp, spPosition, options.beamPos, variance);
+    InternalSpacePoint<external_spacepoint_t> isp{sp, spPosition,
+                                                  options.beamPos, variance};
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);
+    size_t rIndex = static_cast<size_t>(isp.radius() / config.binSizeR);
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;
@@ -85,12 +83,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // bin
   if (config.forceRadialSorting) {
     for (auto& rbin : rBins) {
-      std::sort(
-          rbin.begin(), rbin.end(),
-          [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
-             std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
-            return a->radius() < b->radius();
-          });
+      std::sort(rbin.begin(), rbin.end(),
+                [](const InternalSpacePoint<external_spacepoint_t>& a,
+                   const InternalSpacePoint<external_spacepoint_t>& b) {
+                  return a.radius() < b.radius();
+                });
     }
   }
 
@@ -99,9 +96,9 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // requested
   for (auto& rbin : rBins) {
     for (auto& isp : rbin) {
-      Acts::Vector2 spLocation(isp->phi(), isp->z());
-      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-          bin = grid->atPosition(spLocation);
+      Acts::Vector2 spLocation(isp.phi(), isp.z());
+      std::vector<InternalSpacePoint<external_spacepoint_t>>& bin =
+          grid->atPosition(spLocation);
       bin.push_back(std::move(isp));
     }
   }

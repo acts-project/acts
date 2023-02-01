@@ -30,13 +30,13 @@ using NeighborhoodVector = boost::container::small_vector<size_t, 10>;
 template <typename external_spacepoint_t>
 class NeighborhoodIterator {
  public:
-  using sp_it_t = typename std::vector<std::unique_ptr<
-      InternalSpacePoint<external_spacepoint_t>>>::const_iterator;
+  using sp_it_t =
+      typename std::vector<InternalSpacePoint<external_spacepoint_t>>::iterator;
 
   NeighborhoodIterator() = delete;
 
   NeighborhoodIterator(NeighborhoodVector indices,
-                       const SpacePointGrid<external_spacepoint_t>* spgrid) {
+                       SpacePointGrid<external_spacepoint_t>* spgrid) {
     m_grid = spgrid;
     m_indices = std::move(indices);
     m_curInd = 0;
@@ -47,7 +47,7 @@ class NeighborhoodIterator {
   }
 
   NeighborhoodIterator(NeighborhoodVector indices,
-                       const SpacePointGrid<external_spacepoint_t>* spgrid,
+                       SpacePointGrid<external_spacepoint_t>* spgrid,
                        size_t curInd, sp_it_t curIt) {
     m_grid = spgrid;
     m_indices = std::move(indices);
@@ -59,7 +59,7 @@ class NeighborhoodIterator {
   }
   static NeighborhoodIterator<external_spacepoint_t> begin(
       NeighborhoodVector indices,
-      const SpacePointGrid<external_spacepoint_t>* spgrid) {
+      SpacePointGrid<external_spacepoint_t>* spgrid) {
     auto nIt = NeighborhoodIterator<external_spacepoint_t>(indices, spgrid);
     // advance until first non-empty bin or last bin
     if (nIt.m_curIt == nIt.m_binEnd) {
@@ -95,9 +95,7 @@ class NeighborhoodIterator {
     }
   }
 
-  InternalSpacePoint<external_spacepoint_t>* operator*() {
-    return (*m_curIt).get();
-  }
+  InternalSpacePoint<external_spacepoint_t>& operator*() { return (*m_curIt); }
 
   bool operator!=(const NeighborhoodIterator<external_spacepoint_t>& other) {
     return m_curIt != other.m_curIt || m_curInd != other.m_curInd;
@@ -110,7 +108,7 @@ class NeighborhoodIterator {
   NeighborhoodVector m_indices;
   // current bin
   size_t m_curInd;
-  const Acts::SpacePointGrid<external_spacepoint_t>* m_grid;
+  Acts::SpacePointGrid<external_spacepoint_t>* m_grid;
 };
 
 /// @c Neighborhood Used to access iterators to access a group of bins
@@ -121,7 +119,7 @@ class Neighborhood {
  public:
   Neighborhood() = delete;
   Neighborhood(NeighborhoodVector indices,
-               const SpacePointGrid<external_spacepoint_t>* spgrid) {
+               SpacePointGrid<external_spacepoint_t>* spgrid) {
     m_indices = std::move(indices);
     m_spgrid = spgrid;
   }
@@ -137,7 +135,7 @@ class Neighborhood {
 
  private:
   NeighborhoodVector m_indices;
-  const SpacePointGrid<external_spacepoint_t>* m_spgrid;
+  SpacePointGrid<external_spacepoint_t>* m_spgrid;
 };
 
 /// @c BinnedSPGroupIterator Allows to iterate over all groups of bins
@@ -193,7 +191,7 @@ class BinnedSPGroupIterator {
     return Neighborhood<external_spacepoint_t>(topBinIndices, grid);
   }
 
-  BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,
+  BinnedSPGroupIterator(SpacePointGrid<external_spacepoint_t>* spgrid,
                         const BinFinder<external_spacepoint_t>* botBinFinder,
                         const BinFinder<external_spacepoint_t>* tBinFinder,
                         std::vector<size_t> bins = {}) {
@@ -214,7 +212,7 @@ class BinnedSPGroupIterator {
     topBinIndices = m_topBinFinder->findBins(phiIndex, this_zIndex, grid);
   }
 
-  BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,
+  BinnedSPGroupIterator(SpacePointGrid<external_spacepoint_t>* spgrid,
                         const BinFinder<external_spacepoint_t>* botBinFinder,
                         const BinFinder<external_spacepoint_t>* tBinFinder,
                         size_t phiInd, size_t zInd,
@@ -247,7 +245,7 @@ class BinnedSPGroupIterator {
   NeighborhoodVector currentBin;
   NeighborhoodVector bottomBinIndices;
   NeighborhoodVector topBinIndices;
-  const SpacePointGrid<external_spacepoint_t>* grid;
+  SpacePointGrid<external_spacepoint_t>* grid;
   size_t phiIndex = 1;
   size_t zIndex = 1;
   size_t outputIndex = 0;

@@ -9,8 +9,8 @@
 namespace Acts {
 template <typename external_spacepoint_t>
 inline LinCircle transformCoordinates(
-    InternalSpacePoint<external_spacepoint_t>& sp,
-    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
+    const InternalSpacePoint<external_spacepoint_t>& sp,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
@@ -24,8 +24,9 @@ inline LinCircle transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-inline LinCircle transformCoordinates(external_spacepoint_t& sp,
-                                      external_spacepoint_t& spM, bool bottom,
+inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
+                                      const external_spacepoint_t& spM,
+                                      bool bottom,
                                       callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
@@ -60,7 +61,7 @@ inline LinCircle transformCoordinates(external_spacepoint_t& sp,
 
 template <typename external_spacepoint_t>
 inline std::vector<std::size_t> transformCoordinates(
-    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
   auto extractFunction =
@@ -77,9 +78,9 @@ inline std::vector<std::size_t> transformCoordinates(
 
 template <typename external_spacepoint_t, typename callable_t>
 inline std::vector<std::size_t> transformCoordinates(
-    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
-    bool bottom, std::vector<LinCircle>& linCircleVec,
-    callable_t&& extractFunction) {
+    const std::vector<external_spacepoint_t*>& vec,
+    const external_spacepoint_t& spM, bool bottom,
+    std::vector<LinCircle>& linCircleVec, callable_t&& extractFunction) {
   std::vector<std::size_t> indexes(vec.size());
   for (unsigned int i(0); i < indexes.size(); i++) {
     indexes[i] = i;
@@ -89,7 +90,7 @@ inline std::vector<std::size_t> transformCoordinates(
 
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
-  for (auto sp : vec) {
+  for (auto& sp : vec) {
     auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
 
     float deltaX = xSP - xM;
@@ -146,23 +147,23 @@ inline std::vector<std::size_t> transformCoordinates(
   return indexes;
 }
 
-template <typename external_spacepoint_t, typename sp_range_t>
+template <typename external_spacepoint_t, typename sp_t>
 inline bool xyzCoordinateCheck(
     const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
-    sp_range_t sp, const double* spacepointPosition,
+    const sp_t& sp, const double* spacepointPosition,
     double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
 
-  const float topHalfStripLength = m_config.getTopHalfStripLength(sp->sp());
+  const float topHalfStripLength = m_config.getTopHalfStripLength(sp.sp());
   const float bottomHalfStripLength =
-      m_config.getBottomHalfStripLength(sp->sp());
+      m_config.getBottomHalfStripLength(sp.sp());
   const Acts::Vector3 topStripDirection =
-      m_config.getTopStripDirection(sp->sp());
+      m_config.getTopStripDirection(sp.sp());
   const Acts::Vector3 bottomStripDirection =
-      m_config.getBottomStripDirection(sp->sp());
+      m_config.getBottomStripDirection(sp.sp());
   const Acts::Vector3 stripCenterDistance =
-      m_config.getStripCenterDistance(sp->sp());
+      m_config.getStripCenterDistance(sp.sp());
 
   // cross product between top strip vector and spacepointPosition
   double d1[3] = {
@@ -212,7 +213,7 @@ inline bool xyzCoordinateCheck(
   // detector elements
 
   const Acts::Vector3 topStripCenterPosition =
-      m_config.getTopStripCenterPosition(sp->sp());
+      m_config.getTopStripCenterPosition(sp.sp());
 
   // spacepointPosition corected with respect to the top strip position and
   // direction and the distance between the strips

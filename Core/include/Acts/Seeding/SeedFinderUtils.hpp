@@ -37,13 +37,13 @@ struct LinCircle {
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottom Should be true if sp is a bottom SP.
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
-                               InternalSpacePoint<external_spacepoint_t>& spM,
-                               bool bottom);
+LinCircle transformCoordinates(
+    const InternalSpacePoint<external_spacepoint_t>& sp,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom);
 
 template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               external_spacepoint_t& spM, bool bottom,
+LinCircle transformCoordinates(const external_spacepoint_t& sp,
+                               const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
@@ -58,15 +58,15 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 /// @returns Vector of sorted indexes for the vectors (vec and linCircleVec)
 template <typename external_spacepoint_t>
 std::vector<std::size_t> transformCoordinates(
-    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec);
 
 template <typename external_spacepoint_t, typename callable_t>
 std::vector<std::size_t> transformCoordinates(
-    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
-    bool bottom, std::vector<LinCircle>& linCircleVec,
-    callable_t&& extractFunction);
+    const std::vector<external_spacepoint_t*>& vec,
+    const external_spacepoint_t& spM, bool bottom,
+    std::vector<LinCircle>& linCircleVec, callable_t&& extractFunction);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
@@ -78,9 +78,9 @@ std::vector<std::size_t> transformCoordinates(
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
 /// @param[out] outputCoordinates The output vector to write to.
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
-template <typename external_spacepoint_t, typename sp_range_t>
+template <typename external_spacepoint_t, typename sp_t>
 bool xyzCoordinateCheck(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config, sp_range_t sp,
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config, const sp_t& sp,
     const double* spacepointPosition, double* outputCoordinates);
 
 }  // namespace Acts

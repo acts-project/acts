@@ -55,9 +55,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   state.candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                             max_num_quality_seeds_per_spm);
 
-  for (auto spM : middleSPs) {
-    float rM = spM->radius();
-    float zM = spM->z();
+  for (auto& spM : middleSPs) {
+    float rM = spM.radius();
+    float zM = spM.z();
 
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
@@ -100,7 +100,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
+    getCompatibleDoublets(options, topSPs, spM, state.compatTopSP,
                           m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
                           false);
 
@@ -128,7 +128,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    getCompatibleDoublets(options, bottomSPs, *spM, state.compatBottomSP,
+    getCompatibleDoublets(options, bottomSPs, spM, state.compatBottomSP,
                           m_config.deltaRMinBottomSP,
                           m_config.deltaRMaxBottomSP, true);
 
@@ -138,7 +138,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
     // filter candidates
-    filterCandidates(*spM, options, seedFilterState, state);
+    filterCandidates(spM, options, seedFilterState, state);
 
     m_config.seedFilter->filterSeeds_1SpFixed(
         state.candidates_collector, seedFilterState.numQualitySeeds, outIt);
@@ -164,8 +164,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float ratio_xM_rM = xM / rM;
   const float ratio_yM_rM = yM / rM;
 
-  for (auto otherSP : otherSPs) {
-    const float rO = otherSP->radius();
+  for (auto& otherSP : otherSPs) {
+    const float rO = otherSP.radius();
     float deltaR = sign * (rO - rM);
 
     // if r-distance is too small, try next SP in bin
@@ -178,7 +178,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       continue;
     }
 
-    const float zO = otherSP->z();
+    const float zO = otherSP.z();
     float deltaZ = sign * (zO - zM);
     if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
       continue;
@@ -198,17 +198,17 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     }
 
     if (not m_config.interactionPointCut) {
-      outVec.push_back(otherSP);
+      outVec.push_back(&otherSP);
       continue;
     }
 
     const float xVal =
-        (otherSP->x() - xM) * ratio_xM_rM + (otherSP->y() - yM) * ratio_yM_rM;
+        (otherSP.x() - xM) * ratio_xM_rM + (otherSP.y() - yM) * ratio_yM_rM;
     const float yVal =
-        (otherSP->y() - yM) * ratio_xM_rM - (otherSP->x() - xM) * ratio_yM_rM;
+        (otherSP.y() - yM) * ratio_xM_rM - (otherSP.x() - xM) * ratio_yM_rM;
 
     if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
-      outVec.push_back(otherSP);
+      outVec.push_back(&otherSP);
       continue;
     }
 
@@ -236,7 +236,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
       continue;
     }
-    outVec.push_back(otherSP);
+    outVec.push_back(&otherSP);
   }
 }
 
@@ -349,7 +349,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
             cosTheta * std::sqrt(1 + A0 * A0)};
 
         double rMTransf[3];
-        if (!xyzCoordinateCheck(m_config, &spM, positionMiddle, rMTransf)) {
+        if (!xyzCoordinateCheck(m_config, spM, positionMiddle, rMTransf)) {
           continue;
         }
 
@@ -362,9 +362,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
             rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
             cosTheta * std::sqrt(1 + A0 * A0)};
 
-        auto spB = state.compatBottomSP[b];
+        const auto* spB = state.compatBottomSP[b];
         double rBTransf[3];
-        if (!xyzCoordinateCheck(m_config, spB, positionBottom, rBTransf)) {
+        if (!xyzCoordinateCheck(m_config, *spB, positionBottom, rBTransf)) {
           continue;
         }
 
@@ -376,9 +376,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
             rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
             cosTheta * std::sqrt(1 + A0 * A0)};
 
-        auto spT = state.compatTopSP[t];
+        const auto* spT = state.compatTopSP[t];
         double rTTransf[3];
-        if (!xyzCoordinateCheck(m_config, spT, positionTop, rTTransf)) {
+        if (!xyzCoordinateCheck(m_config, *spT, positionTop, rTTransf)) {
           continue;
         }
 

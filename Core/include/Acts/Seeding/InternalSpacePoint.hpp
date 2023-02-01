@@ -30,8 +30,8 @@ class InternalSpacePoint {
   InternalSpacePoint(const InternalSpacePoint<SpacePoint>& sp);
   ~InternalSpacePoint() = default;
 
-  InternalSpacePoint<SpacePoint>& operator=(
-      const InternalSpacePoint<SpacePoint>&) = delete;
+  // InternalSpacePoint<SpacePoint>& operator=(
+  // const InternalSpacePoint<SpacePoint>&) = delete;
 
   const float& x() const { return m_x; }
   const float& y() const { return m_y; }
@@ -68,7 +68,7 @@ class InternalSpacePoint {
       double>::infinity();  // Quality score of the seed the space point is used
                             // for. Quality can be changed if the space point is
                             // used for a better quality seed.
-  const SpacePoint& m_sp;   // external space point
+  std::reference_wrapper<const SpacePoint> m_sp;  // external space point
 };
 
 /////////////////////////////////////////////////////////////////////////////////
