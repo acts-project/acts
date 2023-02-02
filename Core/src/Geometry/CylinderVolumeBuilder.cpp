@@ -13,6 +13,7 @@
 #include "Acts/Geometry/BoundarySurfaceFace.hpp"
 #include "Acts/Geometry/CylinderLayer.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/IConfinedTrackingVolumeBuilder.hpp"
 #include "Acts/Geometry/ILayerBuilder.hpp"
 #include "Acts/Geometry/ITrackingVolumeHelper.hpp"
@@ -231,16 +232,20 @@ Acts::CylinderVolumeBuilder::trackingVolume(
 
   // (C) VOLUME CREATION ----------------------------------
   auto tvHelper = m_cfg.trackingVolumeHelper;
+
+  Extent barrelExtent;
+  barrelExtent.set(binR, wConfig.cVolumeConfig.rMin,
+                   wConfig.cVolumeConfig.rMax);
+  barrelExtent.set(binZ, wConfig.cVolumeConfig.zMin,
+                   wConfig.cVolumeConfig.zMax);
+
   // the barrel is always created
-  auto barrel =
-      wConfig.cVolumeConfig
-          ? tvHelper->createTrackingVolume(
-                gctx, wConfig.cVolumeConfig.layers,
-                wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-                wConfig.cVolumeConfig.rMin, wConfig.cVolumeConfig.rMax,
-                wConfig.cVolumeConfig.zMin, wConfig.cVolumeConfig.zMax,
-                m_cfg.volumeName + "::Barrel")
-          : nullptr;
+  auto barrel = wConfig.cVolumeConfig
+                    ? tvHelper->createTrackingVolume(
+                          gctx, wConfig.cVolumeConfig.layers,
+                          wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
+                          barrelExtent, m_cfg.volumeName + "::Barrel")
+                    : nullptr;
 
   // Helper method to check for
 
@@ -368,10 +373,13 @@ Acts::CylinderVolumeBuilder::trackingVolume(
                                          << " layers, and rmin/rmax = "
                                          << volumeRminRmax[ir].first << "/"
                                          << volumeRminRmax[ir].second);
+            Extent endcapExtent;
+            endcapExtent.set(binR, volumeRminRmax[ir].first,
+                             volumeRminRmax[ir].second);
+            endcapExtent.set(binZ, endcapConfig.zMin, endcapConfig.zMax);
             endcapContainer.push_back(tvHelper->createTrackingVolume(
                 gctx, rLayers, centralConfig.volumes, m_cfg.volumeMaterial,
-                volumeRminRmax[ir].first, volumeRminRmax[ir].second,
-                endcapConfig.zMin, endcapConfig.zMax,
+                endcapExtent,
                 m_cfg.volumeName + endcapName + std::string("::Ring") +
                     std::to_string(ir)));
             ++ir;
@@ -387,11 +395,14 @@ Acts::CylinderVolumeBuilder::trackingVolume(
       }
     }
 
+    Extent endcapExtent;
+    endcapExtent.set(binR, endcapConfig.rMin, endcapConfig.rMax);
+    endcapExtent.set(binZ, endcapConfig.zMin, endcapConfig.zMax);
+
     // No ring layout - return single volume
     return tvHelper->createTrackingVolume(
         gctx, endcapConfig.layers, centralConfig.volumes, m_cfg.volumeMaterial,
-        endcapConfig.rMin, endcapConfig.rMax, endcapConfig.zMin,
-        endcapConfig.zMax, m_cfg.volumeName + endcapName);
+        endcapExtent, m_cfg.volumeName + endcapName);
   };
 
   // The negative endcap is created if present
@@ -474,22 +485,28 @@ Acts::CylinderVolumeBuilder::trackingVolume(
     std::vector<TrackingVolumePtr> existingContainer;
     if (wConfig.fGapVolumeConfig) {
       // create the gap volume
+      Extent fGapExtent;
+      fGapExtent.set(binR, wConfig.fGapVolumeConfig.rMin,
+                     wConfig.fGapVolumeConfig.rMax);
+      fGapExtent.set(binZ, wConfig.fGapVolumeConfig.zMin,
+                     wConfig.fGapVolumeConfig.zMax);
       auto fGap = tvHelper->createGapTrackingVolume(
-          gctx, wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-          wConfig.fGapVolumeConfig.rMin, wConfig.fGapVolumeConfig.rMax,
-          wConfig.fGapVolumeConfig.zMin, wConfig.fGapVolumeConfig.zMax, 1,
-          false, m_cfg.volumeName + "::fGap");
+          gctx, wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial, fGapExtent,
+          1, Surface::SurfaceType::Disc, m_cfg.volumeName + "::fGap");
       // push it back into the list
       existingContainer.push_back(fGap);
     }
     existingContainer.push_back(existingVolumeCp);
     if (wConfig.sGapVolumeConfig) {
       // create the gap volume
+      Extent sGapExtent;
+      sGapExtent.set(binR, wConfig.sGapVolumeConfig.rMin,
+                     wConfig.sGapVolumeConfig.rMax);
+      sGapExtent.set(binZ, wConfig.sGapVolumeConfig.zMin,
+                     wConfig.sGapVolumeConfig.zMax);
       auto sGap = tvHelper->createGapTrackingVolume(
-          gctx, wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial,
-          wConfig.sGapVolumeConfig.rMin, wConfig.sGapVolumeConfig.rMax,
-          wConfig.sGapVolumeConfig.zMin, wConfig.sGapVolumeConfig.zMax, 1,
-          false, m_cfg.volumeName + "::sGap");
+          gctx, wConfig.cVolumeConfig.volumes, m_cfg.volumeMaterial, sGapExtent,
+          1, Surface::SurfaceType::Disc, m_cfg.volumeName + "::sGap");
       // push it back into the list
       existingContainer.push_back(sGap);
     }

@@ -174,6 +174,13 @@ class Extent {
     return 0.5 * (m_range[bValue].min() + m_range[bValue].max());
   }
 
+  /// Access the range span
+  ///
+  /// @param bValue the binning identification
+  ActsScalar span(BinningValue bValue) const {
+    return (m_range[bValue].max() - m_range[bValue].min());
+  }
+
   /// Contains check
   ///
   /// @param rhs the extent that is check if it is contained

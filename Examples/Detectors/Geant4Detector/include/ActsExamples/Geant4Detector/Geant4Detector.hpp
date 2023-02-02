@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 
 #include <memory>
 #include <tuple>
@@ -37,6 +38,8 @@ struct Geant4Detector {
     const G4VPhysicalVolume* g4World = nullptr;
     /// The Converter options: detector surfaces
     Acts::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
+    /// The KDTree binning
+    std::vector<Acts::BinningValue> kdtBinning = {Acts::binZ, Acts::binR};
     /// The corresponding ProtoDetector
     Acts::ProtoDetector protoDetector;
     /// Logging level of the child tools

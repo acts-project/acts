@@ -505,4 +505,83 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
   BOOST_CHECK(isEqual(world, worldIn, 0.1));
 }
 
+BOOST_AUTO_TEST_CASE(ProtoDetectorTelescope) {
+  Acts::ExtentEnvelope planeLayerEnvelope = zeroEnvelopes;
+  planeLayerEnvelope[Acts::binX] = {1., 1.};
+  planeLayerEnvelope[Acts::binY] = {1., 1.};
+
+  Acts::ActsScalar trackerT = 200.;
+
+  Acts::ProtoVolume tracker;
+  tracker.name = "na60-tracker";
+  tracker.extent.set(Acts::binZ, -10700., 11000);
+  tracker.extent.set(Acts::binY, -trackerT, trackerT);
+  tracker.extent.set(Acts::binX, -trackerT, trackerT);
+
+  Acts::ProtoVolume trackerL4;
+  trackerL4.name = "na60-tracker-l4";
+  trackerL4.extent.set(Acts::binZ, -385., -380.);
+  trackerL4.extent.set(Acts::binY, -trackerT, trackerT);
+  trackerL4.extent.set(Acts::binX, -trackerT, trackerT);
+
+  Acts::ProtoVolume trackerL3;
+  trackerL3.name = "na60-tracker-l3";
+  trackerL3.extent.set(Acts::binZ, -255., -250.);
+  trackerL3.extent.set(Acts::binY, -trackerT, trackerT);
+  trackerL3.extent.set(Acts::binX, -trackerT, trackerT);
+
+  Acts::ProtoVolume trackerL2;
+  trackerL2.name = "na60-tracker-l2";
+  trackerL2.extent.set(Acts::binZ, -205., -200.);
+  trackerL2.extent.set(Acts::binY, -trackerT, trackerT);
+  trackerL2.extent.set(Acts::binX, -trackerT, trackerT);
+
+  Acts::ProtoVolume trackerL1;
+  trackerL1.name = "na60-tracker-l1";
+  trackerL1.extent.set(Acts::binZ, -155., 150.);
+  trackerL1.extent.set(Acts::binY, -trackerT, trackerT);
+  trackerL1.extent.set(Acts::binX, -trackerT, trackerT);
+
+  Acts::ProtoVolume trackerL0;
+  trackerL0.name = "na60-tracker-l0";
+  trackerL0.extent.set(Acts::binZ, -75., -70.);
+  trackerL0.extent.set(Acts::binY, -trackerT, trackerT);
+  trackerL0.extent.set(Acts::binX, -trackerT, trackerT);
+
+  tracker.container = Acts::ProtoVolume::ContainerStructure{
+      {trackerL4, trackerL3, trackerL2, trackerL2, trackerL1},
+      {Acts::BinningData(Acts::open, Acts::binZ, {0., 1})},
+      true};
+
+  for (auto& cv : tracker.container.value().constituentVolumes) {
+    cv.extent.setEnvelope(planeLayerEnvelope);
+    cv.internal =
+        Acts::ProtoVolume::InternalStructure{Acts::Surface::SurfaceType::Plane};
+  }
+
+  /**
+  Acts::ProtoVolume muonSystem;
+  trackerMSX.name = "na60-tracker-msx";
+  trackerMSX.extent.set(Acts::binZ, 10400., 10700.);
+  trackerMSX.extent.set(Acts::binY, -trackerT, trackerT);
+  trackerMSX.extent.set(Acts::binX, -trackerT, trackerT);
+  trackerMSX.internal = Acts::ProtoVolume::InternalStructure{
+        Acts::Surface::SurfaceType::Disc};
+    */
+
+  // ----------------------------------------------------------
+  Acts::ProtoDetector detector;
+  detector.name = "na60-plus";
+  detector.worldVolume = tracker;
+
+  // Transform into json
+  nlohmann::json jdet;
+  jdet["detector"] = detector;
+
+  std::ofstream out;
+  out.open("NA60-plus.json");
+  out << jdet.dump(4);
+  out.close();
+}
+
 BOOST_AUTO_TEST_SUITE_END()

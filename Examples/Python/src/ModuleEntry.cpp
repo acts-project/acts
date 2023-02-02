@@ -79,6 +79,7 @@ namespace Acts::Python {
 void addUnits(Context& ctx);
 void addLogging(Context& ctx);
 void addPdgParticle(Context& ctx);
+void addBinning(Context& ctrx);
 void addAlgebra(Context& ctx);
 
 void addPropagation(Context& ctx);
@@ -252,6 +253,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addUnits(ctx);
   addLogging(ctx);
   addPdgParticle(ctx);
+  addBinning(ctx);
   addAlgebra(ctx);
 
   addPropagation(ctx);

@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
+#include "Acts/Geometry/CuboidVolumeHelper.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
 #include "Acts/Geometry/Detector.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
@@ -91,10 +92,18 @@ auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
           cvhConfig,
           Acts::getDefaultLogger("CylinderVolumeHelper", cfg.logLevel));
 
+  // configure the cylinder volume helper
+  Acts::CuboidVolumeHelper::Config cuhConfig;
+  cuhConfig.layerArrayCreator = layerArrayCreator;
+  cuhConfig.trackingVolumeArrayCreator = tVolumeArrayCreator;
+  auto cuboidVolumeHelper = std::make_shared<const Acts::CuboidVolumeHelper>(
+      cuhConfig, Acts::getDefaultLogger("CuboidVolumeHelper", cfg.logLevel));
+
   // The KDT tracking geometry builder
   kdtCfg.layerCreator = layerCreator;
-  kdtCfg.trackingVolumeHelper = cylinderVolumeHelper;
+  kdtCfg.trackingVolumeHelper = cuboidVolumeHelper;  // cylinderVolumeHelper;
   kdtCfg.protoDetector = cfg.protoDetector;
+  kdtCfg.bValues = cfg.kdtBinning;
 
   auto kdtBuilder = Acts::KDTreeTrackingGeometryBuilder(
       kdtCfg,

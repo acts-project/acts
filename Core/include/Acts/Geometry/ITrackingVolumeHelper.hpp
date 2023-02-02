@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Geometry/Extent.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
 #include <memory>
@@ -76,8 +78,7 @@ class ITrackingVolumeHelper {
   /// together with the volume enevlope parameters
   /// @param volumeMaterial material properties for this TrackingVolume
   /// @param mtvVector Vector of confined TrackingVolumes
-  /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
-  /// this TrackingVolume is restricted to Translation only
+  /// @param dimension The extent of the volume to be built
   /// @param volumeName  volume name to be given
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
@@ -85,8 +86,8 @@ class ITrackingVolumeHelper {
   virtual MutableTrackingVolumePtr createTrackingVolume(
       const GeometryContext& gctx, const LayerVector& layers,
       MutableTrackingVolumeVector mtvVector,
-      std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
-      double loc0Max, double loc1Min, double loc1Max,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+      const Extent& dimension,
       const std::string& volumeName = "UndefinedVolume",
       BinningType btype = arbitrary) const = 0;
 
@@ -95,18 +96,17 @@ class ITrackingVolumeHelper {
   /// @param gctx is the geometry context for witch the volume is built
   /// @param mtvVector Vector of confined TrackingVolumes
   /// @param volumeMaterial material properties for this TrackingVolume
-  /// @param loc0Min, loc0Max, loc1Min, loc1Max : local position in space,
-  /// this TrackingVolume is restricted to Translation only
+  /// @param dimension The extent of the volume to be built
   /// @param materialLayers number of material layers (aequidistant binning)
-  /// @param cylinder type of layers
+  /// @param layerType is the type of layers to be built
   /// @param volumeName  volume name to be given
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr createGapTrackingVolume(
       const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-      std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
-      double loc0Max, double loc1Min, double loc1Max,
-      unsigned int materialLayers, bool cylinder = true,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+      const Extent& dimension, unsigned int materialLayers,
+      Surface::SurfaceType layerType = Surface::SurfaceType::Cylinder,
       const std::string& volumeName = "UndefinedVolume") const = 0;
 
   /// Create a gap volume from dimensions and
@@ -114,18 +114,18 @@ class ITrackingVolumeHelper {
   /// @param gctx is the geometry context for witch the volume is built
   /// @param mtvVector Vector of confined TrackingVolumes
   /// @param volumeMaterial material properties for this TrackingVolume
-  /// @param loc0Min, loc0Max, loc1Min, loc1Max local position in space,
+  /// @param dimension The extent of the volume to be built
   /// @param layerPositions custom layer positions
-  /// @param cylinder type of layers
+  /// @param layerType is the type of layers to be built
   /// @param volumeName  : volume name to be given
   /// @param btype (optional) BinningType - arbitrary(default) or equidistant
   ///
   /// @return shared pointer to a new TrackingVolume
   virtual MutableTrackingVolumePtr createGapTrackingVolume(
       const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-      std::shared_ptr<const IVolumeMaterial> volumeMaterial, double loc0Min,
-      double loc0Max, double loc1Min, double loc1Max,
-      const std::vector<double>& layerPositions, bool cylinder = true,
+      std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+      const Extent& dimension, const std::vector<double>& layerPositions,
+      Surface::SurfaceType layerType = Surface::SurfaceType::Cylinder,
       const std::string& volumeName = "UndefinedVolume",
       BinningType btype = arbitrary) const = 0;
 

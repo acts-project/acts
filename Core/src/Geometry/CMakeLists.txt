@@ -6,6 +6,7 @@ target_sources(
     ConeVolumeBounds.cpp
     CuboidVolumeBounds.cpp
     CuboidVolumeBuilder.cpp
+    CuboidVolumeHelper.cpp
     CutoutCylinderVolumeBounds.cpp
     CylinderLayer.cpp
     CylinderVolumeBounds.cpp

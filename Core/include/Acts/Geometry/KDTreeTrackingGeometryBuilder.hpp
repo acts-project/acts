@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Geometry/Extent.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
@@ -16,6 +17,7 @@
 
 #include <array>
 #include <memory>
+#include <optional>
 
 namespace Acts {
 
@@ -42,6 +44,10 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
     std::vector<std::shared_ptr<Surface>> surfaces = {};
     /// The proto tracking geometry description
     ProtoDetector protoDetector;
+    /// KDTree binnig setup
+    std::vector<BinningValue> bValues = {binR, binZ};
+    /// The way the surfaces are measured
+    bool polyhedronMeasurement = true;
     /// Optional geometry identfier hook to be used during closure
     /// @note Will be @b copied when calling the geometry building
     GeometryIdentifierHook geometryIdentifierHook;
@@ -49,8 +55,23 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
     std::string hierarchyIndent = "  ";
   };
 
-  using SurfaceKDT =
+  /// The possible KDTrees: 1-dim
+  using SurfaceKDT1 =
+      KDTree<1u, std::shared_ptr<Surface>, ActsScalar, std::array, 100>;
+
+  /// The possible KDTrees: 2-dim
+  using SurfaceKDT2 =
       KDTree<2u, std::shared_ptr<Surface>, ActsScalar, std::array, 100>;
+
+  /// The possible KDTrees: 3-dim
+  using SurfaceKDT3 =
+      KDTree<3u, std::shared_ptr<Surface>, ActsScalar, std::array, 100>;
+
+  struct SurfaceKDT {
+    std::optional<SurfaceKDT1> kdt1;
+    std::optional<SurfaceKDT2> kdt2;
+    std::optional<SurfaceKDT3> kdt3;
+  };
 
   /// Constructor
   ///
@@ -101,13 +122,14 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
   ///
   /// @param cCache is a cache used to extract the built detector elements
   /// @param gctx is the current geometry context at building
-  /// @param kdt is the pre-filled kdt tree for the surface query
+  /// @param layerSurfaces is the already retrived surfaces from the kd tree
   /// @param plVolume the proto volume representaion a layer to be translated
   /// @param indent is a screen output indentation
   ///
   /// @return a new tracking volume
   std::shared_ptr<const Layer> translateLayer(
-      Cache& cCache, const GeometryContext& gctx, const SurfaceKDT& kdt,
+      Cache& cCache, const GeometryContext& gctx,
+      const std::vector<std::shared_ptr<const Surface>>& layerSurfaces,
       const ProtoVolume& plVolume, const std::string& indent = "") const;
 };
 

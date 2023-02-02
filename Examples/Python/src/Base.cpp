@@ -9,6 +9,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
+#include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/PdgParticle.hpp"
 
@@ -206,6 +207,16 @@ void addLogging(Acts::Python::Context& ctx) {
   logging.def("warning", makeModuleLogFunction(Acts::Logging::WARNING));
   logging.def("error", makeModuleLogFunction(Acts::Logging::ERROR));
   logging.def("fatal", makeModuleLogFunction(Acts::Logging::FATAL));
+}
+
+void addBinning(Acts::Python::Context& ctx) {
+  auto& m = ctx.get("main");
+  py::enum_<Acts::BinningValue>(m, "BinningValue")
+      .value("binX", Acts::binX)
+      .value("binY", Acts::binY)
+      .value("binZ", Acts::binZ)
+      .value("binR", Acts::binR)
+      .value("binPhi", Acts::binPhi);
 }
 
 void addPdgParticle(Acts::Python::Context& ctx) {

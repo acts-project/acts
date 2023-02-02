@@ -161,9 +161,18 @@ std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createTrackingVolume(
     const GeometryContext& gctx, const LayerVector& layers,
     MutableTrackingVolumeVector mtvVector,
-    std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-    double rMax, double zMin, double zMax, const std::string& volumeName,
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    const Extent& dimension, const std::string& volumeName,
     BinningType bType) const {
+  // Check and retrieve primary values
+  if (not dimension.constrains(binR) and not dimension.constrains(binZ)) {
+    throw std::invalid_argument(
+        "CylinderVolumeHelper: extent must constrain r and z.");
+  }
+  auto rMin = dimension.min(binR);
+  auto rMax = dimension.max(binR);
+  auto zMin = dimension.min(binZ);
+  auto zMax = dimension.max(binZ);
   // The Bounds to e created
   CylinderVolumeBounds* cBounds = nullptr;
 
@@ -200,15 +209,26 @@ Acts::CylinderVolumeHelper::createTrackingVolume(
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
     const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-    std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-    double rMax, double zMin, double zMax, unsigned int materialLayers,
-    bool cylinder, const std::string& volumeName) const {
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    const Extent& dimension, unsigned int materialLayers,
+    Surface::SurfaceType layerType, const std::string& volumeName) const {
+  // Check and constrain primary values
+  if (not dimension.constrains(binR) and not dimension.constrains(binZ)) {
+    throw std::invalid_argument(
+        "CylinderVolumeHelper: extent must constrain r and z.");
+  }
+  auto rMin = dimension.min(binR);
+  auto rMax = dimension.max(binR);
+  auto zMin = dimension.min(binZ);
+  auto zMax = dimension.max(binZ);
+
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
   ACTS_VERBOSE('\t' << rMin << " / " << rMax << " / " << zMin << " / " << zMax);
 
   // assing min/max
+  bool cylinder = layerType == Surface::SurfaceType::Cylinder;
   double min = cylinder ? rMin : zMin;
   double max = cylinder ? rMax : zMax;
 
@@ -224,19 +244,29 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
     layerPositions.push_back(0.5 * (min + max));
   }
 
-  // now call the main method
-  return createGapTrackingVolume(gctx, mtvVector, volumeMaterial, rMin, rMax,
-                                 zMin, zMax, layerPositions, cylinder,
-                                 volumeName, arbitrary);
+  // Now call the main method
+  return createGapTrackingVolume(gctx, mtvVector, volumeMaterial, dimension,
+                                 layerPositions, layerType, volumeName,
+                                 arbitrary);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
 Acts::CylinderVolumeHelper::createGapTrackingVolume(
     const GeometryContext& gctx, MutableTrackingVolumeVector& mtvVector,
-    std::shared_ptr<const IVolumeMaterial> volumeMaterial, double rMin,
-    double rMax, double zMin, double zMax,
-    const std::vector<double>& layerPositions, bool cylinder,
-    const std::string& volumeName, BinningType bType) const {
+    std::shared_ptr<const IVolumeMaterial> volumeMaterial,
+    const Extent& dimension, const std::vector<double>& layerPositions,
+    Surface::SurfaceType layerType, const std::string& volumeName,
+    BinningType bType) const {
+  // Check and constrain primary values
+  if (not dimension.constrains(binR) and not dimension.constrains(binZ)) {
+    throw std::invalid_argument(
+        "CylinderVolumeHelper: extent must constrain r and z.");
+  }
+  auto rMin = dimension.min(binR);
+  auto rMax = dimension.max(binR);
+  auto zMin = dimension.min(binZ);
+  auto zMax = dimension.max(binZ);
+
   // screen output
   ACTS_VERBOSE("Create cylindrical gap TrackingVolume '"
                << volumeName << "' with (rMin/rMax/zMin/Max) = ");
@@ -250,7 +280,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
   std::vector<double>::const_iterator layerPropEnd = layerPositions.end();
   for (; layerPropIter != layerPropEnd; ++layerPropIter) {
     // create cylinder layers
-    if (cylinder) {
+    if (layerType == Surface::SurfaceType::Cylinder) {
       // take envelopes into account
       double zMinLayer = zMin;
       double zMaxLayer = zMax;
@@ -260,7 +290,7 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
           std::abs(0.5 * (zMaxLayer - zMinLayer)), m_cfg.passiveLayerThickness,
           m_cfg.passiveLayerPhiBins, m_cfg.passiveLayerRzBins));
 
-    } else {
+    } else if (layerType == Surface::SurfaceType::Disc) {
       // take the envelopes into account
       double rMinLayer = rMin;
       double rMaxLayer = rMax;
@@ -268,11 +298,14 @@ Acts::CylinderVolumeHelper::createGapTrackingVolume(
       layers.push_back(createDiscLayer(
           (*layerPropIter), rMinLayer, rMaxLayer, m_cfg.passiveLayerThickness,
           m_cfg.passiveLayerPhiBins, m_cfg.passiveLayerRzBins));
+    } else {
+      throw std::runtime_error(
+          "CylinderVolumeHelper: Layer type must be cylinder or disc.");
     }
   }
   // now call the createTrackingVolume() method
-  return createTrackingVolume(gctx, layers, mtvVector, volumeMaterial, rMin,
-                              rMax, zMin, zMax, volumeName, bType);
+  return createTrackingVolume(gctx, layers, mtvVector, volumeMaterial,
+                              dimension, volumeName, bType);
 }
 
 std::shared_ptr<Acts::TrackingVolume>
