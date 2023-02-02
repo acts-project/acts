@@ -26,12 +26,14 @@ using BetheHeitlerApprox = Acts::Experimental::AtlasBetheHeitlerApprox<6, 5>;
 /// @param abortOnError wether to call std::abort on an error
 /// @param disableAllMaterialHandling run the GSF like a KF (no energy loss,
 /// always 1 component, ...)
+/// @param logger a logger instance
 std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
     double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
-    bool abortOnError, bool disableAllMaterialHandling);
+    bool abortOnError, bool disableAllMaterialHandling,
+    const Acts::Logger& logger);
 
 }  // namespace ActsExamples

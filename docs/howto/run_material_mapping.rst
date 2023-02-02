@@ -87,6 +87,42 @@ Then edit the config-map.json file
 
    $ python3 <source>/Examples/Scripts/MaterialMapping/configureMap.py geometry-map.json config-map.json
 
+Geometry visualisation and preparation of JSON files
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+To help you visualising the geometry and understand the hierarchical structure of volumes and layers, a script has been provided: ``Examples/scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py``. The documentation of the module can be printed using:
+
+.. code-block:: console
+
+   $ python3 <source>/Examples/Scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py --help
+
+The first thing you can do, is to visualise your geometry with:
+
+.. code-block:: console
+
+   $ python3 <source>/Examples/Scripts/MaterialMapping/GeometryVisualisationAndMaterialHandling.py --geometry <source>/thirdparty/OpenDataDetector/config/odd-material-mapping-config.json
+
+This command produces a series of plots in the output folder ``plot``, or set a different name using ``--output_folder``.
+
+The picture ``volumes_and_layers.png`` show you the volumes and all layers constructed in them:
+
+.. image:: /figures/materialMapping/volumes_and_layers.png
+
+For each volume containing layers, another picture is produced to show the representative layers (without ``approach`` index) and highlight the ones with ``approach`` index. The picture below show layers for one of the ODD volumes. Knowledge of the approach layers is needed to select the lyers you want the material to be mapped onto.
+
+.. image:: /figures/materialMapping/layers_for_volume_17.png
+
+The totality of representative and approach layers is shown in a separate picture ``approach_layers.png``.
+
+.. image:: /figures/materialMapping/approach_layers.png
+
+Additionally, another picture is produced to visualise boundaries of volumes containing layers.
+
+.. image:: /figures/materialMapping/boundaries.png
+
+The same script can be used to dump a steering file that can help you selecting boundaries and approach layers you want the material to be mapped onto, using ``--dump_steering``. At this point you have to edit the steering file which has to contain **ONLY** the structures on which you want to map the material. Once this is done, you can read the steering file with the same python module to produce the final material map file to run material mapping. This is done enabling ``--edit``. At the end of the process, another plot is produced to visualise and validate the structures that will be selected in the mapping procedure to carry material.
+
+
 Geantino scan
 -------------
 
