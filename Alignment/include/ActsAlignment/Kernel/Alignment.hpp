@@ -43,7 +43,6 @@ struct AlignmentOptions {
   /// AlignmentOptions
   ///
   /// @param fOptions The fit options
-  /// @param logger_ The logger wrapper
   /// @param aTransformUpdater The updater to update aligned transform
   /// @param aDetElements The alignable detector elements
   /// @param chi2CufOff The alignment chi2 tolerance
@@ -53,7 +52,6 @@ struct AlignmentOptions {
   AlignmentOptions(
       const fit_options_t& fOptions,
       const AlignedTransformUpdater& aTransformUpdater,
-      Acts::LoggerWrapper logger_,
       const std::vector<Acts::DetectorElementBase*>& aDetElements = {},
       double chi2CutOff = 0.5,
       const std::pair<size_t, double>& deltaChi2CutOff = {5, 0.01},
@@ -65,8 +63,7 @@ struct AlignmentOptions {
         averageChi2ONdfCutOff(chi2CutOff),
         deltaAverageChi2ONdfCutOff(deltaChi2CutOff),
         maxIterations(maxIters),
-        iterationState(iterState),
-        logger(logger_) {}
+        iterationState(iterState) {}
 
   // The fit options
   fit_options_t fitOptions;
@@ -89,9 +86,6 @@ struct AlignmentOptions {
 
   // The alignment mask for different iterations
   std::map<unsigned int, AlignmentMask> iterationState;
-
-  /// Logger
-  Acts::LoggerWrapper logger;
 };
 
 /// @brief Alignment result struct
@@ -142,7 +136,10 @@ struct Alignment {
   Alignment() = delete;
 
   /// Constructor from arguments
-  Alignment(fitter_t fitter) : m_fitter(std::move(fitter)) {}
+  Alignment(fitter_t fitter,
+            std::unique_ptr<const Acts::Logger> _logger =
+                Acts::getDefaultLogger("Alignment", Acts::Logging::INFO))
+      : m_fitter(std::move(fitter)), m_logger{std::move(_logger)} {}
 
   /// @brief evaluate alignment state for a single track
   ///
@@ -168,8 +165,7 @@ struct Alignment {
       const start_parameters_t& sParameters, const fit_options_t& fitOptions,
       const std::unordered_map<const Acts::Surface*, size_t>&
           idxedAlignSurfaces,
-      const AlignmentMask& alignMask,
-      Acts::LoggerWrapper logger = Acts::getDummyLogger()) const;
+      const AlignmentMask& alignMask) const;
 
   /// @brief calculate the alignment parameters delta
   ///
@@ -190,8 +186,7 @@ struct Alignment {
       const trajectory_container_t& trajectoryCollection,
       const start_parameters_container_t& startParametersCollection,
       const fit_options_t& fitOptions, AlignmentResult& alignResult,
-      const AlignmentMask& alignMask = AlignmentMask::All,
-      Acts::LoggerWrapper logger = Acts::getDummyLogger()) const;
+      const AlignmentMask& alignMask = AlignmentMask::All) const;
 
   /// @brief update the detector element alignment parameters
   ///
@@ -203,8 +198,7 @@ struct Alignment {
       const Acts::GeometryContext& gctx,
       const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
       const AlignedTransformUpdater& alignedTransformUpdater,
-      AlignmentResult& alignResult,
-      Acts::LoggerWrapper logger = Acts::getDummyLogger()) const;
+      AlignmentResult& alignResult) const;
 
   /// @brief Alignment implementation
   ///
@@ -229,6 +223,10 @@ struct Alignment {
  private:
   // The fitter
   fitter_t m_fitter;
+
+  std::unique_ptr<const Acts::Logger> m_logger;
+
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 }  // namespace ActsAlignment
 

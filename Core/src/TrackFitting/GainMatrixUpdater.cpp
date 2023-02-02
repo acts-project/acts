@@ -20,7 +20,7 @@ namespace Acts {
 
 std::tuple<double, std::error_code> GainMatrixUpdater::visitMeasurement(
     InternalTrackState trackState, NavigationDirection direction,
-    LoggerWrapper logger) const {
+    const Logger& logger) const {
   // default-constructed error represents success, i.e. an invalid error code
   std::error_code error;
   double chi2 = 0;

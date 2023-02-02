@@ -74,13 +74,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   // fit-function-object
   ActsExamples::MeasurementCalibrator calibrator(measurements);
 
-  GeneralFitterOptions options{ctx.geoContext,
-                               ctx.magFieldContext,
-                               ctx.calibContext,
-                               calibrator,
-                               &(*pSurface),
-                               Acts::LoggerWrapper{logger()},
-                               Acts::PropagatorPlainOptions()};
+  GeneralFitterOptions options{
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+      calibrator,     pSurface.get(),      Acts::PropagatorPlainOptions()};
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
