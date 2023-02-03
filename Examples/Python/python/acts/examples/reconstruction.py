@@ -798,6 +798,7 @@ def addTruthTrackingGsf(
         "disableAllMaterialHandling": False,
         "finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
         "weightCutoff": 1.0e-4,
+        "level": customLogLevel(),
     }
 
     gsfAlg = acts.examples.TrackFittingAlgorithm(
@@ -1016,7 +1017,7 @@ def addTrajectoryWriters(
         if not outputDirCsv.exists():
             outputDirCsv.mkdir()
 
-        if trackSummaryWriter:
+        if writeSummary:
             csvMTJWriter = acts.examples.CsvMultiTrajectoryWriter(
                 level=customLogLevel(),
                 inputTrajectories=trajectories,
