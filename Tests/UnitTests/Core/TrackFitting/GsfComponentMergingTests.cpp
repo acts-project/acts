@@ -32,7 +32,7 @@ template <int D>
 struct DummyComponent {
   Acts::ActsScalar weight = 0;
   Acts::ActsVector<D> boundPars;
-  std::optional<Acts::ActsSymMatrix<D>> boundCov;
+  Acts::ActsSymMatrix<D> boundCov;
 };
 
 // A Multivariate distribution object working in the same way as the
@@ -72,7 +72,7 @@ auto sampleFromMultivariate(const std::vector<DummyComponent<D>> &cmps,
   std::vector<MultiNormal> dists;
   std::vector<double> weights;
   for (const auto &cmp : cmps) {
-    dists.push_back(MultiNormal(cmp.boundPars, *cmp.boundCov));
+    dists.push_back(MultiNormal(cmp.boundPars, cmp.boundCov));
     weights.push_back(cmp.weight);
   }
 
@@ -205,6 +205,9 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
               detail::wrap_periodic(phi + dphi, -M_PI, 2 * M_PI);
           a.boundPars[eBoundTheta] = theta + dtheta;
 
+          // We don't look at covariance in this test
+          a.boundCov = BoundSymMatrix::Zero();
+
           cmps.push_back(a);
           ++p_it;
         }
@@ -212,9 +215,6 @@ void test_surface(const Surface &surface, const angle_description_t &desc,
 
       const auto [mean_approx, cov_approx] =
           detail::combineGaussianMixture(cmps, proj, desc);
-
-      // We don't have a boundCovariance in this test
-      BOOST_CHECK(not cov_approx);
 
       const auto mean_ref = meanFromFree(cmps, surface);
 
@@ -228,13 +228,11 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
   std::vector<DummyComponent<2>> cmps(2);
 
   cmps[0].boundPars << 1.0, 1.0;
-  cmps[0].boundCov = ActsSymMatrix<2>::Zero();
-  *cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
+  cmps[0].boundCov << 1.0, 0.0, 0.0, 1.0;
   cmps[0].weight = 0.5;
 
   cmps[1].boundPars << -2.0, -2.0;
-  cmps[1].boundCov = ActsSymMatrix<2>::Zero();
-  *cmps[1].boundCov << 1.0, 1.0, 1.0, 2.0;
+  cmps[1].boundCov << 1.0, 1.0, 1.0, 2.0;
   cmps[1].weight = 0.5;
 
   const auto samples = sampleFromMultivariate(cmps, 10000, gen);
@@ -245,7 +243,7 @@ BOOST_AUTO_TEST_CASE(test_with_data) {
       detail::combineGaussianMixture(cmps, Identity{}, std::tuple<>{});
 
   CHECK_CLOSE_MATRIX(mean_data, mean_test, 1.e-1);
-  CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
+  CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_with_data_circular) {
@@ -253,13 +251,11 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
   std::vector<DummyComponent<2>> cmps(2);
 
   cmps[0].boundPars << 175_degree, 5_degree;
-  cmps[0].boundCov = ActsSymMatrix<2>::Zero();
-  *cmps[0].boundCov << 20_degree, 0.0, 0.0, 20_degree;
+  cmps[0].boundCov << 20_degree, 0.0, 0.0, 20_degree;
   cmps[0].weight = 0.5;
 
   cmps[1].boundPars << -175_degree, -5_degree;
-  cmps[1].boundCov = ActsSymMatrix<2>::Zero();
-  *cmps[1].boundCov << 20_degree, 20_degree, 20_degree, 40_degree;
+  cmps[1].boundCov << 20_degree, 20_degree, 20_degree, 40_degree;
   cmps[1].weight = 0.5;
 
   const auto samples = sampleFromMultivariate(cmps, 10000, gen);
@@ -281,7 +277,7 @@ BOOST_AUTO_TEST_CASE(test_with_data_circular) {
                                                    2 * M_PI)) < 1.e-1);
   BOOST_CHECK(std::abs(detail::difference_periodic(mean_data[1], mean_test[1],
                                                    2 * M_PI)) < 1.e-1);
-  CHECK_CLOSE_MATRIX(boundCov_data, *boundCov_test, 1.e-1);
+  CHECK_CLOSE_MATRIX(boundCov_data, boundCov_test, 1.e-1);
 }
 
 BOOST_AUTO_TEST_CASE(test_plane_surface) {

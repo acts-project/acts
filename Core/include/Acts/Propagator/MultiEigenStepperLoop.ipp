@@ -28,7 +28,7 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     return SingleStepper::boundState(cmpIt->state, surface, transportCov,
                                      freeToBoundCorrection);
   } else {
-    SmallVector<std::pair<double, BoundTrackParameters>> states;
+    SmallVector<std::tuple<double, BoundVector, BoundSymMatrix>> states;
     double accumulatedPathLength = 0.0;
     int failedBoundTransforms = 0;
 
@@ -37,8 +37,10 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
                                           transportCov, freeToBoundCorrection);
 
       if (bs.ok()) {
-        states.push_back(
-            {state.components[i].weight, std::get<BoundTrackParameters>(*bs)});
+        const auto& btp = std::get<BoundTrackParameters>(*bs);
+        states.emplace_back(
+            state.components[i].weight, btp.parameters(),
+            btp.covariance().value_or(Acts::BoundSymMatrix::Zero()));
         accumulatedPathLength +=
             std::get<double>(*bs) * state.components[i].weight;
       } else {
@@ -54,17 +56,14 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
       return MultiStepperError::SomeComponentsConversionToBoundFailed;
     }
 
-    const auto proj = [&](const auto& wbs) {
-      return std::tie(wbs.first, wbs.second.parameters(),
-                      wbs.second.covariance());
-    };
-
     auto [params, cov] =
         detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-          return detail::combineGaussianMixture(states, proj, desc);
+          return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
         });
 
-    return BoundState{BoundTrackParameters(surface.getSharedPtr(), params, cov),
+    using Opt = std::optional<BoundSymMatrix>;
+    return BoundState{BoundTrackParameters(surface.getSharedPtr(), params,
+                                           transportCov ? Opt{cov} : Opt{}),
                       Jacobian::Zero(), accumulatedPathLength};
   }
 }
@@ -104,8 +103,11 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
       pathLenth += state.components[i].weight * pathLenth;
     }
 
-    return CurvilinearState{CurvilinearTrackParameters(pos4, dir, qop, cov),
-                            Jacobian::Zero(), pathLenth};
+    using Opt = std::optional<BoundSymMatrix>;
+    return CurvilinearState{
+        CurvilinearTrackParameters(pos4, dir, qop,
+                                   transportCov ? Opt{cov} : Opt{}),
+        Jacobian::Zero(), pathLenth};
   }
 }
 
