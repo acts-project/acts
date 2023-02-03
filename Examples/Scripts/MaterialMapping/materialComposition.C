@@ -60,17 +60,6 @@ struct MaterialHistograms {
                              M_PI, 0., 5.);
   }
 
-  // yes we might leak memory here but this would break copy (and potentially
-  // move) and I dont want to implement them
-  /*
-  ~MaterialHistograms() {
-    delete x0_vs_eta;
-    delete l0_vs_eta;
-    delete x0_vs_phi;
-    delete l0_vs_phi;
-  }
-  */
-
   /// This fills the event into the histograms
   /// and clears the cache accordingly
   ///
