@@ -113,20 +113,21 @@ Acts::Geant4ShapeConverter::rectangleBounds(const G4Box& g4Box) {
   std::size_t minPos = std::distance(hG4XYZ.begin(), minAt);
   ActsScalar thickness = 2. * hG4XYZ[minPos];
 
+  // Axes are always with offset of 1 in order to detect sign
   std::array<int, 2u> rAxes = {};
   switch (minPos) {
     case 0: {
-      rAxes = {1, 2};
+      rAxes = {2, 3};
     } break;
     case 1: {
       if (keepAxisOrder) {
-        rAxes = {0, -2};  // flip for right-handed
+        rAxes = {1, -3};  // flip for right-handed
       } else {
-        rAxes = {2, 0};  // cylcic positive
+        rAxes = {3, 1};  // cylcic positive
       }
     } break;
     case 2: {
-      rAxes = {0, 1};
+      rAxes = {1, 2};
     } break;
   }
   auto rBounds = std::make_shared<RectangleBounds>(hG4XYZ[std::abs(rAxes[0u])],
@@ -155,31 +156,32 @@ Acts::Geant4ShapeConverter::trapezoidBounds(const G4Trd& g4Trd) {
   ActsScalar halfLengthXmaxY = 0.;
   ActsScalar halfLengthY = 0.;
 
+  // Axes have an offset of 0 in order to detect sign flips
   std::array<int, 2u> rAxes = {};
   switch (minPos) {
     case 0: {
       halfLengthXminY = hlY0;
       halfLengthXmaxY = hlY1;
       halfLengthY = hlZ;
-      rAxes = {1, 2};
+      rAxes = {2, 3};
     } break;
     case 1: {
       halfLengthXminY = hlX0;
       halfLengthXmaxY = hlX1;
       halfLengthY = hlZ;
-      rAxes = {0, -2};
+      rAxes = {-1, 3};
     } break;
     case 2: {
       if (std::abs(hlY0 - hlY1) < std::abs(hlX0 - hlX1)) {
         halfLengthXminY = hlX0;
         halfLengthXmaxY = hlX1;
         halfLengthY = (hlY0 + hlY1) * 0.5;
-        rAxes = {0, 1};
+        rAxes = {1, 2};
       } else {
         halfLengthXminY = hlY0;
         halfLengthXmaxY = hlY1;
         halfLengthY = (hlX0 + hlX1) * 0.5;
-        rAxes = {-1, 0};
+        rAxes = {-2, 1};
       }
     } break;
   }
@@ -214,8 +216,9 @@ namespace {
 Acts::Transform3 axesOriented(const Acts::Transform3& toGlobalOriginal,
                               const std::array<int, 2u>& axes) {
   auto originalRotation = toGlobalOriginal.rotation();
-  auto colX = originalRotation.col(std::abs(axes[0u]));
-  auto colY = originalRotation.col(std::abs(axes[1u]));
+  // Axes have an offset in order to detect sign flips
+  auto colX = originalRotation.col(std::abs(axes[0u]) - 1u);
+  auto colY = originalRotation.col(std::abs(axes[1u]) - 1u);
   colX *= std::copysign(1, axes[0u]);
   colY *= std::copysign(1, axes[1u]);
   Acts::Vector3 colZ = colX.cross(colY);

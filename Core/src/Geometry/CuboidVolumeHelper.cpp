@@ -285,6 +285,8 @@ std::shared_ptr<Acts::TrackingVolume>
 Acts::CuboidVolumeHelper::createContainerTrackingVolume(
     const GeometryContext& /*gctx*/,
     const TrackingVolumeVector& volumes) const {
+  std::string containerName = "Container: | ";
+
   // Find out the binning direction through last and first volume
   const Vector3 firstPosition = volumes.front()->center();
   const Vector3 lastPosition = volumes.back()->center();
@@ -321,8 +323,13 @@ Acts::CuboidVolumeHelper::createContainerTrackingVolume(
   std::shared_ptr<TrackingVolume> lastVolume = nullptr;
   ActsScalar lastArea = 0.;
 
+  // The end plates
+  std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> plate0 = nullptr;
+  std::shared_ptr<const BoundarySurfaceT<TrackingVolume>> plate1 = nullptr;
+
   std::vector<std::pair<std::shared_ptr<const TrackingVolume>, Vector3>> taps;
   for (auto [iv, v] : enumerate(volumes)) {
+    containerName += v->volumeName() + std::string(" | ");
     // Get the overall bound values
     auto boundValues = v->volumeBounds().values();
     if (v->volumeBounds().type() != VolumeBounds::BoundsType::eCuboid) {
@@ -334,7 +341,9 @@ Acts::CuboidVolumeHelper::createContainerTrackingVolume(
     if (iv == 0) {
       binStart -= boundValues[bValue];
       binSteps.push_back(static_cast<float>(binStart));
+      plate0 = v->boundarySurfaces()[glueFaces[0u]];
     }
+    plate1 = v->boundarySurfaces()[glueFaces[1u]];
 
     for (auto [ibv, bv] : enumerate(boundValues)) {
       maxHalfs[ibv] = std::max(maxHalfs[ibv], bv);
@@ -374,6 +383,12 @@ Acts::CuboidVolumeHelper::createContainerTrackingVolume(
   using ConfinedVolumes = BinnedArrayXD<std::shared_ptr<const TrackingVolume>>;
   auto cVolumes = std::make_shared<ConfinedVolumes>(taps, std::move(cBinning));
 
-  return TrackingVolume::create(Transform3(cTranslation), cBounds, cVolumes,
-                                "Container");
+  auto container = TrackingVolume::create(Transform3(cTranslation), cBounds,
+                                          cVolumes, containerName);
+
+  // Set the end plate surfaces - guarantees attaching in this direction only
+  container->updateBoundarySurface(glueFaces[0u], plate0);
+  container->updateBoundarySurface(glueFaces[1u], plate1);
+
+  return container;
 }

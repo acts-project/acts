@@ -506,17 +506,26 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorRoundTrip) {
 }
 
 BOOST_AUTO_TEST_CASE(ProtoDetectorTelescope) {
+  // The planar layer envelope
   Acts::ExtentEnvelope planeLayerEnvelope = zeroEnvelopes;
   planeLayerEnvelope[Acts::binX] = {1., 1.};
   planeLayerEnvelope[Acts::binY] = {1., 1.};
+  planeLayerEnvelope[Acts::binZ] = {1., 1.};
+
+  // The disc layer envelope
+  Acts::ExtentEnvelope discLayerEnvelope = zeroEnvelopes;
+  discLayerEnvelope[Acts::binR] = {1., 1.};
+  discLayerEnvelope[Acts::binZ] = {1., 1.};
 
   Acts::ActsScalar trackerT = 200.;
+  Acts::ActsScalar trackerMinZ = -500.;
+  Acts::ActsScalar trackerMaxZ = 500.;
 
   Acts::ProtoVolume tracker;
   tracker.name = "na60-tracker";
-  tracker.extent.set(Acts::binZ, -10700., 11000);
   tracker.extent.set(Acts::binY, -trackerT, trackerT);
   tracker.extent.set(Acts::binX, -trackerT, trackerT);
+  tracker.extent.set(Acts::binZ, trackerMinZ, trackerMaxZ);
 
   Acts::ProtoVolume trackerL4;
   trackerL4.name = "na60-tracker-l4";
@@ -559,20 +568,155 @@ BOOST_AUTO_TEST_CASE(ProtoDetectorTelescope) {
         Acts::ProtoVolume::InternalStructure{Acts::Surface::SurfaceType::Plane};
   }
 
-  /**
-  Acts::ProtoVolume muonSystem;
-  trackerMSX.name = "na60-tracker-msx";
-  trackerMSX.extent.set(Acts::binZ, 10400., 10700.);
-  trackerMSX.extent.set(Acts::binY, -trackerT, trackerT);
-  trackerMSX.extent.set(Acts::binX, -trackerT, trackerT);
-  trackerMSX.internal = Acts::ProtoVolume::InternalStructure{
-        Acts::Surface::SurfaceType::Disc};
-    */
+  Acts::ProtoVolume absorberBeOH1;
+  Acts::ActsScalar absorberBeOH1T = 250.;
+  Acts::ActsScalar absorberBeOH1MinZ = trackerMaxZ;
+  Acts::ActsScalar absorberBeOH1MaxZ = 900.;
+
+  absorberBeOH1.name = "na60-absorber-BeOH-1";
+  absorberBeOH1.extent.set(binX, -absorberBeOH1T, absorberBeOH1T);
+  absorberBeOH1.extent.set(binY, -absorberBeOH1T, absorberBeOH1T);
+  absorberBeOH1.extent.set(binZ, absorberBeOH1MinZ, absorberBeOH1MaxZ);
+
+  Acts::ProtoVolume absorberBeOH2;
+  Acts::ActsScalar absorberBeOH2T = 600.;
+  Acts::ActsScalar absorberBeOH2MinZ = absorberBeOH1MaxZ;
+  Acts::ActsScalar absorberBeOH2MaxZ = 1600.;
+  absorberBeOH2.name = "na60-absorber-BeOH-2";
+  absorberBeOH2.extent.set(binX, -absorberBeOH2T, absorberBeOH2T);
+  absorberBeOH2.extent.set(binY, -absorberBeOH2T, absorberBeOH2T);
+  absorberBeOH2.extent.set(binZ, absorberBeOH2MinZ, absorberBeOH2MaxZ);
+
+  Acts::ProtoVolume absorberC1;
+  Acts::ActsScalar absorberC1T = 1300.;
+  Acts::ActsScalar absorberC1MinZ = absorberBeOH2MaxZ;
+  Acts::ActsScalar absorberC1MaxZ = 2900.;
+  absorberC1.name = "na60-absorber-C-1";
+  absorberC1.extent.set(binX, -absorberC1T, absorberC1T);
+  absorberC1.extent.set(binY, -absorberC1T, absorberC1T);
+  absorberC1.extent.set(binZ, absorberC1MinZ, absorberC1MaxZ);
+
+  Acts::ProtoVolume muonS0;
+
+  Acts::ProtoVolume muonS0L0;
+  muonS0L0.name = "na60-muon-station-0-l0";
+  muonS0L0.extent.set(Acts::binZ, 3000., 3300.);
+
+  Acts::ProtoVolume muonS0L1;
+  muonS0L0.name = "na60-muon-station-0-l1";
+  muonS0L0.extent.set(Acts::binZ, 3300., 3600.);
+
+  muonS0.container = Acts::ProtoVolume::ContainerStructure{
+      {muonS0L0, muonS0L1},
+      {Acts::BinningData(Acts::open, Acts::binZ, {0., 1})},
+      true};
+
+  for (auto& cv : muonS0.container.value().constituentVolumes) {
+    cv.extent.setEnvelope(discLayerEnvelope);
+    cv.internal =
+        Acts::ProtoVolume::InternalStructure{Acts::Surface::SurfaceType::Disc};
+  }
+
+  Acts::ActsScalar muonT = 3000.;
+  Acts::ActsScalar muonS0MinZ = absorberC1MaxZ;
+  Acts::ActsScalar muonS0MaxZ = 3600.;
+  muonS0.name = "na60-muon-station-0";
+  muonS0.extent.set(Acts::binX, -muonT, muonT);
+  muonS0.extent.set(Acts::binY, -muonT, muonT);
+  muonS0.extent.set(Acts::binZ, muonS0MinZ, muonS0MaxZ);
+
+  Acts::ProtoVolume toroid;
+  Acts::ActsScalar toroidMinZ = muonS0MaxZ;
+  Acts::ActsScalar toroidMaxZ = 7200.;
+  toroid.name = "na60-toroid";
+  toroid.extent.set(binX, -muonT, muonT);
+  toroid.extent.set(binY, -muonT, muonT);
+  toroid.extent.set(binZ, toroidMinZ, toroidMaxZ);
+
+  Acts::ProtoVolume muonS1;
+
+  Acts::ProtoVolume muonS1L0;
+  muonS1L0.name = "na60-muon-station-1-l0";
+  muonS1L0.extent.set(Acts::binZ, 7300., 7600.);
+
+  Acts::ProtoVolume muonS1L1;
+  muonS1L1.name = "na60-muon-station-1-l1";
+  muonS1L1.extent.set(Acts::binZ, 7600., 8000.);
+
+  muonS1.container = Acts::ProtoVolume::ContainerStructure{
+      {muonS1L0, muonS1L1},
+      {Acts::BinningData(Acts::open, Acts::binZ, {0., 1})},
+      true};
+
+  for (auto& cv : muonS1.container.value().constituentVolumes) {
+    cv.extent.setEnvelope(discLayerEnvelope);
+    cv.internal =
+        Acts::ProtoVolume::InternalStructure{Acts::Surface::SurfaceType::Disc};
+  }
+
+  Acts::ActsScalar muonS1MinZ = toroidMaxZ;
+  Acts::ActsScalar muonS1MaxZ = 8000.;
+  muonS1.name = "na60-muon-station-1";
+  muonS1.extent.set(Acts::binX, -muonT, muonT);
+  muonS1.extent.set(Acts::binY, -muonT, muonT);
+  muonS1.extent.set(Acts::binZ, muonS1MinZ, muonS1MaxZ);
+
+  Acts::ProtoVolume absorberC2;
+  Acts::ActsScalar absorberC2MinZ = muonS1MaxZ;
+  Acts::ActsScalar absorberC2MaxZ = 10000.;
+  absorberC2.name = "na60-absorber-C-2";
+  absorberC2.extent.set(binX, -muonT, muonT);
+  absorberC2.extent.set(binY, -muonT, muonT);
+  absorberC2.extent.set(binZ, absorberC2MinZ, absorberC2MaxZ);
+
+  Acts::ProtoVolume muonS2;
+
+  Acts::ProtoVolume muonS2L0;
+  muonS2L0.name = "na60-muon-station-2-l0";
+  muonS2L0.extent.set(Acts::binZ, 10000., 10400.);
+
+  Acts::ProtoVolume muonS2L1;
+  muonS2L1.name = "na60-muon-station-2-l1";
+  muonS2L1.extent.set(Acts::binZ, 10400., 10800.);
+
+  muonS2.container = Acts::ProtoVolume::ContainerStructure{
+      {muonS2L0, muonS2L1},
+      {Acts::BinningData(Acts::open, Acts::binZ, {0., 1})},
+      true};
+
+  for (auto& cv : muonS2.container.value().constituentVolumes) {
+    cv.extent.setEnvelope(discLayerEnvelope);
+    cv.internal =
+        Acts::ProtoVolume::InternalStructure{Acts::Surface::SurfaceType::Disc};
+  }
+
+  Acts::ActsScalar muonS2MinZ = absorberC2MaxZ;
+  Acts::ActsScalar muonS2MaxZ = 10800.;
+  muonS2.name = "na60-muon-station-1";
+  muonS2.extent.set(Acts::binX, -muonT, muonT);
+  muonS2.extent.set(Acts::binY, -muonT, muonT);
+  muonS2.extent.set(Acts::binZ, muonS2MinZ, muonS2MaxZ);
+
+  Acts::ProtoVolume na60;
+  na60.name = "na60";
+  na60.extent.set(Acts::binZ, trackerMinZ, muonS2MaxZ);
+  na60.container = Acts::ProtoVolume::ContainerStructure{
+      {tracker, absorberBeOH1, absorberBeOH2, absorberC1, muonS0, toroid,
+       muonS1, absorberC2, muonS2},
+      {Acts::BinningData(
+          Acts::open, Acts::binZ,
+          {static_cast<float>(trackerMinZ), static_cast<float>(trackerMaxZ),
+           static_cast<float>(absorberBeOH1MaxZ),
+           static_cast<float>(absorberBeOH2MaxZ),
+           static_cast<float>(absorberC1MaxZ), static_cast<float>(muonS0MaxZ),
+           static_cast<float>(toroidMaxZ), static_cast<float>(muonS1MaxZ),
+           static_cast<float>(absorberC2MaxZ),
+           static_cast<float>(muonS2MaxZ)})}};
 
   // ----------------------------------------------------------
   Acts::ProtoDetector detector;
   detector.name = "na60-plus";
-  detector.worldVolume = tracker;
+  detector.worldVolume = na60;
 
   // Transform into json
   nlohmann::json jdet;

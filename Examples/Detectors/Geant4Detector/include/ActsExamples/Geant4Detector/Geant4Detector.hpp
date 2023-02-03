@@ -40,6 +40,8 @@ struct Geant4Detector {
     Acts::Geant4DetectorSurfaceFactory::Options g4SurfaceOptions;
     /// The KDTree binning
     std::vector<Acts::BinningValue> kdtBinning = {Acts::binZ, Acts::binR};
+    /// The Cylindrical setup flag
+    bool cylindrical = true;
     /// The corresponding ProtoDetector
     Acts::ProtoDetector protoDetector;
     /// Logging level of the child tools

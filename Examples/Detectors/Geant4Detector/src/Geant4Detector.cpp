@@ -101,7 +101,11 @@ auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
 
   // The KDT tracking geometry builder
   kdtCfg.layerCreator = layerCreator;
-  kdtCfg.trackingVolumeHelper = cuboidVolumeHelper;  // cylinderVolumeHelper;
+  if (cfg.cylindrical) {
+    kdtCfg.trackingVolumeHelper = cylinderVolumeHelper;
+  } else {
+    kdtCfg.trackingVolumeHelper = cuboidVolumeHelper;
+  }
   kdtCfg.protoDetector = cfg.protoDetector;
   kdtCfg.bValues = cfg.kdtBinning;
 

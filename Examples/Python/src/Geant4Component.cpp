@@ -279,6 +279,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(g4World);
     ACTS_PYTHON_MEMBER(kdtBinning);
+    ACTS_PYTHON_MEMBER(cylindrical);
     ACTS_PYTHON_MEMBER(g4SurfaceOptions);
     ACTS_PYTHON_MEMBER(protoDetector);
     ACTS_PYTHON_STRUCT_END();
