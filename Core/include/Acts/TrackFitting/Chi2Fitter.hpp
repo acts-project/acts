@@ -147,7 +147,7 @@ struct Chi2FitterOptions {
 template <typename traj_t>
 struct Chi2FitterResult {
   // Fitted states that the actor has handled.
-  std::shared_ptr<traj_t> fittedStates;
+  traj_t* fittedStates{nullptr};
 
   // This is the index of the 'tip' of the track stored in multitrajectory.
   // This correspond to the last measurement state in the multitrajectory.
@@ -621,18 +621,20 @@ class Chi2Fitter {
   /// @param end End iterator for the fittable uncalibrated measurements
   /// @param sParameters The initial track parameters
   /// @param chi2FitterOptions Chi2FitterOptions steering the fit
-  /// @param trajectory Input trajectory storage to append into
+  /// @param trackContainer The target track container
   /// @note The input measurements are given in the form of @c SourceLink s.
   /// It's the calibrators job to turn them into calibrated measurements used in
   /// the fit.
   ///
   /// @return the output as an output track
-  template <typename source_link_iterator_t>
-  Result<Chi2FitterResult<traj_t>> fit(
-      source_link_iterator_t it, source_link_iterator_t end,
-      const BoundTrackParameters& sParameters,
-      const Chi2FitterOptions<traj_t>& chi2FitterOptions,
-      std::shared_ptr<traj_t> trajectory = {}) const {
+  template <typename source_link_iterator_t, typename track_container_t,
+            template <typename> class holder_t>
+  auto fit(source_link_iterator_t it, source_link_iterator_t end,
+           const BoundTrackParameters& sParameters,
+           const Chi2FitterOptions<traj_t>& chi2FitterOptions,
+           TrackContainer<track_container_t, traj_t, holder_t>& trackContainer)
+      const -> Result<typename TrackContainer<track_container_t, traj_t,
+                                              holder_t>::TrackProxy> {
     // To be able to find measurements later, we put them into a map
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("chi2 | preparing " << std::distance(it, end)
@@ -658,8 +660,6 @@ class Chi2Fitter {
 
     // the result object which will be returned. Overridden every iteration.
     Chi2Result c2r;
-
-    trajectory = std::make_shared<traj_t>();
 
     BoundTrackParameters vParams = sParameters;
     auto updatedStartParameters = sParameters;
@@ -687,7 +687,7 @@ class Chi2Fitter {
           inputResult;
 
       auto& r = inputResult.template get<Chi2FitterResult<traj_t>>();
-      r.fittedStates = trajectory;
+      r.fittedStates = &trackContainer.trackStateContainer();
       if (i > 0) {
         r.lastTrackIndex = c2r.lastTrackIndex;
       }
@@ -769,8 +769,25 @@ class Chi2Fitter {
       updatedStartParameters = c2r.fittedParameters.value();
     }
 
+    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    track.tipIndex() = c2r.lastMeasurementIndex;
+    if (c2r.fittedParameters) {
+      const auto& params = c2r.fittedParameters.value();
+      track.parameters() = params.parameters();
+      track.covariance() = params.covariance().value();
+      track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+    }
+
+    track.nMeasurements() = c2r.measurementStates;
+    track.nHoles() = c2r.measurementHoles;
+
+    if (trackContainer.hasColumn(hashString("chi2"))) {
+      track.template component<ActsScalar, hashString("chi2")>() =
+          c2r.chisquare;
+    }
+
     // Return the converted track
-    return c2r;
+    return track;
   }
 };
 

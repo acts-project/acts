@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/TrackFitting/Chi2Fitter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -35,8 +36,11 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
   using TrackFitterChi2Options =
       Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>;
 
-  using TrackFitterChi2Result = Acts::Result<
-      Acts::Experimental::Chi2FitterResult<Acts::VectorMultiTrajectory>>;
+  using TrackContainer =
+      Acts::TrackContainer<Acts::VectorTrackContainer,
+                           Acts::VectorMultiTrajectory, std::shared_ptr>;
+
+  using TrackFitterChi2Result = Acts::Result<TrackContainer::TrackProxy>;
 
   /// Fit function that takes the above parameters and runs a fit
   /// @note This is separated into a virtual interface to keep compilation units
@@ -46,8 +50,7 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
     virtual ~TrackFitterChi2Function() = default;
     virtual TrackFitterChi2Result operator()(
         const std::vector<Acts::SourceLink>&, const TrackParameters&,
-        const TrackFitterChi2Options&,
-        std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const = 0;
+        const TrackFitterChi2Options&, TrackContainer&) const = 0;
   };
 
   struct Config {
@@ -106,7 +109,7 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
       const Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>&
           options,
       const std::vector<const Acts::Surface*>& surfSequence,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const;
+      TrackContainer& trackContainer) const;
 
   Config m_cfg;
 };
@@ -119,14 +122,14 @@ ActsExamples::TrackFittingChi2Algorithm::fitTrack(
         options,
     // const Acts::Chi2FitterOptions& options,
     const std::vector<const Acts::Surface*>& surfSequence,
-    std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const {
+    TrackContainer& trackContainer) const {
   (void)surfSequence;  // TODO: silence unused parameter warning
   //   if (m_cfg.directNavigation) {
   //     return (*m_cfg.dFit)(sourceLinks, initialParameters, options,
   //     surfSequence);
   //   }
 
-  return (*m_cfg.fit)(sourceLinks, initialParameters, options, trajectory);
+  return (*m_cfg.fit)(sourceLinks, initialParameters, options, trackContainer);
 }
 
 }  // namespace ActsExamples
