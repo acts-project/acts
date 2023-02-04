@@ -25,9 +25,9 @@
 namespace Acts {
 
 using Envelope = std::array<ActsScalar, 2>;
-using ExtentEnvelope = std::array<std::array<ActsScalar, 2>, binValues>;
+using ExtentEnvelope = std::array<Envelope, binValues>;
 
-constexpr Envelope zeroEnvelope = {0., 0};
+constexpr Envelope zeroEnvelope = {0, 0};
 constexpr ExtentEnvelope zeroEnvelopes = {
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope,
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope};
