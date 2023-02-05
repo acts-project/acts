@@ -137,7 +137,8 @@ std::ostream& operator<<(std::ostream& os, GeometryIdentifier id);
 struct GeometryIdentifierHook {
   virtual ~GeometryIdentifierHook() = default;
   virtual Acts::GeometryIdentifier decorateIdentifier(
-      Acts::GeometryIdentifier identifier, const Acts::Surface& surface) const;
+    Acts::GeometryIdentifier identifier, const Acts::Surface& /*surface*/) const
+  { return identifier; }
 };
 
 }  // namespace Acts

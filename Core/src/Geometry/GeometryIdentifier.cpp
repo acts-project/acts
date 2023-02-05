@@ -37,9 +37,3 @@ std::ostream& Acts::operator<<(std::ostream& os, Acts::GeometryIdentifier id) {
   }
   return os;
 }
-
-Acts::GeometryIdentifier Acts::GeometryIdentifierHook::decorateIdentifier(
-    Acts::GeometryIdentifier identifier,
-    const Acts::Surface& /*unused*/) const {
-  return identifier;
-}
