@@ -90,7 +90,7 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
                                const external_spacepoint_t& spM,
                                callable_t&& extractFunction,
                                const int bottomSign,
-                               const std::array<float, 6> transformVariables) {
+                               const std::array<float, 6>& transformVariables) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
