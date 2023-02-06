@@ -117,7 +117,7 @@ struct SingleBlockBuilder {
   /// @tparam Portals how the portals are handled
   /// @tparam InternalsHandling how the internals are handled
   ///
-  /// @param shell The input shell
+  /// @param dBlock The detector block to be built
   /// @param gctx The geometry context
   /// @param logLevel is a screen output log level
   ///
