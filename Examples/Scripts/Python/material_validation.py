@@ -41,6 +41,8 @@ def runMaterialValidation(
         sterileLogger=True,
         propagationStepCollection="propagation-steps",
         recordMaterialInteractions=True,
+        d0Sigma=0,
+        z0Sigma=0,
     )
 
     s.addAlgorithm(alg)

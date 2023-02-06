@@ -12,14 +12,6 @@
 
 namespace Acts {
 
-LoggerWrapper::LoggerWrapper(const Logger& logger) : m_logger(&logger) {}
-
-void LoggerWrapper::log(const Logging::Level& lvl,
-                        const std::string& input) const {
-  assert(m_logger != nullptr);
-  return m_logger->log(lvl, input);
-}
-
 namespace Logging {
 
 #if defined(ACTS_ENABLE_LOG_FAILURE_THRESHOLD) and \

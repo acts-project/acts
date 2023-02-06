@@ -285,8 +285,8 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
   auto kfZero = KalmanFitterType(kfZeroPropagator);
 
   // alignment
-  const auto alignLogger = getDefaultLogger("Alignment", Logging::INFO);
-  const auto alignZero = Alignment(std::move(kfZero));
+  auto alignLogger = getDefaultLogger("Alignment", Logging::INFO);
+  const auto alignZero = Alignment(std::move(kfZero), std::move(alignLogger));
 
   // Create 10 trajectories
   const auto& trajectories = createTrajectories(geometry, 10);
@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   // Construct the alignment options
   AlignmentOptions<KalmanFitterOptions<VectorMultiTrajectory>> alignOptions(
-      kfOptions, voidAlignUpdater, LoggerWrapper{*alignLogger});
+      kfOptions, voidAlignUpdater);
   alignOptions.maxIterations = 1;
 
   // Set the surfaces to be aligned (fix the layer 8)
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldKalmanAlignment) {
 
   auto evaluateRes = alignZero.evaluateTrackAlignmentState(
       kfOptions.geoContext, inputTraj.sourcelinks, *inputTraj.startParameters,
-      kfOptions, idxedAlignSurfaces, AlignmentMask::All, alignOptions.logger);
+      kfOptions, idxedAlignSurfaces, AlignmentMask::All);
   BOOST_CHECK(evaluateRes.ok());
 
   const auto& alignState = evaluateRes.value();

@@ -91,7 +91,7 @@ struct CorrectedFreeToBoundTransformer {
       const FreeVector& freeParams, const FreeSymMatrix& freeCovariance,
       const Surface& surface, const GeometryContext& geoContext,
       NavigationDirection navDir = NavigationDirection::Forward,
-      LoggerWrapper logger = getDummyLogger()) const;
+      const Logger& logger = getDummyLogger()) const;
 
  private:
   /// The parameters to tune the weight in UKF (0 < alpha <=1)
