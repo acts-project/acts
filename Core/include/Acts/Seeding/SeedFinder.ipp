@@ -102,14 +102,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.linCircleTop.clear();
 
-    std::size_t numTopSP = state.compatBottomSP.size();
-
-    // Reserve enough space, in case current capacity is too little
-    state.linCircleTop.reserve(numTopSP);
-
     getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
-                          m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
-                          false, state);
+                          state.linCircleTop, m_config.deltaRMinTopSP,
+                          m_config.deltaRMaxTopSP, false);
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -137,14 +132,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     state.linCircleBottom.clear();
 
-    std::size_t numBottomSP = state.compatTopSP.size();
-
-    // Reserve enough space, in case current capacity is too little
-    state.linCircleBottom.reserve(numBottomSP);
-
     getCompatibleDoublets(options, bottomSPs, *spM, state.compatBottomSP,
-                          m_config.deltaRMinBottomSP,
-                          m_config.deltaRMaxBottomSP, true, state);
+                          state.linCircleBottom, m_config.deltaRMinBottomSP,
+                          m_config.deltaRMaxBottomSP, true);
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -165,8 +155,8 @@ template <typename sp_range_t, typename out_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const Acts::SeedFinderOptions& options, sp_range_t& otherSPs,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
-    out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
-    bool isBottom, SeedingState& state) const {
+    out_range_t& outVec, std::vector<LinCircle>& linCircleVec,
+    const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const {
   const int sign = isBottom ? -1 : 1;
 
   outVec.clear();
@@ -175,8 +165,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float& xM = mediumSP.x();
   const float& yM = mediumSP.y();
   const float& zM = mediumSP.z();
-  const float ratio_xM_rM = xM / rM;
-  const float ratio_yM_rM = yM / rM;
+  const float cosPhiM = xM / rM;
+  const float sinPhiM = yM / rM;
 
   for (auto otherSP : otherSPs) {
     const float rO = otherSP->radius();
@@ -193,7 +183,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     }
 
     const float zO = otherSP->z();
-    float deltaZ = sign * (zO - zM);
+    float deltaZAbs = zO - zM;
+    float deltaZ = sign * deltaZAbs;
     if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
       continue;
     }
@@ -212,17 +203,23 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     }
 
     if (not m_config.interactionPointCut) {
+      linCircleVec.push_back(
+          transformCoordinates(*otherSP, mediumSP, isBottom));
       outVec.push_back(otherSP);
+      std::cout << otherSP->cotTheta() << std::endl;
       continue;
     }
 
     const float deltaX = otherSP->x() - xM;
     const float deltaY = otherSP->y() - yM;
 
-    const float xVal = deltaX * ratio_xM_rM + deltaY * ratio_yM_rM;
-    const float yVal = deltaY * ratio_xM_rM - deltaX * ratio_yM_rM;
+    const float xVal = deltaX * cosPhiM + deltaY * sinPhiM;
+    const float yVal = deltaY * cosPhiM - deltaX * sinPhiM;
 
     if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
+      linCircleVec.push_back(transformCoordinates(
+          *otherSP, mediumSP, sign,
+          {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
       outVec.push_back(otherSP);
       continue;
     }
@@ -252,13 +249,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       continue;
     }
 
-    if (isBottom) {
-      state.linCircleBottom.push_back(transformCoordinates(
-          otherSP, mediumSP, {deltaX, deltaY, deltaZ, xVal, yVal, zOrigin}));
-    } else {
-      state.linCircleTop.push_back(transformCoordinates(
-          otherSP, mediumSP, {deltaX, deltaY, deltaZ, xVal, yVal, zOrigin}));
-    }
+    linCircleVec.push_back(
+        transformCoordinates(*otherSP, mediumSP, sign,
+                             {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
 
     outVec.push_back(otherSP);
   }
@@ -273,11 +266,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
-  std::size_t numTopSP = state.compatTopSP.size();
-
   auto sorted_bottoms =
       cotThetaSortIndex(state.compatBottomSP, state.linCircleBottom);
   auto sorted_tops = cotThetaSortIndex(state.compatTopSP, state.linCircleTop);
+
+  std::size_t numTopSP = state.compatTopSP.size();
 
   // Reserve enough space, in case current capacity is too little
   state.topSpVec.reserve(numTopSP);

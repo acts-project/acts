@@ -37,13 +37,13 @@ struct LinCircle {
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottom Should be true if sp is a bottom SP.
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
-                               InternalSpacePoint<external_spacepoint_t>& spM,
-                               bool bottom);
+LinCircle transformCoordinates(
+    InternalSpacePoint<external_spacepoint_t>& sp,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom);
 
 template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               external_spacepoint_t& spM, bool bottom,
+                               const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
 /// @brief Transform two spacepoints to a u-v space circle.
@@ -54,16 +54,19 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 ///
 /// @param[in] sp The first spacepoint to use, either a bottom or top.
 /// @param[in] spM The middle spacepoint to use.
+/// @param[in] bottomSign Should be -1 if sp is a bottom SP or 1 is it is a top SP.
 /// @param[in] transformVariables Vector contaning deltaX, deltaY, deltaZ, xVal, yVal and zOrigin between sp and spM, calculated in SeedFinder to avoid recalculating these parameters.
 template <typename external_spacepoint_t>
 LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
                                InternalSpacePoint<external_spacepoint_t>& spM,
+                               const int bottomSign,
                                std::array<float, 6> transformVariables);
 
 template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(external_spacepoint_t& sp,
                                external_spacepoint_t& spM,
                                callable_t&& extractFunction,
+                               const int bottomSign,
                                std::array<float, 6> transformVariables);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect

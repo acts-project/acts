@@ -115,8 +115,8 @@ class SeedFinder {
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options, sp_range_t& otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
-      out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
-      bool isBottom, SeedingState& state) const;
+      out_range_t& outVec, std::vector<LinCircle>& linCircleVec,
+      const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const;
 
   void filterCandidates(InternalSpacePoint<external_spacepoint_t>& SpM,
                         const Acts::SeedFinderOptions& options,
