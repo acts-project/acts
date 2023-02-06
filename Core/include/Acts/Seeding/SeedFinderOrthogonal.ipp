@@ -277,9 +277,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<LinCircle> linCircleTop;
   linCircleTop.reserve(top.size());
 
-  auto sorted_bottoms =
-      transformCoordinates(bottom, middle, true, linCircleBottom);
-  auto sorted_tops = transformCoordinates(top, middle, false, linCircleTop);
+  transformCoordinates(bottom, middle, true, linCircleBottom);
+  transformCoordinates(top, middle, false, linCircleTop);
+
+  auto sorted_bottoms = cotThetaSortIndex(bottom, linCircleBottom);
+  auto sorted_tops = cotThetaSortIndex(top, linCircleTop);
 
   std::vector<float> tanLM;
   std::vector<float> tanMT;
