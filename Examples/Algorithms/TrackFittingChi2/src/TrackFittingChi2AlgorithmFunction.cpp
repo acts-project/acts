@@ -37,9 +37,10 @@ struct TrackFitterChi2FunctionImpl
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Options&
           options,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      ActsExamples::TrackFittingChi2Algorithm::TrackContainer& trackContainer)
+      const override {
     return trackFitterChi2.fit(sourceLinks.begin(), sourceLinks.end(),
-                               initialParameters, options, trajectory);
+                               initialParameters, options, trackContainer);
   };
 };
 
