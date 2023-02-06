@@ -67,7 +67,7 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
                                external_spacepoint_t& spM,
                                callable_t&& extractFunction,
                                const int bottomSign,
-                               std::array<float, 6> transformVariables);
+                               const std::array<float, 6>& transformVariables);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
