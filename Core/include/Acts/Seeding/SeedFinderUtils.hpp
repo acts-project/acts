@@ -46,12 +46,32 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
                                external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
+/// @brief Transform two spacepoints to a u-v space circle.
+///
+/// This function is a non-vectorized version of @a transformCoordinates.
+///
+/// @tparam external_spacepoint_t The external spacepoint type.
+///
+/// @param[in] sp The first spacepoint to use, either a bottom or top.
+/// @param[in] spM The middle spacepoint to use.
+/// @param[in] transformVariables Vector contaning deltaX, deltaY, deltaZ, xVal, yVal and zOrigin between sp and spM, calculated in SeedFinder to avoid recalculating these parameters.
+template <typename external_spacepoint_t>
+LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
+                               InternalSpacePoint<external_spacepoint_t>& spM,
+                               std::array<float, 6> transformVariables);
+
+template <typename external_spacepoint_t, typename callable_t>
+LinCircle transformCoordinates(external_spacepoint_t& sp,
+                               external_spacepoint_t& spM,
+                               callable_t&& extractFunction,
+                               std::array<float, 6> transformVariables);
+
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
-/// @param[in] vec The list of bottom or top spacepoints
+/// @param[in] vec The list of bottom or top spacepoints.
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
@@ -67,6 +87,18 @@ std::vector<std::size_t> transformCoordinates(
     std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
     bool bottom, std::vector<LinCircle>& linCircleVec,
     callable_t&& extractFunction);
+
+/// @brief Returns a sorted vector of indeces based on cotangent of theta of a vector of spacepoints
+///
+/// @tparam external_spacepoint_t The external spacepoint type.
+///
+/// @param[in] vec The list of bottom or top spacepoints.
+/// @param[out] linCircleVec Vector of spacepoints parameters in u-v space.
+/// @returns Vector of sorted indexes for the vectors (vec and linCircleVec)
+template <typename external_spacepoint_t>
+std::vector<std::size_t> cotThetaSortIndex(
+    std::vector<external_spacepoint_t*>& vec,
+    std::vector<LinCircle>& linCircleVec);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///

@@ -100,9 +100,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
+    state.linCircleTop.clear();
+
+    std::size_t numTopSP = state.compatBottomSP.size();
+
+    // Reserve enough space, in case current capacity is too little
+    state.linCircleTop.reserve(numTopSP);
+
     getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
                           m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
-                          false);
+                          false, state);
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -128,9 +135,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
+    state.linCircleBottom.clear();
+
+    std::size_t numBottomSP = state.compatTopSP.size();
+
+    // Reserve enough space, in case current capacity is too little
+    state.linCircleBottom.reserve(numBottomSP);
+
     getCompatibleDoublets(options, bottomSPs, *spM, state.compatBottomSP,
                           m_config.deltaRMinBottomSP,
-                          m_config.deltaRMaxBottomSP, true);
+                          m_config.deltaRMaxBottomSP, true, state);
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -152,7 +166,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const Acts::SeedFinderOptions& options, sp_range_t& otherSPs,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
-    bool isBottom) const {
+    bool isBottom, SeedingState& state) const {
   const int sign = isBottom ? -1 : 1;
 
   outVec.clear();
@@ -202,10 +216,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       continue;
     }
 
-    const float xVal =
-        (otherSP->x() - xM) * ratio_xM_rM + (otherSP->y() - yM) * ratio_yM_rM;
-    const float yVal =
-        (otherSP->y() - yM) * ratio_xM_rM - (otherSP->x() - xM) * ratio_yM_rM;
+    const float deltaX = otherSP->x() - xM;
+    const float deltaY = otherSP->y() - yM;
+
+    const float xVal = deltaX * ratio_xM_rM + deltaY * ratio_yM_rM;
+    const float yVal = deltaY * ratio_xM_rM - deltaX * ratio_yM_rM;
 
     if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
       outVec.push_back(otherSP);
@@ -236,6 +251,15 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
       continue;
     }
+
+    if (isBottom) {
+      state.linCircleBottom.push_back(transformCoordinates(
+          otherSP, mediumSP, {deltaX, deltaY, deltaZ, xVal, yVal, zOrigin}));
+    } else {
+      state.linCircleTop.push_back(transformCoordinates(
+          otherSP, mediumSP, {deltaX, deltaY, deltaZ, xVal, yVal, zOrigin}));
+    }
+
     outVec.push_back(otherSP);
   }
 }
@@ -249,20 +273,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
-  state.linCircleBottom.clear();
-  state.linCircleTop.clear();
-
   std::size_t numTopSP = state.compatTopSP.size();
-  std::size_t numBottomSP = state.compatBottomSP.size();
 
-  // Reserve enough space, in case current capacity is too little
-  state.linCircleBottom.reserve(numBottomSP);
-  state.linCircleTop.reserve(numTopSP);
-
-  auto sorted_bottoms = transformCoordinates(state.compatBottomSP, spM, true,
-                                             state.linCircleBottom);
-  auto sorted_tops =
-      transformCoordinates(state.compatTopSP, spM, false, state.linCircleTop);
+  auto sorted_bottoms =
+      cotThetaSortIndex(state.compatBottomSP, state.linCircleBottom);
+  auto sorted_tops = cotThetaSortIndex(state.compatTopSP, state.linCircleTop);
 
   // Reserve enough space, in case current capacity is too little
   state.topSpVec.reserve(numTopSP);
