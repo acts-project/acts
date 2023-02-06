@@ -155,8 +155,43 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
 
     m_vol_id.clear();
 
+    auto materialInteractions = mtrack.second.materialInteractions;
+    if (m_cfg.collapseInteractions) {
+      std::vector<Acts::MaterialInteraction> collapsed;
+
+      Acts::Vector3 positionSum = Acts::Vector3::Zero();
+      double pathCorrectionSum = 0;
+
+      for (std::size_t start = 0, end = 0; end < materialInteractions.size();
+           ++end) {
+        const auto& mintStart = materialInteractions[start];
+        const auto& mintEnd = materialInteractions[end];
+
+        positionSum += mintEnd.position;
+        pathCorrectionSum += mintEnd.pathCorrection;
+
+        const bool same = mintStart.materialSlab.material() ==
+                          mintEnd.materialSlab.material();
+        const bool last = end == materialInteractions.size() - 1;
+
+        if (!same || last) {
+          auto mint = mintStart;
+          mint.position = positionSum / (end - start);
+          mint.pathCorrection = pathCorrectionSum;
+
+          collapsed.push_back(mint);
+
+          start = end;
+          positionSum = Acts::Vector3::Zero();
+          pathCorrectionSum = 0;
+        }
+      }
+
+      materialInteractions = std::move(collapsed);
+    }
+
     // Reserve the vector then
-    size_t mints = mtrack.second.materialInteractions.size();
+    size_t mints = materialInteractions.size();
     m_step_sx.reserve(mints);
     m_step_sy.reserve(mints);
     m_step_sz.reserve(mints);
@@ -207,7 +242,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_v_eta = eta(mtrack.first.second);
 
     // an now loop over the material
-    for (auto& mint : mtrack.second.materialInteractions) {
+    for (const auto& mint : materialInteractions) {
       auto direction = mint.direction.normalized();
 
       // The material step position information

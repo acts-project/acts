@@ -25,9 +25,9 @@
 namespace Acts {
 
 using Envelope = std::array<ActsScalar, 2>;
-using ExtentEnvelope = std::array<std::array<ActsScalar, 2>, binValues>;
+using ExtentEnvelope = std::array<Envelope, binValues>;
 
-constexpr Envelope zeroEnvelope = {0., 0};
+constexpr Envelope zeroEnvelope = {0, 0};
 constexpr ExtentEnvelope zeroEnvelopes = {
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope,
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope};
@@ -207,7 +207,7 @@ class Extent {
   std::bitset<binValues> m_constrains{0};
   /// The actual range store
   RangeXD<binValues, ActsScalar> m_range;
-  /// A potential envenelope
+  /// A potential envelope
   ExtentEnvelope m_envelope = zeroEnvelopes;
   /// (Optional) Value histograms for bin detection
   std::array<std::vector<ActsScalar>, binValues> m_valueHistograms;
