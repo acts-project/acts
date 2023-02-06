@@ -60,7 +60,7 @@ template <typename external_spacepoint_t>
 LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
                                InternalSpacePoint<external_spacepoint_t>& spM,
                                const int bottomSign,
-                               std::array<float, 6> transformVariables);
+                               const std::array<float, 6>& transformVariables);
 
 template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(external_spacepoint_t& sp,
