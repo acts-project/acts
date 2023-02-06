@@ -72,7 +72,7 @@ template <typename external_spacepoint_t>
 LinCircle transformCoordinates(
     InternalSpacePoint<external_spacepoint_t>& sp,
     const InternalSpacePoint<external_spacepoint_t>& spM, const int bottomSign,
-    const std::array<float, 6> transformVariables) {
+    const std::array<float, 6>& transformVariables) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
