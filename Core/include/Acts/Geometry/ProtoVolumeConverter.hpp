@@ -43,7 +43,7 @@ struct ConcentricCylinderConverter {
 
   ///  Create cylindrical volume bounds
   ///
-  /// @param gctx The geometry context
+  /// @return a tuple oa  tansform and cylinder volume bounds with it
   DetectorVolumeExternals create(const GeometryContext& /*ignored*/) {
     // Get the extent of this volume and translate
     const auto& pvExtent = protoVolume.extent;
