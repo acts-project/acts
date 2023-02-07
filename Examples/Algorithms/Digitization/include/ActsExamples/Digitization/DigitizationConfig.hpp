@@ -67,7 +67,7 @@ struct GeometricConfig {
 
     auto res = chargeSmearer(path, rng);
     if (res.ok()) {
-      return res->first;
+      return std::clamp(res->first, 0.0, 1.0);
     } else {
       throw std::runtime_error(res.error().message());
     }
