@@ -42,8 +42,10 @@ class OnnxRuntimeBase {
  private:
   /// ONNX runtime session / model properties
   std::unique_ptr<Ort::Session> m_session;
+  std::vector<Ort::AllocatedStringPtr> m_inputNodeNamesAllocated;
   std::vector<const char*> m_inputNodeNames;
   std::vector<int64_t> m_inputNodeDims;
+  std::vector<Ort::AllocatedStringPtr> m_outputNodeNamesAllocated;
   std::vector<const char*> m_outputNodeNames;
   std::vector<int64_t> m_outputNodeDims;
 };
