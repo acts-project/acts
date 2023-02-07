@@ -60,6 +60,7 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output fitted trajectories collection.
     std::string outputTrajectories;
+    std::string outputTracks;
     /// number of update steps
     unsigned int nUpdates = 0;
     /// Type erased fitter function.
