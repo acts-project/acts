@@ -690,6 +690,7 @@ def test_material_mapping(material_recording, tmp_path, assert_root_hash):
         decorators,
         outputDir=str(tmp_path),
         inputDir=material_recording,
+        mappingStep=1,
         s=s,
     )
 
@@ -769,6 +770,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
         mapName="material-map-volume",
         outputDir=str(tmp_path),
         inputDir=material_recording,
+        mappingStep=1,
         s=s,
     )
 

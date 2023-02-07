@@ -27,7 +27,7 @@ template <typename traj_t>
 Result<void> voidKalmanUpdater(
     const GeometryContext& /*gctx*/,
     typename MultiTrajectory<traj_t>::TrackStateProxy trackState,
-    NavigationDirection /*direction*/, LoggerWrapper /*logger*/) {
+    NavigationDirection /*direction*/, const Logger& /*logger*/) {
   trackState.filtered() = trackState.predicted();
   trackState.filteredCovariance() = trackState.predictedCovariance();
   return Result<void>::success();
@@ -36,7 +36,7 @@ Result<void> voidKalmanUpdater(
 template <typename traj_t>
 Result<void> voidKalmanSmoother(const GeometryContext& /*gctx*/,
                                 MultiTrajectory<traj_t>& trackStates,
-                                size_t entry, LoggerWrapper /*logger*/) {
+                                size_t entry, const Logger& /*logger*/) {
   trackStates.applyBackwards(entry, [](auto trackState) {
     trackState.smoothed() = trackState.filtered();
     trackState.smoothedCovariance() = trackState.filteredCovariance();

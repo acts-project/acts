@@ -16,7 +16,7 @@ message( STATUS "Building actsvg as part of the ACTS project" )
 # Declare where to get VecMem from.
 set( ACTS_ACTSVG_GIT_REPOSITORY "https://github.com/acts-project/actsvg.git"
    CACHE STRING "Git repository to take actsvg from" )
-set( ACTS_ACTSVG_GIT_TAG "v0.4.20" CACHE STRING "Version of actsvg to build" )
+set( ACTS_ACTSVG_GIT_TAG "v0.4.28" CACHE STRING "Version of actsvg to build" )
 mark_as_advanced( ACTS_ACTSVG_GIT_REPOSITORY ACTS_ACTSVG_GIT_TAG )
 FetchContent_Declare( actsvg
    GIT_REPOSITORY "${ACTS_ACTSVG_GIT_REPOSITORY}"

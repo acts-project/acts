@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   auto bound = std::make_shared<const CuboidVolumeBounds>(1_m, 1_m, 1_m);
   auto mat = makeSilicon();
   auto volMat = std::make_shared<const HomogeneousVolumeMaterial>(mat);
-  auto volume = (TrackingVolume::create(htrans, bound, volMat)).get();
+  auto volume = TrackingVolume::create(htrans, bound, volMat);
 
   // Create a propagator state
   State state;
@@ -78,13 +78,13 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.navDir = NavigationDirection::Backward;
   state.options.mass = 10.;
   state.options.absPdgCode = 11;
-  state.navigation.currentVolume = volume;
+  state.navigation.currentVolume = volume.get();
 
   Stepper stepper;
 
   // Build the VolumeMaterialInteraction & test assignments
-  detail::VolumeMaterialInteraction volMatInt(volume, state, stepper);
-  BOOST_CHECK_EQUAL(volMatInt.volume, volume);
+  detail::VolumeMaterialInteraction volMatInt(volume.get(), state, stepper);
+  BOOST_CHECK_EQUAL(volMatInt.volume, volume.get());
   BOOST_CHECK_EQUAL(volMatInt.pos, state.stepping.pos);
   BOOST_CHECK_EQUAL(volMatInt.time, state.stepping.t);
   BOOST_CHECK_EQUAL(volMatInt.dir, state.stepping.dir);
