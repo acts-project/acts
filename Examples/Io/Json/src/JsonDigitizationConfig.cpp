@@ -20,45 +20,54 @@ namespace {
 void to_json(nlohmann::json& j, const ActsFatras::SingleParameterSmearFunction<
                                     ActsExamples::RandomEngine>& f) {
   // Gauss:
-  const Digitization::Gauss* gauss = f.target<const Digitization::Gauss>();
+  auto gauss = f.target<const Digitization::Gauss>();
   if (gauss != nullptr) {
     j["type"] = "Gauss";
     j["mean"] = 0;
     j["stddev"] = gauss->sigma;
+    return;
   }
   // Truncated gauss:
-  const Digitization::GaussTrunc* gaussT =
-      f.target<const Digitization::GaussTrunc>();
+  auto gaussT = f.target<const Digitization::GaussTrunc>();
   if (gaussT != nullptr) {
     j["type"] = "GaussTrunc";
     j["mean"] = 0;
     j["stddev"] = gaussT->sigma;
     j["range"] = gaussT->range;
+    return;
   }
   // Clipped gauss:
-  const Digitization::GaussClipped* gaussC =
-      f.target<const Digitization::GaussClipped>();
+  auto gaussC = f.target<const Digitization::GaussClipped>();
   if (gaussC != nullptr) {
     j["type"] = "GaussClipped";
     j["mean"] = 0;
     j["stddev"] = gaussC->sigma;
     j["range"] = gaussC->range;
     j["max_attempts"] = gaussC->maxAttemps;
+    return;
   }
   // Uniform
-  const Digitization::Uniform* uniform =
-      f.target<const Digitization::Uniform>();
+  auto uniform = f.target<const Digitization::Uniform>();
   if (uniform != nullptr) {
     j["type"] = "Uniform";
     j["bindata"] = nlohmann::json(uniform->binningData);
+    return;
   }
   // Digital
-  const Digitization::Digital* digital =
-      f.target<const Digitization::Digital>();
+  auto digital = f.target<const Digitization::Digital>();
   if (uniform != nullptr) {
     j["type"] = "Digitial";
     j["bindata"] = nlohmann::json(digital->binningData);
+    return;
   }
+  // Exact
+  auto exact = f.target<const Digitization::Digital>();
+  if (exact != nullptr) {
+    j["type"] = "Exact";
+    return;
+  }
+
+  throw std::runtime_error("Unable to serialize smearer");
 }
 
 void from_json(
@@ -84,6 +93,10 @@ void from_json(
     Acts::BinningData bd;
     from_json(j["bindata"], bd);
     f = Digitization::Uniform(std::move(bd));
+  } else if (sType == "Exact") {
+    f = Digitization::Exact{};
+  } else {
+    throw std::invalid_argument("Unkown smearer type '" + sType + "'");
   }
 }
 

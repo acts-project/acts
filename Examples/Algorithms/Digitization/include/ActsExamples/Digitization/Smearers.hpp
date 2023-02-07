@@ -23,6 +23,22 @@
 namespace ActsExamples {
 namespace Digitization {
 
+/// Exact smearing of a single parameter.
+///
+struct Exact {
+  /// Call operator for the SmearFunction caller interface.
+  ///
+  /// @param value parameter to be smeared
+  /// @param rnd random generator to be used for the call
+  ///
+  /// @return a Result that is always ok(), and just returns
+  /// the value and a stddev of 0.0
+  Acts::Result<std::pair<double, double>> operator()(
+      double value, RandomEngine& /*unused*/) const {
+    return std::pair{value, 0.0};
+  }
+};
+
 /// Gaussian smearing of a single parameter.
 ///
 /// @note This smearer will smear over module boundaries
