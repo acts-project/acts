@@ -81,8 +81,6 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     std::string inputProtoTracks;
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
-    /// Output fitted trajectories collection.
-    std::string outputTrajectories;
     /// Output fitted tracks collection.
     std::string outputTracks;
     /// Type erased fitter function.

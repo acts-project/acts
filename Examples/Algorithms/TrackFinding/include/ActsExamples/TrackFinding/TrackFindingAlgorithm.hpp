@@ -67,8 +67,6 @@ class TrackFindingAlgorithm final : public BareAlgorithm {
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
     /// Output find trajectories collection.
-    std::string outputTrajectories;
-    /// Output find tracks collection.
     std::string outputTracks;
     /// Type erased track finder function.
     std::shared_ptr<TrackFinderFunction> findTracks;
