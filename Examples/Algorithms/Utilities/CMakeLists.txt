@@ -1,6 +1,7 @@
 add_library(
   ActsExamplesUtilities SHARED
-  src/TrajectoriesToPrototracks.cpp)
+  src/TrajectoriesToPrototracks.cpp
+  src/TracksToTrajectories.cpp)
 target_include_directories(
   ActsExamplesUtilities
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

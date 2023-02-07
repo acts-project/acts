@@ -16,6 +16,7 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
 #include <memory>
@@ -284,6 +285,24 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(inputTrajectories);
     ACTS_PYTHON_MEMBER(outputPrototracks);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using Alg = ActsExamples::TracksToTrajectories;
+    using Config = Alg::Config;
+
+    auto alg =
+        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
+            mex, "TracksToTrajectories")
+            .def(py::init<const Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(inputTracks);
+    ACTS_PYTHON_MEMBER(outputTrajectories);
     ACTS_PYTHON_STRUCT_END();
   }
 
