@@ -103,10 +103,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     state.linCircleTop.clear();
     state.linCircleBottom.clear();
 
-    // Reserve enough space, in case current capacity is too little
-    state.linCircleBottom.reserve(bottomSPs.size());
-    state.linCircleTop.reserve(topSPs.size());
-
     // Iterate over middle-top duplets
     getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
                           state.linCircleTop, m_config.deltaRMinTopSP,

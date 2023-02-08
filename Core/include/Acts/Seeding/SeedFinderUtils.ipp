@@ -69,34 +69,14 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(
-    InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, const int bottomSign,
-    const std::array<float, 6>& transformVariables) {
-  auto extractFunction =
-      [](const InternalSpacePoint<external_spacepoint_t>& obj)
-      -> std::array<float, 6> {
-    return {obj.x(),      obj.y(),         obj.z(),
-                 obj.radius(), obj.varianceR(), obj.varianceZ()};
-  };
-
-  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      sp, spM, extractFunction, bottomSign, transformVariables);
-}
-
-template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(external_spacepoint_t& sp,
                                const external_spacepoint_t& spM,
-                               callable_t&& extractFunction,
                                const int bottomSign,
                                const std::array<float, 6>& transformVariables) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
   // detailed comments.
-
-  auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
-  auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(sp);
 
   auto [deltaX, deltaY, deltaZ, xNewFrame, yNewFrame, zOrigin] =
       transformVariables;
@@ -110,8 +90,8 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
   l.iDeltaR = iDeltaR;
   l.U = xNewFrame * iDeltaR2;
   l.V = yNewFrame * iDeltaR2;
-  l.Er = ((varianceZM + varianceZSP) +
-          (cot_theta * cot_theta) * (varianceRM + varianceRSP)) *
+  l.Er = ((spM.varianceZ() + sp.varianceZ()) +
+          (cot_theta * cot_theta) * (spM.varianceR() + sp.varianceR())) *
          iDeltaR2;
   l.x = xNewFrame;
   l.y = yNewFrame;
