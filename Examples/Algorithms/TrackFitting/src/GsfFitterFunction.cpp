@@ -71,7 +71,6 @@ struct GsfFitterFunctionImpl
         options.magFieldContext,
         options.calibrationContext,
         extensions,
-        options.logger,
         options.propOptions,
         &(*options.referenceSurface),
         maxComponents,
@@ -117,7 +116,8 @@ ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
     double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
-    bool abortOnError, bool disableAllMaterialHandling) {
+    bool abortOnError, bool disableAllMaterialHandling,
+    const Acts::Logger& logger) {
   MultiStepper stepper(std::move(magneticField), finalReductionMethod);
 
   // Standard fitter
@@ -125,16 +125,21 @@ ActsExamples::makeGsfFitterFunction(
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
-  Propagator propagator(std::move(stepper), std::move(navigator));
+  Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
+  Propagator propagator(std::move(stepper), std::move(navigator),
+                        logger.cloneWithSuffix("Propagator"));
   Fitter trackFitter(std::move(propagator),
-                     BetheHeitlerApprox(betheHeitlerApprox));
+                     BetheHeitlerApprox(betheHeitlerApprox),
+                     logger.cloneWithSuffix("GSF"));
 
   // Direct fitter
-  Acts::DirectNavigator directNavigator;
-  DirectPropagator directPropagator(stepper, std::move(directNavigator));
+  Acts::DirectNavigator directNavigator{
+      logger.cloneWithSuffix("DirectNavigator")};
+  DirectPropagator directPropagator(stepper, std::move(directNavigator),
+                                    logger.cloneWithSuffix("DirectPropagator"));
   DirectFitter directTrackFitter(std::move(directPropagator),
-                                 BetheHeitlerApprox(betheHeitlerApprox));
+                                 BetheHeitlerApprox(betheHeitlerApprox),
+                                 logger.cloneWithSuffix("DirectGSF"));
 
   // build the fitter functions. owns the fitter object.
   auto fitterFunction = std::make_shared<GsfFitterFunctionImpl>(

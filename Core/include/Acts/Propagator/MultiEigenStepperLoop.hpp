@@ -617,10 +617,10 @@ class MultiEigenStepperLoop
   /// @param state [in,out] The stepping state (thread-local cache)
   /// @param surface [in] The surface provided
   /// @param bcheck [in] The boundary check for this status update
-  /// @param logger [in] A @c LoggerWrapper instance
+  /// @param logger [in] A @c Loggerinstance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      LoggerWrapper logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger()) const {
     using Status = Intersection3D::Status;
 
     std::array<int, 4> counts = {0, 0, 0, 0};

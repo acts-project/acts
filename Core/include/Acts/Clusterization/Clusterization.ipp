@@ -232,7 +232,7 @@ ConnectResult Connect1D<Cell>::operator()(const Cell& ref, const Cell& iter) {
   return deltaCol == 1 ? ConnectResult::eConn : ConnectResult::eNoConnStop;
 }
 
-template <typename CellCollection, typename Connect, size_t GridDim>
+template <typename CellCollection, size_t GridDim, typename Connect>
 void labelClusters(CellCollection& cells, Connect connect) {
   using Cell = typename CellCollection::value_type;
   internal::staticCheckCellType<Cell, GridDim>();
@@ -316,7 +316,7 @@ ClusterCollection createClusters(CellCollection& cells, Connect connect) {
   using Cluster = typename ClusterCollection::value_type;
   internal::staticCheckCellType<Cell, GridDim>();
   internal::staticCheckClusterType<Cluster&, const Cell&>();
-  labelClusters<CellCollection, Connect, GridDim>(cells, connect);
+  labelClusters<CellCollection, GridDim, Connect>(cells, connect);
   return mergeClusters<CellCollection, ClusterCollection, GridDim>(cells);
 }
 

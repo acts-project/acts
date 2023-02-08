@@ -184,11 +184,12 @@ class SeedFinderOrthogonal {
    * @param options frequently changing configuration (like beam position)
    * @param low The lower spacepoint.
    * @param high The upper spacepoint.
+   * @param isMiddleInverted If middle spacepoint is in the negative z region
    *
    * @return True if the two points form a valid pair, false otherwise.
    */
   bool validTuple(const SeedFinderOptions &options, const internal_sp_t &low,
-                  const internal_sp_t &high) const;
+                  const internal_sp_t &high, bool isMiddleInverted) const;
 
   /**
    * @brief Create a k-d tree from a set of spacepoints.

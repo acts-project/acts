@@ -50,7 +50,6 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     std::reference_wrapper<const Acts::CalibrationContext> calibrationContext;
     std::reference_wrapper<const MeasurementCalibrator> calibrator;
     const Acts::Surface* referenceSurface = nullptr;
-    Acts::LoggerWrapper logger;
     Acts::PropagatorPlainOptions propOptions;
   };
 

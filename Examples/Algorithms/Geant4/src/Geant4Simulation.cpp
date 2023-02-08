@@ -17,7 +17,10 @@
 #include <iostream>
 #include <stdexcept>
 
+#include <G4EmParameters.hh>
 #include <G4FieldManager.hh>
+#include <G4HadronicParameters.hh>
+#include <G4HadronicProcessStore.hh>
 #include <G4MagneticField.hh>
 #include <G4RunManager.hh>
 #include <G4TransportationManager.hh>
@@ -29,6 +32,7 @@
 #include <G4UserTrackingAction.hh>
 #include <G4VUserDetectorConstruction.hh>
 #include <G4VUserPhysicsList.hh>
+#include <G4Version.hh>
 
 namespace {
 /// Helper method to add the user actions
@@ -72,6 +76,24 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
       ACTS_WARNING("No output final particles collection configured");
     }
   }
+
+  // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
+  // 3 would be also possible, but that produces infinite amount of output.
+  const int geantVerboseLevel =
+      logger().level() == Acts::Logging::VERBOSE ? 2 : 0;
+  m_cfg.runManager->SetVerboseLevel(geantVerboseLevel);
+  G4EventManager::GetEventManager()->SetVerboseLevel(geantVerboseLevel);
+  G4EventManager::GetEventManager()->GetTrackingManager()->SetVerboseLevel(
+      geantVerboseLevel);
+  G4EventManager::GetEventManager()->GetStackManager()->SetVerboseLevel(
+      geantVerboseLevel);
+
+  // Suppress the printing of physics information.
+#if G4VERSION_NUMBER >= 1100
+  G4HadronicParameters::Instance()->SetVerboseLevel(0);
+  G4HadronicProcessStore::Instance()->SetVerbose(0);
+  G4EmParameters::Instance()->SetIsPrintedFlag(true);
+#endif
 
   // Set the detector construction
   m_cfg.runManager->SetUserInitialization(m_cfg.detectorConstruction);
