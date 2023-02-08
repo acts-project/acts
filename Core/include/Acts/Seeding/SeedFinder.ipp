@@ -207,7 +207,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       linCircleVec.push_back(
           transformCoordinates(*otherSP, mediumSP, isBottom));
       outVec.push_back(otherSP);
-      std::cout << otherSP->cotTheta() << std::endl;
       continue;
     }
 
