@@ -76,9 +76,8 @@ LinCircle transformCoordinates(
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
-    std::array<float, 6> output{obj.x(),      obj.y(),         obj.z(),
-                                obj.radius(), obj.varianceR(), obj.varianceZ()};
-    return output;
+    return {obj.x(),      obj.y(),         obj.z(),
+                 obj.radius(), obj.varianceR(), obj.varianceZ()};
   };
 
   return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
