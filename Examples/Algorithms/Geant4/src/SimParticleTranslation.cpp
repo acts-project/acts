@@ -147,8 +147,7 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   // Final vertex to be added
   if (pVertex != nullptr) {
     anEvent->AddPrimaryVertex(pVertex);
-    ACTS_DEBUG("Flushing " << pCounter
-                           << " particles associated with vertex "
+    ACTS_DEBUG("Flushing " << pCounter << " particles associated with vertex "
                            << lastVertex->transpose());
   }
 }
