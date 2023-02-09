@@ -11,12 +11,10 @@ target_sources(
     CylinderVolumeBounds.cpp
     CylinderVolumeBuilder.cpp
     CylinderVolumeHelper.cpp
-    CylindricalDetectorHelper.cpp
     Extent.cpp
     KDTreeTrackingGeometryBuilder.cpp
     Detector.cpp
     DetectorVolume.cpp
-    DetectorHelper.cpp
     DiscLayer.cpp
     GenericApproachDescriptor.cpp
     GenericCuboidVolumeBounds.cpp
@@ -33,7 +31,6 @@ target_sources(
     ProtoLayer.cpp
     ProtoDetector.cpp
     ProtoLayerHelper.cpp
-    ProtoVolumeConverter.cpp
     SurfaceArrayCreator.cpp
     TrackingGeometry.cpp
     TrackingGeometryBuilder.cpp
