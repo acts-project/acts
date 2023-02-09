@@ -266,8 +266,7 @@ class BinnedSPGroup {
  public:
   BinnedSPGroup() = delete;
 
-  template <typename spacepoint_iterator_t,
-	    typename callable_t>
+  template <typename spacepoint_iterator_t, typename callable_t>
   BinnedSPGroup<external_spacepoint_t>(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
       callable_t&& toGlobal,
