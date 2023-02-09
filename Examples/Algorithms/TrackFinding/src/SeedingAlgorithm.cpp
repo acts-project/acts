@@ -240,7 +240,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   const Acts::Range1D<float> rMiddleSPRange(
       std::floor(rRangeSPExtent.min(Acts::binR) / 2) * 2 +
           m_cfg.seedFinderConfig.deltaRMiddleMinSPRange,
-      up);
+      up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
   // run the seeding
   static thread_local SimSeedContainer seeds;
