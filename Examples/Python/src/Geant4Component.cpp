@@ -259,27 +259,24 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     using Geant4Detector = ActsExamples::Geant4::Geant4Detector;
 
-    auto g =
-        py::class_<Geant4Detector, std::shared_ptr<Geant4Detector>>(
-            mod, "Geant4Detector")
-            .def(py::init<>())
-            .def("constructDetector",
-                 py::overload_cast<
-                     const ActsExamples::Geant4::Geant4Detector::Config&>(
-                     &ActsExamples::Geant4::Geant4Detector::constructDetector))
-            .def("constructTrackingGeometry",
-                 py::overload_cast<
-                     const ActsExamples::Geant4::Geant4Detector::Config&>(
-                     &ActsExamples::Geant4::Geant4Detector::
-                         constructTrackingGeometry));
+    auto g = py::class_<Geant4Detector, std::shared_ptr<Geant4Detector>>(
+                 mod, "Geant4Detector")
+                 .def(py::init<>())
+                 .def("constructDetector",
+                      py::overload_cast<const Geant4Detector::Config&>(
+                          &Geant4Detector::constructDetector))
+                 .def("constructTrackingGeometry",
+                      py::overload_cast<const Geant4Detector::Config&>(
+                          &Geant4Detector::constructTrackingGeometry));
 
     auto c = py::class_<Geant4Detector::Config>(g, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Geant4Detector::Config);
     ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(g4World);
     ACTS_PYTHON_MEMBER(g4SurfaceOptions);
     ACTS_PYTHON_MEMBER(protoDetector);
+    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
+    ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_STRUCT_END();
   }
 
