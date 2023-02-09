@@ -679,7 +679,7 @@ struct TrackAccessorBase {
   /// @return mutable reference to the column behind the key
   template <typename track_proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
-  T& operator()(track_proxy_t track) {
+  T& operator()(track_proxy_t track) const {
     static_assert(!track_proxy_t::ReadOnly,
                   "Cannot get mutable ref for const track proxy");
     return track.template component<T>(key);
@@ -691,7 +691,7 @@ struct TrackAccessorBase {
   /// @return const reference to the column behind the key
   template <typename track_proxy_t, bool RO = ReadOnly,
             typename = std::enable_if_t<RO>>
-  const T& operator()(track_proxy_t track) {
+  const T& operator()(track_proxy_t track) const {
     if constexpr (track_proxy_t::ReadOnly) {
       return track.template component<T>(key);
     } else {
