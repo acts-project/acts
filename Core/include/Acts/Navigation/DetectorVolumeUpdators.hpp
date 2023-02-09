@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,9 +9,9 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/NavigationDelegates.hpp"
-#include "Acts/Geometry/NavigationState.hpp"
-#include "Acts/Geometry/detail/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -21,8 +21,6 @@ namespace Acts {
 namespace Experimental {
 
 class DetectorVolume;
-
-namespace detail {
 
 /// @brief  The end of world sets the volume pointer of the
 /// navigation state to nullptr, usually indicates the end of
@@ -111,7 +109,7 @@ struct BoundVolumesGrid1Impl : public INavigationDelegate {
   /// @param gBoundaries the grid boundaries
   /// @param bValue the binning value
   /// @param cVolumes the contained volumes
-  /// @param bTransfrom is the optional transform
+  /// @param bTransform is the optional transform
   BoundVolumesGrid1Impl(
       const std::vector<ActsScalar>& gBoundaries, BinningValue bValue,
       const std::vector<const DetectorVolume*>& cVolumes,
@@ -143,6 +141,5 @@ struct BoundVolumesGrid1Impl : public INavigationDelegate {
   }
 };
 
-}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts

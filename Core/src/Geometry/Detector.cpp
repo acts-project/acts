@@ -9,9 +9,9 @@
 #include "Acts/Geometry/Detector.hpp"
 
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Geometry/NavigationState.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
