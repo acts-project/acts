@@ -101,12 +101,12 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 
     root_files = [
         (
-            "fatras_particles_final.root",
+            "particles_final.root",
             "particles",
             nevents,
         ),
         (
-            "fatras_particles_initial.root",
+            "particles_initial.root",
             "particles",
             nevents,
         ),
@@ -151,8 +151,8 @@ def test_geant4(tmp_path, assert_root_hash):
     csv.mkdir()
 
     root_files = [
-        "fatras_particles_final.root",
-        "fatras_particles_initial.root",
+        "particles_final.root",
+        "particles_initial.root",
         "hits.root",
     ]
 
@@ -220,12 +220,12 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             seq.config.events,
         ),
         (
-            "fatras_particles_final.root",
+            "particles_final.root",
             "particles",
             seq.config.events,
         ),
         (
-            "fatras_particles_initial.root",
+            "particles_initial.root",
             "particles",
             seq.config.events,
         ),
@@ -287,12 +287,12 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             seq.config.events,
         ),
         (
-            "fatras_particles_final.root",
+            "particles_final.root",
             "particles",
             seq.config.events,
         ),
         (
-            "fatras_particles_initial.root",
+            "particles_initial.root",
             "particles",
             seq.config.events,
         ),
@@ -359,12 +359,12 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
             seq.config.events,
         ),
         (
-            "fatras_particles_final.root",
+            "particles_final.root",
             "particles",
             seq.config.events,
         ),
         (
-            "fatras_particles_initial.root",
+            "particles_initial.root",
             "particles",
             seq.config.events,
         ),
