@@ -13,10 +13,10 @@
 #include "Acts/Geometry/Detector.hpp"
 #include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/NavigationState.hpp"
-#include "Acts/Geometry/detail/DetectorVolumeFinders.hpp"
 #include "Acts/Geometry/detail/PortalGenerators.hpp"
-#include "Acts/Geometry/detail/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
@@ -49,28 +49,28 @@ auto portalGenerator = Acts::Experimental::detail::defaultPortalGenerator();
 
 auto cyl0 = Acts::Experimental::DetectorVolumeFactory::construct(
     portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0Bounds),
-    Acts::Experimental::detail::allPortals());
+    Acts::Experimental::allPortals());
 
 auto cyl1 = Acts::Experimental::DetectorVolumeFactory::construct(
     portalGenerator, tContext, "Cyl1", nominal, std::move(cyl1Bounds),
-    Acts::Experimental::detail::allPortals());
+    Acts::Experimental::allPortals());
 
 auto cyl2 = Acts::Experimental::DetectorVolumeFactory::construct(
     portalGenerator, tContext, "Cyl2", nominal, std::move(cyl2Bounds),
-    Acts::Experimental::detail::allPortals());
+    Acts::Experimental::allPortals());
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 = {
     cyl0, cyl1, cyl2};
 
 auto det012 = Acts::Experimental::Detector::makeShared(
-    "Det012", volumes012, Acts::Experimental::detail::tryAllVolumes());
+    "Det012", volumes012, Acts::Experimental::tryAllVolumes());
 
 BOOST_AUTO_TEST_SUITE(Experimental)
 
 // Test finding detectors beu trial and error
 BOOST_AUTO_TEST_CASE(TrialAndErrorDetectorVolumeFinder) {
   nState.currentDetector = det012.get();
-  Acts::Experimental::detail::TrialAndErrorImpl tae;
+  Acts::Experimental::TrialAndErrorImpl tae;
   // Cylinder 0
   nState.position = Acts::Vector3(5., 0., 0.);
   tae.update(tContext, nState);
@@ -106,8 +106,8 @@ BOOST_AUTO_TEST_CASE(IndexedDetectorVolumeFinder) {
   g.atPosition(std::array<Acts::ActsScalar, 1u>{50.}) = 1u;
   g.atPosition(std::array<Acts::ActsScalar, 1u>{150.}) = 2u;
 
-  Acts::Experimental::detail::IndexedDetectorVolumeImpl<decltype(g)> idv(
-      std::move(g), {Acts::binR});
+  Acts::Experimental::IndexedDetectorVolumeImpl<decltype(g)> idv(std::move(g),
+                                                                 {Acts::binR});
 
   // Cylinder 0
   nState.position = Acts::Vector3(5., 0., 0.);
