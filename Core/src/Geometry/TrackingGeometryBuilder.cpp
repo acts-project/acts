@@ -20,7 +20,7 @@ Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
   setConfiguration(cgbConfig);
 }
 
-const Acts::TrackingGeometryBuilder::Config &
+const Acts::TrackingGeometryBuilder::Config&
 Acts::TrackingGeometryBuilder::getConfiguration() const {
   return m_cfg;
 }

@@ -82,7 +82,7 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
 
   /// Get configuration method
   /// @return the current configuration
-  const Config &getConfiguration() const;
+  const Config& getConfiguration() const;
 
   /// set logging instance
   /// @param newLogger the new logging instance
