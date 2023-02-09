@@ -6,10 +6,11 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 template <typename external_spacepoint_t>
-template <typename spacepoint_iterator_t>
+template <typename spacepoint_iterator_t,
+	 typename callable_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    const GlobalPositionFunctor& toGlobal,
+    callable_t&& toGlobal,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
