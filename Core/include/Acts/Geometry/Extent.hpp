@@ -167,7 +167,7 @@ class Extent {
   /// @param bValue the binning identification
   ActsScalar max(BinningValue bValue) const { return m_range[bValue].max(); }
 
-  /// Access the maximum parameter
+  /// Access the midpoint
   ///
   /// @param bValue the binning identification
   ActsScalar medium(BinningValue bValue) const {
