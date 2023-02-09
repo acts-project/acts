@@ -917,15 +917,7 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
     assert len(list(csv_dir.iterdir())) == 3 * s.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
     assert_entries(root_file, "vol9", 0)
-    for tn in (
-        8,
-        12,
-        13,
-        14,
-        16,
-        17,
-        18,
-    ):
+    for tn in (8, 12, 13, 14, 16, 17, 18):
         assert_has_entries(root_file, f"vol{tn}")
 
     assert_root_hash(root_file.name, root_file)
@@ -975,15 +967,7 @@ def test_digitization_example_input(trk_geo, tmp_path, assert_root_hash):
     assert_entries(root_file, "vol7", 0)
     assert_entries(root_file, "vol9", 0)
 
-    for tn in (
-        8,
-        12,
-        13,
-        14,
-        16,
-        17,
-        18,
-    ):
+    for tn in (8, 12, 13, 14, 16, 17, 18):
         assert_has_entries(root_file, f"vol{tn}")
     assert_root_hash(root_file.name, root_file)
 
