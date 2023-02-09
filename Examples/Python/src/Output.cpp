@@ -161,7 +161,7 @@ void addOutput(Context& ctx) {
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::RootMaterialTrackWriter, mex,
                              "RootMaterialTrackWriter", collection, filePath,
                              fileMode, treeName, recalculateTotals, prePostStep,
-                             storeSurface, storeVolume);
+                             storeSurface, storeVolume, collapseInteractions);
 
   {
     using Writer = ActsExamples::RootBFieldWriter;

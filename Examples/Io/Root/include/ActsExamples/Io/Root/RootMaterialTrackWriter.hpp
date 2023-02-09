@@ -56,6 +56,9 @@ class RootMaterialTrackWriter
     bool storeSurface = false;
     /// Write the volume to which the material step correpond
     bool storeVolume = false;
+    /// Collapse consecutive interactions of a single surface into a single
+    /// interaction
+    bool collapseInteractions = false;
   };
 
   /// Constructor with
