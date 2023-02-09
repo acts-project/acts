@@ -10,8 +10,8 @@
 
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/NavigationState.hpp"
 #include "Acts/Geometry/detail/PortalGenerators.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <memory>

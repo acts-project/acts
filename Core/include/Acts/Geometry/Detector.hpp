@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
