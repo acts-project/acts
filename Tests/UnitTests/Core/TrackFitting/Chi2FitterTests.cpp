@@ -12,6 +12,7 @@
 #include "Acts/EventData/Measurement.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -198,12 +199,15 @@ BOOST_AUTO_TEST_CASE(ZeroFieldNoSurfaceForward) {
 
   // BOOST_TEST_INFO("Test Case ZeroFieldNoSurfaceForward: running .fit()...");
 
-  auto res =
-      chi2Zero.fit(sourceLinks.begin(), sourceLinks.end(), start, chi2Options);
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  auto res = chi2Zero.fit(sourceLinks.begin(), sourceLinks.end(), start,
+                          chi2Options, tracks);
   BOOST_REQUIRE(res.ok());
 
   const auto& val = res.value();
-  BOOST_CHECK(val.finished);
+  BOOST_CHECK(val.hasReferenceSurface());
 }
 
 // TODO: add more test cases, for holes, outliers, ...

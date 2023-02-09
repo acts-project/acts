@@ -133,6 +133,10 @@ struct TGeoDetector {
       bool itkModuleSplit = false;
       std::map<std::string, unsigned int> barrelMap;
       std::map<std::string, std::vector<std::pair<double, double>>> discMap;
+      /// pairs of regular expressions to match sensor names and category keys
+      /// for either the barrelMap or the discMap
+      std::map<std::string, std::string>
+          splitPatterns;  // @TODO in principle vector<pair< > > would be good enough
     };
 
     std::vector<Volume> volumes;
