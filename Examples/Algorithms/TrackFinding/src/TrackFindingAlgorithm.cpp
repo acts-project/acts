@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/Track.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -98,15 +99,27 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   TrackContainer tracks(trackContainer, trackStateContainer);
 
+  tracks.addColumn<unsigned int>("trackGroup");
+  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+
+  unsigned int nSeed = 0;
+
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     auto result =
         (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracks);
     m_nTotalSeeds++;
+    nSeed++;
+
     if (!result.ok()) {
       m_nFailedSeeds++;
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());
       continue;
+    }
+
+    auto& tracksForSeed = result.value();
+    for (auto& track : tracksForSeed) {
+      seedNumber(track) = nSeed;
     }
   }
 
