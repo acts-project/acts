@@ -835,6 +835,7 @@ def test_volume_material_mapping(material_recording, tmp_path, assert_root_hash)
             marks=[
                 pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up"),
                 pytest.mark.slow,
+                pytest.mark.odd,
             ],
         ),
         (functools.partial(AlignedDetector.create, iovSize=1), 450),
