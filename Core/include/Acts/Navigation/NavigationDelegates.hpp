@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/NavigationState.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 namespace Acts {
