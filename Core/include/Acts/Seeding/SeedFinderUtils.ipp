@@ -59,8 +59,6 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
          iDeltaR2;
   l.x = xNewFrame;
   l.y = yNewFrame;
-  l.z = sp.z();
-  l.r = sp.radius();
 
   sp.setCotTheta(cot_theta);
   sp.setDeltaR(std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
@@ -95,8 +93,6 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
          iDeltaR2;
   l.x = xNewFrame;
   l.y = yNewFrame;
-  l.z = sp.z();
-  l.r = sp.radius();
 
   sp.setCotTheta(cot_theta);
   sp.setDeltaR(std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
@@ -169,8 +165,6 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
            iDeltaR2;
     l.x = xNewFrame;
     l.y = yNewFrame;
-    l.z = sp->z();
-    l.r = sp->radius();
 
     linCircleVec.push_back(l);
     sp->setCotTheta(cot_theta);

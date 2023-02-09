@@ -537,13 +537,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       // positive/negative in phi
       state.curvatures.push_back(B / std::sqrt(S2));
       state.impactParameters.push_back(Im);
-
-      // evaluate eta and pT of the seed
-      float cotThetaAvg = std::sqrt(cotThetaAvg2);
-      float theta = std::atan(1. / cotThetaAvg);
-      float eta = -std::log(std::tan(0.5 * theta));
-      state.etaVec.push_back(eta);
-      state.ptVec.push_back(pT);
     }  // loop on tops
 
     if (state.topSpVec.empty()) {
