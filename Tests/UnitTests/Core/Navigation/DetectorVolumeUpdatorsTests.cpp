@@ -10,8 +10,8 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/NavigationState.hpp"
-#include "Acts/Geometry/detail/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <array>
@@ -50,7 +50,7 @@ BOOST_AUTO_TEST_CASE(EndOfWorldUpdate) {
   nState.currentVolume = volumeA.get();
   BOOST_CHECK(nState.currentVolume == volumeA.get());
 
-  Acts::Experimental::detail::EndOfWorldImpl eow;
+  Acts::Experimental::EndOfWorldImpl eow;
   eow.update(tContext, nState);
 
   BOOST_CHECK(nState.currentVolume == nullptr);
@@ -61,14 +61,13 @@ BOOST_AUTO_TEST_CASE(SingleVolumeUpdate) {
   nState.currentVolume = volumeA.get();
   BOOST_CHECK(nState.currentVolume == volumeA.get());
 
-  Acts::Experimental::detail::SingleDetectorVolumeImpl svu(volumeB.get());
+  Acts::Experimental::SingleDetectorVolumeImpl svu(volumeB.get());
   svu.update(tContext, nState);
 
   BOOST_CHECK(nState.currentVolume == volumeB.get());
 
-  BOOST_CHECK_THROW(
-      Acts::Experimental::detail::SingleDetectorVolumeImpl(nullptr),
-      std::invalid_argument);
+  BOOST_CHECK_THROW(Acts::Experimental::SingleDetectorVolumeImpl(nullptr),
+                    std::invalid_argument);
 }
 
 // A typlical volume array in 1 dimension (bound, not closed)
@@ -77,8 +76,7 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
 
   std::vector<const Acts::Experimental::DetectorVolume*> volumes = {
       volumeA.get(), volumeB.get(), volumeC.get(), volumeD.get()};
-  Acts::Experimental::detail::BoundVolumesGrid1Impl bvg(zArray, Acts::binZ,
-                                                        volumes);
+  Acts::Experimental::BoundVolumesGrid1Impl bvg(zArray, Acts::binZ, volumes);
   // Reset the navigation state
   nState.currentVolume = nullptr;
 
@@ -95,8 +93,8 @@ BOOST_AUTO_TEST_CASE(VolumeArrayUpdate) {
   Acts::Transform3 shift300 = Acts::Transform3::Identity();
   shift300.pretranslate(Acts::Vector3(0, 0, 300));
 
-  Acts::Experimental::detail::BoundVolumesGrid1Impl bvgs(
-      zArray, Acts::binZ, volumes, shift300.inverse());
+  Acts::Experimental::BoundVolumesGrid1Impl bvgs(zArray, Acts::binZ, volumes,
+                                                 shift300.inverse());
 
   // 150 (-300) -> transforms to -150, hence it yields A
   nState.position = Acts::Vector3(0., 0., 150.);

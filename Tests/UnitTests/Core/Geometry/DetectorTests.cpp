@@ -12,10 +12,10 @@
 #include "Acts/Geometry/Detector.hpp"
 #include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/detail/DetectorVolumeFinders.hpp"
-#include "Acts/Geometry/detail/NavigationStateUpdators.hpp"
 #include "Acts/Geometry/detail/PortalGenerators.hpp"
-#include "Acts/Geometry/detail/SurfaceCandidatesUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeFinders.hpp"
+#include "Acts/Navigation/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
@@ -64,24 +64,24 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   auto cyl0 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0Bounds),
-      Acts::Experimental::detail::allPortals());
+      Acts::Experimental::allPortals());
 
   auto cyl0nameDup = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0BoundsCopy),
-      Acts::Experimental::detail::allPortals());
+      Acts::Experimental::allPortals());
 
   auto cyl1 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl1", nominal, std::move(cyl1Bounds),
-      Acts::Experimental::detail::allPortals());
+      Acts::Experimental::allPortals());
 
   auto cyl2 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl2", nominal, std::move(cyl2Bounds),
-      Acts::Experimental::detail::allPortals());
+      Acts::Experimental::allPortals());
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 =
       {cyl0, cyl1, cyl2};
   auto det012 = Acts::Experimental::Detector::makeShared(
-      "Det012", volumes012, Acts::Experimental::detail::tryAllVolumes());
+      "Det012", volumes012, Acts::Experimental::tryAllVolumes());
 
   // Check the basic return functions
   BOOST_CHECK(det012->name() == "Det012");
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
       {cyl0, cyl0nameDup, cyl2};
   BOOST_CHECK_THROW(Acts::Experimental::Detector::makeShared(
                         "Det002_name_duplicate", volumes002,
-                        Acts::Experimental::detail::tryAllVolumes()),
+                        Acts::Experimental::tryAllVolumes()),
                     std::invalid_argument);
 }
 
