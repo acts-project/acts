@@ -55,7 +55,7 @@ clang_tidy:
 
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v30
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v31
   tags:
     - docker
   variables:
