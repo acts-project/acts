@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Geometry/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -19,7 +19,6 @@
 
 namespace Acts {
 namespace Experimental {
-namespace detail {
 
 /// @brief  This sets a single object, e.g. single surface or single volume
 /// @tparam object_type the type of the object to be filled
@@ -173,6 +172,5 @@ class ChainedUpdatorImpl : public INavigationDelegate {
   std::tuple<updators_t...> updators;
 };
 
-}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts
