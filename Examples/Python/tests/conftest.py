@@ -238,12 +238,7 @@ DetectorConfig = namedtuple(
 )
 
 
-@pytest.fixture(
-    params=[
-        "generic",
-        "odd",
-    ]
-)
+@pytest.fixture(params=["generic", pytest.param("odd", marks=pytest.mark.odd)])
 def detector_config(request):
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
