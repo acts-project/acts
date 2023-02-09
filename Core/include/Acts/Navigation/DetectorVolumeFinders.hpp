@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2022-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,9 +11,9 @@
 #include "Acts/Geometry/Detector.hpp"
 #include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/NavigationDelegates.hpp"
-#include "Acts/Geometry/NavigationState.hpp"
-#include "Acts/Geometry/detail/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
 
@@ -21,8 +21,6 @@
 
 namespace Acts {
 namespace Experimental {
-
-namespace detail {
 
 /// @brief The end of world sets the volume pointer of the
 /// navigation state to nullptr, usually indicates the end of
@@ -93,6 +91,5 @@ using IndexedDetectorVolumeImpl =
     IndexedUpdatorImpl<grid_type, IndexedDetectorVolumeExtractor,
                        DetectorVolumeFiller>;
 
-}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts

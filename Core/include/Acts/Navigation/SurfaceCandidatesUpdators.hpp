@@ -12,16 +12,15 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/NavigationState.hpp"
 #include "Acts/Geometry/Portal.hpp"
-#include "Acts/Geometry/detail/NavigationStateUpdators.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <tuple>
 
 namespace Acts {
 namespace Experimental {
-namespace detail {
 
 /// Helper method to update the candidates (portals/surfaces),
 /// this can be called for initial surface/portal estimation,
@@ -189,6 +188,5 @@ template <typename grid_type>
 using IndexedSurfacesImpl =
     IndexedUpdatorImpl<grid_type, IndexedSurfacesExtractor, SurfacesFiller>;
 
-}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts
