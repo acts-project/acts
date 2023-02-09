@@ -31,7 +31,7 @@ class Portal;
 using DetectorVolumes = std::vector<std::shared_ptr<DetectorVolume>>;
 /// Current skin (outside volumes)
 using ProtoContainer = std::map<unsigned int, std::shared_ptr<Portal>>;
-/// Current blok (volumes and skin)
+/// Current block (volumes and skin)
 using DetectorBlock = std::tuple<DetectorVolumes, ProtoContainer>;
 
 /// The detector builder function

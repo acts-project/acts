@@ -109,7 +109,7 @@ struct BoundVolumesGrid1Impl : public INavigationDelegate {
   /// @param gBoundaries the grid boundaries
   /// @param bValue the binning value
   /// @param cVolumes the contained volumes
-  /// @param bTransfrom is the optional transform
+  /// @param bTransform is the optional transform
   BoundVolumesGrid1Impl(
       const std::vector<ActsScalar>& gBoundaries, BinningValue bValue,
       const std::vector<const DetectorVolume*>& cVolumes,
