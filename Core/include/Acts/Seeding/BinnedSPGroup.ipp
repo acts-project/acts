@@ -9,11 +9,11 @@ template <typename external_spacepoint_t>
 template <typename spacepoint_iterator_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    GlobalPositionFunctor toGlobal,
+    const GlobalPositionFunctor& toGlobal,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-    Acts::Extent rRangeSPExtent,
+    Acts::Extent& rRangeSPExtent,
     const SeedFinderConfig<external_spacepoint_t>& config,
     const SeedFinderOptions& options) {
   if (not config.isInInternalUnits) {
