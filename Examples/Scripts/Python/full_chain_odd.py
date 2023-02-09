@@ -25,11 +25,17 @@ from acts.examples.reconstruction import (
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
-parser = argparse.ArgumentParser(description='Full chain with the OpenDataDetector')
+parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetector")
 
-parser.add_argument('--events','-n', help="Number of events", type=int, default=100)
-parser.add_argument('--geant4', help='Use Geant4 instead of fatras', action='store_true')
-parser.add_argument('--ttbar', help='Use Pythia8 (ttbar, pile-up 200) instead of particle gun', action='store_true')
+parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
+parser.add_argument(
+    "--geant4", help="Use Geant4 instead of fatras", action="store_true"
+)
+parser.add_argument(
+    "--ttbar",
+    help="Use Pythia8 (ttbar, pile-up 200) instead of particle gun",
+    action="store_true",
+)
 args = vars(parser.parse_args())
 
 ttbar_pu200 = args["ttbar"]
@@ -52,7 +58,9 @@ rnd = acts.examples.RandomNumbers(seed=42)
 
 # TODO Geant4 currently crashes with FPE monitoring
 with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
-    s = acts.examples.Sequencer(events=args["events"], numThreads=1, outputDir=str(outputDir))
+    s = acts.examples.Sequencer(
+        events=args["events"], numThreads=1, outputDir=str(outputDir)
+    )
 
     if not ttbar_pu200:
         addParticleGun(

@@ -1231,7 +1231,9 @@ def test_full_chain_odd_example(tmp_path):
     )
 
 
-@pytest.mark.skipif(not dd4hepEnabled or not geant4Enabled, reason="DD4hep and/or Geant4 not set up")
+@pytest.mark.skipif(
+    not dd4hepEnabled or not geant4Enabled, reason="DD4hep and/or Geant4 not set up"
+)
 @pytest.mark.slow
 def test_full_chain_odd_example(tmp_path):
     # This test literally only ensures that the full chain example can run without erroring out
@@ -1251,7 +1253,7 @@ def test_full_chain_odd_example(tmp_path):
     env["NEVENTS"] = "1"
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call(
-        [str(script),"-n1","--geant4","--ttbar"],
+        [str(script), "-n1", "--geant4", "--ttbar"],
         cwd=tmp_path,
         env=env,
         stderr=subprocess.STDOUT,
