@@ -82,7 +82,7 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
 
   /// Get configuration method
   /// @return the current configuration
-  Config getConfiguration() const;
+  const Config& getConfiguration() const;
 
   /// set logging instance
   /// @param newLogger the new logging instance
@@ -98,10 +98,5 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
   /// the logging instance
   std::unique_ptr<const Logger> m_logger;
 };
-
-inline TrackingGeometryBuilder::Config
-TrackingGeometryBuilder::getConfiguration() const {
-  return m_cfg;
-}
 
 }  // namespace Acts
