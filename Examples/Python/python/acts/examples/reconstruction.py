@@ -175,7 +175,7 @@ def addSeeding(
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     trackParamsEstimationConfig: TrackParamsEstimationConfig = TrackParamsEstimationConfig(),
-    inputParticles: str = "particles_initial",
+    inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
@@ -194,7 +194,7 @@ def addSeeding(
     truthSeedRanges : TruthSeedRanges(rho, z, phi, eta, absEta, pt, nHits)
         TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
-        If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles_initial"))
+        If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles"))
     particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
@@ -216,7 +216,7 @@ def addSeeding(
     trackParamsEstimationConfig : TrackParamsEstimationConfig(deltaR)
         TrackParamsEstimationAlgorithm configuration. Currently only deltaR=(min,max) range specified here.
         Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
-    inputParticles : str, "particles_initial"
+    inputParticles : str, "particles"
         input particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
@@ -354,6 +354,7 @@ def addSeedingTruthSelection(
         outputParticles="truth_seeds_selected",
     )
     s.addAlgorithm(selAlg)
+    s.addWhiteboardAlias("particles", selAlg.config.outputParticles)
     return selAlg.config.outputParticles
 
 
@@ -944,7 +945,7 @@ def addTrajectoryWriters(
                 # since the unselected CKF track might have a majority particle not in the
                 # filtered particle collection. This could be avoided when a seperate track
                 # selection algorithm is used.
-                inputParticles="particles_selected",
+                inputParticles="particles",
                 inputSimHits="simhits",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -962,7 +963,7 @@ def addTrajectoryWriters(
                 # since the unselected CKF track might have a majority particle not in the
                 # filtered particle collection. This could be avoided when a seperate track
                 # selection algorithm is used.
-                inputParticles="particles_selected",
+                inputParticles="particles",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
                 treeName="tracksummary",
@@ -1273,7 +1274,7 @@ def addVertexFitting(
         )
 
     inputParticles = "particles_input"
-    selectedParticles = "particles_selected"
+    selectedParticles = "particles"
     outputVertices = "fittedVertices"
 
     outputTime = ""
