@@ -5,7 +5,6 @@ import tempfile
 import shutil
 import datetime
 import sys
-import subprocess
 
 sys.path += [
     str(Path(__file__).parent.parent.parent / "Examples/Scripts/Python/"),
@@ -350,11 +349,11 @@ with acts.FpeMonitor():
 
     ### Truth tracking with Kalman Filter
 
-    truth_tracking_kalman()
+    #truth_tracking_kalman()
 
     ### GSF
 
-    truth_tracking_gsf()
+    #truth_tracking_gsf()
 
     ### CKF track finding variations
 
