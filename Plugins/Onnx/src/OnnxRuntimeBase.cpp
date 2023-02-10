@@ -26,11 +26,12 @@ Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {
 
   // get the names of the input nodes of the model
   size_t numInputNodes = m_session->GetInputCount();
-  m_inputNodeNames.resize(numInputNodes);
 
   // iterate over all input nodes and get the name
   for (size_t i = 0; i < numInputNodes; i++) {
-    m_inputNodeNames[i] = m_session->GetInputName(i, allocator);
+    m_inputNodeNamesAllocated.push_back(
+        m_session->GetInputNameAllocated(i, allocator));
+    m_inputNodeNames.push_back(m_inputNodeNamesAllocated.back().get());
 
     // get the dimensions of the input nodes
     // here we assume that all input nodes have the dimensions
@@ -47,11 +48,12 @@ Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {
 
   // get the names of the output nodes
   size_t numOutputNodes = m_session->GetOutputCount();
-  m_outputNodeNames.resize(numOutputNodes);
 
   // iterate over all output nodes and get the name
   for (size_t i = 0; i < numOutputNodes; i++) {
-    m_outputNodeNames[i] = m_session->GetOutputName(i, allocator);
+    m_outputNodeNamesAllocated.push_back(
+        m_session->GetOutputNameAllocated(i, allocator));
+    m_outputNodeNames.push_back(m_outputNodeNamesAllocated.back().get());
 
     // get the dimensions of the output nodes
     // here we assume that all output nodes have the dimensions
