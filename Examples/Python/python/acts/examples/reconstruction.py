@@ -319,6 +319,7 @@ def addSeeding(
                 parEstimateAlg.config.outputProtoTracks,
                 logLevel,
             )
+
     return s
 
 
@@ -850,7 +851,7 @@ def addCKFTracks(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    selectedParticles : str, "truth_seeds_selected"
+    selectedParticles : str, "particles"
         CKFPerformanceWriter truth input
     trackSelectorRanges : TrackSelectorRanges(loc0, loc1, time, eta, absEta, pt, phi, removeNeutral, removeCharged)
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
@@ -1170,7 +1171,7 @@ def addExaTrkX(
 def addAmbiguityResolution(
     s,
     config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
-    selectedParticles: str = "truth_seeds_selected",
+    selectedParticles: str = "particles",
     ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
