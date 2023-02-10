@@ -211,7 +211,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                                   trajState.outlierLayer.end());
 
       // Initialize the truth particle info
-      uint64_t majorityParticleId = std::numeric_limits<size_t>::max();
+      ActsFatras::Barcode majorityParticleId(std::numeric_limits<size_t>::max());
       unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
       int t_charge = 99;
       float t_time = NaNfloat;
@@ -243,7 +243,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Get the truth particle info
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
-        majorityParticleId = particleHitCounts.front().particleId.value();
+        majorityParticleId = particleHitCounts.front().particleId;
         nMajorityHits = particleHitCounts.front().hitCount;
 
         // Find the truth particle via the barcode
@@ -293,7 +293,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
       // Push the corresponding truth particle info for the track.
       // Always push back even if majority particle not found
-      m_majorityParticleId.push_back(majorityParticleId);
+      m_majorityParticleId.push_back(majorityParticleId.value());
       m_nMajorityHits.push_back(nMajorityHits);
       m_t_charge.push_back(t_charge);
       m_t_time.push_back(t_time);

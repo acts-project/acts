@@ -349,11 +349,11 @@ with acts.FpeMonitor():
 
     ### Truth tracking with Kalman Filter
 
-    #truth_tracking_kalman()
+    truth_tracking_kalman()
 
     ### GSF
 
-    #truth_tracking_gsf()
+    truth_tracking_gsf()
 
     ### CKF track finding variations
 

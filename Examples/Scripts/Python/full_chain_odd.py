@@ -103,7 +103,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             detector,
             trackingGeometry,
             field,
-            preselectParticles=ParticleSelectorConfig(
+            preSelectParticles=ParticleSelectorConfig(
                 eta=(-3.0, 3.0),
                 absZ=(0, 1e4),
                 pt=(150 * u.MeV, None),

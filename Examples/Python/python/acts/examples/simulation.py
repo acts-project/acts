@@ -308,7 +308,7 @@ def addPythia8(
 
 def addParticleSelection(
     s: acts.examples.Sequencer,
-    preselectParticles: ParticleSelectorConfig,
+    config: ParticleSelectorConfig,
     inputParticles: str,
     outputParticles: str,
     logLevel: Optional[acts.logging.Level] = None,
@@ -332,22 +332,22 @@ def addParticleSelection(
     s.addAlgorithm(
         acts.examples.ParticleSelector(
             **acts.examples.defaultKWArgs(
-                rhoMin=preselectParticles.rho[0],
-                rhoMax=preselectParticles.rho[1],
-                absZMin=preselectParticles.absZ[0],
-                absZMax=preselectParticles.absZ[1],
-                timeMin=preselectParticles.time[0],
-                timeMax=preselectParticles.time[1],
-                phiMin=preselectParticles.phi[0],
-                phiMax=preselectParticles.phi[1],
-                etaMin=preselectParticles.eta[0],
-                etaMax=preselectParticles.eta[1],
-                absEtaMin=preselectParticles.absEta[0],
-                absEtaMax=preselectParticles.absEta[1],
-                ptMin=preselectParticles.pt[0],
-                ptMax=preselectParticles.pt[1],
-                removeCharged=preselectParticles.removeCharged,
-                removeNeutral=preselectParticles.removeNeutral,
+                rhoMin=config.rho[0],
+                rhoMax=config.rho[1],
+                absZMin=config.absZ[0],
+                absZMax=config.absZ[1],
+                timeMin=config.time[0],
+                timeMax=config.time[1],
+                phiMin=config.phi[0],
+                phiMax=config.phi[1],
+                etaMin=config.eta[0],
+                etaMax=config.eta[1],
+                absEtaMin=config.absEta[0],
+                absEtaMax=config.absEta[1],
+                ptMin=config.pt[0],
+                ptMax=config.pt[1],
+                removeCharged=config.removeCharged,
+                removeNeutral=config.removeNeutral,
             ),
             level=customLogLevel(),
             inputParticles=inputParticles,
@@ -356,9 +356,6 @@ def addParticleSelection(
     )
 
 
-@acts.examples.NamedTypeArgs(
-    preselectParticles=ParticleSelectorConfig,
-)
 def addFatras(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
@@ -513,6 +510,13 @@ def addSimWriters(
                 filePath=str(outputDirRoot / "particles_final.root"),
             )
         )
+        s.addWriter(
+            acts.examples.RootSimHitWriter(
+                level=customLogLevel(),
+                inputSimHits=inputSimHits,
+                filePath=str(outputDirRoot / "hits.root"),
+            )
+        )
 
     return s
 
@@ -541,9 +545,6 @@ def getG4DetectorContruction(
     raise AttributeError(f"cannot find a suitable detector construction for {detector}")
 
 
-@acts.examples.NamedTypeArgs(
-    preselectParticles=ParticleSelectorConfig,
-)
 def addGeant4(
     s: acts.examples.Sequencer,
     detector: Optional[Any],

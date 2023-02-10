@@ -101,6 +101,7 @@ def runVertexFitting(
         field,
         trackParameters=trackParameters,
         associatedParticles=associatedParticles,
+        selectedParticles=selectedParticles,
         trajectories=None,
         vertexFinder=vertexFinder,
         outputDirRoot=outputDir if outputRoot else None,
