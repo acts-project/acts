@@ -16,7 +16,7 @@
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
-#include "ActsExamples/TrackFinding/TrajectoriesToPrototracks.hpp"
+#include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
 #include <memory>
 
