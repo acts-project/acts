@@ -65,30 +65,33 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   G4PrimaryVertex* pVertex = nullptr;
 
   // We are looping through the particles and flush per vertex
-  std::unique_ptr<SimParticle::Vector4> lastVertex = nullptr;
+  std::optional<Acts::Vector4> lastVertex;
 
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
   constexpr double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
 
   unsigned int pCounter = 0;
+  unsigned int trackId = 1;
   // Loop over the input partilces and run
   for (const auto& part : inputParticles) {
     auto currentVertex = part.fourPosition();
-    if (lastVertex == nullptr or not currentVertex.isApprox(*lastVertex)) {
+    if (not lastVertex or not currentVertex.isApprox(*lastVertex)) {
       // Add the vertex to the event
       if (pVertex != nullptr) {
         anEvent->AddPrimaryVertex(pVertex);
         ACTS_DEBUG("Flushing " << pCounter
                                << " particles associated with vertex "
-                               << Acts::toString(*lastVertex));
+                               << lastVertex->transpose());
         pCounter = 0;
       }
-      lastVertex = std::make_unique<SimParticle::Vector4>(currentVertex);
+      lastVertex = currentVertex;
       pVertex = new G4PrimaryVertex(
           currentVertex[0] * convertLength, currentVertex[1] * convertLength,
           currentVertex[2] * convertLength, currentVertex[3]);
     }
+
     // Add a new primary to the vertex
+
     Acts::Vector4 mom4 = part.fourMomentum() * convertEnergy;
 
     // Particle properties, may be forced to specific value
@@ -132,15 +135,19 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     particle->SetMass(particleMass);
     particle->Set4Momentum(mom4[0], mom4[1], mom4[2], mom4[3]);
     particle->SetCharge(part.charge());
-    particle->SetTrackID(pCounter);
+    particle->SetTrackID(trackId++);
+
     // Add the primary to the vertex
     pVertex->SetPrimary(particle);
+
+    eventData.trackIdMapping[particle->GetTrackID()] = part.particleId();
+
     ++pCounter;
   }
   // Final vertex to be added
   if (pVertex != nullptr) {
     anEvent->AddPrimaryVertex(pVertex);
     ACTS_DEBUG("Flushing " << pCounter << " particles associated with vertex "
-                           << Acts::toString(*lastVertex));
+                           << lastVertex->transpose());
   }
 }

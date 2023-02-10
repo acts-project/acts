@@ -536,6 +536,9 @@ def getG4DetectorContruction(
     raise AttributeError(f"cannot find a suitable detector construction for {detector}")
 
 
+@acts.examples.NamedTypeArgs(
+    preselectParticles=ParticleSelectorConfig,
+)
 def addGeant4(
     s: acts.examples.Sequencer,
     detector: Optional[Any],
@@ -565,7 +568,7 @@ def addGeant4(
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     preselectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        ParticleSelector configuration to select particles as input to Fatras. Each range is specified as a tuple of (min,max).
+        ParticleSelector configuration to select particles as input to Geant4. Each range is specified as a tuple of (min,max).
         Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
         Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
