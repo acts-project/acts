@@ -30,10 +30,6 @@ namespace ActsExamples {
 ///  @return drift direction in local 3D coordinates
 using DriftGenerator =
     std::function<Acts::Vector3(const Acts::Vector3 &, RandomEngine &)>;
-/// Takes as an argument the path length, the drift length, and a random engine
-/// @return a charge to which the threshold can be applied
-using ChargeGenerator = std::function<Acts::ActsScalar(
-    Acts::ActsScalar, Acts::ActsScalar, RandomEngine &)>;
 /// Takes as an argument the clsuter size and an random engine
 /// @return a vector of uncorrelated covariance values
 using VarianceGenerator = std::function<std::vector<Acts::ActsScalar>(
@@ -55,19 +51,15 @@ struct GeometricConfig {
     return Acts::Vector3(0., 0., 0.);
   };
   double thickness = 0.;
+  
   /// Charge generation
   ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
       chargeSmearer;
-
   Acts::ActsScalar charge(Acts::ActsScalar path, Acts::ActsScalar,
                           RandomEngine &rng) const {
-    if (!chargeSmearer) {
-      return path;
-    }
-
     auto res = chargeSmearer(path, rng);
     if (res.ok()) {
-      return std::clamp(res->first, 0.0, 1.0);
+      return std::max(0.0, res->first);
     } else {
       throw std::runtime_error(res.error().message());
     }
