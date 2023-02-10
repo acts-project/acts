@@ -881,10 +881,12 @@ def addCKFTracks(
 
     s.addWhiteboardAlias("trajectories", trackFinder.config.outputTrajectories)
 
-    s.addAlgorithm(acts.examples.TrajectoryPrinter(
-        level=customLogLevel(),
-        inputTrajectories=trackFinder.config.outputTrajectories
-    ))
+    s.addAlgorithm(
+        acts.examples.TrajectoryPrinter(
+            level=customLogLevel(),
+            inputTrajectories=trackFinder.config.outputTrajectories,
+        )
+    )
 
     if trackSelectorRanges is not None:
         trackSelector = addTrackSelection(
