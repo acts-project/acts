@@ -106,6 +106,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             preselectParticles=ParticleSelectorConfig(
                 eta=(-3.0, 3.0),
                 absZ=(0, 1e4),
+                rho=(0,1e3),
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             ),
