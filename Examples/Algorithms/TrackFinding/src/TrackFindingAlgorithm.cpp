@@ -42,6 +42,9 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing trajectories output collection");
   }
+  if (m_cfg.outputTracks.empty()) {
+    throw std::invalid_argument("Missing tracks output collection");
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
@@ -101,12 +104,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
-  auto tracks =
-      std::make_unique<TrackContainer>(trackContainer, trackStateContainer);
+
+  TrackContainer tracks(trackContainer, trackStateContainer);
 
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     auto result =
-        (*m_cfg.findTracks)(initialParameters.at(iseed), options, *tracks);
+        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracks);
     m_nTotalSeeds++;
     if (!result.ok()) {
       m_nFailedSeeds++;
@@ -133,22 +136,23 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     }
 
     // Create a Trajectories result struct
-    trajectories.emplace_back(trackStateContainer, std::move(tips),
+    trajectories.emplace_back(*trackStateContainer, std::move(tips),
                               std::move(parameters));
   }
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {
-    computeSharedHits(sourceLinks, *tracks);
+    computeSharedHits(sourceLinks, tracks);
   }
 
   ACTS_DEBUG("Finalized track finding with " << trajectories.size()
                                              << " track candidates.");
 
   m_memoryStatistics.local().hist +=
-      tracks->trackStateContainer().statistics().hist;
+      tracks.trackStateContainer().statistics().hist;
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  ctx.eventStore.add(m_cfg.outputTracks, std::move(tracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
