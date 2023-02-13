@@ -39,6 +39,9 @@ ActsExamples::TrackFittingChi2Algorithm::TrackFittingChi2Algorithm(
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing output trajectories collection");
   }
+  if (m_cfg.outputTracks.empty()) {
+    throw std::invalid_argument("Missing output track collection");
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
@@ -77,6 +80,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
   // kfOptions.multipleScattering = m_cfg.multipleScattering;
   // kfOptions.energyLoss = m_cfg.energyLoss;
   // TODO: pass options to constructor, or here?
+
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+  auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+  TrackContainer tracks(trackContainer, trackStateContainer);
+
+  tracks.addColumn<Acts::ActsScalar>("chi2");
+  static Acts::ConstTrackAccessor<Acts::ActsScalar> chisquare{"chi2"};
 
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
@@ -121,17 +131,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
       }
     }
 
-    auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
-    auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
-    auto tracks =
-        std::make_unique<TrackContainer>(trackContainer, trackStateContainer);
-
-    tracks->addColumn<Acts::ActsScalar>("chi2");
-    static Acts::ConstTrackAccessor<Acts::ActsScalar> chisquare{"chi2"};
-
     ACTS_DEBUG("invoke fitter");
     auto result = fitTrack(trackSourceLinks, initialParams, chi2Options,
-                           surfSequence, *tracks);
+                           surfSequence, tracks);
 
     if (result.ok()) {
       ACTS_DEBUG("result ok");
@@ -158,7 +160,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
         ACTS_DEBUG("No fitted parameters for track " << itrack);
       }
       // store the result
-      trajectories.emplace_back(trackStateContainer, std::move(trackTips),
+      trajectories.emplace_back(*trackStateContainer, std::move(trackTips),
                                 std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track "
@@ -171,6 +173,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
   }
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  ctx.eventStore.add(m_cfg.outputTracks, std::move(tracks));
   // TODO: add chi2 values as output?
   return ActsExamples::ProcessCode::SUCCESS;
 }

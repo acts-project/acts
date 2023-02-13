@@ -83,6 +83,8 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output fitted trajectories collection.
     std::string outputTrajectories;
+    /// Output fitted tracks collection.
+    std::string outputTracks;
     /// Type erased fitter function.
     std::shared_ptr<TrackFitterFunction> fit;
     /// Tracking geometry for surface lookup
