@@ -287,7 +287,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
                                     particleHitCounts);
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
-        auto barcode = particleHitCounts.front().particleId;
+        auto barcode = particleHitCounts.front().particleId.value();
         // Find the truth particle via the barcode
         auto ip = particles.find(barcode);
         if (ip != particles.end()) {

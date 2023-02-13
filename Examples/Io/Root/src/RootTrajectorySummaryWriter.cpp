@@ -211,10 +211,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                                   trajState.outlierLayer.end());
 
       // Initialize the truth particle info
-      ActsFatras::Barcode majorityParticleId(
-          std::numeric_limits<size_t>::max());
+      uint64_t majorityParticleId = std::numeric_limits<size_t>::max();
       unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
-      int t_charge = 99;
+      float t_charge = NaNfloat;
       float t_time = NaNfloat;
       float t_vx = NaNfloat;
       float t_vy = NaNfloat;
@@ -244,7 +243,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Get the truth particle info
       if (not particleHitCounts.empty()) {
         // Get the barcode of the majority truth particle
-        majorityParticleId = particleHitCounts.front().particleId;
+        majorityParticleId = particleHitCounts.front().particleId.value();
         nMajorityHits = particleHitCounts.front().hitCount;
 
         // Find the truth particle via the barcode
@@ -257,7 +256,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
               "Find the truth particle with barcode = " << majorityParticleId);
           // Get the truth particle info at vertex
           t_p = particle.absoluteMomentum();
-          t_charge = static_cast<int>(particle.charge());
+          t_charge = particle.charge();
           t_time = particle.time();
           t_vx = particle.position().x();
           t_vy = particle.position().y();
@@ -294,9 +293,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
       // Push the corresponding truth particle info for the track.
       // Always push back even if majority particle not found
-      m_majorityParticleId.push_back(majorityParticleId.value());
+      m_majorityParticleId.push_back(majorityParticleId);
       m_nMajorityHits.push_back(nMajorityHits);
-      m_t_charge.push_back(t_charge);
+      m_t_charge.push_back(static_cast<int>(t_charge));
       m_t_time.push_back(t_time);
       m_t_vx.push_back(t_vx);
       m_t_vy.push_back(t_vy);
