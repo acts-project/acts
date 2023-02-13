@@ -1226,7 +1226,6 @@ def addVertexFitting(
     trajectories: Optional[str] = "trajectories",
     trackParameters: Optional[str] = None,
     associatedParticles: Optional[str] = None,
-    selectedParticles: str = "particles",
     vertexFinder: VertexFinder = VertexFinder.Truth,
     trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -1279,6 +1278,7 @@ def addVertexFitting(
         )
 
     inputParticles = "particles_input"
+    selectedParticles = "particles_selected"
     outputVertices = "fittedVertices"
 
     outputTime = ""
