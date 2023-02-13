@@ -213,7 +213,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Initialize the truth particle info
       uint64_t majorityParticleId = std::numeric_limits<size_t>::max();
       unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
-      float t_charge = NaNfloat;
+      int t_charge = std::numeric_limits<int>::max();
       float t_time = NaNfloat;
       float t_vx = NaNfloat;
       float t_vy = NaNfloat;
@@ -256,7 +256,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
               "Find the truth particle with barcode = " << majorityParticleId);
           // Get the truth particle info at vertex
           t_p = particle.absoluteMomentum();
-          t_charge = particle.charge();
+          t_charge = static_cast<int>(particle.charge());
           t_time = particle.time();
           t_vx = particle.position().x();
           t_vy = particle.position().y();
@@ -295,7 +295,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Always push back even if majority particle not found
       m_majorityParticleId.push_back(majorityParticleId);
       m_nMajorityHits.push_back(nMajorityHits);
-      m_t_charge.push_back(static_cast<int>(t_charge));
+      m_t_charge.push_back(t_charge);
       m_t_time.push_back(t_time);
       m_t_vx.push_back(t_vx);
       m_t_vy.push_back(t_vy);
