@@ -213,7 +213,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Initialize the truth particle info
       uint64_t majorityParticleId = std::numeric_limits<size_t>::max();
       unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
-      int t_charge = 99;
+      int t_charge = std::numeric_limits<int>::max();
       float t_time = NaNfloat;
       float t_vx = NaNfloat;
       float t_vy = NaNfloat;
