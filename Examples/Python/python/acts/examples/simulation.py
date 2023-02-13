@@ -361,7 +361,7 @@ def addFatras(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
-    preSelectParticles: Optional[ParticleSelectorConfig] = None,
+    preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
     enableInteractions=False,
     inputParticles: str = "particles_input",
@@ -429,14 +429,12 @@ def addFatras(
     # Selector
     if postSelectParticles is not None:
         postSelectedParticles = "particles_initial_selected"
-
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=alg.config.outputParticlesInitial,
             outputParticles=postSelectedParticles,
         )
-
         s.addWhiteboardAlias("particles", postSelectedParticles)
     else:
         s.addWhiteboardAlias("particles", alg.config.outputParticlesInitial)
@@ -555,7 +553,7 @@ def addGeant4(
     volumeMappings: List[str] = [],
     materialMappings: List[str] = [],
     inputParticles: str = "particles_input",
-    preSelectParticles: Optional[ParticleSelectorConfig] = None,
+    preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     postSelectParticles: Optional[ParticleSelectorConfig] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -630,14 +628,12 @@ def addGeant4(
     # Selector
     if postSelectParticles is not None:
         postSelectedParticles = "particles_initial_selected"
-
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=g4conf.outputParticlesInitial,
             outputParticles=postSelectedParticles,
         )
-
         s.addWhiteboardAlias("particles", postSelectedParticles)
     else:
         s.addWhiteboardAlias("particles", alg.config.outputParticlesInitial)
