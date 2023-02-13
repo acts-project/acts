@@ -166,7 +166,7 @@ def addSeeding(
     field: acts.MagneticFieldProvider,
     geoSelectionConfigFile: Optional[Union[Path, str]] = None,
     seedingAlgorithm: SeedingAlgorithm = SeedingAlgorithm.Default,
-    truthSeedRanges: Optional[TruthSeedRanges] = None,
+    truthSeedRanges: Optional[TruthSeedRanges] = TruthSeedRanges(),
     particleSmearingSigmas: ParticleSmearingSigmas = ParticleSmearingSigmas(),
     initialVarInflation: Optional[list] = None,
     seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
@@ -230,8 +230,13 @@ def addSeeding(
     logger = acts.logging.getLogger("addSeeding")
 
     if truthSeedRanges is not None:
-        selectedParticles = addSeedingTruthSelection(
-            s, inputParticles, truthSeedRanges, logLevel
+        selectedParticles = "truth_seeds_selected"
+        addSeedingTruthSelection(
+            s,
+            inputParticles,
+            selectedParticles,
+            truthSeedRanges,
+            logLevel,
         )
     else:
         selectedParticles = inputParticles
@@ -326,6 +331,7 @@ def addSeeding(
 def addSeedingTruthSelection(
     s: acts.examples.Sequencer,
     inputParticles: str,
+    outputParticles: str,
     truthSeedRanges: TruthSeedRanges,
     logLevel: acts.logging.Level = None,
 ):
@@ -352,10 +358,9 @@ def addSeedingTruthSelection(
         level=logLevel,
         inputParticles=inputParticles,
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputParticles="truth_seeds_selected",
+        outputParticles=outputParticles,
     )
     s.addAlgorithm(selAlg)
-    return selAlg.config.outputParticles
 
 
 def addTruthSmearing(
@@ -829,7 +834,7 @@ def addCKFTracks(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     trackSelectorRanges: Optional[TrackSelectorRanges] = None,
-    selectedParticles: str = "particles",
+    selectedParticles: str = "truth_seeds_selected",
     ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -898,7 +903,6 @@ def addCKFTracks(
         name="ckf",
         trajectories=trackFinder.config.outputTrajectories,
         ckfPerformanceConfig=ckfPerformanceConfig,
-        selectedParticles=selectedParticles,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
@@ -921,7 +925,6 @@ def addTrajectoryWriters(
     name: str,
     trajectories: str = "trajectories",
     ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
-    selectedParticles: str = "particles",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     writeStates: bool = True,
@@ -947,7 +950,7 @@ def addTrajectoryWriters(
                 # since the unselected CKF track might have a majority particle not in the
                 # filtered particle collection. This could be avoided when a seperate track
                 # selection algorithm is used.
-                inputParticles=selectedParticles,
+                inputParticles="particles_selected",
                 inputSimHits="simhits",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 inputMeasurementSimHitsMap="measurement_simhits_map",
@@ -965,7 +968,7 @@ def addTrajectoryWriters(
                 # since the unselected CKF track might have a majority particle not in the
                 # filtered particle collection. This could be avoided when a seperate track
                 # selection algorithm is used.
-                inputParticles=selectedParticles,
+                inputParticles="particles_selected",
                 inputMeasurementParticlesMap="measurement_particles_map",
                 filePath=str(outputDirRoot / f"tracksummary_{name}.root"),
                 treeName="tracksummary",
@@ -976,7 +979,7 @@ def addTrajectoryWriters(
             # Write CKF performance data
             ckfPerfWriter = acts.examples.CKFPerformanceWriter(
                 level=customLogLevel(),
-                inputParticles=selectedParticles,
+                inputParticles="truth_seeds_selected",
                 inputTrajectories=trajectories,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 **acts.examples.defaultKWArgs(
@@ -994,7 +997,7 @@ def addTrajectoryWriters(
                 acts.examples.TrackFinderPerformanceWriter(
                     level=acts.logging.INFO,
                     inputProtoTracks="prototracks",
-                    inputParticles=selectedParticles,
+                    inputParticles="truth_seeds_selected",
                     inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(
                         outputDirRoot / f"performance_track_finder_{name}.root"
@@ -1006,8 +1009,8 @@ def addTrajectoryWriters(
             s.addWriter(
                 acts.examples.TrackFitterPerformanceWriter(
                     level=acts.logging.INFO,
+                    inputParticles="truth_seeds_selected",
                     inputTrajectories="trajectories",
-                    inputParticles=selectedParticles,
                     inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(
                         outputDirRoot / f"performance_track_fitter_{name}.root"
@@ -1171,7 +1174,6 @@ def addExaTrkX(
 def addAmbiguityResolution(
     s,
     config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
-    selectedParticles: str = "particles",
     ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -1201,7 +1203,6 @@ def addAmbiguityResolution(
         name="ambi",
         trajectories=alg.config.outputTrajectories,
         ckfPerformanceConfig=ckfPerformanceConfig,
-        selectedParticles=selectedParticles,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
         writeStates=writeTrajectories,
