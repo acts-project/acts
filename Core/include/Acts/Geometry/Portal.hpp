@@ -12,8 +12,8 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/NavigationDelegates.hpp"
-#include "Acts/Geometry/NavigationState.hpp"
+#include "Acts/Navigation/NavigationDelegates.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 

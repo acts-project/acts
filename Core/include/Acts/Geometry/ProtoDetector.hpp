@@ -13,11 +13,31 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 
+#include <functional>
+#include <map>
 #include <optional>
 #include <string>
 #include <vector>
 
 namespace Acts {
+
+struct ProtoVolume;
+
+namespace Experimental {
+class DetectorVolume;
+class Portal;
+
+/// Current volumes (connected)
+using DetectorVolumes = std::vector<std::shared_ptr<DetectorVolume>>;
+/// Current shell (i.e. outside portals)
+using ProtoContainer = std::map<unsigned int, std::shared_ptr<Portal>>;
+/// Current block (volumes and shell)
+using DetectorBlock = std::tuple<DetectorVolumes, ProtoContainer>;
+
+/// The detector builder function
+using DetectorBlockBuilder = std::function<void(
+    DetectorBlock&, const GeometryContext&, Acts::Logging::Level)>;
+}  // namespace Experimental
 
 /// A proto volume description being used to define an overall
 /// structure of either a TrackingVolume or Experimental::DetectorVolume
@@ -45,11 +65,14 @@ struct ProtoVolume {
   /// The extent of this volume
   Extent extent;
 
-  /// Information about internal structure
+  /// Information about internal structure - legacy building
   std::optional<InternalStructure> internal = std::nullopt;
 
-  /// Information about container structure
+  /// Information about container structure - legacy building
   std::optional<ContainerStructure> container = std::nullopt;
+
+  /// An attached Detector volume Builder - new detector schema
+  Experimental::DetectorBlockBuilder blockBuilder;
 
   /// Define an operator==
   ///

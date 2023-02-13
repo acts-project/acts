@@ -105,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
         parameters.emplace(tip, modifyTrack(trk));
       }
 
-      outputTrajectories.emplace_back(trajectories.multiTrajectoryPtr(), tips,
+      outputTrajectories.emplace_back(trajectories.multiTrajectory(), tips,
                                       parameters);
     }
 
