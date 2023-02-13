@@ -469,24 +469,8 @@ def addSimWriters(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
-                inputParticles="particles_initial",
-                outputStem="particles_initial",
-            )
-        )
-        s.addWriter(
-            acts.examples.CsvParticleWriter(
-                level=customLogLevel(),
-                outputDir=str(outputDirCsv),
                 inputParticles="particles_final",
                 outputStem="particles_final",
-            )
-        )
-        s.addWriter(
-            acts.examples.CsvSimHitWriter(
-                level=customLogLevel(),
-                inputSimHits=inputSimHits,
-                outputDir=str(outputDirCsv),
-                outputStem="hits",
             )
         )
 
@@ -497,17 +481,41 @@ def addSimWriters(
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles="particles_initial",
-                filePath=str(outputDirRoot / "particles_initial.root"),
+                inputParticles="particles_final",
+                filePath=str(outputDirRoot / "fatras_particles_final.root"),
             )
         )
+
+    if outputDirCsv is not None:
+        s.addWriter(
+            acts.examples.CsvParticleWriter(
+                level=customLogLevel(),
+                outputDir=str(outputDirCsv),
+                inputParticles="particles_initial",
+                outputStem="particles_initial",
+            )
+        )
+
+    if outputDirRoot is not None:
         s.addWriter(
             acts.examples.RootParticleWriter(
                 level=customLogLevel(),
-                inputParticles="particles_final",
-                filePath=str(outputDirRoot / "particles_final.root"),
+                inputParticles="particles_initial",
+                filePath=str(outputDirRoot / "fatras_particles_initial.root"),
             )
         )
+
+    if outputDirCsv is not None:
+        s.addWriter(
+            acts.examples.CsvSimHitWriter(
+                level=customLogLevel(),
+                inputSimHits=inputSimHits,
+                outputDir=str(outputDirCsv),
+                outputStem="hits",
+            )
+        )
+
+    if outputDirRoot is not None:
         s.addWriter(
             acts.examples.RootSimHitWriter(
                 level=customLogLevel(),
