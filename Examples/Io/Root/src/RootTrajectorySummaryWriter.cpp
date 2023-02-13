@@ -211,7 +211,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                                   trajState.outlierLayer.end());
 
       // Initialize the truth particle info
-      ActsFatras::Barcode majorityParticleId(std::numeric_limits<size_t>::max());
+      ActsFatras::Barcode majorityParticleId(
+          std::numeric_limits<size_t>::max());
       unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
       int t_charge = 99;
       float t_time = NaNfloat;
