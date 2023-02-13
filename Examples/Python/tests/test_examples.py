@@ -109,11 +109,11 @@ def test_fatras(trk_geo, tmp_path, field, assert_root_hash):
 
     root_files = [
         (
-            "fatras_particles_final.root",
+            "particles_final.root",
             "particles",
         ),
         (
-            "fatras_particles_initial.root",
+            "particles_initial.root",
             "particles",
         ),
         (
@@ -157,8 +157,8 @@ def test_geant4(tmp_path, assert_root_hash):
     csv.mkdir()
 
     root_files = [
-        "fatras_particles_final.root",
-        "fatras_particles_initial.root",
+        "particles_final.root",
+        "particles_initial.root",
         "hits.root",
     ]
 
@@ -222,11 +222,11 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "fatras_particles_final.root",
+            "particles_final.root",
             "particles",
         ),
         (
-            "fatras_particles_initial.root",
+            "particles_initial.root",
             "particles",
         ),
     ]
@@ -287,12 +287,12 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             seq.config.events,
         ),
         (
-            "fatras_particles_final.root",
+            "particles_final.root",
             "particles",
             seq.config.events,
         ),
         (
-            "fatras_particles_initial.root",
+            "particles_initial.root",
             "particles",
             seq.config.events,
         ),
@@ -355,11 +355,11 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "particles",
         ),
         (
-            "fatras_particles_final.root",
+            "particles_final.root",
             "particles",
         ),
         (
-            "fatras_particles_initial.root",
+            "particles_initial.root",
             "particles",
         ),
     ]
@@ -1016,8 +1016,6 @@ def test_ckf_tracks_example(
     csv = tmp_path / "csv"
 
     assert not csv.exists()
-
-    srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     events = 100
