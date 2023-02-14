@@ -253,8 +253,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           foundMajorityParticle = true;
 
           const auto& particle = *ip;
-          ACTS_DEBUG(
-              "Find the truth particle with barcode = " << majorityParticleId);
+          ACTS_DEBUG("Find the truth particle with barcode "
+                     << majorityParticleId << "="
+                     << majorityParticleId.value());
           // Get the truth particle info at vertex
           t_p = particle.absoluteMomentum();
           t_charge = particle.charge();
@@ -282,8 +283,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
             }
           }
         } else {
-          ACTS_WARNING("Truth particle with barcode = "
-                       << majorityParticleId
+          ACTS_WARNING("Truth particle with barcode "
+                       << majorityParticleId << "="
+                       << majorityParticleId.value()
                        << " not found in the input collection!");
         }
       }

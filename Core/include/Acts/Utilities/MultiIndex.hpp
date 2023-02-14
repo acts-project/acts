@@ -148,7 +148,6 @@ class MultiIndex {
     for (std::size_t lvl = 1; lvl < NumLevels; ++lvl) {
       os << '|' << idx.level(lvl);
     }
-    os << "=" << idx.value();
     return os;
   }
 };

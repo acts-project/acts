@@ -292,12 +292,13 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         auto ip = particles.find(barcode);
         if (ip != particles.end()) {
           const auto& particle = *ip;
-          ACTS_DEBUG("Find the truth particle with barcode = " << barcode);
+          ACTS_DEBUG("Find the truth particle with barcode "
+                     << barcode << "=" << barcode.value());
           // Get the truth particle charge
           truthQ = static_cast<int>(particle.charge());
         } else {
-          ACTS_WARNING("Truth particle with barcode = " << barcode
-                                                        << " not found!");
+          ACTS_WARNING("Truth particle with barcode "
+                       << barcode << "=" << barcode.value() << " not found!");
         }
       }
 
