@@ -295,16 +295,14 @@ def addSeeding(
             )
         elif seedingAlgorithm == SeedingAlgorithm.HoughTransform:
             logger.info("Using Hough Transform seeding")
-            houghTransformConfig.inputSpacePoints=[spacePoints]
-            houghTransformConfig.inputMeasurements="measurements"
-            houghTransformConfig.inputSourceLinks="sourcelinks"
-            houghTransformConfig.outputProtoTracks="prototracks"
-            houghTransformConfig.outputSeeds="seeds"            
-            houghTransformConfig.trackingGeometry=trackingGeometry
+            houghTransformConfig.inputSpacePoints = [spacePoints]
+            houghTransformConfig.inputMeasurements = "measurements"
+            houghTransformConfig.inputSourceLinks = "sourcelinks"
+            houghTransformConfig.outputProtoTracks = "prototracks"
+            houghTransformConfig.outputSeeds = "seeds"
+            houghTransformConfig.trackingGeometry = trackingGeometry
             inputProtoTracks, inputSeeds = addHoughTransformSeeding(
-                s,
-                houghTransformConfig,
-                logLevel
+                s, houghTransformConfig, logLevel
             )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
