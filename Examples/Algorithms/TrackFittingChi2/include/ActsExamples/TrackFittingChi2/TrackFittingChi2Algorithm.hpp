@@ -59,8 +59,6 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
     /// Output fitted trajectories collection.
-    std::string outputTrajectories;
-    /// Output fitted tracks collection.
     std::string outputTracks;
     /// number of update steps
     unsigned int nUpdates = 0;
