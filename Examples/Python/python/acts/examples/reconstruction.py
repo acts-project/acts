@@ -698,7 +698,9 @@ def addHoughTransformSeeding(
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
     ht = acts.examples.HoughTransformSeeder(config=config, level=logLevel)
     sequence.addAlgorithm(ht)
-    return config.outputProtoTracks, config.outputSeeds
+    # potentially HT can be extended to also produce seeds, but it is not yet implemented yet
+    # configuration option (outputSeeds) exists
+    return config.outputProtoTracks, ""
 
 
 def addSeedPerformanceWriters(
