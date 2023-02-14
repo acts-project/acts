@@ -36,10 +36,6 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
   using TrackFitterChi2Options =
       Acts::Experimental::Chi2FitterOptions<Acts::VectorMultiTrajectory>;
 
-  using TrackContainer =
-      Acts::TrackContainer<Acts::VectorTrackContainer,
-                           Acts::VectorMultiTrajectory, std::shared_ptr>;
-
   using TrackFitterChi2Result = Acts::Result<TrackContainer::TrackProxy>;
 
   /// Fit function that takes the above parameters and runs a fit
@@ -64,6 +60,8 @@ class TrackFittingChi2Algorithm final : public BareAlgorithm {
     std::string inputInitialTrackParameters;
     /// Output fitted trajectories collection.
     std::string outputTrajectories;
+    /// Output fitted tracks collection.
+    std::string outputTracks;
     /// number of update steps
     unsigned int nUpdates = 0;
     /// Type erased fitter function.

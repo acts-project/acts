@@ -191,8 +191,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
       parameters.emplace(tip, trackParameters[iTrack]);
     }
 
-    outputTrajectories.emplace_back(traj.multiTrajectoryPtr(), tips,
-                                    parameters);
+    outputTrajectories.emplace_back(traj.multiTrajectory(), tips, parameters);
   }
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));

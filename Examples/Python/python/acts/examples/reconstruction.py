@@ -428,7 +428,7 @@ def addStandardSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg,
-    seedFinderConfigArg: SeedFilterConfigArg,
+    seedFinderConfigArg: SeedFinderConfigArg,
     seedFinderOptionsArg: SeedFinderOptionsArg,
     seedFilterConfigArg: SeedFilterConfigArg,
     spacePointGridConfigArg: SpacePointGridConfigArg,
@@ -774,6 +774,7 @@ def addKalmanTracks(
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="kfTrajectories",
+        outputTracks="kfTracks",
         directNavigation=directNavigation,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
@@ -814,6 +815,7 @@ def addTruthTrackingGsf(
         inputProtoTracks="prototracks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="gsf_trajectories",
+        outputTracks="gsf_tracks",
         directNavigation=False,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
@@ -879,6 +881,7 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="ckfTrajectories",
+        outputTracks="ckfTracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
