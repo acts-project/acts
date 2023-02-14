@@ -59,7 +59,9 @@ rnd = acts.examples.RandomNumbers(seed=42)
 # TODO Geant4 currently crashes with FPE monitoring
 with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
     s = acts.examples.Sequencer(
-        events=args["events"], numThreads=1, outputDir=str(outputDir)
+        events=args["events"],
+        numThreads=1,
+        outputDir=str(outputDir),
     )
 
     if not ttbar_pu200:
@@ -103,7 +105,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             detector,
             trackingGeometry,
             field,
-            preselectParticles=ParticleSelectorConfig(
+            preSelectParticles=ParticleSelectorConfig(
                 eta=(-3.0, 3.0),
                 absZ=(0, 1e4),
                 rho=(0, 1e3),
@@ -118,8 +120,10 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             s,
             trackingGeometry,
             field,
-            ParticleSelectorConfig(
-                eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True
+            preSelectParticles=ParticleSelectorConfig(
+                eta=(-3.0, 3.0),
+                pt=(150 * u.MeV, None),
+                removeNeutral=True,
             )
             if ttbar_pu200
             else ParticleSelectorConfig(),
@@ -152,7 +156,8 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         trackingGeometry,
         field,
         CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6
+            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
+            nMeasurementsMin=6,
         ),
         TrackSelectorRanges(
             pt=(1.0 * u.GeV, None),
@@ -167,7 +172,8 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         s,
         AmbiguityResolutionConfig(maximumSharedHits=3),
         CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6
+            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
+            nMeasurementsMin=6,
         ),
         outputDirRoot=outputDir,
     )
