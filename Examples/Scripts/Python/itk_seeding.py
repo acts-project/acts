@@ -5,25 +5,25 @@ import tempfile
 
 import acts
 import acts.examples
-from acts.examples import CsvSpacePointReader, TrackParamsEstimationAlgorithm, SeedingPerformanceWriter
+from acts.examples import (
+    CsvSpacePointReader,
+    TrackParamsEstimationAlgorithm,
+    SeedingPerformanceWriter,
+)
 from collections import namedtuple
 import pathlib, acts, acts.examples, acts.examples.itk
 
 from acts.examples.reconstruction import (
-#    addStandardSeeding,
     addSeeding,
-    
-    addSeedPerformanceWriters,
-    addSeedingTruthSelection,
     addStandardSeeding,
     SeedingAlgorithm,
-    TruthSeedRanges,
 )
 
 from acts.examples.itk import itkSeedingAlgConfig
 
 u = acts.UnitConstants
 rnd = acts.examples.RandomNumbers(seed=42)
+
 
 def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
 
@@ -39,7 +39,7 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
             "measurement_id,sp_type,module_idhash,sp_x,sp_y,sp_z,sp_radius,sp_covr,sp_covz,sp_topHalfStripLength,sp_bottomHalfStripLength,sp_topStripDirection[0],sp_topStripDirection[1],sp_topStripDirection[2],sp_bottomStripDirection[0],sp_bottomStripDirection[1],sp_bottomStripDirection[2],sp_stripCenterDistance[0],sp_stripCenterDistance[1],sp_stripCenterDistance[2],sp_topStripCenterPosition[0],sp_topStripCenterPosition[1],sp_topStripCenterPosition[2]\n 1,0,3139,32.67557144165039,-5.311902523040771,-47.65000152587891,33.10452270507812,0.05999999865889549,0.02999880164861679,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 2,0,3422,95.14442443847656,-15.46361255645752,-52.125,96.39286804199219,0.05999999865889549,0.01687432639300823,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 3,0,3650,102.8257064819336,-16.71612739562988,-52.67499923706055,104.1755981445312,0.05999999865889549,0.001875000074505806,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 4,0,4223,159.4266204833984,-25.91166687011719,-56.75,161.5186157226562,0.05999999865889549,0.02999880164861679,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 5,0,5015,224.07958984375,-36.37123107910156,-61.40000152587891,227.0121765136719,0.05999999865889549,0.007499700412154198,0,0,0,0,0,0,0,0,0,0,0,0,0,0\n 6,0,6023,284.1485595703125,-46.0638542175293,-65.72499847412109,287.8580932617188,0.05999999865889549,0.001875000074505806,0,0,0,0,0,0,0,0,0,0,0,0,0,0"
         )
         temp.read()
-        
+
         s = acts.examples.Sequencer(events=1, numThreads=-1, logLevel=acts.logging.INFO)
 
         # Read input space points from input csv files
@@ -51,34 +51,33 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
             outputSpacePoints="particles_input",
             extendCollection=False,
         )
-        
+
         # add csv reader
         s.addReader(evReader)
         spacePoints = evReader.config.outputSpacePoints
-        
+
         # run seeding
         inputProtoTracks, inputSeeds = addStandardSeeding(
-          s,
-          spacePoints,
-          *acts.examples.itk.itkSeedingAlgConfig("PixelSpacePoint"),
+            s,
+            spacePoints,
+            *acts.examples.itk.itkSeedingAlgConfig("PixelSpacePoint"),
         )
 
         # estimate seeding performance
         parEstimateAlg = TrackParamsEstimationAlgorithm(
-          level=acts.logging.INFO,
-          inputSeeds=inputSeeds,
-          inputProtoTracks=inputProtoTracks,
-          inputSpacePoints=[spacePoints],
-          inputSourceLinks="sourcelinks",
-          outputTrackParameters="estimatedparameters",
-          outputProtoTracks="prototracks_estimated",
-          trackingGeometry=trackingGeometry,
-          magneticField=field,
+            level=acts.logging.INFO,
+            inputSeeds=inputSeeds,
+            inputProtoTracks=inputProtoTracks,
+            inputSpacePoints=[spacePoints],
+            inputSourceLinks="sourcelinks",
+            outputTrackParameters="estimatedparameters",
+            outputProtoTracks="prototracks_estimated",
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
         )
         s.addAlgorithm(parEstimateAlg)
-        
-        s.run()
 
+        s.run()
 
     # create temporary file with strips SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -104,44 +103,46 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
             outputSpacePoints="particles_input",
             extendCollection=True,
         )
-        
+
         # add csv reader
         s.addReader(evReader)
         spacePoints = evReader.config.outputSpacePoints
-    
+
         # run seeding
         inputProtoTracks, inputSeeds = addStandardSeeding(
-          s,
-          spacePoints,
-          *acts.examples.itk.itkSeedingAlgConfig("StripSpacePoint"),
+            s,
+            spacePoints,
+            *acts.examples.itk.itkSeedingAlgConfig("StripSpacePoint"),
         )
 
         # estimate seeding performance
         parEstimateAlg = TrackParamsEstimationAlgorithm(
-          level=acts.logging.INFO,
-          inputSeeds=inputSeeds,
-          inputProtoTracks=inputProtoTracks,
-          inputSpacePoints=[spacePoints],
-          inputSourceLinks="sourcelinks",
-          outputTrackParameters="estimatedparameters",
-          outputProtoTracks="prototracks_estimated",
-          trackingGeometry=trackingGeometry,
-          magneticField=field,
+            level=acts.logging.INFO,
+            inputSeeds=inputSeeds,
+            inputProtoTracks=inputProtoTracks,
+            inputSpacePoints=[spacePoints],
+            inputSourceLinks="sourcelinks",
+            outputTrackParameters="estimatedparameters",
+            outputProtoTracks="prototracks_estimated",
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
         )
         s.addAlgorithm(parEstimateAlg)
-        
+
         s.run()
 
 
 if "__main__" == __name__:
     p = argparse.ArgumentParser(
-        description="Example script to run ITk seed finding",
+        description="Example script to run ITk seed finding based on CSV spacepoints",
     )
-    
-    geo_dir = pathlib.Path("/Users/luiscoelho/lcoelho/acts/acts-itk")
+
+    geo_dir = pathlib.Path("acts-itk")
     outputDir = pathlib.Path.cwd() / "itk_output"
 
     detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
-    field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
+    field = acts.examples.MagneticFieldMapXyz(
+        str(geo_dir / "bfield/ATLAS-BField-xyz.root")
+    )
 
     runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir)

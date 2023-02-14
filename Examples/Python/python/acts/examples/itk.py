@@ -537,7 +537,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     )
 
     return (
-				seedingAlgorithmConfigArg,
+        seedingAlgorithmConfigArg,
         seedFinderConfigArg,
         seedFinderOptionsArg,
         seedFilterConfigArg,
