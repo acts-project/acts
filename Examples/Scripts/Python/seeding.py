@@ -84,7 +84,7 @@ def runSeeding(
         outputDirCsv=outputDir / "csv",
         outputDirRoot=outputDir,
         rnd=rnd,
-        preselectParticles=None,
+        preSelectParticles=None,
     )
 
     srcdir = Path(__file__).resolve().parent.parent.parent.parent

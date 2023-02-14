@@ -41,6 +41,9 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing output trajectories collection");
   }
+  if (m_cfg.outputTracks.empty()) {
+    throw std::invalid_argument("Missing output tracks collection");
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
@@ -80,8 +83,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
-  auto tracks =
-      std::make_unique<TrackContainer>(trackContainer, trackStateContainer);
+  TrackContainer tracks(trackContainer, trackStateContainer);
 
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
@@ -132,8 +134,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     auto result =
         m_cfg.directNavigation
             ? (*m_cfg.fit)(trackSourceLinks, initialParams, options,
-                           surfSequence, *tracks)
-            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, *tracks);
+                           surfSequence, tracks)
+            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, tracks);
 
     if (result.ok()) {
       // Get the fit output object
@@ -156,7 +158,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
         ACTS_DEBUG("No fitted parameters for track " << itrack);
       }
       // store the result
-      trajectories.emplace_back(trackStateContainer, std::move(trackTips),
+      trajectories.emplace_back(*trackStateContainer, std::move(trackTips),
                                 std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track "
@@ -173,5 +175,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   ACTS_DEBUG(ss.str());
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  ctx.eventStore.add(m_cfg.outputTracks, std::move(tracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }
