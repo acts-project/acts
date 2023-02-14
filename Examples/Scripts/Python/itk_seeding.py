@@ -3,16 +3,13 @@ import os
 import argparse
 import tempfile
 
-import acts
-import acts.examples
+import pathlib, acts
+
 from acts.examples import (
     CsvSpacePointReader,
     TrackParamsEstimationAlgorithm,
     SeedingPerformanceWriter,
 )
-from collections import namedtuple
-import pathlib, acts, acts.examples, acts.examples.itk
-
 from acts.examples.reconstruction import (
     addSeeding,
     addStandardSeeding,
