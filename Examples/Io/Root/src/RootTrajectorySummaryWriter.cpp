@@ -332,7 +332,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
         res = {param[Acts::eBoundLoc0] - t_d0,
                param[Acts::eBoundLoc1] - t_z0,
                Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
-                                                 2 * M_PIf),
+                                                 static_cast<float>(2 * M_PI)),
                param[Acts::eBoundTheta] - t_theta,
                param[Acts::eBoundQOverP] - t_charge / t_p,
                param[Acts::eBoundTime] - t_time};
