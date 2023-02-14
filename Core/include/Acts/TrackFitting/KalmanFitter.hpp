@@ -55,10 +55,10 @@ struct KalmanFitterExtensions {
   using Calibrator = Delegate<void(const GeometryContext&, TrackStateProxy)>;
 
   using Smoother = Delegate<Result<void>(
-      const GeometryContext&, MultiTrajectory<traj_t>&, size_t, LoggerWrapper)>;
+      const GeometryContext&, MultiTrajectory<traj_t>&, size_t, const Logger&)>;
 
   using Updater = Delegate<Result<void>(const GeometryContext&, TrackStateProxy,
-                                        NavigationDirection, LoggerWrapper)>;
+                                        NavigationDirection, const Logger&)>;
 
   using OutlierFinder = Delegate<bool(ConstTrackStateProxy)>;
 
@@ -474,6 +474,7 @@ class KalmanFitter {
                     // If reversed filtering missed this surface, then there is
                     // no smoothed parameter
                     trackState.unset(TrackStatePropMask::Smoothed);
+                    trackState.typeFlags().set(TrackStateFlag::OutlierFlag);
                   }
                 });
           }

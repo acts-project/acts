@@ -16,6 +16,7 @@
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
@@ -37,9 +38,9 @@ struct TrackFitterChi2FunctionImpl
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Options&
           options,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      ActsExamples::TrackContainer& trackContainer) const override {
     return trackFitterChi2.fit(sourceLinks.begin(), sourceLinks.end(),
-                               initialParameters, options, trajectory);
+                               initialParameters, options, trackContainer);
   };
 };
 

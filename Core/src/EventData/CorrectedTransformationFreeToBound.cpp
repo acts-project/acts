@@ -43,7 +43,7 @@ Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Acts::FreeVector& freeParams,
     const Acts::FreeSymMatrix& freeCovariance, const Acts::Surface& surface,
     const Acts::GeometryContext& geoContext, NavigationDirection navDir,
-    LoggerWrapper logger) const {
+    const Logger& logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);
   Vector3 normal = surface.normal(geoContext);

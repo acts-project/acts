@@ -198,36 +198,30 @@ namespace detail {
 template <typename intersection_t, typename logger_t = std::false_type>
 bool checkIntersection(const intersection_t& intersection, double pLimit,
                        double oLimit, double tolerance,
-                       [[maybe_unused]] logger_t logger = logger_t{}) {
-  constexpr bool doLogging = not std::is_same_v<logger_t, std::false_type>;
-
+                       const Logger& logger = getDummyLogger()) {
   const double cLimit = intersection.pathLength;
 
-  if constexpr (doLogging) {
-    ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
-                                                << ", " << cLimit);
-  }
+  ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
+                                              << ", " << cLimit);
 
   const bool coCriterion = cLimit > oLimit;
   const bool cpCriterion = std::abs(cLimit) < std::abs(pLimit) + tolerance;
 
   const bool accept = coCriterion and cpCriterion;
 
-  if constexpr (doLogging) {
-    if (accept) {
-      ACTS_VERBOSE("Intersection is WITHIN limit");
-    } else {
-      ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
-      if (not coCriterion) {
-        ACTS_VERBOSE("- intersection path length "
-                     << cLimit << " <= overstep limit " << oLimit);
-      }
-      if (not cpCriterion) {
-        ACTS_VERBOSE("- intersection path length "
-                     << std::abs(cLimit) << " is over the path limit "
-                     << (std::abs(pLimit) + tolerance)
-                     << " (including tolerance of " << tolerance << ")");
-      }
+  if (accept) {
+    ACTS_VERBOSE("Intersection is WITHIN limit");
+  } else {
+    ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
+    if (not coCriterion) {
+      ACTS_VERBOSE("- intersection path length "
+                   << cLimit << " <= overstep limit " << oLimit);
+    }
+    if (not cpCriterion) {
+      ACTS_VERBOSE("- intersection path length "
+                   << std::abs(cLimit) << " is over the path limit "
+                   << (std::abs(pLimit) + tolerance)
+                   << " (including tolerance of " << tolerance << ")");
     }
   }
 

@@ -176,7 +176,7 @@ def addSeeding(
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
     houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
     trackParamsEstimationConfig: TrackParamsEstimationConfig = TrackParamsEstimationConfig(),
-    inputParticles: str = "particles_initial",
+    inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
@@ -195,7 +195,7 @@ def addSeeding(
     truthSeedRanges : TruthSeedRanges(rho, z, phi, eta, absEta, pt, nHits)
         TruthSeedSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TruthSeedSelector.hpp
-        If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles_initial"))
+        If specified as None, don't run ParticleSmearing at all (and use addCKFTracks(selectedParticles="particles"))
     particleSmearingSigmas : ParticleSmearingSigmas(d0, d0PtA, d0PtB, z0, z0PtA, z0PtB, t0, phi, theta, pRel)
         ParticleSmearing configuration.
         Defaults specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
@@ -217,7 +217,7 @@ def addSeeding(
     trackParamsEstimationConfig : TrackParamsEstimationConfig(deltaR)
         TrackParamsEstimationAlgorithm configuration. Currently only deltaR=(min,max) range specified here.
         Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
-    inputParticles : str, "particles_initial"
+    inputParticles : str, "particles"
         input particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
@@ -231,8 +231,13 @@ def addSeeding(
     logger = acts.logging.getLogger("addSeeding")
 
     if truthSeedRanges is not None:
-        selectedParticles = addSeedingTruthSelection(
-            s, inputParticles, truthSeedRanges, logLevel
+        selectedParticles = "truth_seeds_selected"
+        addSeedingTruthSelection(
+            s,
+            inputParticles,
+            selectedParticles,
+            truthSeedRanges,
+            logLevel,
         )
     else:
         selectedParticles = inputParticles
@@ -333,13 +338,15 @@ def addSeeding(
                 parEstimateAlg.config.outputProtoTracks,
                 logLevel,
             )
+
     return s
 
 
 def addSeedingTruthSelection(
     s: acts.examples.Sequencer,
     inputParticles: str,
-    truthSeedRanges: str,
+    outputParticles: str,
+    truthSeedRanges: TruthSeedRanges,
     logLevel: acts.logging.Level = None,
 ):
     """adds truth particles filtering before filtering
@@ -365,10 +372,9 @@ def addSeedingTruthSelection(
         level=logLevel,
         inputParticles=inputParticles,
         inputMeasurementParticlesMap="measurement_particles_map",
-        outputParticles="truth_seeds_selected",
+        outputParticles=outputParticles,
     )
     s.addAlgorithm(selAlg)
-    return selAlg.config.outputParticles
 
 
 def addTruthSmearing(
@@ -436,7 +442,7 @@ def addStandardSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg,
-    seedFinderConfigArg: SeedFilterConfigArg,
+    seedFinderConfigArg: SeedFinderConfigArg,
     seedFinderOptionsArg: SeedFinderOptionsArg,
     seedFilterConfigArg: SeedFilterConfigArg,
     spacePointGridConfigArg: SpacePointGridConfigArg,
@@ -799,6 +805,7 @@ def addKalmanTracks(
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="kfTrajectories",
+        outputTracks="kfTracks",
         directNavigation=directNavigation,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
@@ -829,6 +836,7 @@ def addTruthTrackingGsf(
         "disableAllMaterialHandling": False,
         "finalReductionMethod": acts.examples.FinalReductionMethod.maxWeight,
         "weightCutoff": 1.0e-4,
+        "level": customLogLevel(),
     }
 
     gsfAlg = acts.examples.TrackFittingAlgorithm(
@@ -838,6 +846,7 @@ def addTruthTrackingGsf(
         inputProtoTracks="prototracks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="gsf_trajectories",
+        outputTracks="gsf_tracks",
         directNavigation=False,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
@@ -880,7 +889,7 @@ def addCKFTracks(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    selectedParticles : str, "truth_seeds_selected"
+    selectedParticles : str, "particles"
         CKFPerformanceWriter truth input
     trackSelectorRanges : TrackSelectorRanges(loc0, loc1, time, eta, absEta, pt, phi, removeNeutral, removeCharged)
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
@@ -903,6 +912,7 @@ def addCKFTracks(
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
         outputTrajectories="ckfTrajectories",
+        outputTracks="ckfTracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
         ),
@@ -1033,8 +1043,8 @@ def addTrajectoryWriters(
             s.addWriter(
                 acts.examples.TrackFitterPerformanceWriter(
                     level=acts.logging.INFO,
-                    inputTrajectories="trajectories",
                     inputParticles="truth_seeds_selected",
+                    inputTrajectories="trajectories",
                     inputMeasurementParticlesMap="measurement_particles_map",
                     filePath=str(
                         outputDirRoot / f"performance_track_fitter_{name}.root"
@@ -1047,7 +1057,7 @@ def addTrajectoryWriters(
         if not outputDirCsv.exists():
             outputDirCsv.mkdir()
 
-        if trackSummaryWriter:
+        if writeSummary:
             csvMTJWriter = acts.examples.CsvMultiTrajectoryWriter(
                 level=customLogLevel(),
                 inputTrajectories=trajectories,
@@ -1198,7 +1208,6 @@ def addExaTrkX(
 def addAmbiguityResolution(
     s,
     config: AmbiguityResolutionConfig = AmbiguityResolutionConfig(),
-    selectedParticles: str = "truth_seeds_selected",
     ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,

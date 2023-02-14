@@ -8,7 +8,7 @@
 
 #include "ActsExamples/TrackFittingChi2/TrackFittingChi2Algorithm.hpp"
 
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/Track.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
@@ -38,6 +38,9 @@ ActsExamples::TrackFittingChi2Algorithm::TrackFittingChi2Algorithm(
   }
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing output trajectories collection");
+  }
+  if (m_cfg.outputTracks.empty()) {
+    throw std::invalid_argument("Missing output track collection");
   }
 }
 
@@ -78,6 +81,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
   // kfOptions.energyLoss = m_cfg.energyLoss;
   // TODO: pass options to constructor, or here?
 
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+  auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+  TrackContainer tracks(trackContainer, trackStateContainer);
+
+  tracks.addColumn<Acts::ActsScalar>("chi2");
+  static Acts::ConstTrackAccessor<Acts::ActsScalar> chisquare{"chi2"};
+
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
@@ -99,10 +109,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
       continue;
     }
 
-    ACTS_VERBOSE("chi2algo | ev="
-                 << ctx.eventNumber << " | initial parameters: "
-                 << initialParams.fourPosition(ctx.geoContext).transpose()
-                 << " -> " << initialParams.unitDirection().transpose());
+    ACTS_VERBOSE("ev=" << ctx.eventNumber << " | initial parameters: "
+                       << initialParams.fourPosition(ctx.geoContext).transpose()
+                       << " -> " << initialParams.unitDirection().transpose());
 
     // Clear & reserve the right size
     trackSourceLinks.clear();
@@ -122,36 +131,36 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
       }
     }
 
-    ACTS_DEBUG("chi2algo | invoke fitter");
-    auto mtj = std::make_shared<Acts::VectorMultiTrajectory>();
+    ACTS_DEBUG("invoke fitter");
     auto result = fitTrack(trackSourceLinks, initialParams, chi2Options,
-                           surfSequence, mtj);
+                           surfSequence, tracks);
 
     if (result.ok()) {
-      ACTS_DEBUG("chi2algo | result ok");
+      ACTS_DEBUG("result ok");
       // Get the fit output object
-      auto& fitOutput = result.value();
+      auto& track = result.value();
       // The track entry indices container. One element here.
       std::vector<Acts::MultiTrajectoryTraits::IndexType> trackTips;
       trackTips.reserve(1);
-      trackTips.emplace_back(fitOutput.lastMeasurementIndex);
+      trackTips.emplace_back(track.tipIndex());
       // The fitted parameters container. One element (at most) here.
       Trajectories::IndexedParameters indexedParams;
-      ACTS_VERBOSE("chi2algo | final χ² = " << fitOutput.chisquare);
-      ACTS_VERBOSE("chi2algo | lastMeasurementIndex = "
-                   << fitOutput.lastMeasurementIndex);
+      ACTS_VERBOSE("final χ² = " << chisquare(track));
+      ACTS_VERBOSE("lastMeasurementIndex = " << track.tipIndex());
 
-      if (fitOutput.fittedParameters) {
-        const auto& params = fitOutput.fittedParameters.value();
-        ACTS_VERBOSE("chi2algo | Fitted parameters for track "
-                     << itrack << ": " << params.parameters().transpose());
+      if (track.hasReferenceSurface()) {
+        ACTS_VERBOSE("Fitted parameters for track "
+                     << itrack << ": " << track.parameters().transpose());
         // Push the fitted parameters to the container
-        indexedParams.emplace(fitOutput.lastMeasurementIndex, params);
+        indexedParams.emplace(
+            std::pair{track.tipIndex(),
+                      TrackParameters{track.referenceSurface().getSharedPtr(),
+                                      track.parameters(), track.covariance()}});
       } else {
-        ACTS_DEBUG("chi2algo | No fitted parameters for track " << itrack);
+        ACTS_DEBUG("No fitted parameters for track " << itrack);
       }
       // store the result
-      trajectories.emplace_back(fitOutput.fittedStates, std::move(trackTips),
+      trajectories.emplace_back(*trackStateContainer, std::move(trackTips),
                                 std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track "
@@ -164,6 +173,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
   }
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  ctx.eventStore.add(m_cfg.outputTracks, std::move(tracks));
   // TODO: add chi2 values as output?
   return ActsExamples::ProcessCode::SUCCESS;
 }

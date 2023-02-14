@@ -231,6 +231,16 @@ def buildITkGeometry(
                     "EC4": [[756.901, 811.482], [811.482, 866.062]],
                     "EC5": [[867.462, 907.623], [907.623, 967.785]],
                 },
+                splitPatterns={
+                    ".*BRL.*MS.*": "MS",
+                    ".*BRL.*SS.*": "SS",
+                    ".*EC.*Sensor(|Back)0.*": "EC0",
+                    ".*EC.*Sensor(|Back)1.*": "EC1",
+                    ".*EC.*Sensor(|Back)2.*": "EC2",
+                    ".*EC.*Sensor(|Back)3.*": "EC3",
+                    ".*EC.*Sensor(|Back)4.*": "EC4",
+                    ".*EC.*Sensor(|Back)5.*": "EC5",
+                },
             ),
             Volume(
                 name="HGTD",
