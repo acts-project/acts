@@ -265,9 +265,16 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
     // The trajectory index
     m_multiTrajNr = itraj;
 
-    // The trajectory entry indices and the multiTrajectory
-    const auto& mj = traj.multiTrajectory();
+    // The trajectory entry indices
     const auto& trackTips = traj.tips();
+
+    // Dont write empty MultiTrajectory
+    if (trackTips.empty()) {
+      continue;
+    }
+
+    // The MultiTrajectory
+    const auto& mj = traj.multiTrajectory();
 
     // Loop over the entry indices for the subtrajectories
     for (unsigned int isubtraj = 0; isubtraj < trackTips.size(); ++isubtraj) {

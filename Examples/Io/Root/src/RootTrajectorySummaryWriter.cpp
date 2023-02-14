@@ -168,14 +168,16 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    // The trajectory entry indices and the multiTrajectory
-    const auto& mj = traj.multiTrajectory();
+    // The trajectory entry indices
     const auto& trackTips = traj.tips();
 
     // Dont write empty MultiTrajectory
     if (trackTips.empty()) {
       continue;
     }
+
+    // Get the MultiTrajectory
+    const auto& mj = traj.multiTrajectory();
 
     // The trajectory index
     m_multiTrajNr.push_back(itraj);
@@ -214,7 +216,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       ActsFatras::Barcode majorityParticleId(
           std::numeric_limits<size_t>::max());
       unsigned int nMajorityHits = std::numeric_limits<unsigned int>::max();
-      float t_charge = NaNfloat;
+      int t_charge = std::numeric_limits<int>::max();
       float t_time = NaNfloat;
       float t_vx = NaNfloat;
       float t_vy = NaNfloat;
@@ -258,7 +260,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
                      << majorityParticleId.value());
           // Get the truth particle info at vertex
           t_p = particle.absoluteMomentum();
-          t_charge = particle.charge();
+          t_charge = static_cast<int>(particle.charge());
           t_time = particle.time();
           t_vx = particle.position().x();
           t_vy = particle.position().y();
@@ -298,7 +300,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
       // Always push back even if majority particle not found
       m_majorityParticleId.push_back(majorityParticleId.value());
       m_nMajorityHits.push_back(nMajorityHits);
-      m_t_charge.push_back(static_cast<int>(t_charge));
+      m_t_charge.push_back(t_charge);
       m_t_time.push_back(t_time);
       m_t_vx.push_back(t_vx);
       m_t_vy.push_back(t_vy);
@@ -334,7 +336,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
 
         res = {param[Acts::eBoundLoc0] - t_d0,
                param[Acts::eBoundLoc1] - t_z0,
-               param[Acts::eBoundPhi] - t_phi,
+               Acts::detail::difference_periodic(param[Acts::eBoundPhi], t_phi,
+                                                 static_cast<float>(2 * M_PI)),
                param[Acts::eBoundTheta] - t_theta,
                param[Acts::eBoundQOverP] - t_charge / t_p,
                param[Acts::eBoundTime] - t_time};

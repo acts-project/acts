@@ -454,43 +454,18 @@ def addSimWriters(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
-                inputParticles="particles_final",
-                outputStem="particles_final",
-            )
-        )
-
-    if outputDirRoot is not None:
-        outputDirRoot = Path(outputDirRoot)
-        if not outputDirRoot.exists():
-            outputDirRoot.mkdir()
-        s.addWriter(
-            acts.examples.RootParticleWriter(
-                level=customLogLevel(),
-                inputParticles="particles_final",
-                filePath=str(outputDirRoot / "fatras_particles_final.root"),
-            )
-        )
-
-    if outputDirCsv is not None:
-        s.addWriter(
-            acts.examples.CsvParticleWriter(
-                level=customLogLevel(),
-                outputDir=str(outputDirCsv),
                 inputParticles="particles_initial",
                 outputStem="particles_initial",
             )
         )
-
-    if outputDirRoot is not None:
         s.addWriter(
-            acts.examples.RootParticleWriter(
+            acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
-                inputParticles="particles_initial",
-                filePath=str(outputDirRoot / "fatras_particles_initial.root"),
+                outputDir=str(outputDirCsv),
+                inputParticles="particles_final",
+                outputStem="particles_final",
             )
         )
-
-    if outputDirCsv is not None:
         s.addWriter(
             acts.examples.CsvSimHitWriter(
                 level=customLogLevel(),
@@ -501,6 +476,23 @@ def addSimWriters(
         )
 
     if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+        s.addWriter(
+            acts.examples.RootParticleWriter(
+                level=customLogLevel(),
+                inputParticles="particles_initial",
+                filePath=str(outputDirRoot / "particles_initial.root"),
+            )
+        )
+        s.addWriter(
+            acts.examples.RootParticleWriter(
+                level=customLogLevel(),
+                inputParticles="particles_final",
+                filePath=str(outputDirRoot / "particles_final.root"),
+            )
+        )
         s.addWriter(
             acts.examples.RootSimHitWriter(
                 level=customLogLevel(),
@@ -508,8 +500,6 @@ def addSimWriters(
                 filePath=str(outputDirRoot / "hits.root"),
             )
         )
-
-    return s
 
 
 def getG4DetectorContruction(
