@@ -48,7 +48,7 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
             inputStem="spacepoints",
             inputCollection="pixel",
             inputDir=os.path.dirname(temp.name),
-            outputSpacePoints="particles_input",
+            outputSpacePoints="PixelSpacePoint",
             extendCollection=False,
         )
 
@@ -100,7 +100,7 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
             inputStem="spacepoints",
             inputCollection="strip",
             inputDir=os.path.dirname(temp.name),
-            outputSpacePoints="particles_input",
+            outputSpacePoints="StripSpacePoint",
             extendCollection=True,
         )
 
