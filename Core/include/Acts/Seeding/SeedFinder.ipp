@@ -100,9 +100,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    state.linCircleTop.clear();
-    state.linCircleBottom.clear();
-
     // Iterate over middle-top duplets
     getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
                           state.linCircleTop, m_config.deltaRMinTopSP,
@@ -161,6 +158,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const int sign = isBottom ? -1 : 1;
 
   outVec.clear();
+  linCircleVec.clear();
+
+  // reserve enough capacity
+  size_t dupletCapacity =
+      isBottom ? m_config.bottomDupletCapacity : m_config.topDupletCapacity;
+  outVec.reserve(dupletCapacity);
+  linCircleVec.reserve(dupletCapacity);
 
   const float& rM = mediumSP.radius();
   const float& xM = mediumSP.x();
@@ -183,6 +187,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       continue;
     }
 
+    // if absolute value of z-distance is too big, try next SP in bin
     const float zO = otherSP->z();
     float deltaZAbs = zO - zM;
     float deltaZ = sign * deltaZAbs;
@@ -204,6 +209,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     }
 
     if (not m_config.interactionPointCut) {
+      // transform coordinates and fill output vector
       linCircleVec.push_back(
           transformCoordinates(*otherSP, mediumSP, isBottom));
       outVec.push_back(otherSP);
@@ -217,6 +223,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const float yVal = deltaY * cosPhiM - deltaX * sinPhiM;
 
     if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
+      // transform coordinates and fill output vector
       linCircleVec.push_back(transformCoordinates(
           *otherSP, mediumSP, sign,
           {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
@@ -249,10 +256,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       continue;
     }
 
+    // transform coordinates and fill output vector
     linCircleVec.push_back(
         transformCoordinates(*otherSP, mediumSP, sign,
                              {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
-
     outVec.push_back(otherSP);
   }
 }

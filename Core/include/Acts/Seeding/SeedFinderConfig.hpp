@@ -46,6 +46,11 @@ struct SeedFinderConfig {
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
 
+  // maximum capacity of SP duplets to avoid reallocating memory at each
+  // iteration
+  int bottomDupletCapacity = 210;
+  int topDupletCapacity = 450;
+
   // force sorting of middle SPs in radius
   bool forceRadialSorting = false;
 
