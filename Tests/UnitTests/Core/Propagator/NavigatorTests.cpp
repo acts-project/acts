@@ -64,10 +64,10 @@ struct PropagatorState {
       Vector3 dir = Vector3(1., 0., 0.);
 
       /// Momentum
-      double p;
+      double p = 0;
 
       /// Charge
-      double q;
+      double q = 0;
 
       /// the navigation direction
       NavigationDirection navDir = NavigationDirection::Forward;
@@ -118,7 +118,7 @@ struct PropagatorState {
     Intersection3D::Status updateSurfaceStatus(State& state,
                                                const Surface& surface,
                                                const BoundaryCheck& bcheck,
-                                               LoggerWrapper logger) const {
+                                               const Logger& logger) const {
       return detail::updateSingleSurfaceStatus<Stepper>(*this, state, surface,
                                                         bcheck, logger);
     }
@@ -207,7 +207,7 @@ struct PropagatorState {
     size_t debugPfxWidth = 30;
     size_t debugMsgWidth = 50;
 
-    LoggerWrapper logger{getDummyLogger()};
+    const Acts::Logger& logger = Acts::getDummyLogger();
   };
 
   /// Navigation cache: the start surface

@@ -6,6 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+
 template <typename fitter_t>
 template <typename source_link_t, typename start_parameters_t,
           typename fit_options_t>
@@ -15,24 +18,30 @@ ActsAlignment::Alignment<fitter_t>::evaluateTrackAlignmentState(
     const std::vector<source_link_t>& sourcelinks,
     const start_parameters_t& sParameters, const fit_options_t& fitOptions,
     const std::unordered_map<const Acts::Surface*, size_t>& idxedAlignSurfaces,
-    const ActsAlignment::AlignmentMask& alignMask,
-    Acts::LoggerWrapper logger) const {
+    const ActsAlignment::AlignmentMask& alignMask) const {
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+
+  // Convert to Acts::SourceLink during iteration
+  Acts::SourceLinkAdapterIterator begin{sourcelinks.begin()};
+  Acts::SourceLinkAdapterIterator end{sourcelinks.end()};
+
   // Perform the fit
-  auto fitRes = m_fitter.fit(sourcelinks.begin(), sourcelinks.end(),
-                             sParameters, fitOptions);
+  auto fitRes = m_fitter.fit(begin, end, sParameters, fitOptions, tracks);
+
   if (not fitRes.ok()) {
     ACTS_WARNING("Fit failure");
     return fitRes.error();
   }
   // The fit results
-  const auto& fitOutput = fitRes.value();
+  const auto& track = fitRes.value();
   // Calculate the global track parameters covariance with the fitted track
   const auto& globalTrackParamsCov =
       Acts::detail::globalTrackParametersCovariance(
-          *fitOutput.fittedStates, fitOutput.lastMeasurementIndex);
+          tracks.trackStateContainer(), track.tipIndex());
   // Calculate the alignment state
   const auto alignState = detail::trackAlignmentState(
-      gctx, *fitOutput.fittedStates, fitOutput.lastMeasurementIndex,
+      gctx, tracks.trackStateContainer(), track.tipIndex(),
       globalTrackParamsCov, idxedAlignSurfaces, alignMask);
   if (alignState.alignmentDof == 0) {
     ACTS_VERBOSE("No alignment dof on track!");
@@ -49,8 +58,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     const start_parameters_container_t& startParametersCollection,
     const fit_options_t& fitOptions,
     ActsAlignment::AlignmentResult& alignResult,
-    const ActsAlignment::AlignmentMask& alignMask,
-    Acts::LoggerWrapper logger) const {
+    const ActsAlignment::AlignmentMask& alignMask) const {
   // The number of trajectories must be eual to the number of starting
   // parameters
   assert(trajectoryCollection.size() == startParametersCollection.size());
@@ -80,8 +88,7 @@ void ActsAlignment::Alignment<fitter_t>::calculateAlignmentParameters(
     // The result for one single track
     auto evaluateRes = evaluateTrackAlignmentState(
         fitOptions.geoContext, sourcelinks, sParameters,
-        fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask,
-        logger);
+        fitOptionsWithRefSurface, alignResult.idxedAlignSurfaces, alignMask);
     if (not evaluateRes.ok()) {
       ACTS_DEBUG("Evaluation of alignment state for track " << iTraj
                                                             << " failed");
@@ -149,8 +156,7 @@ ActsAlignment::Alignment<fitter_t>::updateAlignmentParameters(
     const Acts::GeometryContext& gctx,
     const std::vector<Acts::DetectorElementBase*>& alignedDetElements,
     const ActsAlignment::AlignedTransformUpdater& alignedTransformUpdater,
-    ActsAlignment::AlignmentResult& alignResult,
-    Acts::LoggerWrapper logger) const {
+    ActsAlignment::AlignmentResult& alignResult) const {
   // Update the aligned transform
   Acts::AlignmentVector deltaAlignmentParam = Acts::AlignmentVector::Zero();
   for (const auto& [surface, index] : alignResult.idxedAlignSurfaces) {
@@ -211,8 +217,6 @@ ActsAlignment::Alignment<fitter_t>::align(
     const trajectory_container_t& trajectoryCollection,
     const start_parameters_container_t& startParametersCollection,
     const ActsAlignment::AlignmentOptions<fit_options_t>& alignOptions) const {
-  const auto& logger = alignOptions.logger;
-
   // Construct an AlignmentResult object
   AlignmentResult alignResult;
 
@@ -243,7 +247,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     // Calculate the alignment parameters delta etc.
     calculateAlignmentParameters(
         trajectoryCollection, startParametersCollection,
-        alignOptions.fitOptions, alignResult, alignMask, logger);
+        alignOptions.fitOptions, alignResult, alignMask);
     // Screen out the information
     ACTS_INFO("iIter = " << iIter << ", total chi2 = " << alignResult.chi2
                          << ", total measurementDim = "
@@ -284,7 +288,7 @@ ActsAlignment::Alignment<fitter_t>::align(
     // Not coveraged yet, update the detector element alignment parameters
     auto updateRes = updateAlignmentParameters(
         alignOptions.fitOptions.geoContext, alignOptions.alignedDetElements,
-        alignOptions.alignedTransformUpdater, alignResult, logger);
+        alignOptions.alignedTransformUpdater, alignResult);
     if (not updateRes.ok()) {
       ACTS_ERROR("Update alignment parameters failed: " << updateRes.error());
       return updateRes.error();
@@ -301,7 +305,6 @@ ActsAlignment::Alignment<fitter_t>::align(
   // Screen out the final aligned parameters
   // @todo
   if (alignmentParametersUpdated) {
-    unsigned int iDetElement = 0;
     for (const auto& det : alignOptions.alignedDetElements) {
       const auto& surface = &det->surface();
       const auto& transform =
@@ -318,7 +321,6 @@ ActsAlignment::Alignment<fitter_t>::align(
       ACTS_VERBOSE(
           "Euler angles (rotZ, rotY, rotX) = " << rotAngles.transpose());
       ACTS_VERBOSE("Rotation marix = \n" << rotation);
-      iDetElement++;
     }
   } else {
     ACTS_DEBUG("Alignment parameters is not updated.");

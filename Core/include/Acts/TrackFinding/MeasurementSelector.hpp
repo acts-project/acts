@@ -78,7 +78,7 @@ class MeasurementSelector {
                        traj_t>::TrackStateProxy>::iterator>>
   select(std::vector<typename MultiTrajectory<traj_t>::TrackStateProxy>&
              candidates,
-         bool& isOutlier, LoggerWrapper logger) const {
+         bool& isOutlier, const Logger& logger) const {
     using Result =
         Result<std::pair<typename std::vector<typename MultiTrajectory<
                              traj_t>::TrackStateProxy>::iterator,
@@ -198,7 +198,7 @@ class MeasurementSelector {
   static cut_value_t VariableCut(
       const typename Acts::MultiTrajectory<traj_t>::TrackStateProxy& trackState,
       const Acts::MeasurementSelector::Config::Iterator selector,
-      const std::vector<cut_value_t>& cuts, LoggerWrapper logger) {
+      const std::vector<cut_value_t>& cuts, const Logger& logger) {
     const auto& etaBins = selector->etaBins;
     if (etaBins.empty()) {
       return cuts[0];  // shortcut if no etaBins

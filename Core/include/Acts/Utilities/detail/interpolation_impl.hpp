@@ -108,7 +108,7 @@ struct interpolate_impl {
     // get distance to lower boundary relative to total bin width
     const double f = (pos[D] - lowerLeft[D]) / (upperRight[D] - lowerLeft[D]);
 
-    std::array<T, (N >> 1)> newFields;
+    std::array<T, (N >> 1)> newFields{};
     for (size_t i = 0; i < N / 2; ++i) {
       newFields.at(i) = (1 - f) * fields.at(2 * i) + f * fields.at(2 * i + 1);
     }

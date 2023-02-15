@@ -62,10 +62,10 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   /// @param level Message level declaration
   RootTrajectoryStatesWriter(const Config& config, Acts::Logging::Level level);
 
-  ~RootTrajectoryStatesWriter() final override;
+  ~RootTrajectoryStatesWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode endRun() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }
@@ -75,7 +75,7 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trajectories are what to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
  private:
   Config m_cfg;             ///< The config class
@@ -123,8 +123,8 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   std::vector<float> m_pull_y_hit;  ///< hit pull y
   std::vector<int> m_dim_hit;       ///< dimension of measurement
 
-  std::array<int, 3> m_nParams;  ///< number of states which have
-                                 ///< filtered/predicted/smoothed parameters
+  std::array<int, 3> m_nParams{};  ///< number of states which have
+                                   ///< filtered/predicted/smoothed parameters
   std::array<std::vector<bool>, 3>
       m_hasParams;  ///< status of the filtered/predicted/smoothed parameters
   std::array<std::vector<float>, 3>

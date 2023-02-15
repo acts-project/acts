@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "DetectorAlignment.hpp"
+
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Alignment/AlignmentAlgorithm.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
@@ -33,6 +35,7 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 
 #include <filesystem>
 #include <memory>
@@ -52,12 +55,9 @@ void addAlignmentOptions(ActsExamples::Options::Description& desc) {
 
 int runDetectorAlignment(
     int argc, char* argv[],
-    std::shared_ptr<ActsExamples::IBaseDetector> detector,
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector,
     ActsAlignment::AlignedTransformUpdater alignedTransformUpdater,
-    std::function<std::vector<Acts::DetectorElementBase*>(
-        const std::shared_ptr<ActsExamples::IBaseDetector>&,
-        const std::vector<Acts::GeometryIdentifier>&)>
-        alignedDetElementsGetter) {
+    const AlignedDetElementGetter& alignedDetElementsGetter) {
   // using boost::program_options::value;
 
   // setup and parse options
@@ -93,7 +93,7 @@ int runDetectorAlignment(
   auto geometry = Geometry::build(vm, *detector);
   auto trackingGeometry = geometry.first;
   // Add context decorators
-  for (auto cdr : geometry.second) {
+  for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
   // Setup the magnetic field
@@ -162,7 +162,7 @@ int runDetectorAlignment(
     alignment.inputInitialTrackParameters =
         particleSmearingCfg.outputTrackParameters;
     alignment.outputAlignmentParameters = "alignment-parameters";
-    alignment.alignedTransformUpdater = alignedTransformUpdater;
+    alignment.alignedTransformUpdater = std::move(alignedTransformUpdater);
     std::string path = vm["alignment-geo-config-file"].as<std::string>();
     if (not path.empty()) {
       alignment.alignedDetElements = alignedDetElementsGetter(
@@ -189,7 +189,7 @@ int runDetectorAlignment(
   }
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
-  fitter.outputTrajectories = "trajectories";
+  fitter.outputTracks = "tracks";
   fitter.directNavigation = dirNav;
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
@@ -200,9 +200,15 @@ int runDetectorAlignment(
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
+  TracksToTrajectories::Config tracksToTrajCfg{};
+  tracksToTrajCfg.inputTracks = fitter.outputTracks;
+  tracksToTrajCfg.outputTrajectories = "trajectories";
+  sequencer.addAlgorithm(
+      (std::make_shared<TracksToTrajectories>(tracksToTrajCfg, logLevel)));
+
   // write track states from fitting
   RootTrajectoryStatesWriter::Config trackStatesWriter;
-  trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
+  trackStatesWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurementParticlesMap =
@@ -215,7 +221,7 @@ int runDetectorAlignment(
 
   // write track summary from CKF
   RootTrajectorySummaryWriter::Config trackSummaryWriter;
-  trackSummaryWriter.inputTrajectories = fitter.outputTrajectories;
+  trackSummaryWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   trackSummaryWriter.inputParticles = inputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
@@ -235,7 +241,7 @@ int runDetectorAlignment(
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
 
   TrackFitterPerformanceWriter::Config perfFitter;
-  perfFitter.inputTrajectories = fitter.outputTrajectories;
+  perfFitter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   perfFitter.inputParticles = inputParticles;
   perfFitter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;

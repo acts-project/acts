@@ -25,9 +25,7 @@ ActsExamples::RootParticleReader::RootParticleReader(
     Acts::Logging::Level level)
     : ActsExamples::IReader(),
       m_cfg(config),
-      m_logger(Acts::getDefaultLogger(name(), level)),
-      m_events(0),
-      m_inputChain(nullptr) {
+      m_logger(Acts::getDefaultLogger(name(), level)) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   if (m_cfg.filePath.empty()) {

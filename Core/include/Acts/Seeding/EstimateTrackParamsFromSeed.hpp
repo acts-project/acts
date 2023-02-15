@@ -155,7 +155,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, spacepoint_iterator_t spBegin,
-    spacepoint_iterator_t spEnd, const Surface& surface, Vector3 bField,
+    spacepoint_iterator_t spEnd, const Surface& surface, const Vector3& bField,
     ActsScalar bFieldMin, ActsScalar mass = 139.57018 * UnitConstants::MeV) {
   // The local logger
   ACTS_LOCAL_LOGGER(

@@ -1,4 +1,4 @@
-from typing import Optional, Union, Any
+from typing import Optional, Union, Any, List
 from pathlib import Path
 from collections import namedtuple
 from collections.abc import Iterable
@@ -128,6 +128,8 @@ def addParticleGun(
     )
 
     s.addReader(evGen)
+
+    s.addWhiteboardAlias("particles", evGen.config.outputParticles)
 
     if printParticles:
         s.addAlgorithm(
@@ -264,6 +266,8 @@ def addPythia8(
 
     s.addReader(evGen)
 
+    s.addWhiteboardAlias("particles", evGen.config.outputParticles)
+
     if printParticles:
         s.addAlgorithm(
             acts.examples.ParticlesPrinter(
@@ -304,9 +308,9 @@ def addPythia8(
 
 def addParticleSelection(
     s: acts.examples.Sequencer,
-    preselectParticles: ParticleSelectorConfig,
-    inputParticles="particles_input",
-    outputParticles="particles_selected",
+    config: ParticleSelectorConfig,
+    inputParticles: str,
+    outputParticles: str,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """
@@ -328,22 +332,22 @@ def addParticleSelection(
     s.addAlgorithm(
         acts.examples.ParticleSelector(
             **acts.examples.defaultKWArgs(
-                rhoMin=preselectParticles.rho[0],
-                rhoMax=preselectParticles.rho[1],
-                absZMin=preselectParticles.absZ[0],
-                absZMax=preselectParticles.absZ[1],
-                timeMin=preselectParticles.time[0],
-                timeMax=preselectParticles.time[1],
-                phiMin=preselectParticles.phi[0],
-                phiMax=preselectParticles.phi[1],
-                etaMin=preselectParticles.eta[0],
-                etaMax=preselectParticles.eta[1],
-                absEtaMin=preselectParticles.absEta[0],
-                absEtaMax=preselectParticles.absEta[1],
-                ptMin=preselectParticles.pt[0],
-                ptMax=preselectParticles.pt[1],
-                removeCharged=preselectParticles.removeCharged,
-                removeNeutral=preselectParticles.removeNeutral,
+                rhoMin=config.rho[0],
+                rhoMax=config.rho[1],
+                absZMin=config.absZ[0],
+                absZMax=config.absZ[1],
+                timeMin=config.time[0],
+                timeMax=config.time[1],
+                phiMin=config.phi[0],
+                phiMax=config.phi[1],
+                etaMin=config.eta[0],
+                etaMax=config.eta[1],
+                absEtaMin=config.absEta[0],
+                absEtaMax=config.absEta[1],
+                ptMin=config.pt[0],
+                ptMax=config.pt[1],
+                removeCharged=config.removeCharged,
+                removeNeutral=config.removeNeutral,
             ),
             level=customLogLevel(),
             inputParticles=inputParticles,
@@ -352,17 +356,17 @@ def addParticleSelection(
     )
 
 
-@acts.examples.NamedTypeArgs(
-    preselectParticles=ParticleSelectorConfig,
-)
 def addFatras(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
+    rnd: acts.examples.RandomNumbers,
+    preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
+    postSelectParticles: Optional[ParticleSelectorConfig] = None,
+    enableInteractions=False,
+    inputParticles: str = "particles_input",
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    rnd: Optional[acts.examples.RandomNumbers] = None,
-    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Fatras
@@ -373,34 +377,34 @@ def addFatras(
         the sequencer module to which we add the Fatras steps (returned from addFatras)
     trackingGeometry : tracking geometry
     field : magnetic field
+    rnd : RandomNumbers
+        random number generator
+    preSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
+        ParticleSelector configuration to select particles as input to Fatras. Each range is specified as a tuple of (min,max).
+        Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
+        Specify preSelectParticles=None to inhibit ParticleSelector altogether.
+    postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
+        Similar to preSelectParticles but applied after simulation to "particles_initial", therefore also filters secondaries.
+    enableInteractions : Enable the particle interactions in the simulation
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    rnd : RandomNumbers, None
-        random number generator
-    preselectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        ParticleSelector configuration to select particles as input to Fatras. Each range is specified as a tuple of (min,max).
-        Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
-        Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    # Preliminaries
-    rnd = rnd or acts.examples.RandomNumbers()
-
     # Selector
-    if preselectParticles is not None:
+    if preSelectParticles is not None:
         particles_selected = "particles_selected"
         addParticleSelection(
             s,
-            preselectParticles,
-            inputParticles="particles_input",
+            preSelectParticles,
+            inputParticles=inputParticles,
             outputParticles=particles_selected,
         )
     else:
-        particles_selected = "particles_input"
+        particles_selected = inputParticles
 
     # Simulation
     alg = acts.examples.FatrasSimulation(
@@ -413,10 +417,27 @@ def addFatras(
         trackingGeometry=trackingGeometry,
         magneticField=field,
         generateHitsOnSensitive=True,
+        emScattering=enableInteractions,
+        emEnergyLossIonisation=enableInteractions,
+        emEnergyLossRadiation=enableInteractions,
+        emPhotonConversion=enableInteractions,
     )
 
     # Sequencer
     s.addAlgorithm(alg)
+
+    # Selector
+    if postSelectParticles is not None:
+        postSelectedParticles = "particles_initial_selected"
+        addParticleSelection(
+            s,
+            preSelectParticles,
+            inputParticles=alg.config.outputParticlesInitial,
+            outputParticles=postSelectedParticles,
+        )
+        s.addWhiteboardAlias("particles", postSelectedParticles)
+    else:
+        s.addWhiteboardAlias("particles", alg.config.outputParticlesInitial)
 
     # Output
     addSimWriters(
@@ -448,43 +469,18 @@ def addSimWriters(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
-                inputParticles="particles_final",
-                outputStem="particles_final",
-            )
-        )
-
-    if outputDirRoot is not None:
-        outputDirRoot = Path(outputDirRoot)
-        if not outputDirRoot.exists():
-            outputDirRoot.mkdir()
-        s.addWriter(
-            acts.examples.RootParticleWriter(
-                level=customLogLevel(),
-                inputParticles="particles_final",
-                filePath=str(outputDirRoot / "fatras_particles_final.root"),
-            )
-        )
-
-    if outputDirCsv is not None:
-        s.addWriter(
-            acts.examples.CsvParticleWriter(
-                level=customLogLevel(),
-                outputDir=str(outputDirCsv),
                 inputParticles="particles_initial",
                 outputStem="particles_initial",
             )
         )
-
-    if outputDirRoot is not None:
         s.addWriter(
-            acts.examples.RootParticleWriter(
+            acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
-                inputParticles="particles_initial",
-                filePath=str(outputDirRoot / "fatras_particles_initial.root"),
+                outputDir=str(outputDirCsv),
+                inputParticles="particles_final",
+                outputStem="particles_final",
             )
         )
-
-    if outputDirCsv is not None:
         s.addWriter(
             acts.examples.CsvSimHitWriter(
                 level=customLogLevel(),
@@ -495,6 +491,23 @@ def addSimWriters(
         )
 
     if outputDirRoot is not None:
+        outputDirRoot = Path(outputDirRoot)
+        if not outputDirRoot.exists():
+            outputDirRoot.mkdir()
+        s.addWriter(
+            acts.examples.RootParticleWriter(
+                level=customLogLevel(),
+                inputParticles="particles_initial",
+                filePath=str(outputDirRoot / "particles_initial.root"),
+            )
+        )
+        s.addWriter(
+            acts.examples.RootParticleWriter(
+                level=customLogLevel(),
+                inputParticles="particles_final",
+                filePath=str(outputDirRoot / "particles_final.root"),
+            )
+        )
         s.addWriter(
             acts.examples.RootSimHitWriter(
                 level=customLogLevel(),
@@ -503,19 +516,45 @@ def addSimWriters(
             )
         )
 
-    return s
+
+def getG4DetectorContruction(
+    detector: Any,
+) -> Any:
+    try:
+        from acts.examples import TelescopeDetector
+        from acts.examples.geant4 import TelescopeG4DetectorConstruction
+
+        if type(detector) is TelescopeDetector:
+            return TelescopeG4DetectorConstruction(detector)
+    except Exception as e:
+        print(e)
+
+    try:
+        from acts.examples.dd4hep import DD4hepDetector
+        from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
+
+        if type(detector) is DD4hepDetector:
+            return DDG4DetectorConstruction(detector)
+    except Exception as e:
+        print(e)
+
+    raise AttributeError(f"cannot find a suitable detector construction for {detector}")
 
 
 def addGeant4(
     s: acts.examples.Sequencer,
-    geometryService: Any,  # acts.examples.dd4hep.DD4hepGeometryService
+    detector: Optional[Any],
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     rnd: acts.examples.RandomNumbers,
+    g4detectorConstruction: Optional[Any] = None,
+    volumeMappings: List[str] = [],
+    materialMappings: List[str] = [],
+    inputParticles: str = "particles_input",
+    preSelectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
+    postSelectParticles: Optional[ParticleSelectorConfig] = None,
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
-    seed: Optional[int] = None,
-    preselectParticles: Optional[ParticleSelectorConfig] = ParticleSelectorConfig(),
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     """This function steers the detector simulation using Geant4
@@ -528,40 +567,47 @@ def addGeant4(
     field : magnetic field
     rnd : RandomNumbers, None
         random number generator
+    preSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
+        ParticleSelector configuration to select particles as input to Geant4. Each range is specified as a tuple of (min,max).
+        Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
+        Specify preSelectParticles=None to inhibit ParticleSelector altogether.
+    postSelectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
+        Similar to preSelectParticles but applied after simulation to "particles_initial", therefore also filters secondaries.
     outputDirCsv : Path|str, path, None
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    preselectParticles : ParticleSelectorConfig(rho, absZ, time, phi, eta, absEta, pt, removeCharged, removeNeutral), None
-        ParticleSelector configuration to select particles as input to Fatras. Each range is specified as a tuple of (min,max).
-        Default of no selections specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSelector.hpp
-        Specify preselectParticles=None to inhibit ParticleSelector altogether.
     """
 
     from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
-    from acts.examples.geant4.dd4hep import DDG4DetectorConstruction
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Selector
-    if preselectParticles is not None:
+    if preSelectParticles is not None:
         particles_selected = "particles_selected"
         addParticleSelection(
             s,
-            preselectParticles,
-            inputParticles="particles_input",
+            preSelectParticles,
+            inputParticles=inputParticles,
             outputParticles=particles_selected,
         )
     else:
-        particles_selected = "particles_input"
+        particles_selected = inputParticles
 
-    g4detector = DDG4DetectorConstruction(geometryService)
+    if g4detectorConstruction is None:
+        if detector is None:
+            raise AttributeError("detector not given")
+        g4detectorConstruction = getG4DetectorContruction(detector)
+
     g4conf = geant4SimulationConfig(
         level=customLogLevel(),
-        detector=g4detector,
-        inputParticles="particles_input",
+        detector=g4detectorConstruction,
+        inputParticles=particles_selected,
         trackingGeometry=trackingGeometry,
         magneticField=field,
+        volumeMappings=volumeMappings,
+        materialMappings=materialMappings,
     )
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
@@ -577,10 +623,23 @@ def addGeant4(
     # Sequencer
     s.addAlgorithm(alg)
 
+    # Selector
+    if postSelectParticles is not None:
+        postSelectedParticles = "particles_initial_selected"
+        addParticleSelection(
+            s,
+            preSelectParticles,
+            inputParticles=g4conf.outputParticlesInitial,
+            outputParticles=postSelectedParticles,
+        )
+        s.addWhiteboardAlias("particles", postSelectedParticles)
+    else:
+        s.addWhiteboardAlias("particles", alg.config.outputParticlesInitial)
+
     # Output
     addSimWriters(
         s,
-        g4conf.outputSimHits,
+        alg.config.outputSimHits,
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,

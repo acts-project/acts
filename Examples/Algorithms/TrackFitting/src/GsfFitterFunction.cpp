@@ -9,17 +9,21 @@
 #include "ActsExamples/TrackFitting/GsfFitterFunction.hpp"
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "Acts/TrackFitting/GaussianSumFitter.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
+
+#include <filesystem>
 
 using namespace ActsExamples;
 
@@ -27,13 +31,17 @@ namespace {
 
 using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
-using Fitter =
-    Acts::Experimental::GaussianSumFitter<Propagator,
-                                          Acts::VectorMultiTrajectory>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
-using DirectFitter =
-    Acts::Experimental::GaussianSumFitter<DirectPropagator,
+
+using Fitter =
+    Acts::Experimental::GaussianSumFitter<Propagator, BetheHeitlerApprox,
                                           Acts::VectorMultiTrajectory>;
+using DirectFitter =
+    Acts::Experimental::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
+                                          Acts::VectorMultiTrajectory>;
+using TrackContainer =
+    Acts::TrackContainer<Acts::VectorTrackContainer,
+                         Acts::VectorMultiTrajectory, std::shared_ptr>;
 
 struct GsfFitterFunctionImpl
     : public ActsExamples::TrackFittingAlgorithm::TrackFitterFunction {
@@ -42,9 +50,10 @@ struct GsfFitterFunctionImpl
 
   Acts::GainMatrixUpdater updater;
 
-  std::size_t maxComponents;
-  bool abortOnError;
-  bool disableAllMaterialHandling;
+  std::size_t maxComponents = 0;
+  double weightCutoff = 0;
+  bool abortOnError = false;
+  bool disableAllMaterialHandling = false;
 
   GsfFitterFunctionImpl(Fitter&& f, DirectFitter&& df)
       : fitter(std::move(f)), directFitter(std::move(df)) {}
@@ -62,12 +71,13 @@ struct GsfFitterFunctionImpl
         options.magFieldContext,
         options.calibrationContext,
         extensions,
-        options.logger,
         options.propOptions,
         &(*options.referenceSurface),
         maxComponents,
+        weightCutoff,
         abortOnError,
         disableAllMaterialHandling};
+
     gsfOptions.extensions.calibrator
         .template connect<&ActsExamples::MeasurementCalibrator::calibrate>(
             &options.calibrator.get());
@@ -76,27 +86,25 @@ struct GsfFitterFunctionImpl
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
-                      gsfOptions, trajectory);
+                      gsfOptions, tracks);
   }
 
   ActsExamples::TrackFittingAlgorithm::TrackFitterResult operator()(
-      const std::vector<std::reference_wrapper<
-          const ActsExamples::IndexSourceLink>>& sourceLinks,
+      const std::vector<Acts::SourceLink>& sourceLinks,
       const ActsExamples::TrackParameters& initialParameters,
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       const std::vector<const Acts::Surface*>& surfaceSequence,
-      std::shared_ptr<Acts::VectorMultiTrajectory>& trajectory) const override {
+      TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options);
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                             initialParameters, gsfOptions, surfaceSequence,
-                            trajectory);
+                            tracks);
   }
 };
 
@@ -106,28 +114,38 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 ActsExamples::makeGsfFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    std::size_t maxComponents, bool abortOnError,
-    bool disableAllMaterialHandling) {
-  MultiStepper stepper(std::move(magneticField));
+    BetheHeitlerApprox betheHeitlerApprox, std::size_t maxComponents,
+    double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
+    bool abortOnError, bool disableAllMaterialHandling,
+    const Acts::Logger& logger) {
+  MultiStepper stepper(std::move(magneticField), finalReductionMethod);
 
   // Standard fitter
-  Acts::Navigator::Config cfg{trackingGeometry};
+  Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
-  Propagator propagator(std::move(stepper), std::move(navigator));
-  Fitter trackFitter(std::move(propagator));
+  Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
+  Propagator propagator(std::move(stepper), std::move(navigator),
+                        logger.cloneWithSuffix("Propagator"));
+  Fitter trackFitter(std::move(propagator),
+                     BetheHeitlerApprox(betheHeitlerApprox),
+                     logger.cloneWithSuffix("GSF"));
 
   // Direct fitter
-  Acts::DirectNavigator directNavigator;
-  DirectPropagator directPropagator(stepper, directNavigator);
-  DirectFitter directTrackFitter(std::move(directPropagator));
+  Acts::DirectNavigator directNavigator{
+      logger.cloneWithSuffix("DirectNavigator")};
+  DirectPropagator directPropagator(stepper, std::move(directNavigator),
+                                    logger.cloneWithSuffix("DirectPropagator"));
+  DirectFitter directTrackFitter(std::move(directPropagator),
+                                 BetheHeitlerApprox(betheHeitlerApprox),
+                                 logger.cloneWithSuffix("DirectGSF"));
 
   // build the fitter functions. owns the fitter object.
   auto fitterFunction = std::make_shared<GsfFitterFunctionImpl>(
       std::move(trackFitter), std::move(directTrackFitter));
   fitterFunction->maxComponents = maxComponents;
+  fitterFunction->weightCutoff = weightCutoff;
   fitterFunction->abortOnError = abortOnError;
   fitterFunction->disableAllMaterialHandling = disableAllMaterialHandling;
 

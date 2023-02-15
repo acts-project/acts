@@ -40,7 +40,7 @@ struct Channel {
   /// @param links_ The (optional) links to e.g. truth indices
   Channel(std::array<Cell, kSize> cellId_, signal_t value_,
           std::unordered_set<unsigned int> links_ = {})
-      : cellId(cellId_), value(value_), links(links_) {}
+      : cellId(cellId_), value(value_), links(std::move(links_)) {}
 
   Channel() = delete;
 };

@@ -6,8 +6,8 @@ add_library(
   src/SpacePointMaker.cpp
   src/TrackFindingAlgorithm.cpp
   src/TrackFindingAlgorithmFunction.cpp
-  src/TrackParamsEstimationAlgorithm.cpp
-  src/TrajectoriesToPrototracks.cpp)
+  src/HoughTransformSeeder.cpp
+  src/TrackParamsEstimationAlgorithm.cpp)
 target_include_directories(
   ActsExamplesTrackFinding
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)

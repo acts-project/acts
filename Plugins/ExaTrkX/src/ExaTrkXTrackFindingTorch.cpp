@@ -27,7 +27,7 @@
 using namespace torch::indexing;
 
 namespace {
-void print_current_cuda_meminfo(Acts::LoggerWrapper& logger) {
+void print_current_cuda_meminfo(const Acts::Logger& logger) {
   constexpr int kb = 1024;
   constexpr int mb = kb * kb;
 
@@ -75,7 +75,7 @@ ExaTrkXTrackFindingTorch::~ExaTrkXTrackFindingTorch() {}
 
 std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs,
-    std::vector<std::vector<int> >& trackCandidates, LoggerWrapper logger,
+    std::vector<std::vector<int> >& trackCandidates, const Logger& logger,
     bool recordTiming) const {
   ExaTrkXTime timeInfo;
 
@@ -87,8 +87,11 @@ std::optional<ExaTrkXTime> ExaTrkXTrackFindingTorch::getTracks(
 
   // Clone models (solve memory leak? members can be const...)
   auto e_model = m_embeddingModel->clone();
+  e_model.to(device);
   auto f_model = m_filterModel->clone();
+  f_model.to(device);
   auto g_model = m_gnnModel->clone();
+  g_model.to(device);
 
   // printout the r,phi,z of the first spacepoint
   ACTS_VERBOSE("First spacepoint information [r, phi, z]: "

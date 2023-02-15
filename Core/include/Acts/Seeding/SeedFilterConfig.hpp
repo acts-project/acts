@@ -19,9 +19,12 @@ struct SeedFilterConfig {
   // the allowed delta between two inverted seed radii for them to be considered
   // compatible.
   float deltaInvHelixDiameter = 0.00003 * 1. / Acts::UnitConstants::mm;
-  // the impact parameters (d0) is multiplied by this factor and subtracted from
-  // weight
+  // the transverse impact parameters (d0) is multiplied by this factor and
+  // subtracted from weight
   float impactWeightFactor = 1.;
+  // the logitudinal impact parameters (z0) is multiplied by this factor and
+  // subtracted from weight
+  float zOriginWeightFactor = 1.;
   // seed weight increased by this value if a compatible seed has been found.
   float compatSeedWeight = 200.;
   // minimum distance between compatible seeds to be considered for weight boost
@@ -55,19 +58,26 @@ struct SeedFilterConfig {
   SeedConfirmationRangeConfig forwardSeedConfirmationRange;
 
   // maximum number of lower quality seeds in seed confirmation
-  int maxSeedsPerSpMConf = std::numeric_limits<int>::max();
+  std::size_t maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
   // maximum number of quality seeds for each middle-bottom SP-duplet in seed
   // confirmation if the limit is reached we check if there is a lower quality
   // seed to be replaced
-  int maxQualitySeedsPerSpMConf = std::numeric_limits<int>::max();
+  std::size_t maxQualitySeedsPerSpMConf =
+      std::numeric_limits<std::size_t>::max();
 
   // use deltaR between top and middle SP instead of top radius to search for
   // compatible SPs
   bool useDeltaRorTopRadius = false;
 
+  bool isInInternalUnits = false;
   SeedFilterConfig toInternalUnits() const {
+    if (isInInternalUnits) {
+      throw std::runtime_error(
+          "Repeated conversion to internal units for SeedFilterConfig");
+    }
     using namespace Acts::UnitLiterals;
     SeedFilterConfig config = *this;
+    config.isInInternalUnits = true;
     config.deltaRMin /= 1_mm;
     config.deltaInvHelixDiameter /= 1. / 1_mm;
 

@@ -1,3 +1,5 @@
+include(ActsTargetLinkLibrariesSystem)
+
 add_library(
   ActsExamplesFramework SHARED
   src/Framework/BareAlgorithm.cpp
@@ -21,7 +23,10 @@ target_include_directories(
 target_link_libraries(
   ActsExamplesFramework
   PUBLIC ActsCore ActsFatras Boost::boost ROOT::Core ROOT::Hist
-  PRIVATE dfelibs std::filesystem)
+  PRIVATE std::filesystem)
+acts_target_link_libraries_system(
+  ActsExamplesFramework
+  PRIVATE dfelibs)
 target_compile_definitions(
   ActsExamplesFramework
   PRIVATE BOOST_FILESYSTEM_NO_DEPRECATED)
@@ -57,3 +62,7 @@ endif()
 install(
   TARGETS ActsExamplesFramework
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(
+  DIRECTORY include/ActsExamples 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

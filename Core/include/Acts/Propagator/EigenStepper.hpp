@@ -159,7 +159,7 @@ class EigenStepper {
       /// k_i of the RKN4 algorithm
       Vector3 k1, k2, k3, k4;
       /// k_i elements of the momenta
-      std::array<double, 4> kQoP;
+      std::array<double, 4> kQoP{};
     } stepData;
   };
 
@@ -238,10 +238,10 @@ class EigenStepper {
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
   /// @param [in] bcheck The boundary check for this status update
-  /// @param [in] logger A @c LoggerWrapper instance
+  /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      LoggerWrapper logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
         *this, state, surface, bcheck, logger);
   }

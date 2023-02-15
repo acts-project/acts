@@ -38,18 +38,17 @@ class BareAlgorithm : public IAlgorithm {
                 Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// The algorithm name.
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Execute the algorithm for one event.
   ///
   /// This function must be implemented by subclasses.
-  virtual ProcessCode execute(
-      const AlgorithmContext& context) const override = 0;
+  ProcessCode execute(const AlgorithmContext& context) const override = 0;
 
   /// Initialize the algorithm
-  ProcessCode initialize() const override { return ProcessCode::SUCCESS; }
+  ProcessCode initialize() override { return ProcessCode::SUCCESS; }
   /// Finalize the algorithm
-  ProcessCode finalize() const override { return ProcessCode::SUCCESS; }
+  ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 
  protected:
   const Acts::Logger& logger() const { return *m_logger; }

@@ -57,7 +57,7 @@ class ParticleSmearing final : public BareAlgorithm {
 
   ParticleSmearing(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

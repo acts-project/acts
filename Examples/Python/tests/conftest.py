@@ -26,6 +26,13 @@ import acts
 import acts.examples
 
 try:
+    import ROOT
+
+    ROOT.gSystem.ResetSignals()
+except ImportError:
+    pass
+
+try:
     if acts.logging.getFailureThreshold() != acts.logging.WARNING:
         acts.logging.setFailureThreshold(acts.logging.WARNING)
 except RuntimeError:
@@ -231,12 +238,7 @@ DetectorConfig = namedtuple(
 )
 
 
-@pytest.fixture(
-    params=[
-        "generic",
-        "odd",
-    ]
-)
+@pytest.fixture(params=["generic", pytest.param("odd", marks=pytest.mark.odd)])
 def detector_config(request):
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -332,6 +334,10 @@ def fatras(ptcl_gun, trk_geo, rng):
             trackingGeometry=trk_geo,
             magneticField=field,
             generateHitsOnSensitive=True,
+            emScattering=False,
+            emEnergyLossIonisation=False,
+            emEnergyLossRadiation=False,
+            emPhotonConversion=False,
         )
 
         s.addAlgorithm(simAlg)
@@ -367,11 +373,12 @@ def material_recording_session():
 
     from material_recording import runMaterialRecording
 
-    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
     )
+
     dd4hepG4Construction = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(
-        dd4hepSvc
+        detector
     )
 
     with tempfile.TemporaryDirectory() as d:
@@ -382,7 +389,7 @@ def material_recording_session():
         s.run()
 
         del s
-        del dd4hepSvc
+        del detector
         del dd4hepG4Construction
 
         yield Path(d)
@@ -393,3 +400,11 @@ def material_recording(material_recording_session: Path, tmp_path: Path):
     target = tmp_path / material_recording_session.name
     shutil.copytree(material_recording_session, target)
     yield target
+
+
+@pytest.fixture(autouse=True)
+def fpe_monitoring():
+    print("Enabling FPE monitoring")
+    with acts.FpeMonitor():
+        yield
+    print("Disabling FPE monitoring")

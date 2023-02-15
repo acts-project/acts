@@ -89,9 +89,11 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
+  m_outputFile->Close();
+
   ACTS_INFO("Wrote clusters to tree '" << m_cfg.treeName << "' in '"
                                        << m_cfg.filePath << "'");
-  m_outputFile->Close();
+
   return ProcessCode::SUCCESS;
 }
 
@@ -165,8 +167,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       }
       // write hit-particle truth association
       // each hit can have multiple particles, e.g. in a dense environment
-      const auto& sl = static_cast<const Acts::DigitizationSourceLink&>(
-          cluster.sourceLink());
+      const auto& sl = cluster.sourceLink().get<Acts::DigitizationSourceLink>();
       for (auto idx : sl.indices()) {
         auto it = simHits.nth(idx);
         if (it == simHits.end()) {

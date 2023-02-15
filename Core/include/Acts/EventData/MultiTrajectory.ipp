@@ -69,58 +69,6 @@ inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const -> Covariance {
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::predicted() const -> Parameters {
-  assert(has<hashString("predicted")>());
-  return m_traj->self().parameters(
-      component<IndexType, hashString("predicted")>());
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::predictedCovariance() const
-    -> Covariance {
-  assert(has<hashString("predicted")>());
-  return m_traj->self().covariance(
-      component<IndexType, hashString("predicted")>());
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::filtered() const -> Parameters {
-  assert(has<hashString("filtered")>());
-  return m_traj->self().parameters(
-      component<IndexType, hashString("filtered")>());
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::filteredCovariance() const
-    -> Covariance {
-  assert(has<hashString("filtered")>());
-  return m_traj->self().covariance(
-      component<IndexType, hashString("filtered")>());
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::smoothed() const -> Parameters {
-  assert(has<hashString("smoothed")>());
-  return m_traj->self().parameters(
-      component<IndexType, hashString("smoothed")>());
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::smoothedCovariance() const
-    -> Covariance {
-  assert(has<hashString("smoothed")>());
-  return m_traj->self().covariance(
-      component<IndexType, hashString("smoothed")>());
-}
-
-template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::jacobian() const -> Covariance {
-  assert(has<hashString("jacobian")>());
-  return m_traj->self().jacobian(
-      component<IndexType, hashString("jacobian")>());
-}
-
-template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
   assert(has<hashString("projector")>());
   return bitsetToMatrix<Projector>(
@@ -128,42 +76,21 @@ inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::uncalibrated() const
+inline auto TrackStateProxy<D, M, ReadOnly>::uncalibratedSourceLink() const
     -> const SourceLink& {
-  assert(has<hashString("uncalibrated")>());
-  using T = const SourceLink*;
-  const T& sl = component<const SourceLink*, hashString("uncalibrated")>();
-  assert(sl != nullptr);
-  return *sl;
-}
-
-template <typename D, size_t M, bool ReadOnly>
-template <size_t measdim>
-inline auto TrackStateProxy<D, M, ReadOnly>::calibrated() const
-    -> Measurement<measdim> {
-  assert(has<hashString("calibrated")>());
-  return m_traj->self().template measurement<measdim>(
-      component<IndexType, hashString("calibrated")>());
+  assert(has<hashString("uncalibratedSourceLink")>());
+  return component<std::optional<SourceLink>,
+                   hashString("uncalibratedSourceLink")>()
+      .value();
 }
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::calibratedSourceLink() const
     -> const SourceLink& {
   assert(has<hashString("calibratedSourceLink")>());
-  using T = const SourceLink*;
-  const T& sl =
-      component<const SourceLink*, hashString("calibratedSourceLink")>();
-  assert(sl != nullptr);
-  return *sl;
-}
-
-template <typename D, size_t M, bool ReadOnly>
-template <size_t measdim>
-inline auto TrackStateProxy<D, M, ReadOnly>::calibratedCovariance() const
-    -> MeasurementCovariance<measdim> {
-  assert(has<hashString("calibratedCov")>());
-  return m_traj->self().template measurementCovariance<measdim>(
-      component<IndexType, hashString("calibratedCov")>());
+  return component<std::optional<SourceLink>,
+                   hashString("calibratedSourceLink")>()
+      .value();
 }
 
 }  // namespace detail_lt
@@ -174,6 +101,11 @@ void MultiTrajectory<D>::visitBackwards(IndexType iendpoint,
                                         F&& callable) const {
   static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
+
+  if (iendpoint == MultiTrajectoryTraits::kInvalid) {
+    throw std::runtime_error(
+        "Cannot visit backwards with kInvalid as endpoint");
+  }
 
   while (true) {
     auto ts = getTrackState(iendpoint);

@@ -26,7 +26,17 @@ find_path(
 if(NOT OnnxRuntime_INCLUDE_DIR)
   message(FATAL_ERROR "onnxruntime includes not found")
 else()
-  message(STATUS "Found OnnxRuntime includes at ${OnnxRuntime_INCLUDE_DIR}")
+  file(READ ${OnnxRuntime_INCLUDE_DIR}/core/session/onnxruntime_c_api.h ver)
+  string(REGEX MATCH "ORT_API_VERSION ([0-9]*)" _ ${ver})
+  set(OnnxRuntime_API_VERSION ${CMAKE_MATCH_1})
+  message(STATUS "Found OnnxRuntime includes at ${OnnxRuntime_INCLUDE_DIR} (API version: ${OnnxRuntime_API_VERSION})")
+endif()
+
+
+string(REPLACE "." ";" OnnxRuntime_MIN_VERSION_LIST ${_acts_onnxruntime_version})
+list(GET OnnxRuntime_MIN_VERSION_LIST 1 OnnxRuntime_MIN_API_VERSION)
+if("${OnnxRuntime_API_VERSION}" LESS ${OnnxRuntime_MIN_API_VERSION})
+  message(FATAL_ERROR "OnnxRuntime API version ${OnnxRuntime_MIN_API_VERSION} or greater required")
 endif()
 
 include(FindPackageHandleStandardArgs)
