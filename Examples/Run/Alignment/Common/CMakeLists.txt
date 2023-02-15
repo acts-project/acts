@@ -9,6 +9,7 @@ target_link_libraries(
   PUBLIC
     ActsExamplesFramework
     ActsExamplesCommon
+    ActsExamplesUtilities
     ActsExamplesMagneticField
     ActsExamplesIoPerformance
     ActsExamplesAlignment)

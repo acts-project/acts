@@ -17,8 +17,6 @@
 #include <any>
 #include <vector>
 
-/// @note this is foreseen for the 'Geometry' module
-
 namespace Acts {
 
 class Surface;
@@ -29,13 +27,14 @@ class Portal;
 class Detector;
 class DetectorVolume;
 
-/// @brief A navigation state struct that is
-/// holding the current navigation information
-/// about volume, surfaces, and portals
+/// @brief A navigation state struct that is holding the current navigation information
+///
+/// It relies on Surfaces and Portals, all navigation entities have to be
+/// described in these terms.
 struct NavigationState {
   /// @brief  A surface candidate and its intersection
   ///
-  /// candidates can either be surfaces or portals (which contain a surface)
+  /// A candidates can either be a surface or a portal (which contain a surface)
   struct SurfaceCandidate {
     /// A candidate intersection, in Surface view
     ObjectIntersection<Surface> objectIntersection;

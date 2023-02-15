@@ -15,6 +15,7 @@ target_link_libraries(
   PUBLIC
     ActsExamplesFramework
     ActsExamplesCommon
+    ActsExamplesUtilities
     ActsExamplesMagneticField
     ActsExamplesIoPerformance)
 if(ACTS_BUILD_PLUGIN_ONNX)

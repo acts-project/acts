@@ -95,7 +95,6 @@ void addInput(Context& ctx);
 void addGenerators(Context& ctx);
 void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
-void addTrackFittingChi2(Context& ctx);
 void addTrackFinding(Context& ctx);
 void addVertexing(Context& ctx);
 
@@ -265,7 +264,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addGenerators(ctx);
   addTruthTracking(ctx);
   addTrackFitting(ctx);
-  addTrackFittingChi2(ctx);
   addTrackFinding(ctx);
   addVertexing(ctx);
 

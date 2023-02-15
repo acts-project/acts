@@ -8,10 +8,10 @@
 
 #include "Acts/Geometry/DetectorVolume.hpp"
 
-#include "Acts/Geometry/NavigationState.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Geometry/detail/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -180,9 +180,9 @@ void Acts::Experimental::DetectorVolume::closePortals() {
     for (auto [ivu, vu] : enumerate(p->detectorVolumeUpdators())) {
       if (not vu.connected()) {
         auto eowDir = Acts::directionFromIndex(ivu);
-        auto eow = std::make_unique<const detail::EndOfWorldImpl>();
+        auto eow = std::make_unique<const EndOfWorldImpl>();
         Acts::Experimental::DetectorVolumeUpdator eowLink;
-        eowLink.connect<&detail::EndOfWorldImpl::update>(std::move(eow));
+        eowLink.connect<&EndOfWorldImpl::update>(std::move(eow));
         p->assignDetectorVolumeUpdator(eowDir, std::move(eowLink), {});
       }
     }

@@ -12,7 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
-#include "Acts/Geometry/detail/DetectorVolumeUpdators.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
 #include <exception>
