@@ -12,7 +12,6 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "Acts/Plugins/ExaTrkX/CombinedKfAndCkf.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
@@ -25,6 +24,7 @@
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/TrackFindingX/CombinedKfAndCkf.hpp"
 
 #include <string>
 #include <vector>
@@ -47,7 +47,7 @@ class TrackFindingFromPrototrackAlgorithm final : public BareAlgorithm {
     std::string inputInitialTrackParameters;
 
     /// Output protoTracks collection.
-    std::string outputTrajectories;
+    std::string outputTracks;
 
     /// CKF measurement selector config
     Acts::MeasurementSelector::Config measurementSelectorCfg;
@@ -131,13 +131,15 @@ class TrackFindingFromPrototrackAlgorithm final : public BareAlgorithm {
     Acts::CombinatorialKalmanFilterOptions<IndexSourceLinkAccessor::Iterator,
                                            Acts::VectorMultiTrajectory>
         ckfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-                   slAccessorDelegate, extensions,
-                   Acts::LoggerWrapper{logger()}, pOptions, &(*pSurface));
+                   slAccessorDelegate, extensions, pOptions, &(*pSurface));
 
     // The loop
-    std::vector<std::reference_wrapper<const IndexSourceLink>> trackSourceLinks;
-    TrajectoriesContainer trajectories;
-    trajectories.reserve(protoTracks.size());
+    std::vector<Acts::SourceLink> trackSourceLinks;
+
+    auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+    auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+
+    TrackContainer tracks(trackContainer, trackStateContainer);
 
     for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
       // The list of hits and the initial start parameters
@@ -145,7 +147,7 @@ class TrackFindingFromPrototrackAlgorithm final : public BareAlgorithm {
       const auto& initialParams = initialParameters[itrack];
 
       if (protoTrack.empty()) {
-        trajectories.push_back(Trajectories{});
+        tracks.addTrack();
         ACTS_WARNING("Empty track " << itrack << " found.");
         continue;
       }
@@ -159,7 +161,7 @@ class TrackFindingFromPrototrackAlgorithm final : public BareAlgorithm {
 
       for (auto hitIndex : protoTrack) {
         if (auto it = sourceLinks.nth(hitIndex); it != sourceLinks.end()) {
-          trackSourceLinks.push_back(std::cref(*it));
+          trackSourceLinks.push_back(Acts::SourceLink{*it});
         } else {
           ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
                                     << hitIndex);
@@ -167,32 +169,18 @@ class TrackFindingFromPrototrackAlgorithm final : public BareAlgorithm {
         }
 
         ACTS_DEBUG("Invoke fitter");
-        auto result = m_trackFinder->findTracks(trackSourceLinks.begin(),
-                                                trackSourceLinks.end(),
-                                                initialParams, ckfOptions);
+        auto result = m_trackFinder->findTracks(
+            trackSourceLinks.begin(), trackSourceLinks.end(), initialParams,
+            ckfOptions, tracks);
 
-        if (result.ok()) {
-          auto& trackFindingOutput = result.value();
-          trajectories.emplace_back(trackFindingOutput.fittedStates,
-                                    trackFindingOutput.lastMeasurementIndices,
-                                    trackFindingOutput.fittedParameters);
-
-          // const auto& traj = trajectories.back();
-          // for (const auto tip : traj.tips()) {
-          //   if (traj.hasTrackParameters(tip)) {
-          //     trackParametersContainer.push_back(traj.trackParameters(tip));
-          //     trackParametersTips.push_back({trajectories.size() - 1, tip});
-          //   }
-          // }
-        } else {
+        if (not result.ok())
           ACTS_WARNING("Track finding failed for prototrack "
                        << hitIndex << " with error" << result.error());
-          trajectories.push_back(Trajectories{});
-        }
       }
     }
 
-    ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+    ctx.eventStore.add(m_cfg.outputTracks, std::move(tracks));
+
     return ActsExamples::ProcessCode::SUCCESS;
   }
 

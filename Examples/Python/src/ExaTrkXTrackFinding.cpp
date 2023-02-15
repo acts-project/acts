@@ -13,11 +13,6 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/ParameterFromTrajectoryAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/SourceLinkSelectorAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/TrackFindingFromPrototrackAlgorithm.hpp"
-#include "ActsExamples/TrackFindingExaTrkX/MeasurementMapSelectorAlgorithm.hpp"
 
 #include <memory>
 
@@ -89,29 +84,10 @@ void addExaTrkXTrackFinding(Context& ctx) {
   }
 #endif
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX,
-                                "TrackFindingAlgorithmExaTrkX",
-                                inputSpacePoints, outputProtoTracks,
-                                trackFinderML, rScale, phiScale, zScale);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SourceLinkSelectorAlgorithm,
-                                "SourceLinkSelectorAlgorithm", inputSourceLinks,
-                                outputSourceLinks, geometrySelection);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::ParameterFromTrajectoryAlgorithm,
-                                "ParameterFromTrajectoryAlgorithm",
-                                inputTrajectories, outputParamters);
-
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::TrackFindingFromPrototrackAlgorithm,
-      "TrackFindingFromPrototrackAlgorithm", inputTracks, inputMeasurements,
-      inputSourceLinks, inputInitialTrackParameters, outputTrajectories,
-      measurementSelectorCfg, trackingGeometry, magneticField);
-  
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::MeasurementMapSelectorAlgorithm,
-      "MeasurementMapSelectorAlgorithm", inputMeasurementParticleMap, inputSourceLinks,
-      outputMeasurementParticleMap, geometrySelection);
+    ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX,
+                                  "TrackFindingAlgorithmExaTrkX",
+                                  inputSpacePoints, outputProtoTracks,
+                                  trackFinderML, rScale, phiScale, zScale);
 }
 
 }  // namespace Acts::Python

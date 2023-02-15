@@ -9,7 +9,6 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"

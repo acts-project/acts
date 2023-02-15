@@ -19,6 +19,14 @@
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
+////////////////////////////
+// For GNN+CKF Experiment //
+////////////////////////////
+#include "ActsExamples/TrackFindingX/MeasurementMapSelectorAlgorithm.hpp"
+#include "ActsExamples/TrackFindingX/ParameterFromTrajectoryAlgorithm.hpp"
+#include "ActsExamples/TrackFindingX/SourceLinkSelectorAlgorithm.hpp"
+#include "ActsExamples/TrackFindingX/TrackFindingFromPrototrackAlgorithm.hpp"
+
 #include <memory>
 
 #include <pybind11/pybind11.h>
@@ -342,6 +350,31 @@ void addTrackFinding(Context& ctx) {
                                 "AmbiguityResolutionAlgorithm",
                                 inputSourceLinks, inputTrajectories,
                                 outputTrajectories, maximumSharedHits);
+
+  ////////////////////////////
+  // For GNN+CKF Experiment //
+  ////////////////////////////
+  {
+    ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SourceLinkSelectorAlgorithm, mex,
+                                  "SourceLinkSelectorAlgorithm",
+                                  inputSourceLinks, outputSourceLinks,
+                                  geometrySelection);
+
+    ACTS_PYTHON_DECLARE_ALGORITHM(
+        ActsExamples::ParameterFromTrajectoryAlgorithm, mex,
+        "ParameterFromTrajectoryAlgorithm", inputTrajectories, outputParamters);
+
+    ACTS_PYTHON_DECLARE_ALGORITHM(
+        ActsExamples::TrackFindingFromPrototrackAlgorithm, mex,
+        "TrackFindingFromPrototrackAlgorithm", inputTracks, inputMeasurements,
+        inputSourceLinks, inputInitialTrackParameters, outputTracks,
+        measurementSelectorCfg, trackingGeometry, magneticField);
+
+    ACTS_PYTHON_DECLARE_ALGORITHM(
+        ActsExamples::MeasurementMapSelectorAlgorithm, mex,
+        "MeasurementMapSelectorAlgorithm", inputMeasurementParticleMap,
+        inputSourceLinks, outputMeasurementParticleMap, geometrySelection);
+  }
 }
 
 }  // namespace Acts::Python

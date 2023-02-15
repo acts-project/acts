@@ -10,7 +10,6 @@
 
 #include "ActsFatras/EventData/Barcode.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
 #include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -65,7 +64,7 @@ class MeasurementMapSelectorAlgorithm final : public BareAlgorithm {
 
       for (const auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
         for (const auto& sourceLink : moduleSourceLinks) {
-          const auto [begin, end] = inputMap.equal_range(sourceLink.get().index());
+          const auto [begin, end] = inputMap.equal_range(sourceLink.index());
           
           outputMap.insert(begin, end);
         }

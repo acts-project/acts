@@ -15,19 +15,25 @@ namespace Acts {
 
 template <typename propagator_t, typename traj_t>
 struct CombinedKfAndCkf {
-  KalmanFitter<propagator_t, traj_t> m_kalmanFitter;
   propagator_t m_propagator;
+  std::unique_ptr<const Logger> m_logger;
+  KalmanFitter<propagator_t, traj_t> m_kalmanFitter;
 
-  CombinedKfAndCkf(const propagator_t& propagator)
-      : m_kalmanFitter(propagator), m_propagator(propagator) {}
+  CombinedKfAndCkf(propagator_t pPropagator,
+                   std::unique_ptr<const Logger> _logger =
+                       getDefaultLogger("KfCkfComb", Logging::INFO))
+      : m_propagator(std::move(pPropagator)),
+        m_logger(std::move(_logger)),
+        m_kalmanFitter(pPropagator, m_logger->cloneWithSuffix(":KF")) {}
 
-  template <typename source_link_iterator_kf_t,
-            typename source_link_iterator_ckf_t, typename start_parameters_t>
+  const Logger& logger() const { return *m_logger; }
+
+  template <typename sli_kf_t, typename sli_ckf_t, typename start_parameters_t,
+            typename track_container_t>
   auto runKalmanFitter(
-      source_link_iterator_kf_t it, source_link_iterator_kf_t end,
-      const start_parameters_t& sParameters,
-      const CombinatorialKalmanFilterOptions<source_link_iterator_ckf_t,
-                                             traj_t>& ckfOptions) const {
+      sli_kf_t it, sli_kf_t end, const start_parameters_t& sParameters,
+      const CombinatorialKalmanFilterOptions<sli_ckf_t, traj_t>& ckfOptions,
+      track_container_t& trackContainer) const {
     KalmanFitterExtensions<traj_t> extensions;
     extensions.calibrator = ckfOptions.extensions.calibrator;
     extensions.updater = ckfOptions.extensions.updater;
@@ -36,24 +42,23 @@ struct CombinedKfAndCkf {
 
     KalmanFitterOptions<traj_t> kfOptions(
         ckfOptions.geoContext, ckfOptions.magFieldContext,
-        ckfOptions.calibrationContext, extensions, ckfOptions.logger,
+        ckfOptions.calibrationContext, extensions,
         ckfOptions.propagatorPlainOptions, ckfOptions.referenceSurface,
         ckfOptions.multipleScattering, ckfOptions.energyLoss, false);
 
-    return m_kalmanFitter.fit(it, end, sParameters, kfOptions);
+    return m_kalmanFitter.fit(it, end, sParameters, kfOptions, trackContainer);
   }
 
-  template <typename source_link_iterator_kf_t,
-            typename source_link_iterator_ckf_t, typename start_parameters_t>
-  auto findTracks(source_link_iterator_kf_t it, source_link_iterator_kf_t end,
-                  const start_parameters_t& kfStartParameters,
-                  const CombinatorialKalmanFilterOptions<
-                      source_link_iterator_ckf_t, traj_t>& ckfOptions) const
+  template <typename sli_kf_t, typename sli_ckf_t, typename start_parameters_t,
+            typename track_container_t, template <typename> class holder_t>
+  auto findTracks(
+      sli_kf_t it, sli_kf_t end, const start_parameters_t& kfStartParameters,
+      const CombinatorialKalmanFilterOptions<sli_ckf_t, traj_t>& ckfOptions,
+      TrackContainer<track_container_t, traj_t, holder_t>& trackContainer) const
       -> Result<CombinatorialKalmanFilterResult<traj_t>> {
-    const auto& logger = ckfOptions.logger;
-
     // The KF run
-    auto kfResult = runKalmanFitter(it, end, kfStartParameters, ckfOptions);
+    auto kfResult =
+        runKalmanFitter(it, end, kfStartParameters, ckfOptions, trackContainer);
 
     if (!kfResult.ok()) {
       return kfResult.error();
@@ -62,8 +67,7 @@ struct CombinedKfAndCkf {
     ACTS_INFO("Done KF fitting");
 
     // The CKF run
-    using SourceLinkAccessor =
-        SourceLinkAccessorDelegate<source_link_iterator_ckf_t>;
+    using SourceLinkAccessor = SourceLinkAccessorDelegate<sli_ckf_t>;
 
     using ThisCkf = CombinatorialKalmanFilter<propagator_t, traj_t>;
     using Aborter = typename ThisCkf::template Aborter<SourceLinkAccessor,
@@ -73,8 +77,8 @@ struct CombinedKfAndCkf {
     using Actors = ActionList<Actor>;
     using Aborters = AbortList<Aborter>;
 
-    PropagatorOptions<Actors, Aborters> propOptions(
-        ckfOptions.geoContext, ckfOptions.magFieldContext, ckfOptions.logger);
+    PropagatorOptions<Actors, Aborters> propOptions(ckfOptions.geoContext,
+                                                    ckfOptions.magFieldContext);
 
     propOptions.setPlainOptions(ckfOptions.propagatorPlainOptions);
 
@@ -87,8 +91,7 @@ struct CombinedKfAndCkf {
     combKalmanActor.m_extensions = ckfOptions.extensions;
 
     // Prepare the start parameters
-    const auto state =
-        kfResult->fittedStates->getTrackState(kfResult->lastMeasurementIndex);
+    const auto state = *kfResult->trackStates().end();
 
     BoundTrackParameters ckfStartParameters(
         state.referenceSurface().getSharedPtr(), state.filtered(),
@@ -102,14 +105,16 @@ struct CombinedKfAndCkf {
 
     auto& ckfResult =
         inputResult.template get<CombinatorialKalmanFilterResult<traj_t>>();
-    ckfResult.fittedStates = std::move(kfResult->fittedStates);
-    ckfResult.lastMeasurementIndices.push_back(kfResult->lastMeasurementIndex);
-    ckfResult.lastTrackIndices.push_back(kfResult->lastTrackIndex);
-    ckfResult.activeTips.push_back(
-        {state.index(),
-         {kfResult->measurementStates + kfResult->measurementHoles,
-          kfResult->processedStates, kfResult->measurementStates, 0ul,
-          kfResult->measurementHoles}});
+    ckfResult.fittedStates = &kfResult->container().trackStateContainer();
+    ckfResult.lastMeasurementIndices.push_back(kfResult->tipIndex());
+    ckfResult.lastTrackIndices.push_back(kfResult->tipIndex());
+
+    const CombinatorialKalmanFilterTipState tipState{
+        kfResult->nMeasurements() + kfResult->nHoles(),
+        kfResult->nTrackStates(), kfResult->nMeasurements(), 0ul,
+        kfResult->nHoles()};
+
+    ckfResult.activeTips.push_back({kfResult->tipIndex(), tipState});
 
     // Run the CombinatorialKalmanFilter.
     auto result = m_propagator.template propagate(

@@ -292,7 +292,7 @@ class CombinatorialKalmanFilter {
         m_logger(std::move(_logger)),
         m_actorLogger{m_logger->cloneWithSuffix("Actor")} {}
 
- private:
+ public:
   using KalmanNavigator = typename propagator_t::Navigator;
 
   /// The propgator for the transport and material update
