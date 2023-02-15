@@ -236,7 +236,7 @@ struct GaussianSumFitter {
         inputMeasurements;
     for (auto it = begin; it != end; ++it) {
       const SourceLink& sl = *it;
-      inputMeasurements.emplace(sl.geometryId(), *it);
+      inputMeasurements.emplace(sl.geometryId(), sl);
     }
 
     ACTS_VERBOSE(
