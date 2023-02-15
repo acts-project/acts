@@ -99,8 +99,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
 
   ACTS_DEBUG("Created " << spacePoints.size() << " " << m_cfg.inputCollection
                         << " space points");
-  ctx.eventStore.add("PixelSpacePoints", std::move(spacePoints));
-  ctx.eventStore.add("StripSpacePoints", std::move(spacePoints));
+  ctx.eventStore.add(m_cfg.outputSpacePoints, std::move(spacePoints));
 
   return ProcessCode::SUCCESS;
 }
