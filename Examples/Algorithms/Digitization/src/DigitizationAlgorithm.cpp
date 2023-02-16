@@ -284,8 +284,6 @@ ActsExamples::DigitizationAlgorithm::localParameters(
     const std::vector<ActsFatras::Channelizer::ChannelSegment>& channels,
     RandomEngine& rng) const {
   DigitizedParameters dParameters;
-  
-  // ACTS_LOCAL_LOGGER(Acts::getDefaultLogger("GeoDigi", Acts::Logging::VERBOSE));
 
   const auto& binningData = geoCfg.segmentation.binningData();
 
@@ -296,7 +294,6 @@ ActsExamples::DigitizationAlgorithm::localParameters(
   size_t b1min = SIZE_MAX;
   size_t b1max = 0;
   // Combine the channels
-  ACTS_VERBOSE("-------");
   for (const auto& ch : channels) {
     auto bin = ch.bin;
     Acts::ActsScalar charge =
@@ -307,7 +304,6 @@ ActsExamples::DigitizationAlgorithm::localParameters(
       size_t b1 = bin[1];
       m += Acts::Vector2(charge * binningData[0].center(b0),
                          charge * binningData[1].center(b1));
-      // ACTS_VERBOSE("Updated charge=" << charge << ", m=" << m.transpose() << ", weighted:" << (totalWeight > 0.0 ? (m / totalWeight).transpose().eval() : Acts::Vector2{NAN,NAN}.transpose()));
       b0min = std::min(b0min, b0);
       b0max = std::max(b0max, b0);
       b1min = std::min(b1min, b1);
