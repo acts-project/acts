@@ -40,7 +40,8 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
     std::string
         inputMeasurementParticlesMap;  ///< Input hit-particles map collection
     size_t outputPrecision = 6;        ///< floating point precision
-    size_t nMeasurementsMin = 9;       ///< Min number of measurements
+    size_t nMeasurementsMin = 7;       ///< Min number of measurements
+    bool onlyTruthMatched = false;     ///< Only write truth matched tracks
     double truthMatchProbMin = 0.5;  ///< Probability threshold for fake tracks
     double ptMin = 1_GeV;            ///< Min pt of tracks
   };
@@ -72,7 +73,8 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
     size_t nMajorityHits = 0;
     std::string trackType;
     double truthMatchProb = 0;
-    const TrackParameters* fittedParameters = nullptr;
+    const TrackParameters* fittedParameters;
+    std::vector<uint64_t> measurementsID;
   };  // trackInfo struct
 };
 
