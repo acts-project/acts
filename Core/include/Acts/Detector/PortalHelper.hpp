@@ -8,10 +8,10 @@
 
 #pragma once
 
-#include "Acts/Geometry/DetectorVolume.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Portal.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Portal.hpp"
-#include "Acts/Geometry/detail/PortalGenerators.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <exception>
@@ -21,7 +21,6 @@
 
 namespace Acts {
 namespace Experimental {
-namespace detail {
 
 /// @brief Calls the portal generation and adds registration to sub portals
 ///
@@ -61,6 +60,7 @@ generatePortalsUpdateInternals(
 /// Create a default portal generator that connects to the
 /// static method.
 ///
+/// @note parameters are ignored in this case
 inline static Delegate<std::vector<std::shared_ptr<Portal>>(
     const Transform3&, const VolumeBounds&,
     const std::shared_ptr<DetectorVolume>&)>
@@ -127,6 +127,5 @@ std::vector<std::shared_ptr<DetectorVolume>> attachedDetectorVolumes(
   return attachedVolumes[iu];
 }
 
-}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts
