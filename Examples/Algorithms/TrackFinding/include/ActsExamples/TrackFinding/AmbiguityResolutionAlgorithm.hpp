@@ -37,6 +37,9 @@ class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
 
     /// Maximum amount of shared hits per track.
     std::uint32_t maximumSharedHits = 1;
+
+    /// Minumum number of measurement to form a track.
+    size_t nMeasurementsMin = 7;
   };
 
   /// Construct the ambiguity resolution algorithm.

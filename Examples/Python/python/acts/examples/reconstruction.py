@@ -137,8 +137,8 @@ CKFPerformanceConfig = namedtuple(
 
 AmbiguityResolutionConfig = namedtuple(
     "AmbiguityResolutionConfig",
-    ["maximumSharedHits"],
-    defaults=[None] * 1,
+    ["maximumSharedHits", "nMeasurementsMin"],
+    defaults=[None] * 2,
 )
 
 
@@ -1049,6 +1049,9 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 outputDir=str(outputDirCsv),
+                    **acts.examples.defaultKWArgs(
+                    nMeasurementsMin=ckfPerformanceConfig.nMeasurementsMin,
+                ),            
             )
             s.addWriter(csvMTJWriter)
 
@@ -1212,6 +1215,7 @@ def addAmbiguityResolution(
         outputTrajectories="filteredTrajectories",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
+            nMeasurementsMin=config.nMeasurementsMin,
         ),
     )
     s.addAlgorithm(alg)

@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -120,6 +121,11 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     const auto& traj = trajectories[iTraj];
     for (auto tip : traj.tips()) {
       if (!traj.hasTrackParameters(tip)) {
+        continue;
+      }
+      auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+          traj.multiTrajectory(), tip);
+      if (trajState.nMeasurements < m_cfg.nMeasurementsMin) {
         continue;
       }
       trackParameters.push_back(traj.trackParameters(tip));
