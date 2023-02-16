@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 
@@ -204,6 +207,46 @@ class TrackProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   Covariance covariance() {
     return m_container->covariance(m_index);
+  }
+
+  ActsScalar charge() const {
+    // Currently, neutral tracks are not supported here
+    // @TODO: Evaluate if/how neutral 'tracks' should be accounted for
+    return std::copysign(static_cast<ActsScalar>(UnitConstants::e),
+                         parameters()[eBoundQOverP]);
+  }
+
+  /// Access the theta parameter of the track at the reference surface
+  /// @return The theta parameter
+  ActsScalar theta() const { return parameters()[eBoundTheta]; }
+
+  /// Access the phi parameter of the track at the reference surface
+  /// @return The phi parameter
+  ActsScalar phi() const { return parameters()[eBoundPhi]; }
+
+  /// Access the loc0 parameter of the track at the reference surface
+  /// @return The loc0 parameter
+  ActsScalar loc0() const { return parameters()[eBoundLoc0]; }
+
+  /// Access the loc1 parameter of the track at the reference surface
+  /// @return The loc1 parameter
+  ActsScalar loc1() const { return parameters()[eBoundLoc1]; }
+
+  /// Access the time parameter of the track at the reference surface
+  /// @return The time parameter
+  ActsScalar time() const { return parameters()[eBoundTime]; }
+
+  /// Get the absolute momentum of the tack
+  /// @return The absolute track momentum
+  ActsScalar absoluteMomentum() const {
+    return std::abs(static_cast<ActsScalar>(Acts::UnitConstants::e) /
+                    parameters()[eBoundQOverP]);
+  }
+
+  /// Get the transverse momentum of the track
+  /// @return The track transverse momentum value
+  ActsScalar transverseMomentum() const {
+    return std::sin(parameters()[eBoundTheta]) * absoluteMomentum();
   }
 
   /// Get a range over the track states of this track. Return value is
