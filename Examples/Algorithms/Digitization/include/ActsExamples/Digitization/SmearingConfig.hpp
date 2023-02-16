@@ -23,12 +23,12 @@ struct ParameterSmearingConfig {
   ActsFatras::SingleParameterSmearFunction<RandomEngine> smearFunction;
 
   /// Check if the smearing configuration is the same
-  /// at least the index is checked
   /// @param other is the one to be checked against
   ///
   /// @return boolean to indicate equality
   bool operator==(const ParameterSmearingConfig& other) const {
-    return (index == other.index);
+    return (index == other.index) and
+           Digitization::compareSmearers(smearFunction, other.smearFunction);
   }
 };
 

@@ -89,40 +89,10 @@ struct GeometricConfig {
   /// check if the geometry config can be reused from
   /// @param other, @return a boolean to indicate this
   bool operator==(const GeometricConfig &other) const {
-    if (static_cast<bool>(chargeSmearer) !=
-        static_cast<bool>(other.chargeSmearer)) {
-      return false;
-    }
-
-    // I think this is the only way to really compare the charge smearer. Not
-    // sure if this might be so slow to just avoid this and always?
-    using namespace Digitization;
-    if (chargeSmearer.target<Exact>() != other.chargeSmearer.target<Exact>()) {
-      return false;
-    }
-    if (chargeSmearer.target<Gauss>() != other.chargeSmearer.target<Gauss>()) {
-      return false;
-    }
-    if (chargeSmearer.target<GaussTrunc>() !=
-        other.chargeSmearer.target<GaussTrunc>()) {
-      return false;
-    }
-    if (chargeSmearer.target<GaussClipped>() !=
-        other.chargeSmearer.target<GaussClipped>()) {
-      return false;
-    }
-    if (chargeSmearer.target<Uniform>() !=
-        other.chargeSmearer.target<Uniform>()) {
-      return false;
-    }
-    if (chargeSmearer.target<Digital>() !=
-        other.chargeSmearer.target<Digital>()) {
-      return false;
-    }
-
     return (indices == other.indices and segmentation == other.segmentation and
             thickness == other.thickness and threshold == other.threshold and
-            digital == other.digital);
+            digital == other.digital and
+            Digitization::compareSmearers(chargeSmearer, other.chargeSmearer));
   }
 };
 

@@ -137,7 +137,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
   from_json(j["segmentation"], gdc.segmentation);
   gdc.thickness = j["thickness"];
   gdc.threshold = j["threshold"];
-  gdc.digital = j["digital"];   
+  gdc.digital = j["digital"];
   from_json(j["charge-smearing"], gdc.chargeSmearer);
 }
 

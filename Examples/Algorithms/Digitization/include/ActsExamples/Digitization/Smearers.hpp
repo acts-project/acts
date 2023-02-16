@@ -12,6 +12,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/DigitizationError.hpp"
+#include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <cmath>
 #include <limits>
@@ -22,6 +23,14 @@
 
 namespace ActsExamples {
 namespace Digitization {
+
+/// This function compares `std::function` based on the below defined smearers
+/// for equality.
+/// @note This only works for with the below smearers. If one `std::function`
+/// contains any other target, it will return false.
+bool compareSmearers(
+    const ActsFatras::SingleParameterSmearFunction<RandomEngine>& a,
+    const ActsFatras::SingleParameterSmearFunction<RandomEngine>& b);
 
 /// Exact smearing of a single parameter.
 ///
