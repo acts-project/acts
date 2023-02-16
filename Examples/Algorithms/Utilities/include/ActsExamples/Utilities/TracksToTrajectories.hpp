@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,20 +12,19 @@
 
 namespace ActsExamples {
 
-class TrajectoriesToPrototracks final : public BareAlgorithm {
+class TracksToTrajectories final : public BareAlgorithm {
  public:
   struct Config {
-    std::string inputTrajectories = "trajectories";
-    std::string outputPrototracks = "tracks-from-trajectories";
+    std::string inputTracks = "tracks";
+    std::string outputTrajectories = "trajectories-from-tracks";
   };
 
   /// Construct the algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl)
-      : BareAlgorithm("TrajectoriesToPrototracks", lvl),
-        m_cfg(std::move(cfg)) {}
+  TracksToTrajectories(Config cfg, Acts::Logging::Level lvl)
+      : BareAlgorithm("TracksToTrajectories", lvl), m_cfg(std::move(cfg)) {}
 
   /// Run the algorithm.
   ///

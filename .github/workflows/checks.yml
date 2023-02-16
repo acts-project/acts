@@ -56,6 +56,13 @@ jobs:
       - name: Check
         run: >
           CI/check_include_guards.py . --fail-global --exclude "*thirdparty/*"
+  pragma_once:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Check
+        run: >
+          CI/check_pragma_once.sh
   boost_test_macro:
     runs-on: ubuntu-latest
     steps:

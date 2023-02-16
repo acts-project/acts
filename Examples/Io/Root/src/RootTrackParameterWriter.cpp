@@ -193,8 +193,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
         m_t_charge = static_cast<int>(particle.charge());
         m_t_qop = m_t_charge / p;
       } else {
-        ACTS_WARNING("Truth particle with barcode = " << particleId
-                                                      << " not found!");
+        ACTS_WARNING("Truth particle with barcode " << particleId << "="
+                                                    << particleId.value()
+                                                    << " not found!");
       }
     }
 

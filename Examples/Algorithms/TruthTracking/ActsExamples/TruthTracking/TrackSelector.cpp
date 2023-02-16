@@ -104,7 +104,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
         ++outputCount;
       }
 
-      outputTrajectories.emplace_back(trajectories.multiTrajectoryPtr(), tips,
+      outputTrajectories.emplace_back(trajectories.multiTrajectory(), tips,
                                       parameters);
     }
 
