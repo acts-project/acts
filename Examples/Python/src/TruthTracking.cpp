@@ -137,10 +137,8 @@ void addTruthTracking(Context& ctx) {
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTrackParameters);
-    ACTS_PYTHON_MEMBER(inputTrajectories);
-    ACTS_PYTHON_MEMBER(outputTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrajectories);
+    ACTS_PYTHON_MEMBER(inputTracks);
+    ACTS_PYTHON_MEMBER(outputTracks);
     ACTS_PYTHON_MEMBER(loc0Min);
     ACTS_PYTHON_MEMBER(loc0Max);
     ACTS_PYTHON_MEMBER(loc1Min);
