@@ -37,15 +37,7 @@ class VectorTrackContainerBase {
  protected:
   VectorTrackContainerBase() = default;
 
-  VectorTrackContainerBase(const VectorTrackContainerBase& other)
-      : m_tipIndex{other.m_tipIndex},
-        m_params{other.m_params},
-        m_cov{other.m_cov},
-        m_referenceSurfaces{other.m_referenceSurfaces} {
-    for (const auto& [key, value] : other.m_dynamic) {
-      m_dynamic.insert({key, value->clone()});
-    }
-  };
+  VectorTrackContainerBase(const VectorTrackContainerBase& other);
 
   VectorTrackContainerBase(VectorTrackContainerBase&& other) = default;
 
@@ -88,6 +80,21 @@ class VectorTrackContainerBase {
     }
   }
 
+  void checkConsistency() const {
+    size_t size = m_tipIndex.size();
+
+    assert(m_tipIndex.size() == size);
+    assert(m_params.size() == size);
+    assert(m_cov.size() == size);
+    assert(m_referenceSurfaces.size() == size);
+    assert(m_nMeasurements.size() == size);
+    assert(m_nHoles.size() == size);
+
+    for (const auto& [key, col] : m_dynamic) {
+      assert(col->size() == size);
+    }
+  }
+
  public:
   constexpr bool hasColumn_impl(HashedString key) const {
     using namespace Acts::HashedStringLiteral;
@@ -97,7 +104,10 @@ class VectorTrackContainerBase {
     }
   }
 
-  std::size_t size_impl() const { return m_tipIndex.size(); }
+  std::size_t size_impl() const {
+    checkConsistency();
+    return m_tipIndex.size();
+  }
   // END INTERFACE HELPER
 
   std::vector<IndexType> m_tipIndex;
@@ -115,6 +125,8 @@ class VectorTrackContainerBase {
 }  // namespace detail_vtc
 
 class VectorTrackContainer;
+class ConstVectorTrackContainer;
+
 template <>
 struct IsReadOnlyTrackContainer<VectorTrackContainer> : std::false_type {};
 
@@ -123,6 +135,8 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   VectorTrackContainer() : VectorTrackContainerBase{} {}
   VectorTrackContainer(const VectorTrackContainer& other) = default;
   VectorTrackContainer(VectorTrackContainer&&) = default;
+
+  VectorTrackContainer(const ConstVectorTrackContainer& other);
 
  public:
   // BEGIN INTERFACE
@@ -137,23 +151,9 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
         *this, key, itrack);
   }
 
-  IndexType addTrack_impl() {
-    m_tipIndex.emplace_back();
+  IndexType addTrack_impl();
 
-    m_params.emplace_back();
-    m_cov.emplace_back();
-    m_referenceSurfaces.emplace_back();
-
-    m_nMeasurements.emplace_back();
-    m_nHoles.emplace_back();
-
-    // dynamic columns
-    for (auto& [key, vec] : m_dynamic) {
-      vec->add();
-    }
-
-    return m_tipIndex.size() - 1;
-  }
+  void removeTrack_impl(IndexType itrack);
 
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
@@ -191,11 +191,15 @@ class ConstVectorTrackContainer final
 
   ConstVectorTrackContainer(const ConstVectorTrackContainer& other) = default;
   ConstVectorTrackContainer(const VectorTrackContainer& other)
-      : VectorTrackContainerBase{other} {}
+      : VectorTrackContainerBase{other} {
+    checkConsistency();
+  }
 
   ConstVectorTrackContainer(ConstVectorTrackContainer&&) = default;
   ConstVectorTrackContainer(VectorTrackContainer&& other)
-      : VectorTrackContainerBase{std::move(other)} {}
+      : VectorTrackContainerBase{std::move(other)} {
+    checkConsistency();
+  }
 
  public:
   // BEGIN INTERFACE
@@ -215,5 +219,11 @@ class ConstVectorTrackContainer final
 
   // END INTERFACE
 };
+
+inline VectorTrackContainer::VectorTrackContainer(
+    const ConstVectorTrackContainer& other)
+    : VectorTrackContainerBase{other} {
+  checkConsistency();
+}
 
 }  // namespace Acts
