@@ -30,14 +30,21 @@ class OnnxRuntimeBase {
   /// @brief Default destructor
   ~OnnxRuntimeBase() = default;
 
- protected:
   /// @brief Run the ONNX inference function
   ///
-  /// @param inputTensorValues The input feature values used for prediction
+  /// @param inputTensorValues The input features values used for prediction
   ///
   /// @return The output (predicted) values
   std::vector<float> runONNXInference(
       std::vector<float>& inputTensorValues) const;
+
+  /// @brief Run the ONNX inference function for a batch of input
+  ///
+  /// @param inputTensorValues Vector of the input features values of all the inputs used for prediction
+  ///
+  /// @return The vector of output (predicted) values
+  std::vector<std::vector<float>> runONNXInference(
+      std::vector<std::vector<float>>& inputTensorValues) const;
 
  private:
   /// ONNX runtime session / model properties
