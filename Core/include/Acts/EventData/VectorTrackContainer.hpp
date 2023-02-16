@@ -82,6 +82,7 @@ class VectorTrackContainerBase {
 
   void checkConsistency() const {
     size_t size = m_tipIndex.size();
+    (void)size;
 
     assert(m_tipIndex.size() == size);
     assert(m_params.size() == size);
@@ -91,6 +92,7 @@ class VectorTrackContainerBase {
     assert(m_nHoles.size() == size);
 
     for (const auto& [key, col] : m_dynamic) {
+      (void)key;
       assert(col->size() == size);
     }
   }
