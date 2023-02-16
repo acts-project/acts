@@ -190,6 +190,14 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       continue;
     }
 
+    // if absolute value of z-distance is too big, try next SP in bin
+    const float zO = otherSP->z();
+    float deltaZAbs = zO - zM;
+    float deltaZ = sign * deltaZAbs;
+    if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+      continue;
+    }
+
     // ratio Z/R (forward angle) of space point duplet
     float cotTheta = deltaZ / deltaR;
     if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
@@ -200,14 +208,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     float zOrigin = zM - rM * cotTheta;
     if (zOrigin < m_config.collisionRegionMin ||
         zOrigin > m_config.collisionRegionMax) {
-      continue;
-    }
-
-    // if absolute value of z-distance is too big, try next SP in bin
-    const float zO = otherSP->z();
-    float deltaZAbs = zO - zM;
-    float deltaZ = sign * deltaZAbs;
-    if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
       continue;
     }
 
@@ -227,9 +227,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
     if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
       // transform coordinates and fill output vector
-      linCircleVec.push_back(transformCoordinates(
-          *otherSP, mediumSP, sign,
-          {deltaX, deltaY, deltaZAbs, varR, varZ, xVal, yVal, zOrigin}));
+      linCircleVec.push_back(
+          transformCoordinates(*otherSP, sign,
+                               {deltaX, deltaY, deltaZAbs, varianceRM,
+                                varianceZM, xVal, yVal, zOrigin}));
       outVec.push_back(otherSP);
       continue;
     }
@@ -260,7 +261,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
     // transform coordinates and fill output vector
     linCircleVec.push_back(
-        transformCoordinates(*otherSP, mediumSP, sign,
+        transformCoordinates(*otherSP, sign,
                              {deltaX, deltaY, deltaZAbs, varianceRM, varianceZM,
                               xVal, yVal, zOrigin}));
     outVec.push_back(otherSP);

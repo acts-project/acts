@@ -65,9 +65,7 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               const external_spacepoint_t& spM,
-                               const int bottomSign,
+LinCircle transformCoordinates(external_spacepoint_t& sp, const int bottomSign,
                                const std::array<float, 8>& transformVariables) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
