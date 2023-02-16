@@ -9,8 +9,8 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Geometry/VolumeBounds.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Utilities/Helpers.hpp"
@@ -22,10 +22,8 @@
 
 namespace Acts {
 namespace Experimental {
-namespace detail {
 
 /// @brief Generator function for creation of portal surfaces
-/// for a cylindrical volume
 ///
 /// @param dTransform a contextually resolved transform
 /// @param dBounds the detecor volume bounds
@@ -79,6 +77,5 @@ defaultPortalGenerator() {
   return pGenerator;
 }
 
-}  // namespace detail
 }  // namespace Experimental
 }  // namespace Acts

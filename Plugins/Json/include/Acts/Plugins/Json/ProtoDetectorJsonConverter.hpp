@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/Geometry/ProtoDetector.hpp"
+#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Plugins/Json/UtilitiesJsonConverter.hpp"
 
 // Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus

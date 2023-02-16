@@ -9,11 +9,11 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/Detector.hpp"
-#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/detail/PortalGenerators.hpp"
 #include "Acts/Navigation/DetectorVolumeFinders.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
@@ -45,7 +45,7 @@ auto cyl1Bounds = std::make_unique<Acts::CylinderVolumeBounds>(r1, r2, zHalfL);
 
 auto cyl2Bounds = std::make_unique<Acts::CylinderVolumeBounds>(r2, r3, zHalfL);
 
-auto portalGenerator = Acts::Experimental::detail::defaultPortalGenerator();
+auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
 
 auto cyl0 = Acts::Experimental::DetectorVolumeFactory::construct(
     portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0Bounds),

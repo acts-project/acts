@@ -8,8 +8,8 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
