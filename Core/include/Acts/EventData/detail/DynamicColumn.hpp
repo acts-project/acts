@@ -21,6 +21,8 @@ struct DynamicColumnBase {
 
   virtual void add() = 0;
   virtual void clear() = 0;
+  virtual void erase(size_t i) = 0;
+  virtual size_t size() const = 0;
 
   virtual std::unique_ptr<DynamicColumnBase> clone() const = 0;
 };
@@ -39,6 +41,8 @@ struct DynamicColumn : public DynamicColumnBase {
 
   void add() override { m_vector.emplace_back(); }
   void clear() override { m_vector.clear(); }
+  void erase(size_t i) override { m_vector.erase(m_vector.begin() + i); }
+  size_t size() const override { return m_vector.size(); }
 
   std::unique_ptr<DynamicColumnBase> clone() const override {
     return std::make_unique<DynamicColumn<T>>(*this);
@@ -65,6 +69,8 @@ struct DynamicColumn<bool> : public DynamicColumnBase {
 
   void add() override { m_vector.emplace_back(); }
   void clear() override { m_vector.clear(); }
+  void erase(size_t i) override { m_vector.erase(m_vector.begin() + i); }
+  size_t size() const override { return m_vector.size(); }
 
   std::unique_ptr<DynamicColumnBase> clone() const override {
     return std::make_unique<DynamicColumn<bool>>(*this);

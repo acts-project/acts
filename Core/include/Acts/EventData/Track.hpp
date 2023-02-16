@@ -522,6 +522,14 @@ class TrackContainer {
     return m_container->addTrack_impl();
   }
 
+  /// Remove a track at index @p itrack from the container
+  /// @note This invalidates all track proxies!
+  /// @param itrack The index of the track to remmove
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void removeTrack(IndexType itrack) {
+    m_container->removeTrack_impl(itrack);
+  }
+
   /// Add a dymanic column to the track container
   /// @param key the name of the column to be added
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
