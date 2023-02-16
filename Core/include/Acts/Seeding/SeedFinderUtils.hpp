@@ -53,11 +53,11 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 /// @param[in] sp The first spacepoint to use, either a bottom or top.
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottomSign Should be -1 if sp is a bottom SP or 1 is it is a top SP.
-/// @param[in] transformVariables Vector contaning deltaX, deltaY, deltaZ, xVal, yVal and zOrigin between sp and spM, calculated in SeedFinder to avoid recalculating these parameters.
+/// @param[in] transformVariables Vector contaning deltaX, deltaY, deltaZ, varR, varZ, xVal, yVal and zOrigin between sp and spM, calculated in SeedFinder to avoid recalculating these parameters.
 template <typename external_spacepoint_t>
 LinCircle transformCoordinates(external_spacepoint_t& sp,
                                external_spacepoint_t& spM, const int bottomSign,
-                               const std::array<float, 6>& transformVariables);
+                               const std::array<float, 8>& transformVariables);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.

@@ -170,8 +170,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float& xM = mediumSP.x();
   const float& yM = mediumSP.y();
   const float& zM = mediumSP.z();
+  const float& varianceRM = mediumSP.varianceR();
+  const float& varianceZM = mediumSP.varianceZ();
   const float cosPhiM = xM / rM;
   const float sinPhiM = yM / rM;
+  float vIP = m_config.impactMax / (rM * rM);
 
   for (auto otherSP : otherSPs) {
     const float rO = otherSP->radius();
@@ -226,7 +229,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // transform coordinates and fill output vector
       linCircleVec.push_back(transformCoordinates(
           *otherSP, mediumSP, sign,
-          {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
+          {deltaX, deltaY, deltaZAbs, varR, varZ, xVal, yVal, zOrigin}));
       outVec.push_back(otherSP);
       continue;
     }
@@ -240,7 +243,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     // in the rotated frame the interaction point is positioned at x = -rM
     // and y ~= impactParam
     const float uIP = -1. / rM;
-    float vIP = m_config.impactMax / (rM * rM);
     if (sign * yVal > 0.) {
       vIP = -vIP;
     }
@@ -259,7 +261,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     // transform coordinates and fill output vector
     linCircleVec.push_back(
         transformCoordinates(*otherSP, mediumSP, sign,
-                             {deltaX, deltaY, deltaZAbs, xVal, yVal, zOrigin}));
+                             {deltaX, deltaY, deltaZAbs, varianceRM, varianceZM,
+                              xVal, yVal, zOrigin}));
     outVec.push_back(otherSP);
   }
 }
