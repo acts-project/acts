@@ -142,14 +142,15 @@ def test_root_reader_interface(reader, conf_const, tmp_path):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 def test_root_material_track_reader(material_recording):
 
-    # recreate sequencer
+    input_tracks = material_recording / "geant4_material_tracks.root"
+    assert input_tracks.exists()
 
     s = Sequencer(numThreads=1)
 
     s.addReader(
         RootMaterialTrackReader(
             level=acts.logging.INFO,
-            fileList=[str(material_recording / "geant4_material_tracks.root")],
+            fileList=[str(input_tracks)],
         )
     )
 
