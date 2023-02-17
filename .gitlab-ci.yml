@@ -1,6 +1,6 @@
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004:v29
+  image: ghcr.io/acts-project/ubuntu2204:v34
   artifacts:
     paths:
       - src/clang-tidy/
@@ -12,15 +12,10 @@ clang_tidy:
     - git checkout $HEAD_SHA
     - >
         apt-get update
-        && apt-get install -y g++-8 libstdc++-8-dev parallel software-properties-common 
-        && curl -L https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add
-        && add-apt-repository 'deb http://apt.llvm.org/focal/ llvm-toolchain-focal-16 main'
-        && apt-get install -y clang-16 clang-tidy-16
-        && ln -s /usr/bin/clang++-16 /usr/bin/clang++
-        && ln -s /usr/bin/clang-16 /usr/bin/clang
-        && ln -s /usr/bin/clang-tidy-16 /usr/bin/clang-tidy
+        && apt-get install -y g++-10 libstdc++-10-dev parallel software-properties-common 
+        && apt-get install -y clang-14 clang-tidy-14
         && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
-        && ln -s /usr/lib/gcc/x86_64-linux-gnu/8/ /opt/lib/gcc/x86_64-linux-gnu/ 
+        && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/ /opt/lib/gcc/x86_64-linux-gnu/ 
         && clang++ --gcc-toolchain=/opt -v
     - >
         cmake -B build -S .
