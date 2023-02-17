@@ -80,19 +80,29 @@ class VectorTrackContainerBase {
     }
   }
 
-  void checkConsistency() const {
+  bool checkConsistency() const {
     size_t size = m_tipIndex.size();
+    (void)size;
 
-    assert(m_tipIndex.size() == size);
-    assert(m_params.size() == size);
-    assert(m_cov.size() == size);
-    assert(m_referenceSurfaces.size() == size);
-    assert(m_nMeasurements.size() == size);
-    assert(m_nHoles.size() == size);
+    bool result = true;
+    result = result && m_tipIndex.size() == size;
+    assert(result);
+    result = result && m_params.size() == size;
+    assert(result);
+    result = result && m_cov.size() == size;
+    assert(result);
+    result = result && m_referenceSurfaces.size() == size;
+    assert(result);
+    result = result && m_nMeasurements.size() == size;
+    assert(result);
+    result = result && m_nHoles.size() == size;
 
     for (const auto& [key, col] : m_dynamic) {
-      assert(col->size() == size);
+      (void)key;
+      result = result && col->size() == size;
     }
+
+    return result;
   }
 
  public:
