@@ -1,6 +1,8 @@
 clang_tidy:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2204:v34
+  image: 
+    name: ghcr.io/acts-project/ubuntu2204:v34
+    entrypoint: [ '/bin/bash', '-c', 'ln -snf /bin/bash /bin/sh && /bin/bash -c $0' ]
   artifacts:
     paths:
       - src/clang-tidy/
