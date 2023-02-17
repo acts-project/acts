@@ -12,8 +12,10 @@ clang_tidy:
     - git checkout $HEAD_SHA
     - >
         apt-get update
-        && apt-get install -y g++-10 libstdc++-10-dev parallel software-properties-common 
-        && apt-get install -y clang-14 clang-tidy-14
+        && apt-get install -y g++-10 libstdc++-10-dev parallel software-properties-common clang-14 clang-tidy-14
+        && ln -s /usr/bin/clang++-14 /usr/bin/clang++
+        && ln -s /usr/bin/clang-14 /usr/bin/clang
+        && ln -s /usr/bin/clang-tidy-14 /usr/bin/clang-tidy
         && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
         && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/ /opt/lib/gcc/x86_64-linux-gnu/ 
         && clang++ --gcc-toolchain=/opt -v
