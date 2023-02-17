@@ -91,8 +91,7 @@ struct GeometricConfig {
   bool operator==(const GeometricConfig &other) const {
     return (indices == other.indices and segmentation == other.segmentation and
             thickness == other.thickness and threshold == other.threshold and
-            digital == other.digital and
-            Digitization::compareSmearers(chargeSmearer, other.chargeSmearer));
+            digital == other.digital);
   }
 };
 

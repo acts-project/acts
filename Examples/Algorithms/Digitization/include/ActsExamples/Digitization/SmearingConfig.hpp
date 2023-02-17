@@ -27,8 +27,7 @@ struct ParameterSmearingConfig {
   ///
   /// @return boolean to indicate equality
   bool operator==(const ParameterSmearingConfig& other) const {
-    return (index == other.index) and
-           Digitization::compareSmearers(smearFunction, other.smearFunction);
+    return (index == other.index);
   }
 };
 

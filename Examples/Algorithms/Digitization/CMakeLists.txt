@@ -4,8 +4,7 @@ add_library(
   src/DigitizationConfig.cpp
   src/MeasurementCreation.cpp
   src/PlanarSteppingAlgorithm.cpp
-  src/ModuleClusters.cpp
-  src/Smearers.cpp)
+  src/ModuleClusters.cpp)
 target_include_directories(
   ActsExamplesDigitization
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
