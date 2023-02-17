@@ -200,7 +200,6 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
             field,
             CKFPerformanceConfig(ptMin=400.0 * u.MeV, nMeasurementsMin=6),
             TrackSelectorRanges(
-                removeNeutral=True,
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 pt=(500 * u.MeV, None),
             ),
@@ -316,7 +315,6 @@ def run_vertexing(fitter, mu, events):
                 pt=(500 * u.MeV, None),
                 loc0=(-4.0 * u.mm, 4.0 * u.mm),
                 absEta=(None, 3.0),
-                removeNeutral=True,
             ),
         )
 
