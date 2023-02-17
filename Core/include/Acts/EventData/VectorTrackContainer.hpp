@@ -115,7 +115,7 @@ class VectorTrackContainerBase {
   }
 
   std::size_t size_impl() const {
-    checkConsistency();
+    assert(checkConsistency());
     return m_tipIndex.size();
   }
   // END INTERFACE HELPER
@@ -202,13 +202,13 @@ class ConstVectorTrackContainer final
   ConstVectorTrackContainer(const ConstVectorTrackContainer& other) = default;
   ConstVectorTrackContainer(const VectorTrackContainer& other)
       : VectorTrackContainerBase{other} {
-    checkConsistency();
+    assert(checkConsistency());
   }
 
   ConstVectorTrackContainer(ConstVectorTrackContainer&&) = default;
   ConstVectorTrackContainer(VectorTrackContainer&& other)
       : VectorTrackContainerBase{std::move(other)} {
-    checkConsistency();
+    assert(checkConsistency());
   }
 
  public:
@@ -233,7 +233,7 @@ class ConstVectorTrackContainer final
 inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)
     : VectorTrackContainerBase{other} {
-  checkConsistency();
+  assert(checkConsistency());
 }
 
 }  // namespace Acts

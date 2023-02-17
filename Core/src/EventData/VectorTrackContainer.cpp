@@ -23,13 +23,12 @@ VectorTrackContainerBase::VectorTrackContainerBase(
   for (const auto& [key, value] : other.m_dynamic) {
     m_dynamic.insert({key, value->clone()});
   }
-
-  checkConsistency();
+  assert(checkConsistency());
 }
 }  // namespace detail_vtc
 
 VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
-  checkConsistency();
+  assert(checkConsistency());
 
   m_tipIndex.emplace_back();
 
