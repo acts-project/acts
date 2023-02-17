@@ -8,8 +8,6 @@
 
 #pragma once
 
-#pragma once
-
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Plugins/ActSVG/LayerSvgConverter.hpp"
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"

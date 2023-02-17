@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 
 #include <memory>
