@@ -178,17 +178,16 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         outputDirCsv=outputDir,
     )
 
-    if (MLSolver):
+    if MLSolver:
         addAmbiguityResolutionML(
             s,
             AmbiguityResolutionMLConfig(nMeasurementsMin=7),
-
             CKFPerformanceConfig(
                 ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=7
             ),
             outputDirRoot=outputDir,
             outputDirCsv=outputDir,
-        )        
+        )
     else:
         addAmbiguityResolution(
             s,

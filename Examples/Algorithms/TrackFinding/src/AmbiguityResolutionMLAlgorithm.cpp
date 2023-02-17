@@ -16,13 +16,13 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
-#include <core/session/onnxruntime_cxx_api.h>
-
+#include <chrono>
 #include <iterator>
+#include <map>
 #include <numeric>
 #include <stdexcept>
-#include <map>
-#include <chrono>
+
+#include <core/session/onnxruntime_cxx_api.h>
 
 ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
     ActsExamples::AmbiguityResolutionMLAlgorithm::Config cfg,
@@ -41,35 +41,37 @@ ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
 
 namespace {
 
-
 /// Clusterise tracks based on shared hits
 ///
 /// @param trackMap : Multimap storing pair of track ID and vector of measurement ID. The keys are the number of measurement and are just there to focilitate the ordering.
 /// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
-std::unordered_map<int, std::vector<int>> ClusteriseTrack(std::multimap<int, std::pair<int, std::vector<int>>> trackMap){
-
-  // Unordered map associating a vector with all the track ID of a cluster to the ID of the first track of the cluster
+std::unordered_map<int, std::vector<int>> ClusteriseTrack(
+    std::multimap<int, std::pair<int, std::vector<int>>> trackMap) {
+  // Unordered map associating a vector with all the track ID of a cluster to
+  // the ID of the first track of the cluster
   std::unordered_map<int, std::vector<int>> cluster;
-  // Unordered map associating hits to the ID of the first track of the different clusters.
+  // Unordered map associating hits to the ID of the first track of the
+  // different clusters.
   std::unordered_map<int, int> hitToTrack;
 
   // Loop over all the tracks
-  for (auto track = trackMap.rbegin(); track != trackMap.rend(); ++track ) {
+  for (auto track = trackMap.rbegin(); track != trackMap.rend(); ++track) {
     std::vector<int> hits = track->second.second;
     auto matchedTrack = hitToTrack.end();
     // Loop over all the hits in the track
     for (auto hit = hits.begin(); hit != hits.end(); hit++) {
       // Check if the hit is already associated to a track
       matchedTrack = hitToTrack.find(*hit);
-      if(matchedTrack != hitToTrack.end()){
+      if (matchedTrack != hitToTrack.end()) {
         // Add the track to the cluster associated to the matched track
-        cluster.at(matchedTrack->second).push_back(track->second.first); 
+        cluster.at(matchedTrack->second).push_back(track->second.first);
         break;
-      }      
+      }
     }
     // None of the hits have been matched to a track create a new cluster
-    if(matchedTrack == hitToTrack.end()){
-      cluster.emplace(track->second.first, std::vector<int>(1, track->second.first));
+    if (matchedTrack == hitToTrack.end()) {
+      cluster.emplace(track->second.first,
+                      std::vector<int>(1, track->second.first));
       for (auto hit = hits.begin(); hit != hits.end(); hit++) {
         // Add the hits of the new cluster to the hitToTrack
         hitToTrack.emplace(*hit, track->second.first);
@@ -78,11 +80,10 @@ std::unordered_map<int, std::vector<int>> ClusteriseTrack(std::multimap<int, std
   }
   return cluster;
 }
-}
+}  // namespace
 
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-
   // Read input data
   const auto& trajectories =
       ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
@@ -93,19 +94,21 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   int iTraj = 0;
   std::multimap<int, std::pair<int, std::vector<int>>> trackMap;
 
-
-  // Loop over all the trajectories in the events 
-  for (const auto& traj : trajectories) {  
+  // Loop over all the trajectories in the events
+  for (const auto& traj : trajectories) {
     for (auto tip : traj.tips()) {
-        if (!traj.hasTrackParameters(tip)) {
-          continue;
-        }
-      // Store the hits id for the trajectory and compute the number of measurement
+      if (!traj.hasTrackParameters(tip)) {
+        continue;
+      }
+      // Store the hits id for the trajectory and compute the number of
+      // measurement
       std::vector<int> hits;
       int nbMeasurements = 0;
       traj.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
         if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          int indexHit = state.uncalibratedSourceLink().template get<ActsExamples::IndexSourceLink>().index();
+          int indexHit = state.uncalibratedSourceLink()
+                             .template get<ActsExamples::IndexSourceLink>()
+                             .index();
           hits.emplace_back(indexHit);
           ++nbMeasurements;
         }
@@ -129,33 +132,36 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   for (auto const& [key, val] : clusters) {
     for (auto const& track : val) {
       std::vector<float> trackInput;
-      std::pair<int, int>  tips = trackTips.at(track);
+      std::pair<int, int> tips = trackTips.at(track);
       TrackParameters parameters = trackParameters.at(track);
-      auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(trajectories[tips.first].multiTrajectory(), tips.second);
+      auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+          trajectories[tips.first].multiTrajectory(), tips.second);
       trackInput.push_back(trajState.nStates);
       trackInput.push_back(trajState.nMeasurements);
       trackInput.push_back(trajState.nOutliers);
       trackInput.push_back(trajState.nHoles);
       trackInput.push_back(trajState.NDF);
-      trackInput.push_back((trajState.chi2Sum*1.0)/trajState.NDF);
+      trackInput.push_back((trajState.chi2Sum * 1.0) / trajState.NDF);
       trackInput.push_back(Acts::VectorHelpers::eta(parameters.momentum()));
       trackInput.push_back(Acts::VectorHelpers::phi(parameters.momentum()));
 
       networkInput.push_back(trackInput);
     }
   }
-  
+
   // Use the network to compute a score for all the tracks.
-  std::vector<std::vector<float>> outputTensor = m_duplicateClassifier.runONNXInference(networkInput);
+  std::vector<std::vector<float>> outputTensor =
+      m_duplicateClassifier.runONNXInference(networkInput);
   std::vector<int> goodTracks;
   int iOut = 0;
 
-  // Loop over all the cluster and only keep the track with the highest score in each cluster
+  // Loop over all the cluster and only keep the track with the highest score in
+  // each cluster
   for (auto const& [key, val] : clusters) {
     int bestTrackID = 0;
     float bestTrackScore = 0;
     for (auto const& track : val) {
-      if(outputTensor[iOut][0] > bestTrackScore){
+      if (outputTensor[iOut][0] > bestTrackScore) {
         bestTrackScore = outputTensor[iOut][0];
         bestTrackID = track;
       }
@@ -177,8 +183,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     parameters.emplace(outputTips.second, trackParameters[iTrack]);
 
     outputTrajectories.emplace_back(
-        trajectories[outputTips.first].multiTrajectory(), tips,
-        parameters);
+        trajectories[outputTips.first].multiTrajectory(), tips, parameters);
   }
 
   // Add our output multitrajectories to the event store

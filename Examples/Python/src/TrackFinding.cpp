@@ -341,17 +341,17 @@ void addTrackFinding(Context& ctx) {
             .def(py::init(constructor));
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionAlgorithm, mex,
-                                "AmbiguityResolutionAlgorithm",
-                                inputSourceLinks, inputTrajectories,
-                                outputTrajectories, maximumSharedHits, nMeasurementsMin);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::AmbiguityResolutionAlgorithm, mex,
+      "AmbiguityResolutionAlgorithm", inputSourceLinks, inputTrajectories,
+      outputTrajectories, maximumSharedHits, nMeasurementsMin);
 
 #ifdef ACTS_PLUGIN_ONNX
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm, mex,
-                                "AmbiguityResolutionMLAlgorithm",
-                                inputTrajectories, inputDuplicateNN, outputTrajectories, nMeasurementsMin);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
+                                mex, "AmbiguityResolutionMLAlgorithm",
+                                inputTrajectories, inputDuplicateNN,
+                                outputTrajectories, nMeasurementsMin);
 #endif
-
 }
 
 }  // namespace Acts::Python

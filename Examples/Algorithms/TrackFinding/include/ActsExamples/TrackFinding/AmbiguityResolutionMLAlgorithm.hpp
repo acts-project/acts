@@ -8,8 +8,9 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
+
 #include <string>
 #include <vector>
 
@@ -19,7 +20,7 @@ namespace ActsExamples {
 ///
 /// The implementation works as follows:
 ///  1) Cluster together nearby tracks using shared hits
-///  2) For each track use a neural network to compute a score 
+///  2) For each track use a neural network to compute a score
 ///  3) In each cluster keep the track with the highest score
 class AmbiguityResolutionMLAlgorithm final : public BareAlgorithm {
  public:
@@ -32,7 +33,6 @@ class AmbiguityResolutionMLAlgorithm final : public BareAlgorithm {
     std::string outputTrajectories;
     /// Minumum number of measurement to form a track.
     int nMeasurementsMin = 7;
-  
   };
 
   /// Construct the ambiguity resolution algorithm.

@@ -147,6 +147,7 @@ AmbiguityResolutionMLConfig = namedtuple(
     defaults=[None] * 1,
 )
 
+
 class VertexFinder(Enum):
     Truth = (1,)
     AMVF = (2,)
@@ -1054,9 +1055,9 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 outputDir=str(outputDirCsv),
-                    **acts.examples.defaultKWArgs(
+                **acts.examples.defaultKWArgs(
                     nMeasurementsMin=ckfPerformanceConfig.nMeasurementsMin,
-                ),            
+                ),
             )
             s.addWriter(csvMTJWriter)
 
@@ -1244,6 +1245,7 @@ def addAmbiguityResolution(
 
     return s
 
+
 @acts.examples.NamedTypeArgs(
     config=AmbiguityResolutionMLConfig,
     ckfPerformanceConfig=CKFPerformanceConfig,
@@ -1292,8 +1294,6 @@ def addAmbiguityResolutionML(
     )
 
     return s
-
-
 
 
 @acts.examples.NamedTypeArgs(
