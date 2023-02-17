@@ -11,8 +11,10 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <any>
 #include <cstddef>
@@ -212,8 +214,7 @@ class TrackProxy {
   ActsScalar charge() const {
     // Currently, neutral tracks are not supported here
     // @TODO: Evaluate if/how neutral 'tracks' should be accounted for
-    return std::copysign(static_cast<ActsScalar>(UnitConstants::e),
-                         parameters()[eBoundQOverP]);
+    return SinglyCharged{}.extractCharge(parameters()[eBoundQOverP]);
   }
 
   /// Access the theta parameter of the track at the reference surface
@@ -236,18 +237,31 @@ class TrackProxy {
   /// @return The time parameter
   ActsScalar time() const { return parameters()[eBoundTime]; }
 
+  /// Access the q/p (curvature) parameter of the track at the reference surface
+  /// @return The q/p parameter
+  ActsScalar qOverP() const { return parameters()[eBoundQOverP]; }
+
   /// Get the absolute momentum of the tack
   /// @return The absolute track momentum
   ActsScalar absoluteMomentum() const {
-    return std::abs(static_cast<ActsScalar>(Acts::UnitConstants::e) /
-                    parameters()[eBoundQOverP]);
+    return SinglyCharged{}.extractMomentum(qOverP());
   }
 
   /// Get the transverse momentum of the track
   /// @return The track transverse momentum value
   ActsScalar transverseMomentum() const {
-    return std::sin(parameters()[eBoundTheta]) * absoluteMomentum();
+    return std::sin(theta()) * absoluteMomentum();
   }
+
+  /// Get a unit vector along the track direction at the reference surface
+  /// @return The direction unit vector
+  Vector3 unitDirection() const {
+    return makeDirectionUnitFromPhiTheta(phi(), theta());
+  }
+
+  /// Get the global momentum vector
+  /// @return the global momentum vector
+  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
 
   /// Get a range over the track states of this track. Return value is
   /// compatible with range based for loop. Const version
