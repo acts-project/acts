@@ -57,7 +57,7 @@ Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {
 // Inference function using ONNX runtime for one single entry
 std::vector<float> Acts::OnnxRuntimeBase::runONNXInference(
     std::vector<float>& inputTensorValues) const {
-  Eigen::ArrayXXf vectorInput(1, inputTensorValues.size());
+  Acts::NetworkBatchInput vectorInput(1, inputTensorValues.size());
   for (size_t i = 0; i < inputTensorValues.size(); i++) {
     vectorInput(0, i) = inputTensorValues[i];
   }
@@ -68,7 +68,7 @@ std::vector<float> Acts::OnnxRuntimeBase::runONNXInference(
 // Inference function using ONNX runtime
 // the function assumes that the model has 1 input node and 1 output node
 std::vector<std::vector<float>> Acts::OnnxRuntimeBase::runONNXInference(
-    Eigen::ArrayXXf& inputTensorValues) const {
+    Acts::NetworkBatchInput& inputTensorValues) const {
   int batchSize = inputTensorValues.rows();
   std::vector<int64_t> inputNodeDims = m_inputNodeDims;
   std::vector<int64_t> outputNodeDims = m_outputNodeDims;

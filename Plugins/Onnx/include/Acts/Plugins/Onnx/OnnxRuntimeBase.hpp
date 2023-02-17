@@ -14,6 +14,9 @@
 
 namespace Acts {
 
+using NetworkBatchInput =
+    Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+
 // General class that sets up the ONNX runtime framework for loading a ML model
 // and using it for inference.
 class OnnxRuntimeBase {
@@ -44,7 +47,7 @@ class OnnxRuntimeBase {
   ///
   /// @return The vector of output (predicted) values
   std::vector<std::vector<float>> runONNXInference(
-      Eigen::ArrayXXf& inputTensorValues) const;
+      NetworkBatchInput& inputTensorValues) const;
 
  private:
   /// ONNX runtime session / model properties
