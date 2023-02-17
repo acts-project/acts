@@ -1,7 +1,9 @@
 target_sources(
   ActsCore
   PRIVATE
+    CylindricalDetectorHelper.cpp
     Detector.cpp
+    DetectorHelper.cpp
     DetectorVolume.cpp
     Portal.cpp
     ProtoDetector.cpp
