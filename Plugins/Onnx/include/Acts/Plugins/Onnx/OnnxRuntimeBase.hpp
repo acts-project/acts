@@ -7,9 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
 #include <vector>
 
+#include <Eigen/Dense>
 #include <core/session/onnxruntime_cxx_api.h>
 
 namespace Acts {
@@ -44,7 +44,7 @@ class OnnxRuntimeBase {
   ///
   /// @return The vector of output (predicted) values
   std::vector<std::vector<float>> runONNXInference(
-      std::vector<std::vector<float>>& inputTensorValues) const;
+      Eigen::ArrayXXf& inputTensorValues) const;
 
  private:
   /// ONNX runtime session / model properties

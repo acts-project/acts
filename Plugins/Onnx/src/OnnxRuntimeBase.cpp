@@ -57,8 +57,10 @@ Acts::OnnxRuntimeBase::OnnxRuntimeBase(Ort::Env& env, const char* modelPath) {
 // Inference function using ONNX runtime for one single entry
 std::vector<float> Acts::OnnxRuntimeBase::runONNXInference(
     std::vector<float>& inputTensorValues) const {
-  std::vector<std::vector<float>> vectorInput;
-  vectorInput.push_back(inputTensorValues);
+  Eigen::ArrayXXf vectorInput(1, inputTensorValues.size());
+  for (size_t i = 0; i < inputTensorValues.size(); i++) {
+    vectorInput(0, i) = inputTensorValues[i];
+  }
   auto vectorOutput = runONNXInference(vectorInput);
   return vectorOutput[0];
 }
@@ -66,8 +68,8 @@ std::vector<float> Acts::OnnxRuntimeBase::runONNXInference(
 // Inference function using ONNX runtime
 // the function assumes that the model has 1 input node and 1 output node
 std::vector<std::vector<float>> Acts::OnnxRuntimeBase::runONNXInference(
-    std::vector<std::vector<float>>& inputTensorValues) const {
-  int batchSize = inputTensorValues.size();
+    Eigen::ArrayXXf& inputTensorValues) const {
+  int batchSize = inputTensorValues.rows();
   std::vector<int64_t> inputNodeDims = m_inputNodeDims;
   std::vector<int64_t> outputNodeDims = m_outputNodeDims;
 
@@ -87,20 +89,12 @@ std::vector<std::vector<float>> Acts::OnnxRuntimeBase::runONNXInference(
         "size");
   }
 
-  // Format the input as a single vector
-  std::vector<float> tensorValues;
-  for (auto track : inputTensorValues) {
-    for (auto value : track) {
-      tensorValues.push_back(value);
-    }
-  }
-
   // Create input tensor object from data values
   // note: this assumes the model has only 1 input node
   Ort::MemoryInfo memoryInfo =
       Ort::MemoryInfo::CreateCpu(OrtArenaAllocator, OrtMemTypeDefault);
   Ort::Value inputTensor = Ort::Value::CreateTensor<float>(
-      memoryInfo, tensorValues.data(), tensorValues.size(),
+      memoryInfo, inputTensorValues.data(), inputTensorValues.size(),
       inputNodeDims.data(), inputNodeDims.size());
   // Double-check that inputTensor is a Tensor
   if (!inputTensor.IsTensor()) {
