@@ -80,21 +80,29 @@ class VectorTrackContainerBase {
     }
   }
 
-  void checkConsistency() const {
+  bool checkConsistency() const {
     size_t size = m_tipIndex.size();
     (void)size;
 
-    assert(m_tipIndex.size() == size);
-    assert(m_params.size() == size);
-    assert(m_cov.size() == size);
-    assert(m_referenceSurfaces.size() == size);
-    assert(m_nMeasurements.size() == size);
-    assert(m_nHoles.size() == size);
+    bool result = true;
+    result = result && m_tipIndex.size() == size;
+    assert(result);
+    result = result && m_params.size() == size;
+    assert(result);
+    result = result && m_cov.size() == size;
+    assert(result);
+    result = result && m_referenceSurfaces.size() == size;
+    assert(result);
+    result = result && m_nMeasurements.size() == size;
+    assert(result);
+    result = result && m_nHoles.size() == size;
 
     for (const auto& [key, col] : m_dynamic) {
       (void)key;
-      assert(col->size() == size);
+      result = result && col->size() == size;
     }
+
+    return result;
   }
 
  public:
@@ -107,7 +115,7 @@ class VectorTrackContainerBase {
   }
 
   std::size_t size_impl() const {
-    checkConsistency();
+    assert(checkConsistency());
     return m_tipIndex.size();
   }
   // END INTERFACE HELPER
@@ -194,13 +202,13 @@ class ConstVectorTrackContainer final
   ConstVectorTrackContainer(const ConstVectorTrackContainer& other) = default;
   ConstVectorTrackContainer(const VectorTrackContainer& other)
       : VectorTrackContainerBase{other} {
-    checkConsistency();
+    assert(checkConsistency());
   }
 
   ConstVectorTrackContainer(ConstVectorTrackContainer&&) = default;
   ConstVectorTrackContainer(VectorTrackContainer&& other)
       : VectorTrackContainerBase{std::move(other)} {
-    checkConsistency();
+    assert(checkConsistency());
   }
 
  public:
@@ -225,7 +233,7 @@ class ConstVectorTrackContainer final
 inline VectorTrackContainer::VectorTrackContainer(
     const ConstVectorTrackContainer& other)
     : VectorTrackContainerBase{other} {
-  checkConsistency();
+  assert(checkConsistency());
 }
 
 }  // namespace Acts

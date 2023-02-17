@@ -24,12 +24,12 @@ VectorTrackContainerBase::VectorTrackContainerBase(
     m_dynamic.insert({key, value->clone()});
   }
 
-  checkConsistency();
+  assert(checkConsistency());
 }
 }  // namespace detail_vtc
 
 VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
-  checkConsistency();
+  assert(checkConsistency());
 
   m_tipIndex.emplace_back();
 
@@ -45,7 +45,7 @@ VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
     vec->add();
   }
 
-  checkConsistency();
+  assert(checkConsistency());
 
   return m_tipIndex.size() - 1;
 }
