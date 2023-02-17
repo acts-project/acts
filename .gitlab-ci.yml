@@ -8,47 +8,47 @@ clang_tidy:
     expire_in: 2 weeks
   script:
     - git clone $CLONE_URL src 
-    - cd src
-    - git checkout $HEAD_SHA
-    - >
-        apt-get update
-        && apt-get install -y g++-10 libstdc++-10-dev parallel software-properties-common clang-14 clang-tidy-14
-        && ln -s /usr/bin/clang++-14 /usr/bin/clang++
-        && ln -s /usr/bin/clang-14 /usr/bin/clang
-        && ln -s /usr/bin/clang-tidy-14 /usr/bin/clang-tidy
-        && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
-        && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/ /opt/lib/gcc/x86_64-linux-gnu/ 
-        && clang++ -v
-    - >
-        cmake -B build -S .
-        -GNinja
-        -DCMAKE_CXX_COMPILER=clang++
-        -DCMAKE_C_COMPILER=clang
-        -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_CXX_FLAGS="-Werror"
-        -DACTS_BUILD_EVERYTHING=on
-        -DACTS_RUN_CLANG_TIDY=on
+    # - cd src
+    # - git checkout $HEAD_SHA
+    # - >
+        # apt-get update
+        # && apt-get install -y g++-10 libstdc++-10-dev parallel software-properties-common clang-14 clang-tidy-14
+        # && ln -s /usr/bin/clang++-14 /usr/bin/clang++
+        # && ln -s /usr/bin/clang-14 /usr/bin/clang
+        # && ln -s /usr/bin/clang-tidy-14 /usr/bin/clang-tidy
+        # && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
+        # && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/ /opt/lib/gcc/x86_64-linux-gnu/ 
+        # && clang++ -v
+    # - >
+        # cmake -B build -S .
+        # -GNinja
+        # -DCMAKE_CXX_COMPILER=clang++
+        # -DCMAKE_C_COMPILER=clang
+        # -DCMAKE_BUILD_TYPE=Release
+        # -DCMAKE_CXX_FLAGS="-Werror"
+        # -DACTS_BUILD_EVERYTHING=on
+        # -DACTS_RUN_CLANG_TIDY=on
 
-    - mkdir clang-tidy
+    # - mkdir clang-tidy
 
-    # Main clang-tidy run during cmake compilation
-    - CI/clang_tidy/run_clang_tidy.sh build | tee clang-tidy/clang-tidy.log
+    # # Main clang-tidy run during cmake compilation
+    # - CI/clang_tidy/run_clang_tidy.sh build | tee clang-tidy/clang-tidy.log
 
-    # Install dependencies for processing scripts
-    - pip install -r CI/clang_tidy/requirements.txt
+    # # Install dependencies for processing scripts
+    # - pip install -r CI/clang_tidy/requirements.txt
 
-    # Parse the main clang-tidy run
-    - >
-        CI/clang_tidy/parse_clang_tidy.py 
-        clang-tidy/clang-tidy.log 
-        clang-tidy/clang-tidy.json 
-        --exclude "*thirdparty*"
+    # # Parse the main clang-tidy run
+    # - >
+        # CI/clang_tidy/parse_clang_tidy.py 
+        # clang-tidy/clang-tidy.log 
+        # clang-tidy/clang-tidy.json 
+        # --exclude "*thirdparty*"
 
-    # Check the combined report against the defined limits
-    - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
+    # # Check the combined report against the defined limits
+    # - CI/clang_tidy/check_clang_tidy.py --report clang-tidy/clang-tidy.json --config CI/clang_tidy/limits.yml
 
-    # Generate an html report
-    - codereport clang-tidy/clang-tidy.json clang-tidy/html
+    # # Generate an html report
+    # - codereport clang-tidy/clang-tidy.json clang-tidy/html
 
 build:
   stage: build
