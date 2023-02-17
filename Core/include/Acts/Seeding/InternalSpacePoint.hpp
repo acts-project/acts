@@ -40,9 +40,9 @@ class InternalSpacePoint {
   float phi() const { return atan2f(m_y, m_x); }
   const float& varianceR() const { return m_varianceR; }
   const float& varianceZ() const { return m_varianceZ; }
+  const float& deltaR() const { return m_deltaR; }
   const float& quality() const { return m_quality; }
-  const float& cotTheta() const { return m_cotTheta; }
-  void setCotTheta(float cotTheta) { m_cotTheta = cotTheta; }
+  void setDeltaR(float deltaR) { m_deltaR = deltaR; }
   void setQuality(float quality) {
     if (quality >= m_quality) {
       m_quality = quality;

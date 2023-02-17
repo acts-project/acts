@@ -51,7 +51,6 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
 /// @param[in] sp The first spacepoint to use, either a bottom or top.
-/// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottomSign Should be -1 if sp is a bottom SP or 1 is it is a top SP.
 /// @param[in] transformVariables Vector contaning deltaX, deltaY, deltaZ, varR, varZ, xVal, yVal and zOrigin between sp and spM, calculated in SeedFinder to avoid recalculating these parameters.
 template <typename external_spacepoint_t>
