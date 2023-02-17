@@ -62,10 +62,10 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
         });
 
     std::optional<BoundSymMatrix> finalCov = std::nullopt;
-    if( cov != BoundSymMatrix::Zero() ) {
+    if (cov != BoundSymMatrix::Zero()) {
       finalCov = cov;
     }
-    
+
     return BoundState{BoundTrackParameters(surface.getSharedPtr(), params, cov),
                       Jacobian::Zero(), accumulatedPathLength};
   }
@@ -101,27 +101,27 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
       pos4 += state.components[i].weight * cp.fourPosition(state.geoContext);
       dir += state.components[i].weight * cp.unitDirection();
       qop += state.components[i].weight * (cp.charge() / cp.absoluteMomentum());
-      if( cp.covariance() ) {
+      if (cp.covariance()) {
         cov += state.components[i].weight * *cp.covariance();
       }
       pathLenth += state.components[i].weight * pathLenth;
       sumOfWeights += state.components[i].weight;
     }
-    
+
     pos4 /= sumOfWeights;
     dir /= sumOfWeights;
     qop /= sumOfWeights;
     pathLenth /= sumOfWeights;
     cov /= sumOfWeights;
-    
+
     std::optional<BoundSymMatrix> finalCov = std::nullopt;
-    if( cov != BoundSymMatrix::Zero() ) {
+    if (cov != BoundSymMatrix::Zero()) {
       finalCov = cov;
     }
-    
+
     return CurvilinearState{
-        CurvilinearTrackParameters(pos4, dir, qop, finalCov),
-        Jacobian::Zero(), pathLenth};
+        CurvilinearTrackParameters(pos4, dir, qop, finalCov), Jacobian::Zero(),
+        pathLenth};
   }
 }
 
