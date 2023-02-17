@@ -3,6 +3,7 @@ import os
 import inspect
 from pathlib import Path
 import shutil
+import sys
 import tempfile
 
 import pytest
@@ -513,7 +514,7 @@ def hepmc_data_impl(tmp_path_factory):
     with tempfile.TemporaryDirectory() as tmp_path:
         env = os.environ.copy()
         env["NEVENTS"] = "1"
-        subprocess.check_call([str(script)], cwd=tmp_path, env=env)
+        subprocess.check_call([sys.executable, str(script)], cwd=tmp_path, env=env)
 
         outfile = Path(tmp_path) / "hepmc3/event000000000-events.hepmc3"
         # fake = Path("/scratch/pagessin/acts/hepmc3/event000000000-events.hepmc3")
