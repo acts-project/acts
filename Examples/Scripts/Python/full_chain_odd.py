@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, pathlib, contextlib, acts, acts.examples
+import os, argparse, pathlib, contextlib, acts, acts.examples
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -187,6 +187,8 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             ),
             outputDirRoot=outputDir,
             outputDirCsv=outputDir,
+            onnxModelFile=os.path.dirname(__file__)
+            + "/MLAmbiguityResolution/duplicateClassifier.onnx",
         )
     else:
         addAmbiguityResolution(
