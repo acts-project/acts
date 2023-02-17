@@ -32,7 +32,7 @@ def _make_config_adapter(fn):
         except TypeError as e:
             import textwrap
 
-            print("-"*80)
+            print("-" * 80)
             print("Patched config constructor failed for", type(self))
             message = (
                 "This is most likely because one of the following kwargs "
@@ -44,7 +44,7 @@ def _make_config_adapter(fn):
             members = inspect.getmembers(type(cfg), lambda a: not inspect.isroutine(a))
             members = [m for m, _ in members if not m.startswith("_")]
             print(type(cfg), "has the following properties:\n->", ", ".join(members))
-            print("-"*80)
+            print("-" * 80)
             raise e
 
     return wrapped
