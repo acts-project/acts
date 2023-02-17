@@ -209,6 +209,10 @@ class ConstVectorTrackContainer final
     return ConstParameters{m_params[itrack].data()};
   }
 
+  ConstCovariance covariance(IndexType itrack) const {
+    return ConstCovariance{m_cov[itrack].data()};
+  }
+
   // END INTERFACE
 };
 
