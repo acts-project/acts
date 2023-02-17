@@ -61,9 +61,12 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
           return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
         });
 
-    using Opt = std::optional<BoundSymMatrix>;
-    return BoundState{BoundTrackParameters(surface.getSharedPtr(), params,
-                                           transportCov ? Opt{cov} : Opt{}),
+    std::optional<BoundSymMatrix> finalCov = std::nullopt;
+    if( cov != BoundSymMatrix::Zero() ) {
+      finalCov = cov;
+    }
+    
+    return BoundState{BoundTrackParameters(surface.getSharedPtr(), params, cov),
                       Jacobian::Zero(), accumulatedPathLength};
   }
 }
@@ -89,6 +92,7 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
     ActsScalar qop = 0.0;
     BoundSymMatrix cov = BoundSymMatrix::Zero();
     ActsScalar pathLenth = 0.0;
+    ActsScalar sumOfWeights = 0.0;
 
     for (auto i = 0ul; i < numberComponents(state); ++i) {
       const auto [cp, jac, pl] = SingleStepper::curvilinearState(
@@ -97,16 +101,26 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
       pos4 += state.components[i].weight * cp.fourPosition(state.geoContext);
       dir += state.components[i].weight * cp.unitDirection();
       qop += state.components[i].weight * (cp.charge() / cp.absoluteMomentum());
-      if (cp.covariance()) {
+      if( cp.covariance() ) {
         cov += state.components[i].weight * *cp.covariance();
       }
       pathLenth += state.components[i].weight * pathLenth;
+      sumOfWeights += state.components[i].weight;
     }
-
-    using Opt = std::optional<BoundSymMatrix>;
+    
+    pos4 /= sumOfWeights;
+    dir /= sumOfWeights;
+    qop /= sumOfWeights;
+    pathLenth /= sumOfWeights;
+    cov /= sumOfWeights;
+    
+    std::optional<BoundSymMatrix> finalCov = std::nullopt;
+    if( cov != BoundSymMatrix::Zero() ) {
+      finalCov = cov;
+    }
+    
     return CurvilinearState{
-        CurvilinearTrackParameters(pos4, dir, qop,
-                                   transportCov ? Opt{cov} : Opt{}),
+        CurvilinearTrackParameters(pos4, dir, qop, finalCov),
         Jacobian::Zero(), pathLenth};
   }
 }
