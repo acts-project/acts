@@ -41,12 +41,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
   auto isValidTrack = [&](const auto& trk) {
     const auto theta = trk.theta();
     const auto eta = -std::log(std::tan(theta / 2));
-    // define charge selection
-    const bool validNeutral = (trk.charge() == 0) and not m_cfg.removeNeutral;
-    const bool validCharged = (trk.charge() != 0) and not m_cfg.removeCharged;
-    const bool validCharge = validNeutral or validCharged;
-    return validCharge and
-           within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
+    return within(trk.transverseMomentum(), m_cfg.ptMin, m_cfg.ptMax) and
            within(std::abs(eta), m_cfg.absEtaMin, m_cfg.absEtaMax) and
            within(eta, m_cfg.etaMin, m_cfg.etaMax) and
            within(trk.phi(), m_cfg.phiMin, m_cfg.phiMax) and
