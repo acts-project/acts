@@ -7,12 +7,15 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-
 #include <vector>
 
+#include <Eigen/Dense>
 #include <core/session/onnxruntime_cxx_api.h>
 
 namespace Acts {
+
+using NetworkBatchInput =
+    Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 // General class that sets up the ONNX runtime framework for loading a ML model
 // and using it for inference.
@@ -44,7 +47,7 @@ class OnnxRuntimeBase {
   ///
   /// @return The vector of output (predicted) values
   std::vector<std::vector<float>> runONNXInference(
-      std::vector<std::vector<float>>& inputTensorValues) const;
+      NetworkBatchInput& inputTensorValues) const;
 
  private:
   /// ONNX runtime session / model properties
