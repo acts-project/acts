@@ -94,8 +94,9 @@ std::vector<std::size_t> computeSharedHits(
   return sharedHitCountPerTrack;
 }
 
-std::size_t computeTrackHits(const Acts::VectorMultiTrajectory& multiTrajectory,
-                             const std::size_t tip) {
+std::size_t computeTrackHits(
+    const Acts::ConstVectorMultiTrajectory& multiTrajectory,
+    const std::size_t tip) {
   std::size_t result = 0;
 
   multiTrajectory.visitBackwards(tip, [&](const auto&) { ++result; });
