@@ -18,7 +18,7 @@ clang_tidy:
         && ln -s /usr/bin/clang-tidy-14 /usr/bin/clang-tidy
         && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
         && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/ /opt/lib/gcc/x86_64-linux-gnu/ 
-        && clang++
+        && clang++ -v
     - >
         cmake -B build -S .
         -GNinja
