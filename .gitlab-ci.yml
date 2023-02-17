@@ -18,14 +18,14 @@ clang_tidy:
         && ln -s /usr/bin/clang-tidy-14 /usr/bin/clang-tidy
         && mkdir -p /opt/lib/gcc/x86_64-linux-gnu
         && ln -s /usr/lib/gcc/x86_64-linux-gnu/10/ /opt/lib/gcc/x86_64-linux-gnu/ 
-        && clang++ --gcc-toolchain=/opt -v
+        && clang++
     - >
         cmake -B build -S .
         -GNinja
         -DCMAKE_CXX_COMPILER=clang++
         -DCMAKE_C_COMPILER=clang
         -DCMAKE_BUILD_TYPE=Release
-        -DCMAKE_CXX_FLAGS="-Werror --gcc-toolchain=/opt"
+        -DCMAKE_CXX_FLAGS="-Werror"
         -DACTS_BUILD_EVERYTHING=on
         -DACTS_RUN_CLANG_TIDY=on
 
