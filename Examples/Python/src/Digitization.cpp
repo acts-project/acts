@@ -117,7 +117,6 @@ void addDigitization(Context& ctx) {
 
     ACTS_PYTHON_STRUCT_BEGIN(dc, DC);
     ACTS_PYTHON_MEMBER(inputDigiComponents);
-    ACTS_PYTHON_MEMBER(compactify);
     ACTS_PYTHON_MEMBER(volumeLayerComponents);
     ACTS_PYTHON_MEMBER(outputDigiComponents);
     ACTS_PYTHON_STRUCT_END();

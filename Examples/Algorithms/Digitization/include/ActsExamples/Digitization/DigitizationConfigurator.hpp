@@ -46,9 +46,6 @@ struct DigitizationConfigurator {
   std::vector<std::pair<Acts::GeometryIdentifier, DigiComponentsConfig>>
       outputDigiComponents;
 
-  /// This tries to compactify the output map
-  bool compactify = false;
-
   /// High level reference configurations for compactification
   std::map<Acts::GeometryIdentifier, DigiComponentsConfig>
       volumeLayerComponents;
@@ -244,37 +241,6 @@ struct DigitizationConfigurator {
           }
           // Set the adapted segmentation class
           dOutputConfig.geometricDigiConfig.segmentation = outputSegmentation;
-        }
-
-        // Compactify the output map where possible
-        if (compactify) {
-          // Check for a representing volume configuration, insert if not
-          // present
-          Acts::GeometryIdentifier volGeoId =
-              Acts::GeometryIdentifier().setVolume(geoId.volume());
-
-          auto volRep = volumeLayerComponents.find(volGeoId);
-          if (volRep != volumeLayerComponents.end() and
-              dOutputConfig == volRep->second) {
-            // return if the volume representation already covers this one
-            return;
-          } else {
-            volumeLayerComponents[volGeoId] = dOutputConfig;
-            outputDigiComponents.push_back({volGeoId, dOutputConfig});
-          }
-
-          // Check for a representing layer configuration, insert if not present
-          Acts::GeometryIdentifier volLayGeoId =
-              Acts::GeometryIdentifier(volGeoId).setLayer(geoId.layer());
-          auto volLayRep = volumeLayerComponents.find(volLayGeoId);
-
-          if (volLayRep != volumeLayerComponents.end() and
-              dOutputConfig == volLayRep->second) {
-            return;
-          } else {
-            volumeLayerComponents[volLayGeoId] = dOutputConfig;
-            outputDigiComponents.push_back({volLayGeoId, dOutputConfig});
-          }
         }
 
         // Insert into the output list
