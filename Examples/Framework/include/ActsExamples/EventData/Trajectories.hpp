@@ -30,7 +30,7 @@ namespace ActsExamples {
 struct Trajectories final {
  public:
   /// (Reconstructed) trajectory with multiple states.
-  using MultiTrajectory = Acts::VectorMultiTrajectory;
+  using MultiTrajectory = Acts::ConstVectorMultiTrajectory;
   /// Fitted parameters identified by indices in the multi trajectory.
   using IndexedParameters =
       std::unordered_map<Acts::MultiTrajectoryTraits::IndexType,
