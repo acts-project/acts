@@ -17,7 +17,8 @@
 namespace ActsExamples {
 
 ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
-  const auto& tracks = ctx.eventStore.get<TrackContainer>(m_cfg.inputTracks);
+  const auto& tracks =
+      ctx.eventStore.get<ConstTrackContainer>(m_cfg.inputTracks);
 
   // Prepare the output data with MultiTrajectory
   TrajectoriesContainer trajectories;
