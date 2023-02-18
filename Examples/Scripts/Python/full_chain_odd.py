@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import pathlib, acts, acts.examples
+import argparse, pathlib, contextlib, acts, acts.examples
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -7,6 +7,7 @@ from acts.examples.simulation import (
     ParticleConfig,
     addPythia8,
     addFatras,
+    addGeant4,
     ParticleSelectorConfig,
     addDigitization,
 )
@@ -24,7 +25,21 @@ from acts.examples.reconstruction import (
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
-ttbar_pu200 = False
+parser = argparse.ArgumentParser(description="Full chain with the OpenDataDetector")
+
+parser.add_argument("--events", "-n", help="Number of events", type=int, default=100)
+parser.add_argument(
+    "--geant4", help="Use Geant4 instead of fatras", action="store_true"
+)
+parser.add_argument(
+    "--ttbar",
+    help="Use Pythia8 (ttbar, pile-up 200) instead of particle gun",
+    action="store_true",
+)
+args = vars(parser.parse_args())
+
+ttbar_pu200 = args["ttbar"]
+g4_simulation = args["geant4"]
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
@@ -41,8 +56,13 @@ detector, trackingGeometry, decorators = getOpenDataDetector(
 field = acts.ConstantBField(acts.Vector3(0.0, 0.0, 2.0 * u.T))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-with acts.FpeMonitor():
-    s = acts.examples.Sequencer(events=100, numThreads=1, outputDir=str(outputDir))
+# TODO Geant4 currently crashes with FPE monitoring
+with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
+    s = acts.examples.Sequencer(
+        events=args["events"],
+        numThreads=1,
+        outputDir=str(outputDir),
+    )
 
     if not ttbar_pu200:
         addParticleGun(
@@ -73,19 +93,43 @@ with acts.FpeMonitor():
             rnd=rnd,
             outputDirRoot=outputDir,
         )
+    if g4_simulation:
+        if s.config.numThreads != 1:
+            raise ValueError("Geant 4 simulation does not support multi-threading")
 
-    addFatras(
-        s,
-        trackingGeometry,
-        field,
-        ParticleSelectorConfig(
-            eta=(-3.0, 3.0), pt=(150 * u.MeV, None), removeNeutral=True
+        # Pythia can sometime simulate particles outside the world volume, a cut on the Z of the track help mitigate this effect
+        # Older version of G4 might not work, this as has been tested on version `geant4-11-00-patch-03`
+        # For more detail see issue #1578
+        addGeant4(
+            s,
+            detector,
+            trackingGeometry,
+            field,
+            preSelectParticles=ParticleSelectorConfig(
+                eta=(-3.0, 3.0),
+                absZ=(0, 1e4),
+                rho=(0, 1e3),
+                pt=(150 * u.MeV, None),
+                removeNeutral=True,
+            ),
+            outputDirCsv=outputDir,
+            rnd=rnd,
         )
-        if ttbar_pu200
-        else ParticleSelectorConfig(),
-        outputDirRoot=outputDir,
-        rnd=rnd,
-    )
+    else:
+        addFatras(
+            s,
+            trackingGeometry,
+            field,
+            preSelectParticles=ParticleSelectorConfig(
+                eta=(-3.0, 3.0),
+                pt=(150 * u.MeV, None),
+                removeNeutral=True,
+            )
+            if ttbar_pu200
+            else ParticleSelectorConfig(),
+            outputDirRoot=outputDir,
+            rnd=rnd,
+        )
 
     addDigitization(
         s,
@@ -112,7 +156,8 @@ with acts.FpeMonitor():
         trackingGeometry,
         field,
         CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6
+            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
+            nMeasurementsMin=6,
         ),
         TrackSelectorRanges(
             pt=(1.0 * u.GeV, None),
@@ -127,7 +172,8 @@ with acts.FpeMonitor():
         s,
         AmbiguityResolutionConfig(maximumSharedHits=3),
         CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6
+            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
+            nMeasurementsMin=6,
         ),
         outputDirRoot=outputDir,
     )

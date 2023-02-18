@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include "Acts/Geometry/ProtoDetector.hpp"
+#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 #include "Acts/Plugins/Json/ProtoDetectorJsonConverter.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"

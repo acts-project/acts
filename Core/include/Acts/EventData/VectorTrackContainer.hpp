@@ -37,15 +37,7 @@ class VectorTrackContainerBase {
  protected:
   VectorTrackContainerBase() = default;
 
-  VectorTrackContainerBase(const VectorTrackContainerBase& other)
-      : m_tipIndex{other.m_tipIndex},
-        m_params{other.m_params},
-        m_cov{other.m_cov},
-        m_referenceSurfaces{other.m_referenceSurfaces} {
-    for (const auto& [key, value] : other.m_dynamic) {
-      m_dynamic.insert({key, value->clone()});
-    }
-  };
+  VectorTrackContainerBase(const VectorTrackContainerBase& other);
 
   VectorTrackContainerBase(VectorTrackContainerBase&& other) = default;
 
@@ -88,6 +80,31 @@ class VectorTrackContainerBase {
     }
   }
 
+  bool checkConsistency() const {
+    size_t size = m_tipIndex.size();
+    (void)size;
+
+    bool result = true;
+    result = result && m_tipIndex.size() == size;
+    assert(result);
+    result = result && m_params.size() == size;
+    assert(result);
+    result = result && m_cov.size() == size;
+    assert(result);
+    result = result && m_referenceSurfaces.size() == size;
+    assert(result);
+    result = result && m_nMeasurements.size() == size;
+    assert(result);
+    result = result && m_nHoles.size() == size;
+
+    for (const auto& [key, col] : m_dynamic) {
+      (void)key;
+      result = result && col->size() == size;
+    }
+
+    return result;
+  }
+
  public:
   constexpr bool hasColumn_impl(HashedString key) const {
     using namespace Acts::HashedStringLiteral;
@@ -97,7 +114,10 @@ class VectorTrackContainerBase {
     }
   }
 
-  std::size_t size_impl() const { return m_tipIndex.size(); }
+  std::size_t size_impl() const {
+    assert(checkConsistency());
+    return m_tipIndex.size();
+  }
   // END INTERFACE HELPER
 
   std::vector<IndexType> m_tipIndex;
@@ -115,6 +135,8 @@ class VectorTrackContainerBase {
 }  // namespace detail_vtc
 
 class VectorTrackContainer;
+class ConstVectorTrackContainer;
+
 template <>
 struct IsReadOnlyTrackContainer<VectorTrackContainer> : std::false_type {};
 
@@ -123,6 +145,8 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   VectorTrackContainer() : VectorTrackContainerBase{} {}
   VectorTrackContainer(const VectorTrackContainer& other) = default;
   VectorTrackContainer(VectorTrackContainer&&) = default;
+
+  VectorTrackContainer(const ConstVectorTrackContainer& other);
 
  public:
   // BEGIN INTERFACE
@@ -137,23 +161,9 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
         *this, key, itrack);
   }
 
-  IndexType addTrack_impl() {
-    m_tipIndex.emplace_back();
+  IndexType addTrack_impl();
 
-    m_params.emplace_back();
-    m_cov.emplace_back();
-    m_referenceSurfaces.emplace_back();
-
-    m_nMeasurements.emplace_back();
-    m_nHoles.emplace_back();
-
-    // dynamic columns
-    for (auto& [key, vec] : m_dynamic) {
-      vec->add();
-    }
-
-    return m_tipIndex.size() - 1;
-  }
+  void removeTrack_impl(IndexType itrack);
 
   template <typename T>
   constexpr void addColumn_impl(const std::string& key) {
@@ -191,11 +201,15 @@ class ConstVectorTrackContainer final
 
   ConstVectorTrackContainer(const ConstVectorTrackContainer& other) = default;
   ConstVectorTrackContainer(const VectorTrackContainer& other)
-      : VectorTrackContainerBase{other} {}
+      : VectorTrackContainerBase{other} {
+    assert(checkConsistency());
+  }
 
   ConstVectorTrackContainer(ConstVectorTrackContainer&&) = default;
   ConstVectorTrackContainer(VectorTrackContainer&& other)
-      : VectorTrackContainerBase{std::move(other)} {}
+      : VectorTrackContainerBase{std::move(other)} {
+    assert(checkConsistency());
+  }
 
  public:
   // BEGIN INTERFACE
@@ -209,7 +223,17 @@ class ConstVectorTrackContainer final
     return ConstParameters{m_params[itrack].data()};
   }
 
+  ConstCovariance covariance(IndexType itrack) const {
+    return ConstCovariance{m_cov[itrack].data()};
+  }
+
   // END INTERFACE
 };
+
+inline VectorTrackContainer::VectorTrackContainer(
+    const ConstVectorTrackContainer& other)
+    : VectorTrackContainerBase{other} {
+  assert(checkConsistency());
+}
 
 }  // namespace Acts

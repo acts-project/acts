@@ -16,6 +16,7 @@ import acts.examples.dd4hep
 import acts.examples.geant4
 import acts.examples.geant4.dd4hep
 from common import getOpenDataDetectorDirectory
+from acts.examples.odd import getOpenDataDetector
 
 u = acts.UnitConstants
 
@@ -86,9 +87,10 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
 
 if "__main__" == __name__:
 
-    dd4hepSvc = acts.examples.dd4hep.DD4hepGeometryService(
-        xmlFileNames=[str(getOpenDataDetectorDirectory() / "xml/OpenDataDetector.xml")]
+    detector, trackingGeometry, decorators = getOpenDataDetector(
+        getOpenDataDetectorDirectory()
     )
-    g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(dd4hepSvc)
+
+    g4geo = acts.examples.geant4.dd4hep.DDG4DetectorConstruction(detector)
 
     runMaterialRecording(g4geo=g4geo, tracksPerEvent=100, outputDir=os.getcwd()).run()

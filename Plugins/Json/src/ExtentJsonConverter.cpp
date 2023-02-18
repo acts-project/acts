@@ -13,21 +13,55 @@
 #include "Acts/Utilities/Enumerate.hpp"
 
 void Acts::to_json(nlohmann::json& j, const Acts::Extent& e) {
-  const auto bValueNames = binningValueNames();
-  const auto& xrange = e.range();
-  for (auto [ib, ibv] : enumerate(s_binningValues)) {
-    if (e.constrains(ibv)) {
-      const auto& r = xrange[ib];
-      j[bValueNames[ib]] = r;
+  const auto& bValueNames = binningValueNames();
+
+  {
+    nlohmann::json jrange;
+    const auto& xrange = e.range();
+    for (auto [ib, ibv] : enumerate(s_binningValues)) {
+      if (e.constrains(ibv)) {
+        jrange[bValueNames[ib]] = xrange[ib];
+      }
+    }
+    j["range"] = jrange;
+  }
+
+  {
+    nlohmann::json jenvelope;
+    const auto& envelope = e.envelope();
+    for (auto [ib, ibv] : enumerate(s_binningValues)) {
+      if (envelope[ibv] != zeroEnvelope) {
+        jenvelope[bValueNames[ib]] =
+            Range1D<ActsScalar>(envelope[ib][0], envelope[ib][1]);
+      }
+    }
+    if (!jenvelope.empty()) {
+      j["envelope"] = jenvelope;
     }
   }
 }
 
 void Acts::from_json(const nlohmann::json& j, Acts::Extent& e) {
-  const auto bValueNames = binningValueNames();
-  for (auto [ib, bvn] : enumerate(bValueNames)) {
-    if (j.find(bvn) != j.end()) {
-      e.set(static_cast<BinningValue>(ib), j[bvn]["min"], j[bvn]["max"]);
+  const auto& bValueNames = binningValueNames();
+
+  {
+    const auto& jrange = j["range"];
+    for (auto [ib, bvn] : enumerate(bValueNames)) {
+      if (jrange.contains(bvn)) {
+        e.set(static_cast<BinningValue>(ib), jrange[bvn]["min"],
+              jrange[bvn]["max"]);
+      }
     }
+  }
+
+  if (j.contains("envelope")) {
+    const auto& jenvelope = j["envelope"];
+    ExtentEnvelope envelope;
+    for (auto [ib, bvn] : enumerate(bValueNames)) {
+      if (jenvelope.find(bvn) != jenvelope.end()) {
+        envelope[ib] = {jenvelope[bvn]["min"], jenvelope[bvn]["max"]};
+      }
+    }
+    e.setEnvelope(envelope);
   }
 }

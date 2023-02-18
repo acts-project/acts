@@ -37,6 +37,7 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include <Acts/Definitions/Units.hpp>
 
 #include <filesystem>
@@ -266,16 +267,22 @@ int runRecCKFTracks(
   trackFindingCfg.inputMeasurements = digiCfg.outputMeasurements;
   trackFindingCfg.inputSourceLinks = digiCfg.outputSourceLinks;
   trackFindingCfg.inputInitialTrackParameters = outputTrackParameters;
-  trackFindingCfg.outputTrajectories = "trajectories";
+  trackFindingCfg.outputTracks = "tracks";
   trackFindingCfg.computeSharedHits = true;
   trackFindingCfg.findTracks = TrackFindingAlgorithm::makeTrackFinderFunction(
       trackingGeometry, magneticField);
   sequencer.addAlgorithm(
       std::make_shared<TrackFindingAlgorithm>(trackFindingCfg, logLevel));
 
+  TracksToTrajectories::Config tracksToTrajCfg{};
+  tracksToTrajCfg.inputTracks = trackFindingCfg.outputTracks;
+  tracksToTrajCfg.outputTrajectories = "trajectories";
+  sequencer.addAlgorithm(
+      (std::make_shared<TracksToTrajectories>(tracksToTrajCfg, logLevel)));
+
   // write track states from CKF
   RootTrajectoryStatesWriter::Config trackStatesWriter;
-  trackStatesWriter.inputTrajectories = trackFindingCfg.outputTrajectories;
+  trackStatesWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   // @note The full particles collection is used here to avoid lots of warnings
   // since the unselected CKF track might have a majority particle not in the
   // filtered particle collection. This could be avoided when a seperate track
@@ -293,7 +300,7 @@ int runRecCKFTracks(
 
   // write track summary from CKF
   RootTrajectorySummaryWriter::Config trackSummaryWriter;
-  trackSummaryWriter.inputTrajectories = trackFindingCfg.outputTrajectories;
+  trackSummaryWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   // @note The full particles collection is used here to avoid lots of warnings
   // since the unselected CKF track might have a majority particle not in the
   // filtered particle collection. This could be avoided when a seperate track
@@ -309,7 +316,7 @@ int runRecCKFTracks(
   // Write CKF performance data
   CKFPerformanceWriter::Config perfWriterCfg;
   perfWriterCfg.inputParticles = inputParticles;
-  perfWriterCfg.inputTrajectories = trackFindingCfg.outputTrajectories;
+  perfWriterCfg.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   perfWriterCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   // The bottom seed could be the first, second or third hits on the truth track
@@ -338,7 +345,7 @@ int runRecCKFTracks(
   if (vm["output-csv"].template as<bool>()) {
     // Write the CKF track as Csv
     CsvMultiTrajectoryWriter::Config trackWriterCsvConfig;
-    trackWriterCsvConfig.inputTrajectories = trackFindingCfg.outputTrajectories;
+    trackWriterCsvConfig.inputTrajectories = tracksToTrajCfg.outputTrajectories;
     trackWriterCsvConfig.outputDir = outputDir;
     trackWriterCsvConfig.inputMeasurementParticlesMap =
         digiCfg.outputMeasurementParticlesMap;

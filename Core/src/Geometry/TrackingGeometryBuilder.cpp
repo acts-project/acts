@@ -20,6 +20,11 @@ Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
   setConfiguration(cgbConfig);
 }
 
+const Acts::TrackingGeometryBuilder::Config&
+Acts::TrackingGeometryBuilder::getConfiguration() const {
+  return m_cfg;
+}
+
 void Acts::TrackingGeometryBuilder::setConfiguration(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig) {
   if (cgbConfig.trackingVolumeBuilders.empty()) {
@@ -49,7 +54,7 @@ Acts::TrackingGeometryBuilder::trackingGeometry(
     return std::make_unique<TrackingGeometry>(
         highestVolume,
         m_cfg.materialDecorator ? m_cfg.materialDecorator.get() : nullptr,
-        *m_cfg.geometryIdentifierHook);
+        *m_cfg.geometryIdentifierHook, logger());
   } else {
     throw std::runtime_error(
         "Unable to construct tracking geometry: no tracking volume");

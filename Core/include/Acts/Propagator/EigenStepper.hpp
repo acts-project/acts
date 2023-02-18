@@ -238,10 +238,10 @@ class EigenStepper {
   /// @param [in,out] state The stepping state (thread-local cache)
   /// @param [in] surface The surface provided
   /// @param [in] bcheck The boundary check for this status update
-  /// @param [in] logger A @c LoggerWrapper instance
+  /// @param [in] logger A @c Logger instance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      LoggerWrapper logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger()) const {
     return detail::updateSingleSurfaceStatus<EigenStepper>(
         *this, state, surface, bcheck, logger);
   }

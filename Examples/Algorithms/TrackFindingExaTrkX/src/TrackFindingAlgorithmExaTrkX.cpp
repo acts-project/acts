@@ -64,7 +64,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
   // ProtoTrackContainer protoTracks;
   std::vector<std::vector<int> > trackCandidates;
   m_cfg.trackFinderML->getTracks(inputValues, spacepointIDs, trackCandidates,
-                                 Acts::LoggerWrapper{logger()});
+                                 logger());
 
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
