@@ -134,7 +134,17 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   m_memoryStatistics.local().hist +=
       tracks.trackStateContainer().statistics().hist;
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(tracks));
+  auto constTrackStateContainer =
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*trackStateContainer));
+
+  auto constTrackContainer = std::make_shared<Acts::ConstVectorTrackContainer>(
+      std::move(*trackContainer));
+
+  ConstTrackContainer constTracks{constTrackContainer,
+                                  constTrackStateContainer};
+
+  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
