@@ -9,4 +9,5 @@ target_sources(
     CorrectedTransformationFreeToBound.cpp
     TrackStatePropMask.cpp
     VectorMultiTrajectory.cpp
+    VectorTrackContainer.cpp
 )
