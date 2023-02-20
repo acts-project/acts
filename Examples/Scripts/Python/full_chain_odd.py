@@ -163,7 +163,6 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             pt=(1.0 * u.GeV, None),
             absEta=(None, 3.0),
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
-            removeNeutral=True,
         ),
         outputDirRoot=outputDir,
     )
