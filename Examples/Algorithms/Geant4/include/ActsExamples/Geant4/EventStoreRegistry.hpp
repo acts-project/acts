@@ -42,6 +42,12 @@ class EventStoreRegistry {
     std::unordered_map<size_t, Acts::RecordedMaterialTrack> materialTracks;
     /// Particle hit count (for hit indexing)
     std::unordered_map<SimBarcode, std::size_t> particleHitCount;
+    /// Track ID to Barcode mapping
+    std::unordered_map<unsigned int, SimBarcode> trackIdMapping;
+    /// Track ID to root Track ID mapping
+    std::unordered_map<unsigned int, unsigned int> trackIdRootId;
+    /// Track ID generation counter
+    std::unordered_map<unsigned int, unsigned int> trackIdGenerationCount;
   };
 
   EventStoreRegistry() = delete;

@@ -1,3 +1,4 @@
+import multiprocessing
 from pathlib import Path
 import sys
 import os
@@ -238,12 +239,7 @@ DetectorConfig = namedtuple(
 )
 
 
-@pytest.fixture(
-    params=[
-        "generic",
-        "odd",
-    ]
-)
+@pytest.fixture(params=["generic", pytest.param("odd", marks=pytest.mark.odd)])
 def detector_config(request):
     srcdir = Path(__file__).resolve().parent.parent.parent.parent
 
@@ -368,14 +364,7 @@ def fatras(ptcl_gun, trk_geo, rng):
     return _factory
 
 
-@pytest.fixture(scope="session")
-def material_recording_session():
-    if not helpers.geant4Enabled:
-        pytest.skip("Geantino recording requested, but Geant4 is not set up")
-
-    if not helpers.dd4hepEnabled:
-        pytest.skip("DD4hep recording requested, but Geant4 is not set up")
-
+def _do_material_recording(d: Path):
     from material_recording import runMaterialRecording
 
     detector, trackingGeometry, decorators = getOpenDataDetector(
@@ -386,16 +375,27 @@ def material_recording_session():
         detector
     )
 
+    s = acts.examples.Sequencer(events=2, numThreads=1)
+
+    runMaterialRecording(dd4hepG4Construction, str(d), tracksPerEvent=100, s=s)
+    s.run()
+
+
+@pytest.fixture(scope="session")
+def material_recording_session():
+    if not helpers.geant4Enabled:
+        pytest.skip("Geantino recording requested, but Geant4 is not set up")
+
+    if not helpers.dd4hepEnabled:
+        pytest.skip("DD4hep recording requested, but Geant4 is not set up")
+
     with tempfile.TemporaryDirectory() as d:
 
-        s = acts.examples.Sequencer(events=2, numThreads=1)
-
-        runMaterialRecording(dd4hepG4Construction, str(d), tracksPerEvent=100, s=s)
-        s.run()
-
-        del s
-        del detector
-        del dd4hepG4Construction
+        p = multiprocessing.Process(target=_do_material_recording, args=(d,))
+        p.start()
+        p.join()
+        if p.exitcode != 0:
+            raise RuntimeError("Failure to exeecute material recording")
 
         yield Path(d)
 

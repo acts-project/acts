@@ -20,6 +20,11 @@ Acts::TrackingGeometryBuilder::TrackingGeometryBuilder(
   setConfiguration(cgbConfig);
 }
 
+const Acts::TrackingGeometryBuilder::Config&
+Acts::TrackingGeometryBuilder::getConfiguration() const {
+  return m_cfg;
+}
+
 void Acts::TrackingGeometryBuilder::setConfiguration(
     const Acts::TrackingGeometryBuilder::Config& cgbConfig) {
   if (cgbConfig.trackingVolumeBuilders.empty()) {
