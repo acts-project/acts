@@ -232,7 +232,8 @@ struct GaussianSumFitter {
     // We need to copy input SourceLinks anyways, so the map can own them.
     ACTS_VERBOSE("Preparing " << std::distance(begin, end)
                               << " input measurements");
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
+    std::unordered_map<GeometryIdentifier,
+                       std::reference_wrapper<const SourceLink>>
         inputMeasurements;
     for (auto it = begin; it != end; ++it) {
       const SourceLink& sl = *it;
@@ -403,14 +404,115 @@ struct GaussianSumFitter {
                                               << ", holes: "
                                               << bwdGsfResult.measurementHoles);
 
-    // TODO should this be warning level? it happens quite often... Investigate!
     if (bwdGsfResult.measurementStates != fwdGsfResult.measurementStates) {
       ACTS_DEBUG("Fwd and bwd measuerement states do not match");
     }
 
+<<<<<<< HEAD
     auto track = trackContainer.getTrack(trackContainer.addTrack());
 
     track.tipIndex() = fwdGsfResult.lastMeasurementTip;
+=======
+    // This first collects all states in a new temporary object to filter
+    // forward/backward missmatches etc. Afterwards, this is copied into the
+    // real MultiTrajectory, in order to reverse it again and make it compatible
+    // with KF results.
+    // TODO maybe we could avoid this if we add ad function `reverse(endpoint)`
+    // to the MTJ
+    using Acts::TrackStateFlag;
+    traj_t tmpStates;
+    MultiTrajectoryTraits::IndexType tmpIdx = MultiTrajectoryTraits::kInvalid;
+
+    for (const auto& fwdState : fwdGsfResult.fittedStates.trackStateRange(
+             fwdGsfResult.lastMeasurementTip)) {
+      // For a measurement, check the backwards state
+      if (fwdState.typeFlags().test(MeasurementFlag)) {
+        // Search backward state
+        std::optional<MultiTrajectoryTraits::IndexType> bwdIdx;
+        for (const auto& state : bwdGsfResult.fittedStates.trackStateRange(
+                 bwdGsfResult.lastMeasurementTip)) {
+          if (&state.referenceSurface() == &fwdState.referenceSurface()) {
+            bwdIdx = state.index();
+            break;
+          }
+        }
+
+        // If found backward state, compute smoothed
+        if (bwdIdx) {
+          const auto& bwdState =
+              bwdGsfResult.fittedStates.getTrackState(*bwdIdx);
+
+          tmpIdx = tmpStates.addTrackState(TrackStatePropMask::All, tmpIdx);
+          auto newState = tmpStates.getTrackState(tmpIdx);
+
+          newState.copyFrom(fwdState);
+
+          // Dummy for now
+          newState.smoothed() = bwdState.filtered();
+          newState.smoothedCovariance() = bwdState.filteredCovariance();
+        }
+
+        // If not found, mark as outlier
+        else {
+          tmpIdx = tmpStates.addTrackState(TrackStatePropMask::Calibrated |
+                                               TrackStatePropMask::Predicted |
+                                               TrackStatePropMask::Filtered,
+                                           tmpIdx);
+          auto newState = tmpStates.getTrackState(tmpIdx);
+
+          newState.copyFrom(fwdState);
+          newState.typeFlags().set(OutlierFlag);
+          newState.typeFlags().reset(MeasurementFlag);
+        }
+      }
+      // In all other cases, just take fwd state for now
+      else {
+        tmpIdx = tmpStates.addTrackState(TrackStatePropMask::Calibrated |
+                                             TrackStatePropMask::Predicted |
+                                             TrackStatePropMask::Filtered,
+                                         tmpIdx);
+        auto newState = tmpStates.getTrackState(tmpIdx);
+
+        newState.copyFrom(fwdState);
+        assert(newState.typeFlags().test(OutlierFlag) ||
+               newState.typeFlags().test(HoleFlag) ||
+               newState.typeFlags().test(MaterialFlag));
+      }
+    }
+
+    // Reverse the tmpStates
+    auto& trackStates = trackContainer.trackStateContainer();
+    auto track = trackContainer.getTrack(trackContainer.addTrack());
+
+    for (const auto& tmpState : tmpStates.trackStateRange(tmpIdx)) {
+      const auto mask = tmpState.hasSmoothed()
+                            ? TrackStatePropMask::All
+                            : TrackStatePropMask::Calibrated |
+                                  TrackStatePropMask::Predicted |
+                                  TrackStatePropMask::Filtered;
+
+      track.tipIndex() = trackStates.addTrackState(mask, track.tipIndex());
+      auto newState = trackStates.getTrackState(track.tipIndex());
+
+      newState.copyFrom(tmpState);
+
+      auto mat = newState.typeFlags().test(MaterialFlag) ? " (material)" : "";
+
+      if (newState.typeFlags().test(MeasurementFlag)) {
+        track.nMeasurements()++;
+        ACTS_DEBUG("Combined: Measurement on "
+                   << newState.referenceSurface().geometryId() << mat);
+      } else if (newState.typeFlags().test(OutlierFlag)) {
+        track.nMeasurements()++;
+        ACTS_DEBUG("Combined: Outlier on "
+                   << newState.referenceSurface().geometryId() << mat);
+      } else {
+        track.nHoles()++;
+        ACTS_DEBUG("Combined: Hole on "
+                   << newState.referenceSurface().geometryId() << mat);
+      }
+    }
+>>>>>>> 2355ed482 (update)
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;

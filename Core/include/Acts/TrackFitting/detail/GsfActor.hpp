@@ -75,7 +75,7 @@ struct GsfActor {
     std::size_t maxComponents = 16;
 
     /// Input measurements
-    std::map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
+    std::unordered_map<GeometryIdentifier, std::reference_wrapper<const SourceLink>>
         inputMeasurements;
 
     /// Bethe Heitler Approximator pointer. The fitter holds the approximator
@@ -139,7 +139,7 @@ struct GsfActor {
   struct TemporaryStates {
     traj_t traj;
     std::vector<MultiTrajectoryTraits::IndexType> tips;
-    std::map<MultiTrajectoryTraits::IndexType, double> weights;
+    std::unordered_map<MultiTrajectoryTraits::IndexType, double> weights;
   };
 
   /// Broadcast Cache Type
