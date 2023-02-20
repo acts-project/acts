@@ -32,9 +32,7 @@ def runGeant4EventRange(events, outputDir):
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
     rnd = acts.examples.RandomNumbers(seed=42)
 
-    s = acts.examples.Sequencer(
-        events=len(events), skip=events[0], numThreads=1
-    )
+    s = acts.examples.Sequencer(events=len(events), skip=events[0], numThreads=1)
 
     outputDir = Path(outputDir)
     addParticleGun(
