@@ -36,11 +36,6 @@ int runDigitizationConfigExample(
   Options::addMaterialOptions(desc);
   Options::addDigitizationOptions(desc);
 
-  auto opt = desc.add_options();
-  opt("digi-compactify-output", boost::program_options::bool_switch(),
-      "Try to compactify the resulting output .json file by "
-      "identifying common items.");
-
   // Add specific options for this geometry
   detector->addOptions(desc);
   auto vm = Options::parse(desc, argc, argv);
@@ -57,7 +52,6 @@ int runDigitizationConfigExample(
 
   // Build a parser and visit the geometry
   ActsExamples::DigitizationConfigurator digiConfigurator;
-  digiConfigurator.compactify = vm["digi-compactify-output"].as<bool>();
   digiConfigurator.inputDigiComponents = inputConfig;
 
   geometry.first->visitSurfaces(digiConfigurator);
