@@ -44,7 +44,7 @@ VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
     vec->add();
   }
 
-  checkConsistency();
+  assert(checkConsistency());
 
   return m_tipIndex.size() - 1;
 }
