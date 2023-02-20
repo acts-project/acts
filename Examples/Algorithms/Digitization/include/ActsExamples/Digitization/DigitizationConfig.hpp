@@ -56,7 +56,7 @@ struct GeometricConfig {
   bool digital = false;
 
   /// Charge generation (configurable via the chargeSmearer)
-  Acts::ActsScalar charge(Acts::ActsScalar path, Acts::ActsScalar,
+  Acts::ActsScalar charge(Acts::ActsScalar path, Acts::ActsScalar /*unused*/,
                           RandomEngine &rng) const {
     if (not chargeSmearer) {
       return path;
