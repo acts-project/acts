@@ -624,9 +624,20 @@ class TrackContainer {
     return *m_traj;
   }
 
+  /// Retrieve the holder of the track state container
+  /// @return The track state container including it's holder
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto& trackStateContainerHolder() {
+    return m_traj;
+  }
+
   /// Get a const reference to the track state container backend
   /// @return a const reference to the backend
   const auto& trackStateContainer() const { return *m_traj; }
+
+  /// Retrieve the holder of the track state container
+  /// @return The track state container including it's holder
+  const auto& trackStateContainerHolder() const { return m_traj; }
 
   /// Get a mutable iterator to the first track in the container
   /// @return a mutable iterator to the first track
