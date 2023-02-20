@@ -120,10 +120,12 @@ void ActsExamples::SensitiveSurfaceMapper::remapSensitiveNames(
                    << "' at position " << g4RelPosition.transpose());
     }
   } else {
-    ACTS_VERBOSE(
-        "Did not try mapping '"
-        << g4PhysicalVolume->GetName() << "' at " << g4RelPosition.transpose()
-        << " because g4SensitiveDetector is nullptr"
-        << " and none of the provided volumes or materials were found");
+    ACTS_VERBOSE("Did not try mapping '"
+                 << g4PhysicalVolume->GetName() << "' at "
+                 << g4RelPosition.transpose()
+                 << " because g4SensitiveDetector (=" << g4SensitiveDetector
+                 << ") is null and volume name (=" << volumeName
+                 << ") and material name (=" << volumeMaterialName
+                 << ") were not found");
   }
 }

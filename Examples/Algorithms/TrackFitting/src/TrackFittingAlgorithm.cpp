@@ -9,11 +9,11 @@
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
@@ -38,8 +38,8 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
-  if (m_cfg.outputTrajectories.empty()) {
-    throw std::invalid_argument("Missing output trajectories collection");
+  if (m_cfg.outputTracks.empty()) {
+    throw std::invalid_argument("Missing output tracks collection");
   }
 }
 
@@ -61,10 +61,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     return ProcessCode::ABORT;
   }
 
-  // Prepare the output data with MultiTrajectory
-  TrajectoriesContainer trajectories;
-  trajectories.reserve(protoTracks.size());
-
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
@@ -80,8 +76,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
-  auto tracks =
-      std::make_unique<TrackContainer>(trackContainer, trackStateContainer);
+  TrackContainer tracks(trackContainer, trackStateContainer);
 
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
@@ -99,7 +94,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     // We can have empty tracks which must give empty fit results so the number
     // of entries in input and output containers matches.
     if (protoTrack.empty()) {
-      trajectories.push_back(Trajectories());
       ACTS_WARNING("Empty track " << itrack << " found.");
       continue;
     }
@@ -132,39 +126,22 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     auto result =
         m_cfg.directNavigation
             ? (*m_cfg.fit)(trackSourceLinks, initialParams, options,
-                           surfSequence, *tracks)
-            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, *tracks);
+                           surfSequence, tracks)
+            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, tracks);
 
     if (result.ok()) {
       // Get the fit output object
-      auto& track = result.value();
-      // The track entry indices container. One element here.
-      std::vector<Acts::MultiTrajectoryTraits::IndexType> trackTips;
-      trackTips.reserve(1);
-      trackTips.emplace_back(track.tipIndex());
-      // The fitted parameters container. One element (at most) here.
-      Trajectories::IndexedParameters indexedParams;
+      const auto& track = result.value();
       if (track.hasReferenceSurface()) {
         ACTS_VERBOSE("Fitted parameters for track " << itrack);
         ACTS_VERBOSE("  " << track.parameters().transpose());
-        // Push the fitted parameters to the container
-        indexedParams.emplace(
-            std::pair{track.tipIndex(),
-                      TrackParameters{track.referenceSurface().getSharedPtr(),
-                                      track.parameters(), track.covariance()}});
       } else {
         ACTS_DEBUG("No fitted parameters for track " << itrack);
       }
-      // store the result
-      trajectories.emplace_back(trackStateContainer, std::move(trackTips),
-                                std::move(indexedParams));
     } else {
       ACTS_WARNING("Fit failed for track "
                    << itrack << " with error: " << result.error() << ", "
                    << result.error().message());
-      // Fit failed. Add an empty result so the output container has
-      // the same number of entries as the input.
-      trajectories.push_back(Trajectories());
     }
   }
 
@@ -172,6 +149,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   trackStateContainer->statistics().toStream(ss);
   ACTS_DEBUG(ss.str());
 
-  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  ConstTrackContainer constTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(*trackContainer)),
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*trackStateContainer))};
+
+  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }

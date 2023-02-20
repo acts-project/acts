@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/Track.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -16,7 +17,6 @@
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -39,8 +39,8 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     throw std::invalid_argument(
         "Missing initial track parameters input collection");
   }
-  if (m_cfg.outputTrajectories.empty()) {
-    throw std::invalid_argument("Missing trajectories output collection");
+  if (m_cfg.outputTracks.empty()) {
+    throw std::invalid_argument("Missing tracks output collection");
   }
 }
 
@@ -53,11 +53,6 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
   const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
       m_cfg.inputInitialTrackParameters);
-
-  // Prepare the output data with MultiTrajectory
-  // @TODO: Refactor to remove Trajectories
-  TrajectoriesContainer trajectories;
-  trajectories.reserve(initialParameters.size());
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
@@ -101,54 +96,55 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
-  auto tracks =
-      std::make_unique<TrackContainer>(trackContainer, trackStateContainer);
+
+  TrackContainer tracks(trackContainer, trackStateContainer);
+
+  tracks.addColumn<unsigned int>("trackGroup");
+  Acts::TrackAccessor<unsigned int> seedNumber("trackGroup");
+
+  unsigned int nSeed = 0;
 
   for (std::size_t iseed = 0; iseed < initialParameters.size(); ++iseed) {
     auto result =
-        (*m_cfg.findTracks)(initialParameters.at(iseed), options, *tracks);
+        (*m_cfg.findTracks)(initialParameters.at(iseed), options, tracks);
     m_nTotalSeeds++;
+    nSeed++;
+
     if (!result.ok()) {
       m_nFailedSeeds++;
       ACTS_WARNING("Track finding failed for seed " << iseed << " with error"
                                                     << result.error());
-      // Track finding failed. Add an empty result so the output container has
-      // the same number of entries as the input.
-      trajectories.push_back(Trajectories());
       continue;
     }
 
     auto& tracksForSeed = result.value();
-    std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
-    tips.reserve(tracksForSeed.size());
-    Trajectories::IndexedParameters parameters;
-    parameters.reserve(tracksForSeed.size());
-
     for (auto& track : tracksForSeed) {
-      tips.push_back(track.tipIndex());
-      parameters.emplace(
-          std::pair{track.tipIndex(),
-                    TrackParameters{track.referenceSurface().getSharedPtr(),
-                                    track.parameters(), track.covariance()}});
+      seedNumber(track) = nSeed;
     }
-
-    // Create a Trajectories result struct
-    trajectories.emplace_back(trackStateContainer, std::move(tips),
-                              std::move(parameters));
   }
 
   // Compute shared hits from all the reconstructed tracks
   if (m_cfg.computeSharedHits) {
-    computeSharedHits(sourceLinks, *tracks);
+    computeSharedHits(sourceLinks, tracks);
   }
 
-  ACTS_DEBUG("Finalized track finding with " << trajectories.size()
+  ACTS_DEBUG("Finalized track finding with " << tracks.size()
                                              << " track candidates.");
 
   m_memoryStatistics.local().hist +=
-      tracks->trackStateContainer().statistics().hist;
+      tracks.trackStateContainer().statistics().hist;
 
-  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  auto constTrackStateContainer =
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*trackStateContainer));
+
+  auto constTrackContainer = std::make_shared<Acts::ConstVectorTrackContainer>(
+      std::move(*trackContainer));
+
+  ConstTrackContainer constTracks{constTrackContainer,
+                                  constTrackStateContainer};
+
+  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
