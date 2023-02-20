@@ -22,6 +22,7 @@
 #include <numeric>
 #include <stdexcept>
 
+#include <Eigen/Dense>
 #include <core/session/onnxruntime_cxx_api.h>
 
 ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
@@ -126,29 +127,28 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   }
   // Performe the share hit based clustering
   auto clusters = ClusteriseTrack(trackMap);
-  std::vector<std::vector<float>> networkInput;
-
+  Acts::NetworkBatchInput networkInput(trackID + 1, 8);
+  trackID = 0;
   // Get the input feature of the network for all the tracks
   for (auto const& [key, val] : clusters) {
     for (auto const& track : val) {
-      std::vector<float> trackInput;
       std::pair<int, int> tips = trackTips.at(track);
       TrackParameters parameters = trackParameters.at(track);
       auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
           trajectories[tips.first].multiTrajectory(), tips.second);
-      trackInput.push_back(trajState.nStates);
-      trackInput.push_back(trajState.nMeasurements);
-      trackInput.push_back(trajState.nOutliers);
-      trackInput.push_back(trajState.nHoles);
-      trackInput.push_back(trajState.NDF);
-      trackInput.push_back((trajState.chi2Sum * 1.0) / trajState.NDF);
-      trackInput.push_back(Acts::VectorHelpers::eta(parameters.momentum()));
-      trackInput.push_back(Acts::VectorHelpers::phi(parameters.momentum()));
-
-      networkInput.push_back(trackInput);
+      networkInput(trackID, 0) = trajState.nStates;
+      networkInput(trackID, 1) = trajState.nMeasurements;
+      networkInput(trackID, 2) = trajState.nOutliers;
+      networkInput(trackID, 3) = trajState.nHoles;
+      networkInput(trackID, 4) = trajState.NDF;
+      networkInput(trackID, 5) = (trajState.chi2Sum * 1.0) / trajState.NDF;
+      networkInput(trackID, 6) =
+          Acts::VectorHelpers::eta(parameters.momentum());
+      networkInput(trackID, 7) =
+          Acts::VectorHelpers::phi(parameters.momentum());
+      trackID++;
     }
   }
-
   // Use the network to compute a score for all the tracks.
   std::vector<std::vector<float>> outputTensor =
       m_duplicateClassifier.runONNXInference(networkInput);
