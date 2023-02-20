@@ -48,7 +48,7 @@ args = vars(parser.parse_args())
 
 ttbar_pu200 = args["ttbar"]
 g4_simulation = args["geant4"]
-MLSolver = args["MLSolver"]
+ambiguity_MLSolver = args["MLSolver"]
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
@@ -178,7 +178,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         outputDirCsv=outputDir,
     )
 
-    if MLSolver:
+    if ambiguity_MLSolver:
         addAmbiguityResolutionML(
             s,
             AmbiguityResolutionMLConfig(nMeasurementsMin=7),
