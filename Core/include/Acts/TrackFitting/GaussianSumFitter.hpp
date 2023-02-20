@@ -269,14 +269,6 @@ struct GaussianSumFitter {
       using IsMultiParameters =
           detail::IsMultiComponentBoundParameters<start_parameters_t>;
 
-      typename propagator_t::template action_list_t_result_t<
-          CurvilinearTrackParameters, decltype(fwdPropOptions.actionList)>
-          inputResult;
-
-      auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
-
-      r.fittedStates = &trackContainer.trackStateContainer();
-
       // This allows the initialization with single- and multicomponent start
       // parameters
       if constexpr (not IsMultiParameters::value) {
@@ -286,11 +278,9 @@ struct GaussianSumFitter {
             sParameters.referenceSurface().getSharedPtr(),
             sParameters.parameters(), sParameters.covariance());
 
-        return m_propagator.propagate(params, fwdPropOptions,
-                                      std::move(inputResult));
+        return m_propagator.propagate(params, fwdPropOptions);
       } else {
-        return m_propagator.propagate(sParameters, fwdPropOptions,
-                                      std::move(inputResult));
+        return m_propagator.propagate(sParameters, fwdPropOptions);
       }
     }();
 
@@ -355,19 +345,22 @@ struct GaussianSumFitter {
 
       auto& r = inputResult.template get<detail::GsfResult<traj_t>>();
 
-      r.fittedStates = &trackContainer.trackStateContainer();
-
+      // Add first trackstate that we already had on the forward pass
       assert(
           (fwdGsfResult.lastMeasurementTip != MultiTrajectoryTraits::kInvalid &&
            "tip is invalid"));
 
-      auto proxy =
-          r.fittedStates->getTrackState(fwdGsfResult.lastMeasurementTip);
-      proxy.filtered() = proxy.predicted();
-      proxy.filteredCovariance() = proxy.predictedCovariance();
+      auto lastFwdState = fwdGsfResult.fittedStates.getTrackState(
+          fwdGsfResult.lastMeasurementTip);
 
-      r.currentTip = fwdGsfResult.lastMeasurementTip;
-      r.visitedSurfaces.push_back(&proxy.referenceSurface());
+      r.currentTip = r.fittedStates.addTrackState(
+          TrackStatePropMask::Calibrated | TrackStatePropMask::Predicted |
+          TrackStatePropMask::Filtered);
+      r.lastMeasurementTip = r.currentTip;
+      auto firstBwdState = r.fittedStates.getTrackState(r.currentTip);
+      firstBwdState.copyFrom(lastFwdState);
+
+      r.visitedSurfaces.push_back(&firstBwdState.referenceSurface());
       r.measurementStates++;
       r.processedStates++;
 
@@ -408,11 +401,6 @@ struct GaussianSumFitter {
       ACTS_DEBUG("Fwd and bwd measuerement states do not match");
     }
 
-<<<<<<< HEAD
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
-
-    track.tipIndex() = fwdGsfResult.lastMeasurementTip;
-=======
     // This first collects all states in a new temporary object to filter
     // forward/backward missmatches etc. Afterwards, this is copied into the
     // real MultiTrajectory, in order to reverse it again and make it compatible
@@ -512,7 +500,6 @@ struct GaussianSumFitter {
                    << newState.referenceSurface().geometryId() << mat);
       }
     }
->>>>>>> 2355ed482 (update)
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
@@ -520,9 +507,6 @@ struct GaussianSumFitter {
       track.covariance() = params.covariance().value();
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
     }
-
-    track.nMeasurements() = fwdGsfResult.measurementStates;
-    track.nHoles() = fwdGsfResult.measurementHoles;
 
     return track;
   }

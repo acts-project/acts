@@ -34,7 +34,7 @@ namespace detail {
 template <typename traj_t>
 struct GsfResult {
   /// The multi-trajectory which stores the graph of components
-  traj_t* fittedStates{nullptr};
+  traj_t fittedStates;
 
   /// The current top index of the MultiTrajectory
   MultiTrajectoryTraits::IndexType currentTip = MultiTrajectoryTraits::kInvalid;
@@ -156,8 +156,6 @@ struct GsfActor {
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   result_type& result, const Logger& /*unused*/) const {
-    assert(result.fittedStates && "No MultiTrajectory set");
-
     // Return is we found an error earlier
     if (not result.result.ok()) {
       ACTS_WARNING("result.result not ok, return!")
@@ -713,9 +711,9 @@ struct GsfActor {
 
   void addCombinedState(result_type& result, const TemporaryStates& tmpStates,
                         const Surface& surface) const {
-    using PredProjector =
+    using PrtProjector =
         MultiTrajectoryProjector<StatesType::ePredicted, traj_t>;
-    using FiltProjector =
+    using FltProjector =
         MultiTrajectoryProjector<StatesType::eFiltered, traj_t>;
 
     // We do not need smoothed and jacobian for now
@@ -723,50 +721,34 @@ struct GsfActor {
                       TrackStatePropMask::Predicted |
                       TrackStatePropMask::Filtered;
 
-    if (not m_cfg.inReversePass) {
-      // The predicted state is the forward pass
-      const auto [filtMean, filtCov] =
-          angleDescriptionSwitch(surface, [&](const auto& desc) {
-            return combineGaussianMixture(
-                tmpStates.tips,
-                FiltProjector{tmpStates.traj, tmpStates.weights}, desc);
-          });
+    const auto [prtMean, prtCov] =
+        angleDescriptionSwitch(surface, [&](const auto& desc) {
+          return combineGaussianMixture(
+              tmpStates.tips, PrtProjector{tmpStates.traj, tmpStates.weights},
+              desc);
+        });
 
-      result.currentTip =
-          result.fittedStates->addTrackState(mask, result.currentTip);
-      auto proxy = result.fittedStates->getTrackState(result.currentTip);
-      auto firstCmpProxy = tmpStates.traj.getTrackState(tmpStates.tips.front());
+    const auto [fltMean, fltCov] =
+        angleDescriptionSwitch(surface, [&](const auto& desc) {
+          return combineGaussianMixture(
+              tmpStates.tips, FltProjector{tmpStates.traj, tmpStates.weights},
+              desc);
+        });
 
-      proxy.setReferenceSurface(surface.getSharedPtr());
-      proxy.copyFrom(firstCmpProxy, mask);
+    result.currentTip =
+        result.fittedStates.addTrackState(mask, result.currentTip);
+    auto proxy = result.fittedStates.getTrackState(result.currentTip);
+    auto firstCmpProxy = tmpStates.traj.getTrackState(tmpStates.tips.front());
 
-      // We set predicted & filtered the same so that the fields are not
-      // uninitialized when not finding this state in the reverse pass.
-      proxy.predicted() = filtMean;
-      proxy.predictedCovariance() = filtCov;
-      proxy.filtered() = filtMean;
-      proxy.filteredCovariance() = filtCov;
-    } else {
-      assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
-              "tip not valid"));
-      result.fittedStates->applyBackwards(
-          result.currentTip, [&](auto trackState) {
-            auto fSurface = &trackState.referenceSurface();
-            if (fSurface == &surface) {
-              const auto [filtMean, filtCov] =
-                  angleDescriptionSwitch(surface, [&](const auto& desc) {
-                    return combineGaussianMixture(
-                        tmpStates.tips,
-                        FiltProjector{tmpStates.traj, tmpStates.weights}, desc);
-                  });
+    proxy.setReferenceSurface(surface.getSharedPtr());
+    proxy.copyFrom(firstCmpProxy, mask);
 
-              trackState.filtered() = filtMean;
-              trackState.filteredCovariance() = filtCov;
-              return false;
-            }
-            return true;
-          });
-    }
+    // We set predicted & filtered the same so that the fields are not
+    // uninitialized when not finding this state in the reverse pass.
+    proxy.predicted() = prtMean;
+    proxy.predictedCovariance() = prtCov;
+    proxy.filtered() = fltMean;
+    proxy.filteredCovariance() = fltCov;
   }
 
   /// Set the relevant options that can be set from the Options struct all in

@@ -164,7 +164,7 @@ template <typename D>
 void computePosteriorWeights(
     const MultiTrajectory<D> &mt,
     const std::vector<MultiTrajectoryTraits::IndexType> &tips,
-    std::map<MultiTrajectoryTraits::IndexType, double> &weights) {
+    std::unordered_map<MultiTrajectoryTraits::IndexType, double> &weights) {
   // Helper Function to compute detR
 
   // Find minChi2, this can be used to factor some things later in the
@@ -214,11 +214,11 @@ inline std::ostream &operator<<(std::ostream &os, StatesType type) {
 
 /// @brief Projector type which maps a MultiTrajectory-Index to a tuple of
 /// [weight, parameters, covariance]. Therefore, it contains a MultiTrajectory
-/// and for now a std::map for the weights
+/// and for now a std::unordered_map for the weights
 template <StatesType type, typename traj_t>
 struct MultiTrajectoryProjector {
   const MultiTrajectory<traj_t> &mt;
-  const std::map<MultiTrajectoryTraits::IndexType, double> &weights;
+  const std::unordered_map<MultiTrajectoryTraits::IndexType, double> &weights;
 
   auto operator()(MultiTrajectoryTraits::IndexType idx) const {
     const auto proxy = mt.getTrackState(idx);
