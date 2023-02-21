@@ -904,19 +904,26 @@ def addCKFTracks(
         outputTrajectories="trajectories-from-tracks",
     )
     s.addAlgorithm(trackConverter)
-
     s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     if trackSelectorRanges is not None:
         trackSelector = addTrackSelection(
             s,
             trackSelectorRanges,
-            inputTrajectories=trackConverter.config.outputTrajectories,
-            outputTrajectories="selectedTrajectories",
+            inputTracks=trackFinder.config.outputTracks,
+            outputTracks="selectedTracks",
             logLevel=customLogLevel(),
         )
 
-        s.addWhiteboardAlias("trajectories", trackSelector.config.outputTrajectories)
+        selectedTrackConverter = acts.examples.TracksToTrajectories(
+            level=customLogLevel(),
+            inputTracks=trackSelector.config.outputTracks,
+            outputTrajectories="trajectories-from-selected-tracks",
+        )
+        s.addAlgorithm(selectedTrackConverter)
+        s.addWhiteboardAlias(
+            "trajectories", selectedTrackConverter.config.outputTrajectories
+        )
 
     addTrajectoryWriters(
         s,
@@ -1059,10 +1066,8 @@ def addTrajectoryWriters(
 def addTrackSelection(
     s: acts.examples.Sequencer,
     trackSelectorRanges: TrackSelectorRanges,
-    inputTrackParameters: Optional[str] = None,
-    inputTrajectories: Optional[str] = None,
-    outputTrackParameters: Optional[str] = None,
-    outputTrajectories: Optional[str] = None,
+    inputTracks: str,
+    outputTracks: str,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.TrackSelector:
 
@@ -1070,14 +1075,8 @@ def addTrackSelection(
 
     trackSelector = acts.examples.TrackSelector(
         level=customLogLevel(),
-        inputTrackParameters=inputTrackParameters
-        if inputTrackParameters is not None
-        else "",
-        inputTrajectories=inputTrajectories if inputTrajectories is not None else "",
-        outputTrackParameters=outputTrackParameters
-        if outputTrackParameters is not None
-        else "",
-        outputTrajectories=outputTrajectories if outputTrajectories is not None else "",
+        inputTracks=inputTracks,
+        outputTracks=outputTracks,
         **acts.examples.defaultKWArgs(
             loc0Min=trackSelectorRanges.loc0[0],
             loc0Max=trackSelectorRanges.loc0[1],

@@ -132,6 +132,7 @@ install(
 add_subdirectory(src/EventData)
 add_subdirectory(src/Digitization)
 add_subdirectory(src/Definitions)
+add_subdirectory(src/Detector)
 add_subdirectory(src/Geometry)
 add_subdirectory(src/MagneticField)
 add_subdirectory(src/Material)

@@ -8,12 +8,12 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Detector/PortalHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
-#include "Acts/Geometry/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/detail/PortalGenerators.hpp"
-#include "Acts/Geometry/detail/PortalHelper.hpp"
 #include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   auto fullCylinderBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(0., rOuter, zHalfL);
 
-  auto portalGenerator = detail::defaultPortalGenerator();
+  auto portalGenerator = defaultPortalGenerator();
 
   // Misconfigured - null pointer for bounds
   BOOST_CHECK_THROW(
@@ -116,7 +116,7 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
   auto fullCylinderBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(0., 10., 100.);
 
-  auto portalGenerator = detail::defaultPortalGenerator();
+  auto portalGenerator = defaultPortalGenerator();
 
   auto fullCylinderVolume = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "FullCylinderVolume", nominal,
@@ -144,9 +144,8 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   auto smallBoxBounds =
       std::make_unique<Acts::CuboidVolumeBounds>(smallBox, smallBox, smallBox);
 
-  auto portals = detail::defaultPortalGenerator();
-  auto generatePortalsUpdateInternals =
-      detail::defaultPortalAndSubPortalGenerator();
+  auto portals = defaultPortalGenerator();
+  auto generatePortalsUpdateInternals = defaultPortalAndSubPortalGenerator();
 
   // Create the inner box
   auto innerBox =
