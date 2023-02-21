@@ -8,6 +8,7 @@
 
 namespace Acts {
 template <typename external_spacepoint_t>
+inline
 LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
                                InternalSpacePoint<external_spacepoint_t>& spM,
                                bool bottom) {
@@ -24,6 +25,7 @@ LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
 }
 
 template <typename external_spacepoint_t, typename callable_t>
+inline
 LinCircle transformCoordinates(external_spacepoint_t& sp,
                                external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction) {
@@ -59,6 +61,7 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
+inline
 std::vector<std::size_t> transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
@@ -76,6 +79,7 @@ std::vector<std::size_t> transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
+inline
 std::vector<std::size_t> transformCoordinates(
     std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
     bool bottom, std::vector<LinCircle>& linCircleVec,
@@ -147,6 +151,7 @@ std::vector<std::size_t> transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename sp_range_t>
+inline
 bool xyzCoordinateCheck(
     const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
     sp_range_t sp, const double* spacepointPosition,
