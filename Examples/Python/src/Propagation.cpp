@@ -17,6 +17,7 @@
 #include "ActsExamples/Propagation/PropagatorInterface.hpp"
 
 #include <memory>
+#include <optional>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -25,20 +26,21 @@ namespace py = pybind11;
 
 namespace {
 template <typename stepper_t>
-void addStepper(const std::string& prefix, py::module_& m, py::module_& prop) {
+auto addStepper(const std::string& prefix, py::module_& m, py::module_& prop) {
   auto stepper = py::class_<stepper_t>(m, (prefix + "Stepper").c_str());
 
   using propagator_t = Acts::Propagator<stepper_t, Acts::Navigator>;
-  auto prop = py::class_<propagator_t>(prop, (prefix + "Propagator").c_str())
-      .def(py::init<>(
-               [=](stepper_t _stepper, Acts::Navigator navigator,
-                   Acts::Logging::Level level = Acts::Logging::Level::INFO) {
+  auto propagator =
+      py::class_<propagator_t>(prop, (prefix + "Propagator").c_str())
+          .def(py::init<>([=](stepper_t _stepper, Acts::Navigator navigator,
+                              Acts::Logging::Level level =
+                                  Acts::Logging::Level::INFO) {
                  return propagator_t{
                      std::move(_stepper), std::move(navigator),
                      Acts::getDefaultLogger(prefix + "Propagator", level)};
                }),
-           py::arg("stepper"), py::arg("navigator"),
-           py::arg("level") = Acts::Logging::INFO);
+               py::arg("stepper"), py::arg("navigator"),
+               py::arg("level") = Acts::Logging::INFO);
 
   using prop_if_t = ActsExamples::ConcretePropagator<propagator_t>;
   py::class_<prop_if_t, ActsExamples::PropagatorInterface,
@@ -46,8 +48,7 @@ void addStepper(const std::string& prefix, py::module_& m, py::module_& prop) {
       prop, (prefix + "ConcretePropagator").c_str())
       .def(py::init<propagator_t>());
 
-
-  return std::pair{stepper, prop};
+  return std::pair{stepper, propagator};
 }
 
 }  // namespace
@@ -91,18 +92,32 @@ void addPropagation(Context& ctx) {
       mex, "PropagatorInterface");
 
   {
-    auto [stepper, prop] = addStepper<Acts::EigenStepper<>>("Eigen", m, prop);
-    stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider, double>>(
-          py::arg("bField"), py::arg("overstepLimit")));
+    auto [stepper, propagator] =
+        addStepper<Acts::EigenStepper<>>("Eigen", m, prop);
+    stepper.def(
+        // Add custom constructor lambda so that not specifying the overstep
+        // limit takes the default from C++ EigenStepper
+        py::init(
+            [](std::shared_ptr<const Acts::MagneticFieldProvider> bField,
+               std::optional<double> overstepLimit) -> Acts::EigenStepper<> {
+              if (overstepLimit) {
+                return {std::move(bField), overstepLimit.value()};
+              } else {
+                return {std::move(bField)};
+              }
+            }),
+        py::arg("bField"), py::arg("overstepLimit") = std::nullopt);
   }
 
   {
-    auto [stepper, prop] = addStepper<Acts::AtlasStepper>("Atlas", m, prop);
+    auto [stepper, propagator] =
+        addStepper<Acts::AtlasStepper>("Atlas", m, prop);
     stepper.def(py::init<std::shared_ptr<const Acts::MagneticFieldProvider>>());
   }
 
   {
-    auto [stepper, prop] = addStepper<Acts::StraightLineStepper>("StraightLine", m, prop);
+    auto [stepper, propagator] =
+        addStepper<Acts::StraightLineStepper>("StraightLine", m, prop);
     stepper.def(py::init<>());
   }
 }
