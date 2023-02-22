@@ -457,6 +457,8 @@ def addSimWriters(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
+    particlesInitial="particles_initial",
+    particlesFinal="particles_final",
 ) -> None:
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -469,16 +471,16 @@ def addSimWriters(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
-                inputParticles="particles_initial",
-                outputStem="particles_initial",
+                inputParticles=particlesInitial,
+                outputStem=particlesInitial,
             )
         )
         s.addWriter(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
-                inputParticles="particles_final",
-                outputStem="particles_final",
+                inputParticles=particlesFinal,
+                outputStem=particlesFinal,
             )
         )
         s.addWriter(
@@ -625,17 +627,28 @@ def addGeant4(
 
     # Selector
     if postSelectParticles is not None:
-        postSelectedParticles = "particles_initial_selected"
+        particlesInitial = "particles_initial_selected"
         addParticleSelection(
             s,
             preSelectParticles,
             inputParticles=g4conf.outputParticlesInitial,
-            outputParticles=postSelectedParticles,
+            outputParticles=particlesInitial,
         )
-        s.addWhiteboardAlias("particles", postSelectedParticles)
+        
+        particlesFinal = "particles_final_selected"
+        addParticleSelection(
+            s,
+            preSelectParticles,
+            inputParticles=g4conf.outputParticlesFinal,
+            outputParticles=particlesFinal,
+        )
     else:
-        s.addWhiteboardAlias("particles", alg.config.outputParticlesInitial)
+        particlesInitial = alg.config.outputParticlesInitial
+        particlesFinal = alg.config.outputParticlesFinal
 
+    # Only add alieas for 'particles_initial' as this is the one we use most
+    s.addWhiteboardAlias("particles", particlesInitial)
+    
     # Output
     addSimWriters(
         s,
@@ -643,6 +656,8 @@ def addGeant4(
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,
+        particlesInitial=particlesInitial,
+        particlesFinal=particlesFinal,
     )
 
     return s
