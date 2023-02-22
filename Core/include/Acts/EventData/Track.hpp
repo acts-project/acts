@@ -8,8 +8,13 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <any>
 #include <cstddef>
@@ -205,6 +210,58 @@ class TrackProxy {
   Covariance covariance() {
     return m_container->covariance(m_index);
   }
+
+  ActsScalar charge() const {
+    // Currently, neutral tracks are not supported here
+    // @TODO: Evaluate if/how neutral 'tracks' should be accounted for
+    return SinglyCharged{}.extractCharge(parameters()[eBoundQOverP]);
+  }
+
+  /// Access the theta parameter of the track at the reference surface
+  /// @return The theta parameter
+  ActsScalar theta() const { return parameters()[eBoundTheta]; }
+
+  /// Access the phi parameter of the track at the reference surface
+  /// @return The phi parameter
+  ActsScalar phi() const { return parameters()[eBoundPhi]; }
+
+  /// Access the loc0 parameter of the track at the reference surface
+  /// @return The loc0 parameter
+  ActsScalar loc0() const { return parameters()[eBoundLoc0]; }
+
+  /// Access the loc1 parameter of the track at the reference surface
+  /// @return The loc1 parameter
+  ActsScalar loc1() const { return parameters()[eBoundLoc1]; }
+
+  /// Access the time parameter of the track at the reference surface
+  /// @return The time parameter
+  ActsScalar time() const { return parameters()[eBoundTime]; }
+
+  /// Access the q/p (curvature) parameter of the track at the reference surface
+  /// @return The q/p parameter
+  ActsScalar qOverP() const { return parameters()[eBoundQOverP]; }
+
+  /// Get the absolute momentum of the tack
+  /// @return The absolute track momentum
+  ActsScalar absoluteMomentum() const {
+    return SinglyCharged{}.extractMomentum(qOverP());
+  }
+
+  /// Get the transverse momentum of the track
+  /// @return The track transverse momentum value
+  ActsScalar transverseMomentum() const {
+    return std::sin(theta()) * absoluteMomentum();
+  }
+
+  /// Get a unit vector along the track direction at the reference surface
+  /// @return The direction unit vector
+  Vector3 unitDirection() const {
+    return makeDirectionUnitFromPhiTheta(phi(), theta());
+  }
+
+  /// Get the global momentum vector
+  /// @return the global momentum vector
+  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
 
   /// Get a range over the track states of this track. Return value is
   /// compatible with range based for loop. Const version
@@ -522,6 +579,14 @@ class TrackContainer {
     return m_container->addTrack_impl();
   }
 
+  /// Remove a track at index @p itrack from the container
+  /// @note This invalidates all track proxies!
+  /// @param itrack The index of the track to remmove
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void removeTrack(IndexType itrack) {
+    m_container->removeTrack_impl(itrack);
+  }
+
   /// Add a dymanic column to the track container
   /// @param key the name of the column to be added
   template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
@@ -559,9 +624,20 @@ class TrackContainer {
     return *m_traj;
   }
 
+  /// Retrieve the holder of the track state container
+  /// @return The track state container including it's holder
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto& trackStateContainerHolder() {
+    return m_traj;
+  }
+
   /// Get a const reference to the track state container backend
   /// @return a const reference to the backend
   const auto& trackStateContainer() const { return *m_traj; }
+
+  /// Retrieve the holder of the track state container
+  /// @return The track state container including it's holder
+  const auto& trackStateContainerHolder() const { return m_traj; }
 
   /// Get a mutable iterator to the first track in the container
   /// @return a mutable iterator to the first track
