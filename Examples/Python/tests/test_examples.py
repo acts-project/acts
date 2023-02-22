@@ -3,6 +3,7 @@ import os
 import json
 import functools
 import subprocess
+import sys
 
 import pytest
 
@@ -177,7 +178,7 @@ def test_geant4(tmp_path, assert_root_hash):
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call(
-        [str(script)],
+        [sys.executable, str(script)],
         cwd=tmp_path,
         env=env,
         stderr=subprocess.STDOUT,
@@ -526,7 +527,7 @@ def test_event_recording(tmp_path):
     env["NEVENTS"] = "1"
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call(
-        [str(script)],
+        [sys.executable, str(script)],
         cwd=tmp_path,
         env=env,
         stderr=subprocess.STDOUT,
@@ -1211,7 +1212,7 @@ def test_full_chain_odd_example(tmp_path):
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call(
-        [str(script), "-n1"],
+        [sys.executable, str(script), "-n1"],
         cwd=tmp_path,
         env=env,
         stderr=subprocess.STDOUT,
@@ -1239,7 +1240,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call(
-        [str(script), "-n1", "--geant4", "--ttbar"],
+        [sys.executable, str(script), "-n1", "--geant4", "--ttbar"],
         cwd=tmp_path,
         env=env,
         stderr=subprocess.STDOUT,
