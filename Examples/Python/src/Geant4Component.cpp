@@ -110,9 +110,8 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
         g4PrCfg.inputParticles = inputParticles;
-        g4PrCfg.forceParticle = true;
+        g4PrCfg.forcedCharge = 0.;
         g4PrCfg.forcedMass = 0.;
-        g4PrCfg.forcedPdgCode = 999;
         // Set the material tracks at output
         g4Cfg.outputMaterialTracks = outputMaterialTracks;
 

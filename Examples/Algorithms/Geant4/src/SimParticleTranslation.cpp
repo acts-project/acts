@@ -121,7 +121,8 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     }
     if (particlePdgCode == 0 && particleMass == 0 && particleCharge != 0) {
       if (particleCharge != 1) {
-        ACTS_ERROR("invalid charged geantino charge " << particleCharge << ". should be 1");
+        ACTS_ERROR("invalid charged geantino charge " << particleCharge
+                                                      << ". should be 1");
       }
       particleDefinition = G4ChargedGeantino::Definition();
     }
