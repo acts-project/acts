@@ -18,7 +18,9 @@ makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering = true, bool energyLoss = true,
     double reverseFilteringMomThreshold = 0.0,
-    Acts::FreeToBoundCorrection freeToBoundCorrection = Acts::FreeToBoundCorrection(),
-    const Acts::Logger &logger = *Acts::getDefaultLogger("Kalman", Acts::Logging::INFO)));
+    Acts::FreeToBoundCorrection freeToBoundCorrection =
+        Acts::FreeToBoundCorrection(),
+    const Acts::Logger &logger = *Acts::getDefaultLogger("Kalman",
+                                                         Acts::Logging::INFO));
 
 }  // namespace ActsExamples
