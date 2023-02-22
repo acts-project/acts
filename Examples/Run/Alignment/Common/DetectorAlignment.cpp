@@ -89,6 +89,8 @@ int runDetectorAlignment(
       Options::readRandomNumbersConfig(vm));
   auto dirNav = vm["fit-directed-navigation"].as<bool>();
 
+  auto logger = Acts::getDefaultLogger("AlignmentExec", logLevel);
+
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
   auto trackingGeometry = geometry.first;
@@ -197,7 +199,7 @@ int runDetectorAlignment(
       trackingGeometry, magneticField,
       vm["fit-multiple-scattering-correction"].as<bool>(),
       vm["fit-energy-loss-correction"].as<bool>(), 0,
-      Acts::FreeToBoundCorrection(false), Acts::getDefaultLogger("", logLevel));
+      Acts::FreeToBoundCorrection(false), *logger);
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
