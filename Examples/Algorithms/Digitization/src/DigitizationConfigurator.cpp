@@ -30,7 +30,7 @@ bool digiConfigMaybeEqual(ActsExamples::DigiComponentsConfig &a,
           ag.thickness == bg.thickness and ag.threshold == bg.threshold and
           ag.digital == bg.digital);
 }
-}
+}  // namespace
 
 void ActsExamples::DigitizationConfigurator::operator()(
     const Acts::Surface *surface) {
