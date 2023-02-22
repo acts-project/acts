@@ -44,8 +44,6 @@ using namespace ROOT;
 int boundParamResolution(const std::string& inFile, const std::string& treeName,
                          const std::string& outFile, bool predicted = true,
                          bool filtered = true, bool smoothed = true,
-                         bool fitFiltered = true,
-                         bool fitPredicted = true,
                          bool fitSmoothed = true,
                          const std::string& saveAs = "") {
   // Some style options
