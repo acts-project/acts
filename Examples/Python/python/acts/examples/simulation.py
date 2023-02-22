@@ -26,8 +26,8 @@ EtaConfig = namedtuple(
 PhiConfig = namedtuple("PhiConfig", ["min", "max"], defaults=[None, None])
 ParticleConfig = namedtuple(
     "ParticleConfig",
-    ["num", "pdg", "randomizeCharge"],
-    defaults=[None, None, None],
+    ["num", "pdg", "randomizeCharge", "charge", "mass"],
+    defaults=[None, None, None, None, None],
 )
 ParticleSelectorConfig = namedtuple(
     "ParticleSelectorConfig",
@@ -82,7 +82,7 @@ def addParticleGun(
         pseudorapidity configuration: eta min, eta max, uniform
     phiConfig : PhiConfig(min, max)
         azimuthal angle configuration: phi min, phi max
-    particleConfig : ParticleConfig(num, pdg, randomizeCharge)
+    particleConfig : ParticleConfig(num, pdg, randomizeCharge, charge, mass)
         particle configuration: number of particles, particle type, charge flip
     multiplicity : int, 1
         number of generated vertices
@@ -107,7 +107,8 @@ def addParticleGun(
                 multiplicity=FixedMultiplicityGenerator(n=multiplicity),
                 vertex=vtxGen
                 or acts.examples.GaussianVertexGenerator(
-                    stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
+                    mean=acts.Vector4(0, 0, 0, 0),
+                    stddev=acts.Vector4(0, 0, 0, 0),
                 ),
                 particles=acts.examples.ParametricParticleGenerator(
                     **acts.examples.defaultKWArgs(
@@ -119,6 +120,8 @@ def addParticleGun(
                         numParticles=particleConfig.num,
                         pdg=particleConfig.pdg,
                         randomizeCharge=particleConfig.randomizeCharge,
+                        charge=particleConfig.charge,
+                        mass=particleConfig.mass,
                     )
                 ),
             )
