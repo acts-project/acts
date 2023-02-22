@@ -30,6 +30,9 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
   constexpr double convertLength = Acts::UnitConstants::mm / CLHEP::mm;
   constexpr double convertEnergy = Acts::UnitConstants::GeV / CLHEP::GeV;
 
+  // Retrieve the event data registry
+  auto& eventData = EventStoreRegistry::eventData();
+
   // The particle after the step
   G4Track* track = step->GetTrack();
   G4PrimaryParticle* primaryParticle =
@@ -101,17 +104,18 @@ void ActsExamples::SensitiveSteppingAction::UserSteppingAction(
     Acts::GeometryIdentifier::Value sGeoVal = std::stoul(volumeName);
     Acts::GeometryIdentifier geoID(sGeoVal);
 
-    SimBarcode particleID(track->GetTrackID());
+    auto particleID = eventData.trackIdMapping[track->GetTrackID()];
+
     Acts::Vector4 particlePosition(hX, hY, hZ, hT);
     Acts::Vector4 beforeMomentum(mXpre, mYpre, mZpre, mEpre);
     Acts::Vector4 afterMomentum(mXpost, mYpost, mZpost, mEpost);
 
-    // Retrieve the event data registry
-    auto& eventData = EventStoreRegistry::eventData();
+    // Increase counter (starts at 1 because of ++)
+    ++eventData.particleHitCount[particleID];
 
-    // Fill into the registry
+    // Fill into the registry (subtract 1 from hit-count to get 0-based index)
     eventData.hits.emplace_back(geoID, particleID, particlePosition,
                                 beforeMomentum, afterMomentum,
-                                eventData.hits.size());
+                                eventData.particleHitCount[particleID] - 1);
   }
 }

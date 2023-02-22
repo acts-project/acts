@@ -15,10 +15,11 @@
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/DiscSurface.hpp"
+#include "Acts/Surfaces/LineBounds.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RadialBounds.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
-#include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
@@ -91,6 +92,13 @@ Acts::Geant4ShapeConverter::radialBounds(const G4Tubs& g4Tubs) {
   ActsScalar thickness = g4Tubs.GetZHalfLength() * 2;
   auto rBounds = std::make_shared<RadialBounds>(tArray);
   return std::tie(rBounds, thickness);
+}
+
+std::shared_ptr<Acts::LineBounds> Acts::Geant4ShapeConverter::lineBounds(
+    const G4Tubs& g4Tubs) {
+  auto r = static_cast<ActsScalar>(g4Tubs.GetOuterRadius());
+  auto hlZ = static_cast<ActsScalar>(g4Tubs.GetZHalfLength());
+  return std::make_shared<LineBounds>(r, hlZ);
 }
 
 std::tuple<std::shared_ptr<Acts::RectangleBounds>, std::array<int, 2u>,
@@ -248,47 +256,63 @@ std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
   // Into a rectangle
   auto g4Box = dynamic_cast<const G4Box*>(g4Solid);
   if (g4Box != nullptr) {
-    auto [bounds, axes, original] =
-        Geant4ShapeConverter{}.rectangleBounds(*g4Box);
-    auto orientedToGlobal = axesOriented(toGlobal, axes);
-    surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
-                                                      std::move(bounds));
-    assignMaterial(*surface.get(), original, compressed);
-    return surface;
+    if (forcedType == Surface::SurfaceType::Other or
+        forcedType == Surface::SurfaceType::Plane) {
+      auto [bounds, axes, original] =
+          Geant4ShapeConverter{}.rectangleBounds(*g4Box);
+      auto orientedToGlobal = axesOriented(toGlobal, axes);
+      surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
+                                                        std::move(bounds));
+      assignMaterial(*surface.get(), original, compressed);
+      return surface;
+    } else {
+      throw std::runtime_error("Can not convert 'G4Box' into forced shape.");
+    }
   }
 
   // Into a Trapezoid
   auto g4Trd = dynamic_cast<const G4Trd*>(g4Solid);
   if (g4Trd != nullptr) {
-    auto [bounds, axes, original] =
-        Geant4ShapeConverter{}.trapezoidBounds(*g4Trd);
-    auto orientedToGlobal = axesOriented(toGlobal, axes);
-    surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
-                                                      std::move(bounds));
-    assignMaterial(*surface.get(), original, compressed);
-    return surface;
+    if (forcedType == Surface::SurfaceType::Other or
+        forcedType == Surface::SurfaceType::Plane) {
+      auto [bounds, axes, original] =
+          Geant4ShapeConverter{}.trapezoidBounds(*g4Trd);
+      auto orientedToGlobal = axesOriented(toGlobal, axes);
+      surface = Acts::Surface::makeShared<PlaneSurface>(orientedToGlobal,
+                                                        std::move(bounds));
+      assignMaterial(*surface.get(), original, compressed);
+      return surface;
+    } else {
+      throw std::runtime_error("Can not convert 'G4Trd' into forced shape.");
+    }
   }
 
-  // Into a Cylinder or disc
+  // Into a Cylinder, disc or line
   auto g4Tubs = dynamic_cast<const G4Tubs*>(g4Solid);
   if (g4Tubs != nullptr) {
     ActsScalar diffR = g4Tubs->GetOuterRadius() - g4Tubs->GetInnerRadius();
     ActsScalar diffZ = 2 * g4Tubs->GetZHalfLength();
     // Detect if cylinder or disc case
     ActsScalar original = 0.;
-    if (diffR < diffZ) {
+    if (forcedType == Surface::SurfaceType::Cylinder or
+        (diffR < diffZ and forcedType == Surface::SurfaceType::Other)) {
       auto [bounds, originalT] = Geant4ShapeConverter{}.cylinderBounds(*g4Tubs);
-
-      std::cout << "Creating cylinder with " << *bounds << std::endl;
-
       original = originalT;
       surface = Acts::Surface::makeShared<CylinderSurface>(toGlobal,
                                                            std::move(bounds));
-    } else {
+    } else if (forcedType == Surface::SurfaceType::Disc or
+               forcedType == Surface::SurfaceType::Other) {
       auto [bounds, originalT] = Geant4ShapeConverter{}.radialBounds(*g4Tubs);
       original = originalT;
       surface =
           Acts::Surface::makeShared<DiscSurface>(toGlobal, std::move(bounds));
+    } else if (forcedType == Surface::SurfaceType::Straw) {
+      auto bounds = Geant4ShapeConverter{}.lineBounds(*g4Tubs);
+      surface =
+          Acts::Surface::makeShared<StrawSurface>(toGlobal, std::move(bounds));
+
+    } else {
+      throw std::runtime_error("Can not convert 'G4Tubs' into forced shape.");
     }
     assignMaterial(*surface.get(), original, compressed);
     return surface;
@@ -303,14 +327,29 @@ Acts::Geant4MaterialConverter::surfaceMaterial(const G4Material& g4Material,
                                                ActsScalar compressed) {
   ActsScalar compression = original / compressed;
 
-  auto g4X0 = g4Material.GetRadlen();
-  auto g4L0 = g4Material.GetNuclearInterLength();
-  auto g4Z = g4Material.GetZ();
-  auto g4A = g4Material.GetZ();
-  auto g4Rho = g4Material.GetDensity();
+  auto X0 = g4Material.GetRadlen();
+  auto L0 = g4Material.GetNuclearInterLength();
+  auto Rho = g4Material.GetDensity();
 
-  Material mat = Material::fromMassDensity(
-      g4X0 / compression, g4L0 / compression, g4A, g4Z, compression * g4Rho);
+  // Get{A,Z} is only meaningful for single-element materials (according to
+  // the Geant4 docs). Need to compute average manually.
+  auto g4Elements = g4Material.GetElementVector();
+  auto g4Fraction = g4Material.GetFractionVector();
+  auto g4NElements = g4Material.GetNumberOfElements();
+  double Ar = 0;
+  double Z = 0;
+  if (g4NElements == 1) {
+    Ar = g4Elements->at(0)->GetN();
+    Z = g4Material.GetZ();
+  } else {
+    for (size_t i = 0; i < g4NElements; i++) {
+      Ar += g4Elements->at(i)->GetN() * g4Fraction[i];
+      Z += g4Elements->at(i)->GetZ() * g4Fraction[i];
+    }
+  }
+
+  Material mat = Material::fromMassDensity(X0 / compression, L0 / compression,
+                                           Ar, Z, compression * Rho);
 
   return std::make_shared<HomogeneousSurfaceMaterial>(
       MaterialSlab(mat, compressed));

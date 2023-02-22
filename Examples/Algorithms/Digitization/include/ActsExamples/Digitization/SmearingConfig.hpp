@@ -23,7 +23,6 @@ struct ParameterSmearingConfig {
   ActsFatras::SingleParameterSmearFunction<RandomEngine> smearFunction;
 
   /// Check if the smearing configuration is the same
-  /// at least the index is checked
   /// @param other is the one to be checked against
   ///
   /// @return boolean to indicate equality

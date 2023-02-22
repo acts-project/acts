@@ -50,7 +50,7 @@ class GainMatrixUpdater {
       const GeometryContext& gctx,
       typename MultiTrajectory<traj_t>::TrackStateProxy trackState,
       NavigationDirection direction = NavigationDirection::Forward,
-      LoggerWrapper logger = getDummyLogger()) const {
+      const Logger& logger = getDummyLogger()) const {
     (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
 
@@ -104,7 +104,7 @@ class GainMatrixUpdater {
  private:
   std::tuple<double, std::error_code> visitMeasurement(
       InternalTrackState trackState, NavigationDirection direction,
-      LoggerWrapper logger) const;
+      const Logger& logger) const;
 };
 
 }  // namespace Acts

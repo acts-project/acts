@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 #include <memory>
 #include <tuple>
@@ -62,6 +63,7 @@ class RadialBounds;
 class RectangleBounds;
 class TrapezoidBounds;
 class PlanarBounds;
+class LineBounds;
 
 // The following set of converters convert a Geant4 volume shape
 // to an ACTS surface bounds object, this is for converting the volume
@@ -93,6 +95,13 @@ struct Geant4ShapeConverter {
   std::tuple<std::shared_ptr<RadialBounds>, ActsScalar> radialBounds(
       const G4Tubs& g4Tubs);
 
+  /// @brief Convert to line/straw bounds
+  ///
+  /// @param g4Tubs a Geant4 tube shape
+  ///
+  /// @return an Acts line bounds object and thickness
+  std::shared_ptr<LineBounds> lineBounds(const G4Tubs& g4Tubs);
+
   /// @brief Convert to rectangle bounds
   ///
   /// @param g4Box a Geant4 box shape
@@ -119,9 +128,10 @@ struct Geant4ShapeConverter {
   planarBounds(const G4VSolid& g4Solid);
 };
 
-class Surface;
-
 struct Geant4PhysicalVolumeConverter {
+  /// Optionally allow to foce a type, throws exception if not possbile
+  Surface::SurfaceType forcedType = Surface::SurfaceType::Other;
+
   /// @brief Convert a Geant4 phsyical volume to a surface
   ///
   /// @param g4PhysVol the physical volume to be constructed

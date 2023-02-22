@@ -94,8 +94,9 @@ std::vector<std::size_t> computeSharedHits(
   return sharedHitCountPerTrack;
 }
 
-std::size_t computeTrackHits(const Acts::VectorMultiTrajectory& multiTrajectory,
-                             const std::size_t tip) {
+std::size_t computeTrackHits(
+    const Acts::ConstVectorMultiTrajectory& multiTrajectory,
+    const std::size_t tip) {
   std::size_t result = 0;
 
   multiTrajectory.visitBackwards(tip, [&](const auto&) { ++result; });
@@ -191,8 +192,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
       parameters.emplace(tip, trackParameters[iTrack]);
     }
 
-    outputTrajectories.emplace_back(traj.multiTrajectoryPtr(), tips,
-                                    parameters);
+    outputTrajectories.emplace_back(traj.multiTrajectory(), tips, parameters);
   }
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));

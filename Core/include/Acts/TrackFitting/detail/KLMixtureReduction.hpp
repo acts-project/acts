@@ -26,8 +26,8 @@ auto computeSymmetricKlDivergence(const component_t &a, const component_t &b,
                                   const component_projector_t &proj) {
   const auto parsA = proj(a).boundPars[eBoundQOverP];
   const auto parsB = proj(b).boundPars[eBoundQOverP];
-  const auto covA = (*proj(a).boundCov)(eBoundQOverP, eBoundQOverP);
-  const auto covB = (*proj(b).boundCov)(eBoundQOverP, eBoundQOverP);
+  const auto covA = proj(a).boundCov(eBoundQOverP, eBoundQOverP);
+  const auto covB = proj(b).boundCov(eBoundQOverP, eBoundQOverP);
 
   throw_assert(covA != 0.0, "");
   throw_assert(std::isfinite(covA), "");
@@ -127,10 +127,6 @@ class SymmetricKLDistanceMatrix {
 
   void maskAssociatedDistances(std::size_t n) {
     setAssociated(n, m_mask, [&](std::size_t, std::size_t) { return false; });
-  }
-
-  void setAssociatedDistances(std::size_t n, ActsScalar value) {
-    setAssociated(n, m_mask, [&](std::size_t, std::size_t) { return value; });
   }
 
   auto minDistancePair() const {

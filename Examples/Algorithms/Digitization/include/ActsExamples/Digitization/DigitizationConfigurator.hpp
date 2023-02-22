@@ -71,16 +71,12 @@ struct DigitizationConfigurator {
           // Copy over what can be done
           dOutputConfig.geometricDigiConfig.indices =
               dInputConfig->geometricDigiConfig.indices;
-          dOutputConfig.geometricDigiConfig.drift =
-              dInputConfig->geometricDigiConfig.drift;
           dOutputConfig.geometricDigiConfig.thickness =
               dInputConfig->geometricDigiConfig.thickness;
-          dOutputConfig.geometricDigiConfig.charge =
-              dInputConfig->geometricDigiConfig.charge;
+          dOutputConfig.geometricDigiConfig.chargeSmearer =
+              dInputConfig->geometricDigiConfig.chargeSmearer;
           dOutputConfig.geometricDigiConfig.digital =
               dInputConfig->geometricDigiConfig.digital;
-          dOutputConfig.geometricDigiConfig.variances =
-              dInputConfig->geometricDigiConfig.variances;
 
           const Acts::SurfaceBounds& sBounds = surface->bounds();
           auto boundValues = sBounds.values();
@@ -97,8 +93,8 @@ struct DigitizationConfigurator {
                     boundValues[Acts::RectangleBounds::eMinX];
                 Acts::ActsScalar maxX =
                     boundValues[Acts::RectangleBounds::eMaxX];
-                unsigned int nBins = std::round(
-                    (maxX - minX) / inputSegmentation.binningData()[0].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    (maxX - minX) / inputSegmentation.binningData()[0].step));
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minX, maxX, Acts::open, Acts::binX);
               }
@@ -110,9 +106,9 @@ struct DigitizationConfigurator {
                     boundValues[Acts::RectangleBounds::eMinY];
                 Acts::ActsScalar maxY =
                     boundValues[Acts::RectangleBounds::eMaxY];
-                unsigned int nBins =
-                    std::round((maxY - minY) /
-                               inputSegmentation.binningData()[accessBin].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    (maxY - minY) /
+                    inputSegmentation.binningData()[accessBin].step));
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minY, maxY, Acts::open, Acts::binY);
               }
@@ -124,8 +120,8 @@ struct DigitizationConfigurator {
                 Acts::ActsScalar maxX = std::max(
                     boundValues[Acts::TrapezoidBounds::eHalfLengthXnegY],
                     boundValues[Acts::TrapezoidBounds::eHalfLengthXposY]);
-                unsigned int nBins = std::round(
-                    2 * maxX / inputSegmentation.binningData()[0].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    2 * maxX / inputSegmentation.binningData()[0].step));
                 outputSegmentation += Acts::BinUtility(nBins, -maxX, maxX,
                                                        Acts::open, Acts::binX);
               }
@@ -135,9 +131,9 @@ struct DigitizationConfigurator {
                     inputSegmentation.dimensions() == 2 ? 1 : 0;
                 Acts::ActsScalar maxY =
                     boundValues[Acts::TrapezoidBounds::eHalfLengthY];
-                unsigned int nBins =
-                    std::round((2 * maxY) /
-                               inputSegmentation.binningData()[accessBin].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    (2 * maxY) /
+                    inputSegmentation.binningData()[accessBin].step));
                 outputSegmentation += Acts::BinUtility(nBins, -maxY, maxY,
                                                        Acts::open, Acts::binY);
               }
@@ -148,8 +144,8 @@ struct DigitizationConfigurator {
               if (inputSegmentation.binningData()[0].binvalue == Acts::binR) {
                 Acts::ActsScalar minR = boundValues[Acts::AnnulusBounds::eMinR];
                 Acts::ActsScalar maxR = boundValues[Acts::AnnulusBounds::eMaxR];
-                unsigned int nBins = std::round(
-                    (maxR - minR) / inputSegmentation.binningData()[0].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    (maxR - minR) / inputSegmentation.binningData()[0].step));
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minR, maxR, Acts::open, Acts::binR);
               }
@@ -163,9 +159,9 @@ struct DigitizationConfigurator {
                     averagePhi - boundValues[Acts::AnnulusBounds::eMinPhiRel];
                 Acts::ActsScalar maxPhi =
                     averagePhi + boundValues[Acts::AnnulusBounds::eMaxPhiRel];
-                unsigned int nBins =
-                    std::round((maxPhi - minPhi) /
-                               inputSegmentation.binningData()[accessBin].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    (maxPhi - minPhi) /
+                    inputSegmentation.binningData()[accessBin].step));
                 outputSegmentation += Acts::BinUtility(
                     nBins, minPhi, maxPhi, Acts::open, Acts::binPhi);
               }
@@ -180,8 +176,8 @@ struct DigitizationConfigurator {
                   boundValues[Acts::DiscTrapezoidBounds::eMaxR];
 
               if (inputSegmentation.binningData()[0].binvalue == Acts::binR) {
-                unsigned int nBins = std::round(
-                    (maxR - minR) / inputSegmentation.binningData()[0].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    (maxR - minR) / inputSegmentation.binningData()[0].step));
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minR, maxR, Acts::open, Acts::binR);
               }
@@ -199,9 +195,9 @@ struct DigitizationConfigurator {
                 Acts::ActsScalar alphaMinR = std::atan2(minR, hxMinR);
                 Acts::ActsScalar alphaMaxR = std::atan2(maxR, hxMaxR);
                 Acts::ActsScalar alpha = std::max(alphaMinR, alphaMaxR);
-                unsigned int nBins =
-                    std::round(2 * alpha /
-                               inputSegmentation.binningData()[accessBin].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    2 * alpha /
+                    inputSegmentation.binningData()[accessBin].step));
                 outputSegmentation += Acts::BinUtility(
                     nBins, averagePhi - alpha, averagePhi + alpha, Acts::open,
                     Acts::binPhi);
@@ -213,8 +209,8 @@ struct DigitizationConfigurator {
               if (inputSegmentation.binningData()[0].binvalue == Acts::binR) {
                 Acts::ActsScalar minR = boundValues[Acts::RadialBounds::eMinR];
                 Acts::ActsScalar maxR = boundValues[Acts::RadialBounds::eMaxR];
-                unsigned int nBins = std::round(
-                    (maxR - minR) / inputSegmentation.binningData()[0].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    (maxR - minR) / inputSegmentation.binningData()[0].step));
                 outputSegmentation +=
                     Acts::BinUtility(nBins, minR, maxR, Acts::open, Acts::binR);
               }
@@ -230,9 +226,9 @@ struct DigitizationConfigurator {
                 Acts::ActsScalar minPhi = averagePhi - halfPhiSector;
                 Acts::ActsScalar maxPhi = averagePhi + halfPhiSector;
 
-                unsigned int nBins =
-                    std::round((maxPhi - minPhi) /
-                               inputSegmentation.binningData()[accessBin].step);
+                unsigned int nBins = static_cast<unsigned int>(std::round(
+                    (maxPhi - minPhi) /
+                    inputSegmentation.binningData()[accessBin].step));
                 outputSegmentation += Acts::BinUtility(
                     nBins, minPhi, maxPhi, Acts::open, Acts::binPhi);
               }

@@ -95,7 +95,6 @@ void addInput(Context& ctx);
 void addGenerators(Context& ctx);
 void addTruthTracking(Context& ctx);
 void addTrackFitting(Context& ctx);
-void addTrackFittingChi2(Context& ctx);
 void addTrackFinding(Context& ctx);
 void addVertexing(Context& ctx);
 
@@ -179,11 +178,13 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def("setBoundary", &Acts::GeometryIdentifier::setBoundary)
       .def("setApproach", &Acts::GeometryIdentifier::setApproach)
       .def("setSensitive", &Acts::GeometryIdentifier::setSensitive)
+      .def("setExtra", &Acts::GeometryIdentifier::setExtra)
       .def("volume", &Acts::GeometryIdentifier::volume)
       .def("layer", &Acts::GeometryIdentifier::layer)
       .def("boundary", &Acts::GeometryIdentifier::boundary)
       .def("approach", &Acts::GeometryIdentifier::approach)
-      .def("sensitive", &Acts::GeometryIdentifier::sensitive);
+      .def("sensitive", &Acts::GeometryIdentifier::sensitive)
+      .def("extra", &Acts::GeometryIdentifier::extra);
 
   using ActsExamples::Sequencer;
   using Config = Sequencer::Config;
@@ -263,7 +264,6 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addGenerators(ctx);
   addTruthTracking(ctx);
   addTrackFitting(ctx);
-  addTrackFittingChi2(ctx);
   addTrackFinding(ctx);
   addVertexing(ctx);
 

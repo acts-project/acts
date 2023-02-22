@@ -51,8 +51,8 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
     std::shared_ptr<const IMaterialDecorator> materialDecorator = nullptr;
 
     /// Optional geometry identfier hook to be used during closure
-    /// @note Will be @b copied when calling the geometry building
-    GeometryIdentifierHook geometryIdentifierHook;
+    std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook =
+        std::make_shared<GeometryIdentifierHook>();
   };
 
   /// Constructor
@@ -82,7 +82,7 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
 
   /// Get configuration method
   /// @return the current configuration
-  Config getConfiguration() const;
+  const Config& getConfiguration() const;
 
   /// set logging instance
   /// @param newLogger the new logging instance
@@ -98,10 +98,5 @@ class TrackingGeometryBuilder : public ITrackingGeometryBuilder {
   /// the logging instance
   std::unique_ptr<const Logger> m_logger;
 };
-
-inline TrackingGeometryBuilder::Config
-TrackingGeometryBuilder::getConfiguration() const {
-  return m_cfg;
-}
 
 }  // namespace Acts

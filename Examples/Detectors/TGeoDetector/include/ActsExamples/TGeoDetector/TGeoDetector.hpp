@@ -61,8 +61,8 @@ struct TGeoDetector {
         Acts::TGeoLayerBuilder::defaultElementFactory;
 
     /// Optional geometry identfier hook to be used during closure
-    /// @note Will be @b copied when calling the geometry building
-    Acts::GeometryIdentifierHook geometryIdentifierHook;
+    std::shared_ptr<const Acts::GeometryIdentifierHook> geometryIdentifierHook =
+        std::make_shared<Acts::GeometryIdentifierHook>();
 
     enum SubVolume : size_t { Negative = 0, Central, Positive };
 
@@ -133,6 +133,10 @@ struct TGeoDetector {
       bool itkModuleSplit = false;
       std::map<std::string, unsigned int> barrelMap;
       std::map<std::string, std::vector<std::pair<double, double>>> discMap;
+      /// pairs of regular expressions to match sensor names and category keys
+      /// for either the barrelMap or the discMap
+      std::map<std::string, std::string>
+          splitPatterns;  // @TODO in principle vector<pair< > > would be good enough
     };
 
     std::vector<Volume> volumes;

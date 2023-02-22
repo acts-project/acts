@@ -32,7 +32,7 @@ class PropagatorInterface {
   ///@return PropagationOutput
   virtual PropagationOutput execute(
       const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger,
+      const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const = 0;
 
   ///@brief  Execute a propagation for neutral particle parameters
@@ -44,7 +44,7 @@ class PropagatorInterface {
   ///@return PropagationOutput
   virtual PropagationOutput execute(
       const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger,
+      const Acts::Logger& logger,
       const Acts::NeutralBoundTrackParameters& startParameters) const = 0;
 };
 
@@ -67,14 +67,14 @@ class ConcretePropagator : public PropagatorInterface {
 
   PropagationOutput execute(
       const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger,
+      const Acts::Logger& logger,
       const Acts::BoundTrackParameters& startParameters) const override {
     return executeTest(context, cfg, logger, startParameters);
   }
 
   PropagationOutput execute(
       const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger,
+      const Acts::Logger& logger,
       const Acts::NeutralBoundTrackParameters& startParameters) const override {
     return executeTest(context, cfg, logger, startParameters);
   }
@@ -88,7 +88,7 @@ class ConcretePropagator : public PropagatorInterface {
   template <typename parameters_t>
   PropagationOutput executeTest(
       const AlgorithmContext& context, const PropagationAlgorithm::Config& cfg,
-      Acts::LoggerWrapper logger, const parameters_t& startParameters,
+      const Acts::Logger& logger, const parameters_t& startParameters,
       double pathLength = std::numeric_limits<double>::max()) const {
     ACTS_DEBUG("Test propagation/extrapolation starts");
 
