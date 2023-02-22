@@ -247,3 +247,4 @@ void ActsExamples::DigitizationConfigurator::operator()(
       outputDigiComponents.push_back({geoId, dOutputConfig});
     }
   }
+}
