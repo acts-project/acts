@@ -72,8 +72,6 @@ int runRecTruthTracks(
       Options::readRandomNumbersConfig(vm));
   auto dirNav = vm["fit-directed-navigation"].as<bool>();
 
-  auto logger = Acts::getDefaultLogger("RecTruthTracksExe", logLevel);
-
   // Setup detector geometry
   auto geometry = Geometry::build(vm, *detector);
   auto trackingGeometry = geometry.first;
@@ -157,8 +155,7 @@ int runRecTruthTracks(
       vm["fit-multiple-scattering-correction"].as<bool>(),
       vm["fit-energy-loss-correction"].as<bool>(), reverseFilteringMomThreshold,
       Acts::FreeToBoundCorrection(
-          vm["fit-ftob-nonlinear-correction"].as<bool>()),
-      *logger);
+          vm["fit-ftob-nonlinear-correction"].as<bool>()));
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
