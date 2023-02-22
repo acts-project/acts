@@ -733,9 +733,9 @@ def addKalmanTracks(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     directNavigation=False,
+    reverseFilteringMomThreshold=0 * u.GeV,
     multipleScattering=True,
     energyLoss=True,
-    reverseFilteringMomThreshold=0 * u.GeV,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
