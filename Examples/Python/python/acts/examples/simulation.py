@@ -634,7 +634,7 @@ def addGeant4(
             inputParticles=g4conf.outputParticlesInitial,
             outputParticles=particlesInitial,
         )
-        
+
         particlesFinal = "particles_final_selected"
         addParticleSelection(
             s,
@@ -648,7 +648,7 @@ def addGeant4(
 
     # Only add alieas for 'particles_initial' as this is the one we use most
     s.addWhiteboardAlias("particles", particlesInitial)
-    
+
     # Output
     addSimWriters(
         s,
