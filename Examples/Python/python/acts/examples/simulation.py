@@ -646,7 +646,7 @@ def addGeant4(
         particlesInitial = alg.config.outputParticlesInitial
         particlesFinal = alg.config.outputParticlesFinal
 
-    # Only add alieas for 'particles_initial' as this is the one we use most
+    # Only add alias for 'particles_initial' as this is the one we use most
     s.addWhiteboardAlias("particles", particlesInitial)
 
     # Output
