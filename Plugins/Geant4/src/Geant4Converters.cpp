@@ -230,9 +230,11 @@ Acts::Transform3 axesOriented(const Acts::Transform3& toGlobalOriginal,
 }
 }  // namespace
 
-std::shared_ptr<Acts::Surface> Acts::Geant4PhysicalVolumeConverter::surface(
-    const G4VPhysicalVolume& g4PhysVol, const Transform3& toGlobal,
-    bool convertMaterial, ActsScalar compressed) {
+std::shared_ptr<Acts::Surface>
+Acts::Geant4PhysicalVolumeConverter::surface(const G4VPhysicalVolume& g4PhysVol,
+                                             const Transform3& toGlobal,
+                                             bool convertMaterial,
+                                             ActsScalar compressed) {
   // Get the logical volume
   auto g4LogVol = g4PhysVol.GetLogicalVolume();
   auto g4Solid = g4LogVol->GetSolid();
