@@ -75,8 +75,8 @@ void setupGeant4Simulation(
   g4PrCfg.inputParticles = materialRecording ? Simulation::kParticlesInitial
                                              : Simulation::kParticlesSelection;
   if (materialRecording) {
-    g4Cfg.forcedCharge = 0.;
-    g4Cfg.forcedMass = 0.;
+    g4PrCfg.forcedCharge = 0.;
+    g4PrCfg.forcedMass = 0.;
     // Set the material tracks at output
     g4Cfg.outputMaterialTracks = Simulation::kMaterialTracks;
   }
