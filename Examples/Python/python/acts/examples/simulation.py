@@ -630,7 +630,7 @@ def addGeant4(
         particlesInitial = "particles_initial_selected"
         addParticleSelection(
             s,
-            preSelectParticles,
+            postSelectParticles,
             inputParticles=g4conf.outputParticlesInitial,
             outputParticles=particlesInitial,
         )
@@ -638,7 +638,7 @@ def addGeant4(
         particlesFinal = "particles_final_selected"
         addParticleSelection(
             s,
-            preSelectParticles,
+            postSelectParticles,
             inputParticles=g4conf.outputParticlesFinal,
             outputParticles=particlesFinal,
         )
