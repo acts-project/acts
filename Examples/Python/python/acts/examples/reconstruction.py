@@ -368,7 +368,7 @@ def addTruthSmearing(
     rnd: acts.examples.RandomNumbers,
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
-    initialVarInflation: List[float],
+    initialVarInflation: list[float],
     logLevel: acts.logging.Level = None,
 ):
     """adds algorithm that would mimic detector response uncertainties for truth seeding
