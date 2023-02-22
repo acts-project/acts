@@ -196,7 +196,9 @@ int runDetectorAlignment(
   fitter.fit = ActsExamples::makeKalmanFitterFunction(
       trackingGeometry, magneticField,
       vm["fit-multiple-scattering-correction"].as<bool>(),
-      vm["fit-energy-loss-correction"].as<bool>());
+      vm["fit-energy-loss-correction"].as<bool>(),
+      0, Acts::FreeToBoundCorrection(false),
+      Acts::getDefaultLogger("", logLevel));
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
