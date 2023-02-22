@@ -1,5 +1,5 @@
 from pathlib import Path
-from typing import Optional, Union
+from typing import Optional, Union, List
 from enum import Enum
 from collections import namedtuple
 import warnings
@@ -368,7 +368,7 @@ def addTruthSmearing(
     rnd: acts.examples.RandomNumbers,
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
-    initialVarInflation: list[float],
+    initialVarInflation: List[float],
     logLevel: acts.logging.Level = None,
 ):
     """adds algorithm that would mimic detector response uncertainties for truth seeding
