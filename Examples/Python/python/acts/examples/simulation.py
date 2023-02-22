@@ -472,7 +472,7 @@ def addSimWriters(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
                 inputParticles=particlesInitial,
-                outputStem=particlesInitial,
+                outputStem="particles_initial",
             )
         )
         s.addWriter(
@@ -480,7 +480,7 @@ def addSimWriters(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
                 inputParticles=particlesFinal,
-                outputStem=particlesFinal,
+                outputStem="particles_final",
             )
         )
         s.addWriter(
@@ -634,7 +634,7 @@ def addGeant4(
             inputParticles=g4conf.outputParticlesInitial,
             outputParticles=particlesInitial,
         )
-        
+
         particlesFinal = "particles_final_selected"
         addParticleSelection(
             s,
@@ -648,7 +648,7 @@ def addGeant4(
 
     # Only add alieas for 'particles_initial' as this is the one we use most
     s.addWhiteboardAlias("particles", particlesInitial)
-    
+
     # Output
     addSimWriters(
         s,
