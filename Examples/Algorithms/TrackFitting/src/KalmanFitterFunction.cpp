@@ -130,18 +130,16 @@ ActsExamples::makeKalmanFitterFunction(
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);  // logger.cloneWithSuffix("Navigator")
-  Propagator propagator(
-      stepper, std::move(navigator));  // logger.cloneWithSuffix("Propagator")
+  Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
+  Propagator propagator(stepper, std::move(navigator),
+                        logger.cloneWithSuffix("Propagator"));
   Fitter trackFitter(std::move(propagator), logger.cloneWithSuffix("Fitter"));
 
   // Direct fitter
   Acts::DirectNavigator directNavigator{
       logger.cloneWithSuffix("DirectNavigator")};
-  DirectPropagator directPropagator(
-      stepper,
-      std::move(
-          directNavigator));  // logger.cloneWithSuffix("DirectPropagator")
+  DirectPropagator directPropagator(stepper, std::move(directNavigator),
+                                    logger.cloneWithSuffix("DirectPropagator"));
   DirectFitter directTrackFitter(std::move(directPropagator),
                                  logger.cloneWithSuffix("DirectFitter"));
 
