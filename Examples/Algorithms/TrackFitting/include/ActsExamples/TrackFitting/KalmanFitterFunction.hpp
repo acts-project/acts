@@ -16,9 +16,9 @@ std::shared_ptr<TrackFittingAlgorithm::TrackFitterFunction>
 makeKalmanFitterFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
-    bool multipleScattering = true, bool energyLoss = true,
-    double reverseFilteringMomThreshold = 0.0,
-    Acts::FreeToBoundCorrection freeToBoundCorrection =
-        Acts::FreeToBoundCorrection());
+    bool multipleScattering, bool energyLoss,
+    double reverseFilteringMomThreshold,
+    Acts::FreeToBoundCorrection freeToBoundCorrection,
+    const Acts::Logger& logger);
 
 }  // namespace ActsExamples

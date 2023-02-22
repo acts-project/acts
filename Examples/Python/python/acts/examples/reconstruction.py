@@ -368,7 +368,7 @@ def addTruthSmearing(
     rnd: acts.examples.RandomNumbers,
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
-    initialVarInflation: float,
+    initialVarInflation: list[float],
     logLevel: acts.logging.Level = None,
 ):
     """adds algorithm that would mimic detector response uncertainties for truth seeding
@@ -733,6 +733,8 @@ def addKalmanTracks(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     directNavigation=False,
+    multipleScattering=True,
+    energyLoss=True,
     reverseFilteringMomThreshold=0 * u.GeV,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
@@ -761,10 +763,11 @@ def addKalmanTracks(
         inputProtoTracks = "prototracks"
 
     kalmanOptions = {
-        "multipleScattering": True,
-        "energyLoss": True,
+        "multipleScattering": multipleScattering,
+        "energyLoss": energyLoss,
         "reverseFilteringMomThreshold": reverseFilteringMomThreshold,
         "freeToBoundCorrection": acts.examples.FreeToBoundCorrection(False),
+        "level": customLogLevel(),
     }
 
     fitAlg = acts.examples.TrackFittingAlgorithm(
@@ -847,7 +850,6 @@ def addCKFTracks(
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
     trackSelectorRanges: Optional[TrackSelectorRanges] = None,
-    selectedParticles: str = "truth_seeds_selected",
     ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -869,8 +871,6 @@ def addCKFTracks(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    selectedParticles : str, "particles"
-        CKFPerformanceWriter truth input
     trackSelectorRanges : TrackSelectorRanges(loc0, loc1, time, eta, absEta, pt, phi, removeNeutral, removeCharged)
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
