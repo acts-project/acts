@@ -23,6 +23,7 @@ def runDigitizationConfig(
     inputConfig = readDigiConfigFromJson(str(input))
 
     digiConfigurator = DigitizationConfigurator()
+    digiConfigurator.compactify = True
     digiConfigurator.inputDigiComponents = inputConfig
 
     trackingGeometry.visitSurfaces(digiConfigurator)
