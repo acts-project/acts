@@ -695,6 +695,7 @@ int boundParamResolution(const std::string& inFile, const std::string& treeName,
             pull_smt[vlID + paramNames.at(ipar)]->Fit("gaus", "q");
             TF1* gauss =
                 pull_smt[vlID + paramNames.at(ipar)]->GetFunction("gaus");
+            gauss->SetLineColor(kGreen);
             float mu = gauss->GetParameter(1);
             float sigma = gauss->GetParameter(2);
 
