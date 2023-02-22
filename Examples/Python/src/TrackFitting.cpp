@@ -57,7 +57,6 @@ void addTrackFitting(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputProtoTracks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrajectories);
     ACTS_PYTHON_MEMBER(outputTracks);
     ACTS_PYTHON_MEMBER(fit);
     ACTS_PYTHON_MEMBER(trackingGeometry);
@@ -136,7 +135,6 @@ void addTrackFitting(Context& ctx) {
     ACTS_PYTHON_MEMBER(inputSourceLinks);
     ACTS_PYTHON_MEMBER(inputProtoTracks);
     ACTS_PYTHON_MEMBER(inputInitialTrackParameters);
-    ACTS_PYTHON_MEMBER(outputTrajectories);
     ACTS_PYTHON_MEMBER(outputTracks);
     ACTS_PYTHON_MEMBER(nUpdates);
     ACTS_PYTHON_MEMBER(fit);

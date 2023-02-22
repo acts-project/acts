@@ -773,7 +773,6 @@ def addKalmanTracks(
         inputSourceLinks="sourcelinks",
         inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
-        outputTrajectories="kfTrajectories",
         outputTracks="kfTracks",
         directNavigation=directNavigation,
         pickTrack=-1,
@@ -784,7 +783,14 @@ def addKalmanTracks(
     )
     s.addAlgorithm(fitAlg)
 
-    s.addWhiteboardAlias("trajectories", fitAlg.config.outputTrajectories)
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=fitAlg.config.outputTracks,
+        outputTrajectories="kfTrajectories",
+    )
+    s.addAlgorithm(trackConverter)
+
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     return s
 
@@ -814,15 +820,20 @@ def addTruthTrackingGsf(
         inputSourceLinks="sourcelinks",
         inputProtoTracks="prototracks",
         inputInitialTrackParameters="estimatedparameters",
-        outputTrajectories="gsf_trajectories",
         outputTracks="gsf_tracks",
         directNavigation=False,
         pickTrack=-1,
         trackingGeometry=trackingGeometry,
         fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
     )
-
     s.addAlgorithm(gsfAlg)
+
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=gsfAlg.config.outputTracks,
+        outputTrajectories="gsf_trajectories",
+    )
+    s.addAlgorithm(trackConverter)
 
     return s
 
@@ -880,7 +891,6 @@ def addCKFTracks(
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
         inputInitialTrackParameters="estimatedparameters",
-        outputTrajectories="ckfTrajectories",
         outputTracks="ckfTracks",
         findTracks=acts.examples.TrackFindingAlgorithm.makeTrackFinderFunction(
             trackingGeometry, field
@@ -888,23 +898,37 @@ def addCKFTracks(
     )
     s.addAlgorithm(trackFinder)
 
-    s.addWhiteboardAlias("trajectories", trackFinder.config.outputTrajectories)
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=trackFinder.config.outputTracks,
+        outputTrajectories="trajectories-from-tracks",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     if trackSelectorRanges is not None:
         trackSelector = addTrackSelection(
             s,
             trackSelectorRanges,
-            inputTrajectories=trackFinder.config.outputTrajectories,
-            outputTrajectories="selectedTrajectories",
+            inputTracks=trackFinder.config.outputTracks,
+            outputTracks="selectedTracks",
             logLevel=customLogLevel(),
         )
 
-        s.addWhiteboardAlias("trajectories", trackSelector.config.outputTrajectories)
+        selectedTrackConverter = acts.examples.TracksToTrajectories(
+            level=customLogLevel(),
+            inputTracks=trackSelector.config.outputTracks,
+            outputTrajectories="trajectories-from-selected-tracks",
+        )
+        s.addAlgorithm(selectedTrackConverter)
+        s.addWhiteboardAlias(
+            "trajectories", selectedTrackConverter.config.outputTrajectories
+        )
 
     addTrajectoryWriters(
         s,
         name="ckf",
-        trajectories=trackFinder.config.outputTrajectories,
+        trajectories=trackConverter.config.outputTrajectories,
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
@@ -1042,10 +1066,8 @@ def addTrajectoryWriters(
 def addTrackSelection(
     s: acts.examples.Sequencer,
     trackSelectorRanges: TrackSelectorRanges,
-    inputTrackParameters: Optional[str] = None,
-    inputTrajectories: Optional[str] = None,
-    outputTrackParameters: Optional[str] = None,
-    outputTrajectories: Optional[str] = None,
+    inputTracks: str,
+    outputTracks: str,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.TrackSelector:
 
@@ -1053,14 +1075,8 @@ def addTrackSelection(
 
     trackSelector = acts.examples.TrackSelector(
         level=customLogLevel(),
-        inputTrackParameters=inputTrackParameters
-        if inputTrackParameters is not None
-        else "",
-        inputTrajectories=inputTrajectories if inputTrajectories is not None else "",
-        outputTrackParameters=outputTrackParameters
-        if outputTrackParameters is not None
-        else "",
-        outputTrajectories=outputTrajectories if outputTrajectories is not None else "",
+        inputTracks=inputTracks,
+        outputTracks=outputTracks,
         **acts.examples.defaultKWArgs(
             loc0Min=trackSelectorRanges.loc0[0],
             loc0Max=trackSelectorRanges.loc0[1],

@@ -15,6 +15,8 @@
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
+#include "BoundaryCheckTestsRefs.hpp"
+
 namespace Acts {
 namespace Test {
 BOOST_AUTO_TEST_SUITE(Surfaces)
@@ -82,8 +84,6 @@ BOOST_AUTO_TEST_CASE(BoundaryCheckBoxCovariance) {
 
 BOOST_AUTO_TEST_CASE(BoundaryCheckPolyDistance) {
   // we check a box again, but this time described as a poly
-
-#include "BoundaryCheckTestsRefs.hpp"
 
   BoundaryCheck bcheck(true);
 
