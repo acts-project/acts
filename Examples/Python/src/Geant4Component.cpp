@@ -116,9 +116,9 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
         g4PrCfg.inputParticles = inputParticles;
-        g4PrCfg.forcedPdgCode = 999;
-        g4PrCfg.forcedCharge = 0.;
+        g4PrCfg.forceParticle = true;
         g4PrCfg.forcedMass = 0.;
+        g4PrCfg.forcedPdgCode = 999;
 
         auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
                                       physicsList, g4PrCfg);
