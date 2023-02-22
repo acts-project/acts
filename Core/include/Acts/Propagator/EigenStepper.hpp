@@ -164,7 +164,8 @@ class EigenStepper {
   };
 
   /// Constructor requires knowledge of the detector's magnetic field
-  EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField);
+  EigenStepper(std::shared_ptr<const MagneticFieldProvider> bField,
+               double overstepLimit = 100 * UnitConstants::um);
 
   template <typename charge_t>
   State makeState(std::reference_wrapper<const GeometryContext> gctx,
@@ -402,8 +403,8 @@ class EigenStepper {
   /// Magnetic field inside of the detector
   std::shared_ptr<const MagneticFieldProvider> m_bField;
 
-  /// Overstep limit: could/should be dynamic
-  double m_overstepLimit = 100 * UnitConstants::um;
+  /// Overstep limit
+  double m_overstepLimit;
 };
 }  // namespace Acts
 

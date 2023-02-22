@@ -111,7 +111,7 @@ class TGeoDetectorElement : public IdentifiedDetectorElement {
   /// @param gctx The current geometry context object, e.g. alignment
   const Transform3& transform(const GeometryContext& gctx) const override;
 
-  /// Return surface associated with this identifier, which should come from the
+  /// Return surface associated with this detector element
   const Surface& surface() const override;
 
   /// Retrieve the DigitizationModule
