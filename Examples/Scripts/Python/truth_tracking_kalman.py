@@ -91,7 +91,11 @@ def runTruthTrackingKalman(
     )
 
     addKalmanTracks(
-        s, trackingGeometry, field, directNavigation, reverseFilteringMomThreshold
+        s,
+        trackingGeometry,
+        field,
+        directNavigation,
+        reverseFilteringMomThreshold,
     )
 
     # Output
