@@ -111,8 +111,7 @@ test:
     - docker-gpu-nvidia
   script:
     - apt-get update -y
-    - apt-get install -y python3 libxxhash0 tree
-    - tree -L 2
-    - pip3 install -r Examples/Python/tests/requirements.txt
+    - apt-get install -y python3 libxxhash0
+    - pip3 install -r src/Examples/Python/tests/requirements.txt
     - nvidia-smi
     - pytest -rFsv -k test_exatrkx
