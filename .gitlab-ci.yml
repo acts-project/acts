@@ -112,6 +112,7 @@ test:
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
+    - source build/python/setup.sh
     - pip3 install -r src/Examples/Python/tests/requirements.txt
     - nvidia-smi
     - pytest -rFsv -k test_exatrkx
