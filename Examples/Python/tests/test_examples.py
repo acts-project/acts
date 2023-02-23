@@ -2,6 +2,8 @@ from pathlib import Path
 import os
 import json
 import functools
+import tarfile
+import urllib.request 
 import subprocess
 import sys
 
@@ -1275,18 +1277,17 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
     root_file = "performance_seeding_trees.root"
     assert not (tmp_path / root_file).exists()
-
-    os.system("pushd {}".format(tmp_path))
+    
     if backend == "onnx":
-        os.system(
-            "curl https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar --output models.tar"
-        )
+        url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
     else:
-        os.system(
-            "curl https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar --output models.tar"
-        )
-    os.system("tar -xf models.tar")
-    os.system("popd")
+        url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
+
+    tarfile_name = tmp_path / "models.tar"
+    urllib.request.urlretrieve(url, tarfile_name)
+    tarfile.open(tarfile_name).extractall(tmp_path)
+    
+    print(os.listdir(tmp_path))
 
     script = (
         Path(__file__).parent.parent.parent.parent
