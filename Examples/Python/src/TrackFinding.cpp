@@ -19,6 +19,9 @@
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
+#include "ActsExamples/EventData/SpacePointContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
+
 #include <memory>
 
 #include <pybind11/pybind11.h>
@@ -64,7 +67,9 @@ void addTrackFinding(Context& ctx) {
   }
 
   {
-    using Config = Acts::SeedFinderConfig<SimSpacePoint>;
+    using Config = Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
+                              ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+					    Acts::detail_tc::RefHolder>::SpacePointProxyType>;
     auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);

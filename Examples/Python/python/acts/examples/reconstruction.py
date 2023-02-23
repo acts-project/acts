@@ -295,23 +295,6 @@ def addSeeding(
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
 
-        parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
-            level=logLevel,
-            inputSeeds=inputSeeds,
-            inputProtoTracks=inputProtoTracks,
-            inputSpacePoints=[spacePoints],
-            inputSourceLinks="sourcelinks",
-            outputTrackParameters="estimatedparameters",
-            outputProtoTracks="prototracks_estimated",
-            trackingGeometry=trackingGeometry,
-            magneticField=field,
-            **acts.examples.defaultKWArgs(
-                initialVarInflation=initialVarInflation,
-                deltaRMin=trackParamsEstimationConfig.deltaR[0],
-                deltaRMax=trackParamsEstimationConfig.deltaR[1],
-            ),
-        )
-        s.addAlgorithm(parEstimateAlg)
 
         if outputDirRoot is not None:
             addSeedPerformanceWriters(

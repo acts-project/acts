@@ -19,6 +19,9 @@
 #include <string>
 #include <vector>
 
+#include "ActsExamples/EventData/SpacePointContainer.hpp"
+#include "Acts/EventData/SpacePointContainer.hpp"
+
 namespace ActsExamples {
 
 /// Construct track seeds from space points.
@@ -38,7 +41,9 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::string outputProtoTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
-    Acts::SeedFinderConfig<SimSpacePoint> seedFinderConfig;
+    Acts::SeedFinderConfig< typename Acts::SpacePointContainer<
+			      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+			      Acts::detail_tc::RefHolder>::SpacePointProxyType > seedFinderConfig;
     Acts::SpacePointGridConfig gridConfig;
     Acts::SpacePointGridOptions gridOptions;
     Acts::SeedFinderOptions seedFinderOptions;
@@ -70,7 +75,9 @@ class SeedingAlgorithm final : public BareAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-  Acts::SeedFinder<SimSpacePoint> m_seedFinder;
+  Acts::SeedFinder< typename Acts::SpacePointContainer<
+		      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+		      Acts::detail_tc::RefHolder>::SpacePointProxyType > m_seedFinder;
   Config m_cfg;
 };
 

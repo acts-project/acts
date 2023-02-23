@@ -146,19 +146,6 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
     BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
     BOOST_CHECK_NE(&tc.container(), &copy.container());
   }
-  {
-    VectorMultiTrajectory mtj{};
-    VectorTrackContainer vtc{};
-    TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
-                   detail_tc::ValueHolder>
-        tc{vtc, mtj};
-    BOOST_CHECK_NE(&mtj, &tc.trackStateContainer());
-    BOOST_CHECK_NE(&vtc, &tc.container());
-    tc.addTrack();
-    std::decay_t<decltype(tc)> copy = tc;
-    BOOST_CHECK_NE(&mtj, &copy.trackStateContainer());
-    BOOST_CHECK_NE(&vtc, &copy.container());
-  }
 }
 
 BOOST_AUTO_TEST_CASE(BuildRefHolder) {

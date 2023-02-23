@@ -149,40 +149,44 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
-        [](const void*, const SimSpacePoint& sp) -> float {
-          return sp.topHalfStripLength();
-        });
+    // m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
+    //     [](const void*, const SimSpacePoint& sp) -> float {
+    //       return sp.topHalfStripLength();
+    //     });
 
-    m_cfg.seedFinderConfig.getBottomHalfStripLength.connect(
-        [](const void*, const SimSpacePoint& sp) -> float {
-          return sp.bottomHalfStripLength();
-        });
+    // m_cfg.seedFinderConfig.getBottomHalfStripLength.connect(
+    //     [](const void*, const SimSpacePoint& sp) -> float {
+    //       return sp.bottomHalfStripLength();
+    //     });
 
-    m_cfg.seedFinderConfig.getTopStripDirection.connect(
-        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.topStripDirection();
-        });
+    // m_cfg.seedFinderConfig.getTopStripDirection.connect(
+    //     [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
+    //       return sp.topStripDirection();
+    //     });
 
-    m_cfg.seedFinderConfig.getBottomStripDirection.connect(
-        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.bottomStripDirection();
-        });
+    // m_cfg.seedFinderConfig.getBottomStripDirection.connect(
+    //     [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
+    //       return sp.bottomStripDirection();
+    //     });
 
-    m_cfg.seedFinderConfig.getStripCenterDistance.connect(
-        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.stripCenterDistance();
-        });
+    // m_cfg.seedFinderConfig.getStripCenterDistance.connect(
+    //     [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
+    //       return sp.stripCenterDistance();
+    //     });
 
-    m_cfg.seedFinderConfig.getTopStripCenterPosition.connect(
-        [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-          return sp.topStripCenterPosition();
-        });
+    // m_cfg.seedFinderConfig.getTopStripCenterPosition.connect(
+    //     [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
+    //       return sp.topStripCenterPosition();
+    //     });
   }
 
   m_cfg.seedFinderConfig.seedFilter =
-      std::make_unique<Acts::SeedFilter<SimSpacePoint>>(m_cfg.seedFilterConfig);
-  m_seedFinder = Acts::SeedFinder<SimSpacePoint>(m_cfg.seedFinderConfig);
+    std::make_unique<Acts::SeedFilter< typename Acts::SpacePointContainer<
+      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+	Acts::detail_tc::RefHolder>::SpacePointProxyType >>(m_cfg.seedFilterConfig);
+  m_seedFinder = Acts::SeedFinder<typename Acts::SpacePointContainer<
+    ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+				    Acts::detail_tc::RefHolder>::SpacePointProxyType>(m_cfg.seedFinderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -206,10 +210,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
+  // Prepare interface SpacePoint backend-ACTS
+  ActsExamples::SpacePointContainer container(spacePointPtrs);
+  // Prepare Acts API
+  const Acts::SpacePointContainer<decltype(container),Acts::detail_tc::RefHolder> spContainer(container);
+
+  using value_type = typename decltype(spContainer)::SpacePointProxyType;
+  using seed_type = Acts::Seed< value_type >;
+
+    
   // construct the seeding tools
   // covariance tool, extracts covariances per spacepoint as required
   auto extractGlobalQuantities =
-      [=](const SimSpacePoint& sp, float, float,
+      [](const value_type& sp, float, float,
           float) -> std::pair<Acts::Vector3, Acts::Vector2> {
     Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
     Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
@@ -219,19 +232,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
-      Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsBottom,
-                                     m_cfg.numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<SimSpacePoint>>(
-      Acts::BinFinder<SimSpacePoint>(m_cfg.zBinNeighborsTop,
-                                     m_cfg.numPhiNeighbors));
-  auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
-      m_cfg.gridConfig, m_cfg.gridOptions);
-  auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
-      spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
-      bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
-
+  auto bottomBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
+								       Acts::BinFinder<value_type>(m_cfg.zBinNeighborsBottom,
+												   m_cfg.numPhiNeighbors));
+  auto topBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
+								    Acts::BinFinder<value_type>(m_cfg.zBinNeighborsTop,
+												m_cfg.numPhiNeighbors));
+  auto grid = Acts::SpacePointGridCreator::createGrid<value_type>(
+								  m_cfg.gridConfig, m_cfg.gridOptions);
+  auto spacePointsGrouping = Acts::BinnedSPGroup<value_type>(
+							     spContainer.begin(), spContainer.end(), extractGlobalQuantities,
+							     bottomBinFinder, topBinFinder, std::move(grid), rRangeSPExtent,
+							     m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
+  
   // safely clamp double to float
   float up = Acts::clampValue<float>(
       std::floor(rRangeSPExtent.max(Acts::binR) / 2) * 2);
@@ -243,7 +256,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       up - m_cfg.seedFinderConfig.deltaRMiddleMaxSPRange);
 
   // run the seeding
-  static thread_local SimSeedContainer seeds;
+  static thread_local std::vector<seed_type> seeds;
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
 
@@ -256,26 +269,26 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   }
 
   // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
-  size_t nSeeds = seeds.size();
-  static thread_local ProtoTrackContainer protoTracks;
-  protoTracks.clear();
+  // size_t nSeeds = seeds.size();
+  // static thread_local ProtoTrackContainer protoTracks;
+  // protoTracks.clear();
 
-  protoTracks.reserve(nSeeds);
-  for (const auto& seed : seeds) {
-    ProtoTrack& protoTrack = protoTracks.emplace_back();
-    protoTrack.reserve(seed.sp().size());
-    for (auto spacePointPtr : seed.sp()) {
-      for (const auto& slink : spacePointPtr->sourceLinks()) {
-        const IndexSourceLink& islink = slink.get<IndexSourceLink>();
-        protoTrack.emplace_back(islink.index());
-      }
-    }
-  }
+  // protoTracks.reserve(nSeeds);
+  // for (const auto& seed : seeds) {
+  //   ProtoTrack& protoTrack = protoTracks.emplace_back();
+  //   protoTrack.reserve(seed.sp().size());
+  //   for (auto spacePointPtr : seed.sp()) {
+  //     for (const auto& slink : spacePointPtr->sourceLinks()) {
+  //       const IndexSourceLink& islink = slink.get<IndexSourceLink>();
+  //       protoTrack.emplace_back(islink.index());
+  //     }
+  //   }
+  // }
 
-  ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
+  ACTS_INFO("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
-  ctx.eventStore.add(m_cfg.outputSeeds, SimSeedContainer{seeds});
-  ctx.eventStore.add(m_cfg.outputProtoTracks, ProtoTrackContainer{protoTracks});
+  //  ctx.eventStore.add(m_cfg.outputSeeds, std::vector<seed_type>{seeds});
+  //  ctx.eventStore.add(m_cfg.outputProtoTracks, ProtoTrackContainer{protoTracks});
   return ActsExamples::ProcessCode::SUCCESS;
 }
