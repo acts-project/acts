@@ -1283,7 +1283,7 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
         )
     else:
         os.system(
-            "curl https://bhuth.webo.family/index.php/s/oyFg8WF2cDPrJYz/download --output models.tar"
+            "curl https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar --output models.tar"
         )
     os.system("tar -xf models.tar")
     os.system("popd")
