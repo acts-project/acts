@@ -1301,7 +1301,7 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
 
     subprocess.check_call(
-        [sys.executable, str(script), "torch"],
+        [sys.executable, str(script), backend],
         cwd=tmp_path,
         env=env,
         stderr=subprocess.STDOUT,
