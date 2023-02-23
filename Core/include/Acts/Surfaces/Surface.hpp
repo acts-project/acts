@@ -241,6 +241,11 @@ class Surface : public virtual GeometryObject,
   const std::shared_ptr<const ISurfaceMaterial>& surfaceMaterialSharedPtr()
       const;
 
+  /// Assign a detector element
+  ///
+  /// @param detelement Detector element which is represented by this surface
+  void assignDetectorElement(const DetectorElementBase& detelement);
+
   /// Assign the surface material description
   ///
   /// The material is usually derived in a complicated way and loaded from
