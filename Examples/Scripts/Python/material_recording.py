@@ -60,7 +60,7 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
 
     s.addReader(evGen)
 
-    g4AlgCfg = acts.examples.geant4.materialRecordingConfig(
+    g4AlgCfg = acts.examples.geant4.makeGeant4MaterialRecordingConfig(
         level=acts.logging.INFO,
         detector=g4geo,
         inputParticles=evGen.config.outputParticles,

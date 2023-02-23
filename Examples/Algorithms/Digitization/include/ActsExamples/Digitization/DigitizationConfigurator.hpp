@@ -71,16 +71,12 @@ struct DigitizationConfigurator {
           // Copy over what can be done
           dOutputConfig.geometricDigiConfig.indices =
               dInputConfig->geometricDigiConfig.indices;
-          dOutputConfig.geometricDigiConfig.drift =
-              dInputConfig->geometricDigiConfig.drift;
           dOutputConfig.geometricDigiConfig.thickness =
               dInputConfig->geometricDigiConfig.thickness;
-          dOutputConfig.geometricDigiConfig.charge =
-              dInputConfig->geometricDigiConfig.charge;
+          dOutputConfig.geometricDigiConfig.chargeSmearer =
+              dInputConfig->geometricDigiConfig.chargeSmearer;
           dOutputConfig.geometricDigiConfig.digital =
               dInputConfig->geometricDigiConfig.digital;
-          dOutputConfig.geometricDigiConfig.variances =
-              dInputConfig->geometricDigiConfig.variances;
 
           const Acts::SurfaceBounds& sBounds = surface->bounds();
           auto boundValues = sBounds.values();

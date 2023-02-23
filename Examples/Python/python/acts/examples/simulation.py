@@ -582,7 +582,7 @@ def addGeant4(
         the output folder for the Root output, None triggers no output
     """
 
-    from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
+    from acts.examples.geant4 import Geant4Simulation, makeGeant4SimulationConfig
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -603,9 +603,10 @@ def addGeant4(
             raise AttributeError("detector not given")
         g4detectorConstruction = getG4DetectorContruction(detector)
 
-    g4conf = geant4SimulationConfig(
+    g4conf = makeGeant4SimulationConfig(
         level=customLogLevel(),
         detector=g4detectorConstruction,
+        randomNumbers=rnd,
         inputParticles=particles_selected,
         trackingGeometry=trackingGeometry,
         magneticField=field,
@@ -615,7 +616,6 @@ def addGeant4(
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
     g4conf.outputParticlesFinal = "particles_final"
-    g4conf.randomNumbers = rnd
 
     # Simulation
     alg = Geant4Simulation(
