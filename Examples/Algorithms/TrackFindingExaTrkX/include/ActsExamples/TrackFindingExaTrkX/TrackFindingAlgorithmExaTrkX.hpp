@@ -55,6 +55,8 @@ class TrackFindingAlgorithmExaTrkX final : public BareAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
+   std::vector<std::vector<int>> runPipeline(std::vector<float> &inputValues, std::vector<int> &spacepointIDs) const;
+   
   // configuration
   Config m_cfg;
 };

@@ -14,6 +14,8 @@
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
+#include <random>
+
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     Config config, Acts::Logging::Level level)
     : ActsExamples::BareAlgorithm("TrackFindingMLBasedAlgorithm", level),
@@ -36,6 +38,30 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
                       [](const auto& a) { return static_cast<bool>(a); })) {
     throw std::invalid_argument("Missing graph construction module");
   }
+  
+  // Sanitizer run with dummy input to detect configuration issues
+  Eigen::VectorXf dummyInput = Eigen::VectorXf::Random(3*15);
+  std::vector<float> dummyInputVec(dummyInput.data(), dummyInput.data()+dummyInput.size());
+  std::vector<int> spacepointIDs;
+  std::iota(spacepointIDs.begin(), spacepointIDs.end(), 0);
+  
+  runPipeline(dummyInputVec, spacepointIDs);
+}
+
+std::vector<std::vector<int>>
+ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
+    std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const {
+  auto [nodes, edges] = (*m_cfg.graphConstructor)(inputValues);
+  std::any edge_weights;
+
+  for (auto edgeClassifier : m_cfg.edgeClassifiers) {
+    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(nodes, edges);
+    nodes = newNodes;
+    edges = newEdges;
+    edge_weights = newWeights;
+  }
+
+  return (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
@@ -70,19 +96,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     spacepointIDs.push_back(islink.index());
   }
 
-  // Run the 3 stages
-  auto [nodes, edges] = (*m_cfg.graphConstructor)(inputValues);
-  std::any edge_weights;
-
-  for (auto edgeClassifier : m_cfg.edgeClassifiers) {
-    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(nodes, edges);
-    nodes = newNodes;
-    edges = newEdges;
-    edge_weights = newWeights;
-  }
-
-  const auto trackCandidates =
-      (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs);
+  // Run the pipeline
+  const auto trackCandidates = runPipeline(inputValues, spacepointIDs);
 
   // Make the prototracks
   std::vector<ProtoTrack> protoTracks;

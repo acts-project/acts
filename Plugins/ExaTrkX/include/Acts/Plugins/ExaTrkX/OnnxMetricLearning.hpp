@@ -13,9 +13,11 @@
 
 #include <memory>
 
-namespace torch::jit {
-class Module;
-}
+namespace Ort {
+class Env;
+class Session;
+class Value;
+}  // namespace Ort
 
 namespace Acts {
 
@@ -39,7 +41,9 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
   
  private:  
   Config m_cfg;
-  std::unique_ptr<torch::jit::Module> m_model;
+  std::unique_ptr<Ort::Env> m_env;
+  std::unique_ptr<Ort::Session> m_model;
 };
 
 }  // namespace Acts
+

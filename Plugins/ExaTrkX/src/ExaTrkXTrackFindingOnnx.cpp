@@ -17,6 +17,7 @@
 #include <torch/torch.h>
 
 #include "buildEdges.hpp"
+#include "runSessionWithIoBinding.hpp"
 #include "weaklyConnectedComponentsCugraph.hpp"
 
 using namespace torch::indexing;
@@ -57,30 +58,8 @@ Acts::ExaTrkXTrackFindingOnnx::ExaTrkXTrackFindingOnnx(
 
 Acts::ExaTrkXTrackFindingOnnx::~ExaTrkXTrackFindingOnnx() {}
 
-void Acts::ExaTrkXTrackFindingOnnx::runSessionWithIoBinding(
-    Ort::Session& sess, std::vector<const char*>& inputNames,
-    std::vector<Ort::Value>& inputData, std::vector<const char*>& outputNames,
-    std::vector<Ort::Value>& outputData) const {
-  if (inputNames.size() < 1) {
-    throw std::runtime_error("Onnxruntime input data maping cannot be empty");
-  }
-  if (inputNames.size() != inputData.size()) {
-    throw std::runtime_error("inputData size mismatch");
-  }
 
-  Ort::IoBinding iobinding(sess);
-  for (size_t idx = 0; idx < inputNames.size(); ++idx) {
-    iobinding.BindInput(inputNames[idx], inputData[idx]);
-  }
-
-  for (size_t idx = 0; idx < outputNames.size(); ++idx) {
-    iobinding.BindOutput(outputNames[idx], outputData[idx]);
-  }
-
-  sess.Run(Ort::RunOptions{nullptr}, iobinding);
-}
-
-void Acts::ExaTrkXTrackFindingOnnx::buildEdges(
+void buildEdges(
     std::vector<float>& embedFeatures, std::vector<int64_t>& edgeList,
     int64_t numSpacepoints) const {
   torch::Device device(torch::kCUDA);
