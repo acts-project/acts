@@ -112,11 +112,5 @@ test:
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
-    - curl https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar --output onnx_models.tar
-    - curl https://bhuth.webo.family/index.php/s/oyFg8WF2cDPrJYz/download --output torchscript_models.tar
-    - tar -xf onnx_models.tar
-    - tar -xf torchscript_models.tar
-    - source build/python/setup.sh
     - nvidia-smi
-    - python3 src/Examples/Scripts/Python/exatrkx.py onnx
-    - python3 src/Examples/Scripts/Python/exatrkx.py torch
+    - pytest -k test_exatrkx
