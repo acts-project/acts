@@ -46,6 +46,18 @@ void addGeometry(Context& ctx) {
           return self.center(Acts::GeometryContext{});
         });
   }
+
+  {
+    py::enum_<Acts::Surface::SurfaceType>(m, "SurfaceType")
+        .value("Cone", Acts::Surface::SurfaceType::Cone)
+        .value("Cylinder", Acts::Surface::SurfaceType::Cylinder)
+        .value("Disc", Acts::Surface::SurfaceType::Disc)
+        .value("Perigee", Acts::Surface::SurfaceType::Perigee)
+        .value("Plane", Acts::Surface::SurfaceType::Straw)
+        .value("Straw", Acts::Surface::SurfaceType::Curvilinear)
+        .value("Other", Acts::Surface::SurfaceType::Other);
+  }
+
   {
     py::class_<Acts::TrackingGeometry, std::shared_ptr<Acts::TrackingGeometry>>(
         m, "TrackingGeometry")
