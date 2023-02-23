@@ -43,6 +43,10 @@ def runMaterialRecording(g4geo, outputDir, tracksPerEvent=10000, s=None):
                     mean=acts.Vector4(0, 0, 0, 0),
                 ),
                 particles=ParametricParticleGenerator(
+                    pdg=acts.PdgParticle.eInvalid,
+                    charge=0,
+                    randomizeCharge=False,
+                    mass=0,
                     p=(1 * u.GeV, 10 * u.GeV),
                     eta=(-4, 4),
                     numParticles=tracksPerEvent,

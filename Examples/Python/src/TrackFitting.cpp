@@ -65,14 +65,21 @@ void addTrackFitting(Context& ctx) {
 
     mex.def(
         "makeKalmanFitterFunction",
-        py::overload_cast<std::shared_ptr<const Acts::TrackingGeometry>,
-                          std::shared_ptr<const Acts::MagneticFieldProvider>,
-                          bool, bool, double, Acts::FreeToBoundCorrection>(
-            &ActsExamples::makeKalmanFitterFunction),
+        [](std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
+           std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
+           bool multipleScattering, bool energyLoss,
+           double reverseFilteringMomThreshold,
+           Acts::FreeToBoundCorrection freeToBoundCorrection,
+           Logging::Level level) {
+          return ActsExamples::makeKalmanFitterFunction(
+              trackingGeometry, magneticField, multipleScattering, energyLoss,
+              reverseFilteringMomThreshold, freeToBoundCorrection,
+              *Acts::getDefaultLogger("Kalman", level));
+        },
         py::arg("trackingGeometry"), py::arg("magneticField"),
         py::arg("multipleScattering"), py::arg("energyLoss"),
         py::arg("reverseFilteringMomThreshold"),
-        py::arg("freeToBoundCorrection"));
+        py::arg("freeToBoundCorrection"), py::arg("level"));
 
     py::enum_<Acts::FinalReductionMethod>(mex, "FinalReductionMethod")
         .value("mean", Acts::FinalReductionMethod::eMean)
