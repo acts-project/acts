@@ -104,27 +104,16 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     G4ParticleDefinition* particleDefinition =
         particleTable->FindParticle(particlePdgCode);
     if (particleDefinition == nullptr) {
-      switch (particlePdgCode) {
-        case 999: {
-          particleDefinition = G4Geantino::Definition();
-        } break;
-        case 998: {
-          particleDefinition = G4ChargedGeantino::Definition();
-        } break;
-        default:
-          break;
+      if (particlePdgCode == 0 && particleMass == 0 && particleCharge == 0) {
+        particleDefinition = G4Geantino::Definition();
       }
-    }
-
-    if (particlePdgCode == 0 && particleMass == 0 && particleCharge == 0) {
-      particleDefinition = G4Geantino::Definition();
-    }
-    if (particlePdgCode == 0 && particleMass == 0 && particleCharge != 0) {
-      if (particleCharge != 1) {
-        ACTS_ERROR("invalid charged geantino charge " << particleCharge
-                                                      << ". should be 1");
+      if (particlePdgCode == 0 && particleMass == 0 && particleCharge != 0) {
+        if (particleCharge != 1) {
+          ACTS_ERROR("invalid charged geantino charge " << particleCharge
+                                                        << ". should be 1");
+        }
+        particleDefinition = G4ChargedGeantino::Definition();
       }
-      particleDefinition = G4ChargedGeantino::Definition();
     }
 
     // Skip if tranlation failed
