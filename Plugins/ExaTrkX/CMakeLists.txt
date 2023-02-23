@@ -10,7 +10,9 @@ endif()
 
 if(ACTS_EXATRKX_ENABLE_TORCH)
   list(APPEND SOURCES 
-    src/ExaTrkXTrackFindingTorch.cpp
+    src/TorchEdgeClassifier.cpp
+    src/TorchMetricLearning.cpp
+    src/BoostTrackBuilding.cpp
   )
 endif()
 

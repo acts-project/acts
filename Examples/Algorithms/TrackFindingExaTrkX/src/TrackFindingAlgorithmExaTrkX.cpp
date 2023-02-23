@@ -24,8 +24,17 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing protoTrack output collection");
   }
-  if (!m_cfg.trackFinderML) {
-    throw std::invalid_argument("Missing track finder");
+  if (!m_cfg.graphConstructor) {
+    throw std::invalid_argument("Missing graph construction module");
+  }
+  if (!m_cfg.trackBuilder) {
+    throw std::invalid_argument("Missing track building module");
+  }
+  if (m_cfg.edgeClassifiers.empty() or
+      not std::all_of(m_cfg.edgeClassifiers.begin(),
+                      m_cfg.edgeClassifiers.end(),
+                      [](const auto& a) { return static_cast<bool>(a); })) {
+    throw std::invalid_argument("Missing graph construction module");
   }
 }
 
@@ -61,11 +70,21 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
     spacepointIDs.push_back(islink.index());
   }
 
-  // ProtoTrackContainer protoTracks;
-  std::vector<std::vector<int> > trackCandidates;
-  m_cfg.trackFinderML->getTracks(inputValues, spacepointIDs, trackCandidates,
-                                 logger());
+  // Run the 3 stages
+  auto [nodes, edges] = (*m_cfg.graphConstructor)(inputValues);
+  std::any edge_weights;
 
+  for (auto edgeClassifier : m_cfg.edgeClassifiers) {
+    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(nodes, edges);
+    nodes = newNodes;
+    edges = newEdges;
+    edge_weights = newWeights;
+  }
+
+  const auto trackCandidates =
+      (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs);
+
+  // Make the prototracks
   std::vector<ProtoTrack> protoTracks;
   protoTracks.reserve(trackCandidates.size());
   for (auto& x : trackCandidates) {

@@ -7,7 +7,9 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingOnnx.hpp"
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingTorch.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
+#include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -34,29 +36,63 @@ void addExaTrkXTrackFinding(Context& ctx) {
     using C = Acts::ExaTrkXTrackFindingBase;
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "ExaTrkXTrackFindingBase");
   }
+  {
+    using C = Acts::GraphConstructionBase;
+    auto c = py::class_<C, std::shared_ptr<C>>(mex, "GraphConstructionBase");
+  }
+  {
+    using C = Acts::EdgeClassificationBase;
+    auto c = py::class_<C, std::shared_ptr<C>>(mex, "EdgeClassificationBase");
+  }
+  {
+    using C = Acts::TrackBuildingBase;
+    auto c = py::class_<C, std::shared_ptr<C>>(mex, "TrackBuildingBase");
+  }
 
 #ifdef ACTS_EXATRKX_TORCH_BACKEND
   {
-    using Alg = Acts::ExaTrkXTrackFindingTorch;
+    using Alg = Acts::TorchMetricLearning;
     using Config = Alg::Config;
 
     auto alg =
-        py::class_<Alg, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Alg>>(
-            mex, "ExaTrkXTrackFindingTorch")
-            .def(py::init<const Config&>(), py::arg("config"))
+        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
+            mex, "TorchMetricLearning")
+            .def(py::init<const Config&, const Logger&>(), py::arg("config"), py::arg("logger"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelDir);
+    ACTS_PYTHON_MEMBER(modelPath);
     ACTS_PYTHON_MEMBER(spacepointFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
-    ACTS_PYTHON_MEMBER(filterCut);
-    ACTS_PYTHON_MEMBER(n_chunks);
-    ACTS_PYTHON_MEMBER(edgeCut);
     ACTS_PYTHON_STRUCT_END();
+  }
+  {
+    using Alg = Acts::TorchEdgeClassifier;
+    using Config = Alg::Config;
+
+    auto alg =
+        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
+            mex, "TorchEdgeClassifier")
+            .def(py::init<const Config&, const Logger&>(), py::arg("config"), py::arg("logger"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(modelPath);
+    ACTS_PYTHON_MEMBER(cut);
+    ACTS_PYTHON_MEMBER(n_chunks);
+    ACTS_PYTHON_STRUCT_END();
+  }
+  {
+    using Alg = Acts::BoostTrackBuilding;
+
+    auto alg =
+        py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
+            mex, "TorchEdgeClassifier")
+            .def(py::init<const Logger&>(), py::arg("logger"));
   }
 #endif
 
@@ -68,7 +104,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Alg>>(
             mex, "ExaTrkXTrackFindingOnnx")
-            .def(py::init<const Config&>(), py::arg("config"))
+            .def(py::init<const Config&>(), py::arg("config"), py::arg("logger"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -86,7 +122,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
                                 "TrackFindingAlgorithmExaTrkX",
                                 inputSpacePoints, outputProtoTracks,
-                                trackFinderML, rScale, phiScale, zScale);
+                                graphConstructor, edgeClassifiers, trackBuilder, rScale, phiScale, zScale);
 }
 
 }  // namespace Acts::Python
