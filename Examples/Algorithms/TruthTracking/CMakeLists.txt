@@ -3,6 +3,7 @@ add_library(
   ActsExamples/TruthTracking/ParticleSelector.cpp
   ActsExamples/TruthTracking/ParticleSmearing.cpp
   ActsExamples/TruthTracking/TrackSelector.cpp
+  ActsExamples/TruthTracking/TrackParameterSelector.cpp
   ActsExamples/TruthTracking/TrackModifier.cpp
   ActsExamples/TruthTracking/TruthSeedSelector.cpp
   ActsExamples/TruthTracking/TruthTrackFinder.cpp
