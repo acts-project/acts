@@ -114,11 +114,10 @@ namespace Acts {
     const_iterator begin() const;
     const_iterator end() const;
 
-    SpacePointProxyType get(IndexType n);
-    const SpacePointProxyType get(IndexType n) const;
+    SpacePointProxyType& get(IndexType n);
+    const SpacePointProxyType& get(IndexType n) const;
 
     // do these need to be private or public?
-    container_t& container();
     const container_t& container() const;
 
   private:
@@ -177,13 +176,7 @@ namespace Acts {
     inline typename SpacePointContainer<container_t, holder_t>::const_iterator 
     SpacePointContainer<container_t, holder_t>::end() const 
     { return {*this, size()}; }
-  
-  template<typename container_t,
-    template <typename> class holder_t>
-    inline container_t& 
-    SpacePointContainer<container_t, holder_t>::container() 
-    { return *m_container; }
-  
+    
   template<typename container_t,
     template <typename> class holder_t>
     inline const container_t& 
@@ -229,16 +222,16 @@ namespace Acts {
   
   template<typename container_t,
     template <typename> class holder_t>
-    inline typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType
+    inline typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType&
     SpacePointContainer<container_t, holder_t>::get(
       typename SpacePointContainer<container_t, holder_t>::IndexType n)
-  { return {*this, n}; } //m_proxies[n]; }
+  { return m_proxies[n]; }
 
   template<typename container_t,
     template <typename> class holder_t>
-    inline const typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType
+    inline const typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType&
     SpacePointContainer<container_t, holder_t>::get(
       typename SpacePointContainer<container_t, holder_t>::IndexType n) const
-  { return {*this, n}; } //m_proxies.at(n); }
+  { return m_proxies.at(n); }
 
 }
