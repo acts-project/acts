@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -20,10 +20,14 @@
 
 #include <memory>
 #include <string>
+#include <unordered_map>
 
 namespace ActsExamples {
 
 /// A helper class for users to implement framework algorithms
+class DataHandleBase;
+
+/// Event processing algorithm interface.
 ///
 /// This class provides default implementations for most interface methods and
 /// and adds a default logger that can be used directly in subclasses.
@@ -59,9 +63,13 @@ class IAlgorithm : public SequenceElement {
  protected:
   const Acts::Logger& logger() const { return *m_logger; }
 
+  void registerWriteHandle(const DataHandleBase& handle);
+  void registerReadHandle(const DataHandleBase& handle);
+
  private:
   std::string m_name;
   std::unique_ptr<const Acts::Logger> m_logger;
+  std::unordered_map<std::string, const DataHandleBase*> m_writeHandles;
+  std::unordered_map<std::string, const DataHandleBase*> m_readHandles;
 };
-
 }  // namespace ActsExamples
