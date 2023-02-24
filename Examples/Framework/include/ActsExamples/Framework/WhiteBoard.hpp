@@ -37,6 +37,9 @@ class WhiteBoard {
   WhiteBoard(const WhiteBoard& other) = delete;
   WhiteBoard& operator=(const WhiteBoard&) = delete;
 
+  bool exists(const std::string& name) const;
+
+  // private:
   /// Store an object on the white board and transfer ownership.
   ///
   /// @param name Non-empty identifier to store it under
@@ -52,8 +55,6 @@ class WhiteBoard {
   /// @throws std::out_of_range if no object is stored under the requested name
   template <typename T>
   const T& get(const std::string& name) const;
-
-  bool exists(const std::string& name) const;
 
  private:
   /// Find similar names for suggestions with levenshtein-distance
@@ -81,6 +82,12 @@ class WhiteBoard {
   std::unordered_map<std::string, std::string> m_objectAliases;
 
   const Acts::Logger& logger() const { return *m_logger; }
+
+  template <typename T>
+  friend class WriteDataHandle;
+
+  template <typename T>
+  friend class ReadDataHandle;
 };
 
 }  // namespace ActsExamples
