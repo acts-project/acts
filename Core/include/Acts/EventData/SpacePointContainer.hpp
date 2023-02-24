@@ -31,9 +31,10 @@ namespace Acts {
     static constexpr bool ReadOnly = true;
 
     using IndexType = typename container_t::IndexType;
-    using SpacePointProxyType = typename std::conditional<ReadOnly,
-							  Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>,
-							  const Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>>::type;
+    using SpacePointProxyType = Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
+    // typename std::conditional<ReadOnly,
+    // 							  const Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>,
+    // 							  Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>>::type;
     using iterator = Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>,
 						   SpacePointProxyType,
 						   false>;
@@ -120,8 +121,8 @@ namespace Acts {
     const_iterator begin() const;
     const_iterator end() const;
 
-    SpacePointProxyType* get(IndexType n);
-    const SpacePointProxyType* get(IndexType n) const;
+    SpacePointProxyType get(IndexType n);
+    const SpacePointProxyType get(IndexType n) const;
 
     // do these need to be private or public?
     container_t& container();
@@ -235,16 +236,16 @@ namespace Acts {
   
   template<typename container_t,
     template <typename> class holder_t>
-    inline typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType*
+    inline typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType
     SpacePointContainer<container_t, holder_t>::get(
       typename SpacePointContainer<container_t, holder_t>::IndexType n)
-    { return &m_proxies[n]; }
+  { return {*this, n}; } //m_proxies[n]; }
 
   template<typename container_t,
     template <typename> class holder_t>
-    inline const typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType*
+    inline const typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType
     SpacePointContainer<container_t, holder_t>::get(
       typename SpacePointContainer<container_t, holder_t>::IndexType n) const
-    { return &m_proxies.at(n); }
+  { return {*this, n}; } //m_proxies.at(n); }
 
 }

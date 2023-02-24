@@ -29,9 +29,13 @@ namespace Acts::detail_tc {
   template <typename T>
   struct ValueHolder {
     T val;
-    
+
+    // Let's be clear with the user that we take the ownership
+    // Only require rvalues and avoid hidden copies
     ValueHolder(T& _val) = delete;
     ValueHolder(T&& _val) : val{std::move(_val)} {}
+
+    // Does it makes sense to allow copy operations?
     
     const T& operator*() const { return val; }
     T& operator*() { return val; }

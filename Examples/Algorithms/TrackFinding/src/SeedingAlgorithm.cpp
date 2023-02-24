@@ -213,7 +213,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // Prepare interface SpacePoint backend-ACTS
   ActsExamples::SpacePointContainer container(spacePointPtrs);
   // Prepare Acts API
-  const Acts::SpacePointContainer<decltype(container),Acts::detail_tc::RefHolder> spContainer(container);
+  Acts::SpacePointContainer<decltype(container), Acts::detail_tc::RefHolder> spContainer(container);
 
   using value_type = typename decltype(spContainer)::SpacePointProxyType;
   using seed_type = Acts::Seed< value_type >;
@@ -288,7 +288,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   ACTS_INFO("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
-  //  ctx.eventStore.add(m_cfg.outputSeeds, std::vector<seed_type>{seeds});
+  ctx.eventStore.add(m_cfg.outputSeeds, std::vector<seed_type>{seeds});
   //  ctx.eventStore.add(m_cfg.outputProtoTracks, ProtoTrackContainer{protoTracks});
   return ActsExamples::ProcessCode::SUCCESS;
 }

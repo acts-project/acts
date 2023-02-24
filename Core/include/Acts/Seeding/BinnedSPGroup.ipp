@@ -1,3 +1,4 @@
+// This is -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2019 CERN for the benefit of the Acts project
@@ -27,7 +28,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   static_assert(
       std::is_same<
           typename std::iterator_traits<spacepoint_iterator_t>::value_type,
-          const external_spacepoint_t*>::value,
+          external_spacepoint_t>::value,
       "Iterator does not contain type this class was templated with");
 
   // get region of interest (or full detector if configured accordingly)
@@ -46,11 +47,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   std::vector<
       std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
       rBins(numRBins);
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
-    if (*it == nullptr) {
-      continue;
-    }
-    const external_spacepoint_t& sp = **it;
+  for (spacepoint_iterator_t it = spBegin; it != spEnd; ++it) {
+    const external_spacepoint_t& sp = *it;
     const auto& [spPosition, variance] =
         toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
