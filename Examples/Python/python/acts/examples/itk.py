@@ -360,7 +360,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     phiBinDeflectionCoverage = 3
     numPhiNeighbors = 1
     # only used in orthogonal seeding
-    deltaPhiMax = 0.25
+    deltaPhiMax = 0.025
 
     # variables that change for pixel and strip SPs:
     if inputSpacePointsType == "PixelSpacePoints":
