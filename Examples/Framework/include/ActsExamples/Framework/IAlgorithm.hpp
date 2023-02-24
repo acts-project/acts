@@ -26,12 +26,15 @@ class IAlgorithm {
   /// The algorithm name.
   virtual std::string name() const = 0;
 
-  /// Execute the algorithm for one event.
-  virtual ProcessCode execute(const AlgorithmContext& context) const = 0;
   /// Initialize the algorithm
   virtual ProcessCode initialize() = 0;
+
   /// Finalize the algorithm
   virtual ProcessCode finalize() = 0;
+
+  /// Internal method to execute the algorithm for one event.
+  /// @note Usually, you should not override this method
+  virtual ProcessCode internalExecute(const AlgorithmContext& context) = 0;
 };
 
 }  // namespace ActsExamples

@@ -67,8 +67,9 @@ void ActsExamples::Sequencer::addReader(std::shared_ptr<IReader> reader) {
   if (not reader) {
     throw std::invalid_argument("Can not add empty/NULL reader");
   }
-  m_readers.push_back(std::move(reader));
+  m_readers.push_back(reader);
   ACTS_INFO("Added reader '" << m_readers.back()->name() << "'");
+  addAlgorithm(reader);
 }
 
 void ActsExamples::Sequencer::addAlgorithm(
@@ -84,8 +85,7 @@ void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   if (not writer) {
     throw std::invalid_argument("Can not add empty/NULL writer");
   }
-  m_writers.push_back(std::move(writer));
-  ACTS_INFO("Added writer '" << m_writers.back()->name() << "'");
+  addAlgorithm(std::move(writer));
 }
 
 void ActsExamples::Sequencer::addWhiteboardAlias(
@@ -112,9 +112,6 @@ std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {
   }
   for (const auto& algorithm : m_algorithms) {
     names.push_back("Algorithm:" + algorithm->name());
-  }
-  for (const auto& writer : m_writers) {
-    names.push_back("Writer:" + writer->name());
   }
 
   return names;
@@ -271,9 +268,16 @@ int ActsExamples::Sequencer::run() {
   ACTS_INFO("Starting event loop with " << m_cfg.numThreads << " threads");
   ACTS_INFO("  " << m_services.size() << " services");
   ACTS_INFO("  " << m_decorators.size() << " context decorators");
+  ACTS_INFO("  " << m_algorithms.size()
+                 << " algorithms (incl. readers and writers)");
   ACTS_INFO("  " << m_readers.size() << " readers");
-  ACTS_INFO("  " << m_algorithms.size() << " algorithms");
-  ACTS_INFO("  " << m_writers.size() << " writers");
+  size_t nWriters = 0;
+  for (const auto& alg : m_algorithms) {
+    if (dynamic_cast<const IWriter*>(alg.get()) != nullptr) {
+      nWriters++;
+    }
+  }
+  ACTS_INFO("  " << nWriters << " writers");
 
   // run start-of-run hooks
   for (auto& service : m_services) {
@@ -283,11 +287,23 @@ int ActsExamples::Sequencer::run() {
     service->startRun();
   }
 
+  auto getAlgorithmType = [](const auto& alg) {
+    if (dynamic_cast<const IWriter*>(&alg) != nullptr) {
+      return "writer";
+    }
+    if (dynamic_cast<const IReader*>(&alg) != nullptr) {
+      return "reader";
+    }
+    return "algorithm";
+  };
+
   ACTS_VERBOSE("Initialize algorithms");
   for (auto& alg : m_algorithms) {
-    ACTS_VERBOSE("Initialize algorithm: " << alg->name());
+    ACTS_VERBOSE("Initialize " << getAlgorithmType(*alg) << ": "
+                               << alg->name());
     if (alg->initialize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to initialize algorithm: " << alg->name());
+      ACTS_FATAL("Failed to initialize " << getAlgorithmType(*alg) << ": "
+                                         << alg->name());
       throw std::runtime_error("Failed to process event data");
     }
   }
@@ -328,31 +344,16 @@ int ActsExamples::Sequencer::run() {
               }
             }
 
-            ACTS_VERBOSE("Execute readers");
-            for (auto& rdr : m_readers) {
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute reader: " << rdr->name());
-              if (rdr->read(++context) != ProcessCode::SUCCESS) {
-                throw std::runtime_error("Failed to read input data");
-              }
-            }
-
             ACTS_VERBOSE("Execute algorithms");
+
             for (auto& alg : m_algorithms) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute algorithm: " << alg->name());
-              if (alg->execute(++context) != ProcessCode::SUCCESS) {
-                ACTS_FATAL("Failed to execute algorithm: " << alg->name());
+              ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
+                                      << alg->name());
+              if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
+                ACTS_FATAL("Failed to execute " << getAlgorithmType(*alg)
+                                                << ": " << alg->name());
                 throw std::runtime_error("Failed to process event data");
-              }
-            }
-
-            ACTS_VERBOSE("Execute writers");
-            for (auto& wrt : m_writers) {
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute writer: " << wrt->name());
-              if (wrt->write(++context) != ProcessCode::SUCCESS) {
-                throw std::runtime_error("Failed to write output data");
               }
             }
 
@@ -379,20 +380,11 @@ int ActsExamples::Sequencer::run() {
 
   ACTS_VERBOSE("Finalize algorithms");
   for (auto& alg : m_algorithms) {
-    ACTS_VERBOSE("Finalize algorithm: " << alg->name());
+    ACTS_VERBOSE("Finalize " << getAlgorithmType(*alg) << ": " << alg->name());
     if (alg->finalize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to finalize algorithm: " << alg->name());
+      ACTS_FATAL("Failed to finalize " << getAlgorithmType(*alg) << ": "
+                                       << alg->name());
       throw std::runtime_error("Failed to process event data");
-    }
-  }
-
-  // run end-of-run hooks
-  for (auto& wrt : m_writers) {
-    names.push_back("Writer:" + wrt->name() + ":endRun");
-    clocksAlgorithms.push_back(Duration::zero());
-    StopWatch sw(clocksAlgorithms.back());
-    if (wrt->endRun() != ProcessCode::SUCCESS) {
-      return EXIT_FAILURE;
     }
   }
 

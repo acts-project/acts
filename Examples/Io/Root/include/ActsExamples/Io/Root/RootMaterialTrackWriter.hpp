@@ -71,7 +71,7 @@ class RootMaterialTrackWriter
   ~RootMaterialTrackWriter() override;
 
   /// Framework intialize method
-  ActsExamples::ProcessCode endRun() override;
+  ActsExamples::ProcessCode finalize() override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

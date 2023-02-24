@@ -43,7 +43,13 @@ class BareAlgorithm : public IAlgorithm {
   /// Execute the algorithm for one event.
   ///
   /// This function must be implemented by subclasses.
-  ProcessCode execute(const AlgorithmContext& context) const override = 0;
+  virtual ProcessCode execute(const AlgorithmContext& context) const = 0;
+
+  /// Internal execute method forwards to the algorithm execute method as const
+  /// @param context The algorithm context
+  ProcessCode internalExecute(const AlgorithmContext& context) final {
+    return execute(context);
+  };
 
   /// Initialize the algorithm
   ProcessCode initialize() override { return ProcessCode::SUCCESS; }

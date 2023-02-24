@@ -123,7 +123,6 @@ class Sequencer {
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;
   std::vector<std::shared_ptr<IAlgorithm>> m_algorithms;
-  std::vector<std::shared_ptr<IWriter>> m_writers;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;

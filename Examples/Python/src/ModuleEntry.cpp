@@ -39,9 +39,9 @@ class PyIAlgorithm : public IAlgorithm {
     PYBIND11_OVERRIDE_PURE(std::string, IAlgorithm, name);
   }
 
-  ProcessCode execute(const AlgorithmContext& ctx) const override {
+  ProcessCode internalExecute(const AlgorithmContext& ctx) override {
     py::gil_scoped_acquire acquire{};
-    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
+    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, sysExecute, ctx);
   }
 
   ProcessCode initialize() override {
@@ -160,7 +160,7 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       py::class_<ActsExamples::IAlgorithm, PyIAlgorithm,
                  std::shared_ptr<ActsExamples::IAlgorithm>>(mex, "IAlgorithm")
           .def(py::init_alias<>())
-          .def("execute", &IAlgorithm::execute)
+          .def("internalExecute", &IAlgorithm::internalExecute)
           .def("name", &IAlgorithm::name);
 
   auto bareAlgorithm =
