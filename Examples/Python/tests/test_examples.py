@@ -1286,9 +1286,6 @@ def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
     tarfile_name = tmp_path / "models.tar"
     urllib.request.urlretrieve(url, tarfile_name)
     tarfile.open(tarfile_name).extractall(tmp_path)
-
-    print(os.listdir(tmp_path))
-
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
