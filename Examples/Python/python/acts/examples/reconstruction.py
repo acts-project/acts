@@ -105,8 +105,8 @@ SeedingAlgorithmConfigArg = namedtuple(
     defaults=[None] * 4,
 )
 
-TrackParamsEstimationConfig = namedtuple(
-    "TrackParamsEstimationConfig",
+TruthSeedingAlgorithmConfig = namedtuple(
+    "TruthSeederConfig",
     [
         "deltaR",  # (min,max)
     ],
@@ -157,7 +157,7 @@ class VertexFinder(Enum):
     seedFilterConfigArg=SeedFilterConfigArg,
     spacePointGridConfigArg=SpacePointGridConfigArg,
     seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg,
-    trackParamsEstimationConfig=TrackParamsEstimationConfig,
+    truthSeedingAlgorithmConfig=TruthSeedingAlgorithmConfig,
     logLevel=acts.logging.Level,
 )
 def addSeeding(
@@ -174,7 +174,7 @@ def addSeeding(
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
-    trackParamsEstimationConfig: TrackParamsEstimationConfig = TrackParamsEstimationConfig(),
+    truthSeedingAlgorithmConfig: TruthSeedingAlgorithmConfig = TruthSeedingAlgorithmConfig(),
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -260,16 +260,13 @@ def addSeeding(
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
-            # Use truth tracking
-            truthTrackFinder = acts.examples.TruthTrackFinder(
-                level=logLevel,
-                inputParticles=selectedParticles,
-                inputMeasurementParticlesMap="measurement_particles_map",
-                outputProtoTracks="prototracks",
+            inputProtoTracks, inputSeeds = addTruthSeeding(
+                s,
+                spacePoints,
+                selectedParticles,
+                truthSeedingAlgorithmConfig,
+                logLevel,
             )
-            s.addAlgorithm(truthTrackFinder)
-            inputProtoTracks = truthTrackFinder.config.outputProtoTracks
-            inputSeeds = ""
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
             inputProtoTracks, inputSeeds = addStandardSeeding(
@@ -298,17 +295,11 @@ def addSeeding(
         parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
             level=logLevel,
             inputSeeds=inputSeeds,
-            inputProtoTracks=inputProtoTracks,
-            inputSpacePoints=[spacePoints],
-            inputSourceLinks="sourcelinks",
             outputTrackParameters="estimatedparameters",
-            outputProtoTracks="prototracks_estimated",
             trackingGeometry=trackingGeometry,
             magneticField=field,
             **acts.examples.defaultKWArgs(
                 initialVarInflation=initialVarInflation,
-                deltaRMin=trackParamsEstimationConfig.deltaR[0],
-                deltaRMax=trackParamsEstimationConfig.deltaR[1],
             ),
         )
         s.addAlgorithm(parEstimateAlg)
@@ -321,7 +312,6 @@ def addSeeding(
                 selectedParticles,
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
-                parEstimateAlg.config.outputProtoTracks,
                 logLevel,
             )
 
@@ -422,6 +412,38 @@ def addSpacePointsMaking(
     )
     sequence.addAlgorithm(spAlg)
     return spAlg.config.outputSpacePoints
+
+
+def addTruthSeeding(
+    sequence: acts.examples.Sequencer,
+    spacePoints: str,
+    inputParticles: str,
+    truthSeedingAlgorithmConfig: TruthSeedingAlgorithmConfig,
+    logLevel: acts.logging.Level = None,
+):
+    """adds truth seeding
+    For parameters description see addSeeding
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+
+    truthSeeding = acts.examples.TruthSeedingAlgorithm(
+        level=logLevel,
+        inputParticles=inputParticles,
+        inputMeasurementParticlesMap="measurement_particles_map",
+        inputSourceLinks="sourcelinks",
+        inputSpacePoints=[spacePoints],
+        outputParticles="truth_seeded_particles",
+        outputFullProtoTracks="truth_particle_tracks",
+        outputSeeds="seeds",
+        outputProtoTracks="prototracks",
+        **acts.examples.defaultKWArgs(
+            deltaRMin=truthSeedingAlgorithmConfig.deltaR[0],
+            deltaRMax=truthSeedingAlgorithmConfig.deltaR[1],
+        ),
+    )
+    sequence.addAlgorithm(truthSeeding)
+
+    return truthSeeding.config.outputProtoTracks, truthSeeding.config.outputSeeds
 
 
 def addStandardSeeding(
@@ -685,7 +707,6 @@ def addSeedPerformanceWriters(
     selectedParticles: str,
     inputParticles: str,
     outputTrackParameters: str,
-    outputProtoTracks: str,
     logLevel: acts.logging.Level = None,
 ):
     """Writes seeding related performance output"""
@@ -717,7 +738,7 @@ def addSeedPerformanceWriters(
         acts.examples.RootTrackParameterWriter(
             level=customLogLevel(),
             inputTrackParameters=outputTrackParameters,
-            inputProtoTracks=outputProtoTracks,
+            inputProtoTracks=inputProtoTracks,
             inputParticles=inputParticles,
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -739,26 +760,18 @@ def addKalmanTracks(
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
-    truthTrkFndAlg = acts.examples.TruthTrackFinder(
-        level=customLogLevel(),
-        inputParticles="truth_seeds_selected",
-        inputMeasurementParticlesMap="measurement_particles_map",
-        outputProtoTracks="prototracks",
-    )
-    s.addAlgorithm(truthTrkFndAlg)
+    inputProtoTracks = "truth_particle_tracks"
 
     if directNavigation:
         srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
             level=customLogLevel(),
-            inputProtoTracks="prototracks",
+            inputProtoTracks=inputProtoTracks,
             inputSimHits="simhits",
             inputMeasurementSimHitsMap="measurement_simhits_map",
-            outputProtoTracks="sortedprototracks",
+            outputProtoTracks="sorted_truth_particle_tracks",
         )
         s.addAlgorithm(srfSortAlg)
         inputProtoTracks = srfSortAlg.config.outputProtoTracks
-    else:
-        inputProtoTracks = "prototracks"
 
     kalmanOptions = {
         "multipleScattering": True,
@@ -818,7 +831,7 @@ def addTruthTrackingGsf(
         level=customLogLevel(),
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
-        inputProtoTracks="prototracks",
+        inputProtoTracks="truth_particle_tracks",
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="gsf_tracks",
         directNavigation=False,
