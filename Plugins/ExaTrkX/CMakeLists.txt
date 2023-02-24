@@ -4,7 +4,9 @@ set(SOURCES
 
 if(ACTS_EXATRKX_ENABLE_ONNX)
   list(APPEND SOURCES 
-    src/ExaTrkXTrackFindingOnnx.cpp
+    src/OnnxEdgeClassifier.cpp
+    src/OnnxMetricLearning.cpp
+    src/CugraphTrackBuilding.cpp
   )
 endif()
 
