@@ -22,24 +22,17 @@ namespace Acts {
   public:
     friend class Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
     friend class Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>, 
-					       Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>, 
 					       false>;
     friend class Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>,
-					       Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>,
 					       true>;
 
     static constexpr bool ReadOnly = true;
 
     using IndexType = typename container_t::IndexType;
     using SpacePointProxyType = Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
-    // typename std::conditional<ReadOnly,
-    // 							  const Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>,
-    // 							  Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>>::type;
     using iterator = Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>,
-						   SpacePointProxyType,
 						   false>;
     using const_iterator = Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>,
-							 SpacePointProxyType,
 							 true>;
     
   public:    
