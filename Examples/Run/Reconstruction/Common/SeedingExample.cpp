@@ -170,13 +170,8 @@ int runSeedingExample(
 
   // Algorithm estimating track parameter from seed
   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-  paramsEstimationCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
-  paramsEstimationCfg.inputSpacePoints = {
-      spCfg.outputSpacePoints,
-  };
-  paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
   paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-  paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
   paramsEstimationCfg.trackingGeometry = tGeometry;
   paramsEstimationCfg.magneticField = magneticField;
   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(

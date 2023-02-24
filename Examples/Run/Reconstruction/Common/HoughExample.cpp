@@ -163,13 +163,8 @@ int runHoughExample(
 
   // Algorithm estimating track parameter from seed
   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
-  paramsEstimationCfg.inputProtoTracks = houghCfg.outputProtoTracks;
-  paramsEstimationCfg.inputSpacePoints = {
-      spCfg.outputSpacePoints,
-  };
-  paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
+  paramsEstimationCfg.inputSeeds = houghCfg.outputSeeds;
   paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-  paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
   paramsEstimationCfg.trackingGeometry = tGeometry;
   paramsEstimationCfg.magneticField = magneticField;
   sequencer.addAlgorithm(std::make_shared<TrackParamsEstimationAlgorithm>(
