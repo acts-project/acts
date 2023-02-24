@@ -34,8 +34,8 @@ class HelloWhiteBoardAlgorithm : public ActsExamples::IAlgorithm {
   /// Read input and copy to the output
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  ReadDataHandle<HelloDataCollection> m_readHandle{this};
-  WriteDataHandle<HelloDataCollection> m_writeHandle{this};
+  ReadDataHandle<HelloDataCollection> m_readHandle{this, "Input"};
+  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
 
  private:
   Config m_cfg;

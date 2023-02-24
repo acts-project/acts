@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
 #include <memory>

@@ -9,6 +9,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
@@ -23,15 +24,18 @@
 #include <limits>
 #include <numeric>
 #include <stdexcept>
+#include <typeinfo>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
 
+#include <boost/algorithm/string.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
 namespace ActsExamples {
+
 namespace {
 
 std::string_view getAlgorithmType(const SequenceElement& element) {
@@ -51,6 +55,30 @@ size_t saturatedAdd(size_t a, size_t b) {
   size_t res = a + b;
   res |= -static_cast<int>(res < a);
   return res;
+}
+
+#define _STRING(x) #x
+#define STRING(x) _STRING(x)
+
+std::string demangle(const char* sym) {
+#if defined(CPPFILT_EXECUTABLE)
+  std::array<char, 128> buffer{};
+  std::string result;
+  std::string cmd = std::string{STRING(CPPFILT_EXECUTABLE)} + " -t " + sym;
+  std::cout << cmd << std::endl;
+  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
+                                                pclose);
+  if (!pipe) {
+    return sym;
+  }
+  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
+    result += buffer.data();
+  }
+  boost::trim_right(result);
+  return result;
+#else
+  return sym;
+#endif
 }
 }  // namespace
 
@@ -92,6 +120,54 @@ void Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
   if (not algorithm) {
     throw std::invalid_argument("Can not add empty/NULL algorithm");
   }
+
+  bool valid = true;
+  for (const auto* handle : algorithm->readHandles()) {
+    if (!handle->isInitialized()) {
+      ACTS_ERROR("Algorithm '" << algorithm->name()
+                               << "' has uninitialized read handle: '"
+                               << handle->name() << "'");
+
+      valid = false;
+    }
+
+    if (auto it = m_whiteBoardState.find(handle->key());
+        it != m_whiteBoardState.end()) {
+      const std::type_info& type = *it->second;
+      if (type != handle->typeInfo()) {
+        ACTS_ERROR("Adding algorithm "
+                   << algorithm->name() << ": white board will contain key '"
+                   << handle->key()
+                   << "' at this point in the sequence, but the type will be '"
+                   << demangle(type.name()) << "' and not '"
+                   << demangle(handle->typeInfo().name()) << "'");
+        valid = false;
+      }
+    } else {
+      ACTS_ERROR("Adding algorithm "
+                 << algorithm->name() << ": white board will not contain key '"
+                 << handle->key() << "' at this point in the sequence");
+      valid = false;
+    }
+  }
+
+  for (const auto* handle : algorithm->writeHandles()) {
+    if (!handle->isInitialized()) {
+      ACTS_ERROR("Algorithm '" << algorithm->name()
+                               << "' has uninitialized write handle: '"
+                               << handle->name() << "'");
+      valid = false;
+    }
+
+    if (valid) {  // only record outputs this if we're valid until here
+      m_whiteBoardState.emplace(std::pair{handle->key(), &handle->typeInfo()});
+    }
+  }
+
+  if (!valid) {
+    throw SequenceConfigurationException{};
+  }
+
   addElement(std::move(algorithm));
 }
 

@@ -41,7 +41,7 @@ class HelloRandomAlgorithm : public ActsExamples::IAlgorithm {
   // Generate random numbers from various distributions.
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
-  WriteDataHandle<HelloDataCollection> m_writeHandle{this};
+  WriteDataHandle<int> m_writeHandle{this, "Output"};
 
  private:
   Config m_cfg;

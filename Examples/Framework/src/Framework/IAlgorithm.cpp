@@ -20,12 +20,20 @@ std::string ActsExamples::IAlgorithm::name() const {
   return m_name;
 }
 
-void IAlgorithm::registerWriteHandle(const DataHandleBase &handle) {
-  m_writeHandles.emplace(std::pair{handle.key(), &handle});
+void IAlgorithm::registerWriteHandle(const DataHandleBase& handle) {
+  m_writeHandles.push_back(&handle);
 }
 
-void IAlgorithm::registerReadHandle(const DataHandleBase &handle) {
-  m_readHandles.emplace(std::pair{handle.key(), &handle});
+void IAlgorithm::registerReadHandle(const DataHandleBase& handle) {
+  m_readHandles.push_back(&handle);
+}
+
+const std::vector<const DataHandleBase*>& IAlgorithm::writeHandles() const {
+  return m_writeHandles;
+}
+
+const std::vector<const DataHandleBase*>& IAlgorithm::readHandles() const {
+  return m_readHandles;
 }
 
 }  // namespace ActsExamples

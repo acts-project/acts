@@ -21,7 +21,8 @@ class DataHandleBase {
  protected:
   virtual ~DataHandleBase() = default;
 
-  DataHandleBase(IAlgorithm* parent) : m_parent(parent) {}
+  DataHandleBase(IAlgorithm* parent, const std::string& name)
+      : m_parent(parent), m_name(name) {}
 
  public:
   const std::string& key() const { return m_key.value(); }
@@ -30,16 +31,20 @@ class DataHandleBase {
 
   bool isInitialized() const { return m_key.has_value(); }
 
+  const std::string& name() const { return m_name; }
+
  protected:
   IAlgorithm* m_parent{nullptr};
+  std::string m_name;
   std::optional<std::string> m_key{};
 };
 
 template <typename T>
 class WriteDataHandle final : public DataHandleBase {
  public:
-  WriteDataHandle(IAlgorithm* parent) : DataHandleBase{parent} {
-    std::cout << "Construct data handle" << std::endl;
+  WriteDataHandle(IAlgorithm* parent, const std::string& name)
+      : DataHandleBase{parent, name} {
+    m_parent->registerWriteHandle(*this);
   }
 
   void operator()(const AlgorithmContext& ctx, T&& value) const {
@@ -50,9 +55,6 @@ class WriteDataHandle final : public DataHandleBase {
   void initialize(const std::string& key) {
     throw_assert(!key.empty(), "Input key cannot be empty");
     m_key = key;
-    // std::cout << "init write handle with key: " << m_key.value()
-    // << " and type: " << typeInfo().name() << std::endl;
-    m_parent->registerWriteHandle(*this);
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
@@ -61,16 +63,14 @@ class WriteDataHandle final : public DataHandleBase {
 template <typename T>
 class ReadDataHandle final : public DataHandleBase {
  public:
-  ReadDataHandle(IAlgorithm* parent) : DataHandleBase{parent} {
-    std::cout << "Construct data handle" << std::endl;
+  ReadDataHandle(IAlgorithm* parent, const std::string& name)
+      : DataHandleBase{parent, name} {
+    m_parent->registerReadHandle(*this);
   }
 
   void initialize(const std::string& key) {
     throw_assert(!key.empty(), "Input key cannot be empty");
     m_key = key;
-    // std::cout << "init write handle with key: " << m_key.value()
-    // << " and type: " << typeInfo().name() << std::endl;
-    m_parent->registerReadHandle(*this);
   }
 
   const T& operator()(const AlgorithmContext& ctx) const {

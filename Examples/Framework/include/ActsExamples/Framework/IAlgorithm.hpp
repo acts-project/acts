@@ -20,7 +20,7 @@
 
 #include <memory>
 #include <string>
-#include <unordered_map>
+#include <vector>
 
 namespace ActsExamples {
 
@@ -60,6 +60,9 @@ class IAlgorithm : public SequenceElement {
   /// Finalize the algorithm
   ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 
+  const std::vector<const DataHandleBase*>& writeHandles() const;
+  const std::vector<const DataHandleBase*>& readHandles() const;
+
  protected:
   const Acts::Logger& logger() const { return *m_logger; }
 
@@ -69,7 +72,7 @@ class IAlgorithm : public SequenceElement {
  private:
   std::string m_name;
   std::unique_ptr<const Acts::Logger> m_logger;
-  std::unordered_map<std::string, const DataHandleBase*> m_writeHandles;
-  std::unordered_map<std::string, const DataHandleBase*> m_readHandles;
+  std::vector<const DataHandleBase*> m_writeHandles;
+  std::vector<const DataHandleBase*> m_readHandles;
 };
 }  // namespace ActsExamples
