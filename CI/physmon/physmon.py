@@ -37,7 +37,7 @@ from acts.examples.reconstruction import (
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TrackParamsEstimationConfig,
+    TruthSeedingAlgorithmConfig,
     addCKFTracks,
     CKFPerformanceConfig,
     addAmbiguityResolution,
@@ -181,7 +181,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
-            TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
+            TruthSeedingAlgorithmConfig(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.TruthSmeared
             if truthSmearedSeeded
             else SeedingAlgorithm.TruthEstimated
@@ -284,10 +284,6 @@ def run_vertexing(fitter, mu, events):
             s,
             trackingGeometry,
             field,
-            TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-            ParticleSmearingSigmas(
-                pRel=0.01
-            ),  # only used by SeedingAlgorithm.TruthSmeared
             SeedFinderConfigArg(
                 r=(None, 200 * u.mm),  # rMin=default, 33mm
                 deltaR=(1 * u.mm, 60 * u.mm),
@@ -300,7 +296,6 @@ def run_vertexing(fitter, mu, events):
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
-            TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.Default,
             geoSelectionConfigFile=geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
