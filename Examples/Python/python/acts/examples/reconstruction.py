@@ -260,7 +260,7 @@ def addSeeding(
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
-            inputProtoTracks, inputSeeds = addTruthSeeding(
+            inputProtoTracks, inputSeeds = addTruthEstimatedSeeding(
                 s,
                 spacePoints,
                 selectedParticles,
@@ -353,43 +353,6 @@ def addSeedingTruthSelection(
     s.addAlgorithm(selAlg)
 
 
-def addTruthSmearing(
-    sequence: acts.examples.Sequencer,
-    rnd: acts.examples.RandomNumbers,
-    selectedParticles: str,
-    particleSmearingSigmas: ParticleSmearingSigmas,
-    initialVarInflation: float,
-    logLevel: acts.logging.Level = None,
-):
-    """adds algorithm that would mimic detector response uncertainties for truth seeding
-    For parameters description see addSeeding
-    """
-
-    rnd = rnd or acts.examples.RandomNumbers(seed=42)
-    # Run particle smearing
-    ptclSmear = acts.examples.ParticleSmearing(
-        level=logLevel,
-        inputParticles=selectedParticles,
-        outputTrackParameters="estimatedparameters",
-        randomNumbers=rnd,
-        # gaussian sigmas to smear particle parameters
-        **acts.examples.defaultKWArgs(
-            sigmaD0=particleSmearingSigmas.d0,
-            sigmaD0PtA=particleSmearingSigmas.d0PtA,
-            sigmaD0PtB=particleSmearingSigmas.d0PtB,
-            sigmaZ0=particleSmearingSigmas.z0,
-            sigmaZ0PtA=particleSmearingSigmas.z0PtA,
-            sigmaZ0PtB=particleSmearingSigmas.z0PtB,
-            sigmaT0=particleSmearingSigmas.t0,
-            sigmaPhi=particleSmearingSigmas.phi,
-            sigmaTheta=particleSmearingSigmas.theta,
-            sigmaPRel=particleSmearingSigmas.pRel,
-            initialVarInflation=initialVarInflation,
-        ),
-    )
-    sequence.addAlgorithm(ptclSmear)
-
-
 def addSpacePointsMaking(
     sequence: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
@@ -414,7 +377,53 @@ def addSpacePointsMaking(
     return spAlg.config.outputSpacePoints
 
 
-def addTruthSeeding(
+def addTruthSmearing(
+    sequence: acts.examples.Sequencer,
+    rnd: acts.examples.RandomNumbers,
+    selectedParticles: str,
+    particleSmearingSigmas: ParticleSmearingSigmas,
+    initialVarInflation: float,
+    logLevel: acts.logging.Level = None,
+):
+    """adds algorithm that would mimic detector response uncertainties for truth seeding
+    For parameters description see addSeeding
+    """
+
+    rnd = rnd or acts.examples.RandomNumbers(seed=42)
+
+    truthTrkFndAlg = acts.examples.TruthTrackFinder(
+        level=logLevel,
+        inputParticles="truth_seeds_selected",
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputProtoTracks="truth_particle_tracks",
+    )
+    sequence.addAlgorithm(truthTrkFndAlg)
+
+    # Run particle smearing
+    ptclSmear = acts.examples.ParticleSmearing(
+        level=logLevel,
+        inputParticles=selectedParticles,
+        outputTrackParameters="estimatedparameters",
+        randomNumbers=rnd,
+        # gaussian sigmas to smear particle parameters
+        **acts.examples.defaultKWArgs(
+            sigmaD0=particleSmearingSigmas.d0,
+            sigmaD0PtA=particleSmearingSigmas.d0PtA,
+            sigmaD0PtB=particleSmearingSigmas.d0PtB,
+            sigmaZ0=particleSmearingSigmas.z0,
+            sigmaZ0PtA=particleSmearingSigmas.z0PtA,
+            sigmaZ0PtB=particleSmearingSigmas.z0PtB,
+            sigmaT0=particleSmearingSigmas.t0,
+            sigmaPhi=particleSmearingSigmas.phi,
+            sigmaTheta=particleSmearingSigmas.theta,
+            sigmaPRel=particleSmearingSigmas.pRel,
+            initialVarInflation=initialVarInflation,
+        ),
+    )
+    sequence.addAlgorithm(ptclSmear)
+
+
+def addTruthEstimatedSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     inputParticles: str,

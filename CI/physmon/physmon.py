@@ -80,6 +80,7 @@ def truth_tracking_kalman():
         s = acts.examples.Sequencer(
             events=10000, numThreads=-1, logLevel=acts.logging.INFO
         )
+
         tp = Path(temp)
         runTruthTrackingKalman(
             trackingGeometry,

@@ -25,7 +25,7 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-/// Construct track seeds from .
+/// Construct track seeds from particles.
 class TruthSeedingAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
