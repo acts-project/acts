@@ -37,7 +37,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   torch::Device device(torch::kCUDA);
   // timer.start();
 
-  const auto chunks = at::chunk(at::arange(edgeList.size(1)), m_cfg.n_chunks);
+  const auto chunks = at::chunk(at::arange(edgeList.size(1)), m_cfg.nChunks);
   std::vector<at::Tensor> results;
 
   for (const auto& chunk : chunks) {

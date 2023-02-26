@@ -1160,7 +1160,7 @@ def addExaTrkX(
         "knnVal": 500,
     }
 
-    filterConfig = {"cut": 0.21, "nChunks": 10}
+    filterConfig = {"cut": 0.21}
 
     gnnConfig = {
         "cut": 0.5,
@@ -1169,6 +1169,7 @@ def addExaTrkX(
     if backend == ExaTrkXBackend.Torch:
         metricLearningConfig["modelPath"] = modelDir / "embed.pt"
         filterConfig["modelPath"] = modelDir / "filter.pt"
+        filterConfig["nChunks"] = 10
         gnnConfig["modelPath"] = modelDir / "gnn.pt"
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)

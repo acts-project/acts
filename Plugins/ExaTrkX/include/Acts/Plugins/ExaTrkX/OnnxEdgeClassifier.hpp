@@ -26,7 +26,6 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
   struct Config {
     std::string modelPath;
     float cut = 0.21;
-    int n_chunks = 1;  // NOTE for GNN use 1
   };
 
   OnnxEdgeClassifier(Config cfg, const Logger &logger);
