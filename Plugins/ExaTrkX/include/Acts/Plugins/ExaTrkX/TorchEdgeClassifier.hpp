@@ -24,20 +24,20 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
   struct Config {
     std::string modelPath;
     float cut = 0.21;
-    int n_chunks = 1; // NOTE for GNN use 1
+    int nChunks = 1;  // NOTE for GNN use 1
   };
 
   TorchEdgeClassifier(Config cfg, const Logger &logger);
   ~TorchEdgeClassifier();
-  
+
   std::tuple<std::any, std::any, std::any> operator()(std::any nodes,
-                                            std::any edges) override;
-                                            
+                                                      std::any edges) override;
+
   Config config() const { return m_cfg; }
 
  private:
   const Acts::Logger &logger();
-  
+
   Config m_cfg;
   std::unique_ptr<Acts::Logger> m_logger;
   std::unique_ptr<torch::jit::Module> m_model;

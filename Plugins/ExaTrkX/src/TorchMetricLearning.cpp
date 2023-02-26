@@ -8,29 +8,21 @@
 
 #include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 
-#include <cuda.h>
-#include <cuda_runtime.h>
-#include <cuda_runtime_api.h>
-#include <grid/counting_sort.h>
-#include <grid/find_nbrs.h>
-#include <grid/grid.h>
-#include <grid/insert_points.h>
-#include <grid/prefix_sum.h>
 #include <torch/script.h>
-#include <torch/torch.h>
 
 #include "buildEdges.hpp"
 
 namespace Acts {
-    
-TorchMetricLearning::TorchMetricLearning(Config, const Logger &logger) : GraphConstructionBase(logger) {
+
+TorchMetricLearning::TorchMetricLearning(Config, const Logger &logger)
+    : GraphConstructionBase(logger) {
   c10::InferenceMode guard(true);
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
     *m_model = torch::jit::load(m_cfg.modelPath.c_str());
     m_model->eval();
-  } catch (const c10::Error& e) {
+  } catch (const c10::Error &e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());
   }
 }
@@ -38,7 +30,7 @@ TorchMetricLearning::TorchMetricLearning(Config, const Logger &logger) : GraphCo
 TorchMetricLearning::~TorchMetricLearning() {}
 
 std::tuple<std::any, std::any> TorchMetricLearning::operator()(
-      std::vector<float> &inputValues) {
+    std::vector<float> &inputValues) {
   c10::InferenceMode guard(true);
   torch::Device device(torch::kCUDA);
 
@@ -101,4 +93,4 @@ std::tuple<std::any, std::any> TorchMetricLearning::operator()(
   // timeInfo.building = timer.stopAndGetElapsedTime();
   return {eLibInputTensor, *edgeList};
 }
-}
+}  // namespace Acts

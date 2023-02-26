@@ -41,6 +41,7 @@ target_compile_options(ActsPluginExaTrkX
             
 target_compile_definitions(ActsPluginExaTrkX PUBLIC CUDA_API_PER_THREAD_DEFAULT_STREAM)
 target_compile_definitions(ActsPluginExaTrkX PUBLIC TRITON_ENABLE_GPU)
+target_compile_definitions(ActsPluginExaTrkX PUBLIC NO_CUGRAPH_OPS)
 
 target_include_directories(
   ActsPluginExaTrkX

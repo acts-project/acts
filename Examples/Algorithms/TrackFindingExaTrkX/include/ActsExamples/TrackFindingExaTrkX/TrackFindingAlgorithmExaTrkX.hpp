@@ -24,11 +24,11 @@ class TrackFindingAlgorithmExaTrkX final : public BareAlgorithm {
 
     /// Output protoTracks collection.
     std::string outputProtoTracks;
-    
+
     std::shared_ptr<Acts::GraphConstructionBase> graphConstructor;
-    
+
     std::vector<std::shared_ptr<Acts::EdgeClassificationBase>> edgeClassifiers;
-    
+
     std::shared_ptr<Acts::TrackBuildingBase> trackBuilder;
 
     /// Scaling of the input features
@@ -55,8 +55,9 @@ class TrackFindingAlgorithmExaTrkX final : public BareAlgorithm {
   const Config& config() const { return m_cfg; }
 
  private:
-   std::vector<std::vector<int>> runPipeline(std::vector<float> &inputValues, std::vector<int> &spacepointIDs) const;
-   
+  std::vector<std::vector<int>> runPipeline(
+      std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const;
+
   // configuration
   Config m_cfg;
 };

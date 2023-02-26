@@ -44,6 +44,7 @@ __global__ void weaklyConnectedComponents(std::vector<vertex_t>& rowIndices,
                                           std::vector<vertex_t>& colIndices,
                                           std::vector<weight_t>& edgeWeights,
                                           std::vector<vertex_t>& trackLabels) {
+#if 0
   cudaStream_t stream;
   CUDA_RT_CALL(cudaStreamCreate(&stream));
 
@@ -116,4 +117,5 @@ __global__ void weaklyConnectedComponents(std::vector<vertex_t>& rowIndices,
 
   raft::update_host(trackLabels.data(), d_components.data(),
                     d_components.size(), handle.get_stream());
+#endif
 }

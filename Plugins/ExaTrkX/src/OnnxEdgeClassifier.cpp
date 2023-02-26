@@ -9,10 +9,16 @@
 #include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
 
 #include <core/session/onnxruntime_cxx_api.h>
+#include <torch/script.h>
+
+#include "runSessionWithIoBinding.hpp"
+
+using namespace torch::indexing;
 
 namespace Acts {
-    
-OnnxEdgeClassifier::OnnxEdgeClassifier(Config cfg, const Logger &logger) : EdgeClassificationBase(logger), m_cfg(cfg) {
+
+OnnxEdgeClassifier::OnnxEdgeClassifier(Config cfg, const Logger &logger)
+    : EdgeClassificationBase(logger), m_cfg(cfg) {
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING,
                                      "ExaTrkX - edge classifier");
 
@@ -29,30 +35,38 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(Config cfg, const Logger &logger) : EdgeC
 
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(std::any inputNodes,
-                                            std::any inputEdges) {
-    
+std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
+    std::any inputNodes, std::any inputEdges) {
+  Ort::AllocatorWithDefaultOptions allocator;
+  auto memoryInfo = Ort::MemoryInfo::CreateCpu(
+      OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
+
+  auto eInputTensor =
+      std::any_cast<std::shared_ptr<std::vector<Ort::Value>>>(inputNodes);
+  auto edgeList = std::any_cast<std::vector<int64_t>>(inputEdges);
+  const int numEdges = edgeList.size() / 2;
+
   // ************
   // Filtering
   // ************
-  std::vector<const char*> fInputNames{"f_nodes", "f_edges"};
+  std::vector<const char *> fInputNames{"f_nodes", "f_edges"};
   std::vector<Ort::Value> fInputTensor;
-  fInputTensor.push_back(std::move(eInputTensor[0]));
+  fInputTensor.push_back(std::move(eInputTensor->at(0)));
   std::vector<int64_t> fEdgeShape{2, numEdges};
   fInputTensor.push_back(Ort::Value::CreateTensor<int64_t>(
       memoryInfo, edgeList.data(), edgeList.size(), fEdgeShape.data(),
       fEdgeShape.size()));
 
   // filtering outputs
-  std::vector<const char*> fOutputNames{"f_edge_score"};
+  std::vector<const char *> fOutputNames{"f_edge_score"};
   std::vector<float> fOutputData(numEdges);
   std::vector<int64_t> fOutputShape{numEdges, 1};
   std::vector<Ort::Value> fOutputTensor;
   fOutputTensor.push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, fOutputData.data(), fOutputData.size(), fOutputShape.data(),
       fOutputShape.size()));
-  runSessionWithIoBinding(*m_filterSession, fInputNames, fInputTensor,
-                          fOutputNames, fOutputTensor);
+  runSessionWithIoBinding(*m_model, fInputNames, fInputTensor, fOutputNames,
+                          fOutputTensor);
 
   ACTS_INFO("Get scores for " << numEdges << " edges.");
   // However, I have to convert those numbers to a score by applying sigmoid!
@@ -63,18 +77,18 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(std::any
   torch::Tensor fOutputCTen = torch::tensor(fOutputData, {torch::kFloat32});
   fOutputCTen = fOutputCTen.sigmoid();
 
-  if (debug) {
-    std::fstream out(filtering_outname, out.out);
-    if (!out.is_open()) {
-      ACTS_ERROR("failed to open " << filtering_outname);
-    } else {
-      std::copy(fOutputCTen.data_ptr<float>(),
-                fOutputCTen.data_ptr<float>() + fOutputCTen.numel(),
-                std::ostream_iterator<float>(out, " "));
-    }
-  }
+  // if (debug) {
+  //   std::fstream out(filtering_outname, out.out);
+  //   if (!out.is_open()) {
+  //     ACTS_ERROR("failed to open " << filtering_outname);
+  //   } else {
+  //     std::copy(fOutputCTen.data_ptr<float>(),
+  //               fOutputCTen.data_ptr<float>() + fOutputCTen.numel(),
+  //               std::ostream_iterator<float>(out, " "));
+  //   }
+  // }
   // std::cout << fOutputCTen.slice(0, 0, 3) << std::endl;
-  torch::Tensor filterMask = fOutputCTen > m_cfg.filterCut;
+  torch::Tensor filterMask = fOutputCTen > m_cfg.cut;
   torch::Tensor edgesAfterFCTen = edgeListCTen.index({Slice(), filterMask});
 
   std::vector<int64_t> edgesAfterFiltering;
@@ -84,6 +98,8 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(std::any
 
   int64_t numEdgesAfterF = edgesAfterFiltering.size() / 2;
   ACTS_INFO("After filtering: " << numEdgesAfterF << " edges.");
+
+  return {eInputTensor, edgesAfterFiltering, fOutputCTen};
 }
 
-}
+}  // namespace Acts

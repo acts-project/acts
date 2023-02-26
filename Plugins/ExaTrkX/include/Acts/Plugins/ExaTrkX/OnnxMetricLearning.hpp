@@ -21,7 +21,7 @@ class Value;
 
 namespace Acts {
 
-class TorchMetricLearning final : public Acts::GraphConstructionBase {
+class OnnxMetricLearning final : public Acts::GraphConstructionBase {
  public:
   struct Config {
     std::string modelPath;
@@ -31,19 +31,22 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
     int knnVal = 500;
   };
 
-  TorchMetricLearning(Config cfg, const Logger &logger);
-  ~TorchMetricLearning();
+  OnnxMetricLearning(Config cfg, const Logger& logger);
+  ~OnnxMetricLearning();
 
   std::tuple<std::any, std::any> operator()(
-      std::vector<float> &inputValues) override;
+      std::vector<float>& inputValues) override;
 
   Config config() const { return m_cfg; }
-  
- private:  
+
+ private:
+  void buildEdgesWrapper(std::vector<float>& embedFeatures,
+                         std::vector<int64_t>& edgeList,
+                         int64_t numSpacepoints) const;
+
   Config m_cfg;
   std::unique_ptr<Ort::Env> m_env;
   std::unique_ptr<Ort::Session> m_model;
 };
 
 }  // namespace Acts
-

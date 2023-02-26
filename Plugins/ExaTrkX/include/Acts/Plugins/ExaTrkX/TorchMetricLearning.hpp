@@ -36,8 +36,8 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
       std::vector<float> &inputValues) override;
 
   Config config() const { return m_cfg; }
-  
- private:  
+
+ private:
   Config m_cfg;
   std::unique_ptr<torch::jit::Module> m_model;
 };

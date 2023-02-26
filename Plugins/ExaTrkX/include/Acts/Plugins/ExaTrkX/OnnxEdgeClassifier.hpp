@@ -26,22 +26,21 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
   struct Config {
     std::string modelPath;
     float cut = 0.21;
-    int n_chunks = 1; // NOTE for GNN use 1
+    int n_chunks = 1;  // NOTE for GNN use 1
   };
 
   OnnxEdgeClassifier(Config cfg, const Logger &logger);
   ~OnnxEdgeClassifier();
-  
+
   std::tuple<std::any, std::any, std::any> operator()(std::any nodes,
-                                            std::any edges) override;
-                                            
+                                                      std::any edges) override;
+
   Config config() const { return m_cfg; }
 
- private:  
+ private:
   Config m_cfg;
   std::unique_ptr<Ort::Env> m_env;
   std::unique_ptr<Ort::Session> m_model;
 };
 
 }  // namespace Acts
-

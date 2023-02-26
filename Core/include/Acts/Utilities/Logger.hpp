@@ -716,20 +716,4 @@ std::unique_ptr<const Logger> getDefaultLogger(
 
 const Logger& getDummyLogger();
 
-
-/// Enable easy logging in a class via inheritance
-/// PS: Inheritance without virtual funtions is not so bad
-class Loggable {
-public:
-  Loggable(const Logger &logger) : m_logger(logger.clone()) {}
-  
-protected:
-  const Acts::Logger &logger() {
-    return *m_logger;
-  }
-  
-private:
-  std::unique_ptr<Acts::Logger> m_logger;
-};
-
 }  // namespace Acts

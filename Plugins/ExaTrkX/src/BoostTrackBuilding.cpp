@@ -8,13 +8,11 @@
 
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
 
-#include <torch/torch.h>
+#include <map>
 
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
-
-#include <map>
-
+#include <torch/torch.h>
 
 namespace {
 template <typename vertex_t, typename edge_t, typename weight_t>
@@ -39,20 +37,20 @@ void weaklyConnectedComponents(vertex_t numNodes,
   [[maybe_unused]] size_t num_components =
       boost::connected_components(g, &trackLabels[0]);
 }
-}
+}  // namespace
 
 namespace Acts {
-    
+
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
-      std::any nodes, std::any edges, std::any weights, std::vector<int> &spacepointIDs) {
-    
+    std::any nodes, std::any edges, std::any weights,
+    std::vector<int>& spacepointIDs) {
   const auto eLibInputTensor = std::any_cast<torch::Tensor>(nodes);
   const auto edgesAfterF = std::any_cast<torch::Tensor>(edges);
   const auto gOutput = std::any_cast<torch::Tensor>(weights);
-  
+
   const auto numSpacepoints = spacepointIDs.size();
   const auto numEdgesAfterF = gOutput.size(0);
-          
+
   using vertex_t = int32_t;
   std::vector<vertex_t> rowIndices;
   std::vector<vertex_t> colIndices;
@@ -121,8 +119,8 @@ std::vector<std::vector<int>> BoostTrackBuilding::operator()(
   // } else {
   //   return std::nullopt;
   // }
-  
+
   return trackCandidates;
 }
 
-}
+}  // namespace Acts

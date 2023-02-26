@@ -9,13 +9,13 @@
 #include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 
 #include <torch/script.h>
-#include <torch/torch.h>
 
 using namespace torch::indexing;
 
 namespace Acts {
-    
-TorchEdgeClassifier::TorchEdgeClassifier(Config cfg, const Logger &logger) : EdgeClassificationBase(logger), m_cfg(cfg) {
+
+TorchEdgeClassifier::TorchEdgeClassifier(Config cfg, const Logger& logger)
+    : EdgeClassificationBase(logger), m_cfg(cfg) {
   c10::InferenceMode guard(true);
 
   try {
@@ -29,11 +29,11 @@ TorchEdgeClassifier::TorchEdgeClassifier(Config cfg, const Logger &logger) : Edg
 
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
-std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(std::any inputNodes,
-                                            std::any inputEdges) {
-    const auto eLibInputTensor = std::any_cast<torch::Tensor>(inputNodes);
-    const auto edgeList = std::any_cast<torch::Tensor>(inputEdges);
-    
+std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
+    std::any inputNodes, std::any inputEdges) {
+  const auto eLibInputTensor = std::any_cast<torch::Tensor>(inputNodes);
+  const auto edgeList = std::any_cast<torch::Tensor>(inputEdges);
+
   torch::Device device(torch::kCUDA);
   // timer.start();
 
@@ -67,10 +67,8 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(std::an
   // print_current_cuda_meminfo(logger);
 
   // timeInfo.filtering = timer.stopAndGetElapsedTime();
-    
+
   return {eLibInputTensor, edgesAfterF, fOutput};
 }
-    
-}
 
-
+}  // namespace Acts

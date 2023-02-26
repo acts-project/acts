@@ -15,6 +15,20 @@
 
 namespace Acts {
 
+/// TODO Add to Logger.hpp
+/// Enable easy logging in a class via inheritance
+/// PS: Inheritance without virtual funtions is not so bad
+class Loggable {
+ public:
+  Loggable(const Logger &logger) : m_logger(logger.clone()) {}
+
+ protected:
+  const Acts::Logger &logger() const { return *m_logger; }
+
+ private:
+  std::unique_ptr<Acts::Logger> m_logger;
+};
+
 // TODO maybe replace std::any with some kind of variant<unique_ptr<torch>,
 // unique_ptr<onnx>>?
 // TODO maybe replace input for GraphConstructionBase with some kind of
@@ -30,15 +44,16 @@ class GraphConstructionBase : public Loggable {
 class EdgeClassificationBase : public Loggable {
  public:
   EdgeClassificationBase(const Acts::Logger &logger) : Loggable(logger) {}
-  virtual std::tuple<std::any, std::any, std::any> operator()(std::any nodes,
-                                                    std::any edges) = 0;
+  virtual std::tuple<std::any, std::any, std::any> operator()(
+      std::any nodes, std::any edges) = 0;
 };
 
 class TrackBuildingBase : public Loggable {
  public:
   TrackBuildingBase(const Acts::Logger &logger) : Loggable(logger) {}
   virtual std::vector<std::vector<int>> operator()(
-      std::any nodes, std::any edges, std::any edgeWeights, std::vector<int> &spacepointIDs) = 0;
+      std::any nodes, std::any edges, std::any edgeWeights,
+      std::vector<int> &spacepointIDs) = 0;
 };
 
 }  // namespace Acts

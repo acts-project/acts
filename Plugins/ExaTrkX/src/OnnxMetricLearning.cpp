@@ -9,30 +9,10 @@
 #include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
 
 #include <core/session/onnxruntime_cxx_api.h>
+#include <torch/script.h>
 
-namespace {
-void buildEdges(std::vector<float>& embedFeatures,
-                std::vector<int64_t>& edgeList, int64_t numSpacepoints) const {
-  torch::Device device(torch::kCUDA);
-  auto options =
-      torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
-
-  torch::Tensor embedTensor =
-      torch::tensor(embedFeatures, options)
-          .reshape({1, numSpacepoints, m_cfg.embeddingDim});
-
-  auto stackedEdges =
-      Acts::buildEdges(embedTensor, numSpacepoints, m_cfg.embeddingDim,
-                       m_cfg.rVal, m_cfg.knnVal);
-
-  stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
-
-  ACTS_INFO("copy edges to std::vector");
-  std::copy(stackedEdges.data_ptr<int64_t>(),
-            stackedEdges.data_ptr<int64_t>() + stackedEdges.numel(),
-            std::back_inserter(edgeList));
-}
-}  // namespace
+#include "buildEdges.hpp"
+#include "runSessionWithIoBinding.hpp"
 
 namespace Acts {
 
@@ -54,6 +34,28 @@ OnnxMetricLearning::OnnxMetricLearning(Config, const Logger& logger)
 
 OnnxMetricLearning::~OnnxMetricLearning() {}
 
+void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
+                                           std::vector<int64_t>& edgeList,
+                                           int64_t numSpacepoints) const {
+  torch::Device device(torch::kCUDA);
+  auto options =
+      torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
+
+  torch::Tensor embedTensor =
+      torch::tensor(embedFeatures, options)
+          .reshape({1, numSpacepoints, m_cfg.embeddingDim});
+
+  auto stackedEdges = buildEdges(embedTensor, numSpacepoints,
+                                 m_cfg.embeddingDim, m_cfg.rVal, m_cfg.knnVal);
+
+  stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
+
+  ACTS_INFO("copy edges to std::vector");
+  std::copy(stackedEdges.data_ptr<int64_t>(),
+            stackedEdges.data_ptr<int64_t>() + stackedEdges.numel(),
+            std::back_inserter(edgeList));
+}
+
 std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
     std::vector<float>& inputValues) {
   Ort::AllocatorWithDefaultOptions allocator;
@@ -74,8 +76,8 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   std::vector<int64_t> eInputShape{numSpacepoints, m_cfg.spacepointFeatures};
 
   std::vector<const char*> eInputNames{"sp_features"};
-  std::vector<Ort::Value> eInputTensor;
-  eInputTensor.push_back(Ort::Value::CreateTensor<float>(
+  auto eInputTensor = std::make_shared<std::vector<Ort::Value>>();
+  eInputTensor->push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, inputValues.data(), inputValues.size(), eInputShape.data(),
       eInputShape.size()));
 
@@ -86,28 +88,28 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   eOutputTensor.push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, eOutputData.data(), eOutputData.size(), eOutputShape.data(),
       eOutputShape.size()));
-  runSessionWithIoBinding(*m_embeddingSession, eInputNames, eInputTensor,
-                          eOutputNames, eOutputTensor);
+  runSessionWithIoBinding(*m_model, eInputNames, *eInputTensor, eOutputNames,
+                          eOutputTensor);
 
   ACTS_INFO("Embedding space of the first SP: ");
   for (size_t i = 0; i < 3; i++) {
     ACTS_INFO("\t" << eOutputData[i]);
   }
-  if (debug) {
-    std::fstream out(embedding_outname, out.out);
-    if (!out.is_open()) {
-      ACTS_ERROR("failed to open " << embedding_outname);
-    } else {
-      std::copy(eOutputData.begin(), eOutputData.end(),
-                std::ostream_iterator<float>(out, " "));
-    }
-  }
+  // if (debug) {
+  //   std::fstream out(embedding_outname, out.out);
+  //   if (!out.is_open()) {
+  //     ACTS_ERROR("failed to open " << embedding_outname);
+  //   } else {
+  //     std::copy(eOutputData.begin(), eOutputData.end(),
+  //               std::ostream_iterator<float>(out, " "));
+  //   }
+  // }
 
   // ************
   // Building Edges
   // ************
   std::vector<int64_t> edgeList;
-  buildEdges(eOutputData, edgeList, numSpacepoints);
+  buildEdgesWrapper(eOutputData, edgeList, numSpacepoints);
   int64_t numEdges = edgeList.size() / 2;
   ACTS_INFO("Built " << numEdges << " edges.");
 
@@ -118,15 +120,17 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
     ACTS_INFO(edgeList[numEdges + i]);
   }
 
-  if (debug) {
-    std::fstream out(edgelist_outname, out.out);
-    if (!out.is_open()) {
-      ACTS_ERROR("failed to open " << edgelist_outname);
-    } else {
-      std::copy(edgeList.begin(), edgeList.end(),
-                std::ostream_iterator<int64_t>(out, " "));
-    }
-  }
+  // if (debug) {
+  //   std::fstream out(edgelist_outname, out.out);
+  //   if (!out.is_open()) {
+  //     ACTS_ERROR("failed to open " << edgelist_outname);
+  //   } else {
+  //     std::copy(edgeList.begin(), edgeList.end(),
+  //               std::ostream_iterator<int64_t>(out, " "));
+  //   }
+  // }
+
+  return {eInputTensor, edgeList};
 }
 
 }  // namespace Acts

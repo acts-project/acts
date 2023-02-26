@@ -1152,22 +1152,54 @@ def addExaTrkX(
         if backend == ExaTrkXBackend.Torch
         else acts.examples.ExaTrkXTrackFindingOnnx
     )
-
-    exaTrkxFinding = exaTrkxModule(
-        modelDir=str(modelDir),
-        spacepointFeatures=3,
-        embeddingDim=8,
-        rVal=1.6,
-        knnVal=500,
-        filterCut=0.21,
-    )
+    
+    metricLearningConfig = {
+        "spacepointFeatures": 3,
+        "embeddingDim": 8,
+        "rVal": 1.6,
+        "knnVal": 500,
+    }
+    
+    filterConfig = {
+        "cut": 0.21,
+        "nChunks": 10
+    }
+    
+    gnnConfig = {
+        "cut": 0.5,
+    }
+    
+    if backend == ExaTrkXBackend.Torch:
+        metricLearningConfig["modelPath"] = modelDir / "embed.pt"
+        filterConfig["modelPath"] = modelDir / "filter.pt"
+        gnnConfig["modelPath"] = modelDir / "gnn.pt"
+        
+        graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
+        edgeClassifiers = [
+            acts.examples.TorchEdgeClassifier(**filterConfig),
+            acts.examples.TorchEdgeClassifier(**gnnConfig),
+        ]
+        trackBuilder = acts.examples.BoostTrackBuilder()
+    elif backend == ExaTrkXBackend.Onnx:
+        metricLearningConfig["modelPath"] = modelDir / "embedding.onnx"
+        filterConfig["modelPath"] = modelDir / "filtering.onnx"
+        gnnConfig["modelPath"] = modelDir / "gnn.onnx"
+        
+        graphConstructor = acts.examples.OnnxMetricLearning(**metricLearningConfig)
+        edgeClassifiers = [
+            acts.examples.OnnxEdgeClassifier(**filterConfig),
+            acts.examples.OnnxEdgeClassifier(**gnnConfig),
+        ]
+        trackBuilder = acts.examples.CugraphTrackBuilder()
 
     s.addAlgorithm(
         acts.examples.TrackFindingAlgorithmExaTrkX(
             level=customLogLevel(),
             inputSpacePoints="spacepoints",
             outputProtoTracks="protoTracks",
-            trackFinderML=exaTrkxFinding,
+            graphConstructor=graphConstructor,
+            edgeClassifiers=edgeClassifiers,
+            trackBuilder=trackBuilder,
         )
     )
 

@@ -6,12 +6,15 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include <core/session/onnxruntime_cxx_api.h>
 
-void runSessionWithIoBinding(
-    Ort::Session& sess, std::vector<const char*>& inputNames,
-    std::vector<Ort::Value>& inputData, std::vector<const char*>& outputNames,
-    std::vector<Ort::Value>& outputData) const {
+inline void runSessionWithIoBinding(Ort::Session& sess,
+                                    std::vector<const char*>& inputNames,
+                                    std::vector<Ort::Value>& inputData,
+                                    std::vector<const char*>& outputNames,
+                                    std::vector<Ort::Value>& outputData) {
   if (inputNames.size() < 1) {
     throw std::runtime_error("Onnxruntime input data maping cannot be empty");
   }

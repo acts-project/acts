@@ -6,10 +6,12 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingOnnx.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
-#include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
 #include "Acts/Plugins/ExaTrkX/BoostTrackBuilding.hpp"
+#include "Acts/Plugins/ExaTrkX/CugraphTrackBuilding.hpp"
+#include "Acts/Plugins/ExaTrkX/OnnxEdgeClassifier.hpp"
+#include "Acts/Plugins/ExaTrkX/OnnxMetricLearning.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchEdgeClassifier.hpp"
+#include "Acts/Plugins/ExaTrkX/TorchMetricLearning.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
@@ -33,10 +35,6 @@ void addExaTrkXTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   {
-    using C = Acts::ExaTrkXTrackFindingBase;
-    auto c = py::class_<C, std::shared_ptr<C>>(mex, "ExaTrkXTrackFindingBase");
-  }
-  {
     using C = Acts::GraphConstructionBase;
     auto c = py::class_<C, std::shared_ptr<C>>(mex, "GraphConstructionBase");
   }
@@ -57,7 +55,8 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
             mex, "TorchMetricLearning")
-            .def(py::init<const Config&, const Logger&>(), py::arg("config"), py::arg("logger"))
+            .def(py::init<const Config&, const Logger&>(), py::arg("config"),
+                 py::arg("logger"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -76,7 +75,8 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
             mex, "TorchEdgeClassifier")
-            .def(py::init<const Config&, const Logger&>(), py::arg("config"), py::arg("logger"))
+            .def(py::init<const Config&, const Logger&>(), py::arg("config"),
+                 py::arg("logger"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -89,40 +89,65 @@ void addExaTrkXTrackFinding(Context& ctx) {
   {
     using Alg = Acts::BoostTrackBuilding;
 
-    auto alg =
-        py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
-            mex, "TorchEdgeClassifier")
-            .def(py::init<const Logger&>(), py::arg("logger"));
+    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
+                   mex, "TorchEdgeClassifier")
+                   .def(py::init<const Logger&>(), py::arg("logger"));
   }
 #endif
 
 #ifdef ACTS_EXATRKX_ONNX_BACKEND
   {
-    using Alg = Acts::ExaTrkXTrackFindingOnnx;
+    using Alg = Acts::OnnxMetricLearning;
     using Config = Alg::Config;
 
     auto alg =
-        py::class_<Alg, Acts::ExaTrkXTrackFindingBase, std::shared_ptr<Alg>>(
-            mex, "ExaTrkXTrackFindingOnnx")
-            .def(py::init<const Config&>(), py::arg("config"), py::arg("logger"))
+        py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
+            mex, "OnnxMetricLearning")
+            .def(py::init<const Config&, const Logger&>(), py::arg("config"),
+                 py::arg("logger"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(modelDir);
+    ACTS_PYTHON_MEMBER(modelPath);
     ACTS_PYTHON_MEMBER(spacepointFeatures);
     ACTS_PYTHON_MEMBER(embeddingDim);
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
-    ACTS_PYTHON_MEMBER(filterCut);
     ACTS_PYTHON_STRUCT_END();
+  }
+  {
+    using Alg = Acts::OnnxEdgeClassifier;
+    using Config = Alg::Config;
+
+    auto alg =
+        py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
+            mex, "OnnxEdgeClassifier")
+            .def(py::init<const Config&, const Logger&>(), py::arg("config"),
+                 py::arg("logger"))
+            .def_property_readonly("config", &Alg::config);
+
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(modelPath);
+    ACTS_PYTHON_MEMBER(cut);
+    ACTS_PYTHON_MEMBER(n_chunks);
+    ACTS_PYTHON_STRUCT_END();
+  }
+  {
+    using Alg = Acts::CugraphTrackBuilding;
+
+    auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
+                   mex, "CugraphTrackBuilding")
+                   .def(py::init<const Logger&>(), py::arg("logger"));
   }
 #endif
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
                                 "TrackFindingAlgorithmExaTrkX",
                                 inputSpacePoints, outputProtoTracks,
-                                graphConstructor, edgeClassifiers, trackBuilder, rScale, phiScale, zScale);
+                                graphConstructor, edgeClassifiers, trackBuilder,
+                                rScale, phiScale, zScale);
 }
 
 }  // namespace Acts::Python
