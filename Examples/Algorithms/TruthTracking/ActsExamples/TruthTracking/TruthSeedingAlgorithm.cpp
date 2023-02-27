@@ -95,7 +95,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
 
   std::unordered_map<Index, const SimSpacePoint*> spMap;
 
-  for (const auto &spp : spacePointPtrs) {
+  for (const auto& spp : spacePointPtrs) {
     if (spp->sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in space point");
       continue;
