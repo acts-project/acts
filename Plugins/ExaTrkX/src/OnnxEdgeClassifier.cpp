@@ -64,17 +64,24 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
                                         m_inputNameEdges.c_str()};
   std::vector<Ort::Value> fInputTensor;
   fInputTensor.push_back(std::move(*eInputTensor));
+  std::vector<int64_t> fEdgeShape{2, numEdges};
   fInputTensor.push_back(Ort::Value::CreateTensor<int64_t>(
-      memoryInfo, edgeList.data(), edgeList.size(), m_inputShapeEdges.data(),
-      m_inputShapeEdges.size()));
+      memoryInfo, edgeList.data(), edgeList.size(), fEdgeShape.data(),
+      fEdgeShape.size()));
 
   // filtering outputs
   std::vector<const char *> fOutputNames{m_outputNameScores.c_str()};
   std::vector<float> fOutputData(numEdges);
+
+  auto outputDims = m_model->GetOutputTypeInfo(0)
+                        .GetTensorTypeAndShapeInfo()
+                        .GetDimensionsCount();
+  using Shape = std::vector<int64_t>;
+  Shape fOutputShape = outputDims == 2 ? Shape{numEdges, 1} : Shape{numEdges};
   std::vector<Ort::Value> fOutputTensor;
   fOutputTensor.push_back(Ort::Value::CreateTensor<float>(
-      memoryInfo, fOutputData.data(), fOutputData.size(),
-      m_outputShapeScores.data(), m_outputShapeScores.size()));
+      memoryInfo, fOutputData.data(), fOutputData.size(), fOutputShape.data(),
+      fOutputShape.size()));
   runSessionWithIoBinding(*m_model, fInputNames, fInputTensor, fOutputNames,
                           fOutputTensor);
 
