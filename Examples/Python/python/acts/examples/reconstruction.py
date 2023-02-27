@@ -246,7 +246,7 @@ def addSeeding(
     # finding and track parameters estimation
     if seedingAlgorithm == SeedingAlgorithm.TruthSmeared:
         logger.info("Using smeared truth particles for seeding")
-        addTruthSmearing(
+        addTruthSmearedSeeding(
             s,
             rnd,
             selectedParticles,
@@ -378,9 +378,9 @@ def addSpacePointsMaking(
     return spAlg.config.outputSpacePoints
 
 
-def addTruthSmearing(
+def addTruthSmearedSeeding(
     sequence: acts.examples.Sequencer,
-    rnd: acts.examples.RandomNumbers,
+    rnd: Optional[acts.examples.RandomNumbers],
     selectedParticles: str,
     particleSmearingSigmas: ParticleSmearingSigmas,
     initialVarInflation: List[float],
@@ -391,15 +391,6 @@ def addTruthSmearing(
     """
 
     rnd = rnd or acts.examples.RandomNumbers(seed=42)
-
-    truthTrkFndAlg = acts.examples.TruthTrackFinder(
-        level=logLevel,
-        inputParticles="truth_seeds_selected",
-        inputMeasurementParticlesMap="measurement_particles_map",
-        outputProtoTracks="truth_particle_tracks",
-    )
-    sequence.addAlgorithm(truthTrkFndAlg)
-
     # Run particle smearing
     ptclSmear = acts.examples.ParticleSmearing(
         level=logLevel,
@@ -422,6 +413,14 @@ def addTruthSmearing(
         ),
     )
     sequence.addAlgorithm(ptclSmear)
+
+    truthTrkFndAlg = acts.examples.TruthTrackFinder(
+        level=logLevel,
+        inputParticles=selectedParticles,
+        inputMeasurementParticlesMap="measurement_particles_map",
+        outputProtoTracks="truth_particle_tracks",
+    )
+    sequence.addAlgorithm(truthTrkFndAlg)
 
 
 def addTruthEstimatedSeeding(
@@ -764,16 +763,15 @@ def addKalmanTracks(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
-    directNavigation=False,
-    reverseFilteringMomThreshold=0 * u.GeV,
-    multipleScattering=True,
-    energyLoss=True,
+    directNavigation: bool = False,
+    reverseFilteringMomThreshold: float = 0 * u.GeV,
+    inputProtoTracks: str = "truth_particle_tracks",
+    multipleScattering: bool = True,
+    energyLoss: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
-
-    inputProtoTracks = "truth_particle_tracks"
 
     if directNavigation:
         srfSortAlg = acts.examples.SurfaceSortingAlgorithm(
@@ -826,6 +824,7 @@ def addTruthTrackingGsf(
     s: acts.examples.Sequencer,
     trackingGeometry: acts.TrackingGeometry,
     field: acts.MagneticFieldProvider,
+    inputProtoTracks: str = "truth_particle_tracks",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
 
@@ -845,7 +844,7 @@ def addTruthTrackingGsf(
         level=customLogLevel(),
         inputMeasurements="measurements",
         inputSourceLinks="sourcelinks",
-        inputProtoTracks="truth_particle_tracks",
+        inputProtoTracks=inputProtoTracks,
         inputInitialTrackParameters="estimatedparameters",
         outputTracks="gsf_tracks",
         directNavigation=False,
