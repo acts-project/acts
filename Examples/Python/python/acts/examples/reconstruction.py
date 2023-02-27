@@ -10,7 +10,7 @@ import acts.examples
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
-    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal"
+    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal FTF"
 )
 
 TruthSeedRanges = namedtuple(
@@ -285,6 +285,16 @@ def addSeeding(
         elif seedingAlgorithm == SeedingAlgorithm.Orthogonal:
             logger.info("Using orthogonal seeding")
             inputProtoTracks, inputSeeds = addOrthogonalSeeding(
+                s,
+                spacePoints,
+                seedFinderConfigArg,
+                seedFinderOptionsArg,
+                seedFilterConfigArg,
+                logLevel,
+            )
+        elif seedingAlgorithm == SeedingAlgorithm.FTF:
+            logger.info("Using FTF seeding")
+            inputProtoTracks, inputSeeds = addFTFSeeding(
                 s,
                 spacePoints,
                 seedFinderConfigArg,
@@ -677,110 +687,110 @@ def addOrthogonalSeeding(
     sequence.addAlgorithm(seedingAlg)
     return seedingAlg.config.outputProtoTracks, seedingAlg.config.outputSeeds
 
-# def addFTFSeeding(
-#     sequence: acts.examples.Sequencer,
-#     spacePoints: str,
-#     seedFinderConfigArg: SeedFinderConfigArg,
-#     seedFinderOptionsArg: SeedFinderOptionsArg,
-#     seedFilterConfigArg: SeedFilterConfigArg,
-#     logLevel: acts.logging.Level = None,
-# ):  
-#     """trying to make own seeding algorithm 
-#     eventually will use FTF
-#     """
-#     #just copied these from standard and ortho seeding, same input and outputs in both 
-#     ##which are then inputs to the unique seeding alg (some extra in standard, used common ones)
-#     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
-#     seedFinderConfig = acts.SeedFinderOrthogonalConfig(
-#         **acts.examples.defaultKWArgs(
-#             rMin=seedFinderConfigArg.r[0],
-#             rMax=seedFinderConfigArg.r[1],
-#             deltaRMinTopSP=(
-#                 seedFinderConfigArg.deltaR[0]
-#                 if seedFinderConfigArg.deltaRTopSP[0] is None
-#                 else seedFinderConfigArg.deltaRTopSP[0]
-#             ),
-#             deltaRMaxTopSP=(
-#                 seedFinderConfigArg.deltaR[1]
-#                 if seedFinderConfigArg.deltaRTopSP[1] is None
-#                 else seedFinderConfigArg.deltaRTopSP[1]
-#             ),
-#             deltaRMinBottomSP=(
-#                 seedFinderConfigArg.deltaR[0]
-#                 if seedFinderConfigArg.deltaRBottomSP[0] is None
-#                 else seedFinderConfigArg.deltaRBottomSP[0]
-#             ),
-#             deltaRMaxBottomSP=(
-#                 seedFinderConfigArg.deltaR[1]
-#                 if seedFinderConfigArg.deltaRBottomSP[1] is None
-#                 else seedFinderConfigArg.deltaRBottomSP[1]
-#             ),
-#             collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
-#             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-#             zMin=seedFinderConfigArg.z[0],
-#             zMax=seedFinderConfigArg.z[1],
-#             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
-#             cotThetaMax=seedFinderConfigArg.cotThetaMax,
-#             sigmaScattering=seedFinderConfigArg.sigmaScattering,
-#             radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
-#             minPt=seedFinderConfigArg.minPt,
-#             impactMax=seedFinderConfigArg.impactMax,
-#             interactionPointCut=seedFinderConfigArg.interactionPointCut,
-#             deltaZMax=seedFinderConfigArg.deltaZMax,
-#             maxPtScattering=seedFinderConfigArg.maxPtScattering,
-#             rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
-#             useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
-#             seedConfirmation=seedFinderConfigArg.seedConfirmation,
-#             centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
-#             forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
-#         ),
-#     )
-    # seedFinderOptions = acts.SeedFinderOptions(
-    #     **acts.examples.defaultKWArgs(
-    #         beamPos=acts.Vector2(0.0, 0.0)
-    #         if seedFinderOptionsArg.beamPos == (None, None)
-    #         else acts.Vector2(
-    #             seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
-    #         ),
-    #         bFieldInZ=seedFinderOptionsArg.bFieldInZ,
-    #     )
-    # ) 
-    # seedFilterConfig =  acts.SeedFilterConfig(
-    #     **acts.examples.defaultKWArgs(
-    #         maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-    #         deltaRMin=(
-    #             seedFinderConfigArg.deltaR[0]
-    #             if seedFilterConfigArg.deltaRMin is None
-    #             else seedFilterConfigArg.deltaRMin
-    #         ),
-    #         impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
-    #         zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
-    #         compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
-    #         compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
-    #         numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
-    #         seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
-    #         seedConfirmation=seedFilterConfigArg.seedConfirmation,
-    #         curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
-    #         maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
-    #         maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
-    #         useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
-    #     )
-    # )
+def addFTFSeeding(
+    sequence: acts.examples.Sequencer,
+    spacePoints: str,
+    seedFinderConfigArg: SeedFinderConfigArg,
+    seedFinderOptionsArg: SeedFinderOptionsArg,
+    seedFilterConfigArg: SeedFilterConfigArg,
+    logLevel: acts.logging.Level = None,
+):  
+    """trying to make own seeding algorithm 
+    eventually will use FTF
+    """
+    #just copied these from standard and ortho seeding, same input and outputs in both 
+    ##which are then inputs to the unique seeding alg (some extra in standard, used common ones)
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    seedFinderConfig = acts.SeedFinderOrthogonalConfig(
+        **acts.examples.defaultKWArgs(
+            rMin=seedFinderConfigArg.r[0],
+            rMax=seedFinderConfigArg.r[1],
+            deltaRMinTopSP=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRTopSP[0] is None
+                else seedFinderConfigArg.deltaRTopSP[0]
+            ),
+            deltaRMaxTopSP=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRTopSP[1] is None
+                else seedFinderConfigArg.deltaRTopSP[1]
+            ),
+            deltaRMinBottomSP=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFinderConfigArg.deltaRBottomSP[0] is None
+                else seedFinderConfigArg.deltaRBottomSP[0]
+            ),
+            deltaRMaxBottomSP=(
+                seedFinderConfigArg.deltaR[1]
+                if seedFinderConfigArg.deltaRBottomSP[1] is None
+                else seedFinderConfigArg.deltaRBottomSP[1]
+            ),
+            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
+            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
+            zMin=seedFinderConfigArg.z[0],
+            zMax=seedFinderConfigArg.z[1],
+            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
+            cotThetaMax=seedFinderConfigArg.cotThetaMax,
+            sigmaScattering=seedFinderConfigArg.sigmaScattering,
+            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
+            minPt=seedFinderConfigArg.minPt,
+            impactMax=seedFinderConfigArg.impactMax,
+            interactionPointCut=seedFinderConfigArg.interactionPointCut,
+            deltaZMax=seedFinderConfigArg.deltaZMax,
+            maxPtScattering=seedFinderConfigArg.maxPtScattering,
+            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
+            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
+            seedConfirmation=seedFinderConfigArg.seedConfirmation,
+            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
+            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
+        ),
+    )
+    seedFinderOptions = acts.SeedFinderOptions(
+        **acts.examples.defaultKWArgs(
+            beamPos=acts.Vector2(0.0, 0.0)
+            if seedFinderOptionsArg.beamPos == (None, None)
+            else acts.Vector2(
+                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[1]
+            ),
+            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
+        )
+    ) 
+    seedFilterConfig =  acts.SeedFilterConfig(
+        **acts.examples.defaultKWArgs(
+            maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
+            deltaRMin=(
+                seedFinderConfigArg.deltaR[0]
+                if seedFilterConfigArg.deltaRMin is None
+                else seedFilterConfigArg.deltaRMin
+            ),
+            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
+            zOriginWeightFactor=seedFilterConfigArg.zOriginWeightFactor,
+            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
+            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
+            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
+            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
+            seedConfirmation=seedFilterConfigArg.seedConfirmation,
+            curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
+            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
+            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
+            useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
+        )
+    )
 
-    # ##using ortho algorithm to check the python part works 
-    # seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
-    # #seedingAlg = acts.examples.SeedingFTFAlgorithm(
-    #     level=logLevel,
-    #     inputSpacePoints=[spacePoints],
-    #     outputSeeds="seeds",
-    #     outputProtoTracks="prototracks",
-    #     seedFilterConfig=seedFilterConfig,
-    #     seedFinderConfig=seedFinderConfig,
-    #     seedFinderOptions=seedFinderOptions,
-    # )
+    ##using ortho algorithm to check the python part works 
+    seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
+    #seedingAlg = acts.examples.SeedingFTFAlgorithm(
+        level=logLevel,
+        inputSpacePoints=[spacePoints],
+        outputSeeds="seeds",
+        outputProtoTracks="prototracks",
+        seedFilterConfig=seedFilterConfig,
+        seedFinderConfig=seedFinderConfig,
+        seedFinderOptions=seedFinderOptions,
+    )
 
-    # sequence.addAlgorithm(seedingAlg) 
-    # return seedingAlg.config.outputProtoTracks, seedingAlg.config.outputSeeds 
+    sequence.addAlgorithm(seedingAlg) 
+    return seedingAlg.config.outputProtoTracks, seedingAlg.config.outputSeeds 
 
 
 def addSeedPerformanceWriters(
