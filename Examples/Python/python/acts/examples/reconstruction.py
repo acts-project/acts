@@ -354,30 +354,6 @@ def addSeedingTruthSelection(
     s.addAlgorithm(selAlg)
 
 
-def addSpacePointsMaking(
-    sequence: acts.examples.Sequencer,
-    trackingGeometry: acts.TrackingGeometry,
-    geoSelectionConfigFile: Union[Path, str],
-    logLevel: acts.logging.Level = None,
-):
-    """adds space points making
-    For parameters description see addSeeding
-    """
-    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
-    spAlg = acts.examples.SpacePointMaker(
-        level=logLevel,
-        inputSourceLinks="sourcelinks",
-        inputMeasurements="measurements",
-        outputSpacePoints="spacepoints",
-        trackingGeometry=trackingGeometry,
-        geometrySelection=acts.examples.readJsonGeometryList(
-            str(geoSelectionConfigFile)
-        ),
-    )
-    sequence.addAlgorithm(spAlg)
-    return spAlg.config.outputSpacePoints
-
-
 def addTruthSmearedSeeding(
     sequence: acts.examples.Sequencer,
     rnd: Optional[acts.examples.RandomNumbers],
@@ -453,6 +429,30 @@ def addTruthEstimatedSeeding(
     sequence.addAlgorithm(truthSeeding)
 
     return truthSeeding.config.outputProtoTracks, truthSeeding.config.outputSeeds
+
+
+def addSpacePointsMaking(
+    sequence: acts.examples.Sequencer,
+    trackingGeometry: acts.TrackingGeometry,
+    geoSelectionConfigFile: Union[Path, str],
+    logLevel: acts.logging.Level = None,
+):
+    """adds space points making
+    For parameters description see addSeeding
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    spAlg = acts.examples.SpacePointMaker(
+        level=logLevel,
+        inputSourceLinks="sourcelinks",
+        inputMeasurements="measurements",
+        outputSpacePoints="spacepoints",
+        trackingGeometry=trackingGeometry,
+        geometrySelection=acts.examples.readJsonGeometryList(
+            str(geoSelectionConfigFile)
+        ),
+    )
+    sequence.addAlgorithm(spAlg)
+    return spAlg.config.outputSpacePoints
 
 
 def addStandardSeeding(
