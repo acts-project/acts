@@ -27,7 +27,7 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
     int nChunks = 1;  // NOTE for GNN use 1
   };
 
-  TorchEdgeClassifier(Config cfg);
+  TorchEdgeClassifier(const Config &cfg);
   ~TorchEdgeClassifier();
 
   std::tuple<std::any, std::any, std::any> operator()(

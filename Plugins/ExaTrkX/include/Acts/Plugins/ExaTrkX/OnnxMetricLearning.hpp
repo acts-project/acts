@@ -31,7 +31,7 @@ class OnnxMetricLearning final : public Acts::GraphConstructionBase {
     int knnVal = 500;
   };
 
-  OnnxMetricLearning(Config cfg);
+  OnnxMetricLearning(const Config& cfg);
   ~OnnxMetricLearning();
 
   std::tuple<std::any, std::any> operator()(std::vector<float>& inputValues,

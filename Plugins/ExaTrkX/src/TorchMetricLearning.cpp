@@ -14,12 +14,12 @@
 
 namespace Acts {
 
-TorchMetricLearning::TorchMetricLearning(Config) {
+TorchMetricLearning::TorchMetricLearning(const Config &cfg) : m_cfg(cfg) {
   c10::InferenceMode guard(true);
 
   try {
     m_model = std::make_unique<torch::jit::Module>();
-    *m_model = torch::jit::load(m_cfg.modelPath.c_str());
+    *m_model = torch::jit::load(m_cfg.modelPath);
     m_model->eval();
   } catch (const c10::Error &e) {
     throw std::invalid_argument("Failed to load models: " + e.msg());

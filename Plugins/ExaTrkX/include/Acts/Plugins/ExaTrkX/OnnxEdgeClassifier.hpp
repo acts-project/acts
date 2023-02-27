@@ -28,7 +28,7 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
     float cut = 0.21;
   };
 
-  OnnxEdgeClassifier(Config cfg);
+  OnnxEdgeClassifier(const Config &cfg);
   ~OnnxEdgeClassifier();
 
   std::tuple<std::any, std::any, std::any> operator()(

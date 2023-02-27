@@ -16,7 +16,7 @@
 
 namespace Acts {
 
-OnnxMetricLearning::OnnxMetricLearning(Config) {
+OnnxMetricLearning::OnnxMetricLearning(const Config& cfg) : m_cfg(cfg) {
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING,
                                      "ExaTrkX - metric learning");
 
