@@ -36,10 +36,11 @@ class SimParticleTranslation final : public G4VUserPrimaryGeneratorAction {
     /// The input particle collection
     std::string inputParticles = "";
 
-    /// Force pdgCode & mass (this is needed for Geantino simulation)
-    bool forceParticle = false;
-    G4int forcedPdgCode = 998;
-    G4double forcedMass = 0.;
+    /// Force pdgCode & mass & charge in G4 units (this is needed for Geantino
+    /// simulation)
+    std::optional<G4int> forcedPdgCode;
+    std::optional<G4double> forcedCharge;  // e.g. 1 for charged geantino
+    std::optional<G4double> forcedMass;    // e.g. 0 for geantino
 
     /// The number of hits per particle to be expected
     /// @note best to include secondaries for that

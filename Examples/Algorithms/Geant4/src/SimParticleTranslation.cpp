@@ -95,24 +95,24 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     Acts::Vector4 mom4 = part.fourMomentum() * convertEnergy;
 
     // Particle properties, may be forced to specific value
-    G4int particlePdgCode =
-        m_cfg.forceParticle ? m_cfg.forcedPdgCode : part.pdg();
+    G4int particlePdgCode = m_cfg.forcedPdgCode.value_or(part.pdg());
+    G4double particleCharge = m_cfg.forcedCharge.value_or(part.charge());
     G4double particleMass =
-        m_cfg.forceParticle ? part.mass() * convertEnergy : 0.;
+        m_cfg.forcedMass.value_or(part.mass() * convertEnergy);
 
     // Check if it is a Geantino / ChargedGeantino
     G4ParticleDefinition* particleDefinition =
         particleTable->FindParticle(particlePdgCode);
     if (particleDefinition == nullptr) {
-      switch (particlePdgCode) {
-        case 999: {
-          particleDefinition = G4Geantino::Definition();
-        } break;
-        case 998: {
-          particleDefinition = G4ChargedGeantino::Definition();
-        } break;
-        default:
-          break;
+      if (particlePdgCode == 0 && particleMass == 0 && particleCharge == 0) {
+        particleDefinition = G4Geantino::Definition();
+      }
+      if (particlePdgCode == 0 && particleMass == 0 && particleCharge != 0) {
+        if (particleCharge != 1) {
+          ACTS_ERROR("invalid charged geantino charge " << particleCharge
+                                                        << ". should be 1");
+        }
+        particleDefinition = G4ChargedGeantino::Definition();
       }
     }
 
@@ -127,14 +127,14 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
                  << particleDefinition->GetParticleName()
                  << "' and properties:");
     ACTS_VERBOSE(" -> mass: " << particleMass);
+    ACTS_VERBOSE(" -> charge: " << particleCharge);
     ACTS_VERBOSE(" -> momentum: " << mom4.transpose());
-    ACTS_VERBOSE(" -> charge: " << part.charge());
 
     G4PrimaryParticle* particle = new G4PrimaryParticle(particleDefinition);
 
     particle->SetMass(particleMass);
+    particle->SetCharge(particleCharge);
     particle->Set4Momentum(mom4[0], mom4[1], mom4[2], mom4[3]);
-    particle->SetCharge(part.charge());
     particle->SetTrackID(trackId++);
 
     // Add the primary to the vertex
