@@ -20,10 +20,10 @@ namespace Acts {
 /// PS: Inheritance without virtual funtions is not so bad
 class Loggable {
  public:
-  Loggable(const Logger &logger) : m_logger(logger.clone()) {}
+  Loggable(const Logger &logger);
 
  protected:
-  const Acts::Logger &logger() const { return *m_logger; }
+  const Acts::Logger &logger() const;
 
  private:
   std::unique_ptr<Acts::Logger> m_logger;
