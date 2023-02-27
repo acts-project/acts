@@ -90,7 +90,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     using Alg = Acts::BoostTrackBuilding;
 
     auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
-                   mex, "TorchEdgeClassifier")
+                   mex, "BoostTrackBuilding")
                    .def(py::init<const Logger&>(), py::arg("logger"));
   }
 #endif
