@@ -39,13 +39,6 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg) : m_cfg(cfg) {
       std::string(m_model->GetInputNameAllocated(1, allocator).get());
   m_outputNameScores =
       std::string(m_model->GetOutputNameAllocated(0, allocator).get());
-
-  m_inputShapeNodes =
-      m_model->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
-  m_inputShapeEdges =
-      m_model->GetInputTypeInfo(1).GetTensorTypeAndShapeInfo().GetShape();
-  m_outputShapeScores =
-      m_model->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
 }
 
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
