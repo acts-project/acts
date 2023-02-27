@@ -9,3 +9,7 @@
 #include "Acts/Plugins/ExaTrkX/Stages.hpp"
 
 Acts::Loggable::Loggable(const Logger &logger) : m_logger(logger.clone()) {}
+
+const Acts::Logger &Acts::Loggable::logger() const {
+  return *m_logger;
+}
