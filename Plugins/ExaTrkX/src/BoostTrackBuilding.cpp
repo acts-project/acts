@@ -41,8 +41,8 @@ void weaklyConnectedComponents(vertex_t numNodes,
 
 namespace Acts {
 
-
-BoostTrackBuilding::BoostTrackBuilding(const Logger &logger) : TrackBuildingBase(logger) {}
+BoostTrackBuilding::BoostTrackBuilding(const Logger& logger)
+    : TrackBuildingBase(logger) {}
 
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     std::any nodes, std::any edges, std::any weights,
