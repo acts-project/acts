@@ -106,7 +106,7 @@ SeedingAlgorithmConfigArg = namedtuple(
     defaults=[None] * 4,
 )
 
-TruthSeedingAlgorithmConfig = namedtuple(
+TruthEstimatedSeedingAlgorithmConfigArg = namedtuple(
     "TruthSeederConfig",
     [
         "deltaR",  # (min,max)
@@ -158,7 +158,7 @@ class VertexFinder(Enum):
     seedFilterConfigArg=SeedFilterConfigArg,
     spacePointGridConfigArg=SpacePointGridConfigArg,
     seedingAlgorithmConfigArg=SeedingAlgorithmConfigArg,
-    truthSeedingAlgorithmConfig=TruthSeedingAlgorithmConfig,
+    truthEstimatedSeedingAlgorithmConfigArg=TruthEstimatedSeedingAlgorithmConfigArg,
     logLevel=acts.logging.Level,
 )
 def addSeeding(
@@ -175,7 +175,7 @@ def addSeeding(
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
-    truthSeedingAlgorithmConfig: TruthSeedingAlgorithmConfig = TruthSeedingAlgorithmConfig(),
+    truthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg = TruthEstimatedSeedingAlgorithmConfigArg(),
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
@@ -265,7 +265,7 @@ def addSeeding(
                 s,
                 spacePoints,
                 selectedParticles,
-                truthSeedingAlgorithmConfig,
+                truthEstimatedSeedingAlgorithmConfigArg,
                 logLevel,
             )
         elif seedingAlgorithm == SeedingAlgorithm.Default:
@@ -403,7 +403,7 @@ def addTruthEstimatedSeeding(
     sequence: acts.examples.Sequencer,
     spacePoints: str,
     inputParticles: str,
-    truthSeedingAlgorithmConfig: TruthSeedingAlgorithmConfig,
+    TruthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg,
     logLevel: acts.logging.Level = None,
 ):
     """adds truth seeding
@@ -422,8 +422,8 @@ def addTruthEstimatedSeeding(
         outputSeeds="seeds",
         outputProtoTracks="prototracks",
         **acts.examples.defaultKWArgs(
-            deltaRMin=truthSeedingAlgorithmConfig.deltaR[0],
-            deltaRMax=truthSeedingAlgorithmConfig.deltaR[1],
+            deltaRMin=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[0],
+            deltaRMax=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[1],
         ),
     )
     sequence.addAlgorithm(truthSeeding)

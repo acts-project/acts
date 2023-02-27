@@ -37,7 +37,7 @@ from acts.examples.reconstruction import (
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TruthSeedingAlgorithmConfig,
+    TruthEstimatedSeedingAlgorithmConfigArg,
     addCKFTracks,
     CKFPerformanceConfig,
     addAmbiguityResolution,
@@ -182,7 +182,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
-            TruthSeedingAlgorithmConfig(deltaR=(10.0 * u.mm, None)),
+            TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.TruthSmeared
             if truthSmearedSeeded
             else SeedingAlgorithm.TruthEstimated
