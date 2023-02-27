@@ -31,11 +31,11 @@ class OnnxMetricLearning final : public Acts::GraphConstructionBase {
     int knnVal = 500;
   };
 
-  OnnxMetricLearning(Config cfg, const Logger& logger);
+  OnnxMetricLearning(Config cfg);
   ~OnnxMetricLearning();
 
-  std::tuple<std::any, std::any> operator()(
-      std::vector<float>& inputValues) override;
+  std::tuple<std::any, std::any> operator()(std::vector<float>& inputValues,
+                                            const Logger& logger) override;
 
   Config config() const { return m_cfg; }
 

@@ -29,7 +29,7 @@ class TorchMetricLearning final : public Acts::GraphConstructionBase {
     int knnVal = 500;
   };
 
-  TorchMetricLearning(Config cfg, const Logger &logger);
+  TorchMetricLearning(Config cfg);
   ~TorchMetricLearning();
 
   std::tuple<std::any, std::any> operator()(std::vector<float> &inputValues,

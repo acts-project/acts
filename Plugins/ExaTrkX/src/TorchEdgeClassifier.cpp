@@ -29,7 +29,7 @@ TorchEdgeClassifier::TorchEdgeClassifier(Config cfg) : m_cfg(cfg) {
 TorchEdgeClassifier::~TorchEdgeClassifier() {}
 
 std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
-    std::any inputNodes, std::any inputEdges) {
+    std::any inputNodes, std::any inputEdges, const Logger& logger) {
   const auto eLibInputTensor = std::any_cast<torch::Tensor>(inputNodes);
   const auto edgeList = std::any_cast<torch::Tensor>(inputEdges);
 

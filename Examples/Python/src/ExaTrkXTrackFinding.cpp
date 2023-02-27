@@ -55,8 +55,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
             mex, "TorchMetricLearning")
-            .def(py::init<const Config&, const Logger&>(), py::arg("config"),
-                 py::arg("logger"))
+            .def(py::init<const Config&>(), py::arg("config"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -75,8 +74,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
             mex, "TorchEdgeClassifier")
-            .def(py::init<const Config&, const Logger&>(), py::arg("config"),
-                 py::arg("logger"))
+            .def(py::init<const Config&>(), py::arg("config"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -91,7 +89,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
 
     auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
                    mex, "BoostTrackBuilding")
-                   .def(py::init<const Logger&>(), py::arg("logger"));
+                   .def(py::init<>());
   }
 #endif
 
@@ -103,8 +101,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::GraphConstructionBase, std::shared_ptr<Alg>>(
             mex, "OnnxMetricLearning")
-            .def(py::init<const Config&, const Logger&>(), py::arg("config"),
-                 py::arg("logger"))
+            .def(py::init<const Config&>(), py::arg("config"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -123,8 +120,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
     auto alg =
         py::class_<Alg, Acts::EdgeClassificationBase, std::shared_ptr<Alg>>(
             mex, "OnnxEdgeClassifier")
-            .def(py::init<const Config&, const Logger&>(), py::arg("config"),
-                 py::arg("logger"))
+            .def(py::init<const Config&>(), py::arg("config"))
             .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
@@ -138,7 +134,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
 
     auto alg = py::class_<Alg, Acts::TrackBuildingBase, std::shared_ptr<Alg>>(
                    mex, "CugraphTrackBuilding")
-                   .def(py::init<const Logger&>(), py::arg("logger"));
+                   .def(py::init<>());
   }
 #endif
 

@@ -17,8 +17,6 @@ namespace Acts {
 
 class BoostTrackBuilding final : public Acts::TrackBuildingBase {
  public:
-  BoostTrackBuilding(const Logger &logger);
-
   std::vector<std::vector<int>> operator()(std::any nodes, std::any edges,
                                            std::any edge_weights,
                                            std::vector<int> &spacepointIDs,

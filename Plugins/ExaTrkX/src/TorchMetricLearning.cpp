@@ -29,7 +29,7 @@ TorchMetricLearning::TorchMetricLearning(Config) {
 TorchMetricLearning::~TorchMetricLearning() {}
 
 std::tuple<std::any, std::any> TorchMetricLearning::operator()(
-    std::vector<float> &inputValues) {
+    std::vector<float> &inputValues, const Logger &logger) {
   c10::InferenceMode guard(true);
   torch::Device device(torch::kCUDA);
 
