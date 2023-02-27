@@ -58,8 +58,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  // Read seeds or create them from proto tracks and space points
-  SimSeedContainer seeds =
+  auto const& seeds =
       ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
   ACTS_VERBOSE("Read " << seeds.size() << " seeds");
 
@@ -71,6 +70,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   // Loop over all found seeds to estimate track parameters
   for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
+
     // Get the bottom space point and its reference surface
     const auto bottomSP = seed.sp().front();
     if (bottomSP->sourceLinks().empty()) {

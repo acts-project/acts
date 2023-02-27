@@ -64,10 +64,23 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   // hit_id -> {particle_id...} map on the fly.
   const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
 
-  SimSpacePointContainer spacePoints;
+  // construct the combined input container of space point pointers from all
+  // configured input sources.
+  // pre-compute the total size required so we only need to allocate once
+  size_t nSpacePoints = 0;
   for (const auto& isp : m_cfg.inputSpacePoints) {
-    const auto& sps = ctx.eventStore.get<SimSpacePointContainer>(isp);
-    std::copy(sps.begin(), sps.end(), std::back_inserter(spacePoints));
+    nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
+  }
+
+  std::vector<const SimSpacePoint*> spacePointPtrs;
+  spacePointPtrs.reserve(nSpacePoints);
+  for (const auto& isp : m_cfg.inputSpacePoints) {
+    for (const auto& spacePoint :
+         ctx.eventStore.get<SimSpacePointContainer>(isp)) {
+      // since the event store owns the space points, their pointers should be
+      // stable and we do not need to create local copies.
+      spacePointPtrs.push_back(&spacePoint);
+    }
   }
 
   SimParticleContainer seededParticles;
@@ -82,14 +95,14 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
 
   std::unordered_map<Index, const SimSpacePoint*> spMap;
 
-  for (const SimSpacePoint& sp : spacePoints) {
-    if (sp.sourceLinks().empty()) {
+  for (const auto &spp : spacePointPtrs) {
+    if (spp->sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in space point");
       continue;
     }
-    for (const auto& slink : sp.sourceLinks()) {
+    for (const auto& slink : spp->sourceLinks()) {
       const IndexSourceLink& islink = slink.get<IndexSourceLink>();
-      spMap.emplace(islink.index(), &sp);
+      spMap.emplace(islink.index(), spp);
     }
   }
 
@@ -101,7 +114,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
     ProtoTrack fullTrack;
     fullTrack.reserve(hits.size());
     for (const auto& hit : hits) {
-      fullTrack.emplace_back(hit.second);
+      fullTrack.push_back(hit.second);
     }
 
     // The list of hits and the initial start parameters
@@ -175,8 +188,8 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
 
       seededParticles.insert(particle);
       fullTracks.emplace_back(std::move(fullTrack));
-      seeds.push_back(seed);
-      tracks.emplace_back(track);
+      seeds.emplace_back(std::move(seed));
+      tracks.emplace_back(std::move(track));
     }
   }
 
@@ -186,5 +199,6 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   ctx.eventStore.add(m_cfg.outputFullProtoTracks, std::move(fullTracks));
   ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
   ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(tracks));
+
   return ActsExamples::ProcessCode::SUCCESS;
 }
