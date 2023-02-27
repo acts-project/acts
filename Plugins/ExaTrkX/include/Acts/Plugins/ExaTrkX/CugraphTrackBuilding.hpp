@@ -19,9 +19,10 @@ class CugraphTrackBuilding final : public Acts::TrackBuildingBase {
  public:
   CugraphTrackBuilding(const Logger &logger);
 
-  std::vector<std::vector<int>> operator()(
-      std::any nodes, std::any edges, std::any edge_weights,
-      std::vector<int> &spacepointIDs) override;
+  std::vector<std::vector<int>> operator()(std::any nodes, std::any edges,
+                                           std::any edge_weights,
+                                           std::vector<int> &spacepointIDs,
+                                           const Logger &logger) override;
 };
 
 }  // namespace Acts

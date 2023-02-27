@@ -15,12 +15,10 @@
 #include "weaklyConnectedComponentsCugraph.hpp"
 
 namespace Acts {
-CugraphTrackBuilding::CugraphTrackBuilding(const Logger &logger)
-    : TrackBuildingBase(logger) {}
 
 std::vector<std::vector<int>> CugraphTrackBuilding::operator()(
     std::any nodes, std::any edges, std::any edge_weights,
-    std::vector<int> &spacepointIDs) {
+    std::vector<int> &spacepointIDs, const Logger &logger) {
   auto numSpacepoints = spacepointIDs.size();
   auto edgesAfterFiltering = std::any_cast<std::vector<int64_t>>(edges);
   auto numEdgesAfterF = edgesAfterFiltering.size() / 2;

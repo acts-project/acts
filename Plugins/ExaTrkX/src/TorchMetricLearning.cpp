@@ -14,8 +14,7 @@
 
 namespace Acts {
 
-TorchMetricLearning::TorchMetricLearning(Config, const Logger &logger)
-    : GraphConstructionBase(logger) {
+TorchMetricLearning::TorchMetricLearning(Config) {
   c10::InferenceMode guard(true);
 
   try {

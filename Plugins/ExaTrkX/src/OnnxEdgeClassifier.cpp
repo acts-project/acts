@@ -17,8 +17,7 @@ using namespace torch::indexing;
 
 namespace Acts {
 
-OnnxEdgeClassifier::OnnxEdgeClassifier(Config cfg, const Logger &logger)
-    : EdgeClassificationBase(logger), m_cfg(cfg) {
+OnnxEdgeClassifier::OnnxEdgeClassifier(Config cfg) : m_cfg(cfg) {
   m_env = std::make_unique<Ort::Env>(ORT_LOGGING_LEVEL_WARNING,
                                      "ExaTrkX - edge classifier");
 

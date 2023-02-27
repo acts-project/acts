@@ -41,12 +41,9 @@ void weaklyConnectedComponents(vertex_t numNodes,
 
 namespace Acts {
 
-BoostTrackBuilding::BoostTrackBuilding(const Logger& logger)
-    : TrackBuildingBase(logger) {}
-
 std::vector<std::vector<int>> BoostTrackBuilding::operator()(
     std::any nodes, std::any edges, std::any weights,
-    std::vector<int>& spacepointIDs) {
+    std::vector<int>& spacepointIDs, const Logger& logger) {
   const auto eLibInputTensor = std::any_cast<torch::Tensor>(nodes);
   const auto edgesAfterF = std::any_cast<torch::Tensor>(edges);
   const auto gOutput = std::any_cast<torch::Tensor>(weights);

@@ -31,8 +31,8 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
   OnnxEdgeClassifier(Config cfg, const Logger &logger);
   ~OnnxEdgeClassifier();
 
-  std::tuple<std::any, std::any, std::any> operator()(std::any nodes,
-                                                      std::any edges) override;
+  std::tuple<std::any, std::any, std::any> operator()(
+      std::any nodes, std::any edges, const Logger &logger) override;
 
   Config config() const { return m_cfg; }
 

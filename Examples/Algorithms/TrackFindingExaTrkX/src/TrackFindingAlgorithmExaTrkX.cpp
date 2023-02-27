@@ -52,17 +52,19 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
 std::vector<std::vector<int>>
 ActsExamples::TrackFindingAlgorithmExaTrkX::runPipeline(
     std::vector<float>& inputValues, std::vector<int>& spacepointIDs) const {
-  auto [nodes, edges] = (*m_cfg.graphConstructor)(inputValues);
+  auto [nodes, edges] = (*m_cfg.graphConstructor)(inputValues, logger());
   std::any edge_weights;
 
   for (auto edgeClassifier : m_cfg.edgeClassifiers) {
-    auto [newNodes, newEdges, newWeights] = (*edgeClassifier)(nodes, edges);
+    auto [newNodes, newEdges, newWeights] =
+        (*edgeClassifier)(nodes, edges, logger());
     nodes = newNodes;
     edges = newEdges;
     edge_weights = newWeights;
   }
 
-  return (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs);
+  return (*m_cfg.trackBuilder)(nodes, edges, edge_weights, spacepointIDs,
+                               logger());
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(

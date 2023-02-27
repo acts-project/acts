@@ -14,8 +14,7 @@ using namespace torch::indexing;
 
 namespace Acts {
 
-TorchEdgeClassifier::TorchEdgeClassifier(Config cfg, const Logger& logger)
-    : EdgeClassificationBase(logger), m_cfg(cfg) {
+TorchEdgeClassifier::TorchEdgeClassifier(Config cfg) : m_cfg(cfg) {
   c10::InferenceMode guard(true);
 
   try {
