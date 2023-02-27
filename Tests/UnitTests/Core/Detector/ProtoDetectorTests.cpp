@@ -9,8 +9,8 @@
 #include <boost/test/data/test_case.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
 #include <cmath>

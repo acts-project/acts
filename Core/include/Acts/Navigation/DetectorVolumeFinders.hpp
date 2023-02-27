@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "Acts/Geometry/Detector.hpp"
-#include "Acts/Geometry/DetectorVolume.hpp"
+#include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"

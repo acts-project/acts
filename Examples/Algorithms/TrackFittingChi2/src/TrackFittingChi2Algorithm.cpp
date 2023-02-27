@@ -147,7 +147,13 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(tracks));
+  ConstTrackContainer constTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(*trackContainer)),
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*trackStateContainer))};
+
+  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
   // TODO: add chi2 values as output?
   return ActsExamples::ProcessCode::SUCCESS;
 }

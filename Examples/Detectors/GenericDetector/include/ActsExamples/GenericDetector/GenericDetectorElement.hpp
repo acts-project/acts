@@ -71,7 +71,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   /// Identifier
   Identifier identifier() const final;
 
-  /// Return local to global transform associated with this identifier
+  /// Return local to global transform associated with this detector element
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   ///
@@ -80,7 +80,7 @@ class GenericDetectorElement : public Acts::IdentifiedDetectorElement {
   const Acts::Transform3& transform(
       const Acts::GeometryContext& gctx) const override;
 
-  /// Return surface associated with this identifier,
+  /// Return surface associated with this detector element
   const Acts::Surface& surface() const override;
 
   /// Set the identifier after construction (sometimes needed)

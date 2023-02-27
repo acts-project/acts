@@ -2,151 +2,27 @@
 import os
 import argparse
 import tempfile
-import argparse
 
-import acts
-import acts.examples
+import pathlib, acts
 
-from acts.examples import CsvSpacePointReader
-from collections import namedtuple
+from acts.examples import (
+    CsvSpacePointReader,
+    TrackParamsEstimationAlgorithm,
+    SeedingPerformanceWriter,
+)
 from acts.examples.reconstruction import (
-    SeedFinderConfigArg,
-    SeedFinderOptionsArg,
-    SeedFilterConfigArg,
-    SpacePointGridConfigArg,
-    SeedingAlgorithmConfigArg,
+    addSeeding,
+    addStandardSeeding,
+    SeedingAlgorithm,
 )
 
 from acts.examples.itk import itkSeedingAlgConfig
 
 u = acts.UnitConstants
+rnd = acts.examples.RandomNumbers(seed=42)
 
 
-def addITkSeedingCsv(
-    s,
-    inputSPs,
-    seedFinderConfigArg: SeedFinderConfigArg = SeedFinderConfigArg(),
-    seedFinderOptionsArg: SeedFinderOptionsArg = SeedFinderOptionsArg(),
-    seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
-    spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
-    seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
-):
-
-    seedFinderConfig = acts.SeedFinderConfig(
-        **acts.examples.defaultKWArgs(
-            rMin=seedFinderConfigArg.r[0],
-            rMax=seedFinderConfigArg.r[1],
-            deltaRMin=seedFinderConfigArg.deltaR[0],
-            deltaRMax=seedFinderConfigArg.deltaR[1],
-            deltaRMinTopSP=seedFinderConfigArg.deltaRTopSP[0],
-            deltaRMinBottomSP=seedFinderConfigArg.deltaRBottomSP[0],
-            deltaRMaxTopSP=seedFinderConfigArg.deltaRTopSP[1],
-            deltaRMiddleMinSPRange=seedFinderConfigArg.deltaRMiddleSPRange[0],
-            deltaRMiddleMaxSPRange=seedFinderConfigArg.deltaRMiddleSPRange[1],
-            deltaRMaxBottomSP=seedFinderConfigArg.deltaRBottomSP[1],
-            collisionRegionMin=seedFinderConfigArg.collisionRegion[0],
-            collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
-            zMin=seedFinderConfigArg.z[0],
-            zMax=seedFinderConfigArg.z[1],
-            maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
-            cotThetaMax=seedFinderConfigArg.cotThetaMax,
-            sigmaScattering=seedFinderConfigArg.sigmaScattering,
-            radLengthPerSeed=seedFinderConfigArg.radLengthPerSeed,
-            minPt=seedFinderConfigArg.minPt,
-            impactMax=seedFinderConfigArg.impactMax,
-            interactionPointCut=seedFinderConfigArg.interactionPointCut,
-            arithmeticAverageCotTheta=seedFinderConfigArg.arithmeticAverageCotTheta,
-            deltaZMax=seedFinderConfigArg.deltaZMax,
-            maxPtScattering=seedFinderConfigArg.maxPtScattering,
-            zBinEdges=seedFinderConfigArg.zBinEdges,
-            skipPreviousTopSP=seedFinderConfigArg.skipPreviousTopSP,
-            zBinsCustomLooping=seedFinderConfigArg.zBinsCustomLooping,
-            rRangeMiddleSP=seedFinderConfigArg.rRangeMiddleSP,
-            useVariableMiddleSPRange=seedFinderConfigArg.useVariableMiddleSPRange,
-            binSizeR=seedFinderConfigArg.binSizeR,
-            forceRadialSorting=seedFinderConfigArg.forceRadialSorting,
-            seedConfirmation=seedFinderConfigArg.seedConfirmation,
-            centralSeedConfirmationRange=seedFinderConfigArg.centralSeedConfirmationRange,
-            forwardSeedConfirmationRange=seedFinderConfigArg.forwardSeedConfirmationRange,
-        ),
-    )
-
-    seedFinderOptions = acts.SeedFinderOptions(
-        **acts.examples.defaultKWArgs(
-            bFieldInZ=seedFinderOptionsArg.bFieldInZ,
-            beamPos=acts.Vector2(0.0, 0.0)
-            if seedFinderOptionsArg.beamPos is (None, None)
-            else acts.Vector2(
-                seedFinderOptionsArg.beamPos[0], seedFinderOptionsArg.beamPos[0]
-            ),
-        ),
-    )
-
-    seedFilterConfig = acts.SeedFilterConfig(
-        **acts.examples.defaultKWArgs(
-            maxSeedsPerSpM=seedFinderConfig.maxSeedsPerSpM,
-            deltaRMin=seedFinderConfig.deltaRMin,
-            impactWeightFactor=seedFilterConfigArg.impactWeightFactor,
-            compatSeedWeight=seedFilterConfigArg.compatSeedWeight,
-            compatSeedLimit=seedFilterConfigArg.compatSeedLimit,
-            numSeedIncrement=seedFilterConfigArg.numSeedIncrement,
-            seedWeightIncrement=seedFilterConfigArg.seedWeightIncrement,
-            seedConfirmation=seedFilterConfigArg.seedConfirmation,
-            centralSeedConfirmationRange=seedFinderConfig.centralSeedConfirmationRange,
-            forwardSeedConfirmationRange=seedFinderConfig.forwardSeedConfirmationRange,
-            curvatureSortingInFilter=seedFilterConfigArg.curvatureSortingInFilter,
-            maxSeedsPerSpMConf=seedFilterConfigArg.maxSeedsPerSpMConf,
-            maxQualitySeedsPerSpMConf=seedFilterConfigArg.maxQualitySeedsPerSpMConf,
-            useDeltaRorTopRadius=seedFilterConfigArg.useDeltaRorTopRadius,
-        )
-    )
-
-    gridConfig = acts.SpacePointGridConfig(
-        **acts.examples.defaultKWArgs(
-            bFieldInZ=seedFinderOptions.bFieldInZ,
-            minPt=seedFinderConfig.minPt,
-            rMax=seedFinderConfig.rMax
-            if spacePointGridConfigArg.rMax == None
-            else spacePointGridConfigArg.rMax,
-            zMax=seedFinderConfig.zMax,
-            zMin=seedFinderConfig.zMin,
-            deltaRMax=seedFinderConfig.deltaRMax,
-            cotThetaMax=seedFinderConfig.cotThetaMax,
-            phiMin=spacePointGridConfigArg.phi[0],
-            phiMax=spacePointGridConfigArg.phi[1],
-            impactMax=seedFinderConfig.impactMax,
-            zBinEdges=spacePointGridConfigArg.zBinEdges,
-            phiBinDeflectionCoverage=spacePointGridConfigArg.phiBinDeflectionCoverage,
-        )
-    )
-
-    seedingAlg = acts.examples.SeedingAlgorithm(
-        level=acts.logging.VERBOSE,
-        inputSpacePoints=[inputSPs.config.outputSpacePoints],
-        outputSeeds="seeds",
-        outputProtoTracks="prototracks",
-        **acts.examples.defaultKWArgs(
-            allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
-            zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
-            zBinNeighborsBottom=seedingAlgorithmConfigArg.zBinNeighborsBottom,
-            numPhiNeighbors=seedingAlgorithmConfigArg.numPhiNeighbors,
-        ),
-        gridConfig=gridConfig,
-        seedFilterConfig=seedFilterConfig,
-        seedFinderConfig=seedFinderConfig,
-        seedFinderOptions=seedFinderOptions,
-    )
-
-    s = s or acts.examples.Sequencer(
-        events=1, numThreads=-1, logLevel=acts.logging.INFO
-    )
-
-    s.addAlgorithm(seedingAlg)
-
-    return s
-
-
-def runITkSeedingFromCsv():
+def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
 
     # create temporary file with pixel SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -161,10 +37,7 @@ def runITkSeedingFromCsv():
         )
         temp.read()
 
-        # set magnetic field
-        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-        inputSpacePointsType = "PixelSpacePoints"
+        s = acts.examples.Sequencer(events=1, numThreads=-1, logLevel=acts.logging.INFO)
 
         # Read input space points from input csv files
         evReader = CsvSpacePointReader(
@@ -172,22 +45,36 @@ def runITkSeedingFromCsv():
             inputStem="spacepoints",
             inputCollection="pixel",
             inputDir=os.path.dirname(temp.name),
-            outputSpacePoints=inputSpacePointsType,
+            outputSpacePoints="PixelSpacePoint",
             extendCollection=False,
         )
 
-        s = acts.examples.Sequencer(events=1, numThreads=-1, logLevel=acts.logging.INFO)
-
+        # add csv reader
         s.addReader(evReader)
-
-        print(SeedFinderConfigArg, SeedFilterConfigArg)
+        spacePoints = evReader.config.outputSpacePoints
 
         # run seeding
-        addITkSeedingCsv(
+        inputProtoTracks, inputSeeds = addStandardSeeding(
             s,
-            evReader,
-            *itkSeedingAlgConfig(inputSpacePointsType),
-        ).run()
+            spacePoints,
+            *acts.examples.itk.itkSeedingAlgConfig("PixelSpacePoint"),
+        )
+
+        # estimate seeding performance
+        parEstimateAlg = TrackParamsEstimationAlgorithm(
+            level=acts.logging.INFO,
+            inputSeeds=inputSeeds,
+            inputProtoTracks=inputProtoTracks,
+            inputSpacePoints=[spacePoints],
+            inputSourceLinks="sourcelinks",
+            outputTrackParameters="estimatedparameters",
+            outputProtoTracks="prototracks_estimated",
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
+        )
+        s.addAlgorithm(parEstimateAlg)
+
+        s.run()
 
     # create temporary file with strips SPs and run the seeding
     with tempfile.TemporaryDirectory() as tmpdirname:
@@ -202,10 +89,7 @@ def runITkSeedingFromCsv():
         )
         temp.read()
 
-        # set magnetic field
-        field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
-
-        inputSpacePointsType = "StripSpacePoints"
+        s = acts.examples.Sequencer(events=1, numThreads=-1, logLevel=acts.logging.INFO)
 
         # Read input space points from input csv files
         evReader = CsvSpacePointReader(
@@ -213,25 +97,49 @@ def runITkSeedingFromCsv():
             inputStem="spacepoints",
             inputCollection="strip",
             inputDir=os.path.dirname(temp.name),
-            outputSpacePoints=inputSpacePointsType,
-            extendCollection=False,
+            outputSpacePoints="StripSpacePoint",
+            extendCollection=True,
         )
 
-        s = acts.examples.Sequencer(events=1, numThreads=-1, logLevel=acts.logging.INFO)
-
+        # add csv reader
         s.addReader(evReader)
+        spacePoints = evReader.config.outputSpacePoints
 
         # run seeding
-        addITkSeedingCsv(
+        inputProtoTracks, inputSeeds = addStandardSeeding(
             s,
-            evReader,
-            *itkSeedingAlgConfig(inputSpacePointsType),
-        ).run()
+            spacePoints,
+            *acts.examples.itk.itkSeedingAlgConfig("StripSpacePoint"),
+        )
+
+        # estimate seeding performance
+        parEstimateAlg = TrackParamsEstimationAlgorithm(
+            level=acts.logging.INFO,
+            inputSeeds=inputSeeds,
+            inputProtoTracks=inputProtoTracks,
+            inputSpacePoints=[spacePoints],
+            inputSourceLinks="sourcelinks",
+            outputTrackParameters="estimatedparameters",
+            outputProtoTracks="prototracks_estimated",
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
+        )
+        s.addAlgorithm(parEstimateAlg)
+
+        s.run()
 
 
 if "__main__" == __name__:
     p = argparse.ArgumentParser(
-        description="Example script to run ITk seed finding",
+        description="Example script to run ITk seed finding based on CSV spacepoints",
     )
 
-    runITkSeedingFromCsv()
+    geo_dir = pathlib.Path("acts-itk")
+    outputDir = pathlib.Path.cwd() / "itk_output"
+
+    detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_dir)
+    field = acts.examples.MagneticFieldMapXyz(
+        str(geo_dir / "bfield/ATLAS-BField-xyz.root")
+    )
+
+    runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir)

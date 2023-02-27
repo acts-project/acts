@@ -101,7 +101,7 @@ inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
   }
   auto holder = std::make_shared<HolderT<T>>(std::forward<T>(object));
   m_store.emplace(name, holder);
-  ACTS_VERBOSE("Added object '" << name << "'");
+  ACTS_VERBOSE("Added object '" << name << "' of type " << typeid(T).name());
   if (auto it = m_objectAliases.find(name); it != m_objectAliases.end()) {
     m_store[it->second] = holder;
     ACTS_VERBOSE("Added alias object '" << it->second << "'");
@@ -110,6 +110,8 @@ inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
 
 template <typename T>
 inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
+  ACTS_VERBOSE("Attempt to get object '" << name << "' of type "
+                                         << typeid(T).name());
   auto it = m_store.find(name);
   if (it == m_store.end()) {
     const auto names = similarNames(name, 10, 3);
@@ -125,6 +127,7 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
 
     throw std::out_of_range("Object '" + name + "' does not exists" + ss.str());
   }
+
   const IHolder* holder = it->second.get();
 
   const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);

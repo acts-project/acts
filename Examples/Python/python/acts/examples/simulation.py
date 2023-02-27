@@ -26,8 +26,8 @@ EtaConfig = namedtuple(
 PhiConfig = namedtuple("PhiConfig", ["min", "max"], defaults=[None, None])
 ParticleConfig = namedtuple(
     "ParticleConfig",
-    ["num", "pdg", "randomizeCharge"],
-    defaults=[None, None, None],
+    ["num", "pdg", "randomizeCharge", "charge", "mass"],
+    defaults=[None, None, None, None, None],
 )
 ParticleSelectorConfig = namedtuple(
     "ParticleSelectorConfig",
@@ -82,7 +82,7 @@ def addParticleGun(
         pseudorapidity configuration: eta min, eta max, uniform
     phiConfig : PhiConfig(min, max)
         azimuthal angle configuration: phi min, phi max
-    particleConfig : ParticleConfig(num, pdg, randomizeCharge)
+    particleConfig : ParticleConfig(num, pdg, randomizeCharge, charge, mass)
         particle configuration: number of particles, particle type, charge flip
     multiplicity : int, 1
         number of generated vertices
@@ -107,7 +107,8 @@ def addParticleGun(
                 multiplicity=FixedMultiplicityGenerator(n=multiplicity),
                 vertex=vtxGen
                 or acts.examples.GaussianVertexGenerator(
-                    stddev=acts.Vector4(0, 0, 0, 0), mean=acts.Vector4(0, 0, 0, 0)
+                    mean=acts.Vector4(0, 0, 0, 0),
+                    stddev=acts.Vector4(0, 0, 0, 0),
                 ),
                 particles=acts.examples.ParametricParticleGenerator(
                     **acts.examples.defaultKWArgs(
@@ -119,6 +120,8 @@ def addParticleGun(
                         numParticles=particleConfig.num,
                         pdg=particleConfig.pdg,
                         randomizeCharge=particleConfig.randomizeCharge,
+                        charge=particleConfig.charge,
+                        mass=particleConfig.mass,
                     )
                 ),
             )
@@ -428,16 +431,27 @@ def addFatras(
 
     # Selector
     if postSelectParticles is not None:
-        postSelectedParticles = "particles_initial_selected"
+        particlesInitial = "particles_initial_selected"
         addParticleSelection(
             s,
-            preSelectParticles,
+            postSelectParticles,
             inputParticles=alg.config.outputParticlesInitial,
-            outputParticles=postSelectedParticles,
+            outputParticles=particlesInitial,
         )
-        s.addWhiteboardAlias("particles", postSelectedParticles)
+
+        particlesFinal = "particles_final_selected"
+        addParticleSelection(
+            s,
+            postSelectParticles,
+            inputParticles=alg.config.outputParticlesFinal,
+            outputParticles=particlesFinal,
+        )
     else:
-        s.addWhiteboardAlias("particles", alg.config.outputParticlesInitial)
+        particlesInitial = alg.config.outputParticlesInitial
+        particlesFinal = alg.config.outputParticlesFinal
+
+    # Only add alias for 'particles_initial' as this is the one we use most
+    s.addWhiteboardAlias("particles", particlesInitial)
 
     # Output
     addSimWriters(
@@ -446,6 +460,8 @@ def addFatras(
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,
+        particlesInitial=particlesInitial,
+        particlesFinal=particlesFinal,
     )
 
     return s
@@ -457,6 +473,8 @@ def addSimWriters(
     outputDirCsv: Optional[Union[Path, str]] = None,
     outputDirRoot: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
+    particlesInitial="particles_initial",
+    particlesFinal="particles_final",
 ) -> None:
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -469,7 +487,7 @@ def addSimWriters(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
-                inputParticles="particles_initial",
+                inputParticles=particlesInitial,
                 outputStem="particles_initial",
             )
         )
@@ -477,7 +495,7 @@ def addSimWriters(
             acts.examples.CsvParticleWriter(
                 level=customLogLevel(),
                 outputDir=str(outputDirCsv),
-                inputParticles="particles_final",
+                inputParticles=particlesFinal,
                 outputStem="particles_final",
             )
         )
@@ -579,7 +597,7 @@ def addGeant4(
         the output folder for the Root output, None triggers no output
     """
 
-    from acts.examples.geant4 import Geant4Simulation, geant4SimulationConfig
+    from acts.examples.geant4 import Geant4Simulation, makeGeant4SimulationConfig
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
@@ -600,9 +618,10 @@ def addGeant4(
             raise AttributeError("detector not given")
         g4detectorConstruction = getG4DetectorContruction(detector)
 
-    g4conf = geant4SimulationConfig(
+    g4conf = makeGeant4SimulationConfig(
         level=customLogLevel(),
         detector=g4detectorConstruction,
+        randomNumbers=rnd,
         inputParticles=particles_selected,
         trackingGeometry=trackingGeometry,
         magneticField=field,
@@ -612,7 +631,6 @@ def addGeant4(
     g4conf.outputSimHits = "simhits"
     g4conf.outputParticlesInitial = "particles_initial"
     g4conf.outputParticlesFinal = "particles_final"
-    g4conf.randomNumbers = rnd
 
     # Simulation
     alg = Geant4Simulation(
@@ -625,16 +643,27 @@ def addGeant4(
 
     # Selector
     if postSelectParticles is not None:
-        postSelectedParticles = "particles_initial_selected"
+        particlesInitial = "particles_initial_selected"
         addParticleSelection(
             s,
-            preSelectParticles,
+            postSelectParticles,
             inputParticles=g4conf.outputParticlesInitial,
-            outputParticles=postSelectedParticles,
+            outputParticles=particlesInitial,
         )
-        s.addWhiteboardAlias("particles", postSelectedParticles)
+
+        particlesFinal = "particles_final_selected"
+        addParticleSelection(
+            s,
+            postSelectParticles,
+            inputParticles=g4conf.outputParticlesFinal,
+            outputParticles=particlesFinal,
+        )
     else:
-        s.addWhiteboardAlias("particles", alg.config.outputParticlesInitial)
+        particlesInitial = alg.config.outputParticlesInitial
+        particlesFinal = alg.config.outputParticlesFinal
+
+    # Only add alias for 'particles_initial' as this is the one we use most
+    s.addWhiteboardAlias("particles", particlesInitial)
 
     # Output
     addSimWriters(
@@ -643,6 +672,8 @@ def addGeant4(
         outputDirCsv,
         outputDirRoot,
         logLevel=logLevel,
+        particlesInitial=particlesInitial,
+        particlesFinal=particlesFinal,
     )
 
     return s

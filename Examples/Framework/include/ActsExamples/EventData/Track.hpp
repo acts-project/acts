@@ -26,4 +26,8 @@ using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
                          Acts::VectorMultiTrajectory, std::shared_ptr>;
 
+using ConstTrackContainer =
+    Acts::TrackContainer<Acts::ConstVectorTrackContainer,
+                         Acts::ConstVectorMultiTrajectory, std::shared_ptr>;
+
 }  // namespace ActsExamples
