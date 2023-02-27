@@ -2,6 +2,8 @@ from pathlib import Path
 import os
 import json
 import functools
+import tarfile
+import urllib.request
 import subprocess
 import sys
 
@@ -13,6 +15,7 @@ from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
+    exatrkxEnabled,
     AssertCollectionExistsAlg,
     isCI,
     doHashChecks,
@@ -1267,3 +1270,41 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
         assert fp.stat().st_size > 2**10 * 2
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
+
+
+@pytest.mark.parametrize("backend", ["onnx", "torch"])
+@pytest.mark.skipif(not exatrkxEnabled, reason="ExaTrkX environment not set up")
+def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
+    root_file = "performance_seeding_trees.root"
+    assert not (tmp_path / root_file).exists()
+
+    if backend == "onnx":
+        url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
+    else:
+        url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
+
+    tarfile_name = tmp_path / "models.tar"
+    urllib.request.urlretrieve(url, tarfile_name)
+    tarfile.open(tarfile_name).extractall(tmp_path)
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "exatrkx.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+
+    subprocess.check_call(
+        [sys.executable, str(script), backend],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
+
+    rfp = tmp_path / root_file
+    assert rfp.exists()
+
+    assert_root_hash(root_file, rfp)
