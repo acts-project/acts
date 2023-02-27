@@ -36,10 +36,7 @@ class TorchEdgeClassifier final : public Acts::EdgeClassificationBase {
   Config config() const { return m_cfg; }
 
  private:
-  const Acts::Logger &logger();
-
   Config m_cfg;
-  std::unique_ptr<Acts::Logger> m_logger;
   std::unique_ptr<torch::jit::Module> m_model;
 };
 
