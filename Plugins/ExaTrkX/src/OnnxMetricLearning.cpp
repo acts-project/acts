@@ -35,7 +35,8 @@ OnnxMetricLearning::~OnnxMetricLearning() {}
 
 void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
                                            std::vector<int64_t>& edgeList,
-                                           int64_t numSpacepoints) const {
+                                           int64_t numSpacepoints,
+                                           const Logger& logger) const {
   torch::Device device(torch::kCUDA);
   auto options =
       torch::TensorOptions().dtype(torch::kFloat32).device(torch::kCUDA);
@@ -108,7 +109,7 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   // Building Edges
   // ************
   std::vector<int64_t> edgeList;
-  buildEdgesWrapper(eOutputData, edgeList, numSpacepoints);
+  buildEdgesWrapper(eOutputData, edgeList, numSpacepoints, logger);
   int64_t numEdges = edgeList.size() / 2;
   ACTS_INFO("Built " << numEdges << " edges.");
 
