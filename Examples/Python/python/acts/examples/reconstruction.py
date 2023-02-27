@@ -1146,13 +1146,6 @@ def addExaTrkX(
         )
     )
 
-    # For now we don't configure only the common options so this works
-    exaTrkxModule = (
-        acts.examples.ExaTrkXTrackFindingTorch
-        if backend == ExaTrkXBackend.Torch
-        else acts.examples.ExaTrkXTrackFindingOnnx
-    )
-
     metricLearningConfig = {
         "spacepointFeatures": 3,
         "embeddingDim": 8,
