@@ -40,13 +40,13 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   }
 
   // Sanitizer run with dummy input to detect configuration issues
-  Eigen::VectorXf dummyInput = Eigen::VectorXf::Random(3 * 15);
-  std::vector<float> dummyInputVec(dummyInput.data(),
-                                   dummyInput.data() + dummyInput.size());
-  std::vector<int> spacepointIDs;
-  std::iota(spacepointIDs.begin(), spacepointIDs.end(), 0);
-
-  runPipeline(dummyInputVec, spacepointIDs);
+  // Eigen::VectorXf dummyInput = Eigen::VectorXf::Random(3 * 15);
+  // std::vector<float> dummyInputVec(dummyInput.data(),
+  //                                  dummyInput.data() + dummyInput.size());
+  // std::vector<int> spacepointIDs;
+  // std::iota(spacepointIDs.begin(), spacepointIDs.end(), 0);
+  // 
+  // runPipeline(dummyInputVec, spacepointIDs);
 }
 
 std::vector<std::vector<int>>
