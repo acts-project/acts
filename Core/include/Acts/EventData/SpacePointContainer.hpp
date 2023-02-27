@@ -20,7 +20,8 @@ namespace Acts {
 	   template <typename> class holder_t>
   class SpacePointContainer {
   public:
-    friend class Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
+    friend class Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>, false>;
+    friend class Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>, true>;
     friend class Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>, 
 					       false>;
     friend class Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>,
@@ -29,7 +30,8 @@ namespace Acts {
     static constexpr bool ReadOnly = true;
 
     using IndexType = typename container_t::IndexType;
-    using SpacePointProxyType = Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>>;
+    using SpacePointProxyType = Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>, false>;
+    using ConstSpacePointProxyType = Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>, true>;
     using iterator = Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>,
 						   false>;
     using const_iterator = Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>,

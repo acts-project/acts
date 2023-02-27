@@ -14,13 +14,12 @@
 namespace Acts {
   
   template<typename container_t,
-	   //	   typename proxy_t, // can it be in container specifications?
 	   bool read_only = true>
   class SpacePointProxyIterator {
   public:
     using ContainerType = typename std::conditional<read_only, const container_t, container_t>::type;
     using ProxyType = typename container_t::SpacePointProxyType; 
-    using ConstProxyType = const ProxyType;
+    using ConstProxyType = typename container_t::ConstSpacePointProxyType;
     using IndexType = typename container_t::IndexType;
     
     using iterator_category = std::random_access_iterator_tag;
