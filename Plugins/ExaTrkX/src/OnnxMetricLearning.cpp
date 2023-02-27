@@ -50,7 +50,7 @@ void OnnxMetricLearning::buildEdgesWrapper(std::vector<float>& embedFeatures,
 
   stackedEdges = stackedEdges.toType(torch::kInt64).to(torch::kCPU);
 
-  ACTS_INFO("copy edges to std::vector");
+  ACTS_VERBOSE("copy edges to std::vector");
   std::copy(stackedEdges.data_ptr<int64_t>(),
             stackedEdges.data_ptr<int64_t>() + stackedEdges.numel(),
             std::back_inserter(edgeList));
@@ -63,10 +63,10 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
 
   // printout the r,phi,z of the first spacepoint
-  ACTS_INFO("First spacepoint information: " << inputValues.size() << "\n\t");
-  for (size_t i = 0; i < 3; i++) {
-    ACTS_INFO("\t" << inputValues[i]);
-  }
+  // ACTS_INFO("First spacepoint information: " << inputValues.size() << "\n\t");
+  // for (size_t i = 0; i < 3; i++) {
+  //   ACTS_INFO("\t" << inputValues[i]);
+  // }
 
   // ************
   // Embedding
@@ -76,8 +76,8 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   std::vector<int64_t> eInputShape{numSpacepoints, m_cfg.spacepointFeatures};
 
   std::vector<const char*> eInputNames{"sp_features"};
-  auto eInputTensor = std::make_shared<std::vector<Ort::Value>>();
-  eInputTensor->push_back(Ort::Value::CreateTensor<float>(
+  std::vector<Ort::Value> eInputTensor;
+  eInputTensor.push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, inputValues.data(), inputValues.size(), eInputShape.data(),
       eInputShape.size()));
 
@@ -88,12 +88,12 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   eOutputTensor.push_back(Ort::Value::CreateTensor<float>(
       memoryInfo, eOutputData.data(), eOutputData.size(), eOutputShape.data(),
       eOutputShape.size()));
-  runSessionWithIoBinding(*m_model, eInputNames, *eInputTensor, eOutputNames,
+  runSessionWithIoBinding(*m_model, eInputNames, eInputTensor, eOutputNames,
                           eOutputTensor);
 
-  ACTS_INFO("Embedding space of the first SP: ");
+  ACTS_VERBOSE("Embedding space of the first SP: ");
   for (size_t i = 0; i < 3; i++) {
-    ACTS_INFO("\t" << eOutputData[i]);
+    ACTS_VERBOSE("\t" << eOutputData[i]);
   }
   // if (debug) {
   //   std::fstream out(embedding_outname, out.out);
@@ -111,13 +111,13 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   std::vector<int64_t> edgeList;
   buildEdgesWrapper(eOutputData, edgeList, numSpacepoints, logger);
   int64_t numEdges = edgeList.size() / 2;
-  ACTS_INFO("Built " << numEdges << " edges.");
+  ACTS_INFO("Graph construction: built " << numEdges << " edges.");
 
   for (size_t i = 0; i < 10; i++) {
-    ACTS_INFO(edgeList[i]);
+    ACTS_VERBOSE(edgeList[i]);
   }
   for (size_t i = 0; i < 10; i++) {
-    ACTS_INFO(edgeList[numEdges + i]);
+    ACTS_VERBOSE(edgeList[numEdges + i]);
   }
 
   // if (debug) {
@@ -130,7 +130,7 @@ std::tuple<std::any, std::any> OnnxMetricLearning::operator()(
   //   }
   // }
 
-  return {eInputTensor, edgeList};
+  return {std::make_shared<Ort::Value>(std::move(eInputTensor[0])), edgeList};
 }
 
 }  // namespace Acts

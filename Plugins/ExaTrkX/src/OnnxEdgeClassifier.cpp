@@ -40,24 +40,23 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
   auto memoryInfo = Ort::MemoryInfo::CreateCpu(
       OrtAllocatorType::OrtArenaAllocator, OrtMemType::OrtMemTypeDefault);
 
-  auto eInputTensor =
-      std::any_cast<std::shared_ptr<std::vector<Ort::Value>>>(inputNodes);
+  auto eInputTensor = std::any_cast<std::shared_ptr<Ort::Value>>(inputNodes);
   auto edgeList = std::any_cast<std::vector<int64_t>>(inputEdges);
   const int numEdges = edgeList.size() / 2;
 
   // ************
   // Filtering
   // ************
-  std::vector<const char *> fInputNames{"f_nodes", "f_edges"};
+  std::vector<const char *> fInputNames{"nodes", "edges"};
   std::vector<Ort::Value> fInputTensor;
-  fInputTensor.push_back(std::move(eInputTensor->at(0)));
+  fInputTensor.push_back(std::move(*eInputTensor));
   std::vector<int64_t> fEdgeShape{2, numEdges};
   fInputTensor.push_back(Ort::Value::CreateTensor<int64_t>(
       memoryInfo, edgeList.data(), edgeList.size(), fEdgeShape.data(),
       fEdgeShape.size()));
 
   // filtering outputs
-  std::vector<const char *> fOutputNames{"f_edge_score"};
+  std::vector<const char *> fOutputNames{"edge_score"};
   std::vector<float> fOutputData(numEdges);
   std::vector<int64_t> fOutputShape{numEdges, 1};
   std::vector<Ort::Value> fOutputTensor;
@@ -96,9 +95,11 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
             std::back_inserter(edgesAfterFiltering));
 
   int64_t numEdgesAfterF = edgesAfterFiltering.size() / 2;
-  ACTS_INFO("After filtering: " << numEdgesAfterF << " edges.");
+  ACTS_INFO("Finished edge classification, after cut: " << numEdgesAfterF
+                                                        << " edges.");
 
-  return {eInputTensor, edgesAfterFiltering, fOutputCTen};
+  return {std::make_shared<Ort::Value>(std::move(fInputTensor[0])),
+          edgesAfterFiltering, fOutputCTen};
 }
 
 }  // namespace Acts
