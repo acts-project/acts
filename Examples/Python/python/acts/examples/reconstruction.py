@@ -1160,28 +1160,28 @@ def addExaTrkX(
     }
 
     if backend == ExaTrkXBackend.Torch:
-        metricLearningConfig["modelPath"] = modelDir / "embed.pt"
-        filterConfig["modelPath"] = modelDir / "filter.pt"
+        metricLearningConfig["modelPath"] = str(modelDir / "embed.pt")
+        filterConfig["modelPath"] = str(modelDir / "filter.pt")
         filterConfig["nChunks"] = 10
-        gnnConfig["modelPath"] = modelDir / "gnn.pt"
+        gnnConfig["modelPath"] = str(modelDir / "gnn.pt")
 
         graphConstructor = acts.examples.TorchMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
             acts.examples.TorchEdgeClassifier(**filterConfig),
             acts.examples.TorchEdgeClassifier(**gnnConfig),
         ]
-        trackBuilder = acts.examples.BoostTrackBuilder()
+        trackBuilder = acts.examples.BoostTrackBuilding()
     elif backend == ExaTrkXBackend.Onnx:
-        metricLearningConfig["modelPath"] = modelDir / "embedding.onnx"
-        filterConfig["modelPath"] = modelDir / "filtering.onnx"
-        gnnConfig["modelPath"] = modelDir / "gnn.onnx"
+        metricLearningConfig["modelPath"] = str(modelDir / "embedding.onnx")
+        filterConfig["modelPath"] = str(modelDir / "filtering.onnx")
+        gnnConfig["modelPath"] = str(modelDir / "gnn.onnx")
 
         graphConstructor = acts.examples.OnnxMetricLearning(**metricLearningConfig)
         edgeClassifiers = [
             acts.examples.OnnxEdgeClassifier(**filterConfig),
             acts.examples.OnnxEdgeClassifier(**gnnConfig),
         ]
-        trackBuilder = acts.examples.CugraphTrackBuilder()
+        trackBuilder = acts.examples.CugraphTrackBuilding()
 
     s.addAlgorithm(
         acts.examples.TrackFindingAlgorithmExaTrkX(

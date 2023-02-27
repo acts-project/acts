@@ -34,6 +34,7 @@ std::tuple<std::any, std::any, std::any> TorchEdgeClassifier::operator()(
   const auto edgeList = std::any_cast<torch::Tensor>(inputEdges);
 
   torch::Device device(torch::kCUDA);
+  c10::InferenceMode guard(true);
   // timer.start();
 
   const auto chunks = at::chunk(at::arange(edgeList.size(1)), m_cfg.nChunks);
