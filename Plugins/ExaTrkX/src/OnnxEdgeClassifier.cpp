@@ -30,6 +30,22 @@ OnnxEdgeClassifier::OnnxEdgeClassifier(const Config &cfg) : m_cfg(cfg) {
 
   m_model = std::make_unique<Ort::Session>(*m_env, m_cfg.modelPath.c_str(),
                                            session_options);
+
+  Ort::AllocatorWithDefaultOptions allocator;
+
+  m_inputNameNodes =
+      std::string(m_model->GetInputNameAllocated(0, allocator).get());
+  m_inputNameEdges =
+      std::string(m_model->GetInputNameAllocated(1, allocator).get());
+  m_outputNameScores =
+      std::string(m_model->GetOutputNameAllocated(0, allocator).get());
+
+  m_inputShapeNodes =
+      m_model->GetInputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
+  m_inputShapeEdges =
+      m_model->GetInputTypeInfo(1).GetTensorTypeAndShapeInfo().GetShape();
+  m_outputShapeScores =
+      m_model->GetOutputTypeInfo(0).GetTensorTypeAndShapeInfo().GetShape();
 }
 
 OnnxEdgeClassifier::~OnnxEdgeClassifier() {}
@@ -44,25 +60,21 @@ std::tuple<std::any, std::any, std::any> OnnxEdgeClassifier::operator()(
   auto edgeList = std::any_cast<std::vector<int64_t>>(inputEdges);
   const int numEdges = edgeList.size() / 2;
 
-  // ************
-  // Filtering
-  // ************
-  std::vector<const char *> fInputNames{"nodes", "edges"};
+  std::vector<const char *> fInputNames{m_inputNameNodes.c_str(),
+                                        m_inputNameEdges.c_str()};
   std::vector<Ort::Value> fInputTensor;
   fInputTensor.push_back(std::move(*eInputTensor));
-  std::vector<int64_t> fEdgeShape{2, numEdges};
   fInputTensor.push_back(Ort::Value::CreateTensor<int64_t>(
-      memoryInfo, edgeList.data(), edgeList.size(), fEdgeShape.data(),
-      fEdgeShape.size()));
+      memoryInfo, edgeList.data(), edgeList.size(), m_inputShapeEdges.data(),
+      m_inputShapeEdges.size()));
 
   // filtering outputs
-  std::vector<const char *> fOutputNames{"edge_score"};
+  std::vector<const char *> fOutputNames{m_outputNameScores.c_str()};
   std::vector<float> fOutputData(numEdges);
-  std::vector<int64_t> fOutputShape{numEdges, 1};
   std::vector<Ort::Value> fOutputTensor;
   fOutputTensor.push_back(Ort::Value::CreateTensor<float>(
-      memoryInfo, fOutputData.data(), fOutputData.size(), fOutputShape.data(),
-      fOutputShape.size()));
+      memoryInfo, fOutputData.data(), fOutputData.size(),
+      m_outputShapeScores.data(), m_outputShapeScores.size()));
   runSessionWithIoBinding(*m_model, fInputNames, fInputTensor, fOutputNames,
                           fOutputTensor);
 

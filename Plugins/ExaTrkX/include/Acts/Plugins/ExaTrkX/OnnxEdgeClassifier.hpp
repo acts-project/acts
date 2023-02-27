@@ -40,6 +40,14 @@ class OnnxEdgeClassifier final : public Acts::EdgeClassificationBase {
   Config m_cfg;
   std::unique_ptr<Ort::Env> m_env;
   std::unique_ptr<Ort::Session> m_model;
+  
+  std::string m_inputNameNodes;
+  std::string m_inputNameEdges;
+  std::string m_outputNameScores;
+  
+  std::vector<int64_t> m_inputShapeNodes;
+  std::vector<int64_t> m_inputShapeEdges;
+  std::vector<int64_t> m_outputShapeScores;
 };
 
 }  // namespace Acts
