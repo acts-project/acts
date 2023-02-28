@@ -1,4 +1,5 @@
 import os
+import shutil
 from typing import List, Union
 import contextlib
 
@@ -54,6 +55,15 @@ try:
     pythia8Enabled = hasattr(acts.examples, "pythia8")
 except ImportError:
     pythia8Enabled = False
+
+
+exatrkxEnabled = shutil.which("nvidia-smi") is not None
+if exatrkxEnabled:
+    try:
+        from acts.examples import TrackFindingAlgorithmExaTrkX
+    except ImportError:
+        exatrkxEnabled = False
+
 
 isCI = os.environ.get("CI", "false") == "true"
 
