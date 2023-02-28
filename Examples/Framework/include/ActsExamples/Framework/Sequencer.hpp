@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
@@ -58,14 +59,21 @@ class Sequencer {
   ///
   /// @throws std::invalid_argument if the decorator is NULL.
   void addContextDecorator(std::shared_ptr<IContextDecorator> decorator);
+
   /// Add a reader to the set of readers.
   ///
   /// @throws std::invalid_argument if the reader is NULL.
   void addReader(std::shared_ptr<IReader> reader);
+
   /// Append an algorithm to the sequence of algorithms.
   ///
   /// @throws std::invalid_argument if the algorithm is NULL.
-  void addAlgorithm(std::shared_ptr<SequenceElement> element);
+  void addAlgorithm(std::shared_ptr<IAlgorithm> algorithm);
+
+  /// Append a sequence element to the sequence
+  ///
+  /// @throws std::invalid_argument if the element is NULL.
+  void addElement(std::shared_ptr<SequenceElement> element);
 
   /// Add a writer to the set of writers.
   ///
