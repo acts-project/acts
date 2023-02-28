@@ -8,8 +8,9 @@
 
 #pragma once
 
+#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/ProtoDetector.hpp"
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometryBuilder.hpp"
 #include "Acts/Utilities/KDTree.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -43,8 +44,8 @@ class KDTreeTrackingGeometryBuilder : public ITrackingGeometryBuilder {
     /// The proto tracking geometry description
     ProtoDetector protoDetector;
     /// Optional geometry identfier hook to be used during closure
-    /// @note Will be @b copied when calling the geometry building
-    GeometryIdentifierHook geometryIdentifierHook;
+    std::shared_ptr<const GeometryIdentifierHook> geometryIdentifierHook =
+        std::make_shared<GeometryIdentifierHook>();
     /// For screen output
     std::string hierarchyIndent = "  ";
   };

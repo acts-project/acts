@@ -8,8 +8,9 @@
 
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/CylinderVolumeHelper.hpp"
-#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Geometry/KDTreeTrackingGeometryBuilder.hpp"
 #include "Acts/Geometry/LayerArrayCreator.hpp"
 #include "Acts/Geometry/LayerCreator.hpp"
 #include "Acts/Geometry/SurfaceArrayCreator.hpp"
@@ -59,10 +60,6 @@ auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
 
   auto [surfaces, elements] = convertGeant4Volumes(cfg);
 
-  // Configure the tracking geometry builder, copy the surfaces in
-  Acts::KDTreeTrackingGeometryBuilder::Config kdtCfg;
-  kdtCfg.surfaces = surfaces;
-
   // Surface array creatorr
   auto surfaceArrayCreator = std::make_shared<const Acts::SurfaceArrayCreator>(
       Acts::SurfaceArrayCreator::Config(),
@@ -91,11 +88,15 @@ auto ActsExamples::Geant4::Geant4Detector::constructTrackingGeometry(
           cvhConfig,
           Acts::getDefaultLogger("CylinderVolumeHelper", cfg.logLevel));
 
-  // The KDT tracking geometry builder
+  // Configure the tracking geometry builder, copy the surfaces in
+  Acts::KDTreeTrackingGeometryBuilder::Config kdtCfg;
+  kdtCfg.surfaces = surfaces;
   kdtCfg.layerCreator = layerCreator;
   kdtCfg.trackingVolumeHelper = cylinderVolumeHelper;
   kdtCfg.protoDetector = cfg.protoDetector;
+  kdtCfg.geometryIdentifierHook = cfg.geometryIdentifierHook;
 
+  // The KDT tracking geometry builder
   auto kdtBuilder = Acts::KDTreeTrackingGeometryBuilder(
       kdtCfg,
       Acts::getDefaultLogger("KDTreeTrackingGeometryBuilder", cfg.logLevel));

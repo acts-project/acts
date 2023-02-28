@@ -65,51 +65,54 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
   G4PrimaryVertex* pVertex = nullptr;
 
   // We are looping through the particles and flush per vertex
-  std::unique_ptr<SimParticle::Vector4> lastVertex = nullptr;
+  std::optional<Acts::Vector4> lastVertex;
 
   constexpr double convertLength = CLHEP::mm / Acts::UnitConstants::mm;
   constexpr double convertEnergy = CLHEP::GeV / Acts::UnitConstants::GeV;
 
   unsigned int pCounter = 0;
+  unsigned int trackId = 1;
   // Loop over the input partilces and run
   for (const auto& part : inputParticles) {
     auto currentVertex = part.fourPosition();
-    if (lastVertex == nullptr or not currentVertex.isApprox(*lastVertex)) {
+    if (not lastVertex or not currentVertex.isApprox(*lastVertex)) {
       // Add the vertex to the event
       if (pVertex != nullptr) {
         anEvent->AddPrimaryVertex(pVertex);
         ACTS_DEBUG("Flushing " << pCounter
                                << " particles associated with vertex "
-                               << Acts::toString(*lastVertex));
+                               << lastVertex->transpose());
         pCounter = 0;
       }
-      lastVertex = std::make_unique<SimParticle::Vector4>(currentVertex);
+      lastVertex = currentVertex;
       pVertex = new G4PrimaryVertex(
           currentVertex[0] * convertLength, currentVertex[1] * convertLength,
           currentVertex[2] * convertLength, currentVertex[3]);
     }
+
     // Add a new primary to the vertex
+
     Acts::Vector4 mom4 = part.fourMomentum() * convertEnergy;
 
     // Particle properties, may be forced to specific value
-    G4int particlePdgCode =
-        m_cfg.forceParticle ? m_cfg.forcedPdgCode : part.pdg();
+    G4int particlePdgCode = m_cfg.forcedPdgCode.value_or(part.pdg());
+    G4double particleCharge = m_cfg.forcedCharge.value_or(part.charge());
     G4double particleMass =
-        m_cfg.forceParticle ? part.mass() * convertEnergy : 0.;
+        m_cfg.forcedMass.value_or(part.mass() * convertEnergy);
 
     // Check if it is a Geantino / ChargedGeantino
     G4ParticleDefinition* particleDefinition =
         particleTable->FindParticle(particlePdgCode);
     if (particleDefinition == nullptr) {
-      switch (particlePdgCode) {
-        case 999: {
-          particleDefinition = G4Geantino::Definition();
-        } break;
-        case 998: {
-          particleDefinition = G4ChargedGeantino::Definition();
-        } break;
-        default:
-          break;
+      if (particlePdgCode == 0 && particleMass == 0 && particleCharge == 0) {
+        particleDefinition = G4Geantino::Definition();
+      }
+      if (particlePdgCode == 0 && particleMass == 0 && particleCharge != 0) {
+        if (particleCharge != 1) {
+          ACTS_ERROR("invalid charged geantino charge " << particleCharge
+                                                        << ". should be 1");
+        }
+        particleDefinition = G4ChargedGeantino::Definition();
       }
     }
 
@@ -124,23 +127,27 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
                  << particleDefinition->GetParticleName()
                  << "' and properties:");
     ACTS_VERBOSE(" -> mass: " << particleMass);
+    ACTS_VERBOSE(" -> charge: " << particleCharge);
     ACTS_VERBOSE(" -> momentum: " << mom4.transpose());
-    ACTS_VERBOSE(" -> charge: " << part.charge());
 
     G4PrimaryParticle* particle = new G4PrimaryParticle(particleDefinition);
 
     particle->SetMass(particleMass);
+    particle->SetCharge(particleCharge);
     particle->Set4Momentum(mom4[0], mom4[1], mom4[2], mom4[3]);
-    particle->SetCharge(part.charge());
-    particle->SetTrackID(pCounter);
+    particle->SetTrackID(trackId++);
+
     // Add the primary to the vertex
     pVertex->SetPrimary(particle);
+
+    eventData.trackIdMapping[particle->GetTrackID()] = part.particleId();
+
     ++pCounter;
   }
   // Final vertex to be added
   if (pVertex != nullptr) {
     anEvent->AddPrimaryVertex(pVertex);
     ACTS_DEBUG("Flushing " << pCounter << " particles associated with vertex "
-                           << Acts::toString(*lastVertex));
+                           << lastVertex->transpose());
   }
 }

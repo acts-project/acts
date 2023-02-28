@@ -55,7 +55,7 @@ clang_tidy:
 
 build:
   stage: build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v30
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v34
   tags:
     - docker
   variables:
@@ -71,10 +71,6 @@ build:
   artifacts:
     paths:
       - build/
-      - src/Examples/Python
-      - src/Examples/Scripts/Python
-      - src/Examples/Algorithms/TrackFinding/share
-      - src/Examples/Algorithms/Digitization/share
     exclude:
       - build/**/*.o
 
@@ -100,23 +96,24 @@ build:
       -DACTS_EXATRKX_ENABLE_TORCH=ON
       -DACTS_EXATRKX_ENABLE_ONNX=ON
       -DACTS_BUILD_EXAMPLES_PYTHON_BINDINGS=ON
+      -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON
     - cmake --build build --
 
 test:
   stage: test
   needs:
     - build
-  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v30
+  image: ghcr.io/acts-project/ubuntu2004_exatrkx:v34
   tags:
     - docker-gpu-nvidia
   script:
     - apt-get update -y
     - apt-get install -y python3 libxxhash0
-    - curl https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar --output onnx_models.tar
-    - curl https://bhuth.webo.family/index.php/s/oyFg8WF2cDPrJYz/download --output torchscript_models.tar
-    - tar -xf onnx_models.tar
-    - tar -xf torchscript_models.tar
+    - source /usr/local/bin/thisroot.sh
     - source build/python/setup.sh
+    - git clone $CLONE_URL src
+    - cd src
+    - git checkout $HEAD_SHA
+    - pip3 install -r Examples/Python/tests/requirements.txt
     - nvidia-smi
-    - python3 src/Examples/Scripts/Python/exatrkx.py onnx
-    - python3 src/Examples/Scripts/Python/exatrkx.py torch
+    - pytest -rFsv -k test_exatrkx

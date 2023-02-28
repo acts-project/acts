@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Detector/Detector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
@@ -81,51 +81,56 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       eventActions, trackingActions, steppingActions, detectorConstruction,
       magneticField, sensitiveSurfaceMapper);
 
-  mod.def(
-      "materialRecordingConfig",
-      [](Acts::Logging::Level level, G4VUserDetectorConstruction* detector,
+  auto makeGeant4Config =
+      [](Acts::Logging::Level& level,
          std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
-         const std::string& inputParticles,
-         const std::string& outputMaterialTracks) {
-        // The Geant4 actions needed
-        std::vector<G4UserRunAction*> runActions = {};
-        std::vector<G4UserEventAction*> eventActions = {};
-        std::vector<G4UserTrackingAction*> trackingActions = {};
+         G4VUserDetectorConstruction* detector, G4VUserPhysicsList* physicsList,
+         const SimParticleTranslation::Config& prCfg)
+      -> Geant4Simulation::Config {
+    Geant4Simulation::Config g4Cfg;
 
-        // Set the main Geant4 algorithm, primary generation, detector
-        // construction
-        Geant4Simulation::Config g4Cfg;
-        g4Cfg.randomNumbers = std::move(randomNumbers);
-        g4Cfg.runManager = std::make_shared<G4RunManager>();
-        g4Cfg.runManager->SetUserInitialization(new MaterialPhysicsList(
-            Acts::getDefaultLogger("MaterialPhysicsList", level)));
+    // Set the main Geant4 algorithm, primary generation, detector
+    // construction
+    g4Cfg.randomNumbers = std::move(randomNumbers);
+    g4Cfg.runManager = std::make_shared<G4RunManager>();
+    g4Cfg.runManager->SetUserInitialization(physicsList);
 
-        MaterialSteppingAction::Config mStepCfg;
-        mStepCfg.excludeMaterials = {"Air", "Vacuum"};
-        std::vector<G4UserSteppingAction*> steppingActions = {
-            new MaterialSteppingAction(
-                mStepCfg,
-                Acts::getDefaultLogger("MaterialSteppingAction", level))};
+    // Set the primarty generator
+    g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
+        prCfg, Acts::getDefaultLogger("SimParticleTranslation", level));
+    g4Cfg.detectorConstruction = detector;
+
+    return g4Cfg;
+  };
+
+  mod.def(
+      "makeGeant4MaterialRecordingConfig",
+      [makeGeant4Config](
+          Acts::Logging::Level level, G4VUserDetectorConstruction* detector,
+          std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
+          const std::string& inputParticles,
+          const std::string& outputMaterialTracks) {
+        auto physicsList = new MaterialPhysicsList(
+            Acts::getDefaultLogger("MaterialPhysicsList", level));
 
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
         g4PrCfg.inputParticles = inputParticles;
-        g4PrCfg.forceParticle = true;
+        g4PrCfg.forcedPdgCode = 0;
+        g4PrCfg.forcedCharge = 0.;
         g4PrCfg.forcedMass = 0.;
-        g4PrCfg.forcedPdgCode = 999;
+
+        auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
+                                      physicsList, g4PrCfg);
+
+        MaterialSteppingAction::Config mStepCfg;
+        mStepCfg.excludeMaterials = {"Air", "Vacuum"};
+        auto steppingAction = new MaterialSteppingAction(
+            mStepCfg, Acts::getDefaultLogger("MaterialSteppingAction", level));
+        g4Cfg.steppingActions = {steppingAction};
+
         // Set the material tracks at output
         g4Cfg.outputMaterialTracks = outputMaterialTracks;
-
-        // Set the primarty generator
-        g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
-            g4PrCfg, Acts::getDefaultLogger("SimParticleTranslation", level));
-        g4Cfg.detectorConstruction = detector;
-
-        // Set the user actions
-        g4Cfg.runActions = runActions;
-        g4Cfg.eventActions = eventActions;
-        g4Cfg.trackingActions = trackingActions;
-        g4Cfg.steppingActions = steppingActions;
 
         return g4Cfg;
       },
@@ -133,54 +138,36 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
       "outputMaterialTracks"_a);
 
   mod.def(
-      "geant4SimulationConfig",
-      [](Acts::Logging::Level& level, G4VUserDetectorConstruction* detector,
-         const std::string& inputParticles,
-         const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
-         const std::shared_ptr<const Acts::MagneticFieldProvider>&
-             magneticField,
-         const std::vector<std::string>& volumeMappings,
-         const std::vector<std::string>& materialMappings) {
-        // The Geant4 actions needed
-        std::vector<G4UserRunAction*> runActions = {};
-        std::vector<G4UserEventAction*> eventActions = {};
-        std::vector<G4UserTrackingAction*> trackingActions = {};
-        std::vector<G4UserSteppingAction*> steppingActions = {};
-
-        // Set the main Geant4 algorithm, primary generation, detector
-        // construction
-        Geant4Simulation::Config g4Cfg;
-
-        g4Cfg.runManager = std::make_shared<G4RunManager>();
-        g4Cfg.runManager->SetUserInitialization(new FTFP_BERT());
-
-        ParticleTrackingAction::Config g4TrackCfg;
-        ParticleTrackingAction* particleAction = new ParticleTrackingAction(
-            g4TrackCfg,
-            Acts::getDefaultLogger("ParticleTrackingAction", level));
-        trackingActions.push_back(particleAction);
-
-        SensitiveSteppingAction::Config g4StepCfg;
-        SensitiveSteppingAction* sensitiveStepping =
-            new SensitiveSteppingAction(
-                g4StepCfg,
-                Acts::getDefaultLogger("SensitiveSteppingAction", level));
-        steppingActions.push_back(sensitiveStepping);
+      "makeGeant4SimulationConfig",
+      [makeGeant4Config](
+          Acts::Logging::Level& level, G4VUserDetectorConstruction* detector,
+          std::shared_ptr<const ActsExamples::RandomNumbers> randomNumbers,
+          const std::string& inputParticles,
+          const std::shared_ptr<const Acts::TrackingGeometry>& trackingGeometry,
+          const std::shared_ptr<const Acts::MagneticFieldProvider>&
+              magneticField,
+          const std::vector<std::string>& volumeMappings,
+          const std::vector<std::string>& materialMappings) {
+        auto physicsList = new FTFP_BERT();
 
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
         g4PrCfg.inputParticles = inputParticles;
 
-        // Set the primarty generator
-        g4Cfg.primaryGeneratorAction = new SimParticleTranslation(
-            g4PrCfg, Acts::getDefaultLogger("SimParticleTranslation", level));
-        g4Cfg.detectorConstruction = detector;
+        auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
+                                      physicsList, g4PrCfg);
 
-        // Set the user actions
-        g4Cfg.runActions = runActions;
-        g4Cfg.eventActions = eventActions;
-        g4Cfg.trackingActions = trackingActions;
-        g4Cfg.steppingActions = steppingActions;
+        ParticleTrackingAction::Config g4TrackCfg;
+        ParticleTrackingAction* particleAction = new ParticleTrackingAction(
+            g4TrackCfg,
+            Acts::getDefaultLogger("ParticleTrackingAction", level));
+        g4Cfg.trackingActions.push_back(particleAction);
+
+        SensitiveSteppingAction::Config g4StepCfg;
+        G4UserSteppingAction* steppingAction = new SensitiveSteppingAction(
+            g4StepCfg,
+            Acts::getDefaultLogger("SensitiveSteppingAction", level));
+        g4Cfg.steppingActions.push_back(steppingAction);
 
         // An ACTS Magnetic field is provided
         if (magneticField) {
@@ -211,7 +198,7 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         return g4Cfg;
       },
-      "level"_a, "detector"_a, "inputParticles"_a,
+      "level"_a, "detector"_a, "randomNumbers"_a, "inputParticles"_a,
       py::arg("trackingGeometry") = nullptr, py::arg("magneticField") = nullptr,
       py::arg("volumeMappings") = std::vector<std::string>{},
       py::arg("materialMappings") = std::vector<std::string>{});
@@ -259,27 +246,24 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
     using Geant4Detector = ActsExamples::Geant4::Geant4Detector;
 
-    auto g =
-        py::class_<Geant4Detector, std::shared_ptr<Geant4Detector>>(
-            mod, "Geant4Detector")
-            .def(py::init<>())
-            .def("constructDetector",
-                 py::overload_cast<
-                     const ActsExamples::Geant4::Geant4Detector::Config&>(
-                     &ActsExamples::Geant4::Geant4Detector::constructDetector))
-            .def("constructTrackingGeometry",
-                 py::overload_cast<
-                     const ActsExamples::Geant4::Geant4Detector::Config&>(
-                     &ActsExamples::Geant4::Geant4Detector::
-                         constructTrackingGeometry));
+    auto g = py::class_<Geant4Detector, std::shared_ptr<Geant4Detector>>(
+                 mod, "Geant4Detector")
+                 .def(py::init<>())
+                 .def("constructDetector",
+                      py::overload_cast<const Geant4Detector::Config&>(
+                          &Geant4Detector::constructDetector))
+                 .def("constructTrackingGeometry",
+                      py::overload_cast<const Geant4Detector::Config&>(
+                          &Geant4Detector::constructTrackingGeometry));
 
     auto c = py::class_<Geant4Detector::Config>(g, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Geant4Detector::Config);
     ACTS_PYTHON_MEMBER(name);
-    ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_MEMBER(g4World);
     ACTS_PYTHON_MEMBER(g4SurfaceOptions);
     ACTS_PYTHON_MEMBER(protoDetector);
+    ACTS_PYTHON_MEMBER(geometryIdentifierHook);
+    ACTS_PYTHON_MEMBER(logLevel);
     ACTS_PYTHON_STRUCT_END();
   }
 
