@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include <Acts/Propagator/MaterialInteractor.hpp>

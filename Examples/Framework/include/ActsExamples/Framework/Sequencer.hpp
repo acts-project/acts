@@ -11,7 +11,6 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
 #include "ActsExamples/Utilities/tbbWrap.hpp"
 #include <Acts/Utilities/Logger.hpp>
