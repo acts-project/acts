@@ -15,13 +15,11 @@
 
 namespace ActsExamples {
 
-/// Event processing algorithm interface.
+/// Event processing interface.
 ///
-/// An algorithm must have no internal state and can communicate to the
-/// rest of the world only by reading and writting to the event store.
-class IAlgorithm {
+class SequenceElement {
  public:
-  virtual ~IAlgorithm() = default;
+  virtual ~SequenceElement() = default;
 
   /// The algorithm name.
   virtual std::string name() const = 0;

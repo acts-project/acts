@@ -14,8 +14,8 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
 #include <memory>
@@ -28,7 +28,7 @@ namespace ActsExamples {
 /// This class provides default implementations for most interface methods and
 /// and adds a default logger that can be used directly in subclasses.
 /// Algorithm implementations only need to implement the `execute` method.
-class BareAlgorithm : public IAlgorithm {
+class BareAlgorithm : public SequenceElement {
  public:
   /// Constructor
   ///

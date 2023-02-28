@@ -13,8 +13,8 @@
 #pragma once
 
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 
 #include <string>
 
@@ -25,7 +25,7 @@ namespace ActsExamples {
 /// Get data from the event store and write it to disk. The writer can have
 /// internal state and implementations are responsible to handle concurrent
 /// calls.
-class IWriter : public IAlgorithm {
+class IWriter : public SequenceElement {
  public:
   /// Write data from one event.
   virtual ProcessCode write(const AlgorithmContext& context) = 0;

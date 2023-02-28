@@ -9,8 +9,8 @@
 #pragma once
 
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 
 #include <string>
 #include <utility>
@@ -22,7 +22,7 @@ namespace ActsExamples {
 /// Read data from disk and add it to the event store. The reader can have
 /// internal state and implementations are responsible to handle concurrent
 /// calls.
-class IReader : public IAlgorithm {
+class IReader : public SequenceElement {
  public:
   /// Provide range of available events or [0, SIZE_MAX) if undefined.
   ///

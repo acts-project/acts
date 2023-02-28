@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -46,14 +47,6 @@ ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
 #endif
 }
 
-void ActsExamples::Sequencer::addService(std::shared_ptr<IService> service) {
-  if (not service) {
-    throw std::invalid_argument("Can not add empty/NULL service");
-  }
-  m_services.push_back(std::move(service));
-  ACTS_INFO("Added service '" << m_services.back()->name() << "'");
-}
-
 void ActsExamples::Sequencer::addContextDecorator(
     std::shared_ptr<IContextDecorator> decorator) {
   if (not decorator) {
@@ -73,12 +66,12 @@ void ActsExamples::Sequencer::addReader(std::shared_ptr<IReader> reader) {
 }
 
 void ActsExamples::Sequencer::addAlgorithm(
-    std::shared_ptr<IAlgorithm> algorithm) {
-  if (not algorithm) {
+    std::shared_ptr<SequenceElement> element) {
+  if (not element) {
     throw std::invalid_argument("Can not add empty/NULL algorithm");
   }
-  m_algorithms.push_back(std::move(algorithm));
-  ACTS_INFO("Added algorithm '" << m_algorithms.back()->name() << "'");
+  m_sequenceElements.push_back(std::move(element));
+  ACTS_INFO("Added algorithm '" << m_sequenceElements.back()->name() << "'");
 }
 
 void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
@@ -101,16 +94,13 @@ std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {
   std::vector<std::string> names;
 
   // WARNING this must be done in the same order as in the processing
-  for (const auto& service : m_services) {
-    names.push_back("Service:" + service->name());
-  }
   for (const auto& decorator : m_decorators) {
     names.push_back("Decorator:" + decorator->name());
   }
   for (const auto& reader : m_readers) {
     names.push_back("Reader:" + reader->name());
   }
-  for (const auto& algorithm : m_algorithms) {
+  for (const auto& algorithm : m_sequenceElements) {
     names.push_back("Algorithm:" + algorithm->name());
   }
 
@@ -266,26 +256,17 @@ int ActsExamples::Sequencer::run() {
   ACTS_INFO("Processing events [" << eventsRange.first << ", "
                                   << eventsRange.second << ")");
   ACTS_INFO("Starting event loop with " << m_cfg.numThreads << " threads");
-  ACTS_INFO("  " << m_services.size() << " services");
   ACTS_INFO("  " << m_decorators.size() << " context decorators");
-  ACTS_INFO("  " << m_algorithms.size()
-                 << " algorithms (incl. readers and writers)");
+  ACTS_INFO("  " << m_sequenceElements.size()
+                 << " sequence elements (incl. readers and writers)");
   ACTS_INFO("  " << m_readers.size() << " readers");
   size_t nWriters = 0;
-  for (const auto& alg : m_algorithms) {
+  for (const auto& alg : m_sequenceElements) {
     if (dynamic_cast<const IWriter*>(alg.get()) != nullptr) {
       nWriters++;
     }
   }
   ACTS_INFO("  " << nWriters << " writers");
-
-  // run start-of-run hooks
-  for (auto& service : m_services) {
-    names.push_back("Service:" + service->name() + ":startRun");
-    clocksAlgorithms.push_back(Duration::zero());
-    StopWatch sw(clocksAlgorithms.back());
-    service->startRun();
-  }
 
   auto getAlgorithmType = [](const auto& alg) {
     if (dynamic_cast<const IWriter*>(&alg) != nullptr) {
@@ -297,8 +278,8 @@ int ActsExamples::Sequencer::run() {
     return "algorithm";
   };
 
-  ACTS_VERBOSE("Initialize algorithms");
-  for (auto& alg : m_algorithms) {
+  ACTS_VERBOSE("Initialize sequence elements");
+  for (auto& alg : m_sequenceElements) {
     ACTS_VERBOSE("Initialize " << getAlgorithmType(*alg) << ": "
                                << alg->name());
     if (alg->initialize() != ProcessCode::SUCCESS) {
@@ -330,11 +311,6 @@ int ActsExamples::Sequencer::run() {
             AlgorithmContext context(0, event, eventStore);
             size_t ialgo = 0;
 
-            // Prepare event store w/ service information
-            for (auto& service : m_services) {
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              service->prepare(++context);
-            }
             /// Decorate the context
             for (auto& cdr : m_decorators) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -344,9 +320,9 @@ int ActsExamples::Sequencer::run() {
               }
             }
 
-            ACTS_VERBOSE("Execute algorithms");
+            ACTS_VERBOSE("Execute sequence elements");
 
-            for (auto& alg : m_algorithms) {
+            for (auto& alg : m_sequenceElements) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
               ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
                                       << alg->name());
@@ -378,8 +354,8 @@ int ActsExamples::Sequencer::run() {
         });
   });
 
-  ACTS_VERBOSE("Finalize algorithms");
-  for (auto& alg : m_algorithms) {
+  ACTS_VERBOSE("Finalize sequence elements");
+  for (auto& alg : m_sequenceElements) {
     ACTS_VERBOSE("Finalize " << getAlgorithmType(*alg) << ": " << alg->name());
     if (alg->finalize() != ProcessCode::SUCCESS) {
       ACTS_FATAL("Failed to finalize " << getAlgorithmType(*alg) << ": "
