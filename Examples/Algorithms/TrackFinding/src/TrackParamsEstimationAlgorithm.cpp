@@ -20,7 +20,7 @@
 ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
     ActsExamples::TrackParamsEstimationAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("TrackParamsEstimationAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("TrackParamsEstimationAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   // Either seeds directly or proto tracks + space points
   if (m_cfg.inputSeeds.empty() and m_cfg.inputSpacePoints.empty()) {

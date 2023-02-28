@@ -14,7 +14,7 @@
 
 ActsExamples::HelloLoggerAlgorithm::HelloLoggerAlgorithm(
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("HelloLogger", level) {}
+    : ActsExamples::IAlgorithm("HelloLogger", level) {}
 
 ActsExamples::ProcessCode ActsExamples::HelloLoggerAlgorithm::execute(
     const AlgorithmContext& ctx) const {

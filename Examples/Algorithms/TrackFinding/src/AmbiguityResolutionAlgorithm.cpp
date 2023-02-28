@@ -22,7 +22,7 @@
 ActsExamples::AmbiguityResolutionAlgorithm::AmbiguityResolutionAlgorithm(
     ActsExamples::AmbiguityResolutionAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("AmbiguityResolutionAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("AmbiguityResolutionAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSourceLinks.empty()) {
     throw std::invalid_argument("Missing source links input collection");

@@ -28,14 +28,14 @@ namespace ActsExamples {
 /// This class provides default implementations for most interface methods and
 /// and adds a default logger that can be used directly in subclasses.
 /// Algorithm implementations only need to implement the `execute` method.
-class BareAlgorithm : public SequenceElement {
+class IAlgorithm : public SequenceElement {
  public:
   /// Constructor
   ///
   /// @name The algorithm name
   /// @level The logging level for this algorithm
-  BareAlgorithm(std::string name,
-                Acts::Logging::Level level = Acts::Logging::INFO);
+  IAlgorithm(std::string name,
+             Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// The algorithm name.
   std::string name() const override;

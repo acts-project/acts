@@ -24,7 +24,7 @@
 
 ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
                                                Acts::Logging::Level lvl)
-    : BareAlgorithm("SpacePointMaker", lvl), m_cfg(std::move(cfg)) {
+    : IAlgorithm("SpacePointMaker", lvl), m_cfg(std::move(cfg)) {
   if (m_cfg.inputSourceLinks.empty()) {
     throw std::invalid_argument("Missing source link input collection");
   }

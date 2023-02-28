@@ -11,7 +11,7 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
@@ -59,14 +59,14 @@ class PySequenceElement : public SequenceElement {
 #pragma clang diagnostic pop
 #endif
 
-class PyBareAlgorithm : public BareAlgorithm {
+class PyIAlgorithm : public IAlgorithm {
  public:
-  using BareAlgorithm::BareAlgorithm;
+  using IAlgorithm::IAlgorithm;
 
   ProcessCode execute(const AlgorithmContext& ctx) const override {
     py::gil_scoped_acquire acquire{};
     try {
-      PYBIND11_OVERRIDE_PURE(ProcessCode, BareAlgorithm, execute, ctx);
+      PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
     } catch (py::error_already_set& e) {
       throw;  // Error from python, handle in python.
     } catch (std::runtime_error& e) {
@@ -166,12 +166,12 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
           .def("name", &SequenceElement::name);
 
   auto bareAlgorithm =
-      py::class_<ActsExamples::BareAlgorithm,
-                 std::shared_ptr<ActsExamples::BareAlgorithm>, SequenceElement,
-                 PyBareAlgorithm>(mex, "BareAlgorithm")
+      py::class_<ActsExamples::IAlgorithm,
+                 std::shared_ptr<ActsExamples::IAlgorithm>, SequenceElement,
+                 PyIAlgorithm>(mex, "IAlgorithm")
           .def(py::init_alias<const std::string&, Acts::Logging::Level>(),
                py::arg("name"), py::arg("level"))
-          .def("execute", &BareAlgorithm::execute);
+          .def("execute", &IAlgorithm::execute);
 
   py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
       .def(py::init<>())
