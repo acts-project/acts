@@ -701,7 +701,8 @@ def addFTFSeeding(
     #just copied these from standard and ortho seeding, same input and outputs in both 
     ##which are then inputs to the unique seeding alg (some extra in standard, used common ones)
     logLevel = acts.examples.defaultLogging(sequence, logLevel)()
-    seedFinderConfig = acts.SeedFinderOrthogonalConfig(
+    #want to change to SFFTFconfig here 
+    seedFinderConfig = acts.SeedFinderFTFConfig(
         **acts.examples.defaultKWArgs(
             rMin=seedFinderConfigArg.r[0],
             rMax=seedFinderConfigArg.r[1],
@@ -778,7 +779,7 @@ def addFTFSeeding(
     )
 
     ##using ortho algorithm to check the python part works 
-    seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
+    seedingAlg = acts.examples.SeedingFTFAlgorithm(
     #seedingAlg = acts.examples.SeedingFTFAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
