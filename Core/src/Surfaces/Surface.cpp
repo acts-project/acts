@@ -332,7 +332,7 @@ const Acts::DetectorElementBase* Acts::Surface::associatedDetectorElement()
 }
 
 const Acts::Layer* Acts::Surface::associatedLayer() const {
-  return (m_associatedLayer);
+  return m_associatedLayer;
 }
 
 const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
@@ -342,6 +342,14 @@ const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
 const std::shared_ptr<const Acts::ISurfaceMaterial>&
 Acts::Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
+}
+
+void Acts::Surface::assignDetectorElement(
+    const DetectorElementBase& detelement) {
+  m_associatedDetElement = &detelement;
+  // resetting the transform as it will be handled through the detector element
+  // now
+  m_transform = Transform3::Identity();
 }
 
 void Acts::Surface::assignSurfaceMaterial(

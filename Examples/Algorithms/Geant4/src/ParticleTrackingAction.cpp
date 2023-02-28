@@ -45,9 +45,9 @@ ActsExamples::SimParticle ActsExamples::ParticleTrackingAction::convert(
 
   // Get all the information from the Track
   const G4ParticleDefinition* particleDef = aTrack.GetParticleDefinition();
-  G4double mass = particleDef->GetPDGMass();
-  G4double charge = particleDef->GetPDGCharge();
   G4int pdg = particleDef->GetPDGEncoding();
+  G4double charge = particleDef->GetPDGCharge();
+  G4double mass = particleDef->GetPDGMass();
   G4int id = aTrack.GetTrackID();
   G4int parentId = aTrack.GetParentID();
   G4ThreeVector pPosition = convertLength * aTrack.GetPosition();
