@@ -13,6 +13,7 @@
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/TruthTracking/TrackSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
+#include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 
@@ -213,6 +214,12 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TrackModifier, mex, "TrackModifier", inputTrajectories,
       inputTrackParameters, outputTrajectories, outputTrackParameters,
       dropCovariance, covScale, killTime);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
+      inputParticles, inputMeasurementParticlesMap, inputSourceLinks,
+      inputSpacePoints, outputParticles, outputFullProtoTracks, outputSeeds,
+      outputProtoTracks, deltaRMin, deltaRMax);
 }
 
 }  // namespace Acts::Python

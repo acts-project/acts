@@ -8,9 +8,9 @@
 
 namespace Acts {
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(
+inline LinCircle transformCoordinates(
     InternalSpacePoint<external_spacepoint_t>& sp,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
+    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
@@ -24,9 +24,9 @@ LinCircle transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               const external_spacepoint_t& spM, bool bottom,
-                               callable_t&& extractFunction) {
+inline LinCircle transformCoordinates(external_spacepoint_t& sp,
+                                      external_spacepoint_t& spM, bool bottom,
+                                      callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
   // spacepoint. Please see the other version of this function for more
@@ -64,7 +64,7 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp, const int bottomSign,
+inline LinCircle transformCoordinates(external_spacepoint_t& sp, const int bottomSign,
                                const std::array<float, 8>& transformVariables) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
@@ -95,7 +95,7 @@ LinCircle transformCoordinates(external_spacepoint_t& sp, const int bottomSign,
 }
 
 template <typename external_spacepoint_t>
-void transformCoordinates(
+inline std::vector<std::size_t> transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
@@ -112,10 +112,11 @@ void transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+inline void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
                           const external_spacepoint_t& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction) {
+
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
   float cosPhiM = xM / rM;
@@ -168,7 +169,7 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
 }
 
 template <typename external_spacepoint_t>
-std::vector<std::size_t> cotThetaSortIndex(
+inline std::vector<std::size_t> cotThetaSortIndex(
     std::vector<external_spacepoint_t*>& vec,
     std::vector<LinCircle>& linCircleVec) {
   std::vector<std::size_t> indexes(vec.size());
@@ -185,7 +186,7 @@ std::vector<std::size_t> cotThetaSortIndex(
 }
 
 template <typename external_spacepoint_t, typename sp_range_t>
-bool xyzCoordinateCheck(
+inline bool xyzCoordinateCheck(
     const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
     sp_range_t sp, const double* spacepointPosition,
     double* outputCoordinates) {
