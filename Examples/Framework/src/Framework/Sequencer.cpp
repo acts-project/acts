@@ -34,6 +34,10 @@
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
+#if __has_include(<cxxabi.h>)
+#include <cxxabi.h>
+#endif
+
 namespace ActsExamples {
 
 namespace {
@@ -61,21 +65,16 @@ size_t saturatedAdd(size_t a, size_t b) {
 #define STRING(x) _STRING(x)
 
 std::string demangle(const char* sym) {
-#if defined(CPPFILT_EXECUTABLE)
-  std::array<char, 128> buffer{};
-  std::string result;
-  std::string cmd = std::string{STRING(CPPFILT_EXECUTABLE)} + " -t " + sym;
-  std::cout << cmd << std::endl;
-  std::unique_ptr<FILE, decltype(&pclose)> pipe(popen(cmd.c_str(), "r"),
-                                                pclose);
-  if (!pipe) {
+#if __has_include(<cxxabi.h>)
+  int status = 0;
+
+  char* realname = abi::__cxa_demangle(sym, nullptr, nullptr, &status);
+
+  if (status != 0) {
     return sym;
   }
-  while (fgets(buffer.data(), buffer.size(), pipe.get()) != nullptr) {
-    result += buffer.data();
-  }
-  boost::trim_right(result);
-  return result;
+
+  return realname;
 #else
   return sym;
 #endif

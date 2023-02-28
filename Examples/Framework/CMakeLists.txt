@@ -35,13 +35,6 @@ target_compile_features(
   ActsExamplesFramework
   PUBLIC cxx_std_17)
 
-find_program(CPPFILT_EXECUTABLE c++filt)
-if(NOT CPPFILT_EXECUTABLE STREQUAL "CPPFILT_EXECUTABLE-NOTFOUND") 
-set_source_files_properties(src/Framework/Sequencer.cpp 
-  PROPERTIES COMPILE_DEFINITIONS "CPPFILT_EXECUTABLE=${CPPFILT_EXECUTABLE}")
-endif()
-
-
 if(ACTS_USE_EXAMPLES_TBB)
   # newer DD4hep version require TBB and search interally for TBB in
   # config-only mode. to avoid mismatches we explicitely search using
