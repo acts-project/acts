@@ -46,7 +46,7 @@ class Geant4DetectorSurfaceFactory {
     /// The created detector elements - for the detector store
     std::vector<Geant4SensitiveSurface> sensitiveSurfaces;
     /// The created non-const surfaces - for further processing,
-    std::vector<std::shared_ptr<Surface>> passiveSurfaces;
+    std::vector<Geant4PassiveSurface> passiveSurfaces;
     /// matching and conversion statistics: volumes
     std::size_t matchedG4Volumes = 0;
     /// matching and conversion statistics: surfaces

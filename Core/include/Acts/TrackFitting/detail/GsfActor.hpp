@@ -133,7 +133,7 @@ struct GsfActor {
   struct ParameterCache {
     ActsScalar weight = 0;
     BoundVector boundPars;
-    std::optional<BoundSymMatrix> boundCov;
+    BoundSymMatrix boundCov;
   };
 
   struct TemporaryStates {
@@ -422,25 +422,22 @@ struct GsfActor {
       new_pars[eBoundQOverP] = old_bound.charge() / (p_prev + delta_p);
 
       // compute inverse variance of p from mixture and update covariance
-      auto new_cov = old_bound.covariance();
+      auto new_cov = old_bound.covariance().value();
 
-      if (new_cov.has_value()) {
-        const auto varInvP = [&]() {
-          if (state.stepping.navDir == NavigationDirection::Forward) {
-            const auto f = 1. / (p_prev * gaussian.mean);
-            return f * f * gaussian.var;
-          } else {
-            return gaussian.var / (p_prev * p_prev);
-          }
-        }();
+      const auto varInvP = [&]() {
+        if (state.stepping.navDir == NavigationDirection::Forward) {
+          const auto f = 1. / (p_prev * gaussian.mean);
+          return f * f * gaussian.var;
+        } else {
+          return gaussian.var / (p_prev * p_prev);
+        }
+      }();
 
-        (*new_cov)(eBoundQOverP, eBoundQOverP) += varInvP;
-        throw_assert(
-            std::isfinite((*new_cov)(eBoundQOverP, eBoundQOverP)),
-            "cov not finite, varInvP=" << varInvP << ", p_prev=" << p_prev
-                                       << ", gaussian.mean=" << gaussian.mean
-                                       << ", gaussian.var=" << gaussian.var);
-      }
+      new_cov(eBoundQOverP, eBoundQOverP) += varInvP;
+      throw_assert(std::isfinite(new_cov(eBoundQOverP, eBoundQOverP)),
+                   "cov not finite, varInvP="
+                       << varInvP << ", p_prev=" << p_prev << ", gaussian.mean="
+                       << gaussian.mean << ", gaussian.var=" << gaussian.var);
 
       // Set the remaining things and push to vector
       componentCaches.push_back(
@@ -612,7 +609,7 @@ struct GsfActor {
     for (const auto& idx : tmpStates.tips) {
       const auto [w, p, c] = proj(idx);
       if (w > 0.0) {
-        v.push_back({w, p, *c});
+        v.push_back({w, p, c});
       }
     }
 
@@ -746,9 +743,9 @@ struct GsfActor {
       // We set predicted & filtered the same so that the fields are not
       // uninitialized when not finding this state in the reverse pass.
       proxy.predicted() = filtMean;
-      proxy.predictedCovariance() = filtCov.value();
+      proxy.predictedCovariance() = filtCov;
       proxy.filtered() = filtMean;
-      proxy.filteredCovariance() = filtCov.value();
+      proxy.filteredCovariance() = filtCov;
     } else {
       assert((result.currentTip != MultiTrajectoryTraits::kInvalid &&
               "tip not valid"));
@@ -764,7 +761,7 @@ struct GsfActor {
                   });
 
               trackState.filtered() = filtMean;
-              trackState.filteredCovariance() = filtCov.value();
+              trackState.filteredCovariance() = filtCov;
               return false;
             }
             return true;

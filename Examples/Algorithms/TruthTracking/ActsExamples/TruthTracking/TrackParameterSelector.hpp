@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -16,13 +16,13 @@
 namespace ActsExamples {
 
 /// Select tracks by applying some selection cuts.
-class TrackSelector final : public BareAlgorithm {
+class TrackParameterSelector final : public BareAlgorithm {
  public:
   struct Config {
-    /// Input track collection.
-    std::string inputTracks;
-    /// Output track collection
-    std::string outputTracks;
+    /// Input track parameters collection
+    std::string inputTrackParameters;
+    /// Output track parameters collection.
+    std::string outputTrackParameters;
 
     // Minimum/maximum local positions.
     double loc0Min = -std::numeric_limits<double>::infinity();
@@ -44,7 +44,7 @@ class TrackSelector final : public BareAlgorithm {
     double ptMax = std::numeric_limits<double>::infinity();
   };
 
-  TrackSelector(const Config& config, Acts::Logging::Level level);
+  TrackParameterSelector(const Config& config, Acts::Logging::Level level);
 
   ProcessCode execute(const AlgorithmContext& ctx) const final;
 

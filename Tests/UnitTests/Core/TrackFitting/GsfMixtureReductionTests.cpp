@@ -16,7 +16,7 @@ using namespace Acts::UnitLiterals;
 struct DummyComponent {
   double weight = 0.0;
   BoundVector boundPars = BoundVector::Zero();
-  std::optional<BoundSymMatrix> boundCov = BoundSymMatrix::Identity();
+  BoundSymMatrix boundCov = BoundSymMatrix::Identity();
 };
 
 BOOST_AUTO_TEST_CASE(test_distance_matrix_min_distance) {
