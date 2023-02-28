@@ -233,18 +233,10 @@ int runRecCKFTracks(
     // Algorithm estimating track parameter from seed
     TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
     paramsEstimationCfg.inputSeeds = inputSeeds;
-    paramsEstimationCfg.inputProtoTracks = inputProtoTracks;
-    paramsEstimationCfg.inputSpacePoints = {
-        spCfg.outputSpacePoints,
-    };
-    paramsEstimationCfg.inputSourceLinks = digiCfg.outputSourceLinks;
     paramsEstimationCfg.outputTrackParameters = "estimatedparameters";
-    paramsEstimationCfg.outputProtoTracks = "prototracks_estimated";
     paramsEstimationCfg.trackingGeometry = trackingGeometry;
     paramsEstimationCfg.magneticField = magneticField;
     paramsEstimationCfg.bFieldMin = 0.1_T;
-    paramsEstimationCfg.deltaRMax = 100._mm;
-    paramsEstimationCfg.deltaRMin = 10._mm;
     paramsEstimationCfg.sigmaLoc0 = 25._um;
     paramsEstimationCfg.sigmaLoc1 = 100._um;
     paramsEstimationCfg.sigmaPhi = 0.02_degree;

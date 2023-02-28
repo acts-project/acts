@@ -15,7 +15,8 @@
 #include <vector>
 
 namespace ActsExamples {
+using SimSeed = Acts::Seed<SimSpacePoint>;
 /// Container of sim seed
-using SimSeedContainer = std::vector<Acts::Seed<SimSpacePoint>>;
+using SimSeedContainer = std::vector<SimSeed>;
 
 }  // namespace ActsExamples
