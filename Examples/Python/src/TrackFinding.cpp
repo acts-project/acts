@@ -140,6 +140,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaRMinTopSP);
     ACTS_PYTHON_MEMBER(deltaRMaxTopSP);
     ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(deltaPhiMax);
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(sigmaScattering);
     ACTS_PYTHON_MEMBER(maxPtScattering);
@@ -238,11 +239,9 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
-      "TrackParamsEstimationAlgorithm", inputSeeds, inputSpacePoints,
-      inputProtoTracks, inputSourceLinks, outputTrackParameters,
-      outputProtoTracks, trackingGeometry, magneticField, deltaRMin, deltaRMax,
-      bFieldMin, sigmaLoc0, sigmaLoc1, sigmaPhi, sigmaTheta, sigmaQOverP,
-      sigmaT0, initialVarInflation);
+      "TrackParamsEstimationAlgorithm", inputSeeds, outputTrackParameters,
+      trackingGeometry, magneticField, bFieldMin, sigmaLoc0, sigmaLoc1,
+      sigmaPhi, sigmaTheta, sigmaQOverP, sigmaT0, initialVarInflation);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
