@@ -27,6 +27,9 @@ ActsExamples::TrackParameterSelector::TrackParameterSelector(
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing output track parameters");
   }
+
+  m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
@@ -52,8 +55,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
                   m_cfg.timeMax);
   };
 
-  const auto& inputTrackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  const auto& inputTrackParameters = m_inputTrackParameters(ctx);
   TrackParametersContainer outputTrackParameters;
   outputTrackParameters.reserve(inputTrackParameters.size());
 
@@ -71,8 +73,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParameterSelector::execute(
                       << inputTrackParameters.size()
                       << " tracks in track parameters");
 
-  ctx.eventStore.add(m_cfg.outputTrackParameters,
-                     std::move(outputTrackParameters));
+  m_outputTrackParameters(ctx, std::move(outputTrackParameters));
 
   return ProcessCode::SUCCESS;
 }
