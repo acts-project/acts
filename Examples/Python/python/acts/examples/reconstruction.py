@@ -310,7 +310,7 @@ def addSeeding(
             acts.examples.SeedsToPrototracks(
                 level=logLevel,
                 inputSeeds=seeds,
-                outputPrototracks=prototracks,
+                outputProtoTracks=prototracks,
             )
         )
 
