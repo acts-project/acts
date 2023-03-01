@@ -9,10 +9,11 @@
 #pragma once
 
 #include "Acts/Utilities/ThrowAssert.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <iostream>
+#include <stdexcept>
 #include <typeinfo>
 
 namespace ActsExamples {
@@ -21,8 +22,12 @@ class DataHandleBase {
  protected:
   virtual ~DataHandleBase() = default;
 
-  DataHandleBase(IAlgorithm* parent, const std::string& name)
+  DataHandleBase(SequenceElement* parent, const std::string& name)
       : m_parent(parent), m_name(name) {}
+
+  // We can't change addresses after construction
+  DataHandleBase(const DataHandleBase&) = delete;
+  DataHandleBase(DataHandleBase&&) = default;
 
  public:
   const std::string& key() const { return m_key.value(); }
@@ -33,8 +38,16 @@ class DataHandleBase {
 
   const std::string& name() const { return m_name; }
 
+  void maybeInitialize(const std::string& key) {
+    if (!key.empty()) {
+      m_key = key;
+    }
+  }
+
  protected:
-  IAlgorithm* m_parent{nullptr};
+  std::string fullName() const { return m_parent->name() + "." + name(); }
+
+  SequenceElement* m_parent{nullptr};
   std::string m_name;
   std::optional<std::string> m_key{};
 };
@@ -42,18 +55,24 @@ class DataHandleBase {
 template <typename T>
 class WriteDataHandle final : public DataHandleBase {
  public:
-  WriteDataHandle(IAlgorithm* parent, const std::string& name)
+  WriteDataHandle(SequenceElement* parent, const std::string& name)
       : DataHandleBase{parent, name} {
     m_parent->registerWriteHandle(*this);
   }
 
   void operator()(const AlgorithmContext& ctx, T&& value) const {
-    throw_assert(isInitialized(), "WriteDataHandle not initialized");
+    if (!isInitialized()) {
+      throw std::runtime_error{"WriteDataHandle '" + fullName() +
+                               "' not initialized"};
+    }
     ctx.eventStore.add(m_key.value(), std::move(value));
   }
 
   void initialize(const std::string& key) {
-    throw_assert(!key.empty(), "Input key cannot be empty");
+    if (key.empty()) {
+      throw std::invalid_argument{"Write handle '" + fullName() +
+                                  "' cannot receive empty key"};
+    }
     m_key = key;
   }
 
@@ -63,18 +82,24 @@ class WriteDataHandle final : public DataHandleBase {
 template <typename T>
 class ReadDataHandle final : public DataHandleBase {
  public:
-  ReadDataHandle(IAlgorithm* parent, const std::string& name)
+  ReadDataHandle(SequenceElement* parent, const std::string& name)
       : DataHandleBase{parent, name} {
     m_parent->registerReadHandle(*this);
   }
 
   void initialize(const std::string& key) {
-    throw_assert(!key.empty(), "Input key cannot be empty");
+    if (key.empty()) {
+      throw std::invalid_argument{"Read handle '" + fullName() +
+                                  "' cannot receive empty key"};
+    }
     m_key = key;
   }
 
   const T& operator()(const AlgorithmContext& ctx) const {
-    throw_assert(isInitialized(), "ReadDataHandle not initialized");
+    if (!isInitialized()) {
+      throw std::runtime_error{"ReadDataHandle '" + fullName() +
+                               "' not initialized"};
+    }
     return ctx.eventStore.get<T>(m_key.value());
   }
 

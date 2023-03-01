@@ -24,9 +24,6 @@
 
 namespace ActsExamples {
 
-/// A helper class for users to implement framework algorithms
-class DataHandleBase;
-
 /// Event processing algorithm interface.
 ///
 /// This class provides default implementations for most interface methods and
@@ -60,19 +57,11 @@ class IAlgorithm : public SequenceElement {
   /// Finalize the algorithm
   ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 
-  const std::vector<const DataHandleBase*>& writeHandles() const;
-  const std::vector<const DataHandleBase*>& readHandles() const;
-
  protected:
   const Acts::Logger& logger() const { return *m_logger; }
-
-  void registerWriteHandle(const DataHandleBase& handle);
-  void registerReadHandle(const DataHandleBase& handle);
 
  private:
   std::string m_name;
   std::unique_ptr<const Acts::Logger> m_logger;
-  std::vector<const DataHandleBase*> m_writeHandles;
-  std::vector<const DataHandleBase*> m_readHandles;
 };
 }  // namespace ActsExamples

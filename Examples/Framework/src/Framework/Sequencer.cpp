@@ -31,6 +31,7 @@
 #endif
 
 #include <boost/algorithm/string.hpp>
+#include <boost/core/demangle.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
@@ -120,53 +121,6 @@ void Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
     throw std::invalid_argument("Can not add empty/NULL algorithm");
   }
 
-  bool valid = true;
-  for (const auto* handle : algorithm->readHandles()) {
-    if (!handle->isInitialized()) {
-      ACTS_ERROR("Algorithm '" << algorithm->name()
-                               << "' has uninitialized read handle: '"
-                               << handle->name() << "'");
-
-      valid = false;
-    }
-
-    if (auto it = m_whiteBoardState.find(handle->key());
-        it != m_whiteBoardState.end()) {
-      const std::type_info& type = *it->second;
-      if (type != handle->typeInfo()) {
-        ACTS_ERROR("Adding algorithm "
-                   << algorithm->name() << ": white board will contain key '"
-                   << handle->key()
-                   << "' at this point in the sequence, but the type will be '"
-                   << demangle(type.name()) << "' and not '"
-                   << demangle(handle->typeInfo().name()) << "'");
-        valid = false;
-      }
-    } else {
-      ACTS_ERROR("Adding algorithm "
-                 << algorithm->name() << ": white board will not contain key '"
-                 << handle->key() << "' at this point in the sequence");
-      valid = false;
-    }
-  }
-
-  for (const auto* handle : algorithm->writeHandles()) {
-    if (!handle->isInitialized()) {
-      ACTS_ERROR("Algorithm '" << algorithm->name()
-                               << "' has uninitialized write handle: '"
-                               << handle->name() << "'");
-      valid = false;
-    }
-
-    if (valid) {  // only record outputs this if we're valid until here
-      m_whiteBoardState.emplace(std::pair{handle->key(), &handle->typeInfo()});
-    }
-  }
-
-  if (!valid) {
-    throw SequenceConfigurationException{};
-  }
-
   addElement(std::move(algorithm));
 }
 
@@ -181,9 +135,101 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
   if (not element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
+
+  bool valid = true;
+  std::string elementType{getAlgorithmType(*element)};
+  std::string elementTypeCapitalized = elementType;
+  elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
+
+  for (const auto* handle : element->readHandles()) {
+    if (!handle->isInitialized()) {
+      continue;
+    }
+
+    // std::string key = handle->key();
+    // if (auto it = m_whiteboardObjectAliases.find(key);
+    // it != m_whiteboardObjectAliases.end()) {
+    // ACTS_DEBUG("Key '" << key << "' aliased to '" << it->second << "'");
+    // key = it->second;
+    // }
+
+    if (auto it = m_whiteBoardState.find(handle->key());
+        it != m_whiteBoardState.end()) {
+      const std::type_info& type = *it->second;
+      if (type != handle->typeInfo()) {
+        ACTS_ERROR("Adding " << elementType << " " << element->name() << ":");
+        ACTS_ERROR("-> white board will contain key '" << handle->key() << "'");
+        ACTS_ERROR("at this point in the sequence, but the type will be");
+        ACTS_ERROR("'" << demangle(type.name()) << "'");
+        ACTS_ERROR("and not");
+        ACTS_ERROR("'" << demangle(handle->typeInfo().name()) << "'");
+        valid = false;
+      }
+    } else {
+      ACTS_ERROR("Adding " << elementType << " " << element->name() << ":");
+      ACTS_ERROR("-> white board will not contain key");
+      ACTS_ERROR("   '" << handle->key() << "' at this point in the sequence.");
+      ACTS_ERROR("   Needed for read data handle '" << handle->name() << "'")
+      valid = false;
+    }
+  }
+
+  if (valid) {  // only record outputs this if we're valid until here
+    for (const auto* handle : element->writeHandles()) {
+      if (!handle->isInitialized()) {
+        continue;
+      }
+
+      if (auto it = m_whiteBoardState.find(handle->key());
+          it != m_whiteBoardState.end()) {
+        ACTS_ERROR("White board will already contain key '"
+                   << handle->key() << "' (cannot overwrite)");
+        valid = false;
+        break;
+      }
+
+      m_whiteBoardState.emplace(std::pair{handle->key(), &handle->typeInfo()});
+
+      if (auto it = m_whiteboardObjectAliases.find(handle->key());
+          it != m_whiteboardObjectAliases.end()) {
+        ACTS_DEBUG("Key '" << handle->key() << "' aliased to '" << it->second
+                           << "'");
+        m_whiteBoardState[it->second] = &handle->typeInfo();
+      }
+    }
+  }
+
+  if (!valid) {
+    throw SequenceConfigurationException{};
+  }
+
+  ACTS_INFO("Added " << elementType << " '" << element->name() << "'");
+  auto symbol = [](const char* in) {
+    std::string symbol = boost::core::demangle(in);
+    if (symbol.size() > 80) {
+      symbol.erase(80);
+      symbol += "...";
+    }
+    return symbol;
+  };
+
+  for (const auto* handle : element->readHandles()) {
+    if (!handle->isInitialized()) {
+      continue;
+    }
+    ACTS_DEBUG("<- " << handle->name() << " '" << handle->key() << "':");
+    ACTS_DEBUG("   " << symbol(handle->typeInfo().name()));
+  }
+
+  for (const auto* handle : element->writeHandles()) {
+    if (!handle->isInitialized()) {
+      continue;
+    }
+    ACTS_DEBUG("-> " << handle->name() << " '" << handle->key() << "':");
+    ACTS_DEBUG("   " << symbol(handle->typeInfo().name()));
+  }
+
   m_sequenceElements.push_back(std::move(element));
-  ACTS_INFO("Added " << getAlgorithmType(*m_sequenceElements.back()) << " '"
-                     << m_sequenceElements.back()->name() << "'");
 }
 
 void Sequencer::addWhiteboardAlias(const std::string& aliasName,
@@ -191,7 +237,13 @@ void Sequencer::addWhiteboardAlias(const std::string& aliasName,
   auto [it, success] =
       m_whiteboardObjectAliases.insert({objectName, aliasName});
   if (!success) {
-    throw std::invalid_argument("Alias to '" + objectName + "' already set");
+    throw std::invalid_argument("Alias to '" + aliasName + "' -> '" +
+                                objectName + "' already set");
+  }
+
+  if (auto oit = m_whiteBoardState.find(objectName);
+      oit != m_whiteBoardState.end()) {
+    m_whiteBoardState[aliasName] = oit->second;
   }
 }
 
