@@ -37,8 +37,8 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
-#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
+#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include <Acts/Definitions/Units.hpp>
 
 #include <filesystem>
@@ -219,8 +219,8 @@ int runRecCKFTracks(
       SeedsToPrototracks::Config seedsToPrototrackCfg;
       seedsToPrototrackCfg.inputSeeds = seedingCfg.outputSeeds;
       seedsToPrototrackCfg.outputProtoTracks = "prototracks";
-      sequencer.addAlgorithm(std::make_shared<SeedsToPrototracks>(
-          seedsToPrototrackCfg, logLevel));
+      sequencer.addAlgorithm(
+          std::make_shared<SeedsToPrototracks>(seedsToPrototrackCfg, logLevel));
 
       inputProtoTracks = seedsToPrototrackCfg.outputProtoTracks;
       inputSeeds = seedingCfg.outputSeeds;

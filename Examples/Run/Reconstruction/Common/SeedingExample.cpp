@@ -171,8 +171,8 @@ int runSeedingExample(
   SeedsToPrototracks::Config seedsToPrototrackCfg;
   seedsToPrototrackCfg.inputSeeds = seedingCfg.outputSeeds;
   seedsToPrototrackCfg.outputProtoTracks = "prototracks";
-  sequencer.addAlgorithm(std::make_shared<SeedsToPrototracks>(
-      seedsToPrototrackCfg, logLevel));
+  sequencer.addAlgorithm(
+      std::make_shared<SeedsToPrototracks>(seedsToPrototrackCfg, logLevel));
 
   // Algorithm estimating track parameter from seed
   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
@@ -206,7 +206,8 @@ int runSeedingExample(
   RootTrackParameterWriter::Config trackParamsWriterCfg;
   trackParamsWriterCfg.inputTrackParameters =
       paramsEstimationCfg.outputTrackParameters;
-  trackParamsWriterCfg.inputProtoTracks = seedsToPrototrackCfg.outputProtoTracks;
+  trackParamsWriterCfg.inputProtoTracks =
+      seedsToPrototrackCfg.outputProtoTracks;
   trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
   trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   trackParamsWriterCfg.inputMeasurementParticlesMap =
