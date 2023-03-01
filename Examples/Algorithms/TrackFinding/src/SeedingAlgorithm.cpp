@@ -15,7 +15,6 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/FpeMonitor.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -42,9 +41,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     if (i.empty()) {
       throw std::invalid_argument("Invalid space point input collection");
     }
-  }
-  if (m_cfg.outputProtoTracks.empty()) {
-    throw std::invalid_argument("Missing proto tracks output collection");
   }
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds output collection");
@@ -255,27 +251,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
         group.bottom(), group.middle(), group.top(), rMiddleSPRange);
   }
 
-  // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
-  size_t nSeeds = seeds.size();
-  static thread_local ProtoTrackContainer protoTracks;
-  protoTracks.clear();
-
-  protoTracks.reserve(nSeeds);
-  for (const auto& seed : seeds) {
-    ProtoTrack& protoTrack = protoTracks.emplace_back();
-    protoTrack.reserve(seed.sp().size());
-    for (auto spacePointPtr : seed.sp()) {
-      for (const auto& slink : spacePointPtr->sourceLinks()) {
-        const IndexSourceLink& islink = slink.get<IndexSourceLink>();
-        protoTrack.emplace_back(islink.index());
-      }
-    }
-  }
-
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
   ctx.eventStore.add(m_cfg.outputSeeds, SimSeedContainer{seeds});
-  ctx.eventStore.add(m_cfg.outputProtoTracks, ProtoTrackContainer{protoTracks});
   return ActsExamples::ProcessCode::SUCCESS;
 }

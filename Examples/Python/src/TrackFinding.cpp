@@ -218,18 +218,18 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
-      outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig,
+      outputSeeds, seedFilterConfig, seedFinderConfig,
       seedFinderOptions, gridConfig, gridOptions, allowSeparateRMax,
       zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingOrthogonalAlgorithm, mex,
       "SeedingOrthogonalAlgorithm", inputSpacePoints, outputSeeds,
-      outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions);
+      seedFilterConfig, seedFinderConfig, seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
-      inputSpacePoints, outputSeeds, outputProtoTracks, inputSourceLinks,
+      inputSpacePoints, outputProtoTracks, inputSourceLinks,
       trackingGeometry, geometrySelection, inputMeasurements, subRegions,
       nLayers, xMin, xMax, yMin, yMax, houghHistSize_x, houghHistSize_y,
       hitExtend_x, threshold, localMaxWindowSize, kA);

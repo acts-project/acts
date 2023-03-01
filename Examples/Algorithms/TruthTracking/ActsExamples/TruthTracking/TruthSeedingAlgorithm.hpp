@@ -44,11 +44,9 @@ class TruthSeedingAlgorithm final : public BareAlgorithm {
     std::vector<std::string> inputSpacePoints;
     /// Output successfully seeded truth particles.
     std::string outputParticles;
-    /// Output full proto track collection.
-    std::string outputFullProtoTracks;
     /// Output seed collection.
     std::string outputSeeds;
-    /// Output proto track collection.
+    /// Output full proto track collection.
     std::string outputProtoTracks;
     /// Minimum deltaR between space points in a seed
     float deltaRMin = 1. * Acts::UnitConstants::mm;

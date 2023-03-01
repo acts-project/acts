@@ -218,7 +218,7 @@ void addTruthTracking(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
       inputParticles, inputMeasurementParticlesMap, inputSourceLinks,
-      inputSpacePoints, outputParticles, outputFullProtoTracks, outputSeeds,
+      inputSpacePoints, outputParticles, outputSeeds,
       outputProtoTracks, deltaRMin, deltaRMax);
 }
 
