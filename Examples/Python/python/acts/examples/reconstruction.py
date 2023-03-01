@@ -741,7 +741,7 @@ def addSeedPerformanceWriters(
             inputSeeds=seeds,
             inputParticles=selectedParticles,
             inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "performance_seeding_hists.root"),
+            filePath=str(outputDirRoot / "performance_seeding.root"),
         )
     )
 
@@ -1203,7 +1203,7 @@ def addExaTrkX(
                 inputProtoTracks="protoTracks",
                 inputParticles="particles_initial",  # the original selected particles after digitization
                 inputMeasurementParticlesMap="measurement_particles_map",
-                filePath=str(Path(outputDirRoot) / "performance_seeding_trees.root"),
+                filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
         )
 

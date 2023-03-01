@@ -185,7 +185,7 @@ int runHoughExample(
   seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  seedPerfCfg.filePath = outputDir + "/performance_seeding_hists.root";
+  seedPerfCfg.filePath = outputDir + "/performance_seeding.root";
   sequencer.addWriter(
       std::make_shared<SeedingPerformanceWriter>(seedPerfCfg, logLevel));
 
