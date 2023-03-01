@@ -187,7 +187,6 @@ class VectorMultiTrajectoryBase {
         return instance.m_sourceLinks[instance.m_index[istate].iuncalibrated]
             .has_value();
       case "previous"_hash:
-      case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
       case "chi2"_hash:
@@ -224,9 +223,6 @@ class VectorMultiTrajectoryBase {
         return &instance.m_index[istate].ijacobian;
       case "projector"_hash:
         return &instance.m_projectors[instance.m_index[istate].iprojector];
-      case "calibratedSourceLink"_hash:
-        return &instance.m_sourceLinks[instance.m_index[istate]
-                                           .icalibratedsourcelink];
       case "referenceSurface"_hash:
         return &instance.m_referenceSurfaces[istate];
       case "measdim"_hash:
@@ -263,7 +259,6 @@ class VectorMultiTrajectoryBase {
       case "projector"_hash:
       case "previous"_hash:
       case "uncalibratedSourceLink"_hash:
-      case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
       case "chi2"_hash:

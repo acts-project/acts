@@ -324,11 +324,6 @@ class TrackStateProxy {
       }
 
       if (ACTS_CHECK_BIT(src, PM::Calibrated)) {
-        // need to do it this way since other might be nullptr
-        component<std::optional<SourceLink>,
-                  hashString("calibratedSourceLink")>() =
-            other.template component<std::optional<SourceLink>,
-                                     hashString("calibratedSourceLink")>();
         allocateCalibrated(other.calibratedSize());
 
         // workaround for gcc8 bug:
@@ -375,15 +370,7 @@ class TrackStateProxy {
 
       if (ACTS_CHECK_BIT(mask, PM::Calibrated) &&
           has<hashString("calibrated")>() &&
-          other.template has<hashString("calibrated")>() &&
-          has<hashString("calibratedSourceLink")>() &&
-          other.template has<hashString("calibratedSourceLink")>()) {
-        // need to do it this way since other might be nullptr
-        component<std::optional<SourceLink>,
-                  hashString("calibratedSourceLink")>() =
-            other.template component<std::optional<SourceLink>,
-                                     hashString("calibratedSourceLink")>();
-
+          other.template has<hashString("calibrated")>()) {
         allocateCalibrated(other.calibratedSize());
 
         // workaround for gcc8 bug:
@@ -752,20 +739,6 @@ class TrackStateProxy {
   /// @return Whether it is set
   bool hasCalibrated() const { return has<hashString("calibrated")>(); }
 
-  /// The source link of the calibrated measurement. Const version
-  /// @note This does not necessarily have to be the uncalibrated source link.
-  /// @return The source link
-  const SourceLink& calibratedSourceLink() const;
-
-  /// Set a calibrated source link
-  /// @param sourceLink The source link to set
-  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setCalibratedSourceLink(const SourceLink& sourceLink) {
-    assert(has<hashString("calibratedSourceLink")>());
-    component<std::optional<SourceLink>, hashString("calibratedSourceLink")>() =
-        sourceLink;
-  }
-
   /// Full calibrated measurement vector. Might contain additional zeroed
   /// dimensions.
   /// @return The measurement vector
@@ -900,10 +873,6 @@ class TrackStateProxy {
       const Acts::Measurement<BoundIndices, kMeasurementSize>& meas) {
     static_assert(kMeasurementSize <= M,
                   "Input measurement must be within the allowed size");
-
-    assert(has<hashString("calibratedSourceLink")>());
-
-    setCalibratedSourceLink(meas.sourceLink());
 
     allocateCalibrated(kMeasurementSize);
     assert(hasCalibrated());
