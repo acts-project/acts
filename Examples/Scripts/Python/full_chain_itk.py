@@ -96,7 +96,7 @@ addCKFTracks(
     trackingGeometry,
     field,
     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0), removeNeutral=True),
+    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0)),
     outputDirRoot=outputDir,
 )
 
