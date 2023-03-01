@@ -161,10 +161,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
     auto digitizerItr = m_digitizers.find(moduleGeoId);
     if (digitizerItr == m_digitizers.end()) {
-      ACTS_DEBUG("No digitizer present for module " << moduleGeoId);
+      ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
       continue;
     } else {
-      ACTS_DEBUG("Digitizer found for module " << moduleGeoId);
+      ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
     }
 
     // Run the digitizer. Iterate over the hits for this surface inside the
