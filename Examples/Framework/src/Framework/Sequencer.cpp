@@ -85,7 +85,7 @@ void Sequencer::addReader(std::shared_ptr<IReader> reader) {
     throw std::invalid_argument("Can not add empty/NULL reader");
   }
   m_readers.push_back(reader);
-  addElement(reader);
+  addElement(std::move(reader));
 }
 
 void Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
