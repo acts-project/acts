@@ -1,6 +1,7 @@
 #include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
-ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(const ActsExamples::SimSeed &seed) {
+ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
+    const ActsExamples::SimSeed& seed) {
   ProtoTrack track;
   track.reserve(seed.sp().size());
   for (auto spacePointPtr : seed.sp()) {
@@ -12,7 +13,8 @@ ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(const ActsExamples::SimS
   return track;
 }
 
-ActsExamples::ProtoTrackContainer ActsExamples::seedsToPrototracks(const ActsExamples::SimSeedContainer &seeds) {
+ActsExamples::ProtoTrackContainer ActsExamples::seedsToPrototracks(
+    const ActsExamples::SimSeedContainer& seeds) {
   ProtoTrackContainer tracks;
   tracks.reserve(seeds.size());
 

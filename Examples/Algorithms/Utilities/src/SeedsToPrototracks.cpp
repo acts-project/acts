@@ -9,17 +9,15 @@
 #include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/Utilities/EventDataTransforms.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
+#include "ActsExamples/Utilities/EventDataTransforms.hpp"
 
 namespace ActsExamples {
 
-ProcessCode SeedsToPrototracks::execute(
-    const AlgorithmContext& ctx) const {
-  const auto seeds =
-      ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
+ProcessCode SeedsToPrototracks::execute(const AlgorithmContext& ctx) const {
+  const auto seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
 
   auto tracks = seedsToPrototracks(seeds);
 

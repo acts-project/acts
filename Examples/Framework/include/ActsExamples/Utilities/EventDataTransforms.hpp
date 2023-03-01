@@ -8,8 +8,8 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 
 namespace ActsExamples {
 
