@@ -287,8 +287,8 @@ def buildITkGeometry(
 def itkSeedingAlgConfig(inputSpacePointsType):
 
     if inputSpacePointsType not in ["PixelSpacePoints", "StripSpacePoints"]:
-       raise RuntimeError("Invalid inputSpacePointsType")
-    
+        raise RuntimeError("Invalid inputSpacePointsType")
+
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
     zMin = -3000 * u.mm
