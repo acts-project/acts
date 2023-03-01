@@ -77,20 +77,15 @@ inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
 
 template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::uncalibratedSourceLink() const
-    -> const SourceLink& {
-  assert(has<hashString("uncalibratedSourceLink")>());
-  return component<std::optional<SourceLink>,
-                   hashString("uncalibratedSourceLink")>()
-      .value();
+    -> SourceLink {
+  return getUncalibratedSourceLink();
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::calibratedSourceLink() const
-    -> const SourceLink& {
-  assert(has<hashString("calibratedSourceLink")>());
-  return component<std::optional<SourceLink>,
-                   hashString("calibratedSourceLink")>()
-      .value();
+inline auto TrackStateProxy<D, M, ReadOnly>::getUncalibratedSourceLink() const
+    -> SourceLink {
+  assert(has<hashString("uncalibratedSourceLink")>());
+  return m_traj->getUncalibratedSourceLink(m_istate);
 }
 
 }  // namespace detail_lt

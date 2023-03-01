@@ -315,11 +315,9 @@ class TrackStateProxy {
         smoothedCovariance() = other.smoothedCovariance();
       }
 
-      // need to do it this way since other might be nullptr
-      component<std::optional<SourceLink>,
-                hashString("uncalibratedSourceLink")>() =
-          other.template component<std::optional<SourceLink>,
-                                   hashString("uncalibratedSourceLink")>();
+      if (other.hasUncalibratedSourceLink()) {
+        setUncalibratedSourceLink(other.getUncalibratedSourceLink());
+      }
 
       if (ACTS_CHECK_BIT(src, PM::Jacobian)) {
         jacobian() = other.jacobian();
@@ -366,11 +364,9 @@ class TrackStateProxy {
         smoothedCovariance() = other.smoothedCovariance();
       }
 
-      // need to do it this way since other might be nullptr
-      component<std::optional<SourceLink>,
-                hashString("uncalibratedSourceLink")>() =
-          other.template component<std::optional<SourceLink>,
-                                   hashString("uncalibratedSourceLink")>();
+      if (other.hasUncalibratedSourceLink()) {
+        setUncalibratedSourceLink(other.getUncalibratedSourceLink());
+      }
 
       if (ACTS_CHECK_BIT(mask, PM::Jacobian) && has<hashString("jacobian")>() &&
           other.template has<hashString("jacobian")>()) {
@@ -732,14 +728,18 @@ class TrackStateProxy {
 
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
-  const SourceLink& uncalibratedSourceLink() const;
+  [[deprecated("Use getUncalibratedSourceLink() instead")]] SourceLink
+  uncalibratedSourceLink() const;
+
+  /// Uncalibrated measurement in the form of a source link. Const version
+  /// @return The uncalibrated measurement source link
+  SourceLink getUncalibratedSourceLink() const;
 
   /// Set an uncalibrated source link
   /// @param sourceLink The uncalibrated source link to set
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  void setUncalibratedSourceLink(const SourceLink& sourceLink) {
-    component<std::optional<SourceLink>,
-              hashString("uncalibratedSourceLink")>() = sourceLink;
+  void setUncalibratedSourceLink(SourceLink sourceLink) {
+    m_traj->setUncalibratedSourceLink(m_istate, std::move(sourceLink));
   }
 
   /// Check if the point has an associated uncalibrated measurement.
@@ -1460,6 +1460,15 @@ class MultiTrajectory {
   ///       an the dimension is the same.
   void allocateCalibrated(IndexType istate, size_t measdim) {
     self().allocateCalibrated_impl(istate, measdim);
+  }
+
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void setUncalibratedSourceLink(IndexType istate, SourceLink sourceLink) {
+    self().setUncalibratedSourceLink_impl(istate, std::move(sourceLink));
+  }
+
+  SourceLink getUncalibratedSourceLink(IndexType istate) const {
+    return self().getUncalibratedSourceLink_impl(istate);
   }
 
  private:
