@@ -36,14 +36,26 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
   }
-  for (const auto& i : m_cfg.inputSpacePoints) {
-    if (i.empty()) {
+
+  size_t isp = 0;
+  for (const auto& spName : m_cfg.inputSpacePoints) {
+    if (spName.empty()) {
       throw std::invalid_argument("Invalid space point input collection");
     }
+
+    auto& handle = m_inputSpacePoints.emplace_back(
+        std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
+            this, "InputSpacePoints#" + std::to_string(isp)));
+    handle->initialize(spName);
+
+    isp++;
   }
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds output collection");
   }
+
+  m_outputSeeds.initialize(m_cfg.outputSeeds);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 
   if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax and
       m_cfg.allowSeparateRMax == false) {
@@ -61,21 +73,25 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Inconsistent config deltaRMax");
   }
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
-                "Value of deltaRMaxTopSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMaxTopSP)>::has_quiet_NaN,
+      "Value of deltaRMaxTopSP must support NaN values");
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
-                "Value of deltaRMinTopSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMinTopSP)>::has_quiet_NaN,
+      "Value of deltaRMinTopSP must support NaN values");
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
-                "Value of deltaRMaxBottomSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMaxBottomSP)>::has_quiet_NaN,
+      "Value of deltaRMaxBottomSP must support NaN values");
 
-  static_assert(std::numeric_limits<decltype(
-                    m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
-                "Value of deltaRMinBottomSP must support NaN values");
+  static_assert(
+      std::numeric_limits<
+          decltype(m_cfg.seedFinderConfig.deltaRMinBottomSP)>::has_quiet_NaN,
+      "Value of deltaRMinBottomSP must support NaN values");
 
   if (std::isnan(m_cfg.seedFinderConfig.deltaRMaxTopSP)) {
     m_cfg.seedFinderConfig.deltaRMaxTopSP = m_cfg.seedFinderConfig.deltaRMax;
@@ -191,15 +207,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
   size_t nSpacePoints = 0;
-  for (const auto& isp : m_cfg.inputSpacePoints) {
-    nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
+  for (const auto& isp : m_inputSpacePoints) {
+    nSpacePoints += (*isp)(ctx).size();
   }
 
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
-  for (const auto& isp : m_cfg.inputSpacePoints) {
-    for (const auto& spacePoint :
-         ctx.eventStore.get<SimSpacePointContainer>(isp)) {
+  for (const auto& isp : m_inputSpacePoints) {
+    for (const auto& spacePoint : (*isp)(ctx)) {
       // since the event store owns the space points, their pointers should be
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
