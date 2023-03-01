@@ -150,10 +150,12 @@ class HoughTransformSeeder final : public BareAlgorithm {
     /// space points for strip-like detectors.
     /// Note that we don't *need* spacepoints (measurements can be used instead)
     std::vector<std::string> inputSpacePoints;
-    /// Input source links collection.
-    std::string inputSourceLinks;
+    /// Output track seed collection.
+    std::string outputSeeds;
     /// Output hough track collection.
     std::string outputProtoTracks;
+    /// Input source links collection.
+    std::string inputSourceLinks;
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// For which part of the detector geometry should space points be created.

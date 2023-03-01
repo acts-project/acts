@@ -271,7 +271,7 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrajectoriesToPrototracks, mex,
                                 "TrajectoriesToPrototracks", inputTrajectories,
-                                outputPrototracks);
+                                outputProtoTracks);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TracksToTrajectories, mex,
                                 "TracksToTrajectories", inputTracks,
@@ -317,7 +317,7 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedsToPrototracks, mex,
                                 "SeedsToPrototracks", inputSeeds,
-                                outputPrototracks);
+                                outputProtoTracks);
 }
 
 }  // namespace Acts::Python

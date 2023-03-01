@@ -28,6 +28,7 @@
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 
 #include <memory>
 
@@ -120,7 +121,6 @@ int runSeedingExample(
       spCfg.outputSpacePoints,
   };
   seedingCfg.outputSeeds = "seeds";
-  seedingCfg.outputProtoTracks = "prototracks";
   seedingCfg.gridConfig.rMax = 200._mm;
   seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
 
@@ -168,6 +168,12 @@ int runSeedingExample(
   sequencer.addAlgorithm(
       std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
 
+  SeedsToPrototracks::Config seedsToPrototrackCfg;
+  seedsToPrototrackCfg.inputSeeds = seedingCfg.outputSeeds;
+  seedsToPrototrackCfg.outputProtoTracks = "prototracks";
+  sequencer.addAlgorithm(std::make_shared<SeedsToPrototracks>(
+      seedsToPrototrackCfg, logLevel));
+
   // Algorithm estimating track parameter from seed
   TrackParamsEstimationAlgorithm::Config paramsEstimationCfg;
   paramsEstimationCfg.inputSeeds = seedingCfg.outputSeeds;
@@ -179,7 +185,7 @@ int runSeedingExample(
 
   // Seeding performance Writers
   TrackFinderPerformanceWriter::Config tfPerfCfg;
-  tfPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
+  tfPerfCfg.inputProtoTracks = seedsToPrototrackCfg.outputProtoTracks;
   tfPerfCfg.inputParticles = inputParticles;
   tfPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
@@ -188,7 +194,7 @@ int runSeedingExample(
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
   SeedingPerformanceWriter::Config seedPerfCfg;
-  seedPerfCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
+  seedPerfCfg.inputSeeds = seedingCfg.outputSeeds;
   seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
@@ -200,7 +206,7 @@ int runSeedingExample(
   RootTrackParameterWriter::Config trackParamsWriterCfg;
   trackParamsWriterCfg.inputTrackParameters =
       paramsEstimationCfg.outputTrackParameters;
-  trackParamsWriterCfg.inputProtoTracks = seedingCfg.outputProtoTracks;
+  trackParamsWriterCfg.inputProtoTracks = seedsToPrototrackCfg.outputProtoTracks;
   trackParamsWriterCfg.inputParticles = particleReader.outputParticles;
   trackParamsWriterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   trackParamsWriterCfg.inputMeasurementParticlesMap =

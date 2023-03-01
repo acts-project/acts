@@ -181,7 +181,7 @@ int runHoughExample(
       std::make_shared<TrackFinderPerformanceWriter>(tfPerfCfg, logLevel));
 
   SeedingPerformanceWriter::Config seedPerfCfg;
-  seedPerfCfg.inputProtoTracks = houghCfg.outputProtoTracks;
+  seedPerfCfg.inputSeeds = houghCfg.outputSeeds;
   seedPerfCfg.inputParticles = inputParticles;
   seedPerfCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;

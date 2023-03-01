@@ -16,7 +16,7 @@ class SeedsToPrototracks final : public BareAlgorithm {
  public:
   struct Config {
     std::string inputSeeds = "seeds";
-    std::string outputPrototracks = "tracks-from-seeds";
+    std::string outputProtoTracks = "tracks-from-seeds";
   };
 
   /// Construct the algorithm.
