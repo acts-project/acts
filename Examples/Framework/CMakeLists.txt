@@ -7,6 +7,7 @@ add_library(
   src/Framework/BareService.cpp
   src/Framework/RandomNumbers.cpp
   src/Framework/Sequencer.cpp
+  src/Utilities/EventDataTransforms.cpp
   src/Utilities/Paths.cpp
   src/Utilities/Options.cpp
   src/Utilities/Helpers.cpp
