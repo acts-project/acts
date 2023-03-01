@@ -428,7 +428,7 @@ def addTruthEstimatedSeeding(
         inputSourceLinks="sourcelinks",
         inputSpacePoints=[spacePoints],
         outputParticles="truth_seeded_particles",
-        outputFullProtoTracks="truth_particle_tracks",
+        outputProtoTracks="truth_particle_tracks",
         outputSeeds="seeds",
         **acts.examples.defaultKWArgs(
             deltaRMin=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[0],
@@ -437,7 +437,7 @@ def addTruthEstimatedSeeding(
     )
     sequence.addAlgorithm(truthSeeding)
 
-    return truthSeeding.config.outputProtoTracks
+    return truthSeeding.config.outputSeeds
 
 
 def addSpacePointsMaking(
@@ -600,7 +600,7 @@ def addStandardSeeding(
     seedingAlg = acts.examples.SeedingAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
-        outputProtoTracks="prototracks",
+        outputSeeds="seeds",
         **acts.examples.defaultKWArgs(
             allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
@@ -615,7 +615,7 @@ def addStandardSeeding(
     )
     sequence.addAlgorithm(seedingAlg)
 
-    return seedingAlg.config.outputProtoTracks
+    return seedingAlg.config.outputSeeds
 
 
 def addOrthogonalSeeding(
@@ -709,14 +709,14 @@ def addOrthogonalSeeding(
     seedingAlg = acts.examples.SeedingOrthogonalAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
-        outputProtoTracks="prototracks",
+        outputSeeds="seeds",
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
     )
     sequence.addAlgorithm(seedingAlg)
 
-    return seedingAlg.config.outputProtoTracks
+    return seedingAlg.config.outputSeeds
 
 
 def addSeedPerformanceWriters(
