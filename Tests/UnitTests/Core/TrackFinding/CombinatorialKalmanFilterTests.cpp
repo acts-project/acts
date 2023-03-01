@@ -316,7 +316,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldForward) {
     for (const auto trackState : track.trackStates()) {
       numHits += 1u;
       const auto& sl =
-          trackState.uncalibratedSourceLink().template get<TestSourceLink>();
+          trackState.getUncalibratedSourceLink().template get<TestSourceLink>();
       if (trackId != sl.sourceId) {
         nummismatchedHits++;
       }
@@ -373,7 +373,7 @@ BOOST_AUTO_TEST_CASE(ZeroFieldBackward) {
     for (const auto trackState : track.trackStates()) {
       numHits += 1u;
       const auto& sl =
-          trackState.uncalibratedSourceLink().template get<TestSourceLink>();
+          trackState.getUncalibratedSourceLink().template get<TestSourceLink>();
       if (trackId != sl.sourceId) {
         nummismatchedHits++;
       }

@@ -410,12 +410,14 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCrossTalk) {
     // create a new (invalid) source link
     TestSourceLink invalid;
     invalid.sourceId = -1;
-    BOOST_CHECK_NE(tsa.uncalibratedSourceLink().get<TestSourceLink>(), invalid);
-    BOOST_CHECK_NE(tsb.uncalibratedSourceLink().get<TestSourceLink>(), invalid);
+    BOOST_CHECK_NE(tsa.getUncalibratedSourceLink().get<TestSourceLink>(),
+                   invalid);
+    BOOST_CHECK_NE(tsb.getUncalibratedSourceLink().get<TestSourceLink>(),
+                   invalid);
     tsb.setUncalibratedSourceLink(SourceLink{invalid});
-    BOOST_CHECK_EQUAL(tsa.uncalibratedSourceLink().get<TestSourceLink>(),
+    BOOST_CHECK_EQUAL(tsa.getUncalibratedSourceLink().get<TestSourceLink>(),
                       invalid);
-    BOOST_CHECK_EQUAL(tsb.uncalibratedSourceLink().get<TestSourceLink>(),
+    BOOST_CHECK_EQUAL(tsb.getUncalibratedSourceLink().get<TestSourceLink>(),
                       invalid);
   }
   {
@@ -527,7 +529,7 @@ BOOST_DATA_TEST_CASE(TrackStateProxyStorage, bd::make({1u, 2u}),
   BOOST_CHECK_EQUAL(ts.chi2(), pc.chi2);
 
   // check that the uncalibratedSourceLink source link is set
-  BOOST_CHECK_EQUAL(ts.uncalibratedSourceLink().get<TestSourceLink>(),
+  BOOST_CHECK_EQUAL(ts.getUncalibratedSourceLink().get<TestSourceLink>(),
                     pc.sourceLink);
 
   // check that the calibrated measurement is set
@@ -775,8 +777,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_NE(ts1.smoothed(), ts2.smoothed());
   BOOST_CHECK_NE(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
-  BOOST_CHECK_NE(ts1.uncalibratedSourceLink().get<TestSourceLink>(),
-                 ts2.uncalibratedSourceLink().get<TestSourceLink>());
+  BOOST_CHECK_NE(ts1.getUncalibratedSourceLink().get<TestSourceLink>(),
+                 ts2.getUncalibratedSourceLink().get<TestSourceLink>());
 
   BOOST_CHECK_NE(ts1.calibratedSourceLink().get<TestSourceLink>(),
                  ts2.calibratedSourceLink().get<TestSourceLink>());
@@ -805,8 +807,8 @@ BOOST_AUTO_TEST_CASE(TrackStateProxyCopy) {
   BOOST_CHECK_EQUAL(ts1.smoothed(), ts2.smoothed());
   BOOST_CHECK_EQUAL(ts1.smoothedCovariance(), ts2.smoothedCovariance());
 
-  BOOST_CHECK_EQUAL(ts1.uncalibratedSourceLink().get<TestSourceLink>(),
-                    ts2.uncalibratedSourceLink().get<TestSourceLink>());
+  BOOST_CHECK_EQUAL(ts1.getUncalibratedSourceLink().get<TestSourceLink>(),
+                    ts2.getUncalibratedSourceLink().get<TestSourceLink>());
 
   BOOST_CHECK_EQUAL(ts1.calibratedSourceLink().get<TestSourceLink>(),
                     ts2.calibratedSourceLink().get<TestSourceLink>());
