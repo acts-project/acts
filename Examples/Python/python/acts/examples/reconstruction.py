@@ -125,7 +125,7 @@ TrackSelectorRanges = namedtuple(
         "pt",
         "phi",
     ],
-    defaults=[(None, None)] * 7 + [None] * 2,
+    defaults=[(None, None)] * 7,
 )
 
 CKFPerformanceConfig = namedtuple(
