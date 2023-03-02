@@ -5,18 +5,15 @@ import math
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import LabelEncoder, StandardScaler, OrdinalEncoder
-from sklearn.cluster import DBSCAN
-
-import torch.nn as nn
-import torch.nn.functional as F
 import torch.utils
 
-import ast
-import onnxruntime as ort
+from sklearn.cluster import DBSCAN
+
+from sklearn.preprocessing import LabelEncoder, OrdinalEncoder
+from ambiguity_solver_network import prepareDataSet, DuplicateClassifier, Normalise
 
 
-def PrepareDataSet(CKS_files: list[str]) -> pd.DataFrame:
+def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
     """Read the dataset from the different file, remove the pure duplicate tracks and combine the datasets"""
     """
     @param[in] CKS_files: DataFrame contain the data from each track files (1 file per events usually)
@@ -26,47 +23,22 @@ def PrepareDataSet(CKS_files: list[str]) -> pd.DataFrame:
     data = []
     for f in CKS_files:
         datafile = pd.read_csv(f)
-        # Remove tracks with less than 7 measurements
-        datafile = datafile[datafile["nMeasurements"] > 6]
-        datafile = datafile.sort_values("good/duplicate/fake", ascending=False)
-        # Remove pure duplicate (tracks purely identical) keep the ones good one if among them.
-        datafile = datafile.drop_duplicates(
-            subset=[
-                "particleId",
-                "Hits_ID",
-                "nOutliers",
-                "nHoles",
-                "nSharedHits",
-                "chi2",
-            ],
-            keep="first",
-        )
-        datafile = datafile.sort_values("particleId")
-        # Set truth particle ID as index
-        datafile = datafile.set_index("particleId")
-        # Transform the hit list from a string to an actual list
-        hitsIds = []
-        mergedIds = []
-        for list in datafile["Hits_ID"].values:
-            hitsIds.append(ast.literal_eval(list))
-        datafile["Hits_ID"] = hitsIds
+        datafile = prepareDataSet(datafile)
         # Combine dataset
         data.append(datafile)
     return data
 
 
-def PrepareData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
+def prepareInferenceData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
     """Prepare the data"""
     """
     @param[in] data: input DataFrame to be prepared
     @return: array of the network input and the corresponding truth  
     """
+    # Remove truth and useless variable
     target_column = "good/duplicate/fake"
-    global avg_mean
-    global avg_sdv
     # Separate the truth from the input variables
     y = LabelEncoder().fit(data[target_column]).transform(data[target_column])
-    # Remove truth and useless variable
     input = data.drop(
         columns=[
             target_column,
@@ -80,13 +52,13 @@ def PrepareData(data: pd.DataFrame) -> tuple[np.ndarray, np.ndarray]:
             "cluster",
         ]
     )
-    # Normalise variables
+    # Prepare the input feature
     x_cat = OrdinalEncoder().fit_transform(input.select_dtypes("object"))
     x = np.concatenate((x_cat, input), axis=1)
     return x, y
 
 
-def ClusterTracks(
+def clusterTracks(
     event: pd.DataFrame, DBSCAN_eps: float = 0.07, DBSCAN_min_samples: int = 2
 ) -> pd.DataFrame:
     """
@@ -171,39 +143,6 @@ def renameCluster(clusterarray: np.ndarray) -> np.ndarray:
     return clusterarray
 
 
-class DuplicateClassifier(nn.Module):
-    """MLP model used to separate good tracks from duplicate tracks. Return one score per track the higher one correspond to the good track."""
-
-    def __init__(self, input_dim, n_layers):
-        """Three layer MLP, 20% dropout, sigmoid activation for the last layer."""
-        super(DuplicateClassifier, self).__init__()
-        self.linear1 = nn.Linear(input_dim, n_layers[0])
-        self.linear2 = nn.Linear(n_layers[0], n_layers[1])
-        self.linear3 = nn.Linear(n_layers[1], n_layers[2])
-        self.output = nn.Linear(n_layers[2], 1)
-        self.sigmoid = nn.Sigmoid()
-
-    def forward(self, z):
-        z = F.relu(self.linear1(z))
-        z = F.relu(self.linear2(z))
-        z = F.relu(self.linear3(z))
-        return self.sigmoid(self.output(z))
-
-
-class Normalise(nn.Module):
-    """Normalisation of the input before the MLP model."""
-
-    def __init__(self, mean, std):
-        super(Normalise, self).__init__()
-        self.mean = torch.tensor(mean, dtype=torch.float32)
-        self.std = torch.tensor(std, dtype=torch.float32)
-
-    def forward(self, z):
-        z = z - self.mean
-        z = z / self.std
-        return z
-
-
 # ==================================================================
 
 import time
@@ -215,8 +154,8 @@ import sys
 sys.setrecursionlimit(10**6)
 
 # ttbar events as test input
-CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-CKFtracks.csv"))
-data = PrepareDataSet(CKF_files)
+CKF_files = sorted(glob.glob("odd_output" + "/event0000000[0-9][0-9]-tracks_ckf.csv"))
+data = readDataSet(CKF_files)
 
 # Data of each events after clustering
 clusteredData = []
@@ -227,20 +166,19 @@ t1 = time.time()
 
 # Cluster togather tracks belonging to the same particle
 for event in data:
-    clustered = ClusterTracks(event)
+    clustered = clusterTracks(event)
     clusteredData.append(clustered)
 
 t2 = time.time()
 
-duplicateClassifier = torch.load(os.path.dirname(__file__) + "/duplicateClassifier.pt")
+duplicateClassifier = torch.load("duplicateClassifier.pt")
 
 t3 = time.time()
-
 
 # Performed the MLP based ambiguity resolution
 for clusteredEvent in clusteredData:
     # Prepare the data
-    x_test, y_test = PrepareData(clusteredEvent)
+    x_test, y_test = prepareInferenceData(clusteredEvent)
     # Write the network score to a list
     output_predict = []
     for x in x_test:
@@ -322,15 +260,6 @@ print("===computed speed===")
 print("Clustering : ", (t2 - t1) * 1000 / len(CKF_files), "ms")
 print("Inference : ", (t4 - t3) * 1000 / len(CKF_files), "ms")
 print("tot : ", (end - start) * 1000 / len(CKF_files), "ms")
-
-if os.path.isfile("odd_efficiency.csv"):
-    resultfile = pd.read_csv("odd_efficiency.csv")
-    resultfile = resultfile.set_index("PU")
-    resultfile = pd.concat([resultfile, result], axis=0)
-    resultfile.to_csv(path_or_buf="odd_efficiency.csv")
-else:
-    resultfile = result
-    resultfile.to_csv(path_or_buf="odd_efficiency.csv")
 
 for file, cleanedEvent in zip(CKF_files, cleanedData):
     newFile = file[:-4] + "-Cleaned.csv"

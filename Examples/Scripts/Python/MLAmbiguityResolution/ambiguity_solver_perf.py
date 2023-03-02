@@ -5,50 +5,20 @@ import math
 import pandas as pd
 import numpy as np
 
-from sklearn.preprocessing import LabelEncoder, StandardScaler, OrdinalEncoder
-from sklearn.cluster import DBSCAN
-
-import torch.nn as nn
-import torch.nn.functional as F
-import torch.utils
-
-import ast
+from ambiguity_solver_network import prepareDataSet
 
 
-def PrepareDataSet(CKS_files: list[str]) -> pd.DataFrame:
+def readDataSet(CKS_files: list[str]) -> pd.DataFrame:
     """Read the dataset from the different file, remove the pure duplicate tracks and combine the datasets"""
     """
     @param[in] CKS_files: DataFrame contain the data from each track files (1 file per events usually)
-    @return: combined DataFrame containing all the track, ordered by events and then by truth particle ID in each events 
+    @return: combined DataFrame containing all the track, ordered by events and then by truth particle ID in each event 
     """
     globalindex = 0
     data = []
     for f in CKS_files:
         datafile = pd.read_csv(f)
-        # Remove tracks with less than 7 measurements
-        datafile = datafile[datafile["nMeasurements"] > 6]
-        datafile = datafile.sort_values("good/duplicate/fake", ascending=False)
-        # Remove pure duplicate (tracks purely identical) keep the ones good one if among them.
-        datafile = datafile.drop_duplicates(
-            subset=[
-                "particleId",
-                "Hits_ID",
-                "nOutliers",
-                "nHoles",
-                "nSharedHits",
-                "chi2",
-            ],
-            keep="first",
-        )
-        datafile = datafile.sort_values("particleId")
-        # Set truth particle ID as index
-        datafile = datafile.set_index("particleId")
-        # Transform the hit list from a string to an actual list
-        hitsIds = []
-        mergedIds = []
-        for list in datafile["Hits_ID"].values:
-            hitsIds.append(ast.literal_eval(list))
-        datafile["Hits_ID"] = hitsIds
+        datafile = prepareDataSet(datafile)
         # Combine dataset
         data.append(datafile)
     return data
@@ -58,14 +28,14 @@ def PrepareDataSet(CKS_files: list[str]) -> pd.DataFrame:
 
 # CSV files to be compared, do not forget to sort them
 CKF_files_track = sorted(
-    glob.glob("odd_output" + "/event0000000[0-9][0-9]-CKFtracks.csv")
+    glob.glob("odd_output" + "/event0000000[0-9][0-9]-tracks_ckf.csv")
 )
 CKF_files_resolved = sorted(
-    glob.glob("odd_output_Resolved" + "/event0000000[0-9][0-9]-CKFtracks.csv")
+    glob.glob("odd_output" + "/event0000000[0-9][0-9]-tracks_ambiML.csv")
 )
 
-data_track = PrepareDataSet(CKF_files_track)
-data_resolved = PrepareDataSet(CKF_files_resolved)
+data_track = readDataSet(CKF_files_track)
+data_resolved = readDataSet(CKF_files_resolved)
 
 # Compute the algorithm performances
 nb_part = 0
