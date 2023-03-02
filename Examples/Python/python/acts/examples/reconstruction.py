@@ -124,10 +124,8 @@ TrackSelectorRanges = namedtuple(
         "absEta",
         "pt",
         "phi",
-        "removeNeutral",
-        "removeCharged",
     ],
-    defaults=[(None, None)] * 7 + [None] * 2,
+    defaults=[(None, None)] * 7,
 )
 
 CKFPerformanceConfig = namedtuple(
@@ -900,7 +898,7 @@ def addCKFTracks(
         the output folder for the Csv output, None triggers no output
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
-    trackSelectorRanges : TrackSelectorRanges(loc0, loc1, time, eta, absEta, pt, phi, removeNeutral, removeCharged)
+    trackSelectorRanges : TrackSelectorRanges(loc0, loc1, time, eta, absEta, pt, phi)
         TrackSelector configuration. Each range is specified as a tuple of (min,max).
         Defaults of no cuts specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/TrackSelector.hpp
     writeTrajectories : bool, True
@@ -1125,8 +1123,6 @@ def addTrackSelection(
             absEtaMax=trackSelectorRanges.absEta[1],
             ptMin=trackSelectorRanges.pt[0],
             ptMax=trackSelectorRanges.pt[1],
-            removeCharged=trackSelectorRanges.removeCharged,
-            removeNeutral=trackSelectorRanges.removeNeutral,
         ),
     )
 
