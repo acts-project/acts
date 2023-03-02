@@ -322,7 +322,7 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
-        const auto& sl =
+        auto sl =
             state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         const auto hitIdx = sl.index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
