@@ -54,7 +54,7 @@ struct GsfResult {
   std::size_t processedStates = 0;
 
   std::vector<const Acts::Surface*> visitedSurfaces;
-  std::vector<const Acts::Surface*> missedActiveSurfaces;
+  std::vector<const Acts::Surface*> surfacesVisitedBwdAgain;
 
   // Propagate potential errors to the outside
   Result<void> result{Result<void>::success()};
@@ -662,7 +662,6 @@ struct GsfActor {
 
     // These things should only be done once for all components
     if (is_hole) {
-      result.missedActiveSurfaces.push_back(&surface);
       ++result.measurementHoles;
     }
 
@@ -762,6 +761,7 @@ struct GsfActor {
 
               trackState.filtered() = filtMean;
               trackState.filteredCovariance() = filtCov;
+              result.surfacesVisitedBwdAgain.push_back(&surface);
               return false;
             }
             return true;

@@ -409,8 +409,24 @@ struct GaussianSumFitter {
     }
 
     auto track = trackContainer.getTrack(trackContainer.addTrack());
-
     track.tipIndex() = fwdGsfResult.lastMeasurementTip;
+    
+    // Go through the states and assign outliers / unset smoothed if surface not
+    // passed in backward pass
+    const auto& foundBwd = bwdGsfResult.surfacesVisitedBwdAgain;
+    
+    if( foundBwd.empty() ) {
+      ACTS_WARNING("Did not hit any measurement surface in forward AND backward pass");
+    }
+
+    for (auto state : track.trackStates()) {
+      const bool found = std::find(foundBwd.begin(), foundBwd.end(),
+                                   &state.referenceSurface()) != foundBwd.end();
+      if (not found) {
+        state.typeFlags().set(TrackStateFlag::OutlierFlag);
+        state.typeFlags().reset(TrackStateFlag::MeasurementFlag);
+      }
+    }
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
