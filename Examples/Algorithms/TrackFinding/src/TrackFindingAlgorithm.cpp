@@ -59,7 +59,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = 10000;
+  pOptions.maxSteps = 100000;
 
   MeasurementCalibrator calibrator{measurements};
   Acts::GainMatrixUpdater kfUpdater;
