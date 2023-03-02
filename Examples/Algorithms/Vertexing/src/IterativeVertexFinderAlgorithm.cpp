@@ -56,6 +56,10 @@ ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
 
   m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
   m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
+
+  m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
+  m_outputVertices.initialize(m_cfg.outputVertices);
+  m_outputTime.initialize(m_cfg.outputTime);
 }
 
 ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
@@ -64,18 +68,6 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
 
   auto [inputTrackParameters, inputTrackPointers] =
       makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
-
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using VertexFitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using ImpactPointEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-  using VertexSeeder = Acts::ZScanVertexFinder<VertexFitter>;
-  using VertexFinder = Acts::IterativeVertexFinder<VertexFitter, VertexSeeder>;
-  using VertexFinderOptions =
-      Acts::VertexingOptions<Acts::BoundTrackParameters>;
 
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
@@ -109,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   auto result = finder.find(inputTrackPointers, finderOpts, state);
   auto t2 = std::chrono::high_resolution_clock::now();
 
-  std::vector<Acts::Vertex<Acts::BoundTrackParameters>> vertices;
+  VertexCollection vertices;
   if (result.ok()) {
     vertices = std::move(result.value());
   } else {
@@ -124,18 +116,17 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   }
 
   // store proto vertices extracted from the found vertices
-  ctx.eventStore.add(m_cfg.outputProtoVertices,
-                     makeProtoVertices(inputTrackParameters, vertices));
+  m_outputProtoVertices(ctx, makeProtoVertices(inputTrackParameters, vertices));
 
   // store found vertices
-  ctx.eventStore.add(m_cfg.outputVertices, std::move(vertices));
+  m_outputVertices(ctx, std::move(vertices));
 
   // time in milliseconds
   int timeMS =
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   // store reconstruction time
-  ctx.eventStore.add(m_cfg.outputTime,
-                     std::move(timeMS));  // NOLINT(performance-move-const-arg)
+  m_outputTime(ctx,
+               std::move(timeMS));  // NOLINT(performance-move-const-arg)
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

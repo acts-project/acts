@@ -11,6 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Vertexing/FullBilloirVertexFitter.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
@@ -22,6 +27,17 @@ namespace ActsExamples {
 
 class VertexFitterAlgorithm final : public IAlgorithm {
  public:
+  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  using PropagatorOptions = Acts::PropagatorOptions<>;
+  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
+  using VertexFitter =
+      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+  using VertexFitterOptions =
+      Acts::VertexingOptions<Acts::BoundTrackParameters>;
+
+  using VertexCollection =
+      std::vector<Acts::Vertex<Acts::BoundTrackParameters>>;
+
   struct Config {
     /// Optional. Input track parameters collection
     std::string inputTrackParameters;
@@ -65,6 +81,11 @@ class VertexFitterAlgorithm final : public IAlgorithm {
 
   ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
       this, "InputTrajectories"};
+
+  ReadDataHandle<ProtoVertexContainer> m_inputProtoVertices{
+      this, "InputProtoVertices"};
+
+  WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
 };
 
 }  // namespace ActsExamples
