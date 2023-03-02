@@ -16,7 +16,7 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <optional>
 #include <string>
@@ -25,7 +25,7 @@
 namespace ActsExamples {
 
 /// Construct track seeds from space points.
-class SeedingOrthogonalAlgorithm final : public BareAlgorithm {
+class SeedingOrthogonalAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.

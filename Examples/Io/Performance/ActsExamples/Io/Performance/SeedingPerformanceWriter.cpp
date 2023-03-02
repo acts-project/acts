@@ -64,7 +64,7 @@ ActsExamples::SeedingPerformanceWriter::~SeedingPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::SeedingPerformanceWriter::finalize() {
   float eff = float(m_nTotalMatchedParticles) / m_nTotalParticles;
   float fakeRate = float(m_nTotalSeeds - m_nTotalMatchedSeeds) / m_nTotalSeeds;
   float duplicationRate =

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <limits>
 #include <string>
@@ -16,7 +16,7 @@
 namespace ActsExamples {
 
 /// Select tracks by applying some selection cuts.
-class TrackParameterSelector final : public BareAlgorithm {
+class TrackParameterSelector final : public IAlgorithm {
  public:
   struct Config {
     /// Input track parameters collection

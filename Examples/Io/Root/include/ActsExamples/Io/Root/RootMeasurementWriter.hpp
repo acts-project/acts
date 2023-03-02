@@ -245,7 +245,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   ~RootMeasurementWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }

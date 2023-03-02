@@ -40,7 +40,7 @@ void addTruthTracking(Context& ctx) {
     using Alg = ActsExamples::TruthSeedSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TruthSeedSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -88,7 +88,7 @@ void addTruthTracking(Context& ctx) {
     using Alg = ActsExamples::ParticleSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "ParticleSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -130,11 +130,11 @@ void addTruthTracking(Context& ctx) {
     using Alg = ActsExamples::TrackSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackSelector")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
+    auto alg =
+        py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(mex, "TrackSelector")
+            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
@@ -170,7 +170,7 @@ void addTruthTracking(Context& ctx) {
     using Alg = ActsExamples::TrackParameterSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TrackParameterSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
