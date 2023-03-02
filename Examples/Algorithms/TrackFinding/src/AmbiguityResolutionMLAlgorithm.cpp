@@ -46,7 +46,7 @@ namespace {
 ///
 /// @param trackMap : Multimap storing pair of track ID and vector of measurement ID. The keys are the number of measurement and are just there to focilitate the ordering.
 /// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
-std::unordered_map<int, std::vector<int>> ClusteriseTrack(
+std::unordered_map<int, std::vector<int>> clusterTracks(
     std::multimap<int, std::pair<int, std::vector<int>>> trackMap) {
   // Unordered map associating a vector with all the track ID of a cluster to
   // the ID of the first track of the cluster
@@ -71,11 +71,10 @@ std::unordered_map<int, std::vector<int>> ClusteriseTrack(
     }
     // None of the hits have been matched to a track create a new cluster
     if (matchedTrack == hitToTrack.end()) {
-      cluster.emplace(track->second.first,
-                      std::vector<int>(1, track->second.first));
-      for (auto hit = hits.begin(); hit != hits.end(); hit++) {
+      cluster.emplace(track->second.first, {track->second.first});
+      for (const auto& hit : hits) {
         // Add the hits of the new cluster to the hitToTrack
-        hitToTrack.emplace(*hit, track->second.first);
+        hitToTrack.emplace(hit, track->second.first);
       }
     }
   }
@@ -126,12 +125,12 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     iTraj++;
   }
   // Performe the share hit based clustering
-  auto clusters = ClusteriseTrack(trackMap);
+  auto clusters = clusterTracks(trackMap);
   Acts::NetworkBatchInput networkInput(trackID + 1, 8);
   trackID = 0;
   // Get the input feature of the network for all the tracks
-  for (auto const& [key, val] : clusters) {
-    for (auto const& track : val) {
+  for (const auto& [key, val] : clusters) {
+    for (const auto& track : val) {
       std::pair<int, int> tips = trackTips.at(track);
       TrackParameters parameters = trackParameters.at(track);
       auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
@@ -157,10 +156,10 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
 
   // Loop over all the cluster and only keep the track with the highest score in
   // each cluster
-  for (auto const& [key, val] : clusters) {
+  for (const auto& [key, val] : clusters) {
     int bestTrackID = 0;
     float bestTrackScore = 0;
-    for (auto const& track : val) {
+    for (const auto& track : val) {
       if (outputTensor[iOut][0] > bestTrackScore) {
         bestTrackScore = outputTensor[iOut][0];
         bestTrackID = track;
@@ -173,9 +172,8 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   // Create an output multitrajectory based of the good tracks
   TrajectoriesContainer outputTrajectories;
   outputTrajectories.reserve(goodTracks.size());
-  for (std::size_t iGoodTraj = 0; iGoodTraj < goodTracks.size(); ++iGoodTraj) {
-    const auto& iTrack = goodTracks[iGoodTraj];
-    std::pair<int, int> outputTips = trackTips.at(iTrack);
+  for (auto&& iTrack : goodTracks) {
+    const auto& outputTips = trackTips.at(iTrack);
 
     std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
     Trajectories::IndexedParameters parameters;
