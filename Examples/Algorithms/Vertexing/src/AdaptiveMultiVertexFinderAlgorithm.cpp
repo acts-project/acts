@@ -90,13 +90,14 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::initialize() {
 
   // Set up deterministic annealing with user-defined temperatures
   Acts::AnnealingUtility::Config annealingConfig;
-  annealingConfig.setOfTemperatures = {8.0,       4.0,       2.0,
-                                       1.4142136, 1.2247449, 1.0};
+  annealingConfig.setOfTemperatures = {1.};
   Acts::AnnealingUtility annealingUtility(annealingConfig);
 
   // Set up the vertex fitter with user-defined annealing
   Fitter::Config fitterCfg(ipEstimator);
   fitterCfg.annealingTool = annealingUtility;
+  fitterCfg.minWeight = 0.001;
+  fitterCfg.doSmoothing = true;
   Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
 
   // Set up the vertex seed finder
@@ -106,6 +107,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::initialize() {
                               std::move(linearizer), m_cfg.bField);
   // We do not want to use a beamspot constraint here
   finderConfig.useBeamSpotConstraint = false;
+  finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
 
   // Instantiate the finder
   m_impl = std::make_unique<Impl>(
