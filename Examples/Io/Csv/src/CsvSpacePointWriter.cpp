@@ -28,7 +28,7 @@ ActsExamples::CsvSpacepointWriter::CsvSpacepointWriter(
 
 ActsExamples::CsvSpacepointWriter::~CsvSpacepointWriter() = default;
 
-ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::CsvSpacepointWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }

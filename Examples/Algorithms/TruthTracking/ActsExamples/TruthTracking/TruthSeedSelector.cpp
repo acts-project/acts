@@ -23,7 +23,7 @@ using namespace ActsExamples;
 
 TruthSeedSelector::TruthSeedSelector(const Config& config,
                                      Acts::Logging::Level level)
-    : BareAlgorithm("TruthSeedSelector", level), m_cfg(config) {
+    : IAlgorithm("TruthSeedSelector", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }

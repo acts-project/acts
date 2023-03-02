@@ -10,7 +10,7 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsFatras/Physics/NuclearInteraction/NuclearInteraction.hpp"
@@ -24,7 +24,7 @@ struct FatrasSimulation;
 }
 
 /// Fast track simulation using the Acts propagation and navigation.
-class FatrasSimulation final : public BareAlgorithm {
+class FatrasSimulation final : public IAlgorithm {
  public:
   struct Config {
     /// The particles input collection.

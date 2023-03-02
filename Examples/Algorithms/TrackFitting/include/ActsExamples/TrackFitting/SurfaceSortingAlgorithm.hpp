@@ -12,7 +12,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <map>
 #include <memory>
@@ -22,7 +22,7 @@ namespace ActsExamples {
 
 using TrackHitList = std::map<const double, const Index>;
 
-class SurfaceSortingAlgorithm final : public BareAlgorithm {
+class SurfaceSortingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input proto track collection

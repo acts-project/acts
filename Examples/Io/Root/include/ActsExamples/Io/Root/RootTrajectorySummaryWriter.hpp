@@ -62,7 +62,7 @@ class RootTrajectorySummaryWriter final
   ~RootTrajectorySummaryWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

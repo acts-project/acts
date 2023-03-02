@@ -35,7 +35,7 @@ void addDigitization(Context& ctx) {
   {
     using Config = ActsExamples::DigitizationConfig;
 
-    py::class_<ActsExamples::DigitizationAlgorithm, ActsExamples::BareAlgorithm,
+    py::class_<ActsExamples::DigitizationAlgorithm, ActsExamples::IAlgorithm,
                std::shared_ptr<ActsExamples::DigitizationAlgorithm>>(
         mex, "DigitizationAlgorithm")
         .def(py::init<Config&, Acts::Logging::Level>(), py::arg("config"),
@@ -76,12 +76,11 @@ void addDigitization(Context& ctx) {
   {
     using Alg = ActsExamples::PlanarSteppingAlgorithm;
 
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "PlanarSteppingAlgorithm")
-            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
+    auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "PlanarSteppingAlgorithm")
+                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Alg::Config>(alg, "Config").def(py::init<>());
 
