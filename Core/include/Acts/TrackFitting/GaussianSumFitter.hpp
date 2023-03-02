@@ -367,6 +367,7 @@ struct GaussianSumFitter {
 
       r.currentTip = fwdGsfResult.lastMeasurementTip;
       r.visitedSurfaces.push_back(&proxy.referenceSurface());
+      r.surfacesVisitedBwdAgain.push_back(&proxy.referenceSurface());
       r.measurementStates++;
       r.processedStates++;
 
