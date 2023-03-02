@@ -562,7 +562,6 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
   // Set up all the different tests
   for (auto [ir, r] : Acts::enumerate(radii)) {
     std::string radStr = "_radii_" + std::to_string(ir);
-
     ACTS_INFO("    -> test series innermost radius setup " << radii[ir][0u]);
 
     // Let's create the inner container first

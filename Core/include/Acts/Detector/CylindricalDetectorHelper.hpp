@@ -34,9 +34,10 @@ using ProtoContainer = std::map<unsigned int, std::shared_ptr<Portal>>;
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
-/// @note no checking for consistency is done at this stage
+/// @note a fair amount of consistency checking is done,
+/// and exceptions are thrown if any of the tests fail
 ///
-/// @returns the proto container surfaces of a Proto container
+/// @return a proto container with the outside portals
 ProtoContainer connectDetectorVolumesInR(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<DetectorVolume>>& volumes,
@@ -50,7 +51,10 @@ ProtoContainer connectDetectorVolumesInR(
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
-/// @note no checking for consistency is done at this stage
+/// @note a fair amount of consistency checking is done,
+/// and exceptions are thrown if any of the tests fail
+///
+/// @return a proto container with the outside portals
 ProtoContainer connectDetectorVolumesInZ(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<DetectorVolume>>& volumes,
@@ -64,11 +68,29 @@ ProtoContainer connectDetectorVolumesInZ(
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
-/// @note no checking for consistency is done at this stage
+/// @note a fair amount of consistency checking is done,
+/// and exceptions are thrown if any of the tests fail
+///
+/// @return a proto container with the outside portals
 ProtoContainer connectDetectorVolumesInPhi(
     const GeometryContext& gctx,
     std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     const std::vector<unsigned int>& selectedOnly = {},
+    Acts::Logging::Level logLevel = Acts::Logging::INFO);
+
+/// @brief Connect detector volumes in phi
+///
+/// @param gctx The geometry context
+/// @param volumes the volumes
+/// @param logLevel is the screen logging level
+///
+/// @note a fair amount of consistency checking is done,
+/// and exceptions are thrown if any of the tests fail
+///
+/// @return a proto container with the outside portals
+ProtoContainer wrapDetectorVolumesInZR(
+    const GeometryContext& gctx,
+    std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
 /// @brief Connect containers in R
@@ -78,9 +100,10 @@ ProtoContainer connectDetectorVolumesInPhi(
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
-/// @note no checking for consistency is done at this stage
+/// @note not much checking is done anymore, as the ProtoContainer
+/// are assumed to come properly formed from the prior methods
 ///
-/// @returns the proto container surfaces of a Proto container
+/// @return a proto container with the outside portals
 ProtoContainer connectContainersInR(
     const GeometryContext& gctx, const std::vector<ProtoContainer>& containers,
     const std::vector<unsigned int>& selectedOnly = {},
@@ -93,12 +116,30 @@ ProtoContainer connectContainersInR(
 /// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
-/// @note no checking for consistency is done at this stage
+/// @note not much checking is done anymore, as the ProtoContainer
+/// are assumed to come properly formed from the prior methods
 ///
-/// @returns the proto container surfaces of a Proto container
+/// @return a proto container with the outside portals
 ProtoContainer connectContainersInZ(
     const GeometryContext& gctx, const std::vector<ProtoContainer>& containers,
     const std::vector<unsigned int>& selectedOnly = {},
+    Acts::Logging::Level logLevel = Acts::Logging::INFO);
+
+/// @brief Wrap container in R,Z - this uses the cutout cylinder bounds
+///
+/// @param gctx The geometry context
+/// @param innerContainer the inner container to be matched
+/// @param wrappingVolume the outer wrappig module
+/// @param selectedOnly switch only selected boundaries
+/// @param logLevel is the screen logging level
+///
+/// @note not much checking is done anymore, as the ProtoContainer
+/// are assumed to come properly formed from the prior methods
+///
+/// @return a proto container with the outside portals
+ProtoContainer wrapContainerInZR(
+    const GeometryContext& gctx,
+    ProtoContainer& innerContainer, DetectorVolume& wrappingVolume,
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
 /// @brief Helper method to extract r,z,phi boundaries for
