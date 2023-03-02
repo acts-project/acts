@@ -64,19 +64,19 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
 
   auto cyl0 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0Bounds),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   auto cyl0nameDup = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl0", nominal, std::move(cyl0BoundsCopy),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   auto cyl1 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl1", nominal, std::move(cyl1Bounds),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   auto cyl2 = Acts::Experimental::DetectorVolumeFactory::construct(
       portalGenerator, tContext, "Cyl2", nominal, std::move(cyl2Bounds),
-      Acts::Experimental::allPortals());
+      Acts::Experimental::tryAllPortals());
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 =
       {cyl0, cyl1, cyl2};

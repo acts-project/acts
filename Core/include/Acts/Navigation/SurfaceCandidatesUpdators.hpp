@@ -142,7 +142,7 @@ struct AllPortalsAndSurfacesImpl : public INavigationDelegate {
 /// Generate a provider for all portals
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdator allPortals() {
+inline static SurfaceCandidatesUpdator tryAllPortals() {
   auto ap = std::make_unique<const AllPortalsImpl>();
   SurfaceCandidatesUpdator nStateUpdator;
   nStateUpdator.connect<&AllPortalsImpl::update>(std::move(ap));
@@ -155,7 +155,7 @@ inline static SurfaceCandidatesUpdator allPortals() {
 /// setup with many surfaces
 ///
 /// @return a connected navigationstate updator
-inline static SurfaceCandidatesUpdator allPortalsAndSurfaces() {
+inline static SurfaceCandidatesUpdator tryAllPortalsAndSurfaces() {
   auto aps = std::make_unique<const AllPortalsAndSurfacesImpl>();
   SurfaceCandidatesUpdator nStateUpdator;
   nStateUpdator.connect<&AllPortalsAndSurfacesImpl::update>(std::move(aps));

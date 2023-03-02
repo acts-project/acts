@@ -26,6 +26,7 @@
 #include <string>
 #include <type_traits>
 #include <vector>
+#include <tuple>
 
 #define ACTS_CHECK_BIT(value, mask) ((value & mask) == mask)
 
@@ -597,5 +598,44 @@ T clampValue(U value) {
   return std::clamp(value, static_cast<U>(std::numeric_limits<T>::lowest()),
                     static_cast<U>(std::numeric_limits<T>::max()));
 }
+
+/// Return min/max from a (optionally) sorted series, obsolete with C++20 (ranges)
+/// 
+/// @tparam T a numeric series
+/// 
+/// @param tseries is the number series
+/// @param sort is a boolean directive to sort (requires copy)
+/// 
+/// @return [ min, max ] in an array
+template <typename T>
+std::array<typename T::value_type, 2u> min_max(const T& tseries, bool sort = true){
+  if (sort){
+    T tcopy = tseries;
+    std::sort(tcopy.begin(), tcopy.end());
+    return min_max(tcopy, false);
+  }
+  return { tseries.front(), tseries.back() };
+}
+
+/// Return range and medium of a sorted numeric series
+/// 
+/// @tparam T a numeric series
+/// 
+/// @param tseries is the number series
+/// @param sort is a boolean directive to sort (requires copy)
+/// 
+/// @return [ range, medium ] in an tuple
+template <typename T>
+std::tuple<typename T::value_type, ActsScalar> range_medium(const T& tseries, bool sort = true){
+  if (sort){
+    T tcopy(tseries);
+    std::sort(tcopy.begin(), tcopy.end());
+    return range_medium(tcopy, false);
+  }
+  typename T::value_type range = (tseries.back() - tseries.front());
+  typename T::value_type medium = static_cast<ActsScalar>((tseries.back() + tseries.front())*0.5);
+  return std::tie(range, medium);
+}
+
 
 }  // namespace Acts
