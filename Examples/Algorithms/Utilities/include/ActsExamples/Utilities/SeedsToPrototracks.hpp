@@ -8,11 +8,11 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
 
-class SeedsToPrototracks final : public BareAlgorithm {
+class SeedsToPrototracks final : public IAlgorithm {
  public:
   struct Config {
     std::string inputSeeds = "seeds";
@@ -24,7 +24,7 @@ class SeedsToPrototracks final : public BareAlgorithm {
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
   SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl)
-      : BareAlgorithm("TrajectoriesToPrototracks", lvl),
+      : IAlgorithm("TrajectoriesToPrototracks", lvl),
         m_cfg(std::move(cfg)) {}
 
   /// Run the algorithm.
