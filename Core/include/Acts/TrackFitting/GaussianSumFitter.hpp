@@ -304,7 +304,7 @@ struct GaussianSumFitter {
     }
 
     if (fwdGsfResult.measurementStates == 0) {
-      return return_error_or_abort(GsfError::NoStatesCreated);
+      return return_error_or_abort(GsfError::NoMeasurementStatesCreatedForward);
     }
 
     ACTS_VERBOSE("Finished forward propagation");
@@ -388,8 +388,9 @@ struct GaussianSumFitter {
       return return_error_or_abort(bwdGsfResult.result.error());
     }
 
-    if (bwdGsfResult.processedStates == 0) {
-      return return_error_or_abort(GsfError::NoStatesCreated);
+    if (bwdGsfResult.measurementStates == 0) {
+      return return_error_or_abort(
+          GsfError::NoMeasurementStatesCreatedBackward);
     }
 
     ////////////////////////////////////
@@ -408,25 +409,30 @@ struct GaussianSumFitter {
       ACTS_DEBUG("Fwd and bwd measuerement states do not match");
     }
 
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
-    track.tipIndex() = fwdGsfResult.lastMeasurementTip;
-    
     // Go through the states and assign outliers / unset smoothed if surface not
     // passed in backward pass
     const auto& foundBwd = bwdGsfResult.surfacesVisitedBwdAgain;
-    
-    if( foundBwd.empty() ) {
-      ACTS_WARNING("Did not hit any measurement surface in forward AND backward pass");
-    }
+    std::size_t measurementStatesFinal = 0;
 
-    for (auto state : track.trackStates()) {
+    for (auto state :
+         fwdGsfResult.fittedStates->trackStateRange(fwdGsfResult.currentTip)) {
       const bool found = std::find(foundBwd.begin(), foundBwd.end(),
                                    &state.referenceSurface()) != foundBwd.end();
-      if (not found) {
-        state.typeFlags().set(TrackStateFlag::OutlierFlag);
-        state.typeFlags().reset(TrackStateFlag::MeasurementFlag);
+      if (not found && state.typeFlags().test(MeasurementFlag)) {
+        state.typeFlags().set(OutlierFlag);
+        state.typeFlags().reset(MeasurementFlag);
       }
+
+      measurementStatesFinal +=
+          static_cast<std::size_t>(state.typeFlags().test(MeasurementFlag));
     }
+
+    if (measurementStatesFinal == 0) {
+      return return_error_or_abort(GsfError::NoMeasurementStatesCreatedFinal);
+    }
+
+    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    track.tipIndex() = fwdGsfResult.lastMeasurementTip;
 
     if (options.referenceSurface) {
       const auto& params = *bwdResult->endParameters;
@@ -435,7 +441,7 @@ struct GaussianSumFitter {
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
     }
 
-    track.nMeasurements() = fwdGsfResult.measurementStates;
+    track.nMeasurements() = measurementStatesFinal;
     track.nHoles() = fwdGsfResult.measurementHoles;
 
     return track;
