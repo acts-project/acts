@@ -215,7 +215,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
         ),
         (
             "performance_seeding.root",
-            "track_finder_tracks",
+            None,
         ),
         (
             "particles.root",
@@ -273,7 +273,7 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
         ),
         (
             "performance_seeding.root",
-            "track_finder_tracks",
+            None,
             284,
         ),
         (
@@ -339,7 +339,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         ),
         (
             "performance_seeding.root",
-            "track_finder_tracks",
+            None,
         ),
         (
             "particles.root",
@@ -1032,7 +1032,7 @@ def test_ckf_tracks_example(
         root_files += [
             (
                 "performance_seeding.root",
-                "track_finder_tracks",
+                None,
             ),
         ]
 
