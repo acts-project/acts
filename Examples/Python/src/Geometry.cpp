@@ -42,9 +42,11 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
         .def("geometryId",
              [](Acts::Surface& self) { return self.geometryId(); })
-        .def("center", [](Acts::Surface& self) {
-          return self.center(Acts::GeometryContext{});
-        });
+        .def("center",
+             [](Acts::Surface& self) {
+               return self.center(Acts::GeometryContext{});
+             })
+        .def("type", [](Acts::Surface& self) { return self.type(); });
   }
 
   {
@@ -53,8 +55,9 @@ void addGeometry(Context& ctx) {
         .value("Cylinder", Acts::Surface::SurfaceType::Cylinder)
         .value("Disc", Acts::Surface::SurfaceType::Disc)
         .value("Perigee", Acts::Surface::SurfaceType::Perigee)
-        .value("Plane", Acts::Surface::SurfaceType::Straw)
-        .value("Straw", Acts::Surface::SurfaceType::Curvilinear)
+        .value("Plane", Acts::Surface::SurfaceType::Plane)
+        .value("Straw", Acts::Surface::SurfaceType::Straw)
+        .value("Curvilinear", Acts::Surface::SurfaceType::Curvilinear)
         .value("Other", Acts::Surface::SurfaceType::Other);
   }
 
