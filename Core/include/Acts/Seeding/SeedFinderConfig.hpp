@@ -46,9 +46,6 @@ struct SeedFinderConfig {
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
 
-  // force sorting of middle SPs in radius
-  bool forceRadialSorting = false;
-
   // radial range for middle SP
   // variable range based on SP radius
   bool useVariableMiddleSPRange = false;

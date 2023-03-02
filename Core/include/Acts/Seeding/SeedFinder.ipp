@@ -65,11 +65,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
       if (rM > rMiddleSPRange.max()) {
-        // break if SP are sorted in r
-        if (m_config.forceRadialSorting) {
-          break;
-        }
-        continue;
+        // break because SPs are sorted in r
+        break;
       }
     } else if (not m_config.rRangeMiddleSP.empty()) {
       /// get zBin position of the middle SP
@@ -82,21 +79,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
       if (rM > m_config.rRangeMiddleSP[zBin][1]) {
-        // break if SP are sorted in r
-        if (m_config.forceRadialSorting) {
-          break;
-        }
-        continue;
+        // break because SPs are sorted in r
+        break;
       }
     } else {
       if (rM > m_config.rMaxMiddle) {
         continue;
       }
       if (rM < m_config.rMinMiddle) {
-        if (m_config.forceRadialSorting) {
-          break;
-        }
-        continue;
+        // break because SPs are sorted in r
+        break;
       }
     }
 
