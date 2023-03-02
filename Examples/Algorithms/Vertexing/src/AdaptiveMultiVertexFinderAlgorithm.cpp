@@ -51,6 +51,9 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   if (m_cfg.outputTime.empty()) {
     throw std::invalid_argument("Missing output reconstruction time");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
 }
 
 ActsExamples::ProcessCode
@@ -59,7 +62,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   // retrieve input tracks and convert into the expected format
 
   auto [inputTrackParameters, inputTrackPointers] =
-      makeParameterContainers(m_cfg, ctx);
+      makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
 
   //////////////////////////////////////////////
   /* Full tutorial example code for reference */

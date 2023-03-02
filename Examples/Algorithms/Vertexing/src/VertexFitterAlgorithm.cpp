@@ -37,6 +37,9 @@ ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
   if (m_cfg.inputProtoVertices.empty()) {
     throw std::invalid_argument("Missing input proto vertices collection");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
 }
 
 ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
@@ -68,7 +71,7 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
   auto [inputTrackParameters, inputTrackPointers] =
-      makeParameterContainers(m_cfg, ctx);
+      makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
 
   ACTS_VERBOSE("Have " << inputTrackParameters.size() << " track parameters");
   const auto& protoVertices =

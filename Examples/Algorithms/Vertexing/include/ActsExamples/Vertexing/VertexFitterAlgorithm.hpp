@@ -11,6 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
@@ -56,6 +59,12 @@ class VertexFitterAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
+      m_inputTrackParameters{this, "InputTrackParameters"};
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
 };
 
 }  // namespace ActsExamples

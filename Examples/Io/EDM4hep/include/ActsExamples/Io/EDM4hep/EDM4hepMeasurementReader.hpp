@@ -8,7 +8,10 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/EventData/Cluster.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 
 #include <memory>
 #include <string>
@@ -72,6 +75,17 @@ class EDM4hepMeasurementReader final : public IReader {
 
   const edm4hep::TrackerHitPlaneCollection* m_trackerHitPlaneCollection;
   const edm4hep::TrackerHitCollection* m_trackerHitRawCollection;
+
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
+      this, "OutputMeasurements"};
+
+  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+      this, "OutputMeasurementSimHitsMap"};
+
+  WriteDataHandle<GeometryIdMultiset<IndexSourceLink>> m_outputSourceLinks{
+      this, "OutputSourceLinks"};
+
+  WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
 };
 
 }  // namespace ActsExamples
