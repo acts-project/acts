@@ -18,7 +18,7 @@
 
 ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
     ActsExamples::TruthSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("TruthSeedingAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("TruthSeedingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
