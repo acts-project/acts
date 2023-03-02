@@ -194,8 +194,8 @@ class BinnedSPGroupIterator {
   }
 
   BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,
-                        BinFinder<external_spacepoint_t>* botBinFinder,
-                        BinFinder<external_spacepoint_t>* tBinFinder,
+                        const BinFinder<external_spacepoint_t>* botBinFinder,
+                        const BinFinder<external_spacepoint_t>* tBinFinder,
                         std::vector<size_t> bins = {}) {
     grid = spgrid;
     m_bottomBinFinder = botBinFinder;
@@ -215,8 +215,8 @@ class BinnedSPGroupIterator {
   }
 
   BinnedSPGroupIterator(const SpacePointGrid<external_spacepoint_t>* spgrid,
-                        BinFinder<external_spacepoint_t>* botBinFinder,
-                        BinFinder<external_spacepoint_t>* tBinFinder,
+                        const BinFinder<external_spacepoint_t>* botBinFinder,
+                        const BinFinder<external_spacepoint_t>* tBinFinder,
                         size_t phiInd, size_t zInd,
                         std::vector<size_t> bins = {}) {
     m_bottomBinFinder = botBinFinder;
@@ -252,8 +252,8 @@ class BinnedSPGroupIterator {
   size_t zIndex = 1;
   size_t outputIndex = 0;
   std::array<long unsigned int, 2ul> phiZbins;
-  BinFinder<external_spacepoint_t>* m_bottomBinFinder;
-  BinFinder<external_spacepoint_t>* m_topBinFinder;
+  const BinFinder<external_spacepoint_t>* m_bottomBinFinder;
+  const BinFinder<external_spacepoint_t>* m_topBinFinder;
   std::vector<size_t> customZorder;
   // 	bool start = true;
 };
@@ -270,8 +270,9 @@ class BinnedSPGroup {
   BinnedSPGroup<external_spacepoint_t>(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
       callable_t&& toGlobal,
-      std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
-      std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
+      std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>>
+          botBinFinder,
+      std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
       Acts::Extent& rRangeSPExtent,
       const SeedFinderConfig<external_spacepoint_t>& _config,
@@ -298,8 +299,8 @@ class BinnedSPGroup {
 
   // BinFinder must return std::vector<Acts::Seeding::Bin> with content of
   // each bin sorted in r (ascending)
-  std::shared_ptr<BinFinder<external_spacepoint_t>> m_topBinFinder;
-  std::shared_ptr<BinFinder<external_spacepoint_t>> m_bottomBinFinder;
+  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_topBinFinder;
+  std::shared_ptr<const BinFinder<external_spacepoint_t>> m_bottomBinFinder;
 
   std::vector<size_t> m_bins;
 };
