@@ -322,7 +322,7 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CsvMultiTrajectoryWriter, mex, "CsvMultiTrajectoryWriter",
-      inputTrajectories, outputDir, inputMeasurementParticlesMap,
+      inputTrajectories, outputDir, fileName, inputMeasurementParticlesMap,
       outputPrecision, nMeasurementsMin, truthMatchProbMin, ptMin);
 
   ACTS_PYTHON_DECLARE_WRITER(

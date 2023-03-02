@@ -28,15 +28,16 @@ namespace ActsExamples {
 /// default it writes to the current working directory.
 /// Files are named using the following schema
 ///
-///     event000000001-CKFtracks.csv
-///     event000000002-CKFtracks.csv
+///     event000000001-tracks_{algorithm_name}.csv
+///     event000000002-tracks_{algorithm_name}.csv
 ///
 /// and each line in the file corresponds to one track.
 class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
  public:
   struct Config {
-    std::string inputTrajectories;  ///< Input trajectory collection
-    std::string outputDir;          ///< where to place output files
+    std::string inputTrajectories;           ///< Input trajectory collection
+    std::string outputDir;                   ///< where to place output files
+    std::string fileName = "CKFtracks.csv";  ///< name of the output files
     std::string
         inputMeasurementParticlesMap;  ///< Input hit-particles map collection
     size_t outputPrecision = 6;        ///< floating point precision

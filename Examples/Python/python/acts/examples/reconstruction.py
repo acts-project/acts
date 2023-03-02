@@ -1085,6 +1085,7 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 outputDir=str(outputDirCsv),
+                fileName=str(f"tracks_{name}.csv"),
                 **acts.examples.defaultKWArgs(
                     nMeasurementsMin=ckfPerformanceConfig.nMeasurementsMin,
                 ),
@@ -1302,7 +1303,7 @@ def addAmbiguityResolutionML(
 
     addTrajectoryWriters(
         s,
-        name="ambi",
+        name="ambiML",
         trajectories=alg.config.outputTrajectories,
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,

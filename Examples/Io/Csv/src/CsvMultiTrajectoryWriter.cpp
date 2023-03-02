@@ -35,7 +35,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     const TrajectoriesContainer& trajectories) {
   // open per-event file
   std::string path =
-      perEventFilepath(m_cfg.outputDir, "CKFtracks.csv", context.eventNumber);
+      perEventFilepath(m_cfg.outputDir, m_cfg.fileName, context.eventNumber);
   std::ofstream mos(path, std::ofstream::out | std::ofstream::trunc);
   if (!mos) {
     throw std::ios_base::failure("Could not open '" + path + "' to write");
