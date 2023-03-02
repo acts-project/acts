@@ -83,10 +83,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         break;
       }
     } else {
-      if (rM > m_config.rMaxMiddle) {
+      if (rM < m_config.rMinMiddle) {
         continue;
       }
-      if (rM < m_config.rMinMiddle) {
+      if (rM > m_config.rMaxMiddle) {
         // break because SPs are sorted in r
         break;
       }
