@@ -101,6 +101,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             ),
             rnd=rnd,
             outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
         )
     if g4_simulation:
         if s.config.numThreads != 1:
@@ -121,6 +122,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             ),
+            # outputDirRoot=outputDir,
             outputDirCsv=outputDir,
             rnd=rnd,
         )
@@ -137,6 +139,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             if ttbar_pu200
             else ParticleSelectorConfig(),
             outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
             rnd=rnd,
         )
 
@@ -146,6 +149,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         field,
         digiConfigFile=oddDigiConfig,
         outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
         rnd=rnd,
     )
 
@@ -174,7 +178,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
         ),
         outputDirRoot=outputDir,
-        outputDirCsv=outputDir,
+        # outputDirCsv=outputDir,
     )
 
     if ambiguity_MLSolver:
@@ -185,7 +189,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=7
             ),
             outputDirRoot=outputDir,
-            outputDirCsv=outputDir,
+            # outputDirCsv=outputDir,
             onnxModelFile=os.path.dirname(__file__)
             + "/MLAmbiguityResolution/duplicateClassifier.onnx",
         )
@@ -198,7 +202,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 nMeasurementsMin=7,
             ),
             outputDirRoot=outputDir,
-            outputDirCsv=outputDir,
+            # outputDirCsv=outputDir,
         )
 
     addVertexFitting(
