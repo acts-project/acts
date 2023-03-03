@@ -13,8 +13,8 @@ template <typename callable_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     const std::vector<const external_spacepoint_t*>& spacePoints,
     callable_t&& toGlobal,
-    std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
-    std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
+    std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> botBinFinder,
+    std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
     Acts::Extent& rRangeSPExtent,
     const SeedFinderConfig<external_spacepoint_t>& config,

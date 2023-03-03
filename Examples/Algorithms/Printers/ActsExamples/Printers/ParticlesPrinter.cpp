@@ -19,7 +19,7 @@
 
 ActsExamples::ParticlesPrinter::ParticlesPrinter(const Config& cfg,
                                                  Acts::Logging::Level lvl)
-    : BareAlgorithm("ParticlesPrinter", lvl), m_cfg(cfg) {
+    : IAlgorithm("ParticlesPrinter", lvl), m_cfg(cfg) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Input particles collection is not configured");
   }
