@@ -136,7 +136,13 @@ CKFPerformanceConfig = namedtuple(
 
 AmbiguityResolutionConfig = namedtuple(
     "AmbiguityResolutionConfig",
-    ["maximumSharedHits"],
+    ["maximumSharedHits", "nMeasurementsMin"],
+    defaults=[None] * 2,
+)
+
+AmbiguityResolutionMLConfig = namedtuple(
+    "AmbiguityResolutionMLConfig",
+    ["nMeasurementsMin"],
     defaults=[None] * 1,
 )
 
@@ -1077,6 +1083,10 @@ def addTrajectoryWriters(
                 inputTrajectories=trajectories,
                 inputMeasurementParticlesMap="measurement_particles_map",
                 outputDir=str(outputDirCsv),
+                fileName=str(f"tracks_{name}.csv"),
+                **acts.examples.defaultKWArgs(
+                    nMeasurementsMin=ckfPerformanceConfig.nMeasurementsMin,
+                ),
             )
             s.addWriter(csvMTJWriter)
 
@@ -1230,6 +1240,7 @@ def addAmbiguityResolution(
         outputTrajectories="filteredTrajectories",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
+            nMeasurementsMin=config.nMeasurementsMin,
         ),
     )
     s.addAlgorithm(alg)
@@ -1239,6 +1250,56 @@ def addAmbiguityResolution(
     addTrajectoryWriters(
         s,
         name="ambi",
+        trajectories=alg.config.outputTrajectories,
+        ckfPerformanceConfig=ckfPerformanceConfig,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeStates=writeTrajectories,
+        writeSummary=writeTrajectories,
+        writeCKFperformance=True,
+        writeFinderPerformance=False,
+        writeFitterPerformance=False,
+        logLevel=logLevel,
+    )
+
+    return s
+
+
+@acts.examples.NamedTypeArgs(
+    config=AmbiguityResolutionMLConfig,
+    ckfPerformanceConfig=CKFPerformanceConfig,
+)
+def addAmbiguityResolutionML(
+    s,
+    config: AmbiguityResolutionMLConfig = AmbiguityResolutionMLConfig(),
+    ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
+    onnxModelFile: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    writeTrajectories: bool = True,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+
+    from acts.examples import AmbiguityResolutionMLAlgorithm
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    alg = AmbiguityResolutionMLAlgorithm(
+        level=customLogLevel(),
+        inputTrajectories="trajectories",
+        inputDuplicateNN=onnxModelFile,
+        outputTrajectories="filteredTrajectoriesML",
+        **acts.examples.defaultKWArgs(
+            nMeasurementsMin=config.nMeasurementsMin,
+        ),
+    )
+    s.addAlgorithm(alg)
+
+    s.addWhiteboardAlias("trajectories", alg.config.outputTrajectories)
+
+    addTrajectoryWriters(
+        s,
+        name="ambiML",
         trajectories=alg.config.outputTrajectories,
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
