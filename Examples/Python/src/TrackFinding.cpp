@@ -10,6 +10,9 @@
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
+#ifdef ACTS_PLUGIN_ONNX
+#include "ActsExamples/TrackFinding/AmbiguityResolutionMLAlgorithm.hpp"
+#endif
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
@@ -317,6 +320,13 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedsToPrototracks, mex,
                                 "SeedsToPrototracks", inputSeeds,
                                 outputProtoTracks);
+
+#ifdef ACTS_PLUGIN_ONNX
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
+                                mex, "AmbiguityResolutionMLAlgorithm",
+                                inputTrajectories, inputDuplicateNN,
+                                outputTrajectories, nMeasurementsMin);
+#endif
 }
 
 }  // namespace Acts::Python
