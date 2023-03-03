@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 #include <vector>
@@ -25,7 +25,7 @@ namespace ActsExamples {
 ///  3) Else, remove the track with the highest relative shared hits (i.e.
 ///     shared hits / hits).
 ///  4) Back to square 1.
-class AmbiguityResolutionAlgorithm final : public BareAlgorithm {
+class AmbiguityResolutionAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input source links collection.

@@ -20,7 +20,7 @@
 ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
     ActsExamples::TrackParamsEstimationAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("TrackParamsEstimationAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("TrackParamsEstimationAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds input collection");

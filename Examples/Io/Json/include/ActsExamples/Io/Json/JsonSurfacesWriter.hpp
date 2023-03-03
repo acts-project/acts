@@ -66,7 +66,7 @@ class JsonSurfacesWriter : public IWriter {
   ProcessCode write(const AlgorithmContext& ctx) override;
 
   /// Write geometry using the default context.
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Readonly access to config
   const Config& config() const { return m_cfg; }

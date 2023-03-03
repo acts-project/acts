@@ -9,7 +9,9 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
@@ -29,7 +31,30 @@
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
-ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
+namespace ActsExamples {
+namespace {
+
+std::string_view getAlgorithmType(const SequenceElement& element) {
+  if (dynamic_cast<const IWriter*>(&element) != nullptr) {
+    return "writer";
+  }
+  if (dynamic_cast<const IReader*>(&element) != nullptr) {
+    return "reader";
+  }
+  return "algorithm";
+}
+
+// Saturated addition that does not overflow and exceed SIZE_MAX.
+//
+// From http://locklessinc.com/articles/sat_arithmetic/
+size_t saturatedAdd(size_t a, size_t b) {
+  size_t res = a + b;
+  res |= -static_cast<int>(res < a);
+  return res;
+}
+}  // namespace
+
+Sequencer::Sequencer(const Sequencer::Config& cfg)
     : m_cfg(cfg),
       m_taskArena((m_cfg.numThreads < 0) ? tbb::task_arena::automatic
                                          : m_cfg.numThreads),
@@ -46,15 +71,7 @@ ActsExamples::Sequencer::Sequencer(const Sequencer::Config& cfg)
 #endif
 }
 
-void ActsExamples::Sequencer::addService(std::shared_ptr<IService> service) {
-  if (not service) {
-    throw std::invalid_argument("Can not add empty/NULL service");
-  }
-  m_services.push_back(std::move(service));
-  ACTS_INFO("Added service '" << m_services.back()->name() << "'");
-}
-
-void ActsExamples::Sequencer::addContextDecorator(
+void Sequencer::addContextDecorator(
     std::shared_ptr<IContextDecorator> decorator) {
   if (not decorator) {
     throw std::invalid_argument("Can not add empty/NULL context decorator");
@@ -63,33 +80,39 @@ void ActsExamples::Sequencer::addContextDecorator(
   ACTS_INFO("Added context decarator '" << m_decorators.back()->name() << "'");
 }
 
-void ActsExamples::Sequencer::addReader(std::shared_ptr<IReader> reader) {
+void Sequencer::addReader(std::shared_ptr<IReader> reader) {
   if (not reader) {
     throw std::invalid_argument("Can not add empty/NULL reader");
   }
-  m_readers.push_back(std::move(reader));
-  ACTS_INFO("Added reader '" << m_readers.back()->name() << "'");
+  m_readers.push_back(reader);
+  addElement(std::move(reader));
 }
 
-void ActsExamples::Sequencer::addAlgorithm(
-    std::shared_ptr<IAlgorithm> algorithm) {
+void Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
   if (not algorithm) {
     throw std::invalid_argument("Can not add empty/NULL algorithm");
   }
-  m_algorithms.push_back(std::move(algorithm));
-  ACTS_INFO("Added algorithm '" << m_algorithms.back()->name() << "'");
+  addElement(std::move(algorithm));
 }
 
-void ActsExamples::Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
+void Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   if (not writer) {
     throw std::invalid_argument("Can not add empty/NULL writer");
   }
-  m_writers.push_back(std::move(writer));
-  ACTS_INFO("Added writer '" << m_writers.back()->name() << "'");
+  addElement(std::move(writer));
 }
 
-void ActsExamples::Sequencer::addWhiteboardAlias(
-    const std::string& aliasName, const std::string& objectName) {
+void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
+  if (not element) {
+    throw std::invalid_argument("Can not add empty/NULL element");
+  }
+  m_sequenceElements.push_back(std::move(element));
+  ACTS_INFO("Added " << getAlgorithmType(*m_sequenceElements.back()) << " '"
+                     << m_sequenceElements.back()->name() << "'");
+}
+
+void Sequencer::addWhiteboardAlias(const std::string& aliasName,
+                                   const std::string& objectName) {
   auto [it, success] =
       m_whiteboardObjectAliases.insert({objectName, aliasName});
   if (!success) {
@@ -97,52 +120,34 @@ void ActsExamples::Sequencer::addWhiteboardAlias(
   }
 }
 
-std::vector<std::string> ActsExamples::Sequencer::listAlgorithmNames() const {
+std::vector<std::string> Sequencer::listAlgorithmNames() const {
   std::vector<std::string> names;
 
   // WARNING this must be done in the same order as in the processing
-  for (const auto& service : m_services) {
-    names.push_back("Service:" + service->name());
-  }
   for (const auto& decorator : m_decorators) {
     names.push_back("Decorator:" + decorator->name());
   }
   for (const auto& reader : m_readers) {
     names.push_back("Reader:" + reader->name());
   }
-  for (const auto& algorithm : m_algorithms) {
+  for (const auto& algorithm : m_sequenceElements) {
     names.push_back("Algorithm:" + algorithm->name());
-  }
-  for (const auto& writer : m_writers) {
-    names.push_back("Writer:" + writer->name());
   }
 
   return names;
 }
 
-namespace {
-// Saturated addition that does not overflow and exceed SIZE_MAX.
-//
-// From http://locklessinc.com/articles/sat_arithmetic/
-size_t saturatedAdd(size_t a, size_t b) {
-  size_t res = a + b;
-  res |= -static_cast<int>(res < a);
-  return res;
-}
-}  // namespace
-
-std::pair<std::size_t, std::size_t>
-ActsExamples::Sequencer::determineEventsRange() const {
+std::pair<std::size_t, std::size_t> Sequencer::determineEventsRange() const {
   constexpr auto kInvalidEventsRange = std::make_pair(SIZE_MAX, SIZE_MAX);
 
   // Note on skipping events:
   //
-  // Previously, skipping events was only allowed when readers where available,
-  // since only readers had a `.skip()` functionality. The `.skip()` interface
-  // has been removed in favour of telling the readers the event they are
-  // requested to read via the algorithm context.
-  // Skipping can now also be used when no readers are configured, e.g. for
-  // generating only a few specific events in a simulation setup.
+  // Previously, skipping events was only allowed when readers where
+  // available, since only readers had a `.skip()` functionality. The
+  // `.skip()` interface has been removed in favour of telling the readers the
+  // event they are requested to read via the algorithm context. Skipping can
+  // now also be used when no readers are configured, e.g. for generating only
+  // a few specific events in a simulation setup.
 
   // determine intersection of event ranges available from readers
   size_t beg = 0u;
@@ -153,7 +158,8 @@ ActsExamples::Sequencer::determineEventsRange() const {
     end = std::min(end, available.second);
   }
 
-  // since we use event ranges (and not just num events) they might not overlap
+  // since we use event ranges (and not just num events) they might not
+  // overlap
   if (end < beg) {
     ACTS_ERROR("Available events ranges from readers do not overlap");
     return kInvalidEventsRange;
@@ -251,7 +257,7 @@ void storeTiming(const std::vector<std::string>& identifiers,
 }
 }  // namespace
 
-int ActsExamples::Sequencer::run() {
+int Sequencer::run() {
   // measure overall wall clock
   Timepoint clockWallStart = Clock::now();
   // per-algorithm time measures
@@ -269,25 +275,35 @@ int ActsExamples::Sequencer::run() {
   ACTS_INFO("Processing events [" << eventsRange.first << ", "
                                   << eventsRange.second << ")");
   ACTS_INFO("Starting event loop with " << m_cfg.numThreads << " threads");
-  ACTS_INFO("  " << m_services.size() << " services");
   ACTS_INFO("  " << m_decorators.size() << " context decorators");
-  ACTS_INFO("  " << m_readers.size() << " readers");
-  ACTS_INFO("  " << m_algorithms.size() << " algorithms");
-  ACTS_INFO("  " << m_writers.size() << " writers");
+  ACTS_INFO("  " << m_sequenceElements.size() << " sequence elements");
 
-  // run start-of-run hooks
-  for (auto& service : m_services) {
-    names.push_back("Service:" + service->name() + ":startRun");
-    clocksAlgorithms.push_back(Duration::zero());
-    StopWatch sw(clocksAlgorithms.back());
-    service->startRun();
+  size_t nWriters = 0;
+  size_t nReaders = 0;
+  size_t nAlgorithms = 0;
+  for (const auto& alg : m_sequenceElements) {
+    if (dynamic_cast<const IWriter*>(alg.get()) != nullptr) {
+      nWriters++;
+    } else if (dynamic_cast<const IReader*>(alg.get()) != nullptr) {
+      nReaders++;
+    } else if (dynamic_cast<const IAlgorithm*>(alg.get()) != nullptr) {
+      nAlgorithms++;
+    } else {
+      throw std::runtime_error{"Unknown sequence element type"};
+    }
   }
 
-  ACTS_VERBOSE("Initialize algorithms");
-  for (auto& alg : m_algorithms) {
-    ACTS_VERBOSE("Initialize algorithm: " << alg->name());
+  ACTS_INFO("  " << nReaders << " readers");
+  ACTS_INFO("  " << nAlgorithms << " algorithms");
+  ACTS_INFO("  " << nWriters << " writers");
+
+  ACTS_VERBOSE("Initialize sequence elements");
+  for (auto& alg : m_sequenceElements) {
+    ACTS_VERBOSE("Initialize " << getAlgorithmType(*alg) << ": "
+                               << alg->name());
     if (alg->initialize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to initialize algorithm: " << alg->name());
+      ACTS_FATAL("Failed to initialize " << getAlgorithmType(*alg) << ": "
+                                         << alg->name());
       throw std::runtime_error("Failed to process event data");
     }
   }
@@ -309,16 +325,11 @@ int ActsExamples::Sequencer::run() {
                 Acts::getDefaultLogger("EventStore#" + std::to_string(event),
                                        m_cfg.logLevel),
                 m_whiteboardObjectAliases);
-            // If we ever wanted to run algorithms in parallel, this needs to be
-            // changed to Algorithm context copies
+            // If we ever wanted to run algorithms in parallel, this needs to
+            // be changed to Algorithm context copies
             AlgorithmContext context(0, event, eventStore);
             size_t ialgo = 0;
 
-            // Prepare event store w/ service information
-            for (auto& service : m_services) {
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              service->prepare(++context);
-            }
             /// Decorate the context
             for (auto& cdr : m_decorators) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
@@ -328,31 +339,16 @@ int ActsExamples::Sequencer::run() {
               }
             }
 
-            ACTS_VERBOSE("Execute readers");
-            for (auto& rdr : m_readers) {
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute reader: " << rdr->name());
-              if (rdr->read(++context) != ProcessCode::SUCCESS) {
-                throw std::runtime_error("Failed to read input data");
-              }
-            }
+            ACTS_VERBOSE("Execute sequence elements");
 
-            ACTS_VERBOSE("Execute algorithms");
-            for (auto& alg : m_algorithms) {
+            for (auto& alg : m_sequenceElements) {
               StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute algorithm: " << alg->name());
-              if (alg->execute(++context) != ProcessCode::SUCCESS) {
-                ACTS_FATAL("Failed to execute algorithm: " << alg->name());
+              ACTS_VERBOSE("Execute " << getAlgorithmType(*alg) << ": "
+                                      << alg->name());
+              if (alg->internalExecute(++context) != ProcessCode::SUCCESS) {
+                ACTS_FATAL("Failed to execute " << getAlgorithmType(*alg)
+                                                << ": " << alg->name());
                 throw std::runtime_error("Failed to process event data");
-              }
-            }
-
-            ACTS_VERBOSE("Execute writers");
-            for (auto& wrt : m_writers) {
-              StopWatch sw(localClocksAlgorithms[ialgo++]);
-              ACTS_VERBOSE("Execute writer: " << wrt->name());
-              if (wrt->write(++context) != ProcessCode::SUCCESS) {
-                throw std::runtime_error("Failed to write output data");
               }
             }
 
@@ -377,22 +373,13 @@ int ActsExamples::Sequencer::run() {
         });
   });
 
-  ACTS_VERBOSE("Finalize algorithms");
-  for (auto& alg : m_algorithms) {
-    ACTS_VERBOSE("Finalize algorithm: " << alg->name());
+  ACTS_VERBOSE("Finalize sequence elements");
+  for (auto& alg : m_sequenceElements) {
+    ACTS_VERBOSE("Finalize " << getAlgorithmType(*alg) << ": " << alg->name());
     if (alg->finalize() != ProcessCode::SUCCESS) {
-      ACTS_FATAL("Failed to finalize algorithm: " << alg->name());
+      ACTS_FATAL("Failed to finalize " << getAlgorithmType(*alg) << ": "
+                                       << alg->name());
       throw std::runtime_error("Failed to process event data");
-    }
-  }
-
-  // run end-of-run hooks
-  for (auto& wrt : m_writers) {
-    names.push_back("Writer:" + wrt->name() + ":endRun");
-    clocksAlgorithms.push_back(Duration::zero());
-    StopWatch sw(clocksAlgorithms.back());
-    if (wrt->endRun() != ProcessCode::SUCCESS) {
-      return EXIT_FAILURE;
     }
   }
 
@@ -417,3 +404,5 @@ int ActsExamples::Sequencer::run() {
 
   return EXIT_SUCCESS;
 }
+
+}  // namespace ActsExamples

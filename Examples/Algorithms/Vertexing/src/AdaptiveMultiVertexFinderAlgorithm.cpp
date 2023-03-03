@@ -36,7 +36,7 @@
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
     AdaptiveMultiVertexFinderAlgorithm(const Config& config,
                                        Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("AdaptiveMultiVertexFinder", level),
+    : ActsExamples::IAlgorithm("AdaptiveMultiVertexFinder", level),
       m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument(

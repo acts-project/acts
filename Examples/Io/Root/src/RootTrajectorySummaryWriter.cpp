@@ -134,7 +134,8 @@ ActsExamples::RootTrajectorySummaryWriter::~RootTrajectorySummaryWriter() {
   m_outputFile->Close();
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::RootTrajectorySummaryWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();

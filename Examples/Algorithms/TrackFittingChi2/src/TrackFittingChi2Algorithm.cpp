@@ -17,7 +17,7 @@
 
 ActsExamples::TrackFittingChi2Algorithm::TrackFittingChi2Algorithm(
     Config config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFittingChi2Algorithm", level),
+    : ActsExamples::IAlgorithm("TrackFittingChi2Algorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
