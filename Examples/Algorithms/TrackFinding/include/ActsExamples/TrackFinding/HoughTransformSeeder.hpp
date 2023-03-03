@@ -156,6 +156,7 @@ class HoughTransformSeeder final : public IAlgorithm {
     std::string outputProtoTracks;
     /// Input source links collection.
     std::string inputSourceLinks;
+    /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// For which part of the detector geometry should space points be created.
     ///
