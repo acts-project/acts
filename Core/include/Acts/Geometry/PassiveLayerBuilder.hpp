@@ -23,7 +23,7 @@ class ISurfaceMaterial;
 /// @class PassiveLayerBuilder
 ///
 /// The PassiveLayerBuilder is able to build cylinder & disc layers with given
-/// dimensions and material. The specifications of the the layers have to be
+/// dimensions and material. The specifications of the layers have to be
 /// given by the configuration struct.
 
 class PassiveLayerBuilder : public ILayerBuilder {

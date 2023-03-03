@@ -11,20 +11,22 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
+#include "ActsExamples/Utilities/tbbWrap.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
 #include <cstddef>
 #include <memory>
 #include <optional>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
-#include <tbb/task_arena.h>
-
 namespace ActsExamples {
+
+using IterationCallback = void (*)();
 
 /// A simple algorithm sequencer for event processing.
 ///
@@ -44,30 +46,43 @@ class Sequencer {
     int numThreads = -1;
     /// output directory for timing information, empty for working directory
     std::string outputDir;
+    /// output name of the timing file
+    std::string outputTimingFile = "timing.tsv";
+    /// Callback that is invoked in the event loop.
+    /// @warning This function can be called from multiple threads and should therefore be thread-safe
+    IterationCallback iterationCallback = []() {};
   };
 
-  Sequencer(const Config& cfg);
+  Sequencer(const Config &cfg);
 
-  /// Add a service to the set of services.
-  ///
-  /// @throws std::invalid_argument if the service is NULL.
-  void addService(std::shared_ptr<IService> service);
   /// Add a context decorator to the set of context decorators.
   ///
   /// @throws std::invalid_argument if the decorator is NULL.
   void addContextDecorator(std::shared_ptr<IContextDecorator> decorator);
+
   /// Add a reader to the set of readers.
   ///
   /// @throws std::invalid_argument if the reader is NULL.
   void addReader(std::shared_ptr<IReader> reader);
+
   /// Append an algorithm to the sequence of algorithms.
   ///
   /// @throws std::invalid_argument if the algorithm is NULL.
   void addAlgorithm(std::shared_ptr<IAlgorithm> algorithm);
+
+  /// Append a sequence element to the sequence
+  ///
+  /// @throws std::invalid_argument if the element is NULL.
+  void addElement(std::shared_ptr<SequenceElement> element);
+
   /// Add a writer to the set of writers.
   ///
   /// @throws std::invalid_argument if the writer is NULL.
   void addWriter(std::shared_ptr<IWriter> writer);
+
+  /// Add an alias to the whiteboard.
+  void addWhiteboardAlias(const std::string &aliasName,
+                          const std::string &objectName);
 
   /// Run the event loop.
   ///
@@ -97,6 +112,9 @@ class Sequencer {
   /// the end-of-run hook for all configured writers.
   int run();
 
+  /// Get const access to the config
+  const Config &config() const { return m_cfg; }
+
  private:
   /// List of all configured algorithm names.
   std::vector<std::string> listAlgorithmNames() const;
@@ -104,15 +122,15 @@ class Sequencer {
   std::pair<size_t, size_t> determineEventsRange() const;
 
   Config m_cfg;
-  tbb::task_arena m_taskArena;
-  std::vector<std::shared_ptr<IService>> m_services;
+  tbbWrap::task_arena m_taskArena;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;
-  std::vector<std::shared_ptr<IAlgorithm>> m_algorithms;
-  std::vector<std::shared_ptr<IWriter>> m_writers;
+  std::vector<std::shared_ptr<SequenceElement>> m_sequenceElements;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  const Acts::Logger& logger() const { return *m_logger; }
+  std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
+
+  const Acts::Logger &logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples

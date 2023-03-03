@@ -15,7 +15,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -40,7 +39,7 @@ namespace ActsExamples {
 /// in the root file for optimised data writing speed
 /// The event number is part of the written data.
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
@@ -69,23 +68,23 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
 
     TTree* tree = nullptr;
     // Identification parameters
-    int eventNr;
-    int volumeID;
-    int layerID;
-    int surfaceID;
+    int eventNr = 0;
+    int volumeID = 0;
+    int layerID = 0;
+    int surfaceID = 0;
 
     /// Type 0 - free, 1 - bound
     int measType = 1;
 
     /// Truth parameters
-    float trueBound[Acts::eBoundSize];
+    float trueBound[Acts::eBoundSize] = {};
     float trueGx = 0.;
     float trueGy = 0.;
     float trueGz = 0.;
 
     /// Reconstruction information
-    float recBound[Acts::eBoundSize];
-    float varBound[Acts::eBoundSize];
+    float recBound[Acts::eBoundSize] = {};
+    float varBound[Acts::eBoundSize] = {};
 
     /// Cluster information comprised of
     /// nch :  number of channels
@@ -93,7 +92,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// chId : channel identification
     /// chValue: value/activation of the channel
     int nch = 0;
-    int cSize[2];
+    int cSize[2] = {};
     std::array<std::vector<int>*, 2> chId = {nullptr, nullptr};
     std::vector<float>* chValue = nullptr;
 
@@ -214,16 +213,12 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
 
       Acts::BoundSymMatrix fullVar =
           m.expander() * m.covariance() * m.expander().transpose();
-      varBound[Acts::eBoundLoc0] =
-          std::sqrt(fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0));
-      varBound[Acts::eBoundLoc1] =
-          std::sqrt(fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1));
-      varBound[Acts::eBoundPhi] =
-          std::sqrt(fullVar(Acts::eBoundPhi, Acts::eBoundPhi));
+      varBound[Acts::eBoundLoc0] = fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0);
+      varBound[Acts::eBoundLoc1] = fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1);
+      varBound[Acts::eBoundPhi] = fullVar(Acts::eBoundPhi, Acts::eBoundPhi);
       varBound[Acts::eBoundTheta] =
-          std::sqrt(fullVar(Acts::eBoundTheta, Acts::eBoundTheta));
-      varBound[Acts::eBoundTime] =
-          std::sqrt(fullVar(Acts::eBoundTime, Acts::eBoundTime));
+          fullVar(Acts::eBoundTheta, Acts::eBoundTheta);
+      varBound[Acts::eBoundTime] = fullVar(Acts::eBoundTime, Acts::eBoundTime);
     }
 
     /// Convenience function to fill the cluster information
@@ -244,13 +239,16 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// Constructor with
   /// @param cfg configuration struct
   /// @param output logging level
-  RootMeasurementWriter(const Config& cfg, Acts::Logging::Level lvl);
+  RootMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~RootMeasurementWriter() final override;
+  ~RootMeasurementWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get const access to the config
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// This implementation holds the actual writing method
@@ -259,7 +257,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const MeasurementContainer& measurements) final override;
+                     const MeasurementContainer& measurements) override;
 
  private:
   Config m_cfg;

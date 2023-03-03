@@ -9,16 +9,16 @@
 // clang-format off
 #include <boost/test/unit_test.hpp>
 #include <boost/test/data/test_case.hpp>
-#include <boost/test/output_test_stream.hpp>
+#include <boost/test/tools/output_test_stream.hpp>
 // clang-format on
 
-#include <limits>
-#include <fstream>
-
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Surfaces/AnnulusBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
-#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+
+#include <fstream>
+#include <limits>
 
 namespace Acts {
 
@@ -45,7 +45,7 @@ BOOST_AUTO_TEST_CASE(AnnulusBoundsRecreation) {
   // Test construction with radii and default sector
   auto original = AnnulusBounds(minRadius, maxRadius, minPhi, maxPhi, offset);
   auto valvector = original.values();
-  std::array<double, AnnulusBounds::eSize> values;
+  std::array<double, AnnulusBounds::eSize> values{};
   std::copy_n(valvector.begin(), AnnulusBounds::eSize, values.begin());
   AnnulusBounds recreated(values);
   BOOST_CHECK_EQUAL(original, recreated);

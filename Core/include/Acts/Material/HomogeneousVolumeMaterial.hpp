@@ -54,8 +54,9 @@ class HomogeneousVolumeMaterial : public IVolumeMaterial {
   /// Access to actual material
   ///
   /// @param position is the request position for the material call
+  /// @note @p position is ignored
   /// @todo interface to change including 'cell'
-  const Material material(const Vector3& /*position*/) const final;
+  const Material material(const Vector3& position) const final;
 
   /// Output Method for std::ostream
   ///

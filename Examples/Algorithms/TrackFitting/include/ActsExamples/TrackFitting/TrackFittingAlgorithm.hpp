@@ -8,12 +8,16 @@
 
 #pragma once
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
+#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
+#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
 #include "Acts/TrackFitting/KalmanFitter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
@@ -26,67 +30,72 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-class TrackFittingAlgorithm final : public BareAlgorithm {
+class TrackFittingAlgorithm final : public IAlgorithm {
  public:
-  /// Track fitter function that takes input measurements, initial trackstate
-  /// and fitter options and returns some track-fitter-specific result.
-  using TrackFitterOptions =
-      Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>;
-  using TrackFitterResult =
-      Acts::Result<Acts::KalmanFitterResult<IndexSourceLink>>;
-  using TrackFitterFunction = std::function<TrackFitterResult(
-      const std::vector<IndexSourceLink>&, const TrackParameters&,
-      const TrackFitterOptions&)>;
+  // All track fitter functions must return the same type. For now this is the
+  // KalmanFitterResult, but maybe in the future it makes sense to generalize
+  // this
 
-  /// Fit function that takes the above parameters plus a sorted surface
-  /// sequence for the DirectNavigator to follow
-  using DirectedTrackFitterFunction = std::function<TrackFitterResult(
-      const std::vector<IndexSourceLink>&, const TrackParameters&,
-      const TrackFitterOptions&, const std::vector<const Acts::Surface*>&)>;
+  using TrackContainer =
+      Acts::TrackContainer<Acts::VectorTrackContainer,
+                           Acts::VectorMultiTrajectory, std::shared_ptr>;
 
-  /// Create the track fitter function implementation.
-  ///
-  /// The magnetic field is intentionally given by-value since the variant
-  /// contains shared_ptr anyways.
-  static TrackFitterFunction makeTrackFitterFunction(
-      std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
+  using TrackFitterResult = Acts::Result<TrackContainer::TrackProxy>;
 
-  static DirectedTrackFitterFunction makeTrackFitterFunction(
-      std::shared_ptr<const Acts::MagneticFieldProvider> magneticField);
+  /// General options that do not depend on the fitter type, but need to be
+  /// handed over by the algorithm
+  struct GeneralFitterOptions {
+    std::reference_wrapper<const Acts::GeometryContext> geoContext;
+    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
+    std::reference_wrapper<const Acts::CalibrationContext> calibrationContext;
+    std::reference_wrapper<const MeasurementCalibrator> calibrator;
+    const Acts::Surface* referenceSurface = nullptr;
+    Acts::PropagatorPlainOptions propOptions;
+  };
+
+  /// Fit function that takes the above parameters and runs a fit
+  /// @note This is separated into a virtual interface to keep compilation units
+  /// small.
+  class TrackFitterFunction {
+   public:
+    virtual ~TrackFitterFunction() = default;
+    virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
+                                         const TrackParameters&,
+                                         const GeneralFitterOptions&,
+                                         TrackContainer&) const = 0;
+
+    virtual TrackFitterResult operator()(
+        const std::vector<Acts::SourceLink>&, const TrackParameters&,
+        const GeneralFitterOptions&, const std::vector<const Acts::Surface*>&,
+        TrackContainer&) const = 0;
+  };
 
   struct Config {
     /// Input measurements collection.
     std::string inputMeasurements;
     /// Boolean determining to use DirectNavigator or standard Navigator
-    bool directNavigation;
+    bool directNavigation = false;
     /// Input source links collection.
     std::string inputSourceLinks;
     /// Input proto tracks collection, i.e. groups of hit indices.
     std::string inputProtoTracks;
     /// Input initial track parameter estimates for for each proto track.
     std::string inputInitialTrackParameters;
-    /// Output fitted trajectories collection.
-    std::string outputTrajectories;
+    /// Output fitted tracks collection.
+    std::string outputTracks;
     /// Type erased fitter function.
-    TrackFitterFunction fit;
-    /// Type erased direct navigation fitter function
-    DirectedTrackFitterFunction dFit;
+    std::shared_ptr<TrackFitterFunction> fit;
     /// Tracking geometry for surface lookup
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
-    /// Some more detailed steering - mainly for debugging, correct for MCS
-    bool multipleScattering = true;
-    /// Some more detailed steering - correct for e-loss
-    bool energyLoss = true;
     /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
   };
 
   /// Constructor of the fitting algorithm
   ///
-  /// @param cfg is the config struct to configure the algorihtm
+  /// @param config is the config struct to configure the algorihtm
   /// @param level is the logging level
-  TrackFittingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  TrackFittingAlgorithm(Config config, Acts::Logging::Level level);
 
   /// Framework execute method of the fitting algorithm
   ///
@@ -94,29 +103,11 @@ class TrackFittingAlgorithm final : public BareAlgorithm {
   /// @return a process code to steer the algporithm flow
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
 
- private:
-  /// Helper function to call correct FitterFunction
-  TrackFitterResult fitTrack(
-      const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
-      const ActsExamples::TrackParameters& initialParameters,
-      const TrackFitterOptions& options,
-      const std::vector<const Acts::Surface*>& surfSequence) const;
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
+ private:
   Config m_cfg;
 };
-
-inline ActsExamples::TrackFittingAlgorithm::TrackFitterResult
-ActsExamples::TrackFittingAlgorithm::fitTrack(
-    const std::vector<ActsExamples::IndexSourceLink>& sourceLinks,
-    const ActsExamples::TrackParameters& initialParameters,
-    const Acts::KalmanFitterOptions<MeasurementCalibrator,
-                                    Acts::VoidOutlierFinder>& options,
-    const std::vector<const Acts::Surface*>& surfSequence) const {
-  if (m_cfg.directNavigation) {
-    return m_cfg.dFit(sourceLinks, initialParameters, options, surfSequence);
-  }
-
-  return m_cfg.fit(sourceLinks, initialParameters, options);
-}
 
 }  // namespace ActsExamples

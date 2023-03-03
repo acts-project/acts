@@ -14,15 +14,17 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
+#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
+#include "ActsExamples/Options/VertexingOptions.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
+#include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
 #include "ActsExamples/TruthTracking/ParticleSmearing.hpp"
 #include "ActsExamples/Vertexing/IterativeVertexFinderAlgorithm.hpp"
-#include "ActsExamples/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
 
@@ -34,11 +36,12 @@ int main(int argc, char* argv[]) {
   auto desc = Options::makeDefaultOptions();
   Options::addSequencerOptions(desc);
   Options::addRandomNumbersOptions(desc);
-  ParticleSelector::addOptions(desc);
+  Options::addParticleSelectorOptions(desc);
   Options::addVertexingOptions(desc);
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
+  Options::addParticleSmearingOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;
@@ -62,7 +65,8 @@ int main(int argc, char* argv[]) {
       std::make_shared<CsvParticleReader>(readParticles, logLevel));
 
   // pre-select particles
-  ParticleSelector::Config selectParticles = ParticleSelector::readConfig(vars);
+  ParticleSelector::Config selectParticles =
+      Options::readParticleSelectorConfig(vars);
   selectParticles.inputParticles = readParticles.outputParticles;
   selectParticles.outputParticles = "particles_selected";
   // smearing only works with charge particles for now
@@ -73,23 +77,20 @@ int main(int argc, char* argv[]) {
   sequencer.addAlgorithm(
       std::make_shared<ParticleSelector>(selectParticles, logLevel));
 
-  // simulate track reconstruction by smearing truth track parameters
-  ParticleSmearing::Config smearParticles;
-  smearParticles.inputParticles = selectParticles.outputParticles;
-  smearParticles.outputTrackParameters = "trackparameters";
-  smearParticles.randomNumbers = rnd;
-  sequencer.addAlgorithm(
-      std::make_shared<ParticleSmearing>(smearParticles, logLevel));
+  // Run the particle smearing
+  auto particleSmearingCfg = setupParticleSmearing(
+      vars, sequencer, rnd, selectParticles.outputParticles);
 
   // print input track parameters
   TrackParametersPrinter::Config printTracks;
-  printTracks.inputTrackParameters = smearParticles.outputTrackParameters;
+  printTracks.inputTrackParameters = particleSmearingCfg.outputTrackParameters;
   sequencer.addAlgorithm(
       std::make_shared<TrackParametersPrinter>(printTracks, logLevel));
 
   // find vertices
-  IterativeVertexFinderAlgorithm::Config findVertices(magneticField);
-  findVertices.inputTrackParameters = smearParticles.outputTrackParameters;
+  IterativeVertexFinderAlgorithm::Config findVertices;
+  findVertices.bField = magneticField;
+  findVertices.inputTrackParameters = particleSmearingCfg.outputTrackParameters;
   findVertices.outputProtoVertices = "protovertices";
   sequencer.addAlgorithm(
       std::make_shared<IterativeVertexFinderAlgorithm>(findVertices, logLevel));

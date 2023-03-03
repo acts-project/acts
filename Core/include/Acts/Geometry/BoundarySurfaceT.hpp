@@ -35,8 +35,9 @@ class Surface;
 
 template <class volume_t>
 class BoundarySurfaceT {
-  /// declare the TrackingVolume as friend
+#ifndef DOXYGEN
   friend volume_t;
+#endif
 
   using VolumePtr = std::shared_ptr<const volume_t>;
   using VolumeArray = BinnedArray<VolumePtr>;
@@ -101,12 +102,12 @@ class BoundarySurfaceT {
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param pos The global position on surface
   /// @param mom The direction on the surface
-  /// @param dir is an aditional direction corrective
+  /// @param navDir is an aditional direction corrective
   ///
   /// @return The attached volume at that position
   virtual const volume_t* attachedVolume(const GeometryContext& gctx,
                                          const Vector3& pos, const Vector3& mom,
-                                         NavigationDirection pdir) const;
+                                         NavigationDirection navDir) const;
 
   /// templated onBoundary method
   ///
@@ -125,7 +126,6 @@ class BoundarySurfaceT {
   /// Helper method: attach a Volume to this BoundarySurfaceT
   /// this is done during the geometry construction.
   ///
-  /// @param gctx The current geometry context object, e.g. alignment
   /// @param volume The volume to be attached
   /// @param navDir The navigation direction for attaching
   void attachVolume(const volume_t* volume, NavigationDirection navDir);
@@ -160,7 +160,7 @@ inline const Surface& BoundarySurfaceT<volume_t>::surfaceRepresentation()
 template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolume(const volume_t* volume,
                                               NavigationDirection navDir) {
-  if (navDir == backward) {
+  if (navDir == NavigationDirection::Backward) {
     m_oppositeVolume = volume;
   } else {
     m_alongVolume = volume;
@@ -171,7 +171,7 @@ template <class volume_t>
 void BoundarySurfaceT<volume_t>::attachVolumeArray(
     const std::shared_ptr<const VolumeArray> volumes,
     NavigationDirection navDir) {
-  if (navDir == backward) {
+  if (navDir == NavigationDirection::Backward) {
     m_oppositeVolumeArray = volumes;
   } else {
     m_alongVolumeArray = volumes;

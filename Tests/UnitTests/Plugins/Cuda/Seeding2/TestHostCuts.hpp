@@ -22,9 +22,10 @@ class TestHostCuts : public Acts::IExperimentCuts<TestSpacePoint> {
   /// @param middle middle space point of the current seed
   /// @param top top space point of the current seed
   /// @return seed weight to be added to the seed's weight
-  float seedWeight(const Acts::InternalSpacePoint<TestSpacePoint>& bottom,
-                   const Acts::InternalSpacePoint<TestSpacePoint>& middle,
-                   const Acts::InternalSpacePoint<TestSpacePoint>& top) const;
+  float seedWeight(
+      const Acts::InternalSpacePoint<TestSpacePoint>& bottom,
+      const Acts::InternalSpacePoint<TestSpacePoint>& middle,
+      const Acts::InternalSpacePoint<TestSpacePoint>& top) const final;
 
   /// @param weight the current seed weight
   /// @param bottom bottom space point of the current seed
@@ -32,20 +33,18 @@ class TestHostCuts : public Acts::IExperimentCuts<TestSpacePoint> {
   /// @param top top space point of the current seed
   /// @return true if the seed should be kept, false if the seed should be
   /// discarded
-  bool singleSeedCut(float weight,
-                     const Acts::InternalSpacePoint<TestSpacePoint>& bottom,
-                     const Acts::InternalSpacePoint<TestSpacePoint>&,
-                     const Acts::InternalSpacePoint<TestSpacePoint>&) const;
+  bool singleSeedCut(
+      float weight, const Acts::InternalSpacePoint<TestSpacePoint>& bottom,
+      const Acts::InternalSpacePoint<TestSpacePoint>&,
+      const Acts::InternalSpacePoint<TestSpacePoint>&) const final;
 
-  /// @param seeds contains pairs of weight and seed created for one middle
-  /// space
-  /// point
-  /// @return vector of seeds that pass the cut
-  std::vector<std::pair<
-      float, std::unique_ptr<const Acts::InternalSeed<TestSpacePoint>>>>
-  cutPerMiddleSP(
-      std::vector<std::pair<
-          float, std::unique_ptr<const Acts::InternalSeed<TestSpacePoint>>>>
-          seeds) const;
+  /// @param seedCandidates contains collection of seed candidates created for one middle
+  /// space point in a std::tuple format
+  /// @return vector of seed candidates that pass the cut
+  std::vector<typename Acts::CandidatesForMiddleSp<
+      Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+  cutPerMiddleSP(std::vector<typename Acts::CandidatesForMiddleSp<
+                     Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+                     seedCandidates) const final override;
 
 };  // struct TestHostCuts

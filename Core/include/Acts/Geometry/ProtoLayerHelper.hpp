@@ -35,12 +35,14 @@ class ProtoLayerHelper {
 
   /// Constructor with explicit config
   ///
-  /// @param cfg Explicit config struct
+  /// @param config Explicit config struct
   /// @param logger logging instance
-  ProtoLayerHelper(const Config& /* cfg */,
+  ProtoLayerHelper(const Config& config,
                    std::unique_ptr<const Logger> logger =
                        getDefaultLogger("ProtoLayerHelper", Logging::INFO))
-      : m_logger(std::move(logger)) {}
+      : m_logger(std::move(logger)) {
+    (void)config;
+  }
   ~ProtoLayerHelper() = default;
 
   /// Sort the surfaces into ProtoLayers

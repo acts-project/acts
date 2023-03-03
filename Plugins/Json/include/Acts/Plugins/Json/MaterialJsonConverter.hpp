@@ -15,7 +15,7 @@
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Plugins/Json/ActsJson.hpp"
 
-// Custom Json encoder/decoders. Naming is mandated by nlohman::json and thus
+// Custom Json encoder/decoders. Naming is mandated by nlohmann::json and thus
 // can not match our naming guidelines.
 namespace Acts {
 
@@ -32,12 +32,22 @@ void from_json(const nlohmann::json& j, MaterialSlab& t);
 
 void from_json(const nlohmann::json& j, MaterialSlabMatrix& t);
 
-void to_json(nlohmann::json& j, const volumeMaterialPointer& t);
+void to_json(nlohmann::json& j, const volumeMaterialPointer& material);
 
-void from_json(const nlohmann::json& j, volumeMaterialPointer& t);
+void from_json(const nlohmann::json& j, volumeMaterialPointer& material);
 
-void to_json(nlohmann::json& j, const surfaceMaterialPointer& t);
+void to_json(nlohmann::json& j, const surfaceMaterialPointer& material);
 
-void from_json(const nlohmann::json& j, surfaceMaterialPointer& t);
+void from_json(const nlohmann::json& j, surfaceMaterialPointer& material);
+
+// This macro create a conversion for the mapping type enum
+NLOHMANN_JSON_SERIALIZE_ENUM(Acts::MappingType,
+                             {
+                                 {Acts::MappingType::PreMapping, "PreMapping"},
+                                 {Acts::MappingType::Default, "Default"},
+                                 {Acts::MappingType::PostMapping,
+                                  "PostMapping"},
+                                 {Acts::MappingType::Sensor, "Sensor"},
+                             })
 
 }  // namespace Acts

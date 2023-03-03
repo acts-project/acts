@@ -6,8 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/MaterialMapping/MaterialMappingBase.hpp"
-#include "ActsExamples/TGeoDetector/TGeoDetector.hpp"
+#include "ActsExamples/Detector/TGeoDetectorWithOptions.hpp"
+#include "ActsExamples/MaterialMapping/CommonMaterialMapping.hpp"
 
 /// @brief main executable
 ///
@@ -15,7 +15,7 @@
 /// @param argv The argument list
 int main(int argc, char* argv[]) {
   // --------------------------------------------------------------------------------
-  TGeoDetector detector;
+  ActsExamples::TGeoDetectorWithOptions detector;
   // now process it
-  return materialMappingExample(argc, argv, detector);
+  return runMaterialMapping(argc, argv, detector);
 }

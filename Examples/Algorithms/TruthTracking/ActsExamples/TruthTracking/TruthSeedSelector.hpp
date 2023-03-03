@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
 
@@ -26,7 +25,7 @@ namespace ActsExamples {
 /// Then we could use particles only satistying provided criteria as the 'seeds'
 /// of CKF instead of handling all the truth particles.
 //
-class TruthSeedSelector final : public BareAlgorithm {
+class TruthSeedSelector final : public IAlgorithm {
  public:
   struct Config {
     /// The input truth particles that should be used to create proto tracks.
@@ -58,15 +57,12 @@ class TruthSeedSelector final : public BareAlgorithm {
     size_t nHitsMax = std::numeric_limits<size_t>::max();
   };
 
-  TruthSeedSelector(const Config& cfg, Acts::Logging::Level lvl);
+  TruthSeedSelector(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const override final;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
 
-  /// Add options for the particle selector.
-  static void addOptions(Options::Description& desc);
-
-  /// Construct particle selector config from user variables.
-  static Config readConfig(const Options::Variables& vars);
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

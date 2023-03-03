@@ -20,17 +20,17 @@ ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
     std::shared_ptr<const Acts::ISurfaceMaterial> material,
     std::shared_ptr<const Acts::DigitizationModule> digitizationModule)
     : Acts::IdentifiedDetectorElement(),
-      m_elementIdentifier(std::move(identifier)),
+      m_elementIdentifier(identifier),
       m_elementTransform(std::move(transform)),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::PlaneSurface>(pBounds, *this)),
       m_elementThickness(thickness),
       m_elementPlanarBounds(std::move(pBounds)),
       m_elementDiscBounds(nullptr),
-      m_digitizationModule(digitizationModule) {
+      m_digitizationModule(std::move(digitizationModule)) {
   auto mutableSurface =
       std::const_pointer_cast<Acts::Surface>(m_elementSurface);
-  mutableSurface->assignSurfaceMaterial(material);
+  mutableSurface->assignSurfaceMaterial(std::move(material));
 }
 
 ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
@@ -40,15 +40,15 @@ ActsExamples::Generic::GenericDetectorElement::GenericDetectorElement(
     std::shared_ptr<const Acts::ISurfaceMaterial> material,
     std::shared_ptr<const Acts::DigitizationModule> digitizationModule)
     : Acts::IdentifiedDetectorElement(),
-      m_elementIdentifier(std::move(identifier)),
+      m_elementIdentifier(identifier),
       m_elementTransform(std::move(transform)),
       m_elementSurface(
           Acts::Surface::makeShared<Acts::DiscSurface>(dBounds, *this)),
       m_elementThickness(thickness),
       m_elementPlanarBounds(nullptr),
       m_elementDiscBounds(std::move(dBounds)),
-      m_digitizationModule(digitizationModule) {
+      m_digitizationModule(std::move(digitizationModule)) {
   auto mutableSurface =
       std::const_pointer_cast<Acts::Surface>(m_elementSurface);
-  mutableSurface->assignSurfaceMaterial(material);
+  mutableSurface->assignSurfaceMaterial(std::move(material));
 }

@@ -27,6 +27,7 @@ namespace Acts {
 ///
 /// @param bu BinUtility at source
 /// @param cBounds the Cylinder volume bounds to adjust to
+/// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
@@ -81,6 +82,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 ///
 /// @param bu BinUtility at source
 /// @param cBounds the Cutout Cylinder volume bounds to adjust to
+/// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
@@ -135,6 +137,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 ///
 /// @param bu BinUtility at source
 /// @param cBounds the Cuboid volume bounds to adjust to
+/// @param transform Transform for the adjusted @c BinUtility
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu,
@@ -186,7 +189,7 @@ BinUtility adjustBinUtility(const BinUtility& bu,
 /// @brief adjust the BinUtility bu to a volume
 ///
 /// @param bu BinUtility at source
-/// @param Volume to which the adjustment is being done
+/// @param volume Volume to which the adjustment is being done
 ///
 /// @return new updated BinUtiltiy
 BinUtility adjustBinUtility(const BinUtility& bu, const Volume& volume) {

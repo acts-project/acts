@@ -1,17 +1,21 @@
 add_library(
   ActsExamplesDetectorTGeo SHARED
   src/TGeoDetector.cpp
-  src/TGeoDetectorOptions.cpp)
+  src/TGeoITkModuleSplitter.cpp)
+  
 target_include_directories(
   ActsExamplesDetectorTGeo
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesDetectorTGeo
   PUBLIC
-    ActsCore ActsPluginIdentification ActsPluginDigitization ActsPluginTGeo
-    ActsExamplesFramework ActsExamplesDetectorsCommon
-    ActsExamplesDetectorGeneric)
+    ActsCore ActsPluginIdentification ActsPluginTGeo ActsPluginJson
+    ActsExamplesFramework ActsExamplesDetectorGeneric)
 
 install(
   TARGETS ActsExamplesDetectorTGeo
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+
+install(
+  DIRECTORY include/ActsExamples 
+  DESTINATION ${CMAKE_INSTALL_INCLUDEDIR})

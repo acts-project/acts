@@ -15,10 +15,9 @@
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
+#include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
-#include "ActsExamples/Utilities/OptionsFwd.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <functional>
@@ -26,19 +25,6 @@
 #include <string>
 
 namespace ActsExamples {
-
-/// Takes as an argument the position, and a random engine
-///  @return drift direction in local 3D coordinates
-using DriftGenerator =
-    std::function<Acts::Vector3(const Acts::Vector3 &, RandomEngine &)>;
-/// Takes as an argument the path length, the drift length, and a random engine
-/// @return a charge to which the threshold can be applied
-using ChargeGenerator = std::function<Acts::ActsScalar(
-    Acts::ActsScalar, Acts::ActsScalar, RandomEngine &)>;
-/// Takes as an argument the clsuter size and an random engine
-/// @return a vector of uncorrelated covariance values
-using VarianceGenerator = std::function<std::vector<Acts::ActsScalar>(
-    size_t, size_t, RandomEngine &)>;
 
 /// Configuration struct for geometric digitization
 ///
@@ -48,25 +34,54 @@ using VarianceGenerator = std::function<std::vector<Acts::ActsScalar>(
 /// are defined by this.
 ///
 struct GeometricConfig {
+  // The dimensions of the measurement
   std::vector<Acts::BoundIndices> indices = {};
+
+  // The (multidimensional) binning definition for the segmentation of the
+  // sensor
   Acts::BinUtility segmentation;
-  /// Drift generation
-  DriftGenerator drift = [](const Acts::Vector3 &,
-                            RandomEngine &) -> Acts::Vector3 {
-    return Acts::Vector3(0., 0., 0.);
-  };
+
+  // The thickness of the sensor
   double thickness = 0.;
-  /// Charge generation
-  ChargeGenerator charge = [](Acts::ActsScalar path, Acts::ActsScalar,
-                              RandomEngine &) -> Acts::ActsScalar {
-    return path;
-  };
+
+  /// The charge smearer
+  ActsFatras::SingleParameterSmearFunction<ActsExamples::RandomEngine>
+      chargeSmearer = Digitization::Exact{};
+
+  // The threshold below an cell activation is ignored
   double threshold = 0.;
-  /// Position and Covariance generation
+
+  // Wether to assume digital readout (activation is either 0 or 1)
   bool digital = false;
-  VarianceGenerator variances =
-      [](size_t, size_t, RandomEngine &) -> std::vector<Acts::ActsScalar> {
+
+  /// Charge generation (configurable via the chargeSmearer)
+  Acts::ActsScalar charge(Acts::ActsScalar path, Acts::ActsScalar /*unused*/,
+                          RandomEngine &rng) const {
+    if (not chargeSmearer) {
+      return path;
+    }
+    auto res = chargeSmearer(path, rng);
+    if (res.ok()) {
+      return std::max(0.0, res->first);
+    } else {
+      throw std::runtime_error(res.error().message());
+    }
+  }
+
+  /// Position and Covariance generation (currently not implemented)
+  /// Takes as an argument the clsuter size and an random engine
+  /// @return a vector of uncorrelated covariance values
+  std::vector<Acts::ActsScalar> variances(size_t /*unused*/, size_t /*unused*/,
+                                          RandomEngine & /*unused*/) const {
     return {};
+  };
+
+  /// Drift generation (currently not implemented)
+  /// Takes as an argument the position, and a random engine
+  ///  @return drift direction in local 3D coordinates
+  Acts::Vector3 drift(const Acts::Vector3 & /*unused*/,
+                      RandomEngine & /*unused*/) const {
+    return Acts::Vector3(0., 0., 0.);
   };
 };
 
@@ -82,12 +97,16 @@ struct DigiComponentsConfig {
 
 class DigitizationConfig {
  public:
-  DigitizationConfig(const Options::Variables &vars)
+  DigitizationConfig(bool merge, double sigma, bool commonCorner)
       : DigitizationConfig(
-            vars, Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
+            merge, sigma, commonCorner,
+            Acts::GeometryHierarchyMap<DigiComponentsConfig>()){};
 
   DigitizationConfig(
-      const Options::Variables &vars,
+      bool doMerge, double mergeNsigma, bool mergeCommonCorner,
+      Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
+
+  DigitizationConfig(
       Acts::GeometryHierarchyMap<DigiComponentsConfig> &&digiCfgs);
 
   /// Input collection of simulated hits.
@@ -106,10 +125,8 @@ class DigitizationConfig {
   std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
   /// Random numbers tool.
   std::shared_ptr<const RandomNumbers> randomNumbers = nullptr;
-  /// Was the simple smearer requested
-  const bool isSimpleSmearer;
   /// Do we merge hits or not
-  const bool doMerge;
+  bool doMerge;
   /// How close do parameters have to be to consider merged
   const double mergeNsigma;
   /// Consider clusters that share a corner as merged (8-cell connectivity)
@@ -119,14 +136,6 @@ class DigitizationConfig {
 
   std::vector<
       std::pair<Acts::GeometryIdentifier, std::vector<Acts::BoundIndices>>>
-  getBoundIndices();
-
- private:
-  // Private initializer for SmearingAlgorithm
-  void smearingConfig(const Options::Variables &vars);
+  getBoundIndices() const;
 };
-
-std::shared_ptr<ActsExamples::IAlgorithm> createDigitizationAlgorithm(
-    DigitizationConfig &cfg, Acts::Logging::Level lvl);
-
 }  // namespace ActsExamples

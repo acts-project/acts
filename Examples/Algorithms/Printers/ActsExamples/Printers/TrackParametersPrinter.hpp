@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
 /// Print track parameters.
-class TrackParametersPrinter : public BareAlgorithm {
+class TrackParametersPrinter : public IAlgorithm {
  public:
   struct Config {
     /// Input tracks parameters collection.
@@ -24,7 +24,9 @@ class TrackParametersPrinter : public BareAlgorithm {
 
   TrackParametersPrinter(const Config& cfg, Acts::Logging::Level level);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

@@ -33,7 +33,7 @@ struct AlignmentContext {
   unsigned int alignmentIndex{0};
 
   /// Default contructor
-  AlignmentContext() {}
+  AlignmentContext() = default;
 
   /// Constructor with Store and context index
   AlignmentContext(std::shared_ptr<const std::array<Transform3, 2>> aStore,
@@ -57,7 +57,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   /// @param pBounds is the planar bounds for the planar detector element
   /// @param thickness is the module thickness
   AlignableDetectorElement(std::shared_ptr<const Transform3> transform,
-                           std::shared_ptr<const PlanarBounds> pBounds,
+                           const std::shared_ptr<const PlanarBounds>& pBounds,
                            double thickness)
       : DetectorElementBase(),
         m_elementTransform(std::move(transform)),
@@ -67,8 +67,7 @@ class AlignableDetectorElement : public DetectorElementBase {
   }
 
   ///  Destructor
-  ~AlignableDetectorElement() override { /*nop */
-  }
+  ~AlignableDetectorElement() override = default;
 
   /// Return local to global transform associated with this identifier
   ///

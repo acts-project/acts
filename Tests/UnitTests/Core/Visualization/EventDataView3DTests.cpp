@@ -29,8 +29,8 @@ BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationObj) {
   ObjVisualization3D obj;
   auto objTest = EventDataView3DTest::testBoundTrackParameters(obj);
   auto objErrors = testObjString(objTest);
-  BOOST_CHECK(objErrors.size() == 0);
-  for (auto objerr : objErrors) {
+  BOOST_CHECK(objErrors.empty());
+  for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
 }
@@ -39,8 +39,8 @@ BOOST_AUTO_TEST_CASE(BoundTrackParametersVisualizationPly) {
   PlyVisualization3D ply;
   auto plyTest = EventDataView3DTest::testBoundTrackParameters(ply);
   auto plyErrors = testPlyString(plyTest);
-  BOOST_CHECK(plyErrors.size() == 0);
-  for (auto plyerr : plyErrors) {
+  BOOST_CHECK(plyErrors.empty());
+  for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
 }
@@ -49,8 +49,8 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationObj) {
   ObjVisualization3D obj;
   auto objTest = EventDataView3DTest::testMultiTrajectory(obj);
   auto objErrors = testObjString(objTest);
-  BOOST_CHECK(objErrors.size() == 0);
-  for (auto objerr : objErrors) {
+  BOOST_CHECK(objErrors.empty());
+  for (const auto& objerr : objErrors) {
     std::cout << objerr << std::endl;
   }
 }
@@ -59,8 +59,8 @@ BOOST_AUTO_TEST_CASE(MultiTrajectoryVisualizationPly) {
   PlyVisualization3D ply;
   auto plyTest = EventDataView3DTest::testMultiTrajectory(ply);
   auto plyErrors = testPlyString(plyTest);
-  BOOST_CHECK(plyErrors.size() == 0);
-  for (auto plyerr : plyErrors) {
+  BOOST_CHECK(plyErrors.empty());
+  for (const auto& plyerr : plyErrors) {
     std::cout << plyerr << std::endl;
   }
 }

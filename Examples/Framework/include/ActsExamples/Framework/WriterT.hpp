@@ -25,6 +25,7 @@ namespace ActsExamples {
 /// NaN values for TTree variables
 constexpr double NaNdouble = std::numeric_limits<double>::quiet_NaN();
 constexpr float NaNfloat = std::numeric_limits<float>::quiet_NaN();
+constexpr float NaNint = std::numeric_limits<int>::quiet_NaN();
 
 /// A helper class for users to implement framework writers.
 ///
@@ -40,7 +41,7 @@ constexpr float NaNfloat = std::numeric_limits<float>::quiet_NaN();
 /// implement the type-specific write method.
 ///
 /// Default no-op implementations for `initialize` and `finalize` are provided
-/// but can be overriden by the user.
+/// but can be overridden by the user.
 template <typename write_data_t>
 class WriterT : public IWriter {
  public:
@@ -51,13 +52,13 @@ class WriterT : public IWriter {
           Acts::Logging::Level level);
 
   /// Provide the name of the writer
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Read the object and call the type-specific member function.
-  ProcessCode write(const AlgorithmContext& context) final override;
+  ProcessCode write(const AlgorithmContext& context) override;
 
   /// No-op default implementation.
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
  protected:
   /// Type-specific write function implementation
@@ -98,7 +99,8 @@ inline std::string ActsExamples::WriterT<write_data_t>::name() const {
 }
 
 template <typename write_data_t>
-inline ActsExamples::ProcessCode ActsExamples::WriterT<write_data_t>::endRun() {
+inline ActsExamples::ProcessCode
+ActsExamples::WriterT<write_data_t>::finalize() {
   return ProcessCode::SUCCESS;
 }
 

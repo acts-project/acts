@@ -14,6 +14,8 @@
 
 #include <iostream>
 
+#include <boost/program_options.hpp>
+
 #include "PropagationAlgorithm.hpp"
 
 namespace ActsExamples {
@@ -23,8 +25,8 @@ namespace Options {
 /// @brief PropagationAlgorithm options
 ///
 /// @tparam aopt_t Type of the options class from boost
-template <typename aopt_t>
-void addPropagationOptions(aopt_t& opt) {
+inline void addPropagationOptions(
+    boost::program_options::options_description& opt) {
   namespace po = boost::program_options;
   using namespace Acts::UnitLiterals;
   opt.add_options()(
@@ -89,16 +91,11 @@ void addPropagationOptions(aopt_t& opt) {
 /// @tparam vmap_t is the Type of the Parameter map to be read out
 /// @tparam propagator_t is the Type of the Propagator used
 ///
-/// @param vm is the parameter map for the options
-/// @param propagator is the propagator to be used in this job
-///
 /// @returns a Config object for the PropagationAlgorithm
-template <typename vmap_t, typename propagator_t>
-typename ActsExamples::PropagationAlgorithm<propagator_t>::Config
-readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
+inline ActsExamples::PropagationAlgorithm::Config readPropagationConfig(
+    const boost::program_options::variables_map& vm) {
   using namespace Acts::UnitLiterals;
-  typename ActsExamples::PropagationAlgorithm<propagator_t>::Config pAlgConfig(
-      std::move(propagator));
+  ActsExamples::PropagationAlgorithm::Config pAlgConfig;
 
   auto iphir = vm["prop-phi-range"].template as<Reals<2>>();
   auto ietar = vm["prop-eta-range"].template as<Reals<2>>();
@@ -137,27 +134,21 @@ readPropagationConfig(const vmap_t& vm, propagator_t propagator) {
     /// Set the covariance transport to true
     pAlgConfig.covarianceTransport = true;
     /// Set the covariance matrix
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc0,
-                           Acts::BoundIndices::eBoundLoc0) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc0) =
         pAlgConfig.d0Sigma * pAlgConfig.d0Sigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc1,
-                           Acts::BoundIndices::eBoundLoc1) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundLoc1) =
         pAlgConfig.z0Sigma * pAlgConfig.z0Sigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundPhi,
-                           Acts::BoundIndices::eBoundPhi) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundPhi) =
         pAlgConfig.phiSigma * pAlgConfig.phiSigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundTheta,
-                           Acts::BoundIndices::eBoundTheta) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundTheta) =
         pAlgConfig.thetaSigma * pAlgConfig.thetaSigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundQOverP,
-                           Acts::BoundIndices::eBoundQOverP) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundQOverP) =
         pAlgConfig.qpSigma * pAlgConfig.qpSigma;
-    pAlgConfig.covariances(Acts::BoundIndices::eBoundTime,
-                           Acts::BoundIndices::eBoundTime) =
+    pAlgConfig.covariances(Acts::BoundIndices::eBoundTime) =
         pAlgConfig.tSigma * pAlgConfig.tSigma;
 
     // Only if they are properly defined, assign off-diagonals
-    if (vm.count("prop-corr-offd")) {
+    if (vm.count("prop-corr-offd") != 0u) {
       auto readOffd = vm["prop-corr-offd"].template as<Reals<15>>();
       pAlgConfig.correlations(Acts::BoundIndices::eBoundLoc0,
                               Acts::BoundIndices::eBoundLoc1) = readOffd[0];

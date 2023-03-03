@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/DefaultExtension.hpp"
 #include "Acts/Propagator/DenseEnvironmentExtension.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
@@ -14,10 +13,11 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Root/RootMaterialTrackWriter.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
+#include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include <Acts/Geometry/TrackingGeometry.hpp>
 #include <Acts/Propagator/EigenStepper.hpp>
@@ -54,7 +54,7 @@ ActsExamples::ProcessCode setupPropagation(
 
   // Get a Navigator
   Acts::Navigator::Config cfg;
-  cfg.trackingGeometry = tGeometry;
+  cfg.trackingGeometry = std::move(tGeometry);
   cfg.resolvePassive = true;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -70,13 +70,16 @@ ActsExamples::ProcessCode setupPropagation(
   Propagator propagator(std::move(stepper), std::move(navigator));
 
   // Read the propagation config and create the algorithms
-  auto pAlgConfig =
-      ActsExamples::Options::readPropagationConfig(vm, propagator);
-  pAlgConfig.randomNumberSvc = randomNumberSvc;
+  auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);
+  pAlgConfig.randomNumberSvc = std::move(randomNumberSvc);
   pAlgConfig.recordMaterialInteractions = true;
-  auto propagationAlg =
-      std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
-          pAlgConfig, logLevel);
+
+  pAlgConfig.propagatorImpl =
+      std::make_shared<ActsExamples::ConcretePropagator<Propagator>>(
+          std::move(propagator));
+
+  auto propagationAlg = std::make_shared<ActsExamples::PropagationAlgorithm>(
+      pAlgConfig, logLevel);
 
   // Add the propagation algorithm
   sequencer.addAlgorithm({propagationAlg});
@@ -100,22 +103,24 @@ ActsExamples::ProcessCode setupStraightLinePropagation(
   auto logLevel = ActsExamples::Options::readLogLevel(vm);
 
   // Get a Navigator
-  Acts::Navigator navigator({tGeometry});
+  Acts::Navigator navigator({std::move(tGeometry)});
 
   // Straight line stepper
   using SlStepper = Acts::StraightLineStepper;
   using Propagator = Acts::Propagator<SlStepper, Acts::Navigator>;
   // Make stepper and propagator
   SlStepper stepper;
-  Propagator propagator(std::move(stepper), std::move(navigator));
+  Propagator propagator(stepper, std::move(navigator));
 
   // Read the propagation config and create the algorithms
-  auto pAlgConfig =
-      ActsExamples::Options::readPropagationConfig(vm, propagator);
-  pAlgConfig.randomNumberSvc = randomNumberSvc;
-  auto propagationAlg =
-      std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
-          pAlgConfig, logLevel);
+  auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);
+
+  pAlgConfig.randomNumberSvc = std::move(randomNumberSvc);
+  pAlgConfig.propagatorImpl =
+      std::make_shared<ActsExamples::ConcretePropagator<Propagator>>(
+          std::move(propagator));
+  auto propagationAlg = std::make_shared<ActsExamples::PropagationAlgorithm>(
+      pAlgConfig, logLevel);
 
   // Add the propagation algorithm
   sequencer.addAlgorithm({propagationAlg});
@@ -155,7 +160,7 @@ int materialValidationExample(int argc, char* argv[],
   auto geometry = ActsExamples::Geometry::build(vm, detector);
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 

@@ -19,6 +19,35 @@ target_link_libraries(
   ActsCore
   PUBLIC Boost::boost Eigen3::Eigen)
 
+# Fpe flags
+set(_fpe_options "")
+
+find_library(dl_LIBRARY dl)
+find_package(Backtrace)
+find_program(addr2line_EXECUTABLE addr2line)
+if(APPLE)
+  list(APPEND _fpe_options -D_GNU_SOURCE)
+else()
+  if(dl_LIBRARY)
+    target_link_libraries(ActsCore PUBLIC ${dl_LIBRARY})
+    if(addr2line_EXECUTABLE)
+      list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_ADDR2LINE)
+      list(APPEND _fpe_options -DBOOST_STACKTRACE_ADDR2LINE_LOCATION=${addr2line_EXECUTABLE})
+    elseif(Backtrace_FOUND)
+      list(APPEND _fpe_options -DBOOST_STACKTRACE_USE_BACKTRACE)
+      target_link_libraries(ActsCore PUBLIC ${Backtrace_LIBRARY})
+    else()
+      list(APPEND _fpe_options -BOOST_STACKTRACE_USE_NOOP)
+    endif()
+  else()
+      list(APPEND _fpe_options -BOOST_STACKTRACE_USE_NOOP)
+  endif()
+endif()
+
+message(STATUS ${_fpe_options})
+
+set_source_files_properties(src/Utilities/FpeMonitor.cpp PROPERTIES COMPILE_OPTIONS "${_fpe_options}")
+
 if(ACTS_PARAMETER_DEFINITIONS_HEADER)
   target_compile_definitions(
     ActsCore
@@ -32,9 +61,59 @@ if(ACTS_CUSTOM_SCALARTYPE)
 endif()
 
 if(ACTS_LOG_FAILURE_THRESHOLD)
+  message(STATUS "Enable log failure threshold, set to ${ACTS_LOG_FAILURE_THRESHOLD}")
   target_compile_definitions(
     ActsCore
-    PUBLIC -DACTS_LOG_FAILURE_THRESHOLD=${ACTS_LOG_FAILURE_THRESHOLD})
+    PUBLIC 
+    -DACTS_LOG_FAILURE_THRESHOLD=${ACTS_LOG_FAILURE_THRESHOLD}
+    -DACTS_ENABLE_LOG_FAILURE_THRESHOLD)
+
+else()
+
+if(ACTS_ENABLE_LOG_FAILURE_THRESHOLD)
+  message(STATUS "Enable log failure threshold")
+  target_compile_definitions(
+    ActsCore
+    PUBLIC 
+    -DACTS_ENABLE_LOG_FAILURE_THRESHOLD)
+endif()
+
+endif()
+
+if(ACTS_ENABLE_CPU_PROFILING)
+  message(STATUS "added lprofiler")
+
+  if(NOT ACTS_GPERF_INSTALL_DIR STREQUAL "")
+    find_library(PROFILER_LIBRARY profiler HINTS ${ACTS_GPERF_INSTALL_DIR})
+
+    target_link_libraries(
+      ActsCore
+      PUBLIC ${PROFILER_LIBRARY})
+  else()
+    target_link_libraries(
+      ActsCore
+      PUBLIC -lprofiler)
+  endif()
+
+  target_link_options(
+    ActsCore
+      PUBLIC "LINKER:-no-as-needed")
+endif()
+
+if(ACTS_ENABLE_MEMORY_PROFILING)
+  message(STATUS "added ltcmalloc")
+
+  if(NOT ACTS_GPERF_INSTALL_DIR STREQUAL "")
+    find_library(TCMALLOC_LIBRARY tcmalloc HINTS ${ACTS_GPERF_INSTALL_DIR})
+
+    target_link_libraries(
+      ActsCore
+      PUBLIC ${TCMALLOC_LIBRARY})
+  else()
+    target_link_libraries(
+      ActsCore
+      PUBLIC -ltcmalloc)
+  endif()
 endif()
 
 install(
@@ -51,6 +130,9 @@ install(
 
 # target source files are added separately
 add_subdirectory(src/EventData)
+add_subdirectory(src/Digitization)
+add_subdirectory(src/Definitions)
+add_subdirectory(src/Detector)
 add_subdirectory(src/Geometry)
 add_subdirectory(src/MagneticField)
 add_subdirectory(src/Material)

@@ -11,15 +11,15 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
+#include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
-#include <functional>
 #include <memory>
 #include <string>
 #include <unordered_map>
 
 namespace Acts {
 
-class TrackingVolume;
 class Layer;
 class Surface;
 class PerigeeSurface;
@@ -46,8 +46,12 @@ class TrackingGeometry {
   /// @param highestVolume is the world volume
   /// @param materialDecorator is a dediated decorator that can assign
   ///        surface or volume based material to the TrackingVolume
+  /// @param hook Identifier hook to be applied to surfaces
+  /// @param logger instance of a logger (defaulting to the "silent" one)
   TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
-                   const IMaterialDecorator* materialDecorator = nullptr);
+                   const IMaterialDecorator* materialDecorator = nullptr,
+                   const GeometryIdentifierHook& hook = {},
+                   const Logger& logger = getDummyLogger());
 
   /// Destructor
   ~TrackingGeometry();
@@ -67,7 +71,7 @@ class TrackingGeometry {
 
   /// Forward the associated Layer information
   ///
-  /// @paramn gctx is the context for this request (e.g. alignment)
+  /// @param gctx is the context for this request (e.g. alignment)
   /// @param gp is the global position of the call
   ///
   /// @return plain pointer to assocaiated layer
@@ -89,10 +93,15 @@ class TrackingGeometry {
 
   /// @brief Visit all sensitive surfaces
   ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
-  void visitSurfaces(
-      const std::function<void(const Acts::Surface*)>& visitor) const;
+  template <typename visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    highestTrackingVolume()->template visitSurfaces<visitor_t>(
+        std::forward<visitor_t>(visitor));
+  }
 
   /// Search for a volume with the given identifier.
   ///

@@ -13,39 +13,18 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/GenericDetector/BuildGenericDetector.hpp"
 #include "ActsExamples/GenericDetector/GenericDetectorElement.hpp"
-#include "ActsExamples/GenericDetector/GenericDetectorOptions.hpp"
-
-#include <boost/program_options.hpp>
-
-void GenericDetector::addOptions(
-    boost::program_options::options_description& opt) const {
-  ActsExamples::Options::addGenericGeometryOptions(opt);
-}
 
 auto GenericDetector::finalize(
-    const boost::program_options::variables_map& vm,
+    const Config& cfg,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
-  // --------------------------------------------------------------------------------
   DetectorElement::ContextType nominalContext;
-
-  auto buildLevel = vm["geo-generic-buildlevel"].template as<size_t>();
-  // set geometry building logging level
-  Acts::Logging::Level surfaceLogLevel =
-      Acts::Logging::Level(vm["geo-surface-loglevel"].template as<size_t>());
-  Acts::Logging::Level layerLogLevel =
-      Acts::Logging::Level(vm["geo-layer-loglevel"].template as<size_t>());
-  Acts::Logging::Level volumeLogLevel =
-      Acts::Logging::Level(vm["geo-volume-loglevel"].template as<size_t>());
-
-  bool buildProto =
-      (vm["mat-input-type"].template as<std::string>() == "proto");
-
   /// Return the generic detector
   TrackingGeometryPtr gGeometry =
       ActsExamples::Generic::buildDetector<DetectorElement>(
-          nominalContext, detectorStore, buildLevel, std::move(mdecorator),
-          buildProto, surfaceLogLevel, layerLogLevel, volumeLogLevel);
+          nominalContext, detectorStore, cfg.buildLevel, std::move(mdecorator),
+          cfg.buildProto, cfg.surfaceLogLevel, cfg.layerLogLevel,
+          cfg.volumeLogLevel);
   ContextDecorators gContextDeocrators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(

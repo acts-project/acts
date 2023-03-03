@@ -23,7 +23,7 @@ class ContextType {
  public:
   /// Default constructor, does nothing
   ///
-  ContextType() {}
+  ContextType() = default;
 
   /// Move construct a new Context Type object from anything. Must be explicit.
   ///
@@ -78,6 +78,10 @@ class ContextType {
   const std::decay_t<T>& get() const {
     return std::any_cast<const std::decay_t<T>&>(m_data);
   }
+
+  /// Check if the contained type is initialized.
+  /// @return Boolean indicating whether a type is present
+  bool hasValue() const { return m_data.has_value(); }
 
  private:
   std::any m_data;

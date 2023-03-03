@@ -154,7 +154,7 @@ struct TrackStatesReader : public TreeReader {
   }
 
   // The variables
-  uint32_t eventId;
+  uint32_t eventId = 0;
   std::vector<float>* LOC0_prt =
       new std::vector<float>;  ///< predicted parameter local x
   std::vector<float>* LOC1_prt =
@@ -282,7 +282,7 @@ struct TrackStatesReader : public TreeReader {
   std::vector<bool>* filtered = new std::vector<bool>;   ///< filtering status
   std::vector<bool>* smoothed = new std::vector<bool>;   ///< smoothing status
 
-  unsigned int nStates, nMeasurements;
+  unsigned int nStates = 0, nMeasurements = 0;
 };
 
 /// Struct used for reading track summary info written out by the
@@ -307,9 +307,21 @@ struct TrackSummaryReader : public TreeReader {
     tree->SetBranchAddress("outlierVolume", &outlierVolume);
     tree->SetBranchAddress("outlierLayer", &outlierLayer);
     tree->SetBranchAddress("nMajorityHits", &nMajorityHits);
+    tree->SetBranchAddress("nSharedHits", &nSharedHits);
     tree->SetBranchAddress("majorityParticleId", &majorityParticleId);
 
     tree->SetBranchAddress("hasFittedParams", &hasFittedParams);
+
+    tree->SetBranchAddress("t_theta", &t_theta);
+    tree->SetBranchAddress("t_phi", &t_phi);
+    tree->SetBranchAddress("t_eta", &t_eta);
+    tree->SetBranchAddress("t_p", &t_p);
+    tree->SetBranchAddress("t_pT", &t_pT);
+    tree->SetBranchAddress("t_d0", &t_d0);
+    tree->SetBranchAddress("t_z0", &t_z0);
+    tree->SetBranchAddress("t_charge", &t_charge);
+    tree->SetBranchAddress("t_time", &t_time);
+
     tree->SetBranchAddress("eLOC0_fit", &eLOC0_fit);
     tree->SetBranchAddress("eLOC1_fit", &eLOC1_fit);
     tree->SetBranchAddress("ePHI_fit", &ePHI_fit);
@@ -335,11 +347,12 @@ struct TrackSummaryReader : public TreeReader {
   }
 
   // The variables
-  uint32_t eventId;
+  uint32_t eventId = 0;
   std::vector<unsigned int>* nStates = new std::vector<unsigned int>;
   std::vector<unsigned int>* nMeasurements = new std::vector<unsigned int>;
   std::vector<unsigned int>* nOutliers = new std::vector<unsigned int>;
   std::vector<unsigned int>* nHoles = new std::vector<unsigned int>;
+  std::vector<unsigned int>* nSharedHits = new std::vector<unsigned int>;
   std::vector<float>* chi2Sum = new std::vector<float>;
   std::vector<unsigned int>* NDF = new std::vector<unsigned int>;
   std::vector<std::vector<double>>* measurementChi2 =
@@ -358,12 +371,26 @@ struct TrackSummaryReader : public TreeReader {
   std::vector<uint64_t>* majorityParticleId = new std::vector<uint64_t>;
 
   std::vector<bool>* hasFittedParams = new std::vector<bool>;
+
+  // True parameters
+  std::vector<float>* t_d0 = new std::vector<float>;
+  std::vector<float>* t_z0 = new std::vector<float>;
+  std::vector<float>* t_phi = new std::vector<float>;
+  std::vector<float>* t_theta = new std::vector<float>;
+  std::vector<float>* t_eta = new std::vector<float>;
+  std::vector<float>* t_p = new std::vector<float>;
+  std::vector<float>* t_pT = new std::vector<float>;
+  std::vector<float>* t_time = new std::vector<float>;
+  std::vector<int>* t_charge = new std::vector<int>;
+
+  // Estimated parameters
   std::vector<float>* eLOC0_fit = new std::vector<float>;
   std::vector<float>* eLOC1_fit = new std::vector<float>;
   std::vector<float>* ePHI_fit = new std::vector<float>;
   std::vector<float>* eTHETA_fit = new std::vector<float>;
   std::vector<float>* eQOP_fit = new std::vector<float>;
   std::vector<float>* eT_fit = new std::vector<float>;
+
   std::vector<float>* err_eLOC0_fit = new std::vector<float>;
   std::vector<float>* err_eLOC1_fit = new std::vector<float>;
   std::vector<float>* err_ePHI_fit = new std::vector<float>;

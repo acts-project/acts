@@ -21,6 +21,7 @@
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 namespace bdata = boost::unit_test::data;
 namespace tt = boost::test_tools;
@@ -43,7 +44,7 @@ struct SteppingState {
   Vector3 dir = Vector3(0., 0., 1);
   double p = 100_MeV;
 
-  NavigationDirection navDir = NavigationDirection::forward;
+  NavigationDirection navDir = NavigationDirection::Forward;
 };
 
 /// @brief mockup of stepping state
@@ -93,7 +94,7 @@ struct Options {
   /// Contains: target aborters
   AbortList<PathLimitReached> abortList;
 
-  LoggerWrapper logger{getDummyLogger()};
+  const Acts::Logger& logger = Acts::getDummyLogger();
 };
 
 /// @brief mockup of propagtor state
@@ -127,11 +128,12 @@ BOOST_DATA_TEST_CASE(
 
   Stepper pStepper;
 
-  auto initialLimit =
-      pState.options.abortList.get<PathLimitReached>().internalLimit;
+  auto& pathLimit = pState.options.abortList.get<PathLimitReached>();
+  auto initialLimit = pathLimit.internalLimit;
 
-  LoopProtection<PathLimitReached> lProtection;
-  lProtection(pState, pStepper);
+  detail::setupLoopProtection(
+      pState, pStepper, pathLimit,
+      *Acts::getDefaultLogger("LoopProt", Logging::INFO));
 
   auto updatedLimit =
       pState.options.abortList.get<PathLimitReached>().internalLimit;
@@ -182,7 +184,7 @@ BOOST_DATA_TEST_CASE(
   CurvilinearTrackParameters start(Vector4(0, 0, 0, 42), phi, theta, p, q);
 
   using PropagatorOptions = PropagatorOptions<ActionList<>, AbortList<>>;
-  PropagatorOptions options(tgContext, mfContext, getDummyLogger());
+  PropagatorOptions options(tgContext, mfContext);
   options.maxSteps = 1e6;
   const auto& result = epropagator.propagate(start, options).value();
 

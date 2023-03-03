@@ -15,7 +15,7 @@
 
 class G4Run;
 
-namespace ActsExamples {
+namespace ActsExamples::Geant4::HepMC3 {
 
 /// The RunAction class is the implementation of the
 /// Geant4 class G4UserRunAction. It initiates the run
@@ -27,18 +27,18 @@ class RunAction final : public G4UserRunAction {
 
   /// Construct the action and ensure singleton usage.
   RunAction();
-  ~RunAction() final override;
+  ~RunAction() override;
 
   /// Interface method at the begin of the run
   /// @note resets the event action
-  void BeginOfRunAction(const G4Run* /*unused*/) final override;
+  void BeginOfRunAction(const G4Run* /*unused*/) override;
 
   /// Interface method at the end of the run
-  void EndOfRunAction(const G4Run* /*unused*/) final override;
+  void EndOfRunAction(const G4Run* /*unused*/) override;
 
  private:
   /// Instance of the EventAction
   static RunAction* s_instance;
 };
 
-}  // namespace ActsExamples
+}  // namespace ActsExamples::Geant4::HepMC3

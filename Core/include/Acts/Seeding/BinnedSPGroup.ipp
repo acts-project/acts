@@ -5,18 +5,25 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
-
 template <typename external_spacepoint_t>
-template <typename spacepoint_iterator_t>
+template <typename spacepoint_iterator_t, typename callable_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    std::function<std::pair<Acts::Vector3, Acts::Vector2>(
-        const external_spacepoint_t&, float, float, float)>
-        globTool,
-    std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
-    std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
+    callable_t&& toGlobal,
+    std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> botBinFinder,
+    std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
-    const SeedfinderConfig<external_spacepoint_t>& config) {
+    Acts::Extent& rRangeSPExtent,
+    const SeedFinderConfig<external_spacepoint_t>& config,
+    const SeedFinderOptions& options) {
+  if (not config.isInInternalUnits) {
+    throw std::runtime_error(
+        "SeedFinderConfig not in ACTS internal units in BinnedSPGroup");
+  }
+  if (not options.isInInternalUnits) {
+    throw std::runtime_error(
+        "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
+  }
   static_assert(
       std::is_same<
           typename std::iterator_traits<spacepoint_iterator_t>::value_type,
@@ -33,9 +40,11 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // add magnitude of beamPos to rMax to avoid excluding measurements
   // create number of bins equal to number of millimeters rMax
   // (worst case minR: configured minR + 1mm)
-  size_t numRBins = (config.rMax + config.beamPos.norm());
-  std::vector<std::vector<
-      std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>>
+  // binSizeR allows to increase or reduce numRBins if needed
+  size_t numRBins = static_cast<size_t>((config.rMax + options.beamPos.norm()) /
+                                        config.binSizeR);
+  std::vector<
+      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
       rBins(numRBins);
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
@@ -43,11 +52,14 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     }
     const external_spacepoint_t& sp = **it;
     const auto& [spPosition, variance] =
-        globTool(sp, config.zAlign, config.rAlign, config.sigmaError);
+        toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
     float spX = spPosition[0];
     float spY = spPosition[1];
     float spZ = spPosition[2];
+
+    // store x,y,z values in extent
+    rRangeSPExtent.extend({spX, spY, spZ});
 
     if (spZ > zMax || spZ < zMin) {
       continue;
@@ -57,25 +69,38 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
 
-    auto isp =
-        std::make_unique<const InternalSpacePoint<external_spacepoint_t>>(
-            sp, spPosition, config.beamPos, variance);
+    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
+        sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    size_t rIndex = isp->radius();
+    size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;
     }
     rBins[rIndex].push_back(std::move(isp));
   }
+
+  // if requested, it is possible to force sorting in R for each (z, phi) grid
+  // bin
+  if (config.forceRadialSorting) {
+    for (auto& rbin : rBins) {
+      std::sort(
+          rbin.begin(), rbin.end(),
+          [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
+             std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
+            return a->radius() < b->radius();
+          });
+    }
+  }
+
   // fill rbins into grid such that each grid bin is sorted in r
-  // space points with delta r < rbin size can be out of order
+  // space points with delta r < rbin size can be out of order is sorting is not
+  // requested
   for (auto& rbin : rBins) {
     for (auto& isp : rbin) {
       Acts::Vector2 spLocation(isp->phi(), isp->z());
-      std::vector<
-          std::unique_ptr<const InternalSpacePoint<external_spacepoint_t>>>&
+      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
           bin = grid->atPosition(spLocation);
       bin.push_back(std::move(isp));
     }
@@ -83,4 +108,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   m_binnedSP = std::move(grid);
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;
+
+  m_bins = config.zBinsCustomLooping;
 }

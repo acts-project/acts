@@ -16,6 +16,8 @@
 namespace Acts {
 namespace Test {
 
+class Object {};
+
 /// test of the intersection class
 BOOST_AUTO_TEST_CASE(IntersectionTest) {
   // a few valid intersections
@@ -151,6 +153,25 @@ BOOST_AUTO_TEST_CASE(IntersectionTest) {
   BOOST_CHECK_EQUAL(ztfsnIntersections[3].pathLength, -3.);
 }
 
+/// test swappping of the intersection
+BOOST_AUTO_TEST_CASE(SwapObjectIntersectionTest) {
+  using ObjectIntersection = ObjectIntersection<Object>;
+
+  Intersection3D intersection(Vector3(0., 0., 0.), 0.,
+                              IntersectionStatus::onSurface);
+  Intersection3D alternative(Vector3(10., 0., 0.), 10.,
+                             IntersectionStatus::reachable);
+  ObjectIntersection oIntersection;
+  oIntersection.intersection = intersection;
+  oIntersection.alternative = alternative;
+
+  BOOST_CHECK(oIntersection.intersection.position == Vector3(0., 0., 0.));
+  BOOST_CHECK(oIntersection.alternative.position == Vector3(10., 0., 0.));
+  oIntersection.swapSolutions();
+  BOOST_CHECK(oIntersection.alternative.position == Vector3(0., 0., 0.));
+  BOOST_CHECK(oIntersection.intersection.position == Vector3(10., 0., 0.));
+}
+
 /// test of the object intersection class
 BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
   auto psf6 = Surface::makeShared<PlaneSurface>(Vector3(6., 0., 0.),
@@ -204,6 +225,20 @@ BOOST_AUTO_TEST_CASE(ObjectIntersectionTest) {
                  secondSet.end(), std::back_inserter(unionSetCst),
                  onSameSurface);
   BOOST_CHECK_EQUAL(unionSetCst.size(), 5u);
+}
+
+BOOST_AUTO_TEST_CASE(IntersectionStatusPrinting) {
+  std::array<IntersectionStatus, 4> status_values = {
+      {IntersectionStatus::missed, IntersectionStatus::unreachable,
+       IntersectionStatus::reachable, IntersectionStatus::onSurface}};
+  std::array<std::string, 4> expected_messages = {
+      {"missed/unreachable", "missed/unreachable", "reachable", "onSurface"}};
+
+  for (int i = 0; i < 4; ++i) {
+    std::stringstream ss;
+    ss << status_values[i];
+    BOOST_CHECK(ss.str() == expected_messages[i]);
+  }
 }
 
 }  // namespace Test

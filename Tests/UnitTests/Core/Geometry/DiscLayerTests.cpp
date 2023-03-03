@@ -77,7 +77,7 @@ BOOST_AUTO_TEST_CASE(DiscLayerConstruction) {
 }
 
 /// Unit test for testing Layer properties
-BOOST_AUTO_TEST_CASE(DiscLayerProperties /*, *utf::expected_failures(1)*/) {
+BOOST_AUTO_TEST_CASE(DiscLayerProperties) {
   Translation3 translation{0., 1., 2.};
   auto pTransform = Transform3(translation);
   const double minRad(5.), maxRad(10.);  // 20 x 10 disc

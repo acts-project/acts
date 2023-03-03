@@ -21,18 +21,18 @@
 #include <TMath.h>
 
 ActsExamples::RootParticleReader::RootParticleReader(
-    const ActsExamples::RootParticleReader::Config& cfg)
-    : ActsExamples::IReader(), m_cfg(cfg), m_events(0), m_inputChain(nullptr) {
+    const ActsExamples::RootParticleReader::Config& config,
+    Acts::Logging::Level level)
+    : ActsExamples::IReader(),
+      m_cfg(config),
+      m_logger(Acts::getDefaultLogger(name(), level)) {
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
-  if (m_cfg.inputFile.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing input filename");
   }
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
-  }
-  if (m_cfg.inputDir.empty()) {
-    throw std::invalid_argument("Missing input directory");
   }
 
   // Set the branches
@@ -59,7 +59,7 @@ ActsExamples::RootParticleReader::RootParticleReader(
   m_inputChain->SetBranchAddress("generation", &m_generation);
   m_inputChain->SetBranchAddress("sub_particle", &m_subParticle);
 
-  auto path = joinPaths(m_cfg.inputDir, m_cfg.inputFile);
+  auto path = m_cfg.filePath;
 
   // add file to the input chain
   m_inputChain->Add(path.c_str());
@@ -76,10 +76,6 @@ ActsExamples::RootParticleReader::RootParticleReader(
     TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
                 m_entryNumbers.data(), false);
   }
-}
-
-std::string ActsExamples::RootParticleReader::name() const {
-  return m_cfg.name;
 }
 
 std::pair<size_t, size_t> ActsExamples::RootParticleReader::availableEvents()
@@ -116,7 +112,7 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
   ACTS_DEBUG("Trying to read recorded particles.");
 
   // read in the particle
-  if (m_inputChain && context.eventNumber < m_events) {
+  if (m_inputChain != nullptr && context.eventNumber < m_events) {
     // lock the mutex
     std::lock_guard<std::mutex> lock(m_read_mutex);
     // now read

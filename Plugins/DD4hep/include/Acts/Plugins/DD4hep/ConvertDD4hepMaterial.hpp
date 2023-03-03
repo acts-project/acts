@@ -8,12 +8,12 @@
 
 #pragma once
 
-#include "Acts/Plugins/DD4hep/ActsExtension.hpp"
 #include "Acts/Utilities/BinningData.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <DD4hep/DetElement.h>
 #include <DD4hep/DetFactoryHelper.h>
+#include <DDRec/DetectorData.h>
 
 namespace Acts {
 
@@ -25,13 +25,12 @@ class Layer;
 /// This is used to assign proto material to Cylinder Layers
 ///
 /// @param detElement the DD4hep detector element for which this material is
-/// assigned
-/// @param loggingLevel is the output level for the conversion
-///
-/// @return a map of the identification string and a surface material
-void addCylinderLayerProtoMaterial(
-    dd4hep::DetElement detElement, Layer& cylinderLayer,
-    Logging::Level loggingLevel = Logging::Level::INFO);
+///                   assigned
+/// @param cylinderLayer is the target layer
+/// @param logger a @c Logger for output
+void addCylinderLayerProtoMaterial(dd4hep::DetElement detElement,
+                                   Layer& cylinderLayer,
+                                   const Logger& logger = getDummyLogger());
 
 /// Helper method to translate DD4hep material to Acts::ISurfaceMaterial
 ///
@@ -39,50 +38,36 @@ void addCylinderLayerProtoMaterial(
 ///
 /// @param detElement the DD4hep detector element for which this material is
 /// assigned
-/// @param loggingLevel is the output level for the conversion
-///
-/// @return a map of the identification string and a surface material
-void addDiscLayerProtoMaterial(
-    dd4hep::DetElement detElement, Layer& discLayer,
-    Logging::Level loggingLevel = Logging::Level::INFO);
+/// @param discLayer is the target layer
+/// @param logger a @c Logger for output
+void addDiscLayerProtoMaterial(dd4hep::DetElement detElement, Layer& discLayer,
+                               const Logger& logger = getDummyLogger());
 
 /// Helper method to be called for Cylinder and Disc Proto material
 ///
 /// For both, cylinder and disc, the closed binning value is "binPhi"
 ///
-/// @param aExtension the ActsExtension for the binning parameters
+/// @param params An instance of @c DD4hep::VariantParameters
 /// @param layer the Layer to assign the proto material
 /// @param binning the Binning prescription for the ActsExtension
+/// @param logger a @c Logger for output
 void addLayerProtoMaterial(
-    const ActsExtension& actsExtension, Layer& layer,
+    const dd4hep::rec::VariantParameters& params, Layer& layer,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning);
+        binning,
+    const Logger& logger = getDummyLogger());
 
 /// Helper method to create proto material - to be called from the
 /// addProto(...) methods
 ///
-/// @param actsExtension the ActExtension to be checked
+/// @param params An instance of @c DD4hep::VariantParameters
 /// @param valueTag the xml tag for to ActsExtension to be parsed
-/// @param firstBinning string lookup for first bin
 /// @param binning the Binning prescription for the ActsExtension
+/// @param logger a @c Logger for output
 std::shared_ptr<Acts::ProtoSurfaceMaterial> createProtoMaterial(
-    const ActsExtension& actsExtension, const std::string& valueTag,
+    const dd4hep::rec::VariantParameters& params, const std::string& valueTag,
     const std::vector<std::pair<const std::string, Acts::BinningOption> >&
-        binning);
-
-/// Helper method that decorates an ActsExtension with proto material
-/// description for boundaries
-/// - it assigns bins for inner / representing / outer
-
-/// Helper method that decorates an ActsExtension with proto material
-/// description,
-/// - it assigns bins for inner / representing / outer
-///
-/// @param x_material the material tag to be inspected
-/// @param actsExtension the extension that is augmented
-/// @param baseTag the xml tag to be checked
-void xmlToProtoSurfaceMaterial(const xml_comp_t& x_material,
-                               ActsExtension& actsExtension,
-                               const std::string& baseTag);
+        binning,
+    const Logger& logger = getDummyLogger());
 
 }  // namespace Acts

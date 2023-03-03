@@ -9,8 +9,7 @@ target_link_libraries(
   ActsExampleTruthTracksGeneric
   PRIVATE
     ActsExamplesRecTracksCommon 
-    ActsExamplesDetectorGeneric)
-
+    ActsExamplesDetectorGeneric) 
 # Truth fitting for TGeo detector 
 add_executable(
   ActsExampleTruthTracksTGeo
@@ -61,6 +60,27 @@ target_link_libraries(
     ActsExamplesRecTracksCommon
     ActsExamplesDetectorTelescope)
 
+# Hough Transform
+add_executable(
+  ActsExampleHough
+  HoughExample.cpp)
+target_link_libraries(
+  ActsExampleHough
+  PRIVATE
+    ActsExamplesRecTracksCommon
+    ActsExamplesDetectorGeneric
+)
+
+# Chi2 fitting for Telescope detector
+add_executable(
+  ActsExampleChi2TracksTelescope
+  TelescopeRecChi2Tracks.cpp)
+target_link_libraries(
+  ActsExampleChi2TracksTelescope
+  PRIVATE
+    ActsExamplesRecTracksCommon
+    ActsExamplesDetectorTelescope)
+
 # Seeding for Generic detector
 add_executable(
   ActsExampleSeedingGeneric
@@ -83,6 +103,43 @@ target_link_libraries(
     ActsExamplesDetectorTGeo
 )
 
+# =================================================
+# Convert measurements to spacepoints and write sp to csv
+add_executable(
+  ActsExampleMeasurementsToSPTGeo
+  MeasurementsToSPTGeo.cpp
+)
+target_link_libraries(
+  ActsExampleMeasurementsToSPTGeo
+  PRIVATE
+    ActsExamplesFramework
+    ActsExamplesCommon
+    ActsExamplesIoCsv
+    ActsExamplesIoJson
+    ActsExamplesIoRoot
+    ActsExamplesDetectorTGeo
+    ActsExamplesMagneticField
+    ActsExamplesTrackFinding
+    ActsExamplesRecTracksCommon
+)
+
+add_executable(
+  ActsExampleMeasurementsToSPGeneric
+  MeasurementsToSPGeneric.cpp)
+target_link_libraries(
+  ActsExampleMeasurementsToSPGeneric
+    PRIVATE
+      ActsExamplesFramework
+      ActsExamplesCommon
+      ActsExamplesIoCsv
+      ActsExamplesIoJson
+      ActsExamplesIoRoot
+      ActsExamplesDetectorGeneric
+      ActsExamplesMagneticField
+      ActsExamplesTrackFinding
+      ActsExamplesRecTracksCommon)
+# =================================================
+
 install(
   TARGETS
     ActsExampleTruthTracksGeneric
@@ -91,7 +148,9 @@ install(
     ActsExampleCKFTracksGeneric
     ActsExampleCKFTracksTGeo
     ActsExampleCKFTracksTelescope
+    ActsExampleChi2TracksTelescope
     ActsExampleSeedingGeneric
+    ActsExampleHough
     ActsExampleSeedingTGeo
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

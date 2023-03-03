@@ -15,16 +15,17 @@
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryParametersReader.hpp"
+#include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexPerformanceWriter.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
+#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
+#include "ActsExamples/Options/VertexingOptions.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
-#include "ActsExamples/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
 
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
-  ActsExamples::ParticleSelector::addOptions(desc);
+  Options::addParticleSelectorOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;
@@ -61,41 +62,38 @@ int main(int argc, char* argv[]) {
 
   RootParticleReader::Config particleReaderConfig;
   particleReaderConfig.particleCollection = "allTruthParticles";
-  particleReaderConfig.inputFile = "particles_initial.root";
+  particleReaderConfig.filePath = inputDir + "/particles_initial.root";
   particleReaderConfig.treeName = "particles";
-  particleReaderConfig.inputDir = inputDir;
-  sequencer.addReader(
-      std::make_shared<RootParticleReader>(particleReaderConfig));
+  sequencer.addReader(std::make_shared<RootParticleReader>(
+      particleReaderConfig, Acts::Logging::INFO));
 
   // add additional particle selection
-  auto select = ActsExamples::ParticleSelector::readConfig(vars);
+  auto select = Options::readParticleSelectorConfig(vars);
   select.inputParticles = particleReaderConfig.particleCollection;
   select.outputParticles = "detectorAcceptanceSelectedTruthParticles";
   sequencer.addAlgorithm(
       std::make_shared<ActsExamples::ParticleSelector>(select, logLevel));
 
-  RootTrajectoryParametersReader::Config trackParamsReader;
-  trackParamsReader.outputTracks = "fittedTrackParameters";
-  trackParamsReader.outputParticles = "associatedTruthParticles";
-  trackParamsReader.inputFile = "trackparams_fitter.root";
-  trackParamsReader.inputDir = inputDir;
-  sequencer.addReader(
-      std::make_shared<RootTrajectoryParametersReader>(trackParamsReader));
+  RootTrajectorySummaryReader::Config trackSummaryReader;
+  trackSummaryReader.outputTracks = "fittedTrackParameters";
+  trackSummaryReader.outputParticles = "associatedTruthParticles";
+  trackSummaryReader.filePath = inputDir + "/tracksummary_fitter.root";
+  sequencer.addReader(std::make_shared<RootTrajectorySummaryReader>(
+      trackSummaryReader, logLevel));
 
   // Apply some primary vertexing selection cuts
-  TrackSelector::Config trackSelectorConfig;
-  trackSelectorConfig.inputTrackParameters = trackParamsReader.outputTracks;
+  TrackParameterSelector::Config trackSelectorConfig;
+  trackSelectorConfig.inputTrackParameters = trackSummaryReader.outputTracks;
   trackSelectorConfig.outputTrackParameters = "selectedTracks";
-  trackSelectorConfig.outputTrackIndices = "outputTrackIndices";
-  trackSelectorConfig.removeNeutral = true;
   trackSelectorConfig.absEtaMax = vars["vertexing-eta-max"].as<double>();
   trackSelectorConfig.loc0Max = vars["vertexing-rho-max"].as<double>() * 1_mm;
   trackSelectorConfig.ptMin = vars["vertexing-pt-min"].as<double>() * 1_MeV;
   sequencer.addAlgorithm(
-      std::make_shared<TrackSelector>(trackSelectorConfig, logLevel));
+      std::make_shared<TrackParameterSelector>(trackSelectorConfig, logLevel));
 
   // find vertices
-  AdaptiveMultiVertexFinderAlgorithm::Config findVertices(magneticField);
+  AdaptiveMultiVertexFinderAlgorithm::Config findVertices;
+  findVertices.bField = magneticField;
   findVertices.inputTrackParameters = trackSelectorConfig.outputTrackParameters;
   findVertices.outputProtoVertices = "fittedProtoVertices";
   findVertices.outputVertices = "fittedVertices";
@@ -109,13 +107,12 @@ int main(int argc, char* argv[]) {
       particleReaderConfig.particleCollection;
   vertexWriterConfig.inputSelectedTruthParticles = select.outputParticles;
   vertexWriterConfig.inputAssociatedTruthParticles =
-      trackParamsReader.outputParticles;
-  vertexWriterConfig.inputFittedTracks = trackParamsReader.outputTracks;
+      trackSummaryReader.outputParticles;
+  vertexWriterConfig.inputTrackParameters = trackSummaryReader.outputTracks;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
   vertexWriterConfig.inputTime = findVertices.outputTime;
-  vertexWriterConfig.outputFilename = "vertexperformance_AMVF.root";
-  vertexWriterConfig.outputTreename = "amvf";
-  vertexWriterConfig.outputDir = outputDir;
+  vertexWriterConfig.filePath = outputDir + "/vertexperformance_AMVF.root";
+  vertexWriterConfig.treeName = "amvf";
   sequencer.addWriter(std::make_shared<RootVertexPerformanceWriter>(
       vertexWriterConfig, logLevel));
 

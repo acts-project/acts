@@ -65,10 +65,12 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiReader::read(
     reader.read_event(event);
   }
 
-  if (events.empty())
+  if (events.empty()) {
     return ActsExamples::ProcessCode::ABORT;
+  }
 
-  ACTS_VERBOSE(events.size() << " events read");
+  ACTS_VERBOSE(events.size()
+               << " events read, writing to " << m_cfg.outputEvents);
   ctx.eventStore.add(m_cfg.outputEvents, std::move(events));
 
   reader.close();

@@ -11,20 +11,22 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
+#include <functional>
 #include <memory>
 #include <mutex>
 
-#include <G4VUserDetectorConstruction.hh>
 #include <HepMC3/GenEvent.h>
+
+#include "G4VUserDetectorConstruction.hh"
 
 class G4RunManager;
 
 namespace ActsExamples {
 
-class EventRecording final : public ActsExamples::BareAlgorithm {
+class EventRecording final : public ActsExamples::IAlgorithm {
  public:
   /// @class Config
   struct Config {
@@ -33,7 +35,7 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
     /// The recorded events output
     std::string outputHepMcTracks = "geant-outcome-tracks";
 
-    std::unique_ptr<G4VUserDetectorConstruction> detectorConstruction = nullptr;
+    G4VUserDetectorConstruction* detectorConstruction{nullptr};
 
     /// random number seed 1
     int seed1 = 12345;
@@ -50,11 +52,17 @@ class EventRecording final : public ActsExamples::BareAlgorithm {
   };
 
   /// Constructor
-  EventRecording(Config&& cnf, Acts::Logging::Level level);
-  ~EventRecording();
+  /// @param config the configuration
+  /// @param level the log level
+  EventRecording(const Config& config, Acts::Logging::Level level);
+
+  ~EventRecording() override;
 
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
   /// The config object

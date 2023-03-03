@@ -1,17 +1,35 @@
 add_executable(
-  ActsExampleGeantinoRecordingDD4hep
-  DD4hepGeantinoRecording.cpp)
+  ActsExampleGeant4DD4hep
+  DD4hepGeant4Simulation.cpp)
 target_link_libraries(
-  ActsExampleGeantinoRecordingDD4hep
+  ActsExampleGeant4DD4hep
   PRIVATE
     ActsExamplesCommon
-    ActsExamplesDetectorDD4hep
+    ActsExamplesDD4hepDetectorWithOptions
     ActsExamplesFramework
     ActsExamplesGeant4
-    ActsExamplesGeant4DD4hep
-    ActsExamplesIoRoot
-    Boost::program_options)
+    ActsExamplesGeant4Common
+    ActsExamplesMagneticField
+    ActsExamplesIoRoot)
 
 install(
-  TARGETS ActsExampleGeantinoRecordingDD4hep
+  TARGETS ActsExampleGeant4DD4hep
+  RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+
+add_executable(
+  ActsExampleMaterialRecordingDD4hep
+  DD4hepMaterialRecording.cpp)
+target_link_libraries(
+  ActsExampleMaterialRecordingDD4hep
+  PRIVATE
+    ActsExamplesCommon
+    ActsExamplesDD4hepDetectorWithOptions
+    ActsExamplesFramework
+    ActsExamplesGeant4
+    ActsExamplesGeant4Common
+    ActsExamplesIoRoot)
+
+install(
+  TARGETS ActsExampleMaterialRecordingDD4hep
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

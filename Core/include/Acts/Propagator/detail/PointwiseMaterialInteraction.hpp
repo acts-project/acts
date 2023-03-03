@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -53,7 +54,7 @@ struct PointwiseMaterialInteraction {
   /// The energy change due to the interaction.
   double Eloss = 0.;
   /// The momentum after the interaction
-  double nextP;
+  double nextP = 0.;
 
   /// @brief Contructor
   ///
@@ -88,14 +89,15 @@ struct PointwiseMaterialInteraction {
   ///
   /// @return Boolean statement whether the material is valid
   template <typename propagator_state_t>
-  bool evaluateMaterialSlab(const propagator_state_t& state,
-                            MaterialUpdateStage updateStage = fullUpdate) {
+  bool evaluateMaterialSlab(
+      const propagator_state_t& state,
+      MaterialUpdateStage updateStage = MaterialUpdateStage::FullUpdate) {
     // We are at the start surface
     if (surface == state.navigation.startSurface) {
-      updateStage = postUpdate;
+      updateStage = MaterialUpdateStage::PostUpdate;
       // Or is it the target surface ?
     } else if (surface == state.navigation.targetSurface) {
-      updateStage = preUpdate;
+      updateStage = MaterialUpdateStage::PreUpdate;
     }
 
     // Retrieve the material properties
@@ -125,24 +127,33 @@ struct PointwiseMaterialInteraction {
   ///
   /// @param [in] state State of the propagation
   /// @param [in] stepper Stepper in use
+  /// @param [in] updateMode The noise update mode (in default: add noise)
   template <typename propagator_state_t, typename stepper_t>
-  void updateState(propagator_state_t& state, const stepper_t& stepper) {
+  void updateState(propagator_state_t& state, const stepper_t& stepper,
+                   NoiseUpdateMode updateMode = addNoise) {
     // in forward(backward) propagation, energy decreases(increases) and
     // variances increase(decrease)
-    const auto nextE = std::sqrt(mass * mass + momentum * momentum) -
-                       std::copysign(Eloss, nav);
+    const auto nextE =
+        std::sqrt(mass * mass + momentum * momentum) -
+        std::copysign(
+            Eloss,
+            static_cast<std::underlying_type_t<NavigationDirection>>(nav));
     // put particle at rest if energy loss is too large
     nextP = (mass < nextE) ? std::sqrt(nextE * nextE - mass * mass) : 0;
+    // minimum momentum below which we will not push particles via material
+    // update
+    static constexpr double minP = 10 * Acts::UnitConstants::MeV;
+    nextP = std::max(minP, nextP);
     // update track parameters and covariance
     stepper.update(state.stepping, pos, dir, nextP, time);
-    // Update covariance matrix
-    NoiseUpdateMode mode = (nav == forward) ? addNoise : removeNoise;
     state.stepping.cov(eBoundPhi, eBoundPhi) = updateVariance(
-        state.stepping.cov(eBoundPhi, eBoundPhi), variancePhi, mode);
-    state.stepping.cov(eBoundTheta, eBoundTheta) = updateVariance(
-        state.stepping.cov(eBoundTheta, eBoundTheta), varianceTheta, mode);
-    state.stepping.cov(eBoundQOverP, eBoundQOverP) = updateVariance(
-        state.stepping.cov(eBoundQOverP, eBoundQOverP), varianceQoverP, mode);
+        state.stepping.cov(eBoundPhi, eBoundPhi), variancePhi, updateMode);
+    state.stepping.cov(eBoundTheta, eBoundTheta) =
+        updateVariance(state.stepping.cov(eBoundTheta, eBoundTheta),
+                       varianceTheta, updateMode);
+    state.stepping.cov(eBoundQOverP, eBoundQOverP) =
+        updateVariance(state.stepping.cov(eBoundQOverP, eBoundQOverP),
+                       varianceQoverP, updateMode);
   }
 
  private:

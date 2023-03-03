@@ -12,6 +12,8 @@
 
 #include <vector>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 
 /// @class BinFinder
@@ -22,17 +24,24 @@ namespace Acts {
 template <typename external_spacepoint_t>
 class BinFinder {
  public:
-  /// destructor
-  ~BinFinder() = default;
+  /// constructor
+  BinFinder();
+
+  BinFinder(std::vector<std::pair<int, int> > zBinNeighbors,
+            int numPhiNeighbors);
 
   /// Return all bins that could contain space points that can be used with the
   /// space points in the bin with the provided indices to create seeds.
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  std::vector<size_t> findBins(
+  boost::container::small_vector<size_t, 10> findBins(
       size_t phiBin, size_t zBin,
-      const SpacePointGrid<external_spacepoint_t>* binnedSP);
+      const SpacePointGrid<external_spacepoint_t>* binnedSP) const;
+
+ private:
+  std::vector<std::pair<int, int> > m_zBinNeighbors;
+  int m_numPhiNeighbors = 1;
 };
 }  // namespace Acts
 #include "Acts/Seeding/BinFinder.ipp"

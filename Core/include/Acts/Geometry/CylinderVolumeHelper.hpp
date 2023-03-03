@@ -247,8 +247,8 @@ class CylinderVolumeHelper : public ITrackingVolumeHelper {
 
   /// Private method - helper method not to duplicate code
   ///
-  /// @param tVolume is the volume to which faces are added
-  /// @param bsf is the boundary surface to which faces are added
+  /// @param tvol is the volume to which faces are added
+  /// @param glueFace the boundary surface to which faces are added
   /// @param vols are the voluems which are added
   void addFaceVolumes(const MutableTrackingVolumePtr& tvol,
                       BoundarySurfaceFace glueFace,

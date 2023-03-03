@@ -35,7 +35,9 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   ///
   /// @param binUtility a BinUtility determining the granularity
   ///        and binning of the material on the surface/layer
-  ProtoSurfaceMaterial(const BinUtility& binUtility);
+  /// @param mappingType is the type of surface mapping associated to the surface
+  ProtoSurfaceMaterial(const BinUtility& binUtility,
+                       MappingType mappingType = MappingType::Default);
 
   /// Copy constuctor
   ///
@@ -48,8 +50,6 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
   ProtoSurfaceMaterial(ProtoSurfaceMaterial&& smproxy) = default;
 
   /// Destructor
-  ///
-  /// @param smproxy The source proxy
   ~ProtoSurfaceMaterial() override = default;
 
   /// Assignment operator
@@ -65,7 +65,7 @@ class ProtoSurfaceMaterial : public ISurfaceMaterial {
 
   /// Scale operator
   ///
-  /// @param
+  /// @param scale The value to scale this material by
   ProtoSurfaceMaterial& operator*=(double scale) final;
 
   /// Return the BinUtility

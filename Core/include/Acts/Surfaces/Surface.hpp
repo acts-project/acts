@@ -25,6 +25,8 @@
 #include "Acts/Utilities/Result.hpp"
 
 #include <memory>
+#include <ostream>
+#include <string>
 
 namespace Acts {
 
@@ -239,6 +241,11 @@ class Surface : public virtual GeometryObject,
   const std::shared_ptr<const ISurfaceMaterial>& surfaceMaterialSharedPtr()
       const;
 
+  /// Assign a detector element
+  ///
+  /// @param detelement Detector element which is represented by this surface
+  void assignDetectorElement(const DetectorElementBase& detelement);
+
   /// Assign the surface material description
   ///
   /// The material is usually derived in a complicated way and loaded from
@@ -320,7 +327,7 @@ class Surface : public virtual GeometryObject,
   /// Calculate the jacobian from local to global which the surface knows best,
   /// hence the calculation is done here.
   ///
-  /// @note In priciple, the input could also be a free parameters
+  /// @note In principle, the input could also be a free parameters
   /// vector as it could be transformed to a bound parameters. But the transform
   /// might fail in case the parameters is not on surface. To avoid the check
   /// inside this function, it takes directly the bound parameters as input
@@ -401,6 +408,11 @@ class Surface : public virtual GeometryObject,
   /// @param sl is the ostream to be dumped into
   virtual std::ostream& toStream(const GeometryContext& gctx,
                                  std::ostream& sl) const;
+
+  /// Output into a std::string
+  ///
+  /// @param gctx The current geometry context object, e.g. alignment
+  std::string toString(const GeometryContext& gctx) const;
 
   /// Return properly formatted class name
   virtual std::string name() const = 0;
@@ -500,5 +512,16 @@ class Surface : public virtual GeometryObject,
   AlignmentToBoundMatrix alignmentToBoundDerivativeWithoutCorrection(
       const GeometryContext& gctx, const FreeVector& parameters) const;
 };
+
+/// Print surface information to the provided stream. Internally invokes the
+/// `surface.toStream(...)`-method. This can be easily used e.g. like `std::cout
+/// << std::tie(surface, geometryContext);`
+inline std::ostream& operator<<(
+    std::ostream& os,
+    const std::tuple<const Surface&, const GeometryContext&>& tup) {
+  const auto [surface, gctx] = tup;
+  surface.toStream(gctx, os);
+  return os;
+}
 
 }  // namespace Acts

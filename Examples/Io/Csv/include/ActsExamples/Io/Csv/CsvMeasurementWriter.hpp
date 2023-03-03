@@ -15,7 +15,6 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
-#include "ActsExamples/Digitization/SmearingAlgorithm.hpp"
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
@@ -44,7 +43,7 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// Which measurement collection to write.
     std::string inputMeasurements;
     /// Which cluster collection to write (optional)
-    std::string inputClusters;
+    std::string inputClusters = "";
     /// Which simulated (truth) hits collection to use.
     std::string inputSimHits;
     /// Input collection to map measured hits to simulated hits.
@@ -52,19 +51,22 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
     /// Where to place output files
     std::string outputDir;
     /// Number of decimal digits for floating point precision in output.
-    size_t outputPrecision = std::numeric_limits<float>::max_digits10;
+    int outputPrecision = std::numeric_limits<float>::max_digits10;
   };
 
   /// Constructor with
-  /// @param cfg configuration struct
-  /// @param output logging level
-  CsvMeasurementWriter(const Config& cfg, Acts::Logging::Level lvl);
+  /// @param config configuration struct
+  /// @param level logging level
+  CsvMeasurementWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
-  ~CsvMeasurementWriter() final override;
+  ~CsvMeasurementWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// This implementation holds the actual writing method
@@ -73,7 +75,7 @@ class CsvMeasurementWriter final : public WriterT<MeasurementContainer> {
   /// @param ctx The Algorithm context with per event information
   /// @param measurements is the data to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const MeasurementContainer& measurements) final override;
+                     const MeasurementContainer& measurements) override;
 
  private:
   Config m_cfg;

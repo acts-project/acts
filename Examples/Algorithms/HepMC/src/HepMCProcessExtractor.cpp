@@ -26,7 +26,7 @@ namespace {
 ///
 /// @return The particle pointer if found, else nullptr
 HepMC3::ConstGenParticlePtr searchProcessParticleById(
-    HepMC3::ConstGenVertexPtr vertex, const int id) {
+    const HepMC3::ConstGenVertexPtr& vertex, const int id) {
   // Loop over all outgoing particles
   for (const auto& particle : vertex->particles_out()) {
     const int trackid =
@@ -84,7 +84,7 @@ void setPassedMaterial(const HepMC3::ConstGenVertexPtr& vertex, const int id,
 ///
 /// @return Vector containing the outgoing particles from a vertex
 std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
-    HepMC3::ConstGenVertexPtr vertex, const int trackID) {
+    const HepMC3::ConstGenVertexPtr& vertex, const int trackID) {
   std::vector<ActsExamples::SimParticle> finalStateParticles;
 
   // Identify the ingoing particle in the outgoing particles
@@ -103,7 +103,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
   } else {
     // Store the leftovers if it dies
     for (const HepMC3::ConstGenParticlePtr& procPartOut :
-         endVertex->particles_out())
+         endVertex->particles_out()) {
       if (procPartOut->attribute<HepMC3::IntAttribute>("TrackID")->value() ==
               trackID &&
           procPartOut->end_vertex()) {
@@ -113,6 +113,7 @@ std::vector<ActsExamples::SimParticle> selectOutgoingParticles(
               ActsExamples::HepMC3Particle::particle(dyingPartOut));
         }
       }
+    }
   }
 
   // Record the particles produced in this process
@@ -174,12 +175,13 @@ void filterAndSort(
 }
 }  // namespace
 
-ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() {}
+ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() = default;
 
 ActsExamples::HepMCProcessExtractor::HepMCProcessExtractor(
-    ActsExamples::HepMCProcessExtractor::Config cfg, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("HepMCProcessExtractor", level),
-      m_cfg(std::move(cfg)) {
+    ActsExamples::HepMCProcessExtractor::Config config,
+    Acts::Logging::Level level)
+    : ActsExamples::IAlgorithm("HepMCProcessExtractor", level),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputEvents.empty()) {
     throw std::invalid_argument("Missing input event collection");
   }

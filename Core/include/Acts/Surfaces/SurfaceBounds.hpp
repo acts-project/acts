@@ -70,7 +70,7 @@ class SurfaceBounds {
 
   /// Output Method for std::ostream, to be overloaded by child classes
   ///
-  /// @param sl is the outstream in which the string dump is done
+  /// @param os is the outstream in which the string dump is done
   virtual std::ostream& toStream(std::ostream& os) const = 0;
 };
 

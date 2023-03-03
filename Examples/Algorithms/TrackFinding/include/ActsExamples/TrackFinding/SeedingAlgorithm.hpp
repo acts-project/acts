@@ -8,10 +8,14 @@
 
 #pragma once
 
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/BinFinder.hpp"
+#include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
 #include <vector>
@@ -19,7 +23,7 @@
 namespace ActsExamples {
 
 /// Construct track seeds from space points.
-class SeedingAlgorithm final : public BareAlgorithm {
+class SeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
@@ -33,22 +37,22 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::string outputSeeds;
     /// Output proto track collection.
     std::string outputProtoTracks;
-    float rMax = 200.;
-    float deltaRMin = 1.;
-    float deltaRMax = 60.;
-    float collisionRegionMin = -250;
-    float collisionRegionMax = 250.;
-    float zMin = -2000.;
-    float zMax = 2000.;
-    float maxSeedsPerSpM = 1;
-    float cotThetaMax = 7.40627;  // 2.7 eta
-    float sigmaScattering = 50;
-    float radLengthPerSeed = 0.1;
-    float minPt = 500.;
-    float bFieldInZ = 0.00199724;
-    float beamPosX = 0;
-    float beamPosY = 0;
-    float impactMax = 3.;
+
+    Acts::SeedFilterConfig seedFilterConfig;
+    Acts::SeedFinderConfig<SimSpacePoint> seedFinderConfig;
+    Acts::SpacePointGridConfig gridConfig;
+    Acts::SpacePointGridOptions gridOptions;
+    Acts::SeedFinderOptions seedFinderOptions;
+
+    // allow for different values of rMax in gridConfig and seedFinderConfig
+    bool allowSeparateRMax = false;
+
+    // vector containing the map of z bins in the top and bottom layers
+    std::vector<std::pair<int, int>> zBinNeighborsTop;
+    std::vector<std::pair<int, int>> zBinNeighborsBottom;
+    // number of phiBin neighbors at each side of the current bin that will be
+    // used to search for SPs
+    int numPhiNeighbors = 0;
   };
 
   /// Construct the seeding algorithm.
@@ -59,14 +63,18 @@ class SeedingAlgorithm final : public BareAlgorithm {
 
   /// Run the seeding algorithm.
   ///
-  /// @param txt is the algorithm context with event information
+  /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Const access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
+  Acts::SeedFinder<SimSpacePoint> m_seedFinder;
+  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_bottomBinFinder;
+  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_topBinFinder;
   Config m_cfg;
-  Acts::SpacePointGridConfig m_gridCfg;
-  Acts::SeedfinderConfig<SimSpacePoint> m_finderCfg;
 };
 
 }  // namespace ActsExamples

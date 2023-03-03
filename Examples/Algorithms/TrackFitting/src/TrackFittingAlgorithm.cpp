@@ -8,17 +8,20 @@
 
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/TrackFitting/GainMatrixSmoother.hpp"
+#include "Acts/TrackFitting/GainMatrixUpdater.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <stdexcept>
 
 ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
-    Config cfg, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFittingAlgorithm", level),
-      m_cfg(std::move(cfg)) {
+    Config config, Acts::Logging::Level level)
+    : ActsExamples::IAlgorithm("TrackFittingAlgorithm", level),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
   }
@@ -35,8 +38,8 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
-  if (m_cfg.outputTrajectories.empty()) {
-    throw std::invalid_argument("Missing output trajectories collection");
+  if (m_cfg.outputTracks.empty()) {
+    throw std::invalid_argument("Missing output tracks collection");
   }
 }
 
@@ -54,34 +57,34 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
-    ACTS_FATAL("Inconsistent number of proto tracks and parameters");
+    ACTS_FATAL("Inconsistent number of proto tracks and parameters "
+               << protoTracks.size() << " vs " << initialParameters.size());
     return ProcessCode::ABORT;
   }
-
-  // Prepare the output data with MultiTrajectory
-  TrajectoriesContainer trajectories;
-  trajectories.reserve(protoTracks.size());
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
       Acts::Vector3{0., 0., 0.});
 
-  // Set the KalmanFitter options
-  Acts::KalmanFitterOptions<MeasurementCalibrator, Acts::VoidOutlierFinder>
-      kfOptions(ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
-                MeasurementCalibrator(measurements), Acts::VoidOutlierFinder(),
-                Acts::LoggerWrapper{logger()}, Acts::PropagatorPlainOptions(),
-                &(*pSurface));
+  // Measurement calibrator must be instantiated here, because we need the
+  // measurements to construct it. The other extensions are hold by the
+  // fit-function-object
+  ActsExamples::MeasurementCalibrator calibrator(measurements);
 
-  kfOptions.multipleScattering = m_cfg.multipleScattering;
-  kfOptions.energyLoss = m_cfg.energyLoss;
+  GeneralFitterOptions options{
+      ctx.geoContext, ctx.magFieldContext, ctx.calibContext,
+      calibrator,     pSurface.get(),      Acts::PropagatorPlainOptions()};
+
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+  auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+  TrackContainer tracks(trackContainer, trackStateContainer);
 
   // Perform the fit for each input track
-  std::vector<IndexSourceLink> trackSourceLinks;
+  std::vector<Acts::SourceLink> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
   for (std::size_t itrack = 0; itrack < protoTracks.size(); ++itrack) {
     // Check if you are not in picking mode
-    if (m_cfg.pickTrack > 0 and m_cfg.pickTrack != static_cast<int>(itrack)) {
+    if (m_cfg.pickTrack > -1 and m_cfg.pickTrack != static_cast<int>(itrack)) {
       continue;
     }
 
@@ -92,63 +95,67 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     // We can have empty tracks which must give empty fit results so the number
     // of entries in input and output containers matches.
     if (protoTrack.empty()) {
-      trajectories.push_back(Trajectories());
       ACTS_WARNING("Empty track " << itrack << " found.");
       continue;
     }
 
+    ACTS_VERBOSE("Initial parameters: "
+                 << initialParams.fourPosition(ctx.geoContext).transpose()
+                 << " -> " << initialParams.unitDirection().transpose());
+
     // Clear & reserve the right size
     trackSourceLinks.clear();
     trackSourceLinks.reserve(protoTrack.size());
+    surfSequence.clear();
+    surfSequence.reserve(protoTrack.size());
 
     // Fill the source links via their indices from the container
     for (auto hitIndex : protoTrack) {
-      auto sourceLink = sourceLinks.nth(hitIndex);
-      auto geoId = sourceLink->geometryId();
-      if (sourceLink == sourceLinks.end()) {
+      if (auto it = sourceLinks.nth(hitIndex); it != sourceLinks.end()) {
+        const IndexSourceLink& sourceLink = *it;
+        auto geoId = sourceLink.geometryId();
+        trackSourceLinks.push_back(Acts::SourceLink{sourceLink});
+        surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
+      } else {
         ACTS_FATAL("Proto track " << itrack << " contains invalid hit index"
                                   << hitIndex);
         return ProcessCode::ABORT;
       }
-      trackSourceLinks.push_back(*sourceLink);
-      surfSequence.push_back(m_cfg.trackingGeometry->findSurface(geoId));
     }
 
-    ACTS_DEBUG("Invoke fitter");
+    ACTS_DEBUG("Invoke direct fitter for track " << itrack);
     auto result =
-        fitTrack(trackSourceLinks, initialParams, kfOptions, surfSequence);
+        m_cfg.directNavigation
+            ? (*m_cfg.fit)(trackSourceLinks, initialParams, options,
+                           surfSequence, tracks)
+            : (*m_cfg.fit)(trackSourceLinks, initialParams, options, tracks);
 
     if (result.ok()) {
       // Get the fit output object
-      const auto& fitOutput = result.value();
-      // The track entry indices container. One element here.
-      std::vector<size_t> trackTips;
-      trackTips.reserve(1);
-      trackTips.emplace_back(fitOutput.lastMeasurementIndex);
-      // The fitted parameters container. One element (at most) here.
-      Trajectories::IndexedParameters indexedParams;
-      if (fitOutput.fittedParameters) {
-        const auto& params = fitOutput.fittedParameters.value();
-        ACTS_VERBOSE("Fitted paramemeters for track " << itrack);
-        ACTS_VERBOSE("  " << params.parameters().transpose());
-        // Push the fitted parameters to the container
-        indexedParams.emplace(fitOutput.lastMeasurementIndex,
-                              std::move(params));
+      const auto& track = result.value();
+      if (track.hasReferenceSurface()) {
+        ACTS_VERBOSE("Fitted parameters for track " << itrack);
+        ACTS_VERBOSE("  " << track.parameters().transpose());
       } else {
-        ACTS_DEBUG("No fitted paramemeters for track " << itrack);
+        ACTS_DEBUG("No fitted parameters for track " << itrack);
       }
-      // store the result
-      trajectories.emplace_back(std::move(fitOutput.fittedStates),
-                                std::move(trackTips), std::move(indexedParams));
     } else {
-      ACTS_WARNING("Fit failed for track " << itrack << " with error"
-                                           << result.error());
-      // Fit failed. Add an empty result so the output container has
-      // the same number of entries as the input.
-      trajectories.push_back(Trajectories());
+      ACTS_WARNING("Fit failed for track "
+                   << itrack << " with error: " << result.error() << ", "
+                   << result.error().message());
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  std::stringstream ss;
+  trackStateContainer->statistics().toStream(ss);
+  ACTS_DEBUG(ss.str());
+
+  ConstTrackContainer constTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(*trackContainer)),
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*trackStateContainer))};
+
+  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -28,10 +28,12 @@ namespace Acts {
 /// since it builds the surfaces of all TrackingVolumes at container level
 /// for a cylindrical tracking geometry.
 ///
-/// @image html CylinderSurface.png
+/// @image html figures/CylinderSurface.png
 
 class CylinderSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor from DetectorElementBase: Element proxy
@@ -48,8 +50,11 @@ class CylinderSurface : public Surface {
   /// @param halfz The half length in z
   /// @param halfphi The half opening angle
   /// @param avphi The phi value from which the opening angle spans (both sides)
+  /// @param bevelMinZ (optional) The bevel on the negative z side
+  /// @param bevelMaxZ (optional) The bevel on the positive z sid The bevel on the positive z side
   CylinderSurface(const Transform3& transform, double radius, double halfz,
-                  double halfphi = M_PI, double avphi = 0.);
+                  double halfphi = M_PI, double avphi = 0.,
+                  double bevelMinZ = 0., double bevelMaxZ = 0.);
 
   /// Constructor from Transform3 and CylinderBounds arguments
   ///

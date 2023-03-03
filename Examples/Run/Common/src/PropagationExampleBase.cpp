@@ -7,7 +7,6 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/MagneticField/SharedBField.hpp"
 #include "Acts/Propagator/AtlasStepper.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -18,11 +17,12 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
 #include "ActsExamples/Io/Root/RootPropagationStepsWriter.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
 #include "ActsExamples/Plugins/Obj/ObjPropagationStepsWriter.hpp"
 #include "ActsExamples/Propagation/PropagationAlgorithm.hpp"
 #include "ActsExamples/Propagation/PropagationOptions.hpp"
+#include "ActsExamples/Propagation/PropagatorInterface.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 
 #include <memory>
@@ -59,7 +59,7 @@ int propagationExample(int argc, char* argv[],
   auto tGeometry = geometry.first;
   auto contextDecorators = geometry.second;
   // Add the decorator to the sequencer
-  for (auto cdr : contextDecorators) {
+  for (const auto& cdr : contextDecorators) {
     sequencer.addContextDecorator(cdr);
   }
 
@@ -89,13 +89,16 @@ int propagationExample(int argc, char* argv[],
     Propagator propagator(std::move(stepper), std::move(navigator));
 
     // Read the propagation config and create the algorithms
-    auto pAlgConfig =
-        ActsExamples::Options::readPropagationConfig(vm, propagator);
+    auto pAlgConfig = ActsExamples::Options::readPropagationConfig(vm);
     pAlgConfig.randomNumberSvc = randomNumberSvc;
     pAlgConfig.sterileLogger = not rootOutput and not objOutput;
-    sequencer.addAlgorithm(
-        std::make_shared<ActsExamples::PropagationAlgorithm<Propagator>>(
-            pAlgConfig, logLevel));
+
+    pAlgConfig.propagatorImpl =
+        std::make_shared<ActsExamples::ConcretePropagator<Propagator>>(
+            std::move(propagator));
+
+    sequencer.addAlgorithm(std::make_shared<ActsExamples::PropagationAlgorithm>(
+        pAlgConfig, logLevel));
   };
 
   // translate option to variant

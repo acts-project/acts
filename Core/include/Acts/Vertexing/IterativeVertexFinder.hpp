@@ -67,7 +67,7 @@ class IterativeVertexFinder {
   using InputTrack_t = typename vfitter_t::InputTrack_t;
   using IPEstimator = ImpactPointEstimator<InputTrack_t, Propagator_t>;
 
-  /// @struct Config Configuration struct
+  /// Configuration struct
   struct Config {
     /// @brief Config constructor
     ///
@@ -75,10 +75,10 @@ class IterativeVertexFinder {
     /// @param lin Track linearizer
     /// @param sfinder The seed finder
     /// @param est ImpactPointEstimator
-    Config(const vfitter_t& fitter, const Linearizer_t& lin, sfinder_t sfinder,
+    Config(const vfitter_t& fitter, Linearizer_t lin, sfinder_t sfinder,
            const IPEstimator& est)
         : vertexFitter(fitter),
-          linearizer(lin),
+          linearizer(std::move(lin)),
           seedFinder(std::move(sfinder)),
           ipEst(est) {}
 
@@ -107,7 +107,7 @@ class IterativeVertexFinder {
     double cutOffTrackWeight = 0.01;
   };
 
-  /// @struct State State struct
+  /// State struct
   struct State {
     State(const MagneticFieldProvider& field,
           const Acts::MagneticFieldContext& magContext)
@@ -170,8 +170,6 @@ class IterativeVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
@@ -263,8 +261,6 @@ class IterativeVertexFinder {
   /// @brief Counts all tracks that are significant for a vertex
   ///
   /// @param vtx The vertex
-  /// @param weightThreshold Threshold to count all tracks with weights >
-  /// weightThreshold
   ///
   /// @return Number of significant tracks
   int countSignificantTracks(const Vertex<InputTrack_t>& vtx) const;

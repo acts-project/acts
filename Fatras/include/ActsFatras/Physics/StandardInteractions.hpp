@@ -60,7 +60,7 @@ using StandardChargedElectroMagneticInteractions =
 
 /// Construct the standard electro-magnetic interactions for charged particles.
 ///
-/// @param pMin lower p cut on output particles
+/// @param minimumAbsMomentum lower p cut on output particles
 StandardChargedElectroMagneticInteractions
 makeStandardChargedElectroMagneticInteractions(double minimumAbsMomentum);
 

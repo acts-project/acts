@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
@@ -16,7 +16,7 @@
 namespace ActsExamples {
 
 /// Example algorithm that reads/writes data from/to the event store.
-class HelloWhiteBoardAlgorithm : public ActsExamples::BareAlgorithm {
+class HelloWhiteBoardAlgorithm : public ActsExamples::IAlgorithm {
  public:
   struct Config {
     /// Input collection name.
@@ -29,8 +29,7 @@ class HelloWhiteBoardAlgorithm : public ActsExamples::BareAlgorithm {
                            Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Read input and copy to the output
-  ActsExamples::ProcessCode execute(
-      const AlgorithmContext& ctx) const final override;
+  ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
 
  private:
   Config m_cfg;

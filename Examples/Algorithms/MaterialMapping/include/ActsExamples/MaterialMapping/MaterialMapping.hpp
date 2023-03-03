@@ -11,7 +11,7 @@
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <climits>
@@ -50,21 +50,22 @@ namespace ActsExamples {
 ///
 /// It therefore saves the mapping state/cache as a private member variable
 /// and is designed to be executed in a single threaded mode.
-class MaterialMapping : public ActsExamples::BareAlgorithm {
+class MaterialMapping : public ActsExamples::IAlgorithm {
  public:
   /// @class nested Config class
   /// of the MaterialMapping algorithm
   struct Config {
-    /// Constructor with geometry and magnetic field contexts
-    Config(std::reference_wrapper<const Acts::GeometryContext> gctx,
-           std::reference_wrapper<const Acts::MagneticFieldContext> mctx)
-        : geoContext(gctx), magFieldContext(mctx) {}
+    // Geometry context for the state creation
+    std::reference_wrapper<const Acts::GeometryContext> geoContext;
+
+    // MagneticField  context for the state creation
+    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
 
     /// Input collection
-    std::string collection = "material-tracks";
+    std::string collection = "material_tracks";
 
     /// The material collection to be stored
-    std::string mappingMaterialCollection = "MappedMaterialTracks";
+    std::string mappingMaterialCollection = "mapped_material_tracks";
 
     /// The ACTS surface material mapper
     std::shared_ptr<Acts::SurfaceMaterialMapper> materialSurfaceMapper =
@@ -74,16 +75,10 @@ class MaterialMapping : public ActsExamples::BareAlgorithm {
     std::shared_ptr<Acts::VolumeMaterialMapper> materialVolumeMapper = nullptr;
 
     /// The writer of the material
-    std::vector<std::shared_ptr<IMaterialWriter>> materialWriters;
+    std::vector<std::shared_ptr<IMaterialWriter>> materialWriters{};
 
     /// The TrackingGeometry to be mapped on
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry = nullptr;
-
-    // Geometry context for the state creation
-    std::reference_wrapper<const Acts::GeometryContext> geoContext;
-
-    // MagneticField  context for the state creation
-    std::reference_wrapper<const Acts::MagneticFieldContext> magFieldContext;
   };
 
   /// Constructor
@@ -95,13 +90,22 @@ class MaterialMapping : public ActsExamples::BareAlgorithm {
 
   /// Destructor
   /// - it also writes out the file
-  ~MaterialMapping();
+  ~MaterialMapping() override;
 
   /// Framework execute method
   ///
   /// @param context The algorithm context for event consistency
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
+
+  /// Return the parameters to optimised the material map for a given surface
+  /// Those parameters are the variance and the number of track for each bin
+  ///
+  /// @param surfaceID the ID of the surface of intrest
+  std::vector<std::pair<double, int>> scoringParameters(uint64_t surfaceID);
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;  //!< internal config object

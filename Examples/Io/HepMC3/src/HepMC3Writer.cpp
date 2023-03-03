@@ -10,11 +10,12 @@
 
 #include "ActsExamples/Utilities/Paths.hpp"
 
-ActsExamples::HepMC3AsciiWriter::HepMC3AsciiWriter(const Config&& cfg,
-                                                   Acts::Logging::Level lvl)
-    : WriterT(cfg.inputEvents, "HepMC3EventWriter", lvl), m_cfg(cfg) {
-  if (m_cfg.outputStem.empty())
+ActsExamples::HepMC3AsciiWriter::HepMC3AsciiWriter(const Config& config,
+                                                   Acts::Logging::Level level)
+    : WriterT(config.inputEvents, "HepMC3EventWriter", level), m_cfg(config) {
+  if (m_cfg.outputStem.empty()) {
     throw std::invalid_argument("Missing output stem file name");
+  }
 }
 
 ActsExamples::ProcessCode ActsExamples::HepMC3AsciiWriter::writeT(
@@ -28,8 +29,9 @@ ActsExamples::ProcessCode ActsExamples::HepMC3AsciiWriter::writeT(
 
   for (const auto& event : events) {
     writer.write_event(event);
-    if (writer.failed())
+    if (writer.failed()) {
       return ActsExamples::ProcessCode::ABORT;
+    }
   }
 
   writer.close();

@@ -6,4 +6,8 @@ target_sources(
     TrackParameters.cpp
     TransformationBoundToFree.cpp
     TransformationFreeToBound.cpp
+    CorrectedTransformationFreeToBound.cpp
+    TrackStatePropMask.cpp
+    VectorMultiTrajectory.cpp
+    VectorTrackContainer.cpp
 )

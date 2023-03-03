@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,16 +23,56 @@
 #include <Acts/Surfaces/CylinderBounds.hpp>
 #include <Acts/Surfaces/RadialBounds.hpp>
 #include <Acts/Surfaces/SurfaceBounds.hpp>
+#include <Acts/Surfaces/TrapezoidBounds.hpp>
 
 #include <algorithm>
 #include <map>
 
+namespace Acts {
+// specialisations of decoration helper function
+// to pick correct objects from the contaier object
+template <>
+inline void decorateJson<Acts::SurfaceAndMaterialWithContext>(
+    const ITrackingGeometryJsonDecorator* decorator,
+    const Acts::SurfaceAndMaterialWithContext& src, nlohmann::json& dest) {
+  if (decorator != nullptr && std::get<0>(src) != nullptr) {
+    decorator->decorate(*std::get<0>(src), dest);
+  }
+}
+template <>
+inline void decorateJson<Acts::TrackingVolumeAndMaterial>(
+    const ITrackingGeometryJsonDecorator* decorator,
+    const Acts::TrackingVolumeAndMaterial& src, nlohmann::json& dest) {
+  if (decorator != nullptr && src.first != nullptr) {
+    decorator->decorate(*src.first, dest);
+  }
+}
+
+template <>
+inline void decorateJson<Acts::IVolumeMaterial>(
+    const IVolumeMaterialJsonDecorator* decorator,
+    const Acts::IVolumeMaterial* src, nlohmann::json& dest) {
+  if (decorator != nullptr && src != nullptr) {
+    decorator->decorate(*src, dest);
+  }
+}
+template <>
+inline void decorateJson<Acts::ISurfaceMaterial>(
+    const IVolumeMaterialJsonDecorator* decorator,
+    const Acts::ISurfaceMaterial* src, nlohmann::json& dest) {
+  if (decorator != nullptr && src != nullptr) {
+    decorator->decorate(*src, dest);
+  }
+}
+}  // namespace Acts
+
 namespace {
 
-Acts::SurfaceAndMaterial defaultSurfaceMaterial(
-    std::shared_ptr<const Acts::Surface> surface) {
+Acts::SurfaceAndMaterialWithContext defaultSurfaceMaterial(
+    const std::shared_ptr<const Acts::Surface>& surface,
+    const Acts::GeometryContext& context) {
   if (surface->surfaceMaterialSharedPtr() != nullptr) {
-    return {surface, surface->surfaceMaterialSharedPtr()};
+    return {surface, surface->surfaceMaterialSharedPtr(), context};
   }
   Acts::BinUtility bUtility;
   // Check which type of bounds is associated to the surface
@@ -45,6 +85,8 @@ Acts::SurfaceAndMaterial defaultSurfaceMaterial(
       dynamic_cast<const Acts::AnnulusBounds*>(&surfaceBounds);
   const Acts::RectangleBounds* rectangleBounds =
       dynamic_cast<const Acts::RectangleBounds*>(&surfaceBounds);
+  const Acts::TrapezoidBounds* trapezoidBounds =
+      dynamic_cast<const Acts::TrapezoidBounds*>(&surfaceBounds);
 
   if (radialBounds != nullptr) {
     bUtility += Acts::BinUtility(
@@ -96,7 +138,19 @@ Acts::SurfaceAndMaterial defaultSurfaceMaterial(
                          rectangleBounds->get(Acts::RectangleBounds::eMaxY),
                          Acts::open, Acts::binY);
   }
-  return {surface, std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility)};
+  if (trapezoidBounds != nullptr) {
+    double halfLengthX =
+        std::max(trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXnegY),
+                 trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthXposY));
+    bUtility += Acts::BinUtility(1, -1 * halfLengthX, halfLengthX, Acts::open,
+                                 Acts::binX);
+    bUtility += Acts::BinUtility(
+        1, -1 * trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY),
+        trapezoidBounds->get(Acts::TrapezoidBounds::eHalfLengthY), Acts::open,
+        Acts::binY);
+  }
+  return {surface, std::make_shared<Acts::ProtoSurfaceMaterial>(bUtility),
+          context};
 }
 
 Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
@@ -160,22 +214,20 @@ Acts::TrackingVolumeAndMaterial defaultVolumeMaterial(
 }  // namespace
 
 Acts::MaterialMapJsonConverter::MaterialMapJsonConverter(
-    const Acts::MaterialMapJsonConverter::Config& cfg)
-    : m_cfg(std::move(cfg)),
+    const Acts::MaterialMapJsonConverter::Config& config,
+    Acts::Logging::Level level)
+    : m_cfg(config),
+      m_logger{getDefaultLogger("MaterialMapJsonConverter", level)},
       m_volumeMaterialConverter(m_volumeName),
       m_volumeConverter(m_volumeName),
       m_surfaceMaterialConverter(m_surfaceName),
-      m_surfaceConverter(m_surfaceName) {
-  // Validate the configuration
-  if (!m_cfg.logger) {
-    throw std::invalid_argument("Missing logger");
-  }
-}
+      m_surfaceConverter(m_surfaceName) {}
 
 /// Convert method
 ///
 nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
-    const DetectorMaterialMaps& maps) {
+    const DetectorMaterialMaps& maps,
+    const IVolumeMaterialJsonDecorator* decorator) {
   VolumeMaterialMap volumeMap = maps.second;
   std::vector<std::pair<GeometryIdentifier, const IVolumeMaterial*>>
       mapVolumeInit;
@@ -185,7 +237,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   GeometryHierarchyMap<const IVolumeMaterial*> hierarchyVolumeMap(
       mapVolumeInit);
   nlohmann::json materialVolume =
-      m_volumeMaterialConverter.toJson(hierarchyVolumeMap);
+      m_volumeMaterialConverter.toJson(hierarchyVolumeMap, decorator);
   SurfaceMaterialMap surfaceMap = maps.first;
   std::vector<std::pair<GeometryIdentifier, const ISurfaceMaterial*>>
       mapSurfaceInit;
@@ -195,7 +247,7 @@ nlohmann::json Acts::MaterialMapJsonConverter::materialMapsToJson(
   GeometryHierarchyMap<const ISurfaceMaterial*> hierarchySurfaceMap(
       mapSurfaceInit);
   nlohmann::json materialSurface =
-      m_surfaceMaterialConverter.toJson(hierarchySurfaceMap);
+      m_surfaceMaterialConverter.toJson(hierarchySurfaceMap, decorator);
   nlohmann::json materialMap;
   materialMap["Volumes"] = materialVolume;
   materialMap["Surfaces"] = materialSurface;
@@ -232,19 +284,23 @@ Acts::MaterialMapJsonConverter::jsonToMaterialMaps(
 }
 
 nlohmann::json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
-    const Acts::TrackingGeometry& tGeometry) {
+    const Acts::TrackingGeometry& tGeometry,
+    const ITrackingGeometryJsonDecorator* decorator) {
   std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>
       volumeHierarchy;
-  std::vector<std::pair<GeometryIdentifier, Acts::SurfaceAndMaterial>>
+  std::vector<
+      std::pair<GeometryIdentifier, Acts::SurfaceAndMaterialWithContext>>
       surfaceHierarchy;
   convertToHierarchy(volumeHierarchy, surfaceHierarchy,
                      tGeometry.highestTrackingVolume());
   GeometryHierarchyMap<Acts::TrackingVolumeAndMaterial> hierarchyVolumeMap(
       volumeHierarchy);
-  nlohmann::json jsonVolumes = m_volumeConverter.toJson(hierarchyVolumeMap);
-  GeometryHierarchyMap<Acts::SurfaceAndMaterial> hierarchySurfaceMap(
+  nlohmann::json jsonVolumes =
+      m_volumeConverter.toJson(hierarchyVolumeMap, decorator);
+  GeometryHierarchyMap<Acts::SurfaceAndMaterialWithContext> hierarchySurfaceMap(
       surfaceHierarchy);
-  nlohmann::json jsonSurfaces = m_surfaceConverter.toJson(hierarchySurfaceMap);
+  nlohmann::json jsonSurfaces =
+      m_surfaceConverter.toJson(hierarchySurfaceMap, decorator);
   nlohmann::json hierarchyMap;
   hierarchyMap["Volumes"] = jsonVolumes;
   hierarchyMap["Surfaces"] = jsonSurfaces;
@@ -254,14 +310,14 @@ nlohmann::json Acts::MaterialMapJsonConverter::trackingGeometryToJson(
 void Acts::MaterialMapJsonConverter::convertToHierarchy(
     std::vector<std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>>&
         volumeHierarchy,
-    std::vector<std::pair<GeometryIdentifier, Acts::SurfaceAndMaterial>>&
+    std::vector<
+        std::pair<GeometryIdentifier, Acts::SurfaceAndMaterialWithContext>>&
         surfaceHierarchy,
     const Acts::TrackingVolume* tVolume) {
   auto sameId =
       [tVolume](
-          std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial> pair) {
-        return (tVolume->geometryId() == pair.first);
-      };
+          const std::pair<GeometryIdentifier, Acts::TrackingVolumeAndMaterial>&
+              pair) { return (tVolume->geometryId() == pair.first); };
   if (std::find_if(volumeHierarchy.begin(), volumeHierarchy.end(), sameId) !=
       volumeHierarchy.end()) {
     // this volume was already visited
@@ -303,7 +359,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
             layRep.geometryId() != GeometryIdentifier()) {
           surfaceHierarchy.push_back(
               {layRep.geometryId(),
-               defaultSurfaceMaterial(layRep.getSharedPtr())});
+               defaultSurfaceMaterial(layRep.getSharedPtr(), m_cfg.context)});
         }
       }
       if (lay->approachDescriptor() != nullptr &&
@@ -313,7 +369,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
               m_cfg.processNonMaterial == true) {
             surfaceHierarchy.push_back(
                 {asf->geometryId(),
-                 defaultSurfaceMaterial(asf->getSharedPtr())});
+                 defaultSurfaceMaterial(asf->getSharedPtr(), m_cfg.context)});
           }
         }
       }
@@ -321,9 +377,12 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
         for (auto& ssf : lay->surfaceArray()->surfaces()) {
           if (ssf->surfaceMaterial() != nullptr ||
               m_cfg.processNonMaterial == true) {
-            surfaceHierarchy.push_back(
-                {ssf->geometryId(),
-                 defaultSurfaceMaterial(ssf->getSharedPtr())});
+            auto sp = ssf->getSharedPtr();
+            auto sm = defaultSurfaceMaterial(sp, m_cfg.context);
+            auto id = ssf->geometryId();
+
+            std::pair p{id, sm};
+            surfaceHierarchy.push_back(p);
           }
         }
       }
@@ -339,7 +398,7 @@ void Acts::MaterialMapJsonConverter::convertToHierarchy(
           m_cfg.processNonMaterial == true) {
         surfaceHierarchy.push_back(
             {bssfRep.geometryId(),
-             defaultSurfaceMaterial(bssfRep.getSharedPtr())});
+             defaultSurfaceMaterial(bssfRep.getSharedPtr(), m_cfg.context)});
       }
     }
   }

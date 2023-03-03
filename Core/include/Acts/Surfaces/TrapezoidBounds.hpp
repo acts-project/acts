@@ -20,7 +20,7 @@ namespace Acts {
 ///
 /// Bounds for a trapezoidal, planar Surface.
 ///
-/// @image html TrapezoidBounds.gif
+/// @image html figures/TrapezoidBounds.gif
 ///
 /// @todo can be speed optimized by calculating kappa/delta and caching it
 
@@ -68,9 +68,6 @@ class TrapezoidBounds : public PlanarBounds {
   /// in words: the shorter of the two parallel sides of the trapezoid
   /// intersects
   /// with the negative @f$ y @f$ - axis of the local frame.
-  ///
-  /// @param lpos is the local position to be checked (Cartesian local frame)
-  /// @param bcheck is the boundary check directive
   ///
   /// <br>
   /// The cases are:<br>

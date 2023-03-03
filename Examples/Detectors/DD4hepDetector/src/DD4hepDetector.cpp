@@ -10,33 +10,34 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "ActsExamples/DD4hepDetector/DD4hepDetectorOptions.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepGeometryService.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 
 #include <boost/program_options.hpp>
 
-void DD4hepDetector::addOptions(
-    boost::program_options::options_description& opt) const {
-  ActsExamples::Options::addDD4hepOptions(opt);
-}
+namespace ActsExamples {
+namespace DD4hep {
 
 auto DD4hepDetector::finalize(
-    const boost::program_options::variables_map& vm,
+    ActsExamples::DD4hep::DD4hepGeometryService::Config config,
     std::shared_ptr<const Acts::IMaterialDecorator> mdecorator)
     -> std::pair<TrackingGeometryPtr, ContextDecorators> {
   Acts::GeometryContext dd4HepContext;
-  // read the detector config & dd4hep detector
-  auto dd4HepDetectorConfig =
-      ActsExamples::Options::readDD4hepConfig<po::variables_map>(vm);
-  dd4HepDetectorConfig.matDecorator = mdecorator;
-  auto geometrySvc =
-      std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(
-          dd4HepDetectorConfig);
+  config.matDecorator = std::move(mdecorator);
+  geometryService =
+      std::make_shared<ActsExamples::DD4hep::DD4hepGeometryService>(config);
+  lcdd = geometryService->lcdd();
   TrackingGeometryPtr dd4tGeometry =
-      geometrySvc->trackingGeometry(dd4HepContext);
+      geometryService->trackingGeometry(dd4HepContext);
+  if (!dd4tGeometry) {
+    throw std::runtime_error{
+        "Did not receive tracking geometry from DD4hep geometry service"};
+  }
   ContextDecorators dd4ContextDeocrators = {};
   // return the pair of geometry and empty decorators
   return std::make_pair<TrackingGeometryPtr, ContextDecorators>(
       std::move(dd4tGeometry), std::move(dd4ContextDeocrators));
 }
+
+}  // namespace DD4hep
+}  // namespace ActsExamples

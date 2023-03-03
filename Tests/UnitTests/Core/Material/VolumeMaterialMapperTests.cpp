@@ -53,7 +53,7 @@ struct MaterialCollector {
 
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  result_type& result, const Logger& /*logger*/) const {
     if (state.navigation.currentVolume != nullptr) {
       auto position = stepper.position(state.stepping);
       result.matTrue.push_back(
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   /// We need a Navigator, Stepper to build a Propagator
   Navigator navigator({tGeometry});
   StraightLineStepper stepper;
-  VolumeMaterialMapper::StraightLinePropagator propagator(std::move(stepper),
+  VolumeMaterialMapper::StraightLinePropagator propagator(stepper,
                                                           std::move(navigator));
 
   /// The config object
@@ -144,7 +144,7 @@ BOOST_AUTO_TEST_CASE(SurfaceMaterialMapper_tests) {
   auto mState = vmMapper.createState(gCtx, mfCtx, *tGeometry);
 
   /// Test if this is not null
-  BOOST_CHECK_EQUAL(mState.recordedMaterial.size(), 3u);
+  BOOST_CHECK_EQUAL(mState.materialBin.size(), 3u);
 }
 
 /// @brief Test case for comparison between the mapped material and the
@@ -195,9 +195,9 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   std::unique_ptr<const TrackingGeometry> detector = tgb.trackingGeometry(gc);
 
   // Set up the grid axes
-  std::array<double, 3> xAxis{0_m, 3_m, 7};
-  std::array<double, 3> yAxis{-0.5_m, 0.5_m, 7};
-  std::array<double, 3> zAxis{-0.5_m, 0.5_m, 7};
+  Acts::MaterialGridAxisData xAxis{0_m, 3_m, 7};
+  Acts::MaterialGridAxisData yAxis{-0.5_m, 0.5_m, 7};
+  Acts::MaterialGridAxisData zAxis{-0.5_m, 0.5_m, 7};
 
   // Set up a random engine for sampling material
   std::random_device rd;
@@ -226,8 +226,19 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
       [](Vector3 pos) -> Vector3 {
     return {pos.x(), pos.y(), pos.z()};
   };
-  MaterialGrid3D matGrid =
-      mapMaterialPoints(Grid, matRecord, transfoGlobalToLocal);
+
+  // Walk over each properties
+  for (const auto& rm : matRecord) {
+    // Walk over each point associated with the properties
+    for (const auto& point : rm.second) {
+      // Search for fitting grid point and accumulate
+      Acts::Grid3D::index_t index =
+          Grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
+      Grid.atLocalBins(index).accumulate(rm.first);
+    }
+  }
+
+  MaterialGrid3D matGrid = mapMaterialPoints(Grid);
 
   // Construct a simple propagation through the detector
   StraightLineStepper sls;
@@ -244,7 +255,7 @@ BOOST_AUTO_TEST_CASE(VolumeMaterialMapper_comparison_tests) {
   MagneticFieldContext mc;
   // Launch propagation and gather result
   PropagatorOptions<ActionList<MaterialCollector>, AbortList<EndOfWorldReached>>
-      po(gc, mc, getDummyLogger());
+      po(gc, mc);
   po.maxStepSize = 1._mm;
   po.maxSteps = 1e6;
 

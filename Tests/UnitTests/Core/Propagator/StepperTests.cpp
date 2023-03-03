@@ -85,12 +85,14 @@ struct EndOfWorld {
   /// @param [in] stepper Stepper of the propagation
   /// @return Boolean statement if the particle is still in the detector
   template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const Logger& /*logger*/) const {
     const double tolerance = state.options.targetTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
-        std::abs(stepper.position(state.stepping).z()) >= 0.5_m)
+        std::abs(stepper.position(state.stepping).z()) >= 0.5_m) {
       return true;
+    }
     return false;
   }
 };
@@ -121,7 +123,7 @@ struct StepCollector {
   /// @param [out] result Struct which is filled with the data
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  result_type& result, const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping) *
                               stepper.direction(state.stepping));
@@ -131,7 +133,7 @@ struct StepCollector {
 /// These tests are aiming to test whether the state setup is working properly
 BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   // Set up some variables
-  NavigationDirection ndir = backward;
+  NavigationDirection ndir = NavigationDirection::Backward;
   double stepSize = 123.;
   double tolerance = 234.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
@@ -157,7 +159,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
   BOOST_CHECK_EQUAL(esState.cov, Covariance::Zero());
   BOOST_CHECK_EQUAL(esState.navDir, ndir);
   BOOST_CHECK_EQUAL(esState.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esState.stepSize, ndir * stepSize);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), ndir * stepSize);
   BOOST_CHECK_EQUAL(esState.previousStepSize, 0.);
   BOOST_CHECK_EQUAL(esState.tolerance, tolerance);
 
@@ -183,7 +185,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_state_test) {
 /// The numerical correctness of the stepper is tested in the integration tests
 BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Set up some variables for the state
-  NavigationDirection ndir = backward;
+  NavigationDirection ndir = NavigationDirection::Backward;
   double stepSize = 123.;
   double tolerance = 234.;
   auto bField = std::make_shared<ConstantBField>(Vector3(1., 2.5, 33.33));
@@ -219,10 +221,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   es.setStepSize(esState, 1337.);
   BOOST_CHECK_EQUAL(esState.previousStepSize, ndir * stepSize);
-  BOOST_CHECK_EQUAL(esState.stepSize, 1337.);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), 1337.);
 
   es.releaseStepSize(esState);
-  BOOST_CHECK_EQUAL(esState.stepSize, -123.);
+  BOOST_CHECK_EQUAL(esState.stepSize.value(), -123.);
   BOOST_CHECK_EQUAL(es.outputStepSize(esState), originalStepSize);
 
   // Test the curvilinear state construction
@@ -293,7 +295,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                                  charge2, cov2);
   FreeVector freeParams = detail::transformBoundToFreeParameters(
       cp2.referenceSurface(), tgContext, cp2.parameters());
-  ndir = forward;
+  ndir = NavigationDirection::Forward;
   double stepSize2 = -2. * stepSize;
 
   auto copyState = [&](auto& field, const auto& state) {
@@ -348,7 +350,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize, ndir * stepSize2);
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(), ndir * stepSize2);
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
@@ -373,8 +375,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
   BOOST_CHECK_EQUAL(esStateCopy.navDir, ndir);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize,
-                    ndir * std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
@@ -397,9 +399,10 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
                     std::abs(1. / freeParams[eFreeQOverP]));
   BOOST_CHECK_EQUAL(es.charge(esStateCopy), es.charge(ps.stepping));
   BOOST_CHECK_EQUAL(es.time(esStateCopy), freeParams[eFreeTime]);
-  BOOST_CHECK_EQUAL(esStateCopy.navDir, forward);
+  BOOST_CHECK_EQUAL(esStateCopy.navDir, NavigationDirection::Forward);
   BOOST_CHECK_EQUAL(esStateCopy.pathAccumulated, 0.);
-  BOOST_CHECK_EQUAL(esStateCopy.stepSize, std::numeric_limits<double>::max());
+  BOOST_CHECK_EQUAL(esStateCopy.stepSize.value(),
+                    std::numeric_limits<double>::max());
   BOOST_CHECK_EQUAL(esStateCopy.previousStepSize, ps.stepping.previousStepSize);
   BOOST_CHECK_EQUAL(esStateCopy.tolerance, ps.stepping.tolerance);
 
@@ -425,14 +428,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
       targetSurface->intersect(esState.geoContext, es.position(esState),
                                esState.navDir * es.direction(esState), false),
       false);
-  CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
-  esState.stepSize = ndir * stepSize;
+  CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
+  esState.stepSize.setValue(ndir * stepSize);
   es.updateStepSize(
       esState,
       targetSurface->intersect(esState.geoContext, es.position(esState),
                                esState.navDir * es.direction(esState), false),
       true);
-  CHECK_CLOSE_ABS(esState.stepSize, 2., eps);
+  CHECK_CLOSE_ABS(esState.stepSize.value(), 2., eps);
 
   // Test the bound state construction
   auto boundState = es.boundState(esState, *plane).value();
@@ -461,7 +464,8 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   freeParams[eFreeTime] *= 2;
   freeParams[eFreeQOverP] *= -0.5;
 
-  es.update(esState, freeParams, 2 * (*bp.covariance()));
+  es.update(esState, freeParams, bp.parameters(), 2 * (*bp.covariance()),
+            *plane);
   CHECK_CLOSE_OR_SMALL(es.position(esState), 2. * pos, eps, eps);
   CHECK_CLOSE_OR_SMALL(es.direction(esState), dir, eps, eps);
   CHECK_CLOSE_REL(es.momentum(esState), 2 * absMom, eps);
@@ -472,9 +476,9 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
 
   // Test a case where no step size adjustment is required
   ps.options.tolerance = 2. * 4.4258e+09;
-  double h0 = esState.stepSize;
+  double h0 = esState.stepSize.value();
   es.step(ps);
-  CHECK_CLOSE_ABS(h0, esState.stepSize, eps);
+  CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 
   // Produce some errors
   auto nBfield = std::make_shared<NullBField>();
@@ -546,7 +550,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
@@ -573,8 +577,9 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   for (const auto& pos : stepResult.position) {
     CHECK_SMALL(pos.y(), 1_um);
     CHECK_SMALL(pos.z(), 1_um);
-    if (pos == stepResult.position.back())
+    if (pos == stepResult.position.back()) {
       CHECK_CLOSE_ABS(pos.x(), 1_m, 1_um);
+    }
   }
   for (const auto& mom : stepResult.momentum) {
     CHECK_CLOSE_ABS(mom, startMom, 1_keV);
@@ -585,7 +590,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Set options for propagator
   PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-      propOptsDef(tgContext, mfContext, getDummyLogger());
+      propOptsDef(tgContext, mfContext);
   propOptsDef.actionList = aListDef;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 100;
@@ -652,7 +657,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 10000;
@@ -699,7 +704,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOptsDense(tgContext, mfContext, getDummyLogger());
+      propOptsDense(tgContext, mfContext);
   propOptsDense.actionList = aList;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 1000;
@@ -813,7 +818,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.abortList = abortList;
   propOpts.maxSteps = 1000;
   propOpts.maxStepSize = 1.5_m;
@@ -869,7 +874,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set options for propagator
 
   PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-      propOptsDef(tgContext, mfContext, getDummyLogger());
+      propOptsDef(tgContext, mfContext);
   abortList.get<EndOfWorld>().maxX = 1_m;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 1000;
@@ -923,7 +928,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOptsDense(tgContext, mfContext, getDummyLogger());
+      propOptsDense(tgContext, mfContext);
   abortList.get<EndOfWorld>().maxX = 2_m;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 1000;
@@ -982,7 +987,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
       new HomogeneousSurfaceMaterial(matProp));
   sConf1.thickness = 1._mm;
   CuboidVolumeBuilder::LayerConfig lConf1;
-  lConf1.surfaceCfg = sConf1;
+  lConf1.surfaceCfg = {sConf1};
 
   CuboidVolumeBuilder::SurfaceConfig sConf2;
   sConf2.position = Vector3(0.6_m, 0., 0.);
@@ -995,7 +1000,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
       new HomogeneousSurfaceMaterial(matProp));
   sConf2.thickness = 1._mm;
   CuboidVolumeBuilder::LayerConfig lConf2;
-  lConf2.surfaceCfg = sConf2;
+  lConf2.surfaceCfg = {sConf2};
 
   CuboidVolumeBuilder::VolumeConfig muConf1;
   muConf1.position = {2.3_m, 0., 0.};
@@ -1052,7 +1057,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.abortList.get<EndOfWorld>().maxX = 3._m;
   propOpts.maxSteps = 10000;
 

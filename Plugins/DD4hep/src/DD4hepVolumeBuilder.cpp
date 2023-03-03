@@ -46,7 +46,7 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
   // Resulting volumes
   MutableTrackingVolumeVector volumes;
   // Inner/outer radius and half length of the barrel
-  double rMin, rMax, dz;
+  double rMin = 0, rMax = 0, dz = 0;
 
   // Go through volumes
   for (auto& detElement : m_cfg.centralVolumes) {
@@ -58,9 +58,10 @@ Acts::DD4hepVolumeBuilder::centralVolumes() const {
 
     if (geoShape != nullptr) {
       TGeoTubeSeg* tube = dynamic_cast<TGeoTubeSeg*>(geoShape);
-      if (tube == nullptr)
+      if (tube == nullptr) {
         ACTS_ERROR(
             "[L] Cylinder layer has wrong shape - needs to be TGeoTubeSeg!");
+      }
 
       // Extract the boundaries
       rMin = tube->GetRmin() * UnitConstants::cm;

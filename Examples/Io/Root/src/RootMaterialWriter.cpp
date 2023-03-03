@@ -8,6 +8,8 @@
 
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 
+#include "Acts/Material/InterpolatedMaterialMap.hpp"
+#include "Acts/Material/MaterialGridHelper.hpp"
 #include <Acts/Geometry/GeometryIdentifier.hpp>
 #include <Acts/Material/BinnedSurfaceMaterial.hpp>
 
@@ -19,30 +21,30 @@
 #include <TH2F.h>
 
 ActsExamples::RootMaterialWriter::RootMaterialWriter(
-    const ActsExamples::RootMaterialWriter::Config& cfg)
-    : m_cfg(cfg) {
+    const ActsExamples::RootMaterialWriter::Config& config,
+    Acts::Logging::Level level)
+    : m_cfg(config),
+      m_logger{Acts::getDefaultLogger("RootMaterialWriter", level)} {
   // Validate the configuration
-  if (m_cfg.folderNameBase.empty()) {
-    throw std::invalid_argument("Missing folder name base");
-  } else if (m_cfg.fileName.empty()) {
+  if (m_cfg.folderSurfaceNameBase.empty()) {
+    throw std::invalid_argument("Missing surface folder name base");
+  } else if (m_cfg.folderVolumeNameBase.empty()) {
+    throw std::invalid_argument("Missing volume folder name base");
+  } else if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing file name");
-  } else if (!m_cfg.logger) {
-    throw std::invalid_argument("Missing logger");
-  } else if (m_cfg.name.empty()) {
-    throw std::invalid_argument("Missing service name");
+  }
+
+  // Setup ROOT I/O
+  m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
+  if (m_outputFile == nullptr) {
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
   }
 }
 
-void ActsExamples::RootMaterialWriter::write(
+void ActsExamples::RootMaterialWriter::writeMaterial(
     const Acts::DetectorMaterialMaps& detMaterial) {
-  // Setup ROOT I/O
-  TFile* outputFile = TFile::Open(m_cfg.fileName.c_str(), "recreate");
-  if (!outputFile) {
-    throw std::ios_base::failure("Could not open '" + m_cfg.fileName);
-  }
-
   // Change to the output file
-  outputFile->cd();
+  m_outputFile->cd();
 
   auto& surfaceMaps = detMaterial.first;
   for (auto& [key, value] : surfaceMaps) {
@@ -58,15 +60,15 @@ void ActsExamples::RootMaterialWriter::write(
     const auto gappID = geoID.approach();
     const auto gsenID = geoID.sensitive();
     // create the directory
-    std::string tdName = m_cfg.folderNameBase.c_str();
+    std::string tdName = m_cfg.folderSurfaceNameBase.c_str();
     tdName += m_cfg.voltag + std::to_string(gvolID);
     tdName += m_cfg.boutag + std::to_string(gbouID);
     tdName += m_cfg.laytag + std::to_string(glayID);
     tdName += m_cfg.apptag + std::to_string(gappID);
     tdName += m_cfg.sentag + std::to_string(gsenID);
     // create a new directory
-    outputFile->mkdir(tdName.c_str());
-    outputFile->cd(tdName.c_str());
+    m_outputFile->mkdir(tdName.c_str());
+    m_outputFile->cd(tdName.c_str());
 
     ACTS_VERBOSE("Writing out map at " << tdName);
 
@@ -74,7 +76,7 @@ void ActsExamples::RootMaterialWriter::write(
     // understand what sort of material you have in mind
     const Acts::BinnedSurfaceMaterial* bsm =
         dynamic_cast<const Acts::BinnedSurfaceMaterial*>(sMaterial);
-    if (bsm) {
+    if (bsm != nullptr) {
       // overwrite the bin numbers
       bins0 = bsm->binUtility().bins(0);
       bins1 = bsm->binUtility().bins(1);
@@ -158,7 +160,147 @@ void ActsExamples::RootMaterialWriter::write(
     rho->Write();
   }
 
-  outputFile->Close();
+  auto& volumeMaps = detMaterial.second;
+  for (auto& [key, value] : volumeMaps) {
+    // Get the Volume material
+    const Acts::IVolumeMaterial* vMaterial = value.get();
+
+    // get the geometry ID
+    Acts::GeometryIdentifier geoID = key;
+    // decode the geometryID
+    const auto gvolID = geoID.volume();
+
+    // create the directory
+    std::string tdName = m_cfg.folderVolumeNameBase.c_str();
+    tdName += m_cfg.voltag + std::to_string(gvolID);
+
+    // create a new directory
+    m_outputFile->mkdir(tdName.c_str());
+    m_outputFile->cd(tdName.c_str());
+
+    ACTS_VERBOSE("Writing out map at " << tdName);
+
+    // understand what sort of material you have in mind
+    auto bvMaterial3D = dynamic_cast<const Acts::InterpolatedMaterialMap<
+        Acts::MaterialMapper<Acts::MaterialGrid3D>>*>(vMaterial);
+    auto bvMaterial2D = dynamic_cast<const Acts::InterpolatedMaterialMap<
+        Acts::MaterialMapper<Acts::MaterialGrid2D>>*>(vMaterial);
+
+    size_t points = 1;
+    if (bvMaterial3D != nullptr || bvMaterial2D != nullptr) {
+      // Get the binning data
+      std::vector<Acts::BinningData> binningData;
+      if (bvMaterial3D != nullptr) {
+        binningData = bvMaterial3D->binUtility().binningData();
+        Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
+        points = grid.size();
+      } else {
+        binningData = bvMaterial2D->binUtility().binningData();
+        Acts::MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
+        points = grid.size();
+      }
+
+      // 2-D or 3-D maps
+      size_t binningBins = binningData.size();
+
+      // The bin number information
+      TH1F* n = new TH1F(m_cfg.ntag.c_str(), "bins; bin", binningBins, -0.5,
+                         binningBins - 0.5);
+
+      // The binning value information
+      TH1F* v = new TH1F(m_cfg.vtag.c_str(), "binning values; bin", binningBins,
+                         -0.5, binningBins - 0.5);
+
+      // The binning option information
+      TH1F* o = new TH1F(m_cfg.otag.c_str(), "binning options; bin",
+                         binningBins, -0.5, binningBins - 0.5);
+
+      // The binning option information
+      TH1F* min = new TH1F(m_cfg.mintag.c_str(), "min; bin", binningBins, -0.5,
+                           binningBins - 0.5);
+
+      // The binning option information
+      TH1F* max = new TH1F(m_cfg.maxtag.c_str(), "max; bin", binningBins, -0.5,
+                           binningBins - 0.5);
+
+      // Now fill the histogram content
+      size_t b = 1;
+      for (auto bData : binningData) {
+        // Fill: nbins, value, option, min, max
+        n->SetBinContent(b, int(binningData[b - 1].bins()));
+        v->SetBinContent(b, int(binningData[b - 1].binvalue));
+        o->SetBinContent(b, int(binningData[b - 1].option));
+        min->SetBinContent(b, binningData[b - 1].min);
+        max->SetBinContent(b, binningData[b - 1].max);
+        ++b;
+      }
+      n->Write();
+      v->Write();
+      o->Write();
+      min->Write();
+      max->Write();
+    }
+
+    TH1F* x0 = new TH1F(m_cfg.x0tag.c_str(), "X_{0} [mm] ;gridPoint", points,
+                        -0.5, points - 0.5);
+    TH1F* l0 = new TH1F(m_cfg.l0tag.c_str(), "#Lambda_{0} [mm] ;gridPoint",
+                        points, -0.5, points - 0.5);
+    TH1F* A = new TH1F(m_cfg.atag.c_str(), "X_{0} [mm] ;gridPoint", points,
+                       -0.5, points - 0.5);
+    TH1F* Z = new TH1F(m_cfg.ztag.c_str(), "#Lambda_{0} [mm] ;gridPoint",
+                       points, -0.5, points - 0.5);
+    TH1F* rho = new TH1F(m_cfg.rhotag.c_str(), "#rho [g/mm^3] ;gridPoint",
+                         points, -0.5, points - 0.5);
+    // homogeneous volume
+    if (points == 1) {
+      auto mat = vMaterial->material({0, 0, 0});
+      x0->SetBinContent(1, mat.X0());
+      l0->SetBinContent(1, mat.L0());
+      A->SetBinContent(1, mat.Ar());
+      Z->SetBinContent(1, mat.Z());
+      rho->SetBinContent(1, mat.massDensity());
+    } else {
+      // 3d grid volume
+      if (bvMaterial3D != nullptr) {
+        Acts::MaterialGrid3D grid = bvMaterial3D->getMapper().getGrid();
+        for (size_t point = 0; point < points; point++) {
+          auto mat = Acts::Material(grid.at(point));
+          if (mat) {
+            x0->SetBinContent(point + 1, mat.X0());
+            l0->SetBinContent(point + 1, mat.L0());
+            A->SetBinContent(point + 1, mat.Ar());
+            Z->SetBinContent(point + 1, mat.Z());
+            rho->SetBinContent(point + 1, mat.massDensity());
+          }
+        }
+      }
+      // 2d grid volume
+      else if (bvMaterial2D != nullptr) {
+        Acts::MaterialGrid2D grid = bvMaterial2D->getMapper().getGrid();
+        for (size_t point = 0; point < points; point++) {
+          auto mat = Acts::Material(grid.at(point));
+          if (mat) {
+            x0->SetBinContent(point + 1, mat.X0());
+            l0->SetBinContent(point + 1, mat.L0());
+            A->SetBinContent(point + 1, mat.Ar());
+            Z->SetBinContent(point + 1, mat.Z());
+            rho->SetBinContent(point + 1, mat.massDensity());
+          }
+        }
+      }
+    }
+    x0->Write();
+    l0->Write();
+    A->Write();
+    Z->Write();
+    rho->Write();
+  }
+}
+
+ActsExamples::RootMaterialWriter::~RootMaterialWriter() {
+  if (m_outputFile != nullptr) {
+    m_outputFile->Close();
+  }
 }
 
 void ActsExamples::RootMaterialWriter::write(
@@ -170,7 +312,7 @@ void ActsExamples::RootMaterialWriter::write(
     collectMaterial(*hVolume, detMatMap);
   }
   // Write the resulting map to the file
-  write(detMatMap);
+  writeMaterial(detMatMap);
 }
 
 void ActsExamples::RootMaterialWriter::collectMaterial(

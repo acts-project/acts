@@ -53,7 +53,8 @@ void createSegment(std::vector<vertex_t>& vertices,
                    const vertex_t& offset = vertex_t::Zero(),
                    const transform_t& transform = transform_t::Identity()) {
   // Calculate the number of segments - 1 is the minimum
-  unsigned int segs = std::abs(phi2 - phi1) / (2 * M_PI) * lseg;
+  unsigned int segs =
+      static_cast<unsigned int>(std::abs(phi2 - phi1) / (2 * M_PI) * lseg);
   segs = segs > 0 ? segs : 1;
   ActsScalar phistep = (phi2 - phi1) / segs;
   // Create the segments
@@ -62,6 +63,7 @@ void createSegment(std::vector<vertex_t>& vertices,
     vertex_t vertex = vertex_t::Zero();
     vertex(0) = rxy.first * std::cos(phi);
     vertex(1) = rxy.second * std::sin(phi);
+
     vertex = vertex + offset;
     vertices.push_back(transform * vertex);
   }

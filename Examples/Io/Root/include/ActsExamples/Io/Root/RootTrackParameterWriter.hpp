@@ -40,38 +40,36 @@ class RootTrackParameterWriter final : public TrackParameterWriter {
     std::string inputMeasurementParticlesMap;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
-    /// output directory.
-    std::string outputDir;
     /// output filename.
-    std::string outputFilename = "estimatedparams.root";
+    std::string filePath = "estimatedparams.root";
     /// name of the output tree.
-    std::string outputTreename = "estimatedparams";
+    std::string treeName = "estimatedparams";
     /// file access mode.
     std::string fileMode = "RECREATE";
-    /// common root file.
-    TFile* rootFile = nullptr;
   };
 
   /// Constructor
   ///
-  /// @param cfg Configuration struct
+  /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrackParameterWriter(const Config& cfg,
+  RootTrackParameterWriter(const Config& config,
                            Acts::Logging::Level level = Acts::Logging::INFO);
 
   /// Virtual destructor
   ~RootTrackParameterWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trackParams are parameters to write
-  ProcessCode writeT(
-      const AlgorithmContext& ctx,
-      const TrackParametersContainer& trackParams) final override;
+  ProcessCode writeT(const AlgorithmContext& ctx,
+                     const TrackParametersContainer& trackParams) override;
 
  private:
   Config m_cfg;             ///< The config class

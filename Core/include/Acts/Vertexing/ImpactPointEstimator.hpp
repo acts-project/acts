@@ -39,11 +39,11 @@ template <typename input_track_t, typename propagator_t,
           typename propagator_options_t = PropagatorOptions<>>
 class ImpactPointEstimator {
  public:
-  /// @struct State struct
+  /// State struct
   struct State {
     /// @brief The state constructor
     ///
-    /// @param mctx The magnetic field context
+    /// @param fieldCacheIn The magnetic field cache
     State(MagneticFieldProvider::Cache fieldCacheIn)
         : fieldCache(std::move(fieldCacheIn)) {}
     /// Magnetic field cache
@@ -55,8 +55,8 @@ class ImpactPointEstimator {
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    Config(std::shared_ptr<MagneticFieldProvider> bIn,
-           std::shared_ptr<propagator_t> prop)
+    Config(std::shared_ptr<const MagneticFieldProvider> bIn,
+           std::shared_ptr<const propagator_t> prop)
         : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
     /// @brief Config constructor without B field -> uses NullBField
@@ -67,9 +67,9 @@ class ImpactPointEstimator {
         : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     /// Magnetic field
-    std::shared_ptr<MagneticFieldProvider> bField;
+    std::shared_ptr<const MagneticFieldProvider> bField;
     /// Propagator
-    std::shared_ptr<propagator_t> propagator;
+    std::shared_ptr<const propagator_t> propagator;
     /// Max. number of iterations in Newton method
     int maxIterations = 20;
     /// Desired precision in deltaPhi in Newton method
@@ -112,18 +112,17 @@ class ImpactPointEstimator {
   /// @param state The state object
   ///
   /// @return New track params
-  Result<std::unique_ptr<const BoundTrackParameters>>
-  estimate3DImpactParameters(const GeometryContext& gctx,
-                             const Acts::MagneticFieldContext& mctx,
-                             const BoundTrackParameters& trkParams,
-                             const Vector3& vtxPos, State& state) const;
+  Result<BoundTrackParameters> estimate3DImpactParameters(
+      const GeometryContext& gctx, const Acts::MagneticFieldContext& mctx,
+      const BoundTrackParameters& trkParams, const Vector3& vtxPos,
+      State& state) const;
 
   /// @brief Estimates the compatibility of a
   /// track to a vertex position based on the 3d
   /// distance between the track and the vertex
   ///
   /// @param gctx The Geometry context
-  /// @param track Track parameters at point of closest
+  /// @param trkParams Track parameters at point of closest
   /// approach in 3d as retrieved by estimate3DImpactParameters
   /// @param vertexPos The vertex position
   ///
@@ -143,6 +142,38 @@ class ImpactPointEstimator {
   Result<ImpactParametersAndSigma> estimateImpactParameters(
       const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
       const GeometryContext& gctx, const MagneticFieldContext& mctx) const;
+
+  /// @brief Estimates the sign of the 2D and Z lifetime of a given track
+  /// w.r.t. a vertex and a direction (e.g. a jet direction)
+  /// by propagating the trajectory state towards the vertex position
+  /// and computing the scalar product with the direction vector
+  ///
+  /// @param track Track to estimate the IP from
+  /// @param vtx   Vertex the track belongs to
+  /// @param direction   The direction
+  /// @param gctx  The geometry context
+  /// @param mctx  The magnetic field context
+  ///
+  /// @return A pair holding the sign for the 2D an Z lifetimes
+  Result<std::pair<double, double>> getLifetimesSignOfTrack(
+      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const Acts::Vector3& direction, const GeometryContext& gctx,
+      const MagneticFieldContext& mctx) const;
+
+  /// @brief Estimates the sign of the 3D lifetime of a given track
+  /// w.r.t. a vertex and a direction (e.g. a jet direction)
+  ///
+  /// @param track Track to estimate the IP from
+  /// @param vtx   Vertex the track belongs to
+  /// @param direction   The direction
+  /// @param gctx  The geometry context
+  /// @param mctx  The magnetic field context
+  ///
+  /// @return The value of the 3D lifetime
+  Result<double> get3DLifetimeSignOfTrack(
+      const BoundTrackParameters& track, const Vertex<input_track_t>& vtx,
+      const Acts::Vector3& direction, const GeometryContext& gctx,
+      const MagneticFieldContext& mctx) const;
 
  private:
   /// Configuration object

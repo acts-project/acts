@@ -113,6 +113,12 @@ class MultiIndex {
     return (m_value & ~maskLower) | maskLower;
   }
 
+  /// Get the number of bits for the associated level
+  static constexpr std::size_t bits(std::size_t lvl) {
+    assert((lvl < NumLevels) and "Index level outside allowed range");
+    return s_bits[lvl];
+  }
+
  private:
   // per-level mask and right-most bit position for shifting
   static constexpr std::array<std::size_t, NumLevels> s_bits{BitsPerLevel...};

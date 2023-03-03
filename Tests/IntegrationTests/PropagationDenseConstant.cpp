@@ -20,6 +20,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Propagator/RiddersPropagator.hpp"
 #include "Acts/Tests/CommonHelpers/PredefinedMaterials.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <limits>
 
@@ -79,7 +80,11 @@ inline Propagator makePropagator(double bz) {
 
   auto magField = std::make_shared<MagneticField>(Acts::Vector3(0.0, 0.0, bz));
   Stepper stepper(std::move(magField));
-  return Propagator(std::move(stepper), Acts::Navigator{{makeDetector()}});
+  auto logger = getDefaultLogger("Dense", Logging::INFO);
+  return Propagator(
+      std::move(stepper),
+      Acts::Navigator{{makeDetector()}, logger->cloneWithSuffix("Nav")},
+      logger->cloneWithSuffix("Prop"));
 }
 
 inline RiddersPropagator makeRiddersPropagator(double bz) {
@@ -169,7 +174,7 @@ BOOST_DATA_TEST_CASE(CovarianceCurvilinear,
       epsDir, epsMom, epsCov);
 }
 
-// limit theta to ignore the covariance missmatches at high theta for now
+// limit theta to ignore the covariance mismatches at high theta for now
 BOOST_DATA_TEST_CASE(CovarianceToCylinderAlongZ,
                      ds::phiWithoutAmbiguity* ds::thetaCentral* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,
@@ -206,7 +211,7 @@ BOOST_DATA_TEST_CASE(CovarianceToPlane,
       PlaneSurfaceBuilder(), epsPos, epsDir, epsMom, epsCov);
 }
 
-// limit theta to ignore the covariance missmatches at high theta for now
+// limit theta to ignore the covariance mismatches at high theta for now
 BOOST_DATA_TEST_CASE(CovarianceToStrawAlongZ,
                      ds::phiWithoutAmbiguity* ds::thetaCentral* ds::absMomentum*
                          ds::chargeNonZero* ds::pathLength* ds::magneticField,

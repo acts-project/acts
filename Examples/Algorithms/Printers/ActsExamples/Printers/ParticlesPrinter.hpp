@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
 /// Print all particles.
-class ParticlesPrinter : public BareAlgorithm {
+class ParticlesPrinter : public IAlgorithm {
  public:
   struct Config {
     /// Input particles collection.
@@ -24,7 +24,9 @@ class ParticlesPrinter : public BareAlgorithm {
 
   ParticlesPrinter(const Config& cfg, Acts::Logging::Level lvl);
 
-  ProcessCode execute(const AlgorithmContext& ctx) const;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

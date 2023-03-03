@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
@@ -53,18 +53,21 @@ class CsvPlanarClusterWriter final
 
   /// Construct the cluster writer.
   ///
-  /// @params cfg is the configuration object
-  /// @params lvl is the logging level
-  CsvPlanarClusterWriter(const Config& cfg, Acts::Logging::Level lvl);
+  /// @param config is the configuration object
+  /// @param level is the logging level
+  CsvPlanarClusterWriter(const Config& config, Acts::Logging::Level level);
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// Type-specific write implementation.
   ///
   /// @param[in] ctx is the algorithm context
   /// @param[in] particles are the particle to be written
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const GeometryIdMultimap<Acts::PlanarModuleCluster>&
-                         clusters) final override;
+  ProcessCode writeT(
+      const AlgorithmContext& ctx,
+      const GeometryIdMultimap<Acts::PlanarModuleCluster>& clusters) override;
 
  private:
   Config m_cfg;

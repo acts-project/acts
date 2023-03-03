@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
 #include "Acts/Surfaces/CylinderBounds.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
@@ -173,7 +174,6 @@ struct EventDataView3D {
 
   /// Helper method to draw one trajectory stored in a MultiTrajectory object
   ///
-  /// @tparam source_link_t The source link type
   /// @param helper [in, out] The visualization helper
   /// @param multiTraj The MultiTrajectory storing the trajectory to be drawn
   /// @param entryIndex The trajectory entry index
@@ -189,10 +189,9 @@ struct EventDataView3D {
   /// parameters
   /// @param smoothedConfig The visualization options for the smoothed
   /// parameters
-  template <typename source_link_t>
-  static inline void drawMultiTrajectory(
-      IVisualization3D& helper,
-      const Acts::MultiTrajectory<source_link_t>& multiTraj,
+  template <typename D>
+  static void drawMultiTrajectory(
+      IVisualization3D& helper, const Acts::MultiTrajectory<D>& multiTraj,
       const size_t& entryIndex, const GeometryContext& gctx = GeometryContext(),
       double momentumScale = 1., double locErrorScale = 1.,
       double angularErrorScale = 1.,
@@ -201,6 +200,8 @@ struct EventDataView3D {
       const ViewConfig& predictedConfig = s_viewPredicted,
       const ViewConfig& filteredConfig = s_viewFiltered,
       const ViewConfig& smoothedConfig = s_viewSmoothed) {
+    // @TODO: Refactor based on Track class
+
     // Visit the track states on the trajectory
     multiTraj.visitBackwards(entryIndex, [&](const auto& state) {
       // Only draw the measurement states
@@ -226,9 +227,8 @@ struct EventDataView3D {
       // @Todo: how to draw 1D measurement?
       if (measurementConfig.visible and state.hasCalibrated() and
           state.calibratedSize() == 2) {
-        const Vector2& lposition = state.calibrated().template head<2>();
-        const SymMatrix2 covariance =
-            state.calibratedCovariance().template topLeftCorner<2, 2>();
+        const Vector2& lposition = state.template calibrated<2>();
+        const SymMatrix2 covariance = state.template calibratedCovariance<2>();
         drawCovarianceCartesian(helper, lposition, covariance,
                                 state.referenceSurface().transform(gctx),
                                 locErrorScale, measurementConfig);

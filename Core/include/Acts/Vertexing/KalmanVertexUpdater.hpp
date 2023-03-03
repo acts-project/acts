@@ -50,8 +50,6 @@ void updateVertexWithTrack(Vertex<input_track_t>& vtx,
 /// @param trackWeight Track weight
 /// @param sign +1 (add track) or -1 (remove track)
 /// @param[out] matrixCache A cache to store matrix information
-///
-/// @return Vertex with updated position and covariance
 template <typename input_track_t>
 void updatePosition(const Acts::Vertex<input_track_t>& vtx,
                     const Acts::LinearizedTrack& linTrack, double trackWeight,

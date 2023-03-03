@@ -8,10 +8,10 @@ target_include_directories(
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesDetectorGeneric
-  PUBLIC ActsCore ActsPluginIdentification ActsPluginDigitization)
+  PUBLIC ActsCore ActsPluginIdentification)
 target_link_libraries(
   ActsExamplesDetectorGeneric
-  PUBLIC ActsExamplesFramework ActsExamplesDetectorsCommon)
+  PUBLIC ActsExamplesFramework)
 
 install(
   TARGETS ActsExamplesDetectorGeneric

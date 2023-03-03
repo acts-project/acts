@@ -1,9 +1,12 @@
 add_library(
   ActsExamplesRecTracksCommon SHARED
-  RecInput.cpp 
   RecTruthTracks.cpp
   RecCKFTracks.cpp
-  SeedingExample.cpp)
+  RecChi2Tracks.cpp
+  SeedingExample.cpp
+  HoughExample.cpp
+  MeasurementsToSpacepoints.cpp
+)
 target_include_directories(
   ActsExamplesRecTracksCommon
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)
@@ -12,12 +15,8 @@ target_link_libraries(
   PUBLIC
     ActsExamplesFramework
     ActsExamplesCommon
-    ActsExamplesDigitization
-    ActsExamplesTrackFitting
-    ActsExamplesTrackFinding
+    ActsExamplesUtilities
     ActsExamplesMagneticField
-    ActsExamplesTruthTracking
-    ActsExamplesIoCsv
     ActsExamplesIoPerformance)
 if(ACTS_BUILD_PLUGIN_ONNX)
   target_compile_definitions(

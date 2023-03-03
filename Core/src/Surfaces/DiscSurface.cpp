@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2016-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2016-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -36,7 +36,7 @@ Acts::DiscSurface::DiscSurface(const GeometryContext& gctx,
 Acts::DiscSurface::DiscSurface(const Transform3& transform, double rmin,
                                double rmax, double hphisec)
     : GeometryObject(),
-      Surface(std::move(transform)),
+      Surface(transform),
       m_bounds(std::make_shared<const RadialBounds>(rmin, rmax, hphisec)) {}
 
 Acts::DiscSurface::DiscSurface(const Transform3& transform, double minhalfx,
@@ -85,7 +85,7 @@ Acts::Result<Acts::Vector2> Acts::DiscSurface::globalToLocal(
     const Vector3& /*gmom*/, double tolerance) const {
   // transport it to the globalframe
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
-  if (loc3Dframe.z() * loc3Dframe.z() > tolerance * tolerance) {
+  if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Acts::Vector2>::success({perp(loc3Dframe), phi(loc3Dframe)});
@@ -341,20 +341,23 @@ Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
 
 Acts::Vector3 Acts::DiscSurface::binningPosition(const GeometryContext& gctx,
                                                  BinningValue bValue) const {
-  if (bValue == binR) {
+  if (bValue == binR || bValue == binPhi) {
     double r = m_bounds->binningValueR();
     double phi = m_bounds->binningValuePhi();
-    return Vector3(r * cos(phi), r * sin(phi), center(gctx).z());
+    return localToGlobal(gctx, Vector2{r, phi}, Vector3{});
   }
   return center(gctx);
 }
 
 double Acts::DiscSurface::binningPositionValue(const GeometryContext& gctx,
                                                BinningValue bValue) const {
-  // only modify binR
   if (bValue == binR) {
-    return VectorHelpers::perp(center(gctx)) + m_bounds->binningValueR();
+    return VectorHelpers::perp(binningPosition(gctx, bValue));
   }
+  if (bValue == binPhi) {
+    return VectorHelpers::phi(binningPosition(gctx, bValue));
+  }
+
   return GeometryObject::binningPositionValue(gctx, bValue);
 }
 

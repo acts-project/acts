@@ -27,9 +27,10 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/TrapezoidBounds.hpp"
 
-void Acts::to_json(nlohmann::json& j, const Acts::SurfaceAndMaterial& surface) {
-  to_json(j, surface.first);
-  to_json(j, surface.second.get());
+void Acts::to_json(nlohmann::json& j,
+                   const Acts::SurfaceAndMaterialWithContext& surface) {
+  toJson(j, std::get<0>(surface), std::get<2>(surface));
+  to_json(j, std::get<1>(surface).get());
 }
 
 void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
@@ -38,13 +39,13 @@ void Acts::to_json(nlohmann::json& j, const Acts::Surface& surface) {
 }
 
 void Acts::to_json(nlohmann::json& j,
-                   std::shared_ptr<const Acts::Surface> surface) {
+                   const std::shared_ptr<const Acts::Surface>& surface) {
   Acts::GeometryContext gctx;
   toJson(j, *(surface.get()), gctx);
 }
 
 void Acts::toJson(nlohmann::json& j,
-                  std::shared_ptr<const Acts::Surface> surface,
+                  const std::shared_ptr<const Acts::Surface>& surface,
                   const Acts::GeometryContext& gctx) {
   toJson(j, *(surface.get()), gctx);
 }
@@ -63,6 +64,7 @@ void Acts::toJson(nlohmann::json& j, const Acts::Surface& surface,
     j["material"] = nlohmann::json(surface.surfaceMaterial());
   }
 }
+
 std::shared_ptr<Acts::Surface> Acts::surfaceFromJson(const nlohmann::json& j) {
   std::string sType = j["type"];
   std::string bType = j["bounds"]["type"];
@@ -109,7 +111,7 @@ std::shared_ptr<Acts::Surface> Acts::surfaceFromJson(const nlohmann::json& j) {
     mutableSf->assignGeometryId(geoID);
     // Add material
     if (j.find("material") != j.end() and not j["material"].empty()) {
-      const Acts::ISurfaceMaterial* surfaceMaterial;
+      const Acts::ISurfaceMaterial* surfaceMaterial = nullptr;
       from_json(j, surfaceMaterial);
       std::shared_ptr<const ISurfaceMaterial> sharedSurfaceMaterial(
           surfaceMaterial);

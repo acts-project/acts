@@ -30,25 +30,31 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
     std::string inputMeasurementParticlesMap;
     /// Input truth particles collection.
     std::string inputParticles;
-    /// Output directory.
-    std::string outputDir;
     /// Output filename.
-    std::string outputFilename = "performance_track_seeding.root";
+    std::string filePath = "performance_track_seeding.root";
+    /// Output file mode
+    std::string fileMode = "RECREATE";
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
     DuplicationPlotTool::Config duplicationPlotToolConfig;
   };
 
   /// Construct from configuration and log level.
-  SeedingPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
+  /// @param config The configuration
+  /// @param level
+  SeedingPerformanceWriter(Config config, Acts::Logging::Level level);
+
   ~SeedingPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ProtoTrackContainer& tracks) final override;
+                     const ProtoTrackContainer& tracks) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.

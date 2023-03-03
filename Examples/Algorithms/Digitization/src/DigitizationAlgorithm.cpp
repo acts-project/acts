@@ -20,14 +20,15 @@
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
 #include <algorithm>
+#include <list>
 #include <stdexcept>
 #include <string>
 #include <type_traits>
 
 ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
-    DigitizationConfig cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("DigitizationAlgorithm", lvl),
-      m_cfg(std::move(cfg)) {
+    DigitizationConfig config, Acts::Logging::Level level)
+    : ActsExamples::IAlgorithm("DigitizationAlgorithm", level),
+      m_cfg(std::move(config)) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
@@ -112,8 +113,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Retrieve input
   const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  ACTS_DEBUG("Loaded " << simHits.size() << " sim hits");
 
   // Prepare output containers
+  // need list here for stable addresses
   IndexSourceLinkContainer sourceLinks;
   MeasurementContainer measurements;
   ClusterContainer clusters;
@@ -128,7 +131,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
   auto rng = m_cfg.randomNumbers->spawnGenerator(ctx);
 
   ACTS_DEBUG("Starting loop over modules ...");
-  for (auto simHitsGroup : groupByModule(simHits)) {
+  for (const auto& simHitsGroup : groupByModule(simHits)) {
     // Manual pair unpacking instead of using
     //   auto [moduleGeoId, moduleSimHits] : ...
     // otherwise clang on macos complains that it is unable to capture the local
@@ -139,7 +142,7 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     const Acts::Surface* surfacePtr =
         m_cfg.trackingGeometry->findSurface(moduleGeoId);
 
-    if (not surfacePtr) {
+    if (surfacePtr == nullptr) {
       // this is either an invalid geometry id or a misconfigured smearer
       // setup; both cases can not be handled and should be fatal.
       ACTS_ERROR("Could not find surface " << moduleGeoId
@@ -220,13 +223,14 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
             // The measurement container is unordered and the index under which
             // the measurement will be stored is known before adding it.
             Index measurementIdx = measurements.size();
-            IndexSourceLink sourceLink(moduleGeoId, measurementIdx);
+            IndexSourceLink sourceLink{moduleGeoId, measurementIdx};
 
             // Add to output containers:
             // index map and source link container are geometry-ordered.
             // since the input is also geometry-ordered, new items can
             // be added at the end.
-            sourceLinks.emplace_hint(sourceLinks.end(), std::move(sourceLink));
+            sourceLinks.insert(sourceLinks.end(), sourceLink);
+
             measurements.emplace_back(
                 createMeasurement(dParameters, sourceLink));
             clusters.emplace_back(std::move(dParameters.cluster));

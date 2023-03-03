@@ -22,13 +22,13 @@
 using Acts::VectorHelpers::eta;
 
 ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
-    ActsExamples::TrackFitterPerformanceWriter::Config cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputTrajectories, "TrackFitterPerformanceWriter", lvl),
-      m_cfg(std::move(cfg)),
-      m_resPlotTool(m_cfg.resPlotToolConfig, lvl),
-      m_effPlotTool(m_cfg.effPlotToolConfig, lvl),
-      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, lvl)
+    ActsExamples::TrackFitterPerformanceWriter::Config config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputTrajectories, "TrackFitterPerformanceWriter", level),
+      m_cfg(std::move(config)),
+      m_resPlotTool(m_cfg.resPlotToolConfig, level),
+      m_effPlotTool(m_cfg.effPlotToolConfig, level),
+      m_trackSummaryPlotTool(m_cfg.trackSummaryPlotToolConfig, level)
 
 {
   // trajectories collection name is already checked by base ctor
@@ -38,16 +38,16 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing hit-particles map input collection");
   }
-  if (m_cfg.outputFilename.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
 
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
-  auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
+  auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), "RECREATE");
-  if (not m_outputFile) {
+  if (m_outputFile == nullptr) {
     throw std::invalid_argument("Could not open '" + path + "'");
   }
 
@@ -62,16 +62,17 @@ ActsExamples::TrackFitterPerformanceWriter::~TrackFitterPerformanceWriter() {
   m_effPlotTool.clear(m_effPlotCache);
   m_trackSummaryPlotTool.clear(m_trackSummaryPlotCache);
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::TrackFitterPerformanceWriter::finalize() {
   // fill residual and pull details into additional hists
   m_resPlotTool.refinement(m_resPlotCache);
 
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->cd();
     m_resPlotTool.write(m_resPlotCache);
     m_effPlotTool.write(m_effPlotCache);
@@ -105,14 +106,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
-      continue;
-    }
-
     // The trajectory entry indices and the multiTrajectory
     const auto& trackTips = traj.tips();
     const auto& mj = traj.multiTrajectory();
+
+    if (trackTips.empty()) {
+      ACTS_WARNING("No trajectory found for entry " << itraj);
+      continue;
+    }
 
     // Check the size of the trajectory entry indices. For track fitting, there
     // should be at most one trajectory
@@ -155,7 +156,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     // Fill the trajectory summary info
     m_trackSummaryPlotTool.fill(m_trackSummaryPlotCache, fittedParameters,
                                 trajState.nStates, trajState.nMeasurements,
-                                trajState.nOutliers, trajState.nHoles);
+                                trajState.nOutliers, trajState.nHoles,
+                                trajState.nSharedHits);
   }
 
   // Fill the efficiency, defined as the ratio between number of tracks with

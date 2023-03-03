@@ -101,6 +101,12 @@ class AxisAlignedBoundingBox {
   AxisAlignedBoundingBox(const self_t& other) = default;
 
   /**
+   * Copy assignment operator from other bounding box.
+   * @param other The other AABB
+   */
+  AxisAlignedBoundingBox& operator=(const self_t& other) = default;
+
+  /**
    * Constructor from an entity pointer, and the min and max vertices.
    * @param entity The entity to store
    * @param vmin The minimum vertex.
@@ -307,8 +313,8 @@ class AxisAlignedBoundingBox {
    */
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>
   std::ostream& svg(std::ostream& os, value_type w, value_type h,
-                    value_type unit = 10, std::string label = "",
-                    std::string fillcolor = "grey") const;
+                    value_type unit = 10, const std::string& label = "",
+                    const std::string& fillcolor = "grey") const;
 
  private:
   template <size_t D = DIM, std::enable_if_t<D == 2, int> = 0>

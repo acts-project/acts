@@ -1,9 +1,9 @@
 add_library(
   ActsExamplesTrackFitting SHARED
-  src/TrackFittingOptions.cpp
   src/SurfaceSortingAlgorithm.cpp
   src/TrackFittingAlgorithm.cpp
-  src/TrackFittingAlgorithmFunction.cpp)
+  src/KalmanFitterFunction.cpp
+  src/GsfFitterFunction.cpp)
 target_include_directories(
   ActsExamplesTrackFitting
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
@@ -11,8 +11,7 @@ target_link_libraries(
   ActsExamplesTrackFitting
   PUBLIC
     ActsCore
-    ActsExamplesFramework ActsExamplesMagneticField
-    Boost::program_options)
+    ActsExamplesFramework ActsExamplesMagneticField)
 
 install(
   TARGETS ActsExamplesTrackFitting

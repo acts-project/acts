@@ -57,10 +57,10 @@ struct MaterialCollector {
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
   /// @param result is the result object to be filled
+  /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
-    const auto& logger = state.options.logger;
+                  result_type& result, const Logger& logger) const {
     if (state.navigation.currentSurface) {
       if (state.navigation.currentSurface == state.navigation.targetSurface and
           not state.navigation.targetReached) {
@@ -83,13 +83,13 @@ struct MaterialCollector {
             ACTS_VERBOSE("Update on start surface: post-update mode.");
             prepofu =
                 state.navigation.currentSurface->surfaceMaterial()->factor(
-                    state.stepping.navDir, postUpdate);
+                    state.stepping.navDir, MaterialUpdateStage::PostUpdate);
           } else if (state.navigation.targetSurface ==
                      state.navigation.currentSurface) {
             ACTS_VERBOSE("Update on target surface: pre-update mode");
             prepofu =
                 state.navigation.currentSurface->surfaceMaterial()->factor(
-                    state.stepping.navDir, preUpdate);
+                    state.stepping.navDir, MaterialUpdateStage::PreUpdate);
           } else {
             ACTS_VERBOSE("Update while pass through: full mode.");
           }

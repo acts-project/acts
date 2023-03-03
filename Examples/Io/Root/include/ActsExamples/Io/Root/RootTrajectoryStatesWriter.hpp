@@ -30,7 +30,7 @@ namespace ActsExamples {
 /// Each entry in the TTree corresponds to one trajectory for optimum
 /// writing speed. The event number is part of the written data.
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing
 /// file
 ///
@@ -48,34 +48,34 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
     std::string inputMeasurementParticlesMap;
     /// Input collection to map measured hits to simulated hits.
     std::string inputMeasurementSimHitsMap;
-    /// output directory.
-    std::string outputDir;
     /// output filename.
-    std::string outputFilename = "trackstates.root";
+    std::string filePath = "trackstates.root";
     /// name of the output tree.
-    std::string outputTreename = "trackstates";
+    std::string treeName = "trackstates";
     /// file access mode.
     std::string fileMode = "RECREATE";
-    /// common root file.
-    TFile* rootFile = nullptr;
   };
 
   /// Constructor
   ///
-  /// @param cfg Configuration struct
+  /// @param config Configuration struct
   /// @param level Message level declaration
-  RootTrajectoryStatesWriter(const Config& cfg, Acts::Logging::Level lvl);
-  ~RootTrajectoryStatesWriter() final override;
+  RootTrajectoryStatesWriter(const Config& config, Acts::Logging::Level level);
+
+  ~RootTrajectoryStatesWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trajectories are what to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
  private:
   Config m_cfg;             ///< The config class
@@ -109,6 +109,7 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   std::vector<int> m_volumeID;      ///< volume identifier
   std::vector<int> m_layerID;       ///< layer identifier
   std::vector<int> m_moduleID;      ///< surface identifier
+  std::vector<float> m_pathLength;  ///< path length
   std::vector<float> m_lx_hit;      ///< uncalibrated measurement local x
   std::vector<float> m_ly_hit;      ///< uncalibrated measurement local y
   std::vector<float> m_x_hit;       ///< uncalibrated measurement global x
@@ -122,8 +123,8 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   std::vector<float> m_pull_y_hit;  ///< hit pull y
   std::vector<int> m_dim_hit;       ///< dimension of measurement
 
-  std::array<int, 3> m_nParams;  ///< number of states which have
-                                 ///< filtered/predicted/smoothed parameters
+  std::array<int, 3> m_nParams{};  ///< number of states which have
+                                   ///< filtered/predicted/smoothed parameters
   std::array<std::vector<bool>, 3>
       m_hasParams;  ///< status of the filtered/predicted/smoothed parameters
   std::array<std::vector<float>, 3>

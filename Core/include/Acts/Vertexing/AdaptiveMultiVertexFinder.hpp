@@ -42,12 +42,14 @@ class AdaptiveMultiVertexFinder {
   template <typename T, typename = int>
   struct NeedsRemovedTracks : std::false_type {};
 
+#ifndef DOXYGEN
   template <typename T>
   struct NeedsRemovedTracks<T, decltype((void)T::tracksToRemove, 0)>
       : std::true_type {};
+#endif
 
  public:
-  /// @struct Config Configuration struct
+  /// Configuration struct
   struct Config {
     /// @brief Config constructor
     ///
@@ -55,13 +57,14 @@ class AdaptiveMultiVertexFinder {
     /// @param sfinder The seed finder
     /// @param ipEst ImpactPointEstimator
     /// @param lin Track linearizer
+    /// @param bIn Input magnetic field
     Config(vfitter_t fitter, const sfinder_t& sfinder,
            const ImpactPointEstimator<InputTrack_t, Propagator_t>& ipEst,
-           const Linearizer_t& lin, std::shared_ptr<MagneticFieldProvider> bIn)
+           Linearizer_t lin, std::shared_ptr<const MagneticFieldProvider> bIn)
         : vertexFitter(std::move(fitter)),
           seedFinder(sfinder),
           ipEstimator(ipEst),
-          linearizer(lin),
+          linearizer(std::move(lin)),
           bField{std::move(bIn)} {}
 
     // Vertex fitter
@@ -76,7 +79,7 @@ class AdaptiveMultiVertexFinder {
     // Track linearizer
     Linearizer_t linearizer;
 
-    std::shared_ptr<MagneticFieldProvider> bField;
+    std::shared_ptr<const MagneticFieldProvider> bField;
 
     // Use a beam spot constraint, vertexConstraint in VertexingOptions
     // has to be set in this case
@@ -160,7 +163,7 @@ class AdaptiveMultiVertexFinder {
 
   };  // Config struct
 
-  /// @struct State State struct for fulfilling interface
+  /// State struct for fulfilling interface
   struct State {};
 
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
@@ -193,6 +196,8 @@ class AdaptiveMultiVertexFinder {
         m_extractParameters(func),
         m_logger(std::move(logger)) {}
 
+  AdaptiveMultiVertexFinder(AdaptiveMultiVertexFinder&&) = default;
+
   /// @brief Function that performs the adaptive
   /// multi-vertex finding
   ///
@@ -213,8 +218,6 @@ class AdaptiveMultiVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance

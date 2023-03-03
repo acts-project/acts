@@ -25,10 +25,6 @@ namespace Acts {
 
 class MaterialSlab;
 
-/// list of point used in the mapping of a volume
-using RecordedMaterialVolumePoint =
-    std::vector<std::pair<Acts::MaterialSlab, std::vector<Acts::Vector3>>>;
-
 using EAxis = Acts::detail::EquidistantAxis;
 using Grid2D =
     Acts::detail::Grid<Acts::AccumulatedVolumeMaterial, EAxis, EAxis>;
@@ -39,6 +35,8 @@ using MaterialGrid2D =
 using MaterialGrid3D =
     Acts::detail::Grid<Acts::Material::ParametersVector, EAxis, EAxis, EAxis>;
 
+using MaterialGridAxisData = std::tuple<double, double, size_t>;
+
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
 ///
@@ -48,8 +46,8 @@ using MaterialGrid3D =
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid2D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2);
+Grid2D createGrid(MaterialGridAxisData gridAxis1,
+                  MaterialGridAxisData gridAxis2);
 
 /// @brief Helper method that creates the cache grid for the mapping. This
 /// grid allows the collection of material at a the anchor points.
@@ -61,14 +59,14 @@ Grid2D createGrid(std::array<double, 3> gridAxis1,
 /// maximum value, number of bins}
 ///
 /// @return The grid
-Grid3D createGrid(std::array<double, 3> gridAxis1,
-                  std::array<double, 3> gridAxis2,
-                  std::array<double, 3> gridAxis3);
+Grid3D createGrid(MaterialGridAxisData gridAxis1,
+                  MaterialGridAxisData gridAxis2,
+                  MaterialGridAxisData gridAxis3);
 
 /// @brief return a function that return the coordinate corresponding to type of
 /// bin
 ///
-/// @param [in] Type of bin
+/// @param [in] type Type of bin
 ///
 /// @return a coordinate transform function
 std::function<double(Acts::Vector3)> globalToLocalFromBin(
@@ -78,8 +76,8 @@ std::function<double(Acts::Vector3)> globalToLocalFromBin(
 /// Also determine the coresponding global to local transform and grid mapping
 /// function
 ///
-/// @param [in] BinUtility of the volume to be mapped
-/// @param [in] Global to local transform to be updated.
+/// @param [in] bins BinUtility of the volume to be mapped
+/// @param [in] transfoGlobalToLocal Global to local transform to be updated.
 ///
 /// @return the 3D grid
 Grid2D createGrid2D(
@@ -90,38 +88,28 @@ Grid2D createGrid2D(
 /// Also determine the coresponding global to local transform and grid mapping
 /// function
 ///
-/// @param [in] BinUtility of the volume to be mapped
-/// @param [in] Global to local transform to be updated.
+/// @param [in] bins BinUtility of the volume to be mapped
+/// @param [in] transfoGlobalToLocal Global to local transform to be updated.
 ///
 /// @return the 3D grid
 Grid3D createGrid3D(
     const BinUtility& bins,
     std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal);
 
-/// @brief Concatenate a set of material at arbitrary space points on a set of
-/// grid points and produces a grid containing the averaged material values.
+/// @brief Average the material collected in a 2D grid and use it to create a 2D material grid
 ///
 /// @param [in] grid The material collecting grid
-/// @param [in] mPoints The set of material at the space points
-/// @param [in] transfoGlobalToLocal tranformation from local to local
 /// coordinate
 ///
 /// @return The average material grid decomposed into classification numbers
-MaterialGrid2D mapMaterialPoints(
-    Grid2D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal);
+MaterialGrid2D mapMaterialPoints(Grid2D& grid);
 
-/// @brief Concatenate a set of material at arbitrary space points on a set of
-/// grid points and produces a grid containing the averaged material values.
+/// @brief Average the material collected in a 3D grid and use it to create a 3D material grid
 ///
 /// @param [in] grid The material collecting grid
-/// @param [in] mPoints The set of material at the space points
-/// @param [in] transfoGlobalToLocal tranformation from local to local
 /// coordinate
 ///
 /// @return The average material grid decomposed into classification numbers
-MaterialGrid3D mapMaterialPoints(
-    Grid3D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal);
+MaterialGrid3D mapMaterialPoints(Grid3D& grid);
 
 }  // namespace Acts

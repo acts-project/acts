@@ -35,6 +35,7 @@ namespace Acts {
 class IVolumeMaterial;
 class ISurfaceMaterial;
 class TrackingGeometry;
+struct MaterialInteraction;
 
 /// @brief selector for finding surface
 struct MaterialSurface {
@@ -90,13 +91,16 @@ class SurfaceMaterialMapper {
     bool emptyBinCorrection = true;
     /// Mapping output to debug stream
     bool mapperDebugOutput = false;
+    /// Compute the variance of each material slab (only if using an input map)
+    bool computeVariance = false;
   };
 
   /// @struct State
   ///
   /// Nested State struct which is used for the mapping prococess
   struct State {
-    /// Constructor of the Sate with contexts
+    /// @param [in] gctx The geometry context to use
+    /// @param [in] mctx The magnetic field context to use
     State(const GeometryContext& gctx, const MagneticFieldContext& mctx)
         : geoContext(gctx), magFieldContext(mctx) {}
 
@@ -107,6 +111,10 @@ class SurfaceMaterialMapper {
     /// The created surface material from it
     std::map<GeometryIdentifier, std::unique_ptr<const ISurfaceMaterial>>
         surfaceMaterial;
+
+    /// The surface material of the input tracking geometry
+    std::map<GeometryIdentifier, std::shared_ptr<const ISurfaceMaterial>>
+        inputSurfaceMaterial;
 
     /// The volume material of the input tracking geometry
     std::map<GeometryIdentifier, std::shared_ptr<const IVolumeMaterial>>
@@ -126,7 +134,7 @@ class SurfaceMaterialMapper {
   ///
   /// @param cfg Configuration struct
   /// @param propagator The straight line propagator
-  /// @param log The logger
+  /// @param slogger The logger
   SurfaceMaterialMapper(const Config& cfg, StraightLinePropagator propagator,
                         std::unique_ptr<const Logger> slogger =
                             getDefaultLogger("SurfaceMaterialMapper",
@@ -134,6 +142,8 @@ class SurfaceMaterialMapper {
 
   /// @brief helper method that creates the cache for the mapping
   ///
+  /// @param [in] gctx The geometry context to use
+  /// @param [in] mctx The magnetic field context to use
   /// @param[in] tGeometry The geometry which should be mapped
   ///
   /// This method takes a TrackingGeometry,
@@ -161,6 +171,24 @@ class SurfaceMaterialMapper {
   /// to be ordered from the starting position along the starting direction
   void mapMaterialTrack(State& mState, RecordedMaterialTrack& mTrack) const;
 
+  /// Loop through all the material interactions and add them to the
+  /// associated surface
+  ///
+  /// @param mState The current state map
+  /// @param mTrack The material track to be mapped
+  ///
+  void mapInteraction(State& mState, RecordedMaterialTrack& mTrack) const;
+
+  /// Loop through all the material interactions and add them to the
+  /// associated surface
+  ///
+  /// @param mState The current state map
+  /// @param rMaterial Vector of all the material interactions that will be mapped
+  ///
+  /// @note The material interactions are assumed to have an associated surface ID
+  void mapSurfaceInteraction(State& mState,
+                             std::vector<MaterialInteraction>& rMaterial) const;
+
  private:
   /// @brief finds all surfaces with ProtoSurfaceMaterial of a volume
   ///
@@ -173,13 +201,13 @@ class SurfaceMaterialMapper {
   ///
   /// @param mState is the map to be filled
   /// @param surface is the surface to be checked for a Proxy
-  void checkAndInsert(State& /*mState*/, const Surface& surface) const;
+  void checkAndInsert(State& mState, const Surface& surface) const;
 
   /// @brief check and insert
   ///
   /// @param mState is the map to be filled
-  /// @param surface is the surface to be checked for a Proxy
-  void collectMaterialVolumes(State& /*mState*/,
+  /// @param tVolume is the volume collect from
+  void collectMaterialVolumes(State& mState,
                               const TrackingVolume& tVolume) const;
 
   /// Standard logger method

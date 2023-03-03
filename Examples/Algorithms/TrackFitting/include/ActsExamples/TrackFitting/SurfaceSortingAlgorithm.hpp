@@ -12,7 +12,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <map>
 #include <memory>
@@ -22,13 +22,13 @@ namespace ActsExamples {
 
 using TrackHitList = std::map<const double, const Index>;
 
-class SurfaceSortingAlgorithm final : public BareAlgorithm {
+class SurfaceSortingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input proto track collection
     std::string inputProtoTracks;
     /// Input simulated hit collection
-    std::string inputSimulatedHits;
+    std::string inputSimHits;
     /// Input measurement to simulated hit map for truth position
     std::string inputMeasurementSimHitsMap;
     /// Output proto track collection
@@ -38,6 +38,9 @@ class SurfaceSortingAlgorithm final : public BareAlgorithm {
   SurfaceSortingAlgorithm(Config cfg, Acts::Logging::Level level);
 
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

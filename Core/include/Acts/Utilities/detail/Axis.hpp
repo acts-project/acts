@@ -70,8 +70,8 @@ class NeighborHoodIndices {
     bool operator!=(const iterator& it) const { return !(*this == it); }
 
    private:
-    size_t m_current, m_end1, m_begin2;
-    bool m_wrapped;
+    size_t m_current = 0, m_end1 = 0, m_begin2 = 0;
+    bool m_wrapped = false;
   };
 
   iterator begin() const { return iterator(m_begin1, m_end1, m_begin2); }
@@ -139,7 +139,7 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @param [in] sizes how many neighboring bins (up/down)
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(size_t idx, size_t size = 1) const {
-    return neighborHoodIndices(idx, std::make_pair(size, size));
+    return neighborHoodIndices(idx, std::make_pair(-size, size));
   }
 
   /// @brief Get #size bins which neighbor the one given
@@ -155,12 +155,13 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
   NeighborHoodIndices neighborHoodIndices(size_t idx,
-                                          std::pair<size_t, size_t> sizes = {
-                                              1, 1}) const {
+                                          std::pair<int, int> sizes = {
+                                              -1, 1}) const {
     constexpr int min = 0;
     const int max = getNBins() + 1;
-    const int itmin = std::max(min, int(idx - sizes.first));
-    const int itmax = std::min(max, int(idx + sizes.second));
+    const int itmin = std::clamp(static_cast<int>(idx + sizes.first), min, max);
+    const int itmax =
+        std::clamp(static_cast<int>(idx + sizes.second), min, max);
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
@@ -176,21 +177,22 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
   NeighborHoodIndices neighborHoodIndices(size_t idx,
-                                          std::pair<size_t, size_t> sizes = {
-                                              1, 1}) const {
+                                          std::pair<int, int> sizes = {
+                                              -1, 1}) const {
     if (idx <= 0 || idx >= (getNBins() + 1)) {
       return NeighborHoodIndices();
     }
     constexpr int min = 1;
     const int max = getNBins();
-    const int itmin = std::max(min, int(idx - sizes.first));
-    const int itmax = std::min(max, int(idx + sizes.second));
+    const int itmin = std::clamp(static_cast<int>(idx) + sizes.first, min, max);
+    const int itmax =
+        std::clamp(static_cast<int>(idx) + sizes.second, min, max);
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
   /// @brief Get #size bins which neighbor the one given
   ///
-  /// This is the version for Closed
+  /// This is the version for Closed (i.e. Wrapping)
   ///
   /// @param [in] idx requested bin index
   /// @param [in] sizes how many neighboring bins (up/down)
@@ -200,20 +202,22 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
   NeighborHoodIndices neighborHoodIndices(size_t idx,
-                                          std::pair<size_t, size_t> sizes = {
-                                              1, 1}) const {
+                                          std::pair<int, int> sizes = {
+                                              -1, 1}) const {
     // Handle invalid indices
     if (idx <= 0 || idx >= (getNBins() + 1)) {
       return NeighborHoodIndices();
     }
 
     // Handle corner case where user requests more neighbours than the number
-    // of bins on the axis. We do not want to ActsScalar-count bins in that
-    // case.
-    sizes.first %= getNBins();
-    sizes.second %= getNBins();
-    if (sizes.first + sizes.second + 1 > getNBins()) {
-      sizes.second -= (sizes.first + sizes.second + 1) - getNBins();
+    // of bins on the axis. All bins are returned in this case.
+
+    const int max = getNBins();
+    sizes.first = std::clamp(sizes.first, -max, max);
+    sizes.second = std::clamp(sizes.second, -max, max);
+    if (std::abs(sizes.first - sizes.second) >= max) {
+      sizes.first = 1 - idx;
+      sizes.second = max - idx;
     }
 
     // If the entire index range is not covered, we must wrap the range of
@@ -223,14 +227,14 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
     // Before wraparound - [        XXXXX]XXX
     // After wraparound  - [ XXXX   XXXX ]
     //
-    const int itmin = idx - sizes.first;
+    const int itmin = idx + sizes.first;
     const int itmax = idx + sizes.second;
     const size_t itfirst = wrapBin(itmin);
     const size_t itlast = wrapBin(itmax);
     if (itfirst <= itlast) {
       return NeighborHoodIndices(itfirst, itlast + 1);
     } else {
-      return NeighborHoodIndices(itfirst, getNBins() + 1, 1, itlast + 1);
+      return NeighborHoodIndices(itfirst, max + 1, 1, itlast + 1);
     }
   }
 
@@ -283,7 +287,8 @@ class Axis<AxisType::Equidistant, bdt> final : public IAxis {
   /// @note Bin indices start at @c 1. The underflow bin has the index @c 0
   ///       while the index <tt>nBins + 1</tt> indicates the overflow bin .
   size_t getBin(ActsScalar x) const {
-    return wrapBin(std::floor((x - getMin()) / getBinWidth()) + 1);
+    return wrapBin(
+        static_cast<int>(std::floor((x - getMin()) / getBinWidth()) + 1));
   }
 
   /// @brief get bin width
@@ -417,7 +422,7 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   /// @param [in] size how many neighboring bins
   /// @return Set of neighboring bin indices (global)
   NeighborHoodIndices neighborHoodIndices(size_t idx, size_t size = 1) const {
-    return neighborHoodIndices(idx, std::make_pair(size, size));
+    return neighborHoodIndices(idx, std::make_pair(-size, size));
   }
 
   /// @brief Get #size bins which neighbor the one given
@@ -433,12 +438,12 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Open, int> = 0>
   NeighborHoodIndices neighborHoodIndices(size_t idx,
-                                          std::pair<size_t, size_t> sizes = {
-                                              1, 1}) const {
+                                          std::pair<int, int> sizes = {
+                                              -1, 1}) const {
     constexpr int min = 0;
     const int max = getNBins() + 1;
-    const int itmin = std::max(min, int(idx - sizes.first));
-    const int itmax = std::min(max, int(idx + sizes.second));
+    const int itmin = std::max(min, static_cast<int>(idx) + sizes.first);
+    const int itmax = std::min(max, static_cast<int>(idx) + sizes.second);
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
@@ -454,15 +459,15 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Bound, int> = 0>
   NeighborHoodIndices neighborHoodIndices(size_t idx,
-                                          std::pair<size_t, size_t> sizes = {
-                                              1, 1}) const {
+                                          std::pair<int, int> sizes = {
+                                              -1, 1}) const {
     if (idx <= 0 || idx >= (getNBins() + 1)) {
       return NeighborHoodIndices();
     }
     constexpr int min = 1;
     const int max = getNBins();
-    const int itmin = std::max(min, int(idx - sizes.first));
-    const int itmax = std::min(max, int(idx + sizes.second));
+    const int itmin = std::max(min, static_cast<int>(idx) + sizes.first);
+    const int itmax = std::min(max, static_cast<int>(idx) + sizes.second);
     return NeighborHoodIndices(itmin, itmax + 1);
   }
 
@@ -478,20 +483,22 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
   template <AxisBoundaryType T = bdt,
             std::enable_if_t<T == AxisBoundaryType::Closed, int> = 0>
   NeighborHoodIndices neighborHoodIndices(size_t idx,
-                                          std::pair<size_t, size_t> sizes = {
-                                              1, 1}) const {
+                                          std::pair<int, int> sizes = {
+                                              -1, 1}) const {
     // Handle invalid indices
     if (idx <= 0 || idx >= (getNBins() + 1)) {
       return NeighborHoodIndices();
     }
 
     // Handle corner case where user requests more neighbours than the number
-    // of bins on the axis. We do not want to ActsScalar-count bins in that
-    // case.
-    sizes.first %= getNBins();
-    sizes.second %= getNBins();
-    if (sizes.first + sizes.second + 1 > getNBins()) {
-      sizes.second -= (sizes.first + sizes.second + 1) - getNBins();
+    // of bins on the axis. All bins are returned in this case
+
+    const int max = getNBins();
+    sizes.first = std::clamp(sizes.first, -max, max);
+    sizes.second = std::clamp(sizes.second, -max, max);
+    if (std::abs(sizes.first - sizes.second) >= max) {
+      sizes.first = 1 - idx;
+      sizes.second = max - idx;
     }
 
     // If the entire index range is not covered, we must wrap the range of
@@ -501,14 +508,14 @@ class Axis<AxisType::Variable, bdt> final : public IAxis {
     // Before wraparound - [        XXXXX]XXX
     // After wraparound  - [ XXXX   XXXX ]
     //
-    const int itmin = idx - sizes.first;
+    const int itmin = idx + sizes.first;
     const int itmax = idx + sizes.second;
     const size_t itfirst = wrapBin(itmin);
     const size_t itlast = wrapBin(itmax);
     if (itfirst <= itlast) {
       return NeighborHoodIndices(itfirst, itlast + 1);
     } else {
-      return NeighborHoodIndices(itfirst, getNBins() + 1, 1, itlast + 1);
+      return NeighborHoodIndices(itfirst, max + 1, 1, itlast + 1);
     }
   }
 

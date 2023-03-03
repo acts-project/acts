@@ -6,8 +6,7 @@ set(_common_libraries
   ActsExamplesMagneticField
   ActsExamplesIoObj
   ActsExamplesIoJson
-  ActsExamplesIoRoot
-  Boost::program_options)
+  ActsExamplesIoRoot)
 
 # Empty detector
 add_executable(
@@ -15,7 +14,7 @@ add_executable(
   EmptyDetectorPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationEmpty
-  PRIVATE ${_common_libraries} ActsExamplesDetectorEmpty)
+  PRIVATE ${_common_libraries})
 
 # Generic detector
 add_executable(
@@ -23,23 +22,16 @@ add_executable(
   GenericPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationGeneric
-  PRIVATE ${_common_libraries} ActsExamplesDetectorGeneric)
+  PRIVATE ${_common_libraries})
 
-# Generic detector with IOV based alignment
+# Generic detector with alignment
 add_executable(
   ActsExamplePropagationAligned
   AlignedPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationAligned
-  PRIVATE ${_common_libraries} ActsExamplesDetectorContextual)
+  PRIVATE ${_common_libraries})
 
-# Generic detector with Payload based alignment
-add_executable(
-  ActsExamplePropagationPayload
-  PayloadPropagationExample.cpp)
-target_link_libraries(
-  ActsExamplePropagationPayload
-  PRIVATE ${_common_libraries} ActsExamplesDetectorContextual)
 
 # TGeo detector
 add_executable(
@@ -47,14 +39,13 @@ add_executable(
   TGeoPropagationExample.cpp)
 target_link_libraries(
   ActsExamplePropagationTGeo
-  PRIVATE ${_common_libraries} ActsExamplesDetectorTGeo)
+  PRIVATE ${_common_libraries})
 
 install(
   TARGETS
     ActsExamplePropagationEmpty
     ActsExamplePropagationGeneric
     ActsExamplePropagationAligned
-    ActsExamplePropagationPayload
     ActsExamplePropagationTGeo
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
 

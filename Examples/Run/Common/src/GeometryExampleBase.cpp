@@ -11,13 +11,13 @@
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsWriter.hpp"
 #include "ActsExamples/Io/Csv/CsvTrackingGeometryWriter.hpp"
 #include "ActsExamples/Io/Json/JsonMaterialWriter.hpp"
-#include "ActsExamples/Io/Json/JsonOptionsWriter.hpp"
 #include "ActsExamples/Io/Json/JsonSurfacesWriter.hpp"
 #include "ActsExamples/Io/Root/RootMaterialWriter.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CsvOptionsWriter.hpp"
+#include "ActsExamples/Options/JsonOptionsWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjTrackingGeometryWriter.hpp"
 #include "ActsExamples/Plugins/Obj/ObjWriterOptions.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
@@ -78,12 +78,13 @@ int processGeometry(int argc, char* argv[],
 
     /// Decorate the context
     for (auto& cdr : contextDecorators) {
-      if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS)
+      if (cdr->decorate(context) != ActsExamples::ProcessCode::SUCCESS) {
         throw std::runtime_error("Failed to decorate event context");
+      }
     }
 
     std::string geoContextStr = "";
-    if (contextDecorators.size() > 0) {
+    if (!contextDecorators.empty()) {
       // We need indeed a context object
       if (nEvents > 1) {
         geoContextStr = "_geoContext" + std::to_string(ievt);
@@ -98,11 +99,11 @@ int processGeometry(int argc, char* argv[],
     if (vm["output-obj"].as<bool>()) {
       // Configure the tracking geometry writer
       auto tgObjWriterConfig =
-          ActsExamples::Options::readObjTrackingGeometryWriterConfig(
-              vm, "ObjTrackingGeometryWriter", volumeLogLevel);
+          ActsExamples::Options::readObjTrackingGeometryWriterConfig(vm);
+      tgObjWriterConfig.outputDir = outputDir;
       auto tgObjWriter =
           std::make_shared<ActsExamples::ObjTrackingGeometryWriter>(
-              tgObjWriterConfig);
+              tgObjWriterConfig, volumeLogLevel);
       // Write the tracking geometry object
       tgObjWriter->write(context, *tGeometry);
     }
@@ -141,19 +142,16 @@ int processGeometry(int argc, char* argv[],
 
     if (!materialFileName.empty() and vm["output-root"].template as<bool>()) {
       // The writer of the indexed material
-      ActsExamples::RootMaterialWriter::Config rmwConfig("MaterialWriter");
-      rmwConfig.fileName = materialFileName + ".root";
-      ActsExamples::RootMaterialWriter rmwImpl(rmwConfig);
+      ActsExamples::RootMaterialWriter::Config rmwConfig;
+      rmwConfig.filePath = materialFileName + ".root";
+      ActsExamples::RootMaterialWriter rmwImpl(rmwConfig, logLevel);
       rmwImpl.write(*tGeometry);
     }
 
     if (!materialFileName.empty() and (vm["output-json"].template as<bool>() or
                                        vm["output-cbor"].template as<bool>())) {
-      /// The name of the output file
-      std::string fileName = vm["mat-output-file"].template as<std::string>();
       // the material writer
-      Acts::MaterialMapJsonConverter::Config jmConverterCfg(
-          "MaterialMapJsonConverter", Acts::Logging::INFO);
+      Acts::MaterialMapJsonConverter::Config jmConverterCfg;
       jmConverterCfg.processSensitives =
           vm["mat-output-sensitives"].template as<bool>();
       jmConverterCfg.processApproaches =
@@ -182,7 +180,7 @@ int processGeometry(int argc, char* argv[],
       }
       jmWriterCfg.writeFormat = format;
 
-      ActsExamples::JsonMaterialWriter jmwImpl(std::move(jmWriterCfg));
+      ActsExamples::JsonMaterialWriter jmwImpl(jmWriterCfg, logLevel);
 
       jmwImpl.write(*tGeometry);
     }

@@ -13,9 +13,11 @@
 #include "Acts/Geometry/ITrackingVolumeBuilder.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
+#include <array>
 #include <functional>
 #include <iosfwd>
 #include <memory>
+#include <optional>
 #include <string>
 #include <utility>
 #include <vector>
@@ -28,7 +30,7 @@ class RectangleBounds;
 class ISurfaceMaterial;
 class IVolumeMaterial;
 class DetectorElementBase;
-class PlaneSurface;
+class Surface;
 class Layer;
 
 /// @brief This class builds a box detector with a configurable amount of
@@ -59,18 +61,25 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   };
 
   /// @brief This struct stores the data for the construction of a PlaneLayer
-  /// that has a single PlaneSurface encapsulated
   struct LayerConfig {
     // Configuration of the surface
-    SurfaceConfig surfaceCfg;
+    std::vector<SurfaceConfig> surfaceCfg;
     // Encapsulated surface
-    std::shared_ptr<const PlaneSurface> surface = nullptr;
+    std::vector<std::shared_ptr<const Surface>> surfaces;
     // Boolean flag if layer is active
     bool active = false;
     // Bins in Y direction
     size_t binsY = 1;
     // Bins in Z direction
     size_t binsZ = 1;
+    // Envelope in X
+    std::array<ActsScalar, 2u> envelopeX{0, 0};
+    // Envelope in Y
+    std::array<ActsScalar, 2u> envelopeY{0, 0};
+    // Envelope in Z
+    std::array<ActsScalar, 2u> envelopeZ{0, 0};
+    // An optional rotation fo this
+    std::optional<RotationMatrix3> rotation{std::nullopt};
   };
 
   /// @brief This struct stores the data for the construction of a cuboid
@@ -124,8 +133,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// @param [in] cfg Configuration of the surface
   ///
   /// @return Pointer to the created surface
-  std::shared_ptr<const PlaneSurface> buildSurface(
-      const GeometryContext& gctx, const SurfaceConfig& cfg) const;
+  std::shared_ptr<const Surface> buildSurface(const GeometryContext& gctx,
+                                              const SurfaceConfig& cfg) const;
 
   /// @brief This function creates a layer with a surface encaspulated with a
   /// given configuration. The surface gets a detector element attached if the

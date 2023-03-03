@@ -24,10 +24,10 @@ Acts::LineSurface::LineSurface(const Transform3& transform,
                                std::shared_ptr<const LineBounds> lbounds)
     : GeometryObject(), Surface(transform), m_bounds(std::move(lbounds)) {}
 
-Acts::LineSurface::LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
+Acts::LineSurface::LineSurface(std::shared_ptr<const LineBounds> lbounds,
                                const DetectorElementBase& detelement)
-    : GeometryObject(), Surface(detelement), m_bounds(lbounds) {
-  throw_assert(lbounds, "LineBounds must not be nullptr");
+    : GeometryObject(), Surface(detelement), m_bounds(std::move(lbounds)) {
+  throw_assert(m_bounds, "LineBounds must not be nullptr");
 }
 
 Acts::LineSurface::LineSurface(const LineSurface& other)
@@ -141,10 +141,10 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
   double denom = 1 - eaTeb * eaTeb;
   // validity parameter
   Intersection3D::Status status = Intersection3D::Status::unreachable;
-  if (denom * denom > s_onSurfaceTolerance * s_onSurfaceTolerance) {
+  if (std::abs(denom) > std::abs(s_onSurfaceTolerance)) {
     double u = (mab.dot(ea) - mab.dot(eb) * eaTeb) / denom;
     // Check if we are on the surface already
-    status = (u * u < s_onSurfaceTolerance * s_onSurfaceTolerance)
+    status = std::abs(u) < std::abs(s_onSurfaceTolerance)
                  ? Intersection3D::Status::onSurface
                  : Intersection3D::Status::reachable;
     Vector3 result = (ma + u * ea);
@@ -156,7 +156,7 @@ Acts::SurfaceIntersection Acts::LineSurface::intersect(
       double cZ = vecLocal.dot(eb);
       double hZ =
           m_bounds->get(LineBounds::eHalfLengthZ) + s_onSurfaceTolerance;
-      if ((cZ * cZ > hZ * hZ) or
+      if ((std::abs(cZ) > std::abs(hZ)) or
           ((vecLocal - cZ * eb).norm() >
            m_bounds->get(LineBounds::eR) + s_onSurfaceTolerance)) {
         status = Intersection3D::Status::missed;

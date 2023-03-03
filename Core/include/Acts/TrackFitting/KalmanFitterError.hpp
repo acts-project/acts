@@ -19,6 +19,7 @@ enum class KalmanFitterError {
   SmoothFailed,
   OutputConversionFailed,
   NoMeasurementFound,
+  ReverseNavigationFailed,
 };
 
 std::error_code make_error_code(Acts::KalmanFitterError e);

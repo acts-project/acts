@@ -15,17 +15,17 @@
 #include <stdexcept>
 #include <tuple>
 
-Acts::Grid2D Acts::createGrid(std::array<double, 3> gridAxis1,
-                              std::array<double, 3> gridAxis2) {
+Acts::Grid2D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
+                              Acts::MaterialGridAxisData gridAxis2) {
   // get the number of bins
-  size_t nBinsAxis1 = gridAxis1[2];
-  size_t nBinsAxis2 = gridAxis2[2];
+  size_t nBinsAxis1 = std::get<2>(gridAxis1);
+  size_t nBinsAxis2 = std::get<2>(gridAxis2);
 
   // get the minimum and maximum
-  double minAxis1 = gridAxis1[0];
-  double minAxis2 = gridAxis2[0];
-  double maxAxis1 = gridAxis1[1];
-  double maxAxis2 = gridAxis2[1];
+  double minAxis1 = std::get<0>(gridAxis1);
+  double minAxis2 = std::get<0>(gridAxis2);
+  double maxAxis1 = std::get<1>(gridAxis1);
+  double maxAxis2 = std::get<1>(gridAxis2);
   // calculate maxima (add one last bin, because bin value always corresponds
   // to
   // left boundary)
@@ -42,27 +42,30 @@ Acts::Grid2D Acts::createGrid(std::array<double, 3> gridAxis1,
   return Acts::Grid2D(std::make_tuple(std::move(axis1), std::move(axis2)));
 }
 
-Acts::Grid3D Acts::createGrid(std::array<double, 3> gridAxis1,
-                              std::array<double, 3> gridAxis2,
-                              std::array<double, 3> gridAxis3) {
+Acts::Grid3D Acts::createGrid(Acts::MaterialGridAxisData gridAxis1,
+                              Acts::MaterialGridAxisData gridAxis2,
+                              Acts::MaterialGridAxisData gridAxis3) {
   // get the number of bins
-  size_t nBinsAxis1 = gridAxis1[2];
-  size_t nBinsAxis2 = gridAxis2[2];
-  size_t nBinsAxis3 = gridAxis3[2];
+  size_t nBinsAxis1 = std::get<2>(gridAxis1);
+  size_t nBinsAxis2 = std::get<2>(gridAxis2);
+  size_t nBinsAxis3 = std::get<2>(gridAxis3);
 
   // get the minimum and maximum
-  double minAxis1 = gridAxis1[0];
-  double minAxis2 = gridAxis2[0];
-  double minAxis3 = gridAxis3[0];
-  double maxAxis1 = gridAxis1[1];
-  double maxAxis2 = gridAxis2[1];
-  double maxAxis3 = gridAxis3[1];
+  double minAxis1 = std::get<0>(gridAxis1);
+  double minAxis2 = std::get<0>(gridAxis2);
+  double minAxis3 = std::get<0>(gridAxis3);
+  double maxAxis1 = std::get<1>(gridAxis1);
+  double maxAxis2 = std::get<1>(gridAxis2);
+  double maxAxis3 = std::get<1>(gridAxis3);
   // calculate maxima (add one last bin, because bin value always corresponds
   // to
   // left boundary)
-  double stepAxis1 = std::fabs(maxAxis1 - minAxis1) / (nBinsAxis1 - 1);
-  double stepAxis2 = std::fabs(maxAxis2 - minAxis2) / (nBinsAxis2 - 1);
-  double stepAxis3 = std::fabs(maxAxis3 - minAxis3) / (nBinsAxis3 - 1);
+  double stepAxis1 =
+      std::fabs(maxAxis1 - minAxis1) / std::max(nBinsAxis1 - 1, size_t(1));
+  double stepAxis2 =
+      std::fabs(maxAxis2 - minAxis2) / std::max(nBinsAxis2 - 1, size_t(1));
+  double stepAxis3 =
+      std::fabs(maxAxis3 - minAxis3) / std::max(nBinsAxis3 - 1, size_t(1));
   maxAxis1 += stepAxis1;
   maxAxis2 += stepAxis2;
   maxAxis3 += stepAxis3;
@@ -83,31 +86,31 @@ std::function<double(Acts::Vector3)> Acts::globalToLocalFromBin(
 
   switch (type) {
     case Acts::binX:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.x());
       };
       break;
 
     case Acts::binY:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.y());
       };
       break;
 
     case Acts::binR:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (Acts::VectorHelpers::perp(pos));
       };
       break;
 
     case Acts::binPhi:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (Acts::VectorHelpers::phi(pos));
       };
       break;
 
     case Acts::binZ:
-      transfoGlobalToLocal = [](Acts::Vector3 pos) -> double {
+      transfoGlobalToLocal = [](const Acts::Vector3& pos) -> double {
         return (pos.z());
       };
       break;
@@ -127,9 +130,6 @@ Acts::Grid2D Acts::createGrid2D(
     const Acts::BinUtility& bins,
     std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
-  // First we nee to create the 2 axis
-  std::array<double, 3> gridAxis1;
-  std::array<double, 3> gridAxis2;
 
   bool isCartesian = false;
   bool isCylindrical = false;
@@ -146,13 +146,9 @@ Acts::Grid2D Acts::createGrid2D(
     throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
   }
 
-  gridAxis1[0] = bu[0].min;
-  gridAxis1[1] = bu[0].max;
-  gridAxis1[2] = bu[0].bins();
-
-  gridAxis2[0] = bu[1].min;
-  gridAxis2[1] = bu[1].max;
-  gridAxis2[2] = bu[1].bins();
+  // First we nee to create the 2 axis
+  MaterialGridAxisData gridAxis1{bu[0].min, bu[0].max, bu[0].bins()};
+  MaterialGridAxisData gridAxis2{bu[1].min, bu[1].max, bu[1].bins()};
 
   std::function<double(Acts::Vector3)> coord1 =
       globalToLocalFromBin(bu[0].binvalue);
@@ -164,7 +160,7 @@ Acts::Grid2D Acts::createGrid2D(
     pos = transfo * pos;
     return {coord1(pos), coord2(pos)};
   };
-  return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2)));
+  return Acts::createGrid(gridAxis1, gridAxis2);
 }
 
 Acts::Grid3D Acts::createGrid3D(
@@ -172,9 +168,6 @@ Acts::Grid3D Acts::createGrid3D(
     std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal) {
   auto bu = bins.binningData();
   // First we nee to create the 3 axis
-  std::array<double, 3> gridAxis1;
-  std::array<double, 3> gridAxis2;
-  std::array<double, 3> gridAxis3;
 
   bool isCartesian = false;
   bool isCylindrical = false;
@@ -191,17 +184,11 @@ Acts::Grid3D Acts::createGrid3D(
     throw std::invalid_argument("Incorrect bin, should be x,y,z or r,phi,z");
   }
 
-  gridAxis1[0] = bu[0].min;
-  gridAxis1[1] = bu[0].max;
-  gridAxis1[2] = bu[0].bins();
+  MaterialGridAxisData gridAxis1{bu[0].min, bu[0].max, bu[0].bins()};
 
-  gridAxis2[0] = bu[1].min;
-  gridAxis2[1] = bu[1].max;
-  gridAxis2[2] = bu[1].bins();
+  MaterialGridAxisData gridAxis2{bu[1].min, bu[1].max, bu[1].bins()};
 
-  gridAxis3[0] = bu[2].min;
-  gridAxis3[1] = bu[2].max;
-  gridAxis3[2] = bu[2].bins();
+  MaterialGridAxisData gridAxis3{bu[2].min, bu[2].max, bu[2].bins()};
 
   std::function<double(Acts::Vector3)> coord1 =
       globalToLocalFromBin(bu[0].binvalue);
@@ -216,24 +203,10 @@ Acts::Grid3D Acts::createGrid3D(
     pos = transfo * pos;
     return {coord1(pos), coord2(pos), coord3(pos)};
   };
-  return (Acts::createGrid(std::move(gridAxis1), std::move(gridAxis2),
-                           std::move(gridAxis3)));
+  return Acts::createGrid(gridAxis1, gridAxis2, gridAxis3);
 }
 
-Acts::MaterialGrid2D Acts::mapMaterialPoints(
-    Acts::Grid2D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector2(Acts::Vector3)>& transfoGlobalToLocal) {
-  // Walk over each properties
-  for (const auto& rm : mPoints) {
-    // Walk over each point associated with the properties
-    for (const auto& point : rm.second) {
-      // Search for fitting grid point and accumulate
-      Acts::Grid2D::index_t index =
-          grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
-      grid.atLocalBins(index).accumulate(rm.first);
-    }
-  }
-
+Acts::MaterialGrid2D Acts::mapMaterialPoints(Acts::Grid2D& grid) {
   // Build material grid
   // Re-build the axes
   Acts::Grid2D::point_t min = grid.minPosition();
@@ -243,7 +216,7 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(
   Acts::EAxis axis1(min[0], max[0], nBins[0]);
   Acts::EAxis axis2(min[1], max[1], nBins[1]);
 
-  // Build the grid and fill it with data
+  // Fill the material Grid by averaging the material in the 2D grid
   Acts::MaterialGrid2D mGrid(std::make_tuple(axis1, axis2));
   for (size_t index = 0; index < grid.size(); index++) {
     mGrid.at(index) = grid.at(index).average().parameters();
@@ -252,20 +225,7 @@ Acts::MaterialGrid2D Acts::mapMaterialPoints(
   return mGrid;
 }
 
-Acts::MaterialGrid3D Acts::mapMaterialPoints(
-    Acts::Grid3D& grid, const Acts::RecordedMaterialVolumePoint& mPoints,
-    std::function<Acts::Vector3(Acts::Vector3)>& transfoGlobalToLocal) {
-  // Walk over each properties
-  for (const auto& rm : mPoints) {
-    // Walk over each point associated with the properties
-    for (const auto& point : rm.second) {
-      // Search for fitting grid point and accumulate
-      Acts::Grid3D::index_t index =
-          grid.localBinsFromLowerLeftEdge(transfoGlobalToLocal(point));
-      grid.atLocalBins(index).accumulate(rm.first);
-    }
-  }
-
+Acts::MaterialGrid3D Acts::mapMaterialPoints(Acts::Grid3D& grid) {
   // Build material grid
   // Re-build the axes
   Acts::Grid3D::point_t min = grid.minPosition();
@@ -276,7 +236,7 @@ Acts::MaterialGrid3D Acts::mapMaterialPoints(
   Acts::EAxis axis2(min[1], max[1], nBins[1]);
   Acts::EAxis axis3(min[2], max[2], nBins[2]);
 
-  // Build the grid and fill it with data
+  // Fill the material Grid by averaging the material in the 3D grid
   Acts::MaterialGrid3D mGrid(std::make_tuple(axis1, axis2, axis3));
   for (size_t index = 0; index < grid.size(); index++) {
     mGrid.at(index) = grid.at(index).average().parameters();

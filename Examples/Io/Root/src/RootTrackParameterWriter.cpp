@@ -33,12 +33,11 @@ using Acts::VectorHelpers::phi;
 using Acts::VectorHelpers::theta;
 
 ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
-    const ActsExamples::RootTrackParameterWriter::Config& cfg,
+    const ActsExamples::RootTrackParameterWriter::Config& config,
     Acts::Logging::Level level)
-    : TrackParameterWriter(cfg.inputTrackParameters, "RootTrackParameterWriter",
-                           level),
-      m_cfg(cfg),
-      m_outputFile(cfg.rootFile) {
+    : TrackParameterWriter(config.inputTrackParameters,
+                           "RootTrackParameterWriter", level),
+      m_cfg(config) {
   if (m_cfg.inputProtoTracks.empty()) {
     throw std::invalid_argument("Missing proto tracks input collection");
   }
@@ -55,27 +54,26 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
     throw std::invalid_argument(
         "Missing hit-simulated-hits map input collection");
   }
-  if (m_cfg.outputFilename.empty()) {
+  if (m_cfg.filePath.empty()) {
     throw std::invalid_argument("Missing output filename");
   }
-  if (m_cfg.outputTreename.empty()) {
+  if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
 
   // Setup ROOT I/O
   if (m_outputFile == nullptr) {
-    auto path = joinPaths(m_cfg.outputDir, m_cfg.outputFilename);
+    auto path = m_cfg.filePath;
     m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
     if (m_outputFile == nullptr) {
       throw std::ios_base::failure("Could not open '" + path);
     }
   }
   m_outputFile->cd();
-  m_outputTree =
-      new TTree(m_cfg.outputTreename.c_str(), m_cfg.outputTreename.c_str());
-  if (m_outputTree == nullptr)
+  m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
-  else {
+  } else {
     // The estimated track parameters
     m_outputTree->Branch("event_nr", &m_eventNr);
     m_outputTree->Branch("loc0", &m_loc0);
@@ -100,19 +98,19 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
 }
 
 ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() {
-  if (m_outputFile) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
-  if (m_outputFile) {
-    m_outputFile->cd();
-    m_outputTree->Write();
-    ACTS_INFO("Write estimated parameters from seed to tree '"
-              << m_cfg.outputTreename << "' in '"
-              << joinPaths(m_cfg.outputDir, m_cfg.outputFilename) << "'");
-  }
+ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::finalize() {
+  m_outputFile->cd();
+  m_outputTree->Write();
+  m_outputFile->Close();
+
+  ACTS_INFO("Wrote estimated parameters from seed to tree '"
+            << m_cfg.treeName << "' in '" << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 
@@ -121,10 +119,6 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     const TrackParametersContainer& trackParams) {
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   using HitSimHitsMap = IndexMultimap<Index>;
-
-  if (m_outputFile == nullptr) {
-    return ProcessCode::SUCCESS;
-  }
 
   // Read additional input collections
   const auto& protoTracks =
@@ -142,6 +136,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
 
   // Get the event number
   m_eventNr = ctx.eventNumber;
+
+  ACTS_VERBOSE("Writing " << trackParams.size() << " track parameters");
 
   // Loop over the estimated track parameters
   for (size_t iparams = 0; iparams < trackParams.size(); ++iparams) {
@@ -194,11 +190,12 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
       auto ip = particles.find(particleId);
       if (ip != particles.end()) {
         const auto& particle = *ip;
-        m_t_charge = particle.charge();
+        m_t_charge = static_cast<int>(particle.charge());
         m_t_qop = m_t_charge / p;
       } else {
-        ACTS_WARNING("Truth particle with barcode = " << particleId
-                                                      << " not found!");
+        ACTS_WARNING("Truth particle with barcode " << particleId << "="
+                                                    << particleId.value()
+                                                    << " not found!");
       }
     }
 

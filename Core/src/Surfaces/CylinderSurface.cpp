@@ -30,10 +30,11 @@ Acts::CylinderSurface::CylinderSurface(const GeometryContext& gctx,
 
 Acts::CylinderSurface::CylinderSurface(const Transform3& transform,
                                        double radius, double halfz,
-                                       double halfphi, double avphi)
+                                       double halfphi, double avphi,
+                                       double bevelMinZ, double bevelMaxZ)
     : Surface(transform),
-      m_bounds(std::make_shared<const CylinderBounds>(radius, halfz, halfphi,
-                                                      avphi)) {}
+      m_bounds(std::make_shared<const CylinderBounds>(
+          radius, halfz, halfphi, avphi, bevelMinZ, bevelMaxZ)) {}
 
 Acts::CylinderSurface::CylinderSurface(
     std::shared_ptr<const CylinderBounds> cbounds,
@@ -62,17 +63,15 @@ Acts::CylinderSurface& Acts::CylinderSurface::operator=(
 // return the binning position for ordering in the BinnedArray
 Acts::Vector3 Acts::CylinderSurface::binningPosition(
     const GeometryContext& gctx, BinningValue bValue) const {
-  const Acts::Vector3& sfCenter = center(gctx);
   // special binning type for R-type methods
   if (bValue == Acts::binR || bValue == Acts::binRPhi) {
     double R = bounds().get(CylinderBounds::eR);
     double phi = bounds().get(CylinderBounds::eAveragePhi);
-    return Vector3(sfCenter.x() + R * cos(phi), sfCenter.y() + R * sin(phi),
-                   sfCenter.z());
+    return localToGlobal(gctx, Vector2{phi * R, 0}, Vector3{});
   }
   // give the center as default for all of these binning types
   // binX, binY, binZ, binR, binPhi, binRPhi, binH, binEta
-  return sfCenter;
+  return center(gctx);
 }
 
 // return the measurement frame: it's the tangential plane
@@ -167,41 +166,20 @@ const Acts::CylinderBounds& Acts::CylinderSurface::bounds() const {
 
 Acts::Polyhedron Acts::CylinderSurface::polyhedronRepresentation(
     const GeometryContext& gctx, size_t lseg) const {
+  auto ctrans = transform(gctx);
+
   // Prepare vertices and faces
-  std::vector<Vector3> vertices;
+  std::vector<Vector3> vertices = bounds().createCircles(ctrans, lseg);
   std::vector<Polyhedron::FaceType> faces;
   std::vector<Polyhedron::FaceType> triangularMesh;
 
-  auto ctrans = transform(gctx);
   bool fullCylinder = bounds().coversFullAzimuth();
 
-  double avgPhi = bounds().get(CylinderBounds::eAveragePhi);
-  double halfPhi = bounds().get(CylinderBounds::eHalfPhiSector);
-
-  // Get the phi segments from the helper - ensures extra points
-  auto phiSegs = fullCylinder ? detail::VerticesHelper::phiSegments()
-                              : detail::VerticesHelper::phiSegments(
-                                    avgPhi - halfPhi, avgPhi + halfPhi,
-                                    {static_cast<ActsScalar>(avgPhi)});
-
-  // Write the two bows/circles on either side
-  std::vector<int> sides = {-1, 1};
-  for (auto& side : sides) {
-    for (size_t iseg = 0; iseg < phiSegs.size() - 1; ++iseg) {
-      int addon = (iseg == phiSegs.size() - 2 and not fullCylinder) ? 1 : 0;
-      /// Helper method to create the segment
-      detail::VerticesHelper::createSegment(
-          vertices,
-          {bounds().get(CylinderBounds::eR), bounds().get(CylinderBounds::eR)},
-          phiSegs[iseg], phiSegs[iseg + 1], lseg, addon,
-          Vector3(0., 0., side * bounds().get(CylinderBounds::eHalfLengthZ)),
-          ctrans);
-    }
-  }
   auto facesMesh =
       detail::FacesHelper::cylindricalFaceMesh(vertices, fullCylinder);
   return Polyhedron(vertices, facesMesh.first, facesMesh.second, false);
 }
+
 Acts::Vector3 Acts::CylinderSurface::rotSymmetryAxis(
     const GeometryContext& gctx) const {
   // fast access via tranform matrix (and not rotation())
@@ -246,7 +224,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
   Intersection3D::Status status1 =
-      qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance
+      std::abs(qe.first) < std::abs(s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
           : Intersection3D::Status::reachable;
 
@@ -255,8 +233,9 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
       [&](const Vector3& solution,
           Intersection3D::Status status) -> Intersection3D::Status {
     // No check to be done, return current status
-    if (!bcheck)
+    if (!bcheck) {
       return status;
+    }
     const auto& cBounds = bounds();
     if (cBounds.coversFullAzimuth() and
         bcheck.type() == BoundaryCheck::Type::eAbsolute) {
@@ -268,7 +247,8 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
       double cZ = vecLocal.dot(tMatrix.block<3, 1>(0, 2));
       double tolerance = s_onSurfaceTolerance + bcheck.tolerance()[eBoundLoc1];
       double hZ = cBounds.get(CylinderBounds::eHalfLengthZ) + tolerance;
-      return (cZ * cZ < hZ * hZ) ? status : Intersection3D::Status::missed;
+      return std::abs(cZ) < std::abs(hZ) ? status
+                                         : Intersection3D::Status::missed;
     }
     return (isOnSurface(gctx, solution, direction, bcheck)
                 ? status
@@ -285,7 +265,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.second * direction;
   Intersection3D::Status status2 =
-      qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance
+      std::abs(qe.second) < std::abs(s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
           : Intersection3D::Status::reachable;
   // Check first solution for boundary compatiblity
@@ -296,7 +276,7 @@ Acts::SurfaceIntersection Acts::CylinderSurface::intersect(
                 (status1 == Intersection3D::Status::missed and
                  status2 == Intersection3D::Status::missed);
   // Check and (eventually) go with the first solution
-  if ((check1 and qe.first * qe.first < qe.second * qe.second) or
+  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
       status2 == Intersection3D::Status::missed) {
     // And add the alternative
     cIntersection.alternative = second;

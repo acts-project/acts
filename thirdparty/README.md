@@ -12,31 +12,36 @@ issues with missing files after installation.
 
 ## dfelibs
 
-A copy of [dfelibs](https://github.com/msmk0/dfelibs) v20200416, with the
-following folders removed:
-
--   examples
--   unittests
+CMake instructions to build [dfelibs](https://github.com/msmk0/dfelibs).
 
 ## nlohmann_json
 
-A copy of [nlohmann::json](https://github.com/nlohmann/json) revision 84f19d6, with the
-following folders removed:
-
--   benchmarks
--   doc
--   test
--   include
--   third_party
+CMake instructions to build [nlohmann::json](https://github.com/nlohmann/json).
 
 ## autodiff
 
-A copy of [autodiff](https://github.com/autodiff/autodiff), v0.5.12 (however, the 
-version given in the `CMakeLists.txt` of autodiff has not been changed by the maintainers
-and is still v0.5.11). In the `CMakeLists.txt` the commands `add_subdirectory(tests)` and 
-`add_subdirectory(examples)` have been commented out. All folders/files have been 
-removed except the following ones:
+CMake instructions to build  [autodiff](https://github.com/autodiff/autodiff).
 
--   autodiff (contains the header files)
--   cmake
--   CMakeLists.txt
+## boost 
+
+For convenience, it's possible to use the ACTS build system to build the minimum
+required version of [boost](https://www.boost.org/) (currently 1.71.0).  No source is
+bundled here, and if requested via "-DACTS_USE_SYSTEM_BOOST=OFF", only the filesystem,
+program_options, and test libraries will be built.
+
+Warning: during installation, the built boost libraries will be installed alongside the
+ACTS libraries, with a version suffix. This location may be known to the system linker.
+
+## eigen3
+
+For convenience, it's possible to use the ACTS build system to build
+the minimum required version of [Eigen](https://eigen.tuxfamily.org)
+(currently 3.3.7), with "-DACTS_USE_SYSTEM_EIGEN3=OFF".
+
+## pybind11
+
+CMake instructions to build [Pybind11](https://github.com/pybind/pybind11), which is used to create python bindings for the examples.
+
+## FRNN
+
+CMake instructions to build [FRNN](https://github.com/lxxue/FRNN), which is used by the Exa.TrkX plugin.

@@ -43,21 +43,21 @@ struct GenericDenseEnvironmentExtension {
   /// TODO : Might not be needed anymore
   Material material;
   /// Derivatives dLambda''dlambda at each sub-step point
-  std::array<Scalar, 4> dLdl;
+  std::array<Scalar, 4> dLdl{};
   /// q/p at each sub-step
-  std::array<Scalar, 4> qop;
+  std::array<Scalar, 4> qop{};
   /// Derivatives dPds at each sub-step
-  std::array<Scalar, 4> dPds;
+  std::array<Scalar, 4> dPds{};
   /// Derivative d(dEds)d(q/p) evaluated at the initial point
   Scalar dgdqopValue = 0.;
   /// Derivative dEds at the initial point
   Scalar g = 0.;
   /// k_i equivalent for the time propagation
-  std::array<Scalar, 4> tKi;
+  std::array<Scalar, 4> tKi{};
   /// Lambda''_i
-  std::array<Scalar, 4> Lambdappi;
+  std::array<Scalar, 4> Lambdappi{};
   /// Energy at each sub-step
-  std::array<Scalar, 4> energy;
+  std::array<Scalar, 4> energy{};
 
   /// @brief Default constructor
   GenericDenseEnvironmentExtension() = default;
@@ -101,7 +101,7 @@ struct GenericDenseEnvironmentExtension {
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          ThisVector3& knew, const Vector3& bField, std::array<Scalar, 4>& kQoP,
          const int i = 0, const double h = 0.,
-         const ThisVector3& kprev = ThisVector3()) {
+         const ThisVector3& kprev = ThisVector3::Zero()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
@@ -263,7 +263,7 @@ struct GenericDenseEnvironmentExtension {
     Vector3 dk4dL = Vector3::Zero();
 
     /// Propagation of derivatives of dLambda''dlambda at each sub-step
-    std::array<double, 4> jdL;
+    std::array<double, 4> jdL{};
 
     // Evaluation of the rightmost column without the last term.
     jdL[0] = dLdl[0];

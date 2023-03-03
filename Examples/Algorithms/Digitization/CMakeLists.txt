@@ -4,18 +4,15 @@ add_library(
   src/DigitizationConfig.cpp
   src/MeasurementCreation.cpp
   src/PlanarSteppingAlgorithm.cpp
-  src/SmearingAlgorithm.cpp
-  src/DigitizationOptions.cpp
+  src/DigitizationConfigurator.cpp
   src/ModuleClusters.cpp)
 target_include_directories(
   ActsExamplesDigitization
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
 target_link_libraries(
   ActsExamplesDigitization
-  PRIVATE
-    ActsCore ActsPluginDigitization ActsPluginIdentification
-    ActsExamplesFramework
-    Boost::program_options)
+  PUBLIC
+    ActsCore ActsPluginIdentification ActsExamplesFramework)
 
 install(
   TARGETS ActsExamplesDigitization

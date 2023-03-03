@@ -33,7 +33,8 @@ constexpr FreeIndices freeIndices[] = {
     eFreePos0, eFreePos1, eFreePos2, eFreeTime,
     eFreeDir0, eFreeDir1, eFreeDir2, eFreeQOverP,
 };
-const TestSourceLink source;
+const TestSourceLink sourceOrig;
+const Acts::SourceLink source{sourceOrig};
 // fix seed for reproducible tests
 std::default_random_engine rng(123);
 }  // namespace
@@ -58,7 +59,8 @@ BOOST_DATA_TEST_CASE(FixedBoundOne, bd::make(boundIndices), index) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink(), source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
+                    sourceOrig);
 }
 
 BOOST_AUTO_TEST_CASE(FixedBoundAll) {
@@ -72,7 +74,7 @@ BOOST_AUTO_TEST_CASE(FixedBoundAll) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink(), source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
 }
 
 namespace {
@@ -130,7 +132,8 @@ BOOST_DATA_TEST_CASE(FixedFreeOne, bd::make(freeIndices), index) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink(), source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().template get<TestSourceLink>(),
+                    sourceOrig);
 
   // all free parameters are unrestricted and we know the expected residual.
   constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();
@@ -151,7 +154,7 @@ BOOST_AUTO_TEST_CASE(FixedFreeAll) {
   }
   BOOST_CHECK_EQUAL(meas.parameters(), params);
   BOOST_CHECK_EQUAL(meas.covariance(), cov);
-  BOOST_CHECK_EQUAL(meas.sourceLink(), source);
+  BOOST_CHECK_EQUAL(meas.sourceLink().get<TestSourceLink>(), sourceOrig);
 
   // all free parameters are unrestricted and we know the expected residual.
   constexpr auto tol = std::numeric_limits<ActsScalar>::epsilon();
@@ -162,7 +165,7 @@ BOOST_AUTO_TEST_CASE(FixedFreeAll) {
 BOOST_AUTO_TEST_CASE(VariantBound) {
   // generate w/ a single parameter
   auto [par1, cov1] = generateParametersCovariance<ActsScalar, 1u>(rng);
-  BoundVariantMeasurement<SourceLink> meas =
+  BoundVariantMeasurement meas =
       makeMeasurement(source, par1, cov1, eBoundTheta);
   std::visit(
       [](const auto& m) {
@@ -196,7 +199,7 @@ BOOST_AUTO_TEST_CASE(VariantBound) {
 BOOST_AUTO_TEST_CASE(VariantFree) {
   // generate w/ two parameters
   auto [par2, cov2] = generateParametersCovariance<ActsScalar, 2u>(rng);
-  FreeVariantMeasurement<SourceLink> meas =
+  FreeVariantMeasurement meas =
       makeMeasurement(source, par2, cov2, eFreePos2, eFreeTime);
   std::visit(
       [](const auto& m) {

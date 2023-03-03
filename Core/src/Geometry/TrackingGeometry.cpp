@@ -8,23 +8,25 @@
 
 #include "Acts/Geometry/TrackingGeometry.hpp"
 
+#include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/Layer.hpp"
-#include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 Acts::TrackingGeometry::TrackingGeometry(
     const MutableTrackingVolumePtr& highestVolume,
-    const IMaterialDecorator* materialDecorator)
+    const IMaterialDecorator* materialDecorator,
+    const GeometryIdentifierHook& hook, const Logger& logger)
     : m_world(highestVolume),
       m_beam(Surface::makeShared<PerigeeSurface>(Vector3::Zero())) {
   // Close the geometry: assign geometryID and successively the material
   size_t volumeID = 0;
-  highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID);
+  highestVolume->closeGeometry(materialDecorator, m_volumesById, volumeID, hook,
+                               logger);
   m_volumesById.rehash(0);
   // fill surface lookup container
   m_world->visitSurfaces([this](const Acts::Surface* srf) {
-    if (srf) {
+    if (srf != nullptr) {
       m_surfacesById[srf->geometryId()] = srf;
     }
   });
@@ -62,11 +64,6 @@ void Acts::TrackingGeometry::registerBeamTube(
 
 const Acts::Surface* Acts::TrackingGeometry::getBeamline() const {
   return m_beam.get();
-}
-
-void Acts::TrackingGeometry::visitSurfaces(
-    const std::function<void(const Acts::Surface*)>& visitor) const {
-  highestTrackingVolume()->visitSurfaces(visitor);
 }
 
 const Acts::TrackingVolume* Acts::TrackingGeometry::findVolume(

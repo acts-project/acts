@@ -28,35 +28,40 @@ namespace ActsExamples {
 /// default it writes to the current working directory.
 /// Files are named using the following schema
 ///
-///     event000000001-CKFtracks.csv
-///     event000000002-CKFtracks.csv
+///     event000000001-tracks_{algorithm_name}.csv
+///     event000000002-tracks_{algorithm_name}.csv
 ///
 /// and each line in the file corresponds to one track.
 class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
  public:
   struct Config {
-    std::string inputTrajectories;  ///< Input trajectory collection
-    std::string outputDir;          ///< where to place output files
+    std::string inputTrajectories;           ///< Input trajectory collection
+    std::string outputDir;                   ///< where to place output files
+    std::string fileName = "CKFtracks.csv";  ///< name of the output files
     std::string
         inputMeasurementParticlesMap;  ///< Input hit-particles map collection
     size_t outputPrecision = 6;        ///< floating point precision
-    size_t nMeasurementsMin = 9;       ///< Min number of measurements
+    size_t nMeasurementsMin = 7;       ///< Min number of measurements
+    bool onlyTruthMatched = false;     ///< Only write truth matched tracks
     double truthMatchProbMin = 0.5;  ///< Probability threshold for fake tracks
     double ptMin = 1_GeV;            ///< Min pt of tracks
   };
 
   /// constructor
-  /// @param cfg is the configuration object
-  /// @parm level is the output logging level
-  CsvMultiTrajectoryWriter(const Config& cfg,
+  /// @param config is the configuration object
+  /// @param level is the output logging level
+  CsvMultiTrajectoryWriter(const Config& config,
                            Acts::Logging::Level level = Acts::Logging::INFO);
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] context is the algorithm context for consistency
   /// @param [in] tracks is the track collection
   ProcessCode writeT(const AlgorithmContext& context,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
  private:
   Config m_cfg;  //!< Nested configuration struct
@@ -64,12 +69,13 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// @brief Struct for brief trajectory summary info
   ///
   struct trackInfo : public Acts::MultiTrajectoryHelpers::TrajectoryState {
-    size_t trackId;
+    size_t trackId = 0;
     ActsFatras::Barcode particleId;
-    size_t nMajorityHits;
+    size_t nMajorityHits = 0;
     std::string trackType;
-    double truthMatchProb;
-    const TrackParameters* fittedParameters;
+    double truthMatchProb = 0;
+    const TrackParameters* fittedParameters = nullptr;
+    std::vector<uint64_t> measurementsID;
   };  // trackInfo struct
 };
 

@@ -159,6 +159,9 @@ class GaussianTrackDensity {
   /// @param newZ The new z value
   /// @param newValue The new value at z position
   /// @param newSecondDerivative The new second derivative
+  /// @param maxZ Maximum z value, will be compared against @p newZ
+  /// @param maxValue Maximum value
+  /// @param maxSecondDerivative Maximum of the second derivative
   /// @return The max z position, the max value at z position, the max second
   /// derivative
   std::tuple<double, double, double> updateMaximum(

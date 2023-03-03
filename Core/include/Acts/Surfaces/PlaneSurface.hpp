@@ -28,24 +28,26 @@ class DetectorElementBase;
 /// The PlaneSurface extends the Surface class with the possibility to
 /// convert local to global positions (vice versa).
 ///
-/// @image html PlaneSurface.png
+/// @image html figures/PlaneSurface.png
 ///
 class PlaneSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Copy Constructor
   ///
-  /// @param psf is the source surface for the copy
+  /// @param other is the source surface for the copy
   PlaneSurface(const PlaneSurface& other);
 
   /// Copy constructor - with shift
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param other is the source cone surface
-  /// @param transf is the additional transfrom applied after copying
+  /// @param transform is the additional transfrom applied after copying
   PlaneSurface(const GeometryContext& gctx, const PlaneSurface& other,
-               const Transform3& transf);
+               const Transform3& transform);
 
   /// Dedicated Constructor with normal vector
   /// This is for curvilinear surfaces which are by definition boundless
@@ -63,9 +65,9 @@ class PlaneSurface : public Surface {
 
   /// Constructor for Planes with (optional) shared bounds object
   ///
-  /// @param htrans transform in 3D that positions this surface
+  /// @param transform transform in 3D that positions this surface
   /// @param pbounds bounds object to describe the actual surface area
-  PlaneSurface(const Transform3& htrans,
+  PlaneSurface(const Transform3& transform,
                std::shared_ptr<const PlanarBounds> pbounds = nullptr);
 
  public:
@@ -137,6 +139,7 @@ class PlaneSurface : public Surface {
 
   /// Method that calculates the correction due to incident angle
   ///
+  /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not
   /// inside bounds (check is done)
   /// @param direction global 3D momentum direction (ignored for PlaneSurface)

@@ -12,22 +12,36 @@
 
 #pragma once
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
+#include <array>
 #include <limits>
 namespace Acts {
+
+/// Status enum
+enum class IntersectionStatus : int {
+  missed = 0,
+  unreachable = 0,
+  reachable = 1,
+  onSurface = 2
+};
+
+/// Ostream-operator for the IntersectionStatus enum
+inline std::ostream& operator<<(std::ostream& os, IntersectionStatus status) {
+  constexpr static std::array<const char*, 3> names = {
+      {"missed/unreachable", "reachable", "onSurface"}};
+
+  os << names[static_cast<std::size_t>(status)];
+  return os;
+}
 
 ///  @struct Intersection
 ///
 ///  Intersection struct used for position
 template <unsigned int DIM>
 struct Intersection {
-  /// Nested Status enum
-  enum class Status : int {
-    missed = 0,
-    unreachable = 0,
-    reachable = 1,
-    onSurface = 2
-  };
+  /// Status enum
+  using Status = IntersectionStatus;
 
   /// Position of the intersection
   ActsVector<DIM> position = ActsVector<DIM>::Zero();
@@ -41,7 +55,7 @@ struct Intersection {
   ///
   /// @param sinter is the position of the intersection
   /// @param slength is the path length to the intersection
-  /// @param svalid is a boolean indicating if intersection is valid
+  /// @param sstatus is an enum indicating the status of the intersection
   Intersection(const ActsVector<DIM>& sinter, double slength, Status sstatus)
       : position(sinter), pathLength(slength), status(sstatus) {}
 
@@ -107,7 +121,6 @@ class ObjectIntersection {
   ///
   /// @param sInter is the intersection
   /// @param sObject is the object to be instersected
-  /// @param sRepresentation is the object represenatation
   template <typename T = representation_t,
             std::enable_if_t<std::is_same<T, object_t>::value, int> = 0>
   ObjectIntersection(const Intersection3D& sInter, const object_t* sObject)
@@ -148,6 +161,9 @@ class ObjectIntersection {
       const ObjectIntersection<object_t, representation_t>& oi) const {
     return (intersection > oi.intersection);
   }
+
+  /// Allow swapping the intersection and the alternative
+  void swapSolutions() { std::swap(intersection, alternative); }
 };
 
 struct SameSurfaceIntersection {
@@ -163,5 +179,55 @@ struct SameSurfaceIntersection {
     return (i1.object == i2.object);
   }
 };
+
+namespace detail {
+
+/// This function checks if an intersection is valid for the specified
+/// path-limit and overstep-limit
+///
+/// @tparam intersection_t Type of the intersection object
+/// @tparam logger_t The logger type, which defaults to std::false_type to
+/// prevent the generation of logging code
+///
+/// @param intersection The intersection to check
+/// @param pLimit The path-limit
+/// @param oLimit The overstep-limit
+/// @param tolerance The tolerance that is applied to the path-limit criterion
+/// @param logger A optionally supplied logger which prints out a lot of infos
+/// at VERBOSE level
+template <typename intersection_t, typename logger_t = std::false_type>
+bool checkIntersection(const intersection_t& intersection, double pLimit,
+                       double oLimit, double tolerance,
+                       const Logger& logger = getDummyLogger()) {
+  const double cLimit = intersection.pathLength;
+
+  ACTS_VERBOSE(" -> pLimit, oLimit, cLimit: " << pLimit << ", " << oLimit
+                                              << ", " << cLimit);
+
+  const bool coCriterion = cLimit > oLimit;
+  const bool cpCriterion = std::abs(cLimit) < std::abs(pLimit) + tolerance;
+
+  const bool accept = coCriterion and cpCriterion;
+
+  if (accept) {
+    ACTS_VERBOSE("Intersection is WITHIN limit");
+  } else {
+    ACTS_VERBOSE("Intersection is OUTSIDE limit because: ");
+    if (not coCriterion) {
+      ACTS_VERBOSE("- intersection path length "
+                   << cLimit << " <= overstep limit " << oLimit);
+    }
+    if (not cpCriterion) {
+      ACTS_VERBOSE("- intersection path length "
+                   << std::abs(cLimit) << " is over the path limit "
+                   << (std::abs(pLimit) + tolerance)
+                   << " (including tolerance of " << tolerance << ")");
+    }
+  }
+
+  return accept;
+}
+
+}  // namespace detail
 
 }  // namespace Acts

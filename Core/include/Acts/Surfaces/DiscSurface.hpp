@@ -38,10 +38,12 @@ class DetectorElementBase;
 /// to happen to transfer the local coordinates onto the
 /// cartesian reference frame coordinates.
 ///
-/// @image html DiscSurface.png
+/// @image html figures/DiscSurface.png
 ///
 class DiscSurface : public Surface {
+#ifndef DOXYGEN
   friend Surface;
+#endif
 
  protected:
   /// Constructor for Discs from Transform3, \f$ r_{min}, r_{max} \f$
@@ -179,7 +181,6 @@ class DiscSurface : public Surface {
   /// Special method for DiscSurface : local<->local transformations polar <->
   /// cartesian
   ///
-  /// @param gctx The current geometry context object, e.g. alignment
   /// @param locpol is a local position in polar coordinates
   ///
   /// @return values is local 2D position in cartesian coordinates

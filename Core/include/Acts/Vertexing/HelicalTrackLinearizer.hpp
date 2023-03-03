@@ -46,11 +46,11 @@ class HelicalTrackLinearizer {
  public:
   using Propagator_t = propagator_t;
 
-  /// @struct State struct
+  /// State struct
   struct State {
     /// @brief The state constructor
     ///
-    /// @param mctx The magnetic field context
+    /// @param fieldCacheIn The magnetic field cache
     State(MagneticFieldProvider::Cache fieldCacheIn)
         : fieldCache(std::move(fieldCacheIn)) {}
     /// Magnetic field cache
@@ -63,20 +63,20 @@ class HelicalTrackLinearizer {
     ///
     /// @param bIn The magnetic field
     /// @param prop The propagator
-    Config(std::shared_ptr<MagneticFieldProvider> bIn,
-           std::shared_ptr<Propagator_t> prop)
+    Config(std::shared_ptr<const MagneticFieldProvider> bIn,
+           std::shared_ptr<const Propagator_t> prop)
         : bField(std::move(bIn)), propagator(std::move(prop)) {}
 
     /// @brief Config constructor without B field -> uses NullBField
     ///
     /// @param prop The propagator
-    Config(std::shared_ptr<Propagator_t> prop)
+    Config(std::shared_ptr<const Propagator_t> prop)
         : bField{std::make_shared<NullBField>()}, propagator(std::move(prop)) {}
 
     // The magnetic field
-    std::shared_ptr<MagneticFieldProvider> bField;
+    std::shared_ptr<const MagneticFieldProvider> bField;
     // The propagator
-    std::shared_ptr<Propagator_t> propagator;
+    std::shared_ptr<const Propagator_t> propagator;
 
     // Minimum q/p value
     double minQoP = 1e-15;
@@ -87,7 +87,11 @@ class HelicalTrackLinearizer {
   /// @brief Constructor
   ///
   /// @param config Configuration object
-  HelicalTrackLinearizer(const Config& config) : m_cfg(config) {}
+  /// @param _logger a logger instance
+  HelicalTrackLinearizer(const Config& config,
+                         std::unique_ptr<const Logger> _logger =
+                             getDefaultLogger("HelTrkLinProp", Logging::INFO))
+      : m_cfg(config), m_logger{std::move(_logger)} {}
 
   /// @brief Function that linearizes BoundTrackParameters at
   /// given linearization point
@@ -108,6 +112,10 @@ class HelicalTrackLinearizer {
  private:
   /// Configuration object
   const Config m_cfg;
+
+  std::unique_ptr<const Logger> m_logger;
+
+  const Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace Acts

@@ -26,7 +26,7 @@ class DeviceArrayDeleter {
   DeviceArrayDeleter(cl::sycl::queue& queue) : m_queue(&queue) {}
   /// Operator performing the deletion of the memory
   void operator()(void* ptr) {
-    if (ptr) {
+    if (ptr != nullptr) {
       cl::sycl::free(ptr, *m_queue);
     }
   }

@@ -4,11 +4,23 @@ if (NOT CMAKE_BUILD_TYPE)
   message(STATUS "Setting default build type: ${CMAKE_BUILD_TYPE}")
 endif() 
 
-set(ACTS_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wunused-local-typedefs")
+set(ACTS_CXX_FLAGS "-Wall -Wextra -Wpedantic -Wshadow -Wno-unused-local-typedefs")
 set(ACTS_CXX_FLAGS_DEBUG "--coverage")
 set(ACTS_CXX_FLAGS_MINSIZEREL "")
 set(ACTS_CXX_FLAGS_RELEASE "")
 set(ACTS_CXX_FLAGS_RELWITHDEBINFO "")
+
+# This adds some useful conversion checks like float-to-bool, float-to-int, etc.
+# However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion 
+# is much more aggressive and also triggers on e.g., double-to-float
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang|AppleClang") 
+ set(ACTS_CXX_FLAGS "${ACTS_CXX_FLAGS} -Wfloat-conversion")
+endif()
+
+if(ACTS_ENABLE_CPU_PROFILING OR ACTS_ENABLE_MEMORY_PROFILING)
+  message(STATUS "Added -g compile flag")
+  set(ACTS_CXX_FLAGS "${ACTS_CXX_FLAGS} -g")
+endif()
 
 # Acts linker flags
 set(ACTS_EXE_LINKER_FLAGS_DEBUG "--coverage")

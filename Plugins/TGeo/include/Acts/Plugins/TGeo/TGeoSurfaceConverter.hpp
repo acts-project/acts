@@ -60,7 +60,7 @@ struct TGeoSurfaceConverter {
   ///
   /// @param tgShape The TGeoShape
   /// @param rotation The rotation matrix as Double_t* from root
-  /// @param rotation The translation vector as Double_t* from root
+  /// @param translation The translation as a Double_t*
   /// @param axes The axes definition
   /// @param scalor The unit scalor between TGeo and Acts
   ///

@@ -27,22 +27,22 @@ namespace Acts {
 ///
 
 struct LinearizedTrack {
+  LinearizedTrack() = default;
+
   /// @brief Constructor taking perigee parameters and covariance matrix
   /// of track propagated to closest approach (PCA) of linearization point,
   /// position and momentum Jacobian and const term.
   ///
   /// @param paramsAtPCA Parameters at point of closest approach
   /// @param parCovarianceAtPCA Parameter covariance matrix at point of closest
-  /// approach
+  ///                           approach
+  /// @param parWeightAtPCA The weight at the point of closest approach
   /// @param linPoint Linearization point
   /// @param posJacobian Position jacobian
   /// @param momJacobian Momentum jacobian
   /// @param position Position at point of closest approach
   /// @param momentum Momentum at point of closest approach
   /// @param constTerm Constant term in taylor expansion
-
-  LinearizedTrack() = default;
-
   LinearizedTrack(const BoundVector& paramsAtPCA,
                   const BoundSymMatrix& parCovarianceAtPCA,
                   const BoundSymMatrix& parWeightAtPCA, const Vector4& linPoint,

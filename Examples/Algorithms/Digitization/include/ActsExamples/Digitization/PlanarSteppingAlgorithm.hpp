@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <memory>
@@ -27,7 +27,7 @@ class TrackingGeometry;
 namespace ActsExamples {
 
 /// Create planar clusters from simulation hits.
-class PlanarSteppingAlgorithm final : public BareAlgorithm {
+class PlanarSteppingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input collection of simulated hits.
@@ -36,6 +36,8 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
     std::string outputClusters;
     /// Output source links collection.
     std::string outputSourceLinks;
+    /// Output digitization source links collection
+    std::string outputDigiSourceLinks;
     /// Output measurements collection.
     std::string outputMeasurements;
     /// Output collection to map measured hits to contributing particles.
@@ -52,15 +54,18 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
 
   /// Construct the digitization algorithm.
   ///
-  /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
-  PlanarSteppingAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  /// @param config is the algorithm configuration
+  /// @param level is the logging level
+  PlanarSteppingAlgorithm(Config config, Acts::Logging::Level level);
 
   /// Build clusters from input simulation hits.
   ///
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
   struct Digitizable {

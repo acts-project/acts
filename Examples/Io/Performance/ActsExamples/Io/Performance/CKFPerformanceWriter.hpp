@@ -27,7 +27,7 @@ namespace ActsExamples {
 /// track efficiency, fake rate etc.
 /// @TODO: add duplication plots
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
@@ -40,10 +40,10 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
-    /// Output directory.
-    std::string outputDir;
     /// Output filename.
-    std::string outputFilename = "performance_ckf.root";
+    std::string filePath = "performance_ckf.root";
+    /// Output filemode
+    std::string fileMode = "RECREATE";
     /// Plot tool configurations.
     EffPlotTool::Config effPlotToolConfig;
     FakeRatePlotTool::Config fakeRatePlotToolConfig;
@@ -61,14 +61,17 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
 
   /// Construct from configuration and log level.
   CKFPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
-  ~CKFPerformanceWriter() final override;
+  ~CKFPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.
@@ -85,7 +88,17 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   DuplicationPlotTool::DuplicationPlotCache m_duplicationPlotCache{};
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
+
+  // Adding numbers for efficiency, fake, duplicate calculations
+  size_t m_nTotalTracks = 0;
+  size_t m_nTotalMatchedTracks = 0;
+  size_t m_nTotalFakeTracks = 0;
+  size_t m_nTotalDuplicateTracks = 0;
+  size_t m_nTotalParticles = 0;
+  size_t m_nTotalMatchedParticles = 0;
+  size_t m_nTotalDuplicateParticles = 0;
+  size_t m_nTotalFakeParticles = 0;
 };
 
 }  // namespace ActsExamples

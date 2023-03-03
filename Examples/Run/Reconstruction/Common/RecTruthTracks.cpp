@@ -8,37 +8,39 @@
 
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/Detector/IBaseDetector.hpp"
-#include "ActsExamples/Digitization/DigitizationOptions.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/Geometry/CommonGeometry.hpp"
-#include "ActsExamples/Io/Csv/CsvOptionsReader.hpp"
 #include "ActsExamples/Io/Csv/CsvParticleReader.hpp"
 #include "ActsExamples/Io/Csv/CsvSimHitReader.hpp"
 #include "ActsExamples/Io/Performance/TrackFinderPerformanceWriter.hpp"
 #include "ActsExamples/Io/Performance/TrackFitterPerformanceWriter.hpp"
-#include "ActsExamples/Io/Root/RootTrajectoryParametersWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectoryStatesWriter.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryWriter.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/CsvOptionsReader.hpp"
+#include "ActsExamples/Options/DigitizationOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
+#include "ActsExamples/Options/TrackFittingOptions.hpp"
+#include "ActsExamples/Options/TruthSeedSelectorOptions.hpp"
+#include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
+#include "ActsExamples/TrackFitting/KalmanFitterFunction.hpp"
 #include "ActsExamples/TrackFitting/SurfaceSortingAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
-#include "ActsExamples/TrackFitting/TrackFittingOptions.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 
 #include <memory>
-
-#include "RecInput.hpp"
 
 using namespace Acts::UnitLiterals;
 using namespace ActsExamples;
 
-int runRecTruthTracks(int argc, char* argv[],
-                      std::shared_ptr<ActsExamples::IBaseDetector> detector) {
+int runRecTruthTracks(
+    int argc, char* argv[],
+    const std::shared_ptr<ActsExamples::IBaseDetector>& detector) {
   using boost::program_options::value;
 
   // setup and parse options
@@ -53,7 +55,8 @@ int runRecTruthTracks(int argc, char* argv[],
   Options::addMagneticFieldOptions(desc);
   Options::addFittingOptions(desc);
   Options::addDigitizationOptions(desc);
-  TruthSeedSelector::addOptions(desc);
+  Options::addParticleSmearingOptions(desc);
+  Options::addTruthSeedSelectorOptions(desc);
 
   auto vm = Options::parse(desc, argc, argv);
   if (vm.empty()) {
@@ -73,7 +76,7 @@ int runRecTruthTracks(int argc, char* argv[],
   auto geometry = Geometry::build(vm, *detector);
   auto trackingGeometry = geometry.first;
   // Add context decorators
-  for (auto cdr : geometry.second) {
+  for (const auto& cdr : geometry.second) {
     sequencer.addContextDecorator(cdr);
   }
   // Setup the magnetic field
@@ -92,7 +95,7 @@ int runRecTruthTracks(int argc, char* argv[],
   // from all particles read in by particle reader for further processing. It
   // has no impact on the truth hits read-in by the cluster reader.
   TruthSeedSelector::Config particleSelectorCfg =
-      TruthSeedSelector::readConfig(vm);
+      Options::readTruthSeedSelectorConfig(vm);
   particleSelectorCfg.inputParticles = particleReader.outputParticles;
   particleSelectorCfg.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
@@ -124,7 +127,7 @@ int runRecTruthTracks(int argc, char* argv[],
   SurfaceSortingAlgorithm::Config sorterCfg;
   // Setup the surface sorter if running direct navigator
   sorterCfg.inputProtoTracks = trackFinderCfg.outputProtoTracks;
-  sorterCfg.inputSimulatedHits = simHitReaderCfg.outputSimHits;
+  sorterCfg.inputSimHits = simHitReaderCfg.outputSimHits;
   sorterCfg.inputMeasurementSimHitsMap = digiCfg.outputMeasurementSimHitsMap;
   sorterCfg.outputProtoTracks = "sortedprototracks";
   if (dirNav) {
@@ -133,6 +136,7 @@ int runRecTruthTracks(int argc, char* argv[],
   }
 
   // setup the fitter
+  const double reverseFilteringMomThreshold = 0.0;
   TrackFittingAlgorithm::Config fitter;
   fitter.inputMeasurements = digiCfg.outputMeasurements;
   fitter.inputSourceLinks = digiCfg.outputSourceLinks;
@@ -142,54 +146,45 @@ int runRecTruthTracks(int argc, char* argv[],
   }
   fitter.inputInitialTrackParameters =
       particleSmearingCfg.outputTrackParameters;
-  fitter.outputTrajectories = "trajectories";
+  fitter.outputTracks = "tracks";
   fitter.directNavigation = dirNav;
-  fitter.multipleScattering =
-      vm["fit-multiple-scattering-correction"].as<bool>();
-  fitter.energyLoss = vm["fit-energy-loss-correction"].as<bool>();
   fitter.pickTrack = vm["fit-pick-track"].as<int>();
   fitter.trackingGeometry = trackingGeometry;
-  fitter.dFit = TrackFittingAlgorithm::makeTrackFitterFunction(magneticField);
-  fitter.fit = TrackFittingAlgorithm::makeTrackFitterFunction(trackingGeometry,
-                                                              magneticField);
+  fitter.fit = makeKalmanFitterFunction(
+      trackingGeometry, magneticField,
+      vm["fit-multiple-scattering-correction"].as<bool>(),
+      vm["fit-energy-loss-correction"].as<bool>(), reverseFilteringMomThreshold,
+      Acts::FreeToBoundCorrection(
+          vm["fit-ftob-nonlinear-correction"].as<bool>()));
   sequencer.addAlgorithm(
       std::make_shared<TrackFittingAlgorithm>(fitter, logLevel));
 
+  TracksToTrajectories::Config tracksToTrajCfg{};
+  tracksToTrajCfg.inputTracks = fitter.outputTracks;
+  tracksToTrajCfg.outputTrajectories = "trajectories";
+  sequencer.addAlgorithm(
+      (std::make_shared<TracksToTrajectories>(tracksToTrajCfg, logLevel)));
+
   // write track states from fitting
   RootTrajectoryStatesWriter::Config trackStatesWriter;
-  trackStatesWriter.inputTrajectories = fitter.outputTrajectories;
+  trackStatesWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   trackStatesWriter.inputParticles = inputParticles;
   trackStatesWriter.inputSimHits = simHitReaderCfg.outputSimHits;
   trackStatesWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
   trackStatesWriter.inputMeasurementSimHitsMap =
       digiCfg.outputMeasurementSimHitsMap;
-  trackStatesWriter.outputDir = outputDir;
-  trackStatesWriter.outputFilename = "trackstates_fitter.root";
-  trackStatesWriter.outputTreename = "trackstates_fitter";
+  trackStatesWriter.filePath = outputDir + "/trackstates_fitter.root";
   sequencer.addWriter(std::make_shared<RootTrajectoryStatesWriter>(
       trackStatesWriter, logLevel));
 
-  // write track parameters from fitting
-  RootTrajectoryParametersWriter::Config trackParamsWriter;
-  trackParamsWriter.inputTrajectories = fitter.outputTrajectories;
-  trackParamsWriter.inputParticles = inputParticles;
-  trackParamsWriter.inputMeasurementParticlesMap =
-      digiCfg.outputMeasurementParticlesMap;
-  trackParamsWriter.outputDir = outputDir;
-  trackParamsWriter.outputFilename = "trackparams_fitter.root";
-  trackParamsWriter.outputTreename = "trackparams_fitter";
-  sequencer.addWriter(std::make_shared<RootTrajectoryParametersWriter>(
-      trackParamsWriter, logLevel));
-
   // write track summary from CKF
   RootTrajectorySummaryWriter::Config trackSummaryWriter;
-  trackSummaryWriter.inputTrajectories = fitter.outputTrajectories;
+  trackSummaryWriter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
+  trackSummaryWriter.inputParticles = inputParticles;
   trackSummaryWriter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  trackSummaryWriter.outputDir = outputDir;
-  trackSummaryWriter.outputFilename = "tracksummary_fitter.root";
-  trackSummaryWriter.outputTreename = "tracksummary_fitter";
+  trackSummaryWriter.filePath = outputDir + "/tracksummary_fitter.root";
   sequencer.addWriter(std::make_shared<RootTrajectorySummaryWriter>(
       trackSummaryWriter, logLevel));
 
@@ -200,15 +195,16 @@ int runRecTruthTracks(int argc, char* argv[],
   perfFinder.inputParticles = inputParticles;
   perfFinder.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  perfFinder.outputDir = outputDir;
+  perfFinder.filePath = outputDir + "/performance_track_finder.root";
   sequencer.addWriter(
       std::make_shared<TrackFinderPerformanceWriter>(perfFinder, logLevel));
+
   TrackFitterPerformanceWriter::Config perfFitter;
-  perfFitter.inputTrajectories = fitter.outputTrajectories;
+  perfFitter.inputTrajectories = tracksToTrajCfg.outputTrajectories;
   perfFitter.inputParticles = inputParticles;
   perfFitter.inputMeasurementParticlesMap =
       digiCfg.outputMeasurementParticlesMap;
-  perfFitter.outputDir = outputDir;
+  perfFitter.filePath = outputDir + "/performance_track_fitter.root";
   sequencer.addWriter(
       std::make_shared<TrackFitterPerformanceWriter>(perfFitter, logLevel));
 

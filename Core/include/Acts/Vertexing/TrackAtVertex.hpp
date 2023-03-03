@@ -36,24 +36,15 @@ struct TrackAtVertex {
                 const input_track_t* originalTrack)
       : fittedParams(paramsAtVertex),
         originalParams(originalTrack),
-        chi2Track(chi2perTrack),
-        ndf(0.),
-        vertexCompatibility(0.),
-        trackWeight(1.) {}
+        chi2Track(chi2perTrack) {}
 
   /// @brief Constructor with default chi2
   ///
-  /// @param chi2perTrack Chi2 of track
   /// @param paramsAtVertex Fitted perigee parameter
   /// @param originalTrack Original perigee parameter
   TrackAtVertex(const BoundTrackParameters& paramsAtVertex,
                 const input_track_t* originalTrack)
-      : fittedParams(paramsAtVertex),
-        originalParams(originalTrack),
-        chi2Track(0.),
-        ndf(0.),
-        vertexCompatibility(0.),
-        trackWeight(1.) {}
+      : fittedParams(paramsAtVertex), originalParams(originalTrack) {}
 
   /// Fitted perigee
   BoundTrackParameters fittedParams;
@@ -75,7 +66,7 @@ struct TrackAtVertex {
   double vertexCompatibility = 0;
 
   /// Weight of track in fit
-  double trackWeight = 0;
+  double trackWeight = 1;
 
   /// The linearized state of the track at vertex
   LinearizedTrack linearizedState;

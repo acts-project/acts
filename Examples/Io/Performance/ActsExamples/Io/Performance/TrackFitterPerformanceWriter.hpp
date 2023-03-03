@@ -25,7 +25,7 @@ namespace ActsExamples {
 ///
 /// Efficiency here is the fraction of smoothed tracks compared to all tracks.
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
@@ -39,10 +39,8 @@ class TrackFitterPerformanceWriter final
     std::string inputParticles;
     /// Input hit-particles map collection.
     std::string inputMeasurementParticlesMap;
-    /// Output directory.
-    std::string outputDir;
     /// Output filename.
-    std::string outputFilename = "performance_track_fitter.root";
+    std::string filePath = "performance_track_fitter.root";
     /// Plot tool configurations.
     ResPlotTool::Config resPlotToolConfig;
     EffPlotTool::Config effPlotToolConfig;
@@ -50,15 +48,21 @@ class TrackFitterPerformanceWriter final
   };
 
   /// Construct from configuration and log level.
-  TrackFitterPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
-  ~TrackFitterPerformanceWriter() final override;
+  /// @param config The configuration
+  /// @param level The logger level
+  TrackFitterPerformanceWriter(Config config, Acts::Logging::Level level);
+
+  ~TrackFitterPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.
@@ -72,7 +76,7 @@ class TrackFitterPerformanceWriter final
   EffPlotTool::EffPlotCache m_effPlotCache;
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
 };
 
 }  // namespace ActsExamples

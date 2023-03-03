@@ -19,18 +19,11 @@ struct FrameworkRndmEngine : public Pythia8::RndmEngine {
   ActsExamples::RandomEngine& rng;
 
   FrameworkRndmEngine(ActsExamples::RandomEngine& rng_) : rng(rng_) {}
-  double flat() {
+  double flat() override {
     return std::uniform_real_distribution<double>(0.0, 1.0)(rng);
   }
 };
 }  // namespace
-
-std::function<ActsExamples::SimParticleContainer(ActsExamples::RandomEngine&)>
-ActsExamples::Pythia8Generator::makeFunction(const Config& cfg,
-                                             Acts::Logging::Level lvl) {
-  auto gen = std::make_shared<Pythia8Generator>(cfg, lvl);
-  return [=](RandomEngine& rng) { return (*gen)(rng); };
-}
 
 ActsExamples::Pythia8Generator::Pythia8Generator(const Config& cfg,
                                                  Acts::Logging::Level lvl)
@@ -52,7 +45,7 @@ ActsExamples::Pythia8Generator::Pythia8Generator(const Config& cfg,
 }
 
 // needed to allow unique_ptr of forward-declared Pythia class
-ActsExamples::Pythia8Generator::~Pythia8Generator() {}
+ActsExamples::Pythia8Generator::~Pythia8Generator() = default;
 
 ActsExamples::SimParticleContainer ActsExamples::Pythia8Generator::operator()(
     RandomEngine& rng) {

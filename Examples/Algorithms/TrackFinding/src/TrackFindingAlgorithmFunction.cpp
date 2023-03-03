@@ -6,6 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
@@ -25,30 +28,35 @@ using Smoother = Acts::GainMatrixSmoother;
 using Stepper = Acts::EigenStepper<>;
 using Navigator = Acts::Navigator;
 using Propagator = Acts::Propagator<Stepper, Navigator>;
-using CKF = Acts::CombinatorialKalmanFilter<Propagator, Updater, Smoother>;
+using CKF =
+    Acts::CombinatorialKalmanFilter<Propagator, Acts::VectorMultiTrajectory>;
 
-struct TrackFinderFunctionImpl {
+using TrackContainer =
+    Acts::TrackContainer<Acts::VectorTrackContainer,
+                         Acts::VectorMultiTrajectory, std::shared_ptr>;
+
+struct TrackFinderFunctionImpl
+    : public ActsExamples::TrackFindingAlgorithm::TrackFinderFunction {
   CKF trackFinder;
 
   TrackFinderFunctionImpl(CKF&& f) : trackFinder(std::move(f)) {}
 
   ActsExamples::TrackFindingAlgorithm::TrackFinderResult operator()(
-      const ActsExamples::IndexSourceLinkContainer& sourcelinks,
-      const ActsExamples::TrackParametersContainer& initialParameters,
-      const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options)
-      const {
-    return trackFinder.findTracks(sourcelinks, initialParameters, options);
+      const ActsExamples::TrackParameters& initialParameters,
+      const ActsExamples::TrackFindingAlgorithm::TrackFinderOptions& options,
+      TrackContainer& tracks) const override {
+    return trackFinder.findTracks(initialParameters, options, tracks);
   };
 };
 
 }  // namespace
 
-ActsExamples::TrackFindingAlgorithm::TrackFinderFunction
+std::shared_ptr<ActsExamples::TrackFindingAlgorithm::TrackFinderFunction>
 ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry,
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField) {
   Stepper stepper(std::move(magneticField));
-  Navigator::Config cfg{trackingGeometry};
+  Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
@@ -57,5 +65,5 @@ ActsExamples::TrackFindingAlgorithm::makeTrackFinderFunction(
   CKF trackFinder(std::move(propagator));
 
   // build the track finder functions. owns the track finder object.
-  return TrackFinderFunctionImpl(std::move(trackFinder));
+  return std::make_shared<TrackFinderFunctionImpl>(std::move(trackFinder));
 }

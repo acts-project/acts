@@ -8,8 +8,8 @@ dependencies and are thus disabled by default.
 .. toctree::
    :maxdepth: 1
 
+   autodiff
    dd4hep
-   digitization
-   identification
-   sycl
+   exatrkx
+   json
    tgeo

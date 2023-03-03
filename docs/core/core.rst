@@ -11,10 +11,16 @@ tools related to one particular subject, i.e. experiment geometry or vertexing.
    definitions/units
    eventdata
    geometry
+   experimental_geometry
    magnetic_field
    material
    propagation
+   clustering
+   spacepoint_formation
    seeding
+   track_fitting
+   track_finding
+   vertexing
    utilities/grid_axis
-   utilities/logging
+   logging
    visualization/visualization

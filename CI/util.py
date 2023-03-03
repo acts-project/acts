@@ -7,6 +7,7 @@ try:
 except:
     Halo = None
 
+
 @contextlib.contextmanager
 def Spinner(text, persist=True, *args, **kwargs):
     stream = kwargs.get("stream", sys.stdout)

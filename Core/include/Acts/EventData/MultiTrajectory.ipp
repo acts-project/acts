@@ -18,13 +18,13 @@
 
 namespace Acts {
 namespace detail_lt {
-template <typename SL, size_t M, bool ReadOnly>
-inline TrackStateProxy<SL, M, ReadOnly>::TrackStateProxy(
-    ConstIf<MultiTrajectory<SL>, ReadOnly>& trajectory, size_t istate)
+template <typename D, size_t M, bool ReadOnly>
+inline TrackStateProxy<D, M, ReadOnly>::TrackStateProxy(
+    ConstIf<MultiTrajectory<D>, ReadOnly>& trajectory, IndexType istate)
     : m_traj(&trajectory), m_istate(istate) {}
 
-template <typename SL, size_t M, bool ReadOnly>
-TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
+template <typename D, size_t M, bool ReadOnly>
+TrackStatePropMask TrackStateProxy<D, M, ReadOnly>::getMask() const {
   using PM = TrackStatePropMask;
 
   PM mask = PM::None;
@@ -40,235 +40,92 @@ TrackStatePropMask TrackStateProxy<SL, M, ReadOnly>::getMask() const {
   if (hasJacobian()) {
     mask |= PM::Jacobian;
   }
-  if (hasUncalibrated()) {
-    mask |= PM::Uncalibrated;
-  }
   if (hasCalibrated()) {
     mask |= PM::Calibrated;
   }
   return mask;
 }
 
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::parameters() const -> Parameters {
-  IndexData::IndexType idx;
+template <typename D, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<D, M, ReadOnly>::parameters() const -> Parameters {
   if (hasSmoothed()) {
-    idx = data().ismoothed;
+    return smoothed();
   } else if (hasFiltered()) {
-    idx = data().ifiltered;
+    return filtered();
   } else {
-    idx = data().ipredicted;
+    return predicted();
   }
-
-  return Parameters(m_traj->m_params.data.col(idx).data());
 }
 
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::covariance() const -> Covariance {
-  IndexData::IndexType idx;
+template <typename D, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<D, M, ReadOnly>::covariance() const -> Covariance {
   if (hasSmoothed()) {
-    idx = data().ismoothed;
+    return smoothedCovariance();
   } else if (hasFiltered()) {
-    idx = data().ifiltered;
+    return filteredCovariance();
   } else {
-    idx = data().ipredicted;
+    return predictedCovariance();
   }
-  return Covariance(m_traj->m_cov.data.col(idx).data());
 }
 
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::predicted() const -> Parameters {
-  assert(data().ipredicted != IndexData::kInvalid);
-  return Parameters(m_traj->m_params.col(data().ipredicted).data());
+template <typename D, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
+  assert(has<hashString("projector")>());
+  return bitsetToMatrix<Projector>(
+      component<ProjectorBitset, hashString("projector")>());
 }
 
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::predictedCovariance() const
-    -> Covariance {
-  assert(data().ipredicted != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ipredicted).data());
-}
-
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::filtered() const -> Parameters {
-  assert(data().ifiltered != IndexData::kInvalid);
-  return Parameters(m_traj->m_params.col(data().ifiltered).data());
-}
-
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::filteredCovariance() const
-    -> Covariance {
-  assert(data().ifiltered != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ifiltered).data());
-}
-
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::smoothed() const -> Parameters {
-  assert(data().ismoothed != IndexData::kInvalid);
-  return Parameters(m_traj->m_params.col(data().ismoothed).data());
-}
-
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::smoothedCovariance() const
-    -> Covariance {
-  assert(data().ismoothed != IndexData::kInvalid);
-  return Covariance(m_traj->m_cov.col(data().ismoothed).data());
-}
-
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::jacobian() const -> Covariance {
-  assert(data().ijacobian != IndexData::kInvalid);
-  return Covariance(m_traj->m_jac.col(data().ijacobian).data());
-}
-
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::projector() const -> Projector {
-  assert(data().iprojector != IndexData::kInvalid);
-  return bitsetToMatrix<Projector>(m_traj->m_projectors[data().iprojector]);
-}
-
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::uncalibrated() const
+template <typename D, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<D, M, ReadOnly>::uncalibratedSourceLink() const
     -> const SourceLink& {
-  assert(data().iuncalibrated != IndexData::kInvalid);
-  return m_traj->m_sourceLinks[data().iuncalibrated];
+  assert(has<hashString("uncalibratedSourceLink")>());
+  return component<std::optional<SourceLink>,
+                   hashString("uncalibratedSourceLink")>()
+      .value();
 }
 
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::calibrated() const
-    -> Measurement {
-  assert(data().icalibrated != IndexData::kInvalid);
-  return Measurement(m_traj->m_meas.col(data().icalibrated).data());
-}
-
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::calibratedSourceLink() const
+template <typename D, size_t M, bool ReadOnly>
+inline auto TrackStateProxy<D, M, ReadOnly>::calibratedSourceLink() const
     -> const SourceLink& {
-  assert(data().icalibratedsourcelink != IndexData::kInvalid);
-  return m_traj->m_sourceLinks[data().icalibratedsourcelink];
-}
-
-template <typename SL, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<SL, M, ReadOnly>::calibratedCovariance() const
-    -> MeasurementCovariance {
-  assert(data().icalibrated != IndexData::kInvalid);
-  return MeasurementCovariance(
-      m_traj->m_measCov.col(data().icalibrated).data());
+  assert(has<hashString("calibratedSourceLink")>());
+  return component<std::optional<SourceLink>,
+                   hashString("calibratedSourceLink")>()
+      .value();
 }
 
 }  // namespace detail_lt
 
-template <typename SL>
-inline size_t MultiTrajectory<SL>::addTrackState(TrackStatePropMask mask,
-                                                 size_t iprevious) {
-  using PropMask = TrackStatePropMask;
-
-  m_index.emplace_back();
-  detail_lt::IndexData& p = m_index.back();
-  size_t index = m_index.size() - 1;
-
-  if (iprevious != SIZE_MAX) {
-    p.iprevious = static_cast<uint16_t>(iprevious);
-  }
-
-  // always set, but can be null
-  m_referenceSurfaces.emplace_back(nullptr);
-  p.irefsurface = m_referenceSurfaces.size() - 1;
-
-  if (ACTS_CHECK_BIT(mask, PropMask::Predicted)) {
-    m_params.addCol();
-    m_cov.addCol();
-    p.ipredicted = m_params.size() - 1;
-  }
-
-  if (ACTS_CHECK_BIT(mask, PropMask::Filtered)) {
-    m_params.addCol();
-    m_cov.addCol();
-    p.ifiltered = m_params.size() - 1;
-  }
-
-  if (ACTS_CHECK_BIT(mask, PropMask::Smoothed)) {
-    m_params.addCol();
-    m_cov.addCol();
-    p.ismoothed = m_params.size() - 1;
-  }
-
-  if (ACTS_CHECK_BIT(mask, PropMask::Jacobian)) {
-    m_jac.addCol();
-    p.ijacobian = m_jac.size() - 1;
-  }
-
-  if (ACTS_CHECK_BIT(mask, PropMask::Uncalibrated)) {
-    m_sourceLinks.emplace_back();
-    p.iuncalibrated = m_sourceLinks.size() - 1;
-  }
-
-  if (ACTS_CHECK_BIT(mask, PropMask::Calibrated)) {
-    m_meas.addCol();
-    m_measCov.addCol();
-    p.icalibrated = m_meas.size() - 1;
-
-    m_sourceLinks.emplace_back();
-    p.icalibratedsourcelink = m_sourceLinks.size() - 1;
-
-    m_projectors.emplace_back();
-    p.iprojector = m_projectors.size() - 1;
-  }
-
-  return index;
-}
-
-template <typename SL>
+template <typename D>
 template <typename F>
-void MultiTrajectory<SL>::visitBackwards(size_t iendpoint, F&& callable) const {
+void MultiTrajectory<D>::visitBackwards(IndexType iendpoint,
+                                        F&& callable) const {
   static_assert(detail_lt::VisitorConcept<F, ConstTrackStateProxy>,
                 "Callable needs to satisfy VisitorConcept");
 
+  if (iendpoint == MultiTrajectoryTraits::kInvalid) {
+    throw std::runtime_error(
+        "Cannot visit backwards with kInvalid as endpoint");
+  }
+
   while (true) {
+    auto ts = getTrackState(iendpoint);
     if constexpr (std::is_same_v<std::invoke_result_t<F, ConstTrackStateProxy>,
                                  bool>) {
-      bool proceed = callable(getTrackState(iendpoint));
+      bool proceed = callable(ts);
       // this point has no parent and ends the trajectory, or a break was
       // requested
-      if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid ||
-          !proceed) {
+      if (!proceed || !ts.hasPrevious()) {
         break;
       }
     } else {
-      callable(getTrackState(iendpoint));
+      callable(ts);
       // this point has no parent and ends the trajectory
-      if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
+      if (!ts.hasPrevious()) {
         break;
       }
     }
-    iendpoint = m_index[iendpoint].iprevious;
+    iendpoint = ts.previous();
   }
 }
 
-template <typename SL>
-template <typename F>
-void MultiTrajectory<SL>::applyBackwards(size_t iendpoint, F&& callable) {
-  static_assert(detail_lt::VisitorConcept<F, TrackStateProxy>,
-                "Callable needs to satisfy VisitorConcept");
-
-  while (true) {
-    if constexpr (std::is_same_v<std::invoke_result_t<F, TrackStateProxy>,
-                                 bool>) {
-      bool proceed = callable(getTrackState(iendpoint));
-      // this point has no parent and ends the trajectory, or a break was
-      // requested
-      if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid ||
-          !proceed) {
-        break;
-      }
-    } else {
-      callable(getTrackState(iendpoint));
-      // this point has no parent and ends the trajectory
-      if (m_index[iendpoint].iprevious == detail_lt::IndexData::kInvalid) {
-        break;
-      }
-    }
-    iendpoint = m_index[iendpoint].iprevious;
-  }
-}
 }  // namespace Acts

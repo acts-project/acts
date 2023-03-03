@@ -58,14 +58,14 @@ struct CovarianceCache {
   /// @param gctx The current geometry context
   /// @param surface The surface of the bound representation
   /// @param position The position of the representaiton
-  /// @param boundVector The bound parameters at the surface
+  /// @param boundParameters The bound parameters at the surface
   /// @param boundCovariance The bound covariance to be propagated
   ///
   /// This constructor will set the variant covariance type to
   /// a bound matrix, remember the surface & establish the
   /// jacobian between bound and free parametrisation.
   CovarianceCache(const GeometryContext& gctx, const Surface& surface,
-                  const Vector3 position, const BoundVector& boundParameters,
+                  const Vector3& position, const BoundVector& boundParameters,
                   const BoundSymMatrix& boundCovariance);
 
   /// Constructor from curvilinear
@@ -77,7 +77,7 @@ struct CovarianceCache {
   /// This constructor will set the variant covariance type to
   /// a bound matrix, remember the surface & establish the
   /// jacobian between bound and free parametrisation.
-  CovarianceCache(const Vector3 position, const Vector3& direction,
+  CovarianceCache(const Vector3& position, const Vector3& direction,
                   const BoundSymMatrix& boundCovariance);
 
   /// Construction from free
@@ -93,7 +93,7 @@ struct CovarianceCache {
 ///
 /// @param gctx [in] The current geometry context
 /// @param surface [in] The surface of the bound representation
-/// @param freeParameters [in] The free parametrisation on the surface
+/// @param parameters [in] The free parametrisation on the surface
 /// @param cCache [in,out] the covariance cache (to be modified)
 ///
 /// @return a variant transport jacobian
@@ -106,8 +106,6 @@ transportCovarianceToBound(const GeometryContext& gctx, const Surface& surface,
 ///
 /// @param direction [in] The track direction at the new curvilinear definition
 /// @param cCache [in,out]  the covariance cache (to be modified)
-/// @param reinitialize [in] boolean flag to reinitialize, usually only
-/// false for destination
 std::tuple<VariantCovariance, VariantTransportJacobian>
 transportCovarianceToCurvilinear(const Vector3& direction,
                                  CovarianceCache& cCache);
@@ -115,8 +113,6 @@ transportCovarianceToCurvilinear(const Vector3& direction,
 /// Transport the covariance to a new free definition
 ///
 /// @param cCache [in,out] the covariance cache (to be modified)
-/// @param reinitialize [in] boolean flag to reinitialize, usually only
-/// false for destination
 std::tuple<VariantCovariance, VariantTransportJacobian>
 transportCovarianceToFree(CovarianceCache& cCache);
 

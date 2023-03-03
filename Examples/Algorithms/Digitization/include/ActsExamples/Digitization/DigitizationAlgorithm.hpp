@@ -16,7 +16,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
@@ -37,19 +37,22 @@ class TrackingGeometry;
 namespace ActsExamples {
 
 /// Algorithm that turns simulated hits into measurements by truth smearing.
-class DigitizationAlgorithm final : public BareAlgorithm {
+class DigitizationAlgorithm final : public IAlgorithm {
  public:
   /// Construct the smearing algorithm.
   ///
-  /// @param cfg is the algorithm configuration
-  /// @param lvl is the logging level
-  DigitizationAlgorithm(DigitizationConfig cfg, Acts::Logging::Level lvl);
+  /// @param config is the algorithm configuration
+  /// @param level is the logging level
+  DigitizationAlgorithm(DigitizationConfig config, Acts::Logging::Level level);
 
   /// Build measurement from simulation hits at input.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+  /// Get const access to the config
+  const DigitizationConfig& config() const { return m_cfg; }
 
  private:
   /// Helper method for the geometric channelizing part

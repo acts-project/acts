@@ -14,7 +14,7 @@
 
 #include "EventAction.hpp"
 
-using namespace ActsExamples;
+namespace ActsExamples::Geant4::HepMC3 {
 
 RunAction* RunAction::s_instance = nullptr;
 
@@ -23,7 +23,7 @@ RunAction* RunAction::instance() {
 }
 
 RunAction::RunAction() : G4UserRunAction() {
-  if (s_instance) {
+  if (s_instance != nullptr) {
     throw std::logic_error("Attempted to duplicate the RunAction singleton");
   } else {
     s_instance = this;
@@ -40,3 +40,5 @@ void RunAction::BeginOfRunAction(const G4Run* /*unused*/) {
 }
 
 void RunAction::EndOfRunAction(const G4Run* /*unused*/) {}
+
+}  // namespace ActsExamples::Geant4::HepMC3

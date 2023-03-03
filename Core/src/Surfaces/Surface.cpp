@@ -13,6 +13,7 @@
 
 #include <iomanip>
 #include <iostream>
+#include <sstream>
 #include <utility>
 
 Acts::Surface::Surface(const Transform3& transform)
@@ -31,7 +32,6 @@ Acts::Surface::Surface(const GeometryContext& gctx, const Surface& other,
                        const Transform3& shift)
     : GeometryObject(),
       m_transform(shift * other.transform(gctx)),
-      m_associatedLayer(nullptr),
       m_surfaceMaterial(other.m_surfaceMaterial) {}
 
 Acts::Surface::~Surface() = default;
@@ -210,6 +210,12 @@ std::ostream& Acts::Surface::toStream(const GeometryContext& gctx,
   return sl;
 }
 
+std::string Acts::Surface::toString(const GeometryContext& gctx) const {
+  std::stringstream ss;
+  toStream(gctx, ss);
+  return ss.str();
+}
+
 bool Acts::Surface::operator!=(const Acts::Surface& sf) const {
   return !(operator==(sf));
 }
@@ -326,7 +332,7 @@ const Acts::DetectorElementBase* Acts::Surface::associatedDetectorElement()
 }
 
 const Acts::Layer* Acts::Surface::associatedLayer() const {
-  return (m_associatedLayer);
+  return m_associatedLayer;
 }
 
 const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
@@ -336,6 +342,14 @@ const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
 const std::shared_ptr<const Acts::ISurfaceMaterial>&
 Acts::Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
+}
+
+void Acts::Surface::assignDetectorElement(
+    const DetectorElementBase& detelement) {
+  m_associatedDetElement = &detelement;
+  // resetting the transform as it will be handled through the detector element
+  // now
+  m_transform = Transform3::Identity();
 }
 
 void Acts::Surface::assignSurfaceMaterial(

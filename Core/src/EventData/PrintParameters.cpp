@@ -165,7 +165,7 @@ void Acts::detail::printBoundParameters(std::ostream& os,
                                         const Acts::Surface& surface,
                                         const Acts::BoundVector& params,
                                         const Acts::BoundSymMatrix* cov) {
-  if (cov) {
+  if (cov != nullptr) {
     printParametersCovariance(os, makeBoundNames(), kMonotonic, params, *cov);
   } else {
     printParameters(os, makeBoundNames(), kMonotonic, params);
@@ -177,7 +177,7 @@ void Acts::detail::printBoundParameters(std::ostream& os,
 void Acts::detail::printFreeParameters(std::ostream& os,
                                        const Acts::FreeVector& params,
                                        const Acts::FreeMatrix* cov) {
-  if (cov) {
+  if (cov != nullptr) {
     printParametersCovariance(os, makeFreeNames(), kMonotonic, params, *cov);
   } else {
     printParameters(os, makeFreeNames(), kMonotonic, params);

@@ -10,19 +10,19 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
-class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
+class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    Config(std::shared_ptr<Acts::MagneticFieldProvider> magneticField)
-        : bField(magneticField) {}
-    /// Input track parameters collection
+    /// Optional. Input track parameters collection
     std::string inputTrackParameters;
+    /// Optional. Input trajectories container.
+    std::string inputTrajectories;
     /// Output proto vertex collection
     std::string outputProtoVertices;
     /// Output vertex collection
@@ -33,14 +33,17 @@ class AdaptiveMultiVertexFinderAlgorithm final : public BareAlgorithm {
     std::shared_ptr<Acts::MagneticFieldProvider> bField;
   };
 
-  AdaptiveMultiVertexFinderAlgorithm(const Config& cfg,
-                                     Acts::Logging::Level lvl);
+  AdaptiveMultiVertexFinderAlgorithm(const Config& config,
+                                     Acts::Logging::Level level);
 
   /// Find vertices using the adapative multi vertex finder algorithm.
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
   ProcessCode execute(const AlgorithmContext& ctx) const final;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;

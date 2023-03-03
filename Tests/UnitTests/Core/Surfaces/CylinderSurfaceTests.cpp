@@ -11,6 +11,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/DetectorElementStub.hpp"
@@ -179,7 +180,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
   // And it's path should be further away then the primary solution
   double pn = sfIntersection.intersection.pathLength;
   double pa = sfIntersection.alternative.pathLength;
-  BOOST_CHECK(pn * pn < pa * pa);
+  BOOST_CHECK(std::abs(pn) < std::abs(pa));
   BOOST_CHECK_EQUAL(sfIntersection.object, cylinderSurfaceObject.get());
 
   //
@@ -201,7 +202,7 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceProperties) {
      Rotation:             colX = (1.000000, 0.000000, 0.000000)\n\
                            colY = (0.000000, 1.000000, 0.000000)\n\
                            colZ = (0.000000, 0.000000, 1.000000)\n\
-     Bounds  : Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, averagePhi) = (1.0000000, 10.0000000, 3.1415927, 0.0000000)"));
+     Bounds  : Acts::CylinderBounds: (radius, halfLengthZ, halfPhiSector, averagePhi, bevelMinZ, bevelMaxZ) = (1.0000000, 10.0000000, 3.1415927, 0.0000000, 0.0000000, 0.0000000)"));
 }
 
 BOOST_AUTO_TEST_CASE(CylinderSurfaceEqualityOperators) {
@@ -275,6 +276,41 @@ BOOST_AUTO_TEST_CASE(CylinderSurfaceAlignment) {
   ActsMatrix<2, 3> expLoc3DToLocBound = ActsMatrix<2, 3>::Zero();
   expLoc3DToLocBound << -1, 0, 0, 0, 0, 1;
   CHECK_CLOSE_ABS(loc3DToLocBound, expLoc3DToLocBound, 1e-10);
+}
+
+BOOST_AUTO_TEST_CASE(CylinderSurfaceBinningPosition) {
+  using namespace Acts::UnitLiterals;
+  Vector3 s{5_mm, 7_mm, 10_cm};
+  Transform3 trf;
+  trf = Translation3(s) * AngleAxis3{0.5, Vector3::UnitZ()};
+
+  double r = 300;
+  double halfZ = 330;
+  double averagePhi = 0.1;
+
+  auto bounds =
+      std::make_shared<CylinderBounds>(r, halfZ, M_PI / 8, averagePhi);
+  auto cylinder = Acts::Surface::makeShared<CylinderSurface>(trf, bounds);
+
+  Vector3 exp = Vector3{r * std::cos(averagePhi), r * std::sin(averagePhi), 0};
+  exp = trf * exp;
+
+  Vector3 bp = cylinder->binningPosition(testContext, binR);
+  CHECK_CLOSE_ABS(bp, exp, 1e-10);
+  CHECK_CLOSE_ABS(cylinder->binningPositionValue(testContext, binR),
+                  VectorHelpers::perp(exp), 1e-10);
+
+  bp = cylinder->binningPosition(testContext, binRPhi);
+  CHECK_CLOSE_ABS(bp, exp, 1e-10);
+  CHECK_CLOSE_ABS(cylinder->binningPositionValue(testContext, binRPhi),
+                  VectorHelpers::phi(exp) * VectorHelpers::perp(exp), 1e-10);
+
+  for (auto b : {binX, binY, binZ, binEta, binH, binMag}) {
+    BOOST_TEST_CONTEXT("binValue: " << b) {
+      BOOST_CHECK_EQUAL(cylinder->binningPosition(testContext, b),
+                        cylinder->center(testContext));
+    }
+  }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

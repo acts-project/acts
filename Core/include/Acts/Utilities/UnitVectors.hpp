@@ -24,7 +24,7 @@ namespace Acts {
 /// @note The input arguments intentionally use the same template type so that
 ///       a compile error occurs if inconsistent input types are used. Avoids
 ///       unexpected implicit type conversions and forces the user to
-///       explicitely cast missmatched input types.
+///       explicitely cast mismatched input types.
 template <typename T>
 inline Eigen::Matrix<T, 3, 1> makeDirectionUnitFromPhiEta(T phi, T eta) {
   const auto coshEtaInv = 1 / std::cosh(eta);
@@ -43,7 +43,7 @@ inline Eigen::Matrix<T, 3, 1> makeDirectionUnitFromPhiEta(T phi, T eta) {
 /// @note The input arguments intentionally use the same template type so that
 ///       a compile error occurs if inconsistent input types are used. Avoids
 ///       unexpected implicit type conversions and forces the user to
-///       explicitely cast missmatched input types.
+///       explicitely cast mismatched input types.
 template <typename T>
 inline Eigen::Matrix<T, 3, 1> makeDirectionUnitFromPhiTheta(T phi, T theta) {
   const auto cosTheta = std::cos(theta);

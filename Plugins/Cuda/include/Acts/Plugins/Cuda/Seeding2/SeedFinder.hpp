@@ -14,7 +14,7 @@
 // Acts include(s).
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
-#include "Acts/Seeding/SeedfinderConfig.hpp"
+#include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 // System include(s).
@@ -32,14 +32,16 @@ class SeedFinder {
  public:
   /// Create a CUDA backed seed finder object
   ///
-  /// @param commonConfig Configuration shared with @c Acts::Seedfinder
+  /// @param commonConfig Configuration shared with @c Acts::SeedFinder
+  /// @param seedFinderOptions options als shared with Acts::SeedFinder
   /// @param seedFilterConfig Configuration shared with @c Acts::SeedFilter
   /// @param tripletFilterConfig Configuration for the GPU based triplet
   ///        filtering
   /// @param device The identifier of the CUDA device to run on
-  /// @param loggerLevel Output level of messages coming from the object
+  /// @param logger A @c Logger instance
   ///
-  SeedFinder(SeedfinderConfig<external_spacepoint_t> commonConfig,
+  SeedFinder(SeedFinderConfig<external_spacepoint_t> commonConfig,
+             const SeedFinderOptions& seedFinderOptions,
              const SeedFilterConfig& seedFilterConfig,
              const TripletFilterConfig& tripletFilterConfig, int device = 0,
              std::unique_ptr<const Logger> logger =
@@ -47,9 +49,9 @@ class SeedFinder {
 
   /// Create all seeds from the space points in the three iterators.
   /// Can be used to parallelize the seed creation
-  /// @param bottom group of space points to be used as innermost SP in a seed.
-  /// @param middle group of space points to be used as middle SP in a seed.
-  /// @param top group of space points to be used as outermost SP in a seed.
+  /// @param bottomSPs group of space points to be used as innermost SP in a seed.
+  /// @param middleSPs group of space points to be used as middle SP in a seed.
+  /// @param topSPs group of space points to be used as outermost SP in a seed.
   /// Ranges must return pointers.
   /// Ranges must be separate objects for each parallel call.
   /// @return vector in which all found seeds for this group are stored.
@@ -69,7 +71,8 @@ class SeedFinder {
   const Logger& logger() const { return *m_logger; }
 
   /// Configuration for the seed finder
-  SeedfinderConfig<external_spacepoint_t> m_commonConfig;
+  SeedFinderConfig<external_spacepoint_t> m_commonConfig;
+  SeedFinderOptions m_seedFinderOptions;
   /// Configuration for the (host) seed filter
   SeedFilterConfig m_seedFilterConfig;
   /// Configuration for the (device) triplet filter

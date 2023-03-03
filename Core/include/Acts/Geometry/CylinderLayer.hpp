@@ -40,15 +40,15 @@ class CylinderLayer : public CylinderSurface, public Layer {
   /// @todo ApproachDescriptor to unique_ptr
   ///
   /// @return The return object is a shared poiter to the layer.
-  static MutableLayerPtr create(
+  static std::shared_ptr<CylinderLayer> create(
       const Transform3& transform,
       const std::shared_ptr<const CylinderBounds>& cbounds,
       std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
       double thickness = 0., std::unique_ptr<ApproachDescriptor> ad = nullptr,
       LayerType laytyp = passive) {
-    return MutableLayerPtr(new CylinderLayer(transform, cbounds,
-                                             std::move(surfaceArray), thickness,
-                                             std::move(ad), laytyp));
+    return std::shared_ptr<CylinderLayer>(
+        new CylinderLayer(transform, cbounds, std::move(surfaceArray),
+                          thickness, std::move(ad), laytyp));
   }
 
   CylinderLayer(const CylinderLayer& cla) = delete;
@@ -71,14 +71,12 @@ class CylinderLayer : public CylinderSurface, public Layer {
   /// Private constructor for CylinderLayer, called by create(args*) factory
   ///
   /// @param transform is the 3D transform that places the layer in 3D space
-  /// @param cbounds are the cylindrical bounds of the layer
+  /// @param cBounds The cylindrical bounds of the layer
   /// @param surfaceArray is the Binned Array that holds the sensitive surfaces
   /// @param thickness is the layer thickness (along the normal)
-  /// @param ad is the approach descriptor for approaching the layer
+  /// @param ades are the approach descriptors for approaching the layer
   /// @param laytyp is the layer type
   /// @todo change ApproachDescriptor to unique_ptr
-  ///
-  /// @return The return object is a shared poiter to the layer.
   CylinderLayer(const Transform3& transform,
                 const std::shared_ptr<const CylinderBounds>& cBounds,
                 std::unique_ptr<SurfaceArray> surfaceArray = nullptr,
@@ -90,8 +88,6 @@ class CylinderLayer : public CylinderSurface, public Layer {
   ///
   /// @param cla is the source cylinder layer for the copy
   /// @param shift is the additional transform applied after cloning
-  ///
-  /// @return The return object is a shared pointer to the layer.
   CylinderLayer(const CylinderLayer& cla, const Transform3& shift);
 };
 

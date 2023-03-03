@@ -23,7 +23,7 @@ namespace {
 /// @param [in] processFilter List of processes that will be filtered
 ///
 /// @return True if the process was found, false if not
-bool findAttribute(HepMC3::ConstGenVertexPtr vertex,
+bool findAttribute(const HepMC3::ConstGenVertexPtr& vertex,
                    const std::vector<std::string>& processFilter) {
   // Consider only 1->1 vertices to keep a correct history
   if ((vertex->particles_in().size() == 1) &&
@@ -107,7 +107,7 @@ void reduceVertex(HepMC3::GenEvent& event, HepMC3::GenVertexPtr vertex,
 /// @param [in, out] The current vertex under investigation
 /// @param [in] processFilter List of processes that will be filtered
 void followOutgoingParticles(HepMC3::GenEvent& event,
-                             HepMC3::GenVertexPtr vertex,
+                             const HepMC3::GenVertexPtr& vertex,
                              const std::vector<std::string>& processFilter) {
   // Replace and reduce vertex if it should be filtered
   if (findAttribute(vertex, processFilter)) {
@@ -120,46 +120,80 @@ void followOutgoingParticles(HepMC3::GenEvent& event,
 }
 }  // namespace
 
-ActsExamples::EventAction* ActsExamples::EventAction::s_instance = nullptr;
+namespace ActsExamples::Geant4::HepMC3 {
 
-ActsExamples::EventAction* ActsExamples::EventAction::instance() {
+EventAction* EventAction::s_instance = nullptr;
+
+EventAction* EventAction::instance() {
   // Static acces function via G4RunManager
   return s_instance;
 }
 
-ActsExamples::EventAction::EventAction(std::vector<std::string> processFilter)
+EventAction::EventAction(std::vector<std::string> processFilter)
     : G4UserEventAction(), m_processFilter(std::move(processFilter)) {
-  if (s_instance) {
+  if (s_instance != nullptr) {
     throw std::logic_error("Attempted to duplicate a singleton");
   } else {
     s_instance = this;
   }
 }
 
-ActsExamples::EventAction::~EventAction() {
+EventAction::~EventAction() {
   s_instance = nullptr;
 }
 
-void ActsExamples::EventAction::BeginOfEventAction(const G4Event*) {
+void EventAction::BeginOfEventAction(const G4Event* /*unused*/) {
   SteppingAction::instance()->clear();
-  m_event = HepMC3::GenEvent(HepMC3::Units::GEV, HepMC3::Units::MM);
-  m_event.add_beam_particle(std::make_shared<HepMC3::GenParticle>());
+  m_event = ::HepMC3::GenEvent(::HepMC3::Units::GEV, ::HepMC3::Units::MM);
+  m_event.add_beam_particle(std::make_shared<::HepMC3::GenParticle>());
 }
 
-void ActsExamples::EventAction::EndOfEventAction(const G4Event*) {
+void EventAction::EndOfEventAction(const G4Event* /*unused*/) {
   // Fast exit if the event is empty
   if (m_event.vertices().empty()) {
     return;
   }
   // Filter irrelevant processes
   auto currentVertex = m_event.vertices()[0];
+  for (auto& bp : m_event.beams()) {
+    if (!bp->end_vertex()) {
+      currentVertex->add_particle_in(bp);
+    }
+  }
   followOutgoingParticles(m_event, currentVertex, m_processFilter);
+  // Remove vertices w/o outgoing particles and particles w/o production
+  // vertices
+  while (true) {
+    bool sane = true;
+    for (const auto& v : m_event.vertices()) {
+      if (!v) {
+        continue;
+      }
+      if (v->particles_out().empty()) {
+        m_event.remove_vertex(v);
+        sane = false;
+      }
+    }
+    for (const auto& p : m_event.particles()) {
+      if (!p) {
+        continue;
+      }
+      if (!p->production_vertex()) {
+        m_event.remove_particle(p);
+        sane = false;
+      }
+    }
+    if (sane) {
+      break;
+    }
+  }
 }
 
-void ActsExamples::EventAction::clear() {
+void EventAction::clear() {
   SteppingAction::instance()->clear();
 }
 
-HepMC3::GenEvent& ActsExamples::EventAction::event() {
+::HepMC3::GenEvent& EventAction::event() {
   return m_event;
 }
+}  // namespace ActsExamples::Geant4::HepMC3

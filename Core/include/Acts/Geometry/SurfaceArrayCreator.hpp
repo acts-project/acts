@@ -50,22 +50,22 @@ using AxisScalar = Vector3::Scalar;
 /// @todo write more documentation on how this is done
 class SurfaceArrayCreator {
  public:
-  friend Acts::Test::SurfaceArrayCreatorFixture;
-  friend Acts::SurfaceArray;
+  friend struct Acts::Test::SurfaceArrayCreatorFixture;
+  friend class Acts::SurfaceArray;
 
   struct ProtoAxis {
-    BinningType bType;
-    BinningValue bValue;
-    size_t nBins;
-    AxisScalar min;
-    AxisScalar max;
+    BinningType bType = BinningType::equidistant;
+    BinningValue bValue = BinningValue::binX;
+    size_t nBins = 0;
+    AxisScalar min = 0;
+    AxisScalar max = 0;
     std::vector<AxisScalar> binEdges;
 
     size_t getBin(AxisScalar x) const {
       if (binEdges.empty()) {
         // equidistant
         AxisScalar w = (max - min) / nBins;
-        return std::floor((x - min) / w);
+        return static_cast<size_t>(std::floor((x - min) / w));
       } else {
         // variable
         const auto it =
@@ -215,8 +215,7 @@ class SurfaceArrayCreator {
   /// @param [in] bins2 is the number of bins in the orthogonal direction to @p
   /// bValue
   /// @param [in] bValue Direction of the aligned surfaces
-  /// @param [in] bTypePhi the binning type in phi direction
-  /// (equidistant/aribtrary)
+  /// @param [in] protoLayerOpt Optional @c ProtoLayer instance
   /// @param [in] transform is the (optional) additional transform applied
   ///
   /// @return a unique pointer a new SurfaceArray
@@ -314,7 +313,8 @@ class SurfaceArrayCreator {
   ///       into an actual @c Axis object to be used
   ProtoAxis createVariableAxis(const GeometryContext& gctx,
                                const std::vector<const Surface*>& surfaces,
-                               BinningValue bValue, ProtoLayer protoLayer,
+                               BinningValue bValue,
+                               const ProtoLayer& protoLayer,
                                Transform3& transform) const;
 
   /// SurfaceArrayCreator internal method
@@ -335,12 +335,14 @@ class SurfaceArrayCreator {
   /// (currently possible: binPhi, binR, binZ)
   /// @param protoLayer Instance of @c ProtoLayer holding generic layer info
   /// @param transform is the (optional) additional transform applied
+  /// @param nBins Number of bins to use, 0 means determine automatically
   /// @return Instance of @c ProtoAxis containing determined properties
   /// @note This only creates the @c ProtoAxis, this needs to be turned
   ///       into an actual @c Axis object to be used
   ProtoAxis createEquidistantAxis(const GeometryContext& gctx,
                                   const std::vector<const Surface*>& surfaces,
-                                  BinningValue bValue, ProtoLayer protoLayer,
+                                  BinningValue bValue,
+                                  const ProtoLayer& protoLayer,
                                   Transform3& transform,
                                   size_t nBins = 0) const;
 

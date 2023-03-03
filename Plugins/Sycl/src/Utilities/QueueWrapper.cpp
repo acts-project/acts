@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -25,13 +25,11 @@ QueueWrapper::QueueWrapper(const std::string& deviceNameSubstring,
                            std::unique_ptr<const Logger> incomingLogger)
     : m_queue(nullptr), m_ownsQueue(true), m_logger(std::move(incomingLogger)) {
   // SYCL kernel exceptions are asynchronous
-  auto exception_handler = [&log =
-                                m_logger](cl::sycl::exception_list exceptions) {
+  auto exception_handler = [this](cl::sycl::exception_list exceptions) {
     for (std::exception_ptr const& e : exceptions) {
       try {
         std::rethrow_exception(e);
       } catch (std::exception& e) {
-        LoggerWrapper logger(*log);
         ACTS_FATAL("Caught asynchronous (kernel) SYCL exception:\n" << e.what())
       }
     }
@@ -43,10 +41,15 @@ QueueWrapper::QueueWrapper(const std::string& deviceNameSubstring,
   m_ownsQueue = true;
 
   // See which device we are running on.
-  LoggerWrapper logger(*m_logger);
   ACTS_INFO("Running on: "
             << m_queue->get_device().get_info<cl::sycl::info::device::name>());
 }
+
+QueueWrapper::QueueWrapper(cl::sycl::queue& queue,
+                           std::unique_ptr<const Logger> incomingLogger)
+    : m_queue(&queue),
+      m_ownsQueue(false),
+      m_logger(std::move(incomingLogger)) {}
 
 QueueWrapper::QueueWrapper(QueueWrapper&& parent) noexcept
     : m_queue(parent.m_queue),
@@ -100,8 +103,28 @@ QueueWrapper& QueueWrapper::operator=(const QueueWrapper& other) {
   return *this;
 }
 
-cl::sycl::queue* QueueWrapper::getQueue() const {
+const cl::sycl::queue* QueueWrapper::getQueue() const {
   return m_queue;
+}
+
+cl::sycl::queue* QueueWrapper::getQueue() {
+  return m_queue;
+}
+
+const cl::sycl::queue* QueueWrapper::operator->() const {
+  return m_queue;
+}
+
+cl::sycl::queue* QueueWrapper::operator->() {
+  return m_queue;
+}
+
+const cl::sycl::queue& QueueWrapper::operator*() const {
+  return *m_queue;
+}
+
+cl::sycl::queue& QueueWrapper::operator*() {
+  return *m_queue;
 }
 
 }  // namespace Acts::Sycl

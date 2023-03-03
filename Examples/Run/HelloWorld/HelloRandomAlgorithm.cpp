@@ -17,7 +17,7 @@
 
 ActsExamples::HelloRandomAlgorithm::HelloRandomAlgorithm(
     const HelloRandomAlgorithm::Config& cfg, Acts::Logging::Level level)
-    : BareAlgorithm("HelloRandom", level), m_cfg(cfg) {
+    : IAlgorithm("HelloRandom", level), m_cfg(cfg) {
   if (!m_cfg.randomNumbers) {
     throw std::invalid_argument("Missing random number service");
   }
@@ -57,7 +57,7 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
     ACTS_VERBOSE("Gamma   : " << gamma);
     ACTS_VERBOSE("Poisson : " << poisson);
 
-    HelloData x;
+    HelloData x{};
     x.x = gauss;
     x.a = uniform;
     x.b = gamma;

@@ -12,6 +12,7 @@
 #include "Acts/EventData/detail/covariance_helper.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
+#include "Acts/Utilities/Delegate.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
@@ -26,16 +27,51 @@ class GainMatrixSmoother {
  public:
   /// Run the Kalman smoothing for one trajectory.
   ///
-  /// @tparam source_link_t The type of source link
   /// @param[in] gctx The geometry context for the smoothing
   /// @param[in,out] trajectory The trajectory to be smoothed
   /// @param[in] entryIndex The index of state to start the smoothing
   /// @param[in] logger Where to write logging information to
-  template <typename source_link_t>
-  Result<void> operator()(const GeometryContext& /* gctx */,
-                          MultiTrajectory<source_link_t>& trajectory,
-                          size_t entryIndex,
-                          LoggerWrapper logger = getDummyLogger()) const {
+  template <typename D>
+  Result<void> operator()(const GeometryContext& gctx,
+                          MultiTrajectory<D>& trajectory, size_t entryIndex,
+                          const Logger& logger = getDummyLogger()) const {
+    (void)gctx;
+
+    using TrackStateProxy = typename MultiTrajectory<D>::TrackStateProxy;
+
+    GetParameters filtered;
+    GetCovariance filteredCovariance;
+    GetParameters smoothed;
+    GetParameters predicted;
+    GetCovariance predictedCovariance;
+    GetCovariance smoothedCovariance;
+    GetCovariance jacobian;
+
+    filtered.connect([](const void*, void* ts) {
+      return static_cast<TrackStateProxy*>(ts)->filtered();
+    });
+    filteredCovariance.connect([](const void*, void* ts) {
+      return static_cast<TrackStateProxy*>(ts)->filteredCovariance();
+    });
+
+    smoothed.connect([](const void*, void* ts) {
+      return static_cast<TrackStateProxy*>(ts)->smoothed();
+    });
+    smoothedCovariance.connect([](const void*, void* ts) {
+      return static_cast<TrackStateProxy*>(ts)->smoothedCovariance();
+    });
+
+    predicted.connect([](const void*, void* ts) {
+      return static_cast<TrackStateProxy*>(ts)->predicted();
+    });
+    predictedCovariance.connect([](const void*, void* ts) {
+      return static_cast<TrackStateProxy*>(ts)->predictedCovariance();
+    });
+
+    jacobian.connect([](const void*, void* ts) {
+      return static_cast<TrackStateProxy*>(ts)->jacobian();
+    });
+
     ACTS_VERBOSE("Invoked GainMatrixSmoother on entry index: " << entryIndex);
 
     // For the last state: smoothed is filtered - also: switch to next
@@ -46,7 +82,7 @@ class GainMatrixSmoother {
     prev_ts.smoothedCovariance() = prev_ts.filteredCovariance();
 
     // make sure there is more than one track state
-    if (prev_ts.previous() == Acts::detail_lt::IndexData::kInvalid) {
+    if (!prev_ts.hasPrevious()) {
       ACTS_VERBOSE("Only one track state given, smoothing terminates early");
       return Result<void>::success();
     }
@@ -56,8 +92,7 @@ class GainMatrixSmoother {
 
     // default-constructed error represents success, i.e. an invalid error code
     std::error_code error;
-    trajectory.applyBackwards(prev_ts.previous(), [&prev_ts, &error,
-                                                   &logger](auto ts) {
+    trajectory.applyBackwards(prev_ts.previous(), [&, this](auto ts) {
       // should have filtered and predicted, this should also include the
       // covariances.
       assert(ts.hasFiltered());
@@ -71,59 +106,14 @@ class GainMatrixSmoother {
       ACTS_VERBOSE("Calculate smoothing matrix:");
       ACTS_VERBOSE("Filtered covariance:\n" << ts.filteredCovariance());
       ACTS_VERBOSE("Jacobian:\n" << ts.jacobian());
-      ACTS_VERBOSE("Prev. predicted covariance\n"
-                   << prev_ts.predictedCovariance() << "\n, inverse: \n"
-                   << prev_ts.predictedCovariance().inverse());
 
-      // Gain smoothing matrix
-      // NB: The jacobian stored in a state is the jacobian from previous
-      // state to this state in forward propagation
-      BoundMatrix G = ts.filteredCovariance() * prev_ts.jacobian().transpose() *
-                      prev_ts.predictedCovariance().inverse();
-
-      if (G.hasNaN()) {
-        error = KalmanFitterError::SmoothFailed;  // set to error
-        return false;                             // abort execution
+      if (auto res = calculate(&ts, &prev_ts, filtered, filteredCovariance,
+                               smoothed, predicted, predictedCovariance,
+                               smoothedCovariance, jacobian, logger);
+          !res.ok()) {
+        error = res.error();
+        return false;
       }
-
-      ACTS_VERBOSE("Gain smoothing matrix G:\n" << G);
-
-      ACTS_VERBOSE("Calculate smoothed parameters:");
-      ACTS_VERBOSE("Filtered parameters: " << ts.filtered().transpose());
-      ACTS_VERBOSE(
-          "Prev. smoothed parameters: " << prev_ts.smoothed().transpose());
-      ACTS_VERBOSE(
-          "Prev. predicted parameters: " << prev_ts.predicted().transpose());
-
-      // Calculate the smoothed parameters
-      ts.smoothed() =
-          ts.filtered() + G * (prev_ts.smoothed() - prev_ts.predicted());
-
-      ACTS_VERBOSE("Smoothed parameters are: " << ts.smoothed().transpose());
-      ACTS_VERBOSE("Calculate smoothed covariance:");
-      ACTS_VERBOSE("Prev. smoothed covariance:\n"
-                   << prev_ts.smoothedCovariance());
-
-      // And the smoothed covariance
-      ts.smoothedCovariance() =
-          ts.filteredCovariance() -
-          G * (prev_ts.predictedCovariance() - prev_ts.smoothedCovariance()) *
-              G.transpose();
-
-      // Check if the covariance matrix is semi-positive definite.
-      // If not, make one (could do more) attempt to replace it with the
-      // nearest semi-positive def matrix,
-      // but it could still be non semi-positive
-      BoundSymMatrix smoothedCov = ts.smoothedCovariance();
-      if (not detail::covariance_helper<BoundSymMatrix>::validate(
-              smoothedCov)) {
-        ACTS_DEBUG(
-            "Smoothed covariance is not positive definite. Could result in "
-            "negative covariance!");
-      }
-      // Reset smoothed covariance
-      ts.smoothedCovariance() = smoothedCov;
-      ACTS_VERBOSE("Smoothed covariance is: \n" << ts.smoothedCovariance());
 
       prev_ts = ts;
       return true;  // continue execution
@@ -131,6 +121,22 @@ class GainMatrixSmoother {
 
     return error ? Result<void>::failure(error) : Result<void>::success();
   }
+
+  using GetParameters =
+      Acts::Delegate<TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                      false>::Parameters(void*)>;
+  using GetCovariance =
+      Acts::Delegate<TrackStateTraits<MultiTrajectoryTraits::MeasurementSizeMax,
+                                      false>::Covariance(void*)>;
+
+  Result<void> calculate(void* ts, void* prev_ts, const GetParameters& filtered,
+                         const GetCovariance& filteredCovariance,
+                         const GetParameters& smoothed,
+                         const GetParameters& predicted,
+                         const GetCovariance& predictedCovariance,
+                         const GetCovariance& smoothedCovariance,
+                         const GetCovariance& jacobian,
+                         const Logger& logger) const;
 };
 
 }  // namespace Acts

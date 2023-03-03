@@ -13,7 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
@@ -25,7 +25,7 @@ class G4RunManager;
 namespace ActsExamples {
 
 /// @brief This class extracts a certain process from a HepMC event record.
-class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
+class HepMCProcessExtractor final : public ActsExamples::IAlgorithm {
  public:
   /// @class Config
   struct Config {
@@ -45,11 +45,16 @@ class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
   };
 
   /// Constructor
-  HepMCProcessExtractor(Config cfg, Acts::Logging::Level level);
-  ~HepMCProcessExtractor();
+  /// @param config the configuration
+  /// @param level the log level
+  HepMCProcessExtractor(Config config, Acts::Logging::Level level);
+  ~HepMCProcessExtractor() override;
 
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   /// The config object

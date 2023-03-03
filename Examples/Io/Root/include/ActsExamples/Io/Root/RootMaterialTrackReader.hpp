@@ -9,7 +9,6 @@
 #pragma once
 
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Definitions/Algebra.hpp>
 #include <Acts/Propagator/MaterialInteractor.hpp>
@@ -33,49 +32,43 @@ class RootMaterialTrackReader : public IReader {
   struct Config {
     std::string collection =
         "material-tracks";                     ///< material collection to read
-    std::string filePath = "";                 ///< path of the output file
     std::string treeName = "material-tracks";  ///< name of the output tree
-    std::vector<std::string> fileList;         ///< The name of the input file
+    std::vector<std::string> fileList;         ///< List of input files
 
     /// Whether the events are ordered or not
     bool orderedEvents = true;
-
-    /// The default logger
-    std::shared_ptr<const Acts::Logger> logger;
-
-    /// The name of the service
-    std::string name;
-
-    /// Constructor
-    /// @param lname The name of the Material reader
-    /// @parqam lvl The log level for the logger
-    Config(const std::string& lname = "MaterialReader",
-           Acts::Logging::Level lvl = Acts::Logging::INFO)
-        : logger(Acts::getDefaultLogger(lname, lvl)), name(lname) {}
+    // Read surface information for the root file
+    bool readCachedSurfaceInformation = false;
   };
 
   /// Constructor
-  /// @param cfg The Configuration struct
-  RootMaterialTrackReader(const Config& cfg);
+  /// @param config The Configuration struct
+  /// @param level The log level
+  RootMaterialTrackReader(const Config& config, Acts::Logging::Level level);
 
   /// Destructor
-  ~RootMaterialTrackReader();
+  ~RootMaterialTrackReader() override;
 
   /// Framework name() method
-  std::string name() const final override;
+  std::string name() const override;
 
   /// Return the available events range.
-  std::pair<size_t, size_t> availableEvents() const final override;
+  std::pair<size_t, size_t> availableEvents() const override;
 
   /// Read out data from the input stream
   ///
   /// @param context The algorithm context
-  ProcessCode read(
-      const ActsExamples::AlgorithmContext& context) final override;
+  ProcessCode read(const ActsExamples::AlgorithmContext& context) override;
+
+  /// Readonly access to the config
+  const Config& config() const { return m_cfg; }
 
  private:
+  /// The logger
+  std::unique_ptr<const Acts::Logger> m_logger;
+
   /// Private access to the logging instance
-  const Acts::Logger& logger() const { return *m_cfg.logger; }
+  const Acts::Logger& logger() const { return *m_logger; }
 
   /// The config class
   Config m_cfg;
@@ -86,26 +79,29 @@ class RootMaterialTrackReader : public IReader {
   /// The number of events
   size_t m_events = 0;
 
+  /// The batch size (number of track per events)
+  size_t m_batchSize = 0;
+
   /// The input tree name
   TChain* m_inputChain = nullptr;
 
   /// Event identifier.
-  uint32_t m_eventId;
+  uint32_t m_eventId = 0;
 
   /// The entry numbers for accessing events in increased order (there could be
   /// multiple entries corresponding to one event number)
   std::vector<long long> m_entryNumbers = {};
 
-  float m_v_x;    ///< start global x
-  float m_v_y;    ///< start global y
-  float m_v_z;    ///< start global z
-  float m_v_px;   ///< start global momentum x
-  float m_v_py;   ///< start global momentum y
-  float m_v_pz;   ///< start global momentum z
-  float m_v_phi;  ///< start phi direction
-  float m_v_eta;  ///< start eta direction
-  float m_tX0;    ///< thickness in X0/L0
-  float m_tL0;    ///< thickness in X0/L0
+  float m_v_x = 0;    ///< start global x
+  float m_v_y = 0;    ///< start global y
+  float m_v_z = 0;    ///< start global z
+  float m_v_px = 0;   ///< start global momentum x
+  float m_v_py = 0;   ///< start global momentum y
+  float m_v_pz = 0;   ///< start global momentum z
+  float m_v_phi = 0;  ///< start phi direction
+  float m_v_eta = 0;  ///< start eta direction
+  float m_tX0 = 0;    ///< thickness in X0/L0
+  float m_tL0 = 0;    ///< thickness in X0/L0
 
   std::vector<float>* m_step_x = new std::vector<float>;   ///< step x position
   std::vector<float>* m_step_y = new std::vector<float>;   ///< step y position
@@ -120,6 +116,22 @@ class RootMaterialTrackReader : public IReader {
   std::vector<float>* m_step_Z = new std::vector<float>;   ///< step material Z
   std::vector<float>* m_step_rho =
       new std::vector<float>;  ///< step material rho
+
+  std::vector<std::uint64_t>* m_sur_id =
+      new std::vector<std::uint64_t>;  ///< ID of the suface associated with the
+                                       ///< step
+  std::vector<float>* m_sur_x =
+      new std::vector<float>;  ///< x position of the center of the suface
+                               ///< associated with the step
+  std::vector<float>* m_sur_y =
+      new std::vector<float>;  ///< y position of the center of the suface
+                               ///< associated with the step
+  std::vector<float>* m_sur_z =
+      new std::vector<float>;  ///< z position of the center of the suface
+                               ///< associated with the step
+  std::vector<float>* m_sur_pathCorrection =
+      new std::vector<float>;  ///< path correction when associating
+                               ///< material to the given surface
 };
 
 }  // namespace ActsExamples

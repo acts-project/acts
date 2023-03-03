@@ -216,8 +216,6 @@ class AdaptiveMultiVertexFitter {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance
@@ -254,6 +252,7 @@ class AdaptiveMultiVertexFitter {
   /// in order to later faster estimate compatibilities of track
   /// with different vertices
   ///
+  /// @param state The state to operate on
   /// @param vtx The vertex object
   /// @param vertexingOptions Vertexing options
   Result<void> prepareVertexForFit(

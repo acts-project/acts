@@ -17,9 +17,9 @@
 namespace ActsExamples {
 
 struct ParameterSmearingConfig {
-  // Which parameter does this apply to.
+  /// Which parameter does this apply to.
   Acts::BoundIndices index = Acts::eBoundSize;
-  // The smearing function for this parameter.
+  /// The smearing function for this parameter.
   ActsFatras::SingleParameterSmearFunction<RandomEngine> smearFunction;
 };
 

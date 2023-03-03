@@ -27,6 +27,8 @@
 #include <string>
 #include <unordered_map>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 
 class GlueVolumesDescriptor;
@@ -53,8 +55,9 @@ using LayerVector = std::vector<LayerPtr>;
 // Intersection with Layer
 using LayerIntersection = ObjectIntersection<Layer, Surface>;
 
-// Full intersection with surface
+/// BoundarySurface of a volume
 using BoundarySurface = BoundarySurfaceT<TrackingVolume>;
+/// Intersection with a @c BoundarySurface
 using BoundaryIntersection = ObjectIntersection<BoundarySurface, Surface>;
 
 /// @class TrackingVolume
@@ -110,11 +113,11 @@ class TrackingVolume : public Volume {
   ///
   /// @param transform is the global 3D transform to position the volume in
   /// space
-  /// @param volBounds is the description of the volume boundaries
+  /// @param volbounds is the description of the volume boundaries
   /// @param boxStore Vector owning the contained bounding boxes
   /// @param descendants Vector owning the child volumes
   /// @param top The top of the hierarchy (top node)
-  /// @param matprop is are materials of the tracking volume
+  /// @param volumeMaterial is the materials of the tracking volume
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
@@ -136,9 +139,10 @@ class TrackingVolume : public Volume {
   /// @param transform is the global 3D transform to position the volume in
   /// space
   /// @param volumeBounds is the description of the volume boundaries
-  /// @param matprop is are materials of the tracking volume
+  /// @param volumeMaterial is are materials of the tracking volume
   /// @param containedLayers is the confined layer array (optional)
   /// @param containedVolumes is the confined volume array (optional)
+  /// @param denseVolumes is the array of dense volulmes (optional)
   /// @param volumeName is a string identifier
   ///
   /// @return shared pointer to a new TrackingVolume
@@ -175,7 +179,7 @@ class TrackingVolume : public Volume {
   /// @param options The templated navigation options
   ///
   /// @return vector of compatible intersections with layers
-  std::vector<LayerIntersection> compatibleLayers(
+  boost::container::small_vector<LayerIntersection, 10> compatibleLayers(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
@@ -188,13 +192,13 @@ class TrackingVolume : public Volume {
   /// @param position The position for searching
   /// @param direction The direction for searching
   /// @param options The templated navigation options
-  /// @param sorter Sorter of the boundary surfaces
+  /// @param logger A @c Logger instance
   ///
   /// @return is the templated boundary intersection
-  std::vector<BoundaryIntersection> compatibleBoundaries(
+  boost::container::small_vector<BoundaryIntersection, 4> compatibleBoundaries(
       const GeometryContext& gctx, const Vector3& position,
       const Vector3& direction, const NavigationOptions<Surface>& options,
-      LoggerWrapper logger = getDummyLogger()) const;
+      const Logger& logger = getDummyLogger()) const;
 
   /// @brief Return surfaces in given direction from bounding volume hierarchy
   /// @tparam options_t Type of navigation options object for decomposition
@@ -234,13 +238,35 @@ class TrackingVolume : public Volume {
 
   /// @brief Visit all sensitive surfaces
   ///
+  /// @tparam visitor_t Type of the callable visitor
+  ///
   /// @param visitor The callable. Will be called for each sensitive surface
   /// that is found
   ///
   /// If a context is needed for the vist, the vistitor has to provide this
   /// e.g. as a private member
-  void visitSurfaces(
-      const std::function<void(const Acts::Surface*)>& visitor) const;
+  template <typename visitor_t>
+  void visitSurfaces(visitor_t&& visitor) const {
+    if (!m_confinedVolumes) {
+      // no sub volumes => loop over the confined layers
+      if (m_confinedLayers) {
+        for (const auto& layer : m_confinedLayers->arrayObjects()) {
+          if (layer->surfaceArray() == nullptr) {
+            // no surface array (?)
+            continue;
+          }
+          for (const auto& srf : layer->surfaceArray()->surfaces()) {
+            visitor(srf);
+          }
+        }
+      }
+    } else {
+      // contains sub volumes
+      for (const auto& volume : m_confinedVolumes->arrayObjects()) {
+        volume->visitSurfaces(visitor);
+      }
+    }
+  }
 
   /// Returns the VolumeName - for debug reason, might be depreciated later
   const std::string& volumeName() const;
@@ -260,7 +286,8 @@ class TrackingVolume : public Volume {
   /// a framework given source. As various volumes could potentially share the
   /// the same material description, it is provided as a shared object
   ///
-  /// @param material Material description of this volume
+  /// @param surfaceMaterial Material description of this volume
+  /// @param bsFace Specifies which boundary surface to assign the material to
   void assignBoundaryMaterial(
       std::shared_ptr<const ISurfaceMaterial> surfaceMaterial,
       BoundarySurfaceFace bsFace);
@@ -410,11 +437,14 @@ class TrackingVolume : public Volume {
   /// @param volumeMap is a map to find the a volume by identifier
   /// @param vol is the geometry id of the volume
   ///        as calculated by the TrackingGeometry
+  /// @param hook Identifier hook to be applied to surfaces
+  /// @param logger A @c LoggerWrapper instance
   ///
   void closeGeometry(
       const IMaterialDecorator* materialDecorator,
       std::unordered_map<GeometryIdentifier, const TrackingVolume*>& volumeMap,
-      size_t& vol);
+      size_t& vol, const GeometryIdentifierHook& hook,
+      const Logger& logger = getDummyLogger());
 
   /// interlink the layers in this TrackingVolume
   void interlinkLayers();
@@ -504,6 +534,8 @@ inline bool TrackingVolume::hasBoundingVolumeHierarchy() const {
   return m_bvhTop != nullptr;
 }
 
-#include "detail/TrackingVolume.ipp"
+#ifndef DOXYGEN
+#include "Acts/Geometry/detail/TrackingVolume.ipp"
+#endif
 
 }  // namespace Acts

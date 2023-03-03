@@ -8,13 +8,14 @@
 
 #pragma once
 
+#include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 
 #include <memory>
 
 namespace Acts {
-/// @class IExperimentCuts can be used to increase or decrease seed weights
-///  based on the space points used in a seed. Seed weights are also
+/// @c IExperimentCuts can be used to increase or decrease seed weights
+/// based on the space points used in a seed. Seed weights are also
 /// influenced by the SeedFilter default implementation. This tool is also used
 /// to decide if a seed passes a seed weight cut. As the weight is stored in
 /// seeds, there are two distinct methods.
@@ -41,15 +42,13 @@ class IExperimentCuts {
       const InternalSpacePoint<SpacePoint>& middle,
       const InternalSpacePoint<SpacePoint>& top) const = 0;
 
-  /// @param seeds contains pairs of weight and seed created for one middle
-  /// space
-  /// point
-  /// @return vector of seeds that pass the cut
-  virtual std::vector<
-      std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-  cutPerMiddleSP(
-      std::vector<
-          std::pair<float, std::unique_ptr<const InternalSeed<SpacePoint>>>>
-          seeds) const = 0;
+  /// @param seedCandidates contains collection of seed candidates created for one middle
+  /// space point in a std::tuple format
+  /// @return vector of seed candidates that pass the cut
+  virtual std::vector<typename CandidatesForMiddleSp<
+      InternalSpacePoint<SpacePoint>>::value_type>
+  cutPerMiddleSP(std::vector<typename CandidatesForMiddleSp<
+                     InternalSpacePoint<SpacePoint>>::value_type>
+                     seedCandidates) const = 0;
 };
 }  // namespace Acts

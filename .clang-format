@@ -8,6 +8,7 @@ AllowShortIfStatementsOnASingleLine: false
 AllowShortLoopsOnASingleLine: false
 PointerAlignment: Left
 ColumnLimit: 80
+CommentPragmas: '[@\\].*'
 IncludeCategories:
   # This is a bugfix/compatibility header that must come first
   - Regex: '^(<|")Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp'

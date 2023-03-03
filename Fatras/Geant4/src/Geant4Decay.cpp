@@ -25,22 +25,22 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
   // Find the particle type that will decay
   G4ParticleDefinition* pDef =
       m_pdgToG4Conv.getParticleDefinition(parent.pdg());
-  if (!pDef) {
+  if (pDef == nullptr) {
     return children;
   }
   // Get the particles decay table
   G4DecayTable* dt = pDef->GetDecayTable();
-  if (!dt) {
+  if (dt == nullptr) {
     return children;
   }
   // Select a decay channel
   G4VDecayChannel* channel = dt->SelectADecayChannel();
-  if (!channel) {
+  if (channel == nullptr) {
     return children;
   }
   // Get the decay products from the selected channel
   G4DecayProducts* products = channel->DecayIt();
-  if (!products) {
+  if (products == nullptr) {
     return children;
   }
 
@@ -53,7 +53,7 @@ std::vector<ActsFatras::Particle> ActsFatras::Geant4Decay::decayParticle(
   G4int nProducts = products->entries();
   for (G4int i = 0; i < nProducts; i++) {
     G4DynamicParticle* prod = products->PopProducts();
-    if (!prod) {
+    if (prod == nullptr) {
       continue;
     }
 

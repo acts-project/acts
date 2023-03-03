@@ -19,6 +19,7 @@
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/BinnedArray.hpp"
 #include "Acts/Utilities/Intersection.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <utility>
@@ -34,6 +35,9 @@ class VolumeBounds;
 class TrackingVolume;
 class ApproachDescriptor;
 class IMaterialDecorator;
+
+template <typename T>
+struct NavigationOptions;
 
 // Simple surface intersection
 using SurfaceIntersection = ObjectIntersection<Surface>;
@@ -96,8 +100,8 @@ class Layer : public virtual GeometryObject {
 
   /// Assignment operator - forbidden, layer assignment must not be ambiguous
   ///
-  /// @param lay is the source layer for assignment
-  Layer& operator=(const Layer&) = delete;
+  /// @param layer is the source layer for assignment
+  Layer& operator=(const Layer& layer) = delete;
 
   /// Return the entire SurfaceArray, returns a nullptr if no SurfaceArray
   const SurfaceArray* surfaceArray() const;
@@ -158,37 +162,30 @@ class Layer : public virtual GeometryObject {
 
   /// @brief Decompose Layer into (compatible) surfaces
   ///
-  /// @tparam options_t The navigation options type
-  ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position parameter for searching
-  /// @param momentum Momentum parameter for searching
-  /// @param options The templated naivation options
+  /// @param direction Direction of the parameters for searching
+  /// @param options The navigation options
   ///
   /// @return list of intersection of surfaces on the layer
-  template <typename options_t>
-  std::vector<SurfaceIntersection> compatibleSurfaces(
+  boost::container::small_vector<SurfaceIntersection, 10> compatibleSurfaces(
       const GeometryContext& gctx, const Vector3& position,
-      const Vector3& direction, const options_t& options) const;
+      const Vector3& direction,
+      const NavigationOptions<Surface>& options) const;
 
   /// Surface seen on approach
-  ///
-  /// @tparam options_t The navigation options type
-  ///
   /// for layers without sub structure, this is the surfaceRepresentation
   /// for layers with sub structure, this is the approachSurface
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position Position for searching
   /// @param direction Direction for searching
-  /// @param options The templated naivation options
+  /// @param options The  navigation options
   ///
   /// @return the Surface intersection of the approach surface
-  template <typename options_t>
-  const SurfaceIntersection surfaceOnApproach(const GeometryContext& gctx,
-                                              const Vector3& position,
-                                              const Vector3& direction,
-                                              const options_t& options) const;
+  SurfaceIntersection surfaceOnApproach(
+      const GeometryContext& gctx, const Vector3& position,
+      const Vector3& direction, const NavigationOptions<Layer>& options) const;
 
   /// Fast navigation to next layer
   ///
@@ -239,7 +236,7 @@ class Layer : public virtual GeometryObject {
   NextLayers m_nextLayers;
 
   /// A binutility to find the next layer
-  /// @TODO check if this is needed
+  /// @todo check if this is needed
   const BinUtility* m_nextLayerUtility = nullptr;
 
   /// SurfaceArray on this layer Surface
@@ -284,11 +281,16 @@ class Layer : public virtual GeometryObject {
   ///        optionally the surface material to where they belong
   /// @param layerID is the geometry id of the volume
   ///                as calculated by the TrackingGeometry
+  /// @param hook Identifier hook to be applied to surfaces
+  /// @param logger A @c Logger instance
+  ///
   void closeGeometry(const IMaterialDecorator* materialDecorator,
-                     const GeometryIdentifier& layerID);
+                     const GeometryIdentifier& layerID,
+                     const GeometryIdentifierHook& hook,
+                     const Logger& logger = getDummyLogger());
 };
 
-/// Layers are constructedd with shared_ptr factories, hence the layer array is
+/// Layers are constructed with shared_ptr factories, hence the layer array is
 /// describes as:
 using LayerArray = BinnedArray<LayerPtr>;
 

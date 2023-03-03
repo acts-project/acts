@@ -9,9 +9,10 @@
 #include "ActsExamples/Io/Root/RootPlanarClusterWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Digitization/DigitizationModule.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
-#include "Acts/Plugins/Digitization/Segmentation.hpp"
+#include "Acts/Digitization/DigitizationModule.hpp"
+#include "Acts/Digitization/DigitizationSourceLink.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Digitization/Segmentation.hpp"
 #include "Acts/Plugins/Identification/IdentifiedDetectorElement.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
@@ -26,11 +27,10 @@
 #include <TTree.h>
 
 ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
-    const ActsExamples::RootPlanarClusterWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputClusters, "RootPlanarClusterWriter", lvl),
-      m_cfg(cfg),
-      m_outputFile(cfg.rootFile) {
+    const ActsExamples::RootPlanarClusterWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputClusters, "RootPlanarClusterWriter", level),
+      m_cfg(config) {
   // inputClusters is already checked by base constructor
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -42,17 +42,15 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
     throw std::invalid_argument("Missing tracking geometry");
   }
   // Setup ROOT I/O
+  m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
   if (m_outputFile == nullptr) {
-    m_outputFile = TFile::Open(m_cfg.filePath.c_str(), m_cfg.fileMode.c_str());
-    if (m_outputFile == nullptr) {
-      throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
-    }
+    throw std::ios_base::failure("Could not open '" + m_cfg.filePath);
   }
   m_outputFile->cd();
-  m_outputTree =
-      new TTree(m_cfg.treeName.c_str(), "TTree from RootPlanarClusterWriter");
-  if (m_outputTree == nullptr)
+  m_outputTree = new TTree(m_cfg.treeName.c_str(), m_cfg.treeName.c_str());
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_nr", &m_eventNr);
@@ -78,22 +76,24 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   m_outputTree->Branch("truth_g_t", &m_t_gt);
   m_outputTree->Branch("truth_l_x", &m_t_lx);
   m_outputTree->Branch("truth_l_y", &m_t_ly);
-  m_outputTree->Branch("truth_barcode", &m_t_barcode, "truth_barcode/l");
+  m_outputTree->Branch("truth_barcode", &m_t_barcode);
 }
 
 ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
-  /// Close the file if it's yours
-  if (m_cfg.rootFile == nullptr) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
+  m_outputFile->Close();
+
   ACTS_INFO("Wrote clusters to tree '" << m_cfg.treeName << "' in '"
                                        << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 
@@ -113,7 +113,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
   for (auto [moduleGeoId, moduleClusters] : groupByModule(clusters)) {
     const Acts::Surface* surfacePtr =
         m_cfg.trackingGeometry->findSurface(moduleGeoId);
-    if (not surfacePtr) {
+    if (surfacePtr == nullptr) {
       ACTS_ERROR("Could not find surface for " << moduleGeoId);
       return ProcessCode::ABORT;
     }
@@ -154,7 +154,8 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
         m_cell_IDy.push_back(cell.channel1);
         m_cell_data.push_back(cell.data);
         // for more we need the digitization module
-        if (detectorElement && detectorElement->digitizationModule()) {
+        if ((detectorElement != nullptr) &&
+            detectorElement->digitizationModule()) {
           auto digitationModule = detectorElement->digitizationModule();
           const Acts::Segmentation& segmentation =
               digitationModule->segmentation();
@@ -166,7 +167,8 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
       }
       // write hit-particle truth association
       // each hit can have multiple particles, e.g. in a dense environment
-      for (auto idx : cluster.sourceLink().indices()) {
+      const auto& sl = cluster.sourceLink().get<Acts::DigitizationSourceLink>();
+      for (auto idx : sl.indices()) {
         auto it = simHits.nth(idx);
         if (it == simHits.end()) {
           ACTS_FATAL("Simulation hit with index " << idx << " does not exist");

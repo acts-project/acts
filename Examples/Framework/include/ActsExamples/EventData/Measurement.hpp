@@ -9,6 +9,9 @@
 #pragma once
 
 #include "Acts/EventData/Measurement.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 
 #include <cassert>
@@ -17,7 +20,7 @@
 namespace ActsExamples {
 
 /// Variable measurement type that can contain all possible combinations.
-using Measurement = ::Acts::BoundVariantMeasurement<IndexSourceLink>;
+using Measurement = ::Acts::BoundVariantMeasurement;
 /// Container of measurements.
 ///
 /// In contrast to the source links, the measurements themself must not be
@@ -37,16 +40,24 @@ class MeasurementCalibrator {
   /// Find the measurement corresponding to the source link.
   ///
   /// @tparam parameters_t Track parameters type
-  /// @param sourceLink Input source link
-  /// @param parameters Input track parameters (unused)
-  template <typename parameters_t>
-  const Measurement& operator()(const IndexSourceLink& sourceLink,
-                                const parameters_t& /* parameters */) const {
+  /// @param gctx The geometry context (unused)
+  /// @param trackState The track state to calibrate
+  void calibrate(
+      const Acts::GeometryContext& /*gctx*/,
+      Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy
+          trackState) const {
+    const IndexSourceLink& sourceLink =
+        trackState.uncalibratedSourceLink().get<IndexSourceLink>();
     assert(m_measurements and
            "Undefined measurement container in DigitizedCalibrator");
     assert((sourceLink.index() < m_measurements->size()) and
            "Source link index is outside the container bounds");
-    return (*m_measurements)[sourceLink.index()];
+    std::visit(
+        [&trackState](const auto& meas) {
+          trackState.allocateCalibrated(meas.size());
+          trackState.setCalibrated(meas);
+        },
+        (*m_measurements)[sourceLink.index()]);
   }
 
  private:

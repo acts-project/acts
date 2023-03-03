@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -45,8 +45,9 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
 
   m_outputTree = new TTree(m_cfg.treeName.c_str(),
                            "TTree from RootPropagationStepsWriter");
-  if (m_outputTree == nullptr)
+  if (m_outputTree == nullptr) {
     throw std::bad_alloc();
+  }
 
   // Set the branches
   m_outputTree->Branch("event_nr", &m_eventNr);
@@ -55,6 +56,7 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("layer_id", &m_layerID);
   m_outputTree->Branch("approach_id", &m_approachID);
   m_outputTree->Branch("sensitive_id", &m_sensitiveID);
+  m_outputTree->Branch("material", &m_material);
   m_outputTree->Branch("g_x", &m_x);
   m_outputTree->Branch("g_y", &m_y);
   m_outputTree->Branch("g_z", &m_z);
@@ -66,21 +68,27 @@ ActsExamples::RootPropagationStepsWriter::RootPropagationStepsWriter(
   m_outputTree->Branch("step_act", &m_step_act);
   m_outputTree->Branch("step_abt", &m_step_abt);
   m_outputTree->Branch("step_usr", &m_step_usr);
+  m_outputTree->Branch("nStepTrials", &m_nStepTrials);
 }
 
 ActsExamples::RootPropagationStepsWriter::~RootPropagationStepsWriter() {
-  /// Close the file if it's yours
-  if (m_cfg.rootFile == nullptr) {
+  if (m_outputFile != nullptr) {
     m_outputFile->Close();
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();
+  /// Close the file if it's yours
+  if (m_cfg.rootFile == nullptr) {
+    m_outputFile->Close();
+  }
+
   ACTS_VERBOSE("Wrote particles to tree '" << m_cfg.treeName << "' in '"
                                            << m_cfg.filePath << "'");
+
   return ProcessCode::SUCCESS;
 }
 
@@ -101,6 +109,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_layerID.clear();
     m_approachID.clear();
     m_sensitiveID.clear();
+    m_material.clear();
     m_x.clear();
     m_y.clear();
     m_z.clear();
@@ -112,6 +121,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
     m_step_act.clear();
     m_step_abt.clear();
     m_step_usr.clear();
+    m_nStepTrials.clear();
 
     // loop over single steps
     for (auto& step : steps) {
@@ -121,6 +131,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       Acts::GeometryIdentifier::Value layerID = 0;
       Acts::GeometryIdentifier::Value approachID = 0;
       Acts::GeometryIdentifier::Value sensitiveID = 0;
+      int material = 0;
       // get the identification from the surface first
       if (step.surface) {
         auto geoID = step.surface->geometryId();
@@ -129,9 +140,12 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
         layerID = geoID.layer();
         approachID = geoID.approach();
         sensitiveID = geoID.sensitive();
+        if (step.surface->surfaceMaterial() != nullptr) {
+          material = 1;
+        }
       }
       // a current volume overwrites the surface tagged one
-      if (step.volume) {
+      if (step.volume != nullptr) {
         volumeID = step.volume->geometryId().volume();
       }
       // now fill
@@ -140,6 +154,7 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       m_layerID.push_back(layerID);
       m_boundaryID.push_back(boundaryID);
       m_volumeID.push_back(volumeID);
+      m_material.push_back(material);
 
       // kinematic information
       m_x.push_back(step.position.x());
@@ -154,27 +169,30 @@ ActsExamples::ProcessCode ActsExamples::RootPropagationStepsWriter::writeT(
       double actor = step.stepSize.value(Acts::ConstrainedStep::actor);
       double aborter = step.stepSize.value(Acts::ConstrainedStep::aborter);
       double user = step.stepSize.value(Acts::ConstrainedStep::user);
-      double act2 = actor * actor;
-      double acc2 = accuracy * accuracy;
-      double abo2 = aborter * aborter;
-      double usr2 = user * user;
+      double actAbs = std::abs(actor);
+      double accAbs = std::abs(accuracy);
+      double aboAbs = std::abs(aborter);
+      double usrAbs = std::abs(user);
 
       // todo - fold with direction
-      if (act2 < acc2 && act2 < abo2 && act2 < usr2) {
+      if (actAbs < accAbs && actAbs < aboAbs && actAbs < usrAbs) {
         m_step_type.push_back(0);
-      } else if (acc2 < abo2 && acc2 < usr2) {
+      } else if (accAbs < aboAbs && accAbs < usrAbs) {
         m_step_type.push_back(1);
-      } else if (abo2 < usr2) {
+      } else if (aboAbs < usrAbs) {
         m_step_type.push_back(2);
       } else {
         m_step_type.push_back(3);
       }
 
       // step size information
-      m_step_acc.push_back(accuracy);
-      m_step_act.push_back(actor);
-      m_step_abt.push_back(aborter);
-      m_step_usr.push_back(user);
+      m_step_acc.push_back(Acts::clampValue<float>(accuracy));
+      m_step_act.push_back(Acts::clampValue<float>(actor));
+      m_step_abt.push_back(Acts::clampValue<float>(aborter));
+      m_step_usr.push_back(Acts::clampValue<float>(user));
+
+      // stepper efficiency
+      m_nStepTrials.push_back(step.stepSize.nStepTrials);
     }
     m_outputTree->Fill();
   }

@@ -8,8 +8,8 @@
 
 #pragma once
 
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
@@ -28,7 +28,7 @@ namespace ActsExamples {
 /// in the root file for optimised data writing speed
 /// The event number is part of the written data.
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
@@ -43,21 +43,23 @@ class RootPlanarClusterWriter
     std::string filePath = "";          ///< path of the output file
     std::string fileMode = "RECREATE";  ///< file access mode
     std::string treeName = "clusters";  ///< name of the output tree
-    TFile* rootFile = nullptr;          ///< common root file
     /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
   };
 
   /// Constructor with
-  /// @param cfg configuration struct
-  /// @param output logging level
-  RootPlanarClusterWriter(const Config& cfg, Acts::Logging::Level lvl);
+  /// @param config configuration struct
+  /// @param level logging level
+  RootPlanarClusterWriter(const Config& config, Acts::Logging::Level level);
 
   /// Virtual destructor
   ~RootPlanarClusterWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// This implementation holds the actual writing method
@@ -65,27 +67,27 @@ class RootPlanarClusterWriter
   ///
   /// @param ctx The Algorithm context with per event information
   /// @param clusters is the data to be written out
-  ProcessCode writeT(const AlgorithmContext& ctx,
-                     const GeometryIdMultimap<Acts::PlanarModuleCluster>&
-                         clusters) final override;
+  ProcessCode writeT(
+      const AlgorithmContext& ctx,
+      const GeometryIdMultimap<Acts::PlanarModuleCluster>& clusters) override;
 
  private:
   Config m_cfg;                    ///< the configuration object
   std::mutex m_writeMutex;         ///< protect multi-threaded writes
-  TFile* m_outputFile;             ///< the output file
-  TTree* m_outputTree;             ///< the output tree
-  int m_eventNr;                   ///< the event number of
-  int m_volumeID;                  ///< volume identifier
-  int m_layerID;                   ///< layer identifier
-  int m_surfaceID;                 ///< surface identifier
-  float m_x;                       ///< global x
-  float m_y;                       ///< global y
-  float m_z;                       ///< global z
-  float m_t;                       ///< global t
-  float m_lx;                      ///< local lx
-  float m_ly;                      ///< local ly
-  float m_cov_lx;                  ///< local covariance lx
-  float m_cov_ly;                  ///< local covariance ly
+  TFile* m_outputFile{nullptr};    ///< the output file
+  TTree* m_outputTree{nullptr};    ///< the output tree
+  int m_eventNr = 0;               ///< the event number of
+  int m_volumeID = 0;              ///< volume identifier
+  int m_layerID = 0;               ///< layer identifier
+  int m_surfaceID = 0;             ///< surface identifier
+  float m_x = 0;                   ///< global x
+  float m_y = 0;                   ///< global y
+  float m_z = 0;                   ///< global z
+  float m_t = 0;                   ///< global t
+  float m_lx = 0;                  ///< local lx
+  float m_ly = 0;                  ///< local ly
+  float m_cov_lx = 0;              ///< local covariance lx
+  float m_cov_ly = 0;              ///< local covariance ly
   std::vector<int> m_cell_IDx;     ///< cell ID in lx
   std::vector<int> m_cell_IDy;     ///< cell ID in ly
   std::vector<float> m_cell_lx;    ///< local cell position x
@@ -93,14 +95,13 @@ class RootPlanarClusterWriter
   std::vector<float> m_cell_data;  ///< local cell position y
 
   // (optional) the truth position
-  std::vector<float> m_t_gx;  ///< truth position global x
-  std::vector<float> m_t_gy;  ///< truth position global y
-  std::vector<float> m_t_gz;  ///< truth position global z
-  std::vector<float> m_t_gt;  ///< truth time t
-  std::vector<float> m_t_lx;  ///< truth position local x
-  std::vector<float> m_t_ly;  ///< truth position local y
-  std::vector<unsigned long>
-      m_t_barcode;  ///< associated truth particle barcode
+  std::vector<float> m_t_gx;          ///< truth position global x
+  std::vector<float> m_t_gy;          ///< truth position global y
+  std::vector<float> m_t_gz;          ///< truth position global z
+  std::vector<float> m_t_gt;          ///< truth time t
+  std::vector<float> m_t_lx;          ///< truth position local x
+  std::vector<float> m_t_ly;          ///< truth position local y
+  std::vector<uint64_t> m_t_barcode;  ///< associated truth particle barcode
 };
 
 }  // namespace ActsExamples

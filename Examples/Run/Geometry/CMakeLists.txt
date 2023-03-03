@@ -5,8 +5,7 @@ set(_common_libraries
   ActsExamplesIoObj
   ActsExamplesIoCsv
   ActsExamplesIoJson
-  ActsExamplesIoRoot
-  Boost::program_options)
+  ActsExamplesIoRoot)
 
 # Empty detector
 add_executable(
@@ -14,7 +13,7 @@ add_executable(
   EmptyGeometryExample.cpp)
 target_link_libraries(
   ActsExampleGeometryEmpty
-  PRIVATE ${_common_libraries} ActsExamplesDetectorEmpty)
+  PRIVATE ${_common_libraries})
 
 # Generic detector
 add_executable(
@@ -22,23 +21,15 @@ add_executable(
   GenericGeometryExample.cpp)
 target_link_libraries(
   ActsExampleGeometryGeneric
-  PRIVATE ${_common_libraries} ActsExamplesDetectorGeneric)
+  PRIVATE ${_common_libraries})
 
-# Generic detector with IOV based alignment
+# Generic detector with alignment
 add_executable(
   ActsExampleGeometryAligned
   AlignedGeometryExample.cpp)
 target_link_libraries(
   ActsExampleGeometryAligned
-  PRIVATE ${_common_libraries} ActsExamplesDetectorContextual)
-
-# Generic detector with Payload based alignment
-add_executable(
-  ActsExampleGeometryPayload
-  PayloadGeometryExample.cpp)
-target_link_libraries(
-  ActsExampleGeometryPayload
-  PRIVATE ${_common_libraries} ActsExamplesDetectorContextual)
+  PRIVATE ${_common_libraries})
 
 # TGeo detector
 add_executable(
@@ -46,7 +37,7 @@ add_executable(
   TGeoGeometryExample.cpp)
 target_link_libraries(
   ActsExampleGeometryTGeo
-  PRIVATE ${_common_libraries} ActsExamplesDetectorTGeo)
+  PRIVATE ${_common_libraries})
 
 # Telescope detector
 add_executable(
@@ -54,14 +45,13 @@ add_executable(
   TelescopeGeometryExample.cpp)
 target_link_libraries(
   ActsExampleGeometryTelescope
-  PRIVATE ${_common_libraries} ActsExamplesDetectorTelescope)
+  PRIVATE ${_common_libraries})
 
 install(
   TARGETS
     ActsExampleGeometryEmpty
     ActsExampleGeometryGeneric
     ActsExampleGeometryAligned
-    ActsExampleGeometryPayload
     ActsExampleGeometryTGeo
     ActsExampleGeometryTelescope
   RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})

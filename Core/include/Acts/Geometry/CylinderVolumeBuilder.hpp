@@ -94,7 +94,7 @@ struct VolumeConfig {
 
   /// Attach method - non-const
   /// it attaches the one volume config to the other one in Z
-  /// this is the non-cost method, i.e. the mit point is is used
+  /// this is the non-cost method, i.e. the mid point is used
   ///
   /// @param [in] lConfig is the config to which it should be attached
   /// @note lConfig will be changed
@@ -356,6 +356,15 @@ struct WrappingConfig {
           // set the Central Wrapping
           wCondition = CentralWrapping;
           wConditionScreen = "[centrally inserted]";
+        } else if ((existingVolumeConfig.rMax > containerVolumeConfig.rMin &&
+                    existingVolumeConfig.rMin < containerVolumeConfig.rMin) ||
+                   (existingVolumeConfig.rMax > containerVolumeConfig.rMax &&
+                    existingVolumeConfig.rMin < containerVolumeConfig.rMax)) {
+          // The volumes are overlapping this shouldn't be happening return an
+          // error
+          throw std::invalid_argument(
+              "Volumes are overlapping, this shouldn't be happening. Please "
+              "check your geometry building.");
         }
 
         // check if gaps are needed
@@ -405,7 +414,7 @@ struct WrappingConfig {
     // for screen output
     std::stringstream sl;
     if (containerVolumeConfig) {
-      sl << "New contaienr built with       configuration: "
+      sl << "New container built with       configuration: "
          << containerVolumeConfig.toString() << '\n';
     }
     // go throug the new new ones first
@@ -541,6 +550,7 @@ class CylinderVolumeBuilder : public ITrackingVolumeBuilder {
   ///
   /// @param [in] gctx the geometry context for this building
   /// @param [in] lVector is the vector of layers that are parsed
+  /// @param [in] mtvVector Vector of mutable tracking volumes to analyze
   ///
   /// @return a VolumeConfig representing this layer
   VolumeConfig analyzeContent(

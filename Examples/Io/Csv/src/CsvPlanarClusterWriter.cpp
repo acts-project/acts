@@ -9,7 +9,8 @@
 #include "ActsExamples/Io/Csv/CsvPlanarClusterWriter.hpp"
 
 #include "Acts/Definitions/Units.hpp"
-#include "Acts/Plugins/Digitization/PlanarModuleCluster.hpp"
+#include "Acts/Digitization/DigitizationSourceLink.hpp"
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
@@ -23,9 +24,10 @@
 #include "CsvOutputData.hpp"
 
 ActsExamples::CsvPlanarClusterWriter::CsvPlanarClusterWriter(
-    const ActsExamples::CsvPlanarClusterWriter::Config& cfg,
-    Acts::Logging::Level lvl)
-    : WriterT(cfg.inputClusters, "CsvPlanarClusterWriter", lvl), m_cfg(cfg) {
+    const ActsExamples::CsvPlanarClusterWriter::Config& config,
+    Acts::Logging::Level level)
+    : WriterT(config.inputClusters, "CsvPlanarClusterWriter", level),
+      m_cfg(config) {
   // inputClusters is already checked by base constructor
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
@@ -65,7 +67,7 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
   for (auto [moduleGeoId, moduleClusters] : groupByModule(clusters)) {
     const Acts::Surface* surfacePtr =
         m_cfg.trackingGeometry->findSurface(moduleGeoId);
-    if (not surfacePtr) {
+    if (surfacePtr == nullptr) {
       ACTS_ERROR("Could not find surface for " << moduleGeoId);
       return ProcessCode::ABORT;
     }
@@ -104,7 +106,8 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterWriter::writeT(
       // each hit can have multiple particles, e.g. in a dense environment
       truth.hit_id = hit.hit_id;
       truth.geometry_id = hit.geometry_id;
-      for (auto idx : cluster.sourceLink().indices()) {
+      const auto& sl = cluster.sourceLink().get<Acts::DigitizationSourceLink>();
+      for (auto idx : sl.indices()) {
         auto it = simHits.nth(idx);
         if (it == simHits.end()) {
           ACTS_FATAL("Simulation hit with index " << idx << " does not exist");

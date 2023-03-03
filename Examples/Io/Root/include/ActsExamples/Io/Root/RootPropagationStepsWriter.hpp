@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2018-2022 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,11 +23,11 @@ using PropagationSteps = std::vector<Acts::detail::Step>;
 /// @class RootPropagationStepsWriter
 ///
 /// Write out the steps of test propgations for stepping validation,
-/// each step sequence is one entry in the  in the root file for optimised
+/// each step sequence is one entry in the root file for optimised
 /// data writing speed.
 /// The event number is part of the written data.
 ///
-/// A common file can be provided for to the writer to attach his TTree,
+/// A common file can be provided for the writer to attach his TTree,
 /// this is done by setting the Config::rootFile pointer to an existing file
 ///
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
@@ -53,28 +53,33 @@ class RootPropagationStepsWriter
   ~RootPropagationStepsWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// This implementation holds the actual writing method
   /// and is called by the WriterT<>::write interface
   ///
   /// @param context The Algorithm context with per event information
-  /// @param steps is the data to be written out
-  ProcessCode writeT(const AlgorithmContext& context,
-                     const std::vector<PropagationSteps>& steps) final override;
+  /// @param stepCollection is the data to be written out
+  ProcessCode writeT(
+      const AlgorithmContext& context,
+      const std::vector<PropagationSteps>& stepCollection) override;
 
  private:
   Config m_cfg;                    ///< the configuration object
   std::mutex m_writeMutex;         ///< protect multi-threaded writes
-  TFile* m_outputFile;             ///< the output file name
-  TTree* m_outputTree;             ///< the output tree
-  int m_eventNr;                   ///< the event number of
+  TFile* m_outputFile = nullptr;   ///< the output file name
+  TTree* m_outputTree = nullptr;   ///< the output tree
+  int m_eventNr = 0;               ///< the event number of
   std::vector<int> m_volumeID;     ///< volume identifier
   std::vector<int> m_boundaryID;   ///< boundary identifier
   std::vector<int> m_layerID;      ///< layer identifier if
   std::vector<int> m_approachID;   ///< surface identifier
   std::vector<int> m_sensitiveID;  ///< surface identifier
+  std::vector<int> m_material;     ///< flag material if present
   std::vector<float> m_x;          ///< global x
   std::vector<float> m_y;          ///< global y
   std::vector<float> m_z;          ///< global z
@@ -86,6 +91,9 @@ class RootPropagationStepsWriter
   std::vector<float> m_step_act;   ///< actor check
   std::vector<float> m_step_abt;   ///< aborter
   std::vector<float> m_step_usr;   ///< user
+  std::vector<size_t>
+      m_nStepTrials;  ///< Number of iterations needed by the stepsize
+                      ///  finder (e.g. Runge-Kutta) of the stepper.
 };
 
 }  // namespace ActsExamples

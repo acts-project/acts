@@ -67,5 +67,20 @@ BOOST_AUTO_TEST_CASE(BinAdjustment_Rectangle) {
   BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 30);
 }
 
+// Test Trapezoid
+BOOST_AUTO_TEST_CASE(BinAdjustment_Trapezoid) {
+  TrapezoidBounds bound(5, 15, 30);
+  BinUtility bu;
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::binX);
+  bu += BinUtility(1, 0, 1, Acts::open, Acts::binY);
+
+  BinUtility buAdjust = adjustBinUtility(bu, bound, Transform3::Identity());
+
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].min, -15);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[0].max, 15);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].min, -30);
+  BOOST_CHECK_EQUAL(buAdjust.binningData()[1].max, 30);
+}
+
 }  // namespace Test
 }  // namespace Acts

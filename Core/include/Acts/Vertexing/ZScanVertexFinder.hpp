@@ -39,7 +39,7 @@ class ZScanVertexFinder {
  public:
   using InputTrack_t = typename vfitter_t::InputTrack_t;
 
-  /// @struct Config Configuration struct
+  /// Configuration struct
   struct Config {
     /// @brief Finder configuration
     ///
@@ -70,7 +70,7 @@ class ZScanVertexFinder {
     double minWeight = 0.01;
   };
 
-  /// @struct State State struct for fulfilling interface
+  /// State struct for fulfilling interface
   struct State {};
 
   /// @brief Constructor used if InputTrack_t type == BoundTrackParameters
@@ -123,8 +123,6 @@ class ZScanVertexFinder {
   /// @brief Function to extract track parameters,
   /// InputTrack_t objects are BoundTrackParameters by default, function to be
   /// overwritten to return BoundTrackParameters for other InputTrack_t objects.
-  ///
-  /// @param InputTrack_t object to extract track parameters from
   std::function<BoundTrackParameters(InputTrack_t)> m_extractParameters;
 
   /// Logging instance

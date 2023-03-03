@@ -12,6 +12,7 @@ code_format = """
 {code}
 """.strip()
 
+
 def fix_pragma(file):
     with open(file, "r+") as f:
         text = f.read().strip()
@@ -19,12 +20,15 @@ def fix_pragma(file):
         def repl(m):
             code = m.group(2).strip()
             return code_format.format(code=code)
-        
-        newtext, num = re.subn(r"#ifndef (.*)\n#define \1.*\n((:?.|\n)+)#endif.*", repl, text, 1)
+
+        newtext, num = re.subn(
+            r"#ifndef (.*)\n#define \1.*\n((:?.|\n)+)#endif.*", repl, text, 1
+        )
         if num == 1:
             f.seek(0)
             f.truncate()
             f.write(newtext)
+
 
 def main():
     p = argparse.ArgumentParser()
@@ -37,19 +41,17 @@ def main():
         headers = [args.input]
     elif os.path.isdir(args.input):
         patterns = ["**/*.hpp", "**/*.h"]
-        headers = sum([glob(os.path.join(args.input, p), recursive=True) for p in patterns], [])
+        headers = sum(
+            [glob(os.path.join(args.input, p), recursive=True) for p in patterns], []
+        )
     else:
         headers = glob(args.input, recursive=True)
 
-
     # for h in headers: print(h)
 
-    for h in headers: 
+    for h in headers:
         fix_pragma(h)
-
-
 
 
 if "__main__" == __name__:
     main()
-

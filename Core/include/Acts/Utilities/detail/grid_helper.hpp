@@ -17,9 +17,18 @@
 #include <tuple>
 #include <utility>
 
+#include <boost/container/small_vector.hpp>
+
 namespace Acts {
 
 namespace detail {
+
+template <typename T>
+constexpr T ipow(T num, unsigned int pow) {
+  return (pow >= sizeof(unsigned int) * 8)
+             ? 0
+             : pow == 0 ? 1 : num * ipow(num, pow - 1);
+}
 
 // This object can be iterated to produce the (ordered) set of global indices
 // associated with a neighborhood around a certain point on a grid.
@@ -39,8 +48,9 @@ class GlobalNeighborHoodIndices {
       std::array<NeighborHoodIndices, DIM>& neighborIndices,
       const std::array<size_t, DIM>& nBinsArray)
       : m_localIndices(neighborIndices) {
-    if (DIM == 1)
+    if (DIM == 1) {
       return;
+    }
     size_t globalStride = 1;
     for (long i = DIM - 2; i >= 0; --i) {
       globalStride *= (nBinsArray[i + 1] + 2);
@@ -58,8 +68,9 @@ class GlobalNeighborHoodIndices {
 
     size_t operator*() const {
       size_t globalIndex = *m_localIndicesIter[DIM - 1];
-      if (DIM == 1)
+      if (DIM == 1) {
         return globalIndex;
+      }
       for (size_t i = 0; i < DIM - 1; ++i) {
         globalIndex += m_parent->m_globalStrides[i] * (*m_localIndicesIter[i]);
       }
@@ -74,8 +85,9 @@ class GlobalNeighborHoodIndices {
       // - If it reaches the end, reset it and increment the previous one...
       for (long i = DIM - 1; i > 0; --i) {
         ++m_localIndicesIter[i];
-        if (m_localIndicesIter[i] != localIndices[i].end())
+        if (m_localIndicesIter[i] != localIndices[i].end()) {
           return *this;
+        }
         m_localIndicesIter[i] = localIndices[i].begin();
       }
 
@@ -104,7 +116,7 @@ class GlobalNeighborHoodIndices {
   };
 
   iterator begin() const {
-    std::array<NeighborHoodIndices::iterator, DIM> localIndicesIter;
+    std::array<NeighborHoodIndices::iterator, DIM> localIndicesIter{};
     for (size_t i = 0; i < DIM; ++i) {
       localIndicesIter[i] = m_localIndices[i].begin();
     }
@@ -122,9 +134,9 @@ class GlobalNeighborHoodIndices {
     return result;
   }
 
-  // Collect the sequence of indices into an std::vector
-  std::vector<size_t> collect() const {
-    std::vector<size_t> result;
+  // Collect the sequence of indices into an vector
+  auto collect() const {
+    boost::container::small_vector<size_t, ipow(3, DIM)> result;
     result.reserve(this->size());
     for (size_t idx : *this) {
       result.push_back(idx);
@@ -132,9 +144,14 @@ class GlobalNeighborHoodIndices {
     return result;
   }
 
+  std::vector<size_t> collectVector() const {
+    auto result = collect();
+    return {result.begin(), result.end()};
+  }
+
  private:
-  std::array<NeighborHoodIndices, DIM> m_localIndices;
-  std::array<size_t, DIM - 1> m_globalStrides;
+  std::array<NeighborHoodIndices, DIM> m_localIndices{};
+  std::array<size_t, DIM - 1> m_globalStrides{};
 };
 
 /// @cond
@@ -171,7 +188,7 @@ struct grid_helper_impl {
                                  const std::tuple<Axes...>& axes,
                                  std::array<size_t, sizeof...(Axes)>& indices) {
     const auto& thisAxis = std::get<N>(axes);
-    indices.at(N) = thisAxis.getBin(point[N]);
+    indices.at(N) = static_cast<size_t>(thisAxis.getBin(point[N]));
     grid_helper_impl<N - 1>::getLocalBinIndices(point, axes, indices);
   }
 
@@ -266,12 +283,28 @@ struct grid_helper_impl {
   template <class... Axes>
   static void neighborHoodIndices(
       const std::array<size_t, sizeof...(Axes)>& localIndices,
-      std::pair<size_t, size_t> sizes, const std::tuple<Axes...>& axes,
+      std::pair<int, int> sizes, const std::tuple<Axes...>& axes,
       std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
     // ask n-th axis
     size_t locIdx = localIndices.at(N);
     NeighborHoodIndices locNeighbors =
         std::get<N>(axes).neighborHoodIndices(locIdx, sizes);
+    neighborIndices.at(N) = locNeighbors;
+
+    grid_helper_impl<N - 1>::neighborHoodIndices(localIndices, sizes, axes,
+                                                 neighborIndices);
+  }
+
+  template <class... Axes>
+  static void neighborHoodIndices(
+      const std::array<size_t, sizeof...(Axes)>& localIndices,
+      std::array<std::pair<int, int>, sizeof...(Axes)> sizes,
+      const std::tuple<Axes...>& axes,
+      std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
+    // ask n-th axis
+    size_t locIdx = localIndices.at(N);
+    NeighborHoodIndices locNeighbors =
+        std::get<N>(axes).neighborHoodIndices(locIdx, sizes.at(N));
     neighborIndices.at(N) = locNeighbors;
 
     grid_helper_impl<N - 1>::neighborHoodIndices(localIndices, sizes, axes,
@@ -398,12 +431,25 @@ struct grid_helper_impl<0u> {
   template <class... Axes>
   static void neighborHoodIndices(
       const std::array<size_t, sizeof...(Axes)>& localIndices,
-      std::pair<size_t, size_t> sizes, const std::tuple<Axes...>& axes,
+      std::pair<int, int> sizes, const std::tuple<Axes...>& axes,
       std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
     // ask 0-th axis
     size_t locIdx = localIndices.at(0u);
     NeighborHoodIndices locNeighbors =
         std::get<0u>(axes).neighborHoodIndices(locIdx, sizes);
+    neighborIndices.at(0u) = locNeighbors;
+  }
+
+  template <class... Axes>
+  static void neighborHoodIndices(
+      const std::array<size_t, sizeof...(Axes)>& localIndices,
+      std::array<std::pair<int, int>, sizeof...(Axes)> sizes,
+      const std::tuple<Axes...>& axes,
+      std::array<NeighborHoodIndices, sizeof...(Axes)>& neighborIndices) {
+    // ask 0-th axis
+    size_t locIdx = localIndices.at(0u);
+    NeighborHoodIndices locNeighbors =
+        std::get<0u>(axes).neighborHoodIndices(locIdx, sizes.at(0u));
     neighborIndices.at(0u) = locNeighbors;
   }
 
@@ -478,7 +524,7 @@ struct grid_helper {
   static std::array<ActsScalar, sizeof...(Axes)> getBinCenter(
       const std::array<size_t, sizeof...(Axes)>& localIndices,
       const std::tuple<Axes...>& axes) {
-    std::array<ActsScalar, sizeof...(Axes)> center;
+    std::array<ActsScalar, sizeof...(Axes)> center{};
     constexpr size_t MAX = sizeof...(Axes) - 1;
     grid_helper_impl<MAX>::getBinCenter(center, localIndices, axes);
 
@@ -526,7 +572,7 @@ struct grid_helper {
   static std::array<size_t, sizeof...(Axes)> getLocalBinIndices(
       const Point& point, const std::tuple<Axes...>& axes) {
     constexpr size_t MAX = sizeof...(Axes) - 1;
-    std::array<size_t, sizeof...(Axes)> indices;
+    std::array<size_t, sizeof...(Axes)> indices{};
 
     grid_helper_impl<MAX>::getLocalBinIndices(point, axes, indices);
 
@@ -548,7 +594,7 @@ struct grid_helper {
       size_t bin, const std::tuple<Axes...>& axes) {
     constexpr size_t MAX = sizeof...(Axes) - 1;
     size_t area = 1;
-    std::array<size_t, sizeof...(Axes)> indices;
+    std::array<size_t, sizeof...(Axes)> indices{};
 
     grid_helper_impl<MAX>::getLocalBinIndices(bin, axes, area, indices);
 
@@ -568,7 +614,7 @@ struct grid_helper {
   static std::array<ActsScalar, sizeof...(Axes)> getLowerLeftBinEdge(
       const std::array<size_t, sizeof...(Axes)>& localIndices,
       const std::tuple<Axes...>& axes) {
-    std::array<ActsScalar, sizeof...(Axes)> llEdge;
+    std::array<ActsScalar, sizeof...(Axes)> llEdge{};
     constexpr size_t MAX = sizeof...(Axes) - 1;
     grid_helper_impl<MAX>::getLowerLeftBinEdge(llEdge, localIndices, axes);
 
@@ -610,7 +656,7 @@ struct grid_helper {
   template <class... Axes>
   static std::array<size_t, sizeof...(Axes)> getNBins(
       const std::tuple<Axes...>& axes) {
-    std::array<size_t, sizeof...(Axes)> nBinsArray;
+    std::array<size_t, sizeof...(Axes)> nBinsArray{};
     grid_helper_impl<sizeof...(Axes) - 1>::getNBins(axes, nBinsArray);
     return nBinsArray;
   }
@@ -624,7 +670,7 @@ struct grid_helper {
   template <class... Axes>
   static std::array<const IAxis*, sizeof...(Axes)> getAxes(
       const std::tuple<Axes...>& axes) {
-    std::array<const IAxis*, sizeof...(Axes)> arr;
+    std::array<const IAxis*, sizeof...(Axes)> arr{};
     grid_helper_impl<sizeof...(Axes) - 1>::getAxes(axes, arr);
     return arr;
   }
@@ -642,7 +688,7 @@ struct grid_helper {
   static std::array<ActsScalar, sizeof...(Axes)> getUpperRightBinEdge(
       const std::array<size_t, sizeof...(Axes)>& localIndices,
       const std::tuple<Axes...>& axes) {
-    std::array<ActsScalar, sizeof...(Axes)> urEdge;
+    std::array<ActsScalar, sizeof...(Axes)> urEdge{};
     constexpr size_t MAX = sizeof...(Axes) - 1;
     grid_helper_impl<MAX>::getUpperRightBinEdge(urEdge, localIndices, axes);
 
@@ -681,7 +727,7 @@ struct grid_helper {
   template <class... Axes>
   static std::array<ActsScalar, sizeof...(Axes)> getMin(
       const std::tuple<Axes...>& axes) {
-    std::array<ActsScalar, sizeof...(Axes)> minArray;
+    std::array<ActsScalar, sizeof...(Axes)> minArray{};
     grid_helper_impl<sizeof...(Axes) - 1>::getMin(axes, minArray);
     return minArray;
   }
@@ -694,7 +740,7 @@ struct grid_helper {
   template <class... Axes>
   static std::array<ActsScalar, sizeof...(Axes)> getMax(
       const std::tuple<Axes...>& axes) {
-    std::array<ActsScalar, sizeof...(Axes)> maxArray;
+    std::array<ActsScalar, sizeof...(Axes)> maxArray{};
     grid_helper_impl<sizeof...(Axes) - 1>::getMax(axes, maxArray);
     return maxArray;
   }
@@ -707,7 +753,7 @@ struct grid_helper {
   template <class... Axes>
   static std::array<ActsScalar, sizeof...(Axes)> getWidth(
       const std::tuple<Axes...>& axes) {
-    std::array<ActsScalar, sizeof...(Axes)> widthArray;
+    std::array<ActsScalar, sizeof...(Axes)> widthArray{};
     grid_helper_impl<sizeof...(Axes) - 1>::getWidth(axes, widthArray);
     return widthArray;
   }
@@ -739,7 +785,7 @@ struct grid_helper {
     constexpr size_t MAX = sizeof...(Axes) - 1;
 
     // length N array which contains local neighbors based on size par
-    std::array<NeighborHoodIndices, sizeof...(Axes)> neighborIndices;
+    std::array<NeighborHoodIndices, sizeof...(Axes)> neighborIndices{};
     // get local bin indices for neighboring bins
     grid_helper_impl<MAX>::neighborHoodIndices(localIndices, sizes, axes,
                                                neighborIndices);
@@ -755,7 +801,49 @@ struct grid_helper {
   static GlobalNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
       const std::array<size_t, sizeof...(Axes)>& localIndices, size_t size,
       const std::tuple<Axes...>& axes) {
-    return neighborHoodIndices(localIndices, std::make_pair(size, size), axes);
+    return neighborHoodIndices(localIndices, std::make_pair(int(-size), size),
+                               axes);
+  }
+
+  /// @brief get global bin indices for bins in specified neighborhood
+  ///        for each axis
+  ///
+  /// @tparam Axes parameter pack of axis types defining the grid
+  /// @param  [in] localIndices local bin indices along each axis
+  /// @param  [in] size         size of neighborhood for each axis, which
+  ///                           bins along each axis are considered
+  /// @param  [in] axes         actual axis objects spanning the grid
+  /// @return Sorted collection of global bin indices for all bins in
+  ///         the neighborhood
+  ///
+  /// @note Over-/underflow bins are included in the neighborhood.
+  /// @note The @c size parameter sets the range by how many units each local
+  ///       bin index is allowed to be varied. All local bin indices are
+  ///       varied independently, that is diagonal neighbors are included.
+  ///       Ignoring the truncation of the neighborhood size reaching beyond
+  ///       over-/underflow bins, the neighborhood is of size \f$2 \times
+  ///       \text{size}+1\f$ along each dimension.
+  /// @note The concrete bins which are returned depend on the WrappingTypes
+  ///       of the contained axes
+  ///
+  template <class... Axes>
+  static GlobalNeighborHoodIndices<sizeof...(Axes)> neighborHoodIndices(
+      const std::array<size_t, sizeof...(Axes)>& localIndices,
+      std::array<std::pair<int, int>, sizeof...(Axes)>& sizes,
+      const std::tuple<Axes...>& axes) {
+    constexpr size_t MAX = sizeof...(Axes) - 1;
+
+    // length N array which contains local neighbors based on size par
+    std::array<NeighborHoodIndices, sizeof...(Axes)> neighborIndices{};
+    // get local bin indices for neighboring bins
+    grid_helper_impl<MAX>::neighborHoodIndices(localIndices, sizes, axes,
+                                               neighborIndices);
+
+    // Query the number of bins
+    std::array<size_t, sizeof...(Axes)> nBinsArray = getNBins(axes);
+
+    // Produce iterator of global indices
+    return GlobalNeighborHoodIndices(neighborIndices, nBinsArray);
   }
 
   /// @brief get bin indices of all overflow and underflow bins
@@ -767,8 +855,8 @@ struct grid_helper {
   static std::set<size_t> exteriorBinIndices(const std::tuple<Axes...>& axes) {
     constexpr size_t MAX = sizeof...(Axes) - 1;
 
-    std::array<size_t, sizeof...(Axes)> idx;
-    std::array<bool, sizeof...(Axes)> isExterior;
+    std::array<size_t, sizeof...(Axes)> idx{};
+    std::array<bool, sizeof...(Axes)> isExterior{};
     std::set<size_t> combinations;
     grid_helper_impl<MAX>::exteriorBinIndices(idx, isExterior, combinations,
                                               axes);

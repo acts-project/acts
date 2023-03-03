@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "Acts/EventData/SourceLink.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
 #include "ActsExamples/EventData/Index.hpp"
 
@@ -38,22 +40,22 @@ class IndexSourceLink final {
   IndexSourceLink& operator=(const IndexSourceLink&) = default;
   IndexSourceLink& operator=(IndexSourceLink&&) = default;
 
-  /// Access the geometry identifier.
-  constexpr Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
   /// Access the index.
   constexpr Index index() const { return m_index; }
 
+  Acts::GeometryIdentifier geometryId() const { return m_geometryId; }
+
  private:
   Acts::GeometryIdentifier m_geometryId;
-  Index m_index;
+  Index m_index = 0;
 
-  friend constexpr bool operator==(const IndexSourceLink& lhs,
-                                   const IndexSourceLink& rhs) {
-    return (lhs.m_geometryId == rhs.m_geometryId) and
+  friend bool operator==(const IndexSourceLink& lhs,
+                         const IndexSourceLink& rhs) {
+    return (lhs.geometryId() == rhs.geometryId()) and
            (lhs.m_index == rhs.m_index);
   }
-  friend constexpr bool operator!=(const IndexSourceLink& lhs,
-                                   const IndexSourceLink& rhs) {
+  friend bool operator!=(const IndexSourceLink& lhs,
+                         const IndexSourceLink& rhs) {
     return not(lhs == rhs);
   }
 };
@@ -67,6 +69,16 @@ using IndexSourceLinkContainer = GeometryIdMultiset<IndexSourceLink>;
 ///
 /// It wraps up a few lookup methods to be used in the Combinatorial Kalman
 /// Filter
-using IndexSourceLinkAccessor = GeometryIdMultisetAccessor<IndexSourceLink>;
+struct IndexSourceLinkAccessor : GeometryIdMultisetAccessor<IndexSourceLink> {
+  using BaseIterator = GeometryIdMultisetAccessor<IndexSourceLink>::Iterator;
 
+  using Iterator = Acts::SourceLinkAdapterIterator<BaseIterator>;
+
+  // get the range of elements with requested geoId
+  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
+    assert(container != nullptr);
+    auto [begin, end] = container->equal_range(surface.geometryId());
+    return {Iterator{begin}, Iterator{end}};
+  }
+};
 }  // namespace ActsExamples

@@ -8,6 +8,8 @@
 
 #include "Acts/Visualization/GeometryView3D.hpp"
 
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/Layer.hpp"
 #include "Acts/Geometry/Polyhedron.hpp"
@@ -21,6 +23,30 @@
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Surfaces/SurfaceArray.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+
+#include <limits.h>
+#include <unistd.h>
+
+namespace {
+std::string joinPaths(const std::string& a, const std::string& b) {
+  if (b.substr(0, 1) == "/" || a.empty()) {
+    return b;
+  }
+
+  if (a.substr(a.size() - 1) == "/") {
+    return a.substr(a.size() - 1) + "/" + b;
+  }
+
+  return a + "/" + b;
+}
+
+std::string getWorkingDirectory() {
+  char buffer[PATH_MAX];
+  return (getcwd(buffer, sizeof(buffer)) != nullptr ? std::string(buffer)
+                                                    : std::string(""));
+}
+
+}  // namespace
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
@@ -48,13 +74,13 @@ void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
   drawPolyhedron(helper, surfaceHedron, ViewConfig);
 }
 
-void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
-                                            const SurfaceArray& surfaceArray,
-                                            const GeometryContext& gctx,
-                                            const Transform3& transform,
-                                            const ViewConfig& sensitiveConfig,
-                                            const ViewConfig& passiveConfig,
-                                            const ViewConfig& gridConfig) {
+void Acts::GeometryView3D::drawSurfaceArray(
+    IVisualization3D& helper, const SurfaceArray& surfaceArray,
+    const GeometryContext& gctx, const Transform3& transform,
+    const ViewConfig& sensitiveConfig, const ViewConfig& passiveConfig,
+    const ViewConfig& gridConfig, const std::string& _outputDir) {
+  std::string outputDir =
+      _outputDir == "." ? getWorkingDirectory() : _outputDir;
   // Draw all the surfaces
   Extent arrayExtent;
   for (const auto& sf : surfaceArray.surfaces()) {
@@ -67,7 +93,7 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
   }
 
   if (not sensitiveConfig.outputName.empty()) {
-    helper.write(sensitiveConfig.outputName);
+    helper.write(joinPaths(outputDir, sensitiveConfig.outputName));
     helper.clear();
   }
 
@@ -95,7 +121,7 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
                                0.5 * thickness);
       auto cvbOrientedSurfaces = cvb.orientedSurfaces();
       for (auto z : zValues) {
-        for (auto cvbSf : cvbOrientedSurfaces) {
+        for (const auto& cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
@@ -111,7 +137,7 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
         CylinderVolumeBounds cvb(r - 0.5 * thickness, r + 0.5 * thickness,
                                  0.5 * thickness);
         auto cvbOrientedSurfaces = cvb.orientedSurfaces();
-        for (auto cvbSf : cvbOrientedSurfaces) {
+        for (const auto& cvbSf : cvbOrientedSurfaces) {
           drawSurface(helper, *cvbSf.first, gctx,
                       Translation3(0., 0., z) * transform, gridRadConfig);
         }
@@ -129,7 +155,7 @@ void Acts::GeometryView3D::drawSurfaceArray(IVisualization3D& helper,
   }
 
   if (not gridConfig.outputName.empty()) {
-    helper.write(gridConfig.outputName);
+    helper.write(joinPaths(outputDir, gridConfig.outputName));
     helper.clear();
   }
 }
@@ -146,12 +172,55 @@ void Acts::GeometryView3D::drawVolume(IVisualization3D& helper,
   }
 }
 
-void Acts::GeometryView3D::drawLayer(IVisualization3D& helper,
-                                     const Layer& layer,
-                                     const GeometryContext& gctx,
-                                     const ViewConfig& layerConfig,
-                                     const ViewConfig& sensitiveConfig,
-                                     const ViewConfig& gridConfig) {
+void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
+                                      const Experimental::Portal& portal,
+                                      const GeometryContext& gctx,
+                                      const Transform3& transform,
+                                      const ViewConfig& connected,
+                                      const ViewConfig& disconnected) {
+  // color the portal based on if it contains two links(green)
+  // or one link(red)
+  auto surface = &(portal.surface());
+  auto links = &(portal.detectorVolumeUpdators());
+  if (links->size() == 2) {
+    drawSurface(helper, *surface, gctx, transform, connected);
+  } else {
+    drawSurface(helper, *surface, gctx, transform, disconnected);
+  }
+}
+
+void Acts::GeometryView3D::drawDetectorVolume(
+    IVisualization3D& helper, const Experimental::DetectorVolume& volume,
+    const GeometryContext& gctx, const Transform3& transform,
+    const ViewConfig& connected, const ViewConfig& unconnected) {
+  // draw the envelope first
+  auto portals = volume.portals();
+  for (auto portal : portals) {
+    drawPortal(helper, *portal, gctx, transform, connected, unconnected);
+  }
+  // recurse if there are subvolumes, otherwise draw the portals
+  auto subvolumes = volume.volumes();
+  for (auto subvolume : subvolumes) {
+    if (!subvolume->volumes().empty()) {
+      drawDetectorVolume(helper, *subvolume, gctx, transform, connected,
+                         unconnected);
+    } else {
+      auto sub_portals = subvolume->portals();
+      for (auto sub_portal : sub_portals) {
+        drawPortal(helper, *sub_portal, gctx, transform, connected,
+                   unconnected);
+      }
+    }
+  }
+}
+
+void Acts::GeometryView3D::drawLayer(
+    IVisualization3D& helper, const Layer& layer, const GeometryContext& gctx,
+    const ViewConfig& layerConfig, const ViewConfig& sensitiveConfig,
+    const ViewConfig& gridConfig, const std::string& _outputDir) {
+  std::string outputDir =
+      _outputDir == "." ? getWorkingDirectory() : _outputDir;
+
   if (layerConfig.visible) {
     auto layerVolume = layer.representingVolume();
     if (layerVolume != nullptr) {
@@ -163,7 +232,7 @@ void Acts::GeometryView3D::drawLayer(IVisualization3D& helper,
                   layerConfig);
     }
     if (not layerConfig.outputName.empty()) {
-      helper.write(layerConfig.outputName);
+      helper.write(joinPaths(outputDir, layerConfig.outputName));
       helper.clear();
     }
   }
@@ -172,7 +241,7 @@ void Acts::GeometryView3D::drawLayer(IVisualization3D& helper,
     auto surfaceArray = layer.surfaceArray();
     if (surfaceArray != nullptr) {
       drawSurfaceArray(helper, *surfaceArray, gctx, Transform3::Identity(),
-                       sensitiveConfig, layerConfig, gridConfig);
+                       sensitiveConfig, layerConfig, gridConfig, outputDir);
     }
   }
 }
@@ -182,12 +251,15 @@ void Acts::GeometryView3D::drawTrackingVolume(
     const GeometryContext& gctx, const ViewConfig& containerView,
     const ViewConfig& volumeView, const ViewConfig& layerView,
     const ViewConfig& sensitiveView, const ViewConfig& gridView, bool writeIt,
-    const std::string& tag) {
+    const std::string& tag, const std::string& _outputDir) {
+  std::string outputDir =
+      _outputDir == "." ? getWorkingDirectory() : _outputDir;
   if (tVolume.confinedVolumes() != nullptr) {
     const auto& subVolumes = tVolume.confinedVolumes()->arrayObjects();
     for (const auto& tv : subVolumes) {
       drawTrackingVolume(helper, *tv, gctx, containerView, volumeView,
-                         layerView, sensitiveView, gridView, writeIt, tag);
+                         layerView, sensitiveView, gridView, writeIt, tag,
+                         outputDir);
     }
   }
 
@@ -201,8 +273,9 @@ void Acts::GeometryView3D::drawTrackingVolume(
   ViewConfig vcConfig = cConfig;
   std::string vname = tVolume.volumeName();
   if (writeIt) {
-    std::vector<std::string> repChar = {":", "|", " ", "{", "}"};
-    for (auto rchar : repChar) {
+    std::vector<std::string> repChar = {"::" /*, "|", " ", "{", "}"*/};
+    // std::cout << "PRE: " << vname << std::endl;
+    for (const auto& rchar : repChar) {
       while (vname.find(rchar) != std::string::npos) {
         vname.replace(vname.find(rchar), rchar.size(), std::string("_"));
       }
@@ -211,8 +284,20 @@ void Acts::GeometryView3D::drawTrackingVolume(
       vcConfig = vConfig;
       vcConfig.outputName = vname + std::string("_boundaries") + tag;
     } else {
-      vcConfig.outputName =
-          std::string("Container-") + vname + std::string("_boundaries") + tag;
+      std::stringstream vs;
+      vs << "Container";
+      std::vector<GeometryIdentifier::Value> ids{tVolume.geometryId().volume()};
+
+      for (const auto* current = &tVolume; current->motherVolume() != nullptr;
+           current = current->motherVolume()) {
+        ids.push_back(current->motherVolume()->geometryId().volume());
+      }
+
+      for (size_t i = ids.size() - 1; i < ids.size(); --i) {
+        vs << "_v" << ids[i];
+      }
+      vname = vs.str();
+      vcConfig.outputName = vname + std::string("_boundaries") + tag;
     }
   }
 
@@ -222,7 +307,8 @@ void Acts::GeometryView3D::drawTrackingVolume(
                 Transform3::Identity(), vcConfig);
   }
   if (writeIt) {
-    helper.write(vcConfig.outputName);
+    std::string outputName = joinPaths(outputDir, vcConfig.outputName);
+    helper.write(outputName);
     helper.clear();
   }
 
@@ -238,7 +324,7 @@ void Acts::GeometryView3D::drawTrackingVolume(
         gConfig.outputName =
             vname + std::string("_grids_l") + std::to_string(il) + tag;
       }
-      drawLayer(helper, *tl, gctx, lConfig, sConfig, gConfig);
+      drawLayer(helper, *tl, gctx, lConfig, sConfig, gConfig, outputDir);
       ++il;
     }
   }

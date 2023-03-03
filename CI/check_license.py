@@ -22,7 +22,7 @@ class bcolors:
     UNDERLINE = "\033[4m"
 
 
-CROSS_SYMBOL = u"\u2717"
+CROSS_SYMBOL = "\u2717"
 
 
 def err(string):
@@ -146,7 +146,7 @@ def main():
     )
 
     ref = re.compile(reg, re.M)
-    clean_re = re.compile(r"(\(C\)) (.*) (Acts)", re.M)
+    clean_re = re.compile(r"(\(C\)) (.*) (CERN)", re.M)
     year_re = re.compile(r"^(?P<year1>20\d{2}|(?P<year2>20\d{2})-(?P<year3>20\d{2}))$")
     extract_re = re.compile(r"(20\d{2})-?(20\d{2})?")
 

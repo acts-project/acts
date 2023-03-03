@@ -12,8 +12,8 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 
-#include <autodiff/forward.hpp>
-#include <autodiff/forward/eigen.hpp>
+#include <autodiff/forward/dual.hpp>
+#include <autodiff/forward/dual/eigen.hpp>
 
 namespace Acts {
 
@@ -49,7 +49,7 @@ struct AutodiffExtensionWrapper {
   bool k(const propagator_state_t& state, const stepper_t& stepper,
          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
          const int i = 0, const double h = 0.,
-         const Vector3& kprev = Vector3()) {
+         const Vector3& kprev = Vector3::Zero()) {
     return m_doubleExtension.k(state, stepper, knew, bField, kQoP, i, h, kprev);
   }
 
@@ -73,7 +73,7 @@ struct AutodiffExtensionWrapper {
   struct FakeStepperState {
     AutodiffFreeVector pars;
     AutodiffFreeVector derivative;
-    double q;
+    double q = 0;
     bool covTransport = false;
   };
 
@@ -124,8 +124,6 @@ struct AutodiffExtensionWrapper {
     const auto& sd = state.stepping.stepData;
 
     // Compute jacobian
-    using namespace autodiff::forward;
-
     D = jacobian([&](const auto& in) { return RKN4step(in, sd, fstate, h); },
                  wrt(initial_params), at(initial_params))
             .template cast<double>();

@@ -29,6 +29,7 @@ class TGeoNode;
 namespace Acts {
 
 class TGeoDetectorElement;
+class ITGeoDetectorElementSplitter;
 class Surface;
 
 /// @class TGeoLayerBuilder
@@ -39,11 +40,11 @@ class Surface;
 /// string.
 ///
 /// The parsing can be restricted to a given parse volume (in r and z),
-/// and given some splitting parameters the surfaces can be automatically be
+/// and given some splitting parameters the surfaces can be automatically
 /// split into layers.
 class TGeoLayerBuilder : public ILayerBuilder {
  public:
-  ///  Helper config structs for volume parsin
+  ///  Helper config structs for volume parsing
   struct LayerConfig {
    public:
     using RangeConfig = std::pair<BinningValue, std::pair<double, double>>;
@@ -61,12 +62,12 @@ class TGeoLayerBuilder : public ILayerBuilder {
     /// Layer splitting: parameter and tolerance
     std::vector<SplitConfig> splitConfigs = {};
     /// The envelope to be built around the layer
-    std::pair<double, double> envelope = {0 * UnitConstants::mm,
-                                          0 * UnitConstants::mm};
+    std::pair<double, double> envelope = {1 * UnitConstants::mm,
+                                          1 * UnitConstants::mm};
     /// Binning setup in l0: nbins (-1 -> automated), axis binning type
-    std::tuple<int, BinningType> binning0 = {-1, equidistant};
+    std::vector<std::pair<int, BinningType>> binning0 = {{-1, equidistant}};
     /// Binning setup in l1: nbins (-1 -> automated), axis binning type
-    std::tuple<int, BinningType> binning1 = {-1, equidistant};
+    std::vector<std::pair<int, BinningType>> binning1 = {{-1, equidistant}};
 
     // Default constructor
     LayerConfig()
@@ -77,6 +78,16 @@ class TGeoLayerBuilder : public ILayerBuilder {
                                              1 * UnitConstants::mm)) {}
   };
 
+  using ElementFactory = std::function<std::shared_ptr<TGeoDetectorElement>(
+      const Identifier&, const TGeoNode&, const TGeoMatrix& tGeoMatrix,
+      const std::string& axes, double scalor,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material)>;
+
+  static std::shared_ptr<TGeoDetectorElement> defaultElementFactory(
+      const Identifier& identifier, const TGeoNode& tGeoNode,
+      const TGeoMatrix& tGeoMatrix, const std::string& axes, double scalor,
+      std::shared_ptr<const Acts::ISurfaceMaterial> material);
+
   /// @struct Config
   /// @brief nested configuration struct for steering of the layer builder
   struct Config {
@@ -86,6 +97,11 @@ class TGeoLayerBuilder : public ILayerBuilder {
     double unit = 1 * UnitConstants::cm;
     /// Create an indentifier from TGeoNode
     std::shared_ptr<const ITGeoIdentifierProvider> identifierProvider = nullptr;
+    /// Split TGeoElement if a splitter is provided
+    std::shared_ptr<const ITGeoDetectorElementSplitter>
+        detectorElementSplitter = nullptr;
+    /// Factory for creating detector elements based on TGeoNodes
+    ElementFactory elementFactory = defaultElementFactory;
     /// Layer creator
     std::shared_ptr<const LayerCreator> layerCreator = nullptr;
     /// ProtoLayer helper
@@ -165,7 +181,7 @@ class TGeoLayerBuilder : public ILayerBuilder {
 
   /// Private helper method : build layers
   ///
-  /// @param gcts the geometry context of this call
+  /// @param gctx the geometry context of this call
   /// @param layers is goint to be filled
   /// @param type is the indication which ones to build -1 | 0 | 1
   void buildLayers(const GeometryContext& gctx, LayerVector& layers,

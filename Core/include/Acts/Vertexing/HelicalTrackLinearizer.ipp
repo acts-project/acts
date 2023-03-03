@@ -19,36 +19,38 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   const std::shared_ptr<PerigeeSurface> perigeeSurface =
       Surface::makeShared<PerigeeSurface>(linPointPos);
 
-  // Create propagator options
-  auto logger = getDefaultLogger("HelTrkLinProp", Logging::INFO);
-  propagator_options_t pOptions(gctx, mctx, LoggerWrapper{*logger});
-  pOptions.direction = backward;
+  auto intersection = perigeeSurface->intersect(gctx, params.position(gctx),
+                                                params.unitDirection(), false);
 
-  const BoundTrackParameters* endParams = nullptr;
+  // Create propagator options
+  propagator_options_t pOptions(gctx, mctx);
+  pOptions.direction = intersection.intersection.pathLength >= 0
+                           ? NavigationDirection::Forward
+                           : NavigationDirection::Backward;
+
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
-  if (result.ok()) {
-    endParams = (*result).endParameters.get();
-
-  } else {
+  if (not result.ok()) {
     return result.error();
   }
 
-  BoundVector paramsAtPCA = endParams->parameters();
+  const auto& endParams = *result->endParameters;
+
+  BoundVector paramsAtPCA = endParams.parameters();
   Vector4 positionAtPCA = Vector4::Zero();
   {
-    auto pos = endParams->position(gctx);
+    auto pos = endParams.position(gctx);
     positionAtPCA[ePos0] = pos[ePos0];
     positionAtPCA[ePos1] = pos[ePos1];
     positionAtPCA[ePos2] = pos[ePos2];
-    positionAtPCA[eTime] = endParams->time();
+    positionAtPCA[eTime] = endParams.time();
   }
-  BoundSymMatrix parCovarianceAtPCA = endParams->covariance().value();
+  BoundSymMatrix parCovarianceAtPCA = endParams.covariance().value();
 
   if (parCovarianceAtPCA.determinant() <= 0) {
     // Use the original parameters
     paramsAtPCA = params.parameters();
-    auto pos = endParams->position(gctx);
+    auto pos = endParams.position(gctx);
     positionAtPCA[ePos0] = pos[ePos0];
     positionAtPCA[ePos1] = pos[ePos1];
     positionAtPCA[ePos2] = pos[ePos2];
@@ -78,7 +80,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
     return field.error();
   }
   double Bz = (*field)[eZ];
-  double rho;
+  double rho = 0;
   // Curvature is infinite w/o b field
   if (Bz == 0. || std::abs(qOvP) < m_cfg.minQoP) {
     rho = sgnH * m_cfg.maxRho;
@@ -100,7 +102,7 @@ Acts::Result<Acts::LinearizedTrack> Acts::
   int sgnX = (X < 0.) ? -1 : 1;
   int sgnY = (Y < 0.) ? -1 : 1;
 
-  double phiAtPCA;
+  double phiAtPCA = 0;
   if (std::abs(X) > std::abs(Y)) {
     phiAtPCA = sgnH * sgnX * std::acos(-sgnH * Y / S);
   } else {
