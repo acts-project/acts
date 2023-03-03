@@ -44,8 +44,6 @@ class TruthSeedingAlgorithm final : public IAlgorithm {
     std::vector<std::string> inputSpacePoints;
     /// Output successfully seeded truth particles.
     std::string outputParticles;
-    /// Output full proto track collection.
-    std::string outputFullProtoTracks;
     /// Output seed collection.
     std::string outputSeeds;
     /// Output proto track collection.

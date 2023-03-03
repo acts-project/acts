@@ -149,7 +149,7 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::SeedingPerformanceWriter, mex, "SeedingPerformanceWriter",
-      inputProtoTracks, inputMeasurementParticlesMap, inputParticles, filePath,
+      inputSeeds, inputMeasurementParticlesMap, inputParticles, filePath,
       fileMode, effPlotToolConfig, duplicationPlotToolConfig);
 
   ACTS_PYTHON_DECLARE_WRITER(
