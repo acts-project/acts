@@ -266,9 +266,9 @@ class BinnedSPGroup {
  public:
   BinnedSPGroup() = delete;
 
-  template <typename spacepoint_iterator_t, typename callable_t>
+  template <typename callable_t>
   BinnedSPGroup<external_spacepoint_t>(
-      spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
+      const std::vector<const external_spacepoint_t*>& spacePoints,
       callable_t&& toGlobal,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
       std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,

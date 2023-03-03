@@ -5,10 +5,13 @@
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+#include <chrono>
+
 template <typename external_spacepoint_t>
-template <typename spacepoint_iterator_t, typename callable_t>
+template <typename callable_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
-    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
+    const std::vector<const external_spacepoint_t*>& spacePoints,
     callable_t&& toGlobal,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<Acts::BinFinder<external_spacepoint_t>> tBinFinder,
@@ -24,17 +27,14 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
-  static_assert(
-      std::is_same<
-          typename std::iterator_traits<spacepoint_iterator_t>::value_type,
-          const external_spacepoint_t*>::value,
-      "Iterator does not contain type this class was templated with");
 
   // get region of interest (or full detector if configured accordingly)
   float phiMin = config.phiMin;
   float phiMax = config.phiMax;
   float zMin = config.zMin;
   float zMax = config.zMax;
+
+  auto start = std::chrono::steady_clock::now();
 
   // sort by radius
   // add magnitude of beamPos to rMax to avoid excluding measurements
@@ -43,13 +43,24 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // binSizeR allows to increase or reduce numRBins if needed
   size_t numRBins = static_cast<size_t>((config.rMax + options.beamPos.norm()) /
                                         config.binSizeR);
-  std::set<std::size_t> rBinsIndex;
 
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
-    if (*it == nullptr) {
-      continue;
-    }
-    const external_spacepoint_t& sp = **it;
+  // initialize original SP index locations
+  std::vector<std::size_t> indexes(spacePoints.size());
+  for (std::size_t i(0); i < indexes.size(); ++i) {
+    indexes[i] = i;
+  }
+
+  // sort the SP indexes
+  std::sort(indexes.begin(), indexes.end(),
+            [&spacePoints](const std::size_t& a, const std::size_t& b) {
+              return spacePoints[a]->r() < spacePoints[b]->r();
+            });
+
+  // fill the grid with space points sorted in radius
+  // automatically all sps in all (z, phi) bins will be sorted in R
+  for (const auto& idx : indexes) {
+    const external_spacepoint_t& sp = *spacePoints[idx];
+
     const auto& [spPosition, variance] =
         toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
@@ -83,24 +94,13 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
         rbin = grid->atPosition(spLocation);
     rbin.push_back(std::move(isp));
-
-    // global indices of each bin with more than one SP
-    if (rbin.size() > 1) {
-      rBinsIndex.insert(grid->globalBinFromPosition(spLocation));
-    }
   }
 
-  // sort SPs in R for each filled (z, phi) bin
-  for (auto& rbinIndex : rBinsIndex) {
-    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-        rbin = grid->atPosition(rbinIndex);
-    std::sort(
-        rbin.begin(), rbin.end(),
-        [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
-           std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
-          return a->radius() < b->radius();
-        });
-  }
+  auto end = std::chrono::steady_clock::now();
+  std::chrono::duration<double> elapsed_seconds = end - start;
+  std::chrono::milliseconds elapsed =
+      std::chrono::duration_cast<std::chrono::milliseconds>(elapsed_seconds);
+  std::cout << "elapsed time: " << elapsed_seconds.count() << " micro sec \n";
 
   m_binnedSP = std::move(grid);
   m_bottomBinFinder = botBinFinder;
