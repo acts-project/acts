@@ -391,7 +391,7 @@ ProcessCode CsvTrackingGeometryWriter::write(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode CsvTrackingGeometryWriter::endRun() {
+ProcessCode CsvTrackingGeometryWriter::finalize() {
   SurfaceWriter sfWriter(joinPaths(m_cfg.outputDir, "detectors.csv"),
                          m_cfg.outputPrecision);
   SurfaceGridWriter sfGridWriter(

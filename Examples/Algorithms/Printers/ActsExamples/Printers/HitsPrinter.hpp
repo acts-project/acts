@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <cstddef>
 #include <string>
@@ -16,7 +16,7 @@
 namespace ActsExamples {
 
 /// Print hits within some geometric region-of-interest.
-class HitsPrinter : public BareAlgorithm {
+class HitsPrinter : public IAlgorithm {
  public:
   struct Config {
     /// Input cluster collection.

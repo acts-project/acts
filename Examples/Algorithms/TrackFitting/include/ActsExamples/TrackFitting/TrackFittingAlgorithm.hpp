@@ -17,7 +17,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
@@ -30,7 +30,7 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-class TrackFittingAlgorithm final : public BareAlgorithm {
+class TrackFittingAlgorithm final : public IAlgorithm {
  public:
   // All track fitter functions must return the same type. For now this is the
   // KalmanFitterResult, but maybe in the future it makes sense to generalize

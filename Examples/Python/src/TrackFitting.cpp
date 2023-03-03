@@ -39,7 +39,7 @@ void addTrackFitting(Context& ctx) {
     using Alg = ActsExamples::TrackFittingAlgorithm;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TrackFittingAlgorithm")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -119,7 +119,7 @@ void addTrackFitting(Context& ctx) {
     using Config = Alg::Config;
 
     auto alg =
-        py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+        py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
             mex, "TrackFittingChi2Algorithm")
             .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                  py::arg("config"), py::arg("level"))

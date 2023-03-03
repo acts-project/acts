@@ -10,13 +10,13 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
-class IterativeVertexFinderAlgorithm final : public BareAlgorithm {
+class IterativeVertexFinderAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Optional. Input track parameters collection
