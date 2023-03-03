@@ -1078,7 +1078,9 @@ def test_ckf_tracks_example(
         if tn is not None:
             assert_root_hash(rf, rp)
 
-    assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
+    assert (
+        len([f for f in csv.iterdir() if f.name.endswith("tracks_ckf.csv")]) == events
+    )
     assert all([f.stat().st_size > 300 for f in csv.iterdir()])
 
 
