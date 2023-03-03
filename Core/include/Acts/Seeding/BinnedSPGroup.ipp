@@ -43,9 +43,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // binSizeR allows to increase or reduce numRBins if needed
   size_t numRBins = static_cast<size_t>((config.rMax + options.beamPos.norm()) /
                                         config.binSizeR);
-  std::vector<
-      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
-      rBins(numRBins);
+  std::set<std::size_t> rBinsIndex;
+
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
       continue;
@@ -78,11 +77,23 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     if (rIndex >= numRBins) {
       continue;
     }
-    rBins[rIndex].push_back(std::move(isp));
+
+    // fill rbins into grid
+    Acts::Vector2 spLocation(isp->phi(), isp->z());
+    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
+        rbin = grid->atPosition(spLocation);
+    rbin.push_back(std::move(isp));
+
+    // global indices of each bin with more than one SP
+    if (rbin.size() > 1) {
+      rBinsIndex.insert(grid->globalBinFromPosition(spLocation));
+    }
   }
 
-  // sort SPs in R for each (z, phi) grid bin
-  for (auto& rbin : rBins) {
+  // sort SPs in R for each filled (z, phi) bin
+  for (auto& rbinIndex : rBinsIndex) {
+    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
+        rbin = grid->atPosition(rbinIndex);
     std::sort(
         rbin.begin(), rbin.end(),
         [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
@@ -91,17 +102,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
         });
   }
 
-  // fill rbins into grid such that each grid bin is sorted in r
-  // space points with delta r < rbin size can be out of order is sorting is not
-  // requested
-  for (auto& rbin : rBins) {
-    for (auto& isp : rbin) {
-      Acts::Vector2 spLocation(isp->phi(), isp->z());
-      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-          bin = grid->atPosition(spLocation);
-      bin.push_back(std::move(isp));
-    }
-  }
   m_binnedSP = std::move(grid);
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;
