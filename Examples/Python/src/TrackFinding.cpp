@@ -312,10 +312,10 @@ void addTrackFinding(Context& ctx) {
             .def(py::init(constructor));
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionAlgorithm, mex,
-                                "AmbiguityResolutionAlgorithm",
-                                inputSourceLinks, inputTrajectories,
-                                outputTrajectories, maximumSharedHits);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::AmbiguityResolutionAlgorithm, mex,
+      "AmbiguityResolutionAlgorithm", inputSourceLinks, inputTrajectories,
+      outputTrajectories, maximumSharedHits, nMeasurementsMin);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedsToPrototracks, mex,
                                 "SeedsToPrototracks", inputSeeds,
