@@ -51,7 +51,7 @@ struct SeedFinderConfig {
 
   // radial range for middle SP
   // variable range based on SP radius
-  bool useVariableMiddleSPRange = true;
+  bool useVariableMiddleSPRange = false;
   float deltaRMiddleMinSPRange = 10. * Acts::UnitConstants::mm;
   float deltaRMiddleMaxSPRange = 10. * Acts::UnitConstants::mm;
   // range defined in vector for each z region

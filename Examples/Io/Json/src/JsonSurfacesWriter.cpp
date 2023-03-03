@@ -135,7 +135,7 @@ ProcessCode JsonSurfacesWriter::write(const AlgorithmContext& ctx) {
   return ProcessCode::SUCCESS;
 }
 
-ProcessCode JsonSurfacesWriter::endRun() {
+ProcessCode JsonSurfacesWriter::finalize() {
   std::ofstream out;
   out.open(joinPaths(m_cfg.outputDir, "detector.csv"));
 

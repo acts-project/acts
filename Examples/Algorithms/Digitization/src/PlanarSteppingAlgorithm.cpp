@@ -34,7 +34,7 @@
 ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
     ActsExamples::PlanarSteppingAlgorithm::Config config,
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("PlanarSteppingAlgorithm", level),
+    : ActsExamples::IAlgorithm("PlanarSteppingAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing input hits collection");

@@ -58,7 +58,7 @@ class WriterT : public IWriter {
   ProcessCode write(const AlgorithmContext& context) override;
 
   /// No-op default implementation.
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
  protected:
   /// Type-specific write function implementation
@@ -99,7 +99,8 @@ inline std::string ActsExamples::WriterT<write_data_t>::name() const {
 }
 
 template <typename write_data_t>
-inline ActsExamples::ProcessCode ActsExamples::WriterT<write_data_t>::endRun() {
+inline ActsExamples::ProcessCode
+ActsExamples::WriterT<write_data_t>::finalize() {
   return ProcessCode::SUCCESS;
 }
 
