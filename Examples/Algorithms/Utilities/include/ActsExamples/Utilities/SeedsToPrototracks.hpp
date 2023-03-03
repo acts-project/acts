@@ -24,8 +24,7 @@ class SeedsToPrototracks final : public IAlgorithm {
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
   SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl)
-      : IAlgorithm("TrajectoriesToPrototracks", lvl),
-        m_cfg(std::move(cfg)) {}
+      : IAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(std::move(cfg)) {}
 
   /// Run the algorithm.
   ///
