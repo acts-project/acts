@@ -180,7 +180,7 @@ ActsExamples::HepMCProcessExtractor::~HepMCProcessExtractor() = default;
 ActsExamples::HepMCProcessExtractor::HepMCProcessExtractor(
     ActsExamples::HepMCProcessExtractor::Config config,
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("HepMCProcessExtractor", level),
+    : ActsExamples::IAlgorithm("HepMCProcessExtractor", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputEvents.empty()) {
     throw std::invalid_argument("Missing input event collection");

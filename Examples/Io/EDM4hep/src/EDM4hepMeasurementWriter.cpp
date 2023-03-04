@@ -44,7 +44,7 @@ EDM4hepMeasurementWriter::EDM4hepMeasurementWriter(
   m_writer.registerForWrite("ActsTrackerHitsRaw");
 }
 
-ActsExamples::ProcessCode EDM4hepMeasurementWriter::endRun() {
+ActsExamples::ProcessCode EDM4hepMeasurementWriter::finalize() {
   m_writer.finish();
 
   return ProcessCode::SUCCESS;

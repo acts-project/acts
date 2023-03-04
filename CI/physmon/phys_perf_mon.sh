@@ -46,8 +46,8 @@ function full_chain() {
     
     if [ $suffix != truth_smeared ]; then
 	    run \
-  	      $outdir/performance_seeding_hists_${suffix}.root \
-    	    $refdir/performance_seeding_hists_${suffix}.root \
+  	      $outdir/performance_seeding_${suffix}.root \
+    	    $refdir/performance_seeding_${suffix}.root \
       	  --title "Seeding ${suffix}" \
         	-c $config \
         	-o $outdir/seeding_${suffix}.html \
