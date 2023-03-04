@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -39,7 +40,8 @@ template <typename external_spacepoint_t>
 inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator==(
     const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
   return m_group.ptr == other.m_group.ptr and
-         m_current_localBins[INDEX::PHI] == other.m_current_localBins[INDEX::PHI] and
+         m_current_localBins[INDEX::PHI] ==
+             other.m_current_localBins[INDEX::PHI] and
          m_current_localBins[INDEX::Z] == other.m_current_localBins[INDEX::Z];
 }
 
@@ -267,6 +269,13 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   m_topBinFinder = tBinFinder;
 
   m_bins = config.zBinsCustomLooping;
+  if (m_bins.size() == 0) {
+    std::size_t nZbins = m_grid->numLocalBins()[1];
+    m_bins.reserve(nZbins);
+    for (std::size_t i(0); i<nZbins; ++i) {
+      m_bins.push_back( i + 1);
+    }
+  }
 }
 
 template <typename external_spacepoint_t>
