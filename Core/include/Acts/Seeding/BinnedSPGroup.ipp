@@ -39,8 +39,8 @@ template <typename external_spacepoint_t>
 inline bool Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator==(
     const Acts::BinnedSPGroupIterator<external_spacepoint_t>& other) const {
   return m_group.ptr == other.m_group.ptr and
-         m_current_localBins[INDEX::PHI] == m_max_localBins[INDEX::PHI] and
-         m_current_localBins[INDEX::Z] == m_max_localBins[INDEX::Z];
+         m_current_localBins[INDEX::PHI] == other.m_current_localBins[INDEX::PHI] and
+         m_current_localBins[INDEX::Z] == other.m_current_localBins[INDEX::Z];
 }
 
 template <typename external_spacepoint_t>
