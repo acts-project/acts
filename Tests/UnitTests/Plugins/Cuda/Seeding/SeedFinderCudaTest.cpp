@@ -262,21 +262,19 @@ int main(int argc, char** argv) {
   auto start_cpu = std::chrono::system_clock::now();
 
   int group_count;
-  auto groupIt = spGroup.begin();
+  auto groupIt = Acts::BinnedSPGroupIterator<SpacePoint>(spGroup, skip);
 
   //----------- CPU ----------//
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_cpu;
-  groupIt = spGroup.begin();
 
   if (do_cpu) {
     decltype(seedFinder_cpu)::SeedingState state;
-    for (int i_s = 0; i_s < skip; i_s++)
-      ++groupIt;
-    for (; !(groupIt == spGroup.end()); ++groupIt) {
+    for (; groupIt != spGroup.end(); ++groupIt) {
+      auto [bottom, middle, top] = *groupIt;
       seedFinder_cpu.createSeedsForGroup(
-          options, state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
+	options, state, std::back_inserter(seedVector_cpu.emplace_back()),
+	bottom, middle, top, rMiddleSPRange);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)

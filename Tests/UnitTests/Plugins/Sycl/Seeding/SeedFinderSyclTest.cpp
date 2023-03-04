@@ -220,11 +220,10 @@ auto main(int argc, char** argv) -> int {
 
   if (!cmdlTool.onlyGpu) {
     decltype(normalSeedFinder)::SeedingState state;
-    for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
-         ++groupIt) {
+    for (auto [bottom, middle, top] : spGroup) {
       normalSeedFinder.createSeedsForGroup(
           options, state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
+          bottom, middle, top, rMiddleSPRange);
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
         break;
