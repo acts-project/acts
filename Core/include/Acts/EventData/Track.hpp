@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -15,6 +15,8 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+#include "Acts/Utilities/Holders.hpp"
+#include "Acts/EventData/Utils.hpp"
 
 #include <any>
 #include <cstddef>
@@ -350,42 +352,6 @@ class TrackProxy {
       m_container;
   IndexType m_index;
 };
-
-/// Internal holder type for referencing a backend without ownership
-template <typename T>
-struct RefHolder {
-  T* ptr;
-
-  RefHolder(T* _ptr) : ptr{_ptr} {}
-  RefHolder(T& ref) : ptr{&ref} {}
-
-  const T& operator*() const { return *ptr; }
-  T& operator*() { return *ptr; }
-
-  const T* operator->() const { return ptr; }
-  T* operator->() { return ptr; }
-};
-
-/// Internal holder type holding a backend container by value
-template <typename T>
-struct ValueHolder {
-  T val;
-
-  ValueHolder(T& _val) : val{_val} {}
-  ValueHolder(T&& _val) : val{std::move(_val)} {}
-
-  const T& operator*() const { return val; }
-  T& operator*() { return val; }
-
-  const T* operator->() const { return &val; }
-  T* operator->() { return &val; }
-};
-
-template <template <typename...> class, template <typename...> class>
-struct is_same_template : std::false_type {};
-
-template <template <typename...> class T>
-struct is_same_template<T, T> : std::true_type {};
 
 /// Helper iterator to allow iteration over tracks via track proxies.
 template <typename container_t, typename proxy_t, bool ReadOnly>

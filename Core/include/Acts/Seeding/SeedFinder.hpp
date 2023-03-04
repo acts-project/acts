@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -84,7 +84,7 @@ class SeedFinder {
   void createSeedsForGroup(
       const Acts::SeedFinderOptions& options, SeedingState& state,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
+      sp_range_t& bottomSPs, sp_range_t& middleSPs, sp_range_t& topSPs,
       const Acts::Range1D<float>& rMiddleSPRange) const;
 
   /// @brief Compatibility method for the new-style seed finding API.

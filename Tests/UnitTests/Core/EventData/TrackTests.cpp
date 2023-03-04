@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -145,19 +145,6 @@ BOOST_AUTO_TEST_CASE(BuildValueHolder) {
     std::decay_t<decltype(tc)> copy = tc;
     BOOST_CHECK_NE(&tc.trackStateContainer(), &copy.trackStateContainer());
     BOOST_CHECK_NE(&tc.container(), &copy.container());
-  }
-  {
-    VectorMultiTrajectory mtj{};
-    VectorTrackContainer vtc{};
-    TrackContainer<VectorTrackContainer, VectorMultiTrajectory,
-                   detail_tc::ValueHolder>
-        tc{vtc, mtj};
-    BOOST_CHECK_NE(&mtj, &tc.trackStateContainer());
-    BOOST_CHECK_NE(&vtc, &tc.container());
-    tc.addTrack();
-    std::decay_t<decltype(tc)> copy = tc;
-    BOOST_CHECK_NE(&mtj, &copy.trackStateContainer());
-    BOOST_CHECK_NE(&vtc, &copy.container());
   }
 }
 
