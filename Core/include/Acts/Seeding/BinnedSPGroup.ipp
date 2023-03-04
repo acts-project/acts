@@ -66,30 +66,59 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottoms;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middles;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> tops; 
-
-  std::size_t nBottoms = 0;
-  std::size_t nTops = 0;
-
+  
   // Global Index
   std::size_t global_index = m_group->m_grid->globalBinFromLocalBins({m_current_localBins[INDEX::PHI], m_group->m_bins[m_current_localBins[INDEX::Z]]});
 
-  // Middles
+  // First check if there are bottom and tops
+  // If not, do not waste time and return. No seed can be found
+  // Get n bottoms
+  std::size_t nBottoms = 0;
+  std::size_t nTops = 0;
+
+  // Bottom
+  auto bottomBinIndices = m_group->m_bottomBinFinder->findBins(m_current_localBins[INDEX::PHI],
+							       m_group->m_bins[m_current_localBins[INDEX::Z]],
+							       m_group->m_grid.get());
+  
+  for (auto idx : bottomBinIndices) {
+    nBottoms += m_group->m_grid->at(idx).size();
+  }
+  
+  if (nBottoms == 0) {
+    return std::make_tuple( std::move(bottoms),
+			    std::move(middles),
+			    std::move(tops) );
+  }
+  
+  
+  // Tops
+  auto topBinIndices = m_group->m_topBinFinder->findBins(m_current_localBins[INDEX::PHI],
+							 m_group->m_bins[m_current_localBins[INDEX::Z]],
+							 m_group->m_grid.get());
+
+  
+  for (auto idx : topBinIndices) {
+    nTops += m_group->m_grid->at(idx).size();
+  }
+
+  if (nTops == 0) {
+    return std::make_tuple( std::move(bottoms),
+			    std::move(middles),
+			    std::move(tops) );
+  }  
+  
+  // Fill Middles
   auto& collection_middles = m_group->m_grid->at(global_index);
   middles.reserve(collection_middles.size());
   for (auto& sp : collection_middles)
     middles.push_back( sp.get() );
-  
-  // Bottoms
-  auto bottomBinIndices = m_group->m_bottomBinFinder->findBins(m_current_localBins[INDEX::PHI],
-							       m_group->m_bins[m_current_localBins[INDEX::Z]],
-							       m_group->m_grid.get());
 
-  // Get n bottoms
-  for (auto idx : bottomBinIndices) {
-    nBottoms += m_group->m_grid->at(idx).size();
-  }
+  // Reserve
   bottoms.reserve(nBottoms);
-  
+  tops.reserve(nTops);
+
+  // Fill Bottoms
   for (auto idx : bottomBinIndices) {
     auto& collection_bottoms = m_group->m_grid->at(idx);
     for (auto& el : collection_bottoms) {
@@ -97,15 +126,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
     }
   }
   
-  // Tops
-  auto topBinIndices = m_group->m_topBinFinder->findBins(m_current_localBins[INDEX::PHI],
-							 m_group->m_bins[m_current_localBins[INDEX::Z]],
-							 m_group->m_grid.get());
-  
-  for (auto idx : topBinIndices) {
-    nTops += m_group->m_grid->at(idx).size();
-  }
-  
+  // Fill Tops    
   for (auto idx : topBinIndices) {
     auto& collection_tops = m_group->m_grid->at(idx);
     for (auto& el : collection_tops) {
@@ -133,7 +154,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin()
 	 ++zBin) {
       
       std::size_t zBinIndex = m_group->m_bins.size() == 0
-	? zBin
+	? zBin + 1
 	: m_group->m_bins[zBin];
       std::size_t index = m_group->m_grid->globalBinFromLocalBins({phiBin, zBinIndex});
       
