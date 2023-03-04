@@ -438,13 +438,13 @@ class Grid final {
     // add under-and overflow bins for each axis and multiply all bins
     if (fullCounter) {
       for (const auto& value : nBinsArray) {
-	current_size *= value + 2;
+        current_size *= value + 2;
       }
     }
     // ignore under-and overflow bins for each axis and multiply all bins
     else {
       for (const auto& value : nBinsArray) {
-	current_size *= value;
+        current_size *= value;
       }
     }
     return current_size;

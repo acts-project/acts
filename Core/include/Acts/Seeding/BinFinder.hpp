@@ -28,7 +28,7 @@ class BinFinder {
   /// constructor
   BinFinder() = delete;
 
-  BinFinder(const std::vector<std::pair<int, int> >& zBinNeighbors,
+  BinFinder(const std::vector<std::pair<int, int>>& zBinNeighbors,
             int numPhiNeighbors);
 
   /// Return all bins that could contain space points that can be used with the
@@ -43,7 +43,8 @@ class BinFinder {
  private:
   // This vector is provided by the user and is supposed to be a contant for
   // all events. No point in making a copy
-  Acts::detail_tc::RefHolder<const std::vector<std::pair<int, int> >> m_zBinNeighbors;
+  Acts::detail_tc::RefHolder<const std::vector<std::pair<int, int>>>
+      m_zBinNeighbors;
   int m_numPhiNeighbors = 1;
 };
 }  // namespace Acts

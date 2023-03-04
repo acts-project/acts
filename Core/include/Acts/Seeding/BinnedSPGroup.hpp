@@ -22,57 +22,57 @@
 #include <boost/container/small_vector.hpp>
 
 namespace Acts {
-  template<typename external_spacepoint_t>
-  class BinnedSPGroup;
-    
-  /// @c BinnedSPGroupIterator Allows to iterate over all groups of bins
-  /// a provided BinFinder can generate for each bin of a provided SPGrid
+template <typename external_spacepoint_t>
+class BinnedSPGroup;
 
-  /// SpacePointGrid is a very specific structure.
-  /// We know it is 2D and what it contains
-  /// No need to be too general with this class  
-  template <typename external_spacepoint_t>
-  class BinnedSPGroupIterator {
-  private:
-    enum INDEX : int {PHI=0, Z=1};
+/// @c BinnedSPGroupIterator Allows to iterate over all groups of bins
+/// a provided BinFinder can generate for each bin of a provided SPGrid
 
-  public:
-    // Never take ownerships
-    BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>&& group,
-			  std::size_t) = delete;
-    BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>& group,
-			  std::size_t index);
+/// SpacePointGrid is a very specific structure.
+/// We know it is 2D and what it contains
+/// No need to be too general with this class
+template <typename external_spacepoint_t>
+class BinnedSPGroupIterator {
+ private:
+  enum INDEX : int { PHI = 0, Z = 1 };
 
-    BinnedSPGroupIterator(const BinnedSPGroupIterator&) = delete;
-    BinnedSPGroupIterator& operator=(const BinnedSPGroupIterator&) = delete;
+ public:
+  // Never take ownerships
+  BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>&& group,
+                        std::size_t) = delete;
+  BinnedSPGroupIterator(BinnedSPGroup<external_spacepoint_t>& group,
+                        std::size_t index);
 
-    BinnedSPGroupIterator(BinnedSPGroupIterator&&) noexcept = default;
-    BinnedSPGroupIterator& operator=(BinnedSPGroupIterator&&) noexcept = default;
+  BinnedSPGroupIterator(const BinnedSPGroupIterator&) = delete;
+  BinnedSPGroupIterator& operator=(const BinnedSPGroupIterator&) = delete;
 
-    ~BinnedSPGroupIterator() = default;
+  BinnedSPGroupIterator(BinnedSPGroupIterator&&) noexcept = default;
+  BinnedSPGroupIterator& operator=(BinnedSPGroupIterator&&) noexcept = default;
 
-    BinnedSPGroupIterator& operator++();
-    
-    bool operator==(const BinnedSPGroupIterator& other) const;
-    bool operator!=(const BinnedSPGroupIterator& other) const;
+  ~BinnedSPGroupIterator() = default;
 
-    std::tuple< std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>,
-		std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>,
-		std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> >
-    operator*();
-    
-  private:
-    void findNotEmptyBin();
-        
-  private:
-    /// The group, it contains the grid and the bin finders
-    Acts::detail_tc::RefHolder<BinnedSPGroup<external_spacepoint_t>> m_group;
-    /// Max Local Bins - limits of the grid
-    std::array< std::size_t, 2 > m_max_localBins;
-    /// Current Local Bins
-    std::array< std::size_t, 2 > m_current_localBins {0, 0};
-  };
-  
+  BinnedSPGroupIterator& operator++();
+
+  bool operator==(const BinnedSPGroupIterator& other) const;
+  bool operator!=(const BinnedSPGroupIterator& other) const;
+
+  std::tuple<std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>,
+             std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>,
+             std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>>
+  operator*();
+
+ private:
+  void findNotEmptyBin();
+
+ private:
+  /// The group, it contains the grid and the bin finders
+  Acts::detail_tc::RefHolder<BinnedSPGroup<external_spacepoint_t>> m_group;
+  /// Max Local Bins - limits of the grid
+  std::array<std::size_t, 2> m_max_localBins;
+  /// Current Local Bins
+  std::array<std::size_t, 2> m_current_localBins{0, 0};
+};
+
 /// @c BinnedSPGroup Provides access to begin and end BinnedSPGroupIterator
 /// for given BinFinders and SpacePointGrid.
 /// Fulfills the range_expression interface.
@@ -80,14 +80,15 @@ template <typename external_spacepoint_t>
 class BinnedSPGroup {
  public:
   friend BinnedSPGroupIterator<external_spacepoint_t>;
-  
+
   BinnedSPGroup() = delete;
 
   template <typename spacepoint_iterator_t, typename callable_t>
   BinnedSPGroup<external_spacepoint_t>(
       spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
       callable_t&& toGlobal,
-      std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> botBinFinder,
+      std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>>
+          botBinFinder,
       std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> tBinFinder,
       std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
       Acts::Extent& rRangeSPExtent,
@@ -101,13 +102,13 @@ class BinnedSPGroup {
   BinnedSPGroup& operator=(BinnedSPGroup&&) noexcept = default;
 
   ~BinnedSPGroup() = default;
-  
+
   size_t size() const;
 
-  BinnedSPGroupIterator<external_spacepoint_t> begin();  
+  BinnedSPGroupIterator<external_spacepoint_t> begin();
   BinnedSPGroupIterator<external_spacepoint_t> end();
-  
-private:
+
+ private:
   // grid with ownership of all InternalSpacePoint
   std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_grid;
 

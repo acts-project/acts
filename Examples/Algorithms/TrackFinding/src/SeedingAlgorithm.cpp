@@ -241,10 +241,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   static thread_local SimSeedContainer seeds;
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
-  
-  for( auto [bottom, middle, top] : spacePointsGrouping) {
-    m_seedFinder.createSeedsForGroup(m_cfg.seedFinderOptions, state, std::back_inserter(seeds),
-                                     bottom, middle, top, rMiddleSPRange);
+
+  for (auto [bottom, middle, top] : spacePointsGrouping) {
+    m_seedFinder.createSeedsForGroup(m_cfg.seedFinderOptions, state,
+                                     std::back_inserter(seeds), bottom, middle,
+                                     top, rMiddleSPRange);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "

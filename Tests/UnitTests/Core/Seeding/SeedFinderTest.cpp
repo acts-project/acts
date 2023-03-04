@@ -194,11 +194,10 @@ int main(int argc, char** argv) {
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;
   auto start = std::chrono::system_clock::now();
-  for ( auto [bottom, middle, top] : spGroup ) {
+  for (auto [bottom, middle, top] : spGroup) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(options, state, std::back_inserter(v),
-                          bottom, middle, top,
-                          rMiddleSPRange);
+    a.createSeedsForGroup(options, state, std::back_inserter(v), bottom, middle,
+                          top, rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;

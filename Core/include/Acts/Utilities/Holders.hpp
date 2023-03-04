@@ -10,38 +10,38 @@
 
 namespace Acts::detail_tc {
 
-  /// Internal holder type for referencing a backend without ownership
-  template <typename T>
-  struct RefHolder {
-    T* ptr;
-    
-    RefHolder(T* _ptr) : ptr{_ptr} {}
-    RefHolder(T& ref) : ptr{&ref} {}
-    
-    const T& operator*() const { return *ptr; }
-    T& operator*() { return *ptr; }
-    
-    const T* operator->() const { return ptr; }
-    T* operator->() { return ptr; }
-  };
-  
-  /// Internal holder type holding a backend container by value
-  template <typename T>
-  struct ValueHolder {
-    T val;
+/// Internal holder type for referencing a backend without ownership
+template <typename T>
+struct RefHolder {
+  T* ptr;
 
-    // Let's be clear with the user that we take the ownership
-    // Only require rvalues and avoid hidden copies
-    ValueHolder(T& _val) = delete;
-    ValueHolder(T&& _val) : val{std::move(_val)} {}
+  RefHolder(T* _ptr) : ptr{_ptr} {}
+  RefHolder(T& ref) : ptr{&ref} {}
 
-    // Does it makes sense to allow copy operations?
-    
-    const T& operator*() const { return val; }
-    T& operator*() { return val; }
-    
-    const T* operator->() const { return &val; }
-    T* operator->() { return &val; }
-  };
-  
-}
+  const T& operator*() const { return *ptr; }
+  T& operator*() { return *ptr; }
+
+  const T* operator->() const { return ptr; }
+  T* operator->() { return ptr; }
+};
+
+/// Internal holder type holding a backend container by value
+template <typename T>
+struct ValueHolder {
+  T val;
+
+  // Let's be clear with the user that we take the ownership
+  // Only require rvalues and avoid hidden copies
+  ValueHolder(T& _val) = delete;
+  ValueHolder(T&& _val) : val{std::move(_val)} {}
+
+  // Does it makes sense to allow copy operations?
+
+  const T& operator*() const { return val; }
+  T& operator*() { return val; }
+
+  const T* operator->() const { return &val; }
+  T* operator->() { return &val; }
+};
+
+}  // namespace Acts::detail_tc
