@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2019 CERN for the benefit of the Acts project
@@ -87,9 +88,13 @@ inline std::vector<std::size_t> transformCoordinates(
 
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
+  // resize + operator[] is faster then reserve and push_back
+  linCircleVec.resize(vec.size());
+    
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
-  for (auto sp : vec) {
+  for (std::size_t idx(0); idx < vec.size(); ++idx) {
+    auto& sp = vec[idx];
     auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
 
     float deltaX = xSP - xM;
@@ -132,7 +137,7 @@ inline std::vector<std::size_t> transformCoordinates(
     l.z = sp->z();
     l.r = sp->radius();
 
-    linCircleVec.push_back(l);
+    linCircleVec[idx] = l;
     sp->setCotTheta(cot_theta);
 
     sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
