@@ -286,7 +286,7 @@ class MultiEigenStepperLoop
         components.push_back(
             {SingleState(gctx, bfield->makeCache(mctx), std::move(singlePars),
                          ndir, ssize, stolerance),
-             weight, Intersection3D::Status::reachable});
+             weight, Intersection3D::Status::onSurface});
       }
 
       if (std::get<2>(multipars.components().front())) {
@@ -545,6 +545,17 @@ class MultiEigenStepperLoop
 
     state.components.erase(new_end, state.components.end());
   }
+  
+  /// Reweight the components
+  void reweightComponents(State& state) const {
+    ActsScalar sumOfWeights = 0.0;
+    for (const auto& cmp : state.components) {
+      sumOfWeights += cmp.weight;
+    }
+    for (auto& cmp : state.components) {
+      cmp.weight /= sumOfWeights;
+    }
+  }
 
   /// Reset the number of components
   void clearComponents(State& state) const { state.components.clear(); }
@@ -620,51 +631,7 @@ class MultiEigenStepperLoop
   /// @param logger [in] A @c Loggerinstance
   Intersection3D::Status updateSurfaceStatus(
       State& state, const Surface& surface, const BoundaryCheck& bcheck,
-      const Logger& logger = getDummyLogger()) const {
-    using Status = Intersection3D::Status;
-
-    std::array<int, 4> counts = {0, 0, 0, 0};
-
-    for (auto& component : state.components) {
-      component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
-          *this, component.state, surface, bcheck, logger);
-      ++counts[static_cast<std::size_t>(component.status)];
-    }
-
-    ACTS_VERBOSE("Component status wrt "
-                 << surface.geometryId() << " at {"
-                 << surface.center(state.geoContext).transpose() << "}:\t"
-                 << [&]() {
-                      std::stringstream ss;
-                      for (auto& component : state.components) {
-                        ss << component.status << "\t";
-                      }
-                      return ss.str();
-                    }());
-
-    // Switch on stepCounter if one or more components reached a surface, but
-    // some are still in progress of reaching the surface
-    if (!state.stepCounterAfterFirstComponentOnSurface &&
-        counts[static_cast<std::size_t>(Status::onSurface)] > 0 &&
-        counts[static_cast<std::size_t>(Status::reachable)] > 0) {
-      state.stepCounterAfterFirstComponentOnSurface = 0;
-      ACTS_VERBOSE("started stepCounterAfterFirstComponentOnSurface");
-    }
-
-    // This is a 'any_of' criterium. As long as any of the components has a
-    // certain state, this determines the total state (in the order of a
-    // somewhat importance)
-    if (counts[static_cast<std::size_t>(Status::reachable)] > 0) {
-      return Status::reachable;
-    } else if (counts[static_cast<std::size_t>(Status::onSurface)] > 0) {
-      state.stepCounterAfterFirstComponentOnSurface.reset();
-      return Status::onSurface;
-    } else if (counts[static_cast<std::size_t>(Status::unreachable)] > 0) {
-      return Status::unreachable;
-    } else {
-      return Status::missed;
-    }
-  }
+      const Logger& logger = getDummyLogger()) const;
 
   /// Update step size
   ///
@@ -678,29 +645,7 @@ class MultiEigenStepperLoop
   /// @param release [in] boolean to trigger step size release
   template <typename object_intersection_t>
   void updateStepSize(State& state, const object_intersection_t& oIntersection,
-                      bool release = true) const {
-    const Surface& surface = *oIntersection.representation;
-
-    for (auto& component : state.components) {
-      auto intersection = surface.intersect(
-          component.state.geoContext, SingleStepper::position(component.state),
-          SingleStepper::direction(component.state), true);
-
-      // We don't know whatever was done to manipulate the intersection before
-      // (e.g. in Layer.ipp:240), so we trust and just adjust the sign
-      if (std::signbit(oIntersection.intersection.pathLength) !=
-          std::signbit(intersection.intersection.pathLength)) {
-        intersection.intersection.pathLength *= -1;
-      }
-
-      if (std::signbit(oIntersection.alternative.pathLength) !=
-          std::signbit(intersection.alternative.pathLength)) {
-        intersection.alternative.pathLength *= -1;
-      }
-
-      SingleStepper::updateStepSize(component.state, intersection, release);
-    }
-  }
+                      bool release = true) const;
 
   /// Set Step size - explicitely with a double
   ///

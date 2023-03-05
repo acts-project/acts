@@ -173,157 +173,133 @@ struct GsfActor {
       }
     };
 
-    // Count the states of the components, this is necessary to evaluate if
-    // really all components are on a surface TODO Not sure why this is not
-    // garantueed by having currentSurface pointer set
-    const auto [missed_count, reachable_count] = [&]() {
-      std::size_t missed = 0;
-      std::size_t reachable = 0;
-      for (auto cmp : stepper.constComponentIterable(state.stepping)) {
-        using Status = Acts::Intersection3D::Status;
-
-        // clang-format off
-          switch (cmp.status()) {
-            break; case Status::missed: ++missed;
-            break; case Status::reachable: ++reachable;
-            break; default: {}
-          }
-        // clang-format on
-      }
-      return std::make_tuple(missed, reachable);
-    }();
-
     // Prints some VERBOSE things and performs some asserts. Can be removed
     // without change of behaviour
-    const detail::ScopedGsfInfoPrinterAndChecker printer(
-        state, stepper, missed_count, logger());
-
-    // There seem to be cases where this is not always after initializing the
-    // navigation from a surface. Some later functions assume this criterium
-    // to be fulfilled. (The first surface when starting navigation from
-    // surface?)
-    bool on_surface = reachable_count == 0 &&
-                      missed_count < stepper.numberComponents(state.stepping);
+    const detail::ScopedGsfInfoPrinterAndChecker printer(state, stepper,
+                                                         logger());
 
     // We only need to do something if we are on a surface
-    if (state.navigation.currentSurface && on_surface) {
-      const auto& surface = *state.navigation.currentSurface;
-      ACTS_VERBOSE("Step is at surface " << surface.geometryId());
+    if (not state.navigation.currentSurface) {
+      return;
+    }
 
-      // Early return if we already were on this surface TODO why is this
-      // necessary
-      const bool visited = std::find(result.visitedSurfaces.begin(),
-                                     result.visitedSurfaces.end(),
-                                     &surface) != result.visitedSurfaces.end();
+    // All components must have status "on surface". It is however possible,
+    // that currentSurface is nullptr and all components are "on surface" (e.g.,
+    // for surfaces excluded from the navigation)
+    using Status = Acts::Intersection3D::Status;
+    assert(std::all_of(
+        state.stepping.components.cbegin(), state.stepping.components.cend(),
+        [](const auto& cmp) { return cmp.status == Status::onSurface; }));
 
-      if (visited) {
-        ACTS_VERBOSE("Already visited surface, return");
-        return;
-      }
+    const auto& surface = *state.navigation.currentSurface;
+    ACTS_VERBOSE("Step is at surface " << surface.geometryId());
 
-      result.visitedSurfaces.push_back(&surface);
+    // Early return if we already were on this surface TODO why is this
+    // necessary
+    const bool visited =
+        std::find(result.visitedSurfaces.begin(), result.visitedSurfaces.end(),
+                  &surface) != result.visitedSurfaces.end();
 
-      // Remove the missed components and normalize
-      // TODO should be redundant if stepper behaves correctly but do for now to
-      // be safe
-      stepper.removeMissedComponents(state.stepping);
+    if (visited) {
+      ACTS_VERBOSE("Already visited surface, return");
+      return;
+    }
 
-      auto stepperComponents = stepper.componentIterable(state.stepping);
-      detail::normalizeWeights(
-          stepperComponents, [](auto& cmp) -> double& { return cmp.weight(); });
+    result.visitedSurfaces.push_back(&surface);
 
-      // Check what we have on this surface
-      const auto found_source_link =
-          m_cfg.inputMeasurements.find(surface.geometryId());
-      const bool haveMaterial =
-          state.navigation.currentSurface->surfaceMaterial() &&
-          !m_cfg.disableAllMaterialHandling;
-      const bool haveMeasurement =
-          found_source_link != m_cfg.inputMeasurements.end();
+    auto stepperComponents = stepper.componentIterable(state.stepping);
+    detail::normalizeWeights(stepperComponents,
+                             [](auto& cmp) -> double& { return cmp.weight(); });
 
-      ACTS_VERBOSE(std::boolalpha << "haveMaterial " << haveMaterial
-                                  << ", haveMeasurement: " << haveMeasurement);
+    // Check what we have on this surface
+    const auto found_source_link =
+        m_cfg.inputMeasurements.find(surface.geometryId());
+    const bool haveMaterial =
+        state.navigation.currentSurface->surfaceMaterial() &&
+        !m_cfg.disableAllMaterialHandling;
+    const bool haveMeasurement =
+        found_source_link != m_cfg.inputMeasurements.end();
 
-      ////////////////////////
-      // The Core Algorithm
-      ////////////////////////
+    ACTS_VERBOSE(std::boolalpha << "haveMaterial " << haveMaterial
+                                << ", haveMeasurement: " << haveMeasurement);
 
-      // Early return if nothing happens
-      if (not haveMaterial && not haveMeasurement) {
-        // No hole before first measurement
-        if (result.processedStates > 0 && surface.associatedDetectorElement()) {
-          TemporaryStates tmpStates;
-          noMeasurementUpdate(state, stepper, result, tmpStates, true);
-        }
-        return;
-      }
+    ////////////////////////
+    // The Core Algorithm
+    ////////////////////////
 
-      for (auto cmp : stepper.componentIterable(state.stepping)) {
-        auto singleState = cmp.singleState(state);
-        cmp.singleStepper(stepper).transportCovarianceToBound(
-            singleState.stepping, surface);
-      }
-
-      if (haveMaterial) {
-        if (haveMeasurement) {
-          applyMultipleScattering(state, stepper,
-                                  MaterialUpdateStage::PreUpdate);
-        } else {
-          applyMultipleScattering(state, stepper,
-                                  MaterialUpdateStage::FullUpdate);
-        }
-      }
-
-      // We do not need the component cache here, we can just update our stepper
-      // state with the filtered components.
-      // NOTE because of early return before we know that we have a measurement
-      if (not haveMaterial) {
+    // Early return if nothing happens
+    if (not haveMaterial && not haveMeasurement) {
+      // No hole before first measurement
+      if (result.processedStates > 0 && surface.associatedDetectorElement()) {
         TemporaryStates tmpStates;
-
-        auto res = kalmanUpdate(state, stepper, result, tmpStates,
-                                found_source_link->second);
-
-        if (not res.ok()) {
-          setErrorOrAbort(res.error());
-          return;
-        }
-
-        updateStepper(state, stepper, tmpStates);
+        noMeasurementUpdate(state, stepper, result, tmpStates, true);
       }
-      // We have material, we thus need a component cache since we will
-      // convolute the components and later reduce them again before updating
-      // the stepper
-      else {
-        TemporaryStates tmpStates;
-        Result<void> res;
+      return;
+    }
 
-        if (haveMeasurement) {
-          res = kalmanUpdate(state, stepper, result, tmpStates,
-                             found_source_link->second);
-        } else {
-          res = noMeasurementUpdate(state, stepper, result, tmpStates, false);
-        }
+    for (auto cmp : stepper.componentIterable(state.stepping)) {
+      auto singleState = cmp.singleState(state);
+      cmp.singleStepper(stepper).transportCovarianceToBound(
+          singleState.stepping, surface);
+    }
 
-        if (not res.ok()) {
-          setErrorOrAbort(res.error());
-          return;
-        }
-
-        std::vector<ComponentCache> componentCache;
-        convoluteComponents(state, stepper, tmpStates, componentCache);
-
-        reduceComponents(stepper, surface, componentCache);
-
-        removeLowWeightComponents(componentCache);
-
-        updateStepper(state, stepper, componentCache);
-      }
-
-      // If we only done preUpdate before, now do postUpdate
-      if (haveMaterial && haveMeasurement) {
+    if (haveMaterial) {
+      if (haveMeasurement) {
+        applyMultipleScattering(state, stepper, MaterialUpdateStage::PreUpdate);
+      } else {
         applyMultipleScattering(state, stepper,
-                                MaterialUpdateStage::PostUpdate);
+                                MaterialUpdateStage::FullUpdate);
       }
+    }
+
+    // We do not need the component cache here, we can just update our stepper
+    // state with the filtered components.
+    // NOTE because of early return before we know that we have a measurement
+    if (not haveMaterial) {
+      TemporaryStates tmpStates;
+
+      auto res = kalmanUpdate(state, stepper, result, tmpStates,
+                              found_source_link->second);
+
+      if (not res.ok()) {
+        setErrorOrAbort(res.error());
+        return;
+      }
+
+      updateStepper(state, stepper, tmpStates);
+    }
+    // We have material, we thus need a component cache since we will
+    // convolute the components and later reduce them again before updating
+    // the stepper
+    else {
+      TemporaryStates tmpStates;
+      Result<void> res;
+
+      if (haveMeasurement) {
+        res = kalmanUpdate(state, stepper, result, tmpStates,
+                           found_source_link->second);
+      } else {
+        res = noMeasurementUpdate(state, stepper, result, tmpStates, false);
+      }
+
+      if (not res.ok()) {
+        setErrorOrAbort(res.error());
+        return;
+      }
+
+      std::vector<ComponentCache> componentCache;
+      convoluteComponents(state, stepper, tmpStates, componentCache);
+
+      reduceComponents(stepper, surface, componentCache);
+
+      removeLowWeightComponents(componentCache);
+
+      updateStepper(state, stepper, componentCache);
+    }
+
+    // If we only done preUpdate before, now do postUpdate
+    if (haveMaterial && haveMeasurement) {
+      applyMultipleScattering(state, stepper, MaterialUpdateStage::PostUpdate);
     }
 
     // Break the navigation if we found all measurements
