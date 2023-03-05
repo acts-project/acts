@@ -19,7 +19,7 @@
 
 ActsExamples::TruthVertexFinder::TruthVertexFinder(const Config& config,
                                                    Acts::Logging::Level level)
-    : BareAlgorithm("TruthVertexFinder", level), m_cfg(config) {
+    : IAlgorithm("TruthVertexFinder", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }

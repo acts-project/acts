@@ -22,7 +22,7 @@
 
 ActsExamples::TrackSelector::TrackSelector(const Config& config,
                                            Acts::Logging::Level level)
-    : BareAlgorithm("TrackSelector", level), m_cfg(config) {
+    : IAlgorithm("TrackSelector", level), m_cfg(config) {
   if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Input track collection is empty");
   }

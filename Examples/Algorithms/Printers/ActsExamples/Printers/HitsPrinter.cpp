@@ -20,7 +20,7 @@
 
 ActsExamples::HitsPrinter::HitsPrinter(
     const ActsExamples::HitsPrinter::Config& cfg, Acts::Logging::Level level)
-    : BareAlgorithm("HitsPrinter", level), m_cfg(cfg) {
+    : IAlgorithm("HitsPrinter", level), m_cfg(cfg) {
   if (m_cfg.inputClusters.empty()) {
     throw std::invalid_argument("Input clusters collection is not configured");
   }

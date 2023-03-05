@@ -58,7 +58,7 @@ ActsExamples::RootSpacepointWriter::~RootSpacepointWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootSpacepointWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
