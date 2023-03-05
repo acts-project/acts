@@ -58,10 +58,11 @@ std::tuple<std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>,
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   // Retrieve here - this is the heavy lifting
   // Less expensive then doing it in the operator++
+
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottoms;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middles;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> tops;
-
+  
   // Global Index
   std::size_t global_index = m_group->m_grid->globalBinFromLocalBins(
       {m_current_localBins[INDEX::PHI],
@@ -83,8 +84,9 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   }
 
   if (nBottoms == 0) {
-    return std::make_tuple(std::move(bottoms), std::move(middles),
-                           std::move(tops));
+    return std::make_tuple(std::move(bottoms),
+			   std::move(middles),
+			   std::move(tops));
   }
 
   // Tops
@@ -97,25 +99,30 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   }
 
   if (nTops == 0) {
-    return std::make_tuple(std::move(bottoms), std::move(middles),
+    return std::make_tuple(std::move(bottoms),
+                           std::move(middles),
                            std::move(tops));
   }
 
   // Fill Middles
   auto& collection_middles = m_group->m_grid->at(global_index);
-  middles.reserve(collection_middles.size());
-  for (auto& sp : collection_middles)
-    middles.push_back(sp.get());
 
-  // Reserve
-  bottoms.reserve(nBottoms);
-  tops.reserve(nTops);
+  bottoms.resize(nBottoms);
+  middles.resize(collection_middles.size());
+  tops.resize(nTops);
 
+  std::size_t filledBottom = 0;
+  std::size_t filledTop = 0;
+
+  for (std::size_t i(0); i<collection_middles.size(); ++i) {
+    middles[i] = collection_middles[i].get();
+  }
+  
   // Fill Bottoms
   for (auto idx : bottomBinIndices) {
     auto& collection_bottoms = m_group->m_grid->at(idx);
     for (auto& el : collection_bottoms) {
-      bottoms.push_back(el.get());
+      bottoms[filledBottom++] = el.get();
     }
   }
 
@@ -123,7 +130,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   for (auto idx : topBinIndices) {
     auto& collection_tops = m_group->m_grid->at(idx);
     for (auto& el : collection_tops) {
-      tops.push_back(el.get());
+      tops[filledTop++] = el.get();
     }
   }
 
