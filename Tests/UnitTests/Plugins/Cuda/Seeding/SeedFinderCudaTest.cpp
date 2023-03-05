@@ -273,8 +273,8 @@ int main(int argc, char** argv) {
     for (; groupIt != spGroup.end(); ++groupIt) {
       auto [bottom, middle, top] = *groupIt;
       seedFinder_cpu.createSeedsForGroup(
-	options, state, std::back_inserter(seedVector_cpu.emplace_back()),
-	bottom, middle, top, rMiddleSPRange);
+          options, state, std::back_inserter(seedVector_cpu.emplace_back()),
+          bottom, middle, top, rMiddleSPRange);
       group_count++;
       if (allgroup == false) {
         if (group_count >= nGroupToIterate)

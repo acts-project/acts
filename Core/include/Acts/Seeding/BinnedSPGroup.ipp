@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -62,7 +61,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottoms;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middles;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> tops;
-  
+
   // Global Index
   std::size_t global_index = m_group->m_grid->globalBinFromLocalBins(
       {m_current_localBins[INDEX::PHI],
@@ -84,9 +83,8 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   }
 
   if (nBottoms == 0) {
-    return std::make_tuple(std::move(bottoms),
-			   std::move(middles),
-			   std::move(tops));
+    return std::make_tuple(std::move(bottoms), std::move(middles),
+                           std::move(tops));
   }
 
   // Tops
@@ -99,8 +97,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   }
 
   if (nTops == 0) {
-    return std::make_tuple(std::move(bottoms),
-                           std::move(middles),
+    return std::make_tuple(std::move(bottoms), std::move(middles),
                            std::move(tops));
   }
 
@@ -114,10 +111,10 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   std::size_t filledBottom = 0;
   std::size_t filledTop = 0;
 
-  for (std::size_t i(0); i<collection_middles.size(); ++i) {
+  for (std::size_t i(0); i < collection_middles.size(); ++i) {
     middles[i] = collection_middles[i].get();
   }
-  
+
   // Fill Bottoms
   for (auto idx : bottomBinIndices) {
     auto& collection_bottoms = m_group->m_grid->at(idx);
@@ -279,8 +276,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   if (m_bins.size() == 0) {
     std::size_t nZbins = m_grid->numLocalBins()[1];
     m_bins.reserve(nZbins);
-    for (std::size_t i(0); i<nZbins; ++i) {
-      m_bins.push_back( i + 1);
+    for (std::size_t i(0); i < nZbins; ++i) {
+      m_bins.push_back(i + 1);
     }
   }
 }
