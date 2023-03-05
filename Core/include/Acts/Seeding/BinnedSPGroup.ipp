@@ -59,6 +59,10 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   // Retrieve here - this is the heavy lifting
   // Less expensive then doing it in the operator++
 
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottoms;
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middles;
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> tops;
+  
   // Global Index
   std::size_t global_index = m_group->m_grid->globalBinFromLocalBins(
       {m_current_localBins[INDEX::PHI],
@@ -80,9 +84,9 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   }
 
   if (nBottoms == 0) {
-    return std::make_tuple(std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>(),
-			   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>(),
-			   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>());
+    return std::make_tuple(std::move(bottoms),
+			   std::move(middles),
+			   std::move(tops));
   }
 
   // Tops
@@ -95,17 +99,17 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   }
 
   if (nTops == 0) {
-    return std::make_tuple(std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>(),
-                           std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>(),
-                           std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>());
+    return std::make_tuple(std::move(bottoms),
+                           std::move(middles),
+                           std::move(tops));
   }
 
   // Fill Middles
   auto& collection_middles = m_group->m_grid->at(global_index);
 
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottoms(nBottoms);
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middles(collection_middles.size());
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> tops(nTops);
+  bottoms.resize(nBottoms);
+  middles.resize(collection_middles.size());
+  tops.resize(nTops);
 
   std::size_t filledBottom = 0;
   std::size_t filledTop = 0;
