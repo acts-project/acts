@@ -83,6 +83,7 @@ class SeedFinder {
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
       const Acts::SeedFinderOptions& options, SeedingState& state,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       sp_range_t& bottomSPs, sp_range_t& middleSPs, sp_range_t& topSPs,
       const Acts::Range1D<float>& rMiddleSPRange) const;
@@ -113,7 +114,9 @@ class SeedFinder {
  private:
   template <typename sp_range_t, typename out_range_t>
   void getCompatibleDoublets(
-      const Acts::SeedFinderOptions& options, sp_range_t& otherSPs,
+      const Acts::SeedFinderOptions& options,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      sp_range_t& otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;
