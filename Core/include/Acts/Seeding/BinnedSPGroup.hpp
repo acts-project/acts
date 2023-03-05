@@ -56,9 +56,9 @@ class BinnedSPGroupIterator {
   bool operator==(const BinnedSPGroupIterator& other) const;
   bool operator!=(const BinnedSPGroupIterator& other) const;
 
-  std::tuple<std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>,
-             std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>,
-             std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*>>
+  std::tuple<boost::container::small_vector<size_t, 9>,
+	     boost::container::small_vector<size_t, 9>,
+	     boost::container::small_vector<size_t, 9>>
   operator*();
 
  private:
@@ -108,6 +108,8 @@ class BinnedSPGroup {
   BinnedSPGroupIterator<external_spacepoint_t> begin();
   BinnedSPGroupIterator<external_spacepoint_t> end();
 
+  Acts::SpacePointGrid<external_spacepoint_t>& grid() { return *m_grid.get(); }
+  
  private:
   // grid with ownership of all InternalSpacePoint
   std::unique_ptr<Acts::SpacePointGrid<external_spacepoint_t>> m_grid;
