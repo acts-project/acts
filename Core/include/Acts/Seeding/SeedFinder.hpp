@@ -115,8 +115,7 @@ class SeedFinder {
   template <typename sp_range_t, typename out_range_t>
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      sp_range_t& otherSPs,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t& otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;
