@@ -272,10 +272,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   // contains parameters required to calculate circle with linear equation
   // ...for bottom-middle
   std::vector<LinCircle> linCircleBottom;
-  //  linCircleBottom.reserve(bottom.size());
   // ...for middle-top
   std::vector<LinCircle> linCircleTop;
-  //  linCircleTop.reserve(top.size());
 
 
   // transform coordinates

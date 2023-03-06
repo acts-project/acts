@@ -256,11 +256,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   state.linCircleTop.clear();
 
   std::size_t numTopSP = state.compatTopSP.size();
-  //  std::size_t numBottomSP = state.compatBottomSP.size();
-
-  // Reserve enough space, in case current capacity is too little
-  //  state.linCircleBottom.reserve(numBottomSP);
-  //  state.linCircleTop.reserve(numTopSP);
 
   transformCoordinates(state.compatBottomSP, spM, true,
 		       state.linCircleBottom);
