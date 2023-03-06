@@ -148,6 +148,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
 template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t, typename out_range_t>
+inline
 void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const Acts::SeedFinderOptions& options, sp_range_t& otherSPs,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
@@ -238,9 +239,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     }
     outVec.push_back(otherSP);
   }
+
 }
 
 template <typename external_spacepoint_t, typename platform_t>
+inline
 void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     InternalSpacePoint<external_spacepoint_t>& spM,
     const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
@@ -253,17 +256,33 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   state.linCircleTop.clear();
 
   std::size_t numTopSP = state.compatTopSP.size();
-  std::size_t numBottomSP = state.compatBottomSP.size();
+  //  std::size_t numBottomSP = state.compatBottomSP.size();
 
   // Reserve enough space, in case current capacity is too little
-  state.linCircleBottom.reserve(numBottomSP);
-  state.linCircleTop.reserve(numTopSP);
+  //  state.linCircleBottom.reserve(numBottomSP);
+  //  state.linCircleTop.reserve(numTopSP);
 
-  auto sorted_bottoms = transformCoordinates(state.compatBottomSP, spM, true,
-                                             state.linCircleBottom);
-  auto sorted_tops =
-      transformCoordinates(state.compatTopSP, spM, false, state.linCircleTop);
+  transformCoordinates(state.compatBottomSP, spM, true,
+		       state.linCircleBottom);
+  transformCoordinates(state.compatTopSP, spM, false, state.linCircleTop);
 
+  // sort: make index vector
+  std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());
+  for (std::size_t i(0); i<sorted_bottoms.size(); ++i)
+    sorted_bottoms[i] = i;
+
+  std::vector<std::size_t> sorted_tops(state.linCircleTop.size());
+  for (std::size_t i(0); i<sorted_tops.size(); ++i)
+    sorted_tops[i] = i;
+
+  std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
+	    [&state] (const std::size_t& a, const std::size_t& b) -> bool
+	    { return state.linCircleBottom[a].cotTheta < state.linCircleBottom[b].cotTheta; });
+  
+  std::sort(sorted_tops.begin(), sorted_tops.end(),
+	    [&state] (const std::size_t& a, const std::size_t& b) -> bool
+	    { return state.linCircleTop[a].cotTheta < state.linCircleTop[b].cotTheta; });
+  
   // Reserve enough space, in case current capacity is too little
   state.topSpVec.reserve(numTopSP);
   state.curvatures.reserve(numTopSP);
