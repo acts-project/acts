@@ -9,8 +9,8 @@
 namespace Acts {
 template <typename external_spacepoint_t>
 inline LinCircle transformCoordinates(
-    InternalSpacePoint<external_spacepoint_t>& sp,
-    InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
+    const InternalSpacePoint<external_spacepoint_t>& sp,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
       -> std::array<float, 6> {
@@ -24,8 +24,8 @@ inline LinCircle transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-inline LinCircle transformCoordinates(external_spacepoint_t& sp,
-                                      external_spacepoint_t& spM, bool bottom,
+inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
+                                      const external_spacepoint_t& spM, bool bottom,
                                       callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single

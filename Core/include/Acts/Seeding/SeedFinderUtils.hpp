@@ -37,13 +37,13 @@ struct LinCircle {
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottom Should be true if sp is a bottom SP.
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(InternalSpacePoint<external_spacepoint_t>& sp,
-                               InternalSpacePoint<external_spacepoint_t>& spM,
+LinCircle transformCoordinates(const InternalSpacePoint<external_spacepoint_t>& sp,
+                               const InternalSpacePoint<external_spacepoint_t>& spM,
                                bool bottom);
 
 template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp,
-                               external_spacepoint_t& spM, bool bottom,
+LinCircle transformCoordinates(const external_spacepoint_t& sp,
+                               const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
