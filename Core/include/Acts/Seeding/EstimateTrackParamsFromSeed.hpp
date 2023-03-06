@@ -51,7 +51,7 @@ namespace Acts {
 template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    const Logger& logger) {
+    const Logger& logger = getDummyLogger()) {
   // Check the number of provided space points
   size_t numSP = std::distance(spBegin, spEnd);
   if (numSP < 3) {
@@ -155,7 +155,7 @@ template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, spacepoint_iterator_t spBegin,
     spacepoint_iterator_t spEnd, const Surface& surface, const Vector3& bField,
-    ActsScalar bFieldMin, const Acts::Logger& logger,
+    ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger(),
     ActsScalar mass = 139.57018 * UnitConstants::MeV) {
   // Check the number of provided space points
   size_t numSP = std::distance(spBegin, spEnd);
