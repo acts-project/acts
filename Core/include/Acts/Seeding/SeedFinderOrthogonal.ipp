@@ -275,27 +275,30 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   // ...for middle-top
   std::vector<LinCircle> linCircleTop;
 
-
   // transform coordinates
   transformCoordinates(bottom, middle, true, linCircleBottom);
   transformCoordinates(top, middle, false, linCircleTop);
 
   // sort: make index vector
   std::vector<std::size_t> sorted_bottoms(linCircleBottom.size());
-  for (std::size_t i(0); i<sorted_bottoms.size(); ++i)
+  for (std::size_t i(0); i < sorted_bottoms.size(); ++i)
     sorted_bottoms[i] = i;
 
   std::vector<std::size_t> sorted_tops(linCircleTop.size());
-  for (std::size_t i(0); i<sorted_tops.size(); ++i)
+  for (std::size_t i(0); i < sorted_tops.size(); ++i)
     sorted_tops[i] = i;
 
-  std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
-            [&linCircleBottom] (const std::size_t& a, const std::size_t& b) -> bool
-            { return linCircleBottom[a].cotTheta < linCircleBottom[b].cotTheta; });
+  std::sort(
+      sorted_bottoms.begin(), sorted_bottoms.end(),
+      [&linCircleBottom](const std::size_t &a, const std::size_t &b) -> bool {
+        return linCircleBottom[a].cotTheta < linCircleBottom[b].cotTheta;
+      });
 
-  std::sort(sorted_tops.begin(), sorted_tops.end(),
-            [&linCircleTop] (const std::size_t& a, const std::size_t& b) -> bool
-            { return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta; });
+  std::sort(
+      sorted_tops.begin(), sorted_tops.end(),
+      [&linCircleTop](const std::size_t &a, const std::size_t &b) -> bool {
+        return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
+      });
 
   std::vector<float> tanLM;
   std::vector<float> tanMT;

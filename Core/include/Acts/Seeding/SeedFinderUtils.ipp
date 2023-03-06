@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2019 CERN for the benefit of the Acts project
@@ -21,7 +20,7 @@ inline LinCircle transformCoordinates(
   };
 
   return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-									 sp, spM, bottom, std::move(extractFunction));
+      sp, spM, bottom, std::move(extractFunction));
 }
 
 template <typename external_spacepoint_t, typename callable_t>
@@ -73,20 +72,19 @@ inline void transformCoordinates(
   };
 
   transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-								  vec, spM, bottom, linCircleVec, std::move(extractFunction));
+      vec, spM, bottom, linCircleVec, std::move(extractFunction));
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-inline void transformCoordinates(
-    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
-    bool bottom, std::vector<LinCircle>& linCircleVec,
-    callable_t&& extractFunction) {
-
+inline void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+                                 const external_spacepoint_t& spM, bool bottom,
+                                 std::vector<LinCircle>& linCircleVec,
+                                 callable_t&& extractFunction) {
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
   // resize + operator[] is faster then reserve and push_back
   linCircleVec.resize(vec.size());
-    
+
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
   for (std::size_t idx(0); idx < vec.size(); ++idx) {

@@ -63,10 +63,10 @@ void transformCoordinates(
     std::vector<LinCircle>& linCircleVec);
 
 template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(
-    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
-    bool bottom, std::vector<LinCircle>& linCircleVec,
-    callable_t&& extractFunction);
+void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+                          const external_spacepoint_t& spM, bool bottom,
+                          std::vector<LinCircle>& linCircleVec,
+                          callable_t&& extractFunction);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
