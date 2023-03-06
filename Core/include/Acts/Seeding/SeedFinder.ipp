@@ -260,12 +260,14 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
   // sort: make index vector
   std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());
-  for (std::size_t i(0); i < sorted_bottoms.size(); ++i)
+  for (std::size_t i(0); i < sorted_bottoms.size(); ++i) {
     sorted_bottoms[i] = i;
+  }
 
   std::vector<std::size_t> sorted_tops(state.linCircleTop.size());
-  for (std::size_t i(0); i < sorted_tops.size(); ++i)
+  for (std::size_t i(0); i < sorted_tops.size(); ++i) {
     sorted_tops[i] = i;
+  }
 
   std::sort(sorted_bottoms.begin(), sorted_bottoms.end(),
             [&state](const std::size_t& a, const std::size_t& b) -> bool {

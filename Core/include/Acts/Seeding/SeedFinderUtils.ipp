@@ -131,7 +131,7 @@ inline void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
     l.z = sp->z();
     l.r = sp->radius();
 
-    linCircleVec[idx] = std::move(l);
+    linCircleVec[idx] = l;
     sp->setCotTheta(cot_theta);
 
     sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
