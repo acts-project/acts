@@ -286,7 +286,7 @@ class MultiEigenStepperLoop
         components.push_back(
             {SingleState(gctx, bfield->makeCache(mctx), std::move(singlePars),
                          ndir, ssize, stolerance),
-             weight, Intersection3D::Status::reachable});
+             weight, Intersection3D::Status::onSurface});
       }
 
       if (std::get<2>(multipars.components().front())) {

@@ -183,6 +183,9 @@ struct GsfActor {
       return;
     }
 
+    const auto& surface = *state.navigation.currentSurface;
+    ACTS_VERBOSE("Step is at surface " << surface.geometryId());
+
     // All components must be normalized at the beginning here, otherwise the
     // stepper misbehaves
     auto stepperComponents = stepper.constComponentIterable(state.stepping);
@@ -196,9 +199,6 @@ struct GsfActor {
     assert(std::all_of(
         stepperComponents.begin(), stepperComponents.end(),
         [](const auto& cmp) { return cmp.status() == Status::onSurface; }));
-
-    const auto& surface = *state.navigation.currentSurface;
-    ACTS_VERBOSE("Step is at surface " << surface.geometryId());
 
     // Early return if we already were on this surface TODO why is this
     // necessary

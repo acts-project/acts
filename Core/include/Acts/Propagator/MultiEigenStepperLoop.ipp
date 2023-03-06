@@ -191,14 +191,14 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
   double accumulatedPathLength = 0.0;
   std::size_t errorSteps = 0;
 
-  // Type of the proxy single propagation state
+  // Type of the proxy single propagation2 state
   using ThisSinglePropState =
       SinglePropState<SingleState, decltype(state.navigation),
                       decltype(state.options), decltype(state.geoContext)>;
 
   // Lambda that performs the step for a component and returns false if the step
   // went ok and true if there was an error
-  auto componentStep = [&](auto& component) {
+  auto errorInStep = [&](auto& component) {
     if (component.status == Status::onSurface) {
       // We need to add these, so the propagation does not fail if we have only
       // components on surfaces and failing states
@@ -223,7 +223,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   // Loop over components and remove errorous components
   stepping.components.erase(
-      std::remove_if(components.begin(), components.end(), componentStep),
+      std::remove_if(components.begin(), components.end(), errorInStep),
       components.end());
 
   // Reweight if necessary
