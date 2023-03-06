@@ -212,8 +212,8 @@ void test_multi_stepper_vs_eigen_stepper() {
 
   MultiStepper multi_stepper(defaultBField);
   SingleStepper single_stepper(defaultBField);
-  
-  for(auto cmp : multi_stepper.componentIterable(multi_state)) {
+
+  for (auto cmp : multi_stepper.componentIterable(multi_state)) {
     cmp.status() = Acts::Intersection3D::Status::reachable;
   }
 
