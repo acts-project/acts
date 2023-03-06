@@ -9,10 +9,9 @@
 #include <chrono>
 
 template <typename external_spacepoint_t>
-template <typename callable_t>
+template <typename container_t, typename callable_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
-    const std::vector<const external_spacepoint_t*>& spacePoints,
-    callable_t&& toGlobal,
+    const container_t& spacePoints, callable_t&& toGlobal,
     std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
@@ -27,6 +26,10 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     throw std::runtime_error(
         "SeedFinderOptions not in ACTS internal units in BinnedSPGroup");
   }
+  static_assert(
+      std::is_same<typename container_t::value_type,
+                   const external_spacepoint_t*>::value,
+      "Container does not contain type this class was templated with");
 
   // get region of interest (or full detector if configured accordingly)
   float phiMin = config.phiMin;

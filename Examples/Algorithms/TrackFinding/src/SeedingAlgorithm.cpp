@@ -226,9 +226,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
       m_cfg.gridConfig, m_cfg.gridOptions);
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
-      spacePointPtrs, extractGlobalQuantities,
-      m_bottomBinFinder, m_topBinFinder, std::move(grid), rRangeSPExtent,
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
+      spacePointPtrs, extractGlobalQuantities, m_bottomBinFinder,
+      m_topBinFinder, std::move(grid), rRangeSPExtent, m_cfg.seedFinderConfig,
+      m_cfg.seedFinderOptions);
 
   // safely clamp double to float
   float up = Acts::clampValue<float>(
