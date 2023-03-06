@@ -100,14 +100,13 @@ class ScopedGsfInfoPrinterAndChecker {
         "some weights are not finite at " << where);
 
     throw_assert(detail::weightsAreNormalized(
-                      cmps, [](const auto &cmp) { return cmp.weight(); }),
-                  "not normalized at " << where);
+                     cmps, [](const auto &cmp) { return cmp.weight(); }),
+                 "not normalized at " << where);
   }
 
  public:
   ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
-                                 const stepper_t &stepper,
-                                 const Logger &logger)
+                                 const stepper_t &stepper, const Logger &logger)
       : m_state(state),
         m_stepper(stepper),
         m_p_initial(stepper.momentum(state.stepping)),

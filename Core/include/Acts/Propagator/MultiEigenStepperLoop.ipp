@@ -71,8 +71,6 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
   }
 }
 
-
-
 template <typename E, typename R, typename A>
 auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
                                                       bool transportCov) const
@@ -128,6 +126,53 @@ auto MultiEigenStepperLoop<E, R, A>::curvilinearState(State& state,
 }
 
 template <typename E, typename R, typename A>
+std::size_t MultiEigenStepperLoop<E, R, A>::numberComponents(
+    const State& state) const {
+  return state.components.size();
+}
+
+template <typename E, typename R, typename A>
+void MultiEigenStepperLoop<E, R, A>::removeMissedComponents(
+    State& state) const {
+  auto new_end = std::remove_if(
+      state.components.begin(), state.components.end(), [](const auto& cmp) {
+        return cmp.status == Intersection3D::Status::missed;
+      });
+
+  state.components.erase(new_end, state.components.end());
+}
+
+template <typename E, typename R, typename A>
+void MultiEigenStepperLoop<E, R, A>::reweightComponents(State& state) const {
+  ActsScalar sumOfWeights = 0.0;
+  for (const auto& cmp : state.components) {
+    sumOfWeights += cmp.weight;
+  }
+  for (auto& cmp : state.components) {
+    cmp.weight /= sumOfWeights;
+  }
+}
+
+template <typename E, typename R, typename A>
+void MultiEigenStepperLoop<E, R, A>::clearComponents(State& state) const {
+  state.components.clear();
+}
+
+template <typename E, typename R, typename A>
+template <typename charge_t>
+auto MultiEigenStepperLoop<E, R, A>::addComponent(
+    State& state, const SingleBoundTrackParameters<charge_t>& pars,
+    double weight) const -> Result<ComponentProxy> {
+  state.components.push_back(
+      {SingleState(state.geoContext,
+                   SingleStepper::m_bField->makeCache(state.magContext), pars,
+                   state.navDir),
+       weight, Intersection3D::Status::onSurface});
+
+  return ComponentProxy{state.components.back(), state};
+}
+
+template <typename E, typename R, typename A>
 Intersection3D::Status MultiEigenStepperLoop<E, R, A>::updateSurfaceStatus(
     State& state, const Surface& surface, const BoundaryCheck& bcheck,
     const Logger& logger) const {
@@ -140,7 +185,7 @@ Intersection3D::Status MultiEigenStepperLoop<E, R, A>::updateSurfaceStatus(
         *this, component.state, surface, bcheck, logger);
     ++counts[static_cast<std::size_t>(component.status)];
   }
-  
+
   // If at least one component is on a surface, we can remove all missed
   // components before the step. If not, we must keep them for the case that all
   // components miss and we need to retarget

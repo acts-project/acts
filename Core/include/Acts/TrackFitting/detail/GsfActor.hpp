@@ -183,13 +183,19 @@ struct GsfActor {
       return;
     }
 
+    // All components must be normalized at the beginning here, otherwise the
+    // stepper misbehaves
+    auto stepperComponents = stepper.constComponentIterable(state.stepping);
+    assert(detail::weightsAreNormalized(
+        stepperComponents, [](const auto& cmp) { return cmp.weight(); }));
+
     // All components must have status "on surface". It is however possible,
     // that currentSurface is nullptr and all components are "on surface" (e.g.,
     // for surfaces excluded from the navigation)
     using Status = Acts::Intersection3D::Status;
     assert(std::all_of(
-        state.stepping.components.cbegin(), state.stepping.components.cend(),
-        [](const auto& cmp) { return cmp.status == Status::onSurface; }));
+        stepperComponents.begin(), stepperComponents.end(),
+        [](const auto& cmp) { return cmp.status() == Status::onSurface; }));
 
     const auto& surface = *state.navigation.currentSurface;
     ACTS_VERBOSE("Step is at surface " << surface.geometryId());
@@ -206,10 +212,6 @@ struct GsfActor {
     }
 
     result.visitedSurfaces.push_back(&surface);
-
-    auto stepperComponents = stepper.componentIterable(state.stepping);
-    detail::normalizeWeights(stepperComponents,
-                             [](auto& cmp) -> double& { return cmp.weight(); });
 
     // Check what we have on this surface
     const auto found_source_link =

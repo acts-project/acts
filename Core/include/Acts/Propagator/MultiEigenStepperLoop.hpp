@@ -532,52 +532,41 @@ class MultiEigenStepperLoop
   }
 
   /// Get the number of components
-  std::size_t numberComponents(const State& state) const {
-    return state.components.size();
-  }
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  std::size_t numberComponents(const State& state) const;
 
   /// Remove missed components from the component state
-  void removeMissedComponents(State& state) const {
-    auto new_end = std::remove_if(
-        state.components.begin(), state.components.end(), [](const auto& cmp) {
-          return cmp.status == Intersection3D::Status::missed;
-        });
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  void removeMissedComponents(State& state) const;
 
-    state.components.erase(new_end, state.components.end());
-  }
-  
   /// Reweight the components
-  void reweightComponents(State& state) const {
-    ActsScalar sumOfWeights = 0.0;
-    for (const auto& cmp : state.components) {
-      sumOfWeights += cmp.weight;
-    }
-    for (auto& cmp : state.components) {
-      cmp.weight /= sumOfWeights;
-    }
-  }
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  void reweightComponents(State& state) const;
 
   /// Reset the number of components
-  void clearComponents(State& state) const { state.components.clear(); }
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  void clearComponents(State& state) const;
 
   /// Add a component to the Multistepper
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  /// @param [in] pars Parameters of the component to add
+  /// @param [in] weight Weight of the component to add
+  ///
+  /// @note: It is not ensured that the weights are normalized afterwards)
   /// @note This function makes no garantuees about how new components are
   /// initialized, it is up to the caller to ensure that all components are
   /// valid in the end.
   /// @note The returned component-proxy is only garantueed to be valid until
   /// the component number is again modified
   template <typename charge_t>
-  Result<ComponentProxy> addComponent(
-      State& state, const SingleBoundTrackParameters<charge_t>& pars,
-      double weight) const {
-    state.components.push_back(
-        {SingleState(state.geoContext,
-                     SingleStepper::m_bField->makeCache(state.magContext), pars,
-                     state.navDir),
-         weight, Intersection3D::Status::onSurface});
-
-    return ComponentProxy{state.components.back(), state};
-  }
+  auto addComponent(State& state,
+                    const SingleBoundTrackParameters<charge_t>& pars,
+                    double weight) const -> Result<ComponentProxy>;
 
   /// Get the field for the stepping, it checks first if the access is still
   /// within the Cell, and updates the cell if necessary.
