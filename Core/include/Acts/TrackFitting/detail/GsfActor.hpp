@@ -188,7 +188,8 @@ struct GsfActor {
 
     // All components must be normalized at the beginning here, otherwise the
     // stepper misbehaves
-    auto stepperComponents = stepper.constComponentIterable(state.stepping);
+    [[maybe_unused]] auto stepperComponents =
+        stepper.constComponentIterable(state.stepping);
     assert(detail::weightsAreNormalized(
         stepperComponents, [](const auto& cmp) { return cmp.weight(); }));
 
