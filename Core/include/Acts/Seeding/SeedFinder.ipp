@@ -123,6 +123,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
                                          ? seedConfRange.nTopForLargeR
                                          : seedConfRange.nTopForSmallR;
+      // set max bottom radius for seed confirmation
+      seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+      // continue if number of top SPs is smaller than minimum
       if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
         continue;
       }
@@ -317,6 +320,18 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     if (m_config.useDetailedDoubleMeasurementInfo) {
       rotationTermsUVtoXY[0] = spM.x() * sinTheta / spM.radius();
       rotationTermsUVtoXY[1] = spM.y() * sinTheta / spM.radius();
+    }
+
+    // minimum number of compatible top SPs to trigger the filter for a certain
+    // middle bottom pair if seedConfirmation is false we always ask for at
+    // least one compatible top to trigger the filter
+    size_t minCompatibleTopSPs = 2;
+    if (!m_config.seedConfirmation or
+        state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
+      minCompatibleTopSPs = 1;
+    }
+    if (m_config.seedConfirmation and seedFilterState.numQualitySeeds) {
+      minCompatibleTopSPs++;
     }
 
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
@@ -538,7 +553,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       state.ptVec.push_back(pT);
     }  // loop on tops
 
-    if (state.topSpVec.empty()) {
+    // continue if number of top SPs is smaller than minimum required for filter
+    if (state.topSpVec.size() < minCompatibleTopSPs) {
       continue;
     }
 
