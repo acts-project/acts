@@ -49,8 +49,6 @@ class SeedFinder {
     std::vector<InternalSpacePoint<external_spacepoint_t>*> topSpVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
-    std::vector<float> etaVec;
-    std::vector<float> ptVec;
 
     // managing seed candidates for SpM
     CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
