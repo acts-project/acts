@@ -73,7 +73,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
   size_t beginCompTopIndex = 0;
   // loop over top SPs and other compatible top SP candidates
-  for (const std::size_t& topSPIndex : topSPIndexVec) {
+  for (const std::size_t topSPIndex : topSPIndexVec) {
     // if two compatible seeds with high distance in r are found, compatible
     // seeds span 5 layers
     // -> weaker requirement for a good seed
