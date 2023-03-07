@@ -188,6 +188,7 @@ struct SimulationActor {
 
     if (after.absoluteMomentum() == 0.0) {
       result.isAlive = false;
+      return;
     }
 
     // continue the propagation with the modified parameters
