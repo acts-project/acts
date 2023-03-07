@@ -93,8 +93,8 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   // Create more convenient vectors out of the space point containers.
   auto spVecMaker = [](sp_range_t spRange) {
     std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> result;
-    for (auto* sp : spRange) {
-      result.push_back(sp);
+    for (auto& sp : spRange) {
+      result.push_back(&sp);
     }
     return result;
   };

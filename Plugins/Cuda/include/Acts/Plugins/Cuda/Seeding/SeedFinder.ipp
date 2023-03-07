@@ -83,17 +83,17 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   int nSpB(0);
   int nSpT(0);
 
-  for (auto sp : middleSPs) {
+  for (auto& sp : middleSPs) {
     nSpM++;
-    middleSPvec.push_back(sp);
+    middleSPvec.push_back(&sp);
   }
-  for (auto sp : bottomSPs) {
+  for (auto& sp : bottomSPs) {
     nSpB++;
-    bottomSPvec.push_back(sp);
+    bottomSPvec.push_back(&sp);
   }
-  for (auto sp : topSPs) {
+  for (auto& sp : topSPs) {
     nSpT++;
-    topSPvec.push_back(sp);
+    topSPvec.push_back(&sp);
   }
 
   CudaScalar<int> nSpM_cuda(&nSpM);
@@ -108,26 +108,26 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   CpuMatrix<float> spBmat_cpu(nSpB, 6);
   CpuMatrix<float> spTmat_cpu(nSpT, 6);
 
-  auto fillMatrix = [](auto& mat, auto& id, auto sp) {
-    mat.set(id, 0, sp->x());
-    mat.set(id, 1, sp->y());
-    mat.set(id, 2, sp->z());
-    mat.set(id, 3, sp->radius());
-    mat.set(id, 4, sp->varianceR());
-    mat.set(id, 5, sp->varianceZ());
+  auto fillMatrix = [](auto& mat, auto& id, auto& sp) {
+    mat.set(id, 0, sp.x());
+    mat.set(id, 1, sp.y());
+    mat.set(id, 2, sp.z());
+    mat.set(id, 3, sp.radius());
+    mat.set(id, 4, sp.varianceR());
+    mat.set(id, 5, sp.varianceZ());
     id++;
   };
 
   int mIdx(0);
-  for (auto sp : middleSPs) {
+  for (auto& sp : middleSPs) {
     fillMatrix(spMmat_cpu, mIdx, sp);
   }
   int bIdx(0);
-  for (auto sp : bottomSPs) {
+  for (auto& sp : bottomSPs) {
     fillMatrix(spBmat_cpu, bIdx, sp);
   }
   int tIdx(0);
-  for (auto sp : topSPs) {
+  for (auto& sp : topSPs) {
     fillMatrix(spTmat_cpu, tIdx, sp);
   }
 
