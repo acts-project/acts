@@ -55,7 +55,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   m_outputSeeds.initialize(m_cfg.outputSeeds);
-  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 
   if (m_cfg.gridConfig.rMax != m_cfg.seedFinderConfig.rMax and
       m_cfg.allowSeparateRMax == false) {
