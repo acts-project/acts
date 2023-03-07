@@ -186,6 +186,10 @@ struct SimulationActor {
           before.fourMomentum(), after.fourMomentum(), result.hits.size());
     }
 
+    if (after.absoluteMomentum() == 0.0) {
+      result.isAlive = false;
+    }
+
     // continue the propagation with the modified parameters
     stepper.update(state.stepping, after.position(), after.unitDirection(),
                    after.absoluteMomentum(), after.time());
