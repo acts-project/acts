@@ -8,45 +8,38 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
+#include "ActsExamples/Framework/BareAlgorithm.hpp"
 
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
 
-/// Evicts tracks that seem to be duplicated.
+/// Evicts tracks that seem to be duplicated and fake.
 ///
 /// The implementation works as follows:
-///  1) Calculate shared hits per track.
-///  2) If the maximum shared hits criteria is met, we are done.
-///     This is the configurable amount of shared hits we are ok with
-///     in our experiment.
-///  3) Else, remove the track with the highest relative shared hits (i.e.
-///     shared hits / hits).
-///  4) Back to square 1.
-class AmbiguityResolutionAlgorithm final : public IAlgorithm {
+///  1) Cluster together nearby tracks using shared hits
+///  2) For each track use a neural network to compute a score
+///  3) In each cluster keep the track with the highest score
+class AmbiguityResolutionMLAlgorithm final : public BareAlgorithm {
  public:
   struct Config {
-    /// Input source links collection.
-    std::string inputSourceLinks;
     /// Input trajectories collection.
     std::string inputTrajectories;
+    /// path to the ONNX model for the duplicate neural network
+    std::string inputDuplicateNN;
     /// Output trajectories collection.
     std::string outputTrajectories;
-
-    /// Maximum amount of shared hits per track.
-    std::uint32_t maximumSharedHits = 1;
-
     /// Minumum number of measurement to form a track.
-    size_t nMeasurementsMin = 7;
+    int nMeasurementsMin = 7;
   };
 
   /// Construct the ambiguity resolution algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AmbiguityResolutionAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  AmbiguityResolutionMLAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the ambiguity resolution algorithm.
   ///
@@ -59,6 +52,10 @@ class AmbiguityResolutionAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
+  // ONNX environement
+  Ort::Env m_env;
+  // ONNX model for the duplicate neural network
+  Acts::OnnxRuntimeBase m_duplicateClassifier;
 };
 
 }  // namespace ActsExamples
