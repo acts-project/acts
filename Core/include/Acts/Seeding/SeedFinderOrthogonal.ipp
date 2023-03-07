@@ -339,7 +339,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // least one compatible top to trigger the filter
     size_t minCompatibleTopSPs = 2;
     if (!m_config.seedConfirmation or
-        state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
+        bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
     if (m_config.seedConfirmation and seedFilterState.numQualitySeeds) {
@@ -447,7 +447,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
 
     // continue if number of top SPs is smaller than minimum required for filter
-    if (state.topSpVec.size() < minCompatibleTopSPs) {
+    if (top.size() < minCompatibleTopSPs) {
       continue;
     }
     m_config.seedFilter->filterSeeds_2SpFixed(
