@@ -81,30 +81,30 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
 
   for (auto& SP : bottomSPs) {
-    bottomSPvec.push_back(&SP);
+    bottomSPvec.push_back(SP);
   }
   deviceBottomSPs.reserve(bottomSPvec.size());
-  for (auto& SP : bottomSPvec) {
-    deviceBottomSPs.push_back(
-        {SP.x(), SP.y(), SP.z(), SP.radius(), SP.varianceR(), SP.varianceZ()});
+  for (auto SP : bottomSPvec) {
+    deviceBottomSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
+                               SP->varianceR(), SP->varianceZ()});
   }
 
   for (auto& SP : middleSPs) {
-    middleSPvec.push_back(&SP);
+    middleSPvec.push_back(SP);
   }
   deviceMiddleSPs.reserve(middleSPvec.size());
-  for (auto& SP : middleSPvec) {
-    deviceMiddleSPs.push_back(
-        {SP.x(), SP.y(), SP.z(), SP.radius(), SP.varianceR(), SP.varianceZ()});
+  for (auto SP : middleSPvec) {
+    deviceMiddleSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
+                               SP->varianceR(), SP->varianceZ()});
   }
 
   for (auto& SP : topSPs) {
-    topSPvec.push_back(&SP);
+    topSPvec.push_back(SP);
   }
   deviceTopSPs.reserve(topSPvec.size());
-  for (auto& SP : topSPvec) {
-    deviceTopSPs.push_back(
-        {SP.x(), SP.y(), SP.z(), SP.radius(), SP.varianceR(), SP.varianceZ()});
+  for (auto SP : topSPvec) {
+    deviceTopSPs.push_back({SP->x(), SP->y(), SP->z(), SP->radius(),
+                            SP->varianceR(), SP->varianceZ()});
   }
 
   // std::vector<std::vector<detail::SeedData>> seeds;
