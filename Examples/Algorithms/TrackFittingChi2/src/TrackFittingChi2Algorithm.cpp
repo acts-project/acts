@@ -39,10 +39,11 @@ ActsExamples::TrackFittingChi2Algorithm::TrackFittingChi2Algorithm(
     throw std::invalid_argument("Missing output track collection");
   }
 
-  // m_measurementReadHandle.initialize(m_cfg.inputMeasurements);
-  // m_sourceLinkReadHandle.initialize(m_cfg.inputSourceLinks);
-  // m_protoTracksReadHandle.initialize(m_cfg.inputProtoTracks);
-  // m_protoTracksReadHandle
+  m_measurementReadHandle.initialize(m_cfg.inputMeasurements);
+  m_sourceLinkReadHandle.initialize(m_cfg.inputSourceLinks);
+  m_protoTracksReadHandle.initialize(m_cfg.inputProtoTracks);
+  m_initialParametersReadHandle.initialize(m_cfg.inputInitialTrackParameters);
+  m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
@@ -155,7 +156,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
       std::make_shared<Acts::ConstVectorMultiTrajectory>(
           std::move(*trackStateContainer))};
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
+  m_outputTracks(ctx, std::move(constTracks));
   // TODO: add chi2 values as output?
   return ActsExamples::ProcessCode::SUCCESS;
 }

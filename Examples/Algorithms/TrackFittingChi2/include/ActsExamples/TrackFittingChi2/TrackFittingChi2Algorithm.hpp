@@ -119,6 +119,8 @@ class TrackFittingChi2Algorithm final : public IAlgorithm {
                                                               "ProtoTracks"};
   ReadDataHandle<TrackParametersContainer> m_initialParametersReadHandle{
       this, "TrackParameters"};
+
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 inline ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Result
