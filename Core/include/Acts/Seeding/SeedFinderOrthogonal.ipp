@@ -260,6 +260,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
                                        ? seedConfRange.nTopForLargeR
                                        : seedConfRange.nTopForSmallR;
+    // set max bottom radius for seed confirmation
+    seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+    // continue if number of top SPs is smaller than minimum
     if (top.size() < seedFilterState.nTopSeedConf) {
       return;
     }
@@ -330,6 +333,18 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
     // multiply the squared sigma onto the squared scattering
     scatteringInRegion2 *= m_config.sigmaScattering * m_config.sigmaScattering;
+
+    // minimum number of compatible top SPs to trigger the filter for a certain
+    // middle bottom pair if seedConfirmation is false we always ask for at
+    // least one compatible top to trigger the filter
+    size_t minCompatibleTopSPs = 2;
+    if (!m_config.seedConfirmation or
+        state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
+      minCompatibleTopSPs = 1;
+    }
+    if (m_config.seedConfirmation and seedFilterState.numQualitySeeds) {
+      minCompatibleTopSPs++;
+    }
 
     // clear all vectors used in each inner for loop
     top_valid.clear();
@@ -431,11 +446,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
     }
 
-    if (!top_valid.empty()) {
-      m_config.seedFilter->filterSeeds_2SpFixed(
-          *bottom[b], middle, top_valid, curvatures, impactParameters,
-          seedFilterState, candidates_collector);
+    // continue if number of top SPs is smaller than minimum required for filter
+    if (state.topSpVec.size() < minCompatibleTopSPs) {
+      continue;
     }
+    m_config.seedFilter->filterSeeds_2SpFixed(
+        *bottom[b], middle, top_valid, curvatures, impactParameters,
+        seedFilterState, candidates_collector);
+
   }  // loop on bottoms
 }
 
