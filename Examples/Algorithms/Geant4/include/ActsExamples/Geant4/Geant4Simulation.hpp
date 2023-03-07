@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
@@ -45,7 +45,7 @@ class SensitiveSurfaceMapper;
 /// individual slots for the event containers and the store.
 ///
 /// The Geant4Simulation algorithm clears those after processing.
-class Geant4Simulation final : public BareAlgorithm {
+class Geant4Simulation final : public IAlgorithm {
  public:
   /// Nested configuration struct for the Geant4 simulation
   struct Config {

@@ -39,8 +39,7 @@
 
 ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
     const Config& config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("IterativeVertexFinder", level),
-      m_cfg(config) {
+    : ActsExamples::IAlgorithm("IterativeVertexFinder", level), m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument(
         "You have to either provide track parameters or trajectories");

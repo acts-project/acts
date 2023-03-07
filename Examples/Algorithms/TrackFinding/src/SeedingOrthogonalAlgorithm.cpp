@@ -18,8 +18,7 @@
 ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     ActsExamples::SeedingOrthogonalAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("SeedingAlgorithm", lvl),
-      m_cfg(std::move(cfg)) {
+    : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
   m_cfg.seedFilterConfig = m_cfg.seedFilterConfig.toInternalUnits();
   m_cfg.seedFinderConfig =
       m_cfg.seedFinderConfig.toInternalUnits().calculateDerivedQuantities();
@@ -37,9 +36,6 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
     if (i.empty()) {
       throw std::invalid_argument("Invalid space point input collection");
     }
-  }
-  if (m_cfg.outputProtoTracks.empty()) {
-    throw std::invalid_argument("Missing proto tracks output collection");
   }
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds output collection");
@@ -81,30 +77,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
                                               spacePoints, create_coordinates);
 
-  // extract proto tracks, i.e. groups of measurement indices, from tracks seeds
-  size_t nSeeds = seeds.size();
-  ProtoTrackContainer protoTracks;
-  protoTracks.reserve(nSeeds);
-  for (const auto &seed : seeds) {
-    ProtoTrack protoTrack;
-    protoTrack.reserve(seed.sp().size());
-    for (auto spacePointPtr : seed.sp()) {
-      if (spacePointPtr->sourceLinks().empty()) {
-        ACTS_WARNING("Missing sourcelink in space point");
-        continue;
-      }
-      const IndexSourceLink &slink =
-          spacePointPtr->sourceLinks()[0].get<IndexSourceLink>();
-      protoTrack.push_back(slink.index());
-    }
-    protoTracks.push_back(std::move(protoTrack));
-  }
-
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
 
   ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

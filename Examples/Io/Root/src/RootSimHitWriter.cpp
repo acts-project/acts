@@ -69,7 +69,7 @@ ActsExamples::RootSimHitWriter::~RootSimHitWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootSimHitWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();

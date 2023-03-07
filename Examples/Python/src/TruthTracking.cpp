@@ -13,6 +13,7 @@
 #include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/TruthTracking/TrackSelector.hpp"
 #include "ActsExamples/TruthTracking/TruthSeedSelector.hpp"
+#include "ActsExamples/TruthTracking/TruthSeedingAlgorithm.hpp"
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/TruthTracking/TruthVertexFinder.hpp"
 
@@ -39,7 +40,7 @@ void addTruthTracking(Context& ctx) {
     using Alg = ActsExamples::TruthSeedSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TruthSeedSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -87,7 +88,7 @@ void addTruthTracking(Context& ctx) {
     using Alg = ActsExamples::ParticleSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "ParticleSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -129,11 +130,11 @@ void addTruthTracking(Context& ctx) {
     using Alg = ActsExamples::TrackSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
-                   mex, "TrackSelector")
-                   .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
-                        py::arg("config"), py::arg("level"))
-                   .def_property_readonly("config", &Alg::config);
+    auto alg =
+        py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(mex, "TrackSelector")
+            .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
+                 py::arg("config"), py::arg("level"))
+            .def_property_readonly("config", &Alg::config);
 
     auto c = py::class_<Config>(alg, "Config").def(py::init<>());
 
@@ -169,7 +170,7 @@ void addTruthTracking(Context& ctx) {
     using Alg = ActsExamples::TrackParameterSelector;
     using Config = Alg::Config;
 
-    auto alg = py::class_<Alg, BareAlgorithm, std::shared_ptr<Alg>>(
+    auto alg = py::class_<Alg, IAlgorithm, std::shared_ptr<Alg>>(
                    mex, "TrackParameterSelector")
                    .def(py::init<const Alg::Config&, Acts::Logging::Level>(),
                         py::arg("config"), py::arg("level"))
@@ -213,6 +214,12 @@ void addTruthTracking(Context& ctx) {
       ActsExamples::TrackModifier, mex, "TrackModifier", inputTrajectories,
       inputTrackParameters, outputTrajectories, outputTrackParameters,
       dropCovariance, covScale, killTime);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TruthSeedingAlgorithm, mex,
+                                "TruthSeedingAlgorithm", inputParticles,
+                                inputMeasurementParticlesMap, inputSourceLinks,
+                                inputSpacePoints, outputParticles, outputSeeds,
+                                outputProtoTracks, deltaRMin, deltaRMax);
 }
 
 }  // namespace Acts::Python

@@ -286,6 +286,9 @@ def buildITkGeometry(
 
 def itkSeedingAlgConfig(inputSpacePointsType):
 
+    if inputSpacePointsType not in ["PixelSpacePoints", "StripSpacePoints"]:
+        raise RuntimeError("Invalid inputSpacePointsType")
+
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
     zMin = -3000 * u.mm
@@ -300,6 +303,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     bFieldInZ = 2 * u.T
     deltaRMin = 20 * u.mm
     maxPtScattering = float("inf") * u.GeV
+    deltaZMax = float("inf") * u.mm
     zBinEdges = [
         -3000.0,
         -2500.0,
@@ -358,6 +362,8 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     phiMax = 2 * math.pi
     phiBinDeflectionCoverage = 3
     numPhiNeighbors = 1
+    # only used in orthogonal seeding
+    deltaPhiMax = 0.025
 
     # variables that change for pixel and strip SPs:
     if inputSpacePointsType == "PixelSpacePoints":
@@ -371,7 +377,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         deltaRMaxBottomSP = 120 * u.mm
         interactionPointCut = True
         arithmeticAverageCotTheta = False
-        deltaZMax = 600 * u.mm
         impactMax = 2 * u.mm
         zBinsCustomLooping = [
             1,
@@ -424,7 +429,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
-    else:
+    elif inputSpacePointsType == "StripSpacePoints":
         outputSeeds = "StripSeeds"
         allowSeparateRMax = True
         rMaxGridConfig = 1000.0 * u.mm
@@ -435,7 +440,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         deltaRMaxBottomSP = deltaRMaxTopSP
         interactionPointCut = False
         arithmeticAverageCotTheta = True
-        deltaZMax = 900 * u.mm
         impactMax = 20 * u.mm
         zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
         skipPreviousTopSP = False
@@ -485,6 +489,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         radLengthPerSeed=radLengthPerSeed,
         minPt=minPt,
         impactMax=impactMax,
+        deltaPhiMax=deltaPhiMax,
         interactionPointCut=interactionPointCut,
         arithmeticAverageCotTheta=arithmeticAverageCotTheta,
         deltaZMax=deltaZMax,
@@ -538,9 +543,9 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     )
 
     return (
+        seedingAlgorithmConfigArg,
         seedFinderConfigArg,
         seedFinderOptionsArg,
         seedFilterConfigArg,
         spacePointGridConfigArg,
-        seedingAlgorithmConfigArg,
     )

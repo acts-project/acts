@@ -10,12 +10,16 @@
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
+#ifdef ACTS_PLUGIN_ONNX
+#include "ActsExamples/TrackFinding/AmbiguityResolutionMLAlgorithm.hpp"
+#endif
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp"
+#include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include "ActsExamples/Utilities/TrajectoriesToPrototracks.hpp"
 
@@ -137,6 +141,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaRMinTopSP);
     ACTS_PYTHON_MEMBER(deltaRMaxTopSP);
     ACTS_PYTHON_MEMBER(impactMax);
+    ACTS_PYTHON_MEMBER(deltaPhiMax);
     ACTS_PYTHON_MEMBER(deltaZMax);
     ACTS_PYTHON_MEMBER(sigmaScattering);
     ACTS_PYTHON_MEMBER(maxPtScattering);
@@ -217,42 +222,39 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingAlgorithm, mex, "SeedingAlgorithm", inputSpacePoints,
-      outputSeeds, outputProtoTracks, seedFilterConfig, seedFinderConfig,
-      seedFinderOptions, gridConfig, gridOptions, allowSeparateRMax,
-      zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors);
+      outputSeeds, seedFilterConfig, seedFinderConfig, seedFinderOptions,
+      gridConfig, gridOptions, allowSeparateRMax, zBinNeighborsTop,
+      zBinNeighborsBottom, numPhiNeighbors);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::SeedingOrthogonalAlgorithm, mex,
-      "SeedingOrthogonalAlgorithm", inputSpacePoints, outputSeeds,
-      outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedingOrthogonalAlgorithm, mex,
+                                "SeedingOrthogonalAlgorithm", inputSpacePoints,
+                                outputSeeds, seedFilterConfig, seedFinderConfig,
+                                seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
-      inputSpacePoints, outputSeeds, outputProtoTracks, inputSourceLinks,
-      trackingGeometry, geometrySelection, inputMeasurements, subRegions,
-      nLayers, xMin, xMax, yMin, yMax, houghHistSize_x, houghHistSize_y,
-      hitExtend_x, threshold, localMaxWindowSize, kA);
+      inputSpacePoints, outputProtoTracks, inputSourceLinks, trackingGeometry,
+      geometrySelection, inputMeasurements, subRegions, nLayers, xMin, xMax,
+      yMin, yMax, houghHistSize_x, houghHistSize_y, hitExtend_x, threshold,
+      localMaxWindowSize, kA);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::TrackParamsEstimationAlgorithm, mex,
-      "TrackParamsEstimationAlgorithm", inputSeeds, inputSpacePoints,
-      inputProtoTracks, inputSourceLinks, outputTrackParameters,
-      outputProtoTracks, trackingGeometry, magneticField, deltaRMin, deltaRMax,
-      bFieldMin, sigmaLoc0, sigmaLoc1, sigmaPhi, sigmaTheta, sigmaQOverP,
-      sigmaT0, initialVarInflation);
+      "TrackParamsEstimationAlgorithm", inputSeeds, outputTrackParameters,
+      trackingGeometry, magneticField, bFieldMin, sigmaLoc0, sigmaLoc1,
+      sigmaPhi, sigmaTheta, sigmaQOverP, sigmaT0, initialVarInflation);
 
   {
     using Alg = ActsExamples::TrackFindingAlgorithm;
     using Config = Alg::Config;
 
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrackFindingAlgorithm")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config)
-            .def_static("makeTrackFinderFunction",
-                        &Alg::makeTrackFinderFunction);
+    auto alg = py::class_<Alg, ActsExamples::IAlgorithm, std::shared_ptr<Alg>>(
+                   mex, "TrackFindingAlgorithm")
+                   .def(py::init<const Config&, Acts::Logging::Level>(),
+                        py::arg("config"), py::arg("level"))
+                   .def_property_readonly("config", &Alg::config)
+                   .def_static("makeTrackFinderFunction",
+                               &Alg::makeTrackFinderFunction);
 
     py::class_<Alg::TrackFinderFunction,
                std::shared_ptr<Alg::TrackFinderFunction>>(
@@ -269,41 +271,13 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_STRUCT_END();
   }
 
-  {
-    using Alg = ActsExamples::TrajectoriesToPrototracks;
-    using Config = Alg::Config;
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrajectoriesToPrototracks, mex,
+                                "TrajectoriesToPrototracks", inputTrajectories,
+                                outputProtoTracks);
 
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TrajectoriesToPrototracks")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTrajectories);
-    ACTS_PYTHON_MEMBER(outputPrototracks);
-    ACTS_PYTHON_STRUCT_END();
-  }
-
-  {
-    using Alg = ActsExamples::TracksToTrajectories;
-    using Config = Alg::Config;
-
-    auto alg =
-        py::class_<Alg, ActsExamples::BareAlgorithm, std::shared_ptr<Alg>>(
-            mex, "TracksToTrajectories")
-            .def(py::init<const Config&, Acts::Logging::Level>(),
-                 py::arg("config"), py::arg("level"))
-            .def_property_readonly("config", &Alg::config);
-
-    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
-    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
-    ACTS_PYTHON_MEMBER(inputTracks);
-    ACTS_PYTHON_MEMBER(outputTrajectories);
-    ACTS_PYTHON_STRUCT_END();
-  }
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TracksToTrajectories, mex,
+                                "TracksToTrajectories", inputTracks,
+                                outputTrajectories);
 
   {
     auto constructor = [](const std::vector<
@@ -338,10 +312,21 @@ void addTrackFinding(Context& ctx) {
             .def(py::init(constructor));
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionAlgorithm, mex,
-                                "AmbiguityResolutionAlgorithm",
-                                inputSourceLinks, inputTrajectories,
-                                outputTrajectories, maximumSharedHits);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::AmbiguityResolutionAlgorithm, mex,
+      "AmbiguityResolutionAlgorithm", inputSourceLinks, inputTrajectories,
+      outputTrajectories, maximumSharedHits, nMeasurementsMin);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedsToPrototracks, mex,
+                                "SeedsToPrototracks", inputSeeds,
+                                outputProtoTracks);
+
+#ifdef ACTS_PLUGIN_ONNX
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
+                                mex, "AmbiguityResolutionMLAlgorithm",
+                                inputTrajectories, inputDuplicateNN,
+                                outputTrajectories, nMeasurementsMin);
+#endif
 }
 
 }  // namespace Acts::Python
