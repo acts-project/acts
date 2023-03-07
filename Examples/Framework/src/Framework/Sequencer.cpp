@@ -62,9 +62,6 @@ size_t saturatedAdd(size_t a, size_t b) {
   return res;
 }
 
-#define _STRING(x) #x
-#define STRING(x) _STRING(x)
-
 std::string demangle(const char* sym) {
 #if __has_include(<cxxabi.h>)
   int status = 0;
@@ -145,13 +142,6 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
     if (!handle->isInitialized()) {
       continue;
     }
-
-    // std::string key = handle->key();
-    // if (auto it = m_whiteboardObjectAliases.find(key);
-    // it != m_whiteboardObjectAliases.end()) {
-    // ACTS_DEBUG("Key '" << key << "' aliased to '" << it->second << "'");
-    // key = it->second;
-    // }
 
     if (auto it = m_whiteBoardState.find(handle->key());
         it != m_whiteBoardState.end()) {
