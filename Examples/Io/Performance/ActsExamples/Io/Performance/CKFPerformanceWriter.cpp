@@ -65,7 +65,7 @@ ActsExamples::CKFPerformanceWriter::~CKFPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
   float eff_tracks = float(m_nTotalMatchedTracks) / m_nTotalTracks;
   float fakeRate_tracks = float(m_nTotalFakeTracks) / m_nTotalTracks;
   float duplicationRate_tracks =

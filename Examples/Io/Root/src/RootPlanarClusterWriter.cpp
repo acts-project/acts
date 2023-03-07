@@ -85,7 +85,7 @@ ActsExamples::RootPlanarClusterWriter::~RootPlanarClusterWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::finalize() {
   // Write the tree
   m_outputFile->cd();
   m_outputTree->Write();

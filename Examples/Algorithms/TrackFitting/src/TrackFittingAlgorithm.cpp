@@ -20,7 +20,7 @@
 
 ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     Config config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFittingAlgorithm", level),
+    : ActsExamples::IAlgorithm("TrackFittingAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -57,7 +57,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
-    ACTS_FATAL("Inconsistent number of proto tracks and parameters");
+    ACTS_FATAL("Inconsistent number of proto tracks and parameters "
+               << protoTracks.size() << " vs " << initialParameters.size());
     return ProcessCode::ABORT;
   }
 

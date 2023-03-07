@@ -103,7 +103,7 @@ ActsExamples::RootTrackParameterWriter::~RootTrackParameterWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();

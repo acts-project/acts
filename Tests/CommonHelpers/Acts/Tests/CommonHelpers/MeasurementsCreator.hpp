@@ -158,8 +158,6 @@ Measurements createMeasurements(const propagator_t& propagator,
   using Aborters = Acts::AbortList<Acts::EndOfWorldReached>;
 
   // Set options for propagator
-  auto logger =
-      Acts::getDefaultLogger("MeasurementCreator", Acts::Logging::INFO);
   Acts::PropagatorOptions<Actions, Aborters> options(geoCtx, magCtx);
   auto& creator = options.actionList.get<MeasurementsCreator>();
   creator.resolutions = resolutions;

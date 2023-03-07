@@ -120,7 +120,8 @@ ActsExamples::makeKalmanFitterFunction(
     std::shared_ptr<const Acts::MagneticFieldProvider> magneticField,
     bool multipleScattering, bool energyLoss,
     double reverseFilteringMomThreshold,
-    Acts::FreeToBoundCorrection freeToBoundCorrection) {
+    Acts::FreeToBoundCorrection freeToBoundCorrection,
+    const Acts::Logger& logger) {
   // Stepper should be copied into the fitters
   const Stepper stepper(std::move(magneticField));
 
@@ -129,14 +130,18 @@ ActsExamples::makeKalmanFitterFunction(
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
-  Acts::Navigator navigator(cfg);
-  Propagator propagator(stepper, std::move(navigator));
-  Fitter trackFitter(std::move(propagator));
+  Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
+  Propagator propagator(stepper, std::move(navigator),
+                        logger.cloneWithSuffix("Propagator"));
+  Fitter trackFitter(std::move(propagator), logger.cloneWithSuffix("Fitter"));
 
   // Direct fitter
-  Acts::DirectNavigator directNavigator;
-  DirectPropagator directPropagator(stepper, std::move(directNavigator));
-  DirectFitter directTrackFitter(std::move(directPropagator));
+  Acts::DirectNavigator directNavigator{
+      logger.cloneWithSuffix("DirectNavigator")};
+  DirectPropagator directPropagator(stepper, std::move(directNavigator),
+                                    logger.cloneWithSuffix("DirectPropagator"));
+  DirectFitter directTrackFitter(std::move(directPropagator),
+                                 logger.cloneWithSuffix("DirectFitter"));
 
   // build the fitter function. owns the fitter object.
   auto fitterFunction = std::make_shared<KalmanFitterFunctionImpl>(

@@ -48,7 +48,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
   /// @param level is the logging level
   EDM4hepSimHitWriter(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode endRun() final;
+  ProcessCode finalize() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

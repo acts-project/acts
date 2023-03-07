@@ -16,7 +16,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
@@ -29,7 +29,7 @@ class TrackingGeometry;
 
 namespace ActsExamples {
 
-class TrackFittingChi2Algorithm final : public BareAlgorithm {
+class TrackFittingChi2Algorithm final : public IAlgorithm {
  public:
   /// Track fitter function that takes input measurements, initial trackstate
   /// and fitter options and returns some track-fitter-specific result.

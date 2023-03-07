@@ -2,6 +2,8 @@ from pathlib import Path
 import os
 import json
 import functools
+import tarfile
+import urllib.request
 import subprocess
 import sys
 
@@ -13,6 +15,7 @@ from helpers import (
     dd4hepEnabled,
     hepmc3Enabled,
     pythia8Enabled,
+    exatrkxEnabled,
     AssertCollectionExistsAlg,
     isCI,
     doHashChecks,
@@ -211,11 +214,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "estimatedparams",
         ),
         (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-        ),
-        (
-            "performance_seeding_hists.root",
+            "performance_seeding.root",
             None,
         ),
         (
@@ -270,17 +269,12 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
         (
             "estimatedparams.root",
             "estimatedparams",
-            309,
+            284,
         ),
         (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-            309,
-        ),
-        (
-            "performance_seeding_hists.root",
+            "performance_seeding.root",
             None,
-            0,
+            284,
         ),
         (
             "particles.root",
@@ -344,11 +338,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "estimatedparams",
         ),
         (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-        ),
-        (
-            "performance_seeding_hists.root",
+            "performance_seeding.root",
             None,
         ),
         (
@@ -919,7 +909,8 @@ def test_digitization_example(trk_geo, tmp_path, assert_root_hash):
     assert len(list(csv_dir.iterdir())) == 3 * s.config.events
     assert all(f.stat().st_size > 50 for f in csv_dir.iterdir())
     assert_entries(root_file, "vol9", 0)
-    for tn in (8, 12, 13, 14, 16, 17, 18):
+    assert_entries(root_file, "vol14", 0)
+    for tn in (8, 12, 13, 16, 17, 18):
         assert_has_entries(root_file, f"vol{tn}")
 
     assert_root_hash(root_file.name, root_file)
@@ -1040,8 +1031,8 @@ def test_ckf_tracks_example(
     if not truthSmeared:
         root_files += [
             (
-                "performance_seeding_trees.root",
-                "track_finder_tracks",
+                "performance_seeding.root",
+                None,
             ),
         ]
 
@@ -1074,7 +1065,9 @@ def test_ckf_tracks_example(
         if tn is not None:
             assert_root_hash(rf, rp)
 
-    assert len([f for f in csv.iterdir() if f.name.endswith("CKFtracks.csv")]) == events
+    assert (
+        len([f for f in csv.iterdir() if f.name.endswith("tracks_ckf.csv")]) == events
+    )
     assert all([f.stat().st_size > 300 for f in csv.iterdir()])
 
 
@@ -1267,3 +1260,41 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
         assert fp.stat().st_size > 2**10 * 2
         assert_entries(fp, tn, ee)
         assert_root_hash(fn, fp)
+
+
+@pytest.mark.parametrize("backend", ["onnx", "torch"])
+@pytest.mark.skipif(not exatrkxEnabled, reason="ExaTrkX environment not set up")
+def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
+    root_file = "performance_track_finding.root"
+    assert not (tmp_path / root_file).exists()
+
+    if backend == "onnx":
+        url = "https://acts.web.cern.ch/ci/exatrkx/onnx_models_v01.tar"
+    else:
+        url = "https://acts.web.cern.ch/ci/exatrkx/torchscript_models_v01.tar"
+
+    tarfile_name = tmp_path / "models.tar"
+    urllib.request.urlretrieve(url, tarfile_name)
+    tarfile.open(tarfile_name).extractall(tmp_path)
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "exatrkx.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+
+    subprocess.check_call(
+        [sys.executable, str(script), backend],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
+
+    rfp = tmp_path / root_file
+    assert rfp.exists()
+
+    assert_root_hash(root_file, rfp)
