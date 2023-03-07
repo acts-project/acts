@@ -37,9 +37,9 @@ struct LinCircle {
 /// @param[in] spM The middle spacepoint to use.
 /// @param[in] bottom Should be true if sp is a bottom SP.
 template <typename external_spacepoint_t>
-LinCircle transformCoordinates(const InternalSpacePoint<external_spacepoint_t>& sp,
-                               const InternalSpacePoint<external_spacepoint_t>& spM,
-                               bool bottom);
+LinCircle transformCoordinates(
+    const InternalSpacePoint<external_spacepoint_t>& sp,
+    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom);
 
 template <typename external_spacepoint_t, typename callable_t>
 LinCircle transformCoordinates(const external_spacepoint_t& sp,
@@ -79,7 +79,7 @@ std::vector<std::size_t> transformCoordinates(
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
 template <typename external_spacepoint_t>
 bool xyzCoordinateCheck(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config, 
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
     const double* spacepointPosition, double* outputCoordinates);
 

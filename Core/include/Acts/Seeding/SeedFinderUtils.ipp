@@ -25,7 +25,8 @@ inline LinCircle transformCoordinates(
 
 template <typename external_spacepoint_t, typename callable_t>
 inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
-                                      const external_spacepoint_t& spM, bool bottom,
+                                      const external_spacepoint_t& spM,
+                                      bool bottom,
                                       callable_t&& extractFunction) {
   // The computation inside this function is exactly identical to that in the
   // vectorized version of this function, except that it operates on a single
@@ -149,9 +150,8 @@ inline std::vector<std::size_t> transformCoordinates(
 template <typename external_spacepoint_t>
 inline bool xyzCoordinateCheck(
     const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
-    const Acts::InternalSpacePoint<external_spacepoint_t>& sp, 
-    const double* spacepointPosition,
-    double* outputCoordinates) {
+    const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
+    const double* spacepointPosition, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
   const float topHalfStripLength = m_config.getTopHalfStripLength(sp.sp());

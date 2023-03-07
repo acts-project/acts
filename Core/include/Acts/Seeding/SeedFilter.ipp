@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2018 CERN for the benefit of the Acts project
@@ -32,7 +31,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     InternalSpacePoint<external_spacepoint_t>& middleSP,
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
     const std::vector<float>& invHelixDiameterVec,
-    const std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
+    const std::vector<float>& impactParametersVec,
+    SeedFilterState& seedFilterState,
     CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector) const {
   // seed confirmation
