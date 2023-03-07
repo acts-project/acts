@@ -263,7 +263,7 @@ def addSeeding(
         # Run either: truth track finding or seeding
         if seedingAlgorithm == SeedingAlgorithm.TruthEstimated:
             logger.info("Using truth track finding from space points for seeding")
-            inputProtoTracks, inputSeeds = addTruthEstimatedSeeding(
+            seeds = addTruthEstimatedSeeding(
                 s,
                 spacePoints,
                 selectedParticles,
@@ -272,7 +272,7 @@ def addSeeding(
             )
         elif seedingAlgorithm == SeedingAlgorithm.Default:
             logger.info("Using default seeding")
-            inputProtoTracks, inputSeeds = addStandardSeeding(
+            seeds = addStandardSeeding(
                 s,
                 spacePoints,
                 seedingAlgorithmConfigArg,
@@ -284,7 +284,7 @@ def addSeeding(
             )
         elif seedingAlgorithm == SeedingAlgorithm.Orthogonal:
             logger.info("Using orthogonal seeding")
-            inputProtoTracks, inputSeeds = addOrthogonalSeeding(
+            seeds = addOrthogonalSeeding(
                 s,
                 spacePoints,
                 seedFinderConfigArg,
@@ -297,7 +297,7 @@ def addSeeding(
 
         parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
             level=logLevel,
-            inputSeeds=inputSeeds,
+            inputSeeds=seeds,
             outputTrackParameters="estimatedparameters",
             trackingGeometry=trackingGeometry,
             magneticField=field,
@@ -307,11 +307,21 @@ def addSeeding(
         )
         s.addAlgorithm(parEstimateAlg)
 
+        prototracks = "seed-prototracks"
+        s.addAlgorithm(
+            acts.examples.SeedsToPrototracks(
+                level=logLevel,
+                inputSeeds=seeds,
+                outputProtoTracks=prototracks,
+            )
+        )
+
         if outputDirRoot is not None:
             addSeedPerformanceWriters(
                 s,
                 outputDirRoot,
-                inputProtoTracks,
+                seeds,
+                prototracks,
                 selectedParticles,
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
@@ -420,9 +430,8 @@ def addTruthEstimatedSeeding(
         inputSourceLinks="sourcelinks",
         inputSpacePoints=[spacePoints],
         outputParticles="truth_seeded_particles",
-        outputFullProtoTracks="truth_particle_tracks",
+        outputProtoTracks="truth_particle_tracks",
         outputSeeds="seeds",
-        outputProtoTracks="prototracks",
         **acts.examples.defaultKWArgs(
             deltaRMin=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[0],
             deltaRMax=TruthEstimatedSeedingAlgorithmConfigArg.deltaR[1],
@@ -430,7 +439,7 @@ def addTruthEstimatedSeeding(
     )
     sequence.addAlgorithm(truthSeeding)
 
-    return truthSeeding.config.outputProtoTracks, truthSeeding.config.outputSeeds
+    return truthSeeding.config.outputSeeds
 
 
 def addSpacePointsMaking(
@@ -592,7 +601,6 @@ def addStandardSeeding(
         level=logLevel,
         inputSpacePoints=[spacePoints],
         outputSeeds="seeds",
-        outputProtoTracks="prototracks",
         **acts.examples.defaultKWArgs(
             allowSeparateRMax=seedingAlgorithmConfigArg.allowSeparateRMax,
             zBinNeighborsTop=seedingAlgorithmConfigArg.zBinNeighborsTop,
@@ -606,7 +614,8 @@ def addStandardSeeding(
         seedFinderOptions=seedFinderOptions,
     )
     sequence.addAlgorithm(seedingAlg)
-    return seedingAlg.config.outputProtoTracks, seedingAlg.config.outputSeeds
+
+    return seedingAlg.config.outputSeeds
 
 
 def addOrthogonalSeeding(
@@ -700,19 +709,20 @@ def addOrthogonalSeeding(
         level=logLevel,
         inputSpacePoints=[spacePoints],
         outputSeeds="seeds",
-        outputProtoTracks="prototracks",
         seedFilterConfig=seedFilterConfig,
         seedFinderConfig=seedFinderConfig,
         seedFinderOptions=seedFinderOptions,
     )
     sequence.addAlgorithm(seedingAlg)
-    return seedingAlg.config.outputProtoTracks, seedingAlg.config.outputSeeds
+
+    return seedingAlg.config.outputSeeds
 
 
 def addSeedPerformanceWriters(
     sequence: acts.examples.Sequencer,
     outputDirRoot: Union[Path, str],
-    inputProtoTracks: str,
+    seeds: str,
+    prototracks: str,
     selectedParticles: str,
     inputParticles: str,
     outputTrackParameters: str,
@@ -723,23 +733,14 @@ def addSeedPerformanceWriters(
     outputDirRoot = Path(outputDirRoot)
     if not outputDirRoot.exists():
         outputDirRoot.mkdir()
-    sequence.addWriter(
-        acts.examples.TrackFinderPerformanceWriter(
-            level=customLogLevel(),
-            inputProtoTracks=inputProtoTracks,
-            inputParticles=selectedParticles,  # the original selected particles after digitization
-            inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "performance_seeding_trees.root"),
-        )
-    )
 
     sequence.addWriter(
         acts.examples.SeedingPerformanceWriter(
             level=customLogLevel(minLevel=acts.logging.DEBUG),
-            inputProtoTracks=inputProtoTracks,
+            inputSeeds=seeds,
             inputParticles=selectedParticles,
             inputMeasurementParticlesMap="measurement_particles_map",
-            filePath=str(outputDirRoot / "performance_seeding_hists.root"),
+            filePath=str(outputDirRoot / "performance_seeding.root"),
         )
     )
 
@@ -747,7 +748,7 @@ def addSeedPerformanceWriters(
         acts.examples.RootTrackParameterWriter(
             level=customLogLevel(),
             inputTrackParameters=outputTrackParameters,
-            inputProtoTracks=inputProtoTracks,
+            inputProtoTracks=prototracks,
             inputParticles=inputParticles,
             inputSimHits="simhits",
             inputMeasurementParticlesMap="measurement_particles_map",
@@ -1203,7 +1204,7 @@ def addExaTrkX(
                 inputProtoTracks="protoTracks",
                 inputParticles="particles_initial",  # the original selected particles after digitization
                 inputMeasurementParticlesMap="measurement_particles_map",
-                filePath=str(Path(outputDirRoot) / "performance_seeding_trees.root"),
+                filePath=str(Path(outputDirRoot) / "performance_track_finding.root"),
             )
         )
 

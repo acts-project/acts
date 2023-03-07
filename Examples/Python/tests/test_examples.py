@@ -214,11 +214,7 @@ def test_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "estimatedparams",
         ),
         (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-        ),
-        (
-            "performance_seeding_hists.root",
+            "performance_seeding.root",
             None,
         ),
         (
@@ -276,14 +272,9 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
             284,
         ),
         (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-            284,
-        ),
-        (
-            "performance_seeding_hists.root",
+            "performance_seeding.root",
             None,
-            0,
+            284,
         ),
         (
             "particles.root",
@@ -347,11 +338,7 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
             "estimatedparams",
         ),
         (
-            "performance_seeding_trees.root",
-            "track_finder_tracks",
-        ),
-        (
-            "performance_seeding_hists.root",
+            "performance_seeding.root",
             None,
         ),
         (
@@ -1044,8 +1031,8 @@ def test_ckf_tracks_example(
     if not truthSmeared:
         root_files += [
             (
-                "performance_seeding_trees.root",
-                "track_finder_tracks",
+                "performance_seeding.root",
+                None,
             ),
         ]
 
@@ -1278,7 +1265,7 @@ def test_bfield_writing(tmp_path, seq, assert_root_hash):
 @pytest.mark.parametrize("backend", ["onnx", "torch"])
 @pytest.mark.skipif(not exatrkxEnabled, reason="ExaTrkX environment not set up")
 def test_exatrkx(tmp_path, trk_geo, field, assert_root_hash, backend):
-    root_file = "performance_seeding_trees.root"
+    root_file = "performance_track_finding.root"
     assert not (tmp_path / root_file).exists()
 
     if backend == "onnx":
