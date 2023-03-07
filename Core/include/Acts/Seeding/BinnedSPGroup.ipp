@@ -39,8 +39,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   float zMin = config.zMin;
   float zMax = config.zMax;
 
-  auto start = std::chrono::steady_clock::now();
-
   // sort by radius
   // add magnitude of beamPos to rMax to avoid excluding measurements
   // create number of bins equal to number of millimeters rMax
