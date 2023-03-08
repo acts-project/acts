@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -6,6 +7,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include <algorithm>
 #include <cmath>
 #include <numeric>
 #include <type_traits>
@@ -169,25 +171,34 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float ratio_yM_rM = yM / rM;
 
   for (auto otherSPIdx : otherSPsIdx) {
-    auto& otherSPs = grid.at(otherSPIdx);
 
-    for (auto& otherSP : otherSPs) {
+    auto& otherSPs = grid.at(otherSPIdx);
+    if (otherSPs.size() == 0) continue;
+    /// Elements are sorted in r
+    /// Let's get the range of elements that satisfy the deltaR requirement
+    /// we only iterate on these elements to save time
+    /// search of elements is log(N)
+
+    // Get the first element in the proper range
+    auto min_itr = std::lower_bound(otherSPs.begin(), otherSPs.end(),
+				    isBottom ? rM - deltaRMaxSP : rM + deltaRMinSP,
+				    [] (const auto& sp, const float& target) -> bool
+				    { return sp->radius() < target; });
+    if (min_itr == otherSPs.end()) {
+      continue;
+    }
+    
+    // Get the first last element that is not in the proper range anymore
+    auto max_itr = std::upper_bound(min_itr, otherSPs.end(),
+				    isBottom ? rM - deltaRMinSP : rM + deltaRMaxSP,
+				    [] (const float& target, const auto& sp) -> bool
+				    { return target < sp->radius(); });
+
+    
+    for (; min_itr != max_itr; ++min_itr) {
+      auto& otherSP = *min_itr;
       const float rO = otherSP->radius();
       float deltaR = sign * (rO - rM);
-
-      // if r-distance is too small, try next SP in bin
-      if (deltaR < deltaRMinSP) {
-        if (isBottom and m_config.forceRadialSorting)
-          break;
-        continue;
-      }
-
-      // if r-distance is too big, try next SP in bin
-      if (deltaR > deltaRMaxSP) {
-        if (not isBottom and m_config.forceRadialSorting)
-          break;
-        continue;
-      }
 
       const float zO = otherSP->z();
       float deltaZ = sign * (zO - zM);
@@ -249,6 +260,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
       outVec.push_back(otherSP.get());
     }
+
   }
 }
 
