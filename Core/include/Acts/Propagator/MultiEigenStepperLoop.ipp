@@ -62,8 +62,9 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
     finalCov = cov;
   }
 
-  return BoundState{BoundTrackParameters(surface.getSharedPtr(), finalPars, finalCov),
-                    Jacobian::Zero(), accumulatedPathLength};
+  return BoundState{
+      BoundTrackParameters(surface.getSharedPtr(), finalPars, finalCov),
+      Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <typename E, typename R, typename A>
