@@ -759,5 +759,43 @@ struct GsfActor {
   }
 };
 
+
+/// A actor that collects the final multi component state once the propagation finished
+struct FinalStateCollector {
+  using MultiPars =
+      Acts::MultiComponentBoundTrackParameters<Acts::SinglyCharged>;
+      
+  struct result_type {
+    std::optional<MultiPars> pars;
+  };
+
+  template <typename propagator_state_t, typename stepper_t>
+  void operator()(propagator_state_t& state, const stepper_t& stepper,
+                  result_type& result, const Logger& /*unused*/) const {
+    if (not(state.navigation.targetReached and
+            state.navigation.currentSurface)) {
+      return;
+    }
+
+    const auto& surface = *state.navigation.currentSurface;
+    std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
+        states;
+
+    for (auto cmp : stepper.componentIterable(state.stepping)) {
+      auto singleState = cmp.singleState(state);
+      auto bs = cmp.singleStepper(stepper).boundState(singleState.stepping,
+                                                      surface, true);
+
+      if (bs.ok()) {
+        const auto& btp = std::get<BoundTrackParameters>(*bs);
+        states.emplace_back(cmp.weight(), btp.parameters(), btp.covariance());
+      }
+    }
+
+    result.pars = MultiPars(surface.getSharedPtr(), states);
+  }
+};
+
+
 }  // namespace detail
 }  // namespace Acts

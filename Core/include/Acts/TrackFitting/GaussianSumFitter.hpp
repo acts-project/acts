@@ -117,7 +117,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [&sSequence, this](const auto& opts) {
-      using Actors = ActionList<GsfActor, DirectNavigator::Initializer>;
+      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector, DirectNavigator::Initializer>;
       using Aborters = AbortList<>;
 
       std::vector<const Surface*> backwardSequence(
@@ -168,7 +168,7 @@ struct GaussianSumFitter {
 
     // Initialize the backward propagation with the DirectNavigator
     auto bwdPropInitializer = [this](const auto& opts) {
-      using Actors = ActionList<GsfActor>;
+      using Actors = ActionList<GsfActor, Acts::detail::FinalStateCollector>;
       using Aborters = AbortList<EndOfWorldReached>;
 
       PropagatorOptions<Actors, Aborters> propOptions(opts.geoContext,
@@ -440,6 +440,15 @@ struct GaussianSumFitter {
       track.parameters() = params.parameters();
       track.covariance() = params.covariance().value();
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
+      
+      using MultiPars = std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>;
+      const std::string key = "multiComponentState";
+      if(not trackContainer.hasColumn(key)) {
+        trackContainer.template addColumn<MultiPars>(key);
+      }
+      
+      const auto &fsr = bwdResult->template get<Acts::detail::FinalStateCollector::result_type>();
+      track.template component<MultiPars>(key) = fsr.pars;
     }
 
     track.nMeasurements() = measurementStatesFinal;
