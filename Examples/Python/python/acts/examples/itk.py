@@ -286,6 +286,9 @@ def buildITkGeometry(
 
 def itkSeedingAlgConfig(inputSpacePointsType):
 
+    if inputSpacePointsType not in ["PixelSpacePoints", "StripSpacePoints"]:
+        raise RuntimeError("Invalid inputSpacePointsType")
+
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
     zMin = -3000 * u.mm
@@ -375,19 +378,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         interactionPointCut = True
         arithmeticAverageCotTheta = False
         impactMax = 2 * u.mm
-        zBinsCustomLooping = [
-            1,
-            2,
-            3,
-            4,
-            11,
-            10,
-            9,
-            8,
-            6,
-            5,
-            7,
-        ]  # enable custom z looping when searching for SPs, must contain numbers from 1 to the total number of bin in zBinEdges
         skipPreviousTopSP = True
         zBinNeighborsTop = [
             [0, 0],
@@ -426,7 +416,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
-    else:
+    elif inputSpacePointsType == "StripSpacePoints":
         outputSeeds = "StripSeeds"
         allowSeparateRMax = True
         rMaxGridConfig = 1000.0 * u.mm
@@ -438,7 +428,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         interactionPointCut = False
         arithmeticAverageCotTheta = True
         impactMax = 20 * u.mm
-        zBinsCustomLooping = [6, 7, 5, 8, 4, 9, 3, 10, 2, 11, 1]
         skipPreviousTopSP = False
         zBinNeighborsTop = [
             [0, 0],
@@ -493,7 +482,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         maxPtScattering=maxPtScattering,
         zBinEdges=zBinEdges,
         skipPreviousTopSP=skipPreviousTopSP,
-        zBinsCustomLooping=zBinsCustomLooping,
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
         binSizeR=binSizeR,
