@@ -231,6 +231,7 @@ def addSeeding(
 
     logLevel = acts.examples.defaultLogging(s, logLevel)()
     logger = acts.logging.getLogger("addSeeding")
+    logger.setLevel(logLevel)
 
     if truthSeedRanges is not None:
         selectedParticles = "truth_seeds_selected"

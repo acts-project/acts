@@ -341,7 +341,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
             cosTheta * std::sqrt(1 + A0 * A0)};
 
         double rMTransf[3];
-        if (!xyzCoordinateCheck(m_config, &spM, positionMiddle, rMTransf)) {
+        if (!xyzCoordinateCheck(m_config, spM, positionMiddle, rMTransf)) {
           continue;
         }
 
@@ -356,7 +356,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spB = state.compatBottomSP[b];
         double rBTransf[3];
-        if (!xyzCoordinateCheck(m_config, spB, positionBottom, rBTransf)) {
+        if (!xyzCoordinateCheck(m_config, *spB, positionBottom, rBTransf)) {
           continue;
         }
 
@@ -370,7 +370,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spT = state.compatTopSP[t];
         double rTTransf[3];
-        if (!xyzCoordinateCheck(m_config, spT, positionTop, rTTransf)) {
+        if (!xyzCoordinateCheck(m_config, *spT, positionTop, rTTransf)) {
           continue;
         }
 
