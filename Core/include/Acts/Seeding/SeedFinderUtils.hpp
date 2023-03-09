@@ -78,7 +78,7 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction);
 
-/// @brief Returns a sorted vector of indeces based on cotangent of theta of a vector of spacepoints
+/// @brief Returns a sorted vector of indices based on cotangent of theta of a vector of spacepoints
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
