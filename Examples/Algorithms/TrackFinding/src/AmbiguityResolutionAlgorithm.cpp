@@ -34,6 +34,10 @@ ActsExamples::AmbiguityResolutionAlgorithm::AmbiguityResolutionAlgorithm(
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing trajectories output collection");
   }
+
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+  m_outputTrajectories.initialize(m_cfg.outputTrajectories);
 }
 
 namespace {
@@ -110,10 +114,8 @@ std::size_t computeTrackHits(
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Read input data
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& trajectories =
-      ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  const auto& trajectories = m_inputTrajectories(ctx);
 
   TrackParametersContainer trackParameters;
   std::vector<std::pair<size_t, size_t>> trackTips;
@@ -202,6 +204,6 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));
+  m_outputTrajectories(ctx, std::move(outputTrajectories));
   return ActsExamples::ProcessCode::SUCCESS;
 }

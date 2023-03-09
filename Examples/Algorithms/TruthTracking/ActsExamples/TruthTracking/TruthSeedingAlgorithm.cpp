@@ -30,7 +30,6 @@ ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
     throw std::invalid_argument("Missing seeds or space point collection");
   }
 
-  size_t isp = 0;
   for (const auto& spName : m_cfg.inputSpacePoints) {
     if (spName.empty()) {
       throw std::invalid_argument("Invalid space point input collection");
@@ -38,10 +37,9 @@ ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
 
     auto& handle = m_inputSpacePoints.emplace_back(
         std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
-            this, "InputSpacePoints#" + std::to_string(isp)));
+            this,
+            "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
     handle->initialize(spName);
-
-    isp++;
   }
 
   if (m_cfg.outputParticles.empty()) {
