@@ -60,7 +60,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   if (middleSPsIdx.size() == 0 or topSPsIdx.size() == 0) {
     return;
   }
-  
+
   for (auto& spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -97,7 +97,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         break;
       }
     }
-    
+
     getCompatibleDoublets(options, grid, topSPsIdx, *spM.get(),
                           state.compatTopSP, m_config.deltaRMinTopSP,
                           m_config.deltaRMaxTopSP, false);

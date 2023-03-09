@@ -6,7 +6,6 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-
 // Binned SP Group Iterator
 
 #include <boost/container/flat_set.hpp>
@@ -35,7 +34,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator++() {
   }
 
   // Get the next not-empty bin in the grid
-  findNotEmptyBin();  
+  findNotEmptyBin();
   return *this;
 }
 
@@ -63,7 +62,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   std::size_t global_index = m_group->m_grid->globalBinFromLocalBins(
       {m_current_localBins[INDEX::PHI],
        m_group->m_bins[m_current_localBins[INDEX::Z]]});
-  
+
   boost::container::small_vector<size_t, 9> bottoms =
       m_group->m_bottomBinFinder->findBins(
           m_current_localBins[INDEX::PHI],
@@ -91,7 +90,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
     for (std::size_t zBin(m_current_localBins[INDEX::Z]);
          zBin < m_max_localBins[INDEX::Z]; ++zBin) {
       if (phiBin == 0) {
-	continue;
+        continue;
       }
       std::size_t zBinIndex = m_group->m_bins[zBin];
       std::size_t index =
