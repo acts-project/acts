@@ -45,10 +45,12 @@ struct SimulationActor {
     // type.
     using action_type = SimulationActor;
 
-    template <typename propagator_state_t, typename stepper_t>
-    constexpr bool operator()(propagator_state_t & /*unused*/,
-                              const stepper_t & /*unused*/,
-                              const result_type &result,
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    constexpr bool operator()(const result_type &result,
+                              propagator_state_t & /*state*/,
+                              const stepper_t & /*stepper*/,
+                              const navigator_t & /*navigator*/,
                               const Acts::Logger & /*logger*/) const {
       // must return true if the propagation should abort
       return not result.isAlive;
@@ -78,9 +80,11 @@ struct SimulationActor {
   /// @param stepper is the propagation stepper object
   /// @param result is the mutable result/cache object
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t &state, stepper_t &stepper,
-                  result_type &result, const Acts::Logger & /*logger*/) const {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  void operator()(result_type &result, propagator_state_t &state,
+                  stepper_t &stepper, navigator_t & /*navigator*/,
+                  const Acts::Logger & /*logger*/) const {
     assert(generator and "The generator pointer must be valid");
 
     // actors are called once more after the propagation terminated
@@ -197,8 +201,10 @@ struct SimulationActor {
   }
 
   /// Pure observer interface. Does not apply to the Fatras simulator.
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t & /*unused*/, stepper_t & /*unused*/,
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  void operator()(propagator_state_t & /*state*/, const stepper_t & /*stepper*/,
+                  const navigator_t & /*navigator*/,
                   const Acts::Logger & /*logger*/) const {}
 
   /// Construct the current particle state from the stepper state.

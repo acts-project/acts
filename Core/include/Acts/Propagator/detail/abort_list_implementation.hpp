@@ -10,26 +10,27 @@
 
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
-#include <algorithm>
+#include <utility>
 
 namespace Acts {
 
 namespace detail {
 
 namespace {
+
 /// This is the caller used if the condition uses the result
 /// and that result type exists
 template <bool has_result = true>
 struct condition_caller {
   template <typename condition, typename result_t, typename propagator_state_t,
-            typename stepper_t, typename... Args>
+            typename stepper_t, typename navigator_t, typename... Args>
   static bool check(const condition& c, const result_t& r,
                     propagator_state_t& state, const stepper_t& stepper,
-                    Args&&... args) {
+                    const navigator_t& navigator, Args&&... args) {
     using action_type = action_type_t<condition>;
     using result_type = result_type_t<action_type>;
 
-    return c(state, stepper, r.template get<result_type>(),
+    return c(r.template get<result_type>(), state, stepper, navigator,
              std::forward<Args>(args)...);
   }
 };
@@ -39,11 +40,11 @@ struct condition_caller {
 template <>
 struct condition_caller<false> {
   template <typename condition, typename result_t, typename propagator_state_t,
-            typename stepper_t, typename... Args>
+            typename stepper_t, typename navigator_t, typename... Args>
   static bool check(const condition& c, const result_t& /*result*/,
                     propagator_state_t& state, const stepper_t& stepper,
-                    Args&&... args) {
-    return c(state, stepper, std::forward<Args>(args)...);
+                    const navigator_t& navigator, Args&&... args) {
+    return c(state, stepper, navigator, std::forward<Args>(args)...);
   }
 };
 }  // end of anonymous namespace
@@ -57,10 +58,10 @@ struct abort_list_impl;
 template <typename first, typename... others>
 struct abort_list_impl<first, others...> {
   template <typename T, typename result_t, typename propagator_state_t,
-            typename stepper_t, typename... Args>
+            typename stepper_t, typename navigator_t, typename... Args>
   static bool check(const T& conditions_tuple, const result_t& result,
                     propagator_state_t& state, const stepper_t& stepper,
-                    Args&&... args) {
+                    const navigator_t& navigator, Args&&... args) {
     // get the right helper for calling the abort condition
     constexpr bool has_result = has_action_type_v<first>;
     using caller_type = condition_caller<has_result>;
@@ -72,9 +73,10 @@ struct abort_list_impl<first, others...> {
     // - make use of short-circuit evaluation
     // -> skip remaining conditions if this abort condition evaluates to true
     bool abort =
-        caller_type::check(this_condition, result, state, stepper, args...) ||
+        caller_type::check(this_condition, result, state, stepper, navigator,
+                           args...) ||
         abort_list_impl<others...>::check(conditions_tuple, result, state,
-                                          stepper, args...);
+                                          stepper, navigator, args...);
 
     return abort;
   }
@@ -84,16 +86,17 @@ struct abort_list_impl<first, others...> {
 template <typename last>
 struct abort_list_impl<last> {
   template <typename T, typename result_t, typename propagator_state_t,
-            typename stepper_t, typename... Args>
+            typename stepper_t, typename navigator_t, typename... Args>
   static bool check(const T& conditions_tuple, const result_t& result,
                     propagator_state_t& state, const stepper_t& stepper,
-                    Args&&... args) {
+                    const navigator_t& navigator, Args&&... args) {
     // get the right helper for calling the abort condition
     constexpr bool has_result = has_action_type_v<last>;
     const auto& this_condition = std::get<last>(conditions_tuple);
 
-    return condition_caller<has_result>::check(
-        this_condition, result, state, stepper, std::forward<Args>(args)...);
+    return condition_caller<has_result>::check(this_condition, result, state,
+                                               stepper, navigator,
+                                               std::forward<Args>(args)...);
   }
 };
 
@@ -101,10 +104,10 @@ struct abort_list_impl<last> {
 template <>
 struct abort_list_impl<> {
   template <typename T, typename result_t, typename propagator_state_t,
-            typename stepper_t, typename... Args>
-  static bool check(const T& /*unused*/, const result_t& /*result*/,
-                    propagator_state_t& /*state*/, const stepper_t& /*unused*/,
-                    Args&&... /*unused*/) {
+            typename stepper_t, typename navigator_t, typename... Args>
+  static bool check(const T& /*conditions_tuple*/, const result_t& /*result*/,
+                    propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/, Args&&... /*args*/) {
     return false;
   }
 };

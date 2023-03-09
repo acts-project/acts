@@ -338,12 +338,15 @@ class CombinatorialKalmanFilter {
     /// @tparam propagator_state_t Type of the Propagagor state
     /// @tparam stepper_t Type of the stepper
     ///
+    /// @param result is the mutable result state object
     /// @param state is the mutable propagator state object
     /// @param stepper is the stepper in use
-    /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result, const Logger& /*logger*/) const {
+    /// @param navigator is the navigator in use
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    void operator()(result_type& result, propagator_state_t& state,
+                    const stepper_t& stepper, const navigator_t& navigator,
+                    const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
@@ -442,7 +445,7 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      if (result.abortList(result, state, stepper, logger())) {
+      if (result.abortList(result, state, stepper, navigator, logger())) {
         state.navigation.targetReached = false;
         if (result.activeTips.empty()) {
           // we are already done
@@ -1226,10 +1229,12 @@ class CombinatorialKalmanFilter {
     /// Broadcast the result_type
     using action_type = Actor<source_link_accessor_t, parameters_t>;
 
-    template <typename propagator_state_t, typename stepper_t,
-              typename result_t>
-    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const result_t& result, const Logger& /*logger*/) const {
+    template <typename result_t, typename propagator_state_t,
+              typename stepper_t, typename navigator_t>
+    bool operator()(const result_t& result, propagator_state_t& /*state*/,
+                    const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/,
+                    const Logger& /*logger*/) const {
       if (!result.result.ok() or result.finished) {
         return true;
       }

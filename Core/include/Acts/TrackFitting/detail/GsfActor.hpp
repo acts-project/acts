@@ -149,13 +149,16 @@ struct GsfActor {
   ///
   /// @tparam propagator_state_t is the type of Propagagor state
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
   ///
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
   /// @param result is the mutable result state object
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& /*unused*/) const {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  void operator()(result_type& result, propagator_state_t& state,
+                  const stepper_t& stepper, const navigator_t& /*navigator*/,
+                  const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
