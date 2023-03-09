@@ -81,7 +81,8 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t bottomSPs,
+    sp_range_t middleSPs, sp_range_t topSPs) const {
   // Create an empty vector, to be returned already early on when no seeds can
   // be constructed.
   std::vector<Seed<external_spacepoint_t>> outputVec;
@@ -91,10 +92,13 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   //---------------------------------
 
   // Create more convenient vectors out of the space point containers.
-  auto spVecMaker = [](sp_range_t spRange) {
+  auto spVecMaker = [&grid](sp_range_t& spRange) {
     std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> result;
-    for (auto* sp : spRange) {
-      result.push_back(sp);
+    for (std::size_t idx : spRange) {
+      auto& collection = grid.at(idx);
+      for (auto& sp : collection) {
+        result.push_back(sp.get());
+      }
     }
     return result;
   };

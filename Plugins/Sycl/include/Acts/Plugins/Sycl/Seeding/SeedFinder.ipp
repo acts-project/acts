@@ -63,7 +63,8 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Acts::Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t bottomSPs,
+    sp_range_t middleSPs, sp_range_t topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // As a first step, we create Arrays of Structures (AoS)
@@ -80,8 +81,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPvec;
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPvec;
 
-  for (auto SP : bottomSPs) {
-    bottomSPvec.push_back(SP);
+  for (std::size_t SPidx : bottomSPs) {
+    auto& sp_collection = grid.at(SPidx);
+    for (auto& SP : sp_collection) {
+      bottomSPvec.push_back(SP.get());
+    }
   }
   deviceBottomSPs.reserve(bottomSPvec.size());
   for (auto SP : bottomSPvec) {
@@ -89,8 +93,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
                                SP->varianceR(), SP->varianceZ()});
   }
 
-  for (auto SP : middleSPs) {
-    middleSPvec.push_back(SP);
+  for (std::size_t SPidx : middleSPs) {
+    auto& sp_collection = grid.at(SPidx);
+    for (auto& SP : sp_collection) {
+      middleSPvec.push_back(SP.get());
+    }
   }
   deviceMiddleSPs.reserve(middleSPvec.size());
   for (auto SP : middleSPvec) {
@@ -98,8 +105,11 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
                                SP->varianceR(), SP->varianceZ()});
   }
 
-  for (auto SP : topSPs) {
-    topSPvec.push_back(SP);
+  for (auto SPidx : topSPs) {
+    auto& sp_collection = grid.at(SPidx);
+    for (auto& SP : sp_collection) {
+      topSPvec.push_back(SP.get());
+    }
   }
   deviceTopSPs.reserve(topSPvec.size());
   for (auto SP : topSPvec) {

@@ -14,7 +14,7 @@ template <typename external_spacepoint_t>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
     Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index)
     : m_group(group), m_max_localBins(m_group->m_grid->numLocalBins()) {
-  m_max_localBins[INDEX::PHI] += 2;
+  m_max_localBins[INDEX::PHI] += 1;
   if (index == m_group->m_grid->size()) {
     m_current_localBins = m_max_localBins;
   } else {
@@ -97,7 +97,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
           m_group->m_grid->globalBinFromLocalBins({phiBin, zBinIndex});
 
       // Check if there are entries in this bin
-      if (m_group->m_grid->at(index).size() == 0) {
+      if (m_group->m_grid->at(index).empty()) {
         continue;
       }
 
