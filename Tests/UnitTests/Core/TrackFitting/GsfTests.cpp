@@ -50,8 +50,7 @@ using GSF =
     GaussianSumFitter<Propagator, BetheHeitlerApprox, VectorMultiTrajectory>;
 
 const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
-                  makeDefaultBetheHeitlerApprox(),
-                  getDefaultLogger("GSF", Logging::FATAL));
+                  makeDefaultBetheHeitlerApprox());
 
 std::default_random_engine rng(42);
 
