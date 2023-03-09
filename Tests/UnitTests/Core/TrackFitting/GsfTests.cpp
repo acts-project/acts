@@ -43,8 +43,6 @@ GsfExtensions<VectorMultiTrajectory> getExtensions() {
 
 FitterTester tester;
 
-const auto logger = getDefaultLogger("GSF", Logging::INFO);
-
 using Stepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<Stepper, Acts::Navigator>;
 using BetheHeitlerApprox = AtlasBetheHeitlerApprox<6, 5>;
@@ -52,7 +50,8 @@ using GSF =
     GaussianSumFitter<Propagator, BetheHeitlerApprox, VectorMultiTrajectory>;
 
 const GSF gsfZero(makeConstantFieldPropagator<Stepper>(tester.geometry, 0_T),
-                  makeDefaultBetheHeitlerApprox());
+                  makeDefaultBetheHeitlerApprox(),
+                  getDefaultLogger("GSF", Logging::FATAL));
 
 std::default_random_engine rng(42);
 
@@ -182,6 +181,37 @@ BOOST_AUTO_TEST_CASE(ZeroFieldWithOutliers) {
 
   tester.test_ZeroFieldWithOutliers(gsfZero, options, multi_pars, rng, true,
                                     false, false);
+}
+
+BOOST_AUTO_TEST_CASE(WithFinalMultiComponentState) {
+  Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
+                              Acts::VectorMultiTrajectory{}};
+  using namespace Acts::Experimental::GsfConstants;
+  std::string key(kFinalMultiComponentStateColumn);
+  tracks.template addColumn<FinalMultiComponentState>(key);
+
+  auto multi_pars = makeParameters();
+  auto measurements =
+      createMeasurements(tester.simPropagator, tester.geoCtx, tester.magCtx,
+                         multi_pars, tester.resolutions, rng);
+  auto sourceLinks = tester.prepareSourceLinks(measurements.sourceLinks);
+  auto options = makeDefaultGsfOptions();
+
+  // create a boundless target surface near the tracker exit
+  Acts::Vector3 center(-3._m, 0., 0.);
+  Acts::Vector3 normal(1., 0., 0.);
+  auto targetSurface =
+      Acts::Surface::makeShared<Acts::PlaneSurface>(center, normal);
+
+  options.referenceSurface = targetSurface.get();
+
+  auto res = gsfZero.fit(sourceLinks.begin(), sourceLinks.end(), multi_pars,
+                         options, tracks);
+
+  BOOST_REQUIRE(res.ok());
+  BOOST_CHECK(res->template component<FinalMultiComponentState>(
+                     kFinalMultiComponentStateColumn)
+                  .has_value());
 }
 
 BOOST_AUTO_TEST_SUITE_END()

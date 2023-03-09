@@ -759,14 +759,13 @@ struct GsfActor {
   }
 };
 
-
-/// A actor that collects the final multi component state once the propagation finished
+/// A actor that collects the final multi component state once the propagation
+/// finished
 struct FinalStateCollector {
-  using MultiPars =
-      Acts::MultiComponentBoundTrackParameters<Acts::SinglyCharged>;
-      
+  using MultiPars = Acts::Experimental::GsfConstants::FinalMultiComponentState;
+
   struct result_type {
-    std::optional<MultiPars> pars;
+    MultiPars pars;
   };
 
   template <typename propagator_state_t, typename stepper_t>
@@ -792,10 +791,10 @@ struct FinalStateCollector {
       }
     }
 
-    result.pars = MultiPars(surface.getSharedPtr(), states);
+    result.pars =
+        typename MultiPars::value_type(surface.getSharedPtr(), states);
   }
 };
-
 
 }  // namespace detail
 }  // namespace Acts
