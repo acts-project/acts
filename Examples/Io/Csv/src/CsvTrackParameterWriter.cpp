@@ -40,7 +40,7 @@ std::string ActsExamples::CsvTrackParameterWriter::name() const {
   return "CsvTrackParameterWriter";
 }
 
-ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::finalize() {
   // Write the tree
   return ProcessCode::SUCCESS;
 }

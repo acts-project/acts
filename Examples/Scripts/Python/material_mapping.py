@@ -112,6 +112,10 @@ def runMaterialMapping(
         writeFormat=JsonFormat.Json,
     )
 
+    mmAlgCfg.materialWriters = [jmw]
+
+    s.addAlgorithm(MaterialMapping(level=acts.logging.INFO, config=mmAlgCfg))
+
     s.addWriter(
         RootMaterialTrackWriter(
             level=acts.logging.INFO,
@@ -124,10 +128,6 @@ def runMaterialMapping(
             storeVolume=True,
         )
     )
-
-    mmAlgCfg.materialWriters = [jmw]
-
-    s.addAlgorithm(MaterialMapping(level=acts.logging.INFO, config=mmAlgCfg))
 
     return s
 

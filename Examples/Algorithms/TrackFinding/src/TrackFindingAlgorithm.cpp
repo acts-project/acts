@@ -27,7 +27,7 @@
 
 ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
     Config config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFindingAlgorithm", level),
+    : ActsExamples::IAlgorithm("TrackFindingAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing measurements input collection");
@@ -59,7 +59,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
       Acts::Vector3{0., 0., 0.});
 
   Acts::PropagatorPlainOptions pOptions;
-  pOptions.maxSteps = 10000;
+  pOptions.maxSteps = 100000;
 
   MeasurementCalibrator calibrator{measurements};
   Acts::GainMatrixUpdater kfUpdater;

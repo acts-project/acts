@@ -29,7 +29,7 @@
 
 ActsExamples::TutorialVertexFinderAlgorithm::TutorialVertexFinderAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("TutorialVertexFinder", lvl), m_cfg(cfg) {
+    : ActsExamples::IAlgorithm("TutorialVertexFinder", lvl), m_cfg(cfg) {
   if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument(
         "You have to either provide track parameters or trajectories");
