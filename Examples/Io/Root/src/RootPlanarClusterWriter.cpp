@@ -35,6 +35,8 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
