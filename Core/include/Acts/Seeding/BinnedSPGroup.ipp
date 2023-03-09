@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -6,7 +7,10 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 // Binned SP Group Iterator
+
+#include <boost/container/flat_set.hpp>
 
 template <typename external_spacepoint_t>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
@@ -146,9 +150,10 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // binSizeR allows to increase or reduce numRBins if needed
   size_t numRBins = static_cast<size_t>((config.rMax + options.beamPos.norm()) /
                                         config.binSizeR);
-  std::vector<
-      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>>
-      rBins(numRBins);
+
+  // keep track of changed bins while sorting
+  boost::container::flat_set<size_t> rBinsIndex;
+
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
     if (*it == nullptr) {
       continue;
@@ -181,33 +186,32 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     if (rIndex >= numRBins) {
       continue;
     }
-    rBins[rIndex].push_back(std::move(isp));
-  }
 
-  // if requested, it is possible to force sorting in R for each (z, phi) grid
-  // bin
-  if (config.forceRadialSorting) {
-    for (auto& rbin : rBins) {
-      std::sort(
-          rbin.begin(), rbin.end(),
-          [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
-             std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
-            return a->radius() < b->radius();
-          });
+    // fill rbins into grid
+    Acts::Vector2 spLocation(isp->phi(), isp->z());
+    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
+        rbin = grid->atPosition(spLocation);
+    rbin.push_back(std::move(isp));
+
+    // keep track of the bins we modify so that we can later sort the SPs in
+    // those bins only
+    if (rbin.size() > 1) {
+      rBinsIndex.insert(grid->globalBinFromPosition(spLocation));
     }
   }
 
-  // fill rbins into grid such that each grid bin is sorted in r
-  // space points with delta r < rbin size can be out of order is sorting is not
-  // requested
-  for (auto& rbin : rBins) {
-    for (auto& isp : rbin) {
-      Acts::Vector2 spLocation(isp->phi(), isp->z());
-      std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
-          bin = grid->atPosition(spLocation);
-      bin.push_back(std::move(isp));
-    }
+  // sort SPs in R for each filled (z, phi) bin
+  for (auto& binIndex : rBinsIndex) {
+    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
+        rbin = grid->atPosition(binIndex);
+    std::sort(
+        rbin.begin(), rbin.end(),
+        [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
+           std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
+          return a->radius() < b->radius();
+        });
   }
+
   m_grid = std::move(grid);
   m_bottomBinFinder = botBinFinder;
   m_topBinFinder = tBinFinder;
