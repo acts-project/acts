@@ -310,6 +310,12 @@ struct GsfActor {
         result.measurementStates == m_cfg.numberMeasurements) {
       state.navigation.targetReached = true;
     }
+
+    // throw_assert(detail::weightsAreNormalized(
+    //                  stepper.constComponentIterable(state.stepping), [](const
+    //                  auto &cmp) { return cmp.weight(); }),
+    //              "not normalized at cmps: " << m_cfg.maxComponents << " wc: "
+    //              << m_cfg.weightCutoff);
   }
 
   template <typename propagator_state_t, typename stepper_t>
@@ -449,12 +455,21 @@ struct GsfActor {
 
     detail::normalizeWeights(cmps, proj);
 
+    bool anyAboveCut = false;
     auto new_end = std::remove_if(cmps.begin(), cmps.end(), [&](auto& cmp) {
+      anyAboveCut = anyAboveCut || proj(cmp) >= m_cfg.weightCutoff;
       return proj(cmp) < m_cfg.weightCutoff;
     });
-    cmps.erase(new_end, cmps.end());
 
-    detail::normalizeWeights(cmps, proj);
+    if (not anyAboveCut) {
+      cmps.erase(new_end, cmps.end());
+      detail::normalizeWeights(cmps, proj);
+    } else {
+      cmps = {*std::max_element(
+          cmps.begin(), cmps.end(),
+          [&](auto& a, auto& b) { return proj(a) < proj(b); })};
+      std::get<0>(cmps.front()).weight = 1.0;
+    }
   }
 
   /// Function that updates the stepper from the MultiTrajectory
