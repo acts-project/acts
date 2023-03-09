@@ -12,7 +12,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <functional>
 #include <memory>
@@ -26,7 +26,7 @@ class TrackingGeometry;
 namespace ActsExamples {
 
 /// Construct track seeds from particles.
-class TruthSeedingAlgorithm final : public BareAlgorithm {
+class TruthSeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// The input truth particles that should be used for truth seeding.
@@ -44,8 +44,6 @@ class TruthSeedingAlgorithm final : public BareAlgorithm {
     std::vector<std::string> inputSpacePoints;
     /// Output successfully seeded truth particles.
     std::string outputParticles;
-    /// Output full proto track collection.
-    std::string outputFullProtoTracks;
     /// Output seed collection.
     std::string outputSeeds;
     /// Output proto track collection.

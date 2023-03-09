@@ -11,8 +11,9 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Utilities/FpeMonitor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Framework/Sequencer.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
@@ -30,42 +31,42 @@ namespace {
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wgnu-zero-variadic-macro-arguments"
 #endif
-class PyIAlgorithm : public IAlgorithm {
+class PySequenceElement : public SequenceElement {
  public:
-  using IAlgorithm::IAlgorithm;
+  using SequenceElement::SequenceElement;
 
   std::string name() const override {
     py::gil_scoped_acquire acquire{};
-    PYBIND11_OVERRIDE_PURE(std::string, IAlgorithm, name);
+    PYBIND11_OVERRIDE_PURE(std::string, SequenceElement, name);
   }
 
-  ProcessCode execute(const AlgorithmContext& ctx) const override {
+  ProcessCode internalExecute(const AlgorithmContext& ctx) override {
     py::gil_scoped_acquire acquire{};
-    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
+    PYBIND11_OVERRIDE_PURE(ProcessCode, SequenceElement, sysExecute, ctx);
   }
 
   ProcessCode initialize() override {
     py::gil_scoped_acquire acquire{};
-    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, initialize);
+    PYBIND11_OVERRIDE_PURE(ProcessCode, SequenceElement, initialize);
   }
 
   ProcessCode finalize() override {
     py::gil_scoped_acquire acquire{};
-    PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, finalize);
+    PYBIND11_OVERRIDE_PURE(ProcessCode, SequenceElement, finalize);
   }
 };
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
 
-class PyBareAlgorithm : public BareAlgorithm {
+class PyIAlgorithm : public IAlgorithm {
  public:
-  using BareAlgorithm::BareAlgorithm;
+  using IAlgorithm::IAlgorithm;
 
   ProcessCode execute(const AlgorithmContext& ctx) const override {
     py::gil_scoped_acquire acquire{};
     try {
-      PYBIND11_OVERRIDE_PURE(ProcessCode, BareAlgorithm, execute, ctx);
+      PYBIND11_OVERRIDE_PURE(ProcessCode, IAlgorithm, execute, ctx);
     } catch (py::error_already_set& e) {
       throw;  // Error from python, handle in python.
     } catch (std::runtime_error& e) {
@@ -156,20 +157,21 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
       .def_readonly("geoContext", &AlgorithmContext::geoContext)
       .def_readonly("calibContext", &AlgorithmContext::calibContext);
 
-  auto iAlgorithm =
-      py::class_<ActsExamples::IAlgorithm, PyIAlgorithm,
-                 std::shared_ptr<ActsExamples::IAlgorithm>>(mex, "IAlgorithm")
+  auto pySequenceElement =
+      py::class_<ActsExamples::SequenceElement, PySequenceElement,
+                 std::shared_ptr<ActsExamples::SequenceElement>>(
+          mex, "SequenceElement")
           .def(py::init_alias<>())
-          .def("execute", &IAlgorithm::execute)
-          .def("name", &IAlgorithm::name);
+          .def("internalExecute", &SequenceElement::internalExecute)
+          .def("name", &SequenceElement::name);
 
   auto bareAlgorithm =
-      py::class_<ActsExamples::BareAlgorithm,
-                 std::shared_ptr<ActsExamples::BareAlgorithm>, IAlgorithm,
-                 PyBareAlgorithm>(mex, "BareAlgorithm")
+      py::class_<ActsExamples::IAlgorithm,
+                 std::shared_ptr<ActsExamples::IAlgorithm>, SequenceElement,
+                 PyIAlgorithm>(mex, "IAlgorithm")
           .def(py::init_alias<const std::string&, Acts::Logging::Level>(),
                py::arg("name"), py::arg("level"))
-          .def("execute", &BareAlgorithm::execute);
+          .def("execute", &IAlgorithm::execute);
 
   py::class_<Acts::GeometryIdentifier>(m, "GeometryIdentifier")
       .def(py::init<>())

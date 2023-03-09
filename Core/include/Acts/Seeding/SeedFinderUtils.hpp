@@ -93,16 +93,16 @@ std::vector<std::size_t> cotThetaSortIndex(
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
-/// @tparam sp_range_t Container type for the space point collections.
 ///
 /// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
 /// @param[out] outputCoordinates The output vector to write to.
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
-template <typename external_spacepoint_t, typename sp_range_t>
+template <typename external_spacepoint_t>
 bool xyzCoordinateCheck(
-    const Acts::SeedFinderConfig<external_spacepoint_t>& config, sp_range_t sp,
+    const Acts::SeedFinderConfig<external_spacepoint_t>& config,
+    const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
     const double* spacepointPosition, double* outputCoordinates);
 
 }  // namespace Acts

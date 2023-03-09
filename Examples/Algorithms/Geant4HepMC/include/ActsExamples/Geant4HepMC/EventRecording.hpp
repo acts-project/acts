@@ -11,7 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <functional>
@@ -26,7 +26,7 @@ class G4RunManager;
 
 namespace ActsExamples {
 
-class EventRecording final : public ActsExamples::BareAlgorithm {
+class EventRecording final : public ActsExamples::IAlgorithm {
  public:
   /// @class Config
   struct Config {

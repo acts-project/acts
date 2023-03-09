@@ -33,7 +33,7 @@ ActsExamples::EventRecording::~EventRecording() {
 ActsExamples::EventRecording::EventRecording(
     const ActsExamples::EventRecording::Config& config,
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("EventRecording", level),
+    : ActsExamples::IAlgorithm("EventRecording", level),
       m_cfg(config),
       m_runManager(std::make_unique<G4RunManager>()) {
   if (m_cfg.inputParticles.empty()) {

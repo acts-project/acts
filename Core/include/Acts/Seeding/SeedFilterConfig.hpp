@@ -37,9 +37,6 @@ struct SeedFilterConfig {
   size_t compatSeedLimit = 2;
   // Tool to apply experiment specific cuts on collected middle space points
 
-  // sort vectors vectors by curvature
-  bool curvatureSortingInFilter = false;
-
   // increment in seed weight if the number of compatible seeds is larger than
   // numSeedIncrement, this is used in case of high occupancy scenarios if we
   // want to increase the weight of the seed by seedWeightIncrement when the

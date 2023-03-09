@@ -53,9 +53,6 @@ struct SeedFinderConfig {
   int bottomDubletCapacity = 200;
   int topDubletCapacity = 450;
 
-  // force sorting of middle SPs in radius
-  bool forceRadialSorting = false;
-
   // radial range for middle SP
   // variable range based on SP radius
   bool useVariableMiddleSPRange = false;

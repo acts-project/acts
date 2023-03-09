@@ -257,7 +257,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::writeT(
   return ProcessCode::SUCCESS;
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFinderPerformanceWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::TrackFinderPerformanceWriter::finalize() {
   m_impl->close();
   return ProcessCode::SUCCESS;
 }

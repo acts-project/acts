@@ -37,6 +37,7 @@
 #include "ActsExamples/TruthTracking/TruthTrackFinder.hpp"
 #include "ActsExamples/Utilities/Options.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
+#include "ActsExamples/Utilities/SeedsToPrototracks.hpp"
 #include "ActsExamples/Utilities/TracksToTrajectories.hpp"
 #include <Acts/Definitions/Units.hpp>
 
@@ -172,7 +173,6 @@ int runRecCKFTracks(
           spCfg.outputSpacePoints,
       };
       seedingCfg.outputSeeds = "seeds";
-      seedingCfg.outputProtoTracks = "prototracks";
 
       seedingCfg.gridConfig.rMax = 200._mm;
       seedingCfg.seedFinderConfig.rMax = seedingCfg.gridConfig.rMax;
@@ -215,7 +215,14 @@ int runRecCKFTracks(
 
       sequencer.addAlgorithm(
           std::make_shared<SeedingAlgorithm>(seedingCfg, logLevel));
-      inputProtoTracks = seedingCfg.outputProtoTracks;
+
+      SeedsToPrototracks::Config seedsToPrototrackCfg;
+      seedsToPrototrackCfg.inputSeeds = seedingCfg.outputSeeds;
+      seedsToPrototrackCfg.outputProtoTracks = "prototracks";
+      sequencer.addAlgorithm(
+          std::make_shared<SeedsToPrototracks>(seedsToPrototrackCfg, logLevel));
+
+      inputProtoTracks = seedsToPrototrackCfg.outputProtoTracks;
       inputSeeds = seedingCfg.outputSeeds;
     }
 

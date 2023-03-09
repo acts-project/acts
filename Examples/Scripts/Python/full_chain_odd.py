@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import argparse, pathlib, contextlib, acts, acts.examples
+import os, argparse, pathlib, contextlib, acts, acts.examples
 from acts.examples.simulation import (
     addParticleGun,
     MomentumConfig,
@@ -19,6 +19,8 @@ from acts.examples.reconstruction import (
     TrackSelectorRanges,
     addAmbiguityResolution,
     AmbiguityResolutionConfig,
+    addAmbiguityResolutionML,
+    AmbiguityResolutionMLConfig,
     addVertexFitting,
     VertexFinder,
 )
@@ -36,10 +38,17 @@ parser.add_argument(
     help="Use Pythia8 (ttbar, pile-up 200) instead of particle gun",
     action="store_true",
 )
+parser.add_argument(
+    "--MLSolver",
+    help="Use the Ml Ambiguity Solver instead of the classical one",
+    action="store_true",
+)
+
 args = vars(parser.parse_args())
 
 ttbar_pu200 = args["ttbar"]
 g4_simulation = args["geant4"]
+ambiguity_MLSolver = args["MLSolver"]
 u = acts.UnitConstants
 geoDir = getOpenDataDetectorDirectory()
 outputDir = pathlib.Path.cwd() / "odd_output"
@@ -92,6 +101,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             ),
             rnd=rnd,
             outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
         )
     if g4_simulation:
         if s.config.numThreads != 1:
@@ -112,6 +122,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             ),
+            # outputDirRoot=outputDir,
             outputDirCsv=outputDir,
             rnd=rnd,
         )
@@ -128,6 +139,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             if ttbar_pu200
             else ParticleSelectorConfig(),
             outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
             rnd=rnd,
         )
 
@@ -137,6 +149,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         field,
         digiConfigFile=oddDigiConfig,
         outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
         rnd=rnd,
     )
 
@@ -157,7 +170,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         field,
         CKFPerformanceConfig(
             ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
-            nMeasurementsMin=6,
+            nMeasurementsMin=7,
         ),
         TrackSelectorRanges(
             pt=(1.0 * u.GeV, None),
@@ -165,17 +178,32 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
             loc0=(-4.0 * u.mm, 4.0 * u.mm),
         ),
         outputDirRoot=outputDir,
+        # outputDirCsv=outputDir,
     )
 
-    addAmbiguityResolution(
-        s,
-        AmbiguityResolutionConfig(maximumSharedHits=3),
-        CKFPerformanceConfig(
-            ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
-            nMeasurementsMin=6,
-        ),
-        outputDirRoot=outputDir,
-    )
+    if ambiguity_MLSolver:
+        addAmbiguityResolutionML(
+            s,
+            AmbiguityResolutionMLConfig(nMeasurementsMin=7),
+            CKFPerformanceConfig(
+                ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=7
+            ),
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+            onnxModelFile=os.path.dirname(__file__)
+            + "/MLAmbiguityResolution/duplicateClassifier.onnx",
+        )
+    else:
+        addAmbiguityResolution(
+            s,
+            AmbiguityResolutionConfig(maximumSharedHits=3, nMeasurementsMin=7),
+            CKFPerformanceConfig(
+                ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
+                nMeasurementsMin=7,
+            ),
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
+        )
 
     addVertexFitting(
         s,

@@ -43,17 +43,15 @@ namespace Acts {
 ///
 /// @param spBegin is the begin iterator for the space points
 /// @param spEnd is the end iterator for the space points
+/// @param logger A logger instance
 ///
 /// @return optional bound track parameters with the estimated d0, phi and 1/R
 /// stored with the indices, eBoundLoc0, eBoundPhi and eBoundQOverP,
 /// respectively. The bound parameters with other indices are set to zero.
 template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
-    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
-
+    spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
+    const Logger& logger = getDummyLogger()) {
   // Check the number of provided space points
   size_t numSP = std::distance(spBegin, spEnd);
   if (numSP < 3) {
@@ -149,6 +147,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
 /// @param bField is the magnetic field vector
 /// @param bFieldMin is the minimum magnetic field required to trigger the
 /// estimation of q/pt
+/// @param logger A logger instance
 /// @param mass is the estimated particle mass
 ///
 /// @return optional bound parameters
@@ -156,11 +155,8 @@ template <typename spacepoint_iterator_t>
 std::optional<BoundVector> estimateTrackParamsFromSeed(
     const GeometryContext& gctx, spacepoint_iterator_t spBegin,
     spacepoint_iterator_t spEnd, const Surface& surface, const Vector3& bField,
-    ActsScalar bFieldMin, ActsScalar mass = 139.57018 * UnitConstants::MeV) {
-  // The local logger
-  ACTS_LOCAL_LOGGER(
-      getDefaultLogger("estimateTrackParamsFromSeed", Logging::INFO));
-
+    ActsScalar bFieldMin, const Acts::Logger& logger = getDummyLogger(),
+    ActsScalar mass = 139.57018 * UnitConstants::MeV) {
   // Check the number of provided space points
   size_t numSP = std::distance(spBegin, spEnd);
   if (numSP != 3) {

@@ -10,6 +10,7 @@
 
 #include "ActsExamples/Framework/AlgorithmContext.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 
 #include <string>
 #include <utility>
@@ -21,13 +22,8 @@ namespace ActsExamples {
 /// Read data from disk and add it to the event store. The reader can have
 /// internal state and implementations are responsible to handle concurrent
 /// calls.
-class IReader {
+class IReader : public SequenceElement {
  public:
-  virtual ~IReader() = default;
-
-  /// The reader name.
-  virtual std::string name() const = 0;
-
   /// Provide range of available events or [0, SIZE_MAX) if undefined.
   ///
   /// The upper limit is exclusive, i.e. [0,3) means events 0, 1, and 2.
@@ -39,6 +35,18 @@ class IReader {
   /// will most likely not be called in order. Implementations must use the
   /// event number provided to select the proper data to be read.
   virtual ProcessCode read(const AlgorithmContext& context) = 0;
+
+  /// Internal execute method forwards to the read method as mutable
+  /// @param context The algorithm context
+  ProcessCode internalExecute(const AlgorithmContext& context) final {
+    return read(context);
+  }
+
+  /// Fullfil the algorithm interface
+  ProcessCode initialize() override { return ProcessCode::SUCCESS; }
+
+  /// Fullfil the algorithm interface
+  ProcessCode finalize() override { return ProcessCode::SUCCESS; }
 };
 
 }  // namespace ActsExamples

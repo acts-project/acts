@@ -15,7 +15,7 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
@@ -39,7 +39,7 @@ namespace ActsExamples {
 /// located. It creates two additional container to the event store, i.e. the
 /// estimated track parameters container and the proto tracks container storing
 /// only those proto tracks with track parameters estimated.
-class TrackParamsEstimationAlgorithm final : public BareAlgorithm {
+class TrackParamsEstimationAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input seeds collection.
