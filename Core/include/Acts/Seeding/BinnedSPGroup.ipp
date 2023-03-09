@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -16,12 +15,16 @@ template <typename external_spacepoint_t>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
     Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index)
     : m_group(group), m_max_localBins(m_group->m_grid->numLocalBins()) {
+  // numLocalBins returns the number of bins removing the under- and over-flow
+  // this is ok for the Z axis, but not for the phi axis ...
+  // Adding back the missing bins
+  m_max_localBins[INDEX::PHI] += 2;
   if (index == m_group->m_grid->size()) {
     m_current_localBins = m_max_localBins;
+  } else {
+    // Go to the next not-empty bin
+    findNotEmptyBin();
   }
-
-  // Go to the next not-empty bin
-  findNotEmptyBin();
 }
 
 template <typename external_spacepoint_t>
@@ -35,7 +38,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator++() {
   }
 
   // Get the next not-empty bin in the grid
-  findNotEmptyBin();
+  findNotEmptyBin();  
   return *this;
 }
 
@@ -63,7 +66,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::operator*() {
   std::size_t global_index = m_group->m_grid->globalBinFromLocalBins(
       {m_current_localBins[INDEX::PHI],
        m_group->m_bins[m_current_localBins[INDEX::Z]]});
-
+  
   boost::container::small_vector<size_t, 9> bottoms =
       m_group->m_bottomBinFinder->findBins(
           m_current_localBins[INDEX::PHI],
@@ -85,6 +88,7 @@ inline void
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
   // Iterate on the grid till we find a not-empty bin
   // We start from the current bin configuration and move forward
+
   for (std::size_t phiBin(m_current_localBins[INDEX::PHI]);
        phiBin < m_max_localBins[INDEX::PHI]; ++phiBin) {
     for (std::size_t zBin(m_current_localBins[INDEX::Z]);
