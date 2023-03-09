@@ -81,7 +81,7 @@ BOOST_AUTO_TEST_CASE(NextNavigator) {
   Acts::Vector3 mom(0, 0, 10);
   Acts::CurvilinearTrackParameters start(pos, mom, mom.norm(), +1);
   // propagate to the cylinder surface
-  const auto& result = propagator.propagate(start, options).value();
+  propagator.propagate(start, options).value();
 }
 
 BOOST_AUTO_TEST_SUITE_END()

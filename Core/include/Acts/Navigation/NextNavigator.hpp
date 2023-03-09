@@ -85,7 +85,7 @@ class NextNavigator {
   explicit NextNavigator(Config cfg, std::shared_ptr<const Logger> _logger =
                                          getDefaultLogger("NextNavigator",
                                                           Logging::Level::INFO))
-      : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
+      : m_cfg{cfg}, m_logger{std::move(_logger)} {}
 
   /// @brief Navigator status call
   ///
