@@ -310,12 +310,6 @@ struct GsfActor {
         result.measurementStates == m_cfg.numberMeasurements) {
       state.navigation.targetReached = true;
     }
-
-    // throw_assert(detail::weightsAreNormalized(
-    //                  stepper.constComponentIterable(state.stepping), [](const
-    //                  auto &cmp) { return cmp.weight(); }),
-    //              "not normalized at cmps: " << m_cfg.maxComponents << " wc: "
-    //              << m_cfg.weightCutoff);
   }
 
   template <typename propagator_state_t, typename stepper_t>
