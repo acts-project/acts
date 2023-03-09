@@ -67,7 +67,7 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
   }
 
   // transfer generated data to the event store.
-  m_writeHandle(ctx, 5);
+  m_writeHandle(ctx, std::move(collection));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
