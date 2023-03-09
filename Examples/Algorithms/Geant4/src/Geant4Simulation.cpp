@@ -169,29 +169,27 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
       not m_cfg.outputParticlesFinal.empty()) {
     // Initial state of particles
     // Register to the event store
-    ctx.eventStore.add(m_cfg.outputParticlesInitial,
-                       SimParticleContainer(eventData.particlesInitial.begin(),
-                                            eventData.particlesInitial.end()));
+    m_outputParticlesInitial(
+        ctx, SimParticleContainer(eventData.particlesInitial.begin(),
+                                  eventData.particlesInitial.end()));
     // Final state of particles
     // Register to the event store
-    ctx.eventStore.add(m_cfg.outputParticlesFinal,
-                       SimParticleContainer(eventData.particlesFinal.begin(),
-                                            eventData.particlesFinal.end()));
+    m_outputParticlesFinal(
+        ctx, SimParticleContainer(eventData.particlesFinal.begin(),
+                                  eventData.particlesFinal.end()));
   }
 
   // Output handling: Simulated hits
   if (not m_cfg.outputSimHits.empty()) {
     // Register to the event store
-    ctx.eventStore.add(
-        m_cfg.outputSimHits,
-        SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
+    m_outputSimHits(
+        ctx, SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
   }
 
   // Output handling: Material tracks
   if (not m_cfg.outputMaterialTracks.empty()) {
-    ctx.eventStore.add(
-        m_cfg.outputMaterialTracks,
-        decltype(eventData.materialTracks)(eventData.materialTracks));
+    m_outputMaterialTracks(
+        ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
   }
 
   return ActsExamples::ProcessCode::SUCCESS;

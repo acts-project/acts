@@ -61,11 +61,15 @@ class WriteDataHandle final : public DataHandleBase {
   }
 
   void operator()(const AlgorithmContext& ctx, T&& value) const {
+    (*this)(ctx.eventStore, std::forward<T>(value));
+  }
+
+  void operator()(WhiteBoard& wb, T&& value) const {
     if (!isInitialized()) {
       throw std::runtime_error{"WriteDataHandle '" + fullName() +
                                "' not initialized"};
     }
-    ctx.eventStore.add(m_key.value(), std::move(value));
+    wb.add(m_key.value(), std::move(value));
   }
 
   void initialize(const std::string& key) {
@@ -96,11 +100,15 @@ class ReadDataHandle final : public DataHandleBase {
   }
 
   const T& operator()(const AlgorithmContext& ctx) const {
+    return (*this)(ctx.eventStore);
+  }
+
+  const T& operator()(const WhiteBoard& wb) const {
     if (!isInitialized()) {
       throw std::runtime_error{"ReadDataHandle '" + fullName() +
                                "' not initialized"};
     }
-    return ctx.eventStore.get<T>(m_key.value());
+    return wb.get<T>(m_key.value());
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
