@@ -455,7 +455,7 @@ struct GsfActor {
       return proj(cmp) < m_cfg.weightCutoff;
     });
 
-    if (not anyAboveCut) {
+    if (anyAboveCut) {
       cmps.erase(new_end, cmps.end());
       detail::normalizeWeights(cmps, proj);
     } else {
