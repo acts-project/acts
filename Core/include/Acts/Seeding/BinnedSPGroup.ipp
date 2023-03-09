@@ -15,9 +15,6 @@ template <typename external_spacepoint_t>
 Acts::BinnedSPGroupIterator<external_spacepoint_t>::BinnedSPGroupIterator(
     Acts::BinnedSPGroup<external_spacepoint_t>& group, std::size_t index)
     : m_group(group), m_max_localBins(m_group->m_grid->numLocalBins()) {
-  // numLocalBins returns the number of bins removing the under- and over-flow
-  // this is ok for the Z axis, but not for the phi axis ...
-  // Adding back the missing bins
   m_max_localBins[INDEX::PHI] += 2;
   if (index == m_group->m_grid->size()) {
     m_current_localBins = m_max_localBins;
@@ -93,6 +90,9 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
        phiBin < m_max_localBins[INDEX::PHI]; ++phiBin) {
     for (std::size_t zBin(m_current_localBins[INDEX::Z]);
          zBin < m_max_localBins[INDEX::Z]; ++zBin) {
+      if (phiBin == 0) {
+	continue;
+      }
       std::size_t zBinIndex = m_group->m_bins[zBin];
       std::size_t index =
           m_group->m_grid->globalBinFromLocalBins({phiBin, zBinIndex});
