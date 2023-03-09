@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -9,6 +10,7 @@
 #include <cmath>
 #include <numeric>
 #include <type_traits>
+#include <iostream>
 
 namespace Acts {
 
@@ -58,6 +60,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
   auto& middleSPs = grid.at(middleSPsIdx[0]);
 
+  std::cout << "---------------------------------\n";
+  std::cout << "Getting middles within bin " << middleSPsIdx[0] << "\n";
+  std::cout << "--- " << middleSPs.size() << " candidates\n"; 
+  
   for (auto& spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -95,6 +101,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
+    std::cout << "  * n tops: " << topSPsIdx.size() << "\n"; 
+    std::cout << "  * n bottoms: " << bottomSPsIdx.size() << "\n";
+    
+    //    std::cout << "Middle Coordinate: " << 
+    
     getCompatibleDoublets(options, grid, topSPsIdx, *spM.get(),
                           state.compatTopSP, m_config.deltaRMinTopSP,
                           m_config.deltaRMaxTopSP, false);
