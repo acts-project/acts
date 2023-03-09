@@ -286,7 +286,7 @@ class MultiEigenStepperLoop
         components.push_back(
             {SingleState(gctx, bfield->makeCache(mctx), std::move(singlePars),
                          ndir, ssize, stolerance),
-             weight, Intersection3D::Status::reachable});
+             weight, Intersection3D::Status::onSurface});
       }
 
       if (std::get<2>(multipars.components().front())) {
@@ -532,11 +532,15 @@ class MultiEigenStepperLoop
   }
 
   /// Get the number of components
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
   std::size_t numberComponents(const State& state) const {
     return state.components.size();
   }
 
   /// Remove missed components from the component state
+  ///
+  /// @param state [in,out] The stepping state (thread-local cache)
   void removeMissedComponents(State& state) const {
     auto new_end = std::remove_if(
         state.components.begin(), state.components.end(), [](const auto& cmp) {
@@ -546,10 +550,31 @@ class MultiEigenStepperLoop
     state.components.erase(new_end, state.components.end());
   }
 
+  /// Reweight the components
+  ///
+  /// @param [in,out] state The stepping state (thread-local cache)
+  void reweightComponents(State& state) const {
+    ActsScalar sumOfWeights = 0.0;
+    for (const auto& cmp : state.components) {
+      sumOfWeights += cmp.weight;
+    }
+    for (auto& cmp : state.components) {
+      cmp.weight /= sumOfWeights;
+    }
+  }
+
   /// Reset the number of components
+  ///
+  /// @param [in,out] state  The stepping state (thread-local cache)
   void clearComponents(State& state) const { state.components.clear(); }
 
   /// Add a component to the Multistepper
+  ///
+  /// @param [in,out] state  The stepping state (thread-local cache)
+  /// @param [in] pars Parameters of the component to add
+  /// @param [in] weight Weight of the component to add
+  ///
+  /// @note: It is not ensured that the weights are normalized afterwards
   /// @note This function makes no garantuees about how new components are
   /// initialized, it is up to the caller to ensure that all components are
   /// valid in the end.
@@ -629,6 +654,14 @@ class MultiEigenStepperLoop
       component.status = detail::updateSingleSurfaceStatus<SingleStepper>(
           *this, component.state, surface, bcheck, logger);
       ++counts[static_cast<std::size_t>(component.status)];
+    }
+
+    // If at least one component is on a surface, we can remove all missed
+    // components before the step. If not, we must keep them for the case that
+    // all components miss and we need to retarget
+    if (counts[static_cast<std::size_t>(Status::onSurface)] > 0) {
+      removeMissedComponents(state);
+      reweightComponents(state);
     }
 
     ACTS_VERBOSE("Component status wrt "
