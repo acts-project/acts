@@ -144,7 +144,7 @@ inline void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
     // VERY frequent (SP^3) access
     LinCircle l{};
     l.cotTheta = cot_theta;
-    // location on z-axis of this SP-duplet
+    // location on z-axis of this SP-dublet
     l.Zo = zM - rM * cot_theta;
     l.iDeltaR = iDeltaR;
     // transformation of circle equation (x,y) into linear equation (u,v)

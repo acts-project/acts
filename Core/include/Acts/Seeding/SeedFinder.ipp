@@ -100,7 +100,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    // Iterate over middle-top duplets
+    // Iterate over middle-top dublets
     getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
                           state.linCircleTop, m_config.deltaRMinTopSP,
                           m_config.deltaRMaxTopSP, false);
@@ -129,7 +129,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    // Iterate over middle-bottom duplets
+    // Iterate over middle-bottom dublets
     getCompatibleDoublets(options, bottomSPs, *spM, state.compatBottomSP,
                           state.linCircleBottom, m_config.deltaRMinBottomSP,
                           m_config.deltaRMaxBottomSP, true);
@@ -161,10 +161,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   linCircleVec.clear();
 
   // reserve enough capacity
-  size_t dupletCapacity =
-      isBottom ? m_config.bottomDupletCapacity : m_config.topDupletCapacity;
-  outVec.reserve(dupletCapacity);
-  linCircleVec.reserve(dupletCapacity);
+  size_t dubletCapacity =
+      isBottom ? m_config.bottomDubletCapacity : m_config.topDubletCapacity;
+  outVec.reserve(dubletCapacity);
+  linCircleVec.reserve(dubletCapacity);
 
   const float& rM = mediumSP.radius();
   const float& xM = mediumSP.x();
@@ -198,13 +198,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       continue;
     }
 
-    // ratio Z/R (forward angle) of space point duplet
+    // ratio Z/R (forward angle) of space point dublet
     float cotTheta = deltaZ / deltaR;
     if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
       continue;
     }
 
-    // check if duplet origin on z axis within collision region
+    // check if dublet origin on z axis within collision region
     float zOrigin = zM - rM * cotTheta;
     if (zOrigin < m_config.collisionRegionMin ||
         zOrigin > m_config.collisionRegionMax) {

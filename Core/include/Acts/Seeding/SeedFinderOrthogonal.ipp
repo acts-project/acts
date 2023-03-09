@@ -168,7 +168,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   }
 
   /*
-   * Cut: Ensure that the origin of the duplet (the intersection of the line
+   * Cut: Ensure that the origin of the dublet (the intersection of the line
    * between them with the z axis) lies within the collision region.
    */
   float zOrigin = zL - rL * cotTheta;
