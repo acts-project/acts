@@ -715,11 +715,6 @@ class TrackStateProxy {
 
   /// Uncalibrated measurement in the form of a source link. Const version
   /// @return The uncalibrated measurement source link
-  [[deprecated("Use getUncalibratedSourceLink() instead")]] SourceLink
-  uncalibratedSourceLink() const;
-
-  /// Uncalibrated measurement in the form of a source link. Const version
-  /// @return The uncalibrated measurement source link
   SourceLink getUncalibratedSourceLink() const;
 
   /// Set an uncalibrated source link

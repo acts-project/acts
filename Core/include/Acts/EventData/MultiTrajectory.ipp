@@ -76,12 +76,6 @@ inline auto TrackStateProxy<D, M, ReadOnly>::projector() const -> Projector {
 }
 
 template <typename D, size_t M, bool ReadOnly>
-inline auto TrackStateProxy<D, M, ReadOnly>::uncalibratedSourceLink() const
-    -> SourceLink {
-  return getUncalibratedSourceLink();
-}
-
-template <typename D, size_t M, bool ReadOnly>
 inline auto TrackStateProxy<D, M, ReadOnly>::getUncalibratedSourceLink() const
     -> SourceLink {
   assert(has<hashString("uncalibratedSourceLink")>());
