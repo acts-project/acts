@@ -102,7 +102,7 @@ class NextNavigator {
     auto& nState = state.navigation;
     fillNavigationState(state, stepper, nState);
 
-    if (inactive(state, stepper)) {
+    if (inactive()) {
       ACTS_VERBOSE("navigator inactive");
       return;
     }
@@ -175,7 +175,7 @@ class NextNavigator {
 
     auto& nState = state.navigation;
 
-    if (inactive(state, stepper)) {
+    if (inactive()) {
       ACTS_VERBOSE("navigator inactive");
       return;
     }
