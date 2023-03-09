@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
 #include <memory>
@@ -83,6 +82,9 @@ class WhiteBoard {
 
   const Acts::Logger& logger() const { return *m_logger; }
 
+  static std::string typeMismatchMessage(const std::string& name,
+                                         const char* req, const char* act);
+
   template <typename T>
   friend class WriteDataHandle;
 
@@ -138,7 +140,8 @@ inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
 
   const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);
   if (castedHolder == nullptr) {
-    throw std::out_of_range("Type mismatch for object '" + name + "'");
+    throw std::out_of_range(
+        typeMismatchMessage(name, typeid(T).name(), holder->type().name()));
   }
 
   ACTS_VERBOSE("Retrieved object '" << name << "'");

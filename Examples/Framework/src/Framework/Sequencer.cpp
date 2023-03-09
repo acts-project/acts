@@ -35,10 +35,6 @@
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
-#if __has_include(<cxxabi.h>)
-#include <cxxabi.h>
-#endif
-
 namespace ActsExamples {
 
 namespace {
@@ -62,21 +58,6 @@ size_t saturatedAdd(size_t a, size_t b) {
   return res;
 }
 
-std::string demangle(const char* sym) {
-#if __has_include(<cxxabi.h>)
-  int status = 0;
-
-  char* realname = abi::__cxa_demangle(sym, nullptr, nullptr, &status);
-
-  if (status != 0) {
-    return sym;
-  }
-
-  return realname;
-#else
-  return sym;
-#endif
-}
 }  // namespace
 
 Sequencer::Sequencer(const Sequencer::Config& cfg)
@@ -150,9 +131,10 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
         ACTS_ERROR("Adding " << elementType << " " << element->name() << ":");
         ACTS_ERROR("-> white board will contain key '" << handle->key() << "'");
         ACTS_ERROR("at this point in the sequence, but the type will be");
-        ACTS_ERROR("'" << demangle(type.name()) << "'");
+        ACTS_ERROR("'" << boost::core::demangle(type.name()) << "'");
         ACTS_ERROR("and not");
-        ACTS_ERROR("'" << demangle(handle->typeInfo().name()) << "'");
+        ACTS_ERROR("'" << boost::core::demangle(handle->typeInfo().name())
+                       << "'");
         valid = false;
       }
     } else {
@@ -520,6 +502,13 @@ int Sequencer::run() {
   }
 
   return EXIT_SUCCESS;
+}
+
+std::string WhiteBoard::typeMismatchMessage(const std::string& name,
+                                            const char* req, const char* act) {
+  return std::string{"Type mismatch for '" + name + "'. Requested " +
+                     boost::core::demangle(req) + " but actually " +
+                     boost::core::demangle(act)};
 }
 
 }  // namespace ActsExamples

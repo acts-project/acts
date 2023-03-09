@@ -12,6 +12,7 @@
 #include <string_view>
 
 #include <Eigen/Core>
+#include <boost/core/demangle.hpp>
 
 namespace {
 
