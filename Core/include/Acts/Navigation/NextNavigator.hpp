@@ -68,14 +68,6 @@ class NextNavigator {
     /// Navigation state : a break has been detected
     bool navigationBreak = false;
 
-    /// Reset state
-    ///
-    /// @param geoContext is the geometry context
-    /// @param pos is the global position
-    /// @param dir is the momentum direction
-    /// @param navDir is the navigation direction
-    /// @param ssurface is the new starting surface
-    /// @param tsurface is the target surface
     void reset(const GeometryContext& /*geoContext*/, const Vector3& /*pos*/,
                const Vector3& /*dir*/, NavigationDirection /*navDir*/,
                const Surface* /*ssurface*/, const Surface* /*tsurface*/) {
@@ -261,16 +253,8 @@ class NextNavigator {
   /// This checks if a navigation break had been triggered or navigator
   /// is misconfigured
   ///
-  /// @tparam propagator_state_t The state type of the propagagor
-  /// @tparam stepper_t The type of stepper used for the propagation
-  ///
-  /// @param [in,out] state is the propagation state object
-  /// @param [in] stepper Stepper in use
-  ///
   /// boolean return triggers exit to stepper
-  template <typename propagator_state_t, typename stepper_t>
-  bool inactive(propagator_state_t& /*state*/,
-                const stepper_t& /*stepper*/) const {
+  bool inactive() const {
     if (m_cfg.detector == nullptr) {
       return true;
     }
