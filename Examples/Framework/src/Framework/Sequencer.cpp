@@ -177,12 +177,12 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
 
   ACTS_INFO("Added " << elementType << " '" << element->name() << "'");
   auto symbol = [](const char* in) {
-    std::string symbol = boost::core::demangle(in);
-    if (symbol.size() > 80) {
-      symbol.erase(80);
-      symbol += "...";
+    std::string s = boost::core::demangle(in);
+    if (s.size() > 80) {
+      s.erase(80);
+      s += "...";
     }
-    return symbol;
+    return s;
   };
 
   for (const auto* handle : element->readHandles()) {
