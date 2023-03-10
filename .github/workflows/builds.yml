@@ -622,5 +622,5 @@ jobs:
       - uses: cvmfs-contrib/github-action-cvmfs@v3
       - uses: aidasoft/run-lcg-view@v3
         with:
-          release-platform: "102b_ATLAS_11/x86_64-centos7-gcc10-opt"
+          release-platform: "LCG_102b_ATLAS_11/x86_64-centos7-gcc10-opt"
           run: bash CI/athena_build.sh
