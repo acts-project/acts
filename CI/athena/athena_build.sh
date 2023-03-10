@@ -58,10 +58,20 @@ $PWD/ccache -z
 
 export CMAKE_PREFIX_PATH="$PWD/acts-install:$CMAKE_PREFIX_PATH"
 
+cat >package_filters.txt <<EOL
++ .*Acts.*
++ .*InnerDetector/InDetRecAlgs/InDetPriVxFinder.*
++ .*InnerDetector/InDetRecTools/InDetRecToolInterfaces.*
++ .*Tracking/TrkExtrapolation/TrkExAlgs.*
+
+- .*
+... 
+EOL
+
 group "Build Athena"
 
 cmake -S athena/Projects/WorkDir -B athena-build \
-	-DATLAS_PACKAGE_FILTER_FILE=$PWD/CI/athena/package_filters.txt \
+	-DATLAS_PACKAGE_FILTER_FILE=$PWD/package_filters.txt \
 	-DCMAKE_CXX_COMPILER_LAUNCHER=$PWD/ccache
 
 

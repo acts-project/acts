@@ -1,0 +1,6 @@
++ .*Acts.*
++ .*InnerDetector/InDetRecAlgs/InDetPriVxFinder.*
++ .*InnerDetector/InDetRecTools/InDetRecToolInterfaces.*
++ .*Tracking/TrkExtrapolation/TrkExAlgs.*
+
+- .*
