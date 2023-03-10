@@ -8,12 +8,15 @@
 
 #pragma once
 
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <array>
 #include <memory>
 #include <string>
+
+#include "HelloData.hpp"
 
 namespace ActsExamples {
 
@@ -37,6 +40,8 @@ class HelloRandomAlgorithm : public ActsExamples::IAlgorithm {
 
   // Generate random numbers from various distributions.
   ActsExamples::ProcessCode execute(const AlgorithmContext& ctx) const override;
+
+  WriteDataHandle<HelloDataCollection> m_writeHandle{this, "Output"};
 
  private:
   Config m_cfg;

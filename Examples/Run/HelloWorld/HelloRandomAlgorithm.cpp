@@ -24,6 +24,7 @@ ActsExamples::HelloRandomAlgorithm::HelloRandomAlgorithm(
   if (m_cfg.output.empty()) {
     throw std::invalid_argument("Missing output collection");
   }
+  m_writeHandle.initialize(m_cfg.output);
 }
 
 ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
@@ -66,7 +67,7 @@ ActsExamples::ProcessCode ActsExamples::HelloRandomAlgorithm::execute(
   }
 
   // transfer generated data to the event store.
-  ctx.eventStore.add(m_cfg.output, std::move(collection));
+  m_writeHandle(ctx, std::move(collection));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
