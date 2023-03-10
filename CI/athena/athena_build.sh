@@ -4,10 +4,16 @@ set -e
 
 
 function group {
-    if [[ ! -v GITHUB_ACTIONS  ]]; then
+    if [[ -v GITHUB_ACTIONS  ]]; then
         echo "::group::${1}"
     else
+        n=${#1}
+        s=$(python3 -c "print(\"-\" * $n)")
+        echo ""
+        echo $s
         echo "${1}"
+        echo $s
+        echo ""
     fi
 }
 
@@ -86,8 +92,8 @@ mkdir run
 cd run
 
 function runTest {
-    group "Running ${1}"
-    ${1}
+    group "Running ${@}"
+    ${@}
 }
 
 runTest python3 ../athena/Tracking/Acts/ActsGeometry/test/ActsITkTest.py
