@@ -618,8 +618,8 @@ jobs:
   athena:
     runs-on: ubuntu-latest
     env: 
-      - LCG_RELEASE: LCG_102b_ATLAS_11
-      - LCG_PLATFORM: x86_64-centos7-gcc11-opt
+      LCG_RELEASE: LCG_102b_ATLAS_11
+      LCG_PLATFORM: x86_64-centos7-gcc11-opt
     steps:
       - uses: actions/checkout@v3
       - uses: cvmfs-contrib/github-action-cvmfs@v3
