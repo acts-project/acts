@@ -56,17 +56,16 @@ class BinnedSPGroupIterator {
   bool operator==(const BinnedSPGroupIterator& other) const;
   bool operator!=(const BinnedSPGroupIterator& other) const;
 
-  std::tuple<boost::container::small_vector<size_t, 9>,
-             boost::container::small_vector<size_t, 9>,
+  std::tuple<boost::container::small_vector<size_t, 9>, std::size_t,
              boost::container::small_vector<size_t, 9>>
-  operator*();
+  operator*() const;
 
  private:
   void findNotEmptyBin();
 
  private:
   /// The group, it contains the grid and the bin finders
-  Acts::detail_tc::RefHolder<BinnedSPGroup<external_spacepoint_t>> m_group;
+  Acts::detail::RefHolder<BinnedSPGroup<external_spacepoint_t>> m_group;
   /// Max Local Bins - limits of the grid
   std::array<std::size_t, 2> m_max_localBins;
   /// Current Local Bins
@@ -78,9 +77,11 @@ class BinnedSPGroupIterator {
 /// Fulfills the range_expression interface.
 template <typename external_spacepoint_t>
 class BinnedSPGroup {
- public:
+#ifndef DOXYGEN
   friend BinnedSPGroupIterator<external_spacepoint_t>;
+#endif
 
+ public:
   BinnedSPGroup() = delete;
 
   template <typename spacepoint_iterator_t, typename callable_t>

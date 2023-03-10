@@ -59,8 +59,9 @@ class SeedFilter {
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
       InternalSpacePoint<external_spacepoint_t>& middleSP,
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
-      std::vector<float>& invHelixDiameterVec,
-      std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
+      const std::vector<float>& invHelixDiameterVec,
+      const std::vector<float>& impactParametersVec,
+      SeedFilterState& seedFilterState,
       CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector) const;
 

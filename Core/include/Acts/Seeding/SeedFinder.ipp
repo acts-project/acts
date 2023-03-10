@@ -42,7 +42,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
     Acts::SpacePointGrid<external_spacepoint_t>& grid,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-    sp_range_t& bottomSPsIdx, sp_range_t& middleSPsIdx, sp_range_t& topSPsIdx,
+    const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
+    const sp_range_t& topSPsIdx,
     const Acts::Range1D<float>& rMiddleSPRange) const {
   if (not options.isInInternalUnits) {
     throw std::runtime_error(
@@ -58,7 +59,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   state.candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                             max_num_quality_seeds_per_spm);
 
-  auto& middleSPs = grid.at(middleSPsIdx[0]);
+  // If there are no bottom or top bins, just return and waste no time
+  if (bottomSPsIdx.size() == 0 or topSPsIdx.size() == 0) {
+    return;
+  }
+
+  // Get the middle space point candidates
+  auto& middleSPs = grid.at(middleSPsIdx);
 
   for (auto& spM : middleSPs) {
     float rM = spM->radius();
@@ -70,11 +77,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
       if (rM > rMiddleSPRange.max()) {
-        // break if SP are sorted in r
-        if (m_config.forceRadialSorting) {
-          break;
-        }
-        continue;
+        // break because SPs are sorted in r
+        break;
       }
     } else if (not m_config.rRangeMiddleSP.empty()) {
       /// get zBin position of the middle SP
@@ -87,21 +91,16 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
       if (rM > m_config.rRangeMiddleSP[zBin][1]) {
-        // break if SP are sorted in r
-        if (m_config.forceRadialSorting) {
-          break;
-        }
-        continue;
+        // break because SPs are sorted in r
+        break;
       }
     } else {
-      if (rM > m_config.rMaxMiddle) {
+      if (rM < m_config.rMinMiddle) {
         continue;
       }
-      if (rM < m_config.rMinMiddle) {
-        if (m_config.forceRadialSorting) {
-          break;
-        }
-        continue;
+      if (rM > m_config.rMaxMiddle) {
+        // break because SPs are sorted in r
+        break;
       }
     }
 
@@ -373,7 +372,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
             cosTheta * std::sqrt(1 + A0 * A0)};
 
         double rMTransf[3];
-        if (!xyzCoordinateCheck(m_config, &spM, positionMiddle, rMTransf)) {
+        if (!xyzCoordinateCheck(m_config, spM, positionMiddle, rMTransf)) {
           continue;
         }
 
@@ -388,7 +387,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spB = state.compatBottomSP[b];
         double rBTransf[3];
-        if (!xyzCoordinateCheck(m_config, spB, positionBottom, rBTransf)) {
+        if (!xyzCoordinateCheck(m_config, *spB, positionBottom, rBTransf)) {
           continue;
         }
 
@@ -402,7 +401,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spT = state.compatTopSP[t];
         double rTTransf[3];
-        if (!xyzCoordinateCheck(m_config, spT, positionTop, rTTransf)) {
+        if (!xyzCoordinateCheck(m_config, *spT, positionTop, rTTransf)) {
           continue;
         }
 
@@ -576,13 +575,15 @@ template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options, sp_range_t bottomSPs,
-    sp_range_t middleSPs, sp_range_t topSPs) const {
+    const Acts::SeedFinderOptions& options,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   SeedingState state;
   const Acts::Range1D<float> rMiddleSPRange;
   std::vector<Seed<external_spacepoint_t>> ret;
 
-  createSeedsForGroup(options, state, std::back_inserter(ret), bottomSPs,
+  createSeedsForGroup(options, state, grid, std::back_inserter(ret), bottomSPs,
                       middleSPs, topSPs, rMiddleSPRange);
 
   return ret;

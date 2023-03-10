@@ -476,7 +476,7 @@ struct IsReadOnlyTrackContainer;
 /// @tparam traj_t the track state container backend
 /// @tparam holder_t ownership management class for the backend
 template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t = detail_tc::RefHolder>
+          template <typename> class holder_t = detail::RefHolder>
 class TrackContainer {
  public:
   static constexpr bool ReadOnly =
@@ -516,7 +516,7 @@ class TrackContainer {
   /// @param traj the track state container backend
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<
-                detail_tc::is_same_template<H, detail_tc::RefHolder>::value>>
+                detail::is_same_template<H, detail::RefHolder>::value>>
   TrackContainer(track_container_t& container, traj_t& traj)
       : m_container{&container}, m_traj{&traj} {}
 
@@ -695,11 +695,11 @@ class TrackContainer {
 
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
-    -> TrackContainer<track_container_t, traj_t, detail_tc::RefHolder>;
+    -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
-    -> TrackContainer<track_container_t, traj_t, detail_tc::ValueHolder>;
+    -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
 
 /// Utility class that eases accessing dynamic columns in track containers
 /// @tparam T the type of the value to access

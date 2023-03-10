@@ -8,7 +8,7 @@
 
 #pragma once
 
-namespace Acts::detail_tc {
+namespace Acts::detail {
 
 /// Internal holder type for referencing a backend without ownership
 template <typename T>
@@ -44,4 +44,4 @@ struct ValueHolder {
   T* operator->() { return &val; }
 };
 
-}  // namespace Acts::detail_tc
+}  // namespace Acts::detail

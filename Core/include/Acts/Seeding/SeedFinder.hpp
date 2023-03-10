@@ -16,6 +16,7 @@
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
+#include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <array>
 #include <list>
@@ -73,6 +74,7 @@ class SeedFinder {
   /// Can be used to parallelize the seed creation
   /// @param options frequently changing configuration (like beam position)
   /// @param state State object that holds memory used
+  /// @param grid The grid with space points
   /// @param outIt Output iterator for the seeds in the group
   /// @param bottomSPs group of space points to be used as innermost SP in a seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
@@ -85,7 +87,8 @@ class SeedFinder {
       const Acts::SeedFinderOptions& options, SeedingState& state,
       Acts::SpacePointGrid<external_spacepoint_t>& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-      sp_range_t& bottomSPs, sp_range_t& middleSPs, sp_range_t& topSPs,
+      const sp_range_t& bottomSPs, const std::size_t middleSPs,
+      const sp_range_t& topSPs,
       const Acts::Range1D<float>& rMiddleSPRange) const;
 
   /// @brief Compatibility method for the new-style seed finding API.
@@ -101,6 +104,7 @@ class SeedFinder {
   ///
   /// @tparam sp_range_t container type for the seed point collections.
   /// @param options frequently changing configuration (like beam position)
+  /// @param grid The grid with space points
   /// @param bottomSPs group of space points to be used as innermost SP in a
   /// seed.
   /// @param middleSPs group of space points to be used as middle SP in a seed.
@@ -108,8 +112,10 @@ class SeedFinder {
   /// @returns a vector of seeds.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
-      const Acts::SeedFinderOptions& options, sp_range_t bottomSPs,
-      sp_range_t middleSPs, sp_range_t topSPs) const;
+      const Acts::SeedFinderOptions& options,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const sp_range_t& bottomSPs, const std::size_t middleSPs,
+      const sp_range_t& topSPs) const;
 
  private:
   template <typename sp_range_t, typename out_range_t>
