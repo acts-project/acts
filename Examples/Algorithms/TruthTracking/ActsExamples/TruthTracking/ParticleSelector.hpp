@@ -12,14 +12,14 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <limits>
 
 namespace ActsExamples {
 
 /// Select particles by applying some selection cuts.
-class ParticleSelector final : public BareAlgorithm {
+class ParticleSelector final : public IAlgorithm {
  public:
   struct Config {
     /// The input particles collection.

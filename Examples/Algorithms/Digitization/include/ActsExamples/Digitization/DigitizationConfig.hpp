@@ -17,7 +17,6 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
@@ -84,15 +83,6 @@ struct GeometricConfig {
                       RandomEngine & /*unused*/) const {
     return Acts::Vector3(0., 0., 0.);
   };
-
-  /// Equality operator for basic parameters
-  /// check if the geometry config can be reused from
-  /// @param other, @return a boolean to indicate this
-  bool operator==(const GeometricConfig &other) const {
-    return (indices == other.indices and segmentation == other.segmentation and
-            thickness == other.thickness and threshold == other.threshold and
-            digital == other.digital);
-  }
 };
 
 /// Configuration struct for the Digitization algorithm
@@ -103,15 +93,6 @@ struct GeometricConfig {
 struct DigiComponentsConfig {
   GeometricConfig geometricDigiConfig;
   SmearingConfig smearingDigiConfig = {};
-
-  /// Equality operator to check if a digitization configuration
-  /// can be reused from @param other
-  ///
-  /// @return a boolean flag indicating equality
-  bool operator==(const DigiComponentsConfig &other) const {
-    return (geometricDigiConfig == other.geometricDigiConfig and
-            smearingDigiConfig == other.smearingDigiConfig);
-  }
 };
 
 class DigitizationConfig {

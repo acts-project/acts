@@ -51,7 +51,7 @@ void setUserActions(manager_t& manager, actions_t& actions) {
 ActsExamples::Geant4Simulation::Geant4Simulation(
     const ActsExamples::Geant4Simulation::Config& config,
     Acts::Logging::Level level)
-    : BareAlgorithm("Geant4Simulation", level), m_cfg(config) {
+    : IAlgorithm("Geant4Simulation", level), m_cfg(config) {
   if (m_cfg.detectorConstruction == nullptr) {
     throw std::invalid_argument("Missing G4 DetectorConstruction object");
   }

@@ -8,7 +8,6 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareService.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Definitions/Units.hpp>
 #include <Acts/Geometry/TrackingGeometry.hpp>
@@ -35,7 +34,7 @@ void sortFCChhDetElements(std::vector<dd4hep::DetElement>& det);
 /// The DD4hepGeometryService creates the DD4hep, the TGeo and the ACTS
 /// TrackingGeometry
 /// from DD4hep xml input. The geometries are created only on demand.
-class DD4hepGeometryService final : public BareService {
+class DD4hepGeometryService {
  public:
   struct Config {
     /// Log level for the geometry service.
@@ -77,7 +76,7 @@ class DD4hepGeometryService final : public BareService {
   };
 
   DD4hepGeometryService(const Config& cfg);
-  ~DD4hepGeometryService() final;
+  ~DD4hepGeometryService();
 
   /// Interface method to access the DD4hep geometry
   /// @return The world DD4hep DetElement
@@ -112,6 +111,10 @@ class DD4hepGeometryService final : public BareService {
   dd4hep::DetElement m_dd4hepGeometry;
   /// The ACTS TrackingGeometry
   std::unique_ptr<const Acts::TrackingGeometry> m_trackingGeometry;
+
+  const Acts::Logger& logger() const { return *m_logger; }
+
+  std::unique_ptr<const Acts::Logger> m_logger;
 };
 
 }  // namespace DD4hep

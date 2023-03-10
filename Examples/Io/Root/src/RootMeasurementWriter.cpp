@@ -84,7 +84,7 @@ ActsExamples::RootMeasurementWriter::~RootMeasurementWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::finalize() {
   /// Close the file if it's yours
   m_outputFile->cd();
   for (auto dTree = m_outputTrees.begin(); dTree != m_outputTrees.end();

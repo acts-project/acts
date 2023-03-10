@@ -16,7 +16,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
@@ -37,7 +37,7 @@ class TrackingGeometry;
 namespace ActsExamples {
 
 /// Algorithm that turns simulated hits into measurements by truth smearing.
-class DigitizationAlgorithm final : public BareAlgorithm {
+class DigitizationAlgorithm final : public IAlgorithm {
  public:
   /// Construct the smearing algorithm.
   ///

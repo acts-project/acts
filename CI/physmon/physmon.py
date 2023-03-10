@@ -37,7 +37,7 @@ from acts.examples.reconstruction import (
     SeedFinderConfigArg,
     SeedFinderOptionsArg,
     SeedingAlgorithm,
-    TrackParamsEstimationConfig,
+    TruthEstimatedSeedingAlgorithmConfigArg,
     addCKFTracks,
     CKFPerformanceConfig,
     addAmbiguityResolution,
@@ -80,6 +80,7 @@ def truth_tracking_kalman():
         s = acts.examples.Sequencer(
             events=10000, numThreads=-1, logLevel=acts.logging.INFO
         )
+
         tp = Path(temp)
         runTruthTrackingKalman(
             trackingGeometry,
@@ -181,7 +182,7 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
-            TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
+            TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.TruthSmeared
             if truthSmearedSeeded
             else SeedingAlgorithm.TruthEstimated
@@ -228,9 +229,9 @@ def run_ckf_tracking(truthSmearedSeeded, truthEstimatedSeeded, label):
         del s
 
         for stem in ["performance_ckf", "performance_vertexing"] + (
-            ["performance_seeding_hists", "performance_ambi"]
+            ["performance_seeding", "performance_ambi"]
             if label in ["seeded", "orthogonal"]
-            else ["performance_seeding_hists"]
+            else ["performance_seeding"]
             if label == "truth_estimated"
             else []
         ):
@@ -284,10 +285,6 @@ def run_vertexing(fitter, mu, events):
             s,
             trackingGeometry,
             field,
-            TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
-            ParticleSmearingSigmas(
-                pRel=0.01
-            ),  # only used by SeedingAlgorithm.TruthSmeared
             SeedFinderConfigArg(
                 r=(None, 200 * u.mm),  # rMin=default, 33mm
                 deltaR=(1 * u.mm, 60 * u.mm),
@@ -300,7 +297,6 @@ def run_vertexing(fitter, mu, events):
                 impactMax=3 * u.mm,
             ),
             SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T),
-            TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
             seedingAlgorithm=SeedingAlgorithm.Default,
             geoSelectionConfigFile=geoSel,
             rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
