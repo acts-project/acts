@@ -637,6 +637,7 @@ jobs:
         with:
           release-platform: "${{ env.LCG_RELEASE }}/${{ env.LCG_PLATFORM }}"
           run: |
+            echo "export GITHUB_ACTIONS=${{ env.GITHUB_ACTIONS }}" >> .env
             echo "export LCG_RELEASE=${{ env.LCG_RELEASE }}" >> .env
             echo "export LCG_PLATFORM=${{ env.LCG_PLATFORM }}" >> .env
             echo "export CCACHE_DIR=${{ env.CCACHE_DIR }}" >> .env
