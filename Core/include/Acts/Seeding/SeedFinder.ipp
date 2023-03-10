@@ -20,6 +20,7 @@ namespace Acts {
 	    typename spacepoint_collection_t::const_iterator>
   getRangeBound(const spacepoint_collection_t& collection,
 		float lowerBound, float upperBound) {    
+    
     // Check the size first
     if (collection.size() == 0) {
       return std::make_pair(collection.begin(), collection.end());
@@ -36,17 +37,31 @@ namespace Acts {
     // Return if first sp is already higher then the upper bound
     // or if the last sp is already lower then the lower bound
     if (check_lower_bound(collection.back(), lowerBound) or
-	check_upper_bound(upperBound, collection.front()) ) {
+	check_upper_bound(upperBound, collection.front())) {
       return std::make_pair(collection.end(), collection.end());
     }
-           
-    // Get the first element in the proper range
-    auto min_itr = std::lower_bound(collection.begin(), collection.end(),
-				    lowerBound,
-                                    check_lower_bound);
     
-    // Get the first last element that is not in the proper range anymore
-    auto max_itr = std::upper_bound(min_itr, collection.end(),
+    std::size_t n = 0;
+    std::size_t down = 0;
+    std::size_t up = collection.size();
+    std::size_t idxMaxItr = up;
+
+    // we find the lower bound but also update the max bound on the way
+    while (down < up) {
+      n = (up + down) / 2;
+      if (lowerBound <= collection[n]->radius()) {
+	up = n;
+      } else {
+	down = n + 1;
+      }
+      // Update search window for the upper bound
+      if (collection[n]->radius() > upperBound) idxMaxItr = n;
+    }
+    if (n < collection.size() and collection[n]->radius() < lowerBound)
+      ++n;
+    
+    auto min_itr = collection.begin() + n ;
+    auto max_itr = std::upper_bound(min_itr, collection.begin() + idxMaxItr,
 				    upperBound,
 				    check_upper_bound);
     
