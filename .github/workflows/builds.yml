@@ -615,3 +615,12 @@ jobs:
           # && cmake --build build
       # - name: ccache stats
         # run: ccache -s
+  athena:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - uses: cvmfs-contrib/github-action-cvmfs@v3
+      - uses: aidasoft/run-lcg-view@v3
+        with:
+          release-platform: "102b_ATLAS_11/x86_64-centos7-gcc10-opt"
+          run: bash CI/athena_build.sh
