@@ -41,22 +41,22 @@ asetup none,gcc11 || true
 lsetup cmake || true
 lsetup "views ${LCG_RELEASE} ${LCG_PLATFORM}" || true
 
-ln -s $(command -v ccache) $PWD/ccache
+ln -s $(command -v ccache) $PWD/ccache_bin
 
-$PWD/ccache -z
+$PWD/ccache_bin -z
 
 group "Configure ACTS"
 
 cmake -S $PWD -B acts-build \
 	-DCMAKE_INSTALL_PREFIX=$PWD/acts-install \
 	-DACTS_BUILD_PLUGIN_JSON:BOOL=ON \
-	-DCMAKE_CXX_COMPILER_LAUNCHER=$PWD/ccache \
+	-DCMAKE_CXX_COMPILER_LAUNCHER=$PWD/ccache_bin \
 	-DACTS_BUILD_FATRAS:BOOL=ON
 
 group "Build ACTS"
 
 cmake --build acts-build -- -j $(nproc)
-$PWD/ccache -s
+$PWD/ccache_bin -s
 
 group "Install ACTS"
 cmake --install acts-build
@@ -72,7 +72,7 @@ ATHENA_REF="nightly/${branch}/${nightly}"
 group "Cloning ${ATHENA_GIT_REPO} @ ${ATHENA_REF}"
 git clone ${ATHENA_GIT_REPO} -b ${ATHENA_REF}
 
-$PWD/ccache -z
+$PWD/ccache_bin -z
 
 export CMAKE_PREFIX_PATH="$PWD/acts-install:$CMAKE_PREFIX_PATH"
 
@@ -80,12 +80,12 @@ group "Configure Athena"
 
 cmake -S athena/Projects/WorkDir -B athena-build \
 	-DATLAS_PACKAGE_FILTER_FILE=$PWD/CI/athena/package_filters.txt \
-	-DCMAKE_CXX_COMPILER_LAUNCHER=$PWD/ccache
+	-DCMAKE_CXX_COMPILER_LAUNCHER=$PWD/ccache_bin
 
 group "Build Athena"
 
 cmake --build athena-build -- -j $(nproc)
-$PWD/ccache -s
+$PWD/ccache_bin -s
 
 group "Run Athena based tests"
 
