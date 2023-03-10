@@ -193,16 +193,16 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
     if (!handle->isInitialized()) {
       continue;
     }
-    ACTS_DEBUG("<- " << handle->name() << " '" << handle->key() << "':");
-    ACTS_DEBUG("   " << symbol(handle->typeInfo().name()));
+    ACTS_INFO("<- " << handle->name() << " '" << handle->key() << "':");
+    ACTS_INFO("   " << symbol(handle->typeInfo().name()));
   }
 
   for (const auto* handle : element->writeHandles()) {
     if (!handle->isInitialized()) {
       continue;
     }
-    ACTS_DEBUG("-> " << handle->name() << " '" << handle->key() << "':");
-    ACTS_DEBUG("   " << symbol(handle->typeInfo().name()));
+    ACTS_INFO("-> " << handle->name() << " '" << handle->key() << "':");
+    ACTS_INFO("   " << symbol(handle->typeInfo().name()));
   }
 
   m_sequenceElements.push_back(std::move(element));
