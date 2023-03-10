@@ -2,10 +2,19 @@
 
 set -e
 
+env_file=$PWD/.env
+if [[ -f "$env_file"  ]]; then
+    echo "Loading env from: $env_file"
+    cat $env_file
+    source $env_file
+fi
+
 
 function group {
     if [[ -v GITHUB_ACTIONS  ]]; then
+        echo ""
         echo "::group::${1}"
+        echo ""
     else
         n=${#1}
         s=$(python3 -c "print(\"-\" * $n)")
@@ -18,9 +27,6 @@ function group {
 }
 
 group "Setup ACTS"
-
-LCG_RELEASE=$1
-LCG_PLATFORM=$2
 
 echo "LCG_RELEASE: ${LCG_RELEASE}"
 echo "LCG_PLATFORM: ${LCG_PLATFORM}"
