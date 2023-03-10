@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
@@ -21,11 +21,12 @@ class TFile;
 class TTree;
 
 namespace ActsExamples {
-class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
+
+class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
  public:
   struct Config {
-    /// Input reconstructed proto tracks collection.
-    std::string inputProtoTracks;
+    /// Input reconstructed seed collection.
+    std::string inputSeeds;
     /// Input hit to particles map.
     std::string inputMeasurementParticlesMap;
     /// Input truth particles collection.
@@ -54,7 +55,7 @@ class SeedingPerformanceWriter final : public WriterT<ProtoTrackContainer> {
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const ProtoTrackContainer& tracks) override;
+                     const SimSeedContainer& seeds) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.

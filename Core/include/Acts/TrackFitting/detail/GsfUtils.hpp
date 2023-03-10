@@ -74,7 +74,6 @@ class ScopedGsfInfoPrinterAndChecker {
   const propagator_state_t &m_state;
   const stepper_t &m_stepper;
   double m_p_initial;
-  std::size_t m_missedCount;
   const Logger &m_logger;
 
   const Logger &logger() const { return m_logger; }
@@ -95,30 +94,23 @@ class ScopedGsfInfoPrinterAndChecker {
 
   void checks(const std::string_view &where) const {
     const auto cmps = m_stepper.constComponentIterable(m_state.stepping);
-    // If all components are missed, their weights have been reset to zero.
-    // In this case the weights might not be normalized and not even be
-    // finite due to a division by zero.
-    if (m_stepper.numberComponents(m_state.stepping) > m_missedCount) {
-      throw_assert(
-          std::all_of(cmps.begin(), cmps.end(),
-                      [](auto cmp) { return std::isfinite(cmp.weight()); }),
-          "some weights are not finite at " << where);
+    throw_assert(
+        std::all_of(cmps.begin(), cmps.end(),
+                    [](auto cmp) { return std::isfinite(cmp.weight()); }),
+        "some weights are not finite at " << where);
 
-      throw_assert(detail::weightsAreNormalized(
-                       cmps, [](const auto &cmp) { return cmp.weight(); }),
-                   "not normalized at " << where);
-    }
+    throw_assert(detail::weightsAreNormalized(
+                     cmps, [](const auto &cmp) { return cmp.weight(); }),
+                 "not normalized at " << where);
   }
 
  public:
   ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
-                                 const stepper_t &stepper,
-                                 std::size_t missedCount, const Logger &_logger)
+                                 const stepper_t &stepper, const Logger &logger)
       : m_state(state),
         m_stepper(stepper),
         m_p_initial(stepper.momentum(state.stepping)),
-        m_missedCount(missedCount),
-        m_logger{_logger} {
+        m_logger{logger} {
     // Some initial printing
     checks("start");
     ACTS_VERBOSE("Gsf step "
