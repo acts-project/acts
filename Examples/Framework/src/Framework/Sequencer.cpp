@@ -128,7 +128,8 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
     names.push_back("Decorator:" + decorator->name());
   }
   for (const auto& algorithm : m_sequenceElements) {
-    names.push_back(std::string(getAlgorithmType(*algorithm)) + ":" + algorithm->name());
+    names.push_back(std::string(getAlgorithmType(*algorithm)) + ":" +
+                    algorithm->name());
   }
 
   return names;
