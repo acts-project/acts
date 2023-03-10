@@ -637,5 +637,8 @@ jobs:
         with:
           release-platform: "${{ env.LCG_RELEASE }}/${{ env.LCG_PLATFORM }}"
           run: |
-            CI/athena/preserve_env.sh > .env
+            echo "export LCG_RELEASE=${{ env.LCG_RELEASE }}" >> .env
+            echo "export LCG_PLATFORM=${{ env.LCG_PLATFORM }}" >> .env
+            echo "export CCACHE_DIR=${{ env.CCACHE_DIR }}" >> .env
+            echo "export CCACHE_MAXSIZE=${{ env.CCACHE_MAXSIZE }}" >> .env
             env -i CI/athena/athena_build.sh
