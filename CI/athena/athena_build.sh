@@ -13,14 +13,14 @@ fi
 function group {
     if [[ -v GITHUB_ACTIONS  ]]; then
         echo ""
-        echo "::group::${1}"
+        echo "::group::${@}"
         echo ""
     else
         n=${#1}
         s=$(python3 -c "print(\"-\" * $n)")
         echo ""
         echo $s
-        echo "${1}"
+        echo "${@}"
         echo $s
         echo ""
     fi
@@ -103,12 +103,12 @@ function runTest {
 }
 
 runTest python3 ../athena/Tracking/Acts/ActsGeometry/test/ActsITkTest.py
-# runTest ../athena/AtlasTest/CITest/test/ActsKfRefitting.sh
-# runTest ../athena/AtlasTest/CITest/test/ActsPersistifyEDM.sh
-# runTest ../athena/AtlasTest/CITest/test/ActsValidateClusters.sh
-# runTest ../athena/AtlasTest/CITest/test/ActsValidateOrthogonalSeeds.sh
-# runTest ../athena/AtlasTest/CITest/test/ActsValidateSeeds.sh
-# runTest ../athena/AtlasTest/CITest/test/ActsValidateSpacePoints.sh
-# runTest ../athena/AtlasTest/CITest/test/ActsValidateTracks.sh
-# runTest ../athena/AtlasTest/CITest/test/ActsWorkflow.sh
+runTest ../athena/AtlasTest/CITest/test/ActsKfRefitting.sh
+runTest ../athena/AtlasTest/CITest/test/ActsPersistifyEDM.sh
+runTest ../athena/AtlasTest/CITest/test/ActsValidateClusters.sh
+runTest ../athena/AtlasTest/CITest/test/ActsValidateOrthogonalSeeds.sh
+runTest ../athena/AtlasTest/CITest/test/ActsValidateSeeds.sh
+runTest ../athena/AtlasTest/CITest/test/ActsValidateSpacePoints.sh
+runTest ../athena/AtlasTest/CITest/test/ActsValidateTracks.sh
+runTest ../athena/AtlasTest/CITest/test/ActsWorkflow.sh
 
