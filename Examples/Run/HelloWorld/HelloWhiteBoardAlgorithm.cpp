@@ -14,7 +14,7 @@
 
 ActsExamples::HelloWhiteBoardAlgorithm::HelloWhiteBoardAlgorithm(
     const Config& cfg, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("HelloWhiteBoard", level), m_cfg(cfg) {
+    : ActsExamples::IAlgorithm("HelloWhiteBoard", level), m_cfg(cfg) {
   // non-optional config settings must be checked on construction.
   if (m_cfg.input.empty()) {
     throw std::invalid_argument("Missing input collection");

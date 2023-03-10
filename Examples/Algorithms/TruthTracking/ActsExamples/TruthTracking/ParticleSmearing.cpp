@@ -20,7 +20,7 @@
 
 ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
                                                  Acts::Logging::Level level)
-    : BareAlgorithm("ParticleSmearing", level), m_cfg(config) {
+    : IAlgorithm("ParticleSmearing", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }

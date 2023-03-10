@@ -51,7 +51,7 @@ class RootSpacepointWriter final : public WriterT<SimSpacePointContainer> {
   ~RootSpacepointWriter() final;
 
   /// End-of-run hook
-  ProcessCode endRun() final;
+  ProcessCode finalize() final;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

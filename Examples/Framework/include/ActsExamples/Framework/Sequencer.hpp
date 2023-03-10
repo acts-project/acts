@@ -11,8 +11,8 @@
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/IContextDecorator.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
-#include "ActsExamples/Framework/IService.hpp"
 #include "ActsExamples/Framework/IWriter.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsExamples/Utilities/tbbWrap.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
@@ -55,22 +55,26 @@ class Sequencer {
 
   Sequencer(const Config &cfg);
 
-  /// Add a service to the set of services.
-  ///
-  /// @throws std::invalid_argument if the service is NULL.
-  void addService(std::shared_ptr<IService> service);
   /// Add a context decorator to the set of context decorators.
   ///
   /// @throws std::invalid_argument if the decorator is NULL.
   void addContextDecorator(std::shared_ptr<IContextDecorator> decorator);
+
   /// Add a reader to the set of readers.
   ///
   /// @throws std::invalid_argument if the reader is NULL.
   void addReader(std::shared_ptr<IReader> reader);
+
   /// Append an algorithm to the sequence of algorithms.
   ///
   /// @throws std::invalid_argument if the algorithm is NULL.
   void addAlgorithm(std::shared_ptr<IAlgorithm> algorithm);
+
+  /// Append a sequence element to the sequence
+  ///
+  /// @throws std::invalid_argument if the element is NULL.
+  void addElement(std::shared_ptr<SequenceElement> element);
+
   /// Add a writer to the set of writers.
   ///
   /// @throws std::invalid_argument if the writer is NULL.
@@ -119,11 +123,9 @@ class Sequencer {
 
   Config m_cfg;
   tbbWrap::task_arena m_taskArena;
-  std::vector<std::shared_ptr<IService>> m_services;
   std::vector<std::shared_ptr<IContextDecorator>> m_decorators;
   std::vector<std::shared_ptr<IReader>> m_readers;
-  std::vector<std::shared_ptr<IAlgorithm>> m_algorithms;
-  std::vector<std::shared_ptr<IWriter>> m_writers;
+  std::vector<std::shared_ptr<SequenceElement>> m_sequenceElements;
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;

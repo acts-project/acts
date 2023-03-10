@@ -42,9 +42,7 @@ class InternalSpacePoint {
   const float& varianceZ() const { return m_varianceZ; }
   const float& deltaR() const { return m_deltaR; }
   const float& quality() const { return m_quality; }
-  const float& cotTheta() const { return m_cotTheta; }
   void setDeltaR(float deltaR) { m_deltaR = deltaR; }
-  void setCotTheta(float cotTheta) { m_cotTheta = cotTheta; }
   void setQuality(float quality) {
     if (quality >= m_quality) {
       m_quality = quality;
@@ -60,10 +58,6 @@ class InternalSpacePoint {
   float m_varianceR;  //
   float m_varianceZ;  //
   float m_deltaR;     //
-  float m_cotTheta = std::numeric_limits<
-      double>::quiet_NaN();  // 1/tanTheta estimated from central+this space
-                             // point. Its evaluation requires that the space
-                             // point is a candidate for triplet search.
   float m_quality = -std::numeric_limits<
       double>::infinity();  // Quality score of the seed the space point is used
                             // for. Quality can be changed if the space point is

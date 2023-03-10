@@ -97,7 +97,8 @@ ActsExamples::RootVertexPerformanceWriter::~RootVertexPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::RootVertexPerformanceWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();

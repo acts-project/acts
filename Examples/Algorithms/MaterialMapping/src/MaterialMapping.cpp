@@ -17,7 +17,7 @@
 ActsExamples::MaterialMapping::MaterialMapping(
     const ActsExamples::MaterialMapping::Config& cfg,
     Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("MaterialMapping", level),
+    : ActsExamples::IAlgorithm("MaterialMapping", level),
       m_cfg(cfg),
       m_mappingState(cfg.geoContext, cfg.magFieldContext),
       m_mappingStateVol(cfg.geoContext, cfg.magFieldContext) {

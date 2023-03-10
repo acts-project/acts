@@ -348,7 +348,7 @@ ActsExamples::RootNuclearInteractionParametersWriter::
     ~RootNuclearInteractionParametersWriter() = default;
 
 ActsExamples::ProcessCode
-ActsExamples::RootNuclearInteractionParametersWriter::endRun() {
+ActsExamples::RootNuclearInteractionParametersWriter::finalize() {
   namespace Parametrisation = detail::NuclearInteractionParametrisation;
   if (m_eventFractionCollection.empty()) {
     return ProcessCode::ABORT;

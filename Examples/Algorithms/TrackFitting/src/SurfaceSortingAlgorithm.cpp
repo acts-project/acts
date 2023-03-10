@@ -14,7 +14,7 @@
 
 ActsExamples::SurfaceSortingAlgorithm::SurfaceSortingAlgorithm(
     Config cfg, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("SurfaceSortingAlgorithm", level),
+    : ActsExamples::IAlgorithm("SurfaceSortingAlgorithm", level),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputProtoTracks.empty()) {
     throw std::invalid_argument("Missing input proto track collection");

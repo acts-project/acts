@@ -8,6 +8,7 @@
 
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
 
+#include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
@@ -22,7 +23,7 @@
 ActsExamples::AmbiguityResolutionAlgorithm::AmbiguityResolutionAlgorithm(
     ActsExamples::AmbiguityResolutionAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("AmbiguityResolutionAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("AmbiguityResolutionAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSourceLinks.empty()) {
     throw std::invalid_argument("Missing source links input collection");
@@ -123,6 +124,11 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
       if (!traj.hasTrackParameters(tip)) {
         continue;
       }
+      auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+          traj.multiTrajectory(), tip);
+      if (trajState.nMeasurements < m_cfg.nMeasurementsMin) {
+        continue;
+      }
       trackParameters.push_back(traj.trackParameters(tip));
       trackTips.emplace_back(iTraj, tip);
     }
@@ -191,8 +197,9 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
       tips.push_back(tip);
       parameters.emplace(tip, trackParameters[iTrack]);
     }
-
-    outputTrajectories.emplace_back(traj.multiTrajectory(), tips, parameters);
+    if (!tips.empty()) {
+      outputTrajectories.emplace_back(traj.multiTrajectory(), tips, parameters);
+    }
   }
 
   ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));

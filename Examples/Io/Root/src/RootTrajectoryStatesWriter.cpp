@@ -223,7 +223,7 @@ ActsExamples::RootTrajectoryStatesWriter::~RootTrajectoryStatesWriter() {
   m_outputFile->Close();
 }
 
-ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();

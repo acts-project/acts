@@ -42,7 +42,7 @@ ProcessCode TrajectoriesToPrototracks::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputPrototracks, std::move(tracks));
+  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(tracks));
 
   return ProcessCode::SUCCESS;
 }

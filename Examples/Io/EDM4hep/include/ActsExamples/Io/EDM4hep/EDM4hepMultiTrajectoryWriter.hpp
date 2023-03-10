@@ -47,7 +47,7 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   EDM4hepMultiTrajectoryWriter(
       const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
 
-  ProcessCode endRun() final;
+  ProcessCode finalize() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }

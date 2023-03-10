@@ -55,7 +55,7 @@ class CsvTrackParameterWriter final : public IWriter {
   ProcessCode write(const AlgorithmContext& ctx) override;
 
   /// No-op default implementation.
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

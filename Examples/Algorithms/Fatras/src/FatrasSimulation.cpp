@@ -16,7 +16,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsFatras/Kernel/InteractionList.hpp"
@@ -161,8 +161,7 @@ struct FatrasSimulationT final : ActsExamples::detail::FatrasSimulation {
 
 ActsExamples::FatrasSimulation::FatrasSimulation(Config cfg,
                                                  Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("FatrasSimulation", lvl),
-      m_cfg(std::move(cfg)) {
+    : ActsExamples::IAlgorithm("FatrasSimulation", lvl), m_cfg(std::move(cfg)) {
   ACTS_DEBUG("hits on sensitive surfaces: " << m_cfg.generateHitsOnSensitive);
   ACTS_DEBUG("hits on material surfaces: " << m_cfg.generateHitsOnMaterial);
   ACTS_DEBUG("hits on passive surfaces: " << m_cfg.generateHitsOnPassive);
