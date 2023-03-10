@@ -47,8 +47,9 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
-    Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t bottomSPs,
-    sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // Get SeedFinderConfig values
@@ -84,8 +85,8 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   int nSpB(0);
   int nSpT(0);
 
-  for (std::size_t idx : middleSPs) {
-    auto& sp_collection = grid.at(idx);
+  {
+    auto& sp_collection = grid.at(middleSPs);
     for (auto& sp : sp_collection) {
       nSpM++;
       middleSPvec.push_back(sp.get());

@@ -57,8 +57,9 @@ class SeedFinder<external_spacepoint_t, Acts::Cuda> {
   /// @return vector in which all found seeds for this group are stored.
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t> > createSeedsForGroup(
-      Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t bottomSPs,
-      sp_range_t middleSPs, sp_range_t topSPs) const;
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const sp_range_t& bottomSPs, const std::size_t middleSPs,
+      const sp_range_t& topSPs) const;
 
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;

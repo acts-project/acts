@@ -63,8 +63,9 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Acts::Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t>::createSeedsForGroup(
-    Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t bottomSPs,
-    sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // As a first step, we create Arrays of Structures (AoS)
@@ -93,8 +94,8 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
                                SP->varianceR(), SP->varianceZ()});
   }
 
-  for (std::size_t SPidx : middleSPs) {
-    auto& sp_collection = grid.at(SPidx);
+  {
+    auto& sp_collection = grid.at(middleSPs);
     for (auto& SP : sp_collection) {
       middleSPvec.push_back(SP.get());
     }
