@@ -626,4 +626,4 @@ jobs:
       - uses: aidasoft/run-lcg-view@v3
         with:
           release-platform: "${{ env.LCG_RELEASE }}/${{ env.LCG_PLATFORM }}"
-          run: bash CI/athena_build.sh
+          run: env -i CI/athena_build.sh ${{ env.LCG_RELEASE }} ${{ env.LCG_PLATFORM }}

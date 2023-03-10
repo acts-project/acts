@@ -2,6 +2,9 @@
 
 set -e
 
+LCG_RELEASE=$1
+LCG_PLATFORM=$2
+
 echo "LCG_RELEASE: ${LCG_RELEASE}"
 echo "LCG_PLATFORM: ${LCG_PLATFORM}"
 
