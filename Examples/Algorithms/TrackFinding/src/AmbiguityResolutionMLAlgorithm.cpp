@@ -106,7 +106,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
       int nbMeasurements = 0;
       traj.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
         if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          int indexHit = state.uncalibratedSourceLink()
+          int indexHit = state.getUncalibratedSourceLink()
                              .template get<ActsExamples::IndexSourceLink>()
                              .index();
           hits.emplace_back(indexHit);
