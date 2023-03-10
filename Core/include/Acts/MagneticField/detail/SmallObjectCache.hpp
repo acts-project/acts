@@ -93,18 +93,18 @@ class SmallObjectCache {
     void moveConstruct(void* from, void* to) const override {
       assert(from != nullptr && "Source is null");
       assert(to != nullptr && "Target is null");
-      T* _from = static_cast<T*>(from);
-      /*T* ptr =*/new (to) T(std::move(*_from));
+      T* fromValue = static_cast<T*>(from);
+      /*T* ptr =*/new (to) T(std::move(*fromValue));
     }
 
     void move(void* from, void* to) const override {
       assert(from != nullptr && "Source is null");
       assert(to != nullptr && "Target is null");
 
-      T* _from = static_cast<T*>(from);
-      T* _to = static_cast<T*>(to);
+      T* fromValue = static_cast<T*>(from);
+      T* toValue = static_cast<T*>(to);
 
-      (*_to) = std::move(*_from);
+      (*toValue) = std::move(*fromValue);
     }
   };
 
