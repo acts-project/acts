@@ -622,8 +622,18 @@ jobs:
       LCG_PLATFORM: x86_64-centos7-gcc11-opt
     steps:
       - uses: actions/checkout@v3
+
+      - name: Cache build
+        uses: actions/cache@v3
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache-athena_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
+          restore-keys: |
+            ${{ runner.os  }}-ccache-athena_${{ env.CCACHE_KEY_SUFFIX }}_
+
       - uses: cvmfs-contrib/github-action-cvmfs@v3
+
       - uses: aidasoft/run-lcg-view@v3
         with:
           release-platform: "${{ env.LCG_RELEASE }}/${{ env.LCG_PLATFORM }}"
-          run: env -i CI/athena_build.sh ${{ env.LCG_RELEASE }} ${{ env.LCG_PLATFORM }}
+          run: env -i CI/athena/athena_build.sh ${{ env.LCG_RELEASE }} ${{ env.LCG_PLATFORM }}

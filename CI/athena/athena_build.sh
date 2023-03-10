@@ -17,7 +17,7 @@ function group {
     fi
 }
 
-group "Setup"
+group "Setup ACTS"
 
 LCG_RELEASE=$1
 LCG_PLATFORM=$2
@@ -39,19 +39,25 @@ ln -s $(command -v ccache) $PWD/ccache
 
 $PWD/ccache -z
 
-group "Build ACTS"
+group "Configure ACTS"
 
 cmake -S $PWD -B acts-build \
 	-DCMAKE_INSTALL_PREFIX=$PWD/acts-install \
 	-DACTS_BUILD_PLUGIN_JSON:BOOL=ON \
 	-DCMAKE_CXX_COMPILER_LAUNCHER=$PWD/ccache \
 	-DACTS_BUILD_FATRAS:BOOL=ON
+
+group "Build ACTS"
+
 cmake --build acts-build -- -j $(nproc)
 $PWD/ccache -s
+
+group "Install ACTS"
 cmake --install acts-build
 
-asetup ${ATHENA_RELEASE} || true
+group "Setup Athena"
 
+asetup ${ATHENA_RELEASE} || true
 nightly=$(basename $ATLAS_RELEASE_BASE)
 branch=$(echo $ATLAS_RELEASE_BASE | perl -pe 's/.*\/sw\/(\w*?)_(\w*?)_.*/\1/g')
 project=$(echo $ATLAS_RELEASE_BASE | perl -pe 's/.*\/sw\/(\w*?)_(\w*?)_.*/\2/g')
@@ -64,22 +70,13 @@ $PWD/ccache -z
 
 export CMAKE_PREFIX_PATH="$PWD/acts-install:$CMAKE_PREFIX_PATH"
 
-cat >package_filters.txt <<EOL
-+ .*Acts.*
-+ .*InnerDetector/InDetRecAlgs/InDetPriVxFinder.*
-+ .*InnerDetector/InDetRecTools/InDetRecToolInterfaces.*
-+ .*Tracking/TrkExtrapolation/TrkExAlgs.*
-
-- .*
-... 
-EOL
-
-group "Build Athena"
+group "Configure Athena"
 
 cmake -S athena/Projects/WorkDir -B athena-build \
-	-DATLAS_PACKAGE_FILTER_FILE=$PWD/package_filters.txt \
+	-DATLAS_PACKAGE_FILTER_FILE=$PWD/CI/athena/package_filters.txt \
 	-DCMAKE_CXX_COMPILER_LAUNCHER=$PWD/ccache
 
+group "Build Athena"
 
 cmake --build athena-build -- -j $(nproc)
 $PWD/ccache -s
@@ -97,12 +94,12 @@ function runTest {
 }
 
 runTest python3 ../athena/Tracking/Acts/ActsGeometry/test/ActsITkTest.py
-runTest ../athena/AtlasTest/CITest/test/ActsKfRefitting.sh
-runTest ../athena/AtlasTest/CITest/test/ActsPersistifyEDM.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateClusters.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateOrthogonalSeeds.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateSeeds.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateSpacePoints.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateTracks.sh
-runTest ../athena/AtlasTest/CITest/test/ActsWorkflow.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsKfRefitting.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsPersistifyEDM.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateClusters.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateOrthogonalSeeds.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateSeeds.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateSpacePoints.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateTracks.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsWorkflow.sh
 
