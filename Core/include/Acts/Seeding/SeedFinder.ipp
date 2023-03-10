@@ -14,6 +14,46 @@
 
 namespace Acts {
 
+  template<typename spacepoint_collection_t>
+  static inline
+  std::pair<typename spacepoint_collection_t::const_iterator,
+	    typename spacepoint_collection_t::const_iterator>
+  getRangeBound(const spacepoint_collection_t& collection,
+		float lowerBound, float upperBound) {    
+    // Check the size first
+    if (collection.size() == 0) {
+      return std::make_pair(collection.begin(), collection.end());
+    }
+    
+    auto check_lower_bound =
+      [] (const auto& sp, const float& target) -> bool
+      { return sp->radius() < target; };
+    auto check_upper_bound =
+      [] (const float& target, const auto& sp) -> bool
+      { return target < sp->radius(); };
+    
+    // Check the Boudaries
+    // Return if first sp is already higher then the upper bound
+    // or if the last sp is already lower then the lower bound
+    if (check_lower_bound(collection.back(), lowerBound) or
+	check_upper_bound(upperBound, collection.front()) ) {
+      return std::make_pair(collection.end(), collection.end());
+    }
+           
+    // Get the first element in the proper range
+    auto min_itr = std::lower_bound(collection.begin(), collection.end(),
+				    lowerBound,
+                                    check_lower_bound);
+    
+    // Get the first last element that is not in the proper range anymore
+    auto max_itr = std::upper_bound(min_itr, collection.end(),
+				    upperBound,
+				    check_upper_bound);
+    
+    return std::make_pair(min_itr, max_itr);
+  }
+  
+
 template <typename external_spacepoint_t, typename platform_t>
 SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
     const Acts::SeedFinderConfig<external_spacepoint_t>& config)
@@ -178,21 +218,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     /// we only iterate on these elements to save time
     /// search of elements is log(N)
 
-    // Get the first element in the proper range
-    auto min_itr = std::lower_bound(otherSPs.begin(), otherSPs.end(),
-				    isBottom ? rM - deltaRMaxSP : rM + deltaRMinSP,
-				    [] (const auto& sp, const float& target) -> bool
-				    { return sp->radius() < target; });
+    auto [min_itr, max_itr] = getRangeBound(otherSPs, // sps in the grid bin
+					    isBottom ? rM - deltaRMaxSP : rM + deltaRMinSP, // min valid range
+					    isBottom ? rM - deltaRMinSP : rM + deltaRMaxSP); // max valid range
     if (min_itr == otherSPs.end()) {
       continue;
     }
-    
-    // Get the first last element that is not in the proper range anymore
-    auto max_itr = std::upper_bound(min_itr, otherSPs.end(),
-				    isBottom ? rM - deltaRMinSP : rM + deltaRMaxSP,
-				    [] (const float& target, const auto& sp) -> bool
-				    { return target < sp->radius(); });
-
     
     for (; min_itr != max_itr; ++min_itr) {
       auto& otherSP = *min_itr;
