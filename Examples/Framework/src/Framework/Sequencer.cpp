@@ -128,24 +128,23 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
         it != m_whiteBoardState.end()) {
       const std::type_info& type = *it->second;
       if (type != handle->typeInfo()) {
-        ACTS_ERROR("Adding "
-                   << elementType << " " << element->name() << ":"
-                   << "\n-> white board will contain key '" << handle->key()
-                   << "'"
-                   << "\nat this point in the sequence, but the type will be\n"
-                   << "'" << boost::core::demangle(type.name()) << "'"
-                   << "\nand not\n"
-                   << "'" << boost::core::demangle(handle->typeInfo().name())
-                   << "'");
+        ACTS_WARNING(
+            "Adding "
+            << elementType << " " << element->name() << ":"
+            << "\n-> white board will contain key '" << handle->key() << "'"
+            << "\nat this point in the sequence, but the type will be\n"
+            << "'" << boost::core::demangle(type.name()) << "'"
+            << "\nand not\n"
+            << "'" << boost::core::demangle(handle->typeInfo().name()) << "'");
         valid = false;
       }
     } else {
-      ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
-                           << "\n-> white board will not contain key"
-                           << "   '" << handle->key()
-                           << "' at this point in the sequence."
-                           << "\n   Needed for read data handle '"
-                           << handle->name() << "'")
+      ACTS_WARNING("Adding " << elementType << " " << element->name() << ":"
+                             << "\n-> white board will not contain key"
+                             << "   '" << handle->key()
+                             << "' at this point in the sequence."
+                             << "\n   Needed for read data handle '"
+                             << handle->name() << "'")
       valid = false;
     }
   }
@@ -158,8 +157,8 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
 
       if (auto it = m_whiteBoardState.find(handle->key());
           it != m_whiteBoardState.end()) {
-        ACTS_ERROR("White board will already contain key '"
-                   << handle->key() << "' (cannot overwrite)");
+        ACTS_WARNING("White board will already contain key '"
+                     << handle->key() << "' (cannot overwrite)");
         valid = false;
         break;
       }
@@ -175,9 +174,6 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
     }
   }
 
-  if (!valid) {
-    throw SequenceConfigurationException{};
-  }
 
   ACTS_INFO("Added " << elementType << " '" << element->name() << "'");
   auto symbol = [](const char* in) {
