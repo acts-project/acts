@@ -36,12 +36,12 @@ namespace {
 
 std::string_view getAlgorithmType(const SequenceElement& element) {
   if (dynamic_cast<const IWriter*>(&element) != nullptr) {
-    return "writer";
+    return "Writer";
   }
   if (dynamic_cast<const IReader*>(&element) != nullptr) {
-    return "reader";
+    return "Reader";
   }
-  return "algorithm";
+  return "Algorithm";
 }
 
 // Saturated addition that does not overflow and exceed SIZE_MAX.
@@ -127,11 +127,9 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
   for (const auto& decorator : m_decorators) {
     names.push_back("Decorator:" + decorator->name());
   }
-  for (const auto& reader : m_readers) {
-    names.push_back("Reader:" + reader->name());
-  }
   for (const auto& algorithm : m_sequenceElements) {
-    names.push_back("Algorithm:" + algorithm->name());
+    names.push_back(std::string(getAlgorithmType(*algorithm)) + ":" +
+                    algorithm->name());
   }
 
   return names;
