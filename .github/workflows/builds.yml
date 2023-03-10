@@ -617,10 +617,13 @@ jobs:
         # run: ccache -s
   athena:
     runs-on: ubuntu-latest
+    env: 
+      - LCG_RELEASE: LCG_102b_ATLAS_11
+      - LCG_PLATFORM: x86_64-centos7-gcc11-opt
     steps:
       - uses: actions/checkout@v3
       - uses: cvmfs-contrib/github-action-cvmfs@v3
       - uses: aidasoft/run-lcg-view@v3
         with:
-          release-platform: "LCG_102b_ATLAS_11/x86_64-centos7-gcc11-opt"
+          release-platform: "${{ env.LCG_RELEASE }}/${{ env.LCG_PLATFORM }}"
           run: bash CI/athena_build.sh

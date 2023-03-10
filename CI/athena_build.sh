@@ -17,5 +17,5 @@ ATHENA_RELEASE=Athena,master,latest
 source ${ATLAS_LOCAL_ROOT_BASE}/user/atlasLocalSetup.sh || true
 asetup none,gcc11 || true
 lsetup cmake || true
-lsetup "views ${LCG_RELEASE} x86_64-centos7-gcc11-opt" || true
+lsetup "views ${LCG_RELEASE} ${LCG_PLATFORM}" || true
 
