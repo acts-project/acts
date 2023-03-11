@@ -105,6 +105,18 @@ std::size_t computeTrackHits(
   return result;
 }
 
+std::vector<uint32_t> computeTrackHits(
+    const TrajectoriesContainer& trajectories,
+    const std::vector<std::pair<size_t, size_t>>& trackTips) {
+  std::vector<uint32_t> result(trackTips.size(), 0);
+  for (std::size_t i = 0; i < trackTips.size(); ++i) {
+    const auto [iTraj, tip] = trackTips[i];
+    const auto& traj = trajectories[iTraj];
+    result[i] = computeTrackHits(traj.multiTrajectory(), tip);
+  }
+  return result;
+}
+
 }  // namespace
 
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
@@ -134,12 +146,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     }
   }
 
-  std::vector<uint32_t> hitCount(trackParameters.size(), 0);
-  for (std::size_t i = 0; i < trackParameters.size(); ++i) {
-    const auto [iTraj, tip] = trackTips[i];
-    const auto& traj = trajectories[iTraj];
-    hitCount[i] = computeTrackHits(traj.multiTrajectory(), tip);
-  }
+  std::vector<uint32_t> hitCount = computeTrackHits(trajectories, trackTips);
 
   std::vector<uint32_t> trackIndices(trackParameters.size());
   std::iota(std::begin(trackIndices), std::end(trackIndices), 0);
@@ -165,17 +172,6 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     const auto index =
         std::distance(std::begin(relativeSharedHits), maxRelativeSharedHits);
     trackIndices.erase(std::begin(trackIndices) + index);
-  }
-
-  if (trackIndices.size() == trackParameters.size()) {
-    const auto sharedHits =
-        computeSharedHits(sourceLinks, trajectories, trackIndices, trackTips);
-
-    std::vector<float> relativeSharedHits(trackIndices.size(), 0);
-    for (std::size_t i = 0; i < trackIndices.size(); ++i) {
-      const auto indexTrack = trackIndices[i];
-      relativeSharedHits[i] = 1.0f * sharedHits[i] / hitCount[indexTrack];
-    }
   }
 
   ACTS_INFO("Resolved to " << trackIndices.size() << " tracks from "
