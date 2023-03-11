@@ -20,14 +20,13 @@
 #include <numeric>
 #include <stdexcept>
 
+#include <boost/container/flat_set.hpp>
+
 ActsExamples::AmbiguityResolutionAlgorithm::AmbiguityResolutionAlgorithm(
     ActsExamples::AmbiguityResolutionAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("AmbiguityResolutionAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
-  if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument("Missing source links input collection");
-  }
   if (m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
   }
@@ -38,144 +37,133 @@ ActsExamples::AmbiguityResolutionAlgorithm::AmbiguityResolutionAlgorithm(
 
 namespace {
 
-// TODO this is somewhat duplicated in TrackFindingAlgorithm.hpp
-// TODO we should make a common implementation in the core at some point
-std::vector<std::size_t> computeSharedHits(
-    const ActsExamples::IndexSourceLinkContainer& sourceLinks,
+struct State {
+  std::vector<std::pair<size_t, size_t>> trackTips;
+  std::vector<float> trackChi2;
+  std::vector<ActsExamples::TrackParameters> trackParameters;
+  std::vector<std::vector<std::size_t>> measurementsPerTrack;
+
+  std::vector<boost::container::flat_set<std::size_t>> tracksPerMeasurement;
+  std::vector<std::size_t> sharedMeasurementsPerTrack;
+
+  boost::container::flat_set<std::size_t> selectedTracks;
+};
+
+State computeInitialState(
     const ActsExamples::TrajectoriesContainer& trajectories,
-    const std::vector<uint32_t>& trackIndices,
-    const std::vector<std::pair<size_t, size_t>>& trackTips) {
-  std::vector<std::size_t> hitCountPerMeasurement(sourceLinks.size(), 0);
+    std::size_t nMeasurementsMin) {
+  State state;
 
-  for (auto indexTrack : trackIndices) {
-    const auto [indexTraj, tip] = trackTips[indexTrack];
-    const auto& traj = trajectories[indexTraj];
+  {
+    std::size_t iTrack = 0;
+    for (std::size_t iTraj = 0; iTraj < trajectories.size(); ++iTraj) {
+      const auto& traj = trajectories[iTraj];
+      for (auto tip : traj.tips()) {
+        if (!traj.hasTrackParameters(tip)) {
+          continue;
+        }
 
-    traj.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
-      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        return true;
+        auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+            traj.multiTrajectory(), tip);
+        if (trajState.nMeasurements < nMeasurementsMin) {
+          continue;
+        }
+
+        std::vector<std::size_t> measurements;
+        traj.multiTrajectory().visitBackwards(tip, [&](const auto& hit) {
+          if (hit.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+            std::size_t iMeasurement =
+                hit.getUncalibratedSourceLink()
+                    .template get<ActsExamples::IndexSourceLink>()
+                    .index();
+            measurements.push_back(iMeasurement);
+          }
+          return true;
+        });
+
+        state.trackTips.emplace_back(iTraj, tip);
+        state.trackChi2.push_back(trajState.chi2Sum / trajState.NDF);
+        state.trackParameters.push_back(traj.trackParameters(tip));
+        state.measurementsPerTrack.push_back(std::move(measurements));
+
+        state.selectedTracks.insert(iTrack);
+
+        ++iTrack;
       }
-
-      const std::size_t indexHit =
-          state.getUncalibratedSourceLink()
-              .template get<ActsExamples::IndexSourceLink>()
-              .index();
-
-      ++hitCountPerMeasurement[indexHit];
-
-      return true;
-    });
+    }
   }
 
-  std::vector<std::size_t> sharedHitCountPerTrack(trackIndices.size(), 0);
+  state.measurementsPerTrack = std::vector<std::vector<std::size_t>>(
+      state.trackTips.size(), std::vector<std::size_t>());
 
-  for (std::size_t i = 0; i < trackIndices.size(); ++i) {
-    const auto indexTrack = trackIndices[i];
-    const auto [indexTraj, tip] = trackTips[indexTrack];
-    const auto& traj = trajectories[indexTraj];
-
-    traj.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
-      if (!state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        return true;
-      }
-
-      const std::size_t indexHit =
-          state.getUncalibratedSourceLink()
-              .template get<ActsExamples::IndexSourceLink>()
-              .index();
-
-      if (hitCountPerMeasurement[indexHit] > 1) {
-        ++sharedHitCountPerTrack[i];
-      }
-
-      return true;
-    });
+  for (std::size_t iTrack = 0; iTrack < state.trackTips.size(); ++iTrack) {
+    for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
+      state.tracksPerMeasurement[iMeasurement].insert(iTrack);
+    }
   }
 
-  return sharedHitCountPerTrack;
+  state.sharedMeasurementsPerTrack =
+      std::vector<std::size_t>(state.trackTips.size(), 0);
+
+  for (std::size_t iTrack = 0; iTrack < state.trackTips.size(); ++iTrack) {
+    for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
+      if (state.tracksPerMeasurement[iMeasurement].size() > 1) {
+        ++state.sharedMeasurementsPerTrack[iTrack];
+      }
+    }
+  }
+
+  return state;
 }
 
-std::size_t computeTrackHits(
-    const Acts::ConstVectorMultiTrajectory& multiTrajectory,
-    const std::size_t tip) {
-  std::size_t result = 0;
+void removeTrack(State& state, std::size_t iTrack) {
+  for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
+    state.tracksPerMeasurement[iMeasurement].erase(iTrack);
 
-  multiTrajectory.visitBackwards(tip, [&](const auto&) { ++result; });
-
-  return result;
-}
-
-std::vector<uint32_t> computeTrackHits(
-    const TrajectoriesContainer& trajectories,
-    const std::vector<std::pair<size_t, size_t>>& trackTips) {
-  std::vector<uint32_t> result(trackTips.size(), 0);
-  for (std::size_t i = 0; i < trackTips.size(); ++i) {
-    const auto [iTraj, tip] = trackTips[i];
-    const auto& traj = trajectories[iTraj];
-    result[i] = computeTrackHits(traj.multiTrajectory(), tip);
+    if (state.tracksPerMeasurement[iMeasurement].size() <= 1) {
+      --state.sharedMeasurementsPerTrack[iTrack];
+    }
   }
-  return result;
+
+  state.selectedTracks.erase(iTrack);
 }
 
 }  // namespace
 
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-  // Read input data
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
   const auto& trajectories =
       ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
 
-  TrackParametersContainer trackParameters;
-  std::vector<std::pair<size_t, size_t>> trackTips;
+  auto state = computeInitialState(trajectories, m_cfg.nMeasurementsMin);
 
-  for (std::size_t iTraj = 0; iTraj < trajectories.size(); ++iTraj) {
-    const auto& traj = trajectories[iTraj];
-    for (auto tip : traj.tips()) {
-      if (!traj.hasTrackParameters(tip)) {
-        continue;
-      }
-      auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-          traj.multiTrajectory(), tip);
-      if (trajState.nMeasurements < m_cfg.nMeasurementsMin) {
-        continue;
-      }
-      trackParameters.push_back(traj.trackParameters(tip));
-      trackTips.emplace_back(iTraj, tip);
-    }
-  }
-
-  std::vector<uint32_t> hitCount = computeTrackHits(trajectories, trackTips);
-
-  std::vector<uint32_t> trackIndices(trackParameters.size());
-  std::iota(std::begin(trackIndices), std::end(trackIndices), 0);
+  auto sharedMeasurementsComperator = [&state](std::size_t a, std::size_t b) {
+    return state.sharedMeasurementsPerTrack[a] -
+           state.sharedMeasurementsPerTrack[b];
+  };
+  auto badTrackComperator = [&state](std::size_t a, std::size_t b) {
+    auto loss = [&state](std::size_t i) {
+      return 1.0f * state.sharedMeasurementsPerTrack[i] /
+             state.measurementsPerTrack[i].size();
+    };
+    return loss(a) - loss(b);
+  };
 
   while (true) {
-    const auto sharedHits =
-        computeSharedHits(sourceLinks, trajectories, trackIndices, trackTips);
-
-    if (sharedHits.empty() ||
-        *std::max_element(std::begin(sharedHits), std::end(sharedHits)) <
-            m_cfg.maximumSharedHits) {
+    if (*std::max_element(
+            std::begin(state.selectedTracks), std::end(state.selectedTracks),
+            sharedMeasurementsComperator) < m_cfg.maximumSharedHits) {
       break;
     }
 
-    std::vector<float> relativeSharedHits(trackIndices.size(), 0);
-    for (std::size_t i = 0; i < trackIndices.size(); ++i) {
-      const auto indexTrack = trackIndices[i];
-      relativeSharedHits[i] = 1.0f * sharedHits[i] / hitCount[indexTrack];
-    }
-
-    const auto maxRelativeSharedHits = std::max_element(
-        std::begin(relativeSharedHits), std::end(relativeSharedHits));
-    const auto index =
-        std::distance(std::begin(relativeSharedHits), maxRelativeSharedHits);
-    trackIndices.erase(std::begin(trackIndices) + index);
+    const auto badTrack =
+        *std::max_element(std::begin(state.selectedTracks),
+                          std::end(state.selectedTracks), badTrackComperator);
+    removeTrack(state, badTrack);
   }
 
-  ACTS_INFO("Resolved to " << trackIndices.size() << " tracks from "
-                           << trackParameters.size());
+  ACTS_INFO("Resolved to " << state.selectedTracks.size() << " tracks from "
+                           << state.trackTips.size());
 
   TrajectoriesContainer outputTrajectories;
   outputTrajectories.reserve(trajectories.size());
@@ -185,13 +173,13 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
     Trajectories::IndexedParameters parameters;
 
-    for (auto iTrack : trackIndices) {
-      if (trackTips[iTrack].first != iTraj) {
+    for (auto iTrack : state.selectedTracks) {
+      if (state.trackTips[iTrack].first != iTraj) {
         continue;
       }
-      const auto tip = trackTips[iTrack].second;
+      const auto tip = state.trackTips[iTrack].second;
       tips.push_back(tip);
-      parameters.emplace(tip, trackParameters[iTrack]);
+      parameters.emplace(tip, state.trackParameters[iTrack]);
     }
     if (!tips.empty()) {
       outputTrajectories.emplace_back(traj.multiTrajectory(), tips, parameters);
