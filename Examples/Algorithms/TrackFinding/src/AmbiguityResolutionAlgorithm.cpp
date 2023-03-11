@@ -20,6 +20,7 @@
 #include <numeric>
 #include <stdexcept>
 
+#include <boost/container/flat_map.hpp>
 #include <boost/container/flat_set.hpp>
 
 ActsExamples::AmbiguityResolutionAlgorithm::AmbiguityResolutionAlgorithm(
@@ -38,12 +39,16 @@ ActsExamples::AmbiguityResolutionAlgorithm::AmbiguityResolutionAlgorithm(
 namespace {
 
 struct State {
-  std::vector<std::pair<size_t, size_t>> trackTips;
+  std::size_t numberOfTracks{};
+
+  std::vector<std::pair<std::size_t, std::size_t>> trackTips;
   std::vector<float> trackChi2;
   std::vector<ActsExamples::TrackParameters> trackParameters;
   std::vector<std::vector<std::size_t>> measurementsPerTrack;
 
-  std::vector<boost::container::flat_set<std::size_t>> tracksPerMeasurement;
+  boost::container::flat_map<std::size_t,
+                             boost::container::flat_set<std::size_t>>
+      tracksPerMeasurement;
   std::vector<std::size_t> sharedMeasurementsPerTrack;
 
   boost::container::flat_set<std::size_t> selectedTracks;
@@ -54,49 +59,46 @@ State computeInitialState(
     std::size_t nMeasurementsMin) {
   State state;
 
-  {
-    std::size_t iTrack = 0;
-    for (std::size_t iTraj = 0; iTraj < trajectories.size(); ++iTraj) {
-      const auto& traj = trajectories[iTraj];
-      for (auto tip : traj.tips()) {
-        if (!traj.hasTrackParameters(tip)) {
-          continue;
-        }
-
-        auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-            traj.multiTrajectory(), tip);
-        if (trajState.nMeasurements < nMeasurementsMin) {
-          continue;
-        }
-
-        std::vector<std::size_t> measurements;
-        traj.multiTrajectory().visitBackwards(tip, [&](const auto& hit) {
-          if (hit.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-            std::size_t iMeasurement =
-                hit.getUncalibratedSourceLink()
-                    .template get<ActsExamples::IndexSourceLink>()
-                    .index();
-            measurements.push_back(iMeasurement);
-          }
-          return true;
-        });
-
-        state.trackTips.emplace_back(iTraj, tip);
-        state.trackChi2.push_back(trajState.chi2Sum / trajState.NDF);
-        state.trackParameters.push_back(traj.trackParameters(tip));
-        state.measurementsPerTrack.push_back(std::move(measurements));
-
-        state.selectedTracks.insert(iTrack);
-
-        ++iTrack;
+  for (std::size_t iTrack = 0, iTraj = 0; iTraj < trajectories.size();
+       ++iTraj) {
+    const auto& traj = trajectories[iTraj];
+    for (auto tip : traj.tips()) {
+      if (!traj.hasTrackParameters(tip)) {
+        continue;
       }
+
+      auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
+          traj.multiTrajectory(), tip);
+      if (trajState.nMeasurements < nMeasurementsMin) {
+        continue;
+      }
+
+      std::vector<std::size_t> measurements;
+      traj.multiTrajectory().visitBackwards(tip, [&](const auto& hit) {
+        if (hit.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+          std::size_t iMeasurement =
+              hit.getUncalibratedSourceLink()
+                  .template get<ActsExamples::IndexSourceLink>()
+                  .index();
+          measurements.push_back(iMeasurement);
+        }
+        return true;
+      });
+
+      ++state.numberOfTracks;
+
+      state.trackTips.emplace_back(iTraj, tip);
+      state.trackChi2.push_back(trajState.chi2Sum / trajState.NDF);
+      state.trackParameters.push_back(traj.trackParameters(tip));
+      state.measurementsPerTrack.push_back(std::move(measurements));
+
+      state.selectedTracks.insert(iTrack);
+
+      ++iTrack;
     }
   }
 
-  state.measurementsPerTrack = std::vector<std::vector<std::size_t>>(
-      state.trackTips.size(), std::vector<std::size_t>());
-
-  for (std::size_t iTrack = 0; iTrack < state.trackTips.size(); ++iTrack) {
+  for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
     for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
       state.tracksPerMeasurement[iMeasurement].insert(iTrack);
     }
@@ -105,7 +107,7 @@ State computeInitialState(
   state.sharedMeasurementsPerTrack =
       std::vector<std::size_t>(state.trackTips.size(), 0);
 
-  for (std::size_t iTrack = 0; iTrack < state.trackTips.size(); ++iTrack) {
+  for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
     for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
       if (state.tracksPerMeasurement[iMeasurement].size() > 1) {
         ++state.sharedMeasurementsPerTrack[iTrack];
@@ -120,8 +122,9 @@ void removeTrack(State& state, std::size_t iTrack) {
   for (auto iMeasurement : state.measurementsPerTrack[iTrack]) {
     state.tracksPerMeasurement[iMeasurement].erase(iTrack);
 
-    if (state.tracksPerMeasurement[iMeasurement].size() <= 1) {
-      --state.sharedMeasurementsPerTrack[iTrack];
+    if (state.tracksPerMeasurement[iMeasurement].size() == 1) {
+      auto jTrack = *std::begin(state.tracksPerMeasurement[iMeasurement]);
+      --state.sharedMeasurementsPerTrack[jTrack];
     }
   }
 
@@ -138,27 +141,33 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
   auto state = computeInitialState(trajectories, m_cfg.nMeasurementsMin);
 
   auto sharedMeasurementsComperator = [&state](std::size_t a, std::size_t b) {
-    return state.sharedMeasurementsPerTrack[a] -
+    return state.sharedMeasurementsPerTrack[a] <
            state.sharedMeasurementsPerTrack[b];
   };
   auto badTrackComperator = [&state](std::size_t a, std::size_t b) {
     auto loss = [&state](std::size_t i) {
-      return 1.0f * state.sharedMeasurementsPerTrack[i] /
+      return 1.0 * state.sharedMeasurementsPerTrack[i] /
              state.measurementsPerTrack[i].size();
     };
-    return loss(a) - loss(b);
+    return loss(a) < loss(b);
   };
 
-  while (true) {
-    if (*std::max_element(
-            std::begin(state.selectedTracks), std::end(state.selectedTracks),
-            sharedMeasurementsComperator) < m_cfg.maximumSharedHits) {
+  for (std::size_t i = 0; i < m_cfg.maximumIterations; ++i) {
+    auto maximumSharedMeasurements = *std::max_element(
+        std::begin(state.selectedTracks), std::end(state.selectedTracks),
+        sharedMeasurementsComperator);
+    ACTS_VERBOSE(
+        "maximum shared measurements "
+        << state.sharedMeasurementsPerTrack[maximumSharedMeasurements]);
+    if (state.sharedMeasurementsPerTrack[maximumSharedMeasurements] <
+        m_cfg.maximumSharedHits) {
       break;
     }
 
-    const auto badTrack =
+    auto badTrack =
         *std::max_element(std::begin(state.selectedTracks),
                           std::end(state.selectedTracks), badTrackComperator);
+    ACTS_VERBOSE("remove track " << badTrack);
     removeTrack(state, badTrack);
   }
 
