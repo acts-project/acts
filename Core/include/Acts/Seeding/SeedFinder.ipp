@@ -12,62 +12,7 @@
 #include <numeric>
 #include <type_traits>
 
-namespace Acts {
-
-  template<typename spacepoint_collection_t>
-  static inline
-  std::pair<typename spacepoint_collection_t::const_iterator,
-	    typename spacepoint_collection_t::const_iterator>
-  getRangeBound(const spacepoint_collection_t& collection,
-		float lowerBound, float upperBound) {    
-    
-    // Check the size first
-    if (collection.size() == 0) {
-      return std::make_pair(collection.begin(), collection.end());
-    }
-    
-    auto check_lower_bound =
-      [] (const auto& sp, const float& target) -> bool
-      { return sp->radius() < target; };
-    auto check_upper_bound =
-      [] (const float& target, const auto& sp) -> bool
-      { return target < sp->radius(); };
-    
-    // Check the Boudaries
-    // Return if first sp is already higher then the upper bound
-    // or if the last sp is already lower then the lower bound
-    if (check_lower_bound(collection.back(), lowerBound) or
-	check_upper_bound(upperBound, collection.front())) {
-      return std::make_pair(collection.end(), collection.end());
-    }
-    
-    std::size_t n = 0;
-    std::size_t down = 0;
-    std::size_t up = collection.size();
-    std::size_t idxMaxItr = up;
-
-    // we find the lower bound but also update the max bound on the way
-    while (down < up) {
-      n = (up + down) / 2;
-      if (lowerBound <= collection[n]->radius()) {
-	up = n;
-      } else {
-	down = n + 1;
-      }
-      // Update search window for the upper bound
-      if (collection[n]->radius() > upperBound) idxMaxItr = n;
-    }
-    if (n < collection.size() and collection[n]->radius() < lowerBound)
-      ++n;
-    
-    auto min_itr = collection.begin() + n ;
-    auto max_itr = std::upper_bound(min_itr, collection.begin() + idxMaxItr,
-				    upperBound,
-				    check_upper_bound);
-    
-    return std::make_pair(min_itr, max_itr);
-  }
-  
+namespace Acts {  
 
 template <typename external_spacepoint_t, typename platform_t>
 SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
@@ -228,26 +173,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
     auto& otherSPs = grid.at(otherSPIdx);
     if (otherSPs.size() == 0) continue;
-    /// Elements are sorted in r
-    /// Let's get the range of elements that satisfy the deltaR requirement
-    /// we only iterate on these elements to save time
-    /// search of elements is log(N)
-
-    // auto [min_itr, max_itr] = getRangeBound(otherSPs, // sps in the grid bin
-    // 					    isBottom ? rM - deltaRMaxSP : rM + deltaRMinSP, // min valid range
-    // 					    isBottom ? rM - deltaRMinSP : rM + deltaRMaxSP); // max valid range
-    // if (min_itr == otherSPs.end()) {
-    //   continue;
-    // }
 
     // Get the first element in the proper range
     auto min_itr = std::lower_bound(otherSPs.begin(), otherSPs.end(),
 				    isBottom ? rM - deltaRMaxSP : rM + deltaRMinSP,
 				    [] (const auto& sp, const float& target) -> bool
 				    { return sp->radius() < target; });
-    if (min_itr == otherSPs.end()) {
-      continue;
-    }
     
     for (; min_itr != otherSPs.end(); ++min_itr) {
       auto& otherSP = *min_itr;
