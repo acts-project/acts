@@ -233,18 +233,36 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     /// we only iterate on these elements to save time
     /// search of elements is log(N)
 
-    auto [min_itr, max_itr] = getRangeBound(otherSPs, // sps in the grid bin
-					    isBottom ? rM - deltaRMaxSP : rM + deltaRMinSP, // min valid range
-					    isBottom ? rM - deltaRMinSP : rM + deltaRMaxSP); // max valid range
+    // auto [min_itr, max_itr] = getRangeBound(otherSPs, // sps in the grid bin
+    // 					    isBottom ? rM - deltaRMaxSP : rM + deltaRMinSP, // min valid range
+    // 					    isBottom ? rM - deltaRMinSP : rM + deltaRMaxSP); // max valid range
+    // if (min_itr == otherSPs.end()) {
+    //   continue;
+    // }
+
+    // Get the first element in the proper range
+    auto min_itr = std::lower_bound(otherSPs.begin(), otherSPs.end(),
+				    isBottom ? rM - deltaRMaxSP : rM + deltaRMinSP,
+				    [] (const auto& sp, const float& target) -> bool
+				    { return sp->radius() < target; });
     if (min_itr == otherSPs.end()) {
       continue;
     }
     
-    for (; min_itr != max_itr; ++min_itr) {
+    for (; min_itr != otherSPs.end(); ++min_itr) {
       auto& otherSP = *min_itr;
       const float rO = otherSP->radius();
       float deltaR = sign * (rO - rM);
 
+      if (isBottom and deltaR < deltaRMinSP) {
+	break;
+      }
+
+      // if r-distance is too big, try next SP in bin
+      if (not isBottom and deltaR > deltaRMaxSP) {
+	break;
+      }
+      
       const float zO = otherSP->z();
       float deltaZ = sign * (zO - zM);
       if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
