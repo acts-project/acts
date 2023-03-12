@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -194,13 +194,10 @@ int main(int argc, char** argv) {
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector;
   decltype(a)::SeedingState state;
   auto start = std::chrono::system_clock::now();
-  auto groupIt = spGroup.begin();
-  auto endOfGroups = spGroup.end();
-  for (; !(groupIt == endOfGroups); ++groupIt) {
+  for (auto [bottom, middle, top] : spGroup) {
     auto& v = seedVector.emplace_back();
-    a.createSeedsForGroup(options, state, std::back_inserter(v),
-                          groupIt.bottom(), groupIt.middle(), groupIt.top(),
-                          rMiddleSPRange);
+    a.createSeedsForGroup(options, state, spGroup.grid(), std::back_inserter(v),
+                          bottom, middle, top, rMiddleSPRange);
   }
   auto end = std::chrono::system_clock::now();
   std::chrono::duration<double> elapsed_seconds = end - start;
