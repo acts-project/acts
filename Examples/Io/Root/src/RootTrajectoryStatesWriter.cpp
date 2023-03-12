@@ -299,8 +299,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
         auto ip = particles.find(barcode);
         if (ip != particles.end()) {
           const auto& particle = *ip;
-          ACTS_DEBUG("Find the truth particle with barcode "
-                     << barcode << "=" << barcode.value());
+          ACTS_VERBOSE("Find the truth particle with barcode "
+                       << barcode << "=" << barcode.value());
           // Get the truth particle charge
           truthQ = static_cast<int>(particle.charge());
         } else {
@@ -322,8 +322,8 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectoryStatesWriter::writeT(
 
         // get the truth hits corresponding to this trackState
         // Use average truth in the case of multiple contributing sim hits
-        const auto& sl =
-            state.uncalibratedSourceLink().template get<IndexSourceLink>();
+        auto sl =
+            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         const auto hitIdx = sl.index();
         auto indices = makeRange(hitSimHitsMap.equal_range(hitIdx));
         auto [truthLocal, truthPos4, truthUnitDir] =

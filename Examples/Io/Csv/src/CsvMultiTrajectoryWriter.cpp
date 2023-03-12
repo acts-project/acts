@@ -126,8 +126,8 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       mj.visitBackwards(trackTip, [&](const auto& state) {
         if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag) ==
             true) {
-          const auto& sl =
-              state.uncalibratedSourceLink().template get<IndexSourceLink>();
+          auto sl =
+              state.getUncalibratedSourceLink().template get<IndexSourceLink>();
           auto hitIndex = sl.index();
           toAdd.measurementsID.insert(toAdd.measurementsID.begin(), hitIndex);
         }
