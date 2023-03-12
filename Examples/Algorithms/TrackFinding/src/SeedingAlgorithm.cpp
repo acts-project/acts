@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -231,6 +231,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   auto grid = Acts::SpacePointGridCreator::createGrid<SimSpacePoint>(
       m_cfg.gridConfig, m_cfg.gridOptions);
+
   auto spacePointsGrouping = Acts::BinnedSPGroup<SimSpacePoint>(
       spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
       m_bottomBinFinder, m_topBinFinder, std::move(grid), rRangeSPExtent,
@@ -251,12 +252,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
 
-  auto group = spacePointsGrouping.begin();
-  auto groupEnd = spacePointsGrouping.end();
-  for (; !(group == groupEnd); ++group) {
+  for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
-        m_cfg.seedFinderOptions, state, std::back_inserter(seeds),
-        group.bottom(), group.middle(), group.top(), rMiddleSPRange);
+        m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
+        std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
   }
 
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
