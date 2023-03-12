@@ -63,7 +63,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   if (bottomSPsIdx.size() == 0 or topSPsIdx.size() == 0) {
     return;
   }
-  
+
   // Get the middle space point candidates
   auto& middleSPs = grid.at(middleSPsIdx);
 
@@ -121,6 +121,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
+
     getCompatibleDoublets(options, grid, topCandidates, *spM.get(),
                           state.compatTopSP, m_config.deltaRMinTopSP,
                           m_config.deltaRMaxTopSP, false);
@@ -148,6 +149,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
     }
+
 
     getCompatibleDoublets(options, grid, bottomCandidates, *spM.get(),
                           state.compatBottomSP, m_config.deltaRMinBottomSP,
@@ -186,6 +188,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float& zM = mediumSP.z();
   const float ratio_xM_rM = xM / rM;
   const float ratio_yM_rM = yM / rM;
+
 
   for (auto& otherSPCol : otherSPsNeighbours) {
     auto& otherSPs = grid.at(otherSPCol.index());
@@ -276,7 +279,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
       outVec.push_back(otherSP.get());
     }
-
   }
 }
 

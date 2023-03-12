@@ -75,8 +75,8 @@ void ActsExamples::identifyContributingParticles(
       return true;
     }
     // register all particles that generated this hit
-    const IndexSourceLink& sl =
-        state.uncalibratedSourceLink().template get<IndexSourceLink>();
+    IndexSourceLink sl =
+        state.getUncalibratedSourceLink().template get<IndexSourceLink>();
     auto hitIndex = sl.index();
     for (auto hitParticle : makeRange(hitParticlesMap.equal_range(hitIndex))) {
       increaseHitCount(particleHitCounts, hitParticle.second);

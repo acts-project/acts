@@ -15,6 +15,8 @@
 #include "Acts/MagneticField/InterpolatedBFieldMap.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
@@ -89,6 +91,11 @@ class TrackParamsEstimationAlgorithm final : public IAlgorithm {
   /// The track parameters covariance (assumed to be the same for all estimated
   /// track parameters for the moment)
   Acts::BoundSymMatrix m_covariance = Acts::BoundSymMatrix::Zero();
+
+  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 };
 
 }  // namespace ActsExamples

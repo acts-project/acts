@@ -11,7 +11,9 @@
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/SpacePointFormation/SpacePointBuilder.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <memory>
@@ -78,5 +80,14 @@ class SpacePointMaker final : public IAlgorithm {
   Config m_cfg;
 
   Acts::SpacePointBuilder<SimSpacePoint> m_spacePointBuilder;
+
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
+
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+
+  WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
+      this, "OutputSpacePoints"};
 };
 }  // namespace ActsExamples
