@@ -28,8 +28,6 @@ namespace ActsExamples {
 class AmbiguityResolutionAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Input source links collection.
-    std::string inputSourceLinks;
     /// Input trajectories collection.
     std::string inputTrajectories;
     /// Output trajectories collection.
