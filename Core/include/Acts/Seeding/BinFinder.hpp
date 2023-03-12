@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Utilities/Holders.hpp"
 
 #include <vector>
 
@@ -25,9 +26,9 @@ template <typename external_spacepoint_t>
 class BinFinder {
  public:
   /// constructor
-  BinFinder();
+  BinFinder() = delete;
 
-  BinFinder(std::vector<std::pair<int, int> > zBinNeighbors,
+  BinFinder(const std::vector<std::pair<int, int>>& zBinNeighbors,
             int numPhiNeighbors);
 
   /// Return all bins that could contain space points that can be used with the
@@ -35,12 +36,15 @@ class BinFinder {
   /// @param phiBin phi index of bin with middle space points
   /// @param zBin z index of bin with middle space points
   /// @param binnedSP phi-z grid containing all bins
-  boost::container::small_vector<size_t, 10> findBins(
+  boost::container::small_vector<size_t, 9> findBins(
       size_t phiBin, size_t zBin,
       const SpacePointGrid<external_spacepoint_t>* binnedSP) const;
 
  private:
-  std::vector<std::pair<int, int> > m_zBinNeighbors;
+  // This vector is provided by the user and is supposed to be a contant for
+  // all events. No point in making a copy
+  Acts::detail::RefHolder<const std::vector<std::pair<int, int>>>
+      m_zBinNeighbors;
   int m_numPhiNeighbors = 1;
 };
 }  // namespace Acts
