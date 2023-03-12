@@ -145,11 +145,15 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
            state.sharedMeasurementsPerTrack[b];
   };
   auto badTrackComperator = [&state](std::size_t a, std::size_t b) {
-    auto loss = [&state](std::size_t i) {
+    auto relativeSharedMeasurements = [&state](std::size_t i) {
       return 1.0 * state.sharedMeasurementsPerTrack[i] /
              state.measurementsPerTrack[i].size();
     };
-    return loss(a) < loss(b);
+
+    if (relativeSharedMeasurements(a) != relativeSharedMeasurements(b)) {
+      return relativeSharedMeasurements(a) < relativeSharedMeasurements(b);
+    }
+    return state.trackChi2[a] < state.trackChi2[b];
   };
 
   for (std::size_t i = 0; i < m_cfg.maximumIterations; ++i) {
