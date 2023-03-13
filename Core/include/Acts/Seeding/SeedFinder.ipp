@@ -189,8 +189,9 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
   for (auto& otherSPCol : otherSPsNeighbours) {
     auto& otherSPs = grid.at(otherSPCol.index);
-    if (otherSPs.size() == 0)
+    if (otherSPs.size() == 0) {
       continue;
+    }
 
     /// we make a copy of the iterator here since we need it to remain
     /// the same in the Neighbour object
