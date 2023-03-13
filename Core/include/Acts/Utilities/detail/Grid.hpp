@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017-2018 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -55,7 +55,8 @@ class Grid final {
   /// @brief default constructor
   ///
   /// @param [in] axes actual axis objects spanning the grid
-  Grid(std::tuple<Axes...> axes) : m_axes(std::move(axes)) {
+  Grid(std::tuple<Axes...>& axes) = delete;
+  Grid(std::tuple<Axes...>&& axes) : m_axes(std::move(axes)) {
     m_values.resize(size());
   }
 
@@ -433,18 +434,20 @@ class Grid final {
   /// @note This number contains under-and overflow bins along all axes.
   size_t size(bool fullCounter = true) const {
     index_t nBinsArray = numLocalBins();
+    std::size_t current_size = 1;
     // add under-and overflow bins for each axis and multiply all bins
     if (fullCounter) {
-      return std::accumulate(
-          nBinsArray.begin(), nBinsArray.end(), 1,
-          [](const size_t& a, const size_t& b) { return a * (b + 2); });
+      for (const auto& value : nBinsArray) {
+        current_size *= value + 2;
+      }
     }
     // ignore under-and overflow bins for each axis and multiply all bins
     else {
-      return std::accumulate(
-          nBinsArray.begin(), nBinsArray.end(), 1,
-          [](const size_t& a, const size_t& b) { return a * b; });
+      for (const auto& value : nBinsArray) {
+        current_size *= value;
+      }
     }
+    return current_size;
   }
 
   std::array<const IAxis*, DIM> axes() const {

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2017 CERN for the benefit of the Acts project
+// Copyright (C) 2017-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,7 +23,7 @@
 
 namespace ActsExamples {
 
-/// A helper class for users to implement framework algorithms
+/// Event processing algorithm interface.
 ///
 /// This class provides default implementations for most interface methods and
 /// and adds a default logger that can be used directly in subclasses.
@@ -63,5 +63,4 @@ class IAlgorithm : public SequenceElement {
   std::string m_name;
   std::unique_ptr<const Acts::Logger> m_logger;
 };
-
 }  // namespace ActsExamples

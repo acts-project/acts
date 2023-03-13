@@ -30,6 +30,9 @@ ActsExamples::TrackSelector::TrackSelector(const Config& config,
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Output track collection is empty");
   }
+
+  m_inputTrackContainer.initialize(m_cfg.inputTracks);
+  m_outputTrackContainer.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
@@ -52,8 +55,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
 
   ACTS_VERBOSE("Reading tracks from: " << m_cfg.inputTracks);
 
-  const auto& inputTracks =
-      ctx.eventStore.get<ConstTrackContainer>(m_cfg.inputTracks);
+  const auto& inputTracks = m_inputTrackContainer(ctx);
 
   std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer =
       inputTracks.trackStateContainerHolder();
@@ -99,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
           std::move(*trackContainer)),
       trackStateContainer};
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(outputTracks));
+  m_outputTrackContainer(ctx, std::move(outputTracks));
 
   return ProcessCode::SUCCESS;
 }
