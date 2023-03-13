@@ -10,8 +10,8 @@
 
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
-auto Acts::Propagator<S, N>::propagate_impl(result_t& result,
-                                            propagator_state_t& state) const
+auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
+                                            result_t& result) const
     -> Result<void> {
   // Pre-stepping call to the navigator and action list
   ACTS_VERBOSE("Entering propagation.");
@@ -19,7 +19,7 @@ auto Acts::Propagator<S, N>::propagate_impl(result_t& result,
   // Navigator initialize state call
   m_navigator.status(state, m_stepper);
   // Pre-Stepping call to the action list
-  state.options.actionList(result, state, m_stepper, m_navigator, logger());
+  state.options.actionList(state, m_stepper, m_navigator, result, logger());
   // assume negative outcome, only set to true later if we actually have
   // a positive outcome.
 
@@ -54,7 +54,7 @@ auto Acts::Propagator<S, N>::propagate_impl(result_t& result,
       // Post-stepping:
       // navigator status call - action list - aborter list - target call
       m_navigator.status(state, m_stepper);
-      state.options.actionList(result, state, m_stepper, m_navigator, logger());
+      state.options.actionList(state, m_stepper, m_navigator, result, logger());
       if (state.options.abortList(result, state, m_stepper, m_navigator,
                                   logger())) {
         terminatedNormally = true;
@@ -78,7 +78,7 @@ auto Acts::Propagator<S, N>::propagate_impl(result_t& result,
 
   // Post-stepping call to the action list
   ACTS_VERBOSE("Stepping loop done.");
-  state.options.actionList(result, state, m_stepper, m_navigator, logger());
+  state.options.actionList(state, m_stepper, m_navigator, result, logger());
 
   // return progress flag here, decide on SUCCESS later
   return Result<void>::success();
@@ -157,7 +157,7 @@ auto Acts::Propagator<S, N>::propagate(
       state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
       logger());
   // Perform the actual propagation & check its outcome
-  auto result = propagate_impl<ResultType>(inputResult, state);
+  auto result = propagate_impl<ResultType>(state, inputResult);
   if (result.ok()) {
     /// Convert into return type and fill the result object
     auto curvState = m_stepper.curvilinearState(state.stepping);
@@ -245,7 +245,7 @@ auto Acts::Propagator<S, N>::propagate(
       logger());
 
   // Perform the actual propagation
-  auto result = propagate_impl<ResultType>(inputResult, state);
+  auto result = propagate_impl<ResultType>(state, inputResult);
 
   if (result.ok()) {
     // Compute the final results and mark the propagation as successful

@@ -47,10 +47,10 @@ struct SimulationActor {
 
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    constexpr bool operator()(const result_type &result,
-                              propagator_state_t & /*state*/,
+    constexpr bool operator()(propagator_state_t & /*state*/,
                               const stepper_t & /*stepper*/,
                               const navigator_t & /*navigator*/,
+                              const result_type &result,
                               const Acts::Logger & /*logger*/) const {
       // must return true if the propagation should abort
       return not result.isAlive;
@@ -82,8 +82,8 @@ struct SimulationActor {
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(result_type &result, propagator_state_t &state,
-                  stepper_t &stepper, navigator_t & /*navigator*/,
+  void operator()(propagator_state_t &state, stepper_t &stepper,
+                  navigator_t & /*navigator*/, result_type &result,
                   const Acts::Logger & /*logger*/) const {
     assert(generator and "The generator pointer must be valid");
 

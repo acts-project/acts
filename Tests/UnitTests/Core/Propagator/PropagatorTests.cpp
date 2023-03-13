@@ -52,9 +52,8 @@ struct PerpendicularMeasure {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(result_type& result, propagator_state_t& state,
-                  const stepper_t& stepper,
-                  const navigator_t& /*navigator*/) const {
+  void operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& /*navigator*/, result_type& result) const {
     result.distance = perp(stepper.position(state.stepping));
   }
 
@@ -84,8 +83,8 @@ struct SurfaceObserver {
 
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(result_type& result, propagator_state_t& state,
-                  const stepper_t& stepper, const navigator_t& /*navigator*/,
+  void operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {
     if (surface && !result.surfaces_passed) {
       // calculate the distance to the surface

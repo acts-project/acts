@@ -156,8 +156,8 @@ struct GsfActor {
   /// @param result is the mutable result state object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
-  void operator()(result_type& result, propagator_state_t& state,
-                  const stepper_t& stepper, const navigator_t& /*navigator*/,
+  void operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
 

@@ -269,13 +269,13 @@ class Chi2Fitter {
     /// @tparam stepper_t Type of the stepper
     /// @tparam navigator_t Type of the navigator
     ///
-    /// @param result is the mutable result state object
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void operator()(result_type& result, propagator_state_t& state,
-                    const stepper_t& stepper, const navigator_t& /*navigator*/,
+    void operator()(propagator_state_t& state, const stepper_t& stepper,
+                    const navigator_t& /*navigator*/, result_type& result,
                     const Logger& /*logger*/) const {
       if (result.finished) {
         return;
@@ -600,11 +600,10 @@ class Chi2Fitter {
     /// Broadcast the action_type
     using action_type = Actor<parameters_t>;
 
-    template <typename result_t, typename propagator_state_t,
-              typename stepper_t, typename navigator_t>
-    bool operator()(const result_t& result, propagator_state_t& /*state*/,
-                    const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/,
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t, typename result_t>
+    bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
       // const auto& logger = state.options.logger;
       if (!result.result.ok() or result.finished) {

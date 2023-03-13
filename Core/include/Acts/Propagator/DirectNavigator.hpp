@@ -71,9 +71,8 @@ class DirectNavigator {
     /// @param state the entire propagator state
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
-    void operator()(result_type& r, propagator_state_t& state,
-                    const stepper_t& /*stepper*/,
-                    const navigator_t& /*navigator*/,
+    void operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/, result_type& r,
                     const Logger& /*logger*/) const {
       // Only act once
       if (not r.initialized) {
