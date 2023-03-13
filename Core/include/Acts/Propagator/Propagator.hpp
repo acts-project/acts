@@ -344,8 +344,8 @@ class Propagator final {
   ///
   /// @return Propagation result
   template <typename result_t, typename propagator_state_t>
-  Result<void> propagate_impl(propagator_state_t& state,
-                              result_t& result) const;
+  Result<void> propagate_impl(result_t& result,
+                              propagator_state_t& state) const;
 
  public:
   /// @brief Propagate track parameters

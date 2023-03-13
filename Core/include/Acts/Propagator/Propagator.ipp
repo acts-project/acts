@@ -10,8 +10,8 @@
 
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
-auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
-                                            result_t& result) const
+auto Acts::Propagator<S, N>::propagate_impl(result_t& result,
+                                            propagator_state_t& state) const
     -> Result<void> {
   // Pre-stepping call to the navigator and action list
   ACTS_VERBOSE("Entering propagation.");
@@ -157,7 +157,7 @@ auto Acts::Propagator<S, N>::propagate(
       state, m_stepper, state.options.abortList.template get<path_aborter_t>(),
       logger());
   // Perform the actual propagation & check its outcome
-  auto result = propagate_impl<ResultType>(state, inputResult);
+  auto result = propagate_impl<ResultType>(inputResult, state);
   if (result.ok()) {
     /// Convert into return type and fill the result object
     auto curvState = m_stepper.curvilinearState(state.stepping);
@@ -245,7 +245,7 @@ auto Acts::Propagator<S, N>::propagate(
       logger());
 
   // Perform the actual propagation
-  auto result = propagate_impl<ResultType>(state, inputResult);
+  auto result = propagate_impl<ResultType>(inputResult, state);
 
   if (result.ok()) {
     // Compute the final results and mark the propagation as successful

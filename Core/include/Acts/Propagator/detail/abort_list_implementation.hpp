@@ -27,11 +27,8 @@ struct condition_caller {
   static bool check(const condition& c, const result_t& r,
                     propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, Args&&... args) {
-    using action_type = action_type_t<condition>;
-    using result_type = result_type_t<action_type>;
-
-    return c(r.template get<result_type>(), state, stepper, navigator,
-             std::forward<Args>(args)...);
+    return c(r.template get<detail::result_type_t<condition>>(), state, stepper,
+             navigator, std::forward<Args>(args)...);
   }
 };
 
@@ -64,20 +61,16 @@ struct abort_list_impl<first, others...> {
                     const navigator_t& navigator, Args&&... args) {
     // get the right helper for calling the abort condition
     constexpr bool has_result = has_action_type_v<first>;
-    using caller_type = condition_caller<has_result>;
-
     // get the cache abort condition
     const auto& this_condition = std::get<first>(conditions_tuple);
-
     // - check abort conditions recursively
     // - make use of short-circuit evaluation
     // -> skip remaining conditions if this abort condition evaluates to true
     bool abort =
-        caller_type::check(this_condition, result, state, stepper, navigator,
+        condition_caller<has_result>::check(this_condition, result, state, stepper, navigator,
                            args...) ||
         abort_list_impl<others...>::check(conditions_tuple, result, state,
                                           stepper, navigator, args...);
-
     return abort;
   }
 };
@@ -93,7 +86,6 @@ struct abort_list_impl<last> {
     // get the right helper for calling the abort condition
     constexpr bool has_result = has_action_type_v<last>;
     const auto& this_condition = std::get<last>(conditions_tuple);
-
     return condition_caller<has_result>::check(this_condition, result, state,
                                                stepper, navigator,
                                                std::forward<Args>(args)...);

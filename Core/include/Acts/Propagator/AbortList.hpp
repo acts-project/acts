@@ -106,9 +106,9 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   bool operator()(const result_t& result, propagator_state_t& state,
                   const stepper_t& stepper, const navigator_t& navigator,
                   Args&&... args) const {
-    return detail::abort_list_impl<aborters_t...>::check(
-        tuple(), result, state, stepper, navigator,
-        std::forward<Args>(args)...);
+    using impl = detail::abort_list_impl<aborters_t...>;
+    return impl::check(tuple(), result, state, stepper, navigator,
+                       std::forward<Args>(args)...);
   }
 };
 
