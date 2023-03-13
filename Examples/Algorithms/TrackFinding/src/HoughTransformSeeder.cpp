@@ -451,7 +451,7 @@ void ActsExamples::HoughTransformSeeder::addSpacePoints(
   for (const auto& isp : m_inputSpacePoints) {
     const auto& spContainer = (*isp)(ctx);
     ACTS_DEBUG("Inserting " << spContainer.size() << " space points from "
-                            << isp);
+                            << isp->key());
     for (auto& sp : spContainer) {
       double r = std::hypot(sp.x(), sp.y());
       double z = sp.z();
