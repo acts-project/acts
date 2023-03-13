@@ -68,20 +68,20 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   auto& middleSPs = grid.at(middleSPsIdx);
 
   // neighbours
-  std::vector<neighbour_candidates<external_spacepoint_t>> bottomCandidates;
-  std::vector<neighbour_candidates<external_spacepoint_t>> topCandidates;
-  bottomCandidates.reserve(bottomSPsIdx.size());
-  topCandidates.reserve(topSPsIdx.size());
-  
+  // clear previous results
+  state.bottomNeighbours.clear();
+  state.topNeighbours.clear();
+
+  // Fill
   // bottoms
   for (const std::size_t idx : bottomSPsIdx) {
-    bottomCandidates.emplace_back(grid, idx,
-				  middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
+    state.bottomNeighbours.emplace_back(grid, idx,
+					middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
   }
   // tops
   for (const std::size_t idx : topSPsIdx) {
-    topCandidates.emplace_back(grid, idx,
-			       middleSPs.front()->radius() + m_config.deltaRMinTopSP);
+    state.topNeighbours.emplace_back(grid, idx,
+				     middleSPs.front()->radius() + m_config.deltaRMinTopSP);
   }
   
   for (auto& spM : middleSPs) {
@@ -122,7 +122,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
 
-    getCompatibleDoublets(options, grid, topCandidates, *spM.get(),
+    getCompatibleDoublets(options, grid, state.topNeighbours, *spM.get(),
                           state.compatTopSP, m_config.deltaRMinTopSP,
                           m_config.deltaRMaxTopSP, false);
 
@@ -151,7 +151,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
 
-    getCompatibleDoublets(options, grid, bottomCandidates, *spM.get(),
+    getCompatibleDoublets(options, grid, state.bottomNeighbours, *spM.get(),
                           state.compatBottomSP, m_config.deltaRMinBottomSP,
                           m_config.deltaRMaxBottomSP, true);
 
@@ -174,7 +174,7 @@ template <typename out_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const Acts::SeedFinderOptions& options,
     Acts::SpacePointGrid<external_spacepoint_t>& grid,
-    std::vector<neighbour_candidates<external_spacepoint_t>>& otherSPsNeighbours,
+    boost::container::small_vector<neighbour_candidates<external_spacepoint_t>, 9>& otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
     bool isBottom) const {

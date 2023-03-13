@@ -95,6 +95,10 @@ class SeedFinder {
     // managing seed candidates for SpM
     CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
         candidates_collector;
+
+    // managing doublet candidates
+    boost::container::small_vector<neighbour_candidates<external_spacepoint_t>, 9> bottomNeighbours;
+    boost::container::small_vector<neighbour_candidates<external_spacepoint_t>, 9> topNeighbours;
   };
 
   /// The only constructor. Requires a config object.
@@ -161,7 +165,7 @@ class SeedFinder {
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
       Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      std::vector<neighbour_candidates<external_spacepoint_t>>& otherSPs,
+      boost::container::small_vector<neighbour_candidates<external_spacepoint_t>, 9>& otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;
