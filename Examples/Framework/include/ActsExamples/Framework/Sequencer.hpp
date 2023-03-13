@@ -62,7 +62,7 @@ class Sequencer {
     IterationCallback iterationCallback = []() {};
     /// Run data flow consistency checks
     /// Defaults to false right now until all components are migrated
-    bool runDataFlowChecks = false;
+    bool runDataFlowChecks = true;
   };
 
   Sequencer(const Config &cfg);
