@@ -17,6 +17,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/Seeding/Neighbour.hpp"
 
 #include <array>
 #include <list>
@@ -28,45 +29,6 @@
 #include <vector>
 
 namespace Acts {
-  template <typename external_spacepoint_t>
-  class neighbour_candidates {
-  public:
-    neighbour_candidates() = delete;
-    neighbour_candidates(Acts::SpacePointGrid<external_spacepoint_t>& grid,
-			 std::size_t idx,
-			 const float& lowerBound)
-      : m_index( idx )
-    {
-      auto& collection = grid.at(idx);
-      if (collection.size() == 0) {
-	m_itr = collection.begin();
-	return;
-      }
-      if (collection.front()->radius() > lowerBound) {
-	m_itr = collection.begin();
-      } else if (collection.back()->radius() < lowerBound) {
-	m_itr = collection.end();
-      } else {
-	m_itr = std::lower_bound(collection.begin(), collection.end(),
-				 lowerBound,
-				 [] (const auto& sp, const float& target) -> bool
-				 { return sp->radius() < target; });
-      }
-    }
-
-    void setItr(typename Acts::SpacePointGrid<external_spacepoint_t>::value_type::iterator& itr)
-    { m_itr = itr; }
-    
-    std::size_t index() const
-    { return m_index; }
-    
-    const typename Acts::SpacePointGrid<external_spacepoint_t>::value_type::iterator& itr() const
-    { return m_itr; }
-    
-  private:
-    std::size_t m_index;
-    typename Acts::SpacePointGrid<external_spacepoint_t>::value_type::iterator m_itr;
-  };
   
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
@@ -97,8 +59,8 @@ class SeedFinder {
         candidates_collector;
 
     // managing doublet candidates
-    boost::container::small_vector<neighbour_candidates<external_spacepoint_t>, 9> bottomNeighbours;
-    boost::container::small_vector<neighbour_candidates<external_spacepoint_t>, 9> topNeighbours;
+    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9> bottomNeighbours;
+    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9> topNeighbours;
   };
 
   /// The only constructor. Requires a config object.
@@ -165,7 +127,7 @@ class SeedFinder {
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
       Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      boost::container::small_vector<neighbour_candidates<external_spacepoint_t>, 9>& otherSPs,
+      boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>& otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;

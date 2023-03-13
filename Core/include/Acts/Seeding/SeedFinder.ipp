@@ -174,7 +174,7 @@ template <typename out_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const Acts::SeedFinderOptions& options,
     Acts::SpacePointGrid<external_spacepoint_t>& grid,
-    boost::container::small_vector<neighbour_candidates<external_spacepoint_t>, 9>& otherSPsNeighbours,
+    boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>& otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
     bool isBottom) const {
@@ -191,10 +191,12 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
 
   for (auto& otherSPCol : otherSPsNeighbours) {
-    auto& otherSPs = grid.at(otherSPCol.index());
+    auto& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) continue;
 
-    auto min_itr = otherSPCol.itr();
+    /// we make a copy of the iterator here since we need it to remain
+    /// the same in the Neighbour object
+    auto min_itr = otherSPCol.itr;
     bool found = false;
     
     for (; min_itr != otherSPs.end(); ++min_itr) {
@@ -203,20 +205,26 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       float deltaR = sign * (rO - rM);
 
       if (deltaR < deltaRMinSP) {
-	if (isBottom) break;
+	if (isBottom) {
+	  break;
+	}
 	continue;
       }
 
       // if r-distance is too big, try next SP in bin
       if (deltaR > deltaRMaxSP) {
-	if (not isBottom)
+	if (not isBottom) {
 	  break;
+	}
 	continue;
       }
 
+      /// We update the iterator in the Neighbout object
+      /// that mean that we have changed the middle space point
+      /// and the lower bound has moved accordingly
       if (not found) {
 	found = true;
-	otherSPCol.setItr(min_itr);
+	otherSPCol.itr = min_itr;
       }
       
       const float zO = otherSP->z();
