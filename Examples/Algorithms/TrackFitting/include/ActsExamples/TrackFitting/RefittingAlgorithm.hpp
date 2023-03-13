@@ -19,34 +19,25 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
+#include "ActsExamples/TrackFitting/AlreadyCalibratedCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
 #include <functional>
 #include <memory>
 #include <vector>
 
-namespace Acts {
-class TrackingGeometry;
-}
-
 namespace ActsExamples {
 
-class TrackFittingAlgorithm final : public IAlgorithm {
+class RefittingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
-    /// Input measurements collection.
-    std::string inputMeasurements;
-    /// Input source links collection.
-    std::string inputSourceLinks;
-    /// Input proto tracks collection, i.e. groups of hit indices.
-    std::string inputProtoTracks;
-    /// Input initial track parameter estimates for for each proto track.
-    std::string inputInitialTrackParameters;
+    /// The intput track collection
+    std::string inputTracks;
     /// Output fitted tracks collection.
     std::string outputTracks;
     /// Type erased fitter function.
     std::shared_ptr<TrackFitterFunction> fit;
-    /// Tracking geometry for surface lookup
+    /// Pick a single track for debugging (-1 process all tracks)
     int pickTrack = -1;
   };
 
@@ -54,7 +45,7 @@ class TrackFittingAlgorithm final : public IAlgorithm {
   ///
   /// @param config is the config struct to configure the algorihtm
   /// @param level is the logging level
-  TrackFittingAlgorithm(Config config, Acts::Logging::Level level);
+  RefittingAlgorithm(Config config, Acts::Logging::Level level);
 
   /// Framework execute method of the fitting algorithm
   ///
