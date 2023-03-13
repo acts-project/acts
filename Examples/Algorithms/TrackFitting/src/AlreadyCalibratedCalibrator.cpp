@@ -15,7 +15,8 @@ namespace ActsExamples {
 void AlreadyCalibratedCalibrator::calibrate(
     const Acts::GeometryContext& /*gctx*/, Proxy trackState) const {
   const ActsExamples::IndexSourceLink& sourceLink =
-      trackState.uncalibratedSourceLink().get<ActsExamples::IndexSourceLink>();
+      trackState.getUncalibratedSourceLink()
+          .get<ActsExamples::IndexSourceLink>();
 
   ConstProxy old = callibratedStates.at(sourceLink.index());
 

@@ -73,9 +73,9 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
         continue;
       }
 
-      trackSourceLinks.push_back(state.uncalibratedSourceLink());
+      trackSourceLinks.push_back(state.getUncalibratedSourceLink());
       const auto slIndex =
-          state.uncalibratedSourceLink().get<IndexSourceLink>().index();
+          state.getUncalibratedSourceLink().get<IndexSourceLink>().index();
       auto [it, success] =
           calibrator.callibratedStates.insert({slIndex, std::move(state)});
       assert(success);
