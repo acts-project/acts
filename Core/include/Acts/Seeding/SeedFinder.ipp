@@ -11,7 +11,7 @@
 #include <numeric>
 #include <type_traits>
 
-namespace Acts {  
+namespace Acts {
 
 template <typename external_spacepoint_t, typename platform_t>
 SeedFinder<external_spacepoint_t, platform_t>::SeedFinder(
@@ -74,15 +74,15 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   // Fill
   // bottoms
   for (const std::size_t idx : bottomSPsIdx) {
-    state.bottomNeighbours.emplace_back(grid, idx,
-					middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
+    state.bottomNeighbours.emplace_back(
+        grid, idx, middleSPs.front()->radius() - m_config.deltaRMaxBottomSP);
   }
   // tops
   for (const std::size_t idx : topSPsIdx) {
-    state.topNeighbours.emplace_back(grid, idx,
-				     middleSPs.front()->radius() + m_config.deltaRMinTopSP);
+    state.topNeighbours.emplace_back(
+        grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
   }
-  
+
   for (auto& spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
@@ -120,7 +120,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-
     getCompatibleDoublets(options, grid, state.topNeighbours, *spM.get(),
                           state.compatTopSP, m_config.deltaRMinTopSP,
                           m_config.deltaRMaxTopSP, false);
@@ -149,7 +148,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-
     getCompatibleDoublets(options, grid, state.bottomNeighbours, *spM.get(),
                           state.compatBottomSP, m_config.deltaRMinBottomSP,
                           m_config.deltaRMaxBottomSP, true);
@@ -173,7 +171,8 @@ template <typename out_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const Acts::SeedFinderOptions& options,
     Acts::SpacePointGrid<external_spacepoint_t>& grid,
-    boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>& otherSPsNeighbours,
+    boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
+        otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
     bool isBottom) const {
@@ -188,44 +187,44 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float ratio_xM_rM = xM / rM;
   const float ratio_yM_rM = yM / rM;
 
-
   for (auto& otherSPCol : otherSPsNeighbours) {
     auto& otherSPs = grid.at(otherSPCol.index);
-    if (otherSPs.size() == 0) continue;
+    if (otherSPs.size() == 0)
+      continue;
 
     /// we make a copy of the iterator here since we need it to remain
     /// the same in the Neighbour object
     auto min_itr = otherSPCol.itr;
     bool found = false;
-    
+
     for (; min_itr != otherSPs.end(); ++min_itr) {
       auto& otherSP = *min_itr;
       const float rO = otherSP->radius();
       float deltaR = sign * (rO - rM);
 
       if (deltaR < deltaRMinSP) {
-	if (isBottom) {
-	  break;
-	}
-	continue;
+        if (isBottom) {
+          break;
+        }
+        continue;
       }
 
       // if r-distance is too big, try next SP in bin
       if (deltaR > deltaRMaxSP) {
-	if (not isBottom) {
-	  break;
-	}
-	continue;
+        if (not isBottom) {
+          break;
+        }
+        continue;
       }
 
       /// We update the iterator in the Neighbout object
       /// that mean that we have changed the middle space point
       /// and the lower bound has moved accordingly
       if (not found) {
-	found = true;
-	otherSPCol.itr = min_itr;
+        found = true;
+        otherSPCol.itr = min_itr;
       }
-      
+
       const float zO = otherSP->z();
       float deltaZ = sign * (zO - zM);
       if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {

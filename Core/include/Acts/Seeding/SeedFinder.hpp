@@ -13,11 +13,11 @@
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/Neighbour.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
-#include "Acts/Seeding/Neighbour.hpp"
 
 #include <array>
 #include <list>
@@ -29,7 +29,7 @@
 #include <vector>
 
 namespace Acts {
-  
+
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
@@ -59,8 +59,10 @@ class SeedFinder {
         candidates_collector;
 
     // managing doublet candidates
-    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9> bottomNeighbours;
-    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9> topNeighbours;
+    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+        bottomNeighbours;
+    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+        topNeighbours;
   };
 
   /// The only constructor. Requires a config object.
@@ -127,7 +129,8 @@ class SeedFinder {
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
       Acts::SpacePointGrid<external_spacepoint_t>& grid,
-      boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>& otherSPs,
+      boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>&
+          otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;
