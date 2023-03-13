@@ -41,8 +41,8 @@ void addTrackFitting(Context& ctx) {
       inputInitialTrackParameters, outputTracks, fit, pickTrack);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::RefittingAlgorithm, mex,
-                                "RefittingAlgorithm", inputTracks,
-                                outputTracks, fit, pickTrack);
+                                "RefittingAlgorithm", inputTracks, outputTracks,
+                                fit, pickTrack);
 
   {
     py::class_<TrackFitterFunction, std::shared_ptr<TrackFitterFunction>>(

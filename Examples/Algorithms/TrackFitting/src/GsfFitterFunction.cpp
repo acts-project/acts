@@ -34,11 +34,11 @@ using MultiStepper = Acts::MultiEigenStepperLoop<>;
 using Propagator = Acts::Propagator<MultiStepper, Acts::Navigator>;
 using DirectPropagator = Acts::Propagator<MultiStepper, Acts::DirectNavigator>;
 
-using Fitter = Acts::Experimental::GaussianSumFitter<
-    Propagator, ActsExamples::BetheHeitlerApprox, Acts::VectorMultiTrajectory>;
+using Fitter =
+    Acts::Experimental::GaussianSumFitter<Propagator, BetheHeitlerApprox,
+                                          Acts::VectorMultiTrajectory>;
 using DirectFitter =
-    Acts::Experimental::GaussianSumFitter<DirectPropagator,
-                                          ActsExamples::BetheHeitlerApprox,
+    Acts::Experimental::GaussianSumFitter<DirectPropagator, BetheHeitlerApprox,
                                           Acts::VectorMultiTrajectory>;
 using TrackContainer =
     Acts::TrackContainer<Acts::VectorTrackContainer,
@@ -84,18 +84,17 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
     return gsfOptions;
   }
 
-  virtual TrackFitterResult operator()(
-      const std::vector<Acts::SourceLink>& sourceLinks,
-      const TrackParameters& initialParameters,
-      const GeneralFitterOptions& options,
-      const MeasurementCalibrator& calibrator,
-      TrackContainer& tracks) const override {
+  TrackFitterResult operator()(const std::vector<Acts::SourceLink>& sourceLinks,
+                               const TrackParameters& initialParameters,
+                               const GeneralFitterOptions& options,
+                               const MeasurementCalibrator& calibrator,
+                               TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       gsfOptions, tracks);
   }
 
-  virtual TrackFitterResult operator()(
+  TrackFitterResult operator()(
       const std::vector<Acts::SourceLink>& sourceLinks,
       const TrackParameters& initialParameters,
       const GeneralFitterOptions& options,
