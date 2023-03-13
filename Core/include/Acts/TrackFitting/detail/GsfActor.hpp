@@ -449,20 +449,19 @@ struct GsfActor {
 
     detail::normalizeWeights(cmps, proj);
 
-    bool anyAboveCut = false;
     auto new_end = std::remove_if(cmps.begin(), cmps.end(), [&](auto& cmp) {
-      anyAboveCut = anyAboveCut || proj(cmp) >= m_cfg.weightCutoff;
       return proj(cmp) < m_cfg.weightCutoff;
     });
 
-    if (anyAboveCut) {
-      cmps.erase(new_end, cmps.end());
-      detail::normalizeWeights(cmps, proj);
-    } else {
+    // In case we would remove all components, keep only the largest
+    if (std::distance(cmps.begin(), new_end) == 0) {
       cmps = {*std::max_element(
           cmps.begin(), cmps.end(),
           [&](auto& a, auto& b) { return proj(a) < proj(b); })};
       std::get<0>(cmps.front()).weight = 1.0;
+    } else {
+      cmps.erase(new_end, cmps.end());
+      detail::normalizeWeights(cmps, proj);
     }
   }
 
