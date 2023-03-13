@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <any>
@@ -351,42 +353,6 @@ class TrackProxy {
   IndexType m_index;
 };
 
-/// Internal holder type for referencing a backend without ownership
-template <typename T>
-struct RefHolder {
-  T* ptr;
-
-  RefHolder(T* _ptr) : ptr{_ptr} {}
-  RefHolder(T& ref) : ptr{&ref} {}
-
-  const T& operator*() const { return *ptr; }
-  T& operator*() { return *ptr; }
-
-  const T* operator->() const { return ptr; }
-  T* operator->() { return ptr; }
-};
-
-/// Internal holder type holding a backend container by value
-template <typename T>
-struct ValueHolder {
-  T val;
-
-  ValueHolder(T& _val) : val{_val} {}
-  ValueHolder(T&& _val) : val{std::move(_val)} {}
-
-  const T& operator*() const { return val; }
-  T& operator*() { return val; }
-
-  const T* operator->() const { return &val; }
-  T* operator->() { return &val; }
-};
-
-template <template <typename...> class, template <typename...> class>
-struct is_same_template : std::false_type {};
-
-template <template <typename...> class T>
-struct is_same_template<T, T> : std::true_type {};
-
 /// Helper iterator to allow iteration over tracks via track proxies.
 template <typename container_t, typename proxy_t, bool ReadOnly>
 class TrackProxyIterator {
@@ -510,7 +476,7 @@ struct IsReadOnlyTrackContainer;
 /// @tparam traj_t the track state container backend
 /// @tparam holder_t ownership management class for the backend
 template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t = detail_tc::RefHolder>
+          template <typename> class holder_t = detail::RefHolder>
 class TrackContainer {
  public:
   static constexpr bool ReadOnly =
@@ -550,7 +516,7 @@ class TrackContainer {
   /// @param traj the track state container backend
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<
-                detail_tc::is_same_template<H, detail_tc::RefHolder>::value>>
+                detail::is_same_template<H, detail::RefHolder>::value>>
   TrackContainer(track_container_t& container, traj_t& traj)
       : m_container{&container}, m_traj{&traj} {}
 
@@ -729,11 +695,11 @@ class TrackContainer {
 
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
-    -> TrackContainer<track_container_t, traj_t, detail_tc::RefHolder>;
+    -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
-    -> TrackContainer<track_container_t, traj_t, detail_tc::ValueHolder>;
+    -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
 
 /// Utility class that eases accessing dynamic columns in track containers
 /// @tparam T the type of the value to access

@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -38,8 +38,10 @@ template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs,
+    const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
+    const sp_range_t& topSPsIdx,
     const Acts::Range1D<float>& rMiddleSPRange) const {
   if (not options.isInInternalUnits) {
     throw std::runtime_error(
@@ -55,7 +57,15 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   state.candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                             max_num_quality_seeds_per_spm);
 
-  for (auto spM : middleSPs) {
+  // If there are no bottom or top bins, just return and waste no time
+  if (bottomSPsIdx.size() == 0 or topSPsIdx.size() == 0) {
+    return;
+  }
+
+  // Get the middle space point candidates
+  auto& middleSPs = grid.at(middleSPsIdx);
+
+  for (auto& spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
 
@@ -65,11 +75,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
       if (rM > rMiddleSPRange.max()) {
-        // break if SP are sorted in r
-        if (m_config.forceRadialSorting) {
-          break;
-        }
-        continue;
+        // break because SPs are sorted in r
+        break;
       }
     } else if (not m_config.rRangeMiddleSP.empty()) {
       /// get zBin position of the middle SP
@@ -82,27 +89,22 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         continue;
       }
       if (rM > m_config.rRangeMiddleSP[zBin][1]) {
-        // break if SP are sorted in r
-        if (m_config.forceRadialSorting) {
-          break;
-        }
-        continue;
+        // break because SPs are sorted in r
+        break;
       }
     } else {
-      if (rM > m_config.rMaxMiddle) {
+      if (rM < m_config.rMinMiddle) {
         continue;
       }
-      if (rM < m_config.rMinMiddle) {
-        if (m_config.forceRadialSorting) {
-          break;
-        }
-        continue;
+      if (rM > m_config.rMaxMiddle) {
+        // break because SPs are sorted in r
+        break;
       }
     }
 
-    getCompatibleDoublets(options, topSPs, *spM, state.compatTopSP,
-                          m_config.deltaRMinTopSP, m_config.deltaRMaxTopSP,
-                          false);
+    getCompatibleDoublets(options, grid, topSPsIdx, *spM.get(),
+                          state.compatTopSP, m_config.deltaRMinTopSP,
+                          m_config.deltaRMaxTopSP, false);
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -128,8 +130,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
       }
     }
 
-    getCompatibleDoublets(options, bottomSPs, *spM, state.compatBottomSP,
-                          m_config.deltaRMinBottomSP,
+    getCompatibleDoublets(options, grid, bottomSPsIdx, *spM.get(),
+                          state.compatBottomSP, m_config.deltaRMinBottomSP,
                           m_config.deltaRMaxBottomSP, true);
 
     // no bottom SP found -> try next spM
@@ -138,7 +140,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
     // filter candidates
-    filterCandidates(*spM, options, seedFilterState, state);
+    filterCandidates(*spM.get(), options, seedFilterState, state);
 
     m_config.seedFilter->filterSeeds_1SpFixed(
         state.candidates_collector, seedFilterState.numQualitySeeds, outIt);
@@ -149,7 +151,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t, typename out_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
-    const Acts::SeedFinderOptions& options, sp_range_t& otherSPs,
+    const Acts::SeedFinderOptions& options,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t& otherSPsIdx,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
     bool isBottom) const {
@@ -164,79 +167,89 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float ratio_xM_rM = xM / rM;
   const float ratio_yM_rM = yM / rM;
 
-  for (auto otherSP : otherSPs) {
-    const float rO = otherSP->radius();
-    float deltaR = sign * (rO - rM);
+  for (auto otherSPIdx : otherSPsIdx) {
+    auto& otherSPs = grid.at(otherSPIdx);
 
-    // if r-distance is too small, try next SP in bin
-    if (deltaR < deltaRMinSP) {
-      continue;
-    }
+    for (auto& otherSP : otherSPs) {
+      const float rO = otherSP->radius();
+      float deltaR = sign * (rO - rM);
 
-    // if r-distance is too big, try next SP in bin
-    if (deltaR > deltaRMaxSP) {
-      continue;
-    }
+      // if r-distance is too small, try next SP in bin
+      if (deltaR < deltaRMinSP) {
+        if (isBottom) {
+          break;
+        }
+        continue;
+      }
 
-    const float zO = otherSP->z();
-    float deltaZ = sign * (zO - zM);
-    if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-      continue;
-    }
+      // if r-distance is too big, try next SP in bin
+      if (deltaR > deltaRMaxSP) {
+        if (not isBottom) {
+          break;
+        }
+        continue;
+      }
 
-    // ratio Z/R (forward angle) of space point duplet
-    float cotTheta = deltaZ / deltaR;
-    if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
-      continue;
-    }
+      const float zO = otherSP->z();
+      float deltaZ = sign * (zO - zM);
+      if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+        continue;
+      }
 
-    // check if duplet origin on z axis within collision region
-    float zOrigin = zM - rM * cotTheta;
-    if (zOrigin < m_config.collisionRegionMin ||
-        zOrigin > m_config.collisionRegionMax) {
-      continue;
-    }
+      // ratio Z/R (forward angle) of space point duplet
+      float cotTheta = deltaZ / deltaR;
+      if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
+        continue;
+      }
 
-    if (not m_config.interactionPointCut) {
-      outVec.push_back(otherSP);
-      continue;
-    }
+      // check if duplet origin on z axis within collision region
+      float zOrigin = zM - rM * cotTheta;
+      if (zOrigin < m_config.collisionRegionMin ||
+          zOrigin > m_config.collisionRegionMax) {
+        continue;
+      }
 
-    const float xVal =
-        (otherSP->x() - xM) * ratio_xM_rM + (otherSP->y() - yM) * ratio_yM_rM;
-    const float yVal =
-        (otherSP->y() - yM) * ratio_xM_rM - (otherSP->x() - xM) * ratio_yM_rM;
+      if (not m_config.interactionPointCut) {
+        outVec.push_back(otherSP.get());
+        continue;
+      }
 
-    if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
-      outVec.push_back(otherSP);
-      continue;
-    }
+      const float xVal =
+          (otherSP->x() - xM) * ratio_xM_rM + (otherSP->y() - yM) * ratio_yM_rM;
+      const float yVal =
+          (otherSP->y() - yM) * ratio_xM_rM - (otherSP->x() - xM) * ratio_yM_rM;
 
-    // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
-    // circle into straight lines in the u/v plane the line equation can
-    // be described in terms of aCoef and bCoef, where v = aCoef * u +
-    // bCoef
-    const float uT = xVal / (xVal * xVal + yVal * yVal);
-    const float vT = yVal / (xVal * xVal + yVal * yVal);
-    // in the rotated frame the interaction point is positioned at x = -rM
-    // and y ~= impactParam
-    const float uIP = -1. / rM;
-    float vIP = m_config.impactMax / (rM * rM);
-    if (sign * yVal > 0.) {
-      vIP = -vIP;
+      if (std::abs(rM * yVal) <= sign * m_config.impactMax * xVal) {
+        outVec.push_back(otherSP.get());
+        continue;
+      }
+
+      // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
+      // circle into straight lines in the u/v plane the line equation can
+      // be described in terms of aCoef and bCoef, where v = aCoef * u +
+      // bCoef
+      const float uT = xVal / (xVal * xVal + yVal * yVal);
+      const float vT = yVal / (xVal * xVal + yVal * yVal);
+      // in the rotated frame the interaction point is positioned at x = -rM
+      // and y ~= impactParam
+      const float uIP = -1. / rM;
+      float vIP = m_config.impactMax / (rM * rM);
+      if (sign * yVal > 0.) {
+        vIP = -vIP;
+      }
+      // we can obtain aCoef as the slope dv/du of the linear function,
+      // estimated using du and dv between the two SP bCoef is obtained by
+      // inserting aCoef into the linear equation
+      const float aCoef = (vT - vIP) / (uT - uIP);
+      const float bCoef = vIP - aCoef * uIP;
+      // the distance of the straight line from the origin (radius of the
+      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+      if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
+        continue;
+      }
+      outVec.push_back(otherSP.get());
     }
-    // we can obtain aCoef as the slope dv/du of the linear function,
-    // estimated using du and dv between the two SP bCoef is obtained by
-    // inserting aCoef into the linear equation
-    const float aCoef = (vT - vIP) / (uT - uIP);
-    const float bCoef = vIP - aCoef * uIP;
-    // the distance of the straight line from the origin (radius of the
-    // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
-    // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-    if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
-      continue;
-    }
-    outVec.push_back(otherSP);
   }
 }
 
@@ -349,7 +362,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
             cosTheta * std::sqrt(1 + A0 * A0)};
 
         double rMTransf[3];
-        if (!xyzCoordinateCheck(m_config, &spM, positionMiddle, rMTransf)) {
+        if (!xyzCoordinateCheck(m_config, spM, positionMiddle, rMTransf)) {
           continue;
         }
 
@@ -364,7 +377,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spB = state.compatBottomSP[b];
         double rBTransf[3];
-        if (!xyzCoordinateCheck(m_config, spB, positionBottom, rBTransf)) {
+        if (!xyzCoordinateCheck(m_config, *spB, positionBottom, rBTransf)) {
           continue;
         }
 
@@ -378,7 +391,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spT = state.compatTopSP[t];
         double rTTransf[3];
-        if (!xyzCoordinateCheck(m_config, spT, positionTop, rTTransf)) {
+        if (!xyzCoordinateCheck(m_config, *spT, positionTop, rTTransf)) {
           continue;
         }
 
@@ -552,13 +565,15 @@ template <typename external_spacepoint_t, typename platform_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
-    const Acts::SeedFinderOptions& options, sp_range_t bottomSPs,
-    sp_range_t middleSPs, sp_range_t topSPs) const {
+    const Acts::SeedFinderOptions& options,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   SeedingState state;
   const Acts::Range1D<float> rMiddleSPRange;
   std::vector<Seed<external_spacepoint_t>> ret;
 
-  createSeedsForGroup(options, state, std::back_inserter(ret), bottomSPs,
+  createSeedsForGroup(options, state, grid, std::back_inserter(ret), bottomSPs,
                       middleSPs, topSPs, rMiddleSPRange);
 
   return ret;
