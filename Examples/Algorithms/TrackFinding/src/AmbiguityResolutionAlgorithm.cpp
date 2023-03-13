@@ -158,7 +158,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
 
   for (std::size_t i = 0; i < m_cfg.maximumIterations; ++i) {
     auto maximumSharedMeasurements = *std::max_element(
-        std::begin(state.selectedTracks), std::end(state.selectedTracks),
+        state.selectedTracks.begin(), state.selectedTracks.end(),
         sharedMeasurementsComperator);
     ACTS_VERBOSE(
         "maximum shared measurements "
@@ -169,8 +169,8 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     }
 
     auto badTrack =
-        *std::max_element(std::begin(state.selectedTracks),
-                          std::end(state.selectedTracks), badTrackComperator);
+        *std::max_element(state.selectedTracks.begin(),
+                          state.selectedTracks.end(), badTrackComperator);
     ACTS_VERBOSE("remove track " << badTrack);
     removeTrack(state, badTrack);
   }
