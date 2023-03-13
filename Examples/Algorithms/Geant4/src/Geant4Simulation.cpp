@@ -77,6 +77,10 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     }
   }
 
+  if (m_cfg.inputParticles.empty()) {
+    throw std::invalid_argument("Missing input particle collection");
+  }
+
   // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
   // 3 would be also possible, but that produces infinite amount of output.
   const int geantVerboseLevel =
@@ -140,6 +144,12 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
 
     ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
+  m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
+  m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
 }
 
 ActsExamples::Geant4Simulation::~Geant4Simulation() = default;
@@ -159,6 +169,9 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   // Register the current event store to the registry
   // this will allow access from the User*Actions
   eventData.store = &(ctx.eventStore);
+
+  // Register the input particle read handle
+  eventData.inputParticles = &m_inputParticles;
 
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.

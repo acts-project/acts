@@ -115,13 +115,13 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
-        g4PrCfg.inputParticles = inputParticles;
         g4PrCfg.forcedPdgCode = 0;
         g4PrCfg.forcedCharge = 0.;
         g4PrCfg.forcedMass = 0.;
 
         auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
                                       physicsList, g4PrCfg);
+        g4Cfg.inputParticles = inputParticles;
 
         MaterialSteppingAction::Config mStepCfg;
         mStepCfg.excludeMaterials = {"Air", "Vacuum"};
@@ -152,10 +152,10 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
 
         // Read the particle from the generator
         SimParticleTranslation::Config g4PrCfg;
-        g4PrCfg.inputParticles = inputParticles;
 
         auto g4Cfg = makeGeant4Config(level, std::move(randomNumbers), detector,
                                       physicsList, g4PrCfg);
+        g4Cfg.inputParticles = inputParticles;
 
         ParticleTrackingAction::Config g4TrackCfg;
         ParticleTrackingAction* particleAction = new ParticleTrackingAction(
