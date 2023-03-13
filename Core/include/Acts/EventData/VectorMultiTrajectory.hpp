@@ -187,7 +187,6 @@ class VectorMultiTrajectoryBase {
         return instance.m_sourceLinks[instance.m_index[istate].iuncalibrated]
             .has_value();
       case "previous"_hash:
-      case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
       case "chi2"_hash:
@@ -224,11 +223,6 @@ class VectorMultiTrajectoryBase {
         return &instance.m_index[istate].ijacobian;
       case "projector"_hash:
         return &instance.m_projectors[instance.m_index[istate].iprojector];
-      case "uncalibratedSourceLink"_hash:
-        return &instance.m_sourceLinks[instance.m_index[istate].iuncalibrated];
-      case "calibratedSourceLink"_hash:
-        return &instance.m_sourceLinks[instance.m_index[istate]
-                                           .icalibratedsourcelink];
       case "referenceSurface"_hash:
         return &instance.m_referenceSurfaces[istate];
       case "measdim"_hash:
@@ -265,7 +259,6 @@ class VectorMultiTrajectoryBase {
       case "projector"_hash:
       case "previous"_hash:
       case "uncalibratedSourceLink"_hash:
-      case "calibratedSourceLink"_hash:
       case "referenceSurface"_hash:
       case "measdim"_hash:
       case "chi2"_hash:
@@ -279,6 +272,10 @@ class VectorMultiTrajectoryBase {
 
   IndexType calibratedSize_impl(IndexType istate) const {
     return m_index[istate].measdim;
+  }
+
+  SourceLink getUncalibratedSourceLink_impl(IndexType istate) const {
+    return m_sourceLinks[m_index[istate].iuncalibrated].value();
   }
 
   // END INTERFACE HELPER
@@ -436,6 +433,10 @@ class VectorMultiTrajectory final
 
     m_measCovOffset[istate] = static_cast<IndexType>(m_measCov.size());
     m_measCov.resize(m_measCov.size() + measdim * measdim);
+  }
+
+  void setUncalibratedSourceLink_impl(IndexType istate, SourceLink sourceLink) {
+    m_sourceLinks[m_index[istate].iuncalibrated] = std::move(sourceLink);
   }
 
   // END INTERFACE

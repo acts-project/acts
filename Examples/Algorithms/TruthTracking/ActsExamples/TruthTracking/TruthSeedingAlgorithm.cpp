@@ -18,7 +18,7 @@
 
 ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
     ActsExamples::TruthSeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("TruthSeedingAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("TruthSeedingAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
@@ -39,9 +39,6 @@ ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
   }
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output particles collection");
-  }
-  if (m_cfg.outputFullProtoTracks.empty()) {
-    throw std::invalid_argument("Missing output full proto tracks collection");
   }
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds output collections");
@@ -84,12 +81,10 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   }
 
   SimParticleContainer seededParticles;
-  ProtoTrackContainer fullTracks;
   SimSeedContainer seeds;
   ProtoTrackContainer tracks;
 
   seededParticles.reserve(particles.size());
-  fullTracks.reserve(particles.size());
   seeds.reserve(particles.size());
   tracks.reserve(particles.size());
 
@@ -111,22 +106,22 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
     const auto& hits =
         makeRange(particleHitsMap.equal_range(particle.particleId()));
     // fill hit indices to create the proto track
-    ProtoTrack fullTrack;
-    fullTrack.reserve(hits.size());
+    ProtoTrack track;
+    track.reserve(hits.size());
     for (const auto& hit : hits) {
-      fullTrack.push_back(hit.second);
+      track.push_back(hit.second);
     }
 
     // The list of hits and the initial start parameters
-    if (fullTrack.size() < 3) {
+    if (track.size() < 3) {
       ACTS_WARNING("Particle " << particle << " has less than 3 hits");
       continue;
     }
     // Space points on the proto track
     std::vector<const SimSpacePoint*> spacePointsOnTrack;
-    spacePointsOnTrack.reserve(fullTrack.size());
+    spacePointsOnTrack.reserve(track.size());
     // Loop over the hit index on the proto track to find the space points
-    for (const auto& hitIndex : fullTrack) {
+    for (const auto& hitIndex : track) {
       auto it = spMap.find(hitIndex);
       if (it != spMap.end()) {
         spacePointsOnTrack.push_back(it->second);
@@ -175,19 +170,7 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
           *spacePointsOnTrack[bestSPIndices[2]],
           static_cast<float>(spacePointsOnTrack[bestSPIndices[1]]->z())};
 
-      ProtoTrack track;
-      track.reserve(3);
-      for (const auto& sp : seed.sp()) {
-        if (sp->sourceLinks().empty()) {
-          ACTS_ERROR("Missing source link in the space point")
-          continue;
-        }
-        const auto slink = sp->sourceLinks()[0].get<IndexSourceLink>();
-        track.push_back(slink.index());
-      }
-
       seededParticles.insert(particle);
-      fullTracks.emplace_back(std::move(fullTrack));
       seeds.emplace_back(std::move(seed));
       tracks.emplace_back(std::move(track));
     }
@@ -196,7 +179,6 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   ACTS_VERBOSE("Found " << seeds.size() << " seeds");
 
   ctx.eventStore.add(m_cfg.outputParticles, std::move(seededParticles));
-  ctx.eventStore.add(m_cfg.outputFullProtoTracks, std::move(fullTracks));
   ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
   ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(tracks));
 

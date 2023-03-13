@@ -16,7 +16,7 @@
 
 ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
     Config config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFindingMLBasedAlgorithm", level),
+    : ActsExamples::IAlgorithm("TrackFindingMLBasedAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing spacepoint input collection");

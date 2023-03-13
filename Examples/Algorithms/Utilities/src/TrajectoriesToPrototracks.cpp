@@ -31,8 +31,8 @@ ProcessCode TrajectoriesToPrototracks::execute(
           return true;
         }
 
-        const auto& source_link =
-            state.uncalibratedSourceLink().template get<IndexSourceLink>();
+        auto source_link =
+            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         track.push_back(source_link.index());
 
         return true;
@@ -42,7 +42,7 @@ ProcessCode TrajectoriesToPrototracks::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputPrototracks, std::move(tracks));
+  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(tracks));
 
   return ProcessCode::SUCCESS;
 }

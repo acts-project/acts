@@ -48,7 +48,7 @@ def runTruthTrackingGsf(
         addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
-            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            ParticleConfig(4, acts.PdgParticle.eElectron, True),
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=2,
             rnd=rnd,
@@ -72,6 +72,7 @@ def runTruthTrackingGsf(
         trackingGeometry,
         field,
         rnd=rnd,
+        enableInteractions=True,
     )
 
     addDigitization(

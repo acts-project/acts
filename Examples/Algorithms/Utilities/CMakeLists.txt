@@ -1,5 +1,6 @@
 add_library(
   ActsExamplesUtilities SHARED
+  src/SeedsToPrototracks.cpp
   src/TrajectoriesToPrototracks.cpp
   src/TracksToTrajectories.cpp)
 target_include_directories(

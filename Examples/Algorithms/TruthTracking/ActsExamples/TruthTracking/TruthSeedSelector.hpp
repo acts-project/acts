@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
 
@@ -25,7 +25,7 @@ namespace ActsExamples {
 /// Then we could use particles only satistying provided criteria as the 'seeds'
 /// of CKF instead of handling all the truth particles.
 //
-class TruthSeedSelector final : public BareAlgorithm {
+class TruthSeedSelector final : public IAlgorithm {
  public:
   struct Config {
     /// The input truth particles that should be used to create proto tracks.

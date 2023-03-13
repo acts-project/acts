@@ -13,7 +13,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
@@ -25,7 +25,7 @@ class G4RunManager;
 namespace ActsExamples {
 
 /// @brief This class extracts a certain process from a HepMC event record.
-class HepMCProcessExtractor final : public ActsExamples::BareAlgorithm {
+class HepMCProcessExtractor final : public ActsExamples::IAlgorithm {
  public:
   /// @class Config
   struct Config {

@@ -20,7 +20,7 @@
 ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
     ActsExamples::TrackParamsEstimationAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("TrackParamsEstimationAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("TrackParamsEstimationAlgorithm", lvl),
       m_cfg(std::move(cfg)) {
   if (m_cfg.inputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds input collection");
@@ -34,6 +34,9 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
   if (not m_cfg.magneticField) {
     throw std::invalid_argument("Missing magnetic field");
   }
+
+  m_inputSeeds.initialize(m_cfg.inputSeeds);
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 
   // Set up the track parameters covariance (the same for all tracks)
   m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
@@ -58,7 +61,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  auto const& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
+  auto const& seeds = m_inputSeeds(ctx);
   ACTS_VERBOSE("Read " << seeds.size() << " seeds");
 
   TrackParametersContainer trackParameters;
@@ -96,7 +99,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     // Estimate the track parameters from seed
     auto optParams = Acts::estimateTrackParamsFromSeed(
         ctx.geoContext, seed.sp().begin(), seed.sp().end(), *surface, field,
-        m_cfg.bFieldMin);
+        m_cfg.bFieldMin, logger());
     if (not optParams.has_value()) {
       ACTS_WARNING("Estimation of track parameters for seed " << iseed
                                                               << " failed.");
@@ -111,6 +114,6 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   ACTS_VERBOSE("Estimated " << trackParameters.size() << " track parameters");
 
-  ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(trackParameters));
+  m_outputTrackParameters(ctx, std::move(trackParameters));
   return ProcessCode::SUCCESS;
 }

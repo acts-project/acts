@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
 /// Print all particles.
-class ParticlesPrinter : public BareAlgorithm {
+class ParticlesPrinter : public IAlgorithm {
  public:
   struct Config {
     /// Input particles collection.

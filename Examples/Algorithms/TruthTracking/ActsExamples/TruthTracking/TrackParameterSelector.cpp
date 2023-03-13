@@ -20,7 +20,7 @@
 
 ActsExamples::TrackParameterSelector::TrackParameterSelector(
     const Config& config, Acts::Logging::Level level)
-    : BareAlgorithm("TrackParameterSelector", level), m_cfg(config) {
+    : IAlgorithm("TrackParameterSelector", level), m_cfg(config) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument("Missing input track parameters");
   }

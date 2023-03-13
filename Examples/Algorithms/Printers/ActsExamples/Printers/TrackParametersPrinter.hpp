@@ -8,14 +8,14 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 
 namespace ActsExamples {
 
 /// Print track parameters.
-class TrackParametersPrinter : public BareAlgorithm {
+class TrackParametersPrinter : public IAlgorithm {
  public:
   struct Config {
     /// Input tracks parameters collection.
