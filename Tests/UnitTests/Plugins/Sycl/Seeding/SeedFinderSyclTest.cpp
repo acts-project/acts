@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2021 CERN for the benefit of the Acts project
+// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -220,11 +220,11 @@ auto main(int argc, char** argv) -> int {
 
   if (!cmdlTool.onlyGpu) {
     decltype(normalSeedFinder)::SeedingState state;
-    for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end());
-         ++groupIt) {
+    for (auto [bottom, middle, top] : spGroup) {
       normalSeedFinder.createSeedsForGroup(
-          options, state, std::back_inserter(seedVector_cpu.emplace_back()),
-          groupIt.bottom(), groupIt.middle(), groupIt.top(), rMiddleSPRange);
+          options, state, spGroup.grid(),
+          std::back_inserter(seedVector_cpu.emplace_back()), bottom, middle,
+          top, rMiddleSPRange);
       group_count++;
       if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
         break;
@@ -247,9 +247,9 @@ auto main(int argc, char** argv) -> int {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_sycl;
 
-  for (auto groupIt = spGroup.begin(); !(groupIt == spGroup.end()); ++groupIt) {
+  for (auto [bottom, middle, top] : spGroup) {
     seedVector_sycl.push_back(syclSeedFinder.createSeedsForGroup(
-        groupIt.bottom(), groupIt.middle(), groupIt.top()));
+        spGroup.grid(), bottom, middle, top));
     group_count++;
     if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
       break;

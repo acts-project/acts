@@ -12,8 +12,11 @@
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
+#include <vector>
 
 namespace ActsExamples {
+
+class DataHandleBase;
 
 /// Event processing interface.
 ///
@@ -33,6 +36,22 @@ class SequenceElement {
   /// Internal method to execute the algorithm for one event.
   /// @note Usually, you should not override this method
   virtual ProcessCode internalExecute(const AlgorithmContext& context) = 0;
+
+  const std::vector<const DataHandleBase*>& writeHandles() const;
+  const std::vector<const DataHandleBase*>& readHandles() const;
+
+ private:
+  void registerWriteHandle(const DataHandleBase& handle);
+  void registerReadHandle(const DataHandleBase& handle);
+
+  template <typename T>
+  friend class WriteDataHandle;
+
+  template <typename T>
+  friend class ReadDataHandle;
+
+  std::vector<const DataHandleBase*> m_writeHandles;
+  std::vector<const DataHandleBase*> m_readHandles;
 };
 
 }  // namespace ActsExamples
