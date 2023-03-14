@@ -244,7 +244,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     const SeedFinderOptions &options, internal_sp_t &middle,
     std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
     SeedFilterState seedFilterState,
-    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+    CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
         &candidates_collector) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
@@ -473,7 +473,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   std::size_t max_num_seeds_per_spm =
       m_config.seedFilter->getSeedFilterConfig().maxSeedsPerSpMConf;
 
-  CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+  CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
       candidates_collector;
   candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                       max_num_quality_seeds_per_spm);

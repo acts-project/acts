@@ -62,7 +62,7 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 
 template <typename external_spacepoint_t>
 inline std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePointInfo>& spacePointInfo,
-    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
   auto extractFunction =
@@ -79,7 +79,7 @@ inline std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePoin
 
 template <typename external_spacepoint_t, typename callable_t>
 inline std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePointInfo>& spacePointInfo,
-    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
+    const std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
     bool bottom, std::vector<LinCircle>& linCircleVec,
     callable_t&& extractFunction) {
   std::vector<std::size_t> indexes(vec.size());

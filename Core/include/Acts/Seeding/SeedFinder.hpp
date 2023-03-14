@@ -61,7 +61,7 @@ class SeedFinder {
     std::vector<float> ptVec;
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+    CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
         candidates_collector;
 
     // managing doublet candidates
