@@ -623,8 +623,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Cache build
-        uses: actions/cache@v3
+      - name: Cache build restore
+        uses: actions/cache/restore@v3
         with:
           path: ${{ github.workspace }}/ccache
           key: ${{ runner.os  }}-ccache-athena_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
@@ -652,6 +652,13 @@ jobs:
             echo "export CCACHE_MAXSIZE=${{ env.CCACHE_MAXSIZE }}" >> .env
             env -i CI/athena/athena_build.sh
             echo $? > outcome
+
+      - name: Cache save
+        uses: actions/cache/save@v3
+        if: always()
+        with:
+          path: ${{ github.workspace }}/ccache
+          key: ${{ runner.os  }}-ccache-athena_${{ env.CCACHE_KEY_SUFFIX }}_${{ github.sha }}
 
       - uses: actions/upload-artifact@v3
         if: always()
