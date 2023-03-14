@@ -25,25 +25,21 @@ Acts::detail::RotationToAxes Acts::detail::rotationToLocalAxesDerivative(
   // [ cy*sz  cz*cx+sz*sy*sx  cx*sz*sy-cz*sx ]
   // [ -sy   cy*sx         cy*cx        ]
 
-  // Derivative of local x axis w.r.t. (rotX, rotY, rotZ)
+  // Derivative of local x axis w.r.t. (rotX=0, rotY=0, rotZ=0)
   RotationMatrix3 rotToLocalXAxis = RotationMatrix3::Zero();
   rotToLocalXAxis.col(0) = Vector3(0, 0, 0);
-  rotToLocalXAxis.col(1) = Vector3(-cz * sy, -sz * sy, -cy);
-  rotToLocalXAxis.col(2) = Vector3(-sz * cy, cz * cy, 0);
-  // Derivative of local y axis w.r.t. (rotX, rotY, rotZ)
+  rotToLocalXAxis.col(1) = Vector3(0, 0, -1.0);
+  rotToLocalXAxis.col(2) = Vector3(0, 1.0, 0);
+  // Derivative of local y axis w.r.t. (rotX=0, rotY=0, rotZ=0)
   RotationMatrix3 rotToLocalYAxis = RotationMatrix3::Zero();
-  rotToLocalYAxis.col(0) =
-      Vector3(cz * sy * cx + sz * sx, sz * sy * cx - cz * sx, cy * cx);
-  rotToLocalYAxis.col(1) = Vector3(cz * cy * sx, sz * cy * sx, -sy * sx);
-  rotToLocalYAxis.col(2) =
-      Vector3(-sz * sy * sx - cz * cx, cz * sy * sx - sz * cx, 0);
-  // Derivative of local z axis w.r.t. (rotX, rotY, rotZ)
+  rotToLocalYAxis.col(0) = Vector3(0, 0, 1.0);
+  rotToLocalYAxis.col(1) = Vector3(0, 0, 0);
+  rotToLocalYAxis.col(2) = Vector3(-1.0, 0, 0);
+  // Derivative of local z axis w.r.t. (rotX=0, rotY=0, rotZ=0)
   RotationMatrix3 rotToLocalZAxis = RotationMatrix3::Zero();
-  rotToLocalZAxis.col(0) =
-      Vector3(sz * cx - cz * sy * sx, -sz * sy * sx - cz * cx, -cy * sx);
-  rotToLocalZAxis.col(1) = Vector3(cz * cy * cx, sz * cy * cx, -sy * cx);
-  rotToLocalZAxis.col(2) =
-      Vector3(cz * sx - sz * sy * cx, cz * sy * cx + sz * sx, 0);
+  rotToLocalZAxis.col(0) = Vector3(0, -1.0, 0);
+  rotToLocalZAxis.col(1) = Vector3(1.0, 0, 0);
+  rotToLocalZAxis.col(2) = Vector3(0, 0, 0);
 
   return std::make_tuple(std::move(rotToLocalXAxis), std::move(rotToLocalYAxis),
                          std::move(rotToLocalZAxis));
