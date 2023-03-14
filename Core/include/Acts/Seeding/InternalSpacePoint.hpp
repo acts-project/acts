@@ -42,8 +42,8 @@ class InternalSpacePoint {
   float phi() const { return atan2f(m_y, m_x); }
   const float& varianceR() const { return m_varianceR; }
   const float& varianceZ() const { return m_varianceZ; }
-  const float& deltaR() const { return m_deltaR; }
-  void setDeltaR(float deltaR) { m_deltaR = deltaR; }
+  // const float& deltaR() const { return m_deltaR; }
+  // void setDeltaR(float deltaR) { m_deltaR = deltaR; }
   const SpacePoint& sp() const { return m_sp; }
 
  protected:
@@ -54,7 +54,7 @@ class InternalSpacePoint {
   float m_r;          // radius       in beam system coordinates
   float m_varianceR;  //
   float m_varianceZ;  //
-  float m_deltaR;     //
+  //  float m_deltaR;     //
   const SpacePoint& m_sp;   // external space point
 };
 
@@ -68,15 +68,15 @@ inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
 							  const SpacePoint& sp, const Acts::Vector3& globalPos,
     const Acts::Vector2& offsetXY, const Acts::Vector2& variance)
   : m_index(index),
-    m_sp(sp) {
-  m_x = globalPos.x() - offsetXY.x();
-  m_y = globalPos.y() - offsetXY.y();
-  m_z = globalPos.z();
-  m_r = std::sqrt(m_x * m_x + m_y * m_y);
-  m_varianceR = variance.x();
-  m_varianceZ = variance.y();
-  m_deltaR = 0;
-}
+    m_x(globalPos.x() - offsetXY.x()),
+    m_y(globalPos.y() - offsetXY.y()),
+    m_z(globalPos.z()),
+    m_r(std::sqrt(m_x * m_x + m_y * m_y)),
+    m_varianceR(variance.x()),
+    m_varianceZ(variance.y()),
+    m_sp(sp)
+{}
+
 
 /////////////////////////////////////////////////////////////////////////////////
 // Copy constructor

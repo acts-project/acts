@@ -309,10 +309,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   state.linCircleBottom.reserve(numBottomSP);
   state.linCircleTop.reserve(numTopSP);
 
-  auto sorted_bottoms = transformCoordinates(state.compatBottomSP, spM, true,
+  auto sorted_bottoms = transformCoordinates(state.spacePointInfo, state.compatBottomSP, spM, true,
                                              state.linCircleBottom);
   auto sorted_tops =
-      transformCoordinates(state.compatTopSP, spM, false, state.linCircleTop);
+    transformCoordinates(state.spacePointInfo, state.compatTopSP, spM, false, state.linCircleTop);
 
   // Reserve enough space, in case current capacity is too little
   state.topSpVec.reserve(numTopSP);

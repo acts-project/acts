@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2019 CERN for the benefit of the Acts project
@@ -60,7 +61,7 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-inline std::vector<std::size_t> transformCoordinates(
+inline std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePointInfo>& spacePointInfo,
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
@@ -72,12 +73,12 @@ inline std::vector<std::size_t> transformCoordinates(
     return output;
   };
 
-  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
+  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(spacePointInfo,
       vec, spM, bottom, linCircleVec, extractFunction);
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-inline std::vector<std::size_t> transformCoordinates(
+inline std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePointInfo>& spacePointInfo,
     std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
     bool bottom, std::vector<LinCircle>& linCircleVec,
     callable_t&& extractFunction) {
@@ -90,8 +91,8 @@ inline std::vector<std::size_t> transformCoordinates(
 
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
-  for (auto sp : vec) {
-    auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
+  for (const auto* sp : vec) {
+    const auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
 
     float deltaX = xSP - xM;
     float deltaY = ySP - yM;
@@ -134,7 +135,7 @@ inline std::vector<std::size_t> transformCoordinates(
     l.r = sp->radius();
 
     linCircleVec.push_back(l);
-    sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
+    spacePointInfo[sp->index()].deltaR = std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ));
   }
   // sort the SP in order of cotTheta
   std::sort(

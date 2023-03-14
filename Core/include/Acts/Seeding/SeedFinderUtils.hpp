@@ -58,12 +58,13 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 /// @returns Vector of sorted indexes for the vectors (vec and linCircleVec)
 template <typename external_spacepoint_t>
 std::vector<std::size_t> transformCoordinates(
+					      std::vector<Acts::SpacePointInfo>& spacePointInfo,
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec);
 
 template <typename external_spacepoint_t, typename callable_t>
-std::vector<std::size_t> transformCoordinates(
+std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePointInfo>& spacePointInfo,
     std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
     bool bottom, std::vector<LinCircle>& linCircleVec,
     callable_t&& extractFunction);
