@@ -1,6 +1,6 @@
 add_library(
   ActsExamplesTrackFitting SHARED
-  src/AlreadyCalibratedCalibrator.cpp
+  src/RefittingCalibrator.cpp
   src/SurfaceSortingAlgorithm.cpp
   src/TrackFittingAlgorithm.cpp
   src/KalmanFitterFunction.cpp

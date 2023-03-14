@@ -105,7 +105,7 @@ struct KalmanFitterFunctionImpl final : public TrackFitterFunction {
       const std::vector<Acts::SourceLink>& sourceLinks,
       const TrackParameters& initialParameters,
       const GeneralFitterOptions& options,
-      const AlreadyCalibratedCalibrator& calibrator,
+      const RefittingCalibrator& calibrator,
       const std::vector<const Acts::Surface*>& surfaceSequence,
       TrackContainer& tracks) const override {
     const auto kfOptions = makeKfOptions(options, calibrator);

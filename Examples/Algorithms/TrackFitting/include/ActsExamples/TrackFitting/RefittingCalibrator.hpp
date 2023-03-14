@@ -13,13 +13,19 @@
 
 namespace ActsExamples {
 
-struct AlreadyCalibratedCalibrator {
+struct RefittingCalibrator {
   using Proxy =
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy;
   using ConstProxy = Acts::MultiTrajectory<
       Acts::ConstVectorMultiTrajectory>::ConstTrackStateProxy;
 
-  std::unordered_map<ActsExamples::Index, ConstProxy> callibratedStates;
+  struct RefittingSourceLink {
+    ConstProxy state;
+
+    Acts::GeometryIdentifier geometryId() const {
+      return state.referenceSurface().geometryId();
+    }
+  };
 
   void calibrate(const Acts::GeometryContext& /*gctx*/, Proxy trackState) const;
 };

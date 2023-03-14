@@ -44,7 +44,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
   // Perform the fit for each input track
   std::vector<Acts::SourceLink> trackSourceLinks;
   std::vector<const Acts::Surface*> surfSequence;
-  AlreadyCalibratedCalibrator calibrator;
+  RefittingCalibrator calibrator;
 
   auto itrack = 0ul;
   for (const auto track : inputTracks) {
@@ -64,21 +64,16 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
 
     trackSourceLinks.clear();
     surfSequence.clear();
-    calibrator.callibratedStates.clear();
 
     for (auto state : track.trackStates()) {
       surfSequence.push_back(&state.referenceSurface());
 
-      if (not state.hasUncalibratedSourceLink()) {
+      if (not state.hasCalibrated()) {
         continue;
       }
 
-      trackSourceLinks.push_back(state.getUncalibratedSourceLink());
-      const auto slIndex =
-          state.getUncalibratedSourceLink().get<IndexSourceLink>().index();
-      auto [it, success] =
-          calibrator.callibratedStates.insert({slIndex, std::move(state)});
-      assert(success);
+      auto sl = RefittingCalibrator::RefittingSourceLink{std::move(state)};
+      trackSourceLinks.push_back(Acts::SourceLink{std::move(sl)});
     }
 
     if (surfSequence.empty()) {

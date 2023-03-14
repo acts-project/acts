@@ -22,7 +22,7 @@
 #include "Acts/Utilities/CalibrationContext.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/TrackFitting/AlreadyCalibratedCalibrator.hpp"
+#include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 
 namespace ActsExamples {
 
@@ -31,10 +31,6 @@ namespace ActsExamples {
 /// small.
 class TrackFitterFunction {
  public:
-  using TrackContainer =
-      Acts::TrackContainer<Acts::VectorTrackContainer,
-                           Acts::VectorMultiTrajectory, std::shared_ptr>;
-
   using TrackFitterResult = Acts::Result<TrackContainer::TrackProxy>;
 
   struct GeneralFitterOptions {
@@ -56,7 +52,7 @@ class TrackFitterFunction {
   virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
                                        const TrackParameters&,
                                        const GeneralFitterOptions&,
-                                       const AlreadyCalibratedCalibrator&,
+                                       const RefittingCalibrator&,
                                        const std::vector<const Acts::Surface*>&,
                                        TrackContainer&) const = 0;
 };
