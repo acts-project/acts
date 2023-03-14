@@ -9,6 +9,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
@@ -23,25 +24,29 @@
 #include <limits>
 #include <numeric>
 #include <stdexcept>
+#include <typeinfo>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
 
+#include <boost/algorithm/string.hpp>
+#include <boost/core/demangle.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
 namespace ActsExamples {
+
 namespace {
 
 std::string_view getAlgorithmType(const SequenceElement& element) {
   if (dynamic_cast<const IWriter*>(&element) != nullptr) {
-    return "writer";
+    return "Writer";
   }
   if (dynamic_cast<const IReader*>(&element) != nullptr) {
-    return "reader";
+    return "Reader";
   }
-  return "algorithm";
+  return "Algorithm";
 }
 
 // Saturated addition that does not overflow and exceed SIZE_MAX.
@@ -52,6 +57,7 @@ size_t saturatedAdd(size_t a, size_t b) {
   res |= -static_cast<int>(res < a);
   return res;
 }
+
 }  // namespace
 
 Sequencer::Sequencer(const Sequencer::Config& cfg)
@@ -92,6 +98,7 @@ void Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
   if (not algorithm) {
     throw std::invalid_argument("Can not add empty/NULL algorithm");
   }
+
   addElement(std::move(algorithm));
 }
 
@@ -106,9 +113,103 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
   if (not element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
+
   m_sequenceElements.push_back(std::move(element));
-  ACTS_INFO("Added " << getAlgorithmType(*m_sequenceElements.back()) << " '"
-                     << m_sequenceElements.back()->name() << "'");
+
+  if (!m_cfg.runDataFlowChecks) {
+    return;
+  }
+
+  bool valid = true;
+  std::string elementType{getAlgorithmType(*element)};
+  std::string elementTypeCapitalized = elementType;
+  elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
+
+  for (const auto* handle : element->readHandles()) {
+    if (!handle->isInitialized()) {
+      continue;
+    }
+
+    if (auto it = m_whiteBoardState.find(handle->key());
+        it != m_whiteBoardState.end()) {
+      const std::type_info& type = *it->second;
+      if (type != handle->typeInfo()) {
+        ACTS_ERROR("Adding "
+                   << elementType << " " << element->name() << ":"
+                   << "\n-> white board will contain key '" << handle->key()
+                   << "'"
+                   << "\nat this point in the sequence, but the type will be\n"
+                   << "'" << boost::core::demangle(type.name()) << "'"
+                   << "\nand not\n"
+                   << "'" << boost::core::demangle(handle->typeInfo().name())
+                   << "'");
+        valid = false;
+      }
+    } else {
+      ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
+                           << "\n-> white board will not contain key"
+                           << "   '" << handle->key()
+                           << "' at this point in the sequence."
+                           << "\n   Needed for read data handle '"
+                           << handle->name() << "'")
+      valid = false;
+    }
+  }
+
+  if (valid) {  // only record outputs this if we're valid until here
+    for (const auto* handle : element->writeHandles()) {
+      if (!handle->isInitialized()) {
+        continue;
+      }
+
+      if (auto it = m_whiteBoardState.find(handle->key());
+          it != m_whiteBoardState.end()) {
+        ACTS_ERROR("White board will already contain key '"
+                   << handle->key() << "' (cannot overwrite)");
+        valid = false;
+        break;
+      }
+
+      m_whiteBoardState.emplace(std::pair{handle->key(), &handle->typeInfo()});
+
+      if (auto it = m_whiteboardObjectAliases.find(handle->key());
+          it != m_whiteboardObjectAliases.end()) {
+        ACTS_DEBUG("Key '" << handle->key() << "' aliased to '" << it->second
+                           << "'");
+        m_whiteBoardState[it->second] = &handle->typeInfo();
+      }
+    }
+  }
+
+  if (!valid) {
+    throw SequenceConfigurationException{};
+  }
+
+  ACTS_INFO("Added " << elementType << " '" << element->name() << "'");
+  auto symbol = [](const char* in) {
+    std::string s = boost::core::demangle(in);
+    if (s.size() > 80) {
+      s.erase(80);
+      s += "...";
+    }
+    return s;
+  };
+
+  for (const auto* handle : element->readHandles()) {
+    if (!handle->isInitialized()) {
+      continue;
+    }
+    ACTS_INFO("<- " << handle->name() << " '" << handle->key() << "':");
+    ACTS_INFO("   " << symbol(handle->typeInfo().name()));
+  }
+
+  for (const auto* handle : element->writeHandles()) {
+    if (!handle->isInitialized()) {
+      continue;
+    }
+    ACTS_INFO("-> " << handle->name() << " '" << handle->key() << "':");
+    ACTS_INFO("   " << symbol(handle->typeInfo().name()));
+  }
 }
 
 void Sequencer::addWhiteboardAlias(const std::string& aliasName,
@@ -116,7 +217,13 @@ void Sequencer::addWhiteboardAlias(const std::string& aliasName,
   auto [it, success] =
       m_whiteboardObjectAliases.insert({objectName, aliasName});
   if (!success) {
-    throw std::invalid_argument("Alias to '" + objectName + "' already set");
+    throw std::invalid_argument("Alias to '" + aliasName + "' -> '" +
+                                objectName + "' already set");
+  }
+
+  if (auto oit = m_whiteBoardState.find(objectName);
+      oit != m_whiteBoardState.end()) {
+    m_whiteBoardState[aliasName] = oit->second;
   }
 }
 
@@ -127,11 +234,9 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
   for (const auto& decorator : m_decorators) {
     names.push_back("Decorator:" + decorator->name());
   }
-  for (const auto& reader : m_readers) {
-    names.push_back("Reader:" + reader->name());
-  }
   for (const auto& algorithm : m_sequenceElements) {
-    names.push_back("Algorithm:" + algorithm->name());
+    names.push_back(std::string(getAlgorithmType(*algorithm)) + ":" +
+                    algorithm->name());
   }
 
   return names;

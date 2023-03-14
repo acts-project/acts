@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <limits>
@@ -53,6 +55,11 @@ class TrackSelector final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<ConstTrackContainer> m_inputTrackContainer{this,
+                                                            "InputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTrackContainer{this,
+                                                              "OutputTracks"};
 };
 
 }  // namespace ActsExamples

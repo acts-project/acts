@@ -183,6 +183,11 @@ ActsExamples::FatrasSimulation::FatrasSimulation(Config cfg,
 
   // construct the simulation for the specific magnetic field
   m_sim = std::make_unique<FatrasSimulationT>(m_cfg, lvl);
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
+  m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
 }
 
 // explicit destructor needed for the PIMPL implementation to work
@@ -191,8 +196,7 @@ ActsExamples::FatrasSimulation::~FatrasSimulation() = default;
 ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
     const AlgorithmContext &ctx) const {
   // read input containers
-  const auto &inputParticles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto &inputParticles = m_inputParticles(ctx);
 
   ACTS_DEBUG(inputParticles.size() << " input particles");
 
@@ -242,9 +246,10 @@ ActsExamples::ProcessCode ActsExamples::FatrasSimulation::execute(
                         particlesFinalUnordered.end());
   simHits.insert(simHitsUnordered.begin(), simHitsUnordered.end());
   // store ordered output containers
-  ctx.eventStore.add(m_cfg.outputParticlesInitial, std::move(particlesInitial));
-  ctx.eventStore.add(m_cfg.outputParticlesFinal, std::move(particlesFinal));
-  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+
+  m_outputParticlesInitial(ctx, std::move(particlesInitial));
+  m_outputParticlesFinal(ctx, std::move(particlesFinal));
+  m_outputSimHits(ctx, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
