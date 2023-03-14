@@ -60,9 +60,9 @@ class SeedFilter {
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
   virtual void filterSeeds_2SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
-      InternalSpacePoint<external_spacepoint_t>& bottomSP,
-      InternalSpacePoint<external_spacepoint_t>& middleSP,
-      std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
+      const InternalSpacePoint<external_spacepoint_t>& bottomSP,
+      const InternalSpacePoint<external_spacepoint_t>& middleSP,
+      const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
       const std::vector<float>& invHelixDiameterVec,
       const std::vector<float>& impactParametersVec,
       SeedFilterState& seedFilterState,

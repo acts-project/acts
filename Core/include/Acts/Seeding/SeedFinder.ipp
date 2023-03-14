@@ -171,7 +171,7 @@ template <typename external_spacepoint_t, typename platform_t>
 template <typename out_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const Acts::SeedFinderOptions& options,
-    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const Acts::SpacePointGrid<external_spacepoint_t>& grid,
     boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
         otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
@@ -189,7 +189,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float ratio_yM_rM = yM / rM;
 
   for (auto& otherSPCol : otherSPsNeighbours) {
-    auto& otherSPs = grid.at(otherSPCol.index);
+    const auto& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) {
       continue;
     }
@@ -200,7 +200,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     bool found = false;
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
-      auto& otherSP = *min_itr;
+      const auto& otherSP = *min_itr;
       const float rO = otherSP->radius();
       float deltaR = sign * (rO - rM);
 

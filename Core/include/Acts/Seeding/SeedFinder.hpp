@@ -54,7 +54,7 @@ class SeedFinder {
     std::vector<LinCircle> linCircleTop;
 
     // create vectors here to avoid reallocation in each loop
-    std::vector<InternalSpacePoint<external_spacepoint_t>*> topSpVec;
+    std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
     std::vector<float> etaVec;
@@ -137,7 +137,7 @@ class SeedFinder {
   template <typename out_range_t>
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>&
           otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,

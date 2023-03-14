@@ -268,7 +268,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
   }
 
-  std::vector<internal_sp_t *> top_valid;
+  std::vector<const internal_sp_t *> top_valid;
   std::vector<float> curvatures;
   std::vector<float> impactParameters;
 
