@@ -20,55 +20,51 @@ auto MultiEigenStepperLoop<E, R, A>::boundState(
   if (numberComponents(state) == 1) {
     return SingleStepper::boundState(state.components.front().state, surface,
                                      transportCov, freeToBoundCorrection);
-  } else if (m_finalReductionMethod == FinalReductionMethod::eMaxWeight) {
-    auto cmpIt = std::max_element(
-        state.components.begin(), state.components.end(),
-        [](const auto& a, const auto& b) { return a.weight < b.weight; });
-
-    return SingleStepper::boundState(cmpIt->state, surface, transportCov,
-                                     freeToBoundCorrection);
-  } else {
-    SmallVector<std::tuple<double, BoundVector, BoundSymMatrix>> states;
-    double accumulatedPathLength = 0.0;
-    int failedBoundTransforms = 0;
-
-    for (auto i = 0ul; i < numberComponents(state); ++i) {
-      auto bs = SingleStepper::boundState(state.components[i].state, surface,
-                                          transportCov, freeToBoundCorrection);
-
-      if (bs.ok()) {
-        const auto& btp = std::get<BoundTrackParameters>(*bs);
-        states.emplace_back(
-            state.components[i].weight, btp.parameters(),
-            btp.covariance().value_or(Acts::BoundSymMatrix::Zero()));
-        accumulatedPathLength +=
-            std::get<double>(*bs) * state.components[i].weight;
-      } else {
-        failedBoundTransforms++;
-      }
-    }
-
-    if (states.empty()) {
-      return MultiStepperError::AllComponentsConversionToBoundFailed;
-    }
-
-    if (failedBoundTransforms > 0) {
-      return MultiStepperError::SomeComponentsConversionToBoundFailed;
-    }
-
-    auto [params, cov] =
-        detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
-          return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
-        });
-
-    std::optional<BoundSymMatrix> finalCov = std::nullopt;
-    if (cov != BoundSymMatrix::Zero()) {
-      finalCov = cov;
-    }
-
-    return BoundState{BoundTrackParameters(surface.getSharedPtr(), params, cov),
-                      Jacobian::Zero(), accumulatedPathLength};
   }
+
+  SmallVector<std::tuple<double, BoundVector, BoundSymMatrix>> states;
+  double accumulatedPathLength = 0.0;
+
+  for (auto i = 0ul; i < numberComponents(state); ++i) {
+    auto bs = SingleStepper::boundState(state.components[i].state, surface,
+                                        transportCov, freeToBoundCorrection);
+
+    if (bs.ok()) {
+      const auto& btp = std::get<BoundTrackParameters>(*bs);
+      states.emplace_back(
+          state.components[i].weight, btp.parameters(),
+          btp.covariance().value_or(Acts::BoundSymMatrix::Zero()));
+      accumulatedPathLength +=
+          std::get<double>(*bs) * state.components[i].weight;
+    }
+  }
+
+  if (states.empty()) {
+    return MultiStepperError::AllComponentsConversionToBoundFailed;
+  }
+
+  const auto [mean, cov] =
+      detail::angleDescriptionSwitch(surface, [&](const auto& desc) {
+        return detail::combineGaussianMixture(states, Acts::Identity{}, desc);
+      });
+
+  const auto finalPars =
+      (m_finalReductionMethod == FinalReductionMethod::eMaxWeight)
+          ? std::get<BoundVector>(*std::max_element(
+                states.begin(), states.end(),
+                [](const auto& a, const auto& b) {
+                  return std::get<double>(a) < std::get<double>(b);
+                }))
+          : mean;
+
+  std::optional<BoundSymMatrix> finalCov = std::nullopt;
+  if (cov != BoundSymMatrix::Zero()) {
+    finalCov = cov;
+  }
+
+  return BoundState{
+      BoundTrackParameters(surface.getSharedPtr(), finalPars, finalCov),
+      Jacobian::Zero(), accumulatedPathLength};
 }
 
 template <typename E, typename R, typename A>
