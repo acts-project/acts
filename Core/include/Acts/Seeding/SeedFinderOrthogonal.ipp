@@ -405,7 +405,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
           float pTscatterSigma =
               (m_config.highland / m_config.maxPtScattering) *
               m_config.sigmaScattering;
-          p2scatterSigma *= iHelixDiameter2 * options.sigmapT2perRadius;
+          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
         }
       }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
