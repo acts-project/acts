@@ -27,9 +27,15 @@
 #include <string>
 #include <utility>
 #include <vector>
+#include <limits>
 
 namespace Acts {
 
+  struct SpacePointInfo {  
+    float quality = -std::numeric_limits<float>::infinity();
+    float deltaR = 0;
+  };
+  
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////
@@ -63,6 +69,9 @@ class SeedFinder {
         bottomNeighbours;
     boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
         topNeighbours;
+
+    // Adding space point info
+    std::vector<Acts::SpacePointInfo> spacePointInfo;
   };
 
   /// The only constructor. Requires a config object.

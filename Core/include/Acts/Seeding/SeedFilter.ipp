@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2018 CERN for the benefit of the Acts project
@@ -26,7 +27,7 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 // middle-spacepoint.
 // return vector must contain weight of each seed
 template <typename external_spacepoint_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
+void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
     InternalSpacePoint<external_spacepoint_t>& bottomSP,
     InternalSpacePoint<external_spacepoint_t>& middleSP,
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
@@ -178,8 +179,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < bottomSP.quality() and weight < middleSP.quality() and
-          weight < topSpVec[topSPIndex]->quality()) {
+      if (weight < spacePointInfo[bottomSP.index()].quality and
+	  weight < spacePointInfo[middleSP.index()].quality and
+          weight < spacePointInfo[topSpVec[topSPIndex]->index()].quality) {
         continue;
       }
 
@@ -235,7 +237,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
 // after creating all seeds with a common middle space point, filter again
 
 template <typename external_spacepoint_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
     CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
     std::size_t& numQualitySeeds,
@@ -245,11 +247,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // this collection is alredy sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
-  filterSeeds_1SpFixed(extended_collection, numQualitySeeds, outIt);
+  filterSeeds_1SpFixed(spacePointInfo, extended_collection, numQualitySeeds, outIt);
 }
 
 template <typename external_spacepoint_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
+void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
     std::vector<typename CandidatesForMiddleSp<
         InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
     std::size_t& numQualitySeeds,
@@ -269,7 +271,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
   // ordering by weight by filterSeeds_2SpFixed means these are the lowest
   // weight seeds
   unsigned int numTotalSeeds = 0;
-  for (auto& [bottom, medium, top, bestSeedQuality, zOrigin, qualitySeed] :
+  for (const auto& [bottom, medium, top, bestSeedQuality, zOrigin, qualitySeed] :
        candidates) {
     // stop if we reach the maximum number of seeds
     if (numTotalSeeds >= maxSeeds) {
@@ -281,17 +283,23 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(
       if (numQualitySeeds > 0 and not qualitySeed) {
         continue;
       }
-      if (bestSeedQuality < bottom->quality() and
-          bestSeedQuality < medium->quality() and
-          bestSeedQuality < top->quality()) {
+      if (bestSeedQuality < spacePointInfo[bottom->index()].quality and
+          bestSeedQuality < spacePointInfo[medium->index()].quality and
+          bestSeedQuality < spacePointInfo[top->index()].quality) {
         continue;
       }
     }
 
     // set quality of seed components
-    bottom->setQuality(bestSeedQuality);
-    medium->setQuality(bestSeedQuality);
-    top->setQuality(bestSeedQuality);
+    if (bestSeedQuality > spacePointInfo[bottom->index()].quality) {
+      spacePointInfo[bottom->index()].quality = bestSeedQuality;
+    }
+    if (bestSeedQuality > spacePointInfo[medium->index()].quality) {
+      spacePointInfo[medium->index()].quality = bestSeedQuality;
+    }
+    if (bestSeedQuality > spacePointInfo[top->index()].quality) {
+      spacePointInfo[top->index()].quality = bestSeedQuality;
+    }
 
     outIt = Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),
                                         zOrigin, bestSeedQuality};

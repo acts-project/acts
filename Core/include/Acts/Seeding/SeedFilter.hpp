@@ -21,6 +21,10 @@
 #include <vector>
 
 namespace Acts {
+  struct SpacePointInfo;
+}
+
+namespace Acts {
 struct SeedFilterState {
   // longitudinal impact parameter as defined by bottom and middle space point
   float zOrigin = 0;
@@ -55,7 +59,7 @@ class SeedFilter {
   /// @param impactParametersVec vector containing the impact parameters
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
-  virtual void filterSeeds_2SpFixed(
+  virtual void filterSeeds_2SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
       InternalSpacePoint<external_spacepoint_t>& middleSP,
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
@@ -70,7 +74,7 @@ class SeedFilter {
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
-  virtual void filterSeeds_1SpFixed(
+  virtual void filterSeeds_1SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
       CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
       std::size_t& numQualitySeeds,
@@ -82,7 +86,7 @@ class SeedFilter {
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
-  virtual void filterSeeds_1SpFixed(
+  virtual void filterSeeds_1SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
       std::vector<typename CandidatesForMiddleSp<
           InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
       std::size_t& numQualitySeeds,

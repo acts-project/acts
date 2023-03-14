@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2022 CERN for the benefit of the Acts project
@@ -16,6 +17,8 @@
 #include <functional>
 #include <numeric>
 #include <type_traits>
+
+#include "Acts/Seeding/SeedFinder.hpp"
 
 namespace Acts {
 template <typename external_spacepoint_t>
@@ -431,8 +434,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
     }
 
+    std::vector<Acts::SpacePointInfo> vec;
     if (!top_valid.empty()) {
-      m_config.seedFilter->filterSeeds_2SpFixed(
+      m_config.seedFilter->filterSeeds_2SpFixed(vec,
           *bottom[b], middle, top_valid, curvatures, impactParameters,
           seedFilterState, candidates_collector);
     }
@@ -593,7 +597,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
 
   // TODO: add seed confirmation
   SeedFilterState seedFilterState;
-
+  std::vector<Acts::SpacePointInfo> spacePointInfo;
+  
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
@@ -611,7 +616,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
+  m_config.seedFilter->filterSeeds_1SpFixed(spacePointInfo, candidates_collector,
                                             seedFilterState.numQualitySeeds,
                                             std::back_inserter(out_cont));
 }
@@ -670,10 +675,11 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * point, and save it in a vector.
    */
   Acts::Extent rRangeSPExtent;
+  std::size_t counter = 0;
   std::vector<internal_sp_t *> internalSpacePoints;
   for (const external_spacepoint_t *p : spacePoints) {
     auto [position, variance] = extract_coordinates(p);
-    internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
+    internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(counter++,
         *p, position, options.beamPos, variance));
     // store x,y,z values in extent
     rRangeSPExtent.extend(position);

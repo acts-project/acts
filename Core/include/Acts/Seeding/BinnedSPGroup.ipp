@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -154,7 +155,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // keep track of changed bins while sorting
   boost::container::flat_set<size_t> rBinsIndex;
 
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
+  std::size_t counter = 0;
+  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
     if (*it == nullptr) {
       continue;
     }
@@ -177,7 +179,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
 
-    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
+    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(counter,
         sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)

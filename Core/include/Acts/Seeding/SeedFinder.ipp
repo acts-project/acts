@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -160,7 +161,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     // filter candidates
     filterCandidates(*spM.get(), options, seedFilterState, state);
 
-    m_config.seedFilter->filterSeeds_1SpFixed(
+    m_config.seedFilter->filterSeeds_1SpFixed(state.spacePointInfo,
         state.candidates_collector, seedFilterState.numQualitySeeds, outIt);
 
   }  // loop on mediums
@@ -591,7 +592,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       continue;
     }
 
-    m_config.seedFilter->filterSeeds_2SpFixed(
+    m_config.seedFilter->filterSeeds_2SpFixed(state.spacePointInfo,
         *state.compatBottomSP[b], spM, state.topSpVec, state.curvatures,
         state.impactParameters, seedFilterState, state.candidates_collector);
   }  // loop on bottoms
