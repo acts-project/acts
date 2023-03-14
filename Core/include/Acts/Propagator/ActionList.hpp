@@ -80,12 +80,14 @@ struct ActionList : public detail::Extendable<actors_t...> {
   /// @param [in,out] state This is the propagator state object
   /// @param [in] stepper The stepper in use
   /// @param [in,out] result This is the result object from actions
-  template <typename propagator_state_t, typename stepper_t, typename result_t,
-            typename... Args>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t, typename result_t, typename... Args>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_t& result, Args&&... args) const {
+                  const navigator_t& navigator, result_t& result,
+                  Args&&... args) const {
     using impl = detail::action_list_impl<actors_t...>;
-    impl::action(tuple(), state, stepper, result, std::forward<Args>(args)...);
+    impl::action(tuple(), state, stepper, navigator, result,
+                 std::forward<Args>(args)...);
   }
 };
 
