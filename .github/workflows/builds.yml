@@ -633,7 +633,15 @@ jobs:
 
       - uses: cvmfs-contrib/github-action-cvmfs@v3
 
+      - name: Save PR number
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          mkdir -p physmon
+          echo ${{ github.event.number }} > physmon/pr_number
+          echo ${{ github.event.pull_request.head.sha }} > physmon/sha
+
       - uses: aidasoft/run-lcg-view@v3
+        id: build
         with:
           release-platform: "${{ env.LCG_RELEASE }}/${{ env.LCG_PLATFORM }}"
           run: |
@@ -643,3 +651,12 @@ jobs:
             echo "export CCACHE_DIR=${{ env.CCACHE_DIR }}" >> .env
             echo "export CCACHE_MAXSIZE=${{ env.CCACHE_MAXSIZE }}" >> .env
             env -i CI/athena/athena_build.sh
+            echo $? > outcome
+
+      - uses: actions/upload-artifact@v3
+        if: always()
+        with:
+          name: pr_info
+          path: |
+            pr_number
+            outcome

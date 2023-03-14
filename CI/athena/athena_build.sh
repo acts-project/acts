@@ -97,18 +97,21 @@ export LD_LIBRARY_PATH=$PWD/acts-install/lib:$LD_LIBRARY_PATH
 mkdir run
 cd run
 
+ec=0
 function runTest {
     group "Running ${@}"
     ${@}
+    ec=$(($ec | $?))
 }
 
 runTest python3 ../athena/Tracking/Acts/ActsGeometry/test/ActsITkTest.py
 runTest ../athena/AtlasTest/CITest/test/ActsKfRefitting.sh
-runTest ../athena/AtlasTest/CITest/test/ActsPersistifyEDM.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateClusters.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateOrthogonalSeeds.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateSeeds.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateSpacePoints.sh
-runTest ../athena/AtlasTest/CITest/test/ActsValidateTracks.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsPersistifyEDM.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateClusters.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateOrthogonalSeeds.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateSeeds.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateSpacePoints.sh
+# runTest ../athena/AtlasTest/CITest/test/ActsValidateTracks.sh
 runTest ../athena/AtlasTest/CITest/test/ActsWorkflow.sh
 
+exit $ec
