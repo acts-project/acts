@@ -8,22 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "Acts/EventData/VectorTrackContainer.hpp"
-#include "Acts/EventData/detail/CorrectedTransformationFreeToBound.hpp"
-#include "Acts/Geometry/TrackingGeometry.hpp"
-#include "Acts/Propagator/MultiEigenStepperLoop.hpp"
-#include "Acts/TrackFitting/KalmanFitter.hpp"
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Measurement.hpp"
-#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
-#include "ActsExamples/MagneticField/MagneticField.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
-
-#include <functional>
-#include <memory>
-#include <vector>
 
 namespace Acts {
 class TrackingGeometry;

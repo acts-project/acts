@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
-#include "ActsExamples/EventData/Index.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 
 namespace ActsExamples {
 

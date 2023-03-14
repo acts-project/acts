@@ -20,7 +20,7 @@
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
-#include "ActsExamples/TrackFitting/AlreadyCalibratedCalibrator.hpp"
+#include "ActsExamples/TrackFitting/RefittingCalibrator.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
 namespace {
