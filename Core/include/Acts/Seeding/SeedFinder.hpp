@@ -101,7 +101,7 @@ class SeedFinder {
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
       const Acts::SeedFinderOptions& options, SeedingState& state,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs,
@@ -129,7 +129,7 @@ class SeedFinder {
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
       const Acts::SeedFinderOptions& options,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs) const;
 
@@ -144,7 +144,7 @@ class SeedFinder {
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;
 
-  void filterCandidates(InternalSpacePoint<external_spacepoint_t>& SpM,
+  void filterCandidates(const InternalSpacePoint<external_spacepoint_t>& SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;

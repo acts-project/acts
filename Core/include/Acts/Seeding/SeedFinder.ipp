@@ -40,7 +40,7 @@ template <typename external_spacepoint_t, typename platform_t>
 template <template <typename...> typename container_t, typename sp_range_t>
 void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options, SeedingState& state,
-    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const Acts::SpacePointGrid<external_spacepoint_t>& grid,
     std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
     const sp_range_t& bottomSPsIdx, const std::size_t middleSPsIdx,
     const sp_range_t& topSPsIdx,
@@ -65,7 +65,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
   }
 
   // Get the middle space point candidates
-  auto& middleSPs = grid.at(middleSPsIdx);
+  const auto& middleSPs = grid.at(middleSPsIdx);
 
   // neighbours
   // clear previous results
@@ -84,7 +84,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         grid, idx, middleSPs.front()->radius() + m_config.deltaRMinTopSP);
   }
 
-  for (auto& spM : middleSPs) {
+  for (const auto& spM : middleSPs) {
     float rM = spM->radius();
     float zM = spM->z();
 
@@ -292,7 +292,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
 template <typename external_spacepoint_t, typename platform_t>
 void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
-    InternalSpacePoint<external_spacepoint_t>& spM,
+    const InternalSpacePoint<external_spacepoint_t>& spM,
     const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
     SeedingState& state) const {
   float rM = spM.radius();
@@ -603,7 +603,7 @@ template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     const Acts::SeedFinderOptions& options,
-    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const Acts::SpacePointGrid<external_spacepoint_t>& grid,
     const sp_range_t& bottomSPs, const std::size_t middleSPs,
     const sp_range_t& topSPs) const {
   SeedingState state;
