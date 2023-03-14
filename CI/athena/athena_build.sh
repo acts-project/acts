@@ -32,7 +32,6 @@ echo "LCG_RELEASE: ${LCG_RELEASE}"
 echo "LCG_PLATFORM: ${LCG_PLATFORM}"
 
 export ATLAS_LOCAL_ROOT_BASE=/cvmfs/atlas.cern.ch/repo/ATLASLocalRootBase
-ATHENA_GIT_REPO=https://gitlab.cern.ch/atlas/athena.git
 ATHENA_RELEASE=Athena,master,latest
 
 
@@ -72,8 +71,10 @@ branch=$(echo $ATLAS_RELEASE_BASE | perl -pe 's/.*\/sw\/(\w*?)_(\w*?)_.*/\1/g')
 project=$(echo $ATLAS_RELEASE_BASE | perl -pe 's/.*\/sw\/(\w*?)_(\w*?)_.*/\2/g')
 ATHENA_REF="nightly/${branch}/${nightly}"
 
-group "Cloning ${ATHENA_GIT_REPO} @ ${ATHENA_REF}"
-git clone ${ATHENA_GIT_REPO} -b ${ATHENA_REF}
+group "Getting nightly ${nightly} for ${branch}"
+mkdir athena
+curl -SL https://gitlab.cern.ch/atlas/athena/-/archive/nightly/${branch}/${nightly}/athena-nightly-${branch}-${nightly}.tar \
+   | tar -x -C athena --strip-components 1
 
 $CCACHE -z
 
@@ -89,8 +90,6 @@ group "Build Athena"
 
 cmake --build athena-build -- -j $(nproc)
 $CCACHE -s
-
-group "Run Athena based tests"
 
 source athena-build/x*/setup.sh
 export LD_LIBRARY_PATH=$PWD/acts-install/lib:$LD_LIBRARY_PATH
