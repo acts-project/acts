@@ -67,8 +67,8 @@ class DirectNavigator {
     /// @tparam stepper_t Type of the stepper
     /// @tparam navigator_t Type of the navigator
     ///
-    /// @param r the result of this Actor
     /// @param state the entire propagator state
+    /// @param r the result of this Actor
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
