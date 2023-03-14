@@ -452,9 +452,17 @@ struct GsfActor {
     auto new_end = std::remove_if(cmps.begin(), cmps.end(), [&](auto& cmp) {
       return proj(cmp) < m_cfg.weightCutoff;
     });
-    cmps.erase(new_end, cmps.end());
 
-    detail::normalizeWeights(cmps, proj);
+    // In case we would remove all components, keep only the largest
+    if (std::distance(cmps.begin(), new_end) == 0) {
+      cmps = {*std::max_element(
+          cmps.begin(), cmps.end(),
+          [&](auto& a, auto& b) { return proj(a) < proj(b); })};
+      std::get<0>(cmps.front()).weight = 1.0;
+    } else {
+      cmps.erase(new_end, cmps.end());
+      detail::normalizeWeights(cmps, proj);
+    }
   }
 
   /// Function that updates the stepper from the MultiTrajectory
