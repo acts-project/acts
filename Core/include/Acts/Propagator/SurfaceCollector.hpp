@@ -113,7 +113,8 @@ struct SurfaceCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& /*state*/, const stepper_t& /*unused*/,
-                  const navigator_t& /*navigator*/, const Logger& /*logger*/) const {}
+                  const navigator_t& /*navigator*/,
+                  const Logger& /*logger*/) const {}
 };
 
 }  // namespace Acts

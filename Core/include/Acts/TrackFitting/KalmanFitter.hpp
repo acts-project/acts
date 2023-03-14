@@ -332,7 +332,7 @@ class KalmanFitter {
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    const navigator_t& /*navigator*/, result_type& result,
+                    const navigator_t& navigator, result_type& result,
                     const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
@@ -450,7 +450,8 @@ class KalmanFitter {
             // Remember the track fitting is done
             result.finished = true;
           }
-        } else if (targetReached(state, stepper, *targetSurface, logger())) {
+        } else if (targetReached(state, stepper, navigator, *targetSurface,
+                                 logger())) {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
           auto res = stepper.boundState(state.stepping, *targetSurface, true,

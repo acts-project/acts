@@ -495,8 +495,8 @@ class CombinatorialKalmanFilter {
             }
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
-            if (result.smoothed and
-                targetReached(state, stepper, *targetSurface, logger())) {
+            if (result.smoothed and targetReached(state, stepper, navigator,
+                                                  *targetSurface, logger())) {
               ACTS_VERBOSE(
                   "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
