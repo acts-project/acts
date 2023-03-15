@@ -33,6 +33,10 @@ TruthSeedSelector::TruthSeedSelector(const Config& config,
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output truth particles collection");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_outputParticles.initialize(m_cfg.outputParticles);
 }
 
 ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {

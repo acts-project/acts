@@ -149,7 +149,7 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
   m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
   m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
-  m_outputMaterialTracks.initialize(m_cfg.outputMaterialTracks);
+  m_outputMaterialTracks.maybeInitialize(m_cfg.outputMaterialTracks);
 }
 
 ActsExamples::Geant4Simulation::~Geant4Simulation() = default;
