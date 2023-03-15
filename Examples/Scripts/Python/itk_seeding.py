@@ -57,7 +57,9 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
         inputSeeds = addStandardSeeding(
             s,
             spacePoints,
-            *acts.examples.itk.itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
+            *acts.examples.itk.itkSeedingAlgConfig(
+                InputSpacePointsType.PixelSpacePoints
+            ),
         )
 
         prototracks = "seed-prototracks"
@@ -68,7 +70,7 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
                 outputProtoTracks=prototracks,
             )
         )
-        
+
         # estimate seeding performance
         parEstimateAlg = TrackParamsEstimationAlgorithm(
             level=acts.logging.INFO,
@@ -114,7 +116,9 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
         inputSeeds = addStandardSeeding(
             s,
             spacePoints,
-            *acts.examples.itk.itkSeedingAlgConfig(InputSpacePointsType.StripSpacePoints),
+            *acts.examples.itk.itkSeedingAlgConfig(
+                InputSpacePointsType.StripSpacePoints
+            ),
         )
 
         prototracks = "seed-prototracks"
@@ -125,14 +129,14 @@ def runITkSeedingFromCsv(detector, trackingGeometry, field, outputDir):
                 outputProtoTracks=prototracks,
             )
         )
-        
+
         # estimate seeding performance
         parEstimateAlg = TrackParamsEstimationAlgorithm(
             level=acts.logging.INFO,
             inputSeeds=inputSeeds,
             outputTrackParameters="estimatedparameters",
             trackingGeometry=trackingGeometry,
-            magneticField=field
+            magneticField=field,
         )
         s.addAlgorithm(parEstimateAlg)
 
