@@ -103,7 +103,8 @@ class NextNavigator {
     fillNavigationState(state, stepper, nState);
 
     if (inactive()) {
-      ACTS_VERBOSE("navigator inactive");
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, stepper) << "navigator inactive");
       return;
     }
 
@@ -113,7 +114,9 @@ class NextNavigator {
     }
 
     if (nState.surfaceCandidate == nState.surfaceCandidates.end()) {
-      ACTS_VERBOSE("no surface candidates - waiting for target call");
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, stepper)
+                   << "no surface candidates - waiting for target call");
       return;
     }
 
@@ -129,7 +132,9 @@ class NextNavigator {
       nextSurface = &nextPortal->surface();
       isPortal = true;
     } else {
-      ACTS_ERROR("panic: not a surface not a portal - what is it?");
+      ACTS_ERROR(volInfo(state)
+                 << posInfo(state, stepper)
+                 << "panic: not a surface not a portal - what is it?");
       return;
     }
 
@@ -139,22 +144,27 @@ class NextNavigator {
 
     // Check if we are at a surface
     if (surfaceStatus == Intersection3D::Status::onSurface) {
-      ACTS_VERBOSE("landed on surface");
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, stepper) << "landed on surface");
 
       if (isPortal) {
-        ACTS_VERBOSE("this is a portal, storing it.");
+        ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
+                                    << "this is a portal, storing it.");
 
         nState.currentPortal = nextPortal;
 
-        ACTS_VERBOSE("current portal set to "
+        ACTS_VERBOSE(volInfo(state)
+                     << posInfo(state, stepper) << "current portal set to "
                      << nState.currentPortal->surface().geometryId());
       } else {
-        ACTS_VERBOSE("this is a surface, storing it.");
+        ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
+                                    << "this is a surface, storing it.");
 
         // If we are on the surface pointed at by the iterator, we can make
         // it the current one to pass it to the other actors
         nState.currentSurface = nextSurface;
-        ACTS_VERBOSE("current surface set to "
+        ACTS_VERBOSE(volInfo(state)
+                     << posInfo(state, stepper) << "current surface set to "
                      << nState.currentSurface->geometryId());
         ++nState.surfaceCandidate;
       }
@@ -179,7 +189,8 @@ class NextNavigator {
     auto& nState = state.navigation;
 
     if (inactive()) {
-      ACTS_VERBOSE("navigator inactive");
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, stepper) << "navigator inactive");
       return;
     }
 
@@ -188,9 +199,11 @@ class NextNavigator {
     }
 
     if (nState.currentSurface != nullptr) {
-      ACTS_VERBOSE("stepping through surface");
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, stepper) << "stepping through surface");
     } else if (nState.currentPortal != nullptr) {
-      ACTS_VERBOSE("stepping through portal");
+      ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, stepper) << "stepping through portal");
 
       nState.surfaceCandidates.clear();
       nState.surfaceCandidate = nState.surfaceCandidates.end();
@@ -204,6 +217,7 @@ class NextNavigator {
          ++nState.surfaceCandidate) {
       // Screen output how much is left to try
       ACTS_VERBOSE(volInfo(state)
+                   << posInfo(state, stepper)
                    << std::distance(nState.surfaceCandidate,
                                     nState.surfaceCandidates.end())
                    << " out of " << nState.surfaceCandidates.size()
@@ -213,13 +227,17 @@ class NextNavigator {
       const auto& surface =
           (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
       // Screen output which surface you are on
-      ACTS_VERBOSE("Next surface candidate will be " << surface.geometryId());
+      ACTS_VERBOSE(volInfo(state) << posInfo(state, stepper)
+                                  << "next surface candidate will be "
+                                  << surface.geometryId());
       // Estimate the surface status
       bool boundaryCheck = c.boundaryCheck;
       auto surfaceStatus = stepper.updateSurfaceStatus(state.stepping, surface,
                                                        boundaryCheck, logger());
       if (surfaceStatus == Intersection3D::Status::reachable) {
-        ACTS_VERBOSE("Surface reachable, step size updated to "
+        ACTS_VERBOSE(volInfo(state)
+                     << posInfo(state, stepper)
+                     << "surface reachable, step size updated to "
                      << stepper.outputStepSize(state.stepping));
         break;
       }
@@ -328,12 +346,14 @@ class NextNavigator {
           state.geoContext, nState.position);
 
       if (nState.currentVolume != nullptr) {
-        ACTS_VERBOSE(volInfo(state) << "switched detector volume");
+        ACTS_VERBOSE(volInfo(state)
+                     << posInfo(state, stepper) << "switched detector volume");
       }
     }
 
     if (nState.currentVolume == nullptr) {
-      ACTS_ERROR("panic: no current volume");
+      ACTS_ERROR(volInfo(state)
+                 << posInfo(state, stepper) << "panic: no current volume");
       return;
     }
 
@@ -349,7 +369,8 @@ class NextNavigator {
     nState.charge = stepper.charge(state.stepping);
     auto fieldResult = stepper.getField(state.stepping, nState.position);
     if (!fieldResult.ok()) {
-      ACTS_ERROR("could not read from the magnetic field");
+      ACTS_ERROR(volInfo(state) << posInfo(state, stepper)
+                                << "could not read from the magnetic field");
     }
     nState.magneticField = *fieldResult;
   }
