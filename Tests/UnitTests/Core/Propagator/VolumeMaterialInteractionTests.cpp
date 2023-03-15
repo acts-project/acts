@@ -110,5 +110,6 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK(!result);
   BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 }
+
 }  // namespace Test
 }  // namespace Acts

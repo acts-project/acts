@@ -90,21 +90,21 @@ struct SurfaceCollector {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result,
+                  const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
+    auto currentSurface = navigator.currentSurface(state.navigation);
+
     // The current surface has been assigned by the navigator
-    if (state.navigation.currentSurface &&
-        selector(*state.navigation.currentSurface)) {
+    if (currentSurface && selector(*currentSurface)) {
       // Create for recording
       SurfaceHit surface_hit;
-      surface_hit.surface = state.navigation.currentSurface;
+      surface_hit.surface = currentSurface;
       surface_hit.position = stepper.position(state.stepping);
       surface_hit.direction = stepper.direction(state.stepping);
       // Save if in the result
       result.collected.push_back(surface_hit);
       // Screen output
-      ACTS_VERBOSE("Collect surface  "
-                   << state.navigation.currentSurface->geometryId());
+      ACTS_VERBOSE("Collect surface  " << currentSurface->geometryId());
     }
   }
 };

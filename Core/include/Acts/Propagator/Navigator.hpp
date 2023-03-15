@@ -170,6 +170,7 @@ class Navigator {
   /// created for every propagation/extrapolation step
   /// and keep thread-local navigation information
   struct State {
+   private:
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
@@ -225,6 +226,9 @@ class Navigator {
     /// Force intersection with boundaries
     bool forceIntersectBoundaries = false;
 
+    friend Navigator;
+
+   public:
     /// Reset state
     ///
     /// @param geoContext is the geometry context
@@ -270,6 +274,61 @@ class Navigator {
                      std::shared_ptr<const Logger> _logger =
                          getDefaultLogger("Navigator", Logging::Level::INFO))
       : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
+
+  State makeState(const Surface* startSurface) const {
+    State result;
+    result.startSurface = startSurface;
+    return result;
+  }
+
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
+  }
+
+  const TrackingVolume* currentVolume(const State& state) const {
+    return state.currentVolume;
+  }
+
+  const Surface* startSurface(const State& state) const {
+    return state.startSurface;
+  }
+
+  // TODO sounds like an aborters job?
+  const Surface* targetSurface(const State& state) const {
+    return state.targetSurface;
+  }
+
+  // TODO sounds like an aborters job?
+  bool targetReached(const State& state) const { return state.targetReached; }
+
+  // TODO not sure why the navigation has to break - propergator has control
+  // over that
+  bool navigationBreak(const State& state) const {
+    return state.navigationBreak;
+  }
+
+  // TODO why would anybody set this? sounds dangerous
+  void currentSurface(State& state, const Surface* surface) const {
+    state.currentSurface = surface;
+  }
+
+  // TODO sounds like an aborters job? shouldnt we tell the propagator that we
+  // are done?
+  void targetReached(State& state, bool targetReached) const {
+    state.targetReached = targetReached;
+  }
+
+  // TODO not sure why the navigation has to break - propergator has control
+  // over that
+  void navigationBreak(State& state, bool navigationBreak) const {
+    state.navigationBreak = navigationBreak;
+  }
+
+  // TODO why this
+  void insertExternalSurface(State& state, GeometryIdentifier geoid) const {
+    state.externalSurfaces.insert(
+        std::pair<uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+  }
 
   /// @brief Navigator status call, will be called in two modes
   ///

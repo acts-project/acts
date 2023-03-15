@@ -69,7 +69,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   // if we didn't terminate normally (via aborters) set navigation break.
   // this will trigger error output in the lines below
   if (!terminatedNormally) {
-    state.navigation.navigationBreak = true;
+    m_navigator.navigationBreak(state.navigation, true);
     ACTS_ERROR("Propagation reached the step count limit of "
                << state.options.maxSteps << " (did " << result.steps
                << " steps)");
@@ -141,10 +141,11 @@ auto Acts::Propagator<S, N>::propagate(
   // Initialize the internal propagator state
   using StateType = State<OptionsType>;
   StateType state{
-      start, eOptions,
+      eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
                           eOptions.direction, eOptions.maxStepSize,
-                          eOptions.tolerance)};
+                          eOptions.tolerance),
+      m_navigator.makeState(&start.referenceSurface())};
 
   static_assert(
       Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,
@@ -227,11 +228,11 @@ auto Acts::Propagator<S, N>::propagate(
   // Initialize the internal propagator state
   using StateType = State<OptionsType>;
   StateType state{
-      start, eOptions,
+      eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
                           eOptions.direction, eOptions.maxStepSize,
-                          eOptions.tolerance)};
-  state.navigation.targetSurface = &target;
+                          eOptions.tolerance),
+      m_navigator.makeState(&start.referenceSurface())};
 
   static_assert(
       Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,

@@ -51,7 +51,7 @@ struct MaterialInteractor {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result,
+                  const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
     // In case of Volume material update the result of the previous step
     if (recordInteractions && !result.materialInteractions.empty() &&
@@ -61,7 +61,7 @@ struct MaterialInteractor {
     }
 
     // If we are on target, everything should have been done
-    if (state.navigation.targetReached) {
+    if (navigator.targetReached(state.navigation)) {
       return;
     }
     // Do nothing if nothing is what is requested.
@@ -69,8 +69,8 @@ struct MaterialInteractor {
       return;
     }
     // We only have material interactions if there is potential material
-    const Surface* surface = state.navigation.currentSurface;
-    const TrackingVolume* volume = state.navigation.currentVolume;
+    const Surface* surface = navigator.currentSurface(state.navigation);
+    const TrackingVolume* volume = navigator.currentVolume(state.navigation);
 
     if (not(surface and surface->surfaceMaterial()) and
         not(volume and volume->volumeMaterial())) {
