@@ -163,6 +163,9 @@ class NextNavigator {
 
   /// @brief Navigator target call
   ///
+  /// This will invalide the current surface and current portal in order
+  /// to navigate to the next ones.
+  ///
   /// @tparam propagator_state_t is the type of Propagatgor state
   /// @tparam stepper_t is the used type of the Stepper by the Propagator
   ///
