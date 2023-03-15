@@ -148,7 +148,7 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
     } else {
       ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
                            << "\n-> white board will not contain key"
-                           << "   '" << handle->key()
+                           << " '" << handle->key()
                            << "' at this point in the sequence."
                            << "\n   Needed for read data handle '"
                            << handle->name() << "'")
@@ -186,13 +186,14 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
   }
 
   ACTS_INFO("Added " << elementType << " '" << element->name() << "'");
-  auto symbol = [](const char* in) {
+  auto symbol = [&](const char* in) {
     std::string s = boost::core::demangle(in);
-    if (s.size() > 80) {
-      s.erase(80);
-      s += "...";
+    size_t pos = 0;
+    while (pos + 80 < s.size()) {
+      ACTS_INFO("   " + s.substr(pos, pos + 80));
+      pos += 80;
     }
-    return s;
+    ACTS_INFO("   " + s.substr(pos));
   };
 
   for (const auto* handle : element->readHandles()) {
@@ -200,7 +201,7 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
       continue;
     }
     ACTS_INFO("<- " << handle->name() << " '" << handle->key() << "':");
-    ACTS_INFO("   " << symbol(handle->typeInfo().name()));
+    symbol(handle->typeInfo().name());
   }
 
   for (const auto* handle : element->writeHandles()) {
@@ -208,7 +209,7 @@ void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
       continue;
     }
     ACTS_INFO("-> " << handle->name() << " '" << handle->key() << "':");
-    ACTS_INFO("   " << symbol(handle->typeInfo().name()));
+    symbol(handle->typeInfo().name());
   }
 }
 
