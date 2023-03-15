@@ -15,6 +15,10 @@ from acts.examples.reconstruction import (
 
 u = acts.UnitConstants
 
+from enum import Enum
+class InputSpacePointsType(Enum):
+    PixelSpacePoints = 0
+    StripSpacePoints = 1
 
 def buildITkGeometry(
     geo_dir: Path,
@@ -284,10 +288,8 @@ def buildITkGeometry(
     )
 
 
-def itkSeedingAlgConfig(inputSpacePointsType):
-
-    if inputSpacePointsType not in ["PixelSpacePoints", "StripSpacePoints"]:
-        raise RuntimeError("Invalid inputSpacePointsType")
+def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
+    assert isinstance(inputSpacePointsType, InputSpacePointsType)
 
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
@@ -364,7 +366,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     deltaPhiMax = 0.025
 
     # variables that change for pixel and strip SPs:
-    if inputSpacePointsType == "PixelSpacePoints":
+    if inputSpacePointsType is  InputSpacePointsType.PixelSpacePoints:
         outputSeeds = "PixelSeeds"
         allowSeparateRMax = False
         rMaxGridConfig = 320 * u.mm
@@ -427,7 +429,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
-    elif inputSpacePointsType == "StripSpacePoints":
+    elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
         outputSeeds = "StripSeeds"
         allowSeparateRMax = True
         rMaxGridConfig = 1000.0 * u.mm
