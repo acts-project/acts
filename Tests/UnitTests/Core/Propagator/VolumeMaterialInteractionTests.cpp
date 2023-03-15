@@ -59,6 +59,13 @@ struct Stepper {
   double charge(const StepperState& state) const { return state.q; };
 };
 
+/// @brief Simplified navigator
+struct Navigator {
+  const TrackingVolume* currentVolume(const auto& state) const {
+    return state.currentVolume;
+  }
+};
+
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   // Create a Tracking Volume
   auto htrans = Transform3(Translation3{-10., -10., 0.});
@@ -81,6 +88,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.navigation.currentVolume = volume.get();
 
   Stepper stepper;
+  Navigator navigator;
 
   // Build the VolumeMaterialInteraction & test assignments
   detail::VolumeMaterialInteraction volMatInt(volume.get(), state, stepper);
@@ -98,7 +106,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK_EQUAL(volMatInt.nav, state.stepping.navDir);
 
   // Evaluate the material
-  bool result = volMatInt.evaluateMaterialSlab(state);
+  bool result = volMatInt.evaluateMaterialSlab(state, navigator);
   BOOST_CHECK(result);
   BOOST_CHECK_EQUAL(volMatInt.slab.material(), mat);
   BOOST_CHECK_EQUAL(volMatInt.slab.thickness(), 1.);
@@ -106,7 +114,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Evaluate the material without a tracking volume
   state.navigation.currentVolume = nullptr;
-  result = volMatInt.evaluateMaterialSlab(state);
+  result = volMatInt.evaluateMaterialSlab(state, navigator);
   BOOST_CHECK(!result);
   BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 }

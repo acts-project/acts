@@ -55,14 +55,20 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigtor_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagation
-  template <typename propagator_state_t, typename stepper_t>
+  /// @param [in] navigator Navigator of the propagation
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigtor_t>
   bool validExtensionForStep(const propagator_state_t& state,
-                             const stepper_t& stepper) {
+                             const stepper_t& stepper,
+                             const navigtor_t& navigator) {
     const auto bids = std::apply(
         [&](const auto&... ext) {
-          return std::array<int, nExtensions>{ext.bid(state, stepper)...};
+          return std::array<int, nExtensions>{
+              ext.bid(state, stepper, navigator)...};
         },
         tuple());
 

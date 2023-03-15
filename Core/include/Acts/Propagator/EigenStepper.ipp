@@ -130,7 +130,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return fieldRes.error();
   }
   sd.B_first = *fieldRes;
-  if (!state.stepping.extension.validExtensionForStep(state, *this) ||
+  if (!state.stepping.extension.validExtensionForStep(state, *this,
+                                                      navigator) ||
       !state.stepping.extension.k1(state, *this, navigator, sd.k1, sd.B_first,
                                    sd.kQoP)) {
     return 0.;

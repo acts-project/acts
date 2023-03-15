@@ -236,7 +236,7 @@ auto Acts::Propagator<S, N>::propagate(
 
   static_assert(
       Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
-                            StateType&, const N&>,
+                           StateType&, const N&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 

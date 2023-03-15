@@ -106,8 +106,8 @@ struct MockStepper {
     state.dir = dir;
     state.p = p;
   }
-  void setStepSize(State & /*unused*/, double /*unused*/,
-                   Acts::ConstrainedStep::Type /*unused*/) const {}
+  void setStepSize(State & /*state*/, double /*stepSize*/,
+                   Acts::ConstrainedStep::Type /*stype*/) const {}
 };
 
 struct MockNavigatorState {
@@ -115,7 +115,12 @@ struct MockNavigatorState {
   Acts::Surface *currentSurface = nullptr;
 };
 
-struct MockNavigator {};
+struct MockNavigator {
+  bool targetReached(const auto &state) const { return state.targetReached; }
+  const Acts::Surface *currentSurface(const auto &state) const {
+    return state.currentSurface;
+  }
+};
 
 struct MockPropagatorState {
   MockNavigatorState navigation;

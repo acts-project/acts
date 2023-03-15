@@ -39,18 +39,22 @@ struct AutodiffExtensionWrapper {
   basic_extension_t<double> m_doubleExtension;
 
   // Just call underlying extension
-  template <typename propagator_state_t, typename stepper_t>
-  int bid(const propagator_state_t& ps, const stepper_t& st) const {
-    return m_doubleExtension.bid(ps, st);
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  int bid(const propagator_state_t& ps, const stepper_t& st,
+          const navigator_t& na) const {
+    return m_doubleExtension.bid(ps, st, na);
   }
 
   // Just call underlying extension
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-         const int i = 0, const double h = 0.,
+         const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+         std::array<double, 4>& kQoP, const int i = 0, const double h = 0.,
          const Vector3& kprev = Vector3::Zero()) {
-    return m_doubleExtension.k(state, stepper, knew, bField, kQoP, i, h, kprev);
+    return m_doubleExtension.k(state, stepper, navigator, knew, bField, kQoP, i,
+                               h, kprev);
   }
 
   // Just call underlying extension

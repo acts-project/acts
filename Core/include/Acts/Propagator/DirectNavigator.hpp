@@ -128,6 +128,7 @@ class DirectNavigator {
 
   /// Reset state
   ///
+  /// @param state is the state to reset
   /// @param ssurface is the new starting surface
   /// @param tsurface is the target surface
   void resetState(State& state, const GeometryContext& /*geoContext*/,

@@ -29,10 +29,13 @@ struct GenericDefaultExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @return Boolean flag if the step would be valid
-  template <typename propagator_state_t, typename stepper_t>
-  int bid(const propagator_state_t& /*unused*/,
-          const stepper_t& /*unused*/) const {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  int bid(const propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
+          const navigator_t& /*navigator*/) const {
     return 1;
   }
 
