@@ -41,6 +41,8 @@ struct GenericDefaultExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagation
   /// @param [out] knew Next k_i that is evaluated
@@ -49,12 +51,14 @@ struct GenericDefaultExtension {
   /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
+  ///
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         ThisVector3& knew, const Vector3& bField, std::array<Scalar, 4>& kQoP,
-         const int i = 0, const double h = 0.,
-         const ThisVector3& kprev = ThisVector3::Zero()) {
+         const navigator_t& /*navigator*/, ThisVector3& knew,
+         const Vector3& bField, std::array<Scalar, 4>& kQoP, const int i = 0,
+         const double h = 0., const ThisVector3& kprev = ThisVector3::Zero()) {
     auto qop =
         stepper.charge(state.stepping) / stepper.momentum(state.stepping);
     // First step does not rely on previous data

@@ -76,10 +76,11 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// collects all arguments and extensions, test their validity for the
   /// evaluation and passes them forward for evaluation and returns a boolean as
   /// indicator if the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-         const int i, const double h = 0.,
+         const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+         std::array<double, 4>& kQoP, const int i, const double h = 0.,
          const Vector3& kprev = Vector3::Zero()) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, i, h](auto intType, auto& implRef) {
@@ -94,7 +95,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
         }
         // Continue as long as evaluations are 'true'
         if (std::get<N - 1>(this->tuple())
-                .template k(state, stepper, knew, bField, kQoP, i, h, kprev)) {
+                .template k(state, stepper, navigator, knew, bField, kQoP, i, h,
+                            kprev)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         } else {
           // Break at false
@@ -110,40 +112,45 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// all arguments and extensions, test their validity for the evaluation and
   /// passes them forward for evaluation and returns a boolean as indicator if
   /// the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k1(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP) {
-    return k(state, stepper, knew, bField, kQoP, 0);
+          const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+          std::array<double, 4>& kQoP) {
+    return k(state, stepper, navigator, knew, bField, kQoP, 0);
   }
 
   /// @brief This functions broadcasts the call for evaluating k2. It collects
   /// all arguments and extensions and passes them forward for evaluation and
   /// returns a boolean as indicator if the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k2(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-          const double h, const Vector3& kprev) {
-    return k(state, stepper, knew, bField, kQoP, 1, h, kprev);
+          const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+          std::array<double, 4>& kQoP, const double h, const Vector3& kprev) {
+    return k(state, stepper, navigator, knew, bField, kQoP, 1, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k3. It collects
   /// all arguments and extensions and passes them forward for evaluation and
   /// returns a boolean as indicator if the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k3(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-          const double h, const Vector3& kprev) {
-    return k(state, stepper, knew, bField, kQoP, 2, h, kprev);
+          const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+          std::array<double, 4>& kQoP, const double h, const Vector3& kprev) {
+    return k(state, stepper, navigator, knew, bField, kQoP, 2, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k4. It collects
   /// all arguments and extensions and passes them forward for evaluation and
   /// returns a boolean as indicator if the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k4(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-          const double h, const Vector3& kprev) {
-    return k(state, stepper, knew, bField, kQoP, 3, h, kprev);
+          const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+          std::array<double, 4>& kQoP, const double h, const Vector3& kprev) {
+    return k(state, stepper, navigator, knew, bField, kQoP, 3, h, kprev);
   }
 
   /// @brief This functions broadcasts the call of the method finalize(). It

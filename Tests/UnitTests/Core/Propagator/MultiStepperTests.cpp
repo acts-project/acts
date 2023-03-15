@@ -221,12 +221,12 @@ void test_multi_stepper_vs_eigen_stepper() {
   for (int i = 0; i < 10; ++i) {
     // Single stepper
     auto single_prop_state = DummyPropState(single_state);
-    auto single_result = single_stepper.step(single_prop_state);
+    auto single_result = single_stepper.step(single_prop_state, navigator);
     single_stepper.transportCovarianceToCurvilinear(single_state);
 
     // Multi stepper;
     auto multi_prop_state = DummyPropState(multi_state);
-    auto multi_result = multi_stepper.step(multi_prop_state);
+    auto multi_result = multi_stepper.step(multi_prop_state, navigator);
     multi_stepper.transportCovarianceToCurvilinear(multi_state);
 
     // Check equality
@@ -403,11 +403,11 @@ void test_multi_stepper_surface_status_update() {
   // Step forward now
   {
     auto multi_prop_state = DummyPropState(multi_state);
-    multi_stepper.step(multi_prop_state);
+    multi_stepper.step(multi_prop_state, navigator);
 
     // Single stepper
     auto single_prop_state = DummyPropState(single_state);
-    single_stepper.step(single_prop_state);
+    single_stepper.step(single_prop_state, navigator);
   }
 
   // Update surface status and check again
@@ -490,12 +490,12 @@ void test_component_bound_state() {
   {
     multi_stepper.updateSurfaceStatus(multi_state, *right_surface, false);
     auto multi_prop_state = DummyPropState(multi_state);
-    multi_stepper.step(multi_prop_state);
+    multi_stepper.step(multi_prop_state, navigator);
 
     // Single stepper
     single_stepper.updateSurfaceStatus(single_state, *right_surface, false);
     auto single_prop_state = DummyPropState(single_state);
-    single_stepper.step(single_prop_state);
+    single_stepper.step(single_prop_state, navigator);
   }
 
   // Check component-wise bound-state
