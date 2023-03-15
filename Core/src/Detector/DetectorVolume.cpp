@@ -46,7 +46,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const GeometryContext& /*unused*/, const std::string& name,
+    const GeometryContext& /*gctx*/, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : m_name(name),
