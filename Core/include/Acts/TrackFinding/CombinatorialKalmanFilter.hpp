@@ -445,7 +445,7 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      if (result.abortList(result, state, stepper, navigator, logger())) {
+      if (result.abortList(state, stepper, navigator, result, logger())) {
         state.navigation.targetReached = false;
         if (result.activeTips.empty()) {
           // we are already done
