@@ -13,6 +13,7 @@
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
+#include "Acts/Seeding/Neighbour.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
@@ -56,6 +57,12 @@ class SeedFinder {
     // managing seed candidates for SpM
     CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
         candidates_collector;
+
+    // managing doublet candidates
+    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+        bottomNeighbours;
+    boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
+        topNeighbours;
   };
 
   /// The only constructor. Requires a config object.
@@ -118,10 +125,12 @@ class SeedFinder {
       const sp_range_t& topSPs) const;
 
  private:
-  template <typename sp_range_t, typename out_range_t>
+  template <typename out_range_t>
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid, sp_range_t& otherSPs,
+      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>&
+          otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;

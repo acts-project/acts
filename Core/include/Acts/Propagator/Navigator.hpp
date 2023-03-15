@@ -105,8 +105,7 @@ struct NavigationOptions {
 /// set to the propagation satate, such that other actors can deal wit it.
 /// This navigation actor thus always needs to run first!
 /// It does two things: it figures out the order of volumes, layers and
-/// surfaces. For each propagation step, the operator() runs, which checks if
-/// the current surface (or layer/volume boundary) is reached.
+/// surfaces.
 ///
 /// The current target surface is the surface pointed to by of the iterators
 /// for the surfaces, layers or volume boundaries.
