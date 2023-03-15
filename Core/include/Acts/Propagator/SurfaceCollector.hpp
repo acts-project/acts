@@ -82,9 +82,11 @@ struct SurfaceCollector {
   ///
   /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper used for the propagation
+  /// @tparam navigator_t Type of the navigator used for the propagation
   ///
   /// @param [in,out] state is the mutable stepper state object
   /// @param [in] stepper The stepper in use
+  /// @param [in] navigator The navigator in use
   /// @param [in,out] result is the mutable result object
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,

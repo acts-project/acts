@@ -568,10 +568,10 @@ class CombinatorialKalmanFilter {
       // Reset the navigation state
       // Set targetSurface to nullptr for forward filtering; it's only needed
       // after smoothing
-      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
-                             stepper.direction(state.stepping),
-                             state.stepping.navDir,
-                             &currentState.referenceSurface(), nullptr);
+      navigator.resetState(
+          state.navigation, state.geoContext, stepper.position(state.stepping),
+          stepper.direction(state.stepping), state.stepping.navDir,
+          &currentState.referenceSurface(), nullptr);
 
       // No Kalman filtering for the starting surface, but still need
       // to consider the material effects here
@@ -590,10 +590,12 @@ class CombinatorialKalmanFilter {
     ///
     /// @tparam propagator_state_t Type of the Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the update happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
@@ -1032,10 +1034,12 @@ class CombinatorialKalmanFilter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the material interaction happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param updateStage The materal update stage
     ///
     template <typename propagator_state_t, typename stepper_t,

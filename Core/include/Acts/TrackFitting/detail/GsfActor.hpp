@@ -318,7 +318,8 @@ struct GsfActor {
     }
   }
 
-  template <typename propagator_state_t, typename stepper_t, typename navigator_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void convoluteComponents(propagator_state_t& state, const stepper_t& stepper,
                            const navigator_t& navigator,
                            const TemporaryStates& tmpStates,
@@ -338,8 +339,8 @@ struct GsfActor {
       BoundTrackParameters bound(proxy.referenceSurface().getSharedPtr(),
                                  proxy.filtered(), proxy.filteredCovariance());
 
-      applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx), mcache,
-                        componentCache);
+      applyBetheHeitler(state, navigator, bound, tmpStates.weights.at(idx),
+                        mcache, componentCache);
     }
   }
 

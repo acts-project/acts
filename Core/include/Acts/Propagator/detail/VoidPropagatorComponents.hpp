@@ -9,8 +9,8 @@
 #pragma once
 
 namespace Acts {
-
 namespace detail {
+
 /// @brief The void navigator struct as a default navigator
 ///
 /// It does not provide any navigation action, the compiler

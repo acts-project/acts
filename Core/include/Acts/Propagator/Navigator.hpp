@@ -170,7 +170,6 @@ class Navigator {
   /// created for every propagation/extrapolation step
   /// and keep thread-local navigation information
   struct State {
-   private:
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
@@ -225,45 +224,6 @@ class Navigator {
     Stage navigationStage = Stage::undefined;
     /// Force intersection with boundaries
     bool forceIntersectBoundaries = false;
-
-    friend Navigator;
-
-   public:
-    /// Reset state
-    ///
-    /// @param geoContext is the geometry context
-    /// @param pos is the global position
-    /// @param dir is the momentum direction
-    /// @param navDir is the navigation direction
-    /// @param ssurface is the new starting surface
-    /// @param tsurface is the target surface
-    void reset(const GeometryContext& geoContext, const Vector3& pos,
-               const Vector3& dir, NavigationDirection navDir,
-               const Surface* ssurface, const Surface* tsurface) {
-      // Reset everything first
-      *this = State();
-
-      // Set the start, current and target objects
-      startSurface = ssurface;
-      if (ssurface->associatedLayer() != nullptr) {
-        startLayer = ssurface->associatedLayer();
-      }
-      if (startLayer->trackingVolume() != nullptr) {
-        startVolume = startLayer->trackingVolume();
-      }
-      currentSurface = startSurface;
-      currentVolume = startVolume;
-      targetSurface = tsurface;
-
-      // Get the compatible layers (including the current layer)
-      NavigationOptions<Layer> navOpts(navDir, true, true, true, true, nullptr,
-                                       nullptr);
-      navLayers =
-          currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
-
-      // Set the iterator to the first
-      navLayerIter = navLayers.begin();
-    }
   };
 
   /// Constructor with configuration object
@@ -279,6 +239,44 @@ class Navigator {
     State result;
     result.startSurface = startSurface;
     return result;
+  }
+
+  /// Reset state
+  ///
+  /// @param state is the state
+  /// @param geoContext is the geometry context
+  /// @param pos is the global position
+  /// @param dir is the momentum direction
+  /// @param navDir is the navigation direction
+  /// @param ssurface is the new starting surface
+  /// @param tsurface is the target surface
+  void resetState(State& state, const GeometryContext& geoContext,
+                  const Vector3& pos, const Vector3& dir,
+                  NavigationDirection navDir, const Surface* ssurface,
+                  const Surface* tsurface) const {
+    // Reset everything first
+    state = State();
+
+    // Set the start, current and target objects
+    state.startSurface = ssurface;
+    if (ssurface->associatedLayer() != nullptr) {
+      state.startLayer = ssurface->associatedLayer();
+    }
+    if (state.startLayer->trackingVolume() != nullptr) {
+      state.startVolume = state.startLayer->trackingVolume();
+    }
+    state.currentSurface = state.startSurface;
+    state.currentVolume = state.startVolume;
+    state.targetSurface = tsurface;
+
+    // Get the compatible layers (including the current layer)
+    NavigationOptions<Layer> navOpts(navDir, true, true, true, true, nullptr,
+                                     nullptr);
+    state.navLayers =
+        state.currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
+
+    // Set the iterator to the first
+    state.navLayerIter = state.navLayers.begin();
   }
 
   const Surface* currentSurface(const State& state) const {

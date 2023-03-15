@@ -542,10 +542,10 @@ class KalmanFitter {
       result.passedAgainSurfaces.push_back(&st.referenceSurface());
 
       // Reset navigation state
-      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
-                             stepper.direction(state.stepping),
-                             state.stepping.navDir, &st.referenceSurface(),
-                             targetSurface);
+      navigator.resetState(
+          state.navigation, state.geoContext, stepper.position(state.stepping),
+          stepper.direction(state.stepping), state.stepping.navDir,
+          &st.referenceSurface(), targetSurface);
 
       // Update material effects for last measurement state in reversed
       // direction
@@ -559,10 +559,12 @@ class KalmanFitter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the update happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result The mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>

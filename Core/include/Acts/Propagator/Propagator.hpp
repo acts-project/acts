@@ -265,6 +265,7 @@ class Propagator final {
     ///
     /// @param topts The options handed over by the propagate call
     /// @param steppingIn Stepper state instance to begin with
+    /// @param navigationIn Navigator state instance to begin with
     State(const propagator_options_t& topts, StepperState steppingIn,
           NavigatorState navigationIn)
         : options(topts),

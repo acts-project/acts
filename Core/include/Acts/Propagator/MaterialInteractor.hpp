@@ -43,9 +43,11 @@ struct MaterialInteractor {
   ///
   /// @tparam propagator_state_t is the type of Propagagor state
   /// @tparam stepper_t Type of the stepper of the propagation
+  /// @tparam navigator_t Type of the navigator of the propagation
   ///
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
+  /// @param navigator The navigator in use
   /// @param result is the mutable result state object
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
@@ -83,7 +85,7 @@ struct MaterialInteractor {
 
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (not d.evaluateMaterialSlab(state)) {
+      if (not d.evaluateMaterialSlab(state, navigator)) {
         return;
       }
 
@@ -116,7 +118,7 @@ struct MaterialInteractor {
       detail::VolumeMaterialInteraction d(volume, state, stepper);
       // Determine the effective traversed material and its properties
       // Material exists but it's not real, i.e. vacuum; there is nothing to do
-      if (not d.evaluateMaterialSlab(state)) {
+      if (not d.evaluateMaterialSlab(state, navigator)) {
         return;
       }
       // Record the result
