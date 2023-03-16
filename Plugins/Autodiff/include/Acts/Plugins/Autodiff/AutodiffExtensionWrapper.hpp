@@ -103,6 +103,9 @@ struct AutodiffExtensionWrapper {
     }
   };
 
+  // A fake navigator
+  struct FakeNavigator {};
+
   // Here the autodiff jacobian is computed
   template <typename propagator_state_t, typename stepper_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
@@ -141,6 +144,9 @@ struct AutodiffExtensionWrapper {
     // Initialize fake stepper
     FakeStepper stepper;
 
+    // Initialize fake navigator
+    FakeNavigator navigator;
+
     // Set dependent variables
     state.stepping.pars = in;
 
@@ -152,10 +158,10 @@ struct AutodiffExtensionWrapper {
 
     // Compute k values. Assume all return true, since these parameters
     // are already validated by the "outer RKN4"
-    ext.k(state, stepper, k[0], sd.B_first, kQoP);
-    ext.k(state, stepper, k[1], sd.B_middle, kQoP, 1, h * 0.5, k[0]);
-    ext.k(state, stepper, k[2], sd.B_middle, kQoP, 2, h * 0.5, k[1]);
-    ext.k(state, stepper, k[3], sd.B_last, kQoP, 3, h, k[2]);
+    ext.k(state, stepper, navigator, k[0], sd.B_first, kQoP);
+    ext.k(state, stepper, navigator, k[1], sd.B_middle, kQoP, 1, h * 0.5, k[0]);
+    ext.k(state, stepper, navigator, k[2], sd.B_middle, kQoP, 2, h * 0.5, k[1]);
+    ext.k(state, stepper, navigator, k[3], sd.B_last, kQoP, 3, h, k[2]);
 
     // finalize
     ext.finalize(state, stepper, h);
@@ -183,4 +189,5 @@ struct AutodiffExtensionWrapper {
     return out;
   }
 };
+
 }  // namespace Acts
