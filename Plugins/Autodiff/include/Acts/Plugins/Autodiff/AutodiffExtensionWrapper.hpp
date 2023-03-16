@@ -58,16 +58,19 @@ struct AutodiffExtensionWrapper {
   }
 
   // Just call underlying extension
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h) const {
+                const navigator_t& /*navigator*/, const double h) const {
     return m_doubleExtension.finalize(state, stepper, h);
   }
 
   // Here we call a custom implementation to compute the transport matrix
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, FreeMatrix& D) const {
+                const navigator_t& /*navigator*/, const double h,
+                FreeMatrix& D) const {
     m_doubleExtension.finalize(state, stepper, h);
     return transportMatrix(state, stepper, h, D);
   }
@@ -103,13 +106,12 @@ struct AutodiffExtensionWrapper {
     }
   };
 
-  // A fake navigator
-  struct FakeNavigator {};
-
   // Here the autodiff jacobian is computed
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const double h, FreeMatrix& D) const {
+                       const navigator_t& navigator, const double h,
+                       FreeMatrix& D) const {
     // Initialize fake stepper
     using ThisFakePropState =
         FakePropState<decltype(state.options), decltype(state.navigation)>;
@@ -131,21 +133,22 @@ struct AutodiffExtensionWrapper {
     const auto& sd = state.stepping.stepData;
 
     // Compute jacobian
-    D = jacobian([&](const auto& in) { return RKN4step(in, sd, fstate, h); },
-                 wrt(initial_params), at(initial_params))
+    D = jacobian(
+            [&](const auto& in) {
+              return RKN4step(in, sd, fstate, navigator, h);
+            },
+            wrt(initial_params), at(initial_params))
             .template cast<double>();
 
     return true;
   }
 
-  template <typename step_data_t, typename fake_state_t>
+  template <typename step_data_t, typename fake_state_t, typename navigator_t>
   auto RKN4step(const AutodiffFreeVector& in, const step_data_t& sd,
-                fake_state_t state, const double h) const {
+                fake_state_t state, const navigator_t& navigator,
+                const double h) const {
     // Initialize fake stepper
     FakeStepper stepper;
-
-    // Initialize fake navigator
-    FakeNavigator navigator;
 
     // Set dependent variables
     state.stepping.pars = in;
@@ -164,7 +167,7 @@ struct AutodiffExtensionWrapper {
     ext.k(state, stepper, navigator, k[3], sd.B_last, kQoP, 3, h, k[2]);
 
     // finalize
-    ext.finalize(state, stepper, h);
+    ext.finalize(state, stepper, navigator, h);
 
     // Compute RKN4 integration
     AutodiffFreeVector out;

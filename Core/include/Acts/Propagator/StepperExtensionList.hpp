@@ -162,9 +162,10 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// @brief This functions broadcasts the call of the method finalize(). It
   /// collects all extensions and arguments and passes them forward for
   /// evaluation and returns a boolean.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, FreeMatrix& D) {
+                const navigator_t& navigator, const double h, FreeMatrix& D) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, h](auto intType, auto& implRef) {
       constexpr int N = decltype(intType)::value;
@@ -177,7 +178,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         }
         // Continue as long as evaluations are 'true'
-        if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h, D)) {
+        if (std::get<N - 1>(this->tuple())
+                .finalize(state, stepper, navigator, h, D)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         } else {
           // Break at false
@@ -192,9 +194,10 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// @brief This functions broadcasts the call of the method finalize(). It
   /// collects all extensions and arguments and passes them forward for
   /// evaluation and returns a boolean.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h) {
+                const navigator_t& navigator, const double h) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, h](auto intType, auto& implRef) {
       constexpr int N = decltype(intType)::value;
@@ -208,7 +211,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
         }
 
         // Continue as long as evaluations are 'true'
-        if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h)) {
+        if (std::get<N - 1>(this->tuple())
+                .finalize(state, stepper, navigator, h)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         } else {
           // Break at false

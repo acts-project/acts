@@ -116,8 +116,10 @@ struct MockNavigatorState {
 };
 
 struct MockNavigator {
-  bool targetReached(const auto &state) const { return state.targetReached; }
-  const Acts::Surface *currentSurface(const auto &state) const {
+  bool targetReached(const MockNavigatorState &state) const {
+    return state.targetReached;
+  }
+  const Acts::Surface *currentSurface(const MockNavigatorState &state) const {
     return state.currentSurface;
   }
 };

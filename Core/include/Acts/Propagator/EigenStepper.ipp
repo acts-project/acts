@@ -236,14 +236,14 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   if (state.stepping.covTransport) {
     // The step transport matrix in global coordinates
     FreeMatrix D;
-    if (!state.stepping.extension.finalize(state, *this, h, D)) {
+    if (!state.stepping.extension.finalize(state, *this, navigator, h, D)) {
       return EigenStepperError::StepInvalid;
     }
 
     // for moment, only update the transport part
     state.stepping.jacTransport = D * state.stepping.jacTransport;
   } else {
-    if (!state.stepping.extension.finalize(state, *this, h)) {
+    if (!state.stepping.extension.finalize(state, *this, navigator, h)) {
       return EigenStepperError::StepInvalid;
     }
   }
