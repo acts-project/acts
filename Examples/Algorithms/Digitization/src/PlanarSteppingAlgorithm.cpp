@@ -75,7 +75,7 @@ ActsExamples::PlanarSteppingAlgorithm::PlanarSteppingAlgorithm(
   m_outputClusters.initialize(m_cfg.outputClusters);
   m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
   m_outputDigiSourceLinks.initialize(m_cfg.outputDigiSourceLinks);
-  m_outputMeasurements.initialize(m_cfg.outputDigiSourceLinks);
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
   m_outputMeasurementParticlesMap.initialize(
       m_cfg.outputMeasurementParticlesMap);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);

@@ -69,12 +69,17 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     if (m_cfg.outputSimHits.empty()) {
       ACTS_WARNING("No output sim hits collection configured");
     }
+    m_outputSimHits.initialize(m_cfg.outputSimHits);
+
     if (m_cfg.outputParticlesInitial.empty()) {
       ACTS_WARNING("No output initial particles collection configured");
     }
+    m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
+
     if (m_cfg.outputParticlesFinal.empty()) {
       ACTS_WARNING("No output final particles collection configured");
     }
+    m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
   }
 
   if (m_cfg.inputParticles.empty()) {
@@ -146,9 +151,6 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
   }
 
   m_inputParticles.initialize(m_cfg.inputParticles);
-  m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
-  m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
-  m_outputSimHits.initialize(m_cfg.outputSimHits);
   m_outputMaterialTracks.maybeInitialize(m_cfg.outputMaterialTracks);
 }
 
