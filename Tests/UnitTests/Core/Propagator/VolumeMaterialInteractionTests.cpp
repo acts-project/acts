@@ -30,6 +30,11 @@ struct StepperState {
   NavigationDirection navDir = NavigationDirection::Forward;
 };
 
+/// @brief Simplified navigator
+struct NaivgatorState {
+  TrackingVolume* currentVolume = nullptr;
+};
+
 /// @brief Simplified propgator state
 struct State {
   struct {
@@ -37,11 +42,8 @@ struct State {
     int absPdgCode = 0;
   } options;
 
-  struct {
-    TrackingVolume* currentVolume = nullptr;
-  } navigation;
-
   StepperState stepping;
+  NaivgatorState navigation;
 };
 
 /// @brief Simplified stepper
@@ -61,7 +63,7 @@ struct Stepper {
 
 /// @brief Simplified navigator
 struct Navigator {
-  const TrackingVolume* currentVolume(const auto& state) const {
+  const TrackingVolume* currentVolume(const NaivgatorState& state) const {
     return state.currentVolume;
   }
 };
