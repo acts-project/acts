@@ -107,7 +107,7 @@ struct GeometryView3D {
   /// @param transform An option additional transform
   /// @param connected The config for connected portals
   /// @param unconnected The config for unconnected portals
-  /// @param ViewConfig The drawing configuration
+  /// @param viewConfig The drawing configuration
   static void drawDetectorVolume(
       IVisualization3D& helper,
       const Acts::Experimental::DetectorVolume& volume,
