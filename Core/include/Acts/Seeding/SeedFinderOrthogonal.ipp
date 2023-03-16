@@ -732,6 +732,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
       }
     }
 
+    // remove all middle SPs outside phi and z region of interest
+    if (middle.z() > m_config.zMax || middle.z() < m_config.zMin) {
+      continue;
+    }
+    float spPhi = std::atan2(middle.y(), middle.x());
+    if (spPhi > m_config.phiMax || spPhi < m_config.phiMin) {
+      continue;
+    }
+
     processFromMiddleSP(options, tree, out_cont, middle_p);
   }
 
