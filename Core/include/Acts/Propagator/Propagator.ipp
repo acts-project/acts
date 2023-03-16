@@ -27,7 +27,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   bool terminatedNormally = true;
 
   // Pre-Stepping: abort condition check
-  if (!state.options.abortList(result, state, m_stepper, m_navigator,
+  if (!state.options.abortList(state, m_stepper, m_navigator, result,
                                logger())) {
     // Pre-Stepping: target setting
     m_navigator.target(state, m_stepper);
@@ -55,7 +55,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
       // navigator status call - action list - aborter list - target call
       m_navigator.status(state, m_stepper);
       state.options.actionList(state, m_stepper, m_navigator, result, logger());
-      if (state.options.abortList(result, state, m_stepper, m_navigator,
+      if (state.options.abortList(state, m_stepper, m_navigator, result,
                                   logger())) {
         terminatedNormally = true;
         break;

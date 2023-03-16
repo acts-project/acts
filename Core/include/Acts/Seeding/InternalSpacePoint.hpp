@@ -42,8 +42,6 @@ class InternalSpacePoint {
   float phi() const { return atan2f(m_y, m_x); }
   const float& varianceR() const { return m_varianceR; }
   const float& varianceZ() const { return m_varianceZ; }
-  // const float& deltaR() const { return m_deltaR; }
-  // void setDeltaR(float deltaR) { m_deltaR = deltaR; }
   const SpacePoint& sp() const { return m_sp; }
 
  protected:
@@ -54,7 +52,6 @@ class InternalSpacePoint {
   float m_r;          // radius       in beam system coordinates
   float m_varianceR;  //
   float m_varianceZ;  //
-  //  float m_deltaR;     //
   const SpacePoint& m_sp;   // external space point
 };
 

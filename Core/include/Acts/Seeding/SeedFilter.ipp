@@ -291,15 +291,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(Acts::SpacePointDat
     }
 
     // set quality of seed components
-    if (bestSeedQuality > spacePointData.quality(bottom->index())) {
-      spacePointData.setQuality(bottom->index(), bestSeedQuality);
-    }
-    if (bestSeedQuality > spacePointData.quality(medium->index())) {
-      spacePointData.setQuality(medium->index(), bestSeedQuality);
-    }
-    if (bestSeedQuality > spacePointData.quality(top->index())) {
-      spacePointData.setQuality(top->index(), bestSeedQuality);
-    }
+    spacePointData.setQuality(bottom->index(), bestSeedQuality);
+    spacePointData.setQuality(medium->index(), bestSeedQuality);
+    spacePointData.setQuality(top->index(), bestSeedQuality);
 
     outIt = Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),
                                         zOrigin, bestSeedQuality};

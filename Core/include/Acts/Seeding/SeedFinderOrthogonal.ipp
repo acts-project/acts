@@ -325,6 +325,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+    float sigmaSquaredSPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -412,21 +413,22 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
       float iHelixDiameter2 = B2 / S2;
-      // calculate scattering for p(T) calculated from seed curvature
-      float pT2scatter = 4 * iHelixDiameter2 * options.pT2perRadius;
-      // if pT > maxPtScattering, calculate allowed scattering angle using
-      // maxPtScattering instead of pt.
-      float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
-      if (pT > m_config.maxPtScattering) {
-        float pTscatter = m_config.highland / m_config.maxPtScattering;
-        pT2scatter = pTscatter * pTscatter;
-      }
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
+      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
+      if (!std::isinf(m_config.maxPtScattering)) {
+        // if pT > maxPtScattering, calculate allowed scattering angle using
+        // maxPtScattering instead of pt.
+        float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+        if (pT > m_config.maxPtScattering) {
+          float pTscatterSigma =
+              (m_config.highland / m_config.maxPtScattering) *
+              m_config.sigmaScattering;
+          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
+        }
+      }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 >
-          (error2 + (pT2scatter * iSinTheta2 * m_config.sigmaScattering *
-                     m_config.sigmaScattering))) {
+      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
         if (m_config.skipPreviousTopSP) {
           if (cotThetaB - cotThetaT < 0) {
             break;
@@ -738,6 +740,16 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
       if (rM > m_config.rMaxMiddle || rM < m_config.rMinMiddle) {
         continue;
       }
+    }
+
+
+    // remove all middle SPs outside phi and z region of interest
+    if (middle.z() > m_config.zMax || middle.z() < m_config.zMin) {
+      continue;
+    }
+    float spPhi = std::atan2(middle.y(), middle.x());
+    if (spPhi > m_config.phiMax || spPhi < m_config.phiMin) {
+      continue;
     }
 
     processFromMiddleSP(options, tree, out_cont, middle_p, spacePointData);

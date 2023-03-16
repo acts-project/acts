@@ -68,7 +68,11 @@ namespace Acts {
 
   inline void
   SpacePointData::setQuality(std::size_t idx, const float& value)
-  { m_quality[idx] = value; }
+  {
+    if (value > m_quality[idx]) {
+      m_quality[idx] = value;
+    }
+  }
 
   inline void
   SpacePointData::setDeltaR(std::size_t idx, const float& value)
