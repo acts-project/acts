@@ -302,6 +302,10 @@ jobs:
         image: 
           - ubuntu2204
           - ubuntu2204_clang
+        std: [17, 20]
+        exclude:
+          - image: ubuntu2204
+            std: 17
     container: ghcr.io/acts-project/${{ matrix.image }}:v36
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -325,8 +329,6 @@ jobs:
 
 
       - name: Configure
-        env:
-          IMAGE: "${{ matrix.image }}"
         # setting CMAKE_CXX_STANDARD=17 is a workaround for a bug in the
         # dd4hep CMake configuration that gets triggered on recent CMake
         # versions 
@@ -337,7 +339,7 @@ jobs:
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=20
+          -DCMAKE_CXX_STANDARD=${{ matrix.std }}
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
           -DACTS_BUILD_EVERYTHING=ON
