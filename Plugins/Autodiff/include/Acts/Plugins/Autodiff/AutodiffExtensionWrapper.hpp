@@ -71,7 +71,7 @@ struct AutodiffExtensionWrapper {
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
                 const navigator_t& navigator, const double h,
                 FreeMatrix& D) const {
-    m_doubleExtension.finalize(state, stepper, h);
+    m_doubleExtension.finalize(state, stepper, navigator, h);
     return transportMatrix(state, stepper, navigator, h, D);
   }
 
