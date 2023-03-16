@@ -24,7 +24,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v29
+    container: ghcr.io/acts-project/${{ matrix.image }}:v36
     strategy:
       matrix:
         image:
@@ -124,7 +124,7 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v36
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -207,7 +207,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v36
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
@@ -246,7 +246,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v36
     needs: [linux_ubuntu]
 
     steps:
@@ -302,7 +302,7 @@ jobs:
         image: 
           - ubuntu2204
           - ubuntu2204_clang
-    container: ghcr.io/acts-project/${{ matrix.image }}:v29
+    container: ghcr.io/acts-project/${{ matrix.image }}:v36
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -377,7 +377,7 @@ jobs:
 
   linux-nodeps:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v29
+    container: ghcr.io/acts-project/${{ matrix.image }}:v36
     strategy:
       matrix:
         image:
@@ -551,7 +551,7 @@ jobs:
 
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v29
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v36
     steps:
       - uses: actions/checkout@v3
 
@@ -581,7 +581,7 @@ jobs:
 
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v29
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v36
     defaults:
       run:
         shell: bash
