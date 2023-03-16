@@ -89,5 +89,9 @@ class SpacePointMaker final : public IAlgorithm {
 
   WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
       this, "OutputSpacePoints"};
+
+  static std::pair<const Acts::BoundVector, const Acts::BoundSymMatrix>
+  paramCovFromMeasurements(ActsExamples::MeasurementContainer measurements,
+                           const Acts::SourceLink slink);
 };
 }  // namespace ActsExamples
