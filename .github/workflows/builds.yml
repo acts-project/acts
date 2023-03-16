@@ -300,7 +300,7 @@ jobs:
     strategy:
       matrix:
         image: 
-          - ubuntu2204
+          - ubuntu2004
           - ubuntu2204_clang
     container: ghcr.io/acts-project/${{ matrix.image }}:v36
     env:
