@@ -149,9 +149,9 @@ struct PropagatorState {
       return state.stepSize.toString();
     }
 
-    Result<BoundState> boundState(State& state, const Surface& surface,
-                                  bool /*transportCov*/,
-                                  const FreeToBoundCorrection& /*freeToBoundCorrection*/
+    Result<BoundState> boundState(
+        State& state, const Surface& surface, bool /*transportCov*/,
+        const FreeToBoundCorrection& /*freeToBoundCorrection*/
     ) const {
       auto bound =
           BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
