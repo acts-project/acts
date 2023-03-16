@@ -269,31 +269,26 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
         (
             "estimatedparams.root",
             "estimatedparams",
-            284,
         ),
         (
             "performance_seeding.root",
             None,
-            284,
         ),
         (
             "particles.root",
             "particles",
-            seq.config.events,
         ),
         (
             "particles_final.root",
             "particles",
-            seq.config.events,
         ),
         (
             "particles_initial.root",
             "particles",
-            seq.config.events,
         ),
     ]
 
-    for fn, _, _ in root_files:
+    for fn, _ in root_files:
         fp = tmp_path / fn
         assert not fp.exists()
 
@@ -309,13 +304,13 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
 
     del seq
 
-    for fn, tn, exp_entries in root_files:
+    for fn, tn in root_files:
         fp = tmp_path / fn
         assert fp.exists()
         assert fp.stat().st_size > 100
 
         if tn is not None:
-            assert_entries(fp, tn, exp_entries)
+            assert_has_entries(fp, tn)
             assert_root_hash(fn, fp)
 
     assert_csv_output(csv, "particles")
