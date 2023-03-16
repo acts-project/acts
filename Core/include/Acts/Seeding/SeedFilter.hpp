@@ -13,16 +13,13 @@
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
+#include "Acts/EventData/SpacePointData.hpp"
 
 #include <memory>
 #include <mutex>
 #include <queue>
 #include <tuple>
 #include <vector>
-
-namespace Acts {
-  struct SpacePointInfo;
-}
 
 namespace Acts {
 struct SeedFilterState {
@@ -63,7 +60,7 @@ class SeedFilter {
   /// @param impactParametersVec vector containing the impact parameters
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
-  virtual void filterSeeds_2SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
+  virtual void filterSeeds_2SpFixed(Acts::SpacePointData& spacePointData,
       const InternalSpacePoint<external_spacepoint_t>& bottomSP,
       const InternalSpacePoint<external_spacepoint_t>& middleSP,
       const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
@@ -78,7 +75,7 @@ class SeedFilter {
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
-  virtual void filterSeeds_1SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
+  virtual void filterSeeds_1SpFixed(Acts::SpacePointData& spacePointData,
       CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
       std::size_t& numQualitySeeds,
@@ -90,7 +87,7 @@ class SeedFilter {
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
-  virtual void filterSeeds_1SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
+  virtual void filterSeeds_1SpFixed(Acts::SpacePointData& spacePointData,
       std::vector<typename CandidatesForMiddleSp<
           const InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
       std::size_t& numQualitySeeds,

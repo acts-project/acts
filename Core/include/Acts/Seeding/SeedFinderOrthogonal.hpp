@@ -14,6 +14,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Utilities/KDTree.hpp"
+#include "Acts/EventData/SpacePointData.hpp"
 
 #include <array>
 #include <iostream>
@@ -217,7 +218,8 @@ class SeedFinderOrthogonal {
       std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
       SeedFilterState seedFilterState,
       CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
-          &candidates_collector) const;
+      &candidates_collector,
+      Acts::SpacePointData& spacePointData) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.
@@ -229,11 +231,13 @@ class SeedFinderOrthogonal {
    * @param tree The k-d tree to use for searching.
    * @param out_cont The container write output seeds to.
    * @param middle_p The middle spacepoint to find seeds for.
+   * @param spacePointData Aux data for the spacepoints
    */
   template <typename output_container_t>
   void processFromMiddleSP(const SeedFinderOptions &options, const tree_t &tree,
                            output_container_t &out_cont,
-                           const typename tree_t::pair_t &middle_p) const;
+                           const typename tree_t::pair_t &middle_p,
+			   Acts::SpacePointData& spacePointData) const;
 
   /**
    * @brief The configuration for the seeding algorithm.

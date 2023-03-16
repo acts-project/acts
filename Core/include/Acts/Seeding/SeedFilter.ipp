@@ -27,7 +27,7 @@ SeedFilter<external_spacepoint_t>::SeedFilter(
 // middle-spacepoint.
 // return vector must contain weight of each seed
 template <typename external_spacepoint_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
+void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(Acts::SpacePointData& spacePointData,
     const InternalSpacePoint<external_spacepoint_t>& bottomSP,
     const InternalSpacePoint<external_spacepoint_t>& middleSP,
     const std::vector<const InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
@@ -85,7 +85,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(std::vector<Acts::S
     float upperLimitCurv = invHelixDiameter + m_cfg.deltaInvHelixDiameter;
     // use deltaR instead of top radius
     float currentTopR = m_cfg.useDeltaRorTopRadius
-      ? spacePointInfo[topSpVec[topSPIndex]->index()].deltaR
+      ? spacePointData.deltaR(topSpVec[topSPIndex]->index())
       : topSpVec[topSPIndex]->radius();
     float impact = impactParametersVec[topSPIndex];
 
@@ -99,7 +99,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(std::vector<Acts::S
       }
 
       float otherTopR = m_cfg.useDeltaRorTopRadius
-	? spacePointInfo[topSpVec[compatibleTopSPIndex]->index()].deltaR
+	? spacePointData.deltaR(topSpVec[compatibleTopSPIndex]->index())
 	: topSpVec[compatibleTopSPIndex]->radius();
 
       // curvature difference within limits?
@@ -179,9 +179,9 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(std::vector<Acts::S
 
       // skip a bad quality seed if any of its constituents has a weight larger
       // than the seed weight
-      if (weight < spacePointInfo[bottomSP.index()].quality and
-	  weight < spacePointInfo[middleSP.index()].quality and
-          weight < spacePointInfo[topSpVec[topSPIndex]->index()].quality) {
+      if (weight < spacePointData.quality(bottomSP.index()) and
+	  weight < spacePointData.quality(middleSP.index()) and
+          weight < spacePointData.quality(topSpVec[topSPIndex]->index())) {
         continue;
       }
 
@@ -237,7 +237,7 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(std::vector<Acts::S
 // after creating all seeds with a common middle space point, filter again
 
 template <typename external_spacepoint_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
+void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(Acts::SpacePointData& spacePointData,
     CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
         candidates_collector,
     std::size_t& numQualitySeeds,
@@ -247,11 +247,11 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(std::vector<Acts::S
   // this collection is alredy sorted
   // higher weights first
   auto extended_collection = candidates_collector.storage();
-  filterSeeds_1SpFixed(spacePointInfo, extended_collection, numQualitySeeds, outIt);
+  filterSeeds_1SpFixed(spacePointData, extended_collection, numQualitySeeds, outIt);
 }
 
 template <typename external_spacepoint_t>
-void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(std::vector<Acts::SpacePointInfo>& spacePointInfo,
+void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(Acts::SpacePointData& spacePointData,
     std::vector<typename CandidatesForMiddleSp<
         const InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
     std::size_t& numQualitySeeds,
@@ -283,22 +283,22 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_1SpFixed(std::vector<Acts::S
       if (numQualitySeeds > 0 and not qualitySeed) {
         continue;
       }
-      if (bestSeedQuality < spacePointInfo[bottom->index()].quality and
-          bestSeedQuality < spacePointInfo[medium->index()].quality and
-          bestSeedQuality < spacePointInfo[top->index()].quality) {
+      if (bestSeedQuality < spacePointData.quality(bottom->index()) and
+          bestSeedQuality < spacePointData.quality(medium->index()) and
+          bestSeedQuality < spacePointData.quality(top->index())) {
         continue;
       }
     }
 
     // set quality of seed components
-    if (bestSeedQuality > spacePointInfo[bottom->index()].quality) {
-      spacePointInfo[bottom->index()].quality = bestSeedQuality;
+    if (bestSeedQuality > spacePointData.quality(bottom->index())) {
+      spacePointData.setQuality(bottom->index(), bestSeedQuality);
     }
-    if (bestSeedQuality > spacePointInfo[medium->index()].quality) {
-      spacePointInfo[medium->index()].quality = bestSeedQuality;
+    if (bestSeedQuality > spacePointData.quality(medium->index())) {
+      spacePointData.setQuality(medium->index(), bestSeedQuality);
     }
-    if (bestSeedQuality > spacePointInfo[top->index()].quality) {
-      spacePointInfo[top->index()].quality = bestSeedQuality;
+    if (bestSeedQuality > spacePointData.quality(top->index())) {
+      spacePointData.setQuality(top->index(), bestSeedQuality);
     }
 
     outIt = Seed<external_spacepoint_t>{bottom->sp(), medium->sp(), top->sp(),

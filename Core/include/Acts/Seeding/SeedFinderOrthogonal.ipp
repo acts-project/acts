@@ -245,7 +245,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
     SeedFilterState seedFilterState,
     CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
-        &candidates_collector) const {
+    &candidates_collector,
+    Acts::SpacePointData& spacePointData) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
@@ -283,10 +284,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<LinCircle> linCircleTop;
   linCircleTop.reserve(top.size());
 
-  std::vector<Acts::SpacePointInfo> spacePointInfo;
   auto sorted_bottoms =
-    transformCoordinates(spacePointInfo, bottom, middle, true, linCircleBottom);
-  auto sorted_tops = transformCoordinates(spacePointInfo, top, middle, false, linCircleTop);
+    transformCoordinates(spacePointData, bottom, middle, true, linCircleBottom);
+  auto sorted_tops = transformCoordinates(spacePointData, top, middle, false, linCircleTop);
 
   std::vector<float> tanLM;
   std::vector<float> tanMT;
@@ -455,10 +455,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       continue;
     }
 
-    // NEED FIXING
-    std::vector<Acts::SpacePointInfo> vec;
-    
-    m_config.seedFilter->filterSeeds_2SpFixed(vec,
+    m_config.seedFilter->filterSeeds_2SpFixed(spacePointData,
 					      *bottom[b], middle, top_valid, curvatures, impactParameters,
 					      seedFilterState, candidates_collector);
     
@@ -470,7 +467,8 @@ template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     const SeedFinderOptions &options, const tree_t &tree,
     output_container_t &out_cont,
-    const typename tree_t::pair_t &middle_p) const {
+    const typename tree_t::pair_t &middle_p,
+    Acts::SpacePointData& spacePointData) const {
   using range_t = typename tree_t::range_t;
   internal_sp_t &middle = *middle_p.second;
 
@@ -619,26 +617,25 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
 
   // TODO: add seed confirmation
   SeedFilterState seedFilterState;
-  std::vector<Acts::SpacePointInfo> spacePointInfo;
   
   /*
    * If we have candidates for increasing z tracks, we try to combine them.
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
     filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
-                     candidates_collector);
+                     candidates_collector, spacePointData);
   }
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
     filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
-                     candidates_collector);
+                     candidates_collector, spacePointData);
   }
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(spacePointInfo, candidates_collector,
+  m_config.seedFilter->filterSeeds_1SpFixed(spacePointData, candidates_collector,
                                             seedFilterState.numQualitySeeds,
                                             std::back_inserter(out_cont));
 }
@@ -699,6 +696,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
   Acts::Extent rRangeSPExtent;
   std::size_t counter = 0;
   std::vector<internal_sp_t *> internalSpacePoints;
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spacePoints.size());
+  
   for (const external_spacepoint_t *p : spacePoints) {
     auto [position, variance] = extract_coordinates(p);
     internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(counter++,
@@ -740,7 +740,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
       }
     }
 
-    processFromMiddleSP(options, tree, out_cont, middle_p);
+    processFromMiddleSP(options, tree, out_cont, middle_p, spacePointData);
   }
 
   /*

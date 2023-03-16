@@ -61,7 +61,7 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-inline std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePointInfo>& spacePointInfo,
+inline std::vector<std::size_t> transformCoordinates(Acts::SpacePointData& spacePointData,
     const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
@@ -73,12 +73,12 @@ inline std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePoin
     return output;
   };
 
-  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(spacePointInfo,
+  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(spacePointData,
       vec, spM, bottom, linCircleVec, extractFunction);
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-inline std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePointInfo>& spacePointInfo,
+inline std::vector<std::size_t> transformCoordinates(Acts::SpacePointData& spacePointData,
     const std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
     bool bottom, std::vector<LinCircle>& linCircleVec,
     callable_t&& extractFunction) {
@@ -135,7 +135,7 @@ inline std::vector<std::size_t> transformCoordinates(std::vector<Acts::SpacePoin
     l.r = sp->radius();
 
     linCircleVec.push_back(l);
-    spacePointInfo[sp->index()].deltaR = std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ));
+    spacePointData.setDeltaR(sp->index(), std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
   // sort the SP in order of cotTheta
   std::sort(

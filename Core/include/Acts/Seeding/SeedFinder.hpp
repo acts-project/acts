@@ -18,6 +18,7 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "Acts/EventData/SpacePointData.hpp"
 
 #include <array>
 #include <list>
@@ -30,11 +31,6 @@
 #include <limits>
 
 namespace Acts {
-
-  struct SpacePointInfo {  
-    float quality = -std::numeric_limits<float>::infinity();
-    float deltaR = 0;
-  };
   
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
@@ -71,7 +67,7 @@ class SeedFinder {
         topNeighbours;
 
     // Adding space point info
-    std::vector<Acts::SpacePointInfo> spacePointInfo;
+    Acts::SpacePointData spacePointData;
   };
 
   /// The only constructor. Requires a config object.

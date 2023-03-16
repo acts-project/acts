@@ -252,8 +252,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
 
-  state.spacePointInfo.clear();
-  state.spacePointInfo.resize(spacePointPtrs.size());
+  state.spacePointData.clear();
+  state.spacePointData.resize(spacePointPtrs.size());
   
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(

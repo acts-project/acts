@@ -164,7 +164,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     // filter candidates
     filterCandidates(*spM.get(), options, seedFilterState, state);
 
-    m_config.seedFilter->filterSeeds_1SpFixed(state.spacePointInfo,
+    m_config.seedFilter->filterSeeds_1SpFixed(state.spacePointData,
         state.candidates_collector, seedFilterState.numQualitySeeds, outIt);
 
   }  // loop on mediums
@@ -312,10 +312,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   state.linCircleBottom.reserve(numBottomSP);
   state.linCircleTop.reserve(numTopSP);
 
-  auto sorted_bottoms = transformCoordinates(state.spacePointInfo, state.compatBottomSP, spM, true,
+  auto sorted_bottoms = transformCoordinates(state.spacePointData, state.compatBottomSP, spM, true,
                                              state.linCircleBottom);
   auto sorted_tops =
-    transformCoordinates(state.spacePointInfo, state.compatTopSP, spM, false, state.linCircleTop);
+    transformCoordinates(state.spacePointData, state.compatTopSP, spM, false, state.linCircleTop);
 
   // Reserve enough space, in case current capacity is too little
   state.topSpVec.reserve(numTopSP);
@@ -608,7 +608,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       continue;
     }
 
-    m_config.seedFilter->filterSeeds_2SpFixed(state.spacePointInfo,
+    m_config.seedFilter->filterSeeds_2SpFixed(state.spacePointData,
         *state.compatBottomSP[b], spM, state.topSpVec, state.curvatures,
         state.impactParameters, seedFilterState, state.candidates_collector);
   }  // loop on bottoms
