@@ -73,8 +73,6 @@ struct GsfOptions {
   bool abortOnError = true;
 
   bool disableAllMaterialHandling = false;
-
-  GsfOptions() = delete;
 };
 
 }  // namespace Experimental
