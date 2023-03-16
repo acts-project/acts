@@ -191,44 +191,43 @@ void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
 
 void Acts::GeometryView3D::drawDetectorVolume(
     IVisualization3D& helper, const Experimental::DetectorVolume& volume,
-    const GeometryContext& gctx,  bool drawSurfaces,
-    const Transform3& transform, const ViewConfig& connected, 
-    const ViewConfig& unconnected, const ViewConfig& viewConfig) {
+    const GeometryContext& gctx, bool drawSurfaces, const Transform3& transform,
+    const ViewConfig& connected, const ViewConfig& unconnected,
+    const ViewConfig& viewConfig) {
   // draw the envelope first
   auto portals = volume.portals();
   for (auto portal : portals) {
     drawPortal(helper, *portal, gctx, transform, connected, unconnected);
   }
 
-  //draw the surfaces of the mother volume 
-  if(drawSurfaces){
+  // draw the surfaces of the mother volume
+  if (drawSurfaces) {
     auto surfaces = volume.surfaces();
-    for(auto surface : surfaces){
+    for (auto surface : surfaces) {
       drawSurface(helper, *surface, gctx, transform, viewConfig);
     }
   }
-  // recurse if there are subvolumes, otherwise draw the portals and the surfaces if tag is true
+  // recurse if there are subvolumes, otherwise draw the portals and the
+  // surfaces if tag is true
   auto subvolumes = volume.volumes();
   for (auto subvolume : subvolumes) {
     if (!subvolume->volumes().empty()) {
-      drawDetectorVolume(helper, *subvolume, gctx, drawSurfaces, transform, connected,
-                         unconnected, viewConfig);
+      drawDetectorVolume(helper, *subvolume, gctx, drawSurfaces, transform,
+                         connected, unconnected, viewConfig);
     } else {
       auto sub_portals = subvolume->portals();
       for (auto sub_portal : sub_portals) {
         drawPortal(helper, *sub_portal, gctx, transform, connected,
                    unconnected);
       }
-      if(drawSurfaces){
+      if (drawSurfaces) {
         auto sub_surfaces = subvolume->surfaces();
-        for(auto sub_surface : sub_surfaces){
+        for (auto sub_surface : sub_surfaces) {
           drawSurface(helper, *sub_surface, gctx, transform, viewConfig);
         }
-
       }
     }
   }
-  
 }
 
 void Acts::GeometryView3D::drawLayer(

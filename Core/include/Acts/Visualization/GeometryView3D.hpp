@@ -110,14 +110,11 @@ struct GeometryView3D {
   static void drawDetectorVolume(
       IVisualization3D& helper,
       const Acts::Experimental::DetectorVolume& volume,
-      const GeometryContext& gctx,
-      bool drawSurfaces,
+      const GeometryContext& gctx, bool drawSurfaces,
       const Transform3& transform = Transform3::Identity(),
       const ViewConfig& connected = ViewConfig({0, 255, 0}),
       const ViewConfig& unconnected = ViewConfig({255, 0, 0}),
       const ViewConfig& viewConfig = s_viewSensitive);
-
-
 
   /// Helper method to draw AbstractVolume objects
   ///
