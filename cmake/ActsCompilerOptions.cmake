@@ -66,15 +66,13 @@ if(${ACTS_CXX_STANDARD} GREATER_EQUAL 20)
     "int main() { static_assert(Derived<B, A>, \"works\");  }\n" )
 
   message(CHECK_START "Are C++20 concepts supported")
-  try_compile(ACTS_CPP20_CONCEPTS_SUPPORTED "${CMAKE_BINARY_DIR}"
+  try_compile(ACTS_CONCEPTS_SUPPORTED "${CMAKE_BINARY_DIR}"
       "${CMAKE_BINARY_DIR}${CMAKE_FILES_DIRECTORY}/CMakeTmp/concepts.cpp"
       CXX_STANDARD 20
       OUTPUT_VARIABLE __OUTPUT)
 
-    if(ACTS_CPP20_CONCEPTS_SUPPORTED)
+  if(ACTS_CONCEPTS_SUPPORTED)
     message(CHECK_PASS "yes")
-    message(STATUS "This compiler supports concepts. "
-                   "Will build with C++20 enabled")
   else()
     message(CHECK_FAIL "no")
   endif()

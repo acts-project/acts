@@ -14,57 +14,35 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "Acts/Vertexing/VertexingOptions.hpp"
 
-#include <vector>
-
-#ifdef ACTS_CPP20_CONCEPTS_SUPPORTED
-
 namespace Acts {
 
-#include <concepts>
+namespace Concepts {
+namespace VertexFinder {
 
 template <typename T>
-concept VertexFinderConcept =
-    requires(const T& finder,
-             const std::vector<const typename T::InputTrack_t*>& inputTracks,
-             const VertexingOptions<typename T::InputTrack_t>& options,
-             T::State& state) {
-  typename T::State;
-  typename T::InputTrack_t;
+using state_t = typename T::State;
 
-  { finder.find(inputTracks, options, state) }
-  ->std::same_as<Result<std::vector<Vertex<typename T::InputTrack_t>>>>;
-};
+METHOD_TRAIT(find_t, find);
 
-// namespace Concepts {
-// namespace VertexFinder {
+// clang-format off
+    template <typename S>
+      struct VertexFinderConcept {
+        constexpr static bool state_exists = exists<state_t, S>;
+        static_assert(state_exists, "State type not found");
+        
+        constexpr static bool find_exists = has_method<const S, Result<std::vector<Vertex<typename S::InputTrack_t>>>,
+         find_t, const std::vector<const typename S::InputTrack_t*>&, 
+         const VertexingOptions<typename S::InputTrack_t>&, typename S::State&>;
+        static_assert(find_exists, "find method not found");
 
-// template <typename T>
-// using state_t = typename T::State;
+        constexpr static bool value = require<state_exists, find_exists>;
+      };
+// clang-format on
+}  // namespace VertexFinder
+}  // namespace Concepts
 
-// METHOD_TRAIT(find_t, find);
-
-// // clang-format off
-// template <typename S>
-// struct VertexFinderConcept {
-// constexpr static bool state_exists = exists<state_t, S>;
-// static_assert(state_exists, "State type not found");
-
-// constexpr static bool find_exists = has_method<const S,
-// Result<std::vector<Vertex<typename S::InputTrack_t>>>, find_t, const
-// std::vector<const typename S::InputTrack_t*>&, const
-// VertexingOptions<typename S::InputTrack_t>&, typename S::State&>;
-// static_assert(find_exists, "find method not found");
-
-// constexpr static bool value = require<state_exists, find_exists>;
-// };
-// // clang-format on
-// }  // namespace VertexFinder
-// }  // namespace Concepts
-
-// template <typename finder>
-// constexpr bool VertexFinderConcept =
-// Acts::Concepts ::VertexFinder::VertexFinderConcept<finder>::value;
+template <typename finder>
+constexpr bool VertexFinderConcept =
+    Acts::Concepts ::VertexFinder::VertexFinderConcept<finder>::value;
 
 }  // namespace Acts
-
-#endif

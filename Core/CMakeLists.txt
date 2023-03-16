@@ -10,15 +10,8 @@ target_compile_features(
   ActsCore
   PUBLIC ${ACTS_CXX_STANDARD_FEATURE})
 
-if(ACTS_CPP20_CONCEPTS_SUPPORTED)
-  target_compile_features(
-    ActsCore
-    PUBLIC cxx_std_20)
-  target_compile_definitions(ActsCore PUBLIC ACTS_CPP20_CONCEPTS_SUPPORTED)
-else()
-  target_compile_features(
-    ActsCore
-    PUBLIC cxx_std_17)
+if(ACTS_CONCEPTS_SUPPORTED)
+  target_compile_definitions(ActsCore PUBLIC ACTS_CONCEPTS_SUPPORTED)
 endif()
 
 target_include_directories(

@@ -357,13 +357,6 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
   find_package(HepMC3 ${_acts_hepmc3_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
-  if(ACTS_CPP20_CONCEPTS_SUPPORTED)
-
-    message(WARNING "C++20 was enabled for ACTS. "
-                    "Pythia8 as of v307 does not support C++20. "
-                    "A patch for pythia v307 is located in cmake/pythia8307-cpp20.patch")
-
-  endif()
   find_package(Pythia8 REQUIRED)
 
 if(DEFINED CMAKE_CXX_STANDARD)

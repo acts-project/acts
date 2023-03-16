@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/Utilities/AnnealingUtility.hpp"
-#include "Acts/Utilities/Concepts.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 #include "Acts/Vertexing/AMVFInfo.hpp"
@@ -36,10 +35,10 @@ namespace Acts {
 ///
 /// @tparam input_track_t Track object type
 /// @tparam linearizer_t Track linearizer type
-template <typename input_track_t, ACTS_CONCEPT(LinearizerConcept) linearizer_t>
+template <typename input_track_t, typename linearizer_t>
 class AdaptiveMultiVertexFitter {
-  // static_assert(LinearizerConcept<linearizer_t>,
-  // "Linearizer does not fulfill linearizer concept.");
+  static_assert(LinearizerConcept<linearizer_t>,
+                "Linearizer does not fulfill linearizer concept.");
 
  public:
   using InputTrack_t = input_track_t;
