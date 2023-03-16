@@ -120,9 +120,11 @@ class DirectNavigator {
     bool navigationBreak = false;
   };
 
-  State makeState(const Surface* startSurface) const {
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
     State result;
     result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
     return result;
   }
 

@@ -38,9 +38,11 @@ struct VoidNavigator {
   /// Unique typedef to publish to the Propagator
   using state_type = State;
 
-  State makeState(const Surface* startSurface) const {
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
     State result;
     result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
     return result;
   }
 

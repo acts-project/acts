@@ -145,7 +145,7 @@ auto Acts::Propagator<S, N>::propagate(
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
                           eOptions.direction, eOptions.maxStepSize,
                           eOptions.tolerance),
-      m_navigator.makeState(&start.referenceSurface())};
+      m_navigator.makeState(&start.referenceSurface(), nullptr)};
 
   static_assert(
       Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
@@ -232,7 +232,7 @@ auto Acts::Propagator<S, N>::propagate(
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
                           eOptions.direction, eOptions.maxStepSize,
                           eOptions.tolerance),
-      m_navigator.makeState(&start.referenceSurface())};
+      m_navigator.makeState(&start.referenceSurface(), &target)};
 
   static_assert(
       Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,

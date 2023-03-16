@@ -235,9 +235,11 @@ class Navigator {
                          getDefaultLogger("Navigator", Logging::Level::INFO))
       : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
 
-  State makeState(const Surface* startSurface) const {
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
     State result;
     result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
     return result;
   }
 
