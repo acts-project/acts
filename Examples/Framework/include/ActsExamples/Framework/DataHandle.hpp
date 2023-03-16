@@ -44,13 +44,18 @@ class DataHandleBase {
     }
   }
 
- protected:
+  virtual bool isCompatible(const DataHandleBase& other) const = 0;
+
   std::string fullName() const { return m_parent->name() + "." + name(); }
 
+ protected:
   SequenceElement* m_parent{nullptr};
   std::string m_name;
   std::optional<std::string> m_key{};
 };
+
+template <typename T>
+class ReadDataHandle;
 
 template <typename T>
 class WriteDataHandle final : public DataHandleBase {
@@ -78,6 +83,10 @@ class WriteDataHandle final : public DataHandleBase {
                                   "' cannot receive empty key"};
     }
     m_key = key;
+  }
+
+  bool isCompatible(const DataHandleBase& other) const override {
+    return dynamic_cast<const ReadDataHandle<T>*>(&other) != nullptr;
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
@@ -109,6 +118,10 @@ class ReadDataHandle final : public DataHandleBase {
                                "' not initialized"};
     }
     return wb.get<T>(m_key.value());
+  }
+
+  bool isCompatible(const DataHandleBase& other) const override {
+    return dynamic_cast<const WriteDataHandle<T>*>(&other) != nullptr;
   }
 
   const std::type_info& typeInfo() const override { return typeid(T); };
