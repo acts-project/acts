@@ -116,8 +116,9 @@ void SpacePointBuilder<spacepoint_t>::makeSourceLinkPairs(
       auto res = m_spUtility->differenceOfMeasurementsChecked(
           gposFront, gposBack, pairOpt.vertex, pairOpt.diffDist,
           pairOpt.diffPhi2, pairOpt.diffTheta2);
-      if (!res.ok())
+      if (!res.ok()) {
         continue;
+      }
       const auto distance = res.value();
       if (distance >= 0. && distance < minDistance) {
         minDistance = distance;

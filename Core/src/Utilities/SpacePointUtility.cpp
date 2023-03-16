@@ -40,8 +40,8 @@ Result<double> SpacePointUtility::differenceOfMeasurementsChecked(
 }
 
 std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
-    const GeometryContext& gctx, SourceLink slink, const BoundVector& par,
-    const BoundSymMatrix& cov) const {
+    const GeometryContext& gctx, const SourceLink& slink,
+    const BoundVector& par, const BoundSymMatrix& cov) const {
   const Surface* surface =
       m_config.trackingGeometry->findSurface(slink.geometryId());
   Vector2 localPos(par[eBoundLoc0], par[eBoundLoc1]);
@@ -79,10 +79,10 @@ std::pair<Vector3, Vector2> SpacePointUtility::globalCoords(
 }
 
 Vector2 SpacePointUtility::calcRhoZVars(
-    const GeometryContext& gctx, SourceLink slinkFront, SourceLink slinkBack,
-    std::function<
-        std::pair<const BoundVector, const BoundSymMatrix>(SourceLink)>
-        paramCovAccessor,
+    const GeometryContext& gctx, const SourceLink& slinkFront,
+    const SourceLink& slinkBack,
+    const std::function<std::pair<const BoundVector, const BoundSymMatrix>(
+        SourceLink)>& paramCovAccessor,
     const Vector3& globalPos, const double theta) const {
   const auto var1 = paramCovAccessor(slinkFront).second(0, 0);
   const auto var2 = paramCovAccessor(slinkBack).second(0, 0);

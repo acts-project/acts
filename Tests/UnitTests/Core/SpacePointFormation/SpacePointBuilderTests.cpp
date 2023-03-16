@@ -63,7 +63,7 @@ CurvilinearTrackParameters makeParameters(double phi, double theta, double p,
 
 std::pair<Vector3, Vector3> stripEnds(
     const std::shared_ptr<const TrackingGeometry>& geo,
-    const GeometryContext& gctx, SourceLink slink,
+    const GeometryContext& gctx, const SourceLink& slink,
     const double stripFrac = 0.4) {
   auto testslink = slink.get<TestSourceLink>();
   const auto lpos = testslink.parameters;
