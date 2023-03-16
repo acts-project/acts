@@ -102,23 +102,6 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
       Acts::getDefaultLogger("SpacePointBuilder", lvl));
 }
 
-std::pair<const Acts::BoundVector, const Acts::BoundSymMatrix>
-ActsExamples::SpacePointMaker::paramCovFromMeasurements(
-    ActsExamples::MeasurementContainer measurements, Acts::SourceLink slink) {
-  const auto islink = slink.get<IndexSourceLink>();
-  const auto& meas = measurements[islink.index()];
-
-  return std::visit(
-      [](const auto& measurement) {
-        auto expander = measurement.expander();
-        Acts::BoundVector par = expander * measurement.parameters();
-        Acts::BoundSymMatrix cov =
-            expander * measurement.covariance() * expander.transpose();
-        return std::make_pair(par, cov);
-      },
-      meas);
-}
-
 ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     const AlgorithmContext& ctx) const {
   const auto& sourceLinks = m_inputSourceLinks(ctx);
@@ -126,8 +109,20 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
 
   // TODO Support strip measurements
   Acts::SpacePointBuilderOptions spOpt;
+
   spOpt.paramCovAccessor = [&](Acts::SourceLink slink) {
-    return paramCovFromMeasurements(measurements, slink);
+    const auto islink = slink.get<IndexSourceLink>();
+    const auto& meas = measurements[islink.index()];
+
+    return std::visit(
+        [](const auto& measurement) {
+          auto expander = measurement.expander();
+          Acts::BoundVector par = expander * measurement.parameters();
+          Acts::BoundSymMatrix cov =
+              expander * measurement.covariance() * expander.transpose();
+          return std::make_pair(par, cov);
+        },
+        meas);
   };
 
   SimSpacePointContainer spacePoints;
