@@ -39,9 +39,9 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// space point in a std::tuple format
   /// @return vector of seeds that pass the cut
   std::vector<typename CandidatesForMiddleSp<
-      InternalSpacePoint<SpacePoint>>::value_type>
+      const InternalSpacePoint<SpacePoint>>::value_type>
   cutPerMiddleSP(std::vector<typename CandidatesForMiddleSp<
-                     InternalSpacePoint<SpacePoint>>::value_type>
+                     const InternalSpacePoint<SpacePoint>>::value_type>
                      seedCandidates) const override;
 };
 
@@ -70,13 +70,13 @@ bool ATLASCuts<SpacePoint>::singleSeedCut(
 
 template <typename SpacePoint>
 std::vector<
-    typename CandidatesForMiddleSp<InternalSpacePoint<SpacePoint>>::value_type>
+    typename CandidatesForMiddleSp<const InternalSpacePoint<SpacePoint>>::value_type>
 ATLASCuts<SpacePoint>::cutPerMiddleSP(
     std::vector<typename CandidatesForMiddleSp<
-        InternalSpacePoint<SpacePoint>>::value_type>
+        const InternalSpacePoint<SpacePoint>>::value_type>
         seedCandidates) const {
   std::vector<typename CandidatesForMiddleSp<
-      InternalSpacePoint<SpacePoint>>::value_type>
+      const InternalSpacePoint<SpacePoint>>::value_type>
       newSeedsVector;
   if (seedCandidates.size() <= 1) {
     return seedCandidates;
