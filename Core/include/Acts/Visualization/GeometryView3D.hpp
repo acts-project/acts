@@ -103,6 +103,7 @@ struct GeometryView3D {
   /// @param [in,out] helper The visualization helper
   /// @param volume The DetectorVolume to be drawn
   /// @param gctx The geometry context for which it is drawn
+  /// @param drawSurface switches on/off the drawing of the volumes' surfaces
   /// @param transform An option additional transform
   /// @param connected The config for connected portals
   /// @param unconnected The config for unconnected portals
@@ -110,9 +111,13 @@ struct GeometryView3D {
       IVisualization3D& helper,
       const Acts::Experimental::DetectorVolume& volume,
       const GeometryContext& gctx,
+      bool drawSurfaces,
       const Transform3& transform = Transform3::Identity(),
       const ViewConfig& connected = ViewConfig({0, 255, 0}),
-      const ViewConfig& unconnected = ViewConfig({255, 0, 0}));
+      const ViewConfig& unconnected = ViewConfig({255, 0, 0}),
+      const ViewConfig& viewConfig = s_viewSensitive);
+
+
 
   /// Helper method to draw AbstractVolume objects
   ///
