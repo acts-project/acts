@@ -110,7 +110,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   // TODO Support strip measurements
   Acts::SpacePointBuilderOptions spOpt;
 
-  spOpt.paramCovAccessor = [&](Acts::SourceLink slink) {
+  spOpt.paramCovAccessor = [&measurements](Acts::SourceLink slink) {
     const auto islink = slink.get<IndexSourceLink>();
     const auto& meas = measurements[islink.index()];
 
