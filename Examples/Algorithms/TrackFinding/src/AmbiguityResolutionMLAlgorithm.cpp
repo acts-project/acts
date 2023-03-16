@@ -22,13 +22,15 @@
 #include <numeric>
 #include <stdexcept>
 
+#include "mlpack/methods/dbscan.hpp"
+
 #include <Eigen/Dense>
 #include <core/session/onnxruntime_cxx_api.h>
 
 ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
     ActsExamples::AmbiguityResolutionMLAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("AmbiguityResolutionMLAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("AmbiguityResolutionMLAlgorithm", lvl),
       m_cfg(std::move(cfg)),
       m_env(ORT_LOGGING_LEVEL_WARNING, "MLClassifier"),
       m_duplicateClassifier(m_env, m_cfg.inputDuplicateNN.c_str()) {
@@ -48,6 +50,7 @@ namespace {
 /// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
 std::unordered_map<int, std::vector<int>> clusterTracks(
     std::multimap<int, std::pair<int, std::vector<int>>> trackMap) {
+
   // Unordered map associating a vector with all the track ID of a cluster to
   // the ID of the first track of the cluster
   std::unordered_map<int, std::vector<int>> cluster;
@@ -71,7 +74,7 @@ std::unordered_map<int, std::vector<int>> clusterTracks(
     }
     // None of the hits have been matched to a track create a new cluster
     if (matchedTrack == hitToTrack.end()) {
-      cluster.emplace(track->second.first, {track->second.first});
+      cluster.emplace(track->second.first, std::vector<int>(1, track->second.first));
       for (const auto& hit : hits) {
         // Add the hits of the new cluster to the hitToTrack
         hitToTrack.emplace(hit, track->second.first);
@@ -80,6 +83,61 @@ std::unordered_map<int, std::vector<int>> clusterTracks(
   }
   return cluster;
 }
+
+/// Clusterise tracks based on shared hits
+///
+/// @param trackMap : Multimap storing pair of track ID and vector of measurement ID. The keys are the number of measurement and are just there to focilitate the ordering.
+/// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
+std::unordered_map<int, std::vector<int>> dbscanClustering(
+    std::multimap<int, std::pair<int, std::vector<int>>> trackMap, ActsExamples::TrackParametersContainer trackParameters) {
+
+  // Unordered map associating a vector with all the track ID of a cluster to
+  // the ID of the first track of the cluster
+  std::unordered_map<int, std::vector<int>> cluster;
+  // Unordered map associating hits to the ID of the first track of the
+  // different clusters.
+  std::unordered_map<int, int> hitToTrack;
+
+  mlpack::DBSCAN dbscan(0.07, 2);
+
+  arma::mat data(2, trackMap.size());
+  std::cout << trackMap.size() << std::endl;
+  int trackID = 0;
+  arma::Row<size_t> assignments;
+
+  // Get the input feature of the network for all the tracks
+  for (const auto& [key, val] : trackMap) {
+    ActsExamples::TrackParameters parameters = trackParameters.at(val.first);
+    data(0, trackID) = Acts::VectorHelpers::eta(parameters.momentum());
+    data(1, trackID) = Acts::VectorHelpers::phi(parameters.momentum());
+    trackID++;
+  }
+  size_t clusterNb = dbscan.Cluster(data, assignments);
+  trackID = 0;
+
+  std::vector<std::multimap<int, std::pair<int, std::vector<int>>>> dbscanClusters(
+      clusterNb);
+
+  for (const auto& [key, val] : trackMap) {
+    int clusterID = assignments(trackID);
+    if (assignments(trackID) == SIZE_MAX) {
+      cluster.emplace(val.first, std::vector<int>(1, val.first));
+    } else {
+      dbscanClusters[clusterID].emplace(key, val);
+    }
+    trackID++;
+  }
+  
+  for (const auto& dbscanCluster : dbscanClusters) {
+    auto subCluster = clusterTracks(dbscanCluster);
+    cluster.merge(subCluster);
+    if(subCluster.size() != 0){
+      std::cout << "Overlapping track ID, there must be an error" << std::endl;
+    }
+  }
+  return cluster;
+}
+
 }  // namespace
 
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
@@ -126,6 +184,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   }
   // Performe the share hit based clustering
   auto clusters = clusterTracks(trackMap);
+  // auto clusters = dbscanClustering(trackMap, trackParameters);
   Acts::NetworkBatchInput networkInput(trackID + 1, 8);
   trackID = 0;
   // Get the input feature of the network for all the tracks
