@@ -149,13 +149,16 @@ struct GsfActor {
   ///
   /// @tparam propagator_state_t is the type of Propagagor state
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
   ///
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
   /// @param result is the mutable result state object
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& /*unused*/) const {
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& /*logger*/) const {
     assert(result.fittedStates && "No MultiTrajectory set");
 
     // Return is we found an error earlier
@@ -452,9 +455,17 @@ struct GsfActor {
     auto new_end = std::remove_if(cmps.begin(), cmps.end(), [&](auto& cmp) {
       return proj(cmp) < m_cfg.weightCutoff;
     });
-    cmps.erase(new_end, cmps.end());
 
-    detail::normalizeWeights(cmps, proj);
+    // In case we would remove all components, keep only the largest
+    if (std::distance(cmps.begin(), new_end) == 0) {
+      cmps = {*std::max_element(
+          cmps.begin(), cmps.end(),
+          [&](auto& a, auto& b) { return proj(a) < proj(b); })};
+      std::get<0>(cmps.front()).weight = 1.0;
+    } else {
+      cmps.erase(new_end, cmps.end());
+      detail::normalizeWeights(cmps, proj);
+    }
   }
 
   /// Function that updates the stepper from the MultiTrajectory

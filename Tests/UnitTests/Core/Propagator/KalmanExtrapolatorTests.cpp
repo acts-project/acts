@@ -57,13 +57,17 @@ struct StepWiseActor {
   ///
   /// @tparam propagator_state_t is the type of Propagagor state
   /// @tparam stepper_t Type of the stepper used for the propagation
+  /// @tparam navigator_t Type of the navigator used for the propagation
   ///
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
+  /// @param navigator The navigator in use
   /// @param result is the mutable result state object
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& /*logger*/) const {
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& /*logger*/) const {
     // Listen to the surface and create bound state where necessary
     auto surface = state.navigation.currentSurface;
     if (surface and surface->associatedDetectorElement()) {
@@ -83,17 +87,6 @@ struct StepWiseActor {
       result.finalized = true;
     }
   }
-
-  /// @brief Kalman sequence operation - void operation
-  ///
-  /// @tparam propagator_state_t is the type of Propagagor state
-  /// @tparam stepper_t Type of the stepper
-  ///
-  /// @param state is the mutable propagator state object
-  /// @param stepper Stepper used by the propagation
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*state*/, const stepper_t& /*unused*/,
-                  const Logger& /*logger*/) const {}
 };
 
 ///

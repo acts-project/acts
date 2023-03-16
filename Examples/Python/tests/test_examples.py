@@ -409,14 +409,14 @@ def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
         addSeeding,
         TruthSeedRanges,
     )
-    from acts.examples.itk import itkSeedingAlgConfig
+    from acts.examples.itk import itkSeedingAlgConfig, InputSpacePointsType
 
     addSeeding(
         seq,
         trk_geo,
         field,
         TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4, 4), nHits=(9, None)),
-        *itkSeedingAlgConfig("PixelSpacePoints"),
+        *itkSeedingAlgConfig(InputSpacePointsType.PixelSpacePoints),
         acts.logging.VERBOSE,
         geoSelectionConfigFile=srcdir
         / "Examples/Algorithms/TrackFinding/share/geoSelection-genericDetector.json",
