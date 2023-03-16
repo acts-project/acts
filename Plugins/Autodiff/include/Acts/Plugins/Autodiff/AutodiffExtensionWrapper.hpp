@@ -61,18 +61,18 @@ struct AutodiffExtensionWrapper {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& /*navigator*/, const double h) const {
-    return m_doubleExtension.finalize(state, stepper, h);
+                const navigator_t& navigator, const double h) const {
+    return m_doubleExtension.finalize(state, stepper, navigator, h);
   }
 
   // Here we call a custom implementation to compute the transport matrix
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const navigator_t& /*navigator*/, const double h,
+                const navigator_t& navigator, const double h,
                 FreeMatrix& D) const {
     m_doubleExtension.finalize(state, stepper, h);
-    return transportMatrix(state, stepper, h, D);
+    return transportMatrix(state, stepper, navigator, h, D);
   }
 
  private:
