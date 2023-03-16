@@ -300,7 +300,7 @@ jobs:
     strategy:
       matrix:
         image: 
-          - ubuntu2004
+          - ubuntu2204
           - ubuntu2204_clang
     container: ghcr.io/acts-project/${{ matrix.image }}:v36
     env:
@@ -332,14 +332,12 @@ jobs:
         # versions 
         run: >
           ccache -z &&
-          [[ $IMAGE = "ubuntu2204"  ]] && ver="20" || ver="17" &&
-          echo "C++ version: $ver" &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
           -DCMAKE_BUILD_TYPE=Release
           -DCMAKE_CXX_FLAGS=-Werror
-          -DCMAKE_CXX_STANDARD=$ver
+          -DCMAKE_CXX_STANDARD=20
           -DCMAKE_INSTALL_PREFIX="${INSTALL_DIR}"
           -DACTS_ENABLE_LOG_FAILURE_THRESHOLD=ON 
           -DACTS_BUILD_EVERYTHING=ON
