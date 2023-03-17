@@ -12,6 +12,7 @@
 
 #include <array>
 #include <cmath>
+#include <functional>
 #include <limits>
 
 namespace Acts {
@@ -52,7 +53,7 @@ class InternalSpacePoint {
   float m_r;               // radius       in beam system coordinates
   float m_varianceR;       //
   float m_varianceZ;       //
-  const SpacePoint& m_sp;  // external space point
+  std::reference_wrapper<const SpacePoint> m_sp;  // external space point
 };
 
 /////////////////////////////////////////////////////////////////////////////////
