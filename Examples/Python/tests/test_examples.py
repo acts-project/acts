@@ -1251,6 +1251,37 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
         env=env,
         stderr=subprocess.STDOUT,
     )
+@pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
+@pytest.mark.slow
+def test_ML_Ambiguity_Solver(tmp_path):
+    root_file = "performance_ambiML.root"
+    assert not (tmp_path / root_file).exists()
+    # This test literally only ensures that the full chain example can run without erroring out
+    getOpenDataDetector(
+        getOpenDataDetectorDirectory()
+    )  # just to make sure it can build
+
+    script = (
+        Path(__file__).parent.parent.parent.parent
+        / "Examples"
+        / "Scripts"
+        / "Python"
+        / "full_chain_odd.py"
+    )
+    assert script.exists()
+    env = os.environ.copy()
+    env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
+    subprocess.check_call(
+        [sys.executable, str(script), "-n5", "--ttbar", "--MLSolver"],
+        cwd=tmp_path,
+        env=env,
+        stderr=subprocess.STDOUT,
+    )
+
+    rfp = tmp_path / root_file
+    assert rfp.exists()
+
+    assert_root_hash(root_file, rfp)
 
 
 def test_bfield_writing(tmp_path, seq, assert_root_hash):
