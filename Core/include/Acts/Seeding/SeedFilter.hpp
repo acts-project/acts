@@ -52,7 +52,7 @@ class SeedFilter {
 
   /// Create InternalSeeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
-  /// @param spacePointData Auxiliary variables used by the seeding 
+  /// @param spacePointData Auxiliary variables used by the seeding
   /// @param bottomSP fixed bottom space point
   /// @param middleSP fixed middle space point
   /// @param topSpVec vector containing all space points that may be compatible
@@ -74,7 +74,7 @@ class SeedFilter {
           candidates_collector) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
-  /// @param spacePointData Auxiliary variables used by the seeding 
+  /// @param spacePointData Auxiliary variables used by the seeding
   /// @param candidates_collector collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
@@ -88,7 +88,7 @@ class SeedFilter {
       const;
 
   /// Filter seeds once all seeds for one middle space point have been created
-  /// @param spacePointData Auxiliary variables used by the seeding 
+  /// @param spacePointData Auxiliary variables used by the seeding
   /// @param candidates collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds

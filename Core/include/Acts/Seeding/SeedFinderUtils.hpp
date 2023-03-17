@@ -52,7 +52,7 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
-/// @param[in] spacePointData Auxiliary variables used by the seeding 
+/// @param[in] spacePointData Auxiliary variables used by the seeding
 /// @param[in] vec The list of bottom or top spacepoints
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
