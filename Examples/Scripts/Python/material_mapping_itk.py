@@ -39,9 +39,9 @@ def runMaterialMapping(
     mapName="material-map",
     mapSurface=True,
     readCachedSurfaceInformation=False,
+    dumpMaterialTracks=False,
     s=None,
 ):
-    # s = s or Sequencer(events=1000000,numThreads=1)
     s = s or Sequencer(numThreads=1)
 
     for decorator in decorators:
@@ -105,19 +105,19 @@ def runMaterialMapping(
         writeFormat=JsonFormat.Json,
     )
 
-    s.addWriter(
-        RootMaterialTrackWriter(
-            level=acts.logging.INFO,
-            # collection=mmAlgCfg.mappingMaterialCollection,
-            collection=mmAlgCfg.collection,
-            filePath=os.path.join(
-                outputDir,
-                mapName + "_tracks.root",
-            ),
-            storeSurface=True,
-            storeVolume=True,
+    if dumpMaterialTracks:
+        s.addWriter(
+            RootMaterialTrackWriter(
+                level=acts.logging.INFO,
+                collection=mmAlgCfg.collection,
+                filePath=os.path.join(
+                    outputDir,
+                    mapName + "_tracks.root",
+                ),
+                storeSurface=True,
+                storeVolume=True,
+            )
         )
-    )
 
     mmAlgCfg.materialWriters = [jmw]
 
@@ -135,7 +135,7 @@ if "__main__" == __name__:
         help="Input directory containing the ITk standalone geometry. Get in touch if you don't have this.",
     )
     p.add_argument(
-        "--material", type=str, default = "", help="Material file to define layers used in material mapping"
+        "--material", type=str, default = "", help="Geometry file to define layers used in material mapping"
     )
 
     args = p.parse_args()

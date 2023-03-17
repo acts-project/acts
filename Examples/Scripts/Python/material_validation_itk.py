@@ -17,9 +17,10 @@ def runMaterialValidation(
     field,
     outputDir,
     outputName="propagation-material",
+    dumpPropagationSteps=False,
     s=None,
 ):
-    s = s or Sequencer(events=100, numThreads=-1)
+    s = s or Sequencer(events=1000, numThreads=-1)
 
     for decorator in decorators:
         s.addContextDecorator(decorator)
@@ -57,13 +58,14 @@ def runMaterialValidation(
         )
     )
 
-    s.addWriter(
-        acts.examples.RootPropagationStepsWriter(
-            level=acts.logging.INFO,
-            collection=alg.config.propagationStepCollection,
-            filePath=outputDir + "/propagation_steps.root",
+    if dumpPropagationSteps:
+        s.addWriter(
+            acts.examples.RootPropagationStepsWriter(
+                level=acts.logging.INFO,
+                collection=alg.config.propagationStepCollection,
+                filePath=outputDir + "/propagation_steps.root",
+            )
         )
-    )
 
     return s
 
@@ -77,7 +79,7 @@ if "__main__" == __name__:
         help="Input directory containing the ITk standalone geometry. Get in touch if you don't have this.",
     )
     p.add_argument(
-        "--material", type=str, default = "", help="Material file to define layers used in material mapping"
+        "--material", type=str, default = "", help="Material file"
     )
 
     args = p.parse_args()
