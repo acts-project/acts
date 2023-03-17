@@ -244,6 +244,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
         &candidates_collector) const {
   float rM = middle.radius();
+  float zM = middle.z();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
 
@@ -251,8 +252,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   if (m_config.seedConfirmation == true) {
     // check if middle SP is in the central or forward region
     SeedConfirmationRangeConfig seedConfRange =
-        (middle.z() > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
-         middle.z() < m_config.centralSeedConfirmationRange.zMinSeedConf)
+        (zM > m_config.centralSeedConfirmationRange.zMaxSeedConf ||
+         zM < m_config.centralSeedConfirmationRange.zMinSeedConf)
             ? m_config.forwardSeedConfirmationRange
             : m_config.centralSeedConfirmationRange;
     // set the minimum number of top SP depending on whether the middle SP is
@@ -339,7 +340,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
     size_t minCompatibleTopSPs = 2;
-    if (!m_config.seedConfirmation or
+    if (!m_config.seedConfirmation or zM < seedFilterState.zMaxSeedConf or
+        zM > seedFilterState.zMinSeedConf or
         bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }

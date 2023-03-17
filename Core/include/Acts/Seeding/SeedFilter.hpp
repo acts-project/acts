@@ -26,6 +26,12 @@ struct SeedFilterState {
   float zOrigin = 0;
   // number of minimum top SPs in seed confirmation
   size_t nTopSeedConf = 0;
+  // z minimum and maximum of middle component of the seed used to define the
+  // region of the detector for seed confirmation
+  float zMinSeedConf =
+      std::numeric_limits<float>::min();  // Acts::UnitConstants::mm
+  float zMaxSeedConf =
+      std::numeric_limits<float>::max();  // Acts::UnitConstants::mm
   // radius of bottom component of seed that is used to define the number of
   // compatible top required
   float rMaxSeedConf =
