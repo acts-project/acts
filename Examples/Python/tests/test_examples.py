@@ -1257,7 +1257,7 @@ def test_ML_Ambiguity_Solver(tmp_path):
     env = os.environ.copy()
     env["ACTS_LOG_FAILURE_THRESHOLD"] = "WARNING"
     subprocess.check_call(
-        [sys.executable, str(script), "-n5", "--ttbar", "--MLSolver"],
+        [sys.executable, str(script), "-n5", "--MLSolver"],
         cwd=tmp_path,
         env=env,
         stderr=subprocess.STDOUT,
