@@ -74,15 +74,16 @@ inline void transformCoordinates(
   };
 
   transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      spacePointData, vec, spM, bottom, linCircleVec, std::move(extractFunction));
+      spacePointData, vec, spM, bottom, linCircleVec,
+      std::move(extractFunction));
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-inline void transformCoordinates(
-    Acts::SpacePointData& spacePointData,
-    const std::vector<external_spacepoint_t*>& vec,
-    const external_spacepoint_t& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec, callable_t&& extractFunction) {
+inline void transformCoordinates(Acts::SpacePointData& spacePointData,
+                                 const std::vector<external_spacepoint_t*>& vec,
+                                 const external_spacepoint_t& spM, bool bottom,
+                                 std::vector<LinCircle>& linCircleVec,
+                                 callable_t&& extractFunction) {
   std::vector<std::size_t> indexes(vec.size());
   for (unsigned int i(0); i < indexes.size(); i++) {
     indexes[i] = i;
@@ -139,7 +140,6 @@ inline void transformCoordinates(
     l.y = y;
     l.z = sp->z();
     l.r = sp->radius();
-
 
     linCircleVec[idx] = l;
     spacePointData.setDeltaR(sp->index(),

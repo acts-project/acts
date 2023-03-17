@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -310,8 +309,10 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
   std::size_t numTopSP = state.compatTopSP.size();
 
-  transformCoordinates(state.spacePointData, state.compatBottomSP, spM, true, state.linCircleBottom);
-  transformCoordinates(state.spacePointData, state.compatTopSP, spM, false, state.linCircleTop);
+  transformCoordinates(state.spacePointData, state.compatBottomSP, spM, true,
+                       state.linCircleBottom);
+  transformCoordinates(state.spacePointData, state.compatTopSP, spM, false,
+                       state.linCircleTop);
 
   // sort: make index vector
   std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());
