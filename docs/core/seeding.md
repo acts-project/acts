@@ -219,7 +219,7 @@ The seed confirmation also sets a limit on the number of seeds produced for each
 which retains only the higher quality seeds. If this limit is exceeded, the algorithm
 checks if there is any low-quality seed in the seed container of this middle SP that can be removed.
 
-:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&,std::size_t&,std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>>) const
+:::{doxygenfunction} Acts::SeedFilter::filterSeeds_1SpFixed (Acts::SpacePointData &spacePointData, CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&,std::size_t&,std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>>) const
 :outline:
 :::
 
