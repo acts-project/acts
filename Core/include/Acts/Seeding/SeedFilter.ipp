@@ -47,8 +47,8 @@ void SeedFilter<external_spacepoint_t>::filterSeeds_2SpFixed(
     // set the minimum number of top SP depending on whether the bottom SP is
     // in the central or forward region
     if (bottomSP.radius() > seedConfRange.rMaxSeedConf or
-        middleSP.z() < seedFilterState.zMaxSeedConf or
-        middleSP.z() > seedFilterState.zMinSeedConf) {
+        (middleSP.z() < seedFilterState.zMaxSeedConf and
+         middleSP.z() > seedFilterState.zMinSeedConf)) {
       seedFilterState.nTopSeedConf = seedConfRange.nTopForLargeR;
     } else {
       seedFilterState.nTopSeedConf = seedConfRange.nTopForSmallR;

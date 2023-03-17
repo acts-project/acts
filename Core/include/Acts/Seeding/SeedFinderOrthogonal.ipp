@@ -340,9 +340,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
     size_t minCompatibleTopSPs = 2;
-    if (!m_config.seedConfirmation or zM < seedFilterState.zMaxSeedConf or
-        zM > seedFilterState.zMinSeedConf or
-        bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
+    if (!m_config.seedConfirmation or
+        bottom[b]->radius() > seedFilterState.rMaxSeedConf or
+        (zM < seedFilterState.zMaxSeedConf and
+         zM > seedFilterState.zMinSeedConf)) {
       minCompatibleTopSPs = 1;
     }
     if (m_config.seedConfirmation and seedFilterState.numQualitySeeds) {
