@@ -254,7 +254,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
 
   state.spacePointData.clear();
   state.spacePointData.resize(spacePointPtrs.size());
-  
+
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
         m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),

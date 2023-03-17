@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
-#include "Acts/EventData/SpacePointData.hpp"
 
 namespace Acts {
 /// @brief A partial description of a circle in u-v space.
@@ -65,10 +65,11 @@ std::vector<std::size_t> transformCoordinates(
     std::vector<LinCircle>& linCircleVec);
 
 template <typename external_spacepoint_t, typename callable_t>
-std::vector<std::size_t> transformCoordinates(Acts::SpacePointData& spacePointData,
-    const std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
-    bool bottom, std::vector<LinCircle>& linCircleVec,
-    callable_t&& extractFunction);
+std::vector<std::size_t> transformCoordinates(
+    Acts::SpacePointData& spacePointData,
+    const std::vector<external_spacepoint_t*>& vec,
+    const external_spacepoint_t& spM, bool bottom,
+    std::vector<LinCircle>& linCircleVec, callable_t&& extractFunction);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///

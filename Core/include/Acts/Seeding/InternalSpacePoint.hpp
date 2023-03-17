@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -23,8 +23,8 @@ class InternalSpacePoint {
 
  public:
   InternalSpacePoint() = delete;
-  InternalSpacePoint(std::size_t index,
-		     const SpacePoint& sp, const Acts::Vector3& globalPos,
+  InternalSpacePoint(std::size_t index, const SpacePoint& sp,
+                     const Acts::Vector3& globalPos,
                      const Acts::Vector2& offsetXY,
                      const Acts::Vector2& variance);
 
@@ -46,13 +46,13 @@ class InternalSpacePoint {
 
  protected:
   std::size_t m_index;
-  float m_x;          // x-coordinate in beam system coordinates
-  float m_y;          // y-coordinate in beam system coordinates
-  float m_z;          // z-coordinate in beam system coordinetes
-  float m_r;          // radius       in beam system coordinates
-  float m_varianceR;  //
-  float m_varianceZ;  //
-  const SpacePoint& m_sp;   // external space point
+  float m_x;               // x-coordinate in beam system coordinates
+  float m_y;               // y-coordinate in beam system coordinates
+  float m_z;               // z-coordinate in beam system coordinetes
+  float m_r;               // radius       in beam system coordinates
+  float m_varianceR;       //
+  float m_varianceZ;       //
+  const SpacePoint& m_sp;  // external space point
 };
 
 /////////////////////////////////////////////////////////////////////////////////
@@ -61,19 +61,16 @@ class InternalSpacePoint {
 
 template <typename SpacePoint>
 inline InternalSpacePoint<SpacePoint>::InternalSpacePoint(
-							  std::size_t index,
-							  const SpacePoint& sp, const Acts::Vector3& globalPos,
+    std::size_t index, const SpacePoint& sp, const Acts::Vector3& globalPos,
     const Acts::Vector2& offsetXY, const Acts::Vector2& variance)
-  : m_index(index),
-    m_x(globalPos.x() - offsetXY.x()),
-    m_y(globalPos.y() - offsetXY.y()),
-    m_z(globalPos.z()),
-    m_r(std::sqrt(m_x * m_x + m_y * m_y)),
-    m_varianceR(variance.x()),
-    m_varianceZ(variance.y()),
-    m_sp(sp)
-{}
-
+    : m_index(index),
+      m_x(globalPos.x() - offsetXY.x()),
+      m_y(globalPos.y() - offsetXY.y()),
+      m_z(globalPos.z()),
+      m_r(std::sqrt(m_x * m_x + m_y * m_y)),
+      m_varianceR(variance.x()),
+      m_varianceZ(variance.y()),
+      m_sp(sp) {}
 
 /////////////////////////////////////////////////////////////////////////////////
 // Copy constructor

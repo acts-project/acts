@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
@@ -18,9 +19,9 @@
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
-#include "Acts/EventData/SpacePointData.hpp"
 
 #include <array>
+#include <limits>
 #include <list>
 #include <map>
 #include <memory>
@@ -28,10 +29,9 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include <limits>
 
 namespace Acts {
-  
+
 template <typename external_spacepoint_t, typename platform_t = void*>
 class SeedFinder {
   ///////////////////////////////////////////////////////////////////

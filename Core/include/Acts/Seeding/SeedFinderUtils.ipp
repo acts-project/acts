@@ -1,7 +1,6 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -61,7 +60,8 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-inline std::vector<std::size_t> transformCoordinates(Acts::SpacePointData& spacePointData,
+inline std::vector<std::size_t> transformCoordinates(
+    Acts::SpacePointData& spacePointData,
     const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
@@ -73,15 +73,16 @@ inline std::vector<std::size_t> transformCoordinates(Acts::SpacePointData& space
     return output;
   };
 
-  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(spacePointData,
-      vec, spM, bottom, linCircleVec, extractFunction);
+  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
+      spacePointData, vec, spM, bottom, linCircleVec, extractFunction);
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-inline std::vector<std::size_t> transformCoordinates(Acts::SpacePointData& spacePointData,
-    const std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
-    bool bottom, std::vector<LinCircle>& linCircleVec,
-    callable_t&& extractFunction) {
+inline std::vector<std::size_t> transformCoordinates(
+    Acts::SpacePointData& spacePointData,
+    const std::vector<external_spacepoint_t*>& vec,
+    const external_spacepoint_t& spM, bool bottom,
+    std::vector<LinCircle>& linCircleVec, callable_t&& extractFunction) {
   std::vector<std::size_t> indexes(vec.size());
   for (unsigned int i(0); i < indexes.size(); i++) {
     indexes[i] = i;
@@ -92,7 +93,8 @@ inline std::vector<std::size_t> transformCoordinates(Acts::SpacePointData& space
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
   for (const auto* sp : vec) {
-    const auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
+    const auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] =
+        extractFunction(*sp);
 
     float deltaX = xSP - xM;
     float deltaY = ySP - yM;
@@ -135,7 +137,8 @@ inline std::vector<std::size_t> transformCoordinates(Acts::SpacePointData& space
     l.r = sp->radius();
 
     linCircleVec.push_back(l);
-    spacePointData.setDeltaR(sp->index(), std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
+    spacePointData.setDeltaR(sp->index(),
+                             std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
   // sort the SP in order of cotTheta
   std::sort(

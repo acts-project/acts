@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -179,8 +178,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
 
-    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(counter,
-        sp, spPosition, options.beamPos, variance);
+    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
+        counter, sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);

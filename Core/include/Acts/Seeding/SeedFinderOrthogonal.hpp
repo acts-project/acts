@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,13 +8,13 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Utilities/KDTree.hpp"
-#include "Acts/EventData/SpacePointData.hpp"
 
 #include <array>
 #include <iostream>
@@ -218,8 +218,8 @@ class SeedFinderOrthogonal {
       std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
       SeedFilterState seedFilterState,
       CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
-      &candidates_collector,
-      Acts::SpacePointData& spacePointData) const;
+          &candidates_collector,
+      Acts::SpacePointData &spacePointData) const;
 
   /**
    * @brief Search for seeds starting from a given middle space point.
@@ -237,7 +237,7 @@ class SeedFinderOrthogonal {
   void processFromMiddleSP(const SeedFinderOptions &options, const tree_t &tree,
                            output_container_t &out_cont,
                            const typename tree_t::pair_t &middle_p,
-			   Acts::SpacePointData& spacePointData) const;
+                           Acts::SpacePointData &spacePointData) const;
 
   /**
    * @brief The configuration for the seeding algorithm.
