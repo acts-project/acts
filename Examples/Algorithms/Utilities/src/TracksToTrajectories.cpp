@@ -16,9 +16,14 @@
 
 namespace ActsExamples {
 
+TracksToTrajectories::TracksToTrajectories(Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("TracksToTrajectories", lvl), m_cfg(std::move(cfg)) {
+  m_inputTracks.initialize(m_cfg.inputTracks);
+  m_outputTrajectories.initialize(m_cfg.outputTrajectories);
+}
+
 ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
-  const auto& tracks =
-      ctx.eventStore.get<ConstTrackContainer>(m_cfg.inputTracks);
+  const auto& tracks = m_inputTracks(ctx);
 
   // Prepare the output data with MultiTrajectory
   TrajectoriesContainer trajectories;
@@ -83,7 +88,7 @@ ProcessCode TracksToTrajectories::execute(const AlgorithmContext& ctx) const {
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(trajectories));
+  m_outputTrajectories(ctx, std::move(trajectories));
 
   return ProcessCode::SUCCESS;
 }

@@ -16,6 +16,7 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
@@ -103,6 +104,19 @@ class DigitizationAlgorithm final : public IAlgorithm {
   ActsFatras::PlanarSurfaceDrift m_surfaceDrift;
   ActsFatras::PlanarSurfaceMask m_surfaceMask;
   ActsFatras::Channelizer m_channelizer;
+
+  ReadDataHandle<SimHitContainer> m_simContainerReadHandle{this,
+                                                           "SimHitContainer"};
+
+  WriteDataHandle<IndexSourceLinkContainer> m_sourceLinkWriteHandle{
+      this, "SourceLinks"};
+  WriteDataHandle<MeasurementContainer> m_measurementWriteHandle{
+      this, "Measurements"};
+  WriteDataHandle<ClusterContainer> m_clusterWriteHandle{this, "Clusters"};
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_measurementParticlesMapWriteHandle{this, "MeasurementParticlesMap"};
+  WriteDataHandle<IndexMultimap<Index>> m_measurementSimHitsMapWriteHandle{
+      this, "MeasurementSimHitsMap"};
 
   /// Construct a fixed-size smearer from a configuration.
   ///

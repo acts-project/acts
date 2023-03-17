@@ -122,8 +122,8 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             ),
-            # outputDirRoot=outputDir,
-            outputDirCsv=outputDir,
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
             rnd=rnd,
         )
     else:

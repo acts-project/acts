@@ -15,7 +15,9 @@
 #include "Acts/TrackFitting/Chi2Fitter.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
@@ -108,6 +110,17 @@ class TrackFittingChi2Algorithm final : public IAlgorithm {
       TrackContainer& trackContainer) const;
 
   Config m_cfg;
+
+  ReadDataHandle<MeasurementContainer> m_measurementReadHandle{this,
+                                                               "Measurements"};
+  ReadDataHandle<IndexSourceLinkContainer> m_sourceLinkReadHandle{
+      this, "SourceLinks"};
+  ReadDataHandle<ProtoTrackContainer> m_protoTracksReadHandle{this,
+                                                              "ProtoTracks"};
+  ReadDataHandle<TrackParametersContainer> m_initialParametersReadHandle{
+      this, "TrackParameters"};
+
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 inline ActsExamples::TrackFittingChi2Algorithm::TrackFitterChi2Result
