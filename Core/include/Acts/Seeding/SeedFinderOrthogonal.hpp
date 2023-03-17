@@ -212,6 +212,7 @@ class SeedFinderOrthogonal {
    * @param seedFilterState  holds quantities used in seed filter
    * @param candidates_collector The container to write the resulting
    * seed candidates to.
+   * @param spacePointData Auxiliary variables used by the seeding
    */
   void filterCandidates(
       const SeedFinderOptions &options, internal_sp_t &middle,
