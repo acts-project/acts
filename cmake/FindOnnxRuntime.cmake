@@ -32,6 +32,13 @@ else()
   message(STATUS "Found OnnxRuntime includes at ${OnnxRuntime_INCLUDE_DIR} (API version: ${OnnxRuntime_API_VERSION})")
 endif()
 
+
+string(REPLACE "." ";" OnnxRuntime_MIN_VERSION_LIST ${_acts_onnxruntime_version})
+list(GET OnnxRuntime_MIN_VERSION_LIST 1 OnnxRuntime_MIN_API_VERSION)
+if("${OnnxRuntime_API_VERSION}" LESS ${OnnxRuntime_MIN_API_VERSION})
+  message(FATAL_ERROR "OnnxRuntime API version ${OnnxRuntime_MIN_API_VERSION} or greater required")
+endif()
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(
   OnnxRuntime
