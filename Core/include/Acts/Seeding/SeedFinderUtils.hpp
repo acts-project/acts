@@ -57,16 +57,16 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 /// @param[out] linCircleVec The output vector to write to.
 /// @returns Vector of sorted indexes for the vectors (vec and linCircleVec)
 template <typename external_spacepoint_t>
-std::vector<std::size_t> transformCoordinates(
+void transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec);
 
 template <typename external_spacepoint_t, typename callable_t>
-std::vector<std::size_t> transformCoordinates(
-    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
-    bool bottom, std::vector<LinCircle>& linCircleVec,
-    callable_t&& extractFunction);
+void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+                          const external_spacepoint_t& spM, bool bottom,
+                          std::vector<LinCircle>& linCircleVec,
+                          callable_t&& extractFunction);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
