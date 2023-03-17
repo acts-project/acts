@@ -15,6 +15,13 @@ from acts.examples.reconstruction import (
 
 u = acts.UnitConstants
 
+from enum import Enum
+
+
+class InputSpacePointsType(Enum):
+    PixelSpacePoints = 0
+    StripSpacePoints = 1
+
 
 def buildITkGeometry(
     geo_dir: Path,
@@ -284,7 +291,8 @@ def buildITkGeometry(
     )
 
 
-def itkSeedingAlgConfig(inputSpacePointsType):
+def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
+    assert isinstance(inputSpacePointsType, InputSpacePointsType)
 
     # variables that do not change for pixel and strip SPs:
     zMax = 3000 * u.mm
@@ -330,7 +338,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     ]  # if useVariableMiddleSPRange is set to false, the vector rRangeMiddleSP can be used to define a fixed r range for each z bin: {{rMin, rMax}, ...}. If useVariableMiddleSPRange is set to false and the vector is empty, the cuts won't be applied
     useVariableMiddleSPRange = True  # if useVariableMiddleSPRange is true, the values in rRangeMiddleSP will be calculated based on r values of the SPs and deltaRMiddleSPRange
     binSizeR = 1 * u.mm
-    forceRadialSorting = True
     seedConfirmation = True
     centralSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
         zMinSeedConf=-250 * u.mm,
@@ -354,7 +361,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     )
     zOriginWeightFactor = 1
     compatSeedWeight = 100
-    curvatureSortingInFilter = True
     phiMin = 0
     phiMax = 2 * math.pi
     phiBinDeflectionCoverage = 3
@@ -363,7 +369,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
     deltaPhiMax = 0.025
 
     # variables that change for pixel and strip SPs:
-    if inputSpacePointsType == "PixelSpacePoints":
+    if inputSpacePointsType is InputSpacePointsType.PixelSpacePoints:
         outputSeeds = "PixelSeeds"
         allowSeparateRMax = False
         rMaxGridConfig = 320 * u.mm
@@ -426,7 +432,7 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         maxSeedsPerSpMConf = 5
         maxQualitySeedsPerSpMConf = 5
         useDeltaRorTopRadius = True
-    else:
+    elif inputSpacePointsType is InputSpacePointsType.StripSpacePoints:
         outputSeeds = "StripSeeds"
         allowSeparateRMax = True
         rMaxGridConfig = 1000.0 * u.mm
@@ -497,7 +503,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         rRangeMiddleSP=rRangeMiddleSP,
         useVariableMiddleSPRange=useVariableMiddleSPRange,
         binSizeR=binSizeR,
-        forceRadialSorting=forceRadialSorting,
         seedConfirmation=seedConfirmation,
         centralSeedConfirmationRange=centralSeedConfirmationRange,
         forwardSeedConfirmationRange=forwardSeedConfirmationRange,
@@ -520,7 +525,6 @@ def itkSeedingAlgConfig(inputSpacePointsType):
         numSeedIncrement=numSeedIncrement,
         seedWeightIncrement=seedWeightIncrement,
         seedConfirmation=seedConfirmation,
-        curvatureSortingInFilter=curvatureSortingInFilter,
         maxSeedsPerSpMConf=maxSeedsPerSpMConf,
         maxQualitySeedsPerSpMConf=maxQualitySeedsPerSpMConf,
         useDeltaRorTopRadius=useDeltaRorTopRadius,

@@ -3,9 +3,11 @@ include(ActsTargetLinkLibrariesSystem)
 add_library(
   ActsExamplesFramework SHARED
   src/Framework/IAlgorithm.cpp
+  src/Framework/SequenceElement.cpp
   src/Framework/WhiteBoard.cpp
   src/Framework/RandomNumbers.cpp
   src/Framework/Sequencer.cpp
+  src/Utilities/EventDataTransforms.cpp
   src/Utilities/Paths.cpp
   src/Utilities/Options.cpp
   src/Utilities/Helpers.cpp

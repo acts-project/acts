@@ -81,11 +81,17 @@ struct EndOfWorld {
   ///
   /// @tparam propagator_state_t State of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagation
   /// @param [in] stepper Stepper of the propagation
+  /// @param [in] navigator Navigator of the propagation
+  ///
   /// @return Boolean statement if the particle is still in the detector
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& /*navigator*/,
                   const Logger& /*logger*/) const {
     const double tolerance = state.options.targetTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
@@ -118,12 +124,17 @@ struct StepCollector {
   ///
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagation
+  /// @param [in] navigator Navigator of the propagation
   /// @param [out] result Struct which is filled with the data
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& /*logger*/) const {
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping) *
                               stepper.direction(state.stepping));

@@ -16,7 +16,7 @@ class TrajectoriesToPrototracks final : public IAlgorithm {
  public:
   struct Config {
     std::string inputTrajectories = "trajectories";
-    std::string outputPrototracks = "tracks-from-trajectories";
+    std::string outputProtoTracks = "tracks-from-trajectories";
   };
 
   /// Construct the algorithm.

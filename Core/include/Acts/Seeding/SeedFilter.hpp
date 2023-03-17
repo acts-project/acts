@@ -26,6 +26,10 @@ struct SeedFilterState {
   float zOrigin = 0;
   // number of minimum top SPs in seed confirmation
   size_t nTopSeedConf = 0;
+  // radius of bottom component of seed that is used to define the number of
+  // compatible top required
+  float rMaxSeedConf =
+      std::numeric_limits<float>::max();  // Acts::UnitConstants::mm
   // number of high quality seeds in seed confirmation
   std::size_t numQualitySeeds = 0;
   // number of seeds that did not pass the quality confirmation but were still
@@ -59,8 +63,9 @@ class SeedFilter {
       InternalSpacePoint<external_spacepoint_t>& bottomSP,
       InternalSpacePoint<external_spacepoint_t>& middleSP,
       std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
-      std::vector<float>& invHelixDiameterVec,
-      std::vector<float>& impactParametersVec, SeedFilterState& seedFilterState,
+      const std::vector<float>& invHelixDiameterVec,
+      const std::vector<float>& impactParametersVec,
+      SeedFilterState& seedFilterState,
       CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector) const;
 

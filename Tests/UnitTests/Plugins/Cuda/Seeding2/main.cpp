@@ -175,15 +175,18 @@ int main(int argc, char* argv[]) {
 
   // Perform the seed finding.
   if (!cmdl.onlyGPU) {
-    auto spGroup_itr = spGroup.begin();
     decltype(seedFinder_host)::SeedingState state;
-    for (std::size_t i = 0;
-         spGroup_itr != spGroup_end && i < cmdl.groupsToIterate;
-         ++i, ++spGroup_itr) {
+    for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
+      auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+      if (spGroup_itr == spGroup.end()) {
+        break;
+      }
       auto& group = seeds_host.emplace_back();
-      seedFinder_host.createSeedsForGroup(
-          sfOptions, state, std::back_inserter(group), spGroup_itr.bottom(),
-          spGroup_itr.middle(), spGroup_itr.top(), rMiddleSPRange);
+      auto [bottom, middle, top] = *spGroup_itr;
+
+      seedFinder_host.createSeedsForGroup(sfOptions, state, spGroup.grid(),
+                                          std::back_inserter(group), bottom,
+                                          middle, top, rMiddleSPRange);
     }
   }
 
@@ -207,12 +210,14 @@ int main(int argc, char* argv[]) {
   std::vector<std::vector<Acts::Seed<TestSpacePoint>>> seeds_device;
 
   // Perform the seed finding.
-  auto spGroup_itr = spGroup.begin();
-  for (std::size_t i = 0;
-       spGroup_itr != spGroup_end && i < cmdl.groupsToIterate;
-       ++i, ++spGroup_itr) {
+  for (std::size_t i = 0; i < cmdl.groupsToIterate; ++i) {
+    auto spGroup_itr = Acts::BinnedSPGroupIterator(spGroup, i);
+    if (spGroup_itr == spGroup_end) {
+      break;
+    }
+    auto [bottom, middle, top] = *spGroup_itr;
     seeds_device.push_back(seedFinder_device.createSeedsForGroup(
-        spGroup_itr.bottom(), spGroup_itr.middle(), spGroup_itr.top()));
+        spGroup.grid(), bottom, middle, top));
   }
 
   // Record the finish time.

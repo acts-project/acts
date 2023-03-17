@@ -37,8 +37,6 @@ class SeedingOrthogonalAlgorithm final : public IAlgorithm {
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
-    /// Output proto track collection.
-    std::string outputProtoTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedFinderOrthogonalConfig<SimSpacePoint> seedFinderConfig;

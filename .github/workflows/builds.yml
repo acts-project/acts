@@ -24,7 +24,7 @@ env:
 jobs:
   lcg:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v29
+    container: ghcr.io/acts-project/${{ matrix.image }}:v36
     strategy:
       matrix:
         image:
@@ -124,7 +124,7 @@ jobs:
 
   linux_ubuntu:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v36
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -208,7 +208,7 @@ jobs:
 
   linux_examples_test:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v36
     needs: [linux_ubuntu]
     steps:
       - name: Install git lfs
@@ -236,7 +236,7 @@ jobs:
       - name: Python level tests
         shell: bash
         run: >
-          /usr/local/bin/download_geant4_data.sh
+          /usr/local/bin/geant4-config --install-datasets
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
           && source /usr/local/bin/geant4.sh
@@ -247,7 +247,7 @@ jobs:
 
   linux_physmon:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v36
     needs: [linux_ubuntu]
 
     steps:
@@ -280,7 +280,7 @@ jobs:
           && git config --global safe.directory "$GITHUB_WORKSPACE"
           && pip3 install histcmp==0.5.2
           && pip3 install -r Examples/Scripts/requirements.txt
-          && /usr/local/bin/download_geant4_data.sh
+          && /usr/local/bin/geant4-config --install-datasets
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
           && source /usr/local/bin/geant4.sh
@@ -301,9 +301,9 @@ jobs:
     strategy:
       matrix:
         image: 
-          - ubuntu2204
+          - ubuntu2004
           - ubuntu2204_clang
-    container: ghcr.io/acts-project/${{ matrix.image }}:v29
+    container: ghcr.io/acts-project/${{ matrix.image }}:v36
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
       ACTS_LOG_FAILURE_THRESHOLD: WARNING
@@ -378,7 +378,7 @@ jobs:
 
   linux-nodeps:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/${{ matrix.image }}:v29
+    container: ghcr.io/acts-project/${{ matrix.image }}:v36
     strategy:
       matrix:
         image:
@@ -552,7 +552,7 @@ jobs:
 
   cuda:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu1804_cuda:v29
+    container: ghcr.io/acts-project/ubuntu1804_cuda:v36
     steps:
       - uses: actions/checkout@v3
 
@@ -582,7 +582,7 @@ jobs:
 
   sycl:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004_oneapi:v29
+    container: ghcr.io/acts-project/ubuntu2004_oneapi:v36
     defaults:
       run:
         shell: bash
