@@ -84,7 +84,6 @@ jobs:
           -DACTS_BUILD_FATRAS=ON
           -DACTS_BUILD_ALIGNMENT=ON
           -DACTS_BUILD_ANALYSIS_APPS=ON
-          -DACTS_BUILD_PLUGIN_ONNX=ON
 
       - name: Build
         run: ${SETUP} && cmake --build build
