@@ -333,7 +333,6 @@ def test_seeding_orthogonal(tmp_path, trk_geo, field, assert_root_hash):
 
 
 def test_itk_seeding(tmp_path, trk_geo, field, assert_root_hash):
-
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))
 
     csv = tmp_path / "csv"
@@ -493,7 +492,6 @@ def test_propagation(tmp_path, trk_geo, field, seq, assert_root_hash):
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 def test_material_recording(tmp_path, material_recording, assert_root_hash):
-
     root_files = [
         (
             "geant4_material_tracks.root",
@@ -516,7 +514,6 @@ def test_material_recording(tmp_path, material_recording, assert_root_hash):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.skipif(not geant4Enabled, reason="Geant4 not set up")
 def test_event_recording(tmp_path):
-
     script = (
         Path(__file__).parent.parent.parent.parent
         / "Examples"
@@ -1130,7 +1127,6 @@ def test_vertex_fitting(tmp_path):
 def test_vertex_fitting_reading(
     tmp_path, ptcl_gun, rng, finder, inputTracks, entries, assert_root_hash
 ):
-
     ptcl_file = tmp_path / "particles.root"
 
     detector, trackingGeometry, decorators = GenericDetector.create()
@@ -1251,6 +1247,8 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
         env=env,
         stderr=subprocess.STDOUT,
     )
+
+
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.slow
 def test_ML_Ambiguity_Solver(tmp_path):
