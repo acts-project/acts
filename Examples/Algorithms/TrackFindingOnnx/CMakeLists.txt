@@ -1,6 +1,6 @@
 add_library(
   ActsExamplesTrackFindingOnnx SHARED
-  src/AmbiguityResolutionAlgorithmML.cpp
+  src/AmbiguityResolutionMLAlgorithm.cpp
 )
 
 target_include_directories(
