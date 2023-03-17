@@ -12,6 +12,7 @@ target_link_libraries(
   ActsExamplesTrackFindingOnnx
   PUBLIC
     ActsCore
+    ActsPluginOnnx
     ActsExamplesFramework
 )
 
