@@ -25,6 +25,7 @@ class InputSpacePointsType(Enum):
 
 def buildITkGeometry(
     geo_dir: Path,
+    customMaterialFile: str = "",
     material: bool = True,
     jsonconfig: bool = False,
     logLevel=acts.logging.WARNING,
@@ -35,8 +36,13 @@ def buildITkGeometry(
 
     matDeco = None
     if material:
-        file = geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
-        logger.info("Adding material from %s", file.absolute())
+        file = None
+        if customMaterialFile:
+            file = customMaterialFile
+            logger.info("Adding custom material from %s", file)
+        else:
+            file = geo_dir / "itk-hgtd/material-maps-ITk-HGTD.json"
+            logger.info("Adding material from %s", file.absolute())
         matDeco = acts.IMaterialDecorator.fromFile(
             file,
             level=customLogLevel(maxLevel=acts.logging.INFO),
