@@ -103,7 +103,6 @@ struct GeometryView3D {
   /// @param [in,out] helper The visualization helper
   /// @param volume The DetectorVolume to be drawn
   /// @param gctx The geometry context for which it is drawn
-  /// @param drawSurfaces switches on/off the drawing of the volumes' surfaces
   /// @param transform An option additional transform
   /// @param connected The config for connected portals
   /// @param unconnected The config for unconnected portals
