@@ -192,7 +192,7 @@ class MultiEigenStepperLoop
   FinalReductionMethod m_finalReductionMethod = FinalReductionMethod::eMean;
 
   /// The logger (used if no logger is provided by caller of methods)
-  std::unique_ptr<Acts::Logger> m_logger;
+  std::unique_ptr<const Acts::Logger> m_logger;
 
   /// Small vector type for speeding up some computations where we need to
   /// accumulate stuff of components. We think 16 is a reasonable amount here.
@@ -226,7 +226,14 @@ class MultiEigenStepperLoop
                                                               Logging::INFO))
       : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
         m_finalReductionMethod(finalReductionMethod),
-        m_logger(logger) {}
+        m_logger(std::move(logger)) {}
+
+  /// Copy constructor. Must be defined, because we need to explicitly clone the
+  /// logger
+  MultiEigenStepperLoop(const MultiEigenStepperLoop& other)
+      : EigenStepper<extensionlist_t, auctioneer_t>(other.m_bField),
+        m_finalReductionMethod(other.m_finalReductionMethod),
+        m_logger(other.m_logger->clone()) {}
 
   struct State {
     /// The struct that stores the individual components

@@ -127,7 +127,7 @@ ActsExamples::makeGsfFitterFunction(
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
-  Propagator propagator(std::move(stepper), std::move(navigator),
+  Propagator propagator(stepper, std::move(navigator),
                         logger.cloneWithSuffix("Propagator"));
   Fitter trackFitter(std::move(propagator),
                      BetheHeitlerApprox(betheHeitlerApprox),
@@ -136,7 +136,8 @@ ActsExamples::makeGsfFitterFunction(
   // Direct fitter
   Acts::DirectNavigator directNavigator{
       logger.cloneWithSuffix("DirectNavigator")};
-  DirectPropagator directPropagator(stepper, std::move(directNavigator),
+  DirectPropagator directPropagator(std::move(stepper),
+                                    std::move(directNavigator),
                                     logger.cloneWithSuffix("DirectPropagator"));
   DirectFitter directTrackFitter(std::move(directPropagator),
                                  BetheHeitlerApprox(betheHeitlerApprox),
