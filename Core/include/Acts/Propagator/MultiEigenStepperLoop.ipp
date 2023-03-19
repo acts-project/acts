@@ -129,9 +129,7 @@ Result<double> MultiEigenStepperLoop<E, R, A>::step(
 
   State& stepping = state.stepping;
   auto& components = stepping.components;
-
-  // @TODO: This needs to be a real logger
-  const Logger& logger = getDummyLogger();
+  const Logger& logger = *m_logger;
 
   // Update step count
   stepping.steps++;

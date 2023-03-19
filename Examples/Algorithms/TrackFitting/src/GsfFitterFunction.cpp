@@ -118,7 +118,8 @@ ActsExamples::makeGsfFitterFunction(
     double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {
-  MultiStepper stepper(std::move(magneticField), finalReductionMethod);
+  MultiStepper stepper(std::move(magneticField), finalReductionMethod,
+                       logger.cloneWithSuffix("Step"));
 
   // Standard fitter
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
