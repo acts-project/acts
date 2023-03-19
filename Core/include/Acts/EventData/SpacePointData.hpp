@@ -10,6 +10,8 @@
 
 #include <limits>
 #include <vector>
+#include <unordered_map>
+#include <iostream>
 
 namespace Acts {
 
@@ -34,7 +36,11 @@ class SpacePointData {
   SpacePointData& operator=(SpacePointData&& other) noexcept = default;
 
   /// @brief Destructor
-  ~SpacePointData() = default;
+  ~SpacePointData() {
+    std::cout << "Num of mutable variables: " << m_quality.size() << "\n";
+    std::cout << "Num of dynamic variables: " << m_topHalfStripLength.size() << "\n";
+    std::cout << "     * " << static_cast<float>(m_topHalfStripLength.size()) / static_cast<float>(m_quality.size()) * 100. << "\n"; 
+  }
 
   /// @brief Getters
   const float& quality(std::size_t idx) const;
@@ -53,9 +59,61 @@ class SpacePointData {
   /// @brief clear vectors
   void clear();
 
+  ///
+  bool hasDynamicVariable(std::size_t idx) const
+  { return m_topHalfStripLength.find(idx) != m_topHalfStripLength.end(); }
+
+  
+  const float& getTopHalfStripLength(std::size_t idx) const
+  { return m_topHalfStripLength.at(idx); }
+
+  const float& getBottomHalfStripLength(std::size_t idx) const
+  { return m_bottomHalfStripLength.at(idx); }
+
+  const Acts::Vector3& getTopStripDirection(std::size_t idx) const
+  { return m_topStripDirection.at(idx); }
+
+  const Acts::Vector3& getBottomStripDirection(std::size_t idx) const
+  { return m_bottomStripDirection.at(idx); }
+
+  const Acts::Vector3& getStripCenterDistance(std::size_t idx) const
+  { return m_stripCenterDistance.at(idx); }
+
+  const Acts::Vector3& getTopStripCenterPosition(std::size_t idx) const
+  { return m_topStripCenterPosition.at(idx); }
+
+
+  void setTopHalfStripLength(std::size_t idx, const float& value)
+  { m_topHalfStripLength[idx] = value; }
+  
+  void setBottomHalfStripLength(std::size_t idx, const float& value)
+  { m_bottomHalfStripLength[idx] = value; }
+  
+  void setTopStripDirection(std::size_t idx, const Acts::Vector3& value)
+  { m_topStripDirection[idx] = value; }
+  
+  void setBottomStripDirection(std::size_t idx, const Acts::Vector3& value)
+  { m_bottomStripDirection[idx] = value; }
+  
+  void setStripCenterDistance(std::size_t idx, const Acts::Vector3& value)
+  { m_stripCenterDistance[idx] = value; }
+  
+  void setTopStripCenterPosition(std::size_t idx, const Acts::Vector3& value)
+  { m_topStripCenterPosition[idx] = value; }
+  
+  
  private:
+  /// Mutable variables
   std::vector<float> m_quality{};
   std::vector<float> m_deltaR{};
+
+  /// dynamic variables
+  std::unordered_map<std::size_t, float> m_topHalfStripLength;
+  std::unordered_map<std::size_t, float> m_bottomHalfStripLength;
+  std::unordered_map<std::size_t, Acts::Vector3> m_topStripDirection;
+  std::unordered_map<std::size_t, Acts::Vector3> m_bottomStripDirection;
+  std::unordered_map<std::size_t, Acts::Vector3> m_stripCenterDistance;
+  std::unordered_map<std::size_t, Acts::Vector3> m_topStripCenterPosition;
 };
 
 inline const float& SpacePointData::quality(std::size_t idx) const {

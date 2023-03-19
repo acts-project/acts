@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -161,7 +162,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
     // filter candidates
-    filterCandidates(*spM.get(), options, seedFilterState, state);
+    filterCandidates(state.spacePointData, *spM.get(), options, seedFilterState, state);
 
     m_config.seedFilter->filterSeeds_1SpFixed(
         state.spacePointData, state.candidates_collector,
@@ -297,6 +298,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 template <typename external_spacepoint_t, typename platform_t>
 
 inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
+    Acts::SpacePointData& spacePointData,	      
     const InternalSpacePoint<external_spacepoint_t>& spM,
     const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
     SeedingState& state) const {
@@ -435,7 +437,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
             cosTheta * std::sqrt(1 + A0 * A0)};
 
         double rMTransf[3];
-        if (!xyzCoordinateCheck(m_config, spM, positionMiddle, rMTransf)) {
+        if (!xyzCoordinateCheck(spacePointData, m_config, spM, positionMiddle, rMTransf)) {
           continue;
         }
 
@@ -450,7 +452,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spB = state.compatBottomSP[b];
         double rBTransf[3];
-        if (!xyzCoordinateCheck(m_config, *spB, positionBottom, rBTransf)) {
+        if (!xyzCoordinateCheck(spacePointData, m_config, *spB, positionBottom, rBTransf)) {
           continue;
         }
 
@@ -464,7 +466,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         auto spT = state.compatTopSP[t];
         double rTTransf[3];
-        if (!xyzCoordinateCheck(m_config, *spT, positionTop, rTTransf)) {
+        if (!xyzCoordinateCheck(spacePointData, m_config, *spT, positionTop, rTTransf)) {
           continue;
         }
 

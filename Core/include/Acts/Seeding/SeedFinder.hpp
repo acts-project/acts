@@ -138,7 +138,8 @@ class SeedFinder {
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;
 
-  void filterCandidates(const InternalSpacePoint<external_spacepoint_t>& SpM,
+  void filterCandidates(Acts::SpacePointData& spacePointData,
+			const InternalSpacePoint<external_spacepoint_t>& SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;
