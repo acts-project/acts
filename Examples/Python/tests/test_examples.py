@@ -1239,7 +1239,7 @@ def test_full_chain_odd_example_pythia_geant4(tmp_path):
 @pytest.mark.skipif(not dd4hepEnabled, reason="DD4hep not set up")
 @pytest.mark.slow
 def test_ML_Ambiguity_Solver(tmp_path):
-    root_file = "performance_ambiML.root"
+    root_file = "odd_output/performance_ambiML.root"
     assert not (tmp_path / root_file).exists()
     # This test literally only ensures that the full chain example can run without erroring out
     getOpenDataDetector(
