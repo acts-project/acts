@@ -14,8 +14,8 @@
 
 #include <TChain.h>
 #include <TFile.h>
-#include <TTree.h>
 #include <TMath.h>
+#include <TTree.h>
 
 ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     const Config& config, Acts::Logging::Level level)
@@ -25,7 +25,8 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
   // Set the branches
-  bool missingEventId = (TTree::kMatch != m_inputChain->SetBranchAddress("event_id", &m_eventId));
+  bool missingEventId =
+      (TTree::kMatch != m_inputChain->SetBranchAddress("event_id", &m_eventId));
   std::cout << "missingEventId = " << missingEventId << std::endl;
 
   m_inputChain->SetBranchAddress("v_x", &m_v_x);
@@ -70,7 +71,10 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   }
 
   size_t nentries = m_inputChain->GetEntries();
-  m_events = missingEventId ? nentries : static_cast<size_t>(m_inputChain->GetMaximum("event_id") + 1);
+  m_events =
+      missingEventId
+          ? nentries
+          : static_cast<size_t>(m_inputChain->GetMaximum("event_id") + 1);
   m_batchSize = nentries / m_events;
   ACTS_DEBUG("The full chain has "
              << nentries << " entries for " << m_events
@@ -82,7 +86,9 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   // If the events are not in order, get the entry numbers for ordered events
   if (not m_cfg.orderedEvents) {
     if (missingEventId)
-      throw std::invalid_argument{"'event_id' branch is missing in your tree. This is not compatible with unordered events."};
+      throw std::invalid_argument{
+          "'event_id' branch is missing in your tree. This is not compatible "
+          "with unordered events."};
     m_entryNumbers.resize(nentries);
     m_inputChain->Draw("event_id", "", "goff");
     // Sort to get the entry numbers of the ordered events
@@ -164,10 +170,10 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
 
       for (size_t is = 0; is < msteps; ++is) {
         ACTS_VERBOSE("====================");
-        ACTS_VERBOSE("["<< is+1 << "/" << msteps <<"] STEP INFORMATION: ");
+        ACTS_VERBOSE("[" << is + 1 << "/" << msteps << "] STEP INFORMATION: ");
 
         double s = (*m_step_length)[is];
-        if (s==0) {
+        if (s == 0) {
           ACTS_VERBOSE("invalid step length... skipping!");
           continue;
         }
@@ -181,16 +187,20 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
         Acts::MaterialInteraction mInteraction;
         mInteraction.position =
             Acts::Vector3((*m_step_x)[is], (*m_step_y)[is], (*m_step_z)[is]);
-        ACTS_VERBOSE("POSITION : " << (*m_step_x)[is] << ", " << (*m_step_y)[is] << ", " << (*m_step_z)[is]);
+        ACTS_VERBOSE("POSITION : " << (*m_step_x)[is] << ", " << (*m_step_y)[is]
+                                   << ", " << (*m_step_z)[is]);
         mInteraction.direction =
             Acts::Vector3((*m_step_dx)[is], (*m_step_dy)[is], (*m_step_dz)[is]);
-        ACTS_VERBOSE("DIRECTION: " << (*m_step_dx)[is] << ", " << (*m_step_dy)[is] << ", " << (*m_step_dz)[is]);
+        ACTS_VERBOSE("DIRECTION: " << (*m_step_dx)[is] << ", "
+                                   << (*m_step_dy)[is] << ", "
+                                   << (*m_step_dz)[is]);
         mInteraction.materialSlab = Acts::MaterialSlab(
             Acts::Material::fromMassDensity(mX0, mL0, (*m_step_A)[is],
                                             (*m_step_Z)[is], (*m_step_rho)[is]),
             s);
-        ACTS_VERBOSE("MATERIAL: " << mX0 << ", " << mL0 << ", " <<
-        (*m_step_A)[is] << ", " << (*m_step_Z)[is] << ", " << (*m_step_rho)[is]);
+        ACTS_VERBOSE("MATERIAL: " << mX0 << ", " << mL0 << ", "
+                                  << (*m_step_A)[is] << ", " << (*m_step_Z)[is]
+                                  << ", " << (*m_step_rho)[is]);
         ACTS_VERBOSE("====================");
 
         if (m_cfg.readCachedSurfaceInformation) {
