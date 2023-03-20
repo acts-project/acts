@@ -300,7 +300,7 @@ struct GsfActor {
         ACTS_WARNING(
             "No components left after applying energy loss. "
             "Is the weight cutoff too high?");
-        ACTS_VERBOSE("Return to propagator");
+        ACTS_WARNING("Return to propagator without applying energy loss");
         return;
       }
 
