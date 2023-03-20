@@ -109,12 +109,12 @@ void Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   addElement(std::move(writer));
 }
 
-void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
+void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
   if (not element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
 
-  m_sequenceElements.push_back(std::move(element));
+  m_sequenceElements.push_back(element);
 
   if (!m_cfg.runDataFlowChecks) {
     return;
