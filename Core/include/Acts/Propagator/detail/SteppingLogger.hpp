@@ -50,14 +50,17 @@ struct SteppingLogger {
 
   /// SteppingLogger action for the ActionList of the Propagator
   ///
-  /// @tparam stepper_t is the type of the Stepper
   /// @tparam propagator_state_t is the type of Propagator state
+  /// @tparam stepper_t is the type of the Stepper
+  /// @tparam navigator_t is the type of the Navigator
   ///
-  /// @param [in,out] state is the mutable stepper state object
   /// @param [in,out] result is the mutable result object
-  template <typename propagator_state_t, typename stepper_t>
+  /// @param [in,out] state is the mutable stepper state object
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& /*logger*/) const {
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& /*logger*/) const {
     // don't log if you have reached the target
     if (sterile or state.navigation.targetReached) {
       return;
@@ -77,12 +80,6 @@ struct SteppingLogger {
     step.volume = state.navigation.currentVolume;
     result.steps.push_back(std::move(step));
   }
-
-  /// Pure observer interface
-  /// - this does not apply to the logger
-  template <typename propagator_state_t, typename stepper_t>
-  void operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                  const Logger& /*logger*/) const {}
 };
 
 }  // namespace detail
