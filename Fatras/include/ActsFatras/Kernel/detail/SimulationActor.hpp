@@ -200,13 +200,6 @@ struct SimulationActor {
                    after.absoluteMomentum(), after.time());
   }
 
-  /// Pure observer interface. Does not apply to the Fatras simulator.
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
-  void operator()(propagator_state_t & /*state*/, const stepper_t & /*stepper*/,
-                  const navigator_t & /*navigator*/,
-                  const Acts::Logger & /*logger*/) const {}
-
   /// Construct the current particle state from the stepper state.
   template <typename stepper_t>
   Particle makeParticle(const Particle &previous, const stepper_t &stepper,

@@ -124,10 +124,6 @@ struct MaterialInteractor {
     }
   }
 
-  /// Material interaction has no pure observer.
-  template <typename propagator_state_t>
-  void operator()(propagator_state_t& /*state*/) const {}
-
  private:
   /// @brief This function records the material effect
   ///

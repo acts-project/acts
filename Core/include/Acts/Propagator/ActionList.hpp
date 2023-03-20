@@ -75,10 +75,12 @@ struct ActionList : public detail::Extendable<actors_t...> {
   ///
   /// @tparam propagator_state_t is the state type of the propagator
   /// @tparam stepper_t Type of the stepper used for the propagation
+  /// @tparam navigator_t Type of the navigator used for the propagation
   /// @tparam result_t is the result type from actions
   ///
   /// @param [in,out] state This is the propagator state object
   /// @param [in] stepper The stepper in use
+  /// @param [in] navigator The navigator in use
   /// @param [in,out] result This is the result object from actions
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename result_t, typename... Args>

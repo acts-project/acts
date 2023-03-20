@@ -20,7 +20,7 @@ inline LinCircle transformCoordinates(
   };
 
   return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      sp, spM, bottom, extractFunction);
+      sp, spM, bottom, std::move(extractFunction));
 }
 
 template <typename external_spacepoint_t, typename callable_t>
@@ -60,7 +60,7 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-inline std::vector<std::size_t> transformCoordinates(
+inline void transformCoordinates(
     std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec) {
@@ -72,25 +72,24 @@ inline std::vector<std::size_t> transformCoordinates(
     return output;
   };
 
-  return transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      vec, spM, bottom, linCircleVec, extractFunction);
+  transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
+      vec, spM, bottom, linCircleVec, std::move(extractFunction));
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-inline std::vector<std::size_t> transformCoordinates(
-    std::vector<external_spacepoint_t*>& vec, const external_spacepoint_t& spM,
-    bool bottom, std::vector<LinCircle>& linCircleVec,
-    callable_t&& extractFunction) {
-  std::vector<std::size_t> indexes(vec.size());
-  for (unsigned int i(0); i < indexes.size(); i++) {
-    indexes[i] = i;
-  }
-
+inline void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+                                 const external_spacepoint_t& spM, bool bottom,
+                                 std::vector<LinCircle>& linCircleVec,
+                                 callable_t&& extractFunction) {
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
+
+  // resize + operator[] is faster then reserve and push_back
+  linCircleVec.resize(vec.size());
 
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
-  for (auto sp : vec) {
+  for (std::size_t idx(0); idx < vec.size(); ++idx) {
+    auto& sp = vec[idx];
     auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
 
     float deltaX = xSP - xM;
@@ -133,16 +132,9 @@ inline std::vector<std::size_t> transformCoordinates(
     l.z = sp->z();
     l.r = sp->radius();
 
-    linCircleVec.push_back(l);
+    linCircleVec[idx] = l;
     sp->setDeltaR(std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
   }
-  // sort the SP in order of cotTheta
-  std::sort(
-      indexes.begin(), indexes.end(),
-      [&linCircleVec](const std::size_t& a, const std::size_t& b) -> bool {
-        return linCircleVec[a].cotTheta < linCircleVec[b].cotTheta;
-      });
-  return indexes;
 }
 
 template <typename external_spacepoint_t>
