@@ -84,6 +84,9 @@ endif()
 
 
 # dependencies which cannot be searched in CONFIG mode
+if(PluginOnnx IN_LIST Acts_COMPONENTS)
+  find_dependency(OnnxRuntime @onnxruntime_version@ CONFIG EXACT)
+endif()
 if(PluginSycl IN_LIST Acts_COMPONENTS)
   find_package(SYCL REQUIRED)
 endif()
