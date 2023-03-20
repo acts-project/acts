@@ -8,10 +8,10 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+
 #include <limits>
 #include <vector>
-#include <unordered_map>
-#include <iostream>
 
 namespace Acts {
 
@@ -36,11 +36,7 @@ class SpacePointData {
   SpacePointData& operator=(SpacePointData&& other) noexcept = default;
 
   /// @brief Destructor
-  ~SpacePointData() {
-    std::cout << "Num of mutable variables: " << m_quality.size() << "\n";
-    std::cout << "Num of dynamic variables: " << m_topHalfStripLength.size() << "\n";
-    std::cout << "     * " << static_cast<float>(m_topHalfStripLength.size()) / static_cast<float>(m_quality.size()) * 100. << "\n"; 
-  }
+  ~SpacePointData() = default;
 
   /// @brief Getters
   const float& quality(std::size_t idx) const;
@@ -56,31 +52,34 @@ class SpacePointData {
   /// @brief Resize vectors
   void resize(std::size_t n);
 
+  /// @brief Resize Dynamic Variables
+  void resizeDynamic(std::size_t n);
+  
   /// @brief clear vectors
   void clear();
 
   ///
-  bool hasDynamicVariable(std::size_t idx) const
-  { return m_topHalfStripLength.find(idx) != m_topHalfStripLength.end(); }
+  bool hasDynamicVariable() const
+  { return not m_topHalfStripLength.empty(); }
 
   
   const float& getTopHalfStripLength(std::size_t idx) const
-  { return m_topHalfStripLength.at(idx); }
+  { return m_topHalfStripLength[idx]; }
 
   const float& getBottomHalfStripLength(std::size_t idx) const
-  { return m_bottomHalfStripLength.at(idx); }
+  { return m_bottomHalfStripLength[idx]; }
 
   const Acts::Vector3& getTopStripDirection(std::size_t idx) const
-  { return m_topStripDirection.at(idx); }
+  { return m_topStripDirection[idx]; }
 
   const Acts::Vector3& getBottomStripDirection(std::size_t idx) const
-  { return m_bottomStripDirection.at(idx); }
+  { return m_bottomStripDirection[idx]; }
 
   const Acts::Vector3& getStripCenterDistance(std::size_t idx) const
-  { return m_stripCenterDistance.at(idx); }
+  { return m_stripCenterDistance[idx]; }
 
   const Acts::Vector3& getTopStripCenterPosition(std::size_t idx) const
-  { return m_topStripCenterPosition.at(idx); }
+  { return m_topStripCenterPosition[idx]; }
 
 
   void setTopHalfStripLength(std::size_t idx, const float& value)
@@ -108,12 +107,12 @@ class SpacePointData {
   std::vector<float> m_deltaR{};
 
   /// dynamic variables
-  std::unordered_map<std::size_t, float> m_topHalfStripLength;
-  std::unordered_map<std::size_t, float> m_bottomHalfStripLength;
-  std::unordered_map<std::size_t, Acts::Vector3> m_topStripDirection;
-  std::unordered_map<std::size_t, Acts::Vector3> m_bottomStripDirection;
-  std::unordered_map<std::size_t, Acts::Vector3> m_stripCenterDistance;
-  std::unordered_map<std::size_t, Acts::Vector3> m_topStripCenterPosition;
+  std::vector<float> m_topHalfStripLength{};
+  std::vector<float> m_bottomHalfStripLength{};
+  std::vector<Acts::Vector3> m_topStripDirection{};
+  std::vector<Acts::Vector3> m_bottomStripDirection{};
+  std::vector<Acts::Vector3> m_stripCenterDistance{};
+  std::vector<Acts::Vector3> m_topStripCenterPosition{};
 };
 
 inline const float& SpacePointData::quality(std::size_t idx) const {
@@ -142,6 +141,15 @@ inline void SpacePointData::reserve(std::size_t n) {
 inline void SpacePointData::resize(std::size_t n) {
   m_quality.resize(n, -std::numeric_limits<float>::infinity());
   m_deltaR.resize(n, 0.);
+}
+
+inline void SpacePointData::resizeDynamic(std::size_t n) {
+  m_topHalfStripLength.resize(n);
+  m_bottomHalfStripLength.resize(n);
+  m_topStripDirection.resize(n);
+  m_bottomStripDirection.resize(n);
+  m_stripCenterDistance.resize(n);
+  m_topStripCenterPosition.resize(n);
 }
 
 inline void SpacePointData::clear() {

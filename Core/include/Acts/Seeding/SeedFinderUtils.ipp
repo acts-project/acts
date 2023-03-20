@@ -156,22 +156,12 @@ inline bool xyzCoordinateCheck(
     const double* spacepointPosition, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
-  std::size_t index = sp.index();
-  bool hasValueStored = spacePointData.hasDynamicVariable(index);
+  bool hasValueStored = spacePointData.hasDynamicVariable();
   if (not hasValueStored) {
-    spacePointData.setTopHalfStripLength(index,
-					 m_config.getTopHalfStripLength(sp.sp()));
-    spacePointData.setBottomHalfStripLength(index,
-					    m_config.getBottomHalfStripLength(sp.sp()));
-    spacePointData.setTopStripDirection(index,
-					m_config.getTopStripDirection(sp.sp()));
-    spacePointData.setBottomStripDirection(index,
-					   m_config.getBottomStripDirection(sp.sp()));
-    spacePointData.setStripCenterDistance(index,
-					  m_config.getStripCenterDistance(sp.sp()));
-    spacePointData.setTopStripCenterPosition(index,
-					     m_config.getTopStripCenterPosition(sp.sp()));
+    return false;
   }
+
+  std::size_t index = sp.index();
   
   const float& topHalfStripLength = spacePointData.getTopHalfStripLength(index);
   const float& bottomHalfStripLength = spacePointData.getBottomHalfStripLength(index);
