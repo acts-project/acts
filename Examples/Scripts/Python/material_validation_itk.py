@@ -25,10 +25,12 @@ def runMaterialValidation(
     for decorator in decorators:
         s.addContextDecorator(decorator)
 
-    nav = acts.Navigator(trackingGeometry=trackingGeometry,
-                         resolveSensitive = True,
-                         resolveMaterial = True,
-                         resolvePassive = True)
+    nav = acts.Navigator(
+        trackingGeometry=trackingGeometry,
+        resolveSensitive=True,
+        resolveMaterial=True,
+        resolvePassive=True,
+    )
 
     # stepper = acts.StraightLineStepper()
     stepper = acts.EigenStepper(field)
@@ -78,21 +80,20 @@ if "__main__" == __name__:
         "geo_dir",
         help="Input directory containing the ITk standalone geometry. Get in touch if you don't have this.",
     )
-    p.add_argument(
-        "--material", type=str, default = "", help="Material file"
-    )
+    p.add_argument("--material", type=str, default="", help="Material file")
 
     args = p.parse_args()
 
     geo_example_dir = Path(args.geo_dir)
     assert geo_example_dir.exists(), "Detector example input directory missing"
-    assert os.path.exists(args.material), "Invalid file path/name in --material. Please check your input!"
+    assert os.path.exists(
+        args.material
+    ), "Invalid file path/name in --material. Please check your input!"
 
     from acts.examples.itk import buildITkGeometry
 
     detector, trackingGeometry, decorators = buildITkGeometry(
-        geo_example_dir,
-        customMaterialFile=args.material
+        geo_example_dir, customMaterialFile=args.material
     )
 
     field = acts.ConstantBField(acts.Vector3(0, 0, 2 * acts.UnitConstants.T))

@@ -81,7 +81,7 @@ def runMaterialMapping(
             trackingGeometry=trackingGeometry,
             resolveSensitive=False,
             resolveMaterial=True,
-            resolvePassive=True
+            resolvePassive=True,
         )
         propagator = Propagator(stepper, navigator)
         mapper = SurfaceMaterialMapper(level=acts.logging.INFO, propagator=propagator)
@@ -134,24 +134,33 @@ if "__main__" == __name__:
         help="Input directory containing the ITk standalone geometry. Get in touch if you don't have this.",
     )
     p.add_argument(
-        "--inputFile", type=str, default = "", help="Input file containing material steps.",
+        "--inputFile",
+        type=str,
+        default="",
+        help="Input file containing material steps.",
     )
     p.add_argument(
-        "--material", type=str, default = "", help="Geometry file to define layers used in material mapping",
+        "--material",
+        type=str,
+        default="",
+        help="Geometry file to define layers used in material mapping",
     )
 
     args = p.parse_args()
 
     geo_example_dir = Path(args.geo_dir)
     assert geo_example_dir.exists(), "Detector example input directory missing"
-    assert os.path.exists(args.inputFile), "Invalid file in --inputFile. Please check your input!"
-    assert os.path.exists(args.material), "Invalid file path/name in --material. Please check your input!"
+    assert os.path.exists(
+        args.inputFile
+    ), "Invalid file in --inputFile. Please check your input!"
+    assert os.path.exists(
+        args.material
+    ), "Invalid file path/name in --material. Please check your input!"
 
     from acts.examples.itk import buildITkGeometry
 
     detector, trackingGeometry, decorators = buildITkGeometry(
-        geo_example_dir,
-        customMaterialFile=args.material
+        geo_example_dir, customMaterialFile=args.material
     )
 
     runMaterialMapping(
@@ -160,4 +169,5 @@ if "__main__" == __name__:
         materialStepsFile=args.inputFile,
         outputDir=os.getcwd(),
         inputDir=os.getcwd(),
-        readCachedSurfaceInformation=False).run()
+        readCachedSurfaceInformation=False,
+    ).run()
