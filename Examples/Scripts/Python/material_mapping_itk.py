@@ -36,6 +36,7 @@ def runMaterialMapping(
     decorators,
     outputDir,
     inputDir,
+    materialStepsFile,
     mapName="material-map",
     mapSurface=True,
     readCachedSurfaceInformation=False,
@@ -62,9 +63,7 @@ def runMaterialMapping(
             fileList=[
                 os.path.join(
                     inputDir,
-                    mapName + "_tracks.root"
-                    if readCachedSurfaceInformation
-                    else "MaterialTracks_mapping-ATLAS-P2-RUN4-01-00-00.root",
+                    materialStepsFile,
                 )
             ],
             readCachedSurfaceInformation=readCachedSurfaceInformation,
@@ -135,13 +134,17 @@ if "__main__" == __name__:
         help="Input directory containing the ITk standalone geometry. Get in touch if you don't have this.",
     )
     p.add_argument(
-        "--material", type=str, default = "", help="Geometry file to define layers used in material mapping"
+        "--inputFile", type=str, default = "", help="Input file containing material steps.",
+    )
+    p.add_argument(
+        "--material", type=str, default = "", help="Geometry file to define layers used in material mapping",
     )
 
     args = p.parse_args()
 
     geo_example_dir = Path(args.geo_dir)
     assert geo_example_dir.exists(), "Detector example input directory missing"
+    assert os.path.exists(args.inputFile), "Invalid file in --inputFile. Please check your input!"
     assert os.path.exists(args.material), "Invalid file path/name in --material. Please check your input!"
 
     from acts.examples.itk import buildITkGeometry
@@ -154,6 +157,7 @@ if "__main__" == __name__:
     runMaterialMapping(
         trackingGeometry,
         decorators,
+        materialStepsFile=args.inputFile,
         outputDir=os.getcwd(),
         inputDir=os.getcwd(),
         readCachedSurfaceInformation=False).run()
