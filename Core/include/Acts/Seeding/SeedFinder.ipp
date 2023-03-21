@@ -145,9 +145,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
                                          : seedConfRange.nTopForSmallR;
       // set max bottom radius for seed confirmation
       seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
-      // set min and max z for seed confirmation
-      seedFilterState.zMaxSeedConf = seedConfRange.zMaxSeedConf;
-      seedFilterState.zMinSeedConf = seedConfRange.zMinSeedConf;
       // continue if number of top SPs is smaller than minimum
       if (state.compatTopSP.size() < seedFilterState.nTopSeedConf) {
         continue;
@@ -301,7 +298,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
     SeedingState& state) const {
   float rM = spM.radius();
-  float zM = spM.z();
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
@@ -380,8 +376,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     // middle bottom pair if seedConfirmation is false we always ask for at
     // least one compatible top to trigger the filter
     size_t minCompatibleTopSPs = 2;
-    if (!m_config.seedConfirmation or zM < seedFilterState.zMaxSeedConf or
-        zM > seedFilterState.zMinSeedConf or
+    if (!m_config.seedConfirmation or
         state.compatBottomSP[b]->radius() > seedFilterState.rMaxSeedConf) {
       minCompatibleTopSPs = 1;
     }
