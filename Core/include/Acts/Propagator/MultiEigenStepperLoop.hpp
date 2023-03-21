@@ -684,6 +684,15 @@ class MultiEigenStepperLoop
       ACTS_VERBOSE("started stepCounterAfterFirstComponentOnSurface");
     }
 
+    // If there are no components onSurface, but the counter is switched on
+    // (e.g., if the navigator changes the target surface), we need to switch it
+    // off again
+    if (state.stepCounterAfterFirstComponentOnSurface &&
+        counts[static_cast<std::size_t>(Status::onSurface)] == 0) {
+      state.stepCounterAfterFirstComponentOnSurface.reset();
+      ACTS_VERBOSE("switch off stepCounterAfterFirstComponentOnSurface");
+    }
+
     // This is a 'any_of' criterium. As long as any of the components has a
     // certain state, this determines the total state (in the order of a
     // somewhat importance)
