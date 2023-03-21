@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -81,6 +81,7 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t>::createSeedsForGroup(
+    Acts::SpacePointData& spacePointData,
     Acts::SpacePointGrid<external_spacepoint_t>& grid,
     const sp_range_t& bottomSPs, const std::size_t middleSPs,
     const sp_range_t& topSPs) const {
@@ -213,7 +214,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   auto triplet_end = tripletCandidates.end();
   for (; triplet_itr != triplet_end; ++triplet_itr, ++middleIndex) {
     std::vector<typename CandidatesForMiddleSp<
-        InternalSpacePoint<external_spacepoint_t>>::value_type>
+        const InternalSpacePoint<external_spacepoint_t>>::value_type>
         candidates;
 
     auto& middleSP = *(middleSPVec[middleIndex]);
@@ -227,11 +228,12 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     }
     std::sort(
         candidates.begin(), candidates.end(),
-        CandidatesForMiddleSp<
-            InternalSpacePoint<external_spacepoint_t>>::descendingByQuality);
+        CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>::
+            descendingByQuality);
     std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_commonConfig.seedFilter->filterSeeds_1SpFixed(
-        candidates, numQualitySeeds, std::back_inserter(outputVec));
+        spacePointData, candidates, numQualitySeeds,
+        std::back_inserter(outputVec));
   }
 
   // Free up all allocated device memory.
