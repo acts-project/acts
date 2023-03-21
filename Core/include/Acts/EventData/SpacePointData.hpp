@@ -47,7 +47,7 @@ class SpacePointData {
   void setDeltaR(std::size_t idx, const float& value);
 
   /// @brief Resize vectors
-  void resize(std::size_t n, bool reserveDynamic = false);
+  void resize(std::size_t n, bool resizeDynamic = false);
 
   /// @brief clear vectors
   void clear();
