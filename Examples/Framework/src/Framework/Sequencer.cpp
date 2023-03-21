@@ -424,6 +424,7 @@ int Sequencer::run() {
                                                       Duration::zero());
 
           for (size_t event = r.begin(); event != r.end(); ++event) {
+            ACTS_DEBUG("start processing event " << event);
             m_cfg.iterationCallback();
             // Use per-event store
             WhiteBoard eventStore(
@@ -458,13 +459,13 @@ int Sequencer::run() {
             }
 
             nProcessedEvents++;
-            if (nTotalEvents <= 100) {
+            if (logger().level() <= Acts::Logging::DEBUG) {
+              ACTS_DEBUG("finished event " << event);
+            } else if (nTotalEvents <= 100) {
               ACTS_INFO("finished event " << event);
-            } else {
-              if (nProcessedEvents % 100 == 0) {
-                ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
-                                           << " events processed");
-              }
+            } else if (nProcessedEvents % 100 == 0) {
+              ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
+                                         << " events processed");
             }
           }
 
