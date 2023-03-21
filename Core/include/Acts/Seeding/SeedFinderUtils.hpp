@@ -76,7 +76,7 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
-/// @param[in] spacePointData Auxiliary variables used by the seeding 
+/// @param[in] spacePointData Auxiliary variables used by the seeding
 /// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
