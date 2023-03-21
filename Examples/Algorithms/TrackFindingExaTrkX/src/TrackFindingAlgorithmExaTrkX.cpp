@@ -27,6 +27,9 @@ ActsExamples::TrackFindingAlgorithmExaTrkX::TrackFindingAlgorithmExaTrkX(
   if (!m_cfg.trackFinderML) {
     throw std::invalid_argument("Missing track finder");
   }
+
+  m_inputSpacePoints.initialize(m_cfg.inputSpacePoints);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithmExaTrkX::execute(
