@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Optional
 import math
 
 import acts
@@ -25,7 +26,7 @@ class InputSpacePointsType(Enum):
 
 def buildITkGeometry(
     geo_dir: Path,
-    customMaterialFile: str = "",
+    customMaterialFile: Optional[str] = None,
     material: bool = True,
     jsonconfig: bool = False,
     logLevel=acts.logging.WARNING,
