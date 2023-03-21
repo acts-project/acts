@@ -15,7 +15,7 @@ concurrency:
 jobs:
   docs:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v36
     env:
         DOXYGEN_WARN_AS_ERROR: FAIL_ON_WARNINGS
     steps:
