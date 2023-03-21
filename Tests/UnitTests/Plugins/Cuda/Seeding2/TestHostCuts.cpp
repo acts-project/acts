@@ -31,13 +31,13 @@ bool TestHostCuts::singleSeedCut(
 }
 
 std::vector<typename Acts::CandidatesForMiddleSp<
-    Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+    const Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
 TestHostCuts::cutPerMiddleSP(
     std::vector<typename Acts::CandidatesForMiddleSp<
-        Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+        const Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
         seedCandidates) const {
   std::vector<typename Acts::CandidatesForMiddleSp<
-      Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+      const Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
       newSeedsVector;
   if (seedCandidates.size() <= 1) {
     return seedCandidates;
