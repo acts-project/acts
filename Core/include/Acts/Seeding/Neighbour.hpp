@@ -43,24 +43,24 @@ struct Neighbour {
   /// @param grid The grid containing the space points
   /// @param idx The global index of the bin in the grid
   /// @param lowerBound The lower bound of the allowed space point
-  Neighbour(Acts::SpacePointGrid<external_spacepoint_t>& grid, std::size_t idx,
-            const float lowerBound);
+  Neighbour(const Acts::SpacePointGrid<external_spacepoint_t>& grid,
+            std::size_t idx, const float lowerBound);
 
   /// The global bin index on the grid
   std::size_t index;
   /// The iterator containing the position of the first space point in the valid
   /// radius range
-  typename Acts::SpacePointGrid<external_spacepoint_t>::value_type::iterator
-      itr;
+  typename Acts::SpacePointGrid<
+      external_spacepoint_t>::value_type::const_iterator itr;
 };
 
 template <typename external_spacepoint_t>
 Neighbour<external_spacepoint_t>::Neighbour(
-    Acts::SpacePointGrid<external_spacepoint_t>& grid, std::size_t idx,
+    const Acts::SpacePointGrid<external_spacepoint_t>& grid, std::size_t idx,
     const float lowerBound)
     : index(idx) {
   /// Get the space points in this specific global bin
-  auto& collection = grid.at(idx);
+  const auto& collection = grid.at(idx);
   /// If there are no elements in the bin, we simply set the iterator to begin()
   /// and return. In this case begin() == end() so we run on nothing
   if (collection.size() == 0) {
