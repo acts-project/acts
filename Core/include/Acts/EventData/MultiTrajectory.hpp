@@ -51,7 +51,7 @@ template <typename derived_t>
 class MultiTrajectory;
 class Surface;
 
-using ProjectorBitset = std::bitset<eBoundSize * eBoundSize>;
+using ProjectorBitset = unsigned long long;
 
 namespace detail_lt {
 /// Either type T or const T depending on the boolean.
@@ -709,8 +709,9 @@ class TrackStateProxy {
     fullProjector.template topLeftCorner<rows, cols>() = projector;
 
     // convert to bitset before storing
+    auto projectorBitset = matrixToBitset(fullProjector);
     component<ProjectorBitset, hashString("projector")>() =
-        matrixToBitset(fullProjector);
+        projectorBitset.to_ullong();
   }
 
   /// Uncalibrated measurement in the form of a source link. Const version
