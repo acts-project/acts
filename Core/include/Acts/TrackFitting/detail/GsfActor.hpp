@@ -299,7 +299,8 @@ struct GsfActor {
       if (componentCache.empty()) {
         ACTS_WARNING(
             "No components left after applying energy loss. "
-            "Is the weight cutoff too high?");
+            "Is the weight cutoff "
+            << m_cfg.weightCutoff << " too high?");
         ACTS_WARNING("Return to propagator without applying energy loss");
         return;
       }
