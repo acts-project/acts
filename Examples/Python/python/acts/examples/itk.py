@@ -481,8 +481,8 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         numSeedIncrement = 1
         seedWeightIncrement = 10100
         useDetailedDoubleMeasurementInfo = True
-        maxSeedsPerSpMConf = 1000000000
-        maxQualitySeedsPerSpMConf = 1000000000
+        maxSeedsPerSpMConf = 100
+        maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
 
     # fill namedtuples
