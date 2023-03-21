@@ -88,7 +88,7 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
     if (phiBin == 0) {
       continue;
     }
-    
+
     for (std::size_t zBin(m_current_localBins[INDEX::Z]);
          zBin < m_max_localBins[INDEX::Z]; ++zBin) {
       std::size_t zBinIndex = m_group->m_bins[zBin];
