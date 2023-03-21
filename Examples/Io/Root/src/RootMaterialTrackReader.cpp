@@ -27,7 +27,6 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
   // Set the branches
   bool missingEventId =
       (TTree::kMatch != m_inputChain->SetBranchAddress("event_id", &m_eventId));
-  std::cout << "missingEventId = " << missingEventId << std::endl;
 
   m_inputChain->SetBranchAddress("v_x", &m_v_x);
   m_inputChain->SetBranchAddress("v_y", &m_v_y);
@@ -85,10 +84,11 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
 
   // If the events are not in order, get the entry numbers for ordered events
   if (not m_cfg.orderedEvents) {
-    if (missingEventId)
+    if (missingEventId) {
       throw std::invalid_argument{
           "'event_id' branch is missing in your tree. This is not compatible "
           "with unordered events."};
+    }
     m_entryNumbers.resize(nentries);
     m_inputChain->Draw("event_id", "", "goff");
     // Sort to get the entry numbers of the ordered events
