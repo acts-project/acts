@@ -342,7 +342,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
-    float sigmaSquaredSPtDependent = iSinTheta2 * options.sigmapT2perRadius;
+    float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -432,7 +432,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
+      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
@@ -754,7 +754,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     }
 
     // remove all middle SPs outside phi and z region of interest
-    if (middle.z() > m_config.zMax || middle.z() < m_config.zMin) {
+    if (middle.z() > m_config.zMaxLastLayer ||
+        middle.z() < m_config.zMinLastLayer) {
       continue;
     }
     float spPhi = std::atan2(middle.y(), middle.x());

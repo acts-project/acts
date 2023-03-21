@@ -119,6 +119,10 @@ struct SeedFinderConfig {
   // which will make seeding very slow!
   float rMin = 33 * Acts::UnitConstants::mm;
 
+  // z of last layers to avoid iterations
+  float zMinLastLayer = -2800 * Acts::UnitConstants::mm;
+  float zMaxLastLayer = 2800 * Acts::UnitConstants::mm;
+
   std::vector<size_t> zBinsCustomLooping = {};
 
   // average radiation lengths of material on the length of a seed. used for

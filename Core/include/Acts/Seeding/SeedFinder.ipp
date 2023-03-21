@@ -85,7 +85,6 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
   for (auto& spM : middleSPs) {
     float rM = spM->radius();
-    float zM = spM->z();
 
     // check if spM is outside our radial region of interest
     if (m_config.useVariableMiddleSPRange) {
@@ -99,7 +98,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     } else if (not m_config.rRangeMiddleSP.empty()) {
       /// get zBin position of the middle SP
       auto pVal = std::lower_bound(m_config.zBinEdges.begin(),
-                                   m_config.zBinEdges.end(), zM);
+                                   m_config.zBinEdges.end(), spM->z());
       int zBin = std::distance(m_config.zBinEdges.begin(), pVal);
       /// protects against zM at the limit of zBinEdges
       zBin == 0 ? zBin : --zBin;
@@ -118,6 +117,13 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
         // break because SPs are sorted in r
         break;
       }
+    }
+
+    // remove middle SPs on the last layer since there would be no outer SPs to
+    // complete a seed
+    float zM = spM->z();
+    if (zM > m_config.zMaxLastLayer or zM < m_config.zMinLastLayer) {
+      continue;
     }
 
     getCompatibleDoublets(options, grid, state.topNeighbours, *spM.get(),
@@ -359,7 +365,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
-    float sigmaSquaredSPtDependent = iSinTheta2 * options.sigmapT2perRadius;
+    float sigmaSquaredPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -573,7 +579,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
       float iHelixDiameter2 = B2 / S2;
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
-      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
+      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredPtDependent;
       if (!std::isinf(m_config.maxPtScattering)) {
         // if pT > maxPtScattering, calculate allowed scattering angle using
         // maxPtScattering instead of pt.
