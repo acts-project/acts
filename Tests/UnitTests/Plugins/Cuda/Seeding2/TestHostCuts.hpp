@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -42,9 +42,10 @@ class TestHostCuts : public Acts::IExperimentCuts<TestSpacePoint> {
   /// space point in a std::tuple format
   /// @return vector of seed candidates that pass the cut
   std::vector<typename Acts::CandidatesForMiddleSp<
-      Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
-  cutPerMiddleSP(std::vector<typename Acts::CandidatesForMiddleSp<
-                     Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
-                     seedCandidates) const final override;
+      const Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+  cutPerMiddleSP(
+      std::vector<typename Acts::CandidatesForMiddleSp<
+          const Acts::InternalSpacePoint<TestSpacePoint>>::value_type>
+          seedCandidates) const final override;
 
 };  // struct TestHostCuts
