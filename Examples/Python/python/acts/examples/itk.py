@@ -485,7 +485,6 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
 
-        
     # fill namedtuples
     seedFinderConfigArg = SeedFinderConfigArg(
         maxSeedsPerSpM=maxSeedsPerSpM,
