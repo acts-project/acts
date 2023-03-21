@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+
 #include <limits>
 #include <vector>
 
@@ -47,53 +48,61 @@ class SpacePointData {
 
   /// @brief Resize vectors
   void resize(std::size_t n, bool reserveDynamic = false);
-  
+
   /// @brief clear vectors
   void clear();
 
   ///
-  bool hasDynamicVariable() const
-  { return not m_topHalfStripLength.empty(); }
+  bool hasDynamicVariable() const { return not m_topHalfStripLength.empty(); }
 
-  
-  const float& getTopHalfStripLength(std::size_t idx) const
-  { return m_topHalfStripLength[idx]; }
+  const float& getTopHalfStripLength(std::size_t idx) const {
+    return m_topHalfStripLength[idx];
+  }
 
-  const float& getBottomHalfStripLength(std::size_t idx) const
-  { return m_bottomHalfStripLength[idx]; }
+  const float& getBottomHalfStripLength(std::size_t idx) const {
+    return m_bottomHalfStripLength[idx];
+  }
 
-  const Acts::Vector3& getTopStripDirection(std::size_t idx) const
-  { return m_topStripDirection[idx]; }
+  const Acts::Vector3& getTopStripDirection(std::size_t idx) const {
+    return m_topStripDirection[idx];
+  }
 
-  const Acts::Vector3& getBottomStripDirection(std::size_t idx) const
-  { return m_bottomStripDirection[idx]; }
+  const Acts::Vector3& getBottomStripDirection(std::size_t idx) const {
+    return m_bottomStripDirection[idx];
+  }
 
-  const Acts::Vector3& getStripCenterDistance(std::size_t idx) const
-  { return m_stripCenterDistance[idx]; }
+  const Acts::Vector3& getStripCenterDistance(std::size_t idx) const {
+    return m_stripCenterDistance[idx];
+  }
 
-  const Acts::Vector3& getTopStripCenterPosition(std::size_t idx) const
-  { return m_topStripCenterPosition[idx]; }
+  const Acts::Vector3& getTopStripCenterPosition(std::size_t idx) const {
+    return m_topStripCenterPosition[idx];
+  }
 
+  void setTopHalfStripLength(std::size_t idx, const float& value) {
+    m_topHalfStripLength[idx] = value;
+  }
 
-  void setTopHalfStripLength(std::size_t idx, const float& value)
-  { m_topHalfStripLength[idx] = value; }
-  
-  void setBottomHalfStripLength(std::size_t idx, const float& value)
-  { m_bottomHalfStripLength[idx] = value; }
-  
-  void setTopStripDirection(std::size_t idx, const Acts::Vector3& value)
-  { m_topStripDirection[idx] = value; }
-  
-  void setBottomStripDirection(std::size_t idx, const Acts::Vector3& value)
-  { m_bottomStripDirection[idx] = value; }
-  
-  void setStripCenterDistance(std::size_t idx, const Acts::Vector3& value)
-  { m_stripCenterDistance[idx] = value; }
-  
-  void setTopStripCenterPosition(std::size_t idx, const Acts::Vector3& value)
-  { m_topStripCenterPosition[idx] = value; }
-  
-  
+  void setBottomHalfStripLength(std::size_t idx, const float& value) {
+    m_bottomHalfStripLength[idx] = value;
+  }
+
+  void setTopStripDirection(std::size_t idx, const Acts::Vector3& value) {
+    m_topStripDirection[idx] = value;
+  }
+
+  void setBottomStripDirection(std::size_t idx, const Acts::Vector3& value) {
+    m_bottomStripDirection[idx] = value;
+  }
+
+  void setStripCenterDistance(std::size_t idx, const Acts::Vector3& value) {
+    m_stripCenterDistance[idx] = value;
+  }
+
+  void setTopStripCenterPosition(std::size_t idx, const Acts::Vector3& value) {
+    m_topStripCenterPosition[idx] = value;
+  }
+
  private:
   /// Mutable variables
   std::vector<float> m_quality{};
@@ -126,8 +135,7 @@ inline void SpacePointData::setDeltaR(std::size_t idx, const float& value) {
   m_deltaR[idx] = value;
 }
 
-inline void SpacePointData::resize(std::size_t n,
-				   bool resizeDynamic) {
+inline void SpacePointData::resize(std::size_t n, bool resizeDynamic) {
   clear();
 
   m_quality.resize(n, -std::numeric_limits<float>::infinity());

@@ -139,7 +139,7 @@ class SeedFinder {
       bool isBottom) const;
 
   void filterCandidates(Acts::SpacePointData& spacePointData,
-			const InternalSpacePoint<external_spacepoint_t>& SpM,
+                        const InternalSpacePoint<external_spacepoint_t>& SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;

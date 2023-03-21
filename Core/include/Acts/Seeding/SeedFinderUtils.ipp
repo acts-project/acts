@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -150,7 +149,7 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
 
 template <typename external_spacepoint_t>
 inline bool xyzCoordinateCheck(
-			       Acts::SpacePointData& spacePointData,
+    Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
     const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
     const double* spacepointPosition, double* outputCoordinates) {
@@ -162,12 +161,16 @@ inline bool xyzCoordinateCheck(
   }
 
   std::size_t index = sp.index();
-  
+
   const float& topHalfStripLength = spacePointData.getTopHalfStripLength(index);
-  const float& bottomHalfStripLength = spacePointData.getBottomHalfStripLength(index);
-  const Acts::Vector3& topStripDirection = spacePointData.getTopStripDirection(index);
-  const Acts::Vector3& bottomStripDirection = spacePointData.getBottomStripDirection(index);
-  const Acts::Vector3& stripCenterDistance = spacePointData.getStripCenterDistance(index);
+  const float& bottomHalfStripLength =
+      spacePointData.getBottomHalfStripLength(index);
+  const Acts::Vector3& topStripDirection =
+      spacePointData.getTopStripDirection(index);
+  const Acts::Vector3& bottomStripDirection =
+      spacePointData.getBottomStripDirection(index);
+  const Acts::Vector3& stripCenterDistance =
+      spacePointData.getStripCenterDistance(index);
 
   // cross product between top strip vector and spacepointPosition
   double d1[3] = {
@@ -216,7 +219,8 @@ inline bool xyzCoordinateCheck(
   // if arive here spacepointPosition is compatible with strip directions and
   // detector elements
 
-  const Acts::Vector3& topStripCenterPosition = spacePointData.getTopStripCenterPosition(index);
+  const Acts::Vector3& topStripCenterPosition =
+      spacePointData.getTopStripCenterPosition(index);
 
   // spacepointPosition corected with respect to the top strip position and
   // direction and the distance between the strips
