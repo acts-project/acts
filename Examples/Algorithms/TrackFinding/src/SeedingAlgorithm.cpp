@@ -251,12 +251,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   static thread_local SimSeedContainer seeds;
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
-
-  state.spacePointData.clear();
-  state.spacePointData.resize(spacePointPtrs.size());
+  state.spacePointData.resize(spacePointPtrs.size(),
+			      m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    state.spacePointData.resizeDynamic(spacePointPtrs.size());
     for (std::size_t grid_glob_bin(0); grid_glob_bin < spacePointsGrouping.grid().size(); ++grid_glob_bin) {
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {

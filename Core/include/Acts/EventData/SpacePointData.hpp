@@ -45,14 +45,8 @@ class SpacePointData {
   void setQuality(std::size_t idx, const float& value);
   void setDeltaR(std::size_t idx, const float& value);
 
-  /// @brief Reserve memory
-  void reserve(std::size_t n);
-
   /// @brief Resize vectors
-  void resize(std::size_t n);
-
-  /// @brief Resize Dynamic Variables
-  void resizeDynamic(std::size_t n);
+  void resize(std::size_t n, bool reserveDynamic = false);
   
   /// @brief clear vectors
   void clear();
@@ -132,28 +126,33 @@ inline void SpacePointData::setDeltaR(std::size_t idx, const float& value) {
   m_deltaR[idx] = value;
 }
 
-inline void SpacePointData::reserve(std::size_t n) {
-  m_quality.reserve(n);
-  m_deltaR.reserve(n);
-}
+inline void SpacePointData::resize(std::size_t n,
+				   bool resizeDynamic) {
+  clear();
 
-inline void SpacePointData::resize(std::size_t n) {
   m_quality.resize(n, -std::numeric_limits<float>::infinity());
   m_deltaR.resize(n, 0.);
-}
 
-inline void SpacePointData::resizeDynamic(std::size_t n) {
-  m_topHalfStripLength.resize(n);
-  m_bottomHalfStripLength.resize(n);
-  m_topStripDirection.resize(n);
-  m_bottomStripDirection.resize(n);
-  m_stripCenterDistance.resize(n);
-  m_topStripCenterPosition.resize(n);
+  if (resizeDynamic) {
+    m_topHalfStripLength.resize(n, 0.);
+    m_bottomHalfStripLength.resize(n, 0.);
+    m_topStripDirection.resize(n, {0, 0, 0});
+    m_bottomStripDirection.resize(n, {0, 0, 0});
+    m_stripCenterDistance.resize(n, {0, 0, 0});
+    m_topStripCenterPosition.resize(n, {0, 0, 0});
+  }
 }
 
 inline void SpacePointData::clear() {
   m_quality.clear();
   m_deltaR.clear();
+
+  m_topHalfStripLength.clear();
+  m_bottomHalfStripLength.clear();
+  m_topStripDirection.clear();
+  m_bottomStripDirection.clear();
+  m_stripCenterDistance.clear();
+  m_topStripCenterPosition.clear();
 }
 
 }  // namespace Acts
