@@ -260,6 +260,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     seedFilterState.nTopSeedConf = rM > seedConfRange.rMaxSeedConf
                                        ? seedConfRange.nTopForLargeR
                                        : seedConfRange.nTopForSmallR;
+    // set max bottom radius for seed confirmation
+    seedFilterState.rMaxSeedConf = seedConfRange.rMaxSeedConf;
+    // continue if number of top SPs is smaller than minimum
     if (top.size() < seedFilterState.nTopSeedConf) {
       return;
     }
@@ -272,14 +275,35 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   // contains parameters required to calculate circle with linear equation
   // ...for bottom-middle
   std::vector<LinCircle> linCircleBottom;
-  linCircleBottom.reserve(bottom.size());
   // ...for middle-top
   std::vector<LinCircle> linCircleTop;
-  linCircleTop.reserve(top.size());
 
-  auto sorted_bottoms =
-      transformCoordinates(bottom, middle, true, linCircleBottom);
-  auto sorted_tops = transformCoordinates(top, middle, false, linCircleTop);
+  // transform coordinates
+  transformCoordinates(bottom, middle, true, linCircleBottom);
+  transformCoordinates(top, middle, false, linCircleTop);
+
+  // sort: make index vector
+  std::vector<std::size_t> sorted_bottoms(linCircleBottom.size());
+  for (std::size_t i(0); i < sorted_bottoms.size(); ++i) {
+    sorted_bottoms[i] = i;
+  }
+
+  std::vector<std::size_t> sorted_tops(linCircleTop.size());
+  for (std::size_t i(0); i < sorted_tops.size(); ++i) {
+    sorted_tops[i] = i;
+  }
+
+  std::sort(
+      sorted_bottoms.begin(), sorted_bottoms.end(),
+      [&linCircleBottom](const std::size_t &a, const std::size_t &b) -> bool {
+        return linCircleBottom[a].cotTheta < linCircleBottom[b].cotTheta;
+      });
+
+  std::sort(
+      sorted_tops.begin(), sorted_tops.end(),
+      [&linCircleTop](const std::size_t &a, const std::size_t &b) -> bool {
+        return linCircleTop[a].cotTheta < linCircleTop[b].cotTheta;
+      });
 
   std::vector<float> tanLM;
   std::vector<float> tanMT;
@@ -318,6 +342,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
     // 1+(cot^2(theta)) = 1/sin^2(theta)
     float iSinTheta2 = (1. + cotThetaB * cotThetaB);
+    float sigmaSquaredSPtDependent = iSinTheta2 * options.sigmapT2perRadius;
     // calculate max scattering for min momentum at the seed's theta angle
     // scaling scatteringAngle^2 by sin^2(theta) to convert pT^2 to p^2
     // accurate would be taking 1/atan(thetaBottom)-1/atan(thetaTop) <
@@ -330,6 +355,18 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
     // multiply the squared sigma onto the squared scattering
     scatteringInRegion2 *= m_config.sigmaScattering * m_config.sigmaScattering;
+
+    // minimum number of compatible top SPs to trigger the filter for a certain
+    // middle bottom pair if seedConfirmation is false we always ask for at
+    // least one compatible top to trigger the filter
+    size_t minCompatibleTopSPs = 2;
+    if (!m_config.seedConfirmation or
+        bottom[b]->radius() > seedFilterState.rMaxSeedConf) {
+      minCompatibleTopSPs = 1;
+    }
+    if (m_config.seedConfirmation and seedFilterState.numQualitySeeds) {
+      minCompatibleTopSPs++;
+    }
 
     // clear all vectors used in each inner for loop
     top_valid.clear();
@@ -393,21 +430,22 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
 
       // 1/helixradius: (B/sqrt(S2))*2 (we leave everything squared)
       float iHelixDiameter2 = B2 / S2;
-      // calculate scattering for p(T) calculated from seed curvature
-      float pT2scatter = 4 * iHelixDiameter2 * options.pT2perRadius;
-      // if pT > maxPtScattering, calculate allowed scattering angle using
-      // maxPtScattering instead of pt.
-      float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
-      if (pT > m_config.maxPtScattering) {
-        float pTscatter = m_config.highland / m_config.maxPtScattering;
-        pT2scatter = pTscatter * pTscatter;
-      }
       // convert p(T) to p scaling by sin^2(theta) AND scale by 1/sin^4(theta)
       // from rad to deltaCotTheta
+      float p2scatterSigma = iHelixDiameter2 * sigmaSquaredSPtDependent;
+      if (!std::isinf(m_config.maxPtScattering)) {
+        // if pT > maxPtScattering, calculate allowed scattering angle using
+        // maxPtScattering instead of pt.
+        float pT = options.pTPerHelixRadius * std::sqrt(S2 / B2) / 2.;
+        if (pT > m_config.maxPtScattering) {
+          float pTscatterSigma =
+              (m_config.highland / m_config.maxPtScattering) *
+              m_config.sigmaScattering;
+          p2scatterSigma = pTscatterSigma * pTscatterSigma * iSinTheta2;
+        }
+      }
       // if deltaTheta larger than allowed scattering for calculated pT, skip
-      if (deltaCotTheta2 >
-          (error2 + (pT2scatter * iSinTheta2 * m_config.sigmaScattering *
-                     m_config.sigmaScattering))) {
+      if (deltaCotTheta2 > (error2 + p2scatterSigma)) {
         if (m_config.skipPreviousTopSP) {
           if (cotThetaB - cotThetaT < 0) {
             break;
@@ -431,11 +469,14 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       }
     }
 
-    if (!top_valid.empty()) {
-      m_config.seedFilter->filterSeeds_2SpFixed(
-          *bottom[b], middle, top_valid, curvatures, impactParameters,
-          seedFilterState, candidates_collector);
+    // continue if number of top SPs is smaller than minimum required for filter
+    if (top.size() < minCompatibleTopSPs) {
+      continue;
     }
+    m_config.seedFilter->filterSeeds_2SpFixed(
+        *bottom[b], middle, top_valid, curvatures, impactParameters,
+        seedFilterState, candidates_collector);
+
   }  // loop on bottoms
 }
 
@@ -710,6 +751,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
       if (rM > m_config.rMaxMiddle || rM < m_config.rMinMiddle) {
         continue;
       }
+    }
+
+    // remove all middle SPs outside phi and z region of interest
+    if (middle.z() > m_config.zMax || middle.z() < m_config.zMin) {
+      continue;
+    }
+    float spPhi = std::atan2(middle.y(), middle.x());
+    if (spPhi > m_config.phiMax || spPhi < m_config.phiMin) {
+      continue;
     }
 
     processFromMiddleSP(options, tree, out_cont, middle_p);

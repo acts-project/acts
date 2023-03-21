@@ -47,7 +47,9 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   std::vector<Seed<external_spacepoint_t>> outputVec;
 
   // Get SeedFinderConfig values
@@ -83,17 +85,26 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   int nSpB(0);
   int nSpT(0);
 
-  for (auto sp : middleSPs) {
-    nSpM++;
-    middleSPvec.push_back(sp);
+  {
+    auto& sp_collection = grid.at(middleSPs);
+    for (auto& sp : sp_collection) {
+      nSpM++;
+      middleSPvec.push_back(sp.get());
+    }
   }
-  for (auto sp : bottomSPs) {
-    nSpB++;
-    bottomSPvec.push_back(sp);
+  for (auto idx : bottomSPs) {
+    auto& sp_collection = grid.at(idx);
+    for (auto& sp : sp_collection) {
+      nSpB++;
+      bottomSPvec.push_back(sp.get());
+    }
   }
-  for (auto sp : topSPs) {
-    nSpT++;
-    topSPvec.push_back(sp);
+  for (std::size_t idx : topSPs) {
+    auto& sp_collection = grid.at(idx);
+    for (auto& sp : sp_collection) {
+      nSpT++;
+      topSPvec.push_back(sp.get());
+    }
   }
 
   CudaScalar<int> nSpM_cuda(&nSpM);
@@ -119,15 +130,15 @@ SeedFinder<external_spacepoint_t, Acts::Cuda>::createSeedsForGroup(
   };
 
   int mIdx(0);
-  for (auto sp : middleSPs) {
+  for (auto sp : middleSPvec) {
     fillMatrix(spMmat_cpu, mIdx, sp);
   }
   int bIdx(0);
-  for (auto sp : bottomSPs) {
+  for (auto sp : bottomSPvec) {
     fillMatrix(spBmat_cpu, bIdx, sp);
   }
   int tIdx(0);
-  for (auto sp : topSPs) {
+  for (auto sp : topSPvec) {
     fillMatrix(spTmat_cpu, tIdx, sp);
   }
 
