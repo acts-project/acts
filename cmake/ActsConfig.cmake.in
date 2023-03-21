@@ -70,9 +70,6 @@ endif()
 if(PluginTGeo IN_LIST Acts_COMPONENTS)
   find_dependency(ROOT @ROOT_VERSION@ CONFIG EXACT)
 endif()
-if(PluginOnnx IN_LIST Acts_COMPONENTS)
-  find_dependency(OnnxRuntime @OnnxRuntime_VERSION@ CONFIG EXACT)
-endif()
 
 # dependencies that we have built ourselves but cannot be
 # straightforwardly handed to cmake

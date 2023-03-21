@@ -9,7 +9,7 @@ find_library(
   PATHS ${onnxruntime_DIR}
   PATH_SUFFIXES lib lib32 lib64
   DOC "The ONNXRuntime library")
-  
+
 if(NOT OnnxRuntime_LIBRARY)
   message(FATAL_ERROR "onnxruntime library not found")
 else()
@@ -22,7 +22,7 @@ find_path(
   PATHS ${onnxruntime_DIR}
   PATH_SUFFIXES include include/onnxruntime
   DOC "The ONNXRuntime include directory")
-  
+
 if(NOT OnnxRuntime_INCLUDE_DIR)
   message(FATAL_ERROR "onnxruntime includes not found")
 else()
