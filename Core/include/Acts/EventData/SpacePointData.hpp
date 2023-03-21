@@ -152,9 +152,10 @@ inline void SpacePointData::resize(std::size_t n, bool resizeDynamic) {
 }
 
 inline void SpacePointData::clear() {
+  // mutable variables
   m_quality.clear();
   m_deltaR.clear();
-
+  // dynamicvariables
   m_topHalfStripLength.clear();
   m_bottomHalfStripLength.clear();
   m_topStripDirection.clear();
