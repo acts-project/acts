@@ -46,13 +46,6 @@ struct SeedFinderConfig {
   // radial bin size for filling space point grid
   float binSizeR = 1. * Acts::UnitConstants::mm;
 
-  // maximum capacity of SP dublets to avoid reallocating memory at each
-  // iteration. The capacity was optimized separately for bottom and top dublets
-  // based on the expected maximum number of selected SPs after
-  // getCompatibleDoublets cuts for high pile-up events
-  int bottomDubletCapacity = 200;
-  int topDubletCapacity = 450;
-
   // radial range for middle SP
   // variable range based on SP radius
   bool useVariableMiddleSPRange = false;
