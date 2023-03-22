@@ -37,11 +37,11 @@ struct LinCircle {
 /// @param[in] bottom Should be true if sp is a bottom SP.
 template <typename external_spacepoint_t>
 LinCircle transformCoordinates(
-    InternalSpacePoint<external_spacepoint_t>& sp,
+    const InternalSpacePoint<external_spacepoint_t>& sp,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom);
 
 template <typename external_spacepoint_t, typename callable_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp,
+LinCircle transformCoordinates(const external_spacepoint_t& sp,
                                const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
