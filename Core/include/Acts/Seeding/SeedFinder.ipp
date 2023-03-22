@@ -326,13 +326,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       // in the rotated frame the interaction point is positioned at x = -rM
       // and y ~= impactParam
       const float uIP = -1. / rM;
-      float vIP;
-      if (sign * yNewFrame > 0.) {
-        vIP = -vIPAbs;
-      } else {
-        vIP = vIPAbs;
-      }
-
+      const float vIP = (sign * yNewFrame > 0.) ? -vIPAbs : vIPAbs;
       // we can obtain aCoef as the slope dv/du of the linear function,
       // estimated using du and dv between the two SP bCoef is obtained by
       // inserting aCoef into the linear equation

@@ -63,7 +63,7 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 
   sp.setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
 
-  return fillLineCircle({cotTheta, iDeltaR, xNewFrame, yNewFrame, U, V, Er});
+  return fillLineCircle({cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame});
 }
 
 template <typename external_spacepoint_t>
@@ -124,28 +124,22 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
     //
     int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
     // cot_theta = (deltaZ/deltaR)
-    float cot_theta = deltaZ * iDeltaR * bottomFactor;
-    // VERY frequent (SP^3) access
-    LinCircle l{};
-    l.cotTheta = cot_theta;
-    l.iDeltaR = iDeltaR;
+    float cotTheta = deltaZ * iDeltaR * bottomFactor;
     // transformation of circle equation (x,y) into linear equation (u,v)
     // x^2 + y^2 - 2x_0*x - 2y_0*y = 0
     // is transformed into
     // 1 - 2x_0*u - 2y_0*v = 0
     // using the following m_U and m_V
     // (u = A + B*v); A and B are created later on
-    l.U = xNewFrame * iDeltaR2;
-    l.V = yNewFrame * iDeltaR2;
+    float U = xNewFrame * iDeltaR2;
+    float V = yNewFrame * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
-    l.Er = ((varianceZM + sp->varianceZ()) +
-            (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
-           iDeltaR2;
+    float Er = ((varianceZM + sp->varianceZ()) +
+                (cotTheta * cotTheta) * (varianceRM + sp->varianceR())) *
+               iDeltaR2;
 
-    l.x = xNewFrame;
-    l.y = yNewFrame;
-
-    linCircleVec[idx] = l;
+    linCircleVec[idx] =
+        fillLineCircle({cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame});
     spacePointData.setDeltaR(sp->index(),
                              std::sqrt(deltaR2 + (deltaZ * deltaZ)));
   }
@@ -156,6 +150,7 @@ inline LinCircle fillLineCircle(
   auto [cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame] =
       lineCircleVariables;
 
+  // VERY frequent (SP^3) access
   LinCircle l{};
   l.cotTheta = cotTheta;
   l.iDeltaR = iDeltaR;
