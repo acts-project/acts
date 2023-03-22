@@ -335,7 +335,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
 
     auto lb = linCircleBottom[b];
-    seedFilterState.zOrigin = lb.Zo;
     float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
     float Ub = lb.U;
@@ -475,6 +474,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     if (top.size() < minCompatibleTopSPs) {
       continue;
     }
+
+    seedFilterState.zOrigin = middle.z() - rM * lb.cotTheta;
 
     m_config.seedFilter->filterSeeds_2SpFixed(
         spacePointData, *bottom[b], middle, top_valid, curvatures,

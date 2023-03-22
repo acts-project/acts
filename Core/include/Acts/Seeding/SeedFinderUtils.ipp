@@ -128,8 +128,6 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
     // VERY frequent (SP^3) access
     LinCircle l{};
     l.cotTheta = cot_theta;
-    // location on z-axis of this SP-dublet
-    l.Zo = zM - rM * cot_theta;
     l.iDeltaR = iDeltaR;
     // transformation of circle equation (x,y) into linear equation (u,v)
     // x^2 + y^2 - 2x_0*x - 2y_0*y = 0
