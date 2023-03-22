@@ -237,7 +237,7 @@ class Navigator {
                const Vector3& dir, NavigationDirection navDir,
                const Surface* ssurface, const Surface* tsurface) {
       // Reset everything first
-      //*this = State();
+      *this = State();
 
       // Set the start, current and target objects
       startSurface = ssurface;
