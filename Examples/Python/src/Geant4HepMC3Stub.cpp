@@ -9,5 +9,5 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 
 namespace Acts::Python {
-void addGeant4HepMC3(Context& /*unused*/) {}
+void addGeant4HepMC3(Context& /*ctx*/) {}
 }  // namespace Acts::Python
