@@ -93,4 +93,20 @@ void VectorTrackContainer::ensureDynamicColumns_impl(
     }
   }
 }
+
+void VectorTrackContainer::reserve(IndexType size) {
+  m_tipIndex.reserve(size);
+
+  m_params.reserve(size);
+  m_cov.reserve(size);
+  m_referenceSurfaces.reserve(size);
+
+  m_nMeasurements.reserve(size);
+  m_nHoles.reserve(size);
+
+  for (auto& [key, vec] : m_dynamic) {
+    vec->reserve(size);
+  }
+}
+
 }  // namespace Acts

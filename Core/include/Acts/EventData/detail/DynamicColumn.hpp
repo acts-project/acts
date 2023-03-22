@@ -21,6 +21,7 @@ struct DynamicColumnBase {
 
   virtual void add() = 0;
   virtual void clear() = 0;
+  virtual void reserve(size_t size) = 0;
   virtual void erase(size_t i) = 0;
   virtual size_t size() const = 0;
   virtual void copyFrom(size_t dstIdx, const DynamicColumnBase& src,
@@ -44,6 +45,7 @@ struct DynamicColumn : public DynamicColumnBase {
 
   void add() override { m_vector.emplace_back(); }
   void clear() override { m_vector.clear(); }
+  void reserve(size_t size) override { m_vector.reserve(size); }
   void erase(size_t i) override { m_vector.erase(m_vector.begin() + i); }
   size_t size() const override { return m_vector.size(); }
 
@@ -82,6 +84,7 @@ struct DynamicColumn<bool> : public DynamicColumnBase {
   }
 
   void add() override { m_vector.emplace_back(); }
+  void reserve(size_t size) override { m_vector.reserve(size); }
   void clear() override { m_vector.clear(); }
   void erase(size_t i) override { m_vector.erase(m_vector.begin() + i); }
   size_t size() const override { return m_vector.size(); }

@@ -194,6 +194,8 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
   void ensureDynamicColumns_impl(
       const detail_vtc::VectorTrackContainerBase& other);
 
+  void reserve(IndexType size);
+
   // END INTERFACE
 };
 

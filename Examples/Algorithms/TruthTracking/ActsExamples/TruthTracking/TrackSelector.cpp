@@ -70,6 +70,7 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
   TrackContainer filteredTracks{trackContainer, tempTrackStateContainer};
   filteredTracks.ensureDynamicColumns(inputTracks);
 
+  trackContainer->reserve(inputTracks.size());
 
   ACTS_VERBOSE("Track container size before filtering: " << inputTracks.size());
 
