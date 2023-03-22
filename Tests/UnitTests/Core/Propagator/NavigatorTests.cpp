@@ -88,10 +88,10 @@ struct PropagatorState {
     };
 
     /// State resetter
-    void resetState(State& /*unused*/, const BoundVector& /*unused*/,
-                    const BoundSymMatrix& /*unused*/, const Surface& /*unused*/,
-                    const NavigationDirection /*unused*/,
-                    const double /*unused*/) const {}
+    void resetState(State& /*state*/, const BoundVector& /*boundParams*/,
+                    const BoundSymMatrix& /*cov*/, const Surface& /*surface*/,
+                    const NavigationDirection /*navDir*/,
+                    const double /*stepSize*/) const {}
 
     /// Global particle position accessor
     Vector3 position(const State& state) const {
@@ -149,9 +149,9 @@ struct PropagatorState {
       return state.stepSize.toString();
     }
 
-    Result<BoundState> boundState(State& state, const Surface& surface,
-                                  bool /*unused*/,
-                                  const FreeToBoundCorrection& /*unused*/
+    Result<BoundState> boundState(
+        State& state, const Surface& surface, bool /*transportCov*/,
+        const FreeToBoundCorrection& /*freeToBoundCorrection*/
     ) const {
       auto bound =
           BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
@@ -164,7 +164,7 @@ struct PropagatorState {
       return bState;
     }
 
-    CurvilinearState curvilinearState(State& state, bool /*unused*/
+    CurvilinearState curvilinearState(State& state, bool /*transportCov*/
     ) const {
       CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
                                             state.q);
@@ -185,8 +185,8 @@ struct PropagatorState {
     void transportCovarianceToCurvilinear(State& /*state*/) const {}
 
     void transportCovarianceToBound(
-        State& /*unused*/, const Surface& /*surface*/,
-        const FreeToBoundCorrection& /*unused*/) const {}
+        State& /*state*/, const Surface& /*surface*/,
+        const FreeToBoundCorrection& /*freeToBoundCorrection*/) const {}
 
     Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
       // get the field from the cell
