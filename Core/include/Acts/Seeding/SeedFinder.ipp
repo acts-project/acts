@@ -252,13 +252,13 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       // ratio Z/R (forward angle) of space point duplet
-      const float cotTheta = deltaZ / deltaR;
+      float cotTheta = deltaZ / deltaR;
       if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
         continue;
       }
 
       // check if duplet origin on z axis within collision region
-      const float zOrigin = zM - rM * cotTheta;
+      float zOrigin = zM - rM * cotTheta;
       if (zOrigin < m_config.collisionRegionMin ||
           zOrigin > m_config.collisionRegionMax) {
         continue;
@@ -291,10 +291,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
            (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
           iDeltaR2;
 
+      cotTheta = deltaZ * iDeltaR;
+      zOrigin = zM - rM * cotTheta;
+
       // continue if interactionPointCut is disabled
       if (not m_config.interactionPointCut) {
-        //        float cot_theta = deltaZ * iDeltaR; // test this
-
         // fill output vectors
         linCircleVec.push_back(fillLineCircle(
             {cotTheta, zOrigin, iDeltaR, xNewFrame, yNewFrame, uT, vT, Er}));
