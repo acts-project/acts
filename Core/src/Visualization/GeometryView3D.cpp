@@ -28,6 +28,7 @@
 #include <unistd.h>
 
 namespace {
+
 std::string joinPaths(const std::string& a, const std::string& b) {
   if (b.substr(0, 1) == "/" || a.empty()) {
     return b;
@@ -50,13 +51,13 @@ std::string getWorkingDirectory() {
 
 void Acts::GeometryView3D::drawPolyhedron(IVisualization3D& helper,
                                           const Polyhedron& polyhedron,
-                                          const ViewConfig& ViewConfig) {
-  if (ViewConfig.visible) {
-    if (not ViewConfig.triangulate) {
-      helper.faces(polyhedron.vertices, polyhedron.faces, ViewConfig.color);
+                                          const ViewConfig& viewConfig) {
+  if (viewConfig.visible) {
+    if (not viewConfig.triangulate) {
+      helper.faces(polyhedron.vertices, polyhedron.faces, viewConfig.color);
     } else {
       helper.faces(polyhedron.vertices, polyhedron.triangularMesh,
-                   ViewConfig.color);
+                   viewConfig.color);
     }
   }
 }
@@ -65,13 +66,13 @@ void Acts::GeometryView3D::drawSurface(IVisualization3D& helper,
                                        const Surface& surface,
                                        const GeometryContext& gctx,
                                        const Transform3& transform,
-                                       const ViewConfig& ViewConfig) {
+                                       const ViewConfig& viewConfig) {
   Polyhedron surfaceHedron =
-      surface.polyhedronRepresentation(gctx, ViewConfig.nSegments);
+      surface.polyhedronRepresentation(gctx, viewConfig.nSegments);
   if (not transform.isApprox(Transform3::Identity())) {
     surfaceHedron.move(transform);
   }
-  drawPolyhedron(helper, surfaceHedron, ViewConfig);
+  drawPolyhedron(helper, surfaceHedron, viewConfig);
 }
 
 void Acts::GeometryView3D::drawSurfaceArray(
@@ -191,42 +192,23 @@ void Acts::GeometryView3D::drawPortal(IVisualization3D& helper,
 
 void Acts::GeometryView3D::drawDetectorVolume(
     IVisualization3D& helper, const Experimental::DetectorVolume& volume,
-    const GeometryContext& gctx, bool drawSurfaces, const Transform3& transform,
+    const GeometryContext& gctx, const Transform3& transform,
     const ViewConfig& connected, const ViewConfig& unconnected,
     const ViewConfig& viewConfig) {
+  // draw the surfaces of the mother volume
+  for (auto surface : volume.surfaces()) {
+    drawSurface(helper, *surface, gctx, transform, viewConfig);
+  }
+
   // draw the envelope first
-  auto portals = volume.portals();
-  for (auto portal : portals) {
+  for (auto portal : volume.portals()) {
     drawPortal(helper, *portal, gctx, transform, connected, unconnected);
   }
 
-  // draw the surfaces of the mother volume
-  if (drawSurfaces) {
-    auto surfaces = volume.surfaces();
-    for (auto surface : surfaces) {
-      drawSurface(helper, *surface, gctx, transform, viewConfig);
-    }
-  }
-  // recurse if there are subvolumes, otherwise draw the portals and the
-  // surfaces if tag is true
-  auto subvolumes = volume.volumes();
-  for (auto subvolume : subvolumes) {
-    if (!subvolume->volumes().empty()) {
-      drawDetectorVolume(helper, *subvolume, gctx, drawSurfaces, transform,
-                         connected, unconnected, viewConfig);
-    } else {
-      auto sub_portals = subvolume->portals();
-      for (auto sub_portal : sub_portals) {
-        drawPortal(helper, *sub_portal, gctx, transform, connected,
-                   unconnected);
-      }
-      if (drawSurfaces) {
-        auto sub_surfaces = subvolume->surfaces();
-        for (auto sub_surface : sub_surfaces) {
-          drawSurface(helper, *sub_surface, gctx, transform, viewConfig);
-        }
-      }
-    }
+  // recurse if there are subvolumes
+  for (auto subvolume : volume.volumes()) {
+    drawDetectorVolume(helper, *subvolume, gctx, transform, connected,
+                       unconnected, viewConfig);
   }
 }
 
