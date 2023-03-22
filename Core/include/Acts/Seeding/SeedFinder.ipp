@@ -274,7 +274,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
       const float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
 
-      const float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
+      const float deltaR2 = (deltaX * deltaX + deltaY * deltaY);
       const float iDeltaR2 = 1. / deltaR2;
 
       // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
@@ -286,14 +286,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       // continue if interactionPointCut is disabled
       if (not m_config.interactionPointCut) {
+        const float iDeltaR = std::sqrt(iDeltaR2);
+        cotTheta = deltaZ * iDeltaR;
+
         // error term for sp-pair without correlation of middle space point
         const float Er =
             ((varianceZM + otherSP->varianceZ()) +
              (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
             iDeltaR2;
-
-        const float iDeltaR = std::sqrt(iDeltaR2);
-        // cotTheta = deltaZ * iDeltaR;
 
         // fill output vectors
         linCircleVec.push_back(fillLineCircle(
@@ -305,14 +305,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       if (std::abs(rM * yNewFrame) <= sign * m_config.impactMax * xNewFrame) {
+        const float iDeltaR = std::sqrt(iDeltaR2);
+        cotTheta = deltaZ * iDeltaR;
+
         // error term for sp-pair without correlation of middle space point
         const float Er =
             ((varianceZM + otherSP->varianceZ()) +
              (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
             iDeltaR2;
-
-        const float iDeltaR = std::sqrt(iDeltaR2);
-        // cotTheta = deltaZ * iDeltaR;
 
         // fill output vectors
         linCircleVec.push_back(fillLineCircle(
@@ -345,14 +345,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         continue;
       }
 
+      const float iDeltaR = std::sqrt(iDeltaR2);
+      cotTheta = deltaZ * iDeltaR;
+
       // error term for sp-pair without correlation of middle space point
       const float Er =
           ((varianceZM + otherSP->varianceZ()) +
            (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
           iDeltaR2;
-
-      const float iDeltaR = std::sqrt(iDeltaR2);
-      // cotTheta = deltaZ * iDeltaR;
 
       // fill output vectors
       linCircleVec.push_back(fillLineCircle(
