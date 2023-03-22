@@ -200,7 +200,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float& varianceZM = mediumSP.varianceZ();
   const float cosPhiM = xM / rM;
   const float sinPhiM = yM / rM;
-  float vIPAbs;
+  float vIPAbs = 0;
   if (m_config.interactionPointCut) {
     vIPAbs = m_config.impactMax / (rM * rM);
   }
