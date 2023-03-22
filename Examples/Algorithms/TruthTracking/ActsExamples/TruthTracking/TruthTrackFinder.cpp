@@ -22,7 +22,7 @@ using namespace ActsExamples;
 
 TruthTrackFinder::TruthTrackFinder(const Config& config,
                                    Acts::Logging::Level level)
-    : BareAlgorithm("TruthTrackFinder", level), m_cfg(config) {
+    : IAlgorithm("TruthTrackFinder", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }

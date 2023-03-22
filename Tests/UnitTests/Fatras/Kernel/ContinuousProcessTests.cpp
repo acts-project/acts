@@ -27,8 +27,8 @@ namespace {
 struct MockMakeChildren {
   template <typename generator_t>
   std::array<ActsFatras::Particle, 4> operator()(
-      generator_t & /*unused*/, const Acts::MaterialSlab & /*unused*/,
-      ActsFatras::Particle & /*unused*/) const {
+      generator_t & /*generator*/, const Acts::MaterialSlab & /*slab*/,
+      ActsFatras::Particle & /*particle*/) const {
     // create daughter particles
     return {
         Particle().setAbsoluteMomentum(1_GeV),
@@ -41,7 +41,7 @@ struct MockMakeChildren {
 
 /// Mock particle selector that selects everything
 struct MockEverything {
-  bool operator()(const Particle & /*unused*/) const { return true; }
+  bool operator()(const Particle & /*particle*/) const { return true; }
 };
 
 /// Mock particle selector for particles with momenta equal or above 10GeV.

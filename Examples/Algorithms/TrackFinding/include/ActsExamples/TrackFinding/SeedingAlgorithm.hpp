@@ -13,8 +13,12 @@
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
 #include <vector>
@@ -25,7 +29,7 @@
 namespace ActsExamples {
 
 /// Construct track seeds from space points.
-class SeedingAlgorithm final : public BareAlgorithm {
+class SeedingAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
@@ -37,8 +41,6 @@ class SeedingAlgorithm final : public BareAlgorithm {
     std::vector<std::string> inputSpacePoints;
     /// Output track seed collection.
     std::string outputSeeds;
-    /// Output proto track collection.
-    std::string outputProtoTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
     Acts::SeedFinderConfig< typename Acts::SpacePointContainer<
@@ -52,8 +54,8 @@ class SeedingAlgorithm final : public BareAlgorithm {
     bool allowSeparateRMax = false;
 
     // vector containing the map of z bins in the top and bottom layers
-    std::vector<std::pair<int, int> > zBinNeighborsTop;
-    std::vector<std::pair<int, int> > zBinNeighborsBottom;
+    std::vector<std::pair<int, int>> zBinNeighborsTop;
+    std::vector<std::pair<int, int>> zBinNeighborsBottom;
     // number of phiBin neighbors at each side of the current bin that will be
     // used to search for SPs
     int numPhiNeighbors = 0;
@@ -78,7 +80,15 @@ class SeedingAlgorithm final : public BareAlgorithm {
   Acts::SeedFinder< typename Acts::SpacePointContainer<
 		      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
 		      Acts::detail_tc::RefHolder>::SpacePointProxyType > m_seedFinder;
+  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_bottomBinFinder;
+  std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_topBinFinder;
   Config m_cfg;
+
+  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
+      m_inputSpacePoints{};
+
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this, "ProtoTracks"};
 };
 
 }  // namespace ActsExamples

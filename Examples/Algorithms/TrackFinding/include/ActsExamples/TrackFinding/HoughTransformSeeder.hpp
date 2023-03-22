@@ -76,7 +76,7 @@
 #include "Acts/Utilities/Result.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/HoughVectors.hpp"
 
 #include <string>
@@ -139,7 +139,7 @@ thread_local std::vector<std::shared_ptr<HoughMeasurementStruct>>
     houghMeasurementStructs;
 
 /// Construct track seeds from space points.
-class HoughTransformSeeder final : public BareAlgorithm {
+class HoughTransformSeeder final : public IAlgorithm {
  public:
   struct Config {
     /// Input space point collections.
@@ -156,6 +156,7 @@ class HoughTransformSeeder final : public BareAlgorithm {
     std::string outputProtoTracks;
     /// Input source links collection.
     std::string inputSourceLinks;
+    /// Tracking geometry required to access global-to-local transforms.
     std::shared_ptr<const Acts::TrackingGeometry> trackingGeometry;
     /// For which part of the detector geometry should space points be created.
     ///

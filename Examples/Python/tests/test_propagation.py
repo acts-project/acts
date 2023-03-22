@@ -4,12 +4,12 @@ import acts
 import acts.examples
 
 
-class AssertCollectionExistsAlg(acts.examples.BareAlgorithm):
+class AssertCollectionExistsAlg(acts.examples.IAlgorithm):
     events_seen = 0
 
     def __init__(self, collection, *args, **kwargs):
         self.collection = collection
-        acts.examples.BareAlgorithm.__init__(self, *args, **kwargs)
+        acts.examples.IAlgorithm.__init__(self, *args, **kwargs)
 
     def execute(self, ctx):
         assert ctx.eventStore.exists(self.collection)

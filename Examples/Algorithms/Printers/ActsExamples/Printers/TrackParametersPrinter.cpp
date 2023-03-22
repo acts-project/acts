@@ -15,7 +15,7 @@
 
 ActsExamples::TrackParametersPrinter::TrackParametersPrinter(
     const Config& cfg, Acts::Logging::Level level)
-    : BareAlgorithm("TrackParametersPrinter", level), m_cfg(cfg) {
+    : IAlgorithm("TrackParametersPrinter", level), m_cfg(cfg) {
   if (m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument(
         "Input track parameters collection is not configured");

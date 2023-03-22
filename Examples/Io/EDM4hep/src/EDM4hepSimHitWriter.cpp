@@ -41,7 +41,7 @@ EDM4hepSimHitWriter::EDM4hepSimHitWriter(
   m_writer.registerForWrite(m_cfg.outputSimTrackerHits);
 }
 
-ActsExamples::ProcessCode EDM4hepSimHitWriter::endRun() {
+ActsExamples::ProcessCode EDM4hepSimHitWriter::finalize() {
   m_writer.finish();
 
   return ProcessCode::SUCCESS;

@@ -8,7 +8,9 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <limits>
 #include <string>
@@ -16,7 +18,7 @@
 namespace ActsExamples {
 
 /// Select tracks by applying some selection cuts.
-class TrackSelector final : public BareAlgorithm {
+class TrackSelector final : public IAlgorithm {
  public:
   struct Config {
     /// Input track collection.
@@ -53,6 +55,11 @@ class TrackSelector final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<ConstTrackContainer> m_inputTrackContainer{this,
+                                                            "InputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTrackContainer{this,
+                                                              "OutputTracks"};
 };
 
 }  // namespace ActsExamples

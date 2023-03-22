@@ -21,7 +21,7 @@
 
 ActsExamples::TrackModifier::TrackModifier(const Config& config,
                                            Acts::Logging::Level level)
-    : BareAlgorithm("TrackModifier", level), m_cfg(config) {
+    : IAlgorithm("TrackModifier", level), m_cfg(config) {
   if (m_cfg.inputTrajectories.empty() == m_cfg.inputTrackParameters.empty()) {
     throw std::invalid_argument(
         "Exactly one of trajectories or track parameters input must be set");

@@ -30,7 +30,7 @@ static inline std::string to_string(std::vector<T> v);
 
 ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
     ActsExamples::HoughTransformSeeder::Config cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("HoughTransformSeeder", lvl),
+    : ActsExamples::IAlgorithm("HoughTransformSeeder", lvl),
       m_cfg(std::move(cfg)),
       m_logger(Acts::getDefaultLogger("HoughTransformSeeder", lvl)) {
   // require spacepoints or input measurements (or both), but at least one kind

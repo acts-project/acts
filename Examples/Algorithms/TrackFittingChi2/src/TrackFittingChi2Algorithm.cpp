@@ -17,7 +17,7 @@
 
 ActsExamples::TrackFittingChi2Algorithm::TrackFittingChi2Algorithm(
     Config config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFittingChi2Algorithm", level),
+    : ActsExamples::IAlgorithm("TrackFittingChi2Algorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -38,23 +38,26 @@ ActsExamples::TrackFittingChi2Algorithm::TrackFittingChi2Algorithm(
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing output track collection");
   }
+
+  m_measurementReadHandle.initialize(m_cfg.inputMeasurements);
+  m_sourceLinkReadHandle.initialize(m_cfg.inputSourceLinks);
+  m_protoTracksReadHandle.initialize(m_cfg.inputProtoTracks);
+  m_initialParametersReadHandle.initialize(m_cfg.inputInitialTrackParameters);
+  m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& protoTracks =
-      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
-      m_cfg.inputInitialTrackParameters);
+  const auto& measurements = m_measurementReadHandle(ctx);
+  const auto& sourceLinks = m_sourceLinkReadHandle(ctx);
+  const auto& protoTracks = m_protoTracksReadHandle(ctx);
+  const auto& initialParameters = m_initialParametersReadHandle(ctx);
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
-    ACTS_FATAL("Inconsistent number of proto tracks and parameters");
+    ACTS_FATAL("Inconsistent number of proto tracks and parameters "
+               << protoTracks.size() << " vs " << initialParameters.size());
     return ProcessCode::ABORT;
   }
 
@@ -153,7 +156,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingChi2Algorithm::execute(
       std::make_shared<Acts::ConstVectorMultiTrajectory>(
           std::move(*trackStateContainer))};
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
+  m_outputTracks(ctx, std::move(constTracks));
   // TODO: add chi2 values as output?
   return ActsExamples::ProcessCode::SUCCESS;
 }

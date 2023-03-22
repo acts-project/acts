@@ -71,7 +71,7 @@ ActsExamples::RootParticleWriter::~RootParticleWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootParticleWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootParticleWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();

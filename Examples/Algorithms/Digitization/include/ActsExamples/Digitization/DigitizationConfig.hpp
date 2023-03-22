@@ -17,7 +17,6 @@
 #include "ActsExamples/Digitization/DigitizationConfig.hpp"
 #include "ActsExamples/Digitization/Smearers.hpp"
 #include "ActsExamples/Digitization/SmearingConfig.hpp"
-#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/UncorrelatedHitSmearer.hpp"
 
@@ -56,8 +55,7 @@ struct GeometricConfig {
   bool digital = false;
 
   /// Charge generation (configurable via the chargeSmearer)
-  Acts::ActsScalar charge(Acts::ActsScalar path, Acts::ActsScalar /*unused*/,
-                          RandomEngine &rng) const {
+  Acts::ActsScalar charge(Acts::ActsScalar path, RandomEngine &rng) const {
     if (not chargeSmearer) {
       return path;
     }
@@ -72,27 +70,18 @@ struct GeometricConfig {
   /// Position and Covariance generation (currently not implemented)
   /// Takes as an argument the clsuter size and an random engine
   /// @return a vector of uncorrelated covariance values
-  std::vector<Acts::ActsScalar> variances(size_t /*unused*/, size_t /*unused*/,
-                                          RandomEngine & /*unused*/) const {
+  std::vector<Acts::ActsScalar> variances(size_t /*size0*/, size_t /*size1*/,
+                                          RandomEngine & /*rng*/) const {
     return {};
   };
 
   /// Drift generation (currently not implemented)
   /// Takes as an argument the position, and a random engine
   ///  @return drift direction in local 3D coordinates
-  Acts::Vector3 drift(const Acts::Vector3 & /*unused*/,
-                      RandomEngine & /*unused*/) const {
+  Acts::Vector3 drift(const Acts::Vector3 & /*position*/,
+                      RandomEngine & /*rng*/) const {
     return Acts::Vector3(0., 0., 0.);
   };
-
-  /// Equality operator for basic parameters
-  /// check if the geometry config can be reused from
-  /// @param other, @return a boolean to indicate this
-  bool operator==(const GeometricConfig &other) const {
-    return (indices == other.indices and segmentation == other.segmentation and
-            thickness == other.thickness and threshold == other.threshold and
-            digital == other.digital);
-  }
 };
 
 /// Configuration struct for the Digitization algorithm
@@ -103,15 +92,6 @@ struct GeometricConfig {
 struct DigiComponentsConfig {
   GeometricConfig geometricDigiConfig;
   SmearingConfig smearingDigiConfig = {};
-
-  /// Equality operator to check if a digitization configuration
-  /// can be reused from @param other
-  ///
-  /// @return a boolean flag indicating equality
-  bool operator==(const DigiComponentsConfig &other) const {
-    return (geometricDigiConfig == other.geometricDigiConfig and
-            smearingDigiConfig == other.smearingDigiConfig);
-  }
 };
 
 class DigitizationConfig {
