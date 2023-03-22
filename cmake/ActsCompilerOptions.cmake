@@ -11,8 +11,10 @@ set(ACTS_CXX_FLAGS_RELEASE "")
 set(ACTS_CXX_FLAGS_RELWITHDEBINFO "")
 
 set(ACTS_CXX_STANDARD_FEATURE cxx_std_17)
-if(${CMAKE_CXX_STANDARD} GREATER 17)
-  set(ACTS_CXX_STANDARD_FEATURE "cxx_std_${CMAKE_CXX_STANDARD}")
+if(DEFINED CMAKE_CXX_STANDARD)
+  if(${CMAKE_CXX_STANDARD} GREATER 17)
+    set(ACTS_CXX_STANDARD_FEATURE "cxx_std_${CMAKE_CXX_STANDARD}")
+  endif()
 endif()
 
 # This adds some useful conversion checks like float-to-bool, float-to-int, etc.
