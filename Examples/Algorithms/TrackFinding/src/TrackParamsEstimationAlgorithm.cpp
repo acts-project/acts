@@ -35,6 +35,9 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
     throw std::invalid_argument("Missing magnetic field");
   }
 
+  m_inputSeeds.initialize(m_cfg.inputSeeds);
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
+
   // Set up the track parameters covariance (the same for all tracks)
   m_covariance(Acts::eBoundLoc0, Acts::eBoundLoc0) =
       m_cfg.initialVarInflation[Acts::eBoundLoc0] * cfg.sigmaLoc0 *
@@ -58,7 +61,7 @@ ActsExamples::TrackParamsEstimationAlgorithm::TrackParamsEstimationAlgorithm(
 
 ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  auto const& seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
+  auto const& seeds = m_inputSeeds(ctx);
   ACTS_VERBOSE("Read " << seeds.size() << " seeds");
 
   TrackParametersContainer trackParameters;
@@ -111,6 +114,6 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
   ACTS_VERBOSE("Estimated " << trackParameters.size() << " track parameters");
 
-  ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(trackParameters));
+  m_outputTrackParameters(ctx, std::move(trackParameters));
   return ProcessCode::SUCCESS;
 }

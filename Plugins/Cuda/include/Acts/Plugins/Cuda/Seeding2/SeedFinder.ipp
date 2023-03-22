@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -81,7 +81,10 @@ template <typename external_spacepoint_t>
 template <typename sp_range_t>
 std::vector<Seed<external_spacepoint_t>>
 SeedFinder<external_spacepoint_t>::createSeedsForGroup(
-    sp_range_t bottomSPs, sp_range_t middleSPs, sp_range_t topSPs) const {
+    Acts::SpacePointData& spacePointData,
+    Acts::SpacePointGrid<external_spacepoint_t>& grid,
+    const sp_range_t& bottomSPs, const std::size_t middleSPs,
+    const sp_range_t& topSPs) const {
   // Create an empty vector, to be returned already early on when no seeds can
   // be constructed.
   std::vector<Seed<external_spacepoint_t>> outputVec;
@@ -91,20 +94,29 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   //---------------------------------
 
   // Create more convenient vectors out of the space point containers.
-  auto spVecMaker = [](sp_range_t spRange) {
+  auto spVecMaker = [&grid](const sp_range_t& spRange) {
     std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> result;
-    for (auto* sp : spRange) {
-      result.push_back(sp);
+    for (std::size_t idx : spRange) {
+      auto& collection = grid.at(idx);
+      for (auto& sp : collection) {
+        result.push_back(sp.get());
+      }
     }
     return result;
   };
 
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> bottomSPVec(
       spVecMaker(bottomSPs));
-  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPVec(
-      spVecMaker(middleSPs));
   std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> topSPVec(
       spVecMaker(topSPs));
+
+  std::vector<Acts::InternalSpacePoint<external_spacepoint_t>*> middleSPVec;
+  {
+    auto& collection = grid.at(middleSPs);
+    for (auto& sp : collection) {
+      middleSPVec.push_back(sp.get());
+    }
+  }
 
   // If either one of them is empty, we have nothing to find.
   if ((middleSPVec.size() == 0) || (bottomSPVec.size() == 0) ||
@@ -202,7 +214,7 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
   auto triplet_end = tripletCandidates.end();
   for (; triplet_itr != triplet_end; ++triplet_itr, ++middleIndex) {
     std::vector<typename CandidatesForMiddleSp<
-        InternalSpacePoint<external_spacepoint_t>>::value_type>
+        const InternalSpacePoint<external_spacepoint_t>>::value_type>
         candidates;
 
     auto& middleSP = *(middleSPVec[middleIndex]);
@@ -216,11 +228,12 @@ SeedFinder<external_spacepoint_t>::createSeedsForGroup(
     }
     std::sort(
         candidates.begin(), candidates.end(),
-        CandidatesForMiddleSp<
-            InternalSpacePoint<external_spacepoint_t>>::descendingByQuality);
+        CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>::
+            descendingByQuality);
     std::size_t numQualitySeeds = 0;  // not used but needs to be fixed
     m_commonConfig.seedFilter->filterSeeds_1SpFixed(
-        candidates, numQualitySeeds, std::back_inserter(outputVec));
+        spacePointData, candidates, numQualitySeeds,
+        std::back_inserter(outputVec));
   }
 
   // Free up all allocated device memory.

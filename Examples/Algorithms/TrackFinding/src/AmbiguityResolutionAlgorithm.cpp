@@ -57,7 +57,7 @@ std::vector<std::size_t> computeSharedHits(
       }
 
       const std::size_t indexHit =
-          state.uncalibratedSourceLink()
+          state.getUncalibratedSourceLink()
               .template get<ActsExamples::IndexSourceLink>()
               .index();
 
@@ -80,7 +80,7 @@ std::vector<std::size_t> computeSharedHits(
       }
 
       const std::size_t indexHit =
-          state.uncalibratedSourceLink()
+          state.getUncalibratedSourceLink()
               .template get<ActsExamples::IndexSourceLink>()
               .index();
 

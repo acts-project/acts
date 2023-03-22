@@ -82,19 +82,19 @@ template <typename trajectory_t>
 Acts::BoundVariantMeasurement testSourceLinkCalibratorReturn(
     const GeometryContext& /*gctx*/,
     typename trajectory_t::TrackStateProxy trackState) {
-  const TestSourceLink& sl =
-      trackState.uncalibratedSourceLink().template get<TestSourceLink>();
+  TestSourceLink sl =
+      trackState.getUncalibratedSourceLink().template get<TestSourceLink>();
   if ((sl.indices[0] != Acts::eBoundSize) and
       (sl.indices[1] != Acts::eBoundSize)) {
     auto meas =
-        makeMeasurement(trackState.uncalibratedSourceLink(), sl.parameters,
+        makeMeasurement(trackState.getUncalibratedSourceLink(), sl.parameters,
                         sl.covariance, sl.indices[0], sl.indices[1]);
     trackState.allocateCalibrated(2);
     trackState.setCalibrated(meas);
     return meas;
   } else if (sl.indices[0] != Acts::eBoundSize) {
     auto meas = makeMeasurement(
-        trackState.uncalibratedSourceLink(), sl.parameters.head<1>(),
+        trackState.getUncalibratedSourceLink(), sl.parameters.head<1>(),
         sl.covariance.topLeftCorner<1, 1>(), sl.indices[0]);
     trackState.allocateCalibrated(1);
     trackState.setCalibrated(meas);
