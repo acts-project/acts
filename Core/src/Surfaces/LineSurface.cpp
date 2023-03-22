@@ -85,7 +85,7 @@ std::string Acts::LineSurface::name() const {
 }
 
 Acts::RotationMatrix3 Acts::LineSurface::referenceFrame(
-    const GeometryContext& gctx, const Vector3& /*unused*/,
+    const GeometryContext& gctx, const Vector3& /*position*/,
     const Vector3& momentum) const {
   RotationMatrix3 mFrame;
   const auto& tMatrix = transform(gctx).matrix();
@@ -100,7 +100,7 @@ Acts::RotationMatrix3 Acts::LineSurface::referenceFrame(
   return mFrame;
 }
 
-double Acts::LineSurface::pathCorrection(const GeometryContext& /*unused*/,
+double Acts::LineSurface::pathCorrection(const GeometryContext& /*gctx*/,
                                          const Vector3& /*pos*/,
                                          const Vector3& /*mom*/) const {
   return 1.;
