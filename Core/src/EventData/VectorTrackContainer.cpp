@@ -71,4 +71,26 @@ void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
   }
 }
 
+void VectorTrackContainer::copyDynamicFrom_impl(
+    IndexType dstIdx, const VectorTrackContainerBase& src, IndexType srcIdx) {
+  for (const auto& [key, value] : src.m_dynamic) {
+    auto it = m_dynamic.find(key);
+    if (it == m_dynamic.end()) {
+      throw std::invalid_argument{
+          "Destination container does not have matching dynamic column"};
+    }
+
+    it->second->copyFrom(dstIdx, *value, srcIdx);
+  }
+}
+
+void VectorTrackContainer::ensureDynamicColumns_impl(
+    const detail_vtc::VectorTrackContainerBase& other) {
+  for (auto& [key, value] : other.m_dynamic) {
+    if (m_dynamic.find(key) == m_dynamic.end()) {
+      auto col = value->clone(true);
+      m_dynamic[key] = std::move(col);
+    }
+  }
+}
 }  // namespace Acts
