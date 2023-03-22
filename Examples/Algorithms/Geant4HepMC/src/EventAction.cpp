@@ -142,13 +142,13 @@ EventAction::~EventAction() {
   s_instance = nullptr;
 }
 
-void EventAction::BeginOfEventAction(const G4Event* /*unused*/) {
+void EventAction::BeginOfEventAction(const G4Event* /*event*/) {
   SteppingAction::instance()->clear();
   m_event = ::HepMC3::GenEvent(::HepMC3::Units::GEV, ::HepMC3::Units::MM);
   m_event.add_beam_particle(std::make_shared<::HepMC3::GenParticle>());
 }
 
-void EventAction::EndOfEventAction(const G4Event* /*unused*/) {
+void EventAction::EndOfEventAction(const G4Event* /*event*/) {
   // Fast exit if the event is empty
   if (m_event.vertices().empty()) {
     return;
