@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
@@ -51,6 +52,7 @@ class SeedFilter {
 
   /// Create InternalSeeds for the all seeds with the same bottom and middle
   /// space point and discard all others.
+  /// @param spacePointData Auxiliary variables used by the seeding
   /// @param bottomSP fixed bottom space point
   /// @param middleSP fixed middle space point
   /// @param topSpVec vector containing all space points that may be compatible
@@ -60,35 +62,42 @@ class SeedFilter {
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
   virtual void filterSeeds_2SpFixed(
-      InternalSpacePoint<external_spacepoint_t>& bottomSP,
-      InternalSpacePoint<external_spacepoint_t>& middleSP,
-      std::vector<InternalSpacePoint<external_spacepoint_t>*>& topSpVec,
+      Acts::SpacePointData& spacePointData,
+      const InternalSpacePoint<external_spacepoint_t>& bottomSP,
+      const InternalSpacePoint<external_spacepoint_t>& middleSP,
+      const std::vector<const InternalSpacePoint<external_spacepoint_t>*>&
+          topSpVec,
       const std::vector<float>& invHelixDiameterVec,
       const std::vector<float>& impactParametersVec,
       SeedFilterState& seedFilterState,
-      CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
+      CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector) const;
 
   /// Filter seeds once all seeds for one middle space point have been created
+  /// @param spacePointData Auxiliary variables used by the seeding
   /// @param candidates_collector collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
-      CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>&
+      Acts::SpacePointData& spacePointData,
+      CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>&
           candidates_collector,
       std::size_t& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;
 
   /// Filter seeds once all seeds for one middle space point have been created
+  /// @param spacePointData Auxiliary variables used by the seeding
   /// @param candidates collection of seed candidates
   /// @param numQualitySeeds number of high quality seeds in seed confirmation
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
+      Acts::SpacePointData& spacePointData,
       std::vector<typename CandidatesForMiddleSp<
-          InternalSpacePoint<external_spacepoint_t>>::value_type>& candidates,
+          const InternalSpacePoint<external_spacepoint_t>>::value_type>&
+          candidates,
       std::size_t& numQualitySeeds,
       std::back_insert_iterator<std::vector<Seed<external_spacepoint_t>>> outIt)
       const;

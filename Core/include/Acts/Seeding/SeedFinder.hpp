@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
@@ -20,6 +21,7 @@
 #include "Acts/Seeding/SpacePointGrid.hpp"
 
 #include <array>
+#include <limits>
 #include <list>
 #include <map>
 #include <memory>
@@ -48,12 +50,12 @@ class SeedFinder {
     std::vector<LinCircle> linCircleTop;
 
     // create vectors here to avoid reallocation in each loop
-    std::vector<InternalSpacePoint<external_spacepoint_t>*> topSpVec;
+    std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+    CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
         candidates_collector;
 
     // managing doublet candidates
@@ -61,6 +63,9 @@ class SeedFinder {
         bottomNeighbours;
     boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>
         topNeighbours;
+
+    // Adding space point info
+    Acts::SpacePointData spacePointData;
   };
 
   /// The only constructor. Requires a config object.
@@ -90,7 +95,7 @@ class SeedFinder {
   template <template <typename...> typename container_t, typename sp_range_t>
   void createSeedsForGroup(
       const Acts::SeedFinderOptions& options, SeedingState& state,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       std::back_insert_iterator<container_t<Seed<external_spacepoint_t>>> outIt,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs,
@@ -118,7 +123,7 @@ class SeedFinder {
   template <typename sp_range_t>
   std::vector<Seed<external_spacepoint_t>> createSeedsForGroup(
       const Acts::SeedFinderOptions& options,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       const sp_range_t& bottomSPs, const std::size_t middleSPs,
       const sp_range_t& topSPs) const;
 
@@ -126,14 +131,15 @@ class SeedFinder {
   template <typename out_range_t>
   void getCompatibleDoublets(
       const Acts::SeedFinderOptions& options,
-      Acts::SpacePointGrid<external_spacepoint_t>& grid,
+      const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       boost::container::small_vector<Acts::Neighbour<external_spacepoint_t>, 9>&
           otherSPs,
       const InternalSpacePoint<external_spacepoint_t>& mediumSP,
       out_range_t& outVec, const float& deltaRMinSP, const float& deltaRMaxSP,
       bool isBottom) const;
 
-  void filterCandidates(InternalSpacePoint<external_spacepoint_t>& SpM,
+  void filterCandidates(Acts::SpacePointData& spacePointData,
+                        const InternalSpacePoint<external_spacepoint_t>& SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;
