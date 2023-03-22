@@ -45,19 +45,6 @@ LinCircle transformCoordinates(external_spacepoint_t& sp,
                                const external_spacepoint_t& spM, bool bottom,
                                callable_t&& extractFunction);
 
-/// @brief Transform two spacepoints to a u-v space circle.
-///
-/// This function is a non-vectorized version of @a transformCoordinates.
-///
-/// @tparam external_spacepoint_t The external spacepoint type.
-///
-/// @param[in] sp The first spacepoint to use, either a bottom or top.
-/// @param[in] bottomSign Should be -1 if sp is a bottom SP or 1 is it is a top SP.
-/// @param[in] transformVariables Vector contaning deltaX, deltaY, deltaZ, varR, varZ, xVal, yVal and zOrigin between sp and spM, calculated in SeedFinder to avoid recalculating these parameters.
-template <typename external_spacepoint_t>
-LinCircle transformCoordinates(external_spacepoint_t& sp, const int bottomSign,
-                               const std::array<float, 8>& transformVariables);
-
 /// @brief Transform a vector of spacepoints to u-v space circles with respect
 /// to a given middle spacepoint.
 ///
@@ -81,6 +68,12 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
                           const external_spacepoint_t& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction);
+
+/// @brief Fills LineCircle object for a SP dublet in u-v frame.
+///
+/// @param[in] transformVariables Vector contaning LineCircle variables
+inline LinCircle fillLineCircle(
+    const std::array<float, 8>& lineCircleVariables);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///

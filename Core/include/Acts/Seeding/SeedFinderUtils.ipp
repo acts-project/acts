@@ -9,7 +9,7 @@
 namespace Acts {
 template <typename external_spacepoint_t>
 inline LinCircle transformCoordinates(
-    InternalSpacePoint<external_spacepoint_t>& sp,
+    const InternalSpacePoint<external_spacepoint_t>& sp,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom) {
   auto extractFunction =
       [](const InternalSpacePoint<external_spacepoint_t>& obj)
@@ -24,7 +24,7 @@ inline LinCircle transformCoordinates(
 }
 
 template <typename external_spacepoint_t, typename callable_t>
-inline LinCircle transformCoordinates(external_spacepoint_t& sp,
+inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
                                       const external_spacepoint_t& spM,
                                       bool bottom,
                                       callable_t&& extractFunction) {
@@ -43,57 +43,29 @@ inline LinCircle transformCoordinates(external_spacepoint_t& sp,
   float deltaZ = zSP - zM;
   float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
   float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
+  float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
   float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
   float iDeltaR = std::sqrt(iDeltaR2);
   int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
-  float cot_theta = deltaZ * iDeltaR * bottomFactor;
-  LinCircle l{};
-  l.cotTheta = cot_theta;
-  l.Zo = zM - rM * cot_theta;
-  l.iDeltaR = iDeltaR;
-  l.U = xNewFrame * iDeltaR2;
-  l.V = yNewFrame * iDeltaR2;
-  l.Er = ((varianceZM + varianceZSP) +
-          (cot_theta * cot_theta) * (varianceRM + varianceRSP)) *
-         iDeltaR2;
-  l.x = xNewFrame;
-  l.y = yNewFrame;
+  float cotTheta = deltaZ * iDeltaR * bottomFactor;
+  float zOrigin = zM - rM * cotTheta;
 
-  sp.setDeltaR(std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
-                         (deltaZ * deltaZ)));
-  return l;
-}
+  // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
+  // circle into straight lines in the u/v plane the line equation can
+  // be described in terms of aCoef and bCoef, where v = aCoef * u +
+  // bCoef
+  const float U = xNewFrame * iDeltaR2;
+  const float V = yNewFrame * iDeltaR2;
 
-template <typename external_spacepoint_t>
-inline LinCircle transformCoordinates(
-    external_spacepoint_t& sp, const int bottomSign,
-    const std::array<float, 8>& transformVariables) {
-  // The computation inside this function is exactly identical to that in the
-  // vectorized version of this function, except that it operates on a single
-  // spacepoint. Please see the other version of this function for more
-  // detailed comments.
+  // error term for sp-pair without correlation of middle space point
+  const float Er = ((varianceZM + varianceZSP) +
+                    (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
+                   iDeltaR2;
 
-  auto [deltaX, deltaY, deltaZ, varR, varZ, xNewFrame, yNewFrame, zOrigin] =
-      transformVariables;
+  sp.setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
 
-  float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
-  float iDeltaR = std::sqrt(iDeltaR2);
-  float cot_theta = deltaZ * iDeltaR * bottomSign;
-  LinCircle l{};
-  l.cotTheta = cot_theta;
-  l.Zo = zOrigin;
-  l.iDeltaR = iDeltaR;
-  l.U = xNewFrame * iDeltaR2;
-  l.V = yNewFrame * iDeltaR2;
-  l.Er = ((varZ + sp.varianceZ()) +
-          (cot_theta * cot_theta) * (varR + sp.varianceR())) *
-         iDeltaR2;
-  l.x = xNewFrame;
-  l.y = yNewFrame;
-
-  sp.setDeltaR(std::sqrt((xNewFrame * xNewFrame) + (yNewFrame * yNewFrame) +
-                         (deltaZ * deltaZ)));
-  return l;
+  return fillLineCircle(
+      {cotTheta, zOrigin, iDeltaR, xNewFrame, yNewFrame, U, V, Er});
 }
 
 template <typename external_spacepoint_t>
@@ -148,7 +120,8 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
     float xNewFrame = deltaX * cosPhiM + deltaY * sinPhiM;
     float yNewFrame = deltaY * cosPhiM - deltaX * sinPhiM;
     // 1/(length of M -> SP)
-    float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
+    float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
+    float iDeltaR2 = 1. / deltaR2;
     float iDeltaR = std::sqrt(iDeltaR2);
     //
     int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
@@ -172,13 +145,32 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
     l.Er = ((varianceZM + sp->varianceZ()) +
             (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
            iDeltaR2;
+
     l.x = xNewFrame;
     l.y = yNewFrame;
 
     linCircleVec[idx] = l;
     spacePointData.setDeltaR(sp->index(),
-                             std::sqrt((x * x) + (y * y) + (deltaZ * deltaZ)));
+                             std::sqrt(deltaR2 + (deltaZ * deltaZ)));
   }
+}
+
+inline LinCircle fillLineCircle(
+    const std::array<float, 8>& lineCircleVariables) {
+  auto [cotTheta, zOrigin, iDeltaR, xNewFrame, yNewFrame, U, V, Er] =
+      lineCircleVariables;
+
+  LinCircle l{};
+  l.cotTheta = cotTheta;
+  l.Zo = zOrigin;
+  l.iDeltaR = iDeltaR;
+  l.U = U;
+  l.V = V;
+  l.Er = Er;
+  l.x = xNewFrame;
+  l.y = yNewFrame;
+
+  return l;
 }
 
 template <typename external_spacepoint_t>
