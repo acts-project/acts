@@ -107,8 +107,8 @@ class SurfaceStub : public Surface {
 
   // Cartesian 3D to local bound derivative
   ActsMatrix<2, 3> localCartesianToBoundLocalDerivative(
-      const GeometryContext& /*unused*/,
-      const Vector3& /*unused*/) const final {
+      const GeometryContext& /*gctx*/,
+      const Vector3& /*position*/) const final {
     return ActsMatrix<2, 3>::Identity();
   };
 

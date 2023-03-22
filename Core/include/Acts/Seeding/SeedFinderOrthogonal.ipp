@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -241,8 +242,9 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     const SeedFinderOptions &options, internal_sp_t &middle,
     std::vector<internal_sp_t *> &bottom, std::vector<internal_sp_t *> &top,
     SeedFilterState seedFilterState,
-    CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
-        &candidates_collector) const {
+    CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
+        &candidates_collector,
+    Acts::SpacePointData &spacePointData) const {
   float rM = middle.radius();
   float varianceRM = middle.varianceR();
   float varianceZM = middle.varianceZ();
@@ -268,7 +270,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
   }
 
-  std::vector<internal_sp_t *> top_valid;
+  std::vector<const internal_sp_t *> top_valid;
   std::vector<float> curvatures;
   std::vector<float> impactParameters;
 
@@ -279,8 +281,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
   std::vector<LinCircle> linCircleTop;
 
   // transform coordinates
-  transformCoordinates(bottom, middle, true, linCircleBottom);
-  transformCoordinates(top, middle, false, linCircleTop);
+  transformCoordinates(spacePointData, bottom, middle, true, linCircleBottom);
+  transformCoordinates(spacePointData, top, middle, false, linCircleTop);
 
   // sort: make index vector
   std::vector<std::size_t> sorted_bottoms(linCircleBottom.size());
@@ -473,9 +475,10 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     if (top.size() < minCompatibleTopSPs) {
       continue;
     }
+
     m_config.seedFilter->filterSeeds_2SpFixed(
-        *bottom[b], middle, top_valid, curvatures, impactParameters,
-        seedFilterState, candidates_collector);
+        spacePointData, *bottom[b], middle, top_valid, curvatures,
+        impactParameters, seedFilterState, candidates_collector);
 
   }  // loop on bottoms
 }
@@ -484,8 +487,8 @@ template <typename external_spacepoint_t>
 template <typename output_container_t>
 void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
     const SeedFinderOptions &options, const tree_t &tree,
-    output_container_t &out_cont,
-    const typename tree_t::pair_t &middle_p) const {
+    output_container_t &out_cont, const typename tree_t::pair_t &middle_p,
+    Acts::SpacePointData &spacePointData) const {
   using range_t = typename tree_t::range_t;
   internal_sp_t &middle = *middle_p.second;
 
@@ -509,7 +512,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
   std::size_t max_num_seeds_per_spm =
       m_config.seedFilter->getSeedFilterConfig().maxSeedsPerSpMConf;
 
-  CandidatesForMiddleSp<InternalSpacePoint<external_spacepoint_t>>
+  CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
       candidates_collector;
   candidates_collector.setMaxElements(max_num_seeds_per_spm,
                                       max_num_quality_seeds_per_spm);
@@ -640,21 +643,21 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    */
   if (!bottom_lh_v.empty() && !top_lh_v.empty()) {
     filterCandidates(options, middle, bottom_lh_v, top_lh_v, seedFilterState,
-                     candidates_collector);
+                     candidates_collector, spacePointData);
   }
   /*
    * Try to combine candidates for decreasing z tracks.
    */
   if (!bottom_hl_v.empty() && !top_hl_v.empty()) {
     filterCandidates(options, middle, bottom_hl_v, top_hl_v, seedFilterState,
-                     candidates_collector);
+                     candidates_collector, spacePointData);
   }
   /*
    * Run a seed filter, just like in other seeding algorithms.
    */
-  m_config.seedFilter->filterSeeds_1SpFixed(candidates_collector,
-                                            seedFilterState.numQualitySeeds,
-                                            std::back_inserter(out_cont));
+  m_config.seedFilter->filterSeeds_1SpFixed(
+      spacePointData, candidates_collector, seedFilterState.numQualitySeeds,
+      std::back_inserter(out_cont));
 }
 
 template <typename external_spacepoint_t>
@@ -711,11 +714,15 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
    * point, and save it in a vector.
    */
   Acts::Extent rRangeSPExtent;
+  std::size_t counter = 0;
   std::vector<internal_sp_t *> internalSpacePoints;
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spacePoints.size());
+
   for (const external_spacepoint_t *p : spacePoints) {
     auto [position, variance] = extract_coordinates(p);
     internalSpacePoints.push_back(new InternalSpacePoint<external_spacepoint_t>(
-        *p, position, options.beamPos, variance));
+        counter++, *p, position, options.beamPos, variance));
     // store x,y,z values in extent
     rRangeSPExtent.extend(position);
   }
@@ -762,7 +769,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
       continue;
     }
 
-    processFromMiddleSP(options, tree, out_cont, middle_p);
+    processFromMiddleSP(options, tree, out_cont, middle_p, spacePointData);
   }
 
   /*
