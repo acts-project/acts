@@ -109,12 +109,12 @@ void Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   addElement(std::move(writer));
 }
 
-void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
+void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
   if (not element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
 
-  m_sequenceElements.push_back(std::move(element));
+  m_sequenceElements.push_back(element);
 
   if (!m_cfg.runDataFlowChecks) {
     return;
@@ -424,6 +424,7 @@ int Sequencer::run() {
                                                       Duration::zero());
 
           for (size_t event = r.begin(); event != r.end(); ++event) {
+            ACTS_DEBUG("start processing event " << event);
             m_cfg.iterationCallback();
             // Use per-event store
             WhiteBoard eventStore(
@@ -458,13 +459,13 @@ int Sequencer::run() {
             }
 
             nProcessedEvents++;
-            if (nTotalEvents <= 100) {
+            if (logger().level() <= Acts::Logging::DEBUG) {
+              ACTS_DEBUG("finished event " << event);
+            } else if (nTotalEvents <= 100) {
               ACTS_INFO("finished event " << event);
-            } else {
-              if (nProcessedEvents % 100 == 0) {
-                ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
-                                           << " events processed");
-              }
+            } else if (nProcessedEvents % 100 == 0) {
+              ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
+                                         << " events processed");
             }
           }
 

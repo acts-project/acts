@@ -133,10 +133,5 @@ struct MaterialCollector {
       }
     }
   }
-
-  /// Pure observer interface
-  /// - this does not apply to the surface collector
-  template <typename propagator_state_t>
-  void operator()(propagator_state_t& /*state*/) const {}
 };  // namespace Acts
 }  // namespace Acts

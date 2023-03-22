@@ -48,9 +48,11 @@ struct MaterialInteractor {
   /// @param stepper The stepper in use
   /// @param result is the mutable result state object
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& logger) const {
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& logger) const {
     // In case of Volume material update the result of the previous step
     if (recordInteractions && !result.materialInteractions.empty() &&
         result.materialInteractions.back().volume != nullptr &&
@@ -121,10 +123,6 @@ struct MaterialInteractor {
       recordResult(d, result);
     }
   }
-
-  /// Material interaction has no pure observer.
-  template <typename propagator_state_t>
-  void operator()(propagator_state_t& /* unused */) const {}
 
  private:
   /// @brief This function records the material effect
