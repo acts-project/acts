@@ -76,6 +76,7 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
+/// @param[in] spacePointData Auxiliary variables used by the seeding
 /// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
@@ -83,6 +84,7 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
 template <typename external_spacepoint_t>
 bool xyzCoordinateCheck(
+    Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
     const double* spacepointPosition, double* outputCoordinates);
