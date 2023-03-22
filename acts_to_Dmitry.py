@@ -47,3 +47,6 @@ for j in range(20,38,2):
 
 f.close() 
  
+#open file to read csv then find right row? 
+# loop over rows, if row [0] = and row [1] equal return row[3]  
+#load file of ACTS volumes and layers- 
