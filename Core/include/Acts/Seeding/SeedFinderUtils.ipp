@@ -48,7 +48,6 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
   float iDeltaR = std::sqrt(iDeltaR2);
   int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
   float cotTheta = deltaZ * iDeltaR * bottomFactor;
-  float zOrigin = zM - rM * cotTheta;
 
   // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
   // circle into straight lines in the u/v plane the line equation can
@@ -64,8 +63,7 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 
   sp.setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
 
-  return fillLineCircle(
-      {cotTheta, zOrigin, iDeltaR, xNewFrame, yNewFrame, U, V, Er});
+  return fillLineCircle({cotTheta, iDeltaR, xNewFrame, yNewFrame, U, V, Er});
 }
 
 template <typename external_spacepoint_t>
@@ -156,13 +154,12 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
 }
 
 inline LinCircle fillLineCircle(
-    const std::array<float, 8>& lineCircleVariables) {
-  auto [cotTheta, zOrigin, iDeltaR, xNewFrame, yNewFrame, U, V, Er] =
+    const std::array<float, 7>& lineCircleVariables) {
+  auto [cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame] =
       lineCircleVariables;
 
   LinCircle l{};
   l.cotTheta = cotTheta;
-  l.Zo = zOrigin;
   l.iDeltaR = iDeltaR;
   l.U = U;
   l.V = V;

@@ -16,7 +16,6 @@
 namespace Acts {
 /// @brief A partial description of a circle in u-v space.
 struct LinCircle {
-  float Zo;
   float cotTheta;
   float iDeltaR;
   float Er;
@@ -73,7 +72,7 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
 ///
 /// @param[in] transformVariables Vector contaning LineCircle variables
 inline LinCircle fillLineCircle(
-    const std::array<float, 8>& lineCircleVariables);
+    const std::array<float, 7>& lineCircleVariables);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
