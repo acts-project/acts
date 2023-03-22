@@ -70,7 +70,7 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
 
 /// @brief Fills LineCircle object for a SP dublet in u-v frame.
 ///
-/// @param[in] transformVariables Vector contaning LineCircle variables
+/// @param[in] lineCircleVariables Vector contaning LineCircle variables
 inline LinCircle fillLineCircle(
     const std::array<float, 7>& lineCircleVariables);
 
