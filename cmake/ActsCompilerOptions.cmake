@@ -10,6 +10,11 @@ set(ACTS_CXX_FLAGS_MINSIZEREL "")
 set(ACTS_CXX_FLAGS_RELEASE "")
 set(ACTS_CXX_FLAGS_RELWITHDEBINFO "")
 
+set(ACTS_CXX_STANDARD_FEATURE cxx_std_17)
+if(${CMAKE_CXX_STANDARD} GREATER 17)
+  set(ACTS_CXX_STANDARD_FEATURE "cxx_std_${CMAKE_CXX_STANDARD}")
+endif()
+
 # This adds some useful conversion checks like float-to-bool, float-to-int, etc.
 # However, at the moment this is only added to clang builds, since GCC's -Wfloat-conversion 
 # is much more aggressive and also triggers on e.g., double-to-float
