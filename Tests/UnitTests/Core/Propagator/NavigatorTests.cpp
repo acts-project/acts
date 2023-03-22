@@ -472,11 +472,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navigator.target(state, stepper);
   // A layer has been found
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
-  // The iterator should points to the begin
-  BOOST_CHECK(state.navigation.navLayerIter ==
-              state.navigation.navLayers.begin());
+  // The index should points to the begin
+  BOOST_CHECK(state.navigation.navLayerIndex == 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayerIter->intersection.position);
+  double beamPipeR = perp(state.navigation.navLayer().intersection.position);
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);
@@ -499,9 +498,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
                     state.navigation.startVolume);
   // The layer number has not changed
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
-  // The iterator still points to the begin
-  BOOST_CHECK(
-      (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
+  // The index still points to the begin
+  BOOST_CHECK(state.navigation.navLayerIndex == 0);
   // ACTORS-ABORTERS-TARGET
   navigator.target(state, stepper);
 
