@@ -132,14 +132,14 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
     l.U = x * iDeltaR2;
     l.V = y * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
-    l.Er = ((varianceZM + sp->varianceZ()) +
-            (cot_theta * cot_theta) * (varianceRM + sp->varianceR())) *
+    l.Er = ((varianceZM + varianceZSP) +
+            (cot_theta * cot_theta) * (varianceRM + varianceRSP)) *
            iDeltaR2;
 
     l.x = x;
     l.y = y;
-    l.z = sp->z();
-    l.r = sp->radius();
+    l.z = zSP;
+    l.r = rSP;
 
     linCircleVec[idx] = l;
     spacePointData.setDeltaR(sp->index(),
