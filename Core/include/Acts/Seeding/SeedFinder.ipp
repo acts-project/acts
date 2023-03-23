@@ -368,15 +368,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
-  // state.linCircleBottom.clear();
-  // state.linCircleTop.clear();
-
   std::size_t numTopSP = state.compatTopSP.size();
-
-  // transformCoordinates(state.spacePointData, state.compatBottomSP, spM,
-  //     true,state.linCircleBottom);
-  // transformCoordinates(state.spacePointData, state.compatTopSP, spM, false,
-  //                       state.linCircleTop);
 
   // sort: make index vector
   std::vector<std::size_t> sorted_bottoms(state.linCircleBottom.size());
