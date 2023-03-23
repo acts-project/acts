@@ -19,7 +19,7 @@ endif()
 find_path(
   OnnxRuntime_INCLUDE_DIR
   NAMES core/session/onnxruntime_cxx_api.h #core/session/providers/cuda_provider_factory.h
-  PATHS ${onxxruntime_DIR}
+  PATHS ${onnxruntime_DIR}
   PATH_SUFFIXES include include/onnxruntime
   DOC "The ONNXRuntime include directory")
   
