@@ -381,8 +381,6 @@ def test_edm4hep_measurement_reader(tmp_path, fatras, conf_const):
     config = EDM4hepMeasurementWriter.Config(
         inputMeasurements=digiAlg.config.outputMeasurements,
         inputClusters=digiAlg.config.outputClusters,
-        inputSimHits=simAlg.config.outputSimHits,
-        inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
         outputPath=str(out),
     )
     s.addWriter(EDM4hepMeasurementWriter(level=acts.logging.INFO, config=config))
