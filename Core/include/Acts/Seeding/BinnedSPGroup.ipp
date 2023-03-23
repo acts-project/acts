@@ -155,16 +155,13 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // keep track of changed bins while sorting
   boost::container::flat_set<size_t> rBinsIndex;
 
-  std::size_t counter = 0;
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
+  for (spacepoint_iterator_t it = spBegin; it != spEnd; ++it) {
     const external_spacepoint_t& sp = *it;
-    const auto& [spPosition, variance] =
-        toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
-    float spX = spPosition[0];
-    float spY = spPosition[1];
-    float spZ = spPosition[2];
-
+    float spX = sp.x();
+    float spY = sp.y();
+    float spZ = sp.z();
+    
     // store x,y,z values in extent
     rRangeSPExtent.extend({spX, spY, spZ});
 
@@ -176,8 +173,10 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
       continue;
     }
 
+    Acts::Vector3 spPosition{spX, spY, spZ};
+    Acts::Vector2 variance{sp.varianceR(), sp.varianceZ()};
     auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        counter, sp, spPosition, options.beamPos, variance);
+									   sp.index(), sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);
