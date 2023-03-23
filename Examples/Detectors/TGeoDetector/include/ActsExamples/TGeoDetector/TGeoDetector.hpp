@@ -54,6 +54,8 @@ struct TGeoDetector {
     double beamPipeRadius{0};
     double beamPipeHalflengthZ{0};
     double beamPipeLayerThickness{0};
+    double beampipeEnvelopeR{1.0};
+    double layerEnvelopeR{1.0};
 
     double unitScalor = 1.0;
 
