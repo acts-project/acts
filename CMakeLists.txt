@@ -349,6 +349,15 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
   find_package(Pythia8 REQUIRED)
+
+if(DEFINED CMAKE_CXX_STANDARD)
+  if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
+    message(WARNING "ACTS is configured to build with C++20."
+      "As of version 309, Pythia8 does not compile under C++20."
+      "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
+  endif()
+endif()
+
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
