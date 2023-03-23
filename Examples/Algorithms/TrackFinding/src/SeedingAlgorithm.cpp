@@ -194,10 +194,10 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   m_cfg.seedFinderConfig.seedFilter =
     std::make_unique<Acts::SeedFilter< typename Acts::SpacePointContainer<
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-	Acts::detail_tc::RefHolder>::SpacePointProxyType >>(m_cfg.seedFilterConfig);
+	Acts::detail::RefHolder>::SpacePointProxyType >>(m_cfg.seedFilterConfig);
   m_seedFinder = Acts::SeedFinder<typename Acts::SpacePointContainer<
     ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-				    Acts::detail_tc::RefHolder>::SpacePointProxyType>(m_cfg.seedFinderConfig);
+				    Acts::detail::RefHolder>::SpacePointProxyType>(m_cfg.seedFinderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -223,7 +223,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // Prepare interface SpacePoint backend-ACTS
   ActsExamples::SpacePointContainer container(spacePointPtrs);
   // Prepare Acts API
-  Acts::SpacePointContainer<decltype(container), Acts::detail_tc::RefHolder> spContainer(container);
+  Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder> spContainer(container);
 
   using value_type = typename decltype(spContainer)::SpacePointProxyType;
   using seed_type = Acts::Seed< value_type >;

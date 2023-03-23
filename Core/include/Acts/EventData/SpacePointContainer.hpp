@@ -46,7 +46,7 @@ namespace Acts {
     // Activate only if holder_t is RefHolder
     template<template <typename> class H = holder_t,
              std::enable_if_t<
-               Acts::detail_tc::is_same_template<H, Acts::detail_tc::RefHolder>::value
+               Acts::detail::is_same_template<H, Acts::detail::RefHolder>::value
                >* = nullptr>
     SpacePointContainer(container_t& container)
       : m_container( container )
@@ -61,7 +61,7 @@ namespace Acts {
     // Activate only if holder_t is ValueHolder
     template<template <typename> class H = holder_t,
              std::enable_if_t<
-               Acts::detail_tc::is_same_template<H, Acts::detail_tc::ValueHolder>::value
+               Acts::detail::is_same_template<H, Acts::detail::ValueHolder>::value
                >* = nullptr>
     SpacePointContainer(container_t&& container)
       :	m_container( container )
@@ -76,7 +76,7 @@ namespace Acts {
     // Need to define copy operations only if holder_t is RefHolder !!!
     template<template <typename> class H = holder_t,
 	     std::enable_if_t<
-	       Acts::detail_tc::is_same_template<H, Acts::detail_tc::RefHolder>::value
+	       Acts::detail::is_same_template<H, Acts::detail::RefHolder>::value
 	       >* = nullptr>
     SpacePointContainer(SpacePointContainer& other)
       : m_container( *m_container.ptr ),
@@ -84,7 +84,7 @@ namespace Acts {
     {}
 
     template<template <typename> class H = holder_t,
-	     std::enable_if_t<Acts::detail_tc::is_same_template<H, Acts::detail_tc::RefHolder>::value, bool> = true>
+	     std::enable_if_t<Acts::detail::is_same_template<H, Acts::detail::RefHolder>::value, bool> = true>
     SpacePointContainer& operator=(SpacePointContainer& other)
     {
       m_container.ptr = other.m_container.ptr;
@@ -142,11 +142,11 @@ namespace Acts {
   // Deduction rules
   template<typename container_t>
   SpacePointContainer(container_t& container)
-    -> SpacePointContainer<container_t, Acts::detail_tc::RefHolder>;
+    -> SpacePointContainer<container_t, Acts::detail::RefHolder>;
 
   template<typename container_t>
   SpacePointContainer(container_t&& container)
-    -> SpacePointContainer<container_t, Acts::detail_tc::ValueHolder>;
+    -> SpacePointContainer<container_t, Acts::detail::ValueHolder>;
   
   // Implementations
   template<typename container_t, 
