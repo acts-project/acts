@@ -32,8 +32,8 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
   /// discarded
   bool singleSeedCut(
       float weight, const InternalSpacePoint<SpacePoint>& bottom,
-      const InternalSpacePoint<SpacePoint>& /*unused*/,
-      const InternalSpacePoint<SpacePoint>& /*unused*/) const override;
+      const InternalSpacePoint<SpacePoint>& /*middle*/,
+      const InternalSpacePoint<SpacePoint>& /*top*/) const override;
 
   /// @param seedCandidates contains collection of seed candidates created for one middle
   /// space point in a std::tuple format
@@ -48,7 +48,7 @@ class ATLASCuts : public IExperimentCuts<SpacePoint> {
 template <typename SpacePoint>
 float ATLASCuts<SpacePoint>::seedWeight(
     const InternalSpacePoint<SpacePoint>& bottom,
-    const InternalSpacePoint<SpacePoint>& /*unused*/,
+    const InternalSpacePoint<SpacePoint>& /*middle*/,
     const InternalSpacePoint<SpacePoint>& top) const {
   float weight = 0;
   if (bottom.radius() > 150) {
@@ -63,8 +63,8 @@ float ATLASCuts<SpacePoint>::seedWeight(
 template <typename SpacePoint>
 bool ATLASCuts<SpacePoint>::singleSeedCut(
     float weight, const InternalSpacePoint<SpacePoint>& b,
-    const InternalSpacePoint<SpacePoint>& /*unused*/,
-    const InternalSpacePoint<SpacePoint>& /*unused*/) const {
+    const InternalSpacePoint<SpacePoint>& /*m*/,
+    const InternalSpacePoint<SpacePoint>& /*t*/) const {
   return !(b.radius() > 150. && weight < 380.);
 }
 
