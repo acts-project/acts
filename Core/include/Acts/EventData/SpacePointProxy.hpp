@@ -18,18 +18,17 @@ namespace Acts {
   class SpacePointProxy {
   public:
     using ContainerType = container_t;
-    using IndexType = typename ContainerType::IndexType;
     
   public:
     // Never take the ownership of the container
-    SpacePointProxy(ContainerType&& container, IndexType index) = delete;
+    SpacePointProxy(ContainerType&& container, std::size_t index) = delete;
     // Only get the reference
-    SpacePointProxy(ContainerType& container, IndexType index);
-    SpacePointProxy(const ContainerType& container, IndexType index);
+    SpacePointProxy(ContainerType& container, std::size_t index);
+    SpacePointProxy(const ContainerType& container, std::size_t index);
 
     // copy and move operations are defaults
     
-    IndexType index() const;
+    std::size_t index() const;
     float x() const;
     float y() const;
     float z() const;
@@ -47,14 +46,14 @@ namespace Acts {
     
   private:
     Acts::detail::RefHolder<ContainerType> m_container; 
-    IndexType m_index;
+    std::size_t m_index;
   };
   
   // Implementation
   template<typename container_t, bool read_only>
   SpacePointProxy<container_t, read_only>::SpacePointProxy(
       typename SpacePointProxy<container_t, read_only>::ContainerType& container, 
-      typename SpacePointProxy<container_t, read_only>::IndexType index)
+      std::size_t index)
     : m_container(container), 
     m_index(index)
     {}
@@ -62,13 +61,13 @@ namespace Acts {
   template<typename container_t, bool read_only>
   SpacePointProxy<container_t, read_only>::SpacePointProxy(
       const typename SpacePointProxy<container_t, read_only>::ContainerType& container, 
-      typename SpacePointProxy<container_t, read_only>::IndexType index)
+      std::size_t index)
     : m_container(container), 
     m_index(index)
     {}
   
   template<typename container_t, bool read_only>
-  inline typename SpacePointProxy<container_t, read_only>::IndexType 
+  inline std::size_t
   SpacePointProxy<container_t, read_only>::index() const
     { return m_index; }
   

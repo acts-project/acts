@@ -20,7 +20,6 @@ namespace Acts {
     using ContainerType = typename std::conditional<read_only, const container_t, container_t>::type;
     using ProxyType = typename container_t::SpacePointProxyType; 
     using ConstProxyType = typename container_t::ConstSpacePointProxyType;
-    using IndexType = typename container_t::IndexType;
     
     using iterator_category = std::random_access_iterator_tag;
     using value_type = typename std::conditional<read_only, ConstProxyType, ProxyType>::type; 
@@ -29,7 +28,7 @@ namespace Acts {
     using reference = value_type&;
     
     // Constructors  
-    SpacePointProxyIterator(ContainerType& container, IndexType index);   
+    SpacePointProxyIterator(ContainerType& container, std::size_t index);   
     
     SpacePointProxyIterator& operator++();
     SpacePointProxyIterator& operator--();  
@@ -43,11 +42,11 @@ namespace Acts {
     bool operator<=(const SpacePointProxyIterator& other) const;
     bool operator>=(const SpacePointProxyIterator& other) const;
     
-    SpacePointProxyIterator& operator+=(IndexType offset);
-    SpacePointProxyIterator& operator-=(IndexType offset);
+    SpacePointProxyIterator& operator+=(std::size_t offset);
+    SpacePointProxyIterator& operator-=(std::size_t offset);
     
-    SpacePointProxyIterator operator+(IndexType offset) const;
-    SpacePointProxyIterator operator-(IndexType offset) const;
+    SpacePointProxyIterator operator+(std::size_t offset) const;
+    SpacePointProxyIterator operator-(std::size_t offset) const;
     
     // returning pointer here since seeding always assumes a vector of pointers as input...
     // not sure about this tbh 
@@ -58,14 +57,14 @@ namespace Acts {
     
   private:
     Acts::detail::RefHolder<ContainerType> m_container;
-    IndexType m_index;
+    std::size_t m_index;
   };
   
   // Implementation
   template<typename container_t, bool read_only>
     SpacePointProxyIterator<container_t, read_only>::SpacePointProxyIterator(
       typename SpacePointProxyIterator<container_t, read_only>::ContainerType& container,
-      typename SpacePointProxyIterator<container_t, read_only>::IndexType index)
+      std::size_t index)
     : m_container(container), 
     m_index(index)
     {}
@@ -156,7 +155,7 @@ namespace Acts {
   template<typename container_t, bool read_only>
     inline SpacePointProxyIterator<container_t, read_only>& 
     SpacePointProxyIterator<container_t, read_only>::operator+=(
-      typename SpacePointProxyIterator<container_t, read_only>::IndexType offset) 
+      std::size_t offset) 
     {
       m_index += offset;
       return *this;
@@ -165,7 +164,7 @@ namespace Acts {
   template<typename container_t, bool read_only>
     inline SpacePointProxyIterator<container_t, read_only>& 
     SpacePointProxyIterator<container_t, read_only>::operator-=(
-      typename SpacePointProxyIterator<container_t, read_only>::IndexType offset) 
+      std::size_t offset) 
     {
       m_index -= offset;
       return *this;
@@ -174,7 +173,7 @@ namespace Acts {
   template<typename container_t, bool read_only>
     inline SpacePointProxyIterator<container_t, read_only>
     SpacePointProxyIterator<container_t, read_only>::operator+(
-      typename SpacePointProxyIterator<container_t, read_only>::IndexType offset) const 
+      std::size_t offset) const 
     {
       return SpacePointProxyIterator(*m_container, m_index + offset);
     }
@@ -182,7 +181,7 @@ namespace Acts {
   template<typename container_t, bool read_only>
     inline SpacePointProxyIterator<container_t, read_only>
     SpacePointProxyIterator<container_t, read_only>::operator-(
-      typename SpacePointProxyIterator<container_t, read_only>::IndexType offset) const 
+      std::size_t offset) const 
     {
       return SpacePointProxyIterator(*m_container, m_index - offset);
     }

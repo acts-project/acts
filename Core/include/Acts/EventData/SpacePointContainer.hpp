@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -29,7 +29,6 @@ namespace Acts {
 
     static constexpr bool ReadOnly = true;
 
-    using IndexType = typename container_t::IndexType;
     using SpacePointProxyType = Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>, false>;
     using ConstSpacePointProxyType = Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>, true>;
     using iterator = Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>,
@@ -51,9 +50,9 @@ namespace Acts {
     SpacePointContainer(container_t& container)
       : m_container( container )
     {
-      IndexType n = size();
+      std::size_t n = size();
       m_proxies.reserve(n);
-      for (IndexType i(0); i<n; i++)
+      for (std::size_t i(0); i<n; i++)
         m_proxies.emplace_back( *this, i );
     }
     
@@ -66,9 +65,9 @@ namespace Acts {
     SpacePointContainer(container_t&& container)
       :	m_container( container )
     {
-      IndexType n = size();
+      std::size_t n = size();
       m_proxies.reserve(n);
-      for (IndexType i(0); i<n; i++)
+      for (std::size_t i(0); i<n; i++)
         m_proxies.emplace_back( *this, i );
     }
     
@@ -108,7 +107,7 @@ namespace Acts {
     // Destructor
     ~SpacePointContainer() = default;
     
-    IndexType size() const;
+    std::size_t size() const;
 
     iterator begin();
     iterator end();
@@ -116,19 +115,19 @@ namespace Acts {
     const_iterator begin() const;
     const_iterator end() const;
 
-    SpacePointProxyType& get(IndexType n);
-    const SpacePointProxyType& get(IndexType n) const;
+    SpacePointProxyType& get(std::size_t n);
+    const SpacePointProxyType& get(std::size_t n) const;
 
     // do these need to be private or public?
     const container_t& container() const;
 
   private:
-    float x(IndexType n) const;
-    float y(IndexType n) const;
-    float z(IndexType n) const;
-    float radius(IndexType n) const;
-    float varianceR(IndexType n) const;
-    float varianceZ(IndexType n) const;    
+    float x(std::size_t n) const;
+    float y(std::size_t n) const;
+    float z(std::size_t n) const;
+    float radius(std::size_t n) const;
+    float varianceR(std::size_t n) const;
+    float varianceZ(std::size_t n) const;    
 
     // The get method in trackcontainer creates every time a new 
     // track state proxy giving this container as input
@@ -151,7 +150,7 @@ namespace Acts {
   // Implementations
   template<typename container_t, 
     template <typename> class holder_t>
-    inline typename SpacePointContainer<container_t, holder_t>::IndexType
+    inline std::size_t
     SpacePointContainer<container_t, holder_t>::size() const
     { return container().size_impl(); }
   
@@ -189,51 +188,51 @@ namespace Acts {
     template <typename> class holder_t>
     inline float 
     SpacePointContainer<container_t, holder_t>::x(
-      typename SpacePointContainer<container_t, holder_t>::IndexType n) const 
+      std::size_t n) const 
     { return container().x_impl(n); }
   
   template<typename container_t,
     template <typename> class holder_t>
     inline float SpacePointContainer<container_t, holder_t>::y(
-      typename SpacePointContainer<container_t, holder_t>::IndexType n) const
+      std::size_t n) const
     { return container().y_impl(n); }
   
   template<typename container_t,
     template <typename> class holder_t>
     inline float SpacePointContainer<container_t, holder_t>::z(
-      typename SpacePointContainer<container_t, holder_t>::IndexType n) const
+      std::size_t n) const
     { return container().z_impl(n); }
   
   template<typename container_t,
     template <typename> class holder_t>
     inline float SpacePointContainer<container_t, holder_t>::radius(
-      typename SpacePointContainer<container_t, holder_t>::IndexType n) const
+      std::size_t n) const
     { return container().radius_impl(n); }
   
   template<typename container_t,
     template <typename> class holder_t>
     inline float SpacePointContainer<container_t, holder_t>::varianceR(
-      typename SpacePointContainer<container_t, holder_t>::IndexType n) const
+      std::size_t n) const
     { return container().varianceR_impl(n); }
   
   template<typename container_t,
     template <typename> class holder_t>
     inline float SpacePointContainer<container_t, holder_t>::varianceZ(
-      typename SpacePointContainer<container_t, holder_t>::IndexType n) const
+      std::size_t n) const
     { return container().varianceZ_impl(n); }
   
   template<typename container_t,
     template <typename> class holder_t>
     inline typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType&
     SpacePointContainer<container_t, holder_t>::get(
-      typename SpacePointContainer<container_t, holder_t>::IndexType n)
+      std::size_t n)
   { return m_proxies[n]; }
 
   template<typename container_t,
     template <typename> class holder_t>
     inline const typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType&
     SpacePointContainer<container_t, holder_t>::get(
-      typename SpacePointContainer<container_t, holder_t>::IndexType n) const
+      std::size_t n) const
   { return m_proxies.at(n); }
 
 }
