@@ -65,7 +65,7 @@ namespace ActsExamples {
     const CollectionType& storage() const;
     
   private:
-    Acts::detail_tc::RefHolder<CollectionType> m_storage;
+    Acts::detail::RefHolder<CollectionType> m_storage;
   };
 
   template<typename collection_t>  

@@ -155,6 +155,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
+    // TMP COMMENTED
     // m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
     //     [](const void*, const SimSpacePoint& sp) -> float {
     //       return sp.topHalfStripLength();
@@ -186,18 +187,18 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     //     });
   }
 
-  m_bottomBinFinder = std::make_shared<const Acts::BinFinder<SimSpacePoint>>(
+  using SpacePointProxy_type = typename Acts::SpacePointContainer<
+    ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+    Acts::detail::RefHolder>::SpacePointProxyType;
+  
+  m_bottomBinFinder = std::make_shared<const Acts::BinFinder<SpacePointProxy_type>>(
       m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors);
-  m_topBinFinder = std::make_shared<const Acts::BinFinder<SimSpacePoint>>(
+  m_topBinFinder = std::make_shared<const Acts::BinFinder<SpacePointProxy_type>>(
       m_cfg.zBinNeighborsTop, m_cfg.numPhiNeighbors);
 
   m_cfg.seedFinderConfig.seedFilter =
-    std::make_unique<Acts::SeedFilter< typename Acts::SpacePointContainer<
-      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-	Acts::detail::RefHolder>::SpacePointProxyType >>(m_cfg.seedFilterConfig);
-  m_seedFinder = Acts::SeedFinder<typename Acts::SpacePointContainer<
-    ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-				    Acts::detail::RefHolder>::SpacePointProxyType>(m_cfg.seedFinderConfig);
+    std::make_shared< Acts::SeedFilter<SpacePointProxy_type> >(m_cfg.seedFilterConfig);
+  m_seedFinder = Acts::SeedFinder<SpacePointProxy_type> (m_cfg.seedFinderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -243,17 +244,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   Acts::Extent rRangeSPExtent;
 
 
-  auto bottomBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-								       Acts::BinFinder<value_type>(m_cfg.zBinNeighborsBottom,
-												   m_cfg.numPhiNeighbors));
-  auto topBinFinder = std::make_shared<Acts::BinFinder<value_type>>(
-								    Acts::BinFinder<value_type>(m_cfg.zBinNeighborsTop,
-												m_cfg.numPhiNeighbors));
-  auto grid = Acts::SpacePointGridCreator::createGrid<value_type>(
-      m_cfg.gridConfig, m_cfg.gridOptions);
+  auto grid = Acts::SpacePointGridCreator::createGrid<value_type>(m_cfg.gridConfig, m_cfg.gridOptions);
 
   auto spacePointsGrouping = Acts::BinnedSPGroup<value_type>(
-      spacePointPtrs.begin(), spacePointPtrs.end(), extractGlobalQuantities,
+      spContainer.begin(), spContainer.end(), extractGlobalQuantities,
       m_bottomBinFinder, m_topBinFinder, std::move(grid), rRangeSPExtent,
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
 
@@ -303,9 +297,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
         std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
   }
 
-  ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
+  ACTS_INFO("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
-  ctx.eventStore.add(m_cfg.outputSeeds, SimSeedContainer{seeds});
+
+  std::vector<seed_type> SeedContainerForStorage{seeds};
+  ctx.eventStore.add(m_cfg.outputSeeds, std::move(SeedContainerForStorage));
   return ActsExamples::ProcessCode::SUCCESS;
 }

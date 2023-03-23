@@ -157,10 +157,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 
   std::size_t counter = 0;
   for (spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
-    if (*it == nullptr) {
-      continue;
-    }
-    const external_spacepoint_t& sp = **it;
+    const external_spacepoint_t& sp = *it;
     const auto& [spPosition, variance] =
         toGlobal(sp, config.zAlign, config.rAlign, config.sigmaError);
 
