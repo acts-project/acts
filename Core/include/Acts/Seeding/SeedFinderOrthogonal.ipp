@@ -754,12 +754,12 @@ void SeedFinderOrthogonal<external_spacepoint_t>::createSeeds(
     }
 
     // remove all middle SPs outside phi and z region of interest
-    if (middle.z() > m_config.zMaxLastLayer ||
-        middle.z() < m_config.zMinLastLayer) {
+    if (middle.z() < m_config.zOutermostLayers.first or
+        middle.z() > m_config.zOutermostLayers.second) {
       continue;
     }
     float spPhi = std::atan2(middle.y(), middle.x());
-    if (spPhi > m_config.phiMax || spPhi < m_config.phiMin) {
+    if (spPhi > m_config.phiMax or spPhi < m_config.phiMin) {
       continue;
     }
 

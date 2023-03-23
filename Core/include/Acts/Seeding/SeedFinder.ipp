@@ -122,7 +122,8 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     // remove middle SPs on the last layer since there would be no outer SPs to
     // complete a seed
     float zM = spM->z();
-    if (zM > m_config.zMaxLastLayer or zM < m_config.zMinLastLayer) {
+    if (zM < m_config.zOutermostLayers.first or
+        zM > m_config.zOutermostLayers.second) {
       continue;
     }
 

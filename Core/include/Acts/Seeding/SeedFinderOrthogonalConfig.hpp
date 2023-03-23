@@ -65,8 +65,8 @@ struct SeedFinderOrthogonalConfig {
   float rMin = 33 * Acts::UnitConstants::mm;
 
   // z of last layers to avoid iterations
-  float zMinLastLayer = -2800 * Acts::UnitConstants::mm;
-  float zMaxLastLayer = 2800 * Acts::UnitConstants::mm;
+  std::pair<float, float> zOutermostLayers{-2700 * Acts::UnitConstants::mm,
+                                           2700 * Acts::UnitConstants::mm};
 
   // radial range for middle SP
   // variable range based on SP radius

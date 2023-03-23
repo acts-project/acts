@@ -55,7 +55,7 @@ SeedFinderConfigArg = namedtuple(
         "collisionRegion",  # (min,max)
         "r",  # (min,max)
         "z",  # (min,max)
-        "zLastLayer", # (min,max)
+        "zOutermostLayers",  # (min,max)
     ],
     defaults=[None] * 20 + [(None, None)] * 8,
 )
@@ -205,8 +205,8 @@ def addSeeding(
     initialVarInflation : list
         List of 6 scale factors to inflate the initial covariance matrix
         Defaults (all 1) specified in Examples/Algorithms/TruthTracking/ActsExamples/TruthTracking/ParticleSmearing.hpp
-    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zLastLayer)
-        SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zLastLayer are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
+    seedFinderConfigArg : SeedFinderConfigArg(maxSeedsPerSpM, cotThetaMax, sigmaScattering, radLengthPerSeed, minPt, impactMax, deltaPhiMax, interactionPointCut, arithmeticAverageCotTheta, deltaZMax, maxPtScattering, zBinEdges, skipPreviousTopSP, zBinsCustomLooping, rRangeMiddleSP, useVariableMiddleSPRange, binSizeR, seedConfirmation, centralSeedConfirmationRange, forwardSeedConfirmationRange, deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers)
+        SeedFinderConfig settings. deltaR, deltaRBottomSP, deltaRTopSP, deltaRMiddleSPRange, collisionRegion, r, z, zOutermostLayers are ranges specified as a tuple of (min,max). beamPos is specified as (x,y).
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
     seedFinderOptionsArg :  SeedFinderOptionsArg(bFieldInZ, beamPos)
         Defaults specified in Core/include/Acts/Seeding/SeedFinderConfig.hpp
@@ -515,8 +515,14 @@ def addStandardSeeding(
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
-            zMinLastLayer=(seedFinderConfigArg.zLastLayer[0] if seedFinderConfigArg.zLastLayer[0] not None else seedFinderConfigArg.z[0]),
-            zMaxLastLayer=(seedFinderConfigArg.zLastLayer[1] if seedFinderConfigArg.zLastLayer[1] not None else seedFinderConfigArg.z[1]),
+            zOutermostLayers=(
+                seedFinderConfigArg.zOutermostLayers[0]
+                if seedFinderConfigArg.zOutermostLayers[0] is not None
+                else seedFinderConfigArg.z[0],
+                seedFinderConfigArg.zOutermostLayers[1]
+                if seedFinderConfigArg.zOutermostLayers[1] is not None
+                else seedFinderConfigArg.z[1],
+            ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
@@ -662,8 +668,14 @@ def addOrthogonalSeeding(
             collisionRegionMax=seedFinderConfigArg.collisionRegion[1],
             zMin=seedFinderConfigArg.z[0],
             zMax=seedFinderConfigArg.z[1],
-						zMinLastLayer=(seedFinderConfigArg.zLastLayer[0] if seedFinderConfigArg.zLastLayer[0] not None else seedFinderConfigArg.z[0]),
-            zMaxLastLayer=(seedFinderConfigArg.zLastLayer[1] if seedFinderConfigArg.zLastLayer[1] not None else seedFinderConfigArg.z[1]),
+            zOutermostLayers=(
+                seedFinderConfigArg.zOutermostLayers[0]
+                if seedFinderConfigArg.zOutermostLayers[0] is not None
+                else seedFinderConfigArg.z[0],
+                seedFinderConfigArg.zOutermostLayers[1]
+                if seedFinderConfigArg.zOutermostLayers[1] is not None
+                else seedFinderConfigArg.z[1],
+            ),
             maxSeedsPerSpM=seedFinderConfigArg.maxSeedsPerSpM,
             cotThetaMax=seedFinderConfigArg.cotThetaMax,
             sigmaScattering=seedFinderConfigArg.sigmaScattering,
