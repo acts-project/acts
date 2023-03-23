@@ -107,7 +107,7 @@ void addHepMC3(Context& ctx);
 void addExaTrkXTrackFinding(Context& ctx);
 void addEDM4hep(Context& ctx);
 void addSvg(Context& ctx);
-void addOnnxTrackFinding(Context& ctx);
+void addMLTrackFinding(Context& ctx);
 
 }  // namespace Acts::Python
 
@@ -277,5 +277,5 @@ PYBIND11_MODULE(ActsPythonBindings, m) {
   addExaTrkXTrackFinding(ctx);
   addEDM4hep(ctx);
   addSvg(ctx);
-  addOnnxTrackFinding(ctx);
+  addMLTrackFinding(ctx);
 }

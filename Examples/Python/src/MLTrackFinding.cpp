@@ -7,7 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/TrackFindingOnnx/AmbiguityResolutionMLAlgorithm.hpp"
+#include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -19,7 +19,7 @@ using namespace Acts;
 
 namespace Acts::Python {
 
-void addOnnxTrackFinding(Context& ctx) {
+void addOnnxMLFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,

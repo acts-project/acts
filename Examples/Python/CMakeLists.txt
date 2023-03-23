@@ -165,10 +165,10 @@ else()
 endif()
 
 if(ACTS_BUILD_PLUGIN_ONNX)
-  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingOnnx)
-  target_sources(ActsPythonBindings PRIVATE src/OnnxTrackFinding.cpp)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingML)
+  target_sources(ActsPythonBindings PRIVATE src/MLTrackFinding.cpp)
 else()
-  target_sources(ActsPythonBindings PRIVATE src/OnnxTrackFindingStub.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/MLTrackFindingStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)

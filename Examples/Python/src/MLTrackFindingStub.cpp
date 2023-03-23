@@ -12,7 +12,7 @@
 #include <pybind11/stl.h>
 
 namespace Acts::Python {
-void addOnnxTrackFinding(Context& /*unused*/) {
+void addMLTrackFinding(Context& /*unused*/) {
   // dummy function
 }
 }  // namespace Acts::Python

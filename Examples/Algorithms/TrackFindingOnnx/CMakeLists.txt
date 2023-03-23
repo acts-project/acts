@@ -1,15 +1,15 @@
 add_library(
-  ActsExamplesTrackFindingOnnx SHARED
+  ActsExamplesTrackFindingML SHARED
   src/AmbiguityResolutionMLAlgorithm.cpp
 )
 
 target_include_directories(
-  ActsExamplesTrackFindingOnnx
+  ActsExamplesTrackFindingML
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 target_link_libraries(
-  ActsExamplesTrackFindingOnnx
+  ActsExamplesTrackFindingML
   PUBLIC
     ActsCore
     ActsPluginOnnx
@@ -17,6 +17,6 @@ target_link_libraries(
 )
 
 install(
-  TARGETS ActsExamplesTrackFindingOnnx
+  TARGETS ActsExamplesTrackFindingML
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
