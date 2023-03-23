@@ -19,7 +19,7 @@ using namespace Acts;
 
 namespace Acts::Python {
 
-void addOnnxMLFinding(Context& ctx) {
+void addMLTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
