@@ -594,8 +594,6 @@ def test_edm4hep_measurement_writer(tmp_path, fatras):
             level=acts.logging.VERBOSE,
             inputMeasurements=digiAlg.config.outputMeasurements,
             inputClusters=digiAlg.config.outputClusters,
-            inputSimHits=simAlg.config.outputSimHits,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             outputPath=str(out),
         )
     )
