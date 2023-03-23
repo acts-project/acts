@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/Holders.hpp"
+#include "Acts/Utilities/Holders.hpp"
 
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/Holders.hpp"
+#include "Acts/Utilities/Holders.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 
 namespace Acts {
@@ -57,7 +57,7 @@ namespace Acts {
     ProxyType operator*();
     
   private:
-    Acts::detail_tc::RefHolder<ContainerType> m_container;
+    Acts::detail::RefHolder<ContainerType> m_container;
     IndexType m_index;
   };
   

@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/Holders.hpp"
+#include "Acts/Utilities/Holders.hpp"
 #include <type_traits>
 
 namespace Acts {
@@ -46,7 +46,7 @@ namespace Acts {
     const ContainerType& container() const;
     
   private:
-    Acts::detail_tc::RefHolder<ContainerType> m_container; 
+    Acts::detail::RefHolder<ContainerType> m_container; 
     IndexType m_index;
   };
   

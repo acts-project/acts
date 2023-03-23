@@ -17,4 +17,3 @@ template <template <typename...> class T>
 struct is_same_template<T, T> : std::true_type {};
 
 }  // namespace Acts::detail
-
