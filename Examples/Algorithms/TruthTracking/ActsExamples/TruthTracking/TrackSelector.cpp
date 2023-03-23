@@ -78,8 +78,8 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
     if (!isValidTrack(track)) {
       continue;
     }
-    auto dest = filteredTracks.getTrack(filteredTracks.addTrack());
-    dest.copyFrom(track);
+    auto destProxy = filteredTracks.getTrack(filteredTracks.addTrack());
+    destProxy.copyFrom(track);
   }
 
   ACTS_VERBOSE(
