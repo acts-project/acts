@@ -164,6 +164,12 @@ class SeedFinder {
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;
 
+  void filterCandidatesDetailedMeasurements(
+      Acts::SpacePointData& spacePointData,
+      const InternalSpacePoint<external_spacepoint_t>& SpM,
+      const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
+      SeedingState& state) const;
+
  private:
   Acts::SeedFinderConfig<external_spacepoint_t> m_config;
 };
