@@ -65,12 +65,15 @@ class DirectNavigator {
     /// Actor operator call
     /// @tparam statet Type of the full propagator state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param state the entire propagator state
     /// @param r the result of this Actor
-    template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& state, const stepper_t& /*unused*/,
-                    result_type& r, const Logger& /*logger*/) const {
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    void operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
+                    const navigator_t& /*navigator*/, result_type& r,
+                    const Logger& /*logger*/) const {
       // Only act once
       if (not r.initialized) {
         // Initialize the surface sequence
@@ -79,11 +82,6 @@ class DirectNavigator {
         r.initialized = true;
       }
     }
-
-    /// Actor operator call - resultless, unused
-    template <typename propagator_state_t, typename stepper_t>
-    void operator()(propagator_state_t& /*unused*/, const stepper_t& /*unused*/,
-                    const Logger& /*logger*/) const {}
   };
 
   /// Nested State struct

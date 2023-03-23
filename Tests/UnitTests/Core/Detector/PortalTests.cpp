@@ -35,7 +35,7 @@ class LinkToVolumeImpl : public INavigationDelegate {
 
   /// @return the link to the contained volume
   /// @note the parameters are ignored
-  void link(const GeometryContext& /*unused*/, NavigationState& nState) const {
+  void link(const GeometryContext& /*gctx*/, NavigationState& nState) const {
     nState.currentVolume = dVolume.get();
   }
 };

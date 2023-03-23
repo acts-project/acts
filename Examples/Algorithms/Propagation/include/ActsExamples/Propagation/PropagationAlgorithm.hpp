@@ -22,7 +22,7 @@
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -54,7 +54,7 @@ using PropagationOutput =
 ///
 /// If the propagator is equipped appropriately, it can
 /// also be used to test the Extrapolator within the geomtetry
-class PropagationAlgorithm : public BareAlgorithm {
+class PropagationAlgorithm : public IAlgorithm {
  public:
   struct Config {
     /// Instance of a propagator wrapper that performs the actual propagation

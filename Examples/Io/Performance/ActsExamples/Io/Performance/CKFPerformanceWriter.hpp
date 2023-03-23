@@ -64,7 +64,7 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   ~CKFPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get readonly access to the config parameters
   const Config& config() const { return m_cfg; }

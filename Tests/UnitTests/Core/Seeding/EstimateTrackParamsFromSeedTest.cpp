@@ -96,6 +96,9 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
   std::array<double, 3> thetaArray = {80._degree, 90.0_degree, 100._degree};
   std::array<double, 2> qArray = {1, -1};
 
+  auto logger = Acts::getDefaultLogger("estimateTrackParamsFromSeed",
+                                       Acts::Logging::INFO);
+
   for (const auto& p : pArray) {
     for (const auto& phi : phiArray) {
       for (const auto& theta : thetaArray) {
@@ -159,7 +162,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
 
           // Test the partial track parameters estimator
           auto partialParamsOpt = estimateTrackParamsFromSeed(
-              spacePointPtrs.begin(), spacePointPtrs.end());
+              spacePointPtrs.begin(), spacePointPtrs.end(), *logger);
           BOOST_REQUIRE(partialParamsOpt.has_value());
           const auto& estPartialParams = partialParamsOpt.value();
           BOOST_TEST_INFO(
@@ -180,7 +183,7 @@ BOOST_AUTO_TEST_CASE(trackparameters_estimation_test) {
           // Test the full track parameters estimator
           auto fullParamsOpt = estimateTrackParamsFromSeed(
               geoCtx, spacePointPtrs.begin(), spacePointPtrs.end(),
-              *bottomSurface, Vector3(0, 0, 2._T), 0.1_T);
+              *bottomSurface, Vector3(0, 0, 2._T), 0.1_T, *logger);
           BOOST_REQUIRE(fullParamsOpt.has_value());
           const auto& estFullParams = fullParamsOpt.value();
           BOOST_TEST_INFO(

@@ -32,7 +32,8 @@ BOOST_AUTO_TEST_CASE(Geant4DetectorElement_construction) {
   auto rSurface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       rTransform, std::move(rBounds));
   // A detector element
-  Acts::Geant4DetectorElement g4DetElement(rSurface, 0.1, *g4physVol.get());
+  Acts::Geant4DetectorElement g4DetElement(rSurface, *g4physVol.get(),
+                                           rTransform, 0.1);
 
   BOOST_CHECK(g4DetElement.thickness() == 0.1);
   BOOST_CHECK(&g4DetElement.surface() == rSurface.get());

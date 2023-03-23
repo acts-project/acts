@@ -213,16 +213,12 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
 
       Acts::BoundSymMatrix fullVar =
           m.expander() * m.covariance() * m.expander().transpose();
-      varBound[Acts::eBoundLoc0] =
-          std::sqrt(fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0));
-      varBound[Acts::eBoundLoc1] =
-          std::sqrt(fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1));
-      varBound[Acts::eBoundPhi] =
-          std::sqrt(fullVar(Acts::eBoundPhi, Acts::eBoundPhi));
+      varBound[Acts::eBoundLoc0] = fullVar(Acts::eBoundLoc0, Acts::eBoundLoc0);
+      varBound[Acts::eBoundLoc1] = fullVar(Acts::eBoundLoc1, Acts::eBoundLoc1);
+      varBound[Acts::eBoundPhi] = fullVar(Acts::eBoundPhi, Acts::eBoundPhi);
       varBound[Acts::eBoundTheta] =
-          std::sqrt(fullVar(Acts::eBoundTheta, Acts::eBoundTheta));
-      varBound[Acts::eBoundTime] =
-          std::sqrt(fullVar(Acts::eBoundTime, Acts::eBoundTime));
+          fullVar(Acts::eBoundTheta, Acts::eBoundTheta);
+      varBound[Acts::eBoundTime] = fullVar(Acts::eBoundTime, Acts::eBoundTime);
     }
 
     /// Convenience function to fill the cluster information
@@ -249,7 +245,7 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
   ~RootMeasurementWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() override;
+  ProcessCode finalize() override;
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }

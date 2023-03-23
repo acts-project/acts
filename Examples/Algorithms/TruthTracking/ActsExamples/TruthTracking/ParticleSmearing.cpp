@@ -20,7 +20,7 @@
 
 ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
                                                  Acts::Logging::Level level)
-    : BareAlgorithm("ParticleSmearing", level), m_cfg(config) {
+    : IAlgorithm("ParticleSmearing", level), m_cfg(config) {
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing input truth particles collection");
   }
@@ -87,7 +87,7 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
 
       ACTS_VERBOSE("Smearing particle (pos, time, phi, theta, q/p):");
       ACTS_VERBOSE(" from: " << particle.position().transpose() << ", " << time
-                             << "," << phi << "," << theta << ","
+                             << ", " << phi << ", " << theta << ", "
                              << (q != 0 ? q / p : 1 / p));
       ACTS_VERBOSE("   to: " << perigee
                                     ->localToGlobal(
@@ -96,9 +96,9 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
                                                       params[Acts::eBoundLoc1]},
                                         particle.unitDirection() * p)
                                     .transpose()
-                             << ", " << params[Acts::eBoundTime] << ","
-                             << params[Acts::eBoundPhi] << ","
-                             << params[Acts::eBoundTheta] << ","
+                             << ", " << params[Acts::eBoundTime] << ", "
+                             << params[Acts::eBoundPhi] << ", "
+                             << params[Acts::eBoundTheta] << ", "
                              << params[Acts::eBoundQOverP]);
 
       // build the track covariance matrix using the smearing sigmas

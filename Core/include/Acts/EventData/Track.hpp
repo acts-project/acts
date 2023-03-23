@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,8 +8,15 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Holders.hpp"
+#include "Acts/Utilities/UnitVectors.hpp"
 
 #include <any>
 #include <cstddef>
@@ -206,6 +213,58 @@ class TrackProxy {
     return m_container->covariance(m_index);
   }
 
+  ActsScalar charge() const {
+    // Currently, neutral tracks are not supported here
+    // @TODO: Evaluate if/how neutral 'tracks' should be accounted for
+    return SinglyCharged{}.extractCharge(parameters()[eBoundQOverP]);
+  }
+
+  /// Access the theta parameter of the track at the reference surface
+  /// @return The theta parameter
+  ActsScalar theta() const { return parameters()[eBoundTheta]; }
+
+  /// Access the phi parameter of the track at the reference surface
+  /// @return The phi parameter
+  ActsScalar phi() const { return parameters()[eBoundPhi]; }
+
+  /// Access the loc0 parameter of the track at the reference surface
+  /// @return The loc0 parameter
+  ActsScalar loc0() const { return parameters()[eBoundLoc0]; }
+
+  /// Access the loc1 parameter of the track at the reference surface
+  /// @return The loc1 parameter
+  ActsScalar loc1() const { return parameters()[eBoundLoc1]; }
+
+  /// Access the time parameter of the track at the reference surface
+  /// @return The time parameter
+  ActsScalar time() const { return parameters()[eBoundTime]; }
+
+  /// Access the q/p (curvature) parameter of the track at the reference surface
+  /// @return The q/p parameter
+  ActsScalar qOverP() const { return parameters()[eBoundQOverP]; }
+
+  /// Get the absolute momentum of the tack
+  /// @return The absolute track momentum
+  ActsScalar absoluteMomentum() const {
+    return SinglyCharged{}.extractMomentum(qOverP());
+  }
+
+  /// Get the transverse momentum of the track
+  /// @return The track transverse momentum value
+  ActsScalar transverseMomentum() const {
+    return std::sin(theta()) * absoluteMomentum();
+  }
+
+  /// Get a unit vector along the track direction at the reference surface
+  /// @return The direction unit vector
+  Vector3 unitDirection() const {
+    return makeDirectionUnitFromPhiTheta(phi(), theta());
+  }
+
+  /// Get the global momentum vector
+  /// @return the global momentum vector
+  Vector3 momentum() const { return absoluteMomentum() * unitDirection(); }
+
   /// Get a range over the track states of this track. Return value is
   /// compatible with range based for loop. Const version
   /// @return Track state range to iterate over
@@ -293,42 +352,6 @@ class TrackProxy {
       m_container;
   IndexType m_index;
 };
-
-/// Internal holder type for referencing a backend without ownership
-template <typename T>
-struct RefHolder {
-  T* ptr;
-
-  RefHolder(T* _ptr) : ptr{_ptr} {}
-  RefHolder(T& ref) : ptr{&ref} {}
-
-  const T& operator*() const { return *ptr; }
-  T& operator*() { return *ptr; }
-
-  const T* operator->() const { return ptr; }
-  T* operator->() { return ptr; }
-};
-
-/// Internal holder type holding a backend container by value
-template <typename T>
-struct ValueHolder {
-  T val;
-
-  ValueHolder(T& _val) : val{_val} {}
-  ValueHolder(T&& _val) : val{std::move(_val)} {}
-
-  const T& operator*() const { return val; }
-  T& operator*() { return val; }
-
-  const T* operator->() const { return &val; }
-  T* operator->() { return &val; }
-};
-
-template <template <typename...> class, template <typename...> class>
-struct is_same_template : std::false_type {};
-
-template <template <typename...> class T>
-struct is_same_template<T, T> : std::true_type {};
 
 /// Helper iterator to allow iteration over tracks via track proxies.
 template <typename container_t, typename proxy_t, bool ReadOnly>
@@ -453,7 +476,7 @@ struct IsReadOnlyTrackContainer;
 /// @tparam traj_t the track state container backend
 /// @tparam holder_t ownership management class for the backend
 template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t = detail_tc::RefHolder>
+          template <typename> class holder_t = detail::RefHolder>
 class TrackContainer {
  public:
   static constexpr bool ReadOnly =
@@ -493,7 +516,7 @@ class TrackContainer {
   /// @param traj the track state container backend
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<
-                detail_tc::is_same_template<H, detail_tc::RefHolder>::value>>
+                detail::is_same_template<H, detail::RefHolder>::value>>
   TrackContainer(track_container_t& container, traj_t& traj)
       : m_container{&container}, m_traj{&traj} {}
 
@@ -520,6 +543,14 @@ class TrackContainer {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexType addTrack() {
     return m_container->addTrack_impl();
+  }
+
+  /// Remove a track at index @p itrack from the container
+  /// @note This invalidates all track proxies!
+  /// @param itrack The index of the track to remmove
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void removeTrack(IndexType itrack) {
+    m_container->removeTrack_impl(itrack);
   }
 
   /// Add a dymanic column to the track container
@@ -559,9 +590,20 @@ class TrackContainer {
     return *m_traj;
   }
 
+  /// Retrieve the holder of the track state container
+  /// @return The track state container including it's holder
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto& trackStateContainerHolder() {
+    return m_traj;
+  }
+
   /// Get a const reference to the track state container backend
   /// @return a const reference to the backend
   const auto& trackStateContainer() const { return *m_traj; }
+
+  /// Retrieve the holder of the track state container
+  /// @return The track state container including it's holder
+  const auto& trackStateContainerHolder() const { return m_traj; }
 
   /// Get a mutable iterator to the first track in the container
   /// @return a mutable iterator to the first track
@@ -653,11 +695,11 @@ class TrackContainer {
 
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
-    -> TrackContainer<track_container_t, traj_t, detail_tc::RefHolder>;
+    -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
-    -> TrackContainer<track_container_t, traj_t, detail_tc::ValueHolder>;
+    -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
 
 /// Utility class that eases accessing dynamic columns in track containers
 /// @tparam T the type of the value to access
