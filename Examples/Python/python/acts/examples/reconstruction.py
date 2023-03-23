@@ -1231,7 +1231,6 @@ def addAmbiguityResolution(
 
     alg = AmbiguityResolutionAlgorithm(
         level=customLogLevel(),
-        inputSourceLinks="sourcelinks",
         inputTrajectories="trajectories",
         outputTrajectories="filteredTrajectories",
         **acts.examples.defaultKWArgs(
