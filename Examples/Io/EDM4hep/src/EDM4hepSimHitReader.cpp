@@ -25,7 +25,7 @@ EDM4hepSimHitReader::EDM4hepSimHitReader(
   m_reader.openFile(m_cfg.inputPath);
   m_store.setReader(&m_reader);
 
-  m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputParticles.maybeInitialize(m_cfg.outputParticles);
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   m_eventsRange = std::make_pair(0, m_reader.getEntries());
