@@ -1,21 +1,22 @@
 add_library(
-  ActsExamplesTrackFindingExaTrkX SHARED
-  src/TrackFindingAlgorithmExaTrkX.cpp
+  ActsExamplesTrackFindingML SHARED
+  src/AmbiguityResolutionMLAlgorithm.cpp
 )
 
 target_include_directories(
-  ActsExamplesTrackFindingExaTrkX
+  ActsExamplesTrackFindingML
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
 )
 
 target_link_libraries(
-  ActsExamplesTrackFindingExaTrkX
+  ActsExamplesTrackFindingML
   PUBLIC
-    ActsPluginExaTrkX
+    ActsCore
+    ActsPluginOnnx
     ActsExamplesFramework
 )
 
 install(
-  TARGETS ActsExamplesTrackFindingExaTrkX
+  TARGETS ActsExamplesTrackFindingML
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
 )
