@@ -82,22 +82,25 @@ struct VolumeCollector {
   ///
   /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper used for the propagation
+  /// @tparam navigator_t Type of the navigator used for the propagation
   ///
   /// @param [in,out] state is the mutable stepper state object
   /// @param [in] stepper The stepper in use
+  /// @param [in] navigator The navigator in use
   /// @param [in,out] result is the mutable result object
   /// @param logger the logger object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result,
+                  const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
+    auto currentVolume = navigator.currentVolume(state.navigation);
+
     // The current volume has been assigned by the navigator
-    if (state.navigation.currentVolume &&
-        selector(*state.navigation.currentVolume)) {
+    if (currentVolume && selector(*currentVolume)) {
       // Create for recording
       VolumeHit volume_hit;
-      volume_hit.volume = state.navigation.currentVolume;
+      volume_hit.volume = currentVolume;
       volume_hit.position = stepper.position(state.stepping);
       volume_hit.direction = stepper.direction(state.stepping);
       bool save = true;
@@ -112,8 +115,7 @@ struct VolumeCollector {
       if (save) {
         result.collected.push_back(volume_hit);
         // Screen output
-        ACTS_VERBOSE("Collect volume  "
-                     << state.navigation.currentVolume->geometryId());
+        ACTS_VERBOSE("Collect volume  " << currentVolume->geometryId());
       }
     }
   }
