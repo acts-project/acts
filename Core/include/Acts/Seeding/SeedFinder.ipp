@@ -166,8 +166,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
     // filter candidates
     if (not m_config.useDetailedDoubleMeasurementInfo) {
-      filterCandidates(state.spacePointData, *spM.get(), options,
-                       seedFilterState, state);
+      filterCandidates(*spM.get(), options, seedFilterState, state);
     } else {
       filterCandidatesDetailedMeasurements(state.spacePointData, *spM.get(),
                                            options, seedFilterState, state);
@@ -364,7 +363,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
 template <typename external_spacepoint_t, typename platform_t>
 inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
-    Acts::SpacePointData& spacePointData,
     const InternalSpacePoint<external_spacepoint_t>& spM,
     const Acts::SeedFinderOptions& options, SeedFilterState& seedFilterState,
     SeedingState& state) const {

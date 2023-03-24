@@ -59,9 +59,9 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
   // error term for sp-pair without correlation of middle space point
   const float Er = ((varianceZM + varianceZSP) +
                     (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
-                   iDeltaR2
+                   iDeltaR2;
 
-                       sp.setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+  sp.setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
 
   return fillLineCircle({cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame});
 }
