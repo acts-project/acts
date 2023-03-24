@@ -8,10 +8,8 @@
 
 #pragma once
 
-// clang-format off
-// Workaround for building on clang+libstdc++. Must be the first include.
+// Workaround for building on clang+libstdc++. Must always be first
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-// clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
@@ -19,20 +17,12 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/AbortList.hpp"
 #include "Acts/Propagator/ActionList.hpp"
-#include "Acts/Propagator/PropagatorError.hpp"
-#include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StepperConcept.hpp"
-#include "Acts/Propagator/detail/LoopProtection.hpp"
 #include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Result.hpp"
 
-#include <cmath>
-#include <functional>
 #include <optional>
-#include <type_traits>
-
-#include <boost/algorithm/string.hpp>
 
 namespace Acts {
 
