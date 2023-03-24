@@ -296,6 +296,15 @@ struct GsfActor {
       std::vector<ComponentCache> componentCache;
       convoluteComponents(state, stepper, tmpStates, componentCache);
 
+      if (componentCache.empty()) {
+        ACTS_WARNING(
+            "No components left after applying energy loss. "
+            "Is the weight cutoff "
+            << m_cfg.weightCutoff << " too high?");
+        ACTS_WARNING("Return to propagator without applying energy loss");
+        return;
+      }
+
       reduceComponents(stepper, surface, componentCache);
 
       removeLowWeightComponents(componentCache);

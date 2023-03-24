@@ -412,7 +412,7 @@ struct MicroBenchmarkIter<Callable, void> {
       Concepts ::exists<call_without_input_t, Callable>;
 
   static inline void iter(const Callable& iteration,
-                          const void* /*unused*/ = nullptr) {
+                          const void* /*input*/ = nullptr) {
     static_assert(is_callable,
                   "Gave callable that is not callable without input");
     if constexpr (is_callable) {

@@ -35,7 +35,7 @@ struct Exact {
   /// @return a Result that is always ok(), and just returns
   /// the value and a stddev of 0.0
   Acts::Result<std::pair<double, double>> operator()(
-      double value, RandomEngine& /*unused*/) const {
+      double value, RandomEngine& /*rnd*/) const {
     return std::pair{value, 0.0};
   }
 };
@@ -191,7 +191,7 @@ struct Digital {
   ///
   /// @return a Result is uniformly distributed between bin borders
   Acts::Result<std::pair<double, double>> operator()(
-      double value, RandomEngine& /*unused*/) const {
+      double value, RandomEngine& /*rnd*/) const {
     if (binningData.min < value and binningData.max > value) {
       auto bin = binningData.search(value);
       auto lower = binningData.boundaries()[bin];
