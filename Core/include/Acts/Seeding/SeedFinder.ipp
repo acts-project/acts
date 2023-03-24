@@ -433,9 +433,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
     // multiply the squared sigma onto the squared scattering
-    scatteringInRegion2 *= m_config.sigmaScattering * m_config.sigmaScattering;
+    float scatteringInRegion2 = options.multipleScattering2 * iSinTheta2;
 
     // clear all vectors used in each inner for loop
     state.topSpVec.clear();
@@ -578,6 +577,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::
         const Acts::SeedFinderOptions& options,
         SeedFilterState& seedFilterState, SeedingState& state) const {
   float rM = spM.radius();
+  float cosPhiM = spM.x() / rM;
+  float sinPhiM = spM.y() / rM;
   float varianceRM = spM.varianceR();
   float varianceZM = spM.varianceZ();
 
@@ -629,9 +630,8 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
     // multiply the squared sigma onto the squared scattering
-    scatteringInRegion2 *= m_config.sigmaScattering * m_config.sigmaScattering;
+    float scatteringInRegion2 = options.multipleScattering2 * iSinTheta2;
 
     float sinTheta = 1 / std::sqrt(iSinTheta2);
     float cosTheta = cotThetaB * sinTheta;
@@ -643,8 +643,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::
 
     // coordinate transformation and checks for middle spacepoint
     // x and y terms for the rotation from UV to XY plane
-    float rotationTermsUVtoXY[2] = {spM.x() * sinTheta / spM.radius(),
-                                    spM.y() * sinTheta / spM.radius()};
+    float rotationTermsUVtoXY[2] = {cosPhiM * sinTheta, sinPhiM * sinTheta};
 
     for (size_t index_t = t0; index_t < numTopSP; index_t++) {
       const std::size_t& t = sorted_tops[index_t];
