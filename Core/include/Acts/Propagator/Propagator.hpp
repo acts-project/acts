@@ -32,8 +32,6 @@
 #include <optional>
 #include <type_traits>
 
-#include <boost/algorithm/string.hpp>
-
 namespace Acts {
 
 /// @brief Simple class holding result of propagation call
