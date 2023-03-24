@@ -11,7 +11,6 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Definitions/Common.hpp"
 
 #include <bitset>
 #include <limits>

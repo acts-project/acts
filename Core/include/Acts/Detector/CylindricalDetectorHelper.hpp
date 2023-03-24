@@ -130,7 +130,6 @@ ProtoContainer connectContainersInZ(
 /// @param gctx The geometry context
 /// @param innerContainer the inner container to be matched
 /// @param wrappingVolume the outer wrappig module
-/// @param selectedOnly switch only selected boundaries
 /// @param logLevel is the screen logging level
 ///
 /// @note not much checking is done anymore, as the ProtoContainer
@@ -138,8 +137,8 @@ ProtoContainer connectContainersInZ(
 ///
 /// @return a proto container with the outside portals
 ProtoContainer wrapContainerInZR(
-    const GeometryContext& gctx,
-    ProtoContainer& innerContainer, DetectorVolume& wrappingVolume,
+    const GeometryContext& gctx, ProtoContainer& innerContainer,
+    DetectorVolume& wrappingVolume,
     Acts::Logging::Level logLevel = Acts::Logging::INFO);
 
 /// @brief Helper method to extract r,z,phi boundaries for

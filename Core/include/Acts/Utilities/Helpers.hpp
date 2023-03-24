@@ -27,7 +27,6 @@
 #include <tuple>
 #include <type_traits>
 #include <vector>
-#include <tuple>
 
 #define ACTS_CHECK_BIT(value, mask) ((value & mask) == mask)
 
