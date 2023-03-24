@@ -31,6 +31,8 @@ ActsExamples::CsvSimHitReader::CsvSimHitReader(
   if (m_cfg.outputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits output collection");
   }
+
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
 }
 
 std::string ActsExamples::CsvSimHitReader::CsvSimHitReader::name() const {
@@ -84,7 +86,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSimHitReader::read(
   // write the ordered data to the EventStore (according to geometry_id).
   SimHitContainer simHits;
   simHits.insert(unordered.begin(), unordered.end());
-  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+  m_outputSimHits(ctx, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -19,6 +19,7 @@
 #include "ActsExamples/EventData/Index.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <memory>
@@ -267,6 +268,11 @@ class RootMeasurementWriter final : public WriterT<MeasurementContainer> {
       m_outputTrees;  ///< the output trees
   std::unordered_map<Acts::GeometryIdentifier, const Acts::Surface*>
       m_dSurfaces;  ///< All surfaces that could carry measurements
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<IndexMultimap<Index>> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 
 }  // namespace ActsExamples

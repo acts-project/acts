@@ -8,15 +8,18 @@
 
 #pragma once
 
+#include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/SurfaceMaterialMapper.hpp"
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MaterialMapping/IMaterialWriter.hpp"
 
 #include <climits>
 #include <memory>
 #include <mutex>
+#include <unordered_map>
 
 namespace Acts {
 
@@ -113,6 +116,12 @@ class MaterialMapping : public ActsExamples::IAlgorithm {
       m_mappingState;  //!< Material mapping state
   Acts::VolumeMaterialMapper::State
       m_mappingStateVol;  //!< Material mapping state
+                          //
+
+  ReadDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+      m_inputMaterialTracks{this, "InputMaterialTracks"};
+  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+      m_outputMaterialTracks{this, "OutputMaterialTracks"};
 };
 
 }  // namespace ActsExamples

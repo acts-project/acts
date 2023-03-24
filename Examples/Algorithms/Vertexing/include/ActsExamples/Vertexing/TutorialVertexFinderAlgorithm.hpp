@@ -10,6 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
@@ -42,6 +45,15 @@ class TutorialVertexFinderAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
+      m_inputTrackParameters{this, "InputTrackParameters"};
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
+      this, "OutputProtoVertices"};
 };
 
 }  // namespace ActsExamples

@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
@@ -56,6 +58,12 @@ class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
   Ort::Env m_env;
   // ONNX model for the duplicate neural network
   Acts::OnnxRuntimeBase m_duplicateClassifier;
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  WriteDataHandle<TrajectoriesContainer> m_outputTrajectories{
+      this, "OutputTrajectories"};
 };
 
 }  // namespace ActsExamples
