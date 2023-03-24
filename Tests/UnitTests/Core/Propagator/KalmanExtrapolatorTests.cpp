@@ -17,6 +17,7 @@
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Tests/CommonHelpers/CubicTrackingGeometry.hpp"
@@ -55,6 +56,7 @@ struct StepWiseActor {
 
   /// @brief Kalman sequence operation
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t is the type of Propagagor state
   /// @tparam stepper_t Type of the stepper used for the propagation
   /// @tparam navigator_t Type of the navigator used for the propagation
@@ -63,8 +65,8 @@ struct StepWiseActor {
   /// @param stepper The stepper in use
   /// @param navigator The navigator in use
   /// @param result is the mutable result state object
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {

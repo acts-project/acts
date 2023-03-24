@@ -12,6 +12,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "Acts/Material/MaterialSlab.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/Propagator/detail/VolumeMaterialInteraction.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -41,6 +42,7 @@ struct MaterialInteractor {
   /// multiple scattering and energy loss is applied  according to the
   /// configuration.
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t is the type of Propagagor state
   /// @tparam stepper_t Type of the stepper of the propagation
   ///
@@ -48,8 +50,8 @@ struct MaterialInteractor {
   /// @param stepper The stepper in use
   /// @param result is the mutable result state object
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& logger) const {

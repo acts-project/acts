@@ -12,6 +12,7 @@
 #include "Acts/Definitions/Common.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
@@ -50,14 +51,15 @@ struct SteppingLogger {
 
   /// SteppingLogger action for the ActionList of the Propagator
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t is the type of the Stepper
   /// @tparam navigator_t is the type of the Navigator
   ///
   /// @param [in,out] result is the mutable result object
   /// @param [in,out] state is the mutable stepper state object
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {

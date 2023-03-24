@@ -13,6 +13,7 @@
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
 #include "Acts/Material/ISurfaceMaterial.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/TrackFitting/BetheHeitlerApprox.hpp"
@@ -147,6 +148,7 @@ struct GsfActor {
 
   /// @brief GSF actor operation
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t is the type of Propagagor state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
@@ -154,8 +156,8 @@ struct GsfActor {
   /// @param state is the mutable propagator state object
   /// @param stepper The stepper in use
   /// @param result is the mutable result state object
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {

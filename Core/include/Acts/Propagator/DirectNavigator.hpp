@@ -14,6 +14,7 @@
 #include "Acts/Geometry/TrackingVolume.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <iomanip>
@@ -63,14 +64,16 @@ class DirectNavigator {
     Initializer() = default;
 
     /// Actor operator call
+    ///
+    /// @tparam propagator_stage Stage of the propagator
     /// @tparam statet Type of the full propagator state
     /// @tparam stepper_t Type of the stepper
     /// @tparam navigator_t Type of the navigator
     ///
     /// @param state the entire propagator state
     /// @param r the result of this Actor
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
+    template <PropagatorStage propagator_stage, typename propagator_state_t,
+              typename stepper_t, typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, result_type& r,
                     const Logger& /*logger*/) const {

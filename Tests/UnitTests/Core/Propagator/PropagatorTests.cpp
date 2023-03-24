@@ -20,6 +20,7 @@
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/CylinderSurface.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -50,8 +51,8 @@ struct PerpendicularMeasure {
 
   PerpendicularMeasure() = default;
 
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result) const {
     result.distance = perp(stepper.position(state.stepping));
@@ -76,8 +77,8 @@ struct SurfaceObserver {
 
   SurfaceObserver() = default;
 
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {

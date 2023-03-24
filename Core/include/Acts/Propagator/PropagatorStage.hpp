@@ -12,7 +12,8 @@ namespace Acts {
 
 enum class PropagatorStage {
   start,
-  preStep,
+  // currently not used
+  // preStep,
   postStep,
   end,
 };

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
@@ -29,6 +30,7 @@ struct MultiStepperSurfaceReached {
 
   /// boolean operator for abort condition without using the result
   ///
+  /// @tparam propagator_stage Stage of the propagator
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
@@ -37,16 +39,17 @@ struct MultiStepperSurfaceReached {
   /// @param [in] stepper Stepper used for propagation
   /// @param [in] navigator Navigator used for the progation
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    return (*this)(state, stepper, navigator, *state.navigation.targetSurface,
-                   logger);
+    return this->template operator()<propagator_stage>(
+        state, stepper, navigator, *state.navigation.targetSurface, logger);
   }
 
   /// boolean operator for abort condition without using the result
   ///
+  /// @tparam propagator_stage Stage of the propagator
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
@@ -55,8 +58,8 @@ struct MultiStepperSurfaceReached {
   /// @param [in] stepper Stepper used for the progation
   /// @param [in] targetSurface The target surface
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/,
                   const Surface& targetSurface, const Logger& logger) const {
@@ -67,8 +70,8 @@ struct MultiStepperSurfaceReached {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      if (!SurfaceReached{}(singleState, singleStepper, targetSurface,
-                            logger)) {
+      if (!SurfaceReached{}.template operator()<propagator_stage>(
+              singleState, singleStepper, targetSurface, logger)) {
         reached = false;
       } else {
         cmp.status() = Acts::Intersection3D::Status::onSurface;
@@ -106,4 +109,5 @@ struct MultiStepperSurfaceReached {
     return reached;
   }
 };
+
 }  // namespace Acts

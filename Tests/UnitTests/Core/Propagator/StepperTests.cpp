@@ -28,6 +28,7 @@
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/detail/Auctioneer.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -88,8 +89,8 @@ struct EndOfWorld {
   /// @param [in] navigator Navigator of the propagation
   ///
   /// @return Boolean statement if the particle is still in the detector
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/,
                   const Logger& /*logger*/) const {
@@ -122,6 +123,7 @@ struct StepCollector {
   /// @brief Main call operator for the action list. It stores the data for
   /// analysis afterwards
   ///
+  /// @tparam propagator_stage Stage of the propagator
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
@@ -130,8 +132,8 @@ struct StepCollector {
   /// @param [in] stepper Stepper of the propagation
   /// @param [in] navigator Navigator of the propagation
   /// @param [out] result Struct which is filled with the data
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {

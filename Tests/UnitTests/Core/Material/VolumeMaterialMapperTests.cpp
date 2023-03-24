@@ -29,6 +29,7 @@
 #include "Acts/Material/VolumeMaterialMapper.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/StraightLineStepper.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -51,8 +52,8 @@ struct MaterialCollector {
   };
   using result_type = this_result;
 
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& /*logger*/) const {

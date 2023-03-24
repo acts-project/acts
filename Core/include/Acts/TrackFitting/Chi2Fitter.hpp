@@ -29,6 +29,7 @@
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/Chi2FitterError.hpp"
@@ -265,6 +266,7 @@ class Chi2Fitter {
 
     /// @brief Chi square actor operation
     ///
+    /// @tparam propagator_stage is the stage of the Propagator
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
     /// @tparam navigator_t Type of the navigator
@@ -272,8 +274,8 @@ class Chi2Fitter {
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
+    template <PropagatorStage propagator_stage, typename propagator_state_t,
+              typename stepper_t, typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& /*navigator*/, result_type& result,
                     const Logger& /*logger*/) const {
@@ -600,8 +602,8 @@ class Chi2Fitter {
     /// Broadcast the action_type
     using action_type = Actor<parameters_t>;
 
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t, typename result_t>
+    template <PropagatorStage propagator_stage, typename propagator_state_t,
+              typename stepper_t, typename navigator_t, typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {
