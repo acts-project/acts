@@ -8,9 +8,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Definitions/Common.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "Acts/Definitions/Common.hpp"
 
 #include <bitset>
 #include <climits>
@@ -182,7 +182,6 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(BlockedMatrixMultiplication, Matrices,
   }
 }
 
-
 BOOST_AUTO_TEST_CASE(min_max) {
   std::vector<ActsScalar> ordered = {-3., -2., -1., 0., 1., 2., 3.};
   auto [min0, max0] = Acts::min_max(ordered, false);
@@ -195,7 +194,6 @@ BOOST_AUTO_TEST_CASE(min_max) {
 
   CHECK_CLOSE_ABS(min1, -3., std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(max1, 3., std::numeric_limits<ActsScalar>::epsilon());
-
 }
 
 BOOST_AUTO_TEST_CASE(range_medium) {
@@ -210,7 +208,6 @@ BOOST_AUTO_TEST_CASE(range_medium) {
 
   CHECK_CLOSE_ABS(range1, 6., std::numeric_limits<ActsScalar>::epsilon());
   CHECK_CLOSE_ABS(medium1, 0., std::numeric_limits<ActsScalar>::epsilon());
-
 }
 
 BOOST_AUTO_TEST_SUITE_END()

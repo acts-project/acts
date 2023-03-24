@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -561,7 +561,7 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
   // Set up all the different tests
   for (auto [ir, r] : Acts::enumerate(radii)) {
     std::string radStr = "_radii_" + std::to_string(ir);
-    
+
     ACTS_INFO("    -> test series innermost radius setup " << radii[ir][0u]);
 
     // Let's create the inner container first
@@ -570,7 +570,8 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
     auto iNecBounds = std::make_unique<Acts::CylinderVolumeBounds>(
         radii[ir][0u], radii[ir][1u], innerEndcapHalfZ);
     Acts::Transform3 ntf = tf;
-    ntf.pretranslate(Acts::Vector3(0., 0., -innerBarrelHalfZ - innerEndcapHalfZ));
+    ntf.pretranslate(
+        Acts::Vector3(0., 0., -innerBarrelHalfZ - innerEndcapHalfZ));
     iVolumes.push_back(DetectorVolumeFactory::construct(
         portalGenerator, tContext, "InnerNec" + radStr, ntf,
         std::move(iNecBounds), tryAllPortals()));
@@ -584,7 +585,8 @@ BOOST_AUTO_TEST_CASE(WrapContainernRZ) {
     auto iPecBounds = std::make_unique<Acts::CylinderVolumeBounds>(
         radii[ir][0u], radii[ir][1u], innerEndcapHalfZ);
     Acts::Transform3 ptf = tf;
-    ptf.pretranslate(Acts::Vector3(0., 0., innerBarrelHalfZ + innerEndcapHalfZ));
+    ptf.pretranslate(
+        Acts::Vector3(0., 0., innerBarrelHalfZ + innerEndcapHalfZ));
     iVolumes.push_back(DetectorVolumeFactory::construct(
         portalGenerator, tContext, "InnerPec" + radStr, ptf,
         std::move(iPecBounds), tryAllPortals()));

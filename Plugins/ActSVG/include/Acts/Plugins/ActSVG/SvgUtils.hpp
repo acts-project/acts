@@ -33,7 +33,7 @@ struct Style {
   ActsScalar strokeWidth = 0.5;
   std::array<int, 3> strokeColor = {0, 0, 0};
 
-  ActsScalar fontSize = 14;
+  unsigned int fontSize = 14u;
 
   unsigned int nSegments = 72u;
 
