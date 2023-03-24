@@ -13,7 +13,7 @@
 
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
 
-// memory backend is a vector of pointer of SimSpacePoint
+#include <any>
 
 namespace ActsExamples {
   
@@ -65,16 +65,22 @@ namespace ActsExamples {
     float varianceZ_impl(IndexType idx) const;
 
     // template<typename T>
-    // const T& component(HashedString key, std::size_t n) const
-    // {
-    //   using namespace Acts::HashedStringLiteral;
-    //   switch (key) {
-    //   case ""_hash:
-    // 	return *std::any_cast<T*>(container().component(HashedString(key), n));
-    //   default:
-    // 	throw std::runtime_error("no such component " + std::to_string(key));
-    //   }
-    // }
+    const std::any component_impl(Acts::HashedString key, std::size_t n) const
+    {
+      using namespace Acts::HashedStringLiteral;
+      switch (key) {
+      case "TopHalfStripLength"_hash:
+      case "BottomHalfStripLength"_hash:
+	return 0.;
+      case "TopStripDirection"_hash:
+      case "BottomStripDirection"_hash:
+      case "StripCenterDistance"_hash:
+      case "TopStripCenterPosition"_hash:
+	return Acts::Vector3(0, 0, 0);
+      default:
+	throw std::runtime_error("no such component " + std::to_string(key));
+      }
+    }
     
   private:
     const CollectionType& storage() const;
