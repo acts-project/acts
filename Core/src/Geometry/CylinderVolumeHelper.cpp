@@ -418,7 +418,7 @@ bool Acts::CylinderVolumeHelper::estimateAndCheckDimension(
     const CylinderVolumeBounds*& cylinderVolumeBounds,
     const Transform3& transform, double& rMinClean, double& rMaxClean,
     double& zMinClean, double& zMaxClean, BinningValue& bValue,
-    BinningType /*unused*/) const {
+    BinningType /*bType*/) const {
   // some verbose output
 
   ACTS_VERBOSE("Parsing the " << layers.size()

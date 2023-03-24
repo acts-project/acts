@@ -9,7 +9,7 @@ find_library(
   PATHS ${onnxruntime_DIR}
   PATH_SUFFIXES lib lib32 lib64
   DOC "The ONNXRuntime library")
-  
+
 if(NOT OnnxRuntime_LIBRARY)
   message(FATAL_ERROR "onnxruntime library not found")
 else()
@@ -19,10 +19,10 @@ endif()
 find_path(
   OnnxRuntime_INCLUDE_DIR
   NAMES core/session/onnxruntime_cxx_api.h #core/session/providers/cuda_provider_factory.h
-  PATHS ${onxxruntime_DIR}
+  PATHS ${onnxruntime_DIR}
   PATH_SUFFIXES include include/onnxruntime
   DOC "The ONNXRuntime include directory")
-  
+
 if(NOT OnnxRuntime_INCLUDE_DIR)
   message(FATAL_ERROR "onnxruntime includes not found")
 else()

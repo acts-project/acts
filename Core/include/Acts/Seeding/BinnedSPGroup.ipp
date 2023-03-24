@@ -154,7 +154,8 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   // keep track of changed bins while sorting
   boost::container::flat_set<size_t> rBinsIndex;
 
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
+  std::size_t counter = 0;
+  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++, ++counter) {
     if (*it == nullptr) {
       continue;
     }
@@ -178,7 +179,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     }
 
     auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        sp, spPosition, options.beamPos, variance);
+        counter, sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);
