@@ -44,7 +44,7 @@ struct NavigationState {
     const Portal* portal = nullptr;
     /// The boundary check used for the candidate, boundary checks
     /// can differ for sensitive surfaces and portals
-    BoundaryCheck bCheck = true;
+    BoundaryCheck boundaryCheck = true;
   };
 
   /// Surface candidate vector alias, this allows to use e.g. boost_small vector
@@ -75,6 +75,9 @@ struct NavigationState {
   /// The current surface, i.e the position is on surface
   const Surface* currentSurface = nullptr;
 
+  /// The current portal, i.e the position is on portal
+  const Portal* currentPortal = nullptr;
+
   /// That are the candidate surfaces to process
   SurfaceCandidates surfaceCandidates = {};
   SurfaceCandidates::iterator surfaceCandidate = surfaceCandidates.end();
@@ -87,53 +90,6 @@ struct NavigationState {
 
   /// Auxilliary attached information
   std::any auxilliary;
-};
-
-/// Filler of the current volume
-struct DetectorVolumeFiller {
-  /// Helper struct that allows to fill a volume into the
-  /// navigation state, it allows to use common navigation
-  /// structs for volume, portal, surfaces
-  ///
-  /// @param nState the navigation state
-  /// @param volume the volume that is filled
-  inline static void fill(NavigationState& nState,
-                          const DetectorVolume* volume) {
-    nState.currentVolume = volume;
-  }
-};
-
-/// Fillers and attachers for surfaces to act on the navigation state
-struct SurfacesFiller {
-  /// Helper struct that allows to fill surfaces into the candidate vector it
-  /// allows to use common navigation structs for volume, portal, surfaces
-  ///
-  /// @param nState the navigation state
-  /// @param surfaces the surfaces that are filled in
-  inline static void fill(NavigationState& nState,
-                          const std::vector<const Surface*>& surfaces) {
-    std::for_each(surfaces.begin(), surfaces.end(), [&](const auto& s) {
-      nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
-          ObjectIntersection<Surface>{}, s, nullptr,
-          nState.surfaceBoundaryCheck});
-    });
-  }
-};
-
-/// Fillers and attachers for portals to act on the navigation state
-struct PortalsFiller {
-  /// Helper struct that allows to fill surfaces into the candidate vector it
-  /// allows to use common navigation structs for volume, portal, surfaces
-  ///
-  /// @param nState the navigation state
-  /// @param portals the portals that are filled in
-  inline static void fill(NavigationState& nState,
-                          const std::vector<const Portal*>& portals) {
-    std::for_each(portals.begin(), portals.end(), [&](const auto& p) {
-      nState.surfaceCandidates.push_back(NavigationState::SurfaceCandidate{
-          ObjectIntersection<Surface>{}, nullptr, p, true});
-    });
-  }
 };
 
 }  // namespace Experimental
