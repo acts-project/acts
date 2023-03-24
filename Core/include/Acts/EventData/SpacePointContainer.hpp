@@ -131,18 +131,31 @@ namespace Acts {
     float varianceR(std::size_t n) const;
     float varianceZ(std::size_t n) const;    
 
-    // component methods for additional quantities
-    template<typename T>
-    const T& component(HashedString key, std::size_t n) const
-    {
-      using namespace Acts::HashedStringLiteral;
-      switch (key) {
-      case ""_hash:
-	return *std::any_cast<T*>(container().component(HashedString(key), n));
-      default:
-	throw std::runtime_error("no such component " + std::to_string(key));
-      }
-    }
+    // Dynamic variables
+    float topHalfStripLength(std::size_t n) const;
+    float bottomHalfStripLength(std::size_t n) const;
+    Acts::Vector3 topStripDirection(std::size_t n) const;
+    Acts::Vector3 bottomStripDirection(std::size_t n) const;
+    Acts::Vector3 stripCenterDistance(std::size_t n) const;
+    Acts::Vector3 topStripCenterPosition(std::size_t n) const;
+    
+    // // component methods for additional quantities
+    // template<typename T>
+    // const T& component(HashedString key, std::size_t n) const
+    // {
+    //   using namespace Acts::HashedStringLiteral;
+    //   switch (key) {
+    //   case "TopHalfStripLength"_hash:
+    //   case "BottomHalfStripLength"_hash:
+    //   case "TopStripDirection"_hash:
+    //   case "BottomStripDirection"_hash:
+    //   case "StripCenterDistance"_hash:
+    //   case "TopStripCenterPosition"_hash:
+    // 	return *std::any_cast<T*>(container().component_impl(key, n));
+    //   default:
+    // 	throw std::runtime_error("no such component " + std::to_string(key));
+    //   }
+    // }
     
   private:
     holder_t<container_t> m_container;
@@ -231,6 +244,36 @@ namespace Acts {
     inline float SpacePointContainer<container_t, holder_t>::varianceZ(
       std::size_t n) const
     { return container().varianceZ_impl(n); }
+
+   template<typename container_t,
+    template <typename> class holder_t>
+   inline float SpacePointContainer<container_t, holder_t>::topHalfStripLength(std::size_t n) const
+   { return container().topHalfStripLength_impl(n); }
+
+   template<typename container_t,
+    template <typename> class holder_t>
+   inline float SpacePointContainer<container_t, holder_t>::bottomHalfStripLength(std::size_t n) const
+   { return container().bottomHalfStripLength_impl(n); }
+
+   template<typename container_t,
+    template <typename> class holder_t>
+   inline Acts::Vector3 SpacePointContainer<container_t, holder_t>::topStripDirection(std::size_t n) const
+   { return container().topStripDirection_impl(n); }
+
+  template<typename container_t,
+	    template <typename> class holder_t>
+   inline Acts::Vector3 SpacePointContainer<container_t, holder_t>::bottomStripDirection(std::size_t n) const
+   { return container().bottomStripDirection_impl(n); }
+
+   template<typename container_t,
+    template <typename> class holder_t>
+   inline Acts::Vector3 SpacePointContainer<container_t, holder_t>::stripCenterDistance(std::size_t n) const
+   { return container().stripCenterDistance_impl(n); }
+
+   template<typename container_t,
+    template <typename> class holder_t>
+   inline Acts::Vector3 SpacePointContainer<container_t, holder_t>::topStripCenterPosition(std::size_t n) const
+   { return container().topStripCenterPosition_impl(n); }
   
   template<typename container_t,
     template <typename> class holder_t>

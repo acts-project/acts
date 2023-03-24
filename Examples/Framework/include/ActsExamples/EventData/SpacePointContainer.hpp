@@ -64,9 +64,17 @@ namespace ActsExamples {
     float varianceR_impl(IndexType idx) const;
     float varianceZ_impl(IndexType idx) const;
 
+    float topHalfStripLength_impl(std::size_t n) const;
+    float bottomHalfStripLength_impl(std::size_t n) const;
+    Acts::Vector3 topStripDirection_impl(std::size_t n) const;
+    Acts::Vector3 bottomStripDirection_impl(std::size_t n) const;
+    Acts::Vector3 stripCenterDistance_impl(std::size_t n) const;
+    Acts::Vector3 topStripCenterPosition_impl(std::size_t n) const;
+    
     // template<typename T>
-    const std::any component_impl(Acts::HashedString key, std::size_t n) const
+    const std::any component_impl(Acts::HashedString key, std::size_t /*n*/) const
     {
+      std::cout << "Inside component_impl\n";
       using namespace Acts::HashedStringLiteral;
       switch (key) {
       case "TopHalfStripLength"_hash:
@@ -130,7 +138,37 @@ namespace ActsExamples {
   inline float
   SpacePointContainer<collection_t>::varianceZ_impl(typename SpacePointContainer<collection_t>::IndexType idx) const
   { return storage()[idx]->varianceZ(); }
-
+  
+  template<typename collection_t>
+  inline float
+  SpacePointContainer<collection_t>::topHalfStripLength_impl(std::size_t /*n*/) const
+  { return 0.; }
+  
+  template<typename collection_t>
+  inline float 
+  SpacePointContainer<collection_t>::bottomHalfStripLength_impl(std::size_t /*n*/) const
+  { return 0.; }
+  
+  template<typename collection_t>
+  inline Acts::Vector3
+  SpacePointContainer<collection_t>::topStripDirection_impl(std::size_t /*n*/) const
+  { return {0.,0.,0.}; }
+  
+  template<typename collection_t>
+  inline Acts::Vector3
+  SpacePointContainer<collection_t>::bottomStripDirection_impl(std::size_t /*n*/) const
+  { return {0.,0.,0.}; }
+  
+  template<typename collection_t>
+  inline Acts::Vector3
+  SpacePointContainer<collection_t>::stripCenterDistance_impl(std::size_t /*n*/) const
+  { return {0.,0.,0.}; }
+  
+  template<typename collection_t>
+  inline Acts::Vector3
+  SpacePointContainer<collection_t>::topStripCenterPosition_impl(std::size_t /*n*/) const
+  { return {0.,0.,0.}; }
+  
   template<typename collection_t>
   const typename SpacePointContainer<collection_t>::CollectionType&
   SpacePointContainer<collection_t>::storage() const

@@ -39,6 +39,13 @@ namespace Acts {
     float radius() const;
     float varianceR() const;
     float varianceZ() const;
+
+    float topHalfStripLength() const;
+    float bottomHalfStripLength() const;
+    Acts::Vector3 topStripDirection() const;
+    Acts::Vector3 bottomStripDirection() const;
+    Acts::Vector3 stripCenterDistance() const;
+    Acts::Vector3 topStripCenterPosition() const;
     
     // component methods for additional quantities
     template<typename T>
@@ -111,6 +118,36 @@ namespace Acts {
   inline float 
   SpacePointProxy<container_t, read_only>::varianceZ() const
   { return container().varianceZ(m_index); }
+
+  template<typename container_t, bool read_only>
+  inline float
+  SpacePointProxy<container_t, read_only>::topHalfStripLength() const
+  { return container().topHalfStripLength(m_index); }
+
+  template<typename container_t, bool read_only>
+  inline float
+  SpacePointProxy<container_t, read_only>::bottomHalfStripLength() const
+  { return container().bottomHalfStripLength(m_index); }
+
+  template<typename container_t, bool read_only>
+  inline Acts::Vector3
+  SpacePointProxy<container_t, read_only>::topStripDirection() const
+  { return container().topStripDirection(m_index); }
+
+  template<typename container_t, bool read_only>
+  inline Acts::Vector3
+  SpacePointProxy<container_t, read_only>::bottomStripDirection() const
+  { return container().bottomStripDirection(m_index); }
+
+  template<typename container_t, bool read_only>
+  inline Acts::Vector3
+  SpacePointProxy<container_t, read_only>::stripCenterDistance() const
+  { return container().stripCenterDistance(m_index); }
+
+  template<typename container_t, bool read_only>
+  inline Acts::Vector3
+  SpacePointProxy<container_t, read_only>::topStripCenterPosition() const
+  { return container().topStripCenterPosition(m_index); }
   
   template<typename container_t, bool read_only>
   inline const typename SpacePointProxy<container_t, read_only>::ContainerType& 

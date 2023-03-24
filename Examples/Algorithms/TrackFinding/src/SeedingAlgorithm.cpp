@@ -22,6 +22,8 @@
 #include <limits>
 #include <stdexcept>
 
+using namespace Acts::HashedStringLiteral;
+
 ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     ActsExamples::SeedingAlgorithm::Config cfg, Acts::Logging::Level lvl)
     : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), m_cfg(std::move(cfg)) {
@@ -275,22 +277,16 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
         std::size_t index = sp->index();
-        state.spacePointData.setTopHalfStripLength(
-            index, m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp()));
-        state.spacePointData.setBottomHalfStripLength(
-            index, m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp()));
-        state.spacePointData.setTopStripDirection(
-            index, m_cfg.seedFinderConfig.getTopStripDirection(sp->sp()));
-        state.spacePointData.setBottomStripDirection(
-            index, m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp()));
-        state.spacePointData.setStripCenterDistance(
-            index, m_cfg.seedFinderConfig.getStripCenterDistance(sp->sp()));
-        state.spacePointData.setTopStripCenterPosition(
-            index, m_cfg.seedFinderConfig.getTopStripCenterPosition(sp->sp()));
+        state.spacePointData.setTopHalfStripLength(index, sp->sp().topHalfStripLength());
+        state.spacePointData.setBottomHalfStripLength(index, sp->sp().bottomHalfStripLength());
+        state.spacePointData.setTopStripDirection(index, sp->sp().topStripDirection());
+        state.spacePointData.setBottomStripDirection(index, sp->sp().bottomStripDirection());
+        state.spacePointData.setStripCenterDistance(index, sp->sp().stripCenterDistance());
+        state.spacePointData.setTopStripCenterPosition(index, sp->sp().topStripCenterPosition());
       }
     }
   }
-
+	
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
         m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
