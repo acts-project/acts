@@ -28,6 +28,7 @@
 #include "Acts/Propagator/DirectNavigator.hpp"
 #include "Acts/Propagator/Navigator.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFitting/KalmanFitterError.hpp"
@@ -322,6 +323,7 @@ class KalmanFitter {
 
     /// @brief Kalman actor operation
     ///
+    /// @tparam propagator_stage the stage of the Propagator
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
     /// @tparam navigator_t Type of the navigator
@@ -330,8 +332,8 @@ class KalmanFitter {
     /// @param stepper The stepper in use
     /// @param navigator The navigator in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
+    template <PropagatorStage propagator_stage, typename propagator_state_t,
+              typename stepper_t, typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, result_type& result,
                     const Logger& /*logger*/) const {
@@ -451,8 +453,8 @@ class KalmanFitter {
             // Remember the track fitting is done
             result.finished = true;
           }
-        } else if (targetReached(state, stepper, navigator, *targetSurface,
-                                 logger())) {
+        } else if (targetReached.template operator()<propagator_stage>(
+                       state, stepper, navigator, *targetSurface, logger())) {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
           auto res = stepper.boundState(state.stepping, *targetSurface, true,
@@ -983,8 +985,8 @@ class KalmanFitter {
     /// Broadcast the result_type
     using action_type = Actor<parameters_t>;
 
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t, typename result_t>
+    template <PropagatorStage propagator_stage, typename propagator_state_t,
+              typename stepper_t, typename navigator_t, typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {

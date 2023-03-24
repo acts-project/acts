@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/EventData/TrackParametersConcept.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 
 template <typename S, typename N>
 template <typename result_t, typename propagator_state_t>
@@ -19,7 +20,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   // Navigator initialize state call
   m_navigator.status(state, m_stepper);
   // Pre-Stepping call to the action list
-  state.options.actionList(state, m_stepper, m_navigator, result, logger());
+  state.options.abortList.template operator()<PropagatorStage::start>(
+      state, m_stepper, m_navigator, result, logger());
   // assume negative outcome, only set to true later if we actually have
   // a positive outcome.
 
@@ -27,8 +29,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   bool terminatedNormally = true;
 
   // Pre-Stepping: abort condition check
-  if (!state.options.abortList(state, m_stepper, m_navigator, result,
-                               logger())) {
+  if (!state.options.abortList.template operator()<PropagatorStage::start>(
+          state, m_stepper, m_navigator, result, logger())) {
     // Pre-Stepping: target setting
     m_navigator.target(state, m_stepper);
     // Stepping loop
@@ -54,9 +56,11 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
       // Post-stepping:
       // navigator status call - action list - aborter list - target call
       m_navigator.status(state, m_stepper);
-      state.options.actionList(state, m_stepper, m_navigator, result, logger());
-      if (state.options.abortList(state, m_stepper, m_navigator, result,
-                                  logger())) {
+      state.options.abortList.template operator()<PropagatorStage::postStep>(
+          state, m_stepper, m_navigator, result, logger());
+      if (state.options.abortList
+              .template operator()<PropagatorStage::postStep>(
+                  state, m_stepper, m_navigator, result, logger())) {
         terminatedNormally = true;
         break;
       }
@@ -78,7 +82,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
 
   // Post-stepping call to the action list
   ACTS_VERBOSE("Stepping loop done.");
-  state.options.actionList(state, m_stepper, m_navigator, result, logger());
+  state.options.actionList.template operator()<PropagatorStage::end>(
+      state, m_stepper, m_navigator, result, logger());
 
   // return progress flag here, decide on SUCCESS later
   return Result<void>::success();

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Utilities/detail/MPL/type_collector.hpp"
 
 #include <utility>
@@ -21,7 +22,8 @@ namespace {
 /// and that result type exists
 template <bool has_result = true>
 struct abort_checker {
-  template <typename aborter_t, typename propagator_state_t, typename stepper_t,
+  template <PropagatorStage propagator_stage, typename aborter_t,
+            typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename result_t, typename... Args>
   static bool check(const aborter_t& aborter, propagator_state_t& state,
                     const stepper_t& stepper, const navigator_t& navigator,
@@ -29,9 +31,9 @@ struct abort_checker {
     using action_type = action_type_t<aborter_t>;
     using result_type = result_type_t<action_type>;
 
-    return aborter(state, stepper, navigator,
-                   result.template get<result_type>(),
-                   std::forward<Args>(args)...);
+    return aborter.template operator()<propagator_stage>(
+        state, stepper, navigator, result.template get<result_type>(),
+        std::forward<Args>(args)...);
   }
 };
 
@@ -39,14 +41,17 @@ struct abort_checker {
 /// it has no access to the result
 template <>
 struct abort_checker<false> {
-  template <typename aborter_t, typename propagator_state_t, typename stepper_t,
+  template <PropagatorStage propagator_stage, typename aborter_t,
+            typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename result_t, typename... Args>
   static bool check(const aborter_t& aborter, propagator_state_t& state,
                     const stepper_t& stepper, const navigator_t& navigator,
                     const result_t& /*result*/, Args&&... args) {
-    return aborter(state, stepper, navigator, std::forward<Args>(args)...);
+    return aborter.template operator()<propagator_stage>(
+        state, stepper, navigator, std::forward<Args>(args)...);
   }
 };
+
 }  // end of anonymous namespace
 
 template <typename... conditions>
@@ -57,7 +62,8 @@ struct abort_list_impl;
 /// the call to the remaining ones
 template <typename first, typename... others>
 struct abort_list_impl<first, others...> {
-  template <typename T, typename propagator_state_t, typename stepper_t,
+  template <PropagatorStage propagator_stage, typename T,
+            typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename result_t, typename... Args>
   static bool check(const T& aborters_tuple, propagator_state_t& state,
                     const stepper_t& stepper, const navigator_t& navigator,
@@ -72,10 +78,10 @@ struct abort_list_impl<first, others...> {
     // -> skip remaining conditions if this abort condition evaluates to true
 
     bool abort =
-        abort_checker<has_result>::check(this_aborter, state, stepper,
-                                         navigator, result, args...) ||
-        abort_list_impl<others...>::check(aborters_tuple, state, stepper,
-                                          navigator, result, args...);
+        abort_checker<has_result>::template check<propagator_stage>(
+            this_aborter, state, stepper, navigator, result, args...) ||
+        abort_list_impl<others...>::template check<propagator_stage>(
+            aborters_tuple, state, stepper, navigator, result, args...);
 
     return abort;
   }
@@ -84,7 +90,8 @@ struct abort_list_impl<first, others...> {
 /// This is the check call on the a last of all conditions
 template <typename last>
 struct abort_list_impl<last> {
-  template <typename T, typename propagator_state_t, typename stepper_t,
+  template <PropagatorStage propagator_stage, typename T,
+            typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename result_t, typename... Args>
   static bool check(const T& aborters_tuple, propagator_state_t& state,
                     const stepper_t& stepper, const navigator_t& navigator,
@@ -92,16 +99,17 @@ struct abort_list_impl<last> {
     // get the right helper for calling the abort condition
     constexpr bool has_result = has_action_type_v<last>;
     const auto& this_aborter = std::get<last>(aborters_tuple);
-    return abort_checker<has_result>::check(this_aborter, state, stepper,
-                                            navigator, result,
-                                            std::forward<Args>(args)...);
+    return abort_checker<has_result>::template check<propagator_stage>(
+        this_aborter, state, stepper, navigator, result,
+        std::forward<Args>(args)...);
   }
 };
 
 /// This is the empty call list - never abort
 template <>
 struct abort_list_impl<> {
-  template <typename T, typename propagator_state_t, typename stepper_t,
+  template <PropagatorStage propagator_stage, typename T,
+            typename propagator_state_t, typename stepper_t,
             typename navigator_t, typename result_t, typename... Args>
   static bool check(const T& /*aborter_tuple*/, propagator_state_t& /*state*/,
                     const stepper_t& /*stepper*/,

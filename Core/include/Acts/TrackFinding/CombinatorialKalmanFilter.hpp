@@ -27,6 +27,7 @@
 #include "Acts/Propagator/ActionList.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/StandardAborters.hpp"
 #include "Acts/Propagator/detail/PointwiseMaterialInteraction.hpp"
 #include "Acts/TrackFinding/CombinatorialKalmanFilterError.hpp"
@@ -335,6 +336,7 @@ class CombinatorialKalmanFilter {
 
     /// @brief CombinatorialKalmanFilter actor operation
     ///
+    /// @tparam propagator_stage the stage of the Propagator
     /// @tparam propagator_state_t Type of the Propagagor state
     /// @tparam stepper_t Type of the stepper
     ///
@@ -342,8 +344,8 @@ class CombinatorialKalmanFilter {
     /// @param stepper is the stepper in use
     /// @param navigator is the navigator in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t>
+    template <PropagatorStage propagator_stage, typename propagator_state_t,
+              typename stepper_t, typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
                     const navigator_t& navigator, result_type& result,
                     const Logger& /*logger*/) const {
@@ -445,7 +447,8 @@ class CombinatorialKalmanFilter {
         }
       }
 
-      if (result.abortList(state, stepper, navigator, result, logger())) {
+      if (result.abortList.template operator()<propagator_stage>(
+              state, stepper, navigator, result, logger())) {
         state.navigation.targetReached = false;
         if (result.activeTips.empty()) {
           // we are already done
@@ -495,8 +498,9 @@ class CombinatorialKalmanFilter {
             }
             // -> then progress to target/reference surface and built the final
             // track parameters for found track indexed with iSmoothed
-            if (result.smoothed and targetReached(state, stepper, navigator,
-                                                  *targetSurface, logger())) {
+            if (result.smoothed and
+                targetReached.template operator()<propagator_stage>(
+                    state, stepper, navigator, *targetSurface, logger())) {
               ACTS_VERBOSE(
                   "Completing the track with last measurement index = "
                   << result.lastMeasurementIndices.at(result.iSmoothed));
@@ -1229,8 +1233,8 @@ class CombinatorialKalmanFilter {
     /// Broadcast the result_type
     using action_type = Actor<source_link_accessor_t, parameters_t>;
 
-    template <typename propagator_state_t, typename stepper_t,
-              typename navigator_t, typename result_t>
+    template <PropagatorStage propagator_stage, typename propagator_state_t,
+              typename stepper_t, typename navigator_t, typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
                     const navigator_t& /*navigator*/, const result_t& result,
                     const Logger& /*logger*/) const {

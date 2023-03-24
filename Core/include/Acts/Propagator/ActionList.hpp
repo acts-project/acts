@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/detail/action_list_implementation.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/all_of.hpp"
@@ -73,6 +74,7 @@ struct ActionList : public detail::Extendable<actors_t...> {
   /// Call operator that is that broadcasts the call to the tuple()
   /// members of the list
   ///
+  /// @tparam propagator_stage is the stage of the propagator
   /// @tparam propagator_state_t is the state type of the propagator
   /// @tparam stepper_t Type of the stepper used for the propagation
   /// @tparam navigator_t Type of the navigator used for the propagation
@@ -82,14 +84,16 @@ struct ActionList : public detail::Extendable<actors_t...> {
   /// @param [in] stepper The stepper in use
   /// @param [in] navigator The navigator in use
   /// @param [in,out] result This is the result object from actions
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t, typename result_t, typename... Args>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t, typename result_t,
+            typename... Args>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, result_t& result,
                   Args&&... args) const {
     using impl = detail::action_list_impl<actors_t...>;
-    impl::action(tuple(), state, stepper, navigator, result,
-                 std::forward<Args>(args)...);
+    impl::template action<propagator_stage>(tuple(), state, stepper, navigator,
+                                            result,
+                                            std::forward<Args>(args)...);
   }
 };
 

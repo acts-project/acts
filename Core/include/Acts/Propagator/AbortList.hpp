@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Propagator/detail/abort_list_implementation.hpp"
 #include "Acts/Utilities/detail/Extendable.hpp"
 #include "Acts/Utilities/detail/MPL/has_duplicates.hpp"
@@ -94,6 +95,7 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   /// This is the call signature for the abort list, it broadcasts the call
   /// to the tuple() memembers of the list
   ///
+  /// @tparam propagator_stage is the stage of the propagator
   /// @tparam propagator_state_t is the state type of the propagator
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
@@ -103,14 +105,16 @@ struct AbortList : public detail::Extendable<aborters_t...> {
   /// @param [in] stepper Stepper used for the propagation
   /// @param [in] navigator Navigator used for the propagation
   /// @param [in] result is the result object from a certain action
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t, typename result_t, typename... Args>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t, typename result_t,
+            typename... Args>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const result_t& result,
                   Args&&... args) const {
     using impl = detail::abort_list_impl<aborters_t...>;
-    return impl::check(tuple(), state, stepper, navigator, result,
-                       std::forward<Args>(args)...);
+    return impl::template check<propagator_stage>(tuple(), state, stepper,
+                                                  navigator, result,
+                                                  std::forward<Args>(args)...);
   }
 };
 

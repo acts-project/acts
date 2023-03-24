@@ -10,6 +10,7 @@
 
 #include "Acts/Material/ISurfaceMaterial.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
@@ -45,7 +46,8 @@ struct SimulationActor {
     // type.
     using action_type = SimulationActor;
 
-    template <typename propagator_state_t, typename stepper_t,
+    template <Acts::PropagatorStage propagator_stage,
+              typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     constexpr bool operator()(propagator_state_t & /*state*/,
                               const stepper_t & /*stepper*/,
@@ -73,6 +75,7 @@ struct SimulationActor {
 
   /// Simulate the interaction with a single surface.
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t is propagator state
   /// @tparam stepper_t is the stepper instance
   ///
@@ -80,8 +83,8 @@ struct SimulationActor {
   /// @param stepper is the propagation stepper object
   /// @param result is the mutable result/cache object
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <Acts::PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t &state, stepper_t &stepper,
                   navigator_t & /*navigator*/, result_type &result,
                   const Acts::Logger & /*logger*/) const {

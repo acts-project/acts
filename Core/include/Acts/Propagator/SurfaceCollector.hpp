@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
 #include <sstream>
@@ -80,6 +81,7 @@ struct SurfaceCollector {
   /// in which case the action is performed:
   /// - it records the surface given the configuration
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t is the type of Propagator state
   /// @tparam stepper_t Type of the stepper used for the propagation
   ///
@@ -87,8 +89,8 @@ struct SurfaceCollector {
   /// @param [in] stepper The stepper in use
   /// @param [in,out] result is the mutable result object
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& logger) const {

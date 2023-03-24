@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/ConstrainedStep.hpp"
+#include "Acts/Propagator/PropagatorStage.hpp"
 #include "Acts/Surfaces/BoundaryCheck.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Intersection.hpp"
@@ -46,6 +47,7 @@ struct PathLimitReached {
 
   /// boolean operator for abort condition without using the result
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
@@ -53,8 +55,8 @@ struct PathLimitReached {
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for propagation
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/,
                   const Logger& logger) const {
@@ -90,6 +92,7 @@ struct SurfaceReached {
 
   /// boolean operator for abort condition without using the result
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
@@ -98,16 +101,17 @@ struct SurfaceReached {
   /// @param [in] stepper Stepper used for propagation
   /// @param [in] navigator Navigator used for propagation
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    return (*this)(state, stepper, navigator, *state.navigation.targetSurface,
-                   logger);
+    return this->template operator()<propagator_stage>(
+        state, stepper, navigator, *state.navigation.targetSurface, logger);
   }
 
   /// boolean operator for abort condition without using the result
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
@@ -116,8 +120,8 @@ struct SurfaceReached {
   /// @param [in] stepper Stepper used for the progation
   /// @param [in] targetSurface The target surface
   /// @param logger a logger instance
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/,
                   const Surface& targetSurface, const Logger& logger) const {
@@ -185,11 +189,12 @@ struct EndOfWorldReached {
 
   /// boolean operator for abort condition without using the result
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t Type of the propagator state
   ///
   /// @param [in,out] state The propagation state object
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& /*stepper*/,
                   const navigator_t& /*navigator*/,
                   const Logger& /*logger*/) const {
@@ -207,14 +212,15 @@ struct ParticleStopped {
 
   /// boolean operator for abort condition without using the result
   ///
+  /// @tparam propagator_stage is the stage of the Propagator
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper The stepper object
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/,
                   const Logger& /*logger*/) const {
