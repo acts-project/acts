@@ -10,6 +10,7 @@
 
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
 
@@ -112,7 +113,7 @@ class MultiGrid1D {
   static constexpr size_t DIM = 1u;
 
   const std::vector<size_t>& atPosition(
-      const std::array<ActsScalar, 1u>& /*unused*/) const {
+      const std::array<ActsScalar, 1u>& /*position*/) const {
     return e;
   }
 
@@ -125,7 +126,7 @@ class MultiGrid2D {
   static constexpr size_t DIM = 2u;
 
   const std::vector<size_t>& atPosition(
-      const std::array<ActsScalar, 2u>& /*unused*/) const {
+      const std::array<ActsScalar, 2u>& /*position*/) const {
     return e;
   }
 

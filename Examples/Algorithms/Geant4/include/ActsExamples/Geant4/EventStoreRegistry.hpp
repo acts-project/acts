@@ -11,6 +11,7 @@
 #include "Acts/Material/MaterialInteraction.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
 #include <unordered_map>
@@ -48,6 +49,9 @@ class EventStoreRegistry {
     std::unordered_map<unsigned int, unsigned int> trackIdRootId;
     /// Track ID generation counter
     std::unordered_map<unsigned int, unsigned int> trackIdGenerationCount;
+
+    /// Data handles to read particles from the whiteboard
+    const ReadDataHandle<SimParticleContainer>* inputParticles{nullptr};
   };
 
   EventStoreRegistry() = delete;

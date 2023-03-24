@@ -62,7 +62,7 @@ class Sequencer {
     IterationCallback iterationCallback = []() {};
     /// Run data flow consistency checks
     /// Defaults to false right now until all components are migrated
-    bool runDataFlowChecks = false;
+    bool runDataFlowChecks = true;
   };
 
   Sequencer(const Config &cfg);
@@ -85,7 +85,7 @@ class Sequencer {
   /// Append a sequence element to the sequence
   ///
   /// @throws std::invalid_argument if the element is NULL.
-  void addElement(std::shared_ptr<SequenceElement> element);
+  void addElement(const std::shared_ptr<SequenceElement> &element);
 
   /// Add a writer to the set of writers.
   ///
@@ -142,7 +142,7 @@ class Sequencer {
 
   std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
 
-  std::unordered_map<std::string, const std::type_info *> m_whiteBoardState;
+  std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };

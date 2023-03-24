@@ -23,14 +23,15 @@ ActsExamples::ParticlesPrinter::ParticlesPrinter(const Config& cfg,
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Input particles collection is not configured");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
 }
 
 ActsExamples::ProcessCode ActsExamples::ParticlesPrinter::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   using namespace Acts::UnitLiterals;
 
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto& particles = m_inputParticles(ctx);
 
   ACTS_INFO("event " << ctx.eventNumber << " collection '"
                      << m_cfg.inputParticles << "' contains "
