@@ -65,14 +65,15 @@ struct MeasurementsCreator {
   /// @brief Operater that is callable by an ActionList. The function
   /// collects the surfaces
   ///
+  /// @tparam propagator_stage Stage of the propagator
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
   /// @tparam navigator_t Type of the navigator
   ///
   /// @param [out] result Vector of matching surfaces
   /// @param [in] state State of the propagator
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
+  template <PropagatorStage propagator_stage, typename propagator_state_t,
+            typename stepper_t, typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& /*navigator*/, result_type& result,
                   const Logger& logger) const {
