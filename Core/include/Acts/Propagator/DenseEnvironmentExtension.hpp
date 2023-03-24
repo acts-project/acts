@@ -8,9 +8,6 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++
-#include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
-
 #include "Acts/Propagator/detail/GenericDenseEnvironmentExtension.hpp"
 
 namespace Acts {
