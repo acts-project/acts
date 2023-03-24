@@ -20,7 +20,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   // Navigator initialize state call
   m_navigator.status(state, m_stepper);
   // Pre-Stepping call to the action list
-  state.options.abortList.template operator()<PropagatorStage::start>(
+  state.options.actionList.template operator()<PropagatorStage::start>(
       state, m_stepper, m_navigator, result, logger());
   // assume negative outcome, only set to true later if we actually have
   // a positive outcome.
@@ -56,7 +56,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
       // Post-stepping:
       // navigator status call - action list - aborter list - target call
       m_navigator.status(state, m_stepper);
-      state.options.abortList.template operator()<PropagatorStage::postStep>(
+      state.options.actionList.template operator()<PropagatorStage::postStep>(
           state, m_stepper, m_navigator, result, logger());
       if (state.options.abortList
               .template operator()<PropagatorStage::postStep>(
