@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointContainer.hpp"
 #include "Acts/Utilities/Holders.hpp"
 
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
@@ -21,6 +22,8 @@ namespace ActsExamples {
   public:
     using CollectionType = collection_t;
     using ValueType = typename CollectionType::value_type;
+
+    friend Acts::SpacePointContainer<ActsExamples::SpacePointContainer<collection_t>, Acts::detail::RefHolder>;
     
     // default constructor is of no use. It cannot be used, so why bother?
     SpacePointContainer() = delete;
@@ -50,7 +53,7 @@ namespace ActsExamples {
     
     ~SpacePointContainer() = default;
 
-  public:
+  private:
     using IndexType = std::size_t;
 
     IndexType size_impl() const;
@@ -61,6 +64,18 @@ namespace ActsExamples {
     float varianceR_impl(IndexType idx) const;
     float varianceZ_impl(IndexType idx) const;
 
+    // template<typename T>
+    // const T& component(HashedString key, std::size_t n) const
+    // {
+    //   using namespace Acts::HashedStringLiteral;
+    //   switch (key) {
+    //   case ""_hash:
+    // 	return *std::any_cast<T*>(container().component(HashedString(key), n));
+    //   default:
+    // 	throw std::runtime_error("no such component " + std::to_string(key));
+    //   }
+    // }
+    
   private:
     const CollectionType& storage() const;
     
