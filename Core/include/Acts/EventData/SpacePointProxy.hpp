@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,7 +8,11 @@
 
 #pragma once
 
+#include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
+
+#include <any>
+#include <string_view>
 #include <type_traits>
 
 namespace Acts {
@@ -36,7 +40,14 @@ namespace Acts {
     float varianceR() const;
     float varianceZ() const;
     
-    // Add component methods for additional quantities
+    // component methods for additional quantities
+    template<typename T>
+    const T& component(HashedString key) const
+    { return container().template component<T>(key, m_index); }
+
+    template<typename T, bool RO = read_only, std::enable_if_t<!RO, bool> = true>
+    T& component(HashedString key)
+    { return container().template component<T>(key, m_index); }
     
   private:
     template<bool RO = read_only, std::enable_if_t<!RO, bool> = true>

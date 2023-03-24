@@ -11,7 +11,9 @@
 #include "Acts/EventData/SpacePointProxy.hpp" 
 #include "Acts/EventData/SpacePointProxyIterator.hpp"
 #include "Acts/EventData/Utils.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 
+#include <any>
 #include <vector>
 
 namespace Acts {
@@ -129,10 +131,19 @@ namespace Acts {
     float varianceR(std::size_t n) const;
     float varianceZ(std::size_t n) const;    
 
-    // The get method in trackcontainer creates every time a new 
-    // track state proxy giving this container as input
-    // would that be ok for space points? 
-
+    // component methods for additional quantities
+    template<typename T>
+    const T& component(HashedString key, std::size_t n) const
+    {
+      using namespace Acts::HashedStringLiteral;
+      switch (key) {
+      case ""_hash:
+	return *std::any_cast<T*>(container().component(HashedString(key), n));
+      default:
+	throw std::runtime_error("no such component " + std::to_string(key));
+      }
+    }
+    
   private:
     holder_t<container_t> m_container;
     std::vector<SpacePointProxyType> m_proxies {}; // this will go away ?
