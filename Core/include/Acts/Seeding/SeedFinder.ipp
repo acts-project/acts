@@ -684,7 +684,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::
       double positionBottom[3] = {
           rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
           rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
-				zPositionMiddle)};
+          zPositionMiddle};
 
       auto spB = state.compatBottomSP[b];
       double rBTransf[3];
