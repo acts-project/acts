@@ -247,6 +247,3 @@ inline bool xyzCoordinateCheck(
   return true;
 }
 }  // namespace Acts
-return true;
-}
-}  // namespace Acts
