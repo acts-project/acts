@@ -195,4 +195,5 @@ class GeometryObjectSorterT {
   ObjectSorterT<Vector3> m_objectSorter;
   std::shared_ptr<const Transform3> m_transform;
 };
+
 }  // namespace Acts
