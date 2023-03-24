@@ -8,8 +8,10 @@
 
 #pragma once
 
-// Workaround for building on clang+libstdc++. Must always be first
+// clang-format off
+// Workaround for building on clang+libstdc++. Must be the first include.
 #include "Acts/Utilities/detail/ReferenceWrapperAnyCompat.hpp"
+// clang-format on
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
