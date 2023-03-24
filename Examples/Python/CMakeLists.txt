@@ -78,7 +78,6 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/SvgStub.cpp)
 endif()
 
-
 if(ACTS_BUILD_PLUGIN_DD4HEP AND ACTS_BUILD_EXAMPLES_DD4HEP)
   pybind11_add_module(ActsPythonBindingsDD4hep src/DD4hepComponent.cpp)
   target_link_libraries(ActsPythonBindingsDD4hep PUBLIC 
@@ -163,6 +162,13 @@ if(ACTS_BUILD_EXAMPLES_EDM4HEP)
   list(APPEND py_files examples/edm4hep.py)
 else()
   target_sources(ActsPythonBindings PRIVATE src/EDM4hepStub.cpp)
+endif()
+
+if(ACTS_BUILD_PLUGIN_ONNX)
+  target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingML)
+  target_sources(ActsPythonBindings PRIVATE src/MLTrackFinding.cpp)
+else()
+  target_sources(ActsPythonBindings PRIVATE src/MLTrackFindingStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)
