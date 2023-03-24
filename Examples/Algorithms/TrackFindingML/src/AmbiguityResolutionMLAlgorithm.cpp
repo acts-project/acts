@@ -38,6 +38,9 @@ ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing trajectories output collection");
   }
+
+  m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+  m_outputTrajectories.initialize(m_cfg.outputTrajectories);
 }
 
 namespace {
