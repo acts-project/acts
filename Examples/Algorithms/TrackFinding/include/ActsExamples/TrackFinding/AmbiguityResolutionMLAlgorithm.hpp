@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 #include <vector>
@@ -22,7 +22,7 @@ namespace ActsExamples {
 ///  1) Cluster together nearby tracks using shared hits
 ///  2) For each track use a neural network to compute a score
 ///  3) In each cluster keep the track with the highest score
-class AmbiguityResolutionMLAlgorithm final : public BareAlgorithm {
+class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input trajectories collection.

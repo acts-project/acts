@@ -101,7 +101,6 @@ std::unordered_map<int, std::vector<int>> dbscanClustering(
   mlpack::DBSCAN dbscan(0.07, 2);
 
   arma::mat data(2, trackMap.size());
-  std::cout << trackMap.size() << std::endl;
   int trackID = 0;
   arma::Row<size_t> assignments;
 
@@ -164,7 +163,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
       int nbMeasurements = 0;
       traj.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
         if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          int indexHit = state.uncalibratedSourceLink()
+          int indexHit = state.getUncalibratedSourceLink()
                              .template get<ActsExamples::IndexSourceLink>()
                              .index();
           hits.emplace_back(indexHit);
@@ -183,8 +182,8 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     iTraj++;
   }
   // Performe the share hit based clustering
-  auto clusters = clusterTracks(trackMap);
-  // auto clusters = dbscanClustering(trackMap, trackParameters);
+  // auto clusters = clusterTracks(trackMap);
+  auto clusters = dbscanClustering(trackMap, trackParameters);
   Acts::NetworkBatchInput networkInput(trackID + 1, 8);
   trackID = 0;
   // Get the input feature of the network for all the tracks
