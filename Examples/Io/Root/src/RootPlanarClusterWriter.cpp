@@ -35,6 +35,9 @@ ActsExamples::RootPlanarClusterWriter::RootPlanarClusterWriter(
   if (m_cfg.inputSimHits.empty()) {
     throw std::invalid_argument("Missing simulated hits input collection");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+
   if (m_cfg.treeName.empty()) {
     throw std::invalid_argument("Missing tree name");
   }
@@ -102,7 +105,7 @@ ActsExamples::ProcessCode ActsExamples::RootPlanarClusterWriter::writeT(
     const ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>&
         clusters) {
   // retrieve simulated hits
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& simHits = m_inputSimHits(ctx);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);

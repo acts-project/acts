@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackParameters.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Definitions/Algebra.hpp>
@@ -70,6 +73,12 @@ class RootTrajectorySummaryReader : public IReader {
 
   /// The config class
   Config m_cfg;
+
+  WriteDataHandle<std::vector<Acts::BoundTrackParameters>>
+      m_outputTrackParameters{this, "OutputTrackParameters"};
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 
   /// mutex used to protect multi-threaded reads
   std::mutex m_read_mutex;

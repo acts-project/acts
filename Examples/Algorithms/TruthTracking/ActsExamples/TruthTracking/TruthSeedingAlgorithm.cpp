@@ -26,17 +26,22 @@ ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument("Missing input hit-particles map collection");
   }
-  if (m_cfg.inputSourceLinks.empty()) {
-    throw std::invalid_argument("Missing source links input collection");
-  }
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing seeds or space point collection");
   }
-  for (const auto& i : m_cfg.inputSpacePoints) {
-    if (i.empty()) {
+
+  for (const auto& spName : m_cfg.inputSpacePoints) {
+    if (spName.empty()) {
       throw std::invalid_argument("Invalid space point input collection");
     }
+
+    auto& handle = m_inputSpacePoints.emplace_back(
+        std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
+            this,
+            "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
+    handle->initialize(spName);
   }
+
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output particles collection");
   }
@@ -46,17 +51,18 @@ ActsExamples::TruthSeedingAlgorithm::TruthSeedingAlgorithm(
   if (m_cfg.outputProtoTracks.empty()) {
     throw std::invalid_argument("Missing proto tracks output collections");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_outputParticles.initialize(m_cfg.outputParticles);
+  m_outputSeeds.initialize(m_cfg.outputSeeds);
 }
 
 ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // prepare input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
   // compute particle_id -> {hit_id...} map from the
   // hit_id -> {particle_id...} map on the fly.
   const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
@@ -65,15 +71,14 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
   // configured input sources.
   // pre-compute the total size required so we only need to allocate once
   size_t nSpacePoints = 0;
-  for (const auto& isp : m_cfg.inputSpacePoints) {
-    nSpacePoints += ctx.eventStore.get<SimSpacePointContainer>(isp).size();
+  for (const auto& isp : m_inputSpacePoints) {
+    nSpacePoints += (*isp)(ctx).size();
   }
 
   std::vector<const SimSpacePoint*> spacePointPtrs;
   spacePointPtrs.reserve(nSpacePoints);
-  for (const auto& isp : m_cfg.inputSpacePoints) {
-    for (const auto& spacePoint :
-         ctx.eventStore.get<SimSpacePointContainer>(isp)) {
+  for (const auto& isp : m_inputSpacePoints) {
+    for (const auto& spacePoint : (*isp)(ctx)) {
       // since the event store owns the space points, their pointers should be
       // stable and we do not need to create local copies.
       spacePointPtrs.push_back(&spacePoint);
@@ -178,9 +183,8 @@ ActsExamples::ProcessCode ActsExamples::TruthSeedingAlgorithm::execute(
 
   ACTS_VERBOSE("Found " << seeds.size() << " seeds");
 
-  ctx.eventStore.add(m_cfg.outputParticles, std::move(seededParticles));
-  ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(tracks));
+  m_outputParticles(ctx, std::move(seededParticles));
+  m_outputSeeds(ctx, std::move(seeds));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
