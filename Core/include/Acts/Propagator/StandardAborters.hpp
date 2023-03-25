@@ -105,13 +105,9 @@ struct SurfaceReached {
             typename stepper_t, typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-<<<<<<< HEAD
     return this->template operator()<propagator_stage>(
-        state, stepper, navigator, *state.navigation.targetSurface, logger);
-=======
-    return (*this)(state, stepper, navigator,
-                   *navigator.targetSurface(state.navigation), logger);
->>>>>>> faded2fcf7c8f91a81b9ca0b34528273b3e533e2
+        state, stepper, navigator, *navigator.targetSurface(state.navigation),
+        logger);
   }
 
   /// boolean operator for abort condition without using the result
@@ -227,14 +223,9 @@ struct ParticleStopped {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper The stepper object
-<<<<<<< HEAD
+  /// @param [in] navigator The navigator object
   template <PropagatorStage propagator_stage, typename propagator_state_t,
             typename stepper_t, typename navigator_t>
-=======
-  /// @param [in] navigator The navigator object
-  template <typename propagator_state_t, typename stepper_t,
-            typename navigator_t>
->>>>>>> faded2fcf7c8f91a81b9ca0b34528273b3e533e2
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator,
                   const Logger& /*logger*/) const {
