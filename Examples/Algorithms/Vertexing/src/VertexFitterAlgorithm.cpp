@@ -37,18 +37,16 @@ ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
   if (m_cfg.inputProtoVertices.empty()) {
     throw std::invalid_argument("Missing input proto vertices collection");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
+
+  m_inputProtoVertices.initialize(m_cfg.inputProtoVertices);
+  m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
 ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using VertexFitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using VertexFitterOptions =
-      Acts::VertexingOptions<Acts::BoundTrackParameters>;
-
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
@@ -68,16 +66,15 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
   auto [inputTrackParameters, inputTrackPointers] =
-      makeParameterContainers(m_cfg, ctx);
+      makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
 
   ACTS_VERBOSE("Have " << inputTrackParameters.size() << " track parameters");
-  const auto& protoVertices =
-      ctx.eventStore.get<ProtoVertexContainer>(m_cfg.inputProtoVertices);
+  const auto& protoVertices = m_inputProtoVertices(ctx);
   ACTS_VERBOSE("Have " << protoVertices.size() << " proto vertices");
 
   std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
 
-  std::vector<Acts::Vertex<Acts::BoundTrackParameters>> fittedVertices;
+  VertexCollection fittedVertices;
 
   for (const auto& protoVertex : protoVertices) {
     // un-constrained fit requires at least two tracks
@@ -141,6 +138,6 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputVertices, std::move(fittedVertices));
+  m_outputVertices(ctx, std::move(fittedVertices));
   return ProcessCode::SUCCESS;
 }

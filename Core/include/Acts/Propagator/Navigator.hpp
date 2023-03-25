@@ -107,11 +107,11 @@ struct NavigationOptions {
 /// It does two things: it figures out the order of volumes, layers and
 /// surfaces.
 ///
-/// The current target surface is the surface pointed to by of the iterators
+/// The current target surface is the surface pointed to by of the index
 /// for the surfaces, layers or volume boundaries.
 /// If a surface is found, the state.navigation.currentSurface
 /// pointer is set. This  enables subsequent actors to react. Secondly, this
-/// actor uses the ordered  iterators  to figure out which surface, layer or
+/// actor uses the ordered indices to figure out which surface, layer or
 /// volume boundary is _supposed_ to be hit next. It then sets the maximum
 /// step size to the path length found out by straight line intersection. If
 /// the state is not on surface, it also  re-computes the step size, to make
@@ -120,19 +120,15 @@ struct NavigationOptions {
 class Navigator {
  public:
   using Surfaces = std::vector<const Surface*>;
-  using SurfaceIter = std::vector<const Surface*>::iterator;
 
   using NavigationSurfaces =
       boost::container::small_vector<SurfaceIntersection, 10>;
-  using NavigationSurfaceIter = NavigationSurfaces::iterator;
 
   using NavigationLayers =
       boost::container::small_vector<LayerIntersection, 10>;
-  using NavigationLayerIter = NavigationLayers::iterator;
 
   using NavigationBoundaries =
       boost::container::small_vector<BoundaryIntersection, 4>;
-  using NavigationBoundaryIter = NavigationBoundaries::iterator;
 
   using ExternalSurfaces = std::multimap<uint64_t, GeometryIdentifier>;
 
@@ -173,20 +169,24 @@ class Navigator {
     // Navigation on surface level
     /// the vector of navigation surfaces to work through
     NavigationSurfaces navSurfaces = {};
-    /// the current surface iterator of the navigation state
-    NavigationSurfaceIter navSurfaceIter = navSurfaces.end();
+    /// the current surface index of the navigation state
+    std::size_t navSurfaceIndex = navSurfaces.size();
 
     // Navigation on layer level
     /// the vector of navigation layers to work through
     NavigationLayers navLayers = {};
-    /// the current layer iterator of the navigation state
-    NavigationLayerIter navLayerIter = navLayers.end();
+    /// the current layer index of the navigation state
+    std::size_t navLayerIndex = navLayers.size();
 
     // Navigation on volume level
     /// the vector of boundary surfaces to work through
     NavigationBoundaries navBoundaries = {};
-    /// the current boundary iterator of the navigation state
-    NavigationBoundaryIter navBoundaryIter = navBoundaries.end();
+    /// the current boundary index of the navigation state
+    std::size_t navBoundaryIndex = navBoundaries.size();
+
+    auto navSurface() const { return navSurfaces.at(navSurfaceIndex); }
+    auto navLayer() const { return navLayers.at(navLayerIndex); }
+    auto navBoundary() const { return navBoundaries.at(navBoundaryIndex); }
 
     /// Externally provided surfaces - these are tried to be hit
     ExternalSurfaces externalSurfaces = {};
@@ -224,42 +224,6 @@ class Navigator {
     Stage navigationStage = Stage::undefined;
     /// Force intersection with boundaries
     bool forceIntersectBoundaries = false;
-
-    /// Reset state
-    ///
-    /// @param geoContext is the geometry context
-    /// @param pos is the global position
-    /// @param dir is the momentum direction
-    /// @param navDir is the navigation direction
-    /// @param ssurface is the new starting surface
-    /// @param tsurface is the target surface
-    void reset(const GeometryContext& geoContext, const Vector3& pos,
-               const Vector3& dir, NavigationDirection navDir,
-               const Surface* ssurface, const Surface* tsurface) {
-      // Reset everything first
-      *this = State();
-
-      // Set the start, current and target objects
-      startSurface = ssurface;
-      if (ssurface->associatedLayer() != nullptr) {
-        startLayer = ssurface->associatedLayer();
-      }
-      if (startLayer->trackingVolume() != nullptr) {
-        startVolume = startLayer->trackingVolume();
-      }
-      currentSurface = startSurface;
-      currentVolume = startVolume;
-      targetSurface = tsurface;
-
-      // Get the compatible layers (including the current layer)
-      NavigationOptions<Layer> navOpts(navDir, true, true, true, true, nullptr,
-                                       nullptr);
-      navLayers =
-          currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
-
-      // Set the iterator to the first
-      navLayerIter = navLayers.begin();
-    }
   };
 
   /// Constructor with configuration object
@@ -270,6 +234,91 @@ class Navigator {
                      std::shared_ptr<const Logger> _logger =
                          getDefaultLogger("Navigator", Logging::Level::INFO))
       : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
+
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
+    State result;
+    result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
+    return result;
+  }
+
+  /// Reset state
+  ///
+  /// @param state is the state
+  /// @param geoContext is the geometry context
+  /// @param pos is the global position
+  /// @param dir is the momentum direction
+  /// @param navDir is the navigation direction
+  /// @param ssurface is the new starting surface
+  /// @param tsurface is the target surface
+  void resetState(State& state, const GeometryContext& geoContext,
+                  const Vector3& pos, const Vector3& dir,
+                  NavigationDirection navDir, const Surface* ssurface,
+                  const Surface* tsurface) const {
+    // Reset everything first
+    state = State();
+
+    // Set the start, current and target objects
+    state.startSurface = ssurface;
+    if (ssurface->associatedLayer() != nullptr) {
+      state.startLayer = ssurface->associatedLayer();
+    }
+    if (state.startLayer->trackingVolume() != nullptr) {
+      state.startVolume = state.startLayer->trackingVolume();
+    }
+    state.currentSurface = state.startSurface;
+    state.currentVolume = state.startVolume;
+    state.targetSurface = tsurface;
+
+    // Get the compatible layers (including the current layer)
+    NavigationOptions<Layer> navOpts(navDir, true, true, true, true, nullptr,
+                                     nullptr);
+    state.navLayers =
+        state.currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
+
+    // Set the index to the first
+    state.navLayerIndex = 0;
+  }
+
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
+  }
+
+  const TrackingVolume* currentVolume(const State& state) const {
+    return state.currentVolume;
+  }
+
+  const Surface* startSurface(const State& state) const {
+    return state.startSurface;
+  }
+
+  const Surface* targetSurface(const State& state) const {
+    return state.targetSurface;
+  }
+
+  bool targetReached(const State& state) const { return state.targetReached; }
+
+  bool navigationBreak(const State& state) const {
+    return state.navigationBreak;
+  }
+
+  void currentSurface(State& state, const Surface* surface) const {
+    state.currentSurface = surface;
+  }
+
+  void targetReached(State& state, bool targetReached) const {
+    state.targetReached = targetReached;
+  }
+
+  void navigationBreak(State& state, bool navigationBreak) const {
+    state.navigationBreak = navigationBreak;
+  }
+
+  void insertExternalSurface(State& state, GeometryIdentifier geoid) const {
+    state.externalSurfaces.insert(
+        std::pair<uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+  }
 
   /// @brief Navigator status call, will be called in two modes
   ///
@@ -316,16 +365,16 @@ class Navigator {
     // (b) Status call within propagation loop
     // Try finding status of surfaces
     if (status(state, stepper, state.navigation.navSurfaces,
-               state.navigation.navSurfaceIter)) {
+               state.navigation.navSurfaceIndex)) {
       ACTS_VERBOSE(volInfo(state) << "Status: in surface handling.");
       if (state.navigation.currentSurface) {
         ACTS_VERBOSE(volInfo(state)
                      << "On surface: switch forward or release.");
-        if (++state.navigation.navSurfaceIter ==
-            state.navigation.navSurfaces.end()) {
+        if (++state.navigation.navSurfaceIndex ==
+            state.navigation.navSurfaces.size()) {
           // this was the last surface, check if we have layers
           if (!state.navigation.navLayers.empty()) {
-            ++state.navigation.navLayerIter;
+            ++state.navigation.navLayerIndex;
           } else if (state.navigation.startLayer != nullptr and
                      state.navigation.currentSurface->associatedLayer() ==
                          state.navigation.startLayer) {
@@ -344,7 +393,7 @@ class Navigator {
       ACTS_VERBOSE(volInfo(state) << "Staying focussed on surface.");
       // Try finding status of layer
     } else if (status(state, stepper, state.navigation.navLayers,
-                      state.navigation.navLayerIter)) {
+                      state.navigation.navLayerIndex)) {
       ACTS_VERBOSE(volInfo(state) << "Status: in layer handling.");
       if (state.navigation.currentSurface != nullptr) {
         ACTS_VERBOSE(volInfo(state) << "On layer: update layer information.");
@@ -360,7 +409,7 @@ class Navigator {
       }
       // Try finding status of boundaries
     } else if (status(state, stepper, state.navigation.navBoundaries,
-                      state.navigation.navBoundaryIter)) {
+                      state.navigation.navBoundaryIndex)) {
       ACTS_VERBOSE(volInfo(state) << "Status: in boundary handling.");
 
       // Are we on the boundary - then overwrite the stage
@@ -370,13 +419,13 @@ class Navigator {
                      << "On boundary: update volume information.");
         // We are on a boundary, reset all information
         state.navigation.navSurfaces.clear();
-        state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
+        state.navigation.navSurfaceIndex = state.navigation.navSurfaces.size();
         state.navigation.navLayers.clear();
-        state.navigation.navLayerIter = state.navigation.navLayers.end();
+        state.navigation.navLayerIndex = state.navigation.navLayers.size();
         state.navigation.lastHierarchySurfaceReached = false;
         // Update volume information
         // get the attached volume information
-        auto boundary = state.navigation.navBoundaryIter->object;
+        auto boundary = state.navigation.navBoundary().object;
         state.navigation.currentVolume = boundary->attachedVolume(
             state.geoContext, stepper.position(state.stepping),
             stepper.direction(state.stepping), state.stepping.navDir);
@@ -393,8 +442,8 @@ class Navigator {
           ACTS_VERBOSE(volInfo(state) << "Volume updated.");
           // Forget the bounday information
           state.navigation.navBoundaries.clear();
-          state.navigation.navBoundaryIter =
-              state.navigation.navBoundaries.end();
+          state.navigation.navBoundaryIndex =
+              state.navigation.navBoundaries.size();
         }
       } else {
         // Set the navigation stage back to boundary target
@@ -563,27 +612,26 @@ class Navigator {
   /// @tparam propagator_state_t The state type of the propagagor
   /// @tparam stepper_t The type of stepper used for the propagation
   /// @tparam navigation_surfaces_t Type of the propagagor
-  /// @tparam navigation_iter_t Type of the navigation iterator
   ///
   /// @param [in,out] state is the propagation state object
   /// @param [in] stepper Stepper in use
   /// @param [in] navSurfaces is the navigation status objects
-  /// @param [in] navIter test surface fore the status test
+  /// @param [in] navIndex test surface fore the status test
   ///
   /// @return boolean return triggers exit to stepper
   template <typename propagator_state_t, typename stepper_t,
-            typename navigation_surfaces_t, typename navigation_iter_t>
+            typename navigation_surfaces_t>
   bool status(propagator_state_t& state, const stepper_t& stepper,
-              navigation_surfaces_t& navSurfaces,
-              const navigation_iter_t& navIter) const {
+              const navigation_surfaces_t& navSurfaces,
+              std::size_t navIndex) const {
     // No surfaces, status check will be done on layer
-    if (navSurfaces.empty() or navIter == navSurfaces.end()) {
+    if (navSurfaces.empty() or navIndex == navSurfaces.size()) {
       return false;
     }
     // Take the current surface
-    auto surface = navIter->representation;
+    auto surface = navSurfaces.at(navIndex).representation;
     // Check if we are at a surface
-    // If we are on the surface pointed at by the iterator, we can make
+    // If we are on the surface pointed at by the index, we can make
     // it the current one to pass it to the other actors
     auto surfaceStatus =
         stepper.updateSurfaceStatus(state.stepping, *surface, true, logger());
@@ -642,27 +690,27 @@ class Navigator {
     // The call that we are on a layer and have not yet resolved the surfaces
     // No surfaces, do not return to stepper
     if (state.navigation.navSurfaces.empty() or
-        state.navigation.navSurfaceIter == state.navigation.navSurfaces.end()) {
+        state.navigation.navSurfaceIndex ==
+            state.navigation.navSurfaces.size()) {
       ACTS_VERBOSE(volInfo(state)
                    << "No surfaces present, target at layer first.");
       return false;
     }
-    auto layerID =
-        state.navigation.navSurfaceIter->object->geometryId().layer();
+    auto layerID = state.navigation.navSurface().object->geometryId().layer();
     std::pair<ExternalSurfaces::iterator, ExternalSurfaces::iterator>
         externalSurfaceRange =
             state.navigation.externalSurfaces.equal_range(layerID);
     // Loop over the remaining navigation surfaces
-    while (state.navigation.navSurfaceIter !=
-           state.navigation.navSurfaces.end()) {
+    while (state.navigation.navSurfaceIndex !=
+           state.navigation.navSurfaces.size()) {
       // Screen output how much is left to try
       ACTS_VERBOSE(volInfo(state)
-                   << std::distance(state.navigation.navSurfaceIter,
-                                    state.navigation.navSurfaces.end())
+                   << (state.navigation.navSurfaces.size() -
+                       state.navigation.navSurfaceIndex)
                    << " out of " << state.navigation.navSurfaces.size()
                    << " surfaces remain to try.");
       // Take the surface
-      auto surface = state.navigation.navSurfaceIter->object;
+      auto surface = state.navigation.navSurface().object;
       // Screen output which surface you are on
       ACTS_VERBOSE(volInfo(state) << "Next surface candidate will be "
                                   << surface->geometryId());
@@ -683,21 +731,22 @@ class Navigator {
                      << stepper.outputStepSize(state.stepping));
         return true;
       }
-      ++state.navigation.navSurfaceIter;
+      ++state.navigation.navSurfaceIndex;
       continue;
     }
 
     // Reached the end of the surface iteration
-    if (state.navigation.navSurfaceIter == state.navigation.navSurfaces.end()) {
+    if (state.navigation.navSurfaceIndex ==
+        state.navigation.navSurfaces.size()) {
       // first clear the surface cache
       state.navigation.navSurfaces.clear();
-      state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
+      state.navigation.navSurfaceIndex = state.navigation.navSurfaces.size();
 
-      if (state.navigation.navLayerIter != state.navigation.navLayers.end()) {
+      if (state.navigation.navLayerIndex != state.navigation.navLayers.size()) {
         ACTS_VERBOSE(volInfo(state)
                      << "Last surface on layer reached, switching layer.");
         // now switch to the next layer
-        ++state.navigation.navLayerIter;
+        ++state.navigation.navLayerIndex;
       } else {
         ACTS_VERBOSE(volInfo(state)
                      << "Last surface on layer reached, and no layer.");
@@ -715,8 +764,8 @@ class Navigator {
   ///
   /// We are now trying to advance to the next layer (with surfaces)
   /// Check if we are on the representing surface of the layer pointed
-  /// at by navLayerIter. If so, we unpack the compatible surfaces
-  /// (determined by straight line intersect), and set up the iterator
+  /// at by navLayerIndex. If so, we unpack the compatible surfaces
+  /// (determined by straight line intersect), and set up the index
   /// so that the next status() call will enter the surface
   /// check mode above. If no surfaces are found, we skip the layer.
   /// If we unpack a surface, the step size is set to the path length
@@ -801,13 +850,12 @@ class Navigator {
                 state.navigation.navSurfaces.begin(), protoNavSurfaces.begin(),
                 protoNavSurfaces.end());
 
-            state.navigation.navSurfaceIter =
-                state.navigation.navSurfaces.begin();
+            state.navigation.navSurfaceIndex = 0;
             state.navigation.navLayers = {};
-            state.navigation.navLayerIter = state.navigation.navLayers.end();
+            state.navigation.navLayerIndex = state.navigation.navLayers.size();
             // The stepper updates the step size ( single / multi component)
             stepper.updateStepSize(state.stepping,
-                                   *state.navigation.navSurfaceIter, true);
+                                   state.navigation.navSurface(), true);
             ACTS_VERBOSE(volInfo(state)
                          << "Navigation stepSize updated to "
                          << stepper.outputStepSize(state.stepping));
@@ -822,9 +870,10 @@ class Navigator {
       }
     }
     // loop over the available navigation layer candiates
-    while (state.navigation.navLayerIter != state.navigation.navLayers.end()) {
+    while (state.navigation.navLayerIndex !=
+           state.navigation.navLayers.size()) {
       // The layer surface
-      auto layerSurface = state.navigation.navLayerIter->representation;
+      auto layerSurface = state.navigation.navLayer().representation;
       // We are on the layer
       if (state.navigation.currentSurface == layerSurface) {
         ACTS_VERBOSE(volInfo(state) << "We are on a layer, resolve Surfaces.");
@@ -833,7 +882,7 @@ class Navigator {
           return true;
         } else {
           // Try the next one
-          ++state.navigation.navLayerIter;
+          ++state.navigation.navLayerIndex;
           continue;
         }
       }
@@ -847,7 +896,7 @@ class Navigator {
       }
       ACTS_VERBOSE(volInfo(state)
                    << "Layer intersection not valid, skipping it.");
-      ++state.navigation.navLayerIter;
+      ++state.navigation.navLayerIndex;
     }
 
     // Re-initialize target at last layer, only in case it is the target volume
@@ -876,18 +925,18 @@ class Navigator {
   /// -------------------------------------------------
   ///
   /// This is the boundary check routine. If the code above set up the
-  /// boundary surface iterator, we advance through them here. If we are on
+  /// boundary surface index, we advance through them here. If we are on
   /// the boundary surface, we set the current surface to the boundary
   /// surface, and get the volume pointed at by the boundary surface.  Next
   /// we unpack the layers from that volume. If the volume contains layers
   /// we set the step size to the straight line path length to the first
   /// layer.  If we don't find a next volume, the navigationBreak
   /// indicator is set.  This ends the navigation. Finally, the boundary
-  /// iterator is cleared, so that the subsequent call goes back to
+  /// index is cleared, so that the subsequent call goes back to
   /// the layer iteration logic.
   ///
   /// If we are not on the current boundary surface, we try the next one.
-  /// The iterator is advanced and the step size is set. If no straight
+  /// The index is advanced and the step size is set. If no straight
   /// line intersect is found, the boundary surface is skipped.
   /// If we are out of boundary surfaces, the navigation is terminated.
   ///
@@ -956,12 +1005,12 @@ class Navigator {
         }
         logger().log(Logging::VERBOSE, os.str());
       }
-      // Set the begin iterator
-      state.navigation.navBoundaryIter = state.navigation.navBoundaries.begin();
+      // Set the begin index
+      state.navigation.navBoundaryIndex = 0;
       if (not state.navigation.navBoundaries.empty()) {
         // Set to the first and return to the stepper
-        stepper.updateStepSize(state.stepping,
-                               *state.navigation.navBoundaryIter, true);
+        stepper.updateStepSize(state.stepping, state.navigation.navBoundary(),
+                               true);
         ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
                                     << stepper.outputStepSize(state.stepping));
         return true;
@@ -975,10 +1024,10 @@ class Navigator {
     }
 
     // Loop over the boundary surface
-    while (state.navigation.navBoundaryIter !=
-           state.navigation.navBoundaries.end()) {
+    while (state.navigation.navBoundaryIndex !=
+           state.navigation.navBoundaries.size()) {
       // That is the current boundary surface
-      auto boundarySurface = state.navigation.navBoundaryIter->representation;
+      auto boundarySurface = state.navigation.navBoundary().representation;
       // Step towards the boundary surfrace
       auto boundaryStatus = stepper.updateSurfaceStatus(
           state.stepping, *boundarySurface, true, logger());
@@ -989,15 +1038,15 @@ class Navigator {
         return true;
       } else {
         ACTS_VERBOSE("Boundary "
-                     << std::distance(state.navigation.navBoundaryIter,
-                                      state.navigation.navBoundaries.end())
+                     << (state.navigation.navBoundaries.size() -
+                         state.navigation.navBoundaryIndex)
                      << " out of " << state.navigation.navBoundaries.size()
                      << " not reachable anymore, switching to next.");
         ACTS_VERBOSE("Targeted boundary surface was: \n"
                      << std::tie(*boundarySurface, state.geoContext));
       }
-      // Increase the iterator to the next one
-      ++state.navigation.navBoundaryIter;
+      // Increase the index to the next one
+      ++state.navigation.navBoundaryIndex;
     }
     // We have to leave the volume somehow, so try again
     state.navigation.navBoundaries.clear();
@@ -1106,8 +1155,8 @@ class Navigator {
                        const Layer* cLayer = nullptr) const {
     // get the layer and layer surface
     auto layerSurface = cLayer ? state.navigation.startSurface
-                               : state.navigation.navLayerIter->representation;
-    auto navLayer = cLayer ? cLayer : state.navigation.navLayerIter->object;
+                               : state.navigation.navLayer().representation;
+    auto navLayer = cLayer ? cLayer : state.navigation.navLayer().object;
     // are we on the start layer
     bool onStart = (navLayer == state.navigation.startLayer);
     auto startSurface = onStart ? state.navigation.startSurface : layerSurface;
@@ -1153,16 +1202,16 @@ class Navigator {
         logger().log(Logging::VERBOSE, os.str());
       }
 
-      // set the iterator
-      state.navigation.navSurfaceIter = state.navigation.navSurfaces.begin();
+      // set the index
+      state.navigation.navSurfaceIndex = 0;
       // The stepper updates the step size ( single / multi component)
-      stepper.updateStepSize(state.stepping, *state.navigation.navSurfaceIter,
+      stepper.updateStepSize(state.stepping, state.navigation.navSurface(),
                              true);
       ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
                                   << stepper.outputStepSize(state.stepping));
       return true;
     }
-    state.navigation.navSurfaceIter = state.navigation.navSurfaces.end();
+    state.navigation.navSurfaceIndex = state.navigation.navSurfaces.size();
     ACTS_VERBOSE(volInfo(state) << "No surface candidates found.");
     return false;
   }
@@ -1221,15 +1270,14 @@ class Navigator {
         }
         logger().log(Logging::VERBOSE, os.str());
       }
-      // Set the iterator to the first
-      state.navigation.navLayerIter = state.navigation.navLayers.begin();
+      // Set the index to the first
+      state.navigation.navLayerIndex = 0;
       // Setting the step size towards first
       if (state.navigation.startLayer &&
-          state.navigation.navLayerIter->object !=
-              state.navigation.startLayer) {
+          state.navigation.navLayer().object != state.navigation.startLayer) {
         ACTS_VERBOSE(volInfo(state) << "Target at layer.");
         // The stepper updates the step size ( single / multi component)
-        stepper.updateStepSize(state.stepping, *state.navigation.navLayerIter,
+        stepper.updateStepSize(state.stepping, state.navigation.navLayer(),
                                true);
         ACTS_VERBOSE(volInfo(state) << "Navigation stepSize updated to "
                                     << stepper.outputStepSize(state.stepping));
@@ -1237,8 +1285,8 @@ class Navigator {
       }
     }
 
-    // Set the iterator to the end of the list
-    state.navigation.navLayerIter = state.navigation.navLayers.end();
+    // Set the index to the end of the list
+    state.navigation.navLayerIndex = state.navigation.navLayers.size();
 
     // Screen output - no layer candidates found
     ACTS_VERBOSE(volInfo(state) << "No compatible layer candidates found.");

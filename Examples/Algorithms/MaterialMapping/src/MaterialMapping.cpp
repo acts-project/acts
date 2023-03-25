@@ -27,6 +27,9 @@ ActsExamples::MaterialMapping::MaterialMapping(
     throw std::invalid_argument("Missing tracking geometry");
   }
 
+  m_inputMaterialTracks.initialize(m_cfg.collection);
+  m_outputMaterialTracks.initialize(m_cfg.mappingMaterialCollection);
+
   ACTS_INFO("This algorithm requires inter-event information, "
             << "run in single-threaded mode!");
 
@@ -93,9 +96,7 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     const ActsExamples::AlgorithmContext& context) const {
   // Take the collection from the EventStore
   std::unordered_map<size_t, Acts::RecordedMaterialTrack> mtrackCollection =
-      context.eventStore
-          .get<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>(
-              m_cfg.collection);
+      m_inputMaterialTracks(context);
 
   if (m_cfg.materialSurfaceMapper) {
     // To make it work with the framework needs a lock guard
@@ -117,8 +118,7 @@ ActsExamples::ProcessCode ActsExamples::MaterialMapping::execute(
     }
   }
   // Write take the collection to the EventStore
-  context.eventStore.add(m_cfg.mappingMaterialCollection,
-                         std::move(mtrackCollection));
+  m_outputMaterialTracks(context, std::move(mtrackCollection));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

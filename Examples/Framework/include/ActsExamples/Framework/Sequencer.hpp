@@ -62,7 +62,7 @@ class Sequencer {
     IterationCallback iterationCallback = []() {};
     /// Run data flow consistency checks
     /// Defaults to false right now until all components are migrated
-    bool runDataFlowChecks = false;
+    bool runDataFlowChecks = true;
   };
 
   Sequencer(const Config &cfg);
@@ -142,7 +142,7 @@ class Sequencer {
 
   std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
 
-  std::unordered_map<std::string, const std::type_info *> m_whiteBoardState;
+  std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };

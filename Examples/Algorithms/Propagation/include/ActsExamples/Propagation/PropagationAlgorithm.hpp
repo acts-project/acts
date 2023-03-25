@@ -22,6 +22,7 @@
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
@@ -134,6 +135,12 @@ class PropagationAlgorithm : public IAlgorithm {
 
  private:
   Config m_cfg;  ///< the config class
+
+  WriteDataHandle<std::vector<std::vector<Acts::detail::Step>>>
+      m_outpoutPropagationSteps{this, "OutputPropagationSteps"};
+
+  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+      m_recordedMaterial{this, "RecordedMaterial"};
 
   /// Private helper method to create a corrleated covariance matrix
   /// @param[in] rnd is the random engine
