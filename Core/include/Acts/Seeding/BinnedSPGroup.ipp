@@ -84,11 +84,13 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
 
   for (std::size_t phiBin(m_current_localBins[INDEX::PHI]);
        phiBin < m_max_localBins[INDEX::PHI]; ++phiBin) {
+    // 0 is the underflow - skip
+    if (phiBin == 0) {
+      continue;
+    }
+
     for (std::size_t zBin(m_current_localBins[INDEX::Z]);
          zBin < m_max_localBins[INDEX::Z]; ++zBin) {
-      if (phiBin == 0) {
-        continue;
-      }
       std::size_t zBinIndex = m_group->m_bins[zBin];
       std::size_t index =
           m_group->m_grid->globalBinFromLocalBins({phiBin, zBinIndex});
