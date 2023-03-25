@@ -881,12 +881,14 @@ class MultiEigenStepperLoop
   ///
   /// @param [in,out] state is the propagation state associated with the track
   /// parameters that are being propagated.
+  /// @param [in] navigator is the navigator of the propagation
   ///
   /// The state contains the desired step size. It can be negative during
   /// backwards track propagation, and since we're using an adaptive
   /// algorithm, it can be modified by the stepper class during propagation.
-  template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const;
+  template <typename propagator_state_t, typename navigator_t>
+  Result<double> step(propagator_state_t& state,
+                      const navigator_t& navigator) const;
 };
 
 }  // namespace Acts

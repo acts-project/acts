@@ -38,6 +38,9 @@ ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing trajectories output collection");
   }
+
+  m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+  m_outputTrajectories.initialize(m_cfg.outputTrajectories);
 }
 
 namespace {
@@ -86,8 +89,7 @@ std::unordered_map<int, std::vector<int>> clusterTracks(
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Read input data
-  const auto& trajectories =
-      ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+  const auto& trajectories = m_inputTrajectories(ctx);
 
   TrackParametersContainer trackParameters;
   std::vector<std::pair<int, int>> trackTips;
@@ -186,7 +188,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   }
 
   // Add our output multitrajectories to the event store
-  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));
+  m_outputTrajectories(ctx, std::move(outputTrajectories));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

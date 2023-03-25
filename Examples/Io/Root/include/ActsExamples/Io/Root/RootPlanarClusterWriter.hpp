@@ -11,6 +11,7 @@
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <memory>
@@ -102,6 +103,8 @@ class RootPlanarClusterWriter
   std::vector<float> m_t_lx;          ///< truth position local x
   std::vector<float> m_t_ly;          ///< truth position local y
   std::vector<uint64_t> m_t_barcode;  ///< associated truth particle barcode
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
 };
 
 }  // namespace ActsExamples

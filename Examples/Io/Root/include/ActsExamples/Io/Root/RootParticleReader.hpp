@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Definitions/Algebra.hpp>
@@ -66,6 +68,14 @@ class RootParticleReader : public IReader {
 
   /// The config class
   Config m_cfg;
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
+
+  WriteDataHandle<std::vector<uint32_t>> m_outputPrimaryVertices{
+      this, "OutputPrimaryVertices"};
+  WriteDataHandle<std::vector<uint32_t>> m_outputSecondaryVertices{
+      this, "OutputSecondaryVertices"};
 
   std::unique_ptr<const Acts::Logger> m_logger;
 
