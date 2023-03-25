@@ -35,6 +35,11 @@ ActsExamples::RootAthenaNTupleReader::RootAthenaNTupleReader(
     throw std::invalid_argument("Missing tree name");
   }
 
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
+  m_outputTruthVtxParameters.initialize(m_cfg.outputTruthVtxParameters);
+  m_outputRecoVtxParameters.initialize(m_cfg.outputRecoVtxParameters);
+  m_outputBeamspotConstraint.initialize(m_cfg.outputBeamspotConstraint);
+
   m_inputChain = new TChain(m_cfg.inputTreeName.c_str());
 
   // unused event identifier
@@ -250,14 +255,10 @@ ActsExamples::ProcessCode ActsExamples::RootAthenaNTupleReader::read(
   beamspotConstraint.setPosition(beamspotPos);
   beamspotConstraint.setCovariance(beamspotCov);
 
-  context.eventStore.add(m_cfg.outputTrackParameters,
-                         std::move(trackContainer));
-  context.eventStore.add(m_cfg.outputTruthVtxParameters,
-                         std::move(truthVertexContainer));
-  context.eventStore.add(m_cfg.outputRecoVtxParameters,
-                         std::move(recoVertexContainer));
-  context.eventStore.add(m_cfg.outputBeamspotConstraint,
-                         std::move(beamspotConstraint));
+  m_outputTrackParameters(context, std::move(trackContainer));
+  m_outputTruthVtxParameters(context, std::move(truthVertexContainer));
+  m_outputRecoVtxParameters(context, std::move(recoVertexContainer));
+  m_outputBeamspotConstraint(context, std::move(beamspotConstraint));
 
   // Return success flag
   return ProcessCode::SUCCESS;

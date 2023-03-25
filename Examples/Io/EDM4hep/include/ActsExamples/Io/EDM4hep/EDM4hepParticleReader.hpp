@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
@@ -62,6 +64,9 @@ class EDM4hepParticleReader final : public IReader {
   podio::EventStore m_store;
 
   const edm4hep::MCParticleCollection* m_mcParticleCollection;
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

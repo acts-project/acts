@@ -32,14 +32,25 @@ ActsExamples::SeedingOrthogonalAlgorithm::SeedingOrthogonalAlgorithm(
   if (m_cfg.inputSpacePoints.empty()) {
     throw std::invalid_argument("Missing space point input collections");
   }
-  for (const auto &i : m_cfg.inputSpacePoints) {
-    if (i.empty()) {
+
+  for (const auto &spName : m_cfg.inputSpacePoints) {
+    if (spName.empty()) {
       throw std::invalid_argument("Invalid space point input collection");
     }
+
+    auto &handle = m_inputSpacePoints.emplace_back(
+        std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
+            this,
+            "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
+    handle->initialize(spName);
   }
+
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds output collection");
   }
+
+  m_outputSeeds.initialize(m_cfg.outputSeeds);
+
   if (m_cfg.seedFilterConfig.maxSeedsPerSpM !=
       m_cfg.seedFinderConfig.maxSeedsPerSpM) {
     throw std::invalid_argument("Inconsistent config maxSeedsPerSpM");
@@ -57,9 +68,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     const AlgorithmContext &ctx) const {
   std::vector<const SimSpacePoint *> spacePoints;
 
-  for (const auto &isp : m_cfg.inputSpacePoints) {
-    for (const auto &spacePoint :
-         ctx.eventStore.get<SimSpacePointContainer>(isp)) {
+  for (const auto &isp : m_inputSpacePoints) {
+    for (const auto &spacePoint : (*isp)(ctx)) {
       spacePoints.push_back(&spacePoint);
     }
   }
@@ -80,7 +90,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePoints.size() << " space points");
 
-  ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
+  m_outputSeeds(ctx, std::move(seeds));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

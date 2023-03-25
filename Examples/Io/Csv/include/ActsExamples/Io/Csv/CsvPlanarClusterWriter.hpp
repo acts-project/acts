@@ -11,6 +11,8 @@
 #include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "ActsExamples/EventData/GeometryContainers.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <limits>
@@ -71,6 +73,8 @@ class CsvPlanarClusterWriter final
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
 };
 
 }  // namespace ActsExamples

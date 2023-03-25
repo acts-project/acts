@@ -9,6 +9,7 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <HepMC3/GenEvent.h>
@@ -65,6 +66,9 @@ class HepMC3AsciiReader final : public IReader {
   std::unique_ptr<const Acts::Logger> m_logger;
 
   const Acts::Logger& logger() const { return *m_logger; }
+
+  WriteDataHandle<std::vector<HepMC3::GenEvent>> m_outputEvents{this,
+                                                                "OutputEvents"};
 };
 
 }  // namespace ActsExamples
