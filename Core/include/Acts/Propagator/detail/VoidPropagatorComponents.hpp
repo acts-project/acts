@@ -9,8 +9,8 @@
 #pragma once
 
 namespace Acts {
-
 namespace detail {
+
 /// @brief The void navigator struct as a default navigator
 ///
 /// It does not provide any navigation action, the compiler
@@ -38,6 +38,44 @@ struct VoidNavigator {
   /// Unique typedef to publish to the Propagator
   using state_type = State;
 
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
+    State result;
+    result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
+    return result;
+  }
+
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
+  }
+
+  const Surface* startSurface(const State& state) const {
+    return state.startSurface;
+  }
+
+  const Surface* targetSurface(const State& state) const {
+    return state.targetSurface;
+  }
+
+  bool targetReached(const State& state) const { return state.targetReached; }
+
+  bool navigationBreak(const State& state) const {
+    return state.navigationBreak;
+  }
+
+  void currentSurface(State& state, const Surface* surface) const {
+    state.currentSurface = surface;
+  }
+
+  void targetReached(State& state, bool targetReached) const {
+    state.targetReached = targetReached;
+  }
+
+  void navigationBreak(State& state, bool navigationBreak) const {
+    state.navigationBreak = navigationBreak;
+  }
+
   /// Navigation call - void
   ///
   /// @tparam propagator_state_t is the type of Propagatgor state
@@ -46,7 +84,7 @@ struct VoidNavigator {
   /// Empty call, compiler should optimise that
   template <typename propagator_state_t, typename stepper_t>
   void status(propagator_state_t& /*state*/,
-              const stepper_t& /*unused*/) const {}
+              const stepper_t& /*stepper*/) const {}
 
   /// Navigation call - void
   ///
@@ -56,7 +94,7 @@ struct VoidNavigator {
   /// Empty call, compiler should optimise that
   template <typename propagator_state_t, typename stepper_t>
   void target(propagator_state_t& /*state*/,
-              const stepper_t& /*unused*/) const {}
+              const stepper_t& /*stepper*/) const {}
 };
 
 }  // namespace detail

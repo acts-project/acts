@@ -77,8 +77,7 @@ struct Neutral {
   ///
   /// This is always `true` as `Neutral` has no internal state.
   /// Must be available to provide a consistent interface.
-  friend constexpr bool operator==(Neutral /*unused*/,
-                                   Neutral /*unused*/) noexcept {
+  friend constexpr bool operator==(Neutral /*lhs*/, Neutral /*rhs*/) noexcept {
     return true;
   }
 };
@@ -110,8 +109,8 @@ struct SinglyCharged {
   ///
   /// This is always `true` as `SinglyCharged` has no internal state.
   /// Must be available to provide a consistent interface.
-  friend constexpr bool operator==(SinglyCharged /*unused*/,
-                                   SinglyCharged /*unused*/) noexcept {
+  friend constexpr bool operator==(SinglyCharged /*lhs*/,
+                                   SinglyCharged /*rhs*/) noexcept {
     return true;
   }
 };

@@ -303,7 +303,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     maxSeedsPerSpM = 4
     cotThetaMax = 27.2899
     sigmaScattering = 2
-    radLengthPerSeed = 0.1
+    radLengthPerSeed = 0.0975
     minPt = 900 * u.MeV
     bFieldInZ = 2 * u.T
     deltaRMin = 20 * u.mm
@@ -481,8 +481,8 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         numSeedIncrement = 1
         seedWeightIncrement = 10100
         useDetailedDoubleMeasurementInfo = True
-        maxSeedsPerSpMConf = 1000000000
-        maxQualitySeedsPerSpMConf = 1000000000
+        maxSeedsPerSpMConf = 100
+        maxQualitySeedsPerSpMConf = 100
         useDeltaRorTopRadius = False
 
     # fill namedtuples

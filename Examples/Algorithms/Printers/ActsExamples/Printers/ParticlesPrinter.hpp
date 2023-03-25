@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
@@ -30,6 +32,8 @@ class ParticlesPrinter : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 };
 
 }  // namespace ActsExamples

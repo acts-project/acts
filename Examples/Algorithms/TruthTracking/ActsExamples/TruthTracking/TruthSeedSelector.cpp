@@ -33,16 +33,16 @@ TruthSeedSelector::TruthSeedSelector(const Config& config,
   if (m_cfg.outputParticles.empty()) {
     throw std::invalid_argument("Missing output truth particles collection");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_outputParticles.initialize(m_cfg.outputParticles);
 }
 
 ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // prepare input collections
-  const auto& inputParticles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& inputParticles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
   // compute particle_id -> {hit_id...} map from the
   // hit_id -> {particle_id...} map on the fly.
   const auto& particleHitsMap = invertIndexMultimap(hitParticlesMap);
@@ -79,6 +79,6 @@ ProcessCode TruthSeedSelector::execute(const AlgorithmContext& ctx) const {
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputParticles, std::move(selectedParticles));
+  m_outputParticles(ctx, std::move(selectedParticles));
   return ProcessCode::SUCCESS;
 }

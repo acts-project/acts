@@ -11,8 +11,11 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Propagator/MaterialInteractor.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 
 #include <functional>
 #include <memory>
@@ -69,6 +72,10 @@ class EventRecording final : public ActsExamples::IAlgorithm {
   Config m_cfg;
   /// G4 run manager
   std::unique_ptr<G4RunManager> m_runManager;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  WriteDataHandle<std::vector<HepMC3::GenEvent>> m_outputEvents{this,
+                                                                "OutputEvents"};
 
   // has to be mutable; algorithm interface enforces object constness
   mutable std::mutex m_runManagerLock;

@@ -32,6 +32,9 @@ ActsExamples::CsvTrackParameterWriter::CsvTrackParameterWriter(
     throw std::invalid_argument(
         "You have to either provide track parameters or trajectories");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
 }
 
 ActsExamples::CsvTrackParameterWriter::~CsvTrackParameterWriter() = default;
@@ -50,13 +53,10 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterWriter::write(
   std::vector<Acts::BoundTrackParameters> inputTrackParameters;
 
   if (!m_cfg.inputTrackParameters.empty()) {
-    const auto& tmp =
-        ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
-            m_cfg.inputTrackParameters);
+    const auto& tmp = m_inputTrackParameters(ctx);
     inputTrackParameters = tmp;
   } else {
-    const auto& inputTrajectories =
-        ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+    const auto& inputTrajectories = m_inputTrajectories(ctx);
 
     for (const auto& trajectories : inputTrajectories) {
       for (auto tip : trajectories.tips()) {
