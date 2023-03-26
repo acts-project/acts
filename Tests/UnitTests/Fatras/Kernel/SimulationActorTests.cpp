@@ -36,12 +36,12 @@ struct MockDecay {
 
   template <typename generator_t>
   constexpr Particle::Scalar generateProperTimeLimit(
-      generator_t & /*unused*/, const Particle &particle) const {
+      generator_t & /*generator*/, const Particle &particle) const {
     return particle.properTime() + properTimeLimit;
   }
   template <typename generator_t>
-  constexpr std::array<Particle, 0> run(generator_t & /*unused*/,
-                                        const Particle & /*unused*/) const {
+  constexpr std::array<Particle, 0> run(generator_t & /*generator*/,
+                                        const Particle & /*particle*/) const {
     return {};
   }
 };
@@ -57,8 +57,8 @@ struct MockInteractionList {
   double energyLoss = 0;
 
   template <typename generator_t>
-  bool runContinuous(generator_t & /*unused*/,
-                     const Acts::MaterialSlab & /*unused*/, Particle &particle,
+  bool runContinuous(generator_t & /*generator*/,
+                     const Acts::MaterialSlab & /*slab*/, Particle &particle,
                      std::vector<Particle> &generated) const {
     generated.push_back(particle);
     particle.correctEnergy(-energyLoss);
@@ -67,15 +67,15 @@ struct MockInteractionList {
   }
 
   template <typename generator_t>
-  Selection armPointLike(generator_t & /*unused*/,
-                         const Particle & /*unused*/) const {
+  Selection armPointLike(generator_t & /*generator*/,
+                         const Particle & /*particle*/) const {
     return {};
   }
 
   template <typename generator_t>
-  bool runPointLike(generator_t & /*unused*/, size_t /*unused*/,
-                    Particle & /*unused*/,
-                    std::vector<Particle> & /*unused*/) const {
+  bool runPointLike(generator_t & /*generator*/, size_t /*processIndex*/,
+                    Particle & /*particle*/,
+                    std::vector<Particle> & /*generated*/) const {
     return false;
   }
 };
@@ -106,8 +106,8 @@ struct MockStepper {
     state.dir = dir;
     state.p = p;
   }
-  void setStepSize(State & /*unused*/, double /*unused*/,
-                   Acts::ConstrainedStep::Type /*unused*/) const {}
+  void setStepSize(State & /*state*/, double /*stepSize*/,
+                   Acts::ConstrainedStep::Type /*stype*/) const {}
 };
 
 struct MockNavigatorState {
@@ -115,7 +115,14 @@ struct MockNavigatorState {
   Acts::Surface *currentSurface = nullptr;
 };
 
-struct MockNavigator {};
+struct MockNavigator {
+  bool targetReached(const MockNavigatorState &state) const {
+    return state.targetReached;
+  }
+  const Acts::Surface *currentSurface(const MockNavigatorState &state) const {
+    return state.currentSurface;
+  }
+};
 
 struct MockPropagatorState {
   MockNavigatorState navigation;

@@ -1,11 +1,12 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2020-2023 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Plugins/Sycl/Seeding/SeedFinder.hpp"
 #include "Acts/Plugins/Sycl/Utilities/QueueWrapper.hpp"
 #include "Acts/Seeding/BinFinder.hpp"
@@ -247,9 +248,12 @@ auto main(int argc, char** argv) -> int {
   group_count = 0;
   std::vector<std::vector<Acts::Seed<SpacePoint>>> seedVector_sycl;
 
+  Acts::SpacePointData spacePointData;
+  spacePointData.resize(spVec.size());
+
   for (auto [bottom, middle, top] : spGroup) {
     seedVector_sycl.push_back(syclSeedFinder.createSeedsForGroup(
-        spGroup.grid(), bottom, middle, top));
+        spacePointData, spGroup.grid(), bottom, middle, top));
     group_count++;
     if (!cmdlTool.allgroup && group_count >= cmdlTool.groups) {
       break;

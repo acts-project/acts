@@ -118,27 +118,71 @@ class DirectNavigator {
     bool targetReached = false;
     /// Navigation state - external interface: a break has been detected
     bool navigationBreak = false;
-
-    /// Reset state
-    ///
-    /// @param ssurface is the new starting surface
-    /// @param tsurface is the target surface
-    void reset(const GeometryContext& /*geoContext*/, const Vector3& /*pos*/,
-               const Vector3& /*dir*/, NavigationDirection /*navDir*/,
-               const Surface* ssurface, const Surface* tsurface) {
-      // Reset everything except the navSurfaces
-      State newState = State();
-      newState.navSurfaces = this->navSurfaces;
-      *this = newState;
-
-      // Reset others
-      navSurfaceIter =
-          std::find(navSurfaces.begin(), navSurfaces.end(), ssurface);
-      startSurface = ssurface;
-      currentSurface = ssurface;
-      targetSurface = tsurface;
-    }
   };
+
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
+    State result;
+    result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
+    return result;
+  }
+
+  /// Reset state
+  ///
+  /// @param state is the state to reset
+  /// @param ssurface is the new starting surface
+  /// @param tsurface is the target surface
+  void resetState(State& state, const GeometryContext& /*geoContext*/,
+                  const Vector3& /*pos*/, const Vector3& /*dir*/,
+                  NavigationDirection /*navDir*/, const Surface* ssurface,
+                  const Surface* tsurface) const {
+    // Reset everything except the navSurfaces
+    auto navSurfaces = state.navSurfaces;
+    state = State();
+    state.navSurfaces = navSurfaces;
+
+    // Reset others
+    state.navSurfaceIter =
+        std::find(state.navSurfaces.begin(), state.navSurfaces.end(), ssurface);
+    state.startSurface = ssurface;
+    state.currentSurface = ssurface;
+    state.targetSurface = tsurface;
+  }
+
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
+  }
+
+  const TrackingVolume* currentVolume(const State& state) const {
+    return state.currentVolume;
+  }
+
+  const Surface* startSurface(const State& state) const {
+    return state.startSurface;
+  }
+
+  const Surface* targetSurface(const State& state) const {
+    return state.targetSurface;
+  }
+
+  bool targetReached(const State& state) const { return state.targetReached; }
+
+  bool navigationBreak(const State& state) const {
+    return state.navigationBreak;
+  }
+
+  void currentSurface(State& state, const Surface* surface) const {
+    state.currentSurface = surface;
+  }
+
+  void targetReached(State& state, bool targetReached) const {
+    state.targetReached = targetReached;
+  }
+
+  void navigationBreak(State& state, bool navigationBreak) const {
+    state.navigationBreak = navigationBreak;
+  }
 
   /// @brief Navigator status call
   ///

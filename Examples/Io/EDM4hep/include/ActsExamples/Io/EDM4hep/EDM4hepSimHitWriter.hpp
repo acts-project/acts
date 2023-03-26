@@ -9,6 +9,8 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
@@ -69,6 +71,8 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
 
   edm4hep::MCParticleCollection* m_mcParticleCollection;
   edm4hep::SimTrackerHitCollection* m_simTrackerHitCollection;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 };
 
 }  // namespace ActsExamples

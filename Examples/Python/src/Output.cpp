@@ -302,10 +302,10 @@ void addOutput(Context& ctx) {
                              "CsvParticleWriter", inputParticles, outputDir,
                              outputStem, outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::CsvMeasurementWriter, mex, "CsvMeasurementWriter",
-      inputMeasurements, inputClusters, inputSimHits,
-      inputMeasurementSimHitsMap, outputDir, outputPrecision);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvMeasurementWriter, mex,
+                             "CsvMeasurementWriter", inputMeasurements,
+                             inputClusters, inputMeasurementSimHitsMap,
+                             outputDir, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvPlanarClusterWriter, mex,
                              "CsvPlanarClusterWriter", inputClusters,

@@ -35,6 +35,10 @@ ActsExamples::RootParticleReader::RootParticleReader(
     throw std::invalid_argument("Missing tree name");
   }
 
+  m_outputParticles.initialize(m_cfg.particleCollection);
+  m_outputPrimaryVertices.maybeInitialize(m_cfg.vertexPrimaryCollection);
+  m_outputSecondaryVertices.maybeInitialize(m_cfg.vertexSecondaryCollection);
+
   // Set the branches
   m_inputChain->SetBranchAddress("event_id", &m_eventId);
   m_inputChain->SetBranchAddress("particle_id", &m_particleId);
@@ -151,17 +155,14 @@ ActsExamples::ProcessCode ActsExamples::RootParticleReader::read(
     }
 
     // Write the collections to the EventStore
-    context.eventStore.add(m_cfg.particleCollection,
-                           std::move(particleContainer));
+    m_outputParticles(context, std::move(particleContainer));
 
     if (not m_cfg.vertexPrimaryCollection.empty()) {
-      context.eventStore.add(m_cfg.vertexPrimaryCollection,
-                             std::move(priVtxCollection));
+      m_outputPrimaryVertices(context, std::move(priVtxCollection));
     }
 
     if (not m_cfg.vertexSecondaryCollection.empty()) {
-      context.eventStore.add(m_cfg.vertexSecondaryCollection,
-                             std::move(secVtxCollection));
+      m_outputSecondaryVertices(context, std::move(secVtxCollection));
     }
   }
   // Return success flag

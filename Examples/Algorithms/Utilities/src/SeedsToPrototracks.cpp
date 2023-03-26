@@ -16,12 +16,18 @@
 
 namespace ActsExamples {
 
+SeedsToPrototracks::SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(std::move(cfg)) {
+  m_inputSeeds.initialize(m_cfg.inputSeeds);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
+}
+
 ProcessCode SeedsToPrototracks::execute(const AlgorithmContext& ctx) const {
-  const auto seeds = ctx.eventStore.get<SimSeedContainer>(m_cfg.inputSeeds);
+  const auto seeds = m_inputSeeds(ctx);
 
   auto tracks = seedsToPrototracks(seeds);
 
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(tracks));
+  m_outputProtoTracks(ctx, std::move(tracks));
 
   return ProcessCode::SUCCESS;
 }

@@ -10,7 +10,19 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/MagneticField/MagneticFieldProvider.hpp"
+#include "Acts/Propagator/EigenStepper.hpp"
+#include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
+#include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
+#include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
+#include "Acts/Vertexing/ImpactPointEstimator.hpp"
+#include "Acts/Vertexing/TrackDensityVertexFinder.hpp"
+#include "ActsExamples/EventData/ProtoVertex.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <string>
 
@@ -18,6 +30,18 @@ namespace ActsExamples {
 
 class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
  public:
+  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
+  using IPEstimator =
+      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
+  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
+  using Fitter =
+      Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
+  using SeedFinder = Acts::TrackDensityVertexFinder<
+      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
+  using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
+
+  using VertexCollection = std::vector<Acts::Vertex<Fitter::InputTrack_t>>;
+
   struct Config {
     /// Optional. Input track parameters collection
     std::string inputTrackParameters;
@@ -35,7 +59,6 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
 
   AdaptiveMultiVertexFinderAlgorithm(const Config& config,
                                      Acts::Logging::Level level);
-
   /// Find vertices using the adapative multi vertex finder algorithm.
   ///
   /// @param ctx is the algorithm context with event information
@@ -47,6 +70,17 @@ class AdaptiveMultiVertexFinderAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-};
 
+  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
+      m_inputTrackParameters{this, "InputTrackParameters"};
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  WriteDataHandle<ProtoVertexContainer> m_outputProtoVertices{
+      this, "OutputProtoVertices"};
+
+  WriteDataHandle<VertexCollection> m_outputVertices{this, "OutputVertices"};
+  WriteDataHandle<int> m_outputTime{this, "OutputTime"};
+};
 }  // namespace ActsExamples
