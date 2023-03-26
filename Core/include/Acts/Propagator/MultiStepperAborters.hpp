@@ -72,13 +72,8 @@ struct MultiStepperSurfaceReached {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-<<<<<<< HEAD
       if (!SurfaceReached{}.template operator()<propagator_stage>(
-              singleState, singleStepper, targetSurface, logger)) {
-=======
-      if (!SurfaceReached{}(singleState, singleStepper, navigator,
-                            targetSurface, logger)) {
->>>>>>> faded2fcf7c8f91a81b9ca0b34528273b3e533e2
+              singleState, singleStepper, navigator, targetSurface, logger)) {
         reached = false;
       } else {
         cmp.status() = Acts::Intersection3D::Status::onSurface;
