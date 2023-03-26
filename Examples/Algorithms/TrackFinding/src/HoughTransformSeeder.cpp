@@ -90,8 +90,7 @@ ActsExamples::HoughTransformSeeder::HoughTransformSeeder(
         (geoId.sensitive() != 0u)) {
       throw std::invalid_argument(
           "HoughTransformSeeder: Invalid geometry selection: only volume and "
-          "layer are allowed to be "
-          "set");
+          "layer are allowed to be set");
     }
   }
   // remove geometry selection duplicates

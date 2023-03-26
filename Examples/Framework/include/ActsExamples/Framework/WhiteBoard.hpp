@@ -18,8 +18,6 @@
 #include <unordered_map>
 #include <vector>
 
-#include <boost/core/demangle.hpp>
-
 namespace ActsExamples {
 
 /// A container to store arbitrary objects with ownership transfer.
