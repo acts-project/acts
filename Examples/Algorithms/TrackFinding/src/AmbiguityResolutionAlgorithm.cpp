@@ -128,6 +128,10 @@ void removeTrack(State& state, std::size_t iTrack) {
 
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {
+<<<<<<< HEAD
+=======
+  const auto& trajectories = m_inputTrajectories(ctx);
+>>>>>>> upstream/main
 
   const auto& tracks = m_inputTracks(ctx);
   auto state = computeInitialState(tracks, m_cfg.nMeasurementsMin);
@@ -186,6 +190,11 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     destProxy.copyFrom(tracks.getTrack(state.trackTips.at(iTrack)));
   }
 
+<<<<<<< HEAD
   ConstTrackContainer outputTracks{ std::make_shared<Acts::ConstVectorTrackContainer>(std::move(*trackContainer)), trackStateContainer};
   m_outputTracks(ctx, std::move(outputTracks));
+=======
+  m_outputTrajectories(ctx, std::move(outputTrajectories));
+  return ActsExamples::ProcessCode::SUCCESS;
+>>>>>>> upstream/main
 }

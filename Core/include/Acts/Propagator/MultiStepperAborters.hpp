@@ -41,8 +41,8 @@ struct MultiStepperSurfaceReached {
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
                   const navigator_t& navigator, const Logger& logger) const {
-    return (*this)(state, stepper, navigator, *state.navigation.targetSurface,
-                   logger);
+    return (*this)(state, stepper, navigator,
+                   *navigator.targetSurface(state.navigation), logger);
   }
 
   /// boolean operator for abort condition without using the result
@@ -53,22 +53,23 @@ struct MultiStepperSurfaceReached {
   ///
   /// @param [in,out] state The propagation state object
   /// @param [in] stepper Stepper used for the progation
+  /// @param [in] navigator Navigator used for the progation
   /// @param [in] targetSurface The target surface
   /// @param logger a logger instance
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   bool operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/,
-                  const Surface& targetSurface, const Logger& logger) const {
+                  const navigator_t& navigator, const Surface& targetSurface,
+                  const Logger& logger) const {
     bool reached = true;
-    const auto oldCurrentSurface = state.navigation.currentSurface;
+    const auto oldCurrentSurface = navigator.currentSurface(state.navigation);
 
     for (auto cmp : stepper.componentIterable(state.stepping)) {
       auto singleState = cmp.singleState(state);
       const auto& singleStepper = cmp.singleStepper(stepper);
 
-      if (!SurfaceReached{}(singleState, singleStepper, targetSurface,
-                            logger)) {
+      if (!SurfaceReached{}(singleState, singleStepper, navigator,
+                            targetSurface, logger)) {
         reached = false;
       } else {
         cmp.status() = Acts::Intersection3D::Status::onSurface;
@@ -85,8 +86,8 @@ struct MultiStepperSurfaceReached {
               Intersection3D::Status::onSurface or
           sIntersection.intersection.pathLength < averageOnSurfaceTolerance) {
         ACTS_VERBOSE("Reached target in average mode");
-        state.navigation.currentSurface = &targetSurface;
-        state.navigation.targetReached = true;
+        navigator.currentSurface(state.navigation, &targetSurface);
+        navigator.targetReached(state.navigation, true);
 
         for (auto cmp : stepper.componentIterable(state.stepping)) {
           cmp.status() = Intersection3D::Status::onSurface;
@@ -99,8 +100,8 @@ struct MultiStepperSurfaceReached {
     // These values are changed by the single component aborters but must be
     // reset if not all components are on the target
     if (!reached) {
-      state.navigation.currentSurface = oldCurrentSurface;
-      state.navigation.targetReached = false;
+      navigator.currentSurface(state.navigation, oldCurrentSurface);
+      navigator.targetReached(state.navigation, false);
     }
 
     return reached;

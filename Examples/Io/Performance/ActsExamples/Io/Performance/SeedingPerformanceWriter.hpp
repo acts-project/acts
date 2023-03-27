@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
@@ -24,6 +26,8 @@ namespace ActsExamples {
 
 class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
  public:
+  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// Input reconstructed seed collection.
     std::string inputSeeds;
@@ -73,6 +77,10 @@ class SeedingPerformanceWriter final : public WriterT<SimSeedContainer> {
   size_t m_nTotalParticles = 0;
   size_t m_nTotalMatchedParticles = 0;
   size_t m_nTotalDuplicatedParticles = 0;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMaps"};
 };
 
 }  // namespace ActsExamples

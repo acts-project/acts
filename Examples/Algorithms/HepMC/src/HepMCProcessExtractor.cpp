@@ -191,13 +191,15 @@ ActsExamples::HepMCProcessExtractor::HepMCProcessExtractor(
   if (m_cfg.extractionProcess.empty()) {
     throw std::invalid_argument("Missing extraction process");
   }
+
+  m_inputEvents.initialize(m_cfg.inputEvents);
+  m_outputSimulationProcesses.initialize(m_cfg.outputSimulationProcesses);
 }
 
 ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
     const ActsExamples::AlgorithmContext& context) const {
   // Retrieve the initial particles
-  const auto events =
-      context.eventStore.get<std::vector<HepMC3::GenEvent>>(m_cfg.inputEvents);
+  const auto events = m_inputEvents(context);
 
   ActsExamples::ExtractedSimulationProcessContainer fractions;
   for (const HepMC3::GenEvent& event : events) {
@@ -247,7 +249,7 @@ ActsExamples::ProcessCode ActsExamples::HepMCProcessExtractor::execute(
   ACTS_INFO(events.size() << " processed");
 
   // Write the recorded material to the event store
-  context.eventStore.add(m_cfg.outputSimulationProcesses, std::move(fractions));
+  m_outputSimulationProcesses(context, std::move(fractions));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

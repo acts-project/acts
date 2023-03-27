@@ -40,6 +40,11 @@ ActsExamples::RootMeasurementWriter::RootMeasurementWriter(
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map input collection");
   }
+
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
+
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
@@ -98,13 +103,12 @@ ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::RootMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  const auto& hitSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
-      m_cfg.inputMeasurementSimHitsMap);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   ClusterContainer clusters;
   if (not m_cfg.inputClusters.empty()) {
-    clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
+    clusters = m_inputClusters(ctx);
   }
 
   // Exclusive access to the tree while writing

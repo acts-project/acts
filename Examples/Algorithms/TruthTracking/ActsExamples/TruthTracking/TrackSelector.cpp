@@ -60,37 +60,26 @@ ActsExamples::ProcessCode ActsExamples::TrackSelector::execute(
   std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer =
       inputTracks.trackStateContainerHolder();
 
-  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>(
-      inputTracks.container());  // mutable copy of the immutable
-                                 // source track container
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+
+  // temporary empty track state container: we don't change the original one,
+  // but we need one for filtering
   auto tempTrackStateContainer =
       std::make_shared<Acts::VectorMultiTrajectory>();
 
   TrackContainer filteredTracks{trackContainer, tempTrackStateContainer};
+  filteredTracks.ensureDynamicColumns(inputTracks);
 
-  ACTS_VERBOSE(
-      "Track container size before filtering: " << filteredTracks.size());
+  trackContainer->reserve(inputTracks.size());
 
-  size_t nRemoved = 0;
+  ACTS_VERBOSE("Track container size before filtering: " << inputTracks.size());
 
-  for (Acts::MultiTrajectoryTraits::IndexType itrack = 0;
-       itrack < filteredTracks.size();) {
-    auto track = filteredTracks.getTrack(itrack);
-    if (isValidTrack(track)) {
-      // Track is valid, go to next index
-      ACTS_VERBOSE(" - Keeping track #" << itrack);
-      itrack++;
+  for (auto track : inputTracks) {
+    if (!isValidTrack(track)) {
       continue;
     }
-    ACTS_VERBOSE(" - Removing track #" << itrack);
-    filteredTracks.removeTrack(itrack);
-    nRemoved++;
-    // Do not increment track index
-  }
-
-  if (nRemoved != inputTracks.size() - filteredTracks.size()) {
-    ACTS_ERROR("Inconsistent track container size after removing "
-               << nRemoved << " tracks");
+    auto destProxy = filteredTracks.getTrack(filteredTracks.addTrack());
+    destProxy.copyFrom(track);
   }
 
   ACTS_VERBOSE(
