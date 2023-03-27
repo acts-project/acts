@@ -10,7 +10,6 @@
 
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
