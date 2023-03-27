@@ -43,9 +43,8 @@ namespace {
 struct State {
   std::size_t numberOfTracks{};
 
-  std::vector<std::pair<std::size_t, std::size_t>> trackTips;
+  std::vector<int> trackTips;
   std::vector<float> trackChi2;
-  std::vector<ActsExamples::TrackParameters> trackParameters;
   std::vector<std::vector<std::size_t>> measurementsPerTrack;
 
   boost::container::flat_map<std::size_t,
@@ -56,11 +55,9 @@ struct State {
   boost::container::flat_set<std::size_t> selectedTracks;
 };
 
-State computeInitialState(
-    const Acts::ConstTrackContainer& tracks,
-    std::size_t nMeasurementsMin) {
+State computeInitialState(const ActsExamples::ConstTrackContainer& tracks,
+                          std::size_t nMeasurementsMin) {
   State state;
-  std::size_t iTrack = 0;
   for (const auto& track : tracks) {
     auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
         tracks.trackStateContainer(), track.tipIndex());
@@ -68,27 +65,24 @@ State computeInitialState(
       continue;
     }
     std::vector<std::size_t> measurements;
-    tracks.trackStateContainer().visitBackwards(track.tipIndex(), [&](const auto& hit) {
-        if (hit.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          std::size_t iMeasurement =
-              hit.getUncalibratedSourceLink()
-                  .template get<ActsExamples::IndexSourceLink>()
-                  .index();
-          measurements.push_back(iMeasurement);
-        }
-        return true;
-      });
+    tracks.trackStateContainer().visitBackwards(
+        track.tipIndex(), [&](const auto& hit) {
+          if (hit.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+            std::size_t iMeasurement =
+                hit.getUncalibratedSourceLink()
+                    .template get<ActsExamples::IndexSourceLink>()
+                    .index();
+            measurements.push_back(iMeasurement);
+          }
+          return true;
+        });
 
-      ++state.numberOfTracks;
+    state.trackTips.push_back(track.index());
+    state.trackChi2.push_back(trajState.chi2Sum / trajState.NDF);
+    state.measurementsPerTrack.push_back(std::move(measurements));
+    state.selectedTracks.insert(state.numberOfTracks);
 
-      state.trackTips.emplace_back(iTrack, track.index());
-      state.trackChi2.push_back(trajState.chi2Sum / trajState.NDF);
-      state.trackParameters.push_back(track.parameters());
-      state.measurementsPerTrack.push_back(std::move(measurements));
-
-      state.selectedTracks.insert(iTrack);
-      ++iTrack;
-  }
+    ++state.numberOfTracks;
   }
 
   for (std::size_t iTrack = 0; iTrack < state.numberOfTracks; ++iTrack) {
@@ -96,7 +90,6 @@ State computeInitialState(
       state.tracksPerMeasurement[iMeasurement].insert(iTrack);
     }
   }
-
   state.sharedMeasurementsPerTrack =
       std::vector<std::size_t>(state.trackTips.size(), 0);
 
@@ -128,11 +121,6 @@ void removeTrack(State& state, std::size_t iTrack) {
 
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     const AlgorithmContext& ctx) const {
-<<<<<<< HEAD
-=======
-  const auto& trajectories = m_inputTrajectories(ctx);
->>>>>>> upstream/main
-
   const auto& tracks = m_inputTracks(ctx);
   auto state = computeInitialState(tracks, m_cfg.nMeasurementsMin);
 
@@ -174,13 +162,14 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
   ACTS_INFO("Resolved to " << state.selectedTracks.size() << " tracks from "
                            << state.trackTips.size());
 
-
-  std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer = tracks.trackStateContainerHolder();
+  std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer =
+      tracks.trackStateContainerHolder();
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   trackContainer->reserve(state.selectedTracks.size());
   // temporary empty track state container: we don't change the original one,
   // but we need one for filtering
-  auto tempTrackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+  auto tempTrackStateContainer =
+      std::make_shared<Acts::VectorMultiTrajectory>();
 
   TrackContainer solvedTracks{trackContainer, tempTrackStateContainer};
   solvedTracks.ensureDynamicColumns(tracks);
@@ -190,11 +179,10 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionAlgorithm::execute(
     destProxy.copyFrom(tracks.getTrack(state.trackTips.at(iTrack)));
   }
 
-<<<<<<< HEAD
-  ConstTrackContainer outputTracks{ std::make_shared<Acts::ConstVectorTrackContainer>(std::move(*trackContainer)), trackStateContainer};
+  ActsExamples::ConstTrackContainer outputTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(*trackContainer)),
+      trackStateContainer};
   m_outputTracks(ctx, std::move(outputTracks));
-=======
-  m_outputTrajectories(ctx, std::move(outputTrajectories));
   return ActsExamples::ProcessCode::SUCCESS;
->>>>>>> upstream/main
 }

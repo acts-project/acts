@@ -9,11 +9,7 @@
 #pragma once
 
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
-<<<<<<< HEAD
-
 #include "ActsExamples/EventData/Track.hpp"
-=======
->>>>>>> upstream/main
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"

@@ -24,8 +24,8 @@ void addMLTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
                                 mex, "AmbiguityResolutionMLAlgorithm",
-                                inputTracks, inputDuplicateNN,
-                                outputTracks, nMeasurementsMin);
+                                inputTracks, inputDuplicateNN, outputTracks,
+                                nMeasurementsMin);
 }
 
 }  // namespace Acts::Python

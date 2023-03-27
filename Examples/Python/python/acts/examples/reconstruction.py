@@ -134,8 +134,8 @@ CKFPerformanceConfig = namedtuple(
 
 AmbiguityResolutionConfig = namedtuple(
     "AmbiguityResolutionConfig",
-    ["maximumSharedHits", "nMeasurementsMin"],
-    defaults=[None] * 2,
+    ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
+    defaults=[None] * 3,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -1231,21 +1231,28 @@ def addAmbiguityResolution(
 
     alg = AmbiguityResolutionAlgorithm(
         level=customLogLevel(),
-        inputTracks="trajectories",
+        inputTracks="selectedTracks",
         outputTracks="filteredTrajectories",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
+            maximumIterations=config.maximumIterations,
         ),
     )
     s.addAlgorithm(alg)
 
-    s.addWhiteboardAlias("trajectories", alg.config.outputTrajectories)
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=alg.config.outputTracks,
+        outputTrajectories="trajectories-from-solved-tracks",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     addTrajectoryWriters(
         s,
         name="ambi",
-        trajectories=alg.config.outputTrajectories,
+        trajectories="trajectories",
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
@@ -1290,12 +1297,18 @@ def addAmbiguityResolutionML(
     )
     s.addAlgorithm(alg)
 
-    s.addWhiteboardAlias("trajectories", alg.config.outputTrajectories)
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=alg.config.outputTracks,
+        outputTrajectories="trajectories-from-solved-tracks",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     addTrajectoryWriters(
         s,
         name="ambiML",
-        trajectories=alg.config.outputTrajectories,
+        trajectories="trajectories",
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,

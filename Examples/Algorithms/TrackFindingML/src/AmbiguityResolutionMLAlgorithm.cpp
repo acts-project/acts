@@ -38,14 +38,8 @@ ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories output collection");
   }
-<<<<<<< HEAD
   m_inputTracks.initialize(m_cfg.inputTracks);
   m_outputTracks.initialize(m_cfg.outputTracks);
-=======
-
-  m_inputTrajectories.initialize(m_cfg.inputTrajectories);
-  m_outputTrajectories.initialize(m_cfg.outputTrajectories);
->>>>>>> upstream/main
 }
 
 namespace {
@@ -56,7 +50,6 @@ namespace {
 /// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
 std::unordered_map<int, std::vector<int>> clusterTracks(
     std::multimap<int, std::pair<int, std::vector<int>>> trackMap) {
-
   // Unordered map associating a vector with all the track ID of a cluster to
   // the ID of the first track of the cluster
   std::unordered_map<int, std::vector<int>> cluster;
@@ -96,11 +89,7 @@ std::unordered_map<int, std::vector<int>> clusterTracks(
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Read input data
-<<<<<<< HEAD
   const auto& tracks = m_inputTracks(ctx);
-=======
-  const auto& trajectories = m_inputTrajectories(ctx);
->>>>>>> upstream/main
 
   int trackID = 0;
   std::multimap<int, std::pair<int, std::vector<int>>> trackMap;
@@ -113,16 +102,16 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     trackIndicies.reserve(tracks.size());
     // Store the hits id for the trajectory and compute the number of
     // measurement
-    tracks.trackStateContainer().visitBackwards(track.tipIndex(), [&](const auto& state) {
-
-      if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-        int indexHit = state.getUncalibratedSourceLink()
-                           .template get<ActsExamples::IndexSourceLink>()
-                           .index();
-        hits.emplace_back(indexHit);
-        ++nbMeasurements;
-      }
-    });
+    tracks.trackStateContainer().visitBackwards(
+        track.tipIndex(), [&](const auto& state) {
+          if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+            int indexHit = state.getUncalibratedSourceLink()
+                               .template get<ActsExamples::IndexSourceLink>()
+                               .index();
+            hits.emplace_back(indexHit);
+            ++nbMeasurements;
+          }
+        });
     if (nbMeasurements < m_cfg.nMeasurementsMin) {
       continue;
     }
@@ -139,17 +128,15 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     for (const auto& track : val) {
       auto traj = tracks.getTrack(trackIndicies.at(track));
       auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-        tracks.trackStateContainer(), traj.tipIndex());
+          tracks.trackStateContainer(), traj.tipIndex());
       networkInput(trackID, 0) = trajState.nStates;
       networkInput(trackID, 1) = trajState.nMeasurements;
       networkInput(trackID, 2) = trajState.nOutliers;
       networkInput(trackID, 3) = trajState.nHoles;
       networkInput(trackID, 4) = trajState.NDF;
       networkInput(trackID, 5) = (trajState.chi2Sum * 1.0) / trajState.NDF;
-      networkInput(trackID, 6) =
-          Acts::VectorHelpers::eta(traj.momentum());
-      networkInput(trackID, 7) =
-          Acts::VectorHelpers::phi(traj.momentum());
+      networkInput(trackID, 6) = Acts::VectorHelpers::eta(traj.momentum());
+      networkInput(trackID, 7) = Acts::VectorHelpers::phi(traj.momentum());
       trackID++;
     }
   }
@@ -174,12 +161,14 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     goodTracks.push_back(bestTrackID);
   }
 
-  std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer = tracks.trackStateContainerHolder();
+  std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer =
+      tracks.trackStateContainerHolder();
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   trackContainer->reserve(goodTracks.size());
   // temporary empty track state container: we don't change the original one,
   // but we need one for filtering
-  auto tempTrackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+  auto tempTrackStateContainer =
+      std::make_shared<Acts::VectorMultiTrajectory>();
 
   TrackContainer solvedTracks{trackContainer, tempTrackStateContainer};
   solvedTracks.ensureDynamicColumns(tracks);
@@ -189,8 +178,11 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     destProxy.copyFrom(tracks.getTrack(trackIndicies.at(iTrack)));
   }
 
-  ConstTrackContainer outputTracks{ std::make_shared<Acts::ConstVectorTrackContainer>(std::move(*trackContainer)), trackStateContainer};
+  ConstTrackContainer outputTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(*trackContainer)),
+      trackStateContainer};
   m_outputTracks(ctx, std::move(outputTracks));
-  
+
   return ActsExamples::ProcessCode::SUCCESS;
 }
