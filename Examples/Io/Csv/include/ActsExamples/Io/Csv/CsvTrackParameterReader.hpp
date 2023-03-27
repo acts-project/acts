@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <array>
@@ -61,6 +63,9 @@ class CsvTrackParameterReader final : public IReader {
   Config m_cfg;
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

@@ -187,6 +187,15 @@ class VectorTrackContainer final : public detail_vtc::VectorTrackContainerBase {
     return ConstCovariance{m_cov[itrack].data()};
   }
 
+  void copyDynamicFrom_impl(IndexType dstIdx,
+                            const VectorTrackContainerBase& src,
+                            IndexType srcIdx);
+
+  void ensureDynamicColumns_impl(
+      const detail_vtc::VectorTrackContainerBase& other);
+
+  void reserve(IndexType size);
+
   // END INTERFACE
 };
 

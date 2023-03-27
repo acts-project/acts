@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
@@ -23,8 +26,7 @@ class SeedsToPrototracks final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl)
-      : IAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(std::move(cfg)) {}
+  SeedsToPrototracks(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///
@@ -37,6 +39,10 @@ class SeedsToPrototracks final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimSeedContainer> m_inputSeeds{this, "InputSeeds"};
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples
