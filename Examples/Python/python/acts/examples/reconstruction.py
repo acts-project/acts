@@ -770,7 +770,6 @@ def addKalmanTracks(
     energyLoss: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if directNavigation:
@@ -827,7 +826,6 @@ def addTruthTrackingGsf(
     inputProtoTracks: str = "truth_particle_tracks",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     gsfOptions = {
@@ -1097,7 +1095,6 @@ def addTrackSelection(
     outputTracks: str,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.TrackSelector:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     trackSelector = acts.examples.TrackSelector(
@@ -1139,7 +1136,6 @@ def addExaTrkX(
     backend: Optional[ExaTrkXBackend] = ExaTrkXBackend.Torch,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Run the particle selection
@@ -1224,7 +1220,6 @@ def addAmbiguityResolution(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     from acts.examples import AmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1281,7 +1276,6 @@ def addAmbiguityResolutionML(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     from acts.examples import AmbiguityResolutionMLAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -1337,7 +1331,6 @@ def addVertexFitting(
     trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     """This function steers the vertex fitting
 
     Parameters
