@@ -149,7 +149,7 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         field,
         digiConfigFile=oddDigiConfig,
         outputDirRoot=outputDir,
-        outputDirCsv=outputDir,
+        # outputDirCsv=outputDir,
         rnd=rnd,
     )
 
