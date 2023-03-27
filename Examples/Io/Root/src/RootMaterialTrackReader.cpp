@@ -84,6 +84,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     TMath::Sort(m_inputChain->GetEntries(), m_inputChain->GetV1(),
                 m_entryNumbers.data(), false);
   }
+  m_outputMaterialTracks.initialize(m_cfg.collection);
 }
 
 ActsExamples::RootMaterialTrackReader::~RootMaterialTrackReader() {
@@ -186,7 +187,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackReader::read(
       mtrackCollection[ib] = (std::move(rmTrack));
     }
     // Write to the collection to the EventStore
-    context.eventStore.add(m_cfg.collection, std::move(mtrackCollection));
+    m_outputMaterialTracks(context, std::move(mtrackCollection));
   }
   // Return success flag
   return ActsExamples::ProcessCode::SUCCESS;

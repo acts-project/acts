@@ -35,13 +35,13 @@ ActsExamples::CsvMeasurementWriter::CsvMeasurementWriter(
     : WriterT(config.inputMeasurements, "CsvMeasurementWriter", level),
       m_cfg(config) {
   // Input container for measurements is already checked by base constructor
-  if (m_cfg.inputSimHits.empty()) {
-    throw std::invalid_argument("Missing simulated hits input collection");
-  }
   if (m_cfg.inputMeasurementSimHitsMap.empty()) {
     throw std::invalid_argument(
         "Missing hit-to-simulated-hits map input collection");
   }
+
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
 }
 
 ActsExamples::CsvMeasurementWriter::~CsvMeasurementWriter() = default;
@@ -53,8 +53,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
-  const auto& measurementSimHitsMap = ctx.eventStore.get<IndexMultimap<Index>>(
-      m_cfg.inputMeasurementSimHitsMap);
+  const auto& measurementSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   ClusterContainer clusters;
 
@@ -71,7 +70,7 @@ ActsExamples::ProcessCode ActsExamples::CsvMeasurementWriter::writeT(
   if (not m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE(
         "Set up writing of clusters from collection: " << m_cfg.inputClusters);
-    clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
+    clusters = m_inputClusters(ctx);
     std::string pathCells =
         perEventFilepath(m_cfg.outputDir, "cells.csv", ctx.eventNumber);
     writerCells =

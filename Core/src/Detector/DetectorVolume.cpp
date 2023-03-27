@@ -114,23 +114,9 @@ bool Acts::Experimental::DetectorVolume::inside(const GeometryContext& gctx,
 
 void Acts::Experimental::DetectorVolume::updateNavigationState(
     const GeometryContext& gctx, NavigationState& nState) const {
-  // This volume still has sub volumes, it needs a double-check
-  // if the internal volumes can be excluded.
-  //
-  // This can be avoided by a precise volume finder
-  if (not m_volumes.external.empty()) {
-    for (const auto v : volumes()) {
-      if (v->inside(gctx, nState.position)) {
-        v->updateNavigationState(gctx, nState);
-        return;
-      }
-    }
-  }
-  // The state updator of the volume itself
   nState.currentVolume = this;
   m_surfaceCandidatesUpdator(gctx, nState);
   nState.surfaceCandidate = nState.surfaceCandidates.begin();
-  return;
 }
 
 void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdator(

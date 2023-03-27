@@ -32,6 +32,8 @@ EDM4hepSimHitWriter::EDM4hepSimHitWriter(
     throw std::invalid_argument("Missing simulated hits input collection");
   }
 
+  m_inputParticles.maybeInitialize(m_cfg.inputParticles);
+
   m_mcParticleCollection =
       &m_store.create<edm4hep::MCParticleCollection>(m_cfg.outputParticles);
   m_writer.registerForWrite(m_cfg.outputParticles);
@@ -54,8 +56,7 @@ ProcessCode EDM4hepSimHitWriter::writeT(const AlgorithmContext& ctx,
       particleMap;
 
   if (!m_cfg.inputParticles.empty()) {
-    auto particles =
-        ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+    auto particles = m_inputParticles(ctx);
 
     for (const auto& particle : particles) {
       auto p = m_mcParticleCollection->create();

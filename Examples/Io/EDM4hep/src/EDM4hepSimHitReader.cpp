@@ -25,6 +25,9 @@ EDM4hepSimHitReader::EDM4hepSimHitReader(
   m_reader.openFile(m_cfg.inputPath);
   m_store.setReader(&m_reader);
 
+  m_outputParticles.maybeInitialize(m_cfg.outputParticles);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
+
   m_eventsRange = std::make_pair(0, m_reader.getEntries());
 
   m_collections = m_reader.getCollectionIDTable()->names();
@@ -62,7 +65,7 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
     // Write ordered particles container to the EventStore
     SimParticleContainer particles;
     particles.insert(unordered.begin(), unordered.end());
-    ctx.eventStore.add(m_cfg.outputParticles, std::move(particles));
+    m_outputParticles(ctx, std::move(particles));
   }
 
   SimHitContainer::sequence_type unordered;
@@ -106,7 +109,7 @@ ProcessCode EDM4hepSimHitReader::read(const AlgorithmContext& ctx) {
 
   SimHitContainer simHits;
   simHits.insert(unordered.begin(), unordered.end());
-  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+  m_outputSimHits(ctx, std::move(simHits));
 
   return ProcessCode::SUCCESS;
 }

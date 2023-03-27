@@ -81,7 +81,6 @@ class SeedingAlgorithm final : public IAlgorithm {
       m_inputSpacePoints{};
 
   WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
-  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this, "ProtoTracks"};
 };
 
 }  // namespace ActsExamples

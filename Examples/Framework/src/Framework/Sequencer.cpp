@@ -116,30 +116,48 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
 
   m_sequenceElements.push_back(element);
 
+  std::string elementType{getAlgorithmType(*element)};
+  std::string elementTypeCapitalized = elementType;
+  elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
+  ACTS_INFO("Add " << elementType << " '" << element->name() << "'");
+
   if (!m_cfg.runDataFlowChecks) {
     return;
   }
 
+  auto symbol = [&](const char* in) {
+    std::string s = boost::core::demangle(in);
+    size_t pos = 0;
+    while (pos + 80 < s.size()) {
+      ACTS_INFO("   " + s.substr(pos, pos + 80));
+      pos += 80;
+    }
+    ACTS_INFO("   " + s.substr(pos));
+  };
+
   bool valid = true;
-  std::string elementType{getAlgorithmType(*element)};
-  std::string elementTypeCapitalized = elementType;
-  elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
 
   for (const auto* handle : element->readHandles()) {
     if (!handle->isInitialized()) {
       continue;
     }
 
+    ACTS_INFO("<- " << handle->name() << " '" << handle->key() << "':");
+    symbol(handle->typeInfo().name());
+
     if (auto it = m_whiteBoardState.find(handle->key());
         it != m_whiteBoardState.end()) {
-      const std::type_info& type = *it->second;
-      if (type != handle->typeInfo()) {
+      const auto& source = *it->second;
+      if (!source.isCompatible(*handle)) {
         ACTS_ERROR("Adding "
                    << elementType << " " << element->name() << ":"
                    << "\n-> white board will contain key '" << handle->key()
                    << "'"
-                   << "\nat this point in the sequence, but the type will be\n"
-                   << "'" << boost::core::demangle(type.name()) << "'"
+                   << "\nat this point in the sequence (source: "
+                   << source.fullName() << "),"
+                   << "\nbut the type will be\n"
+                   << "'" << boost::core::demangle(source.typeInfo().name())
+                   << "'"
                    << "\nand not\n"
                    << "'" << boost::core::demangle(handle->typeInfo().name())
                    << "'");
@@ -148,7 +166,7 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
     } else {
       ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
                            << "\n-> white board will not contain key"
-                           << "   '" << handle->key()
+                           << " '" << handle->key()
                            << "' at this point in the sequence."
                            << "\n   Needed for read data handle '"
                            << handle->name() << "'")
@@ -162,53 +180,32 @@ void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
         continue;
       }
 
+      ACTS_INFO("-> " << handle->name() << " '" << handle->key() << "':");
+      symbol(handle->typeInfo().name());
+
       if (auto it = m_whiteBoardState.find(handle->key());
           it != m_whiteBoardState.end()) {
+        const auto& source = *it->second;
         ACTS_ERROR("White board will already contain key '"
-                   << handle->key() << "' (cannot overwrite)");
+                   << handle->key() << "'. Source: '" << source.fullName()
+                   << "' (cannot overwrite)");
         valid = false;
         break;
       }
 
-      m_whiteBoardState.emplace(std::pair{handle->key(), &handle->typeInfo()});
+      m_whiteBoardState.emplace(std::pair{handle->key(), handle});
 
       if (auto it = m_whiteboardObjectAliases.find(handle->key());
           it != m_whiteboardObjectAliases.end()) {
         ACTS_DEBUG("Key '" << handle->key() << "' aliased to '" << it->second
                            << "'");
-        m_whiteBoardState[it->second] = &handle->typeInfo();
+        m_whiteBoardState[it->second] = handle;
       }
     }
   }
 
   if (!valid) {
     throw SequenceConfigurationException{};
-  }
-
-  ACTS_INFO("Added " << elementType << " '" << element->name() << "'");
-  auto symbol = [](const char* in) {
-    std::string s = boost::core::demangle(in);
-    if (s.size() > 80) {
-      s.erase(80);
-      s += "...";
-    }
-    return s;
-  };
-
-  for (const auto* handle : element->readHandles()) {
-    if (!handle->isInitialized()) {
-      continue;
-    }
-    ACTS_INFO("<- " << handle->name() << " '" << handle->key() << "':");
-    ACTS_INFO("   " << symbol(handle->typeInfo().name()));
-  }
-
-  for (const auto* handle : element->writeHandles()) {
-    if (!handle->isInitialized()) {
-      continue;
-    }
-    ACTS_INFO("-> " << handle->name() << " '" << handle->key() << "':");
-    ACTS_INFO("   " << symbol(handle->typeInfo().name()));
   }
 }
 

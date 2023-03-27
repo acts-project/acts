@@ -26,13 +26,7 @@ EDM4hepMeasurementWriter::EDM4hepMeasurementWriter(
   ACTS_VERBOSE("Created output file " << config.outputPath);
 
   // Input container for measurements is already checked by base constructor
-  if (m_cfg.inputSimHits.empty()) {
-    throw std::invalid_argument("Missing simulated hits input collection");
-  }
-  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
-    throw std::invalid_argument(
-        "Missing hit-to-simulated-hits map input collection");
-  }
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
 
   m_trackerHitPlaneCollection =
       &m_store.create<edm4hep::TrackerHitPlaneCollection>(
@@ -56,7 +50,7 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
 
   if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);
-    clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
+    clusters = m_inputClusters(ctx);
   }
 
   ACTS_VERBOSE("Writing " << measurements.size()

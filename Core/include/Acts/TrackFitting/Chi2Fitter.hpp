@@ -271,11 +271,12 @@ class Chi2Fitter {
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result is the mutable result state object
     template <typename propagator_state_t, typename stepper_t,
               typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    const navigator_t& /*navigator*/, result_type& result,
+                    const navigator_t& navigator, result_type& result,
                     const Logger& /*logger*/) const {
       if (result.finished) {
         return;
@@ -286,16 +287,15 @@ class Chi2Fitter {
       if (result.processedStates == 0) {
         for (auto measurementIt = inputMeasurements->begin();
              measurementIt != inputMeasurements->end(); measurementIt++) {
-          state.navigation.externalSurfaces.insert(
-              std::pair<uint64_t, GeometryIdentifier>(
-                  measurementIt->first.layer(), measurementIt->first));
+          navigator.insertExternalSurface(state.navigation,
+                                          measurementIt->first);
         }
       }
 
       // wait for surface
-      auto surface = state.navigation.currentSurface;
+      auto surface = navigator.currentSurface(state.navigation);
       if (surface != nullptr) {
-        auto res = processSurface(surface, state, stepper, result);
+        auto res = processSurface(surface, state, stepper, navigator, result);
         if (!res.ok()) {
           ACTS_ERROR("Error in processSurface: " << res.error());
           result.result = res.error();
@@ -306,7 +306,7 @@ class Chi2Fitter {
       if (not result.finished) {
         if (result.measurementStates == inputMeasurements->size() or
             (result.measurementStates > 0 and
-             state.navigation.navigationBreak)) {
+             navigator.navigationBreak(state.navigation))) {
           result.missedActiveSurfaces.resize(result.measurementHoles);
           ACTS_VERBOSE("Finalize...");
           result.finished = true;
@@ -318,21 +318,25 @@ class Chi2Fitter {
     ///
     /// @tparam propagator_state_t is the type of Propagator state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the update happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result The mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     Result<void> processSurface(const Surface* surface,
                                 propagator_state_t& state,
                                 const stepper_t& stepper,
+                                const navigator_t& navigator,
                                 result_type& result) const {
       // We need the full jacobianFromStart, so we'll need to calculate it no
       // matter if we have a measurement or not.
 
       // Update state and stepper with pre material effects
-      materialInteractor(surface, state, stepper,
+      materialInteractor(surface, state, stepper, navigator,
                          MaterialUpdateStage::PreUpdate);
       // TODO: do we need the materialInteractor before we access the
       // boundState? In the material-only case in the KF, the materialInteractor
@@ -530,7 +534,7 @@ class Chi2Fitter {
       }
 
       // Update state and stepper with post material effects
-      materialInteractor(surface, state, stepper,
+      materialInteractor(surface, state, stepper, navigator,
                          MaterialUpdateStage::PostUpdate);
       // TODO: is it more expensive to split the materialInteractor into
       // preUpdate and postUpdate vs fullUpdate? One could just fullUpdate in
@@ -543,15 +547,19 @@ class Chi2Fitter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the material interaction happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param updateStage The materal update stage
     ///
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,
-                            stepper_t& stepper,
+                            const stepper_t& stepper,
+                            const navigator_t& navigator,
                             const MaterialUpdateStage& updateStage) const {
       // Indicator if having material
       bool hasMaterial = false;
@@ -561,7 +569,7 @@ class Chi2Fitter {
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
         // Evaluate the material properties
-        if (interaction.evaluateMaterialSlab(state, updateStage)) {
+        if (interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
           // Surface has material at this stage
           hasMaterial = true;
 
