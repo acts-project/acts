@@ -13,12 +13,15 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/ExtractedSimulationProcess.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
 #include <memory>
 #include <string>
 #include <vector>
+
+#include <HepMC3/GenEvent.h>
 
 class G4RunManager;
 
@@ -59,6 +62,11 @@ class HepMCProcessExtractor final : public ActsExamples::IAlgorithm {
  private:
   /// The config object
   Config m_cfg;
+
+  ReadDataHandle<std::vector<HepMC3::GenEvent>> m_inputEvents{this,
+                                                              "InputEvents"};
+  WriteDataHandle<ActsExamples::ExtractedSimulationProcessContainer>
+      m_outputSimulationProcesses{this, "OutputSimulationProcesses"};
 };
 
 }  // namespace ActsExamples

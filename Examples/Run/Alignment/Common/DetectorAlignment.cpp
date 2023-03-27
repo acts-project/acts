@@ -25,6 +25,7 @@
 #include "ActsExamples/Options/CsvOptionsReader.hpp"
 #include "ActsExamples/Options/DigitizationOptions.hpp"
 #include "ActsExamples/Options/MagneticFieldOptions.hpp"
+#include "ActsExamples/Options/ParticleSmearingOptions.hpp"
 #include "ActsExamples/Options/TrackFittingOptions.hpp"
 #include "ActsExamples/Options/TruthSeedSelectorOptions.hpp"
 #include "ActsExamples/Reconstruction/ReconstructionBase.hpp"
@@ -67,6 +68,7 @@ int runDetectorAlignment(
   Options::addGeometryOptions(desc);
   Options::addMaterialOptions(desc);
   Options::addInputOptions(desc);
+  Options::addParticleSmearingOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
   detector->addOptions(desc);
   Options::addMagneticFieldOptions(desc);

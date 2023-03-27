@@ -54,6 +54,9 @@ ActsExamples::RootTrajectorySummaryWriter::RootTrajectorySummaryWriter(
     throw std::invalid_argument("Missing tree name");
   }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
@@ -148,13 +151,9 @@ ActsExamples::RootTrajectorySummaryWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // Read additional input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // For each particle within a track, how many hits did it contribute
   std::vector<ParticleHitCount> particleHitCounts;
@@ -256,9 +255,9 @@ ActsExamples::ProcessCode ActsExamples::RootTrajectorySummaryWriter::writeT(
           foundMajorityParticle = true;
 
           const auto& particle = *ip;
-          ACTS_DEBUG("Find the truth particle with barcode "
-                     << majorityParticleId << "="
-                     << majorityParticleId.value());
+          ACTS_VERBOSE("Find the truth particle with barcode "
+                       << majorityParticleId << "="
+                       << majorityParticleId.value());
           // Get the truth particle info at vertex
           t_p = particle.absoluteMomentum();
           t_charge = static_cast<int>(particle.charge());

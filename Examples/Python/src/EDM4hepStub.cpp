@@ -9,5 +9,5 @@
 #include "Acts/Plugins/Python/Utilities.hpp"
 
 namespace Acts::Python {
-void addEDM4hep(Context& /*unused*/) {}
+void addEDM4hep(Context& /*ctx*/) {}
 }  // namespace Acts::Python

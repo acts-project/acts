@@ -40,6 +40,11 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
   if (m_cfg.geometrySelection.empty()) {
     throw std::invalid_argument("Missing space point maker geometry selection");
   }
+
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
+
   // ensure geometry selection contains only valid inputs
   for (const auto& geoId : m_cfg.geometrySelection) {
     if ((geoId.approach() != 0u) or (geoId.boundary() != 0u) or
@@ -91,6 +96,7 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
       -> SimSpacePoint {
     return SimSpacePoint(pos, cov[0], cov[1], std::move(slinks));
   };
+
   m_spacePointBuilder = Acts::SpacePointBuilder<SimSpacePoint>(
       spBuilderConfig, spConstructor,
       Acts::getDefaultLogger("SpacePointBuilder", lvl));
@@ -98,13 +104,27 @@ ActsExamples::SpacePointMaker::SpacePointMaker(Config cfg,
 
 ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
     const AlgorithmContext& ctx) const {
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  const auto& measurements = m_inputMeasurements(ctx);
 
   // TODO Support strip measurements
   Acts::SpacePointBuilderOptions spOpt;
+
+  spOpt.paramCovAccessor = [&measurements](Acts::SourceLink slink) {
+    const auto islink = slink.get<IndexSourceLink>();
+    const auto& meas = measurements[islink.index()];
+
+    return std::visit(
+        [](const auto& measurement) {
+          auto expander = measurement.expander();
+          Acts::BoundVector par = expander * measurement.parameters();
+          Acts::BoundSymMatrix cov =
+              expander * measurement.covariance() * expander.transpose();
+          return std::make_pair(par, cov);
+        },
+        meas);
+  };
+
   SimSpacePointContainer spacePoints;
   for (Acts::GeometryIdentifier geoId : m_cfg.geometrySelection) {
     // select volume/layer depending on what is set in the geometry id
@@ -115,10 +135,9 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
 
     for (auto [moduleGeoId, moduleSourceLinks] : groupedByModule) {
       for (auto& sourceLink : moduleSourceLinks) {
-        const auto& meas = measurements[sourceLink.index()];
-
-        m_spacePointBuilder.buildSpacePoint(ctx.geoContext, {&meas}, spOpt,
-                                            std::back_inserter(spacePoints));
+        m_spacePointBuilder.buildSpacePoint(
+            ctx.geoContext, {Acts::SourceLink{sourceLink}}, spOpt,
+            std::back_inserter(spacePoints));
       }
     }
   }
@@ -126,7 +145,7 @@ ActsExamples::ProcessCode ActsExamples::SpacePointMaker::execute(
   spacePoints.shrink_to_fit();
 
   ACTS_DEBUG("Created " << spacePoints.size() << " space points");
-  ctx.eventStore.add(m_cfg.outputSpacePoints, std::move(spacePoints));
+  m_outputSpacePoints(ctx, std::move(spacePoints));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

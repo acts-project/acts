@@ -15,10 +15,16 @@
 
 namespace ActsExamples {
 
+TrajectoriesToPrototracks::TrajectoriesToPrototracks(Config cfg,
+                                                     Acts::Logging::Level lvl)
+    : IAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(std::move(cfg)) {
+  m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+  m_outputProtoTracks.initialize(m_cfg.outputProtoTracks);
+}
+
 ProcessCode TrajectoriesToPrototracks::execute(
     const AlgorithmContext& ctx) const {
-  const auto trajectories =
-      ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+  const auto trajectories = m_inputTrajectories(ctx);
 
   ProtoTrackContainer tracks;
 
@@ -31,8 +37,8 @@ ProcessCode TrajectoriesToPrototracks::execute(
           return true;
         }
 
-        const auto& source_link =
-            state.uncalibratedSourceLink().template get<IndexSourceLink>();
+        auto source_link =
+            state.getUncalibratedSourceLink().template get<IndexSourceLink>();
         track.push_back(source_link.index());
 
         return true;
@@ -42,7 +48,7 @@ ProcessCode TrajectoriesToPrototracks::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(tracks));
+  m_outputProtoTracks(ctx, std::move(tracks));
 
   return ProcessCode::SUCCESS;
 }

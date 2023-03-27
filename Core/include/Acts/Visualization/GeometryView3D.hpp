@@ -45,11 +45,11 @@ struct GeometryView3D {
   /// @param surface The surface to be drawn
   /// @param gctx The geometry context for which it is drawn
   /// @param transform An option additional transform
-  /// @param ViewConfig The drawing configuration
+  /// @param viewConfig The drawing configuration
   static void drawSurface(IVisualization3D& helper, const Surface& surface,
                           const GeometryContext& gctx,
                           const Transform3& transform = Transform3::Identity(),
-                          const ViewConfig& ViewConfig = s_viewSensitive);
+                          const ViewConfig& viewConfig = s_viewSensitive);
 
   /// Helper method to draw SurfaceArray objects
   ///
@@ -106,13 +106,15 @@ struct GeometryView3D {
   /// @param transform An option additional transform
   /// @param connected The config for connected portals
   /// @param unconnected The config for unconnected portals
+  /// @param viewConfig The drawing configuration
   static void drawDetectorVolume(
       IVisualization3D& helper,
       const Acts::Experimental::DetectorVolume& volume,
       const GeometryContext& gctx,
       const Transform3& transform = Transform3::Identity(),
       const ViewConfig& connected = ViewConfig({0, 255, 0}),
-      const ViewConfig& unconnected = ViewConfig({255, 0, 0}));
+      const ViewConfig& unconnected = ViewConfig({255, 0, 0}),
+      const ViewConfig& viewConfig = s_viewSensitive);
 
   /// Helper method to draw AbstractVolume objects
   ///

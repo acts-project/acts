@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
@@ -23,8 +26,7 @@ class TrajectoriesToPrototracks final : public IAlgorithm {
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl)
-      : IAlgorithm("TrajectoriesToPrototracks", lvl), m_cfg(std::move(cfg)) {}
+  TrajectoriesToPrototracks(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the algorithm.
   ///
@@ -37,6 +39,12 @@ class TrajectoriesToPrototracks final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples

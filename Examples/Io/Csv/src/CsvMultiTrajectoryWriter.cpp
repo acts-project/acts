@@ -28,6 +28,8 @@ CsvMultiTrajectoryWriter::CsvMultiTrajectoryWriter(
   if (m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument("Missing input trajectories collection");
   }
+
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 }
 
 ProcessCode CsvMultiTrajectoryWriter::writeT(
@@ -41,9 +43,7 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
     throw std::ios_base::failure("Could not open '" + path + "' to write");
   }
 
-  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-  const auto& hitParticlesMap = context.eventStore.get<HitParticlesMap>(
-      m_cfg.inputMeasurementParticlesMap);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(context);
 
   std::unordered_map<Acts::MultiTrajectoryTraits::IndexType, trackInfo> infoMap;
 
@@ -126,8 +126,8 @@ ProcessCode CsvMultiTrajectoryWriter::writeT(
       mj.visitBackwards(trackTip, [&](const auto& state) {
         if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag) ==
             true) {
-          const auto& sl =
-              state.uncalibratedSourceLink().template get<IndexSourceLink>();
+          auto sl =
+              state.getUncalibratedSourceLink().template get<IndexSourceLink>();
           auto hitIndex = sl.index();
           toAdd.measurementsID.insert(toAdd.measurementsID.begin(), hitIndex);
         }

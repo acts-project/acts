@@ -27,8 +27,14 @@ EDM4hepMultiTrajectoryWriter::EDM4hepMultiTrajectoryWriter(
     throw std::invalid_argument("Missing input trajectories collection");
   }
 
+  if (m_cfg.inputMeasurementParticlesMap.empty()) {
+    throw std::invalid_argument{"Missing input hit to particle map"};
+  }
+
   m_trackCollection = &m_store.create<edm4hep::TrackCollection>("ActsTracks");
   m_writer.registerForWrite("ActsTracks");
+
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 }
 
 ActsExamples::ProcessCode EDM4hepMultiTrajectoryWriter::finalize() {
@@ -40,9 +46,7 @@ ActsExamples::ProcessCode EDM4hepMultiTrajectoryWriter::finalize() {
 ProcessCode EDM4hepMultiTrajectoryWriter::writeT(
     const AlgorithmContext& context,
     const TrajectoriesContainer& trajectories) {
-  const auto& hitParticlesMap =
-      context.eventStore.get<IndexMultimap<ActsFatras::Barcode>>(
-          m_cfg.inputMeasurementParticlesMap);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(context);
 
   for (const auto& from : trajectories) {
     for (const auto& trackTip : from.tips()) {

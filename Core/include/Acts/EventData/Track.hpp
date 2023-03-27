@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,7 +13,9 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Utilities/Holders.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <any>
@@ -328,6 +330,29 @@ class TrackProxy {
     return *m_container;
   }
 
+  /// Copy the content of another track proxy into this one
+  /// @tparam track_proxy_t the other track proxy's type
+  /// @param other The the track proxy
+  template <typename track_proxy_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  void copyFrom(const track_proxy_t& other) {
+    // @TODO: Add constraint on which track proxies are allowed,
+    // this is only implicit right now
+
+    tipIndex() = other.tipIndex();
+    parameters() = other.parameters();
+    covariance() = other.covariance();
+    if (other.hasReferenceSurface()) {
+      setReferenceSurface(other.referenceSurface().getSharedPtr());
+    }
+    nMeasurements() = other.nMeasurements();
+    nHoles() = other.nHoles();
+
+    // This will only be valid if the backends match and support this operation
+    m_container->copyDynamicFrom(m_index, other.m_container->container(),
+                                 other.m_index);
+  }
+
   /// Return a reference to the track container backend, const version.
   /// @return reference to the track container backend
   const auto& container() const { return *m_container; }
@@ -338,6 +363,10 @@ class TrackProxy {
   bool operator==(const TrackProxy& other) const {
     return &(*m_container) == &(*other.m_container) && m_index == other.m_index;
   }
+
+  // Track proxies are friends, not food!
+  template <typename A, typename B, template <typename> class H, bool R>
+  friend class TrackProxy;
 
  private:
   TrackProxy(ConstIf<TrackContainer<Container, Trajectory, holder_t>, ReadOnly>&
@@ -350,42 +379,6 @@ class TrackProxy {
       m_container;
   IndexType m_index;
 };
-
-/// Internal holder type for referencing a backend without ownership
-template <typename T>
-struct RefHolder {
-  T* ptr;
-
-  RefHolder(T* _ptr) : ptr{_ptr} {}
-  RefHolder(T& ref) : ptr{&ref} {}
-
-  const T& operator*() const { return *ptr; }
-  T& operator*() { return *ptr; }
-
-  const T* operator->() const { return ptr; }
-  T* operator->() { return ptr; }
-};
-
-/// Internal holder type holding a backend container by value
-template <typename T>
-struct ValueHolder {
-  T val;
-
-  ValueHolder(T& _val) : val{_val} {}
-  ValueHolder(T&& _val) : val{std::move(_val)} {}
-
-  const T& operator*() const { return val; }
-  T& operator*() { return val; }
-
-  const T* operator->() const { return &val; }
-  T* operator->() { return &val; }
-};
-
-template <template <typename...> class, template <typename...> class>
-struct is_same_template : std::false_type {};
-
-template <template <typename...> class T>
-struct is_same_template<T, T> : std::true_type {};
 
 /// Helper iterator to allow iteration over tracks via track proxies.
 template <typename container_t, typename proxy_t, bool ReadOnly>
@@ -510,7 +503,7 @@ struct IsReadOnlyTrackContainer;
 /// @tparam traj_t the track state container backend
 /// @tparam holder_t ownership management class for the backend
 template <typename track_container_t, typename traj_t,
-          template <typename> class holder_t = detail_tc::RefHolder>
+          template <typename> class holder_t = detail::RefHolder>
 class TrackContainer {
  public:
   static constexpr bool ReadOnly =
@@ -550,7 +543,7 @@ class TrackContainer {
   /// @param traj the track state container backend
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<
-                detail_tc::is_same_template<H, detail_tc::RefHolder>::value>>
+                detail::is_same_template<H, detail::RefHolder>::value>>
   TrackContainer(track_container_t& container, traj_t& traj)
       : m_container{&container}, m_traj{&traj} {}
 
@@ -669,6 +662,18 @@ class TrackContainer {
                                          ConstTrackProxy, true>{*this, size()};
   }
 
+  /// Helper function to make this track container match the dynamic columns of
+  /// another one. This will only work if the track container supports this
+  /// source, and depends on the implementation details of the dynamic columns
+  /// of the container
+  /// @tparam other_track_container_t Type of the other track container
+  /// @param other The other track container
+  template <typename other_track_container_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  void ensureDynamicColumns(const other_track_container_t& other) {
+    container().ensureDynamicColumns_impl(other.container());
+  }
+
  protected:
   template <typename T, HashedString key, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
@@ -723,17 +728,22 @@ class TrackContainer {
   }
 
  private:
+  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void copyDynamicFrom(IndexType dstIdx, const T& src, IndexType srcIdx) {
+    container().copyDynamicFrom_impl(dstIdx, src, srcIdx);
+  }
+
   detail_tc::ConstIf<holder_t<track_container_t>, ReadOnly> m_container;
   detail_tc::ConstIf<holder_t<traj_t>, ReadOnly> m_traj;
 };
 
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t& container, traj_t& traj)
-    -> TrackContainer<track_container_t, traj_t, detail_tc::RefHolder>;
+    -> TrackContainer<track_container_t, traj_t, detail::RefHolder>;
 
 template <typename track_container_t, typename traj_t>
 TrackContainer(track_container_t&& container, traj_t&& traj)
-    -> TrackContainer<track_container_t, traj_t, detail_tc::ValueHolder>;
+    -> TrackContainer<track_container_t, traj_t, detail::ValueHolder>;
 
 /// Utility class that eases accessing dynamic columns in track containers
 /// @tparam T the type of the value to access

@@ -8,6 +8,8 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include <Acts/Utilities/Logger.hpp>
 
@@ -58,6 +60,9 @@ class CsvParticleReader final : public IReader {
   Config m_cfg;
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

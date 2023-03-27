@@ -35,6 +35,11 @@ ActsExamples::TrackModifier::TrackModifier(const Config& config,
         "Input and output for trajectories and track parameters have to be "
         "used consistently");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrackParameters);
+  m_outputTrackParameters.maybeInitialize(m_cfg.outputTrackParameters);
+  m_outputTrajectories.maybeInitialize(m_cfg.outputTrajectories);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
@@ -72,9 +77,7 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
   };
 
   if (!m_cfg.inputTrackParameters.empty()) {
-    const auto& inputTrackParameters =
-        ctx.eventStore.get<TrackParametersContainer>(
-            m_cfg.inputTrackParameters);
+    const auto& inputTrackParameters = m_inputTrackParameters(ctx);
     TrackParametersContainer outputTrackParameters;
     outputTrackParameters.reserve(inputTrackParameters.size());
 
@@ -83,11 +86,9 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
       outputTrackParameters.push_back(modifyTrack(trk));
     }
 
-    ctx.eventStore.add(m_cfg.outputTrackParameters,
-                       std::move(outputTrackParameters));
+    m_outputTrackParameters(ctx, std::move(outputTrackParameters));
   } else if (!m_cfg.inputTrajectories.empty()) {
-    const auto& inputTrajectories =
-        ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+    const auto& inputTrajectories = m_inputTrajectories(ctx);
     TrajectoriesContainer outputTrajectories;
     outputTrajectories.reserve(inputTrajectories.size());
 
@@ -109,7 +110,7 @@ ActsExamples::ProcessCode ActsExamples::TrackModifier::execute(
                                       parameters);
     }
 
-    ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));
+    m_outputTrajectories(ctx, std::move(outputTrajectories));
   }
 
   return ProcessCode::SUCCESS;
