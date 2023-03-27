@@ -303,7 +303,7 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   BOOST_CHECK(tsRange.begin() == tsRange.end());
 
   size_t i = 0;
-  for (auto state : tNone.trackStates()) {
+  for (const auto& state : tNone.trackStates()) {
     (void)state;
     i++;
   }
