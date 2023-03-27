@@ -286,6 +286,10 @@ class TrackProxy {
   unsigned int nTrackStates() const {
     // @TODO: This should probably be cached, distance is expensive
     //        without random access
+    if (tipIndex() == kInvalid) {
+      // no tip index -> no track states
+      return 0;
+    }
     auto tsRange = trackStates();
     return std::distance(tsRange.begin(), tsRange.end());
   }
@@ -569,7 +573,9 @@ class TrackContainer {
   /// @return the index to the newly added track
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   IndexType addTrack() {
-    return m_container->addTrack_impl();
+    auto track = getTrack(m_container->addTrack_impl());
+    track.tipIndex() = kInvalid;
+    return track.index();
   }
 
   /// Remove a track at index @p itrack from the container
