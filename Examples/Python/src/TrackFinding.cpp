@@ -309,7 +309,7 @@ void addTrackFinding(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionAlgorithm, mex,
                                 "AmbiguityResolutionAlgorithm",
-                                inputTrajectories, outputTrajectories,
+                                inputTracks, outputTracks,
                                 maximumSharedHits, nMeasurementsMin);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedsToPrototracks, mex,

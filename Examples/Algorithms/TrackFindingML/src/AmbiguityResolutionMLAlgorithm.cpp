@@ -32,12 +32,14 @@ ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
       m_cfg(std::move(cfg)),
       m_env(ORT_LOGGING_LEVEL_WARNING, "MLClassifier"),
       m_duplicateClassifier(m_env, m_cfg.inputDuplicateNN.c_str()) {
-  if (m_cfg.inputTrajectories.empty()) {
+  if (m_cfg.inputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories input collection");
   }
-  if (m_cfg.outputTrajectories.empty()) {
+  if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing trajectories output collection");
   }
+  m_inputTracks.initialize(m_cfg.inputTracks);
+  m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 namespace {
@@ -48,6 +50,7 @@ namespace {
 /// @return an unordered map representing the clusters, the keys the ID of the primary track of each cluster and the store a vector of track IDs.
 std::unordered_map<int, std::vector<int>> clusterTracks(
     std::multimap<int, std::pair<int, std::vector<int>>> trackMap) {
+
   // Unordered map associating a vector with all the track ID of a cluster to
   // the ID of the first track of the cluster
   std::unordered_map<int, std::vector<int>> cluster;
@@ -81,49 +84,41 @@ std::unordered_map<int, std::vector<int>> clusterTracks(
   }
   return cluster;
 }
+
 }  // namespace
 
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Read input data
-  const auto& trajectories =
-      ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+  const auto& tracks = m_inputTracks(ctx);
 
-  TrackParametersContainer trackParameters;
-  std::vector<std::pair<int, int>> trackTips;
   int trackID = 0;
-  int iTraj = 0;
   std::multimap<int, std::pair<int, std::vector<int>>> trackMap;
+  std::vector<int> trackIndicies;
 
   // Loop over all the trajectories in the events
-  for (const auto& traj : trajectories) {
-    for (auto tip : traj.tips()) {
-      if (!traj.hasTrackParameters(tip)) {
-        continue;
+  for (const auto& track : tracks) {
+    std::vector<int> hits;
+    int nbMeasurements = 0;
+    trackIndicies.reserve(tracks.size());
+    // Store the hits id for the trajectory and compute the number of
+    // measurement
+    tracks.trackStateContainer().visitBackwards(track.tipIndex(), [&](const auto& state) {
+
+      if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
+        int indexHit = state.getUncalibratedSourceLink()
+                           .template get<ActsExamples::IndexSourceLink>()
+                           .index();
+        hits.emplace_back(indexHit);
+        ++nbMeasurements;
       }
-      // Store the hits id for the trajectory and compute the number of
-      // measurement
-      std::vector<int> hits;
-      int nbMeasurements = 0;
-      traj.multiTrajectory().visitBackwards(tip, [&](const auto& state) {
-        if (state.typeFlags().test(Acts::TrackStateFlag::MeasurementFlag)) {
-          int indexHit = state.getUncalibratedSourceLink()
-                             .template get<ActsExamples::IndexSourceLink>()
-                             .index();
-          hits.emplace_back(indexHit);
-          ++nbMeasurements;
-        }
-      });
-      if (nbMeasurements < m_cfg.nMeasurementsMin) {
-        continue;
-      }
-      trackMap.emplace(nbMeasurements, std::make_pair(trackID, hits));
-      auto param = traj.trackParameters(tip);
-      trackParameters.emplace_back(param);
-      trackTips.emplace_back(iTraj, tip);
-      trackID++;
+    });
+    if (nbMeasurements < m_cfg.nMeasurementsMin) {
+      continue;
     }
-    iTraj++;
+    trackMap.emplace(nbMeasurements, std::make_pair(trackID, hits));
+    trackIndicies.push_back(track.index());
+    trackID++;
   }
   // Performe the share hit based clustering
   auto clusters = clusterTracks(trackMap);
@@ -132,10 +127,9 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   // Get the input feature of the network for all the tracks
   for (const auto& [key, val] : clusters) {
     for (const auto& track : val) {
-      std::pair<int, int> tips = trackTips.at(track);
-      TrackParameters parameters = trackParameters.at(track);
+      auto traj = tracks.getTrack(trackIndicies.at(track));
       auto trajState = Acts::MultiTrajectoryHelpers::trajectoryState(
-          trajectories[tips.first].multiTrajectory(), tips.second);
+        tracks.trackStateContainer(), traj.tipIndex());
       networkInput(trackID, 0) = trajState.nStates;
       networkInput(trackID, 1) = trajState.nMeasurements;
       networkInput(trackID, 2) = trajState.nOutliers;
@@ -143,9 +137,9 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
       networkInput(trackID, 4) = trajState.NDF;
       networkInput(trackID, 5) = (trajState.chi2Sum * 1.0) / trajState.NDF;
       networkInput(trackID, 6) =
-          Acts::VectorHelpers::eta(parameters.momentum());
+          Acts::VectorHelpers::eta(traj.momentum());
       networkInput(trackID, 7) =
-          Acts::VectorHelpers::phi(parameters.momentum());
+          Acts::VectorHelpers::phi(traj.momentum());
       trackID++;
     }
   }
@@ -170,23 +164,23 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     goodTracks.push_back(bestTrackID);
   }
 
-  // Create an output multitrajectory based of the good tracks
-  TrajectoriesContainer outputTrajectories;
-  outputTrajectories.reserve(goodTracks.size());
+  std::shared_ptr<Acts::ConstVectorMultiTrajectory> trackStateContainer = tracks.trackStateContainerHolder();
+  auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
+  trackContainer->reserve(goodTracks.size());
+  // temporary empty track state container: we don't change the original one,
+  // but we need one for filtering
+  auto tempTrackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
+
+  TrackContainer solvedTracks{trackContainer, tempTrackStateContainer};
+  solvedTracks.ensureDynamicColumns(tracks);
+
   for (auto&& iTrack : goodTracks) {
-    const auto& outputTips = trackTips.at(iTrack);
-
-    std::vector<Acts::MultiTrajectoryTraits::IndexType> tips;
-    Trajectories::IndexedParameters parameters;
-    tips.push_back(outputTips.second);
-    parameters.emplace(outputTips.second, trackParameters[iTrack]);
-
-    outputTrajectories.emplace_back(
-        trajectories[outputTips.first].multiTrajectory(), tips, parameters);
+    auto destProxy = solvedTracks.getTrack(solvedTracks.addTrack());
+    destProxy.copyFrom(tracks.getTrack(trackIndicies.at(iTrack)));
   }
 
-  // Add our output multitrajectories to the event store
-  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));
-
+  ConstTrackContainer outputTracks{ std::make_shared<Acts::ConstVectorTrackContainer>(std::move(*trackContainer)), trackStateContainer};
+  m_outputTracks(ctx, std::move(outputTracks));
+  
   return ActsExamples::ProcessCode::SUCCESS;
 }

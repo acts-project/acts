@@ -1232,8 +1232,8 @@ def addAmbiguityResolution(
 
     alg = AmbiguityResolutionAlgorithm(
         level=customLogLevel(),
-        inputTrajectories="trajectories",
-        outputTrajectories="filteredTrajectories",
+        inputTracks="trajectories",
+        outputTracks="filteredTrajectories",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
@@ -1282,9 +1282,9 @@ def addAmbiguityResolutionML(
 
     alg = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
-        inputTrajectories="trajectories",
+        inputTracks="selectedTracks",
         inputDuplicateNN=onnxModelFile,
-        outputTrajectories="filteredTrajectoriesML",
+        outputTracks="filteredTrajectoriesML",
         **acts.examples.defaultKWArgs(
             nMeasurementsMin=config.nMeasurementsMin,
         ),
