@@ -8,8 +8,7 @@
 
 #pragma once
 
-#include "ActsExamples/EventData/IndexSourceLink.hpp"
-#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
@@ -32,9 +31,9 @@ class AmbiguityResolutionAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input trajectories collection.
-    std::string inputTrajectories;
+    std::string inputTracks;
     /// Output trajectories collection.
-    std::string outputTrajectories;
+    std::string outputTracks;
 
     /// Maximum amount of shared hits per track.
     std::uint32_t maximumSharedHits = 1;
@@ -62,14 +61,8 @@ class AmbiguityResolutionAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-
-  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
-      this, "InputSourceLinks"};
-  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
-      this, "InputTrajectories"};
-
-  WriteDataHandle<TrajectoriesContainer> m_outputTrajectories{
-      this, "OutputTrajectories"};
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples
