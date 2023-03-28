@@ -320,10 +320,10 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         -2500.0,
         -1400.0,
         -925.0,
-        -450.0,
+        -500.0,
         -250.0,
         250.0,
-        450.0,
+        500.0,
         925.0,
         1400.0,
         2500.0,
@@ -346,8 +346,8 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
     binSizeR = 1 * u.mm
     seedConfirmation = True
     centralSeedConfirmationRange = acts.SeedConfirmationRangeConfig(
-        zMinSeedConf=-250 * u.mm,
-        zMaxSeedConf=250 * u.mm,
+        zMinSeedConf=-500 * u.mm,
+        zMaxSeedConf=500 * u.mm,
         rMaxSeedConf=140 * u.mm,
         nTopForLargeR=1,
         nTopForSmallR=2,
@@ -383,7 +383,7 @@ def itkSeedingAlgConfig(inputSpacePointsType: InputSpacePointsType):
         deltaRMinSP = 6 * u.mm
         deltaRMax = 280 * u.mm
         deltaRMaxTopSP = 280 * u.mm
-        deltaRMaxBottomSP = 120 * u.mm
+        deltaRMaxBottomSP = 150 * u.mm
         deltaZMax = float("inf") * u.mm
         interactionPointCut = True
         arithmeticAverageCotTheta = False
