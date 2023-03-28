@@ -16,6 +16,7 @@
 #include "Acts/Propagator/Propagator.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFinder.hpp"
 #include "Acts/Vertexing/AdaptiveMultiVertexFitter.hpp"
 #include "Acts/Vertexing/HelicalTrackLinearizer.hpp"
@@ -27,9 +28,11 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <chrono>
+#include <memory>
 
 #include "VertexingHelpers.hpp"
 
@@ -51,35 +54,29 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::
   if (m_cfg.outputTime.empty()) {
     throw std::invalid_argument("Missing output reconstruction time");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
+
+  m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
+  m_outputVertices.initialize(m_cfg.outputVertices);
+  m_outputTime.initialize(m_cfg.outputTime);
 }
 
 ActsExamples::ProcessCode
 ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  // retrieve input tracks and convert into the expected format
-
-  auto [inputTrackParameters, inputTrackPointers] =
-      makeParameterContainers(m_cfg, ctx);
-
-  //////////////////////////////////////////////
-  /* Full tutorial example code for reference */
-  //////////////////////////////////////////////
-
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Set up the propagator
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
   auto propagator = std::make_shared<Propagator>(stepper);
 
   // Set up ImpactPointEstimator
-  using IPEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
   IPEstimator::Config ipEstimatorCfg(m_cfg.bField, propagator);
   IPEstimator ipEstimator(ipEstimatorCfg);
 
   // Set up the helical track linearizer
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
   Linearizer::Config ltConfig(m_cfg.bField, propagator);
   Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
@@ -89,8 +86,6 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   Acts::AnnealingUtility annealingUtility(annealingConfig);
 
   // Set up the vertex fitter with user-defined annealing
-  using Fitter =
-      Acts::AdaptiveMultiVertexFitter<Acts::BoundTrackParameters, Linearizer>;
   Fitter::Config fitterCfg(ipEstimator);
   fitterCfg.annealingTool = annealingUtility;
   fitterCfg.minWeight = 0.001;
@@ -98,12 +93,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   Fitter fitter(fitterCfg, logger().cloneWithSuffix("AMVFitter"));
 
   // Set up the vertex seed finder
-  using SeedFinder = Acts::TrackDensityVertexFinder<
-      Fitter, Acts::GaussianTrackDensity<Acts::BoundTrackParameters>>;
   SeedFinder seedFinder;
-
-  // The vertex finder type
-  using Finder = Acts::AdaptiveMultiVertexFinder<Fitter, SeedFinder>;
 
   Finder::Config finderConfig(std::move(fitter), seedFinder, ipEstimator,
                               std::move(linearizer), m_cfg.bField);
@@ -112,7 +102,17 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   finderConfig.tracksMaxZinterval = 1. * Acts::UnitConstants::mm;
 
   // Instantiate the finder
-  Finder finder(finderConfig);
+  Finder finder(finderConfig, logger().cloneWithSuffix("AMVFinder"));
+
+  // retrieve input tracks and convert into the expected format
+
+  auto [inputTrackParameters, inputTrackPointers] =
+      makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
+
+  //////////////////////////////////////////////
+  /* Full tutorial example code for reference */
+  //////////////////////////////////////////////
+
   // The vertex finder state
   Finder::State state;
 
@@ -120,7 +120,7 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   using VertexingOptions = Acts::VertexingOptions<Acts::BoundTrackParameters>;
   VertexingOptions finderOpts(ctx.geoContext, ctx.magFieldContext);
 
-  std::vector<Acts::Vertex<Fitter::InputTrack_t>> vertices;
+  VertexCollection vertices;
 
   auto t1 = std::chrono::high_resolution_clock::now();
 
@@ -149,18 +149,17 @@ ActsExamples::AdaptiveMultiVertexFinderAlgorithm::execute(
   }
 
   // store proto vertices extracted from the found vertices
-  ctx.eventStore.add(m_cfg.outputProtoVertices,
-                     makeProtoVertices(inputTrackParameters, vertices));
+  m_outputProtoVertices(ctx, makeProtoVertices(inputTrackParameters, vertices));
 
   // store found vertices
-  ctx.eventStore.add(m_cfg.outputVertices, std::move(vertices));
+  m_outputVertices(ctx, std::move(vertices));
 
   // time in milliseconds
   int timeMS =
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   // store reconstruction time
-  ctx.eventStore.add(m_cfg.outputTime,
-                     std::move(timeMS));  // NOLINT(performance-move-const-arg)
+  m_outputTime(ctx,
+               std::move(timeMS));  // NOLINT(performance-move-const-arg)
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

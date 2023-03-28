@@ -57,12 +57,20 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
   m_inputAllTruthParticles.initialize(m_cfg.inputAllTruthParticles);
   m_inputSelectedTruthParticles.initialize(m_cfg.inputSelectedTruthParticles);
 
-  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
-  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
-  m_inputAssociatedTruthParticles.maybeInitialize(
-      m_cfg.inputAssociatedTruthParticles);
-  m_inputMeasurementParticlesMap.maybeInitialize(
-      m_cfg.inputMeasurementParticlesMap);
+  if (!m_cfg.inputAssociatedTruthParticles.empty()) {
+    m_inputAssociatedTruthParticles.initialize(
+        m_cfg.inputAssociatedTruthParticles);
+    if (!m_cfg.inputTrackParameters.empty()) {
+      m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
+    } else {
+      m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+    }
+  } else {
+    m_inputMeasurementParticlesMap.initialize(
+        m_cfg.inputMeasurementParticlesMap);
+    m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+  }
+
   m_inputTime.maybeInitialize(m_cfg.inputTime);
 
   // Setup ROOT I/O
