@@ -385,13 +385,15 @@ class EigenStepper {
 
   /// Perform a Runge-Kutta track parameter propagation step
   ///
-  /// @param [in,out] state is the propagation
+  /// @param [in,out] state the propagation state
+  /// @param [in] navigator the navigator of the propagation
   /// @note The state contains the desired step size.  It can be negative during
   ///       backwards track propagation, and since we're using an adaptive
   ///       algorithm, it can be modified by the stepper class during
   ///       propagation.
-  template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const;
+  template <typename propagator_state_t, typename navigator_t>
+  Result<double> step(propagator_state_t& state,
+                      const navigator_t& navigator) const;
 
   /// Method that reset the Jacobian to the Identity for when no bound state are
   /// available

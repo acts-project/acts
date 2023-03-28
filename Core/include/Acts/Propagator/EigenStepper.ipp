@@ -111,9 +111,9 @@ void Acts::EigenStepper<E, A>::transportCovarianceToBound(
 }
 
 template <typename E, typename A>
-template <typename propagator_state_t>
+template <typename propagator_state_t, typename navigator_t>
 Acts::Result<double> Acts::EigenStepper<E, A>::step(
-    propagator_state_t& state) const {
+    propagator_state_t& state, const navigator_t& navigator) const {
   using namespace UnitLiterals;
 
   // Runge-Kutta integrator state
@@ -130,8 +130,10 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     return fieldRes.error();
   }
   sd.B_first = *fieldRes;
-  if (!state.stepping.extension.validExtensionForStep(state, *this) ||
-      !state.stepping.extension.k1(state, *this, sd.k1, sd.B_first, sd.kQoP)) {
+  if (!state.stepping.extension.validExtensionForStep(state, *this,
+                                                      navigator) ||
+      !state.stepping.extension.k1(state, *this, navigator, sd.k1, sd.B_first,
+                                   sd.kQoP)) {
     return 0.;
   }
 
@@ -158,14 +160,14 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
     }
     sd.B_middle = *field;
 
-    if (!state.stepping.extension.k2(state, *this, sd.k2, sd.B_middle, sd.kQoP,
-                                     half_h, sd.k1)) {
+    if (!state.stepping.extension.k2(state, *this, navigator, sd.k2,
+                                     sd.B_middle, sd.kQoP, half_h, sd.k1)) {
       return success(false);
     }
 
     // Third Runge-Kutta point
-    if (!state.stepping.extension.k3(state, *this, sd.k3, sd.B_middle, sd.kQoP,
-                                     half_h, sd.k2)) {
+    if (!state.stepping.extension.k3(state, *this, navigator, sd.k3,
+                                     sd.B_middle, sd.kQoP, half_h, sd.k2)) {
       return success(false);
     }
 
@@ -176,8 +178,8 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
       return failure(field.error());
     }
     sd.B_last = *field;
-    if (!state.stepping.extension.k4(state, *this, sd.k4, sd.B_last, sd.kQoP, h,
-                                     sd.k3)) {
+    if (!state.stepping.extension.k4(state, *this, navigator, sd.k4, sd.B_last,
+                                     sd.kQoP, h, sd.k3)) {
       return success(false);
     }
 
@@ -234,14 +236,14 @@ Acts::Result<double> Acts::EigenStepper<E, A>::step(
   if (state.stepping.covTransport) {
     // The step transport matrix in global coordinates
     FreeMatrix D;
-    if (!state.stepping.extension.finalize(state, *this, h, D)) {
+    if (!state.stepping.extension.finalize(state, *this, navigator, h, D)) {
       return EigenStepperError::StepInvalid;
     }
 
     // for moment, only update the transport part
     state.stepping.jacTransport = D * state.stepping.jacTransport;
   } else {
-    if (!state.stepping.extension.finalize(state, *this, h)) {
+    if (!state.stepping.extension.finalize(state, *this, navigator, h)) {
       return EigenStepperError::StepInvalid;
     }
   }

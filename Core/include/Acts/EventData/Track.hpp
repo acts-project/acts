@@ -330,6 +330,29 @@ class TrackProxy {
     return *m_container;
   }
 
+  /// Copy the content of another track proxy into this one
+  /// @tparam track_proxy_t the other track proxy's type
+  /// @param other The the track proxy
+  template <typename track_proxy_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  void copyFrom(const track_proxy_t& other) {
+    // @TODO: Add constraint on which track proxies are allowed,
+    // this is only implicit right now
+
+    tipIndex() = other.tipIndex();
+    parameters() = other.parameters();
+    covariance() = other.covariance();
+    if (other.hasReferenceSurface()) {
+      setReferenceSurface(other.referenceSurface().getSharedPtr());
+    }
+    nMeasurements() = other.nMeasurements();
+    nHoles() = other.nHoles();
+
+    // This will only be valid if the backends match and support this operation
+    m_container->copyDynamicFrom(m_index, other.m_container->container(),
+                                 other.m_index);
+  }
+
   /// Return a reference to the track container backend, const version.
   /// @return reference to the track container backend
   const auto& container() const { return *m_container; }
@@ -340,6 +363,10 @@ class TrackProxy {
   bool operator==(const TrackProxy& other) const {
     return &(*m_container) == &(*other.m_container) && m_index == other.m_index;
   }
+
+  // Track proxies are friends, not food!
+  template <typename A, typename B, template <typename> class H, bool R>
+  friend class TrackProxy;
 
  private:
   TrackProxy(ConstIf<TrackContainer<Container, Trajectory, holder_t>, ReadOnly>&
@@ -635,6 +662,18 @@ class TrackContainer {
                                          ConstTrackProxy, true>{*this, size()};
   }
 
+  /// Helper function to make this track container match the dynamic columns of
+  /// another one. This will only work if the track container supports this
+  /// source, and depends on the implementation details of the dynamic columns
+  /// of the container
+  /// @tparam other_track_container_t Type of the other track container
+  /// @param other The other track container
+  template <typename other_track_container_t, bool RO = ReadOnly,
+            typename = std::enable_if_t<!RO>>
+  void ensureDynamicColumns(const other_track_container_t& other) {
+    container().ensureDynamicColumns_impl(other.container());
+  }
+
  protected:
   template <typename T, HashedString key, bool RO = ReadOnly,
             typename = std::enable_if_t<!RO>>
@@ -689,6 +728,11 @@ class TrackContainer {
   }
 
  private:
+  template <typename T, bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  void copyDynamicFrom(IndexType dstIdx, const T& src, IndexType srcIdx) {
+    container().copyDynamicFrom_impl(dstIdx, src, srcIdx);
+  }
+
   detail_tc::ConstIf<holder_t<track_container_t>, ReadOnly> m_container;
   detail_tc::ConstIf<holder_t<traj_t>, ReadOnly> m_traj;
 };

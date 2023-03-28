@@ -6,7 +6,7 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFinding/AmbiguityResolutionMLAlgorithm.hpp"
+#include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
@@ -28,7 +28,7 @@
 ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
     ActsExamples::AmbiguityResolutionMLAlgorithm::Config cfg,
     Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("AmbiguityResolutionMLAlgorithm", lvl),
+    : ActsExamples::IAlgorithm("AmbiguityResolutionMLAlgorithm", lvl),
       m_cfg(std::move(cfg)),
       m_env(ORT_LOGGING_LEVEL_WARNING, "MLClassifier"),
       m_duplicateClassifier(m_env, m_cfg.inputDuplicateNN.c_str()) {
@@ -38,6 +38,9 @@ ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
   if (m_cfg.outputTrajectories.empty()) {
     throw std::invalid_argument("Missing trajectories output collection");
   }
+
+  m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+  m_outputTrajectories.initialize(m_cfg.outputTrajectories);
 }
 
 namespace {
@@ -71,7 +74,8 @@ std::unordered_map<int, std::vector<int>> clusterTracks(
     }
     // None of the hits have been matched to a track create a new cluster
     if (matchedTrack == hitToTrack.end()) {
-      cluster.emplace(track->second.first, {track->second.first});
+      cluster.emplace(track->second.first,
+                      std::vector<int>(1, track->second.first));
       for (const auto& hit : hits) {
         // Add the hits of the new cluster to the hitToTrack
         hitToTrack.emplace(hit, track->second.first);
@@ -85,8 +89,7 @@ std::unordered_map<int, std::vector<int>> clusterTracks(
 ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Read input data
-  const auto& trajectories =
-      ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+  const auto& trajectories = m_inputTrajectories(ctx);
 
   TrackParametersContainer trackParameters;
   std::vector<std::pair<int, int>> trackTips;
@@ -185,7 +188,7 @@ ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
   }
 
   // Add our output multitrajectories to the event store
-  ctx.eventStore.add(m_cfg.outputTrajectories, std::move(outputTrajectories));
+  m_outputTrajectories(ctx, std::move(outputTrajectories));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

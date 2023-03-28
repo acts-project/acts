@@ -54,15 +54,17 @@ struct SteppingLogger {
   /// @tparam stepper_t is the type of the Stepper
   /// @tparam navigator_t is the type of the Navigator
   ///
-  /// @param [in,out] result is the mutable result object
   /// @param [in,out] state is the mutable stepper state object
+  /// @param [in] stepper the stepper in use
+  /// @param [in] navigator the navigator in use
+  /// @param [in,out] result is the mutable result object
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result,
+                  const navigator_t& navigator, result_type& result,
                   const Logger& /*logger*/) const {
     // don't log if you have reached the target
-    if (sterile or state.navigation.targetReached) {
+    if (sterile or navigator.targetReached(state.navigation)) {
       return;
     }
     // record the propagation state
@@ -72,12 +74,12 @@ struct SteppingLogger {
     step.momentum =
         stepper.momentum(state.stepping) * stepper.direction(state.stepping);
 
-    if (state.navigation.currentSurface != nullptr) {
+    if (navigator.currentSurface(state.navigation) != nullptr) {
       // hang on to surface
-      step.surface = state.navigation.currentSurface->getSharedPtr();
+      step.surface = navigator.currentSurface(state.navigation)->getSharedPtr();
     }
 
-    step.volume = state.navigation.currentVolume;
+    step.volume = navigator.currentVolume(state.navigation);
     result.steps.push_back(std::move(step));
   }
 };

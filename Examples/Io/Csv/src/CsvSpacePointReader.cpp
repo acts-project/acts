@@ -36,6 +36,8 @@ ActsExamples::CsvSpacePointReader::CsvSpacePointReader(
                        : cfg.inputStem + '_' + cfg.inputCollection;
   m_eventsRange = determineEventFilesRange(cfg.inputDir, filename + ".csv");
   m_logger = Acts::getDefaultLogger("CsvSpacePointReader", lvl);
+
+  m_outputSpacePoints.initialize(m_cfg.outputSpacePoints);
 }
 
 std::string ActsExamples::CsvSpacePointReader::CsvSpacePointReader::name()
@@ -99,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::CsvSpacePointReader::read(
 
   ACTS_DEBUG("Created " << spacePoints.size() << " " << m_cfg.inputCollection
                         << " space points");
-  ctx.eventStore.add(m_cfg.outputSpacePoints, std::move(spacePoints));
+  m_outputSpacePoints(ctx, std::move(spacePoints));
 
   return ProcessCode::SUCCESS;
 }

@@ -60,10 +60,11 @@ void normalizeWeights(component_range_t &cmps, const projector_t &proj) {
 // destruction, it also contains some assertions in the constructor and
 // destructor. It can be removed without change of behaviour, since it only
 // holds const references
-template <typename propagator_state_t, typename stepper_t>
+template <typename propagator_state_t, typename stepper_t, typename navigator_t>
 class ScopedGsfInfoPrinterAndChecker {
   const propagator_state_t &m_state;
   const stepper_t &m_stepper;
+  const navigator_t &m_navigator;
   double m_p_initial;
   const Logger &m_logger;
 
@@ -106,9 +107,12 @@ class ScopedGsfInfoPrinterAndChecker {
 
  public:
   ScopedGsfInfoPrinterAndChecker(const propagator_state_t &state,
-                                 const stepper_t &stepper, const Logger &logger)
+                                 const stepper_t &stepper,
+                                 const navigator_t &navigator,
+                                 const Logger &logger)
       : m_state(state),
         m_stepper(stepper),
+        m_navigator(navigator),
         m_p_initial(stepper.momentum(state.stepping)),
         m_logger{logger} {
     // Some initial printing
@@ -129,7 +133,7 @@ class ScopedGsfInfoPrinterAndChecker {
   }
 
   ~ScopedGsfInfoPrinterAndChecker() {
-    if (m_state.navigation.currentSurface) {
+    if (m_navigator.currentSurface(m_state.navigation)) {
       const auto p_final = m_stepper.momentum(m_state.stepping);
       ACTS_VERBOSE("Component status at end of step:");
       print_component_stats();

@@ -8,7 +8,10 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 
 #include <string>
 
@@ -30,6 +33,9 @@ class TrackParametersPrinter : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
 };
 
 }  // namespace ActsExamples

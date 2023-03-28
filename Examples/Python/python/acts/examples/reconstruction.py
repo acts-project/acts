@@ -428,7 +428,6 @@ def addTruthEstimatedSeeding(
         level=logLevel,
         inputParticles=inputParticles,
         inputMeasurementParticlesMap="measurement_particles_map",
-        inputSourceLinks="sourcelinks",
         inputSpacePoints=[spacePoints],
         outputParticles="truth_seeded_particles",
         outputProtoTracks="truth_particle_tracks",
@@ -1232,7 +1231,6 @@ def addAmbiguityResolution(
 
     alg = AmbiguityResolutionAlgorithm(
         level=customLogLevel(),
-        inputSourceLinks="sourcelinks",
         inputTrajectories="trajectories",
         outputTrajectories="filteredTrajectories",
         **acts.examples.defaultKWArgs(

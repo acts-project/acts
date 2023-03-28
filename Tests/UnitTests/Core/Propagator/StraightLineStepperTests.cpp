@@ -38,6 +38,10 @@ struct PropState {
   } options;
 };
 
+struct MockNavigator {};
+
+static constexpr MockNavigator mockNavigator;
+
 static constexpr auto eps = 2 * std::numeric_limits<double>::epsilon();
 
 /// These tests are aiming to test whether the state setup is working properly
@@ -179,7 +183,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   PropState ps(slsState);
 
   ps.stepping.covTransport = false;
-  double h = sls.step(ps).value();
+  double h = sls.step(ps, mockNavigator).value();
   BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), ndir * stepSize);
   BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);
@@ -192,7 +196,7 @@ BOOST_AUTO_TEST_CASE(straight_line_stepper_test) {
   BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
 
   ps.stepping.covTransport = true;
-  double h2 = sls.step(ps).value();
+  double h2 = sls.step(ps, mockNavigator).value();
   BOOST_CHECK_EQUAL(ps.stepping.stepSize.value(), ndir * stepSize);
   BOOST_CHECK_EQUAL(h2, h);
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, 1e-6);

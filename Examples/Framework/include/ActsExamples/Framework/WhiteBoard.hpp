@@ -38,7 +38,7 @@ class WhiteBoard {
 
   bool exists(const std::string& name) const;
 
-  // private:
+ private:
   /// Store an object on the white board and transfer ownership.
   ///
   /// @param name Non-empty identifier to store it under
