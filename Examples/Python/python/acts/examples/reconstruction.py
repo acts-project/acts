@@ -731,7 +731,7 @@ def addOrthogonalSeeding(
 
 def addHoughTransformSeeding(
     sequence: acts.examples.Sequencer,
-    config: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
+    config: acts.examples.HoughTransformSeeder.Config,
     logLevel: acts.logging.Level = None,
 ):
     """
