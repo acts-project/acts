@@ -302,14 +302,14 @@ jobs:
       matrix:
         image: 
           - ubuntu2004
-          - ubuntu2204
           - ubuntu2204_clang
+          - ubuntu2204_cpp20
         std: [17, 20]
         exclude:
-          - image: ubuntu2204
-            std: 17
           - image: ubuntu2004
             std: 20
+          - image: ubuntu2204_cpp20
+            std: 17
     container: ghcr.io/acts-project/${{ matrix.image }}:v41
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
@@ -385,6 +385,10 @@ jobs:
 
   linux-nodeps:
     runs-on: ubuntu-latest
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> 7189dceac (use machines v41)
     container: ghcr.io/acts-project/${{ matrix.image }}:v41
     strategy:
       matrix:
