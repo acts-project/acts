@@ -31,7 +31,6 @@ EDM4hepParticleWriter::EDM4hepParticleWriter(
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-
 }
 
 ActsExamples::ProcessCode EDM4hepParticleWriter::finalize() {

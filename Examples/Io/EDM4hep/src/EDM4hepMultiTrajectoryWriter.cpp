@@ -34,7 +34,6 @@ EDM4hepMultiTrajectoryWriter::EDM4hepMultiTrajectoryWriter(
     throw std::invalid_argument{"Missing input hit to particle map"};
   }
 
-
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 }
 

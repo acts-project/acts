@@ -29,8 +29,6 @@ EDM4hepMeasurementWriter::EDM4hepMeasurementWriter(
 
   // Input container for measurements is already checked by base constructor
   m_inputClusters.maybeInitialize(m_cfg.inputClusters);
-
-
 }
 
 ActsExamples::ProcessCode EDM4hepMeasurementWriter::finalize() {
