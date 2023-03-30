@@ -150,6 +150,7 @@ AmbiguityResolutionMLDBScanConfig = namedtuple(
     defaults=[None] * 3,
 )
 
+
 class VertexFinder(Enum):
     Truth = (1,)
     AMVF = (2,)
@@ -1321,6 +1322,7 @@ def addAmbiguityResolutionML(
 
     return s
 
+
 @acts.examples.NamedTypeArgs(
     config=AmbiguityResolutionMLDBScanConfig,
     ckfPerformanceConfig=CKFPerformanceConfig,
@@ -1376,6 +1378,7 @@ def addAmbiguityResolutionMLDBScan(
     )
 
     return s
+
 
 @acts.examples.NamedTypeArgs(
     trackSelectorRanges=TrackSelectorRanges,
