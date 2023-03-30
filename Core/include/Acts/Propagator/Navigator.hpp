@@ -224,42 +224,6 @@ class Navigator {
     Stage navigationStage = Stage::undefined;
     /// Force intersection with boundaries
     bool forceIntersectBoundaries = false;
-
-    /// Reset state
-    ///
-    /// @param geoContext is the geometry context
-    /// @param pos is the global position
-    /// @param dir is the momentum direction
-    /// @param navDir is the navigation direction
-    /// @param ssurface is the new starting surface
-    /// @param tsurface is the target surface
-    void reset(const GeometryContext& geoContext, const Vector3& pos,
-               const Vector3& dir, NavigationDirection navDir,
-               const Surface* ssurface, const Surface* tsurface) {
-      // Reset everything first
-      *this = State();
-
-      // Set the start, current and target objects
-      startSurface = ssurface;
-      if (ssurface->associatedLayer() != nullptr) {
-        startLayer = ssurface->associatedLayer();
-      }
-      if (startLayer->trackingVolume() != nullptr) {
-        startVolume = startLayer->trackingVolume();
-      }
-      currentSurface = startSurface;
-      currentVolume = startVolume;
-      targetSurface = tsurface;
-
-      // Get the compatible layers (including the current layer)
-      NavigationOptions<Layer> navOpts(navDir, true, true, true, true, nullptr,
-                                       nullptr);
-      navLayers =
-          currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
-
-      // Set the index to the first
-      navLayerIndex = 0;
-    }
   };
 
   /// Constructor with configuration object
@@ -270,6 +234,91 @@ class Navigator {
                      std::shared_ptr<const Logger> _logger =
                          getDefaultLogger("Navigator", Logging::Level::INFO))
       : m_cfg{std::move(cfg)}, m_logger{std::move(_logger)} {}
+
+  State makeState(const Surface* startSurface,
+                  const Surface* targetSurface) const {
+    State result;
+    result.startSurface = startSurface;
+    result.targetSurface = targetSurface;
+    return result;
+  }
+
+  /// Reset state
+  ///
+  /// @param state is the state
+  /// @param geoContext is the geometry context
+  /// @param pos is the global position
+  /// @param dir is the momentum direction
+  /// @param navDir is the navigation direction
+  /// @param ssurface is the new starting surface
+  /// @param tsurface is the target surface
+  void resetState(State& state, const GeometryContext& geoContext,
+                  const Vector3& pos, const Vector3& dir,
+                  NavigationDirection navDir, const Surface* ssurface,
+                  const Surface* tsurface) const {
+    // Reset everything first
+    state = State();
+
+    // Set the start, current and target objects
+    state.startSurface = ssurface;
+    if (ssurface->associatedLayer() != nullptr) {
+      state.startLayer = ssurface->associatedLayer();
+    }
+    if (state.startLayer->trackingVolume() != nullptr) {
+      state.startVolume = state.startLayer->trackingVolume();
+    }
+    state.currentSurface = state.startSurface;
+    state.currentVolume = state.startVolume;
+    state.targetSurface = tsurface;
+
+    // Get the compatible layers (including the current layer)
+    NavigationOptions<Layer> navOpts(navDir, true, true, true, true, nullptr,
+                                     nullptr);
+    state.navLayers =
+        state.currentVolume->compatibleLayers(geoContext, pos, dir, navOpts);
+
+    // Set the index to the first
+    state.navLayerIndex = 0;
+  }
+
+  const Surface* currentSurface(const State& state) const {
+    return state.currentSurface;
+  }
+
+  const TrackingVolume* currentVolume(const State& state) const {
+    return state.currentVolume;
+  }
+
+  const Surface* startSurface(const State& state) const {
+    return state.startSurface;
+  }
+
+  const Surface* targetSurface(const State& state) const {
+    return state.targetSurface;
+  }
+
+  bool targetReached(const State& state) const { return state.targetReached; }
+
+  bool navigationBreak(const State& state) const {
+    return state.navigationBreak;
+  }
+
+  void currentSurface(State& state, const Surface* surface) const {
+    state.currentSurface = surface;
+  }
+
+  void targetReached(State& state, bool targetReached) const {
+    state.targetReached = targetReached;
+  }
+
+  void navigationBreak(State& state, bool navigationBreak) const {
+    state.navigationBreak = navigationBreak;
+  }
+
+  void insertExternalSurface(State& state, GeometryIdentifier geoid) const {
+    state.externalSurfaces.insert(
+        std::pair<uint64_t, GeometryIdentifier>(geoid.layer(), geoid));
+  }
 
   /// @brief Navigator status call, will be called in two modes
   ///

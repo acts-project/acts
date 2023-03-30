@@ -67,6 +67,10 @@ struct PropState {
   } options;
 };
 
+struct MockNavigator {};
+
+static constexpr MockNavigator mockNavigator;
+
 /// @brief Aborter for the case that a particle leaves the detector or reaches
 /// a custom made threshold.
 ///
@@ -275,7 +279,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   PropState ps(std::move(esState));
 
   ps.stepping.covTransport = false;
-  es.step(ps).value();
+  es.step(ps, mockNavigator).value();
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
@@ -285,7 +289,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
 
   ps.stepping.covTransport = true;
-  es.step(ps).value();
+  es.step(ps, mockNavigator).value();
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
@@ -488,7 +492,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test a case where no step size adjustment is required
   ps.options.tolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
-  es.step(ps);
+  es.step(ps, mockNavigator);
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 
   // Produce some errors
@@ -500,14 +504,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test that we can reach the minimum step size
   nps.options.tolerance = 1e-21;
   nps.options.stepSizeCutOff = 1e20;
-  auto res = nes.step(nps);
+  auto res = nes.step(nps, mockNavigator);
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeStalled);
 
   // Test that the number of trials exceeds
   nps.options.stepSizeCutOff = 0.;
   nps.options.maxRungeKuttaStepTrials = 0.;
-  res = nes.step(nps);
+  res = nes.step(nps, mockNavigator);
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeAdjustmentFailed);
 }
