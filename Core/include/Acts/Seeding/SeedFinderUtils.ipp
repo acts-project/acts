@@ -178,15 +178,6 @@ inline bool xyzCoordinateCheck(
 
   std::size_t index = sp.index();
 
-  //  const float& topHalfStripLength =
-  //  spacePointData.getTopHalfStripLength(index); const float&
-  //  bottomHalfStripLength =
-  //      spacePointData.getBottomHalfStripLength(index);
-  //  const Acts::Vector3& topStripDirection =
-  //      spacePointData.getTopStripDirection(index);
-  //  const Acts::Vector3& bottomStripDirection =
-  //      spacePointData.getBottomStripDirection(index);
-
   // prepare variables
   const Acts::Vector3& topStripVector = spacePointData.getTopStripVector(index);
   const Acts::Vector3& bottomStripVector =

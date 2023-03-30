@@ -54,22 +54,6 @@ class SpacePointData {
 
   ///
   bool hasDynamicVariable() const { return not m_topStripVector.empty(); }
-  //
-  //  const float& getTopHalfStripLength(std::size_t idx) const {
-  //    return m_topHalfStripLength[idx];
-  //  }
-  //
-  //  const float& getBottomHalfStripLength(std::size_t idx) const {
-  //    return m_bottomHalfStripLength[idx];
-  //  }
-  //
-  //  const Acts::Vector3& getTopStripDirection(std::size_t idx) const {
-  //    return m_topStripDirection[idx];
-  //  }
-  //
-  //  const Acts::Vector3& getBottomStripDirection(std::size_t idx) const {
-  //    return m_bottomStripDirection[idx];
-  //  }
 
   const Acts::Vector3& getTopStripVector(std::size_t idx) const {
     return m_topStripVector[idx];
@@ -86,23 +70,6 @@ class SpacePointData {
   const Acts::Vector3& getTopStripCenterPosition(std::size_t idx) const {
     return m_topStripCenterPosition[idx];
   }
-
-  //  void setTopHalfStripLength(std::size_t idx, const float& value) {
-  //    m_topHalfStripLength[idx] = value;
-  //  }
-  //
-  //  void setBottomHalfStripLength(std::size_t idx, const float& value) {
-  //    m_bottomHalfStripLength[idx] = value;
-  //  }
-  //
-  //  void setTopStripDirection(std::size_t idx, const Acts::Vector3& value) {
-  //    m_topStripDirection[idx] = value;
-  //  }
-  //
-  //  void setBottomStripDirection(std::size_t idx, const Acts::Vector3& value)
-  //  {
-  //    m_bottomStripDirection[idx] = value;
-  //  }
 
   void setTopStripVector(std::size_t idx, const Acts::Vector3& value) {
     m_topStripVector[idx] = value;
@@ -126,13 +93,8 @@ class SpacePointData {
   std::vector<float> m_deltaR{};
 
   /// dynamic variables
-  //  std::vector<float> m_topHalfStripLength{};
-  //  std::vector<float> m_bottomHalfStripLength{};
-  //  std::vector<Acts::Vector3> m_topStripDirection{};
-  //  std::vector<Acts::Vector3> m_bottomStripDirection{};
   std::vector<Acts::Vector3> m_topStripVector{};
   std::vector<Acts::Vector3> m_bottomStripVector{};
-
   std::vector<Acts::Vector3> m_stripCenterDistance{};
   std::vector<Acts::Vector3> m_topStripCenterPosition{};
 };
@@ -162,10 +124,6 @@ inline void SpacePointData::resize(std::size_t n, bool resizeDynamic) {
   m_deltaR.resize(n, 0.);
 
   if (resizeDynamic) {
-    //    m_topHalfStripLength.resize(n, 0.);
-    //    m_bottomHalfStripLength.resize(n, 0.);
-    //    m_topStripDirection.resize(n, {0, 0, 0});
-    //    m_bottomStripDirection.resize(n, {0, 0, 0});
     m_topStripVector.resize(n, {0, 0, 0});
     m_bottomStripVector.resize(n, {0, 0, 0});
     m_stripCenterDistance.resize(n, {0, 0, 0});
@@ -178,10 +136,6 @@ inline void SpacePointData::clear() {
   m_quality.clear();
   m_deltaR.clear();
   // dynamicvariables
-  //  m_topHalfStripLength.clear();
-  //  m_bottomHalfStripLength.clear();
-  //  m_topStripDirection.clear();
-  //  m_bottomStripDirection.clear();
   m_topStripVector.clear();
   m_bottomStripVector.clear();
   m_stripCenterDistance.clear();

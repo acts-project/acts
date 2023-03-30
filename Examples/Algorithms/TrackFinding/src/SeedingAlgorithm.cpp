@@ -285,20 +285,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
         state.spacePointData.setBottomStripVector(
             index,
             {xBottomStripVector, yBottomStripVector, zBottomStripVector});
-
-        //        state.spacePointData.setTopHalfStripLength(
-        //            index,
-        //            m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp()));
-        //        state.spacePointData.setBottomHalfStripLength(
-        //            index,
-        //            m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp()));
-        //        state.spacePointData.setTopStripDirection(
-        //            index,
-        //            m_cfg.seedFinderConfig.getTopStripDirection(sp->sp()));
-        //        state.spacePointData.setBottomStripDirection(
-        //            index,
-        //            m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp()));
-
         state.spacePointData.setStripCenterDistance(
             index, m_cfg.seedFinderConfig.getStripCenterDistance(sp->sp()));
         state.spacePointData.setTopStripCenterPosition(
