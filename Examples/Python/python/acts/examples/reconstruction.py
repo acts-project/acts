@@ -180,6 +180,7 @@ def addSeeding(
     truthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg = TruthEstimatedSeedingAlgorithmConfigArg(),
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
     logLevel: Optional[acts.logging.Level] = None,
     rnd: Optional[acts.examples.RandomNumbers] = None,
 ) -> None:
@@ -327,6 +328,15 @@ def addSeeding(
                 inputParticles,
                 parEstimateAlg.config.outputTrackParameters,
                 logLevel,
+            )
+
+        if outputDirCsv is not None:
+            s.addWriter(
+                acts.examples.CsvSeedWriter(
+                    inputSeeds=inputSeeds,
+                    level=logLevel,
+                    outputDir=outputDirCsv
+                )
             )
 
     return s

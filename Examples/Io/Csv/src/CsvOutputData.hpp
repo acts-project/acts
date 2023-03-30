@@ -262,6 +262,19 @@ struct SpacepointData {
                  var_z);
 };
 
+struct SeedData {
+  uint64_t measurement_id_1, measurement_id_2, measurement_id_3;
+  uint64_t geometry_id_1, geometry_id_2, geometry_id_3;
+  float x_1, x_2, x_3, y_1, y_2, y_3, z_1, z_2, z_3;
+  float var_r_1, var_r_2, var_r_3, var_z_1, var_z_2, var_z_3;
+  double z_vertex;
+  float seed_quality;
+  DFE_NAMEDTUPLE(SeedData, measurement_id_1, measurement_id_2, measurement_id_3,
+                 geometry_id_1, geometry_id_2, geometry_id_3, x_1, x_2, x_3,
+                 y_1, y_2, y_3, z_1, z_2, z_3, var_r_1, var_r_2, var_r_3,
+                 var_z_1, var_z_2, var_z_3, z_vertex, seed_quality);
+};
+
 struct TrackParameterData {
   double d0;
   double z0;
