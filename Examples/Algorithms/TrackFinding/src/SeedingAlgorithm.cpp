@@ -268,7 +268,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
             m_cfg.seedFinderConfig.getTopStripDirection(sp->sp());
         const Acts::Vector3& bottomStripDirection =
             m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp());
-
+				
         // prepare variables
         const float xTopStripVector = topHalfStripLength * topStripDirection[0];
         const float yTopStripVector = topHalfStripLength * topStripDirection[1];

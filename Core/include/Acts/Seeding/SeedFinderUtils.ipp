@@ -168,7 +168,7 @@ inline bool xyzCoordinateCheck(
     Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
     const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
-    const float* spacepointPosition, float* outputCoordinates) {
+    const double* spacepointPosition, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
   bool hasValueStored = spacePointData.hasDynamicVariable();
@@ -185,45 +185,45 @@ inline bool xyzCoordinateCheck(
   const Acts::Vector3& stripCenterDistance =
       spacePointData.getStripCenterDistance(index);
 
-  const float& xTopStripVector = topStripVector[0];
-  const float& yTopStripVector = topStripVector[1];
-  const float& zTopStripVector = topStripVector[2];
-  const float& xBottomStripVector = bottomStripVector[0];
-  const float& yBottomStripVector = bottomStripVector[1];
-  const float& zBottomStripVector = bottomStripVector[2];
+  const double& xTopStripVector = topStripVector[0];
+  const double& yTopStripVector = topStripVector[1];
+  const double& zTopStripVector = topStripVector[2];
+  const double& xBottomStripVector = bottomStripVector[0];
+  const double& yBottomStripVector = bottomStripVector[1];
+  const double& zBottomStripVector = bottomStripVector[2];
 
   // cross product between top strip vector and spacepointPosition
-  float d1[3] = {yTopStripVector * spacepointPosition[2] -
-                     zTopStripVector * spacepointPosition[1],
-                 zTopStripVector * spacepointPosition[0] -
-                     xTopStripVector * spacepointPosition[2],
-                 xTopStripVector * spacepointPosition[1] -
-                     yTopStripVector * spacepointPosition[0]};
+  double d1[3] = {yTopStripVector * spacepointPosition[2] -
+                      zTopStripVector * spacepointPosition[1],
+                  zTopStripVector * spacepointPosition[0] -
+                      xTopStripVector * spacepointPosition[2],
+                  xTopStripVector * spacepointPosition[1] -
+                      yTopStripVector * spacepointPosition[0]};
 
   // scalar product between bottom strip vector and d1
-  float bd1 = xBottomStripVector * d1[0] + yBottomStripVector * d1[1] +
-              zBottomStripVector * d1[2];
+  double bd1 = xBottomStripVector * d1[0] + yBottomStripVector * d1[1] +
+               zBottomStripVector * d1[2];
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the bottom detector element
-  float s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
-              stripCenterDistance[2] * d1[2]);
+  double s1 = (stripCenterDistance[0] * d1[0] + stripCenterDistance[1] * d1[1] +
+               stripCenterDistance[2] * d1[2]);
   if (std::abs(s1) > std::abs(bd1) * m_config.toleranceParam) {
     return false;
   }
 
   // cross product between bottom strip vector and spacepointPosition
-  float d0[3] = {yBottomStripVector * spacepointPosition[2] -
-                     zBottomStripVector * spacepointPosition[1],
-                 zBottomStripVector * spacepointPosition[0] -
-                     xBottomStripVector * spacepointPosition[2],
-                 xBottomStripVector * spacepointPosition[1] -
-                     yBottomStripVector * spacepointPosition[0]};
+  double d0[3] = {yBottomStripVector * spacepointPosition[2] -
+                      zBottomStripVector * spacepointPosition[1],
+                  zBottomStripVector * spacepointPosition[0] -
+                      xBottomStripVector * spacepointPosition[2],
+                  xBottomStripVector * spacepointPosition[1] -
+                      yBottomStripVector * spacepointPosition[0]};
 
   // compatibility check using distance between strips to evaluate if
   // spacepointPosition is inside the top detector element
-  float s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
-              stripCenterDistance[2] * d0[2]);
+  double s0 = (stripCenterDistance[0] * d0[0] + stripCenterDistance[1] * d0[1] +
+               stripCenterDistance[2] * d0[2]);
   if (std::abs(s0) > std::abs(bd1) * m_config.toleranceParam) {
     return false;
   }
