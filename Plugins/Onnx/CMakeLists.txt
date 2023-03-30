@@ -4,8 +4,7 @@ add_library(
   include/Acts/Plugins/Onnx/OnnxRuntimeBase.hpp
   include/Acts/Plugins/Onnx/MLTrackClassifier.hpp
   # source files
-  src/OnnxRuntimeBase.cpp
-  src/MLTrackClassifier.cpp)
+  src/OnnxRuntimeBase.cpp)
 
 target_include_directories(
   ActsPluginOnnx
