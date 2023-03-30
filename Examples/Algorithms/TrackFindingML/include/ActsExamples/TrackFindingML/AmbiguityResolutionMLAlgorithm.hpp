@@ -8,11 +8,7 @@
 
 #pragma once
 
-<<<<<<< HEAD
 #include "Acts/Plugins/Onnx/AmbiguityTrackClassifier.hpp"
-=======
-#include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
->>>>>>> upstream/main
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionML.hpp"
@@ -57,15 +53,8 @@ class AmbiguityResolutionMLAlgorithm final : public AmbiguityResolutionML {
 
  private:
   Config m_cfg;
-<<<<<<< HEAD
   // ONNX model for track selection
   Acts::AmbiguityTrackClassifier m_duplicateClassifier;
-=======
-  // ONNX environement
-  Ort::Env m_env;
-  // ONNX model for the duplicate neural network
-  Acts::OnnxRuntimeBase m_duplicateClassifier;
->>>>>>> upstream/main
   ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
   WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
