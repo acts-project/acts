@@ -30,7 +30,7 @@ VectorTrackContainerBase::VectorTrackContainerBase(
 VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
   assert(checkConsistency());
 
-  m_tipIndex.emplace_back();
+  m_tipIndex.emplace_back(kInvalid);
 
   m_params.emplace_back();
   m_cov.emplace_back();
