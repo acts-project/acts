@@ -259,14 +259,46 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
         std::size_t index = sp->index();
-        state.spacePointData.setTopHalfStripLength(
-            index, m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp()));
-        state.spacePointData.setBottomHalfStripLength(
-            index, m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp()));
-        state.spacePointData.setTopStripDirection(
-            index, m_cfg.seedFinderConfig.getTopStripDirection(sp->sp()));
-        state.spacePointData.setBottomStripDirection(
-            index, m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp()));
+
+        const float& topHalfStripLength =
+            m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp());
+        const float& bottomHalfStripLength =
+            m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp());
+        const Acts::Vector3& topStripDirection =
+            m_cfg.seedFinderConfig.getTopStripDirection(sp->sp());
+        const Acts::Vector3& bottomStripDirection =
+            m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp());
+
+        // prepare variables
+        const float xTopStripVector = topHalfStripLength * topStripDirection[0];
+        const float yTopStripVector = topHalfStripLength * topStripDirection[1];
+        const float zTopStripVector = topHalfStripLength * topStripDirection[2];
+        const float xBottomStripVector =
+            bottomHalfStripLength * bottomStripDirection[0];
+        const float yBottomStripVector =
+            bottomHalfStripLength * bottomStripDirection[1];
+        const float zBottomStripVector =
+            bottomHalfStripLength * bottomStripDirection[2];
+
+        state.spacePointData.setTopStripVector(
+            index, {xTopStripVector, yTopStripVector, zTopStripVector});
+        state.spacePointData.setBottomStripVector(
+            index,
+            {xBottomStripVector, yBottomStripVector, zBottomStripVector});
+
+        //        state.spacePointData.setTopHalfStripLength(
+        //            index,
+        //            m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp()));
+        //        state.spacePointData.setBottomHalfStripLength(
+        //            index,
+        //            m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp()));
+        //        state.spacePointData.setTopStripDirection(
+        //            index,
+        //            m_cfg.seedFinderConfig.getTopStripDirection(sp->sp()));
+        //        state.spacePointData.setBottomStripDirection(
+        //            index,
+        //            m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp()));
+
         state.spacePointData.setStripCenterDistance(
             index, m_cfg.seedFinderConfig.getStripCenterDistance(sp->sp()));
         state.spacePointData.setTopStripCenterPosition(

@@ -484,12 +484,12 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
 
         // position of Middle SP converted from UV to XY assuming cotTheta
         // evaluated from the Bottom and Middle SPs double
-        double positionMiddle[3] = {
+        float positionMiddle[3] = {
             rotationTermsUVtoXY[0] - rotationTermsUVtoXY[1] * A0,
             rotationTermsUVtoXY[0] * A0 + rotationTermsUVtoXY[1],
             cosTheta * std::sqrt(1 + A0 * A0)};
 
-        double rMTransf[3];
+        float rMTransf[3];
         if (!xyzCoordinateCheck(spacePointData, m_config, spM, positionMiddle,
                                 rMTransf)) {
           continue;
@@ -499,13 +499,13 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         float B0 = 2. * (Vb - A0 * Ub);
         float Cb = 1. - B0 * lb.y;
         float Sb = A0 + B0 * lb.x;
-        double positionBottom[3] = {
+        float positionBottom[3] = {
             rotationTermsUVtoXY[0] * Cb - rotationTermsUVtoXY[1] * Sb,
             rotationTermsUVtoXY[0] * Sb + rotationTermsUVtoXY[1] * Cb,
             cosTheta * std::sqrt(1 + A0 * A0)};
 
         auto spB = state.compatBottomSP[b];
-        double rBTransf[3];
+        float rBTransf[3];
         if (!xyzCoordinateCheck(spacePointData, m_config, *spB, positionBottom,
                                 rBTransf)) {
           continue;
@@ -514,13 +514,13 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
         // coordinate transformation and checks for top spacepoint
         float Ct = 1. - B0 * lt.y;
         float St = A0 + B0 * lt.x;
-        double positionTop[3] = {
+        float positionTop[3] = {
             rotationTermsUVtoXY[0] * Ct - rotationTermsUVtoXY[1] * St,
             rotationTermsUVtoXY[0] * St + rotationTermsUVtoXY[1] * Ct,
             cosTheta * std::sqrt(1 + A0 * A0)};
 
         auto spT = state.compatTopSP[t];
-        double rTTransf[3];
+        float rTTransf[3];
         if (!xyzCoordinateCheck(spacePointData, m_config, *spT, positionTop,
                                 rTTransf)) {
           continue;
