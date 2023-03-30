@@ -23,8 +23,7 @@
 ActsExamples::CsvSeedWriter::CsvSeedWriter(
     const ActsExamples::CsvSeedWriter::Config& config,
     Acts::Logging::Level level)
-    : WriterT(config.inputSeeds, "CsvSeedWriter", level),
-      m_cfg(config) {}
+    : WriterT(config.inputSeeds, "CsvSeedWriter", level), m_cfg(config) {}
 
 ActsExamples::CsvSeedWriter::~CsvSeedWriter() = default;
 
@@ -39,16 +38,18 @@ ActsExamples::ProcessCode ActsExamples::CsvSeedWriter::writeT(
   std::string pathSP =
       perEventFilepath(m_cfg.outputDir, "seed.csv", ctx.eventNumber);
 
-  dfe::NamedTupleCsvWriter<SeedData> writerSP(pathSP,
-                                                    m_cfg.outputPrecision);
+  dfe::NamedTupleCsvWriter<SeedData> writerSP(pathSP, m_cfg.outputPrecision);
 
   SeedData seedData{};
   for (const auto& seed : seeds) {
     const auto& spacepoints = seed.sp();
 
-    const auto slink_1 = spacepoints[0]->sourceLinks()[0].get<IndexSourceLink>();
-    const auto slink_2 = spacepoints[1]->sourceLinks()[0].get<IndexSourceLink>();
-    const auto slink_3 = spacepoints[2]->sourceLinks()[0].get<IndexSourceLink>();
+    const auto slink_1 =
+        spacepoints[0]->sourceLinks()[0].get<IndexSourceLink>();
+    const auto slink_2 =
+        spacepoints[1]->sourceLinks()[0].get<IndexSourceLink>();
+    const auto slink_3 =
+        spacepoints[2]->sourceLinks()[0].get<IndexSourceLink>();
 
     seedData.measurement_id_1 = slink_1.index();
     seedData.geometry_id_1 = slink_1.geometryId().value();
