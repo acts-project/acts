@@ -92,7 +92,6 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
         addPythia8(
             s,
             hardProcess=["Top:qqbar2ttbar=on"],
-            # hardProcess=["NewGaugeBoson:ffbar2gmZZprime=on"],
             npileup=200,
             vtxGen=acts.examples.GaussianVertexGenerator(
                 stddev=acts.Vector4(
