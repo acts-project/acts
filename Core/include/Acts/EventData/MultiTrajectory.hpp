@@ -1016,6 +1016,7 @@ class TrackStateRange {
   };
 
   TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+  TrackStateRange() : m_begin{std::nullopt} {}
 
   Iterator begin() { return m_begin; }
   Iterator end() { return Iterator{std::nullopt}; }
@@ -1132,7 +1133,13 @@ class MultiTrajectory {
   /// @return Iterator pair to iterate over
   /// @note Const version
   auto trackStateRange(IndexType iendpoint) const {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Range for the track states from @p iendpoint to the trajectory start
@@ -1141,7 +1148,13 @@ class MultiTrajectory {
   /// @note Mutable version
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStateRange(IndexType iendpoint) {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Apply a function to all previous states starting at a given endpoint.
