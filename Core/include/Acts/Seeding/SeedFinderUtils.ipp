@@ -99,7 +99,7 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
   float sinPhiM = yM / rM;
 
   int bottomFactor = bottom ? -1 : 1;
-    
+
   for (std::size_t idx(0); idx < vec.size(); ++idx) {
     auto& sp = vec[idx];
     auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
