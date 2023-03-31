@@ -1,4 +1,5 @@
 set(unittest_extra_libraries ActsPluginActSVG)
+add_unittest(GridSvgConverter GridSvgConverterTests.cpp)
 add_unittest(SurfaceSvgConverter SurfaceSvgConverterTests.cpp)
 add_unittest(LayerSvgConverter LayerSvgConverterTests.cpp)
 add_unittest(TrackingGeometrySvgConverter TrackingGeometrySvgConverterTests.cpp)
