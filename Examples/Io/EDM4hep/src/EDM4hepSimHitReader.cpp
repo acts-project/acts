@@ -31,10 +31,6 @@ EDM4hepSimHitReader::EDM4hepSimHitReader(
 
   m_eventsRange = std::make_pair(0, m_reader.getEntries("events"));
 
-  // m_collections = m_reader.getCollectionIDTable()->names();
-
-  // m_mcParticleCollection =
-  // &m_store.get<edm4hep::MCParticleCollection>(m_cfg.inputParticles);
 }
 
 std::string EDM4hepSimHitReader::EDM4hepSimHitReader::name() const {
