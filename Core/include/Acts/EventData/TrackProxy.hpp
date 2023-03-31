@@ -429,6 +429,32 @@ class TrackProxy {
     return component<unsigned int>(hashString("nHoles"));
   }
 
+  /// Return a mutable reference to the chi squared
+  /// Mutable version
+  /// @return The chi squared
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  float& chiSquared() {
+    return component<float>(hashString("chi2"));
+  }
+
+  /// Return the chi squared for the track. Const version
+  /// @return The chi squared
+  float chiSquared() const { return component<float>(hashString("chi2")); }
+
+  /// Return a mutable reference to the number of degrees of freedom for the
+  /// track. Mutable version
+  /// @return The the number of degrees of freedom
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  unsigned int& nDoF() {
+    return component<unsigned int>(hashString("nHoles"));
+  }
+
+  /// Return the number of degrees of freedom for the track. Const version
+  /// @return The number of degrees of freedom
+  unsigned int nDoF() const {
+    return component<unsigned int>(hashString("nHoles"));
+  }
+
   /// Return the index of this track in the track container
   /// @note This is separate from the tip index
   /// @return the track index

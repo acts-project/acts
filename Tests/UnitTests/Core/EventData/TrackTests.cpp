@@ -240,6 +240,12 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t2.nHoles() = 67;
   BOOST_CHECK_EQUAL(t.nHoles(), 67);
 
+  t2.chiSquared() = 555.0;
+  BOOST_CHECK_EQUAL(t2.chiSquared(), 555.0);
+
+  t2.nDoF() = 123;
+  BOOST_CHECK_EQUAL(t2.nDoF(), 123);
+
   // const checks: should not compile
   // const auto& ctc = tc;
   // ctc.getTrack(idx).covariance().setRandom();

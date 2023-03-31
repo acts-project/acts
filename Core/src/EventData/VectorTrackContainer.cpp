@@ -19,7 +19,9 @@ VectorTrackContainerBase::VectorTrackContainerBase(
       m_cov{other.m_cov},
       m_referenceSurfaces{other.m_referenceSurfaces},
       m_nMeasurements{other.m_nMeasurements},
-      m_nHoles{other.m_nHoles} {
+      m_nHoles{other.m_nHoles},
+      m_chi2{other.m_chi2},
+      m_ndf{other.m_ndf} {
   for (const auto& [key, value] : other.m_dynamic) {
     m_dynamic.insert({key, value->clone()});
   }
@@ -38,6 +40,9 @@ VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
 
   m_nMeasurements.emplace_back();
   m_nHoles.emplace_back();
+
+  m_chi2.emplace_back();
+  m_ndf.emplace_back();
 
   // dynamic columns
   for (auto& [key, vec] : m_dynamic) {
@@ -65,6 +70,9 @@ void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
 
   erase(m_nMeasurements);
   erase(m_nHoles);
+
+  erase(m_chi2);
+  erase(m_ndf);
 
   for (auto& [key, vec] : m_dynamic) {
     vec->erase(itrack);
@@ -102,6 +110,9 @@ void VectorTrackContainer::reserve(IndexType size) {
 
   m_nMeasurements.reserve(size);
   m_nHoles.reserve(size);
+
+  m_chi2.reserve(size);
+  m_ndf.reserve(size);
 
   for (auto& [key, vec] : m_dynamic) {
     vec->reserve(size);
