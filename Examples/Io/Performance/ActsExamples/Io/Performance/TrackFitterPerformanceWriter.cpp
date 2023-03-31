@@ -42,6 +42,9 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
     throw std::invalid_argument("Missing output filename");
   }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
@@ -85,13 +88,9 @@ ActsExamples::TrackFitterPerformanceWriter::finalize() {
 
 ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // Read truth input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // Truth particles with corresponding reconstructed tracks
   std::vector<ActsFatras::Barcode> reconParticleIds;

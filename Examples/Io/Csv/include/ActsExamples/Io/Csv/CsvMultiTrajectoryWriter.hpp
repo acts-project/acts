@@ -10,6 +10,7 @@
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsFatras/EventData/Barcode.hpp"
 
@@ -34,6 +35,8 @@ namespace ActsExamples {
 /// and each line in the file corresponds to one track.
 class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
  public:
+  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     std::string inputTrajectories;           ///< Input trajectory collection
     std::string outputDir;                   ///< where to place output files
@@ -65,6 +68,9 @@ class CsvMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
 
  private:
   Config m_cfg;  //!< Nested configuration struct
+
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
 
   /// @brief Struct for brief trajectory summary info
   ///

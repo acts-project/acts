@@ -135,8 +135,8 @@ CKFPerformanceConfig = namedtuple(
 
 AmbiguityResolutionConfig = namedtuple(
     "AmbiguityResolutionConfig",
-    ["maximumSharedHits", "nMeasurementsMin"],
-    defaults=[None] * 2,
+    ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
+    defaults=[None] * 3,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -429,7 +429,6 @@ def addTruthEstimatedSeeding(
         level=logLevel,
         inputParticles=inputParticles,
         inputMeasurementParticlesMap="measurement_particles_map",
-        inputSourceLinks="sourcelinks",
         inputSpacePoints=[spacePoints],
         outputParticles="truth_seeded_particles",
         outputProtoTracks="truth_particle_tracks",
@@ -788,7 +787,6 @@ def addKalmanTracks(
     energyLoss: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if directNavigation:
@@ -845,7 +843,6 @@ def addTruthTrackingGsf(
     inputProtoTracks: str = "truth_particle_tracks",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     gsfOptions = {
@@ -1115,7 +1112,6 @@ def addTrackSelection(
     outputTracks: str,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.TrackSelector:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     trackSelector = acts.examples.TrackSelector(
@@ -1157,7 +1153,6 @@ def addExaTrkX(
     backend: Optional[ExaTrkXBackend] = ExaTrkXBackend.Torch,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Run the particle selection
@@ -1242,29 +1237,34 @@ def addAmbiguityResolution(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     from acts.examples import AmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     alg = AmbiguityResolutionAlgorithm(
         level=customLogLevel(),
-        inputSourceLinks="sourcelinks",
-        inputTrajectories="trajectories",
-        outputTrajectories="filteredTrajectories",
+        inputTracks="selectedTracks",
+        outputTracks="filteredTrajectories",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
+            maximumIterations=config.maximumIterations,
         ),
     )
     s.addAlgorithm(alg)
 
-    s.addWhiteboardAlias("trajectories", alg.config.outputTrajectories)
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=alg.config.outputTracks,
+        outputTrajectories="trajectories-from-solved-tracks",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     addTrajectoryWriters(
         s,
         name="ambi",
-        trajectories=alg.config.outputTrajectories,
+        trajectories="trajectories",
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
@@ -1293,28 +1293,33 @@ def addAmbiguityResolutionML(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     from acts.examples import AmbiguityResolutionMLAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     alg = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
-        inputTrajectories="trajectories",
+        inputTracks="selectedTracks",
         inputDuplicateNN=onnxModelFile,
-        outputTrajectories="filteredTrajectoriesML",
+        outputTracks="filteredTrajectoriesML",
         **acts.examples.defaultKWArgs(
             nMeasurementsMin=config.nMeasurementsMin,
         ),
     )
     s.addAlgorithm(alg)
 
-    s.addWhiteboardAlias("trajectories", alg.config.outputTrajectories)
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=alg.config.outputTracks,
+        outputTrajectories="trajectories-from-solved-tracks",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     addTrajectoryWriters(
         s,
         name="ambiML",
-        trajectories=alg.config.outputTrajectories,
+        trajectories="trajectories",
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
@@ -1343,7 +1348,6 @@ def addVertexFitting(
     trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     """This function steers the vertex fitting
 
     Parameters

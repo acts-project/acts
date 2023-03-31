@@ -44,7 +44,7 @@ namespace {
 /// @param config The input config
 /// @return Vector of layer builder configs
 std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
-    const TGeoDetector::Config& config) {
+    const TGeoDetector::Config& config, const Acts::Logger& logger) {
   std::vector<Acts::TGeoLayerBuilder::Config> detLayerConfigs;
 
   // iterate over all configured detector volumes
@@ -117,14 +117,18 @@ std::vector<Acts::TGeoLayerBuilder::Config> makeLayerBuilderConfigs(
       cdsConfig.discPhiSegments = volume.discNPhiSegments;
       cdsConfig.discRadialSegments = volume.discNRSegments;
       layerBuilderConfig.detectorElementSplitter =
-          std::make_shared<const Acts::TGeoCylinderDiscSplitter>(cdsConfig);
+          std::make_shared<const Acts::TGeoCylinderDiscSplitter>(
+              cdsConfig,
+              logger.clone("TGeoCylinderDiscSplitter", config.layerLogLevel));
     } else if (volume.itkModuleSplit) {
       ActsExamples::TGeoITkModuleSplitter::Config itkConfig;
       itkConfig.barrelMap = volume.barrelMap;
       itkConfig.discMap = volume.discMap;
       itkConfig.splitPatterns = volume.splitPatterns;
       layerBuilderConfig.detectorElementSplitter =
-          std::make_shared<ActsExamples::TGeoITkModuleSplitter>(itkConfig);
+          std::make_shared<ActsExamples::TGeoITkModuleSplitter>(
+              itkConfig,
+              logger.clone("TGeoITkModuleSplitter", config.layerLogLevel));
     }
 
     detLayerConfigs.push_back(layerBuilderConfig);
@@ -213,7 +217,7 @@ std::shared_ptr<const Acts::TrackingGeometry> buildTGeoDetector(
   // Import the file from
   TGeoManager::Import(config.fileName.c_str());
 
-  auto layerBuilderConfigs = makeLayerBuilderConfigs(config);
+  auto layerBuilderConfigs = makeLayerBuilderConfigs(config, logger);
 
   // Remember the layer builders to collect the detector elements
   std::vector<std::shared_ptr<const Acts::TGeoLayerBuilder>> tgLayerBuilders;

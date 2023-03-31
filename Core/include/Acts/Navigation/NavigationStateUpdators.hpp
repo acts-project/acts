@@ -136,7 +136,7 @@ class IndexedUpdatorImpl : public INavigationDelegate {
   /// @param a is the array to be filled
   template <typename Array, std::size_t... idx>
   void fillCasts(const Vector3& position, Array& a,
-                 std::index_sequence<idx...> /*unused*/) const {
+                 std::index_sequence<idx...> /*indices*/) const {
     ((a[idx] = VectorHelpers::cast(position, casts[idx])), ...);
   }
 };

@@ -74,15 +74,15 @@ struct MeasurementsCreator {
   template <typename propagator_state_t, typename stepper_t,
             typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  const navigator_t& /*navigator*/, result_type& result,
+                  const navigator_t& navigator, result_type& result,
                   const Logger& logger) const {
     using namespace Acts::UnitLiterals;
 
     // only generate measurements on surfaces
-    if (not state.navigation.currentSurface) {
+    if (not navigator.currentSurface(state.navigation)) {
       return;
     }
-    const Acts::Surface& surface = *state.navigation.currentSurface;
+    const Acts::Surface& surface = *navigator.currentSurface(state.navigation);
     const Acts::GeometryIdentifier geoId = surface.geometryId();
     // only generate measurements on sensitive surface
     if (not geoId.sensitive()) {

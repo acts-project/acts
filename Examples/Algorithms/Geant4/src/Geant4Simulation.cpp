@@ -69,12 +69,21 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
     if (m_cfg.outputSimHits.empty()) {
       ACTS_WARNING("No output sim hits collection configured");
     }
+    m_outputSimHits.initialize(m_cfg.outputSimHits);
+
     if (m_cfg.outputParticlesInitial.empty()) {
       ACTS_WARNING("No output initial particles collection configured");
     }
+    m_outputParticlesInitial.initialize(m_cfg.outputParticlesInitial);
+
     if (m_cfg.outputParticlesFinal.empty()) {
       ACTS_WARNING("No output final particles collection configured");
     }
+    m_outputParticlesFinal.initialize(m_cfg.outputParticlesFinal);
+  }
+
+  if (m_cfg.inputParticles.empty()) {
+    throw std::invalid_argument("Missing input particle collection");
   }
 
   // If we are in VERBOSE mode, set the verbose level in Geant4 to 2.
@@ -140,6 +149,9 @@ ActsExamples::Geant4Simulation::Geant4Simulation(
 
     ACTS_INFO("Remapping successful for " << sCounter << " selected volumes.");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputMaterialTracks.maybeInitialize(m_cfg.outputMaterialTracks);
 }
 
 ActsExamples::Geant4Simulation::~Geant4Simulation() = default;
@@ -160,6 +172,9 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
   // this will allow access from the User*Actions
   eventData.store = &(ctx.eventStore);
 
+  // Register the input particle read handle
+  eventData.inputParticles = &m_inputParticles;
+
   ACTS_DEBUG("Sending Geant RunManager the BeamOn() command.");
   // Start simulation. each track is simulated as a separate Geant4 event.
   m_cfg.runManager->BeamOn(1);
@@ -169,29 +184,27 @@ ActsExamples::ProcessCode ActsExamples::Geant4Simulation::execute(
       not m_cfg.outputParticlesFinal.empty()) {
     // Initial state of particles
     // Register to the event store
-    ctx.eventStore.add(m_cfg.outputParticlesInitial,
-                       SimParticleContainer(eventData.particlesInitial.begin(),
-                                            eventData.particlesInitial.end()));
+    m_outputParticlesInitial(
+        ctx, SimParticleContainer(eventData.particlesInitial.begin(),
+                                  eventData.particlesInitial.end()));
     // Final state of particles
     // Register to the event store
-    ctx.eventStore.add(m_cfg.outputParticlesFinal,
-                       SimParticleContainer(eventData.particlesFinal.begin(),
-                                            eventData.particlesFinal.end()));
+    m_outputParticlesFinal(
+        ctx, SimParticleContainer(eventData.particlesFinal.begin(),
+                                  eventData.particlesFinal.end()));
   }
 
   // Output handling: Simulated hits
   if (not m_cfg.outputSimHits.empty()) {
     // Register to the event store
-    ctx.eventStore.add(
-        m_cfg.outputSimHits,
-        SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
+    m_outputSimHits(
+        ctx, SimHitContainer(eventData.hits.begin(), eventData.hits.end()));
   }
 
   // Output handling: Material tracks
   if (not m_cfg.outputMaterialTracks.empty()) {
-    ctx.eventStore.add(
-        m_cfg.outputMaterialTracks,
-        decltype(eventData.materialTracks)(eventData.materialTracks));
+    m_outputMaterialTracks(
+        ctx, decltype(eventData.materialTracks)(eventData.materialTracks));
   }
 
   return ActsExamples::ProcessCode::SUCCESS;

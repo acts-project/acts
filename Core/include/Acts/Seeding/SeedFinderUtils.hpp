@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2019 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -15,7 +16,6 @@
 namespace Acts {
 /// @brief A partial description of a circle in u-v space.
 struct LinCircle {
-  float Zo;
   float cotTheta;
   float iDeltaR;
   float Er;
@@ -23,8 +23,6 @@ struct LinCircle {
   float V;
   float x;
   float y;
-  float z;
-  float r;
 };
 
 /// @brief Transform two spacepoints to a u-v space circle.
@@ -51,27 +49,36 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
+/// @param[in] spacePointData Auxiliary variables used by the seeding
 /// @param[in] vec The list of bottom or top spacepoints
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
-/// @returns Vector of sorted indexes for the vectors (vec and linCircleVec)
 template <typename external_spacepoint_t>
 void transformCoordinates(
-    std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
+    Acts::SpacePointData& spacePointData,
+    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
     const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
     std::vector<LinCircle>& linCircleVec);
 
 template <typename external_spacepoint_t, typename callable_t>
-void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
+void transformCoordinates(Acts::SpacePointData& spacePointData,
+                          const std::vector<external_spacepoint_t*>& vec,
                           const external_spacepoint_t& spM, bool bottom,
                           std::vector<LinCircle>& linCircleVec,
                           callable_t&& extractFunction);
+
+/// @brief Fills LineCircle object for a SP dublet in u-v frame.
+///
+/// @param[in] lineCircleVariables Vector contaning LineCircle variables
+inline LinCircle fillLineCircle(
+    const std::array<float, 7>& lineCircleVariables);
 
 /// @brief Check the compatibility of spacepoint coordinates in xyz assuming the Bottom-Middle direction with the strip meassument details
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
+/// @param[in] spacePointData Auxiliary variables used by the seeding
 /// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
@@ -79,6 +86,7 @@ void transformCoordinates(std::vector<external_spacepoint_t*>& vec,
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
 template <typename external_spacepoint_t>
 bool xyzCoordinateCheck(
+    Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
     const double* spacepointPosition, double* outputCoordinates);
