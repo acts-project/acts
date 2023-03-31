@@ -90,11 +90,6 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
                                  const external_spacepoint_t& spM, bool bottom,
                                  std::vector<LinCircle>& linCircleVec,
                                  callable_t&& extractFunction) {
-  std::vector<std::size_t> indexes(vec.size());
-  for (unsigned int i(0); i < indexes.size(); i++) {
-    indexes[i] = i;
-  }
-
   auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
 
   // resize + operator[] is faster then reserve and push_back
