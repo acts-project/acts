@@ -296,8 +296,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
             iDeltaR2;
 
         // fill output vectors
-        linCircleVec.push_back(fillLineCircle(
-            {deltaZ * iDeltaR, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame}));
+        linCircleVec.emplace_back(deltaZ * iDeltaR, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame);
         spacePointData.setDeltaR(otherSP->index(),
                                  std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.push_back(otherSP.get());
@@ -315,8 +314,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
             iDeltaR2;
 
         // fill output vectors
-        linCircleVec.push_back(fillLineCircle(
-            {deltaZ * iDeltaR, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame}));
+        linCircleVec.emplace_back(deltaZ * iDeltaR, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame);
         spacePointData.setDeltaR(otherSP->index(),
                                  std::sqrt(deltaR2 + (deltaZ * deltaZ)));
         outVec.push_back(otherSP.get());
@@ -349,8 +347,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
           iDeltaR2;
 
       // fill output vectors
-      linCircleVec.push_back(fillLineCircle(
-          {deltaZ * iDeltaR, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame}));
+      linCircleVec.emplace_back(deltaZ * iDeltaR, iDeltaR, Er, uT, vT, xNewFrame, yNewFrame);
       spacePointData.setDeltaR(otherSP->index(),
                                std::sqrt(deltaR2 + (deltaZ * deltaZ)));
       outVec.push_back(otherSP.get());

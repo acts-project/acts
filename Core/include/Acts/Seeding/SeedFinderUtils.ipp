@@ -62,8 +62,7 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
                    iDeltaR2;
 
   sp.setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-
-  return fillLineCircle({cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame});
+  return LinCircle(cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame);
 }
 
 template <typename external_spacepoint_t>
@@ -138,29 +137,18 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
                 (cotTheta * cotTheta) * (varianceRM + sp->varianceR())) *
                iDeltaR2;
 
-    linCircleVec[idx] =
-        fillLineCircle({cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame});
+    // Fill Line Circle
+    linCircleVec[idx].cotTheta = cotTheta;
+    linCircleVec[idx].iDeltaR = iDeltaR;
+    linCircleVec[idx].Er = Er;
+    linCircleVec[idx].U = U;
+    linCircleVec[idx].V = V;
+    linCircleVec[idx].x = xNewFrame;
+    linCircleVec[idx].y = yNewFrame;
+
     spacePointData.setDeltaR(sp->index(),
                              std::sqrt(deltaR2 + (deltaZ * deltaZ)));
   }
-}
-
-inline LinCircle fillLineCircle(
-    const std::array<float, 7>& lineCircleVariables) {
-  auto [cotTheta, iDeltaR, Er, U, V, xNewFrame, yNewFrame] =
-      lineCircleVariables;
-
-  // VERY frequent (SP^3) access
-  LinCircle l{};
-  l.cotTheta = cotTheta;
-  l.iDeltaR = iDeltaR;
-  l.U = U;
-  l.V = V;
-  l.Er = Er;
-  l.x = xNewFrame;
-  l.y = yNewFrame;
-
-  return l;
 }
 
 template <typename external_spacepoint_t>
