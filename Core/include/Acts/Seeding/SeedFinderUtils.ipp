@@ -46,7 +46,7 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
   float deltaR2 = (xNewFrame * xNewFrame + yNewFrame * yNewFrame);
   float iDeltaR2 = 1. / (deltaX * deltaX + deltaY * deltaY);
   float iDeltaR = std::sqrt(iDeltaR2);
-  int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
+  int bottomFactor = bottom ? -1 : 1;
   float cotTheta = deltaZ * iDeltaR * bottomFactor;
 
   // conformal transformation u=x/(x²+y²) v=y/(x²+y²) transform the
@@ -98,6 +98,8 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
   float cosPhiM = xM / rM;
   float sinPhiM = yM / rM;
 
+  int bottomFactor = bottom ? -1 : 1;
+    
   for (std::size_t idx(0); idx < vec.size(); ++idx) {
     auto& sp = vec[idx];
     auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
@@ -116,7 +118,6 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
     float iDeltaR2 = 1. / deltaR2;
     float iDeltaR = std::sqrt(iDeltaR2);
     //
-    int bottomFactor = 1 * (int(!bottom)) - 1 * (int(bottom));
     // cot_theta = (deltaZ/deltaR)
     float cotTheta = deltaZ * iDeltaR * bottomFactor;
     // transformation of circle equation (x,y) into linear equation (u,v)
@@ -128,8 +129,8 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
     float U = xNewFrame * iDeltaR2;
     float V = yNewFrame * iDeltaR2;
     // error term for sp-pair without correlation of middle space point
-    float Er = ((varianceZM + sp->varianceZ()) +
-                (cotTheta * cotTheta) * (varianceRM + sp->varianceR())) *
+    float Er = ((varianceZM + varianceZSP) +
+                (cotTheta * cotTheta) * (varianceRM + varianceRSP)) *
                iDeltaR2;
 
     // Fill Line Circle
