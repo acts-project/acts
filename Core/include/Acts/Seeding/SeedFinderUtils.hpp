@@ -17,17 +17,9 @@ namespace Acts {
 /// @brief A partial description of a circle in u-v space.
 struct LinCircle {
   LinCircle() = default;
-  LinCircle(float ct, float idr, float er,
-	    float u, float v, float X, float Y)
-    : cotTheta(ct),
-      iDeltaR(idr),
-      Er(er),
-      U(u),
-      V(v),
-      x(X),
-      y(Y)
-  {}
-   
+  LinCircle(float ct, float idr, float er, float u, float v, float X, float Y)
+      : cotTheta(ct), iDeltaR(idr), Er(er), U(u), V(v), x(X), y(Y) {}
+
   float cotTheta{0.};
   float iDeltaR{0.};
   float Er{0.};
