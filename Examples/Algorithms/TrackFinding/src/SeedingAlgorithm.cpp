@@ -260,31 +260,19 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       for (const auto& sp : collection) {
         std::size_t index = sp->index();
 
-        const float& topHalfStripLength =
+        const float topHalfStripLength =
             m_cfg.seedFinderConfig.getTopHalfStripLength(sp->sp());
-        const float& bottomHalfStripLength =
+        const float bottomHalfStripLength =
             m_cfg.seedFinderConfig.getBottomHalfStripLength(sp->sp());
-        const Acts::Vector3& topStripDirection =
+        const Acts::Vector3 topStripDirection =
             m_cfg.seedFinderConfig.getTopStripDirection(sp->sp());
-        const Acts::Vector3& bottomStripDirection =
+        const Acts::Vector3 bottomStripDirection =
             m_cfg.seedFinderConfig.getBottomStripDirection(sp->sp());
-				
-        // prepare variables
-        const float xTopStripVector = topHalfStripLength * topStripDirection[0];
-        const float yTopStripVector = topHalfStripLength * topStripDirection[1];
-        const float zTopStripVector = topHalfStripLength * topStripDirection[2];
-        const float xBottomStripVector =
-            bottomHalfStripLength * bottomStripDirection[0];
-        const float yBottomStripVector =
-            bottomHalfStripLength * bottomStripDirection[1];
-        const float zBottomStripVector =
-            bottomHalfStripLength * bottomStripDirection[2];
 
         state.spacePointData.setTopStripVector(
-            index, {xTopStripVector, yTopStripVector, zTopStripVector});
+            index, topHalfStripLength * topStripDirection);
         state.spacePointData.setBottomStripVector(
-            index,
-            {xBottomStripVector, yBottomStripVector, zBottomStripVector});
+            index, bottomHalfStripLength * bottomStripDirection);
         state.spacePointData.setStripCenterDistance(
             index, m_cfg.seedFinderConfig.getStripCenterDistance(sp->sp()));
         state.spacePointData.setTopStripCenterPosition(
