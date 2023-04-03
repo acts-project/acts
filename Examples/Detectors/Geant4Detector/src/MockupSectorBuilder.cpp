@@ -155,7 +155,7 @@ ActsExamples::MockupSectorBuilder::BuildSector(
     return nullptr;
   }
 
-  // sort the dtector volumes by their radial distance (from
+  // sort the detector volumes by their radial distance (from
   // innermost---->outermost)
   std::sort(det_volumes.begin(), det_volumes.end(), sortByRadialDistance);
 
