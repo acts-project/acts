@@ -224,17 +224,17 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
       const float rO = otherSP->radius();
-      float deltaR = sign * (rO - rM);
+      float deltaR = (rO - rM);
 
       // if r-distance is too small, try next SP in bin
       if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
 	// if r-distance is too small, try next SP in bin
-	if (deltaR < deltaRMinSP) {
+	if (-deltaR < deltaRMinSP) {
 	  break;
 	}
 	
 	// if r-distance is too big, try next SP in bin
-	if (deltaR > deltaRMaxSP) {
+	if (-deltaR > deltaRMaxSP) {
 	  continue;
 	}
       } else {
@@ -264,7 +264,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       // ratio Z/R (forward angle) of space point duplet
-      float cotTheta = deltaZ / deltaR;
+      float cotTheta = deltaZ / deltaR * sign;
       if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
         continue;
       }
