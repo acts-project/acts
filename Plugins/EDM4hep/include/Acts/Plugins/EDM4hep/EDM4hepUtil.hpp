@@ -10,6 +10,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
@@ -18,6 +19,7 @@
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
+#include <Eigen/src/Core/util/Memory.h>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
 
@@ -28,34 +30,51 @@ namespace EDM4hepUtil {
 
 static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
-template <typename track_container_t, typename track_state_container_t,
-          template <typename> class holder_t>
-void writeTrack(
-    const Acts::GeometryContext& gctx,
-    Acts::TrackProxy<track_container_t, track_state_container_t, holder_t, true>
-        track,
-    edm4hep::MutableTrack to, double Bz) {
-  to.setChi2(track.chi2());
-  to.setNdf(track.nDoF());
+struct Parameters {
+  Acts::ActsVector<5> values;
+  double time;
+  std::optional<Acts::ActsSymMatrix<5>> covariance;
+  std::shared_ptr<const Acts::Surface> surface;
+};
 
-  std::vector<edm4hep::TrackState> outTrackStates;
-  outTrackStates.reserve(track.nTrackStates());
+template <typename charge_t>
+Parameters convertTrackParameters(
+    const Acts::GeometryContext& gctx, double Bz,
+    const SingleBoundTrackParameters<charge_t>& params) {
+  Acts::Vector3 global = params.referenceSurface().localToGlobal(
+      gctx, params.parameters().template head<2>(), params.momentum());
 
-  auto setParameters = [Bz](edm4hep::TrackState& trackState, const auto& params,
-                            const auto& cov) {
-    // Conversion:
-    // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf
-    trackState.D0 = params[Acts::eBoundLoc0];
-    trackState.Z0 = params[Acts::eBoundLoc1];
-    trackState.phi = params[Acts::eBoundPhi];
-    trackState.tanLambda = std::tan(M_PI_2 - params[Acts::eBoundTheta]);
-    trackState.time = params[Acts::eBoundTime];
+  std::shared_ptr<const Acts::Surface> refSurface =
+      params.referenceSurface().getSharedPtr();
 
-    double p = SinglyCharged{}.extractMomentum(params[Acts::eBoundQOverP]);
-    double pt = std::sin(params[Acts::eBoundTheta]) * p;
-    double q = SinglyCharged{}.extractCharge(params[Acts::eBoundQOverP]);
+  if (dynamic_cast<const Acts::PerigeeSurface*>(refSurface.get()) == nullptr) {
+    // reference surface is not a perigee, make one
+    refSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(global);
+  }
 
-    trackState.omega = q * Bz / pt;
+  auto boundToFree = refSurface->boundToFreeJacobian(gctx, params.parameters());
+
+  Acts::FreeVector freePars = Acts::detail::transformBoundToFreeParameters(
+      params.referenceSurface(), gctx, params.parameters());
+
+  Parameters result;
+  result.surface = refSurface;
+
+  Acts::BoundVector targetPars =
+      Acts::detail::transformFreeToBoundParameters(freePars, *refSurface, gctx)
+          .value();
+
+  // Conversion:
+  // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf
+
+  if (params.covariance()) {
+    const auto& cov = params.covariance().value();
+    Acts::FreeMatrix freeCov = boundToFree * cov * boundToFree.transpose();
+
+    Acts::CovarianceCache covCache{freePars, freeCov};
+    auto [varNewCov, varNewJac] =
+        Acts::transportCovarianceToBound(gctx, *refSurface, freePars, covCache);
+    auto targetCov = std::get<Acts::BoundSymMatrix>(varNewCov);
 
     // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
     // q/p) to the LCIO / edm4hep one (d0, z0, phi, tan(lambda), omega). Top
@@ -85,26 +104,64 @@ void writeTrack(
     J(0, 0) = 1;
     J(1, 1) = 1;
     J(2, 2) = 1;
-    double cotTheta = std::tan(M_PI_2 + params[Acts::eBoundTheta]);
+    double cotTheta = std::tan(M_PI_2 + targetPars[Acts::eBoundTheta]);
     J(3, 3) = -cotTheta * cotTheta - 1;  // d(tanLambda) / dTheta
-    J(4, 4) = Bz / std::sin(params[Acts::eBoundTheta]);  // dOmega / d(qop)
-    double sinTheta = std::sin(params[eBoundTheta]);
-    J(4, 3) = -Bz * params[Acts::eBoundQOverP] *
-              std::cos(params[eBoundTheta] /
+    J(4, 4) = Bz / std::sin(targetPars[Acts::eBoundTheta]);  // dOmega / d(qop)
+    double sinTheta = std::sin(targetPars[eBoundTheta]);
+    J(4, 3) = -Bz * targetPars[Acts::eBoundQOverP] *
+              std::cos(targetPars[eBoundTheta] /
                        (sinTheta * sinTheta));  // dOmega / dTheta
 
-    Acts::ActsSymMatrix<5> cIn = cov.template topLeftCorner<5, 5>();
-    Acts::ActsSymMatrix<5> cOut = J * cIn * J.transpose();
+    Acts::ActsSymMatrix<5> cIn = targetCov.template topLeftCorner<5, 5>();
+    result.covariance = J * cIn * J.transpose();
+  }
 
-    trackState.covMatrix = {
-        static_cast<float>(cOut(0, 0)), static_cast<float>(cOut(1, 0)),
-        static_cast<float>(cOut(1, 1)), static_cast<float>(cOut(2, 0)),
-        static_cast<float>(cOut(2, 1)), static_cast<float>(cOut(2, 2)),
-        static_cast<float>(cOut(3, 0)), static_cast<float>(cOut(3, 1)),
-        static_cast<float>(cOut(3, 2)), static_cast<float>(cOut(3, 3)),
-        static_cast<float>(cOut(4, 0)), static_cast<float>(cOut(4, 1)),
-        static_cast<float>(cOut(4, 2)), static_cast<float>(cOut(4, 3)),
-        static_cast<float>(cOut(4, 4))};
+  result.values[0] = targetPars[Acts::eBoundLoc0];
+  result.values[1] = targetPars[Acts::eBoundLoc1];
+  result.values[2] = targetPars[Acts::eBoundPhi];
+  result.values[3] = std::tan(M_PI_2 - targetPars[Acts::eBoundTheta]);
+  result.time = targetPars[Acts::eBoundTime];
+
+  result.values[4] = params.charge() * Bz / params.transverseMomentum();
+
+  return result;
+}
+
+template <typename track_container_t, typename track_state_container_t,
+          template <typename> class holder_t>
+void writeTrack(
+    const Acts::GeometryContext& gctx,
+    Acts::TrackProxy<track_container_t, track_state_container_t, holder_t, true>
+        track,
+    edm4hep::MutableTrack to, double Bz) {
+  to.setChi2(track.chi2());
+  to.setNdf(track.nDoF());
+
+  std::vector<edm4hep::TrackState> outTrackStates;
+  outTrackStates.reserve(track.nTrackStates());
+
+  auto setParameters = [Bz](edm4hep::TrackState& trackState,
+                            const Parameters& params) {
+    trackState.D0 = params.values[0];
+    trackState.Z0 = params.values[1];
+    trackState.phi = params.values[2];
+    trackState.tanLambda = params.values[3];
+    trackState.omega = params.values[4];
+    trackState.time = params.time;
+
+    if (params.covariance) {
+      const auto& c = params.covariance.value();
+
+      trackState.covMatrix = {
+          static_cast<float>(c(0, 0)), static_cast<float>(c(1, 0)),
+          static_cast<float>(c(1, 1)), static_cast<float>(c(2, 0)),
+          static_cast<float>(c(2, 1)), static_cast<float>(c(2, 2)),
+          static_cast<float>(c(3, 0)), static_cast<float>(c(3, 1)),
+          static_cast<float>(c(3, 2)), static_cast<float>(c(3, 3)),
+          static_cast<float>(c(4, 0)), static_cast<float>(c(4, 1)),
+          static_cast<float>(c(4, 2)), static_cast<float>(c(4, 3)),
+          static_cast<float>(c(4, 4))};
+    }
   };
 
   for (const auto& state : track.trackStates()) {
@@ -113,45 +170,18 @@ void writeTrack(
       continue;
     }
 
-    // EDM4hep wants IP parameters relative to the surface center
-    Acts::BoundVector params = state.parameters();
-    Acts::BoundMatrix cov = state.covariance();
-
-    const Acts::Surface& refSurface = state.referenceSurface();
-
-    Acts::Vector3 direction =
-        makeDirectionUnitFromPhiTheta(params[eBoundPhi], params[eBoundTheta]);
     // This makes the hard assumption that |q| = 1
-    ActsScalar absMomentum =
-        SinglyCharged{}.extractMomentum(params[eBoundQOverP]);
-    Acts::Vector3 momentum = direction * absMomentum;
+    SingleBoundTrackParameters<SinglyCharged> params{
+        state.referenceSurface().getSharedPtr(), state.parameters(),
+        state.covariance()};
 
-    Acts::Vector3 global =
-        refSurface.localToGlobal(gctx, params.head<2>(), momentum);
-
-    auto pseudoPerigee =
-        Acts::Surface::makeShared<Acts::PerigeeSurface>(global);
-
-    auto boundToFree = pseudoPerigee->boundToFreeJacobian(gctx, params);
-
-    Acts::FreeVector freePars =
-        Acts::detail::transformBoundToFreeParameters(refSurface, gctx, params);
-    Acts::FreeMatrix freeCov = boundToFree * cov * boundToFree.transpose();
-
-    Acts::BoundVector targetPars = Acts::detail::transformFreeToBoundParameters(
-                                       freePars, *pseudoPerigee, gctx)
-                                       .value();
-
-    Acts::CovarianceCache covCache{freePars, freeCov};
-    auto [varNewCov, varNewJac] = Acts::transportCovarianceToBound(
-        gctx, *pseudoPerigee, freePars, covCache);
-    auto targetCov = std::get<Acts::BoundSymMatrix>(varNewCov);
+    Parameters converted = convertTrackParameters(gctx, Bz, params);
 
     edm4hep::TrackState& trackState = outTrackStates.emplace_back();
     trackState.location = edm4hep::TrackState::AtOther;
 
-    setParameters(trackState, targetPars, targetCov);
-    auto center = pseudoPerigee->center(gctx);
+    setParameters(trackState, converted);
+    auto center = converted.surface->center(gctx);
     trackState.referencePoint.x = center.x();
     trackState.referencePoint.y = center.y();
     trackState.referencePoint.z = center.z();
@@ -161,9 +191,17 @@ void writeTrack(
 
   // add a track state that represents the IP parameters
   auto& ipState = outTrackStates.emplace_back();
-  setParameters(ipState, track.parameters(), track.covariance());
+  SingleBoundTrackParameters<SinglyCharged> trackParams{
+      track.referenceSurface().getSharedPtr(), track.parameters(),
+      track.covariance()};
+  auto converted = convertTrackParameters(gctx, Bz, trackParams);
+  setParameters(ipState, converted);
   ipState.location = edm4hep::TrackState::AtIP;
-  ipState.referencePoint = {0, 0, 0};
+
+  auto center = converted.surface->center(gctx);
+  ipState.referencePoint.x = center.x();
+  ipState.referencePoint.y = center.y();
+  ipState.referencePoint.z = center.z();
 
   for (auto& trackState : outTrackStates) {
     to.addToTrackStates(trackState);
