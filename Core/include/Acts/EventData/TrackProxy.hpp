@@ -429,6 +429,34 @@ class TrackProxy {
     return component<unsigned int>(hashString("nHoles"));
   }
 
+  /// Return a mutable reference to the number of outliers for the track.
+  /// Mutable version
+  /// @return The number of outliers
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  unsigned int& nOutliers() {
+    return component<unsigned int>(hashString("nOutliers"));
+  }
+
+  /// Return the number of outliers for the track. Const version
+  /// @return The number of outliers
+  unsigned int nOutliers() const {
+    return component<unsigned int>(hashString("nOutliers"));
+  }
+
+  /// Return a mutable reference to the number of shared hits for the track.
+  /// Mutable version
+  /// @return The number of shared hits
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  unsigned int& nSharedHits() {
+    return component<unsigned int>(hashString("nSharedHits"));
+  }
+
+  /// Return the number of shared hits for the track. Const version
+  /// @return The number of shared hits
+  unsigned int nSharedHits() const {
+    return component<unsigned int>(hashString("nSharedHits"));
+  }
+
   /// Return a mutable reference to the chi squared
   /// Mutable version
   /// @return The chi squared
@@ -446,13 +474,13 @@ class TrackProxy {
   /// @return The the number of degrees of freedom
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   unsigned int& nDoF() {
-    return component<unsigned int>(hashString("nHoles"));
+    return component<unsigned int>(hashString("ndf"));
   }
 
   /// Return the number of degrees of freedom for the track. Const version
   /// @return The number of degrees of freedom
   unsigned int nDoF() const {
-    return component<unsigned int>(hashString("nHoles"));
+    return component<unsigned int>(hashString("ndf"));
   }
 
   /// Return the index of this track in the track container

@@ -18,6 +18,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -790,6 +791,8 @@ class Chi2Fitter {
 
     track.nMeasurements() = c2r.measurementStates;
     track.nHoles() = c2r.measurementHoles;
+
+    calculateTrackQuantities(track);
 
     if (trackContainer.hasColumn(hashString("chi2"))) {
       track.template component<ActsScalar, hashString("chi2")>() =
