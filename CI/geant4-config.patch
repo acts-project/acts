@@ -1,5 +1,5 @@
 --- geant4-config	2023-03-29 14:07:34.000000000 +0000
-+++ geant4-config-new	2023-04-03 13:41:47.000120302 +0000
++++ geant4-config		2023-04-03 13:41:47.000120302 +0000
 @@ -293,7 +293,7 @@
  # 'length' to find the number of elements in the array. This will fail
  # on other awk implementations. Use standard feature of split function
