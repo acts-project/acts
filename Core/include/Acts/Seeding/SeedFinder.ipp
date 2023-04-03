@@ -194,6 +194,15 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   outVec.clear();
   linCircleVec.clear();
 
+  // get number of neighbour SPs
+  std::size_t nsp = 0;
+  for (const auto& otherSPCol : otherSPsNeighbours) {
+    nsp += grid.at(otherSPCol.index).size();
+  }
+
+  linCircleVec.reserve(nsp);
+  outVec.reserve(nsp);
+  
   const float& rM = mediumSP.radius();
   const float& xM = mediumSP.x();
   const float& yM = mediumSP.y();
@@ -258,13 +267,19 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }
 
       const float zO = otherSP->z();
-      float deltaZ = sign * (zO - zM);
-      if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-        continue;
+      float deltaZ = (zO - zM);
+      if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+	if (-deltaZ > m_config.deltaZMax or -deltaZ < -m_config.deltaZMax) {
+	  continue;
+	}
+      } else {
+	if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+	  continue;
+	}
       }
 
       // ratio Z/R (forward angle) of space point duplet
-      float cotTheta = deltaZ / deltaR * sign;
+      float cotTheta = deltaZ / deltaR;
       if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
         continue;
       }
@@ -316,7 +331,11 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }      
       
       const float iDeltaR = std::sqrt(iDeltaR2);
-      cotTheta = deltaZ * iDeltaR;
+      if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+	cotTheta = - deltaZ * iDeltaR;
+      } else {
+	cotTheta = deltaZ * iDeltaR;
+      }
       
       // error term for sp-pair without correlation of middle space point
       const float Er =
