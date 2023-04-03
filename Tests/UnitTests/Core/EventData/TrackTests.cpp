@@ -240,8 +240,14 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(Build, factory_t, holder_types) {
   t2.nHoles() = 67;
   BOOST_CHECK_EQUAL(t.nHoles(), 67);
 
-  t2.chiSquared() = 555.0;
-  BOOST_CHECK_EQUAL(t2.chiSquared(), 555.0);
+  t2.nOutliers() = 68;
+  BOOST_CHECK_EQUAL(t.nOutliers(), 68);
+
+  t2.nSharedHits() = 69;
+  BOOST_CHECK_EQUAL(t.nSharedHits(), 69);
+
+  t2.chi2() = 555.0;
+  BOOST_CHECK_EQUAL(t2.chi2(), 555.0);
 
   t2.nDoF() = 123;
   BOOST_CHECK_EQUAL(t2.nDoF(), 123);
