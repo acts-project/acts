@@ -428,9 +428,7 @@ inline void SeedFinder<external_spacepoint_t, platform_t>::filterCandidates(
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
-    // multiply the squared sigma onto the squared scattering
-    scatteringInRegion2 *= m_config.sigmaScattering * m_config.sigmaScattering;
+    float scatteringInRegion2 = options.multipleScattering2 * iSinTheta2;
 
     float sinTheta = 1 / std::sqrt(iSinTheta2);
     float cosTheta = cotThetaB * sinTheta;
