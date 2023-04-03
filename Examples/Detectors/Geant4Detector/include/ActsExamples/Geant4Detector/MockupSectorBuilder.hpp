@@ -17,8 +17,6 @@
 
 #include "G4VPhysicalVolume.hh"
 
-// class G4VPhysicalVolume;
-
 namespace ActsExamples {
 
 ///@class MockupsectorBuilder
