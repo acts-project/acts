@@ -1264,7 +1264,7 @@ class KalmanFitter {
     track.nMeasurements() = kalmanResult.measurementStates;
     track.nHoles() = kalmanResult.measurementHoles;
 
-    calculateFitQuality(track);
+    calculateTrackQuantities(track);
 
     if (trackContainer.hasColumn(hashString("smoothed"))) {
       track.template component<bool, hashString("smoothed")>() =
