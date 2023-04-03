@@ -247,7 +247,7 @@ ActsExamples::MockupSectorBuilder::BuildSector(
     Acts::AngleAxis3 rotation(2 * i * hopening_angle,
                               Acts::Vector3(0., 0., 1.));
 
-    itr = 0;
+    int itr = 0;
 
     for (auto& det_vol : det_volumes) {
       auto shift_vol =
