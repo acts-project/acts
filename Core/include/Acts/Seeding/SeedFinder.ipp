@@ -218,7 +218,9 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     vIPAbs = m_config.impactMax / (rM * rM);
   }
 
-
+  float deltaR = 0.;
+  float deltaZ = 0.;
+  
   for (auto& otherSPCol : otherSPsNeighbours) {
     const auto& otherSPs = grid.at(otherSPCol.index);
     if (otherSPs.size() == 0) {
@@ -232,30 +234,31 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
     for (; min_itr != otherSPs.end(); ++min_itr) {
       const auto& otherSP = *min_itr;
-      const float rO = otherSP->radius();
-      float deltaR = (rO - rM);
 
-      // if r-distance is too small, try next SP in bin
       if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
-	// if r-distance is too small, try next SP in bin
-	if (-deltaR < deltaRMinSP) {
+	deltaR = (rM - otherSP->radius());
+
+      	// if r-distance is too small, try next SP in bin
+	if (deltaR < deltaRMinSP) {
 	  break;
-	}
-	
+	}	
 	// if r-distance is too big, try next SP in bin
-	if (-deltaR > deltaRMaxSP) {
+	if (deltaR > deltaRMaxSP) {
 	  continue;
 	}
+	
       } else {
+	deltaR = (otherSP->radius() - rM);
+	
 	// if r-distance is too big, try next SP in bin
 	if (deltaR > deltaRMaxSP) {
 	  break;
 	}
-	
 	// if r-distance is too small, try next SP in bin
 	if (deltaR < deltaRMinSP) {
 	  continue;
 	}
+	
       }
       
       /// We update the iterator in the Neighbout object
@@ -266,24 +269,24 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         otherSPCol.itr = min_itr;
       }
 
-      const float zO = otherSP->z();
-      float deltaZ = (zO - zM);
       if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
-	if (-deltaZ > m_config.deltaZMax or -deltaZ < -m_config.deltaZMax) {
+	deltaZ = (zM - otherSP->z());
+	if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
 	  continue;
 	}
       } else {
+	deltaZ = (otherSP->z() - zM);
 	if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
 	  continue;
 	}
       }
-
+      
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
       if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
         continue;
       }
-
+      
       // check if duplet origin on z axis within collision region
       float zOrigin = zM - rM * cotTheta;
       if (zOrigin < m_config.collisionRegionMin ||
@@ -331,11 +334,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       }      
       
       const float iDeltaR = std::sqrt(iDeltaR2);
-      if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
-	cotTheta = - deltaZ * iDeltaR;
-      } else {
-	cotTheta = deltaZ * iDeltaR;
-      }
+      cotTheta = deltaZ * iDeltaR;
       
       // error term for sp-pair without correlation of middle space point
       const float Er =
