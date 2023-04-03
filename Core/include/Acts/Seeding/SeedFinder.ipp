@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -121,10 +122,11 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
     // Iterate over middle-top dublets
-    getCompatibleDoublets(state.spacePointData, options, grid,
+    getCompatibleDoublets<Acts::SpacePointCandidateType::TOP>(
+			  state.spacePointData, options, grid,
                           state.topNeighbours, *spM.get(), state.linCircleTop,
                           state.compatTopSP, m_config.deltaRMinTopSP,
-                          m_config.deltaRMaxTopSP, false);
+                          m_config.deltaRMaxTopSP);
 
     // no top SP found -> try next spM
     if (state.compatTopSP.empty()) {
@@ -154,10 +156,10 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
     }
 
     // Iterate over middle-bottom dublets
-    getCompatibleDoublets(
+    getCompatibleDoublets<Acts::SpacePointCandidateType::BOTTOM>(
         state.spacePointData, options, grid, state.bottomNeighbours, *spM.get(),
         state.linCircleBottom, state.compatBottomSP, m_config.deltaRMinBottomSP,
-        m_config.deltaRMaxBottomSP, true);
+        m_config.deltaRMaxBottomSP);
 
     // no bottom SP found -> try next spM
     if (state.compatBottomSP.empty()) {
@@ -176,7 +178,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 }
 
 template <typename external_spacepoint_t, typename platform_t>
-template <typename out_range_t>
+template <Acts::SpacePointCandidateType candidateType, typename out_range_t>
 inline void
 SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     Acts::SpacePointData& spacePointData,
@@ -186,8 +188,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
         otherSPsNeighbours,
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
-    const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const {
-  const int sign = isBottom ? -1 : 1;
+    const float& deltaRMinSP, const float& deltaRMaxSP) const {
+  constexpr int sign = candidateType == Acts::SpacePointCandidateType::BOTTOM ? -1 : 1;
 
   outVec.clear();
   linCircleVec.clear();
@@ -198,12 +200,15 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   const float& zM = mediumSP.z();
   const float& varianceRM = mediumSP.varianceR();
   const float& varianceZM = mediumSP.varianceZ();
-  const float cosPhiM = xM / rM;
-  const float sinPhiM = yM / rM;
+
+  const float uIP = -1. / rM;
+  const float cosPhiM = - xM * uIP;
+  const float sinPhiM = - yM * uIP;
   float vIPAbs = 0;
   if (m_config.interactionPointCut) {
     vIPAbs = m_config.impactMax / (rM * rM);
   }
+
 
   for (auto& otherSPCol : otherSPsNeighbours) {
     const auto& otherSPs = grid.at(otherSPCol.index);
@@ -222,21 +227,28 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       float deltaR = sign * (rO - rM);
 
       // if r-distance is too small, try next SP in bin
-      if (deltaR < deltaRMinSP) {
-        if (isBottom) {
-          break;
-        }
-        continue;
+      if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+	// if r-distance is too small, try next SP in bin
+	if (deltaR < deltaRMinSP) {
+	  break;
+	}
+	
+	// if r-distance is too big, try next SP in bin
+	if (deltaR > deltaRMaxSP) {
+	  continue;
+	}
+      } else {
+	// if r-distance is too big, try next SP in bin
+	if (deltaR > deltaRMaxSP) {
+	  break;
+	}
+	
+	// if r-distance is too small, try next SP in bin
+	if (deltaR < deltaRMinSP) {
+	  continue;
+	}
       }
-
-      // if r-distance is too big, try next SP in bin
-      if (deltaR > deltaRMaxSP) {
-        if (not isBottom) {
-          break;
-        }
-        continue;
-      }
-
+      
       /// We update the iterator in the Neighbout object
       /// that mean that we have changed the middle space point
       /// and the lower bound has moved accordingly
@@ -284,75 +296,39 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      // continue if interactionPointCut is disabled
-      if (not m_config.interactionPointCut) {
-        const float iDeltaR = std::sqrt(iDeltaR2);
-        cotTheta = deltaZ * iDeltaR;
+      if (m_config.interactionPointCut and
+	  std::abs(rM * yNewFrame) > sign * m_config.impactMax * xNewFrame) {
 
-        // error term for sp-pair without correlation of middle space point
-        const float Er =
-            ((varianceZM + otherSP->varianceZ()) +
-             (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
-            iDeltaR2;
-
-        // fill output vectors
-        linCircleVec.emplace_back(deltaZ * iDeltaR, iDeltaR, Er, uT, vT,
-                                  xNewFrame, yNewFrame);
-        spacePointData.setDeltaR(otherSP->index(),
-                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-        outVec.push_back(otherSP.get());
-        continue;
-      }
-
-      if (std::abs(rM * yNewFrame) <= sign * m_config.impactMax * xNewFrame) {
-        const float iDeltaR = std::sqrt(iDeltaR2);
-        cotTheta = deltaZ * iDeltaR;
-
-        // error term for sp-pair without correlation of middle space point
-        const float Er =
-            ((varianceZM + otherSP->varianceZ()) +
-             (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
-            iDeltaR2;
-
-        // fill output vectors
-        linCircleVec.emplace_back(deltaZ * iDeltaR, iDeltaR, Er, uT, vT,
-                                  xNewFrame, yNewFrame);
-        spacePointData.setDeltaR(otherSP->index(),
-                                 std::sqrt(deltaR2 + (deltaZ * deltaZ)));
-        outVec.push_back(otherSP.get());
-        continue;
-      }
-
-      // in the rotated frame the interaction point is positioned at x = -rM
-      // and y ~= impactParam
-      const float uIP = -1. / rM;
-      const float vIP = (sign * yNewFrame > 0.) ? -vIPAbs : vIPAbs;
-      // we can obtain aCoef as the slope dv/du of the linear function,
-      // estimated using du and dv between the two SP bCoef is obtained by
-      // inserting aCoef into the linear equation
-      const float aCoef = (vT - vIP) / (uT - uIP);
-      const float bCoef = vIP - aCoef * uIP;
-      // the distance of the straight line from the origin (radius of the
-      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
-      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-      if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
-        continue;
-      }
-
+	// in the rotated frame the interaction point is positioned at x = -rM
+	// and y ~= impactParam
+	const float vIP = (sign * yNewFrame > 0.) ? -vIPAbs : vIPAbs;
+	// we can obtain aCoef as the slope dv/du of the linear function,
+	// estimated using du and dv between the two SP bCoef is obtained by
+	// inserting aCoef into the linear equation
+	const float aCoef = (vT - vIP) / (uT - uIP);
+	const float bCoef = vIP - aCoef * uIP;
+	// the distance of the straight line from the origin (radius of the
+	// circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+	// aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+	if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
+	  continue;
+	}
+      }      
+      
       const float iDeltaR = std::sqrt(iDeltaR2);
       cotTheta = deltaZ * iDeltaR;
-
+      
       // error term for sp-pair without correlation of middle space point
       const float Er =
-          ((varianceZM + otherSP->varianceZ()) +
-           (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
-          iDeltaR2;
-
+	((varianceZM + otherSP->varianceZ()) +
+	 (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
+	iDeltaR2;
+      
       // fill output vectors
-      linCircleVec.emplace_back(deltaZ * iDeltaR, iDeltaR, Er, uT, vT,
-                                xNewFrame, yNewFrame);
+      linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT,
+				xNewFrame, yNewFrame);
       spacePointData.setDeltaR(otherSP->index(),
-                               std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+			       std::sqrt(deltaR2 + (deltaZ * deltaZ)));
       outVec.push_back(otherSP.get());
     }
   }
