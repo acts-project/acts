@@ -243,8 +243,6 @@ ActsExamples::MockupSectorBuilder::BuildSector(
 
   std::vector<std::shared_ptr<Acts::Surface>> shifted_surfaces = {};
 
-  int itr = 0;
-
   for (int i = 0; i < m_cfg.NumberOfSectors; i++) {
     Acts::AngleAxis3 rotation(2 * i * hopening_angle,
                               Acts::Vector3(0., 0., 1.));
