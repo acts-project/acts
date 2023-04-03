@@ -63,7 +63,7 @@ ActsExamples::MockupSectorBuilder::BuildChamber(
     const ActsExamples::MockupSectorBuilder::ChamberConfig& chamber_config) {
   if (g4World == nullptr) {
     throw std::invalid_argument(
-        "MockupSector: No g4World initialized or number ");
+        "MockupSector: No g4World initialized");
     return nullptr;
   }
 
