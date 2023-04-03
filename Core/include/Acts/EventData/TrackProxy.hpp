@@ -433,13 +433,13 @@ class TrackProxy {
   /// Mutable version
   /// @return The chi squared
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
-  float& chiSquared() {
+  float& chi2() {
     return component<float>(hashString("chi2"));
   }
 
   /// Return the chi squared for the track. Const version
   /// @return The chi squared
-  float chiSquared() const { return component<float>(hashString("chi2")); }
+  float chi2() const { return component<float>(hashString("chi2")); }
 
   /// Return a mutable reference to the number of degrees of freedom for the
   /// track. Mutable version
