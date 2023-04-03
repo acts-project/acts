@@ -283,7 +283,6 @@ ActsExamples::MockupSectorBuilder::BuildSector(
                   std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
               Acts::Experimental::allPortalsAndSurfaces());
 
-      // detectorVolumesOfSector.push_back(detectorVolume_sec);
 
       if (itr == 0)
         inner_detectorVolumesOfSector.push_back(detectorVolume_sec);
