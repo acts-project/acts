@@ -67,9 +67,9 @@ class MockupSectorBuilder {
       const Acts::GeometryContext& gctx, const ChamberConfig& chamber_config);
 
   /// Build Sector
-  ///@param det_volumes The vector that contains the detector volumes of the Sector
-  ///@param gctx The current geometry context object
-  std::shared_ptr<Acts::Experimental::DetectorVolume> BuildSector(
+  /// @param det_volumes The vector that contains the detector volumes of the Sector
+  /// @param gctx The current geometry context object
+  std::shared_ptr<Acts::Experimental::DetectorVolume> buildSector(
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
           det_volumes,
       const Acts::GeometryContext& gctx);
