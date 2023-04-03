@@ -61,9 +61,9 @@ class MockupSectorBuilder {
   void setWorld();
 
   /// Build chamber
-  ///@param gctx The current geometry context object
-  ///@param chamber_config The configuration chamber struct
-  std::shared_ptr<Acts::Experimental::DetectorVolume> BuildChamber(
+  /// @param gctx The current geometry context object
+  /// @param chamber_config The configuration chamber struct
+  std::shared_ptr<Acts::Experimental::DetectorVolume> buildChamber(
       const Acts::GeometryContext& gctx, const ChamberConfig& chamber_config);
 
   /// Build Sector
