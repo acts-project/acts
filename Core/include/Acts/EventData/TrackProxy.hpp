@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
@@ -383,6 +384,19 @@ class TrackProxy {
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStates() {
     return m_container->trackStateRange(m_index);
+  }
+
+  /// Append a track state to this track. This will modify the tip index to
+  /// point at the newly created track state, which will be directly after the
+  /// previous track state at tip index.
+  /// @param mask The allocation prop mask for the new track state
+  /// @return The newly added track state
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto appendTrackState(TrackStatePropMask mask = TrackStatePropMask::All) {
+    auto& tsc = m_container->trackStateContainer();
+    auto ts = tsc.getTrackState(tsc.addTrackState(mask, tipIndex()));
+    tipIndex() = ts.index();
+    return ts;
   }
 
   /// Return the number of track states associated to this track

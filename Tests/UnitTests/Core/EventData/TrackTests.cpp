@@ -12,6 +12,7 @@
 
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -541,6 +542,66 @@ BOOST_AUTO_TEST_CASE(EnsureDynamicColumns) {
 
   BOOST_CHECK(tc2.hasColumn("counter"));
   BOOST_CHECK(tc2.hasColumn("odd"));
+}
+
+BOOST_AUTO_TEST_CASE(AppendTrackState) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = tc.getTrack(tc.addTrack());
+
+  std::vector<MultiTrajectory<VectorMultiTrajectory>::TrackStateProxy>
+      trackStates;
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+  trackStates.push_back(t.appendTrackState());
+
+  BOOST_CHECK_EQUAL(trackStates.size(), t.nTrackStates());
+
+  for (size_t i = trackStates.size() - 1; i > 0; i--) {
+    BOOST_CHECK_EQUAL(trackStates.at(i).index(), i);
+  }
+}
+
+BOOST_AUTO_TEST_CASE(CalculateQuantities) {
+  TrackContainer tc{VectorTrackContainer{}, VectorMultiTrajectory{}};
+  auto t = tc.getTrack(tc.addTrack());
+
+  // std::vector<
+
+  auto ts = t.appendTrackState();
+  ts.typeFlags().set(MeasurementFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(OutlierFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().set(SharedHitFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(HoleFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(OutlierFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(HoleFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(MeasurementFlag);
+  ts.typeFlags().set(SharedHitFlag);
+
+  ts = t.appendTrackState();
+  ts.typeFlags().set(OutlierFlag);
+
+  calculateTrackQuantities(t);
+
+  BOOST_CHECK_EQUAL(t.nHoles(), 2);
+  BOOST_CHECK_EQUAL(t.nMeasurements(), 3);
+  BOOST_CHECK_EQUAL(t.nOutliers(), 3);
+  BOOST_CHECK_EQUAL(t.nSharedHits(), 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
