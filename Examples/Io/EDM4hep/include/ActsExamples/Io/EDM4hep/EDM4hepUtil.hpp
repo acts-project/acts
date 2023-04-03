@@ -29,8 +29,6 @@
 namespace ActsExamples {
 namespace EDM4hepUtil {
 
-static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
-
 using MapParticleIdFrom =
     std::function<ActsFatras::Barcode(edm4hep::MCParticle particle)>;
 using MapParticleIdTo =

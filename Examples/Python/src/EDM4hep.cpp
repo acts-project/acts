@@ -14,6 +14,7 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepParticleWriter.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitReader.hpp"
 #include "ActsExamples/Io/EDM4hep/EDM4hepSimHitWriter.hpp"
+#include "ActsExamples/Io/EDM4hep/EDM4hepTrackWriter.hpp"
 
 #include <memory>
 
@@ -60,6 +61,9 @@ void addEDM4hep(Context& ctx) {
                              edm4hep, "EDM4hepMultiTrajectoryWriter",
                              inputTrajectories, inputMeasurementParticlesMap,
                              outputPath);
+
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::EDM4hepTrackWriter, edm4hep,
+                             "EDM4hepTrackWriter", inputTracks, outputPath, Bz);
 }
 
 }  // namespace Acts::Python

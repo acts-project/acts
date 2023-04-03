@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -211,7 +212,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
 
         to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
 
-        to.setType(EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
+        to.setType(Acts::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
         // TODO set uv (which are in global spherical coordinates with r=1)
         to.setPosition({parameters[Acts::eBoundLoc0],
                         parameters[Acts::eBoundLoc1],
