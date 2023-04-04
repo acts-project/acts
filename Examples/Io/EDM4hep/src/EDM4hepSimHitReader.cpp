@@ -30,7 +30,6 @@ EDM4hepSimHitReader::EDM4hepSimHitReader(
   m_outputSimHits.initialize(m_cfg.outputSimHits);
 
   m_eventsRange = std::make_pair(0, m_reader.getEntries("events"));
-
 }
 
 std::string EDM4hepSimHitReader::EDM4hepSimHitReader::name() const {
