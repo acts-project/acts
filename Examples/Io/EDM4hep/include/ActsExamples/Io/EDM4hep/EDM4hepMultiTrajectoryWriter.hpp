@@ -16,9 +16,7 @@
 
 #include <string>
 
-#include "edm4hep/TrackCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTWriter.h"
+#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -65,10 +63,7 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
  private:
   Config m_cfg;
 
-  podio::ROOTWriter m_writer;
-  podio::EventStore m_store;
-
-  edm4hep::TrackCollection* m_trackCollection;
+  podio::ROOTFrameWriter m_writer;
 
   ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>
       m_inputMeasurementParticlesMap{this, "InputMeasurementParticlesMaps"};
