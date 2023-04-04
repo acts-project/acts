@@ -20,6 +20,7 @@
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <Eigen/src/Core/util/Memory.h>
+#include <boost/graph/graph_traits.hpp>
 #include <edm4hep/Track.h>
 #include <edm4hep/TrackState.h>
 
@@ -30,6 +31,7 @@ namespace EDM4hepUtil {
 
 static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
+namespace detail {
 struct Parameters {
   Acts::ActsVector<5> values;
   double time;
@@ -47,39 +49,54 @@ Parameters convertTrackParameters(
   std::shared_ptr<const Acts::Surface> refSurface =
       params.referenceSurface().getSharedPtr();
 
+  Acts::BoundVector targetPars = params.parameters();
+  std::optional<Acts::FreeVector> freePars;
+
+  auto makeFreePars = [&]() {
+    return Acts::detail::transformBoundToFreeParameters(
+        params.referenceSurface(), gctx, params.parameters());
+  };
+
+  // If the reference surface is a perigee surface, we use that. Otherwise
+  // we create a new perigee surface at the global positon of the track
+  // parameters.
   if (dynamic_cast<const Acts::PerigeeSurface*>(refSurface.get()) == nullptr) {
-    // reference surface is not a perigee, make one
     refSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(global);
+
+    // We need to convert to the target parameters
+    // Keep the free parameters around we might need them for the covariance
+    // conversion
+    freePars = makeFreePars();
+    targetPars = Acts::detail::transformFreeToBoundParameters(freePars.value(),
+                                                              *refSurface, gctx)
+                     .value();
   }
-
-  auto boundToFree = refSurface->boundToFreeJacobian(gctx, params.parameters());
-
-  Acts::FreeVector freePars = Acts::detail::transformBoundToFreeParameters(
-      params.referenceSurface(), gctx, params.parameters());
 
   Parameters result;
   result.surface = refSurface;
 
-  Acts::BoundVector targetPars =
-      Acts::detail::transformFreeToBoundParameters(freePars, *refSurface, gctx)
-          .value();
-
-  // Conversion:
-  // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf
-
+  // Only run covariance conversion if we have a covariance input
   if (params.covariance()) {
-    const auto& cov = params.covariance().value();
-    Acts::FreeMatrix freeCov = boundToFree * cov * boundToFree.transpose();
+    auto boundToFree =
+        refSurface->boundToFreeJacobian(gctx, params.parameters());
+    Acts::FreeMatrix freeCov =
+        boundToFree * params.covariance().value() * boundToFree.transpose();
 
-    Acts::CovarianceCache covCache{freePars, freeCov};
-    auto [varNewCov, varNewJac] =
-        Acts::transportCovarianceToBound(gctx, *refSurface, freePars, covCache);
+    // ensure we have free pars
+    if (!freePars.has_value()) {
+      freePars = makeFreePars();
+    }
+
+    Acts::CovarianceCache covCache{freePars.value(), freeCov};
+    auto [varNewCov, varNewJac] = Acts::transportCovarianceToBound(
+        gctx, *refSurface, freePars.value(), covCache);
     auto targetCov = std::get<Acts::BoundSymMatrix>(varNewCov);
 
     // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
-    // q/p) to the LCIO / edm4hep one (d0, z0, phi, tan(lambda), omega). Top
-    // left 3x3 matrix in the jacobian is 1.
-    // Bottom right 2x2 matrix is:
+    // q/p) to the LCIO / edm4hep (see:
+    // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf)
+    // one (d0, z0, phi, tan(lambda), omega). Top left 3x3 matrix in the
+    // jacobian is 1. Bottom right 2x2 matrix is:
     //
     // [  d                                 ]
     // [------(cot(theta))         0        ]
@@ -126,6 +143,7 @@ Parameters convertTrackParameters(
 
   return result;
 }
+}  // namespace detail
 
 template <typename track_container_t, typename track_state_container_t,
           template <typename> class holder_t>
@@ -141,7 +159,7 @@ void writeTrack(
   outTrackStates.reserve(track.nTrackStates());
 
   auto setParameters = [Bz](edm4hep::TrackState& trackState,
-                            const Parameters& params) {
+                            const detail::Parameters& params) {
     trackState.D0 = params.values[0];
     trackState.Z0 = params.values[1];
     trackState.phi = params.values[2];
@@ -170,17 +188,23 @@ void writeTrack(
       continue;
     }
 
+    edm4hep::TrackState& trackState = outTrackStates.emplace_back();
+    trackState.location = edm4hep::TrackState::AtOther;
+
     // This makes the hard assumption that |q| = 1
     SingleBoundTrackParameters<SinglyCharged> params{
         state.referenceSurface().getSharedPtr(), state.parameters(),
         state.covariance()};
 
-    Parameters converted = convertTrackParameters(gctx, Bz, params);
+    // Convert to LCIO track parametrization expected by EDM4hep
+    detail::Parameters converted =
+        detail::convertTrackParameters(gctx, Bz, params);
 
-    edm4hep::TrackState& trackState = outTrackStates.emplace_back();
-    trackState.location = edm4hep::TrackState::AtOther;
-
+    // Write the converted parameters to the EDM4hep track state
     setParameters(trackState, converted);
+
+    // Converted parameters are relative to an ad-hoc perigee surface created at
+    // the hit location
     auto center = converted.surface->center(gctx);
     trackState.referencePoint.x = center.x();
     trackState.referencePoint.y = center.y();
@@ -189,15 +213,23 @@ void writeTrack(
   outTrackStates.front().location = edm4hep::TrackState::AtLastHit;
   outTrackStates.back().location = edm4hep::TrackState::AtFirstHit;
 
-  // add a track state that represents the IP parameters
+  // Add a track state that represents the IP parameters
   auto& ipState = outTrackStates.emplace_back();
+
+  // Convert the track parameters at the IP
   SingleBoundTrackParameters<SinglyCharged> trackParams{
       track.referenceSurface().getSharedPtr(), track.parameters(),
       track.covariance()};
-  auto converted = convertTrackParameters(gctx, Bz, trackParams);
+
+  // Convert to LCIO track parametrization expected by EDM4hep
+  auto converted = detail::convertTrackParameters(gctx, Bz, trackParams);
   setParameters(ipState, converted);
   ipState.location = edm4hep::TrackState::AtIP;
 
+  // Write the converted parameters to the EDM4hep track state
+  // The reference point is at the location of the reference surface of the
+  // track itself, but if that's not a perigee surface, another ad-hoc perigee
+  // at the position will be created.
   auto center = converted.surface->center(gctx);
   ipState.referencePoint.x = center.x();
   ipState.referencePoint.y = center.y();
