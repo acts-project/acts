@@ -24,21 +24,27 @@ FTF_id= array[:,4]
 
 #make histogram 
 c1 = ROOT.TCanvas("c1","c1",800,600)
-h1 = ROOT.TH2D("h1","ACTS volume & layers in terms of FTF volume id;z;r",100,-3000,3000,100,0,1000) 
+h1 = ROOT.TH2D("h1","Pixel geometry in terms of FTF layer id;z;r",100,-3000,3000,100,0,350) 
+# h1 = ROOT.TH2D("h1","ITK geometry in terms of ACTS volume id;z;r",100,-3000,3000,100,0,1000) 
 
-# #ACTS: 
+
+# # #ACTS: 
 # for i in range(0,len(acts_vol)): 
 
 #     h1.Fill(z[i],r[i],acts_vol[i])
 
-#FTF
+# FTF
 for i in range(0,len(acts_vol)): 
-    if FTF_id[i] != 0: 
+    if FTF_id[i] != 1: 
         h1.Fill(z[i],r[i],FTF_id[i])
+    if FTF_id[i] == 1: 
+        print("unidentified ", "volume:" , acts_vol[i] ,"layer: ", acts_lay[i])
+
+    
         
 
-#zcontours = [70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,90,91,92,93,94,95,96,97,98]
-zcontours = [70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98]
+# #zcontours = [70,71,72,73,74,75,76,77,78,79,80,81,82,83,84,90,91,92,93,94,95,96,97,98]
+zcontours = [0,70.5,71.5,72.5,73.5,74.5,75.5,76.5,77.5,78.5,79.5,80.5,81.5,82.5,83.5,84.5,85.5,86.5,87.5,88.5,89.5,90.5,91.5,92.5,93.5,94.5,95.5,96.5,97.5,98.5]
 zcountour = arr.array('d', zcontours)
 
 h1.SetContour(len(zcontours),zcountour)
@@ -48,7 +54,8 @@ h1.SetMaximum(98)
 
         
 
-gStyle.SetPalette(91)
+gStyle.SetPalette(62)
+#gStyle.SetPalette(91) 
 
 c1.cd()
 h1.SetStats(0)
