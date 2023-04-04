@@ -10,6 +10,7 @@
 
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <any>
 #include <iostream>

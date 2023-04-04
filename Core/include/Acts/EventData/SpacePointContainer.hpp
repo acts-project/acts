@@ -12,6 +12,7 @@
 #include "Acts/EventData/SpacePointProxyIterator.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
+#include "Acts/Definitions/Algebra.hpp"
 
 #include <any>
 #include <vector>
