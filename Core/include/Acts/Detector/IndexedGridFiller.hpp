@@ -28,10 +28,10 @@ namespace {
 
 /// @brief Helper method to loop correctly in local bins given open, bound, closed
 ///
-/// @param minMaxBins estimated
-/// @param expand the parameter to expand the view ( extra window)
-/// @param nBins the maximum number of bins in this
-/// @param type the boundary type of the axis
+/// @param minMaxBins estimated bin range (aka binning boundary box)
+/// @param expand the parameter to expand the view (extra window)
+/// @param nBins the maximum number of bins on this axis
+/// @param type the boundary type of the axis (for correct bin closure)
 ///
 /// @note for closed binning a span over half the bins flips direction
 ///
@@ -98,18 +98,26 @@ std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
 /// @tparam grid_type the type of the grid that determines locall binning
 ///
 /// @param grid the grid used for this
-/// @param queries the grid positions for the test
-/// @param expand the expansion (symmetric) around the bins
+/// @param queries the grid positions for the bin queries
+/// @param expansion are the additional (configured) number of bins to expand
+/// the view
+///
+/// @return a set of unique indices
 template <typename grid_type>
 std::set<typename grid_type::index_t> localIndices(
     const grid_type& grid,
     const std::vector<typename grid_type::point_t>& queries,
-    std::size_t expand = 0u) {
+    const std::vector<std::size_t>& expansion = {}) {
   // Return indices
   std::set<typename grid_type::index_t> lIndices;
 
   if (queries.empty()) {
     throw std::runtime_error("IndexedSurfaceGridFiller: no query point given.");
+  }
+
+  if (not expansion.empty() and expansion.size() != grid_type::DIM) {
+    throw std::runtime_error(
+        "IndexedSurfaceGridFiller: wrong dimension of bin expansion given.");
   }
 
   /// These are the axis bounds type parameters - for correct bin sequences
@@ -138,6 +146,8 @@ std::set<typename grid_type::index_t> localIndices(
   }
   // Fill the bins - 1D case
   if constexpr (grid_type::DIM == 1u) {
+    // Take the expansion if available & generate the local bin sequence
+    std::size_t expand = expansion.empty() ? 0u : expansion[0u];
     auto localBins0 =
         binSequence(binRanges[0u], expand, axisBins[0u], axisTypes[0u]);
     for (auto l0 : localBins0) {
@@ -148,8 +158,11 @@ std::set<typename grid_type::index_t> localIndices(
   }
   // Fill the bins - 2D case
   if constexpr (grid_type::DIM == 2u) {
+    // Take the expansion if available & generate the local bin sequence
+    std::size_t expand = expansion.empty() ? 0u : expansion[0u];
     auto localBins0 =
         binSequence(binRanges[0u], expand, axisBins[0u], axisTypes[0u]);
+    expand = expansion.empty() ? 0u : expansion[1u];
     auto localBins1 =
         binSequence(binRanges[1u], expand, axisBins[1u], axisTypes[1u]);
     for (auto l0 : localBins0) {
@@ -274,13 +287,16 @@ struct PolyhedronReferenceGenerator {
 /// A helper class that fills surfaces into predefined grids
 struct IndexedGridFiller {
   // Bin expansion where needed
-  std::size_t binExpansion = 0u;
+  std::vector<std::size_t> binExpansion = {};
 
   // An ouput logging level
   Logging::Level logLevel = Logging::INFO;
 
   /// @brief This method takes a collection of objects and fills them
-  /// into an index grid
+  /// into an index grid - it uses a reference generator for grid query points
+  /// and then completes the bins in between.
+  ///
+  /// It also allows for expanding the fill view.
   ///
   /// @tparam index_grid the type of the index grid
   /// @tparam indexed_objects the type of the object container
@@ -290,19 +306,25 @@ struct IndexedGridFiller {
   /// @param iGrid [in,out] the index grid object to be filled
   /// @param iObjects the object container to be indexed
   /// @param rGenerator the reference point generator for position queries
+  /// @param aToAll the indices that are assigned to all bins
   ///
   /// @note as this is a Detector module, the objects within the indexed_objects container
   /// are assumed to have pointer semantics
   ///
   template <typename index_grid, typename indexed_objects,
             typename reference_generator>
-  void fill(const GeometryContext& gctx, index_grid& iGrid,
-            const indexed_objects& iObjects,
-            const reference_generator& rGenerator) {
+  void fill(
+      const GeometryContext& gctx, index_grid& iGrid,
+      const indexed_objects& iObjects, const reference_generator& rGenerator,
+      const typename index_grid::grid_type::value_type& aToAll = {}) const {
     // Screen output
     ACTS_LOCAL_LOGGER(getDefaultLogger("IndexedGridFiller", logLevel));
     // Loop over the surfaces to be filled
     for (auto [io, o] : enumerate(iObjects)) {
+      // Exclude indices that should be handled differently
+      if (std::find(aToAll.begin(), aToAll.end(), io) != aToAll.end()) {
+        continue;
+      }
       // Get the reference positions
       auto refs = rGenerator.references(gctx, *o);
       std::vector<typename index_grid::grid_type::point_t> gridQueries;
@@ -321,6 +343,28 @@ struct IndexedGridFiller {
       // Now fill the surface indices
       for (const auto& li : lIndices) {
         auto& bContent = iGrid.grid.atLocalBins(li);
+        if (std::find(bContent.begin(), bContent.end(), io) == bContent.end()) {
+          bContent.push_back(io);
+        }
+      }
+    }
+
+    // Assign the indices into all
+    if (not aToAll.empty()) {
+      assignToAll(iGrid, aToAll);
+    }
+  }
+
+  /// Helper method to fill a dedicated list of indices into the entire grid
+  ///
+  /// This is useful if e.g. certain objects are to be attempted in any case,
+  /// regardless of their binning.
+  ///
+  template <typename index_grid, typename indices>
+  void assignToAll(index_grid& iGrid, const indices& idcs) const {
+    for (std::size_t gi = 0; gi < iGrid.grid.size(true); ++gi) {
+      auto& bContent = iGrid.grid.at(gi);
+      for (const auto& io : idcs) {
         if (std::find(bContent.begin(), bContent.end(), io) == bContent.end()) {
           bContent.push_back(io);
         }

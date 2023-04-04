@@ -12,6 +12,7 @@
 #include "Acts/Plugins/ActSVG/SvgUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "Acts/Utilities/detail/Axis.hpp"
 #include "actsvg/core.hpp"
 #include "actsvg/meta.hpp"
 
@@ -68,48 +69,44 @@ ProtoGrid convert(const grid_type& grid,
     return svgEdges;
   };
 
-  /// Internal view type
-  enum ViewType { cylinder, polar, planar, none };
-  ViewType vType = none;
-
   // The endges values
   std::vector<Acts::ActsScalar> edges0;
   std::vector<Acts::ActsScalar> edges1;
 
   // 1D
   if constexpr (grid_type::DIM == 1u) {
+    if (bValues[0u] == binPhi and
+        axes[0]->getBoundaryType() == detail::AxisBoundaryType::Closed) {
+      edges1 = axes[0]->getBinEdges();
+      pGrid._type = actsvg::proto::grid::e_r_phi;
+    }
   }
 
   // 2D cases
   if constexpr (grid_type::DIM == 2u) {
     // Walk throuth the binning and translate
     if (bValues[0] == binPhi and bValues[1] == binZ) {
-      vType = cylinder;
       //  flip to fit with actsvg convention
       edges1 = axes[0]->getBinEdges();
       edges0 = axes[1]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_z_phi;
     } else if (bValues[0] == binPhi and bValues[1] == binR) {
-      vType = polar;
       //  flip to fit with actsvg convention
       edges1 = axes[0]->getBinEdges();
       edges0 = axes[1]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_r_phi;
     } else if (bValues[0] == binZ and bValues[1] == binPhi) {
       // good
-      vType = cylinder;
       edges0 = axes[0]->getBinEdges();
       edges1 = axes[1]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_z_phi;
     } else if (bValues[0] == binR and bValues[1] == binPhi) {
       // good
-      vType = polar;
       edges0 = axes[0]->getBinEdges();
       edges1 = axes[1]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_r_phi;
     } else if (bValues[0] == binX and bValues[1] == binY) {
       // good
-      vType = planar;
       edges0 = axes[0]->getBinEdges();
       edges1 = axes[1]->getBinEdges();
       pGrid._type = actsvg::proto::grid::e_x_y;
