@@ -37,6 +37,8 @@ namespace Acts {
 						   false>;
     using const_iterator = Acts::SpacePointProxyIterator<Acts::SpacePointContainer<container_t, holder_t>,
 							 true>;
+
+    using ValueType = typename container_t::ValueType;
     
   public:    
     // Constructors
@@ -120,6 +122,9 @@ namespace Acts {
     SpacePointProxyType& get(std::size_t n);
     const SpacePointProxyType& get(std::size_t n) const;
 
+    ValueType& sp(std::size_t n) { return container().storage()[n]; }
+    const ValueType& sp(std::size_t n) const { return container().storage()[n]; }
+    
     // do these need to be private or public?
     const container_t& container() const;
 

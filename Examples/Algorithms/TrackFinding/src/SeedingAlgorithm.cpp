@@ -291,17 +291,22 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
         std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
   }
 
-  ACTS_INFO("Created " << seeds.size() << " track seeds from "
+  ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
+  // we have seeds of proxies
+  // convert them to seed of external space points
+  SimSeedContainer SeedContainerForStorage;
+  SeedContainerForStorage.reserve(seeds.size());
   for (const auto& seed : seeds) {
-    std::cout << "Z: " << seed.z() << "\n";
-    std::cout << "Quality: " << seed.seedQuality() << "\n";
     const auto& sps = seed.sp();
-    std::cout << "bottom index: " << sps[0]->index() << "\n";
-    
+    SeedContainerForStorage.emplace_back( *sps[0]->sp(),
+					  *sps[1]->sp(),
+					  *sps[2]->sp(),
+					  seed.z(),
+					  seed.seedQuality() );
   }
-  // std::vector<seed_type> SeedContainerForStorage{seeds};
-  // m_outputSeeds(ctx, std::move(SeedContainerForStorage));
+
+  m_outputSeeds(ctx, std::move(SeedContainerForStorage));
   return ActsExamples::ProcessCode::SUCCESS;
 }

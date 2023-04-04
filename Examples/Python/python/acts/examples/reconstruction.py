@@ -307,38 +307,38 @@ def addSeeding(
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
 
-#        parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
-#            level=logLevel,
-#            inputSeeds=seeds,
-#            outputTrackParameters="estimatedparameters",
-#            trackingGeometry=trackingGeometry,
-#            magneticField=field,
-#            **acts.examples.defaultKWArgs(
-#                initialVarInflation=initialVarInflation,
-#            ),
-#        )
-#        s.addAlgorithm(parEstimateAlg)
+        parEstimateAlg = acts.examples.TrackParamsEstimationAlgorithm(
+            level=logLevel,
+            inputSeeds=seeds,
+            outputTrackParameters="estimatedparameters",
+            trackingGeometry=trackingGeometry,
+            magneticField=field,
+            **acts.examples.defaultKWArgs(
+                initialVarInflation=initialVarInflation,
+            ),
+        )
+        s.addAlgorithm(parEstimateAlg)
 
-#        prototracks = "seed-prototracks"
-#        s.addAlgorithm(
-#            acts.examples.SeedsToPrototracks(
-#                level=logLevel,
-#                inputSeeds=seeds,
-#                outputProtoTracks=prototracks,
-#            )
-#        )
+        prototracks = "seed-prototracks"
+        s.addAlgorithm(
+            acts.examples.SeedsToPrototracks(
+                level=logLevel,
+                inputSeeds=seeds,
+                outputProtoTracks=prototracks,
+            )
+        )
 
-#        if outputDirRoot is not None:
-#            addSeedPerformanceWriters(
-#                s,
-#                outputDirRoot,
-#                seeds,
-#                prototracks,
-#                selectedParticles,
-#                inputParticles,
-#                parEstimateAlg.config.outputTrackParameters,
-#                logLevel,
-#            )
+        if outputDirRoot is not None:
+            addSeedPerformanceWriters(
+                s,
+                outputDirRoot,
+                seeds,
+                prototracks,
+                selectedParticles,
+                inputParticles,
+                parEstimateAlg.config.outputTrackParameters,
+                logLevel,
+            )
 
     return s
 

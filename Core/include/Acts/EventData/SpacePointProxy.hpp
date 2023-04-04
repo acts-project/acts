@@ -14,6 +14,7 @@
 #include <any>
 #include <string_view>
 #include <type_traits>
+#include <iostream>
 
 namespace Acts {
   
@@ -22,6 +23,7 @@ namespace Acts {
   class SpacePointProxy {
   public:
     using ContainerType = container_t;
+    using ValueType = typename ContainerType::ValueType;
     
   public:
     // Never take the ownership of the container
@@ -29,8 +31,10 @@ namespace Acts {
     // Only get the reference
     SpacePointProxy(ContainerType& container, std::size_t index);
     SpacePointProxy(const ContainerType& container, std::size_t index);
-
     // copy and move operations are defaults
+    
+    ValueType& sp() { return container().sp(m_index); }
+    const ValueType& sp() const { return container().sp(m_index); }
     
     std::size_t index() const;
     float x() const;
