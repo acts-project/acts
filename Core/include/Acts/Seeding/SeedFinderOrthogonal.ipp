@@ -353,9 +353,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
-    // multiply the squared sigma onto the squared scattering
-    scatteringInRegion2 *= m_config.sigmaScattering * m_config.sigmaScattering;
+    float scatteringInRegion2 = options.multipleScattering2 * iSinTheta2;
 
     // minimum number of compatible top SPs to trigger the filter for a certain
     // middle bottom pair if seedConfirmation is false we always ask for at
