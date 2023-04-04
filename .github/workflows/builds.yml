@@ -236,8 +236,7 @@ jobs:
       - name: Python level tests
         shell: bash
         run: >
-          patch /usr/local/bin/geant4-config CI/geant4-config.patch
-          && /usr/local/bin/geant4-config --install-datasets
+          /usr/local/bin/geant4-config --install-datasets
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
           && source /usr/local/bin/geant4.sh
@@ -281,7 +280,6 @@ jobs:
           && git config --global safe.directory "$GITHUB_WORKSPACE"
           && pip3 install histcmp==0.5.2
           && pip3 install -r Examples/Scripts/requirements.txt
-          && patch /usr/local/bin/geant4-config CI/geant4-config.patch
           && /usr/local/bin/geant4-config --install-datasets
           && source /usr/local/bin/thisroot.sh
           && source /usr/local/bin/thisdd4hep_only.sh
