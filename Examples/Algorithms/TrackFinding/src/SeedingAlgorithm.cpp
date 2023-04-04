@@ -188,17 +188,20 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
   }
 
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
-    ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-    Acts::detail::RefHolder>::SpacePointProxyType;
-  
-  m_bottomBinFinder = std::make_shared<const Acts::BinFinder<SpacePointProxy_type>>(
-      m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors);
-  m_topBinFinder = std::make_shared<const Acts::BinFinder<SpacePointProxy_type>>(
-      m_cfg.zBinNeighborsTop, m_cfg.numPhiNeighbors);
+      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      Acts::detail::RefHolder>::SpacePointProxyType;
+
+  m_bottomBinFinder =
+      std::make_shared<const Acts::BinFinder<SpacePointProxy_type>>(
+          m_cfg.zBinNeighborsBottom, m_cfg.numPhiNeighbors);
+  m_topBinFinder =
+      std::make_shared<const Acts::BinFinder<SpacePointProxy_type>>(
+          m_cfg.zBinNeighborsTop, m_cfg.numPhiNeighbors);
 
   m_cfg.seedFinderConfig.seedFilter =
-    std::make_shared< Acts::SeedFilter<SpacePointProxy_type> >(m_cfg.seedFilterConfig);
-  m_seedFinder = Acts::SeedFinder<SpacePointProxy_type> (m_cfg.seedFinderConfig);
+      std::make_shared<Acts::SeedFilter<SpacePointProxy_type>>(
+          m_cfg.seedFilterConfig);
+  m_seedFinder = Acts::SeedFinder<SpacePointProxy_type>(m_cfg.seedFinderConfig);
 }
 
 ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
@@ -224,17 +227,17 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // Prepare interface SpacePoint backend-ACTS
   ActsExamples::SpacePointContainer container(spacePointPtrs);
   // Prepare Acts API
-  Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder> spContainer(container);
+  Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
+      spContainer(container);
 
   using value_type = typename decltype(spContainer)::SpacePointProxyType;
-  using seed_type = Acts::Seed< value_type >;
+  using seed_type = Acts::Seed<value_type>;
 
-    
   // construct the seeding tools
   // covariance tool, extracts covariances per spacepoint as required
   auto extractGlobalQuantities =
       [](const value_type& sp, float, float,
-          float) -> std::pair<Acts::Vector3, Acts::Vector2> {
+         float) -> std::pair<Acts::Vector3, Acts::Vector2> {
     Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
     Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
     return std::make_pair(position, covariance);
@@ -243,8 +246,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
-
-  auto grid = Acts::SpacePointGridCreator::createGrid<value_type>(m_cfg.gridConfig, m_cfg.gridOptions);
+  auto grid = Acts::SpacePointGridCreator::createGrid<value_type>(
+      m_cfg.gridConfig, m_cfg.gridOptions);
 
   auto spacePointsGrouping = Acts::BinnedSPGroup<value_type>(
       spContainer.begin(), spContainer.end(), extractGlobalQuantities,
@@ -275,16 +278,22 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
         std::size_t index = sp->index();
-        state.spacePointData.setTopHalfStripLength(index, sp->sp().topHalfStripLength());
-        state.spacePointData.setBottomHalfStripLength(index, sp->sp().bottomHalfStripLength());
-        state.spacePointData.setTopStripDirection(index, sp->sp().topStripDirection());
-        state.spacePointData.setBottomStripDirection(index, sp->sp().bottomStripDirection());
-        state.spacePointData.setStripCenterDistance(index, sp->sp().stripCenterDistance());
-        state.spacePointData.setTopStripCenterPosition(index, sp->sp().topStripCenterPosition());
+        state.spacePointData.setTopHalfStripLength(
+            index, sp->sp().topHalfStripLength());
+        state.spacePointData.setBottomHalfStripLength(
+            index, sp->sp().bottomHalfStripLength());
+        state.spacePointData.setTopStripDirection(index,
+                                                  sp->sp().topStripDirection());
+        state.spacePointData.setBottomStripDirection(
+            index, sp->sp().bottomStripDirection());
+        state.spacePointData.setStripCenterDistance(
+            index, sp->sp().stripCenterDistance());
+        state.spacePointData.setTopStripCenterPosition(
+            index, sp->sp().topStripCenterPosition());
       }
     }
   }
-	
+
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
         m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
@@ -300,11 +309,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   SeedContainerForStorage.reserve(seeds.size());
   for (const auto& seed : seeds) {
     const auto& sps = seed.sp();
-    SeedContainerForStorage.emplace_back( *sps[0]->sp(),
-					  *sps[1]->sp(),
-					  *sps[2]->sp(),
-					  seed.z(),
-					  seed.seedQuality() );
+    SeedContainerForStorage.emplace_back(*sps[0]->sp(), *sps[1]->sp(),
+                                         *sps[2]->sp(), seed.z(),
+                                         seed.seedQuality());
   }
 
   m_outputSeeds(ctx, std::move(SeedContainerForStorage));

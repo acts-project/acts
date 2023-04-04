@@ -1,4 +1,3 @@
-// This is -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -116,10 +115,9 @@ Acts::BinnedSPGroupIterator<external_spacepoint_t>::findNotEmptyBin() {
 
 // Binned SP Group
 template <typename external_spacepoint_t>
-template <typename spacepoint_iterator_t, typename callable_t>
+template <typename spacepoint_iterator_t>
 Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     spacepoint_iterator_t spBegin, spacepoint_iterator_t spEnd,
-    callable_t&& toGlobal,
     std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> botBinFinder,
     std::shared_ptr<const Acts::BinFinder<external_spacepoint_t>> tBinFinder,
     std::unique_ptr<SpacePointGrid<external_spacepoint_t>> grid,
@@ -163,7 +161,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     float spX = sp.x();
     float spY = sp.y();
     float spZ = sp.z();
-    
+
     // store x,y,z values in extent
     rRangeSPExtent.extend({spX, spY, spZ});
 
@@ -178,7 +176,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     Acts::Vector3 spPosition{spX, spY, spZ};
     Acts::Vector2 variance{sp.varianceR(), sp.varianceZ()};
     auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-									   sp.index(), sp, spPosition, options.beamPos, variance);
+        sp.index(), sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
     size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);
