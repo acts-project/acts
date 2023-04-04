@@ -22,11 +22,25 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     : ActsExamples::IReader(),
       m_logger{Acts::getDefaultLogger(name(), level)},
       m_cfg(config) {
+  if (m_cfg.fileList.empty()) {
+    throw std::invalid_argument{"No input files given"};
+  }
+
   m_inputChain = new TChain(m_cfg.treeName.c_str());
 
-  // Set the branches
-  bool missingEventId =
-      (TTree::kMatch != m_inputChain->SetBranchAddress("event_id", &m_eventId));
+  // loop over the input files
+  for (const auto& inputFile : m_cfg.fileList) {
+    // add file to the input chain
+    m_inputChain->Add(inputFile.c_str());
+    ACTS_DEBUG("Adding File " << inputFile << " to tree '" << m_cfg.treeName
+                              << "'.");
+  }
+
+  // get the number of entries, which also loads the tree
+  size_t nentries = m_inputChain->GetEntries();
+
+  bool eventIdPresent =
+      (TTree::kMatch == m_inputChain->SetBranchAddress("event_id", &m_eventId));
 
   m_inputChain->SetBranchAddress("v_x", &m_v_x);
   m_inputChain->SetBranchAddress("v_y", &m_v_y);
@@ -57,23 +71,10 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
     m_inputChain->SetBranchAddress("sur_z", &m_sur_z);
     m_inputChain->SetBranchAddress("sur_pathCorrection", &m_sur_pathCorrection);
   }
-  if (m_cfg.fileList.empty()) {
-    throw std::invalid_argument{"No input files given"};
-  }
 
-  // loop over the input files
-  for (const auto& inputFile : m_cfg.fileList) {
-    // add file to the input chain
-    m_inputChain->Add(inputFile.c_str());
-    ACTS_DEBUG("Adding File " << inputFile << " to tree '" << m_cfg.treeName
-                              << "'.");
-  }
-
-  size_t nentries = m_inputChain->GetEntries();
-  m_events =
-      missingEventId
-          ? nentries
-          : static_cast<size_t>(m_inputChain->GetMaximum("event_id") + 1);
+  m_events = eventIdPresent
+                 ? static_cast<size_t>(m_inputChain->GetMaximum("event_id") + 1)
+                 : nentries;
   m_batchSize = nentries / m_events;
   ACTS_DEBUG("The full chain has "
              << nentries << " entries for " << m_events
@@ -84,7 +85,7 @@ ActsExamples::RootMaterialTrackReader::RootMaterialTrackReader(
 
   // If the events are not in order, get the entry numbers for ordered events
   if (not m_cfg.orderedEvents) {
-    if (missingEventId) {
+    if (not eventIdPresent) {
       throw std::invalid_argument{
           "'event_id' branch is missing in your tree. This is not compatible "
           "with unordered events."};
