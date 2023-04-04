@@ -1,0 +1,3 @@
+add_unittest(ConvertTrackParametersEdm4hep ConvertTrackParametersEdm4hepTest.cpp)
+
+target_link_libraries(ActsUnitTestConvertTrackParametersEdm4hep PUBLIC ActsPluginEDM4hep)

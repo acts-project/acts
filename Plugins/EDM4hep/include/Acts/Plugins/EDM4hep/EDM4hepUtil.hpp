@@ -39,8 +39,47 @@ struct Parameters {
   std::shared_ptr<const Acts::Surface> surface;
 };
 
+ActsSymMatrix<5> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
+  // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
+  // q/p) to the LCIO / edm4hep (see:
+  // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf)
+  // one (d0, z0, phi, tan(lambda), omega). Top left 3x3 matrix in the
+  // jacobian is 1. Bottom right 2x2 matrix is:
+  //
+  // [  d                                 ]
+  // [------(cot(theta))         0        ]
+  // [dtheta                              ]
+  // [                                    ]
+  // [  d   /  B*q/p   \   d  /  B*q/p   \]
+  // [------|----------|  ----|----------|]
+  // [dtheta\sin(theta)/  dq/p\sin(theta)/]
+  //
+  // =
+  //
+  // [     2                        ]
+  // [- cot (theta) - 1       0     ]
+  // [                              ]
+  // [-B*q/p*cos(theta)       B     ]
+  // [------------------  ----------]
+  // [      2             sin(theta)]
+  // [   sin (theta)                ]
+
+  ActsSymMatrix<5> J;
+  J.setZero();
+  J(0, 0) = 1;
+  J(1, 1) = 1;
+  J(2, 2) = 1;
+  double cotTheta = std::tan(M_PI_2 + theta);
+  J(3, 3) = -cotTheta * cotTheta - 1;  // d(tanLambda) / dTheta
+  J(4, 4) = Bz / std::sin(theta);      // dOmega / d(qop)
+  double sinTheta = std::sin(theta);
+  J(4, 3) = -Bz * qOverP *
+            std::cos(theta / (sinTheta * sinTheta));  // dOmega / dTheta
+  return J;
+}
+
 template <typename charge_t>
-Parameters convertTrackParameters(
+Parameters convertTrackParametersToEdm4hep(
     const Acts::GeometryContext& gctx, double Bz,
     const SingleBoundTrackParameters<charge_t>& params) {
   Acts::Vector3 global = params.referenceSurface().localToGlobal(
@@ -92,43 +131,8 @@ Parameters convertTrackParameters(
         gctx, *refSurface, freePars.value(), covCache);
     auto targetCov = std::get<Acts::BoundSymMatrix>(varNewCov);
 
-    // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
-    // q/p) to the LCIO / edm4hep (see:
-    // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf)
-    // one (d0, z0, phi, tan(lambda), omega). Top left 3x3 matrix in the
-    // jacobian is 1. Bottom right 2x2 matrix is:
-    //
-    // [  d                                 ]
-    // [------(cot(theta))         0        ]
-    // [dtheta                              ]
-    // [                                    ]
-    // [  d   /  B*q/p   \   d  /  B*q/p   \]
-    // [------|----------|  ----|----------|]
-    // [dtheta\sin(theta)/  dq/p\sin(theta)/]
-    //
-    // =
-    //
-    // [     2                        ]
-    // [- cot (theta) - 1       0     ]
-    // [                              ]
-    // [-B*q/p*cos(theta)       B     ]
-    // [------------------  ----------]
-    // [      2             sin(theta)]
-    // [   sin (theta)                ]
-
-    ActsSymMatrix<5> J;
-    J.setZero();
-    J(0, 0) = 1;
-    J(1, 1) = 1;
-    J(2, 2) = 1;
-    double cotTheta = std::tan(M_PI_2 + targetPars[Acts::eBoundTheta]);
-    J(3, 3) = -cotTheta * cotTheta - 1;  // d(tanLambda) / dTheta
-    J(4, 4) = Bz / std::sin(targetPars[Acts::eBoundTheta]);  // dOmega / d(qop)
-    double sinTheta = std::sin(targetPars[eBoundTheta]);
-    J(4, 3) = -Bz * targetPars[Acts::eBoundQOverP] *
-              std::cos(targetPars[eBoundTheta] /
-                       (sinTheta * sinTheta));  // dOmega / dTheta
-
+    Acts::ActsSymMatrix<5> J = jacobianToEdm4hep(targetPars[eBoundTheta],
+                                                 targetPars[eBoundQOverP], Bz);
     Acts::ActsSymMatrix<5> cIn = targetCov.template topLeftCorner<5, 5>();
     result.covariance = J * cIn * J.transpose();
   }
@@ -142,6 +146,53 @@ Parameters convertTrackParameters(
   result.values[4] = params.charge() * Bz / params.transverseMomentum();
 
   return result;
+}
+
+template <typename charge_t>
+SingleBoundTrackParameters<charge_t> convertTrackParametersFromEdm4hep(
+    const Acts::GeometryContext& gctx, double Bz, const Parameters& params) {
+  // [     d      /                     pi\                                  ]
+  // [------------|-atan(\tan\lambda) + --|                 0                ]
+  // [d\tan\lambda\                     2 /                                  ]
+  // [                                                                       ]
+  // [     d      /         \Omega        \     d   /         \Omega        \]
+  // [------------|-----------------------|  -------|-----------------------|]
+  // [d\tan\lambda|     __________________|  d\Omega|     __________________|]
+  // [            |    /            2     |         |    /            2     |]
+  // [            \B*\/  \tan\lambda  + 1 /         \B*\/  \tan\lambda  + 1 /]
+  //
+  // =
+  //
+  // [         -1                                     ]
+  // [   ----------------                 0           ]
+  // [              2                                 ]
+  // [   \tan\lambda  + 1                             ]
+  // [                                                ]
+  // [  -\Omega*\tan\lambda               1           ]
+  // [-----------------------  -----------------------]
+  // [                    3/2       __________________]
+  // [  /           2    \         /            2     ]
+  // [B*\\tan\lambda  + 1/     B*\/  \tan\lambda  + 1 ]
+
+  ActsSymMatrix<5> J;
+  J.setIdentity();
+  J(3, 3) = -1 / (params.values[3] * params.values[3] + 1);
+  J(4, 3) = -1 * params.values[3] * params.values[4] /
+            (Bz * std::pow(params.values[3] * params.values[3] + 1, 3. / 2.));
+  J(4, 4) = Bz * std::sqrt(params.values[3] * params.values[3] + 1);
+
+  BoundVector targetPars;
+  // @TODO: Double check this
+  BoundMatrix cov = J * params.covariance.value() * J.transpose();
+
+  targetPars[eBoundLoc0] = params.values[0];
+  targetPars[eBoundLoc1] = params.values[1];
+  targetPars[eBoundPhi] = params.values[2];
+  targetPars[eBoundTheta] = M_PI_2 - std::atan(params.values[3]);
+  targetPars[eBoundQOverP] =
+      params.values[4] * std::sin(targetPars[eBoundTheta]) / Bz;
+
+  return {params.surface, targetPars, cov};
 }
 }  // namespace detail
 
@@ -198,7 +249,7 @@ void writeTrack(
 
     // Convert to LCIO track parametrization expected by EDM4hep
     detail::Parameters converted =
-        detail::convertTrackParameters(gctx, Bz, params);
+        detail::convertTrackParametersToEdm4hep(gctx, Bz, params);
 
     // Write the converted parameters to the EDM4hep track state
     setParameters(trackState, converted);
@@ -222,7 +273,8 @@ void writeTrack(
       track.covariance()};
 
   // Convert to LCIO track parametrization expected by EDM4hep
-  auto converted = detail::convertTrackParameters(gctx, Bz, trackParams);
+  auto converted =
+      detail::convertTrackParametersToEdm4hep(gctx, Bz, trackParams);
   setParameters(ipState, converted);
   ipState.location = edm4hep::TrackState::AtIP;
 
