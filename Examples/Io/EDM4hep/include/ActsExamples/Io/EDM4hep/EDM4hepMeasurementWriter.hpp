@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
@@ -37,10 +39,6 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
     std::string inputMeasurements;
     /// Which cluster collection to write (optional)
     std::string inputClusters;
-    /// Which simulated (truth) hits collection to use.
-    std::string inputSimHits;
-    /// Input collection to map measured hits to simulated hits.
-    std::string inputMeasurementSimHitsMap;
     /// Where to the write the file to.
     std::string outputPath;
   };
@@ -72,6 +70,8 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
 
   edm4hep::TrackerHitPlaneCollection* m_trackerHitPlaneCollection;
   edm4hep::TrackerHitCollection* m_trackerHitRawCollection;
+
+  ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };
 
 }  // namespace ActsExamples

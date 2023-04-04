@@ -67,8 +67,8 @@ option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examp
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
-option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" ON)
-option(ACTS_BUILD_UNITTESTS "Build unit tests" ON)
+option(ACTS_BUILD_INTEGRATIONTESTS "Build integration tests" OFF)
+option(ACTS_BUILD_UNITTESTS "Build unit tests" OFF)
 option(ACTS_RUN_CLANG_TIDY "Run clang-tidy static analysis" OFF)
 # other options
 option(ACTS_BUILD_DOCS "Build documentation" OFF)

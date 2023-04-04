@@ -30,7 +30,7 @@ VectorTrackContainerBase::VectorTrackContainerBase(
 VectorTrackContainer::IndexType VectorTrackContainer::addTrack_impl() {
   assert(checkConsistency());
 
-  m_tipIndex.emplace_back();
+  m_tipIndex.emplace_back(kInvalid);
 
   m_params.emplace_back();
   m_cov.emplace_back();
@@ -68,6 +68,43 @@ void VectorTrackContainer::removeTrack_impl(IndexType itrack) {
 
   for (auto& [key, vec] : m_dynamic) {
     vec->erase(itrack);
+  }
+}
+
+void VectorTrackContainer::copyDynamicFrom_impl(
+    IndexType dstIdx, const VectorTrackContainerBase& src, IndexType srcIdx) {
+  for (const auto& [key, value] : src.m_dynamic) {
+    auto it = m_dynamic.find(key);
+    if (it == m_dynamic.end()) {
+      throw std::invalid_argument{
+          "Destination container does not have matching dynamic column"};
+    }
+
+    it->second->copyFrom(dstIdx, *value, srcIdx);
+  }
+}
+
+void VectorTrackContainer::ensureDynamicColumns_impl(
+    const detail_vtc::VectorTrackContainerBase& other) {
+  for (auto& [key, value] : other.m_dynamic) {
+    if (m_dynamic.find(key) == m_dynamic.end()) {
+      m_dynamic[key] = value->clone(true);
+    }
+  }
+}
+
+void VectorTrackContainer::reserve(IndexType size) {
+  m_tipIndex.reserve(size);
+
+  m_params.reserve(size);
+  m_cov.reserve(size);
+  m_referenceSurfaces.reserve(size);
+
+  m_nMeasurements.reserve(size);
+  m_nHoles.reserve(size);
+
+  for (auto& [key, vec] : m_dynamic) {
+    vec->reserve(size);
   }
 }
 

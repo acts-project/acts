@@ -38,6 +38,8 @@ ActsExamples::CsvTrackParameterReader::CsvTrackParameterReader(
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing output collection");
   }
+
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }
 
 std::string
@@ -108,7 +110,7 @@ ActsExamples::ProcessCode ActsExamples::CsvTrackParameterReader::read(
     trackParameters.emplace_back(surface, params, q, cov);
   }
 
-  ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(trackParameters));
+  m_outputTrackParameters(ctx, std::move(trackParameters));
 
   return ProcessCode::SUCCESS;
 }

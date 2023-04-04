@@ -215,11 +215,10 @@ void addTruthTracking(Context& ctx) {
       inputTrackParameters, outputTrajectories, outputTrackParameters,
       dropCovariance, covScale, killTime);
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TruthSeedingAlgorithm, mex,
-                                "TruthSeedingAlgorithm", inputParticles,
-                                inputMeasurementParticlesMap, inputSourceLinks,
-                                inputSpacePoints, outputParticles, outputSeeds,
-                                outputProtoTracks, deltaRMin, deltaRMax);
+  ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::TruthSeedingAlgorithm, mex, "TruthSeedingAlgorithm",
+      inputParticles, inputMeasurementParticlesMap, inputSpacePoints,
+      outputParticles, outputSeeds, outputProtoTracks, deltaRMin, deltaRMax);
 }
 
 }  // namespace Acts::Python

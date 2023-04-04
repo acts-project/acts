@@ -10,6 +10,9 @@
 
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/DD4hepDetector/DD4hepDetector.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
@@ -73,6 +76,10 @@ class EDM4hepSimHitReader final : public IReader {
   const edm4hep::MCParticleCollection* m_mcParticleCollection;
 
   const Acts::Logger& logger() const { return *m_logger; }
+
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

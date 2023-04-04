@@ -9,6 +9,8 @@
 #pragma once
 
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
@@ -26,11 +28,11 @@ class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
  public:
   struct Config {
     /// Input trajectories collection.
-    std::string inputTrajectories;
+    std::string inputTracks;
     /// path to the ONNX model for the duplicate neural network
     std::string inputDuplicateNN;
     /// Output trajectories collection.
-    std::string outputTrajectories;
+    std::string outputTracks;
     /// Minumum number of measurement to form a track.
     int nMeasurementsMin = 7;
   };
@@ -56,6 +58,8 @@ class AmbiguityResolutionMLAlgorithm final : public IAlgorithm {
   Ort::Env m_env;
   // ONNX model for the duplicate neural network
   Acts::OnnxRuntimeBase m_duplicateClassifier;
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

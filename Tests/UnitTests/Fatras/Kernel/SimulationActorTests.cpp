@@ -115,7 +115,14 @@ struct MockNavigatorState {
   Acts::Surface *currentSurface = nullptr;
 };
 
-struct MockNavigator {};
+struct MockNavigator {
+  bool targetReached(const MockNavigatorState &state) const {
+    return state.targetReached;
+  }
+  const Acts::Surface *currentSurface(const MockNavigatorState &state) const {
+    return state.currentSurface;
+  }
+};
 
 struct MockPropagatorState {
   MockNavigatorState navigation;

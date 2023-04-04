@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include <Acts/Definitions/Algebra.hpp>
@@ -72,6 +73,9 @@ class RootMaterialTrackReader : public IReader {
 
   /// The config class
   Config m_cfg;
+
+  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+      m_outputMaterialTracks{this, "OutputMaterialTracks"};
 
   /// mutex used to protect multi-threaded reads
   std::mutex m_read_mutex;

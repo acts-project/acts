@@ -39,7 +39,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     throw std::invalid_argument("Missing space point input collections");
   }
 
-  size_t isp = 0;
   for (const auto& spName : m_cfg.inputSpacePoints) {
     if (spName.empty()) {
       throw std::invalid_argument("Invalid space point input collection");
@@ -47,10 +46,9 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
     auto& handle = m_inputSpacePoints.emplace_back(
         std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
-            this, "InputSpacePoints#" + std::to_string(isp)));
+            this,
+            "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
     handle->initialize(spName);
-
-    isp++;
   }
   if (m_cfg.outputSeeds.empty()) {
     throw std::invalid_argument("Missing seeds output collection");
@@ -296,8 +294,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   ACTS_INFO("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
-
-  std::vector<seed_type> SeedContainerForStorage{seeds};
-  ctx.eventStore.add(m_cfg.outputSeeds, std::move(SeedContainerForStorage));
+  for (const auto& seed : seeds) {
+    std::cout << "Z: " << seed.z() << "\n";
+    std::cout << "Quality: " << seed.seedQuality() << "\n";
+    const auto& sps = seed.sp();
+    std::cout << "bottom index: " << sps[0]->index() << "\n";
+    
+  }
+  // std::vector<seed_type> SeedContainerForStorage{seeds};
+  // m_outputSeeds(ctx, std::move(SeedContainerForStorage));
   return ActsExamples::ProcessCode::SUCCESS;
 }

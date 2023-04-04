@@ -261,21 +261,17 @@ class Propagator final {
   struct State {
     /// Create the propagator state from the options
     ///
-    /// @tparam parameters_t the type of the start parameters
     /// @tparam propagator_options_t the type of the propagator options
     ///
-    /// @param start The start parameters, used to initialize stepping state
     /// @param topts The options handed over by the propagate call
     /// @param steppingIn Stepper state instance to begin with
-    template <typename parameters_t>
-    State(const parameters_t& start, const propagator_options_t& topts,
-          StepperState steppingIn)
+    /// @param navigationIn Navigator state instance to begin with
+    State(const propagator_options_t& topts, StepperState steppingIn,
+          NavigatorState navigationIn)
         : options(topts),
           stepping{std::move(steppingIn)},
-          geoContext(topts.geoContext) {
-      // Setting the start surface
-      navigation.startSurface = &start.referenceSurface();
-    }
+          navigation{std::move(navigationIn)},
+          geoContext(topts.geoContext) {}
 
     /// These are the options - provided for each propagation step
     propagator_options_t options;
