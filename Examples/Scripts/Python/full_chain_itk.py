@@ -33,7 +33,8 @@ detector, trackingGeometry, decorators = acts.examples.itk.buildITkGeometry(geo_
 field = acts.examples.MagneticFieldMapXyz(str(geo_dir / "bfield/ATLAS-BField-xyz.root"))
 rnd = acts.examples.RandomNumbers(seed=42)
 
-s = acts.examples.Sequencer(events=100, numThreads=-1, outputDir=str(outputDir))
+#increase events number for stats, originally 100 
+s = acts.examples.Sequencer(events=10000, numThreads=-1, outputDir=str(outputDir))
 
 if not ttbar_pu200:
     addParticleGun(
@@ -86,12 +87,16 @@ addSeeding(
     if ttbar_pu200
     else TruthSeedRanges(),
 <<<<<<< HEAD
+<<<<<<< HEAD
     seedingAlgorithm=SeedingAlgorithm.Default,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
 =======
     seedingAlgorithm=SeedingAlgorithm.FTF,
+=======
+    seedingAlgorithm=SeedingAlgorithm.Orthogonal,
+>>>>>>> saving before I try and update ACTS
     *acts.examples.itk.itkSeedingAlgConfig("PixelSpacePoints"),
 >>>>>>> python part of FTF seeding working, but algorithm replaced with ortho
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
