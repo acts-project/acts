@@ -91,7 +91,7 @@ jobs:
         run: cmakeperf collect build/compile_commands.json -o perf.csv
       - name: Results
         run: cmakeperf print perf.csv
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: cmakeperf
           path: perf.csv

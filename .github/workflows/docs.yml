@@ -30,7 +30,7 @@ jobs:
         run: cmake -B build -S . -GNinja -DACTS_BUILD_DOCS=ON
       - name: Build
         run: cmake --build build --target docs-with-api
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: acts-docs
           path: docs/_build/html/

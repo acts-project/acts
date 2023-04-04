@@ -11,7 +11,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
@@ -295,6 +295,19 @@ BOOST_AUTO_TEST_CASE_TEMPLATE(TrackStateAccess, factory_t, holder_types) {
   }
 
   BOOST_CHECK_EQUAL(t.nTrackStates(), 5);
+
+  auto tNone = tc.getTrack(tc.addTrack());
+  BOOST_CHECK_EQUAL(tNone.nTrackStates(), 0);
+
+  auto tsRange = tNone.trackStates();
+  BOOST_CHECK(tsRange.begin() == tsRange.end());
+
+  size_t i = 0;
+  for (const auto& state : tNone.trackStates()) {
+    (void)state;
+    i++;
+  }
+  BOOST_CHECK_EQUAL(i, 0);
 }
 
 BOOST_AUTO_TEST_CASE_TEMPLATE(TrackIterator, factory_t, holder_types) {
