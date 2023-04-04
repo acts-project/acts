@@ -10,11 +10,8 @@ import acts.examples
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
-<<<<<<< HEAD
-    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal HoughTransform"
-=======
-    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal FTF"
->>>>>>> python part of FTF seeding working, but algorithm replaced with ortho
+    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal HoughTransform FTF"
+
 )
 
 TruthSeedRanges = namedtuple(
@@ -297,7 +294,6 @@ def addSeeding(
                 seedFilterConfigArg,
                 logLevel,
             )
-<<<<<<< HEAD
         elif seedingAlgorithm == SeedingAlgorithm.HoughTransform:
             logger.info("Using Hough Transform seeding")
             houghTransformConfig.inputSpacePoints = [spacePoints]
@@ -308,7 +304,6 @@ def addSeeding(
             houghTransformConfig.trackingGeometry = trackingGeometry
             inputProtoTracks, inputSeeds = addHoughTransformSeeding(
                 s, houghTransformConfig, logLevel
-=======
         elif seedingAlgorithm == SeedingAlgorithm.FTF:
             logger.info("Using FTF seeding")
             inputProtoTracks, inputSeeds = addFTFSeeding(
@@ -318,7 +313,6 @@ def addSeeding(
                 seedFinderOptionsArg,
                 seedFilterConfigArg,
                 logLevel,
->>>>>>> python part of FTF seeding working, but algorithm replaced with ortho
             )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
