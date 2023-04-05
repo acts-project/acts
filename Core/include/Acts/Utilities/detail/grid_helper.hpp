@@ -107,7 +107,7 @@ class GlobalNeighborHoodIndices {
       }
     }
 
-    friend bool operator==(const iterator& a, const iterator&b ) {
+    friend bool operator==(const iterator& a, const iterator& b) {
       return a.isEqual(b);
     }
 
