@@ -51,32 +51,25 @@ class SpacePointContainer {
   ~SpacePointContainer() = default;
 
  private:
-  using IndexType = std::size_t;
+  std::size_t size_impl() const;
 
-  IndexType size_impl() const;
-  float x_impl(IndexType idx) const;
-  float y_impl(IndexType idx) const;
-  float z_impl(IndexType idx) const;
-  float radius_impl(IndexType idx) const;
-  float varianceR_impl(IndexType idx) const;
-  float varianceZ_impl(IndexType idx) const;
+  float x_impl(std::size_t idx) const;
+  float y_impl(std::size_t idx) const;
+  float z_impl(std::size_t idx) const;
+  float radius_impl(std::size_t idx) const;
+  float varianceR_impl(std::size_t idx) const;
+  float varianceZ_impl(std::size_t idx) const;
 
-  float topHalfStripLength_impl(std::size_t n) const;
-  float bottomHalfStripLength_impl(std::size_t n) const;
-  Acts::Vector3 topStripDirection_impl(std::size_t n) const;
-  Acts::Vector3 bottomStripDirection_impl(std::size_t n) const;
-  Acts::Vector3 stripCenterDistance_impl(std::size_t n) const;
-  Acts::Vector3 topStripCenterPosition_impl(std::size_t n) const;
+  const ValueType& get_impl(std::size_t idx) const
+  { return storage()[idx]; }
 
-  // template<typename T>
-  const std::any component_impl(Acts::HashedString key,
-                                std::size_t /*n*/) const {
-    std::cout << "Inside component_impl\n";
+  std::any component_impl(Acts::HashedString key,
+			  std::size_t /*n*/) const {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "TopHalfStripLength"_hash:
       case "BottomHalfStripLength"_hash:
-        return 0.;
+        return static_cast<float>(0.);
       case "TopStripDirection"_hash:
       case "BottomStripDirection"_hash:
       case "StripCenterDistance"_hash:
@@ -95,7 +88,7 @@ class SpacePointContainer {
 };
 
 template <typename collection_t>
-inline typename SpacePointContainer<collection_t>::IndexType
+inline std::size_t
 SpacePointContainer<collection_t>::size_impl() const {
   return storage().size();
 }
@@ -105,25 +98,25 @@ SpacePointContainer<collection_t>::size_impl() const {
 
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::x_impl(
-    typename SpacePointContainer<collection_t>::IndexType idx) const {
+    std::size_t idx) const {
   return storage()[idx]->x();
 }
 
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::y_impl(
-    typename SpacePointContainer<collection_t>::IndexType idx) const {
+    std::size_t idx) const {
   return storage()[idx]->y();
 }
 
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::z_impl(
-    typename SpacePointContainer<collection_t>::IndexType idx) const {
+    std::size_t idx) const {
   return storage()[idx]->z();
 }
 
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::radius_impl(
-    typename SpacePointContainer<collection_t>::IndexType idx) const {
+    std::size_t idx) const {
   const float x = x_impl(idx);
   const float y = y_impl(idx);
   return std::sqrt(x * x + y * y);
@@ -131,53 +124,14 @@ inline float SpacePointContainer<collection_t>::radius_impl(
 
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::varianceR_impl(
-    typename SpacePointContainer<collection_t>::IndexType idx) const {
+    std::size_t idx) const {
   return storage()[idx]->varianceR();
 }
 
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::varianceZ_impl(
-    typename SpacePointContainer<collection_t>::IndexType idx) const {
+    std::size_t idx) const {
   return storage()[idx]->varianceZ();
-}
-
-template <typename collection_t>
-inline float SpacePointContainer<collection_t>::topHalfStripLength_impl(
-    std::size_t /*n*/) const {
-  return 0.;
-}
-
-template <typename collection_t>
-inline float SpacePointContainer<collection_t>::bottomHalfStripLength_impl(
-    std::size_t /*n*/) const {
-  return 0.;
-}
-
-template <typename collection_t>
-inline Acts::Vector3 SpacePointContainer<collection_t>::topStripDirection_impl(
-    std::size_t /*n*/) const {
-  return {0., 0., 0.};
-}
-
-template <typename collection_t>
-inline Acts::Vector3
-SpacePointContainer<collection_t>::bottomStripDirection_impl(
-    std::size_t /*n*/) const {
-  return {0., 0., 0.};
-}
-
-template <typename collection_t>
-inline Acts::Vector3
-SpacePointContainer<collection_t>::stripCenterDistance_impl(
-    std::size_t /*n*/) const {
-  return {0., 0., 0.};
-}
-
-template <typename collection_t>
-inline Acts::Vector3
-SpacePointContainer<collection_t>::topStripCenterPosition_impl(
-    std::size_t /*n*/) const {
-  return {0., 0., 0.};
 }
 
 template <typename collection_t>

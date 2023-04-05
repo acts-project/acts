@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -135,7 +136,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   static_assert(
       std::is_same<
           typename std::iterator_traits<spacepoint_iterator_t>::value_type,
-          external_spacepoint_t>::value,
+          const external_spacepoint_t>::value,
       "Iterator does not contain type this class was templated with");
 
   // get region of interest (or full detector if configured accordingly)
