@@ -62,7 +62,7 @@ struct IndexedSurfacesGenerator {
     typename axis_generator::template grid_type<std::vector<std::size_t>> grid(
         std::move(aGenerator()));
 
-    std::array<BinningValue, decltype(grid)::DIM> bvArray;
+    std::array<BinningValue, decltype(grid)::DIM> bvArray = {};
     for (auto [ibv, bv] : enumerate(bValues)) {
       bvArray[ibv] = bv;
     }
