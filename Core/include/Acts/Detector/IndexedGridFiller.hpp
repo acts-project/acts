@@ -62,7 +62,7 @@ std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
       bmin = (int(bmin) - int(expand) > 0) ? bmin - expand : 1u;
       bmax = (bmax + expand <= nBins) ? bmax + expand : nBins;
     } else if (type == Acts::detail::AxisBoundaryType::Open) {
-      bmin = (int(bmin) - int(expand) >= 0u) ? bmin - expand : 0u;
+      bmin = (int(bmin) - int(expand) >= 0) ? bmin - expand : 0u;
       bmax = (bmax + expand <= nBins + 1u) ? bmax + expand : nBins + 1u;
     }
     fill_linear(bmin, bmax);
