@@ -14,6 +14,9 @@
 
 #include <stdexcept>
 
+#include <edm4hep/TrackCollection.h>
+#include <podio/Frame.h>
+
 namespace ActsExamples {
 
 EDM4hepMultiTrajectoryWriter::EDM4hepMultiTrajectoryWriter(
@@ -22,7 +25,7 @@ EDM4hepMultiTrajectoryWriter::EDM4hepMultiTrajectoryWriter(
     : WriterT<TrajectoriesContainer>(config.inputTrajectories,
                                      "EDM4hepMultiTrajectoryWriter", level),
       m_cfg(config),
-      m_writer(config.outputPath, &m_store) {
+      m_writer(config.outputPath) {
   if (m_cfg.inputTrajectories.empty()) {
     throw std::invalid_argument("Missing input trajectories collection");
   }
@@ -30,9 +33,6 @@ EDM4hepMultiTrajectoryWriter::EDM4hepMultiTrajectoryWriter(
   if (m_cfg.inputMeasurementParticlesMap.empty()) {
     throw std::invalid_argument{"Missing input hit to particle map"};
   }
-
-  m_trackCollection = &m_store.create<edm4hep::TrackCollection>("ActsTracks");
-  m_writer.registerForWrite("ActsTracks");
 
   m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
 }
@@ -46,17 +46,22 @@ ActsExamples::ProcessCode EDM4hepMultiTrajectoryWriter::finalize() {
 ProcessCode EDM4hepMultiTrajectoryWriter::writeT(
     const AlgorithmContext& context,
     const TrajectoriesContainer& trajectories) {
+  podio::Frame frame{};
+
   const auto& hitParticlesMap = m_inputMeasurementParticlesMap(context);
+
+  edm4hep::TrackCollection trackCollection;
 
   for (const auto& from : trajectories) {
     for (const auto& trackTip : from.tips()) {
-      auto to = m_trackCollection->create();
+      auto to = trackCollection.create();
       EDM4hepUtil::writeTrajectory(from, to, trackTip, hitParticlesMap);
     }
   }
 
-  m_writer.writeEvent();
-  m_store.clearCollections();
+  frame.put(std::move(trackCollection), "ActsTracks");
+
+  m_writer.writeFrame(frame, "events");
 
   return ProcessCode::SUCCESS;
 }

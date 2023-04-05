@@ -8,7 +8,8 @@
 
 #pragma once
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/detail/DynamicColumn.hpp"
 
 #include <unordered_map>
