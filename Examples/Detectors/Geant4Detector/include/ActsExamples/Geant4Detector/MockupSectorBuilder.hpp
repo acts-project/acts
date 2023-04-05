@@ -32,6 +32,8 @@ class MockupSectorBuilder {
 
     // The number of sectors we want to create
     int NumberOfSectors = 1;
+
+    float toleranceOverlap = 10.;
   };
 
   /// Nested configuration struct for chamber
@@ -52,13 +54,6 @@ class MockupSectorBuilder {
 
   /// Destructor
   ~MockupSectorBuilder() = default;
-
-  /// Set the configuration object
-  /// param config The configurtion struct
-  void setConfiguration(const Config& config);
-
-  /// Set the g4World from the gdml file
-  void setWorld();
 
   /// Build chamber
   /// @param gctx The current geometry context object

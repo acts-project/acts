@@ -41,13 +41,13 @@ int main() {
 
   GeometryContext gctx;
   auto detectorVolume_inner_chamber =
-      mockup_builder.BuildChamber(gctx, mockup_chamberConfig_inner);
+      mockup_builder.buildChamber(gctx, mockup_chamberConfig_inner);
 
   auto detectorVolume_middle_chamber =
-      mockup_builder.BuildChamber(gctx, mockup_chamberConfig_middle);
+      mockup_builder.buildChamber(gctx, mockup_chamberConfig_middle);
 
   auto detectorVolume_outer_chamber =
-      mockup_builder.BuildChamber(gctx, mockup_chamberConfig_outer);
+      mockup_builder.buildChamber(gctx, mockup_chamberConfig_outer);
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
       detector_volumes = {};
@@ -57,7 +57,7 @@ int main() {
   detector_volumes.push_back(detectorVolume_outer_chamber);
 
   auto detectorVolume_sector =
-      mockup_builder.BuildSector(detector_volumes, gctx);
+      mockup_builder.buildSector(detector_volumes, gctx);
 
   Acts::ObjVisualization3D obj_testMockUp;
   Acts::ViewConfig sConfig = Acts::s_viewSensitive;
@@ -65,7 +65,7 @@ int main() {
   Acts::ObjVisualization3D obj_Sector;
 
   Acts::GeometryView3D::drawDetectorVolume(
-      obj_Sector, *detectorVolume_sector, Acts::GeometryContext(), true,
+      obj_Sector, *detectorVolume_sector, Acts::GeometryContext(),
       Acts::Transform3::Identity(), sConfig);
 
   obj_Sector.write("test_sector.obj");
