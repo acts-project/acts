@@ -52,13 +52,6 @@ public:
   float varianceR() const;
   float varianceZ() const;
 
-  float topHalfStripLength() const;
-  float bottomHalfStripLength() const;
-  Acts::Vector3 topStripDirection() const;
-  Acts::Vector3 bottomStripDirection() const;
-  Acts::Vector3 stripCenterDistance() const;
-  Acts::Vector3 topStripCenterPosition() const;
-
   // component methods for additional quantities
   template <typename T>
   T component(HashedString key) const;
