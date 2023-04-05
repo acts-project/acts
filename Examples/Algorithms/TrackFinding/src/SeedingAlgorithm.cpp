@@ -21,6 +21,7 @@
 #include <csignal>
 #include <limits>
 #include <stdexcept>
+#include <chrono>
 
 using namespace Acts::HashedStringLiteral;
 
@@ -224,6 +225,8 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
+  auto start = std::chrono::high_resolution_clock::now();
+  
   // Prepare interface SpacePoint backend-ACTS
   ActsExamples::SpacePointContainer container(spacePointPtrs);
   // Prepare Acts API
@@ -290,6 +293,10 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
         std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
   }
 
+  auto stop = std::chrono::high_resolution_clock::now();
+  auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
+  std::cout << "time=" << duration << "\n";
+  
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
 
