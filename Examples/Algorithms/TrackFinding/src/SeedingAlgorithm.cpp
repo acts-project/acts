@@ -233,16 +233,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   using value_type = typename decltype(spContainer)::SpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
 
-  // construct the seeding tools
-  // covariance tool, extracts covariances per spacepoint as required
-  auto extractGlobalQuantities =
-      [](const value_type& sp, float, float,
-         float) -> std::pair<Acts::Vector3, Acts::Vector2> {
-    Acts::Vector3 position{sp.x(), sp.y(), sp.z()};
-    Acts::Vector2 covariance{sp.varianceR(), sp.varianceZ()};
-    return std::make_pair(position, covariance);
-  };
-
   // extent used to store r range for middle spacepoint
   Acts::Extent rRangeSPExtent;
 
@@ -250,7 +240,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.gridConfig, m_cfg.gridOptions);
 
   auto spacePointsGrouping = Acts::BinnedSPGroup<value_type>(
-      spContainer.begin(), spContainer.end(), extractGlobalQuantities,
+      spContainer.begin(), spContainer.end(), 
       m_bottomBinFinder, m_topBinFinder, std::move(grid), rRangeSPExtent,
       m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
 
@@ -269,7 +259,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
   state.spacePointData.resize(
-      spacePointPtrs.size(),
+      std::distance(spContainer.begin(), spContainer.end()),
       m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
 
   if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {

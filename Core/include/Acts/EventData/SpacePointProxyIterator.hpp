@@ -49,8 +49,7 @@ class SpacePointProxyIterator {
   SpacePointProxyIterator operator+(std::size_t offset) const;
   SpacePointProxyIterator operator-(std::size_t offset) const;
 
-  difference_type operator-(const SpacePointProxyIterator& other) const
-  { return other.m_index - m_index; }
+  difference_type operator-(const SpacePointProxyIterator& other) const;
   
   // returning pointer here since seeding always assumes a vector of pointers as
   // input... not sure about this tbh
@@ -169,6 +168,11 @@ SpacePointProxyIterator<container_t, read_only>::operator-(
   return SpacePointProxyIterator(*m_container, m_index - offset);
 }
 
+template <typename container_t, bool read_only>
+inline typename SpacePointProxyIterator<container_t, read_only>::difference_type
+SpacePointProxyIterator<container_t, read_only>::operator-(const SpacePointProxyIterator<container_t, read_only>& other) const
+{ return m_index - other.m_index; }
+  
 template <typename container_t, bool read_only>
 template <bool, typename>
 inline typename SpacePointProxyIterator<container_t, read_only>::ProxyType&

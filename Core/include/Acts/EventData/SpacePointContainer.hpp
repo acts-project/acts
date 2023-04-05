@@ -57,7 +57,7 @@ class SpacePointContainer {
             std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::RefHolder>::value>* = nullptr>
   SpacePointContainer(container_t& container) : m_container(container) {
-    std::size_t n = size();
+    std::size_t n = container.size_impl();
     m_proxies.reserve(n);
     for (std::size_t i(0); i < n; i++)
       m_proxies.emplace_back(*this, i);
@@ -69,7 +69,7 @@ class SpacePointContainer {
             std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::ValueHolder>::value>* = nullptr>
   SpacePointContainer(container_t&& container) : m_container(container) {
-    std::size_t n = size();
+    std::size_t n = container.size_impl();
     m_proxies.reserve(n);
     for (std::size_t i(0); i < n; i++)
       m_proxies.emplace_back(*this, i);
