@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceCenter) {
   std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   // Check the correct number of filled bins
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 1u);
+  BOOST_TEST(nonEmptyBins == 1u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
@@ -161,7 +161,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfaceBinValue) {
 
   std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 1u);
+  BOOST_TEST(nonEmptyBins == 1u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedron) {
 
   std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 25u);
+  BOOST_TEST(nonEmptyBins == 25u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(IndexGridXYOneSurfacePolyhedronBinExpansion) {
 
   std::size_t nonEmptyBins = countBins<decltype(indexedGridXY)>(indexedGridXY);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 49u);
+  BOOST_TEST(nonEmptyBins == 49u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
@@ -267,7 +267,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfacePolyhedronBinExpansion) {
   std::size_t nonEmptyBins =
       countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 6u);
+  BOOST_TEST(nonEmptyBins == 6u);
 }
 
 BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
@@ -301,7 +301,7 @@ BOOST_AUTO_TEST_CASE(IndexGridZPhiYOneSurfaceMPIPolyhedronBinExpansion) {
   std::size_t nonEmptyBins =
       countBins<decltype(indexedGridZPhi)>(indexedGridZPhi);
   ACTS_INFO("- filled " << nonEmptyBins << " bins of the grid.");
-  BOOST_CHECK(nonEmptyBins == 9u);
+  BOOST_TEST(nonEmptyBins == 9u);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
