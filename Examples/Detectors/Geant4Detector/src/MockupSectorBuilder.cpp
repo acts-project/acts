@@ -83,7 +83,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
 
    std::array<std::pair <float,float>,3> min_max;
    std::fill(min_max.begin(), min_max.end(), 
-            std::make_pair<float, float>(std::move(max_limit), std::move(min_limit)));
+            std::make_pair<float, float>(std::move(std::numeric_limits<float>::max()), std::move(-std::numeric_limits<float>::max())));
 
 
   // Convert the physical volumes of the detector elements to straw surfaces
