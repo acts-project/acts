@@ -67,7 +67,8 @@ struct IndexedSurfacesGenerator {
       bvArray[ibv] = bv;
     }
 
-    // Create the indexed surface grid
+    // Create the indexed surface grid:
+    // non-const as we need to fill the grid
     auto indexedSurfaces =
         std::make_unique<IndexedSurfacesImpl<decltype(grid)>>(
             std::move(grid), bvArray, transform);
