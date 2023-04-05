@@ -113,13 +113,13 @@ template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
 inline typename SpacePointContainer<container_t, holder_t>::ValueType&
 SpacePointContainer<container_t, holder_t>::sp(std::size_t n) {
-  return container().storage()[n];
+  return container().get_impl(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline typename SpacePointContainer<container_t, holder_t>::ValueType&
 SpacePointContainer<container_t, holder_t>::sp(std::size_t n) const {
-  return container().storage()[n];
+  return container().get_impl(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
@@ -201,14 +201,27 @@ SpacePointContainer<container_t, holder_t>::topStripCenterPosition(
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
 inline typename SpacePointContainer<container_t, holder_t>::ProxyType&
-SpacePointContainer<container_t, holder_t>::get(std::size_t n) {
-  return m_proxies[n];
+SpacePointContainer<container_t, holder_t>::proxy(std::size_t n) {
+  return proxies()[n];
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const typename SpacePointContainer<container_t, holder_t>::ProxyType&
-SpacePointContainer<container_t, holder_t>::get(std::size_t n) const {
-  return m_proxies.at(n);
+SpacePointContainer<container_t, holder_t>::proxy(std::size_t n) const {
+  return proxies()[n];
 }
 
+template <typename container_t, template <typename> class holder_t>
+template <bool, typename>
+inline std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>&
+SpacePointContainer<container_t, holder_t>::proxies() {
+  return m_proxies;
+}
+
+template <typename container_t, template <typename> class holder_t>
+inline const std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>&
+SpacePointContainer<container_t, holder_t>::proxies() const {
+  return m_proxies;
+}
+  
 }  // namespace Acts

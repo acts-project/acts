@@ -118,10 +118,14 @@ private:
   const container_t& container() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ProxyType& get(std::size_t n);
+  ProxyType& proxy(std::size_t n);
   
-  const ProxyType& get(std::size_t n) const;
+  const ProxyType& proxy(std::size_t n) const;
 
+  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
+  std::vector<ProxyType>& proxies();
+
+  const std::vector<ProxyType>& proxies() const;
 
  private:
   float x(std::size_t n) const;
