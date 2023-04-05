@@ -729,7 +729,7 @@ def test_edm4hep_tracks_writer(tmp_path):
             level=acts.logging.VERBOSE,
             inputTracks="kfTracks",
             outputPath=str(out),
-            Bz=2*u.T
+            Bz=2 * u.T,
         )
     )
 
@@ -747,23 +747,23 @@ def test_edm4hep_tracks_writer(tmp_path):
     expected = [
         (31.986961364746094, 30, 16),
         (28.64777374267578, 30, 16),
-        (11.607606887817383, 22,12),
-        (5.585886001586914, 22,12),
-        (20.560943603515625, 20,11),
-        (28.742727279663086, 28,15),
-        (27.446802139282227, 22,12),
-        (30.82959747314453, 24,13),
-        (24.671127319335938, 26,14),
-        (16.479907989501953, 20,11),
-        (10.594233512878418, 22,12),
-        (25.174715042114258, 28,15),
+        (11.607606887817383, 22, 12),
+        (5.585886001586914, 22, 12),
+        (20.560943603515625, 20, 11),
+        (28.742727279663086, 28, 15),
+        (27.446802139282227, 22, 12),
+        (30.82959747314453, 24, 13),
+        (24.671127319335938, 26, 14),
+        (16.479907989501953, 20, 11),
+        (10.594233512878418, 22, 12),
+        (25.174715042114258, 28, 15),
         (27.9674072265625, 26, 14),
-        (4.3012871742248535, 22,12),
+        (4.3012871742248535, 22, 12),
         (20.492422103881836, 22, 12),
         (27.92759132385254, 24, 13),
-        (14.514887809753418, 22,12),
-        (12.876864433288574, 22,12),
-        (12.951473236083984, 26,14),
+        (14.514887809753418, 22, 12),
+        (12.876864433288574, 22, 12),
+        (12.951473236083984, 26, 14),
     ]
 
     actual = []
@@ -772,11 +772,13 @@ def test_edm4hep_tracks_writer(tmp_path):
         print("EVENT")
         tracks = frame.get("ActsTracks")
         for track in tracks:
-            actual.append((track.getChi2(), track.getNdf(), len(track.getTrackStates())))
+            actual.append(
+                (track.getChi2(), track.getNdf(), len(track.getTrackStates()))
+            )
 
             locs = []
 
-            perigee=None
+            perigee = None
             for ts in track.getTrackStates():
                 if ts.location == cppyy.gbl.edm4hep.TrackState.AtIP:
                     perigee = ts
@@ -792,10 +794,10 @@ def test_edm4hep_tracks_writer(tmp_path):
 
             assert perigee is not None
             rp = perigee.referencePoint
-            assert rp.x ==0.0
-            assert rp.y ==0.0
-            assert rp.z ==0.0
+            assert rp.x == 0.0
+            assert rp.y == 0.0
+            assert rp.z == 0.0
             assert abs(perigee.D0) < 1e-1
             assert abs(perigee.Z0) < 1
 
-            print(perigee.omega, 1/perigee.omega)
+            print(perigee.omega, 1 / perigee.omega)
