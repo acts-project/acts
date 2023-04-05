@@ -68,7 +68,7 @@ void addTrackFinding(Context& ctx) {
   {
     using Config = Acts::SeedFinderConfig<typename Acts::SpacePointContainer<
         ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-        Acts::detail::RefHolder>::SpacePointProxyType>;
+        Acts::detail::RefHolder>::ConstSpacePointProxyType>;
     auto c = py::class_<Config>(m, "SeedFinderConfig").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(minPt);

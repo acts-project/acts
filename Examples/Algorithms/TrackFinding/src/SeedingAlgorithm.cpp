@@ -189,7 +189,7 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
 
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
-      Acts::detail::RefHolder>::SpacePointProxyType;
+      Acts::detail::RefHolder>::ConstSpacePointProxyType;
 
   m_bottomBinFinder =
       std::make_shared<const Acts::BinFinder<SpacePointProxy_type>>(
@@ -230,7 +230,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
       spContainer(container);
 
-  using value_type = typename decltype(spContainer)::SpacePointProxyType;
+  using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
 
   // extent used to store r range for middle spacepoint

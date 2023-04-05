@@ -45,7 +45,8 @@ class SpacePointContainer {
       Acts::SpacePointContainer<container_t, holder_t>, true>;
 
   using ValueType = typename container_t::ValueType;
-
+  using ProxyType = typename std::conditional<ReadOnly, ConstSpacePointProxyType, SpacePointProxyType>::type;
+  
  public:
   // Constructors
   // It makes sense to support both options of
@@ -113,16 +114,17 @@ class SpacePointContainer {
 
   std::size_t size() const;
 
-  iterator begin();
-  iterator end();
+  // iterator begin();
+  // iterator end();
 
   const_iterator begin() const;
   const_iterator end() const;
 
-  SpacePointProxyType& get(std::size_t n);
-  const SpacePointProxyType& get(std::size_t n) const;
+  ProxyType& get(std::size_t n);
+  const ProxyType& get(std::size_t n) const;
 
-  ValueType& sp(std::size_t n) { return container().storage()[n]; }
+
+  //  ValueType& sp(std::size_t n) { return container().storage()[n]; }
   const ValueType& sp(std::size_t n) const { return container().storage()[n]; }
 
   // do these need to be private or public?
@@ -164,7 +166,8 @@ class SpacePointContainer {
 
  private:
   holder_t<container_t> m_container;
-  std::vector<SpacePointProxyType> m_proxies{};
+  std::vector<ProxyType> m_proxies{};
+  //    std::vector<SpacePointProxyType> m_proxies{};
 };
 
 // Implementations
@@ -173,17 +176,17 @@ inline std::size_t SpacePointContainer<container_t, holder_t>::size() const {
   return container().size_impl();
 }
 
-template <typename container_t, template <typename> class holder_t>
-inline typename SpacePointContainer<container_t, holder_t>::iterator
-SpacePointContainer<container_t, holder_t>::begin() {
-  return {*this, 0};
-}
+// template <typename container_t, template <typename> class holder_t>
+// inline typename SpacePointContainer<container_t, holder_t>::iterator
+// SpacePointContainer<container_t, holder_t>::begin() {
+//   return {*this, 0};
+// }
 
-template <typename container_t, template <typename> class holder_t>
-inline typename SpacePointContainer<container_t, holder_t>::iterator
-SpacePointContainer<container_t, holder_t>::end() {
-  return {*this, size()};
-}
+// template <typename container_t, template <typename> class holder_t>
+// inline typename SpacePointContainer<container_t, holder_t>::iterator
+// SpacePointContainer<container_t, holder_t>::end() {
+//   return {*this, size()};
+// }
 
 template <typename container_t, template <typename> class holder_t>
 inline typename SpacePointContainer<container_t, holder_t>::const_iterator
@@ -280,14 +283,14 @@ SpacePointContainer<container_t, holder_t>::topStripCenterPosition(
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline typename SpacePointContainer<container_t, holder_t>::SpacePointProxyType&
+inline typename SpacePointContainer<container_t, holder_t>::ProxyType&
 SpacePointContainer<container_t, holder_t>::get(std::size_t n) {
   return m_proxies[n];
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline const typename SpacePointContainer<container_t,
-                                          holder_t>::SpacePointProxyType&
+                                          holder_t>::ProxyType&
 SpacePointContainer<container_t, holder_t>::get(std::size_t n) const {
   return m_proxies.at(n);
 }

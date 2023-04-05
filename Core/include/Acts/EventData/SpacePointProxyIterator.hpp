@@ -53,7 +53,7 @@ class SpacePointProxyIterator {
   
   // returning pointer here since seeding always assumes a vector of pointers as
   // input... not sure about this tbh
-  ConstProxyType& operator*() const;
+  const ConstProxyType& operator*() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   ProxyType& operator*();
@@ -181,7 +181,7 @@ SpacePointProxyIterator<container_t, read_only>::operator*() {
 }
 
 template <typename container_t, bool read_only>
-inline typename SpacePointProxyIterator<container_t, read_only>::ConstProxyType&
+inline const typename SpacePointProxyIterator<container_t, read_only>::ConstProxyType&
 SpacePointProxyIterator<container_t, read_only>::operator*() const {
   return m_container->get(m_index);
 }
