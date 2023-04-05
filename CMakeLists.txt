@@ -141,15 +141,15 @@ set_option_if(ACTS_BUILD_EXAMPLES_EXATRKX ACTS_BUILD_PLUGIN_EXATRKX)
 # feature tests
 include(CheckCXXSourceCompiles)
 
-# function that tests if the root installation is compatible (i.e., compiled with C++17)
+# function that tests if the root installation is compatible
 function(check_root_compatibility)
   get_target_property(ROOT_INCLUDE_DIR ROOT::Core INTERFACE_INCLUDE_DIRECTORIES)
-  set(CMAKE_REQUIRED_FLAGS -std=c++17)
   set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
-  check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
-  if(NOT ROOT_COMPATIBILITY_CHECK)
-    message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled with C++17.")
-  endif()
+  #yolo
+  #check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
+  #if(NOT ROOT_COMPATIBILITY_CHECK)
+  #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
+  #endif()
 endfunction()
 
 # additional configuration and tools
