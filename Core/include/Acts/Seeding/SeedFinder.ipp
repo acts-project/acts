@@ -189,6 +189,8 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
     const float& deltaRMinSP, const float& deltaRMaxSP) const {
+  constexpr int sign = candidateType == Acts::SpacePointCandidateType::BOTTOM ? -1 : 1;
+
   outVec.clear();
   linCircleVec.clear();
 
@@ -313,30 +315,23 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      if (m_config.interactionPointCut) {
-        // in the rotated frame the interaction point is positioned at x = -rM
-        // and y ~= impactParam
-        float vIP = vIPAbs;
-        if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
-          if (yNewFrame < 0 and std::abs(rM * yNewFrame) > - m_config.impactMax * xNewFrame)) {
-	          vIP = -vIPAbs;
-          }
-        } else { // TOP
-          if (yNewFrame > 0 and std::abs(rM * yNewFrame) > m_config.impactMax * xNewFrame)) {
-	          vIP = -vIPAbs;
-          }
-        }
-        // we can obtain aCoef as the slope dv/du of the linear function,
-        // estimated using du and dv between the two SP bCoef is obtained by
-        // inserting aCoef into the linear equation
-        const float aCoef = (vT - vIP) / (uT - uIP);
-	      const float bCoef = vIP - aCoef * uIP;
-	      // the distance of the straight line from the origin (radius of the
-	      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
-	      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-	      if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
-	        continue;
-	      }
+      if (m_config.interactionPointCut and
+	  std::abs(rM * yNewFrame) > sign * m_config.impactMax * xNewFrame) {
+
+	// in the rotated frame the interaction point is positioned at x = -rM
+	// and y ~= impactParam
+	const float vIP = (sign * yNewFrame > 0.) ? -vIPAbs : vIPAbs;
+	// we can obtain aCoef as the slope dv/du of the linear function,
+	// estimated using du and dv between the two SP bCoef is obtained by
+	// inserting aCoef into the linear equation
+	const float aCoef = (vT - vIP) / (uT - uIP);
+	const float bCoef = vIP - aCoef * uIP;
+	// the distance of the straight line from the origin (radius of the
+	// circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+	// aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+	if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
+	  continue;
+	}
       }      
       
       const float iDeltaR = std::sqrt(iDeltaR2);
