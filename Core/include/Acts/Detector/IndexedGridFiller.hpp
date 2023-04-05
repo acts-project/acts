@@ -336,7 +336,7 @@ struct IndexedGridFiller {
       auto refs = rGenerator.references(gctx, *o);
       std::vector<typename index_grid::grid_type::point_t> gridQueries;
       gridQueries.reserve(refs.size());
-      for (const auto ref : refs) {
+      for (const auto& ref : refs) {
         // Cast the transfrom according to the grid binning
         gridQueries.push_back(iGrid.castPosition(ref));
       }
