@@ -31,15 +31,6 @@
 #include <vector>
 #include <utility>  
 
-// a function for sorting the detector volumes from the innermost to the
-// outermost
-/*
-bool sortByRadialDistance(
-    std::shared_ptr<Acts::Experimental::DetectorVolume>& det_vol1,
-    std::shared_ptr<Acts::Experimental::DetectorVolume>& det_vol2) {  return det_vol1->center().y() < det_vol2->center().y();
-
-  return det_vol1->center().y() < det_vol2->center().y();
-}*/
 
 ActsExamples::MockupSectorBuilder::MockupSectorBuilder(
     const ActsExamples::MockupSectorBuilder::Config& config){
