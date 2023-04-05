@@ -316,14 +316,14 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       if (m_config.interactionPointCut) {
         // in the rotated frame the interaction point is positioned at x = -rM
         // and y ~= impactParam
-        float vIP = 0;
+        float vIP = vIPAbs;
         if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
-          if (std::abs(rM * yNewFrame) > - m_config.impactMax * xNewFrame)) {
-	          vIP = yNewFrame < 0. ? -vIPAbs : vIPAbs;
+          if (yNewFrame < 0 and std::abs(rM * yNewFrame) > - m_config.impactMax * xNewFrame)) {
+	          vIP = -vIPAbs;
           }
         } else { // TOP
-          if (std::abs(rM * yNewFrame) > m_config.impactMax * xNewFrame)) {
-	          vIP = yNewFrame > 0. ? -vIPAbs : vIPAbs;
+          if (yNewFrame > 0 and std::abs(rM * yNewFrame) > m_config.impactMax * xNewFrame)) {
+	          vIP = -vIPAbs;
           }
         }
         // we can obtain aCoef as the slope dv/du of the linear function,
