@@ -150,7 +150,7 @@ Parameters convertTrackParametersToEdm4hep(
 
 template <typename charge_t>
 SingleBoundTrackParameters<charge_t> convertTrackParametersFromEdm4hep(
-    const Acts::GeometryContext& gctx, double Bz, const Parameters& params) {
+    double Bz, const Parameters& params) {
   // [     d      /                     pi\                                  ]
   // [------------|-atan(\tan\lambda) + --|                 0                ]
   // [d\tan\lambda\                     2 /                                  ]
@@ -179,11 +179,14 @@ SingleBoundTrackParameters<charge_t> convertTrackParametersFromEdm4hep(
   J(3, 3) = -1 / (params.values[3] * params.values[3] + 1);
   J(4, 3) = -1 * params.values[3] * params.values[4] /
             (Bz * std::pow(params.values[3] * params.values[3] + 1, 3. / 2.));
-  J(4, 4) = Bz * std::sqrt(params.values[3] * params.values[3] + 1);
+  J(4, 4) = 1 / (Bz * std::sqrt(params.values[3] * params.values[3] + 1));
 
   BoundVector targetPars;
   // @TODO: Double check this
-  BoundMatrix cov = J * params.covariance.value() * J.transpose();
+  BoundMatrix cov;
+  cov.setIdentity();
+  cov.template topLeftCorner<5, 5>() =
+      J * params.covariance.value() * J.transpose();
 
   targetPars[eBoundLoc0] = params.values[0];
   targetPars[eBoundLoc1] = params.values[1];
@@ -191,6 +194,7 @@ SingleBoundTrackParameters<charge_t> convertTrackParametersFromEdm4hep(
   targetPars[eBoundTheta] = M_PI_2 - std::atan(params.values[3]);
   targetPars[eBoundQOverP] =
       params.values[4] * std::sin(targetPars[eBoundTheta]) / Bz;
+  targetPars[eBoundTime] = params.time;
 
   return {params.surface, targetPars, cov};
 }
