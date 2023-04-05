@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -13,21 +13,26 @@
 
 namespace Acts {
 
-template <typename container_t, bool read_only = true>
+template <typename container_t,
+	  bool read_only>
 class SpacePointProxyIterator {
  public:
-  using ContainerType = typename std::conditional<read_only, const container_t,
+  using ContainerType = typename std::conditional<read_only,
+						  const container_t,
                                                   container_t>::type;
-  using ProxyType = typename container_t::SpacePointProxyType;
-  using ConstProxyType = typename container_t::ConstSpacePointProxyType;
+  using ProxyType = typename std::conditional<read_only,
+					      typename container_t::ConstSpacePointProxyType,
+					      typename container_t::SpacePointProxyType>::type;
 
   using iterator_category = std::random_access_iterator_tag;
-  using value_type =
-      typename std::conditional<read_only, ConstProxyType, ProxyType>::type;
+  using value_type = typename std::conditional<read_only,
+					       const ProxyType,
+					       ProxyType>::type;
   using difference_type = std::ptrdiff_t;
   using pointer = value_type*;
   using reference = value_type&;
 
+public:
   // Constructors
   SpacePointProxyIterator(ContainerType& container, std::size_t index);
 
@@ -51,9 +56,7 @@ class SpacePointProxyIterator {
 
   difference_type operator-(const SpacePointProxyIterator& other) const;
   
-  // returning pointer here since seeding always assumes a vector of pointers as
-  // input... not sure about this tbh
-  const ConstProxyType& operator*() const;
+  const ProxyType& operator*() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   ProxyType& operator*();
@@ -63,127 +66,6 @@ class SpacePointProxyIterator {
   std::size_t m_index;
 };
 
-// Implementation
-template <typename container_t, bool read_only>
-SpacePointProxyIterator<container_t, read_only>::SpacePointProxyIterator(
-    typename SpacePointProxyIterator<container_t, read_only>::ContainerType&
-        container,
-    std::size_t index)
-    : m_container(container), m_index(index) {}
-
-template <typename container_t, bool read_only>
-inline SpacePointProxyIterator<container_t, read_only>&
-SpacePointProxyIterator<container_t, read_only>::operator++() {
-  ++m_index;
-  return *this;
 }
 
-template <typename container_t, bool read_only>
-inline SpacePointProxyIterator<container_t, read_only>&
-SpacePointProxyIterator<container_t, read_only>::operator--() {
-  --m_index;
-  return *this;
-}
-
-template <typename container_t, bool read_only>
-inline SpacePointProxyIterator<container_t, read_only>
-SpacePointProxyIterator<container_t, read_only>::operator++(int) {
-  SpacePointProxyIterator other(*this);
-  ++m_index;
-  return other;
-}
-
-template <typename container_t, bool read_only>
-inline SpacePointProxyIterator<container_t, read_only>
-SpacePointProxyIterator<container_t, read_only>::operator--(int) {
-  SpacePointProxyIterator other(*this);
-  --m_index;
-  return other;
-}
-
-template <typename container_t, bool read_only>
-inline bool SpacePointProxyIterator<container_t, read_only>::operator==(
-    const SpacePointProxyIterator<container_t, read_only>& other) const {
-  return m_container.ptr == other.m_container.ptr and m_index == other.m_index;
-  ;
-}
-
-template <typename container_t, bool read_only>
-inline bool SpacePointProxyIterator<container_t, read_only>::operator!=(
-    const SpacePointProxyIterator<container_t, read_only>& other) const {
-  return not(*this == other);
-}
-
-template <typename container_t, bool read_only>
-inline bool SpacePointProxyIterator<container_t, read_only>::operator<(
-    const SpacePointProxyIterator<container_t, read_only>& other) const {
-  return m_index < other.m_index;
-}
-
-template <typename container_t, bool read_only>
-inline bool SpacePointProxyIterator<container_t, read_only>::operator>(
-    const SpacePointProxyIterator<container_t, read_only>& other) const {
-  return m_index > other.m_index;
-}
-
-template <typename container_t, bool read_only>
-inline bool SpacePointProxyIterator<container_t, read_only>::operator<=(
-    const SpacePointProxyIterator<container_t, read_only>& other) const {
-  return m_index <= other.m_index;
-}
-
-template <typename container_t, bool read_only>
-inline bool SpacePointProxyIterator<container_t, read_only>::operator>=(
-    const SpacePointProxyIterator<container_t, read_only>& other) const {
-  return m_index >= other.m_index;
-}
-
-template <typename container_t, bool read_only>
-inline SpacePointProxyIterator<container_t, read_only>&
-SpacePointProxyIterator<container_t, read_only>::operator+=(
-    std::size_t offset) {
-  m_index += offset;
-  return *this;
-}
-
-template <typename container_t, bool read_only>
-inline SpacePointProxyIterator<container_t, read_only>&
-SpacePointProxyIterator<container_t, read_only>::operator-=(
-    std::size_t offset) {
-  m_index -= offset;
-  return *this;
-}
-
-template <typename container_t, bool read_only>
-inline SpacePointProxyIterator<container_t, read_only>
-SpacePointProxyIterator<container_t, read_only>::operator+(
-    std::size_t offset) const {
-  return SpacePointProxyIterator(*m_container, m_index + offset);
-}
-
-template <typename container_t, bool read_only>
-inline SpacePointProxyIterator<container_t, read_only>
-SpacePointProxyIterator<container_t, read_only>::operator-(
-    std::size_t offset) const {
-  return SpacePointProxyIterator(*m_container, m_index - offset);
-}
-
-template <typename container_t, bool read_only>
-inline typename SpacePointProxyIterator<container_t, read_only>::difference_type
-SpacePointProxyIterator<container_t, read_only>::operator-(const SpacePointProxyIterator<container_t, read_only>& other) const
-{ return m_index - other.m_index; }
-  
-template <typename container_t, bool read_only>
-template <bool, typename>
-inline typename SpacePointProxyIterator<container_t, read_only>::ProxyType&
-SpacePointProxyIterator<container_t, read_only>::operator*() {
-  return m_container->get(m_index);
-}
-
-template <typename container_t, bool read_only>
-inline const typename SpacePointProxyIterator<container_t, read_only>::ConstProxyType&
-SpacePointProxyIterator<container_t, read_only>::operator*() const {
-  return m_container->get(m_index);
-}
-
-}  // namespace Acts
+#include "Acts/EventData/SpacePointProxyIterator.ipp"
