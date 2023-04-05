@@ -57,10 +57,11 @@ class SpacePointContainer {
             std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::RefHolder>::value>* = nullptr>
   SpacePointContainer(container_t& container) : m_container(container) {
-    std::size_t n = container.size_impl();
+    std::size_t n = this->size();
     m_proxies.reserve(n);
-    for (std::size_t i(0); i < n; i++)
+    for (std::size_t i(0); i < n; ++i) {
       m_proxies.emplace_back(*this, i);
+    }
   }
 
   // Take the ownership
@@ -68,11 +69,12 @@ class SpacePointContainer {
   template <template <typename> class H = holder_t,
             std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::ValueHolder>::value>* = nullptr>
-  SpacePointContainer(container_t&& container) : m_container(container) {
-    std::size_t n = container.size_impl();
+  SpacePointContainer(container_t&& container) : m_container(std::move(container)) {
+    std::size_t n = this->size();
     m_proxies.reserve(n);
-    for (std::size_t i(0); i < n; i++)
+    for (std::size_t i(0); i < n; ++i) {
       m_proxies.emplace_back(*this, i);
+    }
   }
 
   // If we take ownership, forbid copy operations
@@ -162,17 +164,8 @@ class SpacePointContainer {
 
  private:
   holder_t<container_t> m_container;
-  std::vector<SpacePointProxyType> m_proxies{};  // this will go away ?
+  std::vector<SpacePointProxyType> m_proxies{};
 };
-
-// Deduction rules
-template <typename container_t>
-SpacePointContainer(container_t& container)
-    -> SpacePointContainer<container_t, Acts::detail::RefHolder>;
-
-template <typename container_t>
-SpacePointContainer(container_t&& container)
-    -> SpacePointContainer<container_t, Acts::detail::ValueHolder>;
 
 // Implementations
 template <typename container_t, template <typename> class holder_t>
