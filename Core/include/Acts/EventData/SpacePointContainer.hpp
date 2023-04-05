@@ -18,8 +18,9 @@
 #include <vector>
 
 namespace Acts {
-// add read and write here?
-template <typename container_t, template <typename> class holder_t>
+
+template <typename container_t,
+	  template <typename> class holder_t>
 class SpacePointContainer {
  public:
   friend class Acts::SpacePointProxy<
@@ -31,7 +32,8 @@ class SpacePointContainer {
   friend class Acts::SpacePointProxyIterator<
       Acts::SpacePointContainer<container_t, holder_t>, true>;
 
-  static constexpr bool ReadOnly = true;
+public:
+  static constexpr bool read_only = true;
 
   using SpacePointProxyType =
       Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>,
@@ -39,13 +41,20 @@ class SpacePointContainer {
   using ConstSpacePointProxyType =
       Acts::SpacePointProxy<Acts::SpacePointContainer<container_t, holder_t>,
                             true>;
+
   using iterator = Acts::SpacePointProxyIterator<
       Acts::SpacePointContainer<container_t, holder_t>, false>;
   using const_iterator = Acts::SpacePointProxyIterator<
       Acts::SpacePointContainer<container_t, holder_t>, true>;
 
-  using ValueType = typename container_t::ValueType;
-  using ProxyType = typename std::conditional<ReadOnly, ConstSpacePointProxyType, SpacePointProxyType>::type;
+  using ValueType = typename std::conditional<read_only,
+					      typename std::conditional<std::is_const<typename container_t::ValueType>::value,
+							       typename container_t::ValueType,
+							       const typename container_t::ValueType>::type,
+					      typename container_t::ValueType>::type;
+  using ProxyType = typename std::conditional<read_only,
+					      ConstSpacePointProxyType,
+					      SpacePointProxyType>::type;
   
  public:
   // Constructors
@@ -55,80 +64,64 @@ class SpacePointContainer {
   // Do not take ownership
   // Activate only if holder_t is RefHolder
   template <template <typename> class H = holder_t,
-            std::enable_if_t<Acts::detail::is_same_template<
-                H, Acts::detail::RefHolder>::value>* = nullptr>
-  SpacePointContainer(container_t& container) : m_container(container) {
-    std::size_t n = this->size();
-    m_proxies.reserve(n);
-    for (std::size_t i(0); i < n; ++i) {
-      m_proxies.emplace_back(*this, i);
-    }
-  }
+            typename = std::enable_if_t<Acts::detail::is_same_template<
+                H, Acts::detail::RefHolder>::value>>
+  SpacePointContainer(container_t& container);
 
   // Take the ownership
   // Activate only if holder_t is ValueHolder
   template <template <typename> class H = holder_t,
-            std::enable_if_t<Acts::detail::is_same_template<
-                H, Acts::detail::ValueHolder>::value>* = nullptr>
-  SpacePointContainer(container_t&& container) : m_container(std::move(container)) {
-    std::size_t n = this->size();
-    m_proxies.reserve(n);
-    for (std::size_t i(0); i < n; ++i) {
-      m_proxies.emplace_back(*this, i);
-    }
-  }
+            typename = std::enable_if_t<Acts::detail::is_same_template<
+					  H, Acts::detail::ValueHolder>::value>>
+  SpacePointContainer(container_t&& container);
 
   // If we take ownership, forbid copy operations
   // Need to define copy operations only if holder_t is RefHolder !!!
   template <template <typename> class H = holder_t,
-            std::enable_if_t<Acts::detail::is_same_template<
-                H, Acts::detail::RefHolder>::value>* = nullptr>
-  SpacePointContainer(SpacePointContainer& other)
-      : m_container(*m_container.ptr),
-        m_proxies(other.m_proxies.begin(), other.m_proxies.end()) {}
+            typename = std::enable_if_t<Acts::detail::is_same_template<
+                H, Acts::detail::RefHolder>::value>>
+  SpacePointContainer(SpacePointContainer& other);
 
   template <template <typename> class H = holder_t,
-            std::enable_if_t<Acts::detail::is_same_template<
-                                 H, Acts::detail::RefHolder>::value,
-                             bool> = true>
-  SpacePointContainer& operator=(SpacePointContainer& other) {
-    m_container.ptr = other.m_container.ptr;
-    m_proxies.insert(m_proxies.end(), other.m_proxies.begin(),
-                     other.m_proxies.end());
-    return *this;
-  }
+            typename = std::enable_if_t<Acts::detail::is_same_template<
+					  H, Acts::detail::RefHolder>::value,
+					bool>>
+  SpacePointContainer& operator=(SpacePointContainer& other);
 
   // move operations
-  SpacePointContainer(SpacePointContainer&& other) noexcept
-      : m_container(std::exchange(other.m_container.ptr, nullptr)),
-        m_proxies(std::move(other.m_proxies)) {}
-
-  SpacePointContainer& operator=(SpacePointContainer&& other) noexcept {
-    m_container = std::exchange(other.m_container.ptr, nullptr);
-    m_proxies = std::move(other.m_proxies);
-    return *this;
-  }
+  SpacePointContainer(SpacePointContainer&& other) noexcept;
+  SpacePointContainer& operator=(SpacePointContainer&& other) noexcept;
 
   // Destructor
   ~SpacePointContainer() = default;
 
   std::size_t size() const;
 
-  // iterator begin();
-  // iterator end();
+  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
+  iterator begin();
+
+  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
+  iterator end();
 
   const_iterator begin() const;
   const_iterator end() const;
 
+  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
+  ValueType& sp(std::size_t n);
+
+  ValueType& sp(std::size_t n) const;
+
+private:
+  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
+  container_t& container();
+
+  const container_t& container() const;
+
+  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   ProxyType& get(std::size_t n);
+  
   const ProxyType& get(std::size_t n) const;
 
-
-  //  ValueType& sp(std::size_t n) { return container().storage()[n]; }
-  const ValueType& sp(std::size_t n) const { return container().storage()[n]; }
-
-  // do these need to be private or public?
-  const container_t& container() const;
 
  private:
   float x(std::size_t n) const;
@@ -146,9 +139,9 @@ class SpacePointContainer {
   Acts::Vector3 stripCenterDistance(std::size_t n) const;
   Acts::Vector3 topStripCenterPosition(std::size_t n) const;
 
-  // // component methods for additional quantities
+  // component methods for additional quantities
   // template<typename T>
-  // const T& component(HashedString key, std::size_t n) const
+  // T component(HashedString key, std::size_t n) const
   // {
   //   using namespace Acts::HashedStringLiteral;
   //   switch (key) {
@@ -158,141 +151,17 @@ class SpacePointContainer {
   //   case "BottomStripDirection"_hash:
   //   case "StripCenterDistance"_hash:
   //   case "TopStripCenterPosition"_hash:
-  // 	return *std::any_cast<T*>(container().component_impl(key, n));
+  //     return *std::any_cast<T>(&container().component_impl(key, n));
   //   default:
-  // 	throw std::runtime_error("no such component " + std::to_string(key));
+  //     throw std::runtime_error("no such component " + std::to_string(key));
   //   }
   // }
 
  private:
   holder_t<container_t> m_container;
   std::vector<ProxyType> m_proxies{};
-  //    std::vector<SpacePointProxyType> m_proxies{};
 };
 
-// Implementations
-template <typename container_t, template <typename> class holder_t>
-inline std::size_t SpacePointContainer<container_t, holder_t>::size() const {
-  return container().size_impl();
-}
-
-// template <typename container_t, template <typename> class holder_t>
-// inline typename SpacePointContainer<container_t, holder_t>::iterator
-// SpacePointContainer<container_t, holder_t>::begin() {
-//   return {*this, 0};
-// }
-
-// template <typename container_t, template <typename> class holder_t>
-// inline typename SpacePointContainer<container_t, holder_t>::iterator
-// SpacePointContainer<container_t, holder_t>::end() {
-//   return {*this, size()};
-// }
-
-template <typename container_t, template <typename> class holder_t>
-inline typename SpacePointContainer<container_t, holder_t>::const_iterator
-SpacePointContainer<container_t, holder_t>::begin() const {
-  return {*this, 0};
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline typename SpacePointContainer<container_t, holder_t>::const_iterator
-SpacePointContainer<container_t, holder_t>::end() const {
-  return {*this, size()};
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline const container_t&
-SpacePointContainer<container_t, holder_t>::container() const {
-  return *m_container;
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::x(
-    std::size_t n) const {
-  return container().x_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::y(
-    std::size_t n) const {
-  return container().y_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::z(
-    std::size_t n) const {
-  return container().z_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::radius(
-    std::size_t n) const {
-  return container().radius_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::varianceR(
-    std::size_t n) const {
-  return container().varianceR_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::varianceZ(
-    std::size_t n) const {
-  return container().varianceZ_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::topHalfStripLength(
-    std::size_t n) const {
-  return container().topHalfStripLength_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::bottomHalfStripLength(
-    std::size_t n) const {
-  return container().bottomHalfStripLength_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline Acts::Vector3
-SpacePointContainer<container_t, holder_t>::topStripDirection(
-    std::size_t n) const {
-  return container().topStripDirection_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline Acts::Vector3
-SpacePointContainer<container_t, holder_t>::bottomStripDirection(
-    std::size_t n) const {
-  return container().bottomStripDirection_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline Acts::Vector3
-SpacePointContainer<container_t, holder_t>::stripCenterDistance(
-    std::size_t n) const {
-  return container().stripCenterDistance_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline Acts::Vector3
-SpacePointContainer<container_t, holder_t>::topStripCenterPosition(
-    std::size_t n) const {
-  return container().topStripCenterPosition_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline typename SpacePointContainer<container_t, holder_t>::ProxyType&
-SpacePointContainer<container_t, holder_t>::get(std::size_t n) {
-  return m_proxies[n];
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline const typename SpacePointContainer<container_t,
-                                          holder_t>::ProxyType&
-SpacePointContainer<container_t, holder_t>::get(std::size_t n) const {
-  return m_proxies.at(n);
-}
-
 }  // namespace Acts
+
+#include "Acts/EventData/SpacePointContainer.ipp"

@@ -69,8 +69,8 @@ class SpacePointContainer {
   Acts::Vector3 topStripCenterPosition_impl(std::size_t n) const;
 
   // template<typename T>
-  const std::any component_impl(Acts::HashedString key,
-                                std::size_t /*n*/) const {
+  std::any component_impl(Acts::HashedString key,
+			  std::size_t /*n*/) const {
     std::cout << "Inside component_impl\n";
     using namespace Acts::HashedStringLiteral;
     switch (key) {

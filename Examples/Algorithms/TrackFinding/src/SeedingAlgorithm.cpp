@@ -268,7 +268,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
         std::size_t index = sp->index();
-        state.spacePointData.setTopHalfStripLength(
+	state.spacePointData.setTopHalfStripLength(
             index, sp->sp().topHalfStripLength());
         state.spacePointData.setBottomHalfStripLength(
             index, sp->sp().bottomHalfStripLength());

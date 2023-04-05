@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -100,12 +99,12 @@ SpacePointProxy<container_t, read_only>::topStripCenterPosition() const {
   return container().topStripCenterPosition(m_index);
 }
 
-template <typename container_t, bool read_only>
-template <typename T>
-inline T
-SpacePointProxy<container_t, read_only>::component(HashedString key) const {
-  return container().template component<T>(key, m_index);
-}
+// template <typename container_t, bool read_only>
+// template <typename T>
+// inline T
+// SpacePointProxy<container_t, read_only>::component(HashedString key) const {
+//   return container().template component<T>(key, m_index);
+// }
 
 template <typename container_t, bool read_only>
 inline typename SpacePointProxy<container_t, read_only>::ContainerType&

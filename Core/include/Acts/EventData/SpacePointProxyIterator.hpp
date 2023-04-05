@@ -34,6 +34,7 @@ class SpacePointProxyIterator {
 
 public:
   // Constructors
+  SpacePointProxyIterator(ContainerType&& container, std::size_t index) = delete;
   SpacePointProxyIterator(ContainerType& container, std::size_t index);
 
   SpacePointProxyIterator& operator++();
