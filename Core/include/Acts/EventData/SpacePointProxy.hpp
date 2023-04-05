@@ -60,8 +60,8 @@ public:
   Acts::Vector3 topStripCenterPosition() const;
 
   // component methods for additional quantities
-  // template <typename T>
-  // T component(HashedString key) const;
+  template <typename T>
+  T component(HashedString key) const;
   
 private:
   ContainerType& container() const;

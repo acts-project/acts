@@ -135,31 +135,23 @@ private:
   float varianceR(std::size_t n) const;
   float varianceZ(std::size_t n) const;
 
-  // Dynamic variables
-  float topHalfStripLength(std::size_t n) const;
-  float bottomHalfStripLength(std::size_t n) const;
-  Acts::Vector3 topStripDirection(std::size_t n) const;
-  Acts::Vector3 bottomStripDirection(std::size_t n) const;
-  Acts::Vector3 stripCenterDistance(std::size_t n) const;
-  Acts::Vector3 topStripCenterPosition(std::size_t n) const;
-
   // component methods for additional quantities
-  // template<typename T>
-  // T component(HashedString key, std::size_t n) const
-  // {
-  //   using namespace Acts::HashedStringLiteral;
-  //   switch (key) {
-  //   case "TopHalfStripLength"_hash:
-  //   case "BottomHalfStripLength"_hash:
-  //   case "TopStripDirection"_hash:
-  //   case "BottomStripDirection"_hash:
-  //   case "StripCenterDistance"_hash:
-  //   case "TopStripCenterPosition"_hash:
-  //     return *std::any_cast<T>(&container().component_impl(key, n));
-  //   default:
-  //     throw std::runtime_error("no such component " + std::to_string(key));
-  //   }
-  // }
+  template<typename T>
+  T component(HashedString key, std::size_t n) const
+  {
+    using namespace Acts::HashedStringLiteral;
+    switch (key) {
+    case "TopHalfStripLength"_hash:
+    case "BottomHalfStripLength"_hash:
+    case "TopStripDirection"_hash:
+    case "BottomStripDirection"_hash:
+    case "StripCenterDistance"_hash:
+    case "TopStripCenterPosition"_hash:
+      return std::any_cast<T>(container().component_impl(key, n));
+    default:
+      throw std::runtime_error("no such component " + std::to_string(key));
+    }
+  }
 
  private:
   holder_t<container_t> m_container;

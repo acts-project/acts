@@ -62,23 +62,14 @@ class SpacePointContainer {
 
   const ValueType& get_impl(std::size_t idx) const
   { return storage()[idx]; }
-  
-  float topHalfStripLength_impl(std::size_t n) const;
-  float bottomHalfStripLength_impl(std::size_t n) const;
-  Acts::Vector3 topStripDirection_impl(std::size_t n) const;
-  Acts::Vector3 bottomStripDirection_impl(std::size_t n) const;
-  Acts::Vector3 stripCenterDistance_impl(std::size_t n) const;
-  Acts::Vector3 topStripCenterPosition_impl(std::size_t n) const;
 
-  // template<typename T>
   std::any component_impl(Acts::HashedString key,
 			  std::size_t /*n*/) const {
-    std::cout << "Inside component_impl\n";
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "TopHalfStripLength"_hash:
       case "BottomHalfStripLength"_hash:
-        return 0.;
+        return static_cast<float>(0.);
       case "TopStripDirection"_hash:
       case "BottomStripDirection"_hash:
       case "StripCenterDistance"_hash:
@@ -141,45 +132,6 @@ template <typename collection_t>
 inline float SpacePointContainer<collection_t>::varianceZ_impl(
     std::size_t idx) const {
   return storage()[idx]->varianceZ();
-}
-
-template <typename collection_t>
-inline float SpacePointContainer<collection_t>::topHalfStripLength_impl(
-    std::size_t /*n*/) const {
-  return 0.;
-}
-
-template <typename collection_t>
-inline float SpacePointContainer<collection_t>::bottomHalfStripLength_impl(
-    std::size_t /*n*/) const {
-  return 0.;
-}
-
-template <typename collection_t>
-inline Acts::Vector3 SpacePointContainer<collection_t>::topStripDirection_impl(
-    std::size_t /*n*/) const {
-  return {0., 0., 0.};
-}
-
-template <typename collection_t>
-inline Acts::Vector3
-SpacePointContainer<collection_t>::bottomStripDirection_impl(
-    std::size_t /*n*/) const {
-  return {0., 0., 0.};
-}
-
-template <typename collection_t>
-inline Acts::Vector3
-SpacePointContainer<collection_t>::stripCenterDistance_impl(
-    std::size_t /*n*/) const {
-  return {0., 0., 0.};
-}
-
-template <typename collection_t>
-inline Acts::Vector3
-SpacePointContainer<collection_t>::topStripCenterPosition_impl(
-    std::size_t /*n*/) const {
-  return {0., 0., 0.};
 }
 
 template <typename collection_t>

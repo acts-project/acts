@@ -159,46 +159,6 @@ inline float SpacePointContainer<container_t, holder_t>::varianceZ(
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::topHalfStripLength(
-    std::size_t n) const {
-  return container().topHalfStripLength_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::bottomHalfStripLength(
-    std::size_t n) const {
-  return container().bottomHalfStripLength_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline Acts::Vector3
-SpacePointContainer<container_t, holder_t>::topStripDirection(
-    std::size_t n) const {
-  return container().topStripDirection_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline Acts::Vector3
-SpacePointContainer<container_t, holder_t>::bottomStripDirection(
-    std::size_t n) const {
-  return container().bottomStripDirection_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline Acts::Vector3
-SpacePointContainer<container_t, holder_t>::stripCenterDistance(
-    std::size_t n) const {
-  return container().stripCenterDistance_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline Acts::Vector3
-SpacePointContainer<container_t, holder_t>::topStripCenterPosition(
-    std::size_t n) const {
-  return container().topStripCenterPosition_impl(n);
-}
-
-template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
 inline typename SpacePointContainer<container_t, holder_t>::ProxyType&
 SpacePointContainer<container_t, holder_t>::proxy(std::size_t n) {

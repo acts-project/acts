@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -64,47 +65,11 @@ inline float SpacePointProxy<container_t, read_only>::varianceZ() const {
 }
 
 template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::topHalfStripLength()
-    const {
-  return container().topHalfStripLength(m_index);
+template <typename T>
+inline T
+SpacePointProxy<container_t, read_only>::component(HashedString key) const {
+ return container().template component<T>(key, m_index);
 }
-
-template <typename container_t, bool read_only>
-inline float SpacePointProxy<container_t, read_only>::bottomHalfStripLength()
-    const {
-  return container().bottomHalfStripLength(m_index);
-}
-
-template <typename container_t, bool read_only>
-inline Acts::Vector3
-SpacePointProxy<container_t, read_only>::topStripDirection() const {
-  return container().topStripDirection(m_index);
-}
-
-template <typename container_t, bool read_only>
-inline Acts::Vector3
-SpacePointProxy<container_t, read_only>::bottomStripDirection() const {
-  return container().bottomStripDirection(m_index);
-}
-
-template <typename container_t, bool read_only>
-inline Acts::Vector3
-SpacePointProxy<container_t, read_only>::stripCenterDistance() const {
-  return container().stripCenterDistance(m_index);
-}
-
-template <typename container_t, bool read_only>
-inline Acts::Vector3
-SpacePointProxy<container_t, read_only>::topStripCenterPosition() const {
-  return container().topStripCenterPosition(m_index);
-}
-
-// template <typename container_t, bool read_only>
-// template <typename T>
-// inline T
-// SpacePointProxy<container_t, read_only>::component(HashedString key) const {
-//   return container().template component<T>(key, m_index);
-// }
 
 template <typename container_t, bool read_only>
 inline typename SpacePointProxy<container_t, read_only>::ContainerType&

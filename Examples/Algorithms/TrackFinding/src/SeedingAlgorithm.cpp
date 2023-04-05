@@ -154,39 +154,6 @@ ActsExamples::SeedingAlgorithm::SeedingAlgorithm(
     }
   }
 
-  if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    // TMP COMMENTED
-    // m_cfg.seedFinderConfig.getTopHalfStripLength.connect(
-    //     [](const void*, const SimSpacePoint& sp) -> float {
-    //       return sp.topHalfStripLength();
-    //     });
-
-    // m_cfg.seedFinderConfig.getBottomHalfStripLength.connect(
-    //     [](const void*, const SimSpacePoint& sp) -> float {
-    //       return sp.bottomHalfStripLength();
-    //     });
-
-    // m_cfg.seedFinderConfig.getTopStripDirection.connect(
-    //     [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-    //       return sp.topStripDirection();
-    //     });
-
-    // m_cfg.seedFinderConfig.getBottomStripDirection.connect(
-    //     [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-    //       return sp.bottomStripDirection();
-    //     });
-
-    // m_cfg.seedFinderConfig.getStripCenterDistance.connect(
-    //     [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-    //       return sp.stripCenterDistance();
-    //     });
-
-    // m_cfg.seedFinderConfig.getTopStripCenterPosition.connect(
-    //     [](const void*, const SimSpacePoint& sp) -> Acts::Vector3 {
-    //       return sp.topStripCenterPosition();
-    //     });
-  }
-
   using SpacePointProxy_type = typename Acts::SpacePointContainer<
       ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
       Acts::detail::RefHolder>::ConstSpacePointProxyType;
@@ -269,17 +236,18 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       for (const auto& sp : collection) {
         std::size_t index = sp->index();
 	state.spacePointData.setTopHalfStripLength(
-            index, sp->sp().topHalfStripLength());
+						   index, sp->sp().template component<float>("TopHalfStripLength"_hash));
         state.spacePointData.setBottomHalfStripLength(
-            index, sp->sp().bottomHalfStripLength());
+						      index, sp->sp().template component<float>("BottomHalfStripLength"_hash));
         state.spacePointData.setTopStripDirection(index,
-                                                  sp->sp().topStripDirection());
+                                                  sp->sp().template component<Acts::Vector3>("TopStripDirection"_hash));
         state.spacePointData.setBottomStripDirection(
-            index, sp->sp().bottomStripDirection());
+						     index,
+						     sp->sp().template component<Acts::Vector3>("BottomStripDirection"_hash));
         state.spacePointData.setStripCenterDistance(
-            index, sp->sp().stripCenterDistance());
+						    index, sp->sp().template component<Acts::Vector3>("StripCenterDistance"_hash));
         state.spacePointData.setTopStripCenterPosition(
-            index, sp->sp().topStripCenterPosition());
+						       index, sp->sp().template component<Acts::Vector3>("TopStripCenterPosition"_hash));
       }
     }
   }
