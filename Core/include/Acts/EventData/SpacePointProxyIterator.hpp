@@ -56,10 +56,10 @@ public:
 
   difference_type operator-(const SpacePointProxyIterator& other) const;
   
-  const ProxyType& operator*() const;
+  value_type& operator*() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ProxyType& operator*();
+  value_type& operator*();
 
  private:
   Acts::detail::RefHolder<ContainerType> m_container;

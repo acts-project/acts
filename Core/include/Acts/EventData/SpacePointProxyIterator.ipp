@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -121,13 +120,13 @@ SpacePointProxyIterator<container_t, read_only>::operator-(const SpacePointProxy
   
 template <typename container_t, bool read_only>
 template <bool, typename>
-inline typename SpacePointProxyIterator<container_t, read_only>::ProxyType&
+inline typename SpacePointProxyIterator<container_t, read_only>::value_type&
 SpacePointProxyIterator<container_t, read_only>::operator*() {
   return m_container->get(m_index);
 }
 
 template <typename container_t, bool read_only>
-inline const typename SpacePointProxyIterator<container_t, read_only>::ProxyType&
+inline typename SpacePointProxyIterator<container_t, read_only>::value_type&
 SpacePointProxyIterator<container_t, read_only>::operator*() const {
   return m_container->get(m_index);
 }
