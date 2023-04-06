@@ -11,6 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <iterator>
@@ -385,6 +386,19 @@ class TrackProxy {
     return m_container->trackStateRange(m_index);
   }
 
+  /// Append a track state to this track. This will modify the tip index to
+  /// point at the newly created track state, which will be directly after the
+  /// previous track state at tip index.
+  /// @param mask The allocation prop mask for the new track state
+  /// @return The newly added track state
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  auto appendTrackState(TrackStatePropMask mask = TrackStatePropMask::All) {
+    auto& tsc = m_container->trackStateContainer();
+    auto ts = tsc.getTrackState(tsc.addTrackState(mask, tipIndex()));
+    tipIndex() = ts.index();
+    return ts;
+  }
+
   /// Return the number of track states associated to this track
   /// @note This is calculated by iterating over the track states which is
   ///       somewhat expensive. Consider caching this value if you need It
@@ -427,6 +441,60 @@ class TrackProxy {
   /// @return The number of measurements
   unsigned int nHoles() const {
     return component<unsigned int>(hashString("nHoles"));
+  }
+
+  /// Return a mutable reference to the number of outliers for the track.
+  /// Mutable version
+  /// @return The number of outliers
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  unsigned int& nOutliers() {
+    return component<unsigned int>(hashString("nOutliers"));
+  }
+
+  /// Return the number of outliers for the track. Const version
+  /// @return The number of outliers
+  unsigned int nOutliers() const {
+    return component<unsigned int>(hashString("nOutliers"));
+  }
+
+  /// Return a mutable reference to the number of shared hits for the track.
+  /// Mutable version
+  /// @return The number of shared hits
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  unsigned int& nSharedHits() {
+    return component<unsigned int>(hashString("nSharedHits"));
+  }
+
+  /// Return the number of shared hits for the track. Const version
+  /// @return The number of shared hits
+  unsigned int nSharedHits() const {
+    return component<unsigned int>(hashString("nSharedHits"));
+  }
+
+  /// Return a mutable reference to the chi squared
+  /// Mutable version
+  /// @return The chi squared
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  float& chi2() {
+    return component<float>(hashString("chi2"));
+  }
+
+  /// Return the chi squared for the track. Const version
+  /// @return The chi squared
+  float chi2() const { return component<float>(hashString("chi2")); }
+
+  /// Return a mutable reference to the number of degrees of freedom for the
+  /// track. Mutable version
+  /// @return The the number of degrees of freedom
+  template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
+  unsigned int& nDoF() {
+    return component<unsigned int>(hashString("ndf"));
+  }
+
+  /// Return the number of degrees of freedom for the track. Const version
+  /// @return The number of degrees of freedom
+  unsigned int nDoF() const {
+    return component<unsigned int>(hashString("ndf"));
   }
 
   /// Return the index of this track in the track container
