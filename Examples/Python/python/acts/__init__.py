@@ -33,9 +33,9 @@ def Propagator(stepper, navigator):
         if isinstance(stepper, _stepper):
             _nextNavigator = getattr(ActsPythonBindings, "NextNavigator")
             if isinstance(navigator, _nextNavigator):
-                return getattr(ActsPythonBindings._propagator, f"{prefix}NextPropagator")(
-                    stepper, navigator
-                )
+                return getattr(
+                    ActsPythonBindings._propagator, f"{prefix}NextPropagator"
+                )(stepper, navigator)
             return getattr(ActsPythonBindings._propagator, f"{prefix}Propagator")(
                 stepper, navigator
             )
