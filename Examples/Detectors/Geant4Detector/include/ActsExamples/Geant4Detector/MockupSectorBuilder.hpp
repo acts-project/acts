@@ -59,21 +59,20 @@ class MockupSectorBuilder {
   /// @param gctx The current geometry context object
   /// @param chamber_config The configuration chamber struct
   std::shared_ptr<Acts::Experimental::DetectorVolume> buildChamber(
-    const ChamberConfig& chamberConfig);
+      const ChamberConfig& chamberConfig);
 
   /// Build Sector
   /// @param det_volumes The vector that contains the detector volumes of the Sector
   /// @param gctx The current geometry context object
   std::shared_ptr<Acts::Experimental::DetectorVolume> buildSector(
-      std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>detVolumes);
+      std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
+          detVolumes);
 
   /// Draw the sector in an obj file
   /// @param nameObjFile The name of the obj file where the sector will be saved
-  void drawSector(std::shared_ptr<Acts::Experimental::DetectorVolume>
-  detectorVolumeSector,
-    std::string nameObjFile);
-
-
+  void drawSector(
+      std::shared_ptr<Acts::Experimental::DetectorVolume> detectorVolumeSector,
+      std::string nameObjFile);
 
  private:
   Config mCfg;

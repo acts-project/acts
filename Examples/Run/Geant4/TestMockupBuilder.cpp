@@ -55,9 +55,7 @@ int main() {
   detector_volumes.push_back(detectorVolume_inner_chamber);
   detector_volumes.push_back(detectorVolume_outer_chamber);
 
-  auto detectorVolume_sector =
-      mockup_builder.buildSector(detector_volumes);
+  auto detectorVolume_sector = mockup_builder.buildSector(detector_volumes);
 
-
-    mockup_builder.drawSector(detectorVolume_sector,"sector_test.obj");
+  mockup_builder.drawSector(detectorVolume_sector, "sector_test.obj");
 }

@@ -22,13 +22,11 @@
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
-#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
-#include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
-#include "Acts/Geometry/GeometryContext.hpp"
-
 #include "Acts/Visualization/GeometryView3D.hpp"
 #include "Acts/Visualization/IVisualization3D.hpp"
 #include "Acts/Visualization/ObjVisualization3D.hpp"
+#include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
+#include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 
 #include <algorithm>
 #include <iostream>
@@ -46,13 +44,11 @@ ActsExamples::MockupSectorBuilder::MockupSectorBuilder(
 std::shared_ptr<Acts::Experimental::DetectorVolume>
 ActsExamples::MockupSectorBuilder::buildChamber(
     const ActsExamples::MockupSectorBuilder::ChamberConfig& chamberConfig) {
-
-
   if (g4World == nullptr) {
     throw std::invalid_argument("MockupSector: No g4World initialized");
     return nullptr;
   }
-  
+
   const Acts::GeometryContext gctx;
 
   // Geant4Detector Config creator with the g4world from the gdml file
@@ -81,10 +77,11 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   // The vector that holds the converted sensitive surfaces of the chamber
   std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
 
-
-   std::array<std::pair <float,float>,3> min_max;
-   std::fill(min_max.begin(), min_max.end(), 
-            std::make_pair<float, float>(std::move(std::numeric_limits<float>::max()), std::move(-std::numeric_limits<float>::max())));
+  std::array<std::pair<float, float>, 3> min_max;
+  std::fill(min_max.begin(), min_max.end(),
+            std::make_pair<float, float>(
+                std::move(std::numeric_limits<float>::max()),
+                std::move(-std::numeric_limits<float>::max())));
 
   // Convert the physical volumes of the detector elements to straw surfaces
   for (auto& detectorElement : detectorElements) {
@@ -122,9 +119,14 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   Acts::Vector3 maxValues = {min_max[0].second, min_max[1].second,
                              min_max[2].second};
 
-  Acts::ActsScalar hx = strawSurfaces.front()->bounds().values()[1] + mCfg.toleranceOverlap;
-  Acts::ActsScalar hy = 0.5 * ((maxValues.y()+radius)-(minValues.y()-radius)) + mCfg.toleranceOverlap;
-  Acts::ActsScalar hz = 0.5 * ((maxValues.z()+radius)-(minValues.z()-radius)) + mCfg.toleranceOverlap;
+  Acts::ActsScalar hx =
+      strawSurfaces.front()->bounds().values()[1] + mCfg.toleranceOverlap;
+  Acts::ActsScalar hy =
+      0.5 * ((maxValues.y() + radius) - (minValues.y() - radius)) +
+      mCfg.toleranceOverlap;
+  Acts::ActsScalar hz =
+      0.5 * ((maxValues.z() + radius) - (minValues.z() - radius)) +
+      mCfg.toleranceOverlap;
 
   auto detectorVolumeBounds =
       std::make_unique<Acts::CuboidVolumeBounds>(hx, hy, hz);
@@ -189,7 +191,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
     sectorAngle = halfPhi;
   }
 
-   const int detVolumesSize = detVolumes.size();
+  const int detVolumesSize = detVolumes.size();
 
   std::vector<float> rmins(detVolumesSize);
   std::vector<float> rmaxs(detVolumesSize);
@@ -205,7 +207,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
                          std::pow(detVol->center().y() +
                                       detVol->volumeBounds().values()[1],
                                   2)) +
-               mCfg.toleranceOverlap;  
+               mCfg.toleranceOverlap;
     halfZ[i] = detVol->volumeBounds().values()[2];
 
     cylinderVolumesBounds[i] = std::make_unique<Acts::CylinderVolumeBounds>(
@@ -222,7 +224,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
   // create a vector for the shifted surfaces of each chamber
   std::vector<std::shared_ptr<Acts::Surface>> shiftedSurfaces = {};
 
-  // creare an array of vectors that holds all the chambers of each sector 
+  // creare an array of vectors that holds all the chambers of each sector
   std::vector<std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
       chambersOfSectors(detVolumesSize);
 
@@ -300,10 +302,9 @@ ActsExamples::MockupSectorBuilder::buildSector(
   return detectorVolume;
 }
 
-void ActsExamples::MockupSectorBuilder::drawSector(std::shared_ptr<Acts::Experimental::DetectorVolume>
-  detectorVolumeSector,
-  std::string nameObjFile){
-
+void ActsExamples::MockupSectorBuilder::drawSector(
+    std::shared_ptr<Acts::Experimental::DetectorVolume> detectorVolumeSector,
+    std::string nameObjFile) {
   Acts::ViewConfig sConfig = Acts::s_viewSensitive;
 
   Acts::ObjVisualization3D objSector;
@@ -313,6 +314,4 @@ void ActsExamples::MockupSectorBuilder::drawSector(std::shared_ptr<Acts::Experim
       Acts::Transform3::Identity(), sConfig);
 
   objSector.write(nameObjFile);
-
-
 }
