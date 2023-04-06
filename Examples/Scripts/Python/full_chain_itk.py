@@ -86,23 +86,13 @@ addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
     if ttbar_pu200
     else TruthSeedRanges(),
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
     seedingAlgorithm=SeedingAlgorithm.Default,
+    # seedingAlgorithm=SeedingAlgorithm.FTF,
+    # seedingAlgorithm=SeedingAlgorithm.Orthogonal,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
-=======
-    seedingAlgorithm=SeedingAlgorithm.FTF,
-=======
-    seedingAlgorithm=SeedingAlgorithm.Orthogonal,
->>>>>>> saving before I try and update ACTS
-=======
-    seedingAlgorithm=SeedingAlgorithm.FTF,
->>>>>>> cd6e1eb9befbbfba5b907897a2dd81986b5fcdf4
-    *acts.examples.itk.itkSeedingAlgConfig("PixelSpacePoints"),
->>>>>>> python part of FTF seeding working, but algorithm replaced with ortho
+    ##python part of FTF seeding working, but algorithm replaced with ortho
     geoSelectionConfigFile=geo_dir / "itk-hgtd/geoSelection-ITk.json",
     outputDirRoot=outputDir,
 )
