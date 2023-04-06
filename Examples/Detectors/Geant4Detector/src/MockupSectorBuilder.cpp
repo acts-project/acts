@@ -117,8 +117,8 @@ ActsExamples::MockupSectorBuilder::buildChamber(
 
 
   Acts::ActsScalar hx = straw_surfaces.front()->bounds().values()[1] + m_cfg.toleranceOverlap;
-  Acts::ActsScalar hy = 0.5 * (std::abs(minValues.y() - maxValues.y()) + 2 * radius + m_cfg.toleranceOverlap);
-  Acts::ActsScalar hz = 0.5 * (std::abs(minValues.z() - maxValues.z()) + 2 * radius + m_cfg.toleranceOverlap);
+  Acts::ActsScalar hy = 0.5 * ((maxValues.y()+radius)-(minValues.y()-radius)) + m_cfg.toleranceOverlap;
+  Acts::ActsScalar hz = 0.5 * ((maxValues.z()+radius)-(minValues.z()-radius)) + m_cfg.toleranceOverlap;
 
   auto detectorVolumeBounds =
       std::make_unique<Acts::CuboidVolumeBounds>(hx, hy, hz);
