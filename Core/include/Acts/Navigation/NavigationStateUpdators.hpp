@@ -156,11 +156,15 @@ class IndexedUpdatorImpl : public INavigationDelegate {
 template <typename... updators_t>
 class ChainedUpdatorImpl : public INavigationDelegate {
  public:
+  /// The stored updators
+  std::tuple<updators_t...> updators;
+
   /// Constructor for chained updators in a tuple, this will unroll
   /// the tuple and call them in sequence
   ///
   /// @param upts the updators to be called in chain
-  ChainedUpdatorImpl(const std::tuple<updators_t...>& upts) : updators(upts) {}
+  ChainedUpdatorImpl(const std::tuple<updators_t...>&& upts)
+      : updators(std::move(upts)) {}
 
   /// A combined navigation state updator w/o intersection specifics
   ///
@@ -173,10 +177,6 @@ class ChainedUpdatorImpl : public INavigationDelegate {
         [&](auto&&... updator) { ((updator.update(gctx, nState)), ...); },
         updators);
   }
-
- private:
-  // The stored updators
-  std::tuple<updators_t...> updators;
 };
 
 }  // namespace Experimental

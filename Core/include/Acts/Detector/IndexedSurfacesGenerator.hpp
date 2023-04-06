@@ -71,24 +71,26 @@ struct IndexedSurfacesGenerator {
       bvArray[ibv] = bv;
     }
 
-    // Create the indexed surface grid:
-    // non-const as we need to fill the grid
-    auto indexedSurfaces =
-        std::make_unique<IndexedSurfacesImpl<decltype(grid)>>(
-            std::move(grid), bvArray, transform);
+    // The indexed surfaces delegate
+    IndexedSurfacesImpl<decltype(grid)> indexedSurfaces(std::move(grid),
+                                                        bvArray, transform);
 
     // Fill the bin indicies
     IndexedGridFiller filler{binExpansion, logLevel};
-    filler.fill(gctx, *indexedSurfaces, surfaces, rGenerator, assignToAll);
+    filler.fill(gctx, indexedSurfaces, surfaces, rGenerator, assignToAll);
 
-    // Now turn it const to act as a navigation delegate
-    std::unique_ptr<const IndexedSurfacesImpl<decltype(grid)>> cis =
-        std::move(indexedSurfaces);
+    // The portal delegate
+    AllPortalsImpl allPortals;
 
-    // Now create the delegate
+    // The chained delegate: indexed surfaces and all portals
+    using DelegateType = IndexedSurfacesAllPortalsImpl<decltype(grid)>;
+    auto indesSurfacesAllPortals = std::make_unique<const DelegateType>(
+        std::tie(indexedSurfaces, allPortals));
+
+    // Create the delegate and connect it
     SurfaceCandidatesUpdator nStateUpdator;
-    nStateUpdator.connect<&IndexedSurfacesImpl<decltype(grid)>::update>(
-        std::move(cis));
+    nStateUpdator.connect<&DelegateType::update>(
+        std::move(indesSurfacesAllPortals));
     return nStateUpdator;
   }
 };
