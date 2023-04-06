@@ -17,6 +17,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -1126,6 +1127,9 @@ class KalmanFitter {
     }
     track.nMeasurements() = kalmanResult.measurementStates;
     track.nHoles() = kalmanResult.measurementHoles;
+
+    calculateTrackQuantities(track);
+
     if (trackContainer.hasColumn(hashString("smoothed"))) {
       track.template component<bool, hashString("smoothed")>() =
           kalmanResult.smoothed;
@@ -1259,6 +1263,9 @@ class KalmanFitter {
     }
     track.nMeasurements() = kalmanResult.measurementStates;
     track.nHoles() = kalmanResult.measurementHoles;
+
+    calculateTrackQuantities(track);
+
     if (trackContainer.hasColumn(hashString("smoothed"))) {
       track.template component<bool, hashString("smoothed")>() =
           kalmanResult.smoothed;
