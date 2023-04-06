@@ -35,8 +35,8 @@ auto addStepper(const std::string& prefix, py::module_& m, py::module_& prop) {
   auto propagator =
       py::class_<propagator_t>(prop, (prefix + "Propagator").c_str())
           .def(py::init<>([&prefix](stepper_t _stepper, navigator_t navigator,
-                              Acts::Logging::Level level =
-                                  Acts::Logging::Level::INFO) {
+                                    Acts::Logging::Level level =
+                                        Acts::Logging::Level::INFO) {
                  return propagator_t{
                      std::move(_stepper), std::move(navigator),
                      Acts::getDefaultLogger(prefix + "Propagator", level)};
@@ -84,7 +84,7 @@ void addPropagation(Context& ctx) {
     using Config = Acts::Experimental::NextNavigator::Config;
     auto nav = py::class_<Acts::Experimental::NextNavigator,
                           std::shared_ptr<Acts::Experimental::NextNavigator>>(
-                   m, "Navigator")
+                   m, "NextNavigator")
                    .def(py::init<>([](Config cfg,
                                       Logging::Level level = Logging::INFO) {
                           return Acts::Experimental::NextNavigator{
