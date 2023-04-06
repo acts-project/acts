@@ -31,13 +31,13 @@ template <typename stepper_t, typename navigator_t>
 void addPropagator(py::module_& m, const std::string& prefix) {
   using propagator_t = Acts::Propagator<stepper_t, navigator_t>;
   py::class_<propagator_t>(m, (prefix + "Propagator").c_str())
-      .def(py::init<>([&prefix](stepper_t stepper, navigator_t navigator,
-                                Acts::Logging::Level level =
-                                    Acts::Logging::Level::INFO) {
-             return propagator_t{
-                 std::move(stepper), std::move(navigator),
-                 Acts::getDefaultLogger(prefix + "Propagator", level)};
-           }),
+      .def(py::init<>(
+               [=](stepper_t stepper, navigator_t navigator,
+                   Acts::Logging::Level level = Acts::Logging::Level::INFO) {
+                 return propagator_t{
+                     std::move(stepper), std::move(navigator),
+                     Acts::getDefaultLogger(prefix + "Propagator", level)};
+               }),
            py::arg("stepper"), py::arg("navigator"),
            py::arg("level") = Acts::Logging::INFO);
 
