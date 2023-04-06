@@ -73,6 +73,10 @@ struct GsfOptions {
   bool abortOnError = true;
 
   bool disableAllMaterialHandling = false;
+
+#if __cplusplus < 202002L
+  GsfOptions() = delete;
+#endif
 };
 
 }  // namespace Experimental
