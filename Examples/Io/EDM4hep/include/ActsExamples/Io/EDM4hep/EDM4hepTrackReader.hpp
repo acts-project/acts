@@ -11,25 +11,26 @@
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
-#include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsExamples/Framework/IReader.hpp"
+#include "ActsExamples/Framework/SequenceElement.hpp"
 #include "ActsFatras/EventData/Hit.hpp"
 #include "ActsFatras/EventData/Particle.hpp"
 
 #include <string>
 
-#include <podio/ROOTFrameWriter.h>
+#include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
 
-class EDM4hepTrackWriter : public WriterT<ConstTrackContainer> {
+class EDM4hepTrackReader : public IReader {
  public:
   struct Config {
-    /// Input track collection
-    std::string inputTracks;
-    /// Output track collection in edm4hep
-    std::string outputTracks = "ActsTracks";
-    /// Where to place output file
-    std::string outputPath;
+    /// Input file path
+    std::string inputPath;
+    /// Input track collection name in edm4hep
+    std::string inputTracks = "ActsTracks";
+    /// Output track collection
+    std::string outputTracks;
     /// Magnetic field along the z axis (needed for the conversion of
     /// parameters)
     double Bz;
@@ -38,25 +39,30 @@ class EDM4hepTrackWriter : public WriterT<ConstTrackContainer> {
   /// constructor
   /// @param config is the configuration object
   /// @param level is the output logging level
-  EDM4hepTrackWriter(const Config& config,
+  EDM4hepTrackReader(const Config& config,
                      Acts::Logging::Level level = Acts::Logging::INFO);
-
-  ProcessCode finalize() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
 
- protected:
-  /// @brief Write method called by the base class
-  /// @param [in] context is the algorithm context for consistency
-  /// @param [in] tracks is the track collection
-  ProcessCode writeT(const AlgorithmContext& context,
-                     const ConstTrackContainer& tracks) final;
+  std::string name() const final;
+
+  /// Return the available events range.
+  std::pair<size_t, size_t> availableEvents() const final;
+
+  /// Read out data from the input stream.
+  ProcessCode read(const ActsExamples::AlgorithmContext& ctx) final;
 
  private:
   Config m_cfg;
 
-  podio::ROOTFrameWriter m_writer;
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
+
+  podio::ROOTFrameReader m_reader;
+
+  std::unique_ptr<const Acts::Logger> m_logger;
+
+  const Acts::Logger& logger() const { return *m_logger; }
 };
 
 }  // namespace ActsExamples

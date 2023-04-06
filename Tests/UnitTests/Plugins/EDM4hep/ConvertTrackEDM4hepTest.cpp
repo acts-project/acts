@@ -33,6 +33,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
 
   BoundMatrix cov;
   cov.setIdentity();
+  cov(5, 5) = 25_ns;
 
   SingleBoundTrackParameters<SinglyCharged> boundPar{refSurface, par, cov};
 
@@ -53,6 +54,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
       (converted.covariance.value().template topLeftCorner<4, 4>()),
       ActsSymMatrix<4>::Identity());
   BOOST_CHECK(converted.covariance.value()(4, 4) > 0);
+  BOOST_CHECK_EQUAL(converted.covariance.value()(5, 5), 25_ns);
 
   // convert back for roundtrip test
 
@@ -74,6 +76,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
 
   BoundMatrix cov;
   cov.setIdentity();
+  cov(5, 5) = 25_ns;
 
   SingleBoundTrackParameters<SinglyCharged> boundPar{refSurface, par, cov};
 
@@ -97,6 +100,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
       (converted.covariance.value().template topLeftCorner<4, 4>()),
       ActsSymMatrix<4>::Identity());
   BOOST_CHECK(converted.covariance.value()(4, 4) > 0);
+  BOOST_CHECK_EQUAL(converted.covariance.value()(5, 5), 25_ns);
 
   // convert back for roundtrip test
   SingleBoundTrackParameters<SinglyCharged> roundtripPar =
@@ -109,5 +113,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
   BOOST_CHECK(roundtripPar.covariance().value().isApprox(
       boundPar.covariance().value()));
 }
+
+// @TODO: Add test without covariance!
 
 BOOST_AUTO_TEST_SUITE_END()

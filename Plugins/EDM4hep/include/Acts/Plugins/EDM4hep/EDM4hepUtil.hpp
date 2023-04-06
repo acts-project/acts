@@ -10,14 +10,19 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/EventData/Charge.hpp"
+#include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/SingleBoundTrackParameters.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/EventData/detail/TransformationBoundToFree.hpp"
 #include "Acts/EventData/detail/TransformationFreeToBound.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
+#include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
+
+#include <stdexcept>
 
 #include <Eigen/src/Core/util/Memory.h>
 #include <boost/graph/graph_traits.hpp>
@@ -33,13 +38,13 @@ static constexpr std::int32_t EDM4HEP_ACTS_POSITION_TYPE = 42;
 
 namespace detail {
 struct Parameters {
-  Acts::ActsVector<5> values;
-  double time;
-  std::optional<Acts::ActsSymMatrix<5>> covariance;
+  Acts::ActsVector<6> values;
+  std::optional<Acts::ActsSymMatrix<6>> covariance;
   std::shared_ptr<const Acts::Surface> surface;
 };
 
-ActsSymMatrix<5> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
+inline ActsSymMatrix<6> jacobianToEdm4hep(double theta, double qOverP,
+                                          double Bz) {
   // Calculate jacobian from our internal parametrization (d0, z0, phi, theta,
   // q/p) to the LCIO / edm4hep (see:
   // https://bib-pubdb1.desy.de/record/81214/files/LC-DET-2006-004%5B1%5D.pdf)
@@ -64,11 +69,8 @@ ActsSymMatrix<5> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   // [      2             sin(theta)]
   // [   sin (theta)                ]
 
-  ActsSymMatrix<5> J;
-  J.setZero();
-  J(0, 0) = 1;
-  J(1, 1) = 1;
-  J(2, 2) = 1;
+  ActsSymMatrix<6> J;
+  J.setIdentity();
   double cotTheta = std::tan(M_PI_2 + theta);
   J(3, 3) = -cotTheta * cotTheta - 1;  // d(tanLambda) / dTheta
   J(4, 4) = Bz / std::sin(theta);      // dOmega / d(qop)
@@ -76,6 +78,59 @@ ActsSymMatrix<5> jacobianToEdm4hep(double theta, double qOverP, double Bz) {
   J(4, 3) = -Bz * qOverP *
             std::cos(theta / (sinTheta * sinTheta));  // dOmega / dTheta
   return J;
+}
+
+inline ActsSymMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega,
+                                            double Bz) {
+  // [     d      /                     pi\                                  ]
+  // [------------|-atan(\tan\lambda) + --|                 0                ]
+  // [d\tan\lambda\                     2 /                                  ]
+  // [                                                                       ]
+  // [     d      /         \Omega        \     d   /         \Omega        \]
+  // [------------|-----------------------|  -------|-----------------------|]
+  // [d\tan\lambda|     __________________|  d\Omega|     __________________|]
+  // [            |    /            2     |         |    /            2     |]
+  // [            \B*\/  \tan\lambda  + 1 /         \B*\/  \tan\lambda  + 1 /]
+  //
+  // =
+  //
+  // [         -1                                     ]
+  // [   ----------------                 0           ]
+  // [              2                                 ]
+  // [   \tan\lambda  + 1                             ]
+  // [                                                ]
+  // [  -\Omega*\tan\lambda               1           ]
+  // [-----------------------  -----------------------]
+  // [                    3/2       __________________]
+  // [  /           2    \         /            2     ]
+  // [B*\\tan\lambda  + 1/     B*\/  \tan\lambda  + 1 ]
+
+  ActsSymMatrix<6> J;
+  J.setIdentity();
+  J(3, 3) = -1 / (tanLambda * tanLambda + 1);
+  J(4, 3) = -1 * omega * tanLambda /
+            (Bz * std::pow(tanLambda * tanLambda + 1, 3. / 2.));
+  J(4, 4) = 1 / (Bz * std::sqrt(tanLambda * tanLambda + 1));
+
+  return J;
+}
+
+inline void packCovariance(const ActsSymMatrix<6>& from, float* to) {
+  for (int i = 0; i < from.rows(); i++) {
+    for (int j = 0; j <= i; j++) {
+      size_t k = (i + 1) * i / 2 + j;
+      to[k] = from(i, j);
+    }
+  }
+}
+
+inline void unpackCovariance(const float* from, ActsSymMatrix<6>& to) {
+  for (int i = 0; i < to.rows(); i++) {
+    for (int j = 0; j <= i; j++) {
+      size_t k = (i + 1) * i / 2 + j;
+      to(i, j) = from[k];
+    }
+  }
 }
 
 template <typename charge_t>
@@ -131,9 +186,9 @@ Parameters convertTrackParametersToEdm4hep(
         gctx, *refSurface, freePars.value(), covCache);
     auto targetCov = std::get<Acts::BoundSymMatrix>(varNewCov);
 
-    Acts::ActsSymMatrix<5> J = jacobianToEdm4hep(targetPars[eBoundTheta],
+    Acts::ActsSymMatrix<6> J = jacobianToEdm4hep(targetPars[eBoundTheta],
                                                  targetPars[eBoundQOverP], Bz);
-    Acts::ActsSymMatrix<5> cIn = targetCov.template topLeftCorner<5, 5>();
+    Acts::ActsSymMatrix<6> cIn = targetCov.template topLeftCorner<6, 6>();
     result.covariance = J * cIn * J.transpose();
   }
 
@@ -141,9 +196,8 @@ Parameters convertTrackParametersToEdm4hep(
   result.values[1] = targetPars[Acts::eBoundLoc1];
   result.values[2] = targetPars[Acts::eBoundPhi];
   result.values[3] = std::tan(M_PI_2 - targetPars[Acts::eBoundTheta]);
-  result.time = targetPars[Acts::eBoundTime];
-
   result.values[4] = params.charge() * Bz / params.transverseMomentum();
+  result.values[5] = targetPars[Acts::eBoundTime];
 
   return result;
 }
@@ -151,42 +205,13 @@ Parameters convertTrackParametersToEdm4hep(
 template <typename charge_t>
 SingleBoundTrackParameters<charge_t> convertTrackParametersFromEdm4hep(
     double Bz, const Parameters& params) {
-  // [     d      /                     pi\                                  ]
-  // [------------|-atan(\tan\lambda) + --|                 0                ]
-  // [d\tan\lambda\                     2 /                                  ]
-  // [                                                                       ]
-  // [     d      /         \Omega        \     d   /         \Omega        \]
-  // [------------|-----------------------|  -------|-----------------------|]
-  // [d\tan\lambda|     __________________|  d\Omega|     __________________|]
-  // [            |    /            2     |         |    /            2     |]
-  // [            \B*\/  \tan\lambda  + 1 /         \B*\/  \tan\lambda  + 1 /]
-  //
-  // =
-  //
-  // [         -1                                     ]
-  // [   ----------------                 0           ]
-  // [              2                                 ]
-  // [   \tan\lambda  + 1                             ]
-  // [                                                ]
-  // [  -\Omega*\tan\lambda               1           ]
-  // [-----------------------  -----------------------]
-  // [                    3/2       __________________]
-  // [  /           2    \         /            2     ]
-  // [B*\\tan\lambda  + 1/     B*\/  \tan\lambda  + 1 ]
-
-  ActsSymMatrix<5> J;
-  J.setIdentity();
-  J(3, 3) = -1 / (params.values[3] * params.values[3] + 1);
-  J(4, 3) = -1 * params.values[3] * params.values[4] /
-            (Bz * std::pow(params.values[3] * params.values[3] + 1, 3. / 2.));
-  J(4, 4) = 1 / (Bz * std::sqrt(params.values[3] * params.values[3] + 1));
-
   BoundVector targetPars;
-  // @TODO: Double check this
+
+  ActsSymMatrix<6> J =
+      jacobianFromEdm4hep(params.values[3], params.values[4], Bz);
+
   BoundMatrix cov;
-  cov.setIdentity();
-  cov.template topLeftCorner<5, 5>() =
-      J * params.covariance.value() * J.transpose();
+  cov = J * params.covariance.value() * J.transpose();
 
   targetPars[eBoundLoc0] = params.values[0];
   targetPars[eBoundLoc1] = params.values[1];
@@ -194,7 +219,7 @@ SingleBoundTrackParameters<charge_t> convertTrackParametersFromEdm4hep(
   targetPars[eBoundTheta] = M_PI_2 - std::atan(params.values[3]);
   targetPars[eBoundQOverP] =
       params.values[4] * std::sin(targetPars[eBoundTheta]) / Bz;
-  targetPars[eBoundTime] = params.time;
+  targetPars[eBoundTime] = params.values[5];
 
   return {params.surface, targetPars, cov};
 }
@@ -220,20 +245,11 @@ void writeTrack(
     trackState.phi = params.values[2];
     trackState.tanLambda = params.values[3];
     trackState.omega = params.values[4];
-    trackState.time = params.time;
+    trackState.time = params.values[5];
 
     if (params.covariance) {
-      const auto& c = params.covariance.value();
-
-      trackState.covMatrix = {
-          static_cast<float>(c(0, 0)), static_cast<float>(c(1, 0)),
-          static_cast<float>(c(1, 1)), static_cast<float>(c(2, 0)),
-          static_cast<float>(c(2, 1)), static_cast<float>(c(2, 2)),
-          static_cast<float>(c(3, 0)), static_cast<float>(c(3, 1)),
-          static_cast<float>(c(3, 2)), static_cast<float>(c(3, 3)),
-          static_cast<float>(c(4, 0)), static_cast<float>(c(4, 1)),
-          static_cast<float>(c(4, 2)), static_cast<float>(c(4, 3)),
-          static_cast<float>(c(4, 4))};
+      detail::packCovariance(params.covariance.value(),
+                             trackState.covMatrix.data());
     }
   };
 
@@ -294,6 +310,77 @@ void writeTrack(
   for (auto& trackState : outTrackStates) {
     to.addToTrackStates(trackState);
   }
+}
+template <typename track_container_t, typename track_state_container_t,
+          template <typename> class holder_t>
+void readTrack(edm4hep::Track from,
+               Acts::TrackProxy<track_container_t, track_state_container_t,
+                                holder_t, false>
+                   track,
+               double Bz) {
+  TrackStatePropMask mask = TrackStatePropMask::Smoothed;
+
+  std::optional<edm4hep::TrackState> ipState;
+
+  auto unpack =
+      [](const edm4hep::TrackState& trackState) -> detail::Parameters {
+    detail::Parameters params;
+    params.covariance = ActsSymMatrix<6>{};
+    detail::unpackCovariance(trackState.covMatrix.data(),
+                             params.covariance.value());
+    params.values[0] = trackState.D0;
+    params.values[1] = trackState.Z0;
+    params.values[2] = trackState.phi;
+    params.values[3] = trackState.tanLambda;
+    params.values[4] = trackState.omega;
+    params.values[5] = trackState.time;
+
+    Vector3 center = {
+        trackState.referencePoint.x,
+        trackState.referencePoint.y,
+        trackState.referencePoint.z,
+    };
+    params.surface = Acts::Surface::makeShared<PerigeeSurface>(center);
+
+    params.covariance = ActsSymMatrix<6>{};
+    detail::unpackCovariance(trackState.covMatrix.data(),
+                             params.covariance.value());
+
+    return params;
+  };
+
+  for (const auto& trackState : from.getTrackStates()) {
+    if (trackState.location == edm4hep::TrackState::AtIP) {
+      ipState = trackState;
+      continue;
+    }
+
+    auto params = unpack(trackState);
+
+    auto ts = track.appendTrackState(mask);
+    ts.typeFlags().set(MeasurementFlag);
+
+    auto converted =
+        detail::convertTrackParametersFromEdm4hep<SinglyCharged>(Bz, params);
+
+    ts.smoothed() = converted.parameters();
+    ts.smoothedCovariance() =
+        converted.covariance().value_or(BoundMatrix::Zero());
+    ts.setReferenceSurface(params.surface);
+  }
+
+  if (!ipState.has_value()) {
+    throw std::runtime_error{"Did not find IP state in edm4hep input"};
+  }
+
+  detail::Parameters params = unpack(ipState.value());
+  track.parameters() = params.values;
+  track.covariance() = params.covariance.value_or(BoundMatrix::Zero());
+  track.setReferenceSurface(params.surface);
+
+  track.chi2() = from.getChi2();
+  track.nDoF() = from.getNdf();
+  track.nMeasurements() = track.nTrackStates();
 }
 }  // namespace EDM4hepUtil
 }  // namespace Acts

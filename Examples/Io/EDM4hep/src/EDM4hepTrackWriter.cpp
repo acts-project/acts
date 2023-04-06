@@ -46,7 +46,7 @@ ProcessCode EDM4hepTrackWriter::writeT(const AlgorithmContext& context,
     Acts::EDM4hepUtil::writeTrack(context.geoContext, from, to, m_cfg.Bz);
   }
 
-  frame.put(std::move(trackCollection), "ActsTracks");
+  frame.put(std::move(trackCollection), m_cfg.outputTracks);
 
   m_writer.writeFrame(frame, "events");
 
