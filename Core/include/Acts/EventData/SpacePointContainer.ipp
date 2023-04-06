@@ -10,9 +10,9 @@ namespace Acts {
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
-SpacePointContainer<container_t, holder_t>::SpacePointContainer(container_t& container)
-  : m_container(container)
-{
+SpacePointContainer<container_t, holder_t>::SpacePointContainer(
+    container_t& container)
+    : m_container(container) {
   std::size_t n = this->size();
   m_proxies.reserve(n);
   for (std::size_t i(0); i < n; ++i) {
@@ -22,9 +22,9 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(container_t& con
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
-SpacePointContainer<container_t, holder_t>::SpacePointContainer(container_t&& container)
-  : m_container(std::move(container))
-{
+SpacePointContainer<container_t, holder_t>::SpacePointContainer(
+    container_t&& container)
+    : m_container(std::move(container)) {
   std::size_t n = this->size();
   m_proxies.reserve(n);
   for (std::size_t i(0); i < n; ++i) {
@@ -34,50 +34,50 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(container_t&& co
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
-SpacePointContainer<container_t, holder_t>::SpacePointContainer(SpacePointContainer<container_t, holder_t>& other)
-  : m_container(*m_container.ptr),
-    m_proxies(other.m_proxies.begin(), other.m_proxies.end())
-{}
+SpacePointContainer<container_t, holder_t>::SpacePointContainer(
+    SpacePointContainer<container_t, holder_t>& other)
+    : m_container(*m_container.ptr),
+      m_proxies(other.m_proxies.begin(), other.m_proxies.end()) {}
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>&
-SpacePointContainer<container_t, holder_t>::operator=(SpacePointContainer<container_t, holder_t>& other)
-{
+SpacePointContainer<container_t, holder_t>::operator=(
+    SpacePointContainer<container_t, holder_t>& other) {
   m_container.ptr = other.m_container.ptr;
   m_proxies.insert(m_proxies.end(), other.m_proxies.begin(),
-		   other.m_proxies.end());
+                   other.m_proxies.end());
   return *this;
 }
 
 template <typename container_t, template <typename> class holder_t>
-SpacePointContainer<container_t, holder_t>::SpacePointContainer(SpacePointContainer<container_t, holder_t>&& other) noexcept
-  : m_container(std::exchange(other.m_container.ptr, nullptr)),
-    m_proxies(std::move(other.m_proxies))
-{}
+SpacePointContainer<container_t, holder_t>::SpacePointContainer(
+    SpacePointContainer<container_t, holder_t>&& other) noexcept
+    : m_container(std::exchange(other.m_container.ptr, nullptr)),
+      m_proxies(std::move(other.m_proxies)) {}
 
 template <typename container_t, template <typename> class holder_t>
-template<typename T>
-T SpacePointContainer<container_t, holder_t>::component(HashedString key, std::size_t n) const
-{
+template <typename T>
+T SpacePointContainer<container_t, holder_t>::component(HashedString key,
+                                                        std::size_t n) const {
   using namespace Acts::HashedStringLiteral;
   switch (key) {
-  case "TopHalfStripLength"_hash:
-  case "BottomHalfStripLength"_hash:
-  case "TopStripDirection"_hash:
-  case "BottomStripDirection"_hash:
-  case "StripCenterDistance"_hash:
-  case "TopStripCenterPosition"_hash:
-    return std::any_cast<T>(container().component_impl(key, n));
-  default:
-    throw std::runtime_error("no such component " + std::to_string(key));
+    case "TopHalfStripLength"_hash:
+    case "BottomHalfStripLength"_hash:
+    case "TopStripDirection"_hash:
+    case "BottomStripDirection"_hash:
+    case "StripCenterDistance"_hash:
+    case "TopStripCenterPosition"_hash:
+      return std::any_cast<T>(container().component_impl(key, n));
+    default:
+      throw std::runtime_error("no such component " + std::to_string(key));
   }
 }
-  
+
 template <typename container_t, template <typename> class holder_t>
 SpacePointContainer<container_t, holder_t>&
-SpacePointContainer<container_t, holder_t>::operator=(SpacePointContainer<container_t, holder_t>&& other) noexcept
-{
+SpacePointContainer<container_t, holder_t>::operator=(
+    SpacePointContainer<container_t, holder_t>&& other) noexcept {
   m_container = std::exchange(other.m_container.ptr, nullptr);
   m_proxies = std::move(other.m_proxies);
   return *this;
@@ -116,11 +116,10 @@ SpacePointContainer<container_t, holder_t>::end() const {
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
-inline container_t&
-SpacePointContainer<container_t, holder_t>::container() {
+inline container_t& SpacePointContainer<container_t, holder_t>::container() {
   return *m_container;
 }
-  
+
 template <typename container_t, template <typename> class holder_t>
 inline const container_t&
 SpacePointContainer<container_t, holder_t>::container() const {
@@ -191,15 +190,17 @@ SpacePointContainer<container_t, holder_t>::proxy(std::size_t n) const {
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
-inline std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>&
+inline std::vector<
+    typename SpacePointContainer<container_t, holder_t>::ProxyType>&
 SpacePointContainer<container_t, holder_t>::proxies() {
   return m_proxies;
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const std::vector<typename SpacePointContainer<container_t, holder_t>::ProxyType>&
+inline const std::vector<
+    typename SpacePointContainer<container_t, holder_t>::ProxyType>&
 SpacePointContainer<container_t, holder_t>::proxies() const {
   return m_proxies;
 }
-  
+
 }  // namespace Acts

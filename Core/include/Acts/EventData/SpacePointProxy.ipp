@@ -1,4 +1,3 @@
-// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -28,7 +27,7 @@ inline typename SpacePointProxy<container_t, read_only>::ValueType&
 SpacePointProxy<container_t, read_only>::sp() const {
   return container().sp(m_index);
 }
-  
+
 template <typename container_t, bool read_only>
 inline std::size_t SpacePointProxy<container_t, read_only>::index() const {
   return m_index;
@@ -66,9 +65,9 @@ inline float SpacePointProxy<container_t, read_only>::varianceZ() const {
 
 template <typename container_t, bool read_only>
 template <typename T>
-inline T
-SpacePointProxy<container_t, read_only>::component(HashedString key) const {
- return container().template component<T>(key, m_index);
+inline T SpacePointProxy<container_t, read_only>::component(
+    HashedString key) const {
+  return container().template component<T>(key, m_index);
 }
 
 template <typename container_t, bool read_only>
@@ -83,5 +82,5 @@ inline typename SpacePointProxy<container_t, read_only>::ContainerType&
 SpacePointProxy<container_t, read_only>::container() {
   return *m_container;
 }
-  
+
 }  // namespace Acts

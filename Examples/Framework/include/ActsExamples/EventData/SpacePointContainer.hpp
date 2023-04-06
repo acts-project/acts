@@ -60,11 +60,9 @@ class SpacePointContainer {
   float varianceR_impl(std::size_t idx) const;
   float varianceZ_impl(std::size_t idx) const;
 
-  const ValueType& get_impl(std::size_t idx) const
-  { return storage()[idx]; }
+  const ValueType& get_impl(std::size_t idx) const { return storage()[idx]; }
 
-  std::any component_impl(Acts::HashedString key,
-			  std::size_t /*n*/) const {
+  std::any component_impl(Acts::HashedString key, std::size_t /*n*/) const {
     using namespace Acts::HashedStringLiteral;
     switch (key) {
       case "TopHalfStripLength"_hash:
@@ -88,8 +86,7 @@ class SpacePointContainer {
 };
 
 template <typename collection_t>
-inline std::size_t
-SpacePointContainer<collection_t>::size_impl() const {
+inline std::size_t SpacePointContainer<collection_t>::size_impl() const {
   return storage().size();
 }
 
@@ -97,20 +94,17 @@ SpacePointContainer<collection_t>::size_impl() const {
 // Be smart here... collection_t can container values or pointers ...
 
 template <typename collection_t>
-inline float SpacePointContainer<collection_t>::x_impl(
-    std::size_t idx) const {
+inline float SpacePointContainer<collection_t>::x_impl(std::size_t idx) const {
   return storage()[idx]->x();
 }
 
 template <typename collection_t>
-inline float SpacePointContainer<collection_t>::y_impl(
-    std::size_t idx) const {
+inline float SpacePointContainer<collection_t>::y_impl(std::size_t idx) const {
   return storage()[idx]->y();
 }
 
 template <typename collection_t>
-inline float SpacePointContainer<collection_t>::z_impl(
-    std::size_t idx) const {
+inline float SpacePointContainer<collection_t>::z_impl(std::size_t idx) const {
   return storage()[idx]->z();
 }
 

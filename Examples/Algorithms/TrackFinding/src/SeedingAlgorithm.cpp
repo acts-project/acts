@@ -207,9 +207,9 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       m_cfg.gridConfig, m_cfg.gridOptions);
 
   auto spacePointsGrouping = Acts::BinnedSPGroup<value_type>(
-      spContainer.begin(), spContainer.end(), 
-      m_bottomBinFinder, m_topBinFinder, std::move(grid), rRangeSPExtent,
-      m_cfg.seedFinderConfig, m_cfg.seedFinderOptions);
+      spContainer.begin(), spContainer.end(), m_bottomBinFinder, m_topBinFinder,
+      std::move(grid), rRangeSPExtent, m_cfg.seedFinderConfig,
+      m_cfg.seedFinderOptions);
 
   // safely clamp double to float
   float up = Acts::clampValue<float>(
@@ -235,19 +235,24 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
         std::size_t index = sp->index();
-	state.spacePointData.setTopHalfStripLength(
-						   index, sp->sp().template component<float>("TopHalfStripLength"_hash));
+        state.spacePointData.setTopHalfStripLength(
+            index,
+            sp->sp().template component<float>("TopHalfStripLength"_hash));
         state.spacePointData.setBottomHalfStripLength(
-						      index, sp->sp().template component<float>("BottomHalfStripLength"_hash));
-        state.spacePointData.setTopStripDirection(index,
-                                                  sp->sp().template component<Acts::Vector3>("TopStripDirection"_hash));
+            index,
+            sp->sp().template component<float>("BottomHalfStripLength"_hash));
+        state.spacePointData.setTopStripDirection(
+            index, sp->sp().template component<Acts::Vector3>(
+                       "TopStripDirection"_hash));
         state.spacePointData.setBottomStripDirection(
-						     index,
-						     sp->sp().template component<Acts::Vector3>("BottomStripDirection"_hash));
+            index, sp->sp().template component<Acts::Vector3>(
+                       "BottomStripDirection"_hash));
         state.spacePointData.setStripCenterDistance(
-						    index, sp->sp().template component<Acts::Vector3>("StripCenterDistance"_hash));
+            index, sp->sp().template component<Acts::Vector3>(
+                       "StripCenterDistance"_hash));
         state.spacePointData.setTopStripCenterPosition(
-						       index, sp->sp().template component<Acts::Vector3>("TopStripCenterPosition"_hash));
+            index, sp->sp().template component<Acts::Vector3>(
+                       "TopStripCenterPosition"_hash));
       }
     }
   }
