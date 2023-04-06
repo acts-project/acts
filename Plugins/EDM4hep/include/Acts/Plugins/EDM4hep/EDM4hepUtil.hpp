@@ -210,8 +210,10 @@ SingleBoundTrackParameters<charge_t> convertTrackParametersFromEdm4hep(
   ActsSymMatrix<6> J =
       jacobianFromEdm4hep(params.values[3], params.values[4], Bz);
 
-  BoundMatrix cov;
-  cov = J * params.covariance.value() * J.transpose();
+  std::optional<BoundMatrix> cov;
+  if (params.covariance.has_value()) {
+    cov = J * params.covariance.value() * J.transpose();
+  }
 
   targetPars[eBoundLoc0] = params.values[0];
   targetPars[eBoundLoc1] = params.values[1];
