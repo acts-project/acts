@@ -9,12 +9,17 @@ add_library(
   src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp
 <<<<<<< HEAD
+<<<<<<< HEAD
 )
 
 =======
   src/SeedingFTFAlgorithm.cpp
   )
 >>>>>>> dummy seeding algorithm now working
+=======
+  src/SeedingFTFAlgorithm.cpp
+  )
+>>>>>>> cd6e1eb9befbbfba5b907897a2dd81986b5fcdf4
 target_include_directories(
   ActsExamplesTrackFinding
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

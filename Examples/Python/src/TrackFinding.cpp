@@ -279,6 +279,11 @@ void addTrackFinding(Context& ctx) {
       outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(
+      ActsExamples::SeedingFTFAlgorithm, mex,
+      "SeedingFTFAlgorithm", inputSpacePoints, outputSeeds,
+      outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions);
+
+  ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::HoughTransformSeeder, mex, "HoughTransformSeeder",
       inputSpacePoints, outputProtoTracks, inputSourceLinks, trackingGeometry,
       geometrySelection, inputMeasurements, subRegions, nLayers, xMin, xMax,
