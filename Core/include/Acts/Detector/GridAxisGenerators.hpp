@@ -36,7 +36,7 @@ struct Eq {
   using grid_type =
       detail::Grid<T, detail::Axis<detail::AxisType::Equidistant, aType>>;
 
-  std::array<ActsScalar, 2u> range;
+  std::array<ActsScalar, 2u> range = {};
   std::size_t nBins = 0u;
 
   /// Call operator that generates the Axis
@@ -98,9 +98,9 @@ struct EqEq {
       detail::Grid<T, detail::Axis<detail::AxisType::Equidistant, aType>,
                    detail::Axis<detail::AxisType::Equidistant, bType>>;
 
-  std::array<ActsScalar, 2u> range0;
+  std::array<ActsScalar, 2u> range0 = {};
   std::size_t nBins0 = 0u;
-  std::array<ActsScalar, 2u> range1;
+  std::array<ActsScalar, 2u> range1 = {};
   std::size_t nBins1 = 1u;
 
   /// Call operator that generates the Axis
@@ -152,7 +152,7 @@ struct EqVar {
       detail::Grid<T, detail::Axis<detail::AxisType::Equidistant, aType>,
                    detail::Axis<detail::AxisType::Variable, bType>>;
 
-  std::array<ActsScalar, 2u> range;
+  std::array<ActsScalar, 2u> range = {};
   std::size_t nBins = 0u;
   std::vector<ActsScalar> edges = {};
 
@@ -204,7 +204,7 @@ struct VarEq {
                    detail::Axis<detail::AxisType::Equidistant, bType>>;
 
   std::vector<ActsScalar> edges = {};
-  std::array<ActsScalar, 2u> range;
+  std::array<ActsScalar, 2u> range = {};
   std::size_t nBins = 0u;
 
   /// Call operator that generates the Axis

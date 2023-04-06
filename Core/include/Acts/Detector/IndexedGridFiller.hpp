@@ -138,7 +138,7 @@ std::set<typename grid_type::index_t> localIndices(
   }
 
   // Initialize the bin ranges
-  std::array<std::array<std::size_t, 2u>, grid_type::DIM> binRanges;
+  std::array<std::array<std::size_t, 2u>, grid_type::DIM> binRanges = {};
   for (auto& br : binRanges) {
     br[0u] = std::numeric_limits<std::size_t>::max();
     br[1u] = 0u;
