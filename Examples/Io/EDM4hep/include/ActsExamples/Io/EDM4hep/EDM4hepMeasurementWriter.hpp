@@ -15,10 +15,9 @@
 
 #include <string>
 
-#include "edm4hep/TrackerHitCollection.h"
-#include "edm4hep/TrackerHitPlaneCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTWriter.h"
+#include <edm4hep/TrackerHitCollection.h>
+#include <edm4hep/TrackerHitPlaneCollection.h>
+#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -65,11 +64,7 @@ class EDM4hepMeasurementWriter final : public WriterT<MeasurementContainer> {
  private:
   Config m_cfg;
 
-  podio::ROOTWriter m_writer;
-  podio::EventStore m_store;
-
-  edm4hep::TrackerHitPlaneCollection* m_trackerHitPlaneCollection;
-  edm4hep::TrackerHitCollection* m_trackerHitRawCollection;
+  podio::ROOTFrameWriter m_writer;
 
   ReadDataHandle<ClusterContainer> m_inputClusters{this, "InputClusters"};
 };

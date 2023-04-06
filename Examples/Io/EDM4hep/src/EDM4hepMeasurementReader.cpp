@@ -17,8 +17,11 @@
 #include <list>
 #include <stdexcept>
 
-#include "edm4hep/TrackerHit.h"
-#include "edm4hep/TrackerHitPlane.h"
+#include <edm4hep/TrackerHit.h>
+#include <edm4hep/TrackerHitCollection.h>
+#include <edm4hep/TrackerHitPlane.h>
+#include <edm4hep/TrackerHitPlaneCollection.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -31,14 +34,8 @@ EDM4hepMeasurementReader::EDM4hepMeasurementReader(
   }
 
   m_reader.openFile(m_cfg.inputPath);
-  m_store.setReader(&m_reader);
 
-  m_eventsRange = std::make_pair(0, m_reader.getEntries());
-
-  m_trackerHitPlaneCollection =
-      &m_store.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");
-  m_trackerHitRawCollection =
-      &m_store.create<edm4hep::TrackerHitCollection>("ActsTrackerHitsRaw");
+  m_eventsRange = std::make_pair(0, m_reader.getEntries("events"));
 
   m_outputMeasurements.initialize(m_cfg.outputMeasurements);
   m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
@@ -61,13 +58,17 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   IndexMultimap<Index> measurementSimHitsMap;
   IndexSourceLinkContainer sourceLinks;
 
-  m_store.clear();
-  m_reader.goToEvent(ctx.eventNumber);
+  podio::Frame frame = m_reader.readEntry("events", ctx.eventNumber);
 
-  for (const auto& trackerHitPlane : *m_trackerHitPlaneCollection) {
+  const auto& trackerHitPlaneCollection =
+      frame.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");
+  const auto& trackerHitRawCollection =
+      frame.get<edm4hep::TrackerHitCollection>("ActsTrackerHitsRaw");
+
+  for (const auto& trackerHitPlane : trackerHitPlaneCollection) {
     Cluster cluster;
     auto measurement = EDM4hepUtil::readMeasurement(
-        trackerHitPlane, m_trackerHitRawCollection, &cluster,
+        trackerHitPlane, &trackerHitRawCollection, &cluster,
         [](std::uint64_t cellId) { return Acts::GeometryIdentifier(cellId); });
 
     measurements.push_back(std::move(measurement));
@@ -81,8 +82,6 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   if (not m_cfg.outputClusters.empty()) {
     m_outputClusters(ctx, std::move(clusters));
   }
-
-  m_reader.endOfEvent();
 
   return ProcessCode::SUCCESS;
 }

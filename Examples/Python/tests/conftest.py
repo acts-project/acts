@@ -387,7 +387,7 @@ def material_recording_session():
         pytest.skip("Geantino recording requested, but Geant4 is not set up")
 
     if not helpers.dd4hepEnabled:
-        pytest.skip("DD4hep recording requested, but Geant4 is not set up")
+        pytest.skip("DD4hep recording requested, but DD4hep is not set up")
 
     with tempfile.TemporaryDirectory() as d:
 
