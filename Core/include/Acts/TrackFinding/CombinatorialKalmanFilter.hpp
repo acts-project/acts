@@ -18,6 +18,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/TrackContainer.hpp"
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/TrackStatePropMask.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -1379,6 +1380,9 @@ class CombinatorialKalmanFilter {
       track.parameters() = parameters.parameters();
       track.covariance() = *parameters.covariance();
       track.setReferenceSurface(parameters.referenceSurface().getSharedPtr());
+
+      calculateTrackQuantities(track);
+
       tracks.push_back(track);
     }
 
