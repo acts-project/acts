@@ -12,6 +12,7 @@
 #include "Acts/Utilities/detail/Grid.hpp"
 
 #include <array>
+#include <tuple>
 #include <vector>
 
 namespace Acts {

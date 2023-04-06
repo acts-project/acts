@@ -19,6 +19,7 @@
 #include "Acts/Utilities/IAxis.hpp"
 #include "Acts/Utilities/Logger.hpp"
 
+#include <algorithm>
 #include <array>
 #include <set>
 #include <string>
@@ -147,8 +148,8 @@ std::set<typename grid_type::index_t> localIndices(
     auto qbin = grid.localBinsFromPosition(q);
     for (std::size_t ib = 0; ib < grid_type::DIM; ++ib) {
       auto iqb = qbin[ib];
-      binRanges[ib][0u] = iqb < binRanges[ib][0u] ? iqb : binRanges[ib][0u];
-      binRanges[ib][1u] = iqb > binRanges[ib][1u] ? iqb : binRanges[ib][1u];
+      binRanges[ib][0u] = std::min(iqb, binRanges[ib][0u]);
+      binRanges[ib][1u] = std::max(iqb, binRanges[ib][1u]);
     }
   }
   // Fill the bins - 1D case

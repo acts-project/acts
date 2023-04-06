@@ -43,7 +43,7 @@ std::size_t countBins(const indexed_surface_grid& isGrid) {
 
 }  // namespace
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(BinSequence) {
   ACTS_LOCAL_LOGGER(getDefaultLogger("*** Pre-Test", logLevel));

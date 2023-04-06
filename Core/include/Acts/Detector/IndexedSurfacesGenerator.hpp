@@ -12,10 +12,14 @@
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Utilities/Enumerate.hpp"
 
+#include <algorithm>
+#include <array>
+#include <memory>
+
 namespace Acts {
 namespace Experimental {
 
-/// @brief  A templaed indexed grid generator.
+/// @brief  A templated indexed grid generator.
 ///
 /// This Generator creates a SurfaceCandidatesUpdator delegate
 /// which can then be used in the DetectorVolume class for updating

@@ -26,7 +26,7 @@ using namespace Acts::Experimental;
 GeometryContext tContext;
 CylindricalTrackingGeometry cGeometry = CylindricalTrackingGeometry(tContext);
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(RingDisc1D) {
   // A single ring

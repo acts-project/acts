@@ -83,6 +83,7 @@ class StaticUpdatorImpl : public INavigationDelegate {
 template <typename grid_t, typename extractor_type, typename filler_type>
 class IndexedUpdatorImpl : public INavigationDelegate {
  public:
+  /// Broadcast the grid type
   using grid_type = grid_t;
 
   /// An extractor helper to get the object(s) from the volume

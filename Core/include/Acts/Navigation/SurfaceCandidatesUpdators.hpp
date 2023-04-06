@@ -18,6 +18,7 @@
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 
+#include <memory>
 #include <tuple>
 
 namespace Acts {
