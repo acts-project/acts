@@ -57,6 +57,24 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(SpacePointContai
 {}
 
 template <typename container_t, template <typename> class holder_t>
+template<typename T>
+T SpacePointContainer<container_t, holder_t>::component(HashedString key, std::size_t n) const
+{
+  using namespace Acts::HashedStringLiteral;
+  switch (key) {
+  case "TopHalfStripLength"_hash:
+  case "BottomHalfStripLength"_hash:
+  case "TopStripDirection"_hash:
+  case "BottomStripDirection"_hash:
+  case "StripCenterDistance"_hash:
+  case "TopStripCenterPosition"_hash:
+    return std::any_cast<T>(container().component_impl(key, n));
+  default:
+    throw std::runtime_error("no such component " + std::to_string(key));
+  }
+}
+  
+template <typename container_t, template <typename> class holder_t>
 SpacePointContainer<container_t, holder_t>&
 SpacePointContainer<container_t, holder_t>::operator=(SpacePointContainer<container_t, holder_t>&& other) noexcept
 {

@@ -137,24 +137,11 @@ private:
 
   // component methods for additional quantities
   template<typename T>
-  T component(HashedString key, std::size_t n) const
-  {
-    using namespace Acts::HashedStringLiteral;
-    switch (key) {
-    case "TopHalfStripLength"_hash:
-    case "BottomHalfStripLength"_hash:
-    case "TopStripDirection"_hash:
-    case "BottomStripDirection"_hash:
-    case "StripCenterDistance"_hash:
-    case "TopStripCenterPosition"_hash:
-      return std::any_cast<T>(container().component_impl(key, n));
-    default:
-      throw std::runtime_error("no such component " + std::to_string(key));
-    }
-  }
+  T component(HashedString key, std::size_t n) const;
 
  private:
   holder_t<container_t> m_container;
+  // Need to change the Seed EDM if we want to get rid of this internal vector
   std::vector<ProxyType> m_proxies{};
 };
 
