@@ -10,12 +10,8 @@ import acts.examples
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
-<<<<<<< HEAD
     "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal HoughTransform FTF"
 
-=======
-    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal FTF"
->>>>>>> cd6e1eb9befbbfba5b907897a2dd81986b5fcdf4
 )
 
 TruthSeedRanges = namedtuple(
