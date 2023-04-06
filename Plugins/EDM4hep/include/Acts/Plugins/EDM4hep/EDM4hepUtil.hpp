@@ -20,6 +20,7 @@
 #include "Acts/Propagator/CovarianceTransport.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/UnitVectors.hpp"
 
 #include <stdexcept>
@@ -75,8 +76,8 @@ inline ActsSymMatrix<6> jacobianToEdm4hep(double theta, double qOverP,
   J(3, 3) = -cotTheta * cotTheta - 1;  // d(tanLambda) / dTheta
   J(4, 4) = Bz / std::sin(theta);      // dOmega / d(qop)
   double sinTheta = std::sin(theta);
-  J(4, 3) = -Bz * qOverP *
-            std::cos(theta / (sinTheta * sinTheta));  // dOmega / dTheta
+  J(4, 3) = -Bz * qOverP * std::cos(theta) /
+            (sinTheta * sinTheta);  // dOmega / dTheta
   return J;
 }
 
@@ -125,10 +126,10 @@ inline void packCovariance(const ActsSymMatrix<6>& from, float* to) {
 }
 
 inline void unpackCovariance(const float* from, ActsSymMatrix<6>& to) {
+  auto k = [](size_t i, size_t j) { return (i + 1) * i / 2 + j; };
   for (int i = 0; i < to.rows(); i++) {
-    for (int j = 0; j <= i; j++) {
-      size_t k = (i + 1) * i / 2 + j;
-      to(i, j) = from[k];
+    for (int j = 0; j < to.cols(); j++) {
+      to(i, j) = from[j <= i ? k(i, j) : k(j, i)];
     }
   }
 }
@@ -233,7 +234,9 @@ void writeTrack(
     const Acts::GeometryContext& gctx,
     Acts::TrackProxy<track_container_t, track_state_container_t, holder_t, true>
         track,
-    edm4hep::MutableTrack to, double Bz) {
+    edm4hep::MutableTrack to, double Bz,
+    const Logger& logger = getDummyLogger()) {
+  ACTS_VERBOSE("Converting track to EDM4hep");
   to.setChi2(track.chi2());
   to.setNdf(track.nDoF());
 
@@ -255,6 +258,8 @@ void writeTrack(
     }
   };
 
+  ACTS_VERBOSE("Converting " << track.nTrackStates() << " track states");
+
   for (const auto& state : track.trackStates()) {
     auto typeFlags = state.typeFlags();
     if (!typeFlags.test(Acts::TrackStateFlag::MeasurementFlag)) {
@@ -275,6 +280,11 @@ void writeTrack(
 
     // Write the converted parameters to the EDM4hep track state
     setParameters(trackState, converted);
+    ACTS_VERBOSE("- parameters: " << state.parameters().transpose() << " -> "
+                                  << converted.values.transpose());
+    ACTS_VERBOSE("- covariance: \n"
+                 << state.covariance() << "\n->\n"
+                 << converted.covariance.value());
 
     // Converted parameters are relative to an ad-hoc perigee surface created at
     // the hit location
@@ -282,6 +292,7 @@ void writeTrack(
     trackState.referencePoint.x = center.x();
     trackState.referencePoint.y = center.y();
     trackState.referencePoint.z = center.z();
+    ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
   }
   outTrackStates.front().location = edm4hep::TrackState::AtLastHit;
   outTrackStates.back().location = edm4hep::TrackState::AtFirstHit;
@@ -299,6 +310,12 @@ void writeTrack(
       detail::convertTrackParametersToEdm4hep(gctx, Bz, trackParams);
   setParameters(ipState, converted);
   ipState.location = edm4hep::TrackState::AtIP;
+  ACTS_VERBOSE("Writing track level quantities as IP track state");
+  ACTS_VERBOSE("- parameters: " << track.parameters().transpose());
+  ACTS_VERBOSE("           -> " << converted.values.transpose());
+  ACTS_VERBOSE("- covariance: \n"
+               << track.covariance() << "\n->\n"
+               << converted.covariance.value());
 
   // Write the converted parameters to the EDM4hep track state
   // The reference point is at the location of the reference surface of the
@@ -309,17 +326,21 @@ void writeTrack(
   ipState.referencePoint.y = center.y();
   ipState.referencePoint.z = center.z();
 
+  ACTS_VERBOSE("- ref surface ctr: " << center.transpose());
+
   for (auto& trackState : outTrackStates) {
     to.addToTrackStates(trackState);
   }
 }
+
 template <typename track_container_t, typename track_state_container_t,
           template <typename> class holder_t>
 void readTrack(edm4hep::Track from,
                Acts::TrackProxy<track_container_t, track_state_container_t,
                                 holder_t, false>
                    track,
-               double Bz) {
+               double Bz, const Logger& logger = getDummyLogger()) {
+  ACTS_VERBOSE("Reading track from EDM4hep");
   TrackStatePropMask mask = TrackStatePropMask::Smoothed;
 
   std::optional<edm4hep::TrackState> ipState;
@@ -344,14 +365,16 @@ void readTrack(edm4hep::Track from,
     };
     params.surface = Acts::Surface::makeShared<PerigeeSurface>(center);
 
-    params.covariance = ActsSymMatrix<6>{};
-    detail::unpackCovariance(trackState.covMatrix.data(),
-                             params.covariance.value());
-
     return params;
   };
 
-  for (const auto& trackState : from.getTrackStates()) {
+  ACTS_VERBOSE("Reading " << from.trackStates_size()
+                          << " track states (including IP state)");
+  // We write the trackstates out outside in, need to reverse iterate to get the
+  // same order
+  for (size_t i = from.trackStates_size() - 1; i <= from.trackStates_size();
+       i--) {
+    auto trackState = from.getTrackStates(i);
     if (trackState.location == edm4hep::TrackState::AtIP) {
       ipState = trackState;
       continue;
@@ -372,12 +395,21 @@ void readTrack(edm4hep::Track from,
   }
 
   if (!ipState.has_value()) {
+    ACTS_ERROR("Did not find IP state in edm4hep input");
     throw std::runtime_error{"Did not find IP state in edm4hep input"};
   }
 
   detail::Parameters params = unpack(ipState.value());
-  track.parameters() = params.values;
-  track.covariance() = params.covariance.value_or(BoundMatrix::Zero());
+
+  auto converted =
+      detail::convertTrackParametersFromEdm4hep<SinglyCharged>(Bz, params);
+
+  ACTS_VERBOSE("IP state parameters: " << converted.parameters().transpose());
+  ACTS_VERBOSE("-> covariance:\n"
+               << converted.covariance().value_or(BoundMatrix::Zero()));
+
+  track.parameters() = converted.parameters();
+  track.covariance() = converted.covariance().value_or(BoundMatrix::Zero());
   track.setReferenceSurface(params.surface);
 
   track.chi2() = from.getChi2();
