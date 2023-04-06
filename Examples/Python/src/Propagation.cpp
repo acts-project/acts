@@ -28,6 +28,7 @@ namespace py = pybind11;
 namespace {
 
 template <typename stepper_t, typename navigator_t>
+
 void addPropagator(py::module_& m, const std::string& prefix) {
   using propagator_t = Acts::Propagator<stepper_t, navigator_t>;
   py::class_<propagator_t>(m, (prefix + "Propagator").c_str())
