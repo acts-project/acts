@@ -12,6 +12,8 @@
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
+
 
 #include <memory>
 
@@ -84,6 +86,11 @@ void addGeometry(Context& ctx) {
   {
     py::class_<Acts::Experimental::Detector,
                std::shared_ptr<Acts::Experimental::Detector>>(m, "Detector");
+  }
+
+   {
+    py::class_<Acts::Experimental::DetectorVolume,
+               std::shared_ptr<Acts::Experimental::DetectorVolume>>(m, "DetectorVolume");
   }
 }
 

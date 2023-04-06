@@ -11,7 +11,6 @@
 #include "Acts/Visualization/ObjVisualization3D.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
 #include "ActsExamples/Geant4Detector/MockupSectorBuilder.hpp"
-
 using namespace Acts;
 using namespace ActsExamples;
 
@@ -22,7 +21,7 @@ int main() {
   auto mockup_chamberConfig_middle = MockupSectorBuilder::ChamberConfig();
   auto mockup_chamberConfig_outer = MockupSectorBuilder::ChamberConfig();
 
-  mockup_config.gdml_path = "./MuonChamber.gdml";
+  mockup_config.gdmlPath = "./MuonChamber.gdml";
   mockup_config.NumberOfSectors = 8;
 
   mockup_chamberConfig_inner.name = "Inner_Detector_Chamber";
@@ -41,13 +40,13 @@ int main() {
 
   GeometryContext gctx;
   auto detectorVolume_inner_chamber =
-      mockup_builder.buildChamber(gctx, mockup_chamberConfig_inner);
+      mockup_builder.buildChamber(mockup_chamberConfig_inner);
 
   auto detectorVolume_middle_chamber =
-      mockup_builder.buildChamber(gctx, mockup_chamberConfig_middle);
+      mockup_builder.buildChamber(mockup_chamberConfig_middle);
 
   auto detectorVolume_outer_chamber =
-      mockup_builder.buildChamber(gctx, mockup_chamberConfig_outer);
+      mockup_builder.buildChamber(mockup_chamberConfig_outer);
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
       detector_volumes = {};
@@ -57,16 +56,8 @@ int main() {
   detector_volumes.push_back(detectorVolume_outer_chamber);
 
   auto detectorVolume_sector =
-      mockup_builder.buildSector(detector_volumes, gctx);
+      mockup_builder.buildSector(detector_volumes);
 
-  Acts::ObjVisualization3D obj_testMockUp;
-  Acts::ViewConfig sConfig = Acts::s_viewSensitive;
 
-  Acts::ObjVisualization3D obj_Sector;
-
-  Acts::GeometryView3D::drawDetectorVolume(
-      obj_Sector, *detectorVolume_sector, Acts::GeometryContext(),
-      Acts::Transform3::Identity(), sConfig);
-
-  obj_Sector.write("test_sector.obj");
+    mockup_builder.drawSector(detectorVolume_sector,"sector_test.obj");
 }

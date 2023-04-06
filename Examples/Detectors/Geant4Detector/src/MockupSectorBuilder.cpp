@@ -16,75 +16,75 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Plugins/Geant4/Geant4Converters.hpp"
+#include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
 #include "Acts/Plugins/Geant4/Geant4DetectorSurfaceFactory.hpp"
 #include "Acts/Plugins/Geant4/Geant4PhysicalVolumeSelectors.hpp"
 #include "Acts/Surfaces/StrawSurface.hpp"
 #include "Acts/Surfaces/Surface.hpp"
+#include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/Geant4/GdmlDetectorConstruction.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
-#include "Acts/Plugins/Geant4/Geant4DetectorElement.hpp"
-#include "Acts/Utilities/Logger.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+
+#include "Acts/Visualization/GeometryView3D.hpp"
+#include "Acts/Visualization/IVisualization3D.hpp"
+#include "Acts/Visualization/ObjVisualization3D.hpp"
 
 #include <algorithm>
 #include <iostream>
 #include <string>
+#include <utility>
 #include <vector>
-#include <utility>  
-
 
 ActsExamples::MockupSectorBuilder::MockupSectorBuilder(
-    const ActsExamples::MockupSectorBuilder::Config& config){
-
-        m_cfg = config;
-       ActsExamples::GdmlDetectorConstruction geo_gdml(m_cfg.gdml_path);
-       g4World = geo_gdml.Construct();
+    const ActsExamples::MockupSectorBuilder::Config& config) {
+  mCfg = config;
+  ActsExamples::GdmlDetectorConstruction geo_gdml(mCfg.gdmlPath);
+  g4World = geo_gdml.Construct();
 }
-
 
 std::shared_ptr<Acts::Experimental::DetectorVolume>
 ActsExamples::MockupSectorBuilder::buildChamber(
-    const Acts::GeometryContext& gctx,
-    const ActsExamples::MockupSectorBuilder::ChamberConfig& chamber_config) {
+    const ActsExamples::MockupSectorBuilder::ChamberConfig& chamberConfig) {
+
+
   if (g4World == nullptr) {
-    throw std::invalid_argument(
-        "MockupSector: No g4World initialized");
+    throw std::invalid_argument("MockupSector: No g4World initialized");
     return nullptr;
   }
+  
+  const Acts::GeometryContext gctx;
 
   // Geant4Detector Config creator with the g4world from the gdml file
-  auto g4World_config = ActsExamples::Geant4::Geant4Detector::Config();
-  g4World_config.name = "Chamber";
-  g4World_config.g4World = g4World;
+  auto g4WorldConfig = ActsExamples::Geant4::Geant4Detector::Config();
+  g4WorldConfig.name = "Chamber";
+  g4WorldConfig.g4World = g4World;
 
   // Get the sensitive and passive surfaces and pass to the g4World Config
   auto g4Sensitive =
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          chamber_config.SensitiveNames);
+          chamberConfig.SensitiveNames);
   auto g4Passive =
       std::make_shared<Acts::Geant4PhysicalVolumeSelectors::NameSelector>(
-          chamber_config.PassiveNames);
+          chamberConfig.PassiveNames);
 
   auto g4SurfaceOptions = Acts::Geant4DetectorSurfaceFactory::Options();
   g4SurfaceOptions.sensitiveSurfaceSelector = g4Sensitive;
   g4SurfaceOptions.passiveSurfaceSelector = g4Passive;
-  g4World_config.g4SurfaceOptions = g4SurfaceOptions;
+  g4WorldConfig.g4SurfaceOptions = g4SurfaceOptions;
 
   auto g4detector = ActsExamples::Geant4::Geant4Detector();
 
   auto [detector, surfaces, detectorElements] =
-      g4detector.constructDetector(g4World_config, Acts::getDummyLogger());
+      g4detector.constructDetector(g4WorldConfig, Acts::getDummyLogger());
 
   // The vector that holds the converted sensitive surfaces of the chamber
-  std::vector<std::shared_ptr<Acts::Surface>> straw_surfaces = {};
+  std::vector<std::shared_ptr<Acts::Surface>> strawSurfaces = {};
 
-   //auto min_max = std::pair<float, float>(std::numeric_limits<float>::max(), -std::numeric_limits<float>::max());
-  auto max_limit = std::numeric_limits<float>::max();
-  auto min_limit = -std::numeric_limits<float>::max();
 
    std::array<std::pair <float,float>,3> min_max;
    std::fill(min_max.begin(), min_max.end(), 
             std::make_pair<float, float>(std::move(std::numeric_limits<float>::max()), std::move(-std::numeric_limits<float>::max())));
-
 
   // Convert the physical volumes of the detector elements to straw surfaces
   for (auto& detectorElement : detectorElements) {
@@ -92,45 +92,52 @@ ActsExamples::MockupSectorBuilder::buildChamber(
     auto g4conv = Acts::Geant4PhysicalVolumeConverter();
 
     g4conv.forcedType = Acts::Surface::SurfaceType::Straw;
-    auto g4conv_surf = g4conv.Geant4PhysicalVolumeConverter::surface(
+    auto g4ConvSurf = g4conv.Geant4PhysicalVolumeConverter::surface(
         detectorElement->g4PhysicalVolume(),
         detectorElement->transform(context));
 
-    straw_surfaces.push_back(g4conv_surf);
+    strawSurfaces.push_back(g4ConvSurf);
 
-    min_max[0].first = std::min(min_max[0].first, (float) g4conv_surf->center(context).x());
-    min_max[0].second = std::max(min_max[0].second, (float) g4conv_surf->center(context).x());
+    min_max[0].first =
+        std::min(min_max[0].first, (float)g4ConvSurf->center(context).x());
+    min_max[0].second =
+        std::max(min_max[0].second, (float)g4ConvSurf->center(context).x());
 
-    min_max[1].first = std::min(min_max[1].first, (float) g4conv_surf->center(context).y());
-    min_max[1].second = std::max(min_max[1].second, (float) g4conv_surf->center(context).y());
+    min_max[1].first =
+        std::min(min_max[1].first, (float)g4ConvSurf->center(context).y());
+    min_max[1].second =
+        std::max(min_max[1].second, (float)g4ConvSurf->center(context).y());
 
-    min_max[2].first = std::min(min_max[2].first, (float) g4conv_surf->center(context).z());
-    min_max[2].second = std::max(min_max[2].second, (float) g4conv_surf->center(context).z());
-
+    min_max[2].first =
+        std::min(min_max[2].first, (float)g4ConvSurf->center(context).z());
+    min_max[2].second =
+        std::max(min_max[2].second, (float)g4ConvSurf->center(context).z());
   }
 
   // Create the bounds of the detector volumes
-  float radius = straw_surfaces.front()->bounds().values()[0];
-  
-  Acts::Vector3 minValues = {min_max[0].first, min_max[1].first, min_max[2].first};
-  Acts::Vector3 maxValues = {min_max[0].second, min_max[1].second, min_max[2].second};
+  float radius = strawSurfaces.front()->bounds().values()[0];
 
+  Acts::Vector3 minValues = {min_max[0].first, min_max[1].first,
+                             min_max[2].first};
+  Acts::Vector3 maxValues = {min_max[0].second, min_max[1].second,
+                             min_max[2].second};
 
-  Acts::ActsScalar hx = straw_surfaces.front()->bounds().values()[1] + m_cfg.toleranceOverlap;
-  Acts::ActsScalar hy = 0.5 * ((maxValues.y()+radius)-(minValues.y()-radius)) + m_cfg.toleranceOverlap;
-  Acts::ActsScalar hz = 0.5 * ((maxValues.z()+radius)-(minValues.z()-radius)) + m_cfg.toleranceOverlap;
+  Acts::ActsScalar hx = strawSurfaces.front()->bounds().values()[1] + mCfg.toleranceOverlap;
+  Acts::ActsScalar hy = 0.5 * ((maxValues.y()+radius)-(minValues.y()-radius)) + mCfg.toleranceOverlap;
+  Acts::ActsScalar hz = 0.5 * ((maxValues.z()+radius)-(minValues.z()-radius)) + mCfg.toleranceOverlap;
 
   auto detectorVolumeBounds =
       std::make_unique<Acts::CuboidVolumeBounds>(hx, hy, hz);
 
-  Acts::Vector3 chamber_position = {(maxValues.x() + minValues.x()) / 2, (maxValues.y() + minValues.y()) / 2,
+  Acts::Vector3 chamber_position = {(maxValues.x() + minValues.x()) / 2,
+                                    (maxValues.y() + minValues.y()) / 2,
                                     (maxValues.z() + minValues.z()) / 2};
 
   // create the detector volume for the chamber
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalGenerator(), gctx, chamber_config.name,
+      Acts::Experimental::defaultPortalGenerator(), gctx, chamberConfig.name,
       Acts::Transform3(Acts::Translation3(chamber_position)),
-      std::move(detectorVolumeBounds), straw_surfaces,
+      std::move(detectorVolumeBounds), strawSurfaces,
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
       Acts::Experimental::allPortalsAndSurfaces());
 
@@ -140,31 +147,32 @@ ActsExamples::MockupSectorBuilder::buildChamber(
 std::shared_ptr<Acts::Experimental::DetectorVolume>
 ActsExamples::MockupSectorBuilder::buildSector(
     std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
-        det_volumes,
-    const Acts::GeometryContext& gctx) {
-
-  if (m_cfg.NumberOfSectors > maxNumberOfSectors) {
+        detVolumes) {
+  if (mCfg.NumberOfSectors > maxNumberOfSectors) {
     throw std::invalid_argument("MockupSector:Number of max sectors exceeded");
     return nullptr;
   }
 
+  const Acts::GeometryContext gctx;
+
   // sort the detector volumes by their radial distance (from
   // innermost---->outermost)
-  std::sort(det_volumes.begin(), det_volumes.end(), [](const auto& det_vol1, const auto& det_vol2) 
-                                                { return det_vol1->center().y() < det_vol2->center().y(); });
+  std::sort(detVolumes.begin(), detVolumes.end(),
+            [](const auto& detVol1, const auto& detVol2) {
+              return detVol1->center().y() < detVol2->center().y();
+            });
 
+  auto xA = detVolumes.back()->center().x() +
+            detVolumes.back()->volumeBounds().values()[0];
+  auto yA = detVolumes.back()->center().y() -
+            detVolumes.back()->volumeBounds().values()[1];
+  auto zA = detVolumes.back()->center().z();
 
-  auto xA = det_volumes.back()->center().x() +
-            det_volumes.back()->volumeBounds().values()[0];
-  auto yA = det_volumes.back()->center().y() -
-            det_volumes.back()->volumeBounds().values()[1];
-  auto zA = det_volumes.back()->center().z();
-
-  auto xB = det_volumes.back()->center().x() -
-            det_volumes.back()->volumeBounds().values()[0];
-  auto yB = det_volumes.back()->center().y() -
-            det_volumes.back()->volumeBounds().values()[1];
-  auto zB = det_volumes.back()->center().z();
+  auto xB = detVolumes.back()->center().x() -
+            detVolumes.back()->volumeBounds().values()[0];
+  auto yB = detVolumes.back()->center().y() -
+            detVolumes.back()->volumeBounds().values()[1];
+  auto zB = detVolumes.back()->center().z();
 
   Acts::Vector3 pointA = {xA, yA, zA};
   Acts::Vector3 pointB = {xB, yB, zB};
@@ -172,33 +180,36 @@ ActsExamples::MockupSectorBuilder::buildSector(
   // calculate the phi angles of the vectors
   auto phiA = Acts::VectorHelpers::phi(pointA);
   auto phiB = Acts::VectorHelpers::phi(pointB);
-  auto sector_angle = M_PI;
+  auto sectorAngle = M_PI;
 
-  auto half_phi = M_PI / m_cfg.NumberOfSectors;
+  auto halfPhi = M_PI / mCfg.NumberOfSectors;
 
-  if (m_cfg.NumberOfSectors == 1) {
-    half_phi = (phiB - phiA) / 2;
-    sector_angle = half_phi;
+  if (mCfg.NumberOfSectors == 1) {
+    halfPhi = (phiB - phiA) / 2;
+    sectorAngle = halfPhi;
   }
 
+   const int detVolumesSize = detVolumes.size();
 
-  std::vector<float> rmins(det_volumes.size());
-  std::vector<float> rmaxs(det_volumes.size());
-  std::vector<float> halfZ(det_volumes.size());
-  std::vector<std::unique_ptr<Acts::CylinderVolumeBounds>>cylinderVolumesBounds(det_volumes.size());
+  std::vector<float> rmins(detVolumesSize);
+  std::vector<float> rmaxs(detVolumesSize);
+  std::vector<float> halfZ(detVolumesSize);
+  std::vector<std::unique_ptr<Acts::CylinderVolumeBounds>>
+      cylinderVolumesBounds(detVolumesSize);
 
-  for(std::size_t i=0; i<det_volumes.size(); i++){
-    const auto &det_vol = det_volumes[i];
-    rmins[i] = det_vol->center().y() - 
-               det_vol->volumeBounds().values()[1] - m_cfg.toleranceOverlap;
-    rmaxs[i] = std::sqrt(std::pow(det_vol->volumeBounds().values()[0],2) + 
-               std::pow(det_vol->center().y() + 
-               det_vol->volumeBounds().values()[1],2)) + m_cfg.toleranceOverlap; //bla bla from pythagoreum
-     halfZ[i] =  det_vol->volumeBounds().values()[2];
+  for (int i = 0; i < detVolumesSize; i++) {
+    const auto& detVol = detVolumes[i];
+    rmins[i] = detVol->center().y() - detVol->volumeBounds().values()[1] -
+               mCfg.toleranceOverlap;
+    rmaxs[i] = std::sqrt(std::pow(detVol->volumeBounds().values()[0], 2) +
+                         std::pow(detVol->center().y() +
+                                      detVol->volumeBounds().values()[1],
+                                  2)) +
+               mCfg.toleranceOverlap;  
+    halfZ[i] = detVol->volumeBounds().values()[2];
 
-    cylinderVolumesBounds[i] = std::make_unique<Acts::CylinderVolumeBounds>(rmins[i], rmaxs[i],
-                                                   halfZ[i], sector_angle);
-
+    cylinderVolumesBounds[i] = std::make_unique<Acts::CylinderVolumeBounds>(
+        rmins[i], rmaxs[i], halfZ[i], sectorAngle);
   }
 
   const Acts::Vector3 pos = {0., 0., 0.};
@@ -208,88 +219,100 @@ ActsExamples::MockupSectorBuilder::buildSector(
   auto transform = Acts::Transform3(Acts::Translation3(pos));
   transform *= rotZ;
 
-  //create a vector for the shifted surfaces of each chamber
-  std::vector<std::shared_ptr<Acts::Surface>> shifted_surfaces = {};
+  // create a vector for the shifted surfaces of each chamber
+  std::vector<std::shared_ptr<Acts::Surface>> shiftedSurfaces = {};
 
-  //creare an array of vectors that holds all the chambers of each sector
-
-  const int array_size =  det_volumes.size();  
-  std::vector<std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>> chambersOfSectors(array_size);
+  // creare an array of vectors that holds all the chambers of each sector 
+  std::vector<std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>>
+      chambersOfSectors(detVolumesSize);
 
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>
-     detectorCylinderVolumesOfSector = {};
+      detectorCylinderVolumesOfSector = {};
 
-  for (int i = 0; i < m_cfg.NumberOfSectors; i++) {
+  for (int i = 0; i < mCfg.NumberOfSectors; i++) {
+    Acts::AngleAxis3 rotation(2 * i * halfPhi, Acts::Vector3(0., 0., 1.));
 
-    Acts::AngleAxis3 rotation(2 * i * half_phi,
-                              Acts::Vector3(0., 0., 1.));
-
-    for (std::size_t itr = 0; itr<det_volumes.size(); itr++) {
-
-      const auto &det_vol = det_volumes[itr];
+    for (int itr = 0; itr < detVolumesSize; itr++) {
+      const auto& detVol = detVolumes[itr];
 
       auto shift_vol =
-          rotation * Acts::Transform3(Acts::Translation3(det_vol->center()));
+          rotation * Acts::Transform3(Acts::Translation3(detVol->center()));
 
-      for (auto& det_surf : det_vol->surfaces()) {
-
+      for (auto& detSurf : detVol->surfaces()) {
         auto shift_surf = Acts::Transform3::Identity() * rotation;
 
         // create the shifted surfaces by creating copied surface objects
         auto strawSurfaceObject = Acts::Surface::makeShared<Acts::StrawSurface>(
-            det_surf->transform(Acts::GeometryContext()), 
-            det_surf->bounds().values()[0], det_surf->bounds().values()[1]);
+            detSurf->transform(Acts::GeometryContext()),
+            detSurf->bounds().values()[0], detSurf->bounds().values()[1]);
 
         auto copiedTransformStrawSurface =
             Acts::Surface::makeShared<Acts::StrawSurface>(
                 Acts::GeometryContext(), *strawSurfaceObject, shift_surf);
 
-        shifted_surfaces.push_back(copiedTransformStrawSurface);
+        shiftedSurfaces.push_back(copiedTransformStrawSurface);
       }
 
       // create the bounds of the volumes of each chamber
       auto bounds = std::make_unique<Acts::CuboidVolumeBounds>(
-          det_vol->volumeBounds().values()[0],
-          det_vol->volumeBounds().values()[1],
-          det_vol->volumeBounds().values()[2]);
+          detVol->volumeBounds().values()[0],
+          detVol->volumeBounds().values()[1],
+          detVol->volumeBounds().values()[2]);
       // create the shifted chamber
-      auto detectorVolume_sec =
+      auto detectorVolumeSec =
           Acts::Experimental::DetectorVolumeFactory::construct(
               Acts::Experimental::defaultPortalGenerator(), gctx,
-              "test-cylinder", shift_vol, std::move(bounds), shifted_surfaces,
+              "test-cylinder", shift_vol, std::move(bounds), shiftedSurfaces,
               std::vector<
                   std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
               Acts::Experimental::allPortalsAndSurfaces());
 
-          chambersOfSectors[itr].push_back(detectorVolume_sec);
+      chambersOfSectors[itr].push_back(detectorVolumeSec);
 
-          shifted_surfaces.clear();
+      shiftedSurfaces.clear();
 
     }  // end of detector volumes
 
   }  // end of number of sectors
 
-
-  for(std::size_t i=0; i < cylinderVolumesBounds.size(); ++i){
-
-    detectorCylinderVolumesOfSector.push_back(Acts::Experimental::DetectorVolumeFactory::construct(
-          Acts::Experimental::defaultPortalGenerator(), gctx, "cylinder_volume",
-          transform, std::move(cylinderVolumesBounds[i]),
-          std::vector<std::shared_ptr<Acts::Surface>>{},
-          chambersOfSectors[i],
-          Acts::Experimental::allPortalsAndSurfaces()));
+  for (std::size_t i = 0; i < cylinderVolumesBounds.size(); ++i) {
+    detectorCylinderVolumesOfSector.push_back(
+        Acts::Experimental::DetectorVolumeFactory::construct(
+            Acts::Experimental::defaultPortalGenerator(), gctx,
+            "cylinder_volume", transform, std::move(cylinderVolumesBounds[i]),
+            std::vector<std::shared_ptr<Acts::Surface>>{}, chambersOfSectors[i],
+            Acts::Experimental::allPortalsAndSurfaces()));
   }
 
-
-  auto cylinderVolumesBoundsOfMother = std::make_unique<Acts::CylinderVolumeBounds>(rmins.front(), rmaxs.back(),
-    *std::max_element(halfZ.begin(), halfZ.end()), sector_angle);
+  auto cylinderVolumesBoundsOfMother =
+      std::make_unique<Acts::CylinderVolumeBounds>(
+          rmins.front(), rmaxs.back(),
+          *std::max_element(halfZ.begin(), halfZ.end()), sectorAngle);
 
   // creation of the mother volume
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
       Acts::Experimental::defaultPortalGenerator(), gctx, "sector", transform,
       std::move(cylinderVolumesBoundsOfMother),
-      std::vector<std::shared_ptr<Acts::Surface>>{}, detectorCylinderVolumesOfSector,
+      std::vector<std::shared_ptr<Acts::Surface>>{},
+      detectorCylinderVolumesOfSector,
       Acts::Experimental::allPortalsAndSurfaces());
 
   return detectorVolume;
+}
+
+void ActsExamples::MockupSectorBuilder::drawSector(std::shared_ptr<Acts::Experimental::DetectorVolume>
+  detectorVolumeSector,
+  std::string nameObjFile){
+
+  Acts::ViewConfig sConfig = Acts::s_viewSensitive;
+
+  Acts::ObjVisualization3D objSector;
+
+  Acts::GeometryView3D::drawDetectorVolume(
+      objSector, *detectorVolumeSector, Acts::GeometryContext(),
+      Acts::Transform3::Identity(), sConfig);
+
+  objSector.write(nameObjFile);
+
+
 }
