@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,7 +11,7 @@
 #include "Acts/Definitions/TrackParametrization.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Seeding/Seed.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/Logger.hpp"
 

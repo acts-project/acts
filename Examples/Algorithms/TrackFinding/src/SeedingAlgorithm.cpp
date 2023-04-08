@@ -10,7 +10,7 @@
 
 #include "Acts/Seeding/BinFinder.hpp"
 #include "Acts/Seeding/BinnedSPGroup.hpp"
-#include "Acts/Seeding/Seed.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "Acts/Utilities/FpeMonitor.hpp"

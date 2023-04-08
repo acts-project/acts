@@ -12,7 +12,7 @@
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/IExperimentCuts.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/Seed.hpp"
+#include "Acts/EventData/Seed.hpp"
 #include "Acts/Seeding/SeedFilterConfig.hpp"
 
 #include <memory>
