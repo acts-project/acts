@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2021 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -73,12 +73,12 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
   for (size_t iseed = 0; iseed < seeds.size(); ++iseed) {
     const auto& seed = seeds[iseed];
     // Get the bottom space point and its reference surface
-    const auto bottomSP = seed.sp().front();
-    if (bottomSP->sourceLinks().empty()) {
+    const auto& bottomSP = seed.sp().front();
+    if (bottomSP.sourceLinks().empty()) {
       ACTS_WARNING("Missing source link in the space point")
       continue;
     }
-    const auto& sourceLink = bottomSP->sourceLinks()[0];
+    const auto& sourceLink = bottomSP.sourceLinks()[0];
     auto geoId = sourceLink.geometryId();
     const Acts::Surface* surface = m_cfg.trackingGeometry->findSurface(geoId);
     if (surface == nullptr) {
@@ -89,7 +89,7 @@ ActsExamples::ProcessCode ActsExamples::TrackParamsEstimationAlgorithm::execute(
 
     // Get the magnetic field at the bottom space point
     auto fieldRes = m_cfg.magneticField->getField(
-        {bottomSP->x(), bottomSP->y(), bottomSP->z()}, bCache);
+        {bottomSP.x(), bottomSP.y(), bottomSP.z()}, bCache);
     if (!fieldRes.ok()) {
       ACTS_ERROR("Field lookup error: " << fieldRes.error());
       return ProcessCode::ABORT;

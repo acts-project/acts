@@ -8,19 +8,18 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/SpacePointProxyIterator.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
-#include "Acts/Definitions/Algebra.hpp"
 
 #include <any>
 #include <vector>
 
 namespace Acts {
 
-template <typename container_t,
-	  template <typename> class holder_t>
+template <typename container_t, template <typename> class holder_t>
 class SpacePointContainer {
  public:
   friend class Acts::SpacePointProxy<
@@ -32,7 +31,7 @@ class SpacePointContainer {
   friend class Acts::SpacePointProxyIterator<
       Acts::SpacePointContainer<container_t, holder_t>, true>;
 
-public:
+ public:
   static constexpr bool read_only = true;
 
   using SpacePointProxyType =
@@ -47,15 +46,17 @@ public:
   using const_iterator = Acts::SpacePointProxyIterator<
       Acts::SpacePointContainer<container_t, holder_t>, true>;
 
-  using ValueType = typename std::conditional<read_only,
-					      typename std::conditional<std::is_const<typename container_t::ValueType>::value,
-							       typename container_t::ValueType,
-							       const typename container_t::ValueType>::type,
-					      typename container_t::ValueType>::type;
-  using ProxyType = typename std::conditional<read_only,
-					      ConstSpacePointProxyType,
-					      SpacePointProxyType>::type;
-  
+  using ValueType = typename std::conditional<
+      read_only,
+      typename std::conditional<
+          std::is_const<typename container_t::ValueType>::value,
+          typename container_t::ValueType,
+          const typename container_t::ValueType>::type,
+      typename container_t::ValueType>::type;
+  using ProxyType =
+      typename std::conditional<read_only, ConstSpacePointProxyType,
+                                SpacePointProxyType>::type;
+
  public:
   // Constructors
   // It makes sense to support both options of
@@ -72,7 +73,7 @@ public:
   // Activate only if holder_t is ValueHolder
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<Acts::detail::is_same_template<
-					  H, Acts::detail::ValueHolder>::value>>
+                H, Acts::detail::ValueHolder>::value>>
   SpacePointContainer(container_t&& container);
 
   // If we take ownership, forbid copy operations
@@ -84,8 +85,8 @@ public:
 
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<Acts::detail::is_same_template<
-					  H, Acts::detail::RefHolder>::value,
-					bool>>
+                                            H, Acts::detail::RefHolder>::value,
+                                        bool>>
   SpacePointContainer& operator=(SpacePointContainer& other);
 
   // move operations
@@ -111,21 +112,16 @@ public:
 
   ValueType& sp(std::size_t n) const;
 
-private:
+ private:
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   container_t& container();
 
   const container_t& container() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ProxyType& proxy(std::size_t n);
-  
-  const ProxyType& proxy(std::size_t n) const;
+  ProxyType proxy(std::size_t n);
 
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  std::vector<ProxyType>& proxies();
-
-  const std::vector<ProxyType>& proxies() const;
+  const ProxyType proxy(std::size_t n) const;
 
  private:
   float x(std::size_t n) const;
@@ -136,26 +132,11 @@ private:
   float varianceZ(std::size_t n) const;
 
   // component methods for additional quantities
-  template<typename T>
-  T component(HashedString key, std::size_t n) const
-  {
-    using namespace Acts::HashedStringLiteral;
-    switch (key) {
-    case "TopHalfStripLength"_hash:
-    case "BottomHalfStripLength"_hash:
-    case "TopStripDirection"_hash:
-    case "BottomStripDirection"_hash:
-    case "StripCenterDistance"_hash:
-    case "TopStripCenterPosition"_hash:
-      return std::any_cast<T>(container().component_impl(key, n));
-    default:
-      throw std::runtime_error("no such component " + std::to_string(key));
-    }
-  }
+  template <typename T>
+  T component(HashedString key, std::size_t n) const;
 
  private:
   holder_t<container_t> m_container;
-  std::vector<ProxyType> m_proxies{};
 };
 
 }  // namespace Acts

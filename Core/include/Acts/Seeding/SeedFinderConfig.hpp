@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2018-2020 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -11,9 +11,9 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/Seeding/SeedConfirmationRangeConfig.hpp"
-#include "Acts/Utilities/Delegate.hpp"
 
 #include <memory>
+#include <vector>
 
 namespace Acts {
 
@@ -147,24 +147,7 @@ struct SeedFinderConfig {
   int nTrplPerSpBLimit = 100;
   int nAvgTrplPerSpBLimit = 2;
 
-  // Delegates for accessors to detailed information on double measurement that
-  // produced the space point.
-  // This is mainly referring to space points produced when combining
-  // measurement from strips on back-to-back modules.
-  // Enables setting of the following delegates.
   bool useDetailedDoubleMeasurementInfo = false;
-  // Returns half of the length of the top strip.
-  Delegate<float(const SpacePoint&)> getTopHalfStripLength;
-  // Returns half of the length of the bottom strip.
-  Delegate<float(const SpacePoint&)> getBottomHalfStripLength;
-  // Returns direction of the top strip.
-  Delegate<Acts::Vector3(const SpacePoint&)> getTopStripDirection;
-  // Returns direction of the bottom strip.
-  Delegate<Acts::Vector3(const SpacePoint&)> getBottomStripDirection;
-  // Returns distance between the centers of the two strips.
-  Delegate<Acts::Vector3(const SpacePoint&)> getStripCenterDistance;
-  // Returns position of the center of the top strip.
-  Delegate<Acts::Vector3(const SpacePoint&)> getTopStripCenterPosition;
 
   bool isInInternalUnits = false;
 

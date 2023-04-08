@@ -8,9 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/HashedString.hpp"
 #include "Acts/Utilities/Holders.hpp"
-#include "Acts/Definitions/Algebra.hpp"
 
 #include <any>
 #include <iostream>
@@ -22,16 +22,17 @@ namespace Acts {
 template <typename container_t, bool read_only>
 class SpacePointProxy {
  public:
-  using ContainerType = typename std::conditional<read_only,
-						  const container_t,
-						  container_t>::type;
-  using ValueType = typename std::conditional<read_only,
-					      typename std::conditional<std::is_const<typename ContainerType::ValueType>::value,
-									typename ContainerType::ValueType,
-									const typename ContainerType::ValueType>::type,
-					      typename ContainerType::ValueType>::type;
+  using ContainerType = typename std::conditional<read_only, const container_t,
+                                                  container_t>::type;
+  using ValueType = typename std::conditional<
+      read_only,
+      typename std::conditional<
+          std::is_const<typename ContainerType::ValueType>::value,
+          typename ContainerType::ValueType,
+          const typename ContainerType::ValueType>::type,
+      typename ContainerType::ValueType>::type;
 
-public:
+ public:
   // Never take the ownership of the container
   SpacePointProxy(ContainerType&& container, std::size_t index) = delete;
   // Only get the reference
@@ -40,7 +41,7 @@ public:
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   ValueType& sp();
-  
+
   ValueType& sp() const;
 
   std::size_t index() const;
@@ -55,18 +56,18 @@ public:
   // component methods for additional quantities
   template <typename T>
   T component(HashedString key) const;
-  
-private:
+
+ private:
   ContainerType& container() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
   ContainerType& container();
-  
+
  private:
   Acts::detail::RefHolder<ContainerType> m_container;
   std::size_t m_index;
 };
-  
+
 }  // namespace Acts
 
 #include "Acts/EventData/SpacePointProxy.ipp"
