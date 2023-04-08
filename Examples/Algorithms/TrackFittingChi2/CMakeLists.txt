@@ -9,7 +9,7 @@ target_link_libraries(
   ActsExamplesTrackFittingChi2
   PUBLIC
     ActsCore
-    ActsExamplesFramework ActsExamplesMagneticField)
+    ActsExamplesFramework ActsExamplesMagneticField ActsExamplesCalibration)
 
 install(
   TARGETS ActsExamplesTrackFittingChi2

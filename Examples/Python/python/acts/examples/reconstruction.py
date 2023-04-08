@@ -853,6 +853,7 @@ def addKalmanTracks(
         fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
+        calibrator=acts.examples.makePassThroughCalibrator()
     )
     s.addAlgorithm(fitAlg)
 

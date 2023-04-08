@@ -68,7 +68,8 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   // Measurement calibrator must be instantiated here, because we need the
   // measurements to construct it. The other extensions are hold by the
   // fit-function-object
-  ActsExamples::MeasurementCalibrator calibrator(measurements);
+  ActsExamples::PairedMeasurementCalibrator calibrator(*(m_cfg.calibrator),
+                                                       measurements);
 
   TrackFitterFunction::GeneralFitterOptions options{
       ctx.geoContext, ctx.magFieldContext, ctx.calibContext, pSurface.get(),
