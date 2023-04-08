@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -12,32 +13,22 @@ template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     container_t& container)
-    : m_container(container) {
-  std::size_t n = this->size();
-  m_proxies.reserve(n);
-  for (std::size_t i(0); i < n; ++i) {
-    m_proxies.emplace_back(*this, i);
-  }
-}
+    : m_container(container)
+{}
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     container_t&& container)
-    : m_container(std::move(container)) {
-  std::size_t n = this->size();
-  m_proxies.reserve(n);
-  for (std::size_t i(0); i < n; ++i) {
-    m_proxies.emplace_back(*this, i);
-  }
-}
+    : m_container(std::move(container))
+{}
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     SpacePointContainer<container_t, holder_t>& other)
-    : m_container(*m_container.ptr),
-      m_proxies(other.m_proxies.begin(), other.m_proxies.end()) {}
+    : m_container(*other.m_container.ptr)
+{}
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
@@ -45,16 +36,14 @@ SpacePointContainer<container_t, holder_t>&
 SpacePointContainer<container_t, holder_t>::operator=(
     SpacePointContainer<container_t, holder_t>& other) {
   m_container.ptr = other.m_container.ptr;
-  m_proxies.insert(m_proxies.end(), other.m_proxies.begin(),
-                   other.m_proxies.end());
   return *this;
 }
 
 template <typename container_t, template <typename> class holder_t>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     SpacePointContainer<container_t, holder_t>&& other) noexcept
-    : m_container(std::exchange(other.m_container.ptr, nullptr)),
-      m_proxies(std::move(other.m_proxies)) {}
+    : m_container(std::exchange(other.m_container.ptr, nullptr))
+{}
 
 template <typename container_t, template <typename> class holder_t>
 template <typename T>
@@ -79,7 +68,6 @@ SpacePointContainer<container_t, holder_t>&
 SpacePointContainer<container_t, holder_t>::operator=(
     SpacePointContainer<container_t, holder_t>&& other) noexcept {
   m_container = std::exchange(other.m_container.ptr, nullptr);
-  m_proxies = std::move(other.m_proxies);
   return *this;
 }
 
@@ -177,30 +165,15 @@ inline float SpacePointContainer<container_t, holder_t>::varianceZ(
 
 template <typename container_t, template <typename> class holder_t>
 template <bool, typename>
-inline typename SpacePointContainer<container_t, holder_t>::ProxyType&
+inline typename SpacePointContainer<container_t, holder_t>::ProxyType
 SpacePointContainer<container_t, holder_t>::proxy(std::size_t n) {
-  return proxies()[n];
+  return {*this, n};
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline const typename SpacePointContainer<container_t, holder_t>::ProxyType&
+inline const typename SpacePointContainer<container_t, holder_t>::ProxyType
 SpacePointContainer<container_t, holder_t>::proxy(std::size_t n) const {
-  return proxies()[n];
-}
-
-template <typename container_t, template <typename> class holder_t>
-template <bool, typename>
-inline std::vector<
-    typename SpacePointContainer<container_t, holder_t>::ProxyType>&
-SpacePointContainer<container_t, holder_t>::proxies() {
-  return m_proxies;
-}
-
-template <typename container_t, template <typename> class holder_t>
-inline const std::vector<
-    typename SpacePointContainer<container_t, holder_t>::ProxyType>&
-SpacePointContainer<container_t, holder_t>::proxies() const {
-  return m_proxies;
+  return {*this, n};
 }
 
 }  // namespace Acts

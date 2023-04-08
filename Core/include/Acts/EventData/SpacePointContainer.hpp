@@ -119,14 +119,9 @@ class SpacePointContainer {
   const container_t& container() const;
 
   template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  ProxyType& proxy(std::size_t n);
+  ProxyType proxy(std::size_t n);
 
-  const ProxyType& proxy(std::size_t n) const;
-
-  template <bool RO = read_only, typename = std::enable_if_t<!RO>>
-  std::vector<ProxyType>& proxies();
-
-  const std::vector<ProxyType>& proxies() const;
+  const ProxyType proxy(std::size_t n) const;
 
  private:
   float x(std::size_t n) const;
@@ -142,8 +137,6 @@ class SpacePointContainer {
 
  private:
   holder_t<container_t> m_container;
-  // Need to change the Seed EDM if we want to get rid of this internal vector
-  std::vector<ProxyType> m_proxies{};
 };
 
 }  // namespace Acts

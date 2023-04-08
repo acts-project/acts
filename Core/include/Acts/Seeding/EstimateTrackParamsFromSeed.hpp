@@ -65,15 +65,11 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   ActsScalar r2m = 0., r4m = 0.;
   ActsScalar xr2m = 0., yr2m = 0.;
 
-  for (spacepoint_iterator_t it = spBegin; it != spEnd; it++) {
-    if (*it == nullptr) {
-      ACTS_ERROR("Empty space point found. This should not happen.")
-      return std::nullopt;
-    }
+  for (spacepoint_iterator_t it = spBegin; it != spEnd; ++it) {
     const auto& sp = *it;
 
-    ActsScalar x = sp->x();
-    ActsScalar y = sp->y();
+    ActsScalar x = sp.x();
+    ActsScalar y = sp.y();
     ActsScalar r2 = x * x + y * y;
     x2m += x * x;
     xm += x;
@@ -184,12 +180,8 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   // and top space point, respectively
   for (size_t isp = 0; isp < 3; ++isp) {
     spacepoint_iterator_t it = std::next(spBegin, isp);
-    if (*it == nullptr) {
-      ACTS_ERROR("Empty space point found. This should not happen.")
-      return std::nullopt;
-    }
     const auto& sp = *it;
-    spGlobalPositions[isp] = Vector3(sp->x(), sp->y(), sp->z());
+    spGlobalPositions[isp] = Vector3(sp.x(), sp.y(), sp.z());
   }
 
   // Define a new coordinate frame with its origin at the bottom space point, z

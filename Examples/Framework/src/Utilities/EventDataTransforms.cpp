@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -12,8 +12,8 @@ ActsExamples::ProtoTrack ActsExamples::seedToPrototrack(
     const ActsExamples::SimSeed& seed) {
   ProtoTrack track;
   track.reserve(seed.sp().size());
-  for (auto spacePointPtr : seed.sp()) {
-    for (const auto& slink : spacePointPtr->sourceLinks()) {
+  for (const auto& spacePoints : seed.sp()) {
+    for (const auto& slink : spacePoints.sourceLinks()) {
       const auto& islink = slink.get<IndexSourceLink>();
       track.emplace_back(islink.index());
     }
