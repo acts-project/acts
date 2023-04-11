@@ -228,13 +228,6 @@ class MultiEigenStepperLoop
         m_finalReductionMethod(finalReductionMethod),
         m_logger(std::move(logger)) {}
 
-  /// Copy constructor. Must be defined, because we need to explicitly clone the
-  /// logger
-  MultiEigenStepperLoop(const MultiEigenStepperLoop& other)
-      : EigenStepper<extensionlist_t, auctioneer_t>(other.m_bField),
-        m_finalReductionMethod(other.m_finalReductionMethod),
-        m_logger(other.m_logger->clone()) {}
-
   struct State {
     /// The struct that stores the individual components
     struct Component {
