@@ -803,15 +803,17 @@ struct FinalStateCollector {
     MultiPars pars;
   };
 
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result, const Logger& /*unused*/) const {
-    if (not(state.navigation.targetReached and
-            state.navigation.currentSurface)) {
+                  const navigator_t& navigator, result_type& result,
+                  const Logger& /*logger*/) const {
+    if (not(navigator.targetReached(state.navigation) and
+            navigator.currentSurface(state.navigation))) {
       return;
     }
 
-    const auto& surface = *state.navigation.currentSurface;
+    const auto& surface = *navigator.currentSurface(state.navigation);
     std::vector<std::tuple<double, BoundVector, std::optional<BoundSymMatrix>>>
         states;
 
