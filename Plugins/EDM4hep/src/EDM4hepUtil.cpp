@@ -17,6 +17,7 @@
 
 namespace ActsExamples {
 
-// void EDM4hepUtil::writeTrack(TrackContainer::ConstTrackProxy track,
-// edm4hep::MutableTrack to) {}
+ void EDM4hepUtil::writeTrack(TrackContainer::ConstTrackProxy track,
+                              edm4hep::MutableTrack to) {}
+
 }  // namespace ActsExamples
