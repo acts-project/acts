@@ -312,7 +312,6 @@ struct IndexedGridFiller {
   /// @param iObjects the object container to be indexed
   /// @param rGenerator the reference point generator for position queries
   /// @param aToAll the indices that are assigned to all bins
-  /// @param logger the logging instance that can be handed through from the caller
   ///
   /// @note as this is a Detector module, the objects within the indexed_objects container
   /// are assumed to have pointer semantics
