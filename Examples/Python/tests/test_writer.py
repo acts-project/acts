@@ -769,7 +769,6 @@ def test_edm4hep_tracks_writer(tmp_path):
     actual = []
 
     for frame in reader.get("events"):
-        print("EVENT")
         tracks = frame.get("ActsTracks")
         for track in tracks:
             actual.append(
@@ -800,4 +799,3 @@ def test_edm4hep_tracks_writer(tmp_path):
             assert abs(perigee.D0) < 1e-1
             assert abs(perigee.Z0) < 1
 
-            print(perigee.omega, 1 / perigee.omega)
