@@ -20,27 +20,33 @@ namespace ActsExamples {
 /// Evicts tracks that seem to be duplicated and fake.
 ///
 /// The implementation works as follows:
-///  1) Cluster together nearby tracks using shared hits
-///  2) For each track use a neural network to compute a score
-///  3) In each cluster keep the track with the highest score
-class AmbiguityResolutionMLAlgorithm final : public AmbiguityResolutionML {
+///  1) Cluster together nearby tracks using a DBScan
+///  2) Create subcluster based on tracks with shared hits
+///  3) For each track use a neural network to compute a score
+///  4) In each cluster keep the track with the highest score
+class AmbiguityResolutionMLDBScanAlgorithm final
+    : public AmbiguityResolutionML {
  public:
   struct Config {
-    /// Input track collection.
+    /// Input trajectories collection.
     std::string inputTracks;
     /// Path to the ONNX model for the duplicate neural network
     std::string inputDuplicateNN;
-    /// Output track collection.
+    /// Output trajectories collection.
     std::string outputTracks;
     /// Minumum number of measurement to form a track.
     int nMeasurementsMin = 7;
+    /// Maximum distance between 2 tracks to be clustered in the DBScan
+    float epsilonDBScan = 0.07;
+    /// Minimum number of tracks to create a cluster in the DBScan
+    int minPointsDBScan = 2;
   };
 
   /// Construct the ambiguity resolution algorithm.
   ///
   /// @param cfg is the algorithm configuration
   /// @param lvl is the logging level
-  AmbiguityResolutionMLAlgorithm(Config cfg, Acts::Logging::Level lvl);
+  AmbiguityResolutionMLDBScanAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   /// Run the ambiguity resolution algorithm.
   ///
