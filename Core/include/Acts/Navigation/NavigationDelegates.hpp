@@ -22,7 +22,10 @@ namespace Experimental {
 /// This allows to define a common Owning delegate
 /// schema, which in turn allows for accessing the holder
 /// of the delegate implementation for e.g. I/O or display
-class INavigationDelegate {};
+class INavigationDelegate {
+ public:
+  virtual ~INavigationDelegate() = default;
+};
 
 /// Declare an updator for the local navigation, i.e. the
 /// navigation inside a detector volume. This can be called

@@ -41,7 +41,7 @@ using namespace Acts::Experimental;
 
 Acts::GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   Acts::ActsScalar rInner = 10.;
@@ -59,7 +59,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   BOOST_CHECK_THROW(
       DetectorVolumeFactory::construct(portalGenerator, tContext,
                                        "MisconfiguredFullCylinderVolume",
-                                       nominal, nullptr, allPortals()),
+                                       nominal, nullptr, tryAllPortals()),
       std::invalid_argument);
 
   // Misconfigured - portal generator not connected
@@ -67,13 +67,13 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
   BOOST_CHECK_THROW(
       DetectorVolumeFactory::construct(unconnected, tContext,
                                        "MisconfiguredFullCylinderVolume",
-                                       nominal, nullptr, allPortals()),
+                                       nominal, nullptr, tryAllPortals()),
       std::invalid_argument);
 
   // A full cylinder
   auto fullCylinderVolume = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "FullCylinderVolume", nominal,
-      std::move(fullCylinderBounds), allPortals());
+      std::move(fullCylinderBounds), tryAllPortals());
 
   BOOST_CHECK(fullCylinderVolume ==
               unpackToShared<DetectorVolume>(*fullCylinderVolume));
@@ -90,7 +90,7 @@ BOOST_AUTO_TEST_CASE(CylindricalDetectorVolumePortals) {
 
   auto tubeCylinderVolume = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "TubeCylinderVolume", nominal,
-      std::move(tubeCylinderBounds), allPortals());
+      std::move(tubeCylinderBounds), tryAllPortals());
 
   BOOST_CHECK(tubeCylinderVolume->surfaces().empty());
   BOOST_CHECK(tubeCylinderVolume->volumes().empty());
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE(UpdatePortal) {
 
   auto fullCylinderVolume = DetectorVolumeFactory::construct(
       portalGenerator, tContext, "FullCylinderVolume", nominal,
-      std::move(fullCylinderBounds), allPortals());
+      std::move(fullCylinderBounds), tryAllPortals());
 
   auto cylinderSurface =
       Acts::Surface::makeShared<Acts::CylinderSurface>(nominal, 10., 100.);
@@ -148,9 +148,9 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   auto generatePortalsUpdateInternals = defaultPortalAndSubPortalGenerator();
 
   // Create the inner box
-  auto innerBox =
-      DetectorVolumeFactory::construct(portals, tContext, "InnerBox", nominal,
-                                       std::move(smallBoxBounds), allPortals());
+  auto innerBox = DetectorVolumeFactory::construct(
+      portals, tContext, "InnerBox", nominal, std::move(smallBoxBounds),
+      tryAllPortals());
 
   std::vector<std::shared_ptr<Acts::Surface>> surfaces = {};
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes = {
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE(CuboidWithCuboid) {
   // with sub portal registration
   auto outerBox = DetectorVolumeFactory::construct(
       generatePortalsUpdateInternals, tContext, "OuterBox", nominal,
-      std::move(bigBoxBounds), surfaces, volumes, allPortals());
+      std::move(bigBoxBounds), surfaces, volumes, tryAllPortals());
 
   // Check that we are within the outer box
   Acts::Experimental::NavigationState nState;
