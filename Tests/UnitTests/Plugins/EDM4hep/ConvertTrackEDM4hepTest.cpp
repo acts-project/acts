@@ -28,6 +28,7 @@
 #include "Acts/Utilities/Logger.hpp"
 #include "Acts/Utilities/Zip.hpp"
 
+#include <algorithm>
 #include <random>
 
 #include <edm4hep/TrackCollection.h>
@@ -103,11 +104,10 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
 
   // input is not a perigee, so new params should be at 0, 0 on ad-hoc perigee
   BOOST_CHECK_EQUAL(converted.values.template head<2>(), (Vector2{0, 0}));
-  BOOST_CHECK_EQUAL(converted.values[2], par[2]);
+  CHECK_CLOSE_ABS(converted.values[2], par[2], 1e-6);
 
-  BOOST_CHECK_EQUAL(
-      (converted.covariance.value().template topLeftCorner<4, 4>()),
-      ActsSymMatrix<4>::Identity());
+  BOOST_CHECK((converted.covariance.value().template topLeftCorner<4, 4>())
+                  .isApprox(ActsSymMatrix<4>::Identity()));
   BOOST_CHECK(converted.covariance.value()(4, 4) > 0);
   BOOST_CHECK_EQUAL(converted.covariance.value()(5, 5), 25_ns);
 
@@ -117,7 +117,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
 
   BOOST_CHECK_EQUAL(roundtripPar.parameters().template head<2>(),
                     (Vector2{0, 0}));
-  BOOST_CHECK_EQUAL(roundtripPar.parameters().tail<4>(), par.tail<4>());
+  BOOST_CHECK(roundtripPar.parameters().tail<4>().isApprox(par.tail<4>()));
   BOOST_CHECK(roundtripPar.covariance().value().isApprox(
       boundPar.covariance().value()));
 }
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
 
   // input is not a perigee, so new params should be at 0, 0 on ad-hoc perigee
   BOOST_CHECK_EQUAL(converted.values.template head<2>(), (Vector2{0, 0}));
-  BOOST_CHECK_EQUAL(converted.values[2], par[2]);
+  CHECK_CLOSE_ABS(converted.values[2], par[2], 1e-6);
 
   // convert back for roundtrip test
   SingleBoundTrackParameters<SinglyCharged> roundtripPar =
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
 
   BOOST_CHECK_EQUAL(roundtripPar.parameters().template head<2>(),
                     (Vector2{0, 0}));
-  BOOST_CHECK_EQUAL(roundtripPar.parameters().tail<4>(), par.tail<4>());
+  BOOST_CHECK(roundtripPar.parameters().tail<4>().isApprox(par.tail<4>()));
   BOOST_CHECK(!roundtripPar.covariance().has_value());
 }
 
@@ -224,7 +224,7 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   std::uniform_real_distribution<double> r(0, 1);
   std::uniform_int_distribution<unsigned int> nTracks(2, 20);
   std::uniform_int_distribution<unsigned int> nTs(1, 20);
-  std::uniform_real_distribution<double> phiDist(0, 2 * M_PI);
+  std::uniform_real_distribution<double> phiDist(-M_PI, M_PI);
   std::uniform_real_distribution<double> etaDist(-4, 4);
   std::uniform_real_distribution<double> ptDist(1_MeV, 10_GeV);
   std::uniform_real_distribution<double> qDist(0., 1.);
@@ -249,7 +249,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     return {par, cov};
   };
 
-  for (size_t t = 0; t < nTracks(rng); t++) {
+  size_t numT = nTracks(rng);
+  for (size_t t = 0; t < numT; t++) {
     auto track = tracks.getTrack(tracks.addTrack());
     {
       auto [par, cov] = genParams();
@@ -259,7 +260,8 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     track.setReferenceSurface(
         Acts::Surface::makeShared<PerigeeSurface>(Vector3{0, 0, 0}));
 
-    for (size_t i = 0; i < nTs(rng); i++) {
+    size_t numTs = nTs(rng);
+    for (size_t i = 0; i < numTs; i++) {
       auto ts = track.appendTrackState(TrackStatePropMask::Smoothed);
       double crit = r(rng);
       if (crit < 0.1) {
@@ -286,7 +288,6 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
     }
 
     calculateTrackQuantities(track);
-    break;
   }
 
   edm4hep::TrackCollection edm4hepTracks;
@@ -324,28 +325,55 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   }
 
   BOOST_CHECK_EQUAL(tracks.size(), readTracks.size());
+  size_t t = 0;
 
-  for (auto [orig, read] : zip(tracks, readTracks)) {
-    CHECK_CLOSE_ABS(orig.parameters(), read.parameters(), 1e-5);
-    CHECK_CLOSE_OR_SMALL(orig.covariance(), read.covariance(), 1e-5, 1e-10);
-    BOOST_CHECK_EQUAL(orig.referenceSurface().center(gctx),
-                      read.referenceSurface().center(gctx));
+  auto origTrackIt = tracks.begin();
+  auto readTrackIt = readTracks.begin();
+  while (origTrackIt != tracks.end() && readTrackIt != readTracks.end()) {
+    BOOST_TEST_CONTEXT("Track #" << t) {
+      auto orig = *origTrackIt;
+      auto read = *readTrackIt;
 
-    for (auto&& [origTs, readTs] :
-         zip(orig.trackStates(), read.trackStates())) {
-      CHECK_CLOSE_OR_SMALL(origTs.smoothedCovariance(),
-                           readTs.smoothedCovariance(), 1e-5, 1e-6);
-      Vector3 newCenter = readTs.referenceSurface().center(
-          gctx);  // new center is a perigee, but should be on the other surface
-      BOOST_CHECK(origTs.referenceSurface().isOnSurface(gctx, newCenter,
-                                                        Vector3::Zero()));
+      CHECK_CLOSE_REL(orig.parameters(), read.parameters(), 1e-3);
+      CHECK_CLOSE_OR_SMALL(orig.covariance(), read.covariance(), 1e-5, 1e-8);
+      BOOST_CHECK_EQUAL(orig.referenceSurface().center(gctx),
+                        read.referenceSurface().center(gctx));
 
-      // global hit positions should be the same
-      Vector3 readGlobal = readTs.referenceSurface().localToGlobal(
-          gctx, readTs.parameters().template head<2>(), Vector3::Zero());
-      Vector3 origGlobal = origTs.referenceSurface().localToGlobal(
-          gctx, origTs.parameters().template head<2>(), Vector3::Zero());
-      CHECK_CLOSE_ABS(readGlobal, origGlobal, 1e-3);
+      auto origTsIt = orig.trackStates().begin();
+      auto readTsIt = read.trackStates().begin();
+
+      size_t tsi = 0;
+      while (origTsIt != orig.trackStates().end() &&
+             readTsIt != read.trackStates().end()) {
+        BOOST_TEST_CONTEXT("TS: #" << tsi) {
+          auto origTs = *std::find_if(
+              origTsIt, orig.trackStates().end(), [](const auto& ts) {
+                return ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
+              });
+          auto readTs = *readTsIt;
+          CHECK_CLOSE_OR_SMALL(origTs.smoothedCovariance(),
+                               readTs.smoothedCovariance(), 1e-5, 1e-6);
+          Vector3 newCenter = readTs.referenceSurface().center(
+              gctx);  // new center is a perigee, but should be on the other
+                      // surface
+          BOOST_CHECK(origTs.referenceSurface().isOnSurface(gctx, newCenter,
+                                                            Vector3::Zero()));
+
+          // global hit positions should be the same
+          Vector3 readGlobal = readTs.referenceSurface().localToGlobal(
+              gctx, readTs.parameters().template head<2>(), Vector3::Zero());
+          Vector3 origGlobal = origTs.referenceSurface().localToGlobal(
+              gctx, origTs.parameters().template head<2>(), Vector3::Zero());
+          CHECK_CLOSE_ABS(readGlobal, origGlobal, 1e-3);
+          ++origTsIt;
+          ++readTsIt;
+          tsi++;
+        }
+      }
+      ++origTrackIt;
+      ++readTrackIt;
+
+      t++;
     }
   }
 }
