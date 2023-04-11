@@ -144,6 +144,12 @@ AmbiguityResolutionMLConfig = namedtuple(
     defaults=[None] * 1,
 )
 
+AmbiguityResolutionMLDBScanConfig = namedtuple(
+    "AmbiguityResolutionMLDBScanConfig",
+    ["nMeasurementsMin", "epsilonDBScan", "minPointsDBScan"],
+    defaults=[None] * 3,
+)
+
 
 class VertexFinder(Enum):
     Truth = (1,)
@@ -1346,6 +1352,63 @@ def addAmbiguityResolutionML(
 
 
 @acts.examples.NamedTypeArgs(
+    config=AmbiguityResolutionMLDBScanConfig,
+    ckfPerformanceConfig=CKFPerformanceConfig,
+)
+def addAmbiguityResolutionMLDBScan(
+    s,
+    config: AmbiguityResolutionMLDBScanConfig = AmbiguityResolutionMLDBScanConfig(),
+    ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
+    onnxModelFile: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    writeTrajectories: bool = True,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+    from acts.examples import AmbiguityResolutionMLDBScanAlgorithm
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    alg = AmbiguityResolutionMLDBScanAlgorithm(
+        level=customLogLevel(),
+        inputTracks="selectedTracks",
+        inputDuplicateNN=onnxModelFile,
+        outputTracks="filteredTrajectoriesMLDBScan",
+        **acts.examples.defaultKWArgs(
+            nMeasurementsMin=config.nMeasurementsMin,
+            epsilonDBScan=config.epsilonDBScan,
+            minPointsDBScan=config.minPointsDBScan,
+        ),
+    )
+    s.addAlgorithm(alg)
+
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=alg.config.outputTracks,
+        outputTrajectories="trajectories-from-solved-tracks",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
+
+    addTrajectoryWriters(
+        s,
+        name="ambiMLDBScan",
+        trajectories="trajectories",
+        ckfPerformanceConfig=ckfPerformanceConfig,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeStates=writeTrajectories,
+        writeSummary=writeTrajectories,
+        writeCKFperformance=True,
+        writeFinderPerformance=False,
+        writeFitterPerformance=False,
+        logLevel=logLevel,
+    )
+
+    return s
+
+
+@acts.examples.NamedTypeArgs(
     trackSelectorRanges=TrackSelectorRanges,
 )
 def addVertexFitting(
@@ -1369,7 +1432,7 @@ def addVertexFitting(
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     associatedParticles : str, "associatedTruthParticles"
-        RootVertexPerformanceWriter.inputAssociatedTruthParticles
+        VertexPerformanceWriter.inputAssociatedTruthParticles
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
     logLevel : acts.logging.Level, None
@@ -1380,7 +1443,7 @@ def addVertexFitting(
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
-        RootVertexPerformanceWriter,
+        VertexPerformanceWriter,
     )
 
     trajectories = trajectories if trajectories is not None else ""
@@ -1458,11 +1521,11 @@ def addVertexFitting(
             outputDirRoot.mkdir()
         if associatedParticles == selectedParticles:
             warnings.warn(
-                "Using RootVertexPerformanceWriter with smeared particles is not necessarily supported. "
+                "Using VertexPerformanceWriter with smeared particles is not necessarily supported. "
                 "Please get in touch with us"
             )
         s.addWriter(
-            RootVertexPerformanceWriter(
+            VertexPerformanceWriter(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,

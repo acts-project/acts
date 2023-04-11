@@ -171,6 +171,11 @@ else()
   target_sources(ActsPythonBindings PRIVATE src/MLTrackFindingStub.cpp)
 endif()
 
+if(ACTS_BUILD_PLUGIN_MLPACK)
+  target_compile_definitions(
+    ActsPythonBindings PUBLIC ACTS_PLUGIN_MLPACK)
+endif()
+
 add_custom_target(ActsPythonGlueCode)
 configure_file(setup.sh.in ${_python_dir}/setup.sh @ONLY)
 install(FILES setup.sh.in DESTINATION "python" RENAME setup.sh)
