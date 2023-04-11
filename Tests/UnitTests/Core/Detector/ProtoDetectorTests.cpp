@@ -92,7 +92,7 @@ namespace Acts {
 
 namespace Test {
 
-BOOST_AUTO_TEST_SUITE(Geometry)
+BOOST_AUTO_TEST_SUITE(Detector)
 
 BOOST_AUTO_TEST_CASE(ProtoTrackingGeometryTests) {
   // Get the raw proto detector description
