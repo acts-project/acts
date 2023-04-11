@@ -51,98 +51,13 @@ ActsSymMatrix<6> jacobianFromEdm4hep(double tanLambda, double omega, double Bz);
 void unpackCovariance(const float* from, ActsSymMatrix<6>& to);
 void packCovariance(const ActsSymMatrix<6>& from, float* to);
 
-template <typename charge_t>
 Parameters convertTrackParametersToEdm4hep(
     const Acts::GeometryContext& gctx, double Bz,
-    const SingleBoundTrackParameters<charge_t>& params) {
-  Acts::Vector3 global = params.referenceSurface().localToGlobal(
-      gctx, params.parameters().template head<2>(), params.momentum());
+    const SingleBoundTrackParameters<SinglyCharged>& params);
 
-  std::shared_ptr<const Acts::Surface> refSurface =
-      params.referenceSurface().getSharedPtr();
+SingleBoundTrackParameters<SinglyCharged> convertTrackParametersFromEdm4hep(
+    double Bz, const Parameters& params);
 
-  Acts::BoundVector targetPars = params.parameters();
-  std::optional<Acts::FreeVector> freePars;
-
-  auto makeFreePars = [&]() {
-    return Acts::detail::transformBoundToFreeParameters(
-        params.referenceSurface(), gctx, params.parameters());
-  };
-
-  // If the reference surface is a perigee surface, we use that. Otherwise
-  // we create a new perigee surface at the global positon of the track
-  // parameters.
-  if (dynamic_cast<const Acts::PerigeeSurface*>(refSurface.get()) == nullptr) {
-    refSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(global);
-
-    // We need to convert to the target parameters
-    // Keep the free parameters around we might need them for the covariance
-    // conversion
-    freePars = makeFreePars();
-    targetPars = Acts::detail::transformFreeToBoundParameters(freePars.value(),
-                                                              *refSurface, gctx)
-                     .value();
-  }
-
-  Parameters result;
-  result.surface = refSurface;
-
-  // Only run covariance conversion if we have a covariance input
-  if (params.covariance()) {
-    auto boundToFree =
-        refSurface->boundToFreeJacobian(gctx, params.parameters());
-    Acts::FreeMatrix freeCov =
-        boundToFree * params.covariance().value() * boundToFree.transpose();
-
-    // ensure we have free pars
-    if (!freePars.has_value()) {
-      freePars = makeFreePars();
-    }
-
-    Acts::CovarianceCache covCache{freePars.value(), freeCov};
-    auto [varNewCov, varNewJac] = Acts::transportCovarianceToBound(
-        gctx, *refSurface, freePars.value(), covCache);
-    auto targetCov = std::get<Acts::BoundSymMatrix>(varNewCov);
-
-    Acts::ActsSymMatrix<6> J = jacobianToEdm4hep(targetPars[eBoundTheta],
-                                                 targetPars[eBoundQOverP], Bz);
-    Acts::ActsSymMatrix<6> cIn = targetCov.template topLeftCorner<6, 6>();
-    result.covariance = J * cIn * J.transpose();
-  }
-
-  result.values[0] = targetPars[Acts::eBoundLoc0];
-  result.values[1] = targetPars[Acts::eBoundLoc1];
-  result.values[2] = targetPars[Acts::eBoundPhi];
-  result.values[3] = std::tan(M_PI_2 - targetPars[Acts::eBoundTheta]);
-  result.values[4] = params.charge() * Bz / params.transverseMomentum();
-  result.values[5] = targetPars[Acts::eBoundTime];
-
-  return result;
-}
-
-template <typename charge_t>
-SingleBoundTrackParameters<charge_t> convertTrackParametersFromEdm4hep(
-    double Bz, const Parameters& params) {
-  BoundVector targetPars;
-
-  ActsSymMatrix<6> J =
-      jacobianFromEdm4hep(params.values[3], params.values[4], Bz);
-
-  std::optional<BoundMatrix> cov;
-  if (params.covariance.has_value()) {
-    cov = J * params.covariance.value() * J.transpose();
-  }
-
-  targetPars[eBoundLoc0] = params.values[0];
-  targetPars[eBoundLoc1] = params.values[1];
-  targetPars[eBoundPhi] = params.values[2];
-  targetPars[eBoundTheta] = M_PI_2 - std::atan(params.values[3]);
-  targetPars[eBoundQOverP] =
-      params.values[4] * std::sin(targetPars[eBoundTheta]) / Bz;
-  targetPars[eBoundTime] = params.values[5];
-
-  return {params.surface, targetPars, cov};
-}
 }  // namespace detail
 
 template <typename track_container_t, typename track_state_container_t,
@@ -249,7 +164,6 @@ void writeTrack(
     to.addToTrackStates(trackState);
   }
 }
-
 template <typename track_container_t, typename track_state_container_t,
           template <typename> class holder_t>
 void readTrack(edm4hep::Track from,
@@ -302,8 +216,7 @@ void readTrack(edm4hep::Track from,
     auto ts = track.appendTrackState(mask);
     ts.typeFlags().set(MeasurementFlag);
 
-    auto converted =
-        detail::convertTrackParametersFromEdm4hep<SinglyCharged>(Bz, params);
+    auto converted = detail::convertTrackParametersFromEdm4hep(Bz, params);
 
     ts.smoothed() = converted.parameters();
     ts.smoothedCovariance() =
@@ -318,8 +231,7 @@ void readTrack(edm4hep::Track from,
 
   detail::Parameters params = unpack(ipState.value());
 
-  auto converted =
-      detail::convertTrackParametersFromEdm4hep<SinglyCharged>(Bz, params);
+  auto converted = detail::convertTrackParametersFromEdm4hep(Bz, params);
 
   ACTS_VERBOSE("IP state parameters: " << converted.parameters().transpose());
   ACTS_VERBOSE("-> covariance:\n"

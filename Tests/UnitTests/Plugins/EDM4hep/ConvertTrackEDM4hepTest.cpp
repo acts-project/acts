@@ -71,8 +71,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigee) {
   // convert back for roundtrip test
 
   SingleBoundTrackParameters<SinglyCharged> roundtripPar =
-      EDM4hepUtil::detail::convertTrackParametersFromEdm4hep<SinglyCharged>(
-          Bz, converted);
+      EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
   BOOST_CHECK(roundtripPar.parameters().isApprox(boundPar.parameters()));
   BOOST_CHECK(roundtripPar.covariance().value().isApprox(
@@ -114,8 +113,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigee) {
 
   // convert back for roundtrip test
   SingleBoundTrackParameters<SinglyCharged> roundtripPar =
-      EDM4hepUtil::detail::convertTrackParametersFromEdm4hep<SinglyCharged>(
-          Bz, converted);
+      EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
   BOOST_CHECK_EQUAL(roundtripPar.parameters().template head<2>(),
                     (Vector2{0, 0}));
@@ -151,8 +149,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithPerigeeNoCov) {
   // convert back for roundtrip test
 
   SingleBoundTrackParameters<SinglyCharged> roundtripPar =
-      EDM4hepUtil::detail::convertTrackParametersFromEdm4hep<SinglyCharged>(
-          Bz, converted);
+      EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
   BOOST_CHECK(roundtripPar.parameters().isApprox(boundPar.parameters()));
   BOOST_CHECK(!roundtripPar.covariance().has_value());
@@ -184,8 +181,7 @@ BOOST_AUTO_TEST_CASE(ConvertTrackParametersToEdm4hepWithOutPerigeeNoCov) {
 
   // convert back for roundtrip test
   SingleBoundTrackParameters<SinglyCharged> roundtripPar =
-      EDM4hepUtil::detail::convertTrackParametersFromEdm4hep<SinglyCharged>(
-          Bz, converted);
+      EDM4hepUtil::detail::convertTrackParametersFromEdm4hep(Bz, converted);
 
   BOOST_CHECK_EQUAL(roundtripPar.parameters().template head<2>(),
                     (Vector2{0, 0}));
