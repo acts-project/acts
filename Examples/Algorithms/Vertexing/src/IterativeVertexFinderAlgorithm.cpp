@@ -14,6 +14,7 @@
 #include "Acts/MagneticField/MagneticFieldContext.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/Propagator.hpp"
+#include "Acts/Propagator/detail/VoidPropagatorComponents.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "Acts/Utilities/Logger.hpp"
@@ -28,9 +29,9 @@
 #include "Acts/Vertexing/ZScanVertexFinder.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
 #include <chrono>
 
@@ -38,10 +39,10 @@
 
 ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
     const Config& config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("IterativeVertexFinder", level),
-      m_cfg(config) {
-  if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing input track parameters collection");
+    : ActsExamples::IAlgorithm("IterativeVertexFinder", level), m_cfg(config) {
+  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
+    throw std::invalid_argument(
+        "You have to either provide track parameters or trajectories");
   }
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
@@ -52,49 +53,43 @@ ActsExamples::IterativeVertexFinderAlgorithm::IterativeVertexFinderAlgorithm(
   if (m_cfg.outputTime.empty()) {
     throw std::invalid_argument("Missing output reconstruction time");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
+
+  m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
+  m_outputVertices.initialize(m_cfg.outputVertices);
+  m_outputTime.initialize(m_cfg.outputTime);
 }
 
 ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // retrieve input tracks and convert into the expected format
-  const auto& inputTrackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
-  const auto& inputTrackPointers =
-      makeTrackParametersPointerContainer(inputTrackParameters);
 
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using VertexFitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using ImpactPointEstimator =
-      Acts::ImpactPointEstimator<Acts::BoundTrackParameters, Propagator>;
-  using VertexSeeder = Acts::ZScanVertexFinder<VertexFitter>;
-  using VertexFinder = Acts::IterativeVertexFinder<VertexFitter, VertexSeeder>;
-  using VertexFinderOptions =
-      Acts::VertexingOptions<Acts::BoundTrackParameters>;
+  auto [inputTrackParameters, inputTrackPointers] =
+      makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
 
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Set up propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext,
-                                   Acts::LoggerWrapper{logger()});
+  auto propagator = std::make_shared<Propagator>(
+      stepper, Acts::detail::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
+  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(vertexFitterCfg);
   // Setup the track linearizer
   Linearizer::Config linearizerCfg(m_cfg.bField, propagator);
-  Linearizer linearizer(linearizerCfg);
+  Linearizer linearizer(linearizerCfg, logger().cloneWithSuffix("HelLin"));
   // Setup the seed finder
   ImpactPointEstimator::Config ipEstCfg(m_cfg.bField, propagator);
   ImpactPointEstimator ipEst(ipEstCfg);
   VertexSeeder::Config seederCfg(ipEst);
   VertexSeeder seeder(seederCfg);
   // Set up the actual vertex finder
-  VertexFinder::Config finderCfg(vertexFitter, linearizer, std::move(seeder),
-                                 ipEst);
+  VertexFinder::Config finderCfg(vertexFitter, std::move(linearizer),
+                                 std::move(seeder), ipEst);
   finderCfg.maxVertices = 200;
   finderCfg.reassignTracksAfterFirstFit = true;
   VertexFinder finder(finderCfg);
@@ -106,7 +101,7 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   auto result = finder.find(inputTrackPointers, finderOpts, state);
   auto t2 = std::chrono::high_resolution_clock::now();
 
-  std::vector<Acts::Vertex<Acts::BoundTrackParameters>> vertices;
+  VertexCollection vertices;
   if (result.ok()) {
     vertices = std::move(result.value());
   } else {
@@ -121,18 +116,17 @@ ActsExamples::ProcessCode ActsExamples::IterativeVertexFinderAlgorithm::execute(
   }
 
   // store proto vertices extracted from the found vertices
-  ctx.eventStore.add(m_cfg.outputProtoVertices,
-                     makeProtoVertices(inputTrackParameters, vertices));
+  m_outputProtoVertices(ctx, makeProtoVertices(inputTrackParameters, vertices));
 
   // store found vertices
-  ctx.eventStore.add(m_cfg.outputVertices, std::move(vertices));
+  m_outputVertices(ctx, std::move(vertices));
 
   // time in milliseconds
   int timeMS =
       std::chrono::duration_cast<std::chrono::milliseconds>(t2 - t1).count();
   // store reconstruction time
-  ctx.eventStore.add(m_cfg.outputTime,
-                     std::move(timeMS));  // NOLINT(performance-move-const-arg)
+  m_outputTime(ctx,
+               std::move(timeMS));  // NOLINT(performance-move-const-arg)
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

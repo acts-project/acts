@@ -16,35 +16,22 @@
 
 #include <stdexcept>
 
+#include <podio/Frame.h>
+
 namespace ActsExamples {
 
 EDM4hepMeasurementWriter::EDM4hepMeasurementWriter(
     const EDM4hepMeasurementWriter::Config& config, Acts::Logging::Level level)
     : WriterT(config.inputMeasurements, "EDM4hepMeasurementWriter", level),
       m_cfg(config),
-      m_writer(config.outputPath, &m_store) {
+      m_writer(config.outputPath) {
   ACTS_VERBOSE("Created output file " << config.outputPath);
 
   // Input container for measurements is already checked by base constructor
-  if (m_cfg.inputSimHits.empty()) {
-    throw std::invalid_argument("Missing simulated hits input collection");
-  }
-  if (m_cfg.inputMeasurementSimHitsMap.empty()) {
-    throw std::invalid_argument(
-        "Missing hit-to-simulated-hits map input collection");
-  }
-
-  m_trackerHitPlaneCollection =
-      &m_store.create<edm4hep::TrackerHitPlaneCollection>(
-          "ActsTrackerHitsPlane");
-  m_writer.registerForWrite("ActsTrackerHitsPlane");
-
-  m_trackerHitRawCollection =
-      &m_store.create<edm4hep::TrackerHitCollection>("ActsTrackerHitsRaw");
-  m_writer.registerForWrite("ActsTrackerHitsRaw");
+  m_inputClusters.maybeInitialize(m_cfg.inputClusters);
 }
 
-ActsExamples::ProcessCode EDM4hepMeasurementWriter::endRun() {
+ActsExamples::ProcessCode EDM4hepMeasurementWriter::finalize() {
   m_writer.finish();
 
   return ProcessCode::SUCCESS;
@@ -54,9 +41,14 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
     const AlgorithmContext& ctx, const MeasurementContainer& measurements) {
   ClusterContainer clusters;
 
+  podio::Frame frame;
+
+  edm4hep::TrackerHitPlaneCollection hitsPlane;
+  edm4hep::TrackerHitCollection hits;
+
   if (!m_cfg.inputClusters.empty()) {
     ACTS_VERBOSE("Fetch clusters for writing: " << m_cfg.inputClusters);
-    clusters = ctx.eventStore.get<ClusterContainer>(m_cfg.inputClusters);
+    clusters = m_inputClusters(ctx);
   }
 
   ACTS_VERBOSE("Writing " << measurements.size()
@@ -66,14 +58,16 @@ ActsExamples::ProcessCode EDM4hepMeasurementWriter::writeT(
     const auto& from = measurements[hitIdx];
     const Cluster* fromCluster = clusters.empty() ? nullptr : &clusters[hitIdx];
 
-    auto to = m_trackerHitPlaneCollection->create();
+    auto to = hitsPlane.create();
     EDM4hepUtil::writeMeasurement(
-        from, to, fromCluster, *m_trackerHitRawCollection,
+        from, to, fromCluster, hits,
         [](Acts::GeometryIdentifier id) { return id.value(); });
   }
 
-  m_writer.writeEvent();
-  m_store.clearCollections();
+  frame.put(std::move(hitsPlane), "ActsTrackerHitsPlane");
+  frame.put(std::move(hits), "ActsTrackerHitsRaw");
+
+  m_writer.writeFrame(frame, "events");
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

@@ -1,3 +1,4 @@
+(geometry_impl)=
 # Geometry module
 
 The ACTS geometry model is strongly based on the ATLAS Tracking geometry. Its
@@ -260,6 +261,7 @@ optimised, but used for templating:
 
 * `TGeoDetectorElement` connects a TGeo volume to a `Surface`
 * `DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a `Surface`
+* `Geant4DetectorElement` connects a Geant4 volume to a `Surface`
 
 Further exensions exist in dedicated experiment contexts, such as e.g. a `GeoModel`
 binding for the ATLAS experiment.
@@ -314,3 +316,14 @@ provided, which performs a variety of volume building, packing and gluing.
 For most cylindrical detectors, there exist automated glueing and geometry building 
 modules that take care of the glueing process.
 ```
+
+## TrackingGeometry building using a KDTree and a Proto Description
+
+For cylindrical detectors there exist a generic tracking geometry building module,
+based on KDTree and a proto description.
+
+This building procedure uses a `ProtoDetector` description which provides a 
+high level description of layers and container volumes, together with some 
+binning and ordering information.
+This proto description is then used to assign surfaces that are provided to the 
+`KDTreeTrackingGeometryBuilder` using an internal query to the KD-tree structure.

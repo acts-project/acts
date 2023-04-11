@@ -85,7 +85,7 @@ Acts::Result<Acts::Vector2> Acts::DiscSurface::globalToLocal(
     const Vector3& /*gmom*/, double tolerance) const {
   // transport it to the globalframe
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
-  if (loc3Dframe.z() * loc3Dframe.z() > tolerance * tolerance) {
+  if (std::abs(loc3Dframe.z()) > std::abs(tolerance)) {
     return Result<Vector2>::failure(SurfaceError::GlobalPositionNotOnSurface);
   }
   return Result<Acts::Vector2>::success({perp(loc3Dframe), phi(loc3Dframe)});
@@ -122,7 +122,7 @@ Acts::Vector3 Acts::DiscSurface::localCartesianToGlobal(
 
 Acts::Vector2 Acts::DiscSurface::globalToLocalCartesian(
     const GeometryContext& gctx, const Vector3& position,
-    double /*unused*/) const {
+    double /*momentum*/) const {
   Vector3 loc3Dframe = (transform(gctx).inverse()) * position;
   return Vector2(loc3Dframe.x(), loc3Dframe.y());
 }
@@ -333,7 +333,7 @@ Acts::ActsMatrix<2, 3> Acts::DiscSurface::localCartesianToBoundLocalDerivative(
 }
 
 Acts::Vector3 Acts::DiscSurface::normal(const GeometryContext& gctx,
-                                        const Vector2& /*unused*/) const {
+                                        const Vector2& /*lposition*/) const {
   // fast access via tranform matrix (and not rotation())
   const auto& tMatrix = transform(gctx).matrix();
   return Vector3(tMatrix(0, 2), tMatrix(1, 2), tMatrix(2, 2));

@@ -9,7 +9,10 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/TrackParameters.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/DuplicationPlotTool.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
@@ -33,6 +36,8 @@ namespace ActsExamples {
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// Input (found) trajectories collection.
     std::string inputTrajectories;
@@ -61,14 +66,17 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
 
   /// Construct from configuration and log level.
   CKFPerformanceWriter(Config cfg, Acts::Logging::Level lvl);
-  ~CKFPerformanceWriter() final override;
+  ~CKFPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
   Config m_cfg;
   /// Mutex used to protect multi-threaded writes.
@@ -85,7 +93,21 @@ class CKFPerformanceWriter final : public WriterT<TrajectoriesContainer> {
   DuplicationPlotTool::DuplicationPlotCache m_duplicationPlotCache{};
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
+
+  // Adding numbers for efficiency, fake, duplicate calculations
+  size_t m_nTotalTracks = 0;
+  size_t m_nTotalMatchedTracks = 0;
+  size_t m_nTotalFakeTracks = 0;
+  size_t m_nTotalDuplicateTracks = 0;
+  size_t m_nTotalParticles = 0;
+  size_t m_nTotalMatchedParticles = 0;
+  size_t m_nTotalDuplicateParticles = 0;
+  size_t m_nTotalFakeParticles = 0;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
 };
 
 }  // namespace ActsExamples

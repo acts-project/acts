@@ -88,6 +88,7 @@ ActsExamples::RootMaterialTrackWriter::RootMaterialTrackWriter(
     m_outputTree->Branch("sur_x", &m_sur_x);
     m_outputTree->Branch("sur_y", &m_sur_y);
     m_outputTree->Branch("sur_z", &m_sur_z);
+    m_outputTree->Branch("sur_pathCorrection", &m_sur_pathCorrection);
     m_outputTree->Branch("sur_range_min", &m_sur_range_min);
     m_outputTree->Branch("sur_range_max", &m_sur_range_max);
   }
@@ -102,12 +103,14 @@ ActsExamples::RootMaterialTrackWriter::~RootMaterialTrackWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::finalize() {
   // write the tree and close the file
   ACTS_INFO("Writing ROOT output File : " << m_cfg.filePath);
+
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
+
   return ActsExamples::ProcessCode::SUCCESS;
 }
 
@@ -146,13 +149,49 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_sur_x.clear();
     m_sur_y.clear();
     m_sur_z.clear();
+    m_sur_pathCorrection.clear();
     m_sur_range_min.clear();
     m_sur_range_max.clear();
 
     m_vol_id.clear();
 
+    auto materialInteractions = mtrack.second.materialInteractions;
+    if (m_cfg.collapseInteractions) {
+      std::vector<Acts::MaterialInteraction> collapsed;
+
+      Acts::Vector3 positionSum = Acts::Vector3::Zero();
+      double pathCorrectionSum = 0;
+
+      for (std::size_t start = 0, end = 0; end < materialInteractions.size();
+           ++end) {
+        const auto& mintStart = materialInteractions[start];
+        const auto& mintEnd = materialInteractions[end];
+
+        positionSum += mintEnd.position;
+        pathCorrectionSum += mintEnd.pathCorrection;
+
+        const bool same = mintStart.materialSlab.material() ==
+                          mintEnd.materialSlab.material();
+        const bool last = end == materialInteractions.size() - 1;
+
+        if (!same || last) {
+          auto mint = mintStart;
+          mint.position = positionSum / (end - start);
+          mint.pathCorrection = pathCorrectionSum;
+
+          collapsed.push_back(mint);
+
+          start = end;
+          positionSum = Acts::Vector3::Zero();
+          pathCorrectionSum = 0;
+        }
+      }
+
+      materialInteractions = std::move(collapsed);
+    }
+
     // Reserve the vector then
-    size_t mints = mtrack.second.materialInteractions.size();
+    size_t mints = materialInteractions.size();
     m_step_sx.reserve(mints);
     m_step_sy.reserve(mints);
     m_step_sz.reserve(mints);
@@ -177,6 +216,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_sur_x.reserve(mints);
     m_sur_y.reserve(mints);
     m_sur_z.reserve(mints);
+    m_sur_pathCorrection.reserve(mints);
     m_sur_range_min.reserve(mints);
     m_sur_range_max.reserve(mints);
 
@@ -202,7 +242,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
     m_v_eta = eta(mtrack.first.second);
 
     // an now loop over the material
-    for (auto& mint : mtrack.second.materialInteractions) {
+    for (const auto& mint : materialInteractions) {
       auto direction = mint.direction.normalized();
 
       // The material step position information
@@ -230,23 +270,34 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
       // Store surface information
       if (m_cfg.storeSurface) {
         const Acts::Surface* surface = mint.surface;
-        Acts::GeometryIdentifier slayerID;
-        if (surface != nullptr) {
+        if (mint.intersectionID.value() != 0) {
+          m_sur_id.push_back(mint.intersectionID.value());
+          m_sur_pathCorrection.push_back(mint.pathCorrection);
+          m_sur_x.push_back(mint.intersection.x());
+          m_sur_y.push_back(mint.intersection.y());
+          m_sur_z.push_back(mint.intersection.z());
+        } else if (surface != nullptr) {
           auto sfIntersection = surface->intersect(
               ctx.geoContext, mint.position, mint.direction, true);
-          slayerID = surface->geometryId();
-          m_sur_id.push_back(slayerID.value());
-          m_sur_type.push_back(surface->type());
+          m_sur_id.push_back(surface->geometryId().value());
+          m_sur_pathCorrection.push_back(1.0);
           m_sur_x.push_back(sfIntersection.intersection.position.x());
           m_sur_y.push_back(sfIntersection.intersection.position.y());
           m_sur_z.push_back(sfIntersection.intersection.position.z());
-
+        } else {
+          m_sur_id.push_back(Acts::GeometryIdentifier().value());
+          m_sur_x.push_back(0);
+          m_sur_y.push_back(0);
+          m_sur_z.push_back(0);
+          m_sur_pathCorrection.push_back(1.0);
+        }
+        if (surface != nullptr) {
+          m_sur_type.push_back(surface->type());
           const Acts::SurfaceBounds& surfaceBounds = surface->bounds();
           const Acts::RadialBounds* radialBounds =
               dynamic_cast<const Acts::RadialBounds*>(&surfaceBounds);
           const Acts::CylinderBounds* cylinderBounds =
               dynamic_cast<const Acts::CylinderBounds*>(&surfaceBounds);
-
           if (radialBounds != nullptr) {
             m_sur_range_min.push_back(radialBounds->rMin());
             m_sur_range_max.push_back(radialBounds->rMax());
@@ -260,17 +311,7 @@ ActsExamples::ProcessCode ActsExamples::RootMaterialTrackWriter::writeT(
             m_sur_range_max.push_back(0);
           }
         } else {
-          slayerID.setVolume(0);
-          slayerID.setBoundary(0);
-          slayerID.setLayer(0);
-          slayerID.setApproach(0);
-          slayerID.setSensitive(0);
-          m_sur_id.push_back(slayerID.value());
           m_sur_type.push_back(-1);
-
-          m_sur_x.push_back(0);
-          m_sur_y.push_back(0);
-          m_sur_z.push_back(0);
           m_sur_range_min.push_back(0);
           m_sur_range_max.push_back(0);
         }

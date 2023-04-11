@@ -12,6 +12,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingVolume.hpp"
+#include "Acts/Utilities/Logger.hpp"
 
 #include <memory>
 #include <string>
@@ -45,8 +46,12 @@ class TrackingGeometry {
   /// @param highestVolume is the world volume
   /// @param materialDecorator is a dediated decorator that can assign
   ///        surface or volume based material to the TrackingVolume
+  /// @param hook Identifier hook to be applied to surfaces
+  /// @param logger instance of a logger (defaulting to the "silent" one)
   TrackingGeometry(const MutableTrackingVolumePtr& highestVolume,
-                   const IMaterialDecorator* materialDecorator = nullptr);
+                   const IMaterialDecorator* materialDecorator = nullptr,
+                   const GeometryIdentifierHook& hook = {},
+                   const Logger& logger = getDummyLogger());
 
   /// Destructor
   ~TrackingGeometry();

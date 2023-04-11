@@ -19,14 +19,15 @@
 #include <array>
 #include <bitset>
 #include <ostream>
+#include <string>
 #include <vector>
 
 namespace Acts {
 
 using Envelope = std::array<ActsScalar, 2>;
-using ExtentEnvelope = std::array<std::array<ActsScalar, 2>, binValues>;
+using ExtentEnvelope = std::array<Envelope, binValues>;
 
-constexpr Envelope zeroEnvelope = {0., 0};
+constexpr Envelope zeroEnvelope = {0, 0};
 constexpr ExtentEnvelope zeroEnvelopes = {
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope,
     zeroEnvelope, zeroEnvelope, zeroEnvelope, zeroEnvelope};
@@ -41,6 +42,12 @@ class Extent {
  public:
   /// Constructor with (optional) @param envelope
   Extent(const ExtentEnvelope& envelope = zeroEnvelopes);
+
+  /// Define a comparison operator
+  bool operator==(const Extent& e) const;
+
+  /// Define a comparison operator
+  bool operator!=(const Extent& e) const { return (not operator==(e)); }
 
   /// Extend with a position vertex
   ///
@@ -87,6 +94,16 @@ class Extent {
   void extend(const Extent& rhs,
               const std::vector<BinningValue>& bValues = s_binningValues,
               bool applyEnv = true);
+
+  /// Constrain an extent by another one, this is
+  /// - values that are already constrained are not touched
+  /// - values not constrained by @param rhs are not touched
+  /// - values that are constrained by the external one, but not
+  /// by the current one, are touched
+  ///
+  /// @param envelope an envelope applied to the constrained value
+  void addConstrain(const Extent& rhs,
+                    const ExtentEnvelope& envelope = zeroEnvelopes);
 
   /// Set a range for a dedicated binning value
   ///
@@ -150,11 +167,18 @@ class Extent {
   /// @param bValue the binning identification
   ActsScalar max(BinningValue bValue) const { return m_range[bValue].max(); }
 
-  /// Access the maximum parameter
+  /// Access the midpoint
   ///
   /// @param bValue the binning identification
   ActsScalar medium(BinningValue bValue) const {
     return 0.5 * (m_range[bValue].min() + m_range[bValue].max());
+  }
+
+  /// Access the parameter internval
+  ///
+  /// @param bValue the binning identification
+  ActsScalar interval(BinningValue bValue) const {
+    return m_range[bValue].size();
   }
 
   /// Contains check
@@ -181,15 +205,16 @@ class Extent {
   bool constrains(BinningValue bValue = binValues) const;
 
   /// Convert to output stream for screen output
-  /// @param sl [in,out] The output stream
-  std::ostream& toStream(std::ostream& sl) const;
+  ///
+  /// @param indent indentation for the screen display
+  std::string toString(const std::string& indent = "") const;
 
  private:
   /// A bitset that remembers the constraint values
   std::bitset<binValues> m_constrains{0};
   /// The actual range store
   RangeXD<binValues, ActsScalar> m_range;
-  /// A potential envenelope
+  /// A potential envelope
   ExtentEnvelope m_envelope = zeroEnvelopes;
   /// (Optional) Value histograms for bin detection
   std::array<std::vector<ActsScalar>, binValues> m_valueHistograms;

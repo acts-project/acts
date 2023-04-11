@@ -9,7 +9,11 @@
 #pragma once
 
 #include "Acts/Definitions/TrackParametrization.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <mutex>
@@ -37,6 +41,9 @@ namespace ActsExamples {
 /// Safe to use from multiple writer threads - uses a std::mutex lock.
 class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+  using HitSimHitsMap = IndexMultimap<Index>;
+
   struct Config {
     /// Input (fitted) trajectories collection
     std::string inputTrajectories;
@@ -62,20 +69,31 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   /// @param level Message level declaration
   RootTrajectoryStatesWriter(const Config& config, Acts::Logging::Level level);
 
-  ~RootTrajectoryStatesWriter() final override;
+  ~RootTrajectoryStatesWriter() override;
 
   /// End-of-run hook
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  protected:
   /// @brief Write method called by the base class
   /// @param [in] ctx is the algorithm context for event information
   /// @param [in] trajectories are what to be written out
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
  private:
-  Config m_cfg;             ///< The config class
+  Config m_cfg;  ///< The config class
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMaps"};
+  ReadDataHandle<HitSimHitsMap> m_inputMeasurementSimHitsMap{
+      this, "InputMeasurementSimHitsMap"};
+
   std::mutex m_writeMutex;  ///< Mutex used to protect multi-threaded writes
   TFile* m_outputFile{nullptr};  ///< The output file
   TTree* m_outputTree{nullptr};  ///< The output tree
@@ -120,8 +138,8 @@ class RootTrajectoryStatesWriter final : public WriterT<TrajectoriesContainer> {
   std::vector<float> m_pull_y_hit;  ///< hit pull y
   std::vector<int> m_dim_hit;       ///< dimension of measurement
 
-  std::array<int, 3> m_nParams;  ///< number of states which have
-                                 ///< filtered/predicted/smoothed parameters
+  std::array<int, 3> m_nParams{};  ///< number of states which have
+                                   ///< filtered/predicted/smoothed parameters
   std::array<std::vector<bool>, 3>
       m_hasParams;  ///< status of the filtered/predicted/smoothed parameters
   std::array<std::vector<float>, 3>

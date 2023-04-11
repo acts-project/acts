@@ -8,8 +8,13 @@
 
 #pragma once
 
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
+#include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
 #include <memory>
@@ -27,8 +32,11 @@ class TrackingGeometry;
 namespace ActsExamples {
 
 /// Create planar clusters from simulation hits.
-class PlanarSteppingAlgorithm final : public BareAlgorithm {
+class PlanarSteppingAlgorithm final : public IAlgorithm {
  public:
+  using ClusterContainer =
+      ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
+
   struct Config {
     /// Input collection of simulated hits.
     std::string inputSimHits;
@@ -62,7 +70,7 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
   ///
   /// @param txt is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -77,6 +85,25 @@ class PlanarSteppingAlgorithm final : public BareAlgorithm {
   Config m_cfg;
   /// Lookup container for all digitizable surfaces
   std::unordered_map<Acts::GeometryIdentifier, Digitizable> m_digitizables;
+
+  ReadDataHandle<SimHitContainer> m_inputSimHits{this, "InputSimHits"};
+
+  WriteDataHandle<ClusterContainer> m_outputClusters{this, "OutputClusters"};
+
+  WriteDataHandle<GeometryIdMultiset<IndexSourceLink>> m_outputSourceLinks{
+      this, "OutputSourceLinks"};
+
+  WriteDataHandle<std::vector<Acts::DigitizationSourceLink>>
+      m_outputDigiSourceLinks{this, "OutputDigiSourceLinks"};
+
+  WriteDataHandle<MeasurementContainer> m_outputMeasurements{
+      this, "OutputMeasurements"};
+
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_outputMeasurementParticlesMap{this, "OutputMeasurementParticlesMap"};
+
+  WriteDataHandle<IndexMultimap<Index>> m_outputMeasurementSimHitsMap{
+      this, "OutputMeasurementSimHitsMap"};
 };
 
 }  // namespace ActsExamples

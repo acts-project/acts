@@ -15,6 +15,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Utilities/Logger.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
@@ -103,7 +104,7 @@ class EventGenerator final : public ActsExamples::IReader {
   /// Available events range. Always return [0,SIZE_MAX) since we generate them.
   std::pair<size_t, size_t> availableEvents() const final;
   /// Generate an event.
-  ProcessCode read(const AlgorithmContext& context) final;
+  ProcessCode read(const AlgorithmContext& ctx) final;
 
   /// Const access to the config
   const Config& config() const { return m_cfg; }
@@ -113,6 +114,9 @@ class EventGenerator final : public ActsExamples::IReader {
 
   Config m_cfg;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

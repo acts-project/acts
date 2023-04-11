@@ -42,6 +42,9 @@ ActsExamples::TrackFitterPerformanceWriter::TrackFitterPerformanceWriter(
     throw std::invalid_argument("Missing output filename");
   }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
@@ -67,7 +70,8 @@ ActsExamples::TrackFitterPerformanceWriter::~TrackFitterPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::TrackFitterPerformanceWriter::finalize() {
   // fill residual and pull details into additional hists
   m_resPlotTool.refinement(m_resPlotCache);
 
@@ -84,13 +88,9 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-
   // Read truth input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // Truth particles with corresponding reconstructed tracks
   std::vector<ActsFatras::Barcode> reconParticleIds;
@@ -105,14 +105,14 @@ ActsExamples::ProcessCode ActsExamples::TrackFitterPerformanceWriter::writeT(
   for (size_t itraj = 0; itraj < trajectories.size(); ++itraj) {
     const auto& traj = trajectories[itraj];
 
-    if (traj.empty()) {
-      ACTS_WARNING("Empty trajectories object " << itraj);
-      continue;
-    }
-
     // The trajectory entry indices and the multiTrajectory
     const auto& trackTips = traj.tips();
     const auto& mj = traj.multiTrajectory();
+
+    if (trackTips.empty()) {
+      ACTS_WARNING("No trajectory found for entry " << itraj);
+      continue;
+    }
 
     // Check the size of the trajectory entry indices. For track fitting, there
     // should be at most one trajectory

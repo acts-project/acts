@@ -81,7 +81,7 @@ Acts::Vector3 Acts::ConeSurface::rotSymmetryAxis(
 
 Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*unused*/) const {
+    const Vector3& /*momentum*/) const {
   RotationMatrix3 mFrame;
   // construct the measurement frame
   // measured Y is the local z axis
@@ -102,7 +102,7 @@ Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
 
 Acts::Vector3 Acts::ConeSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*unused*/) const {
+    const Vector3& /*momentum*/) const {
   // create the position in the local 3d frame
   double r = lposition[Acts::eBoundLoc1] * bounds().tanAlpha();
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -112,7 +112,7 @@ Acts::Vector3 Acts::ConeSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::ConeSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*unused*/, double tolerance) const {
+    const Vector3& /*momentum*/, double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > tolerance) {
@@ -292,7 +292,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
   // Check the validity of the first solution
   Vector3 solution1 = position + qe.first * direction;
   Intersection3D::Status status1 =
-      (qe.first * qe.first < s_onSurfaceTolerance * s_onSurfaceTolerance)
+      std::abs(qe.first) < std::abs(s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
           : Intersection3D::Status::reachable;
 
@@ -303,7 +303,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
   // Check the validity of the second solution
   Vector3 solution2 = position + qe.first * direction;
   Intersection3D::Status status2 =
-      (qe.second * qe.second < s_onSurfaceTolerance * s_onSurfaceTolerance)
+      std::abs(qe.second) < std::abs(s_onSurfaceTolerance)
           ? Intersection3D::Status::onSurface
           : Intersection3D::Status::reachable;
   if (bcheck and not isOnSurface(gctx, solution2, direction, bcheck)) {
@@ -320,7 +320,7 @@ Acts::SurfaceIntersection Acts::ConeSurface::intersect(
                 (status1 == Intersection3D::Status::missed and
                  status2 == Intersection3D::Status::missed);
   // Check and (eventually) go with the first solution
-  if ((check1 and qe.first * qe.first < qe.second * qe.second) or
+  if ((check1 and (std::abs(qe.first) < std::abs(qe.second))) or
       status2 == Intersection3D::Status::missed) {
     // And add the alternative
     if (qe.solutions > 1) {

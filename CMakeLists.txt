@@ -25,23 +25,26 @@ option(ACTS_BUILD_EVERYTHING "Build with most options enabled (except HepMC3 and
 # core related options
 set(ACTS_PARAMETER_DEFINITIONS_HEADER "" CACHE FILEPATH "Use a different (track) parameter definitions header")
 option(ACTS_FORCE_ASSERTIONS "Force assertions regardless of build type" OFF)
+# external library options
+option(ACTS_USE_SYSTEM_LIBS "Use system libraries by default" OFF)
 # plugins related options
 option(ACTS_BUILD_PLUGIN_AUTODIFF "Build the autodiff plugin" OFF)
-option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" OFF)
-option(ACTS_SETUP_ACTSVG "Build ActSVG display plugin" OFF)
-option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" OFF)
+option(ACTS_USE_SYSTEM_AUTODIFF "Use autodiff provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
+option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
+option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
-option(ACTS_USE_SYSTEM_ACTSDD4HEP "Use the ActsDD4hep glue library provided by the system instead of building it" OFF)
+option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
+option(ACTS_EXATRKX_ENABLE_TORCH "Build the torchscript backend for the exatrkx plugin" ON)
 option(ACTS_BUILD_PLUGIN_IDENTIFICATION "Build Identification plugin" OFF)
 option(ACTS_BUILD_PLUGIN_JSON "Build json plugin" OFF)
-option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" OFF)
+option(ACTS_USE_SYSTEM_NLOHMANN_JSON "Use nlohmann::json provided by the system instead of the bundled version" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_LEGACY "Build legacy plugin" OFF)
 option(ACTS_BUILD_PLUGIN_ONNX "Build ONNX plugin" OFF)
 option(ACTS_SETUP_VECMEM "Explicitly set up vecmem for the project" OFF)
-option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" OFF)
+option(ACTS_USE_SYSTEM_VECMEM "Use a system-provided vecmem installation" ${ACTS_USE_SYSTEM_LIBS})
 option(ACTS_BUILD_PLUGIN_SYCL "Build SYCL plugin" OFF)
 option(ACTS_BUILD_PLUGIN_TGEO "Build TGeo plugin" OFF)
 # fatras related options
@@ -58,7 +61,9 @@ option(ACTS_BUILD_EXAMPLES_GEANT4 "Build Geant4-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_HEPMC3 "Build HepMC3-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHIA8 "Build Pythia8-based code in the examples" OFF)
 option(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS "Build python bindings for the examples" OFF)
-option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" OFF )
+option(ACTS_BUILD_EXAMPLES_BINARIES "Build the examples binaries (deprecated)" OFF)
+option(ACTS_USE_SYSTEM_PYBIND11 "Use a system installation of pybind11" ${ACTS_USE_SYSTEM_LIBS} )
+option(ACTS_USE_EXAMPLES_TBB "Use Threading Building Blocks library in the examples" ON)
 option(ACTS_BUILD_ANALYSIS_APPS "Build Analysis applications in the examples" OFF)
 # test related options
 option(ACTS_BUILD_BENCHMARKS "Build benchmarks" OFF)
@@ -106,12 +111,17 @@ set_option_if(
   OR ACTS_BUILD_EXAMPLES_HEPMC3
   OR ACTS_BUILD_EXAMPLES_PYTHIA8
   OR ACTS_BUILD_EXAMPLES_EXATRKX
+  OR ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS
+  OR ACTS_BUILD_EXAMPLES_BINARIES
   OR ACTS_BUILD_EVERYTHING)
 # core plugins might be required by examples or depend on each other
 set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
   ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
   ACTS_BUILD_EXAMPLES_EDM4HEP)
+set_option_if(
+    ACTS_BUILD_PLUGIN_GEANT4
+    ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)  
 set_option_if(
   ACTS_BUILD_PLUGIN_TGEO
   ACTS_BUILD_PLUGIN_DD4HEP OR ACTS_BUILD_EXAMPLES OR ACTS_BUILD_EVERYTHING)
@@ -164,22 +174,29 @@ endif()
 set(_acts_autodiff_version 0.6)
 set(_acts_boost_version 1.71.0)
 set(_acts_dd4hep_version 1.21)
-set(_acts_actsdd4hep_version 1.0.0)
-set(_acts_edm4hep_version v00-04-01)
+set(_acts_edm4hep_version 0.7)
+set(_acts_podio_version 0.6)
 set(_acts_doxygen_version 1.9.4)
 set(_acts_eigen3_version 3.3.7)
 set(_acts_hepmc3_version 3.2.1)
 set(_acts_nlohmanjson_version 3.2.0)
+set(_acts_onnxruntime_version 1.12.0)
 set(_acts_root_version 6.20)
 set(_acts_tbb_version 2020.1)
 
 # required packages
 if (ACTS_SETUP_BOOST)
   if (ACTS_USE_SYSTEM_BOOST)
-    # NOTE we use boost::filesystem instead of std::filesystem since the later
-    # is not uniformly supported even on compilers that nominally support C++17
     # NOTE FindBoost.cmake looks for BoostConfig.cmake first, before running it's own logic.
-    find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS filesystem program_options unit_test_framework)
+
+    # Enable both program_options and unit_test_framework to reduce complexity
+    # Also Cuda tests seem to use program_options
+    if( ACTS_BUILD_EXAMPLES_BINARIES OR ACTS_BUILD_ANALYSIS_APPS OR
+        ACTS_BUILD_UNITTESTS OR ACTS_BUILD_INTEGRATIONTESTS OR ACTS_BUILD_BENCHMARKS )
+      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS program_options unit_test_framework)
+    else()
+      find_package(Boost ${_acts_boost_version} REQUIRED COMPONENTS)
+    endif()
   else()
     add_subdirectory(thirdparty/boost)
   endif()
@@ -200,6 +217,8 @@ if (ACTS_SETUP_VECMEM)
     add_subdirectory(thirdparty/vecmem)
   endif()
 endif()
+
+find_package(Filesystem REQUIRED)
 
 # the `<project_name>_VERSION` variables set by `setup(... VERSION ...)` have
 # only local scope, i.e. they are not accessible her for dependencies added
@@ -233,7 +252,7 @@ endmacro()
 # when a particular package is actually needed.
 # plugin dependencies
 if(ACTS_BUILD_EXAMPLES_PYTHON_BINDINGS)
-  find_package(Python COMPONENTS Interpreter Development)
+  find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development)
   if(ACTS_USE_SYSTEM_PYBIND11) 
     find_package(pybind11 CONFIG REQUIRED)
   else()
@@ -271,7 +290,7 @@ if(ACTS_BUILD_PLUGIN_JSON)
   endif()
 endif()
 if(ACTS_BUILD_PLUGIN_ONNX)
-  find_package(OnnxRuntime REQUIRED)
+  find_package(OnnxRuntime ${_acts_onnxruntime_version} REQUIRED)
 endif()
 if(ACTS_BUILD_PLUGIN_SYCL)
   find_package(SYCL REQUIRED)
@@ -288,9 +307,20 @@ if(ACTS_BUILD_PLUGIN_EXATRKX)
   enable_cuda()
   find_package(CUDAToolkit REQUIRED)
   find_package(Torch REQUIRED)
-  find_package(OnnxRuntime REQUIRED)
-  find_package(cugraph REQUIRED)
-  add_subdirectory(thirdparty/libFRNN)
+  add_subdirectory(thirdparty/FRNN)
+  if(NOT (ACTS_EXATRKX_ENABLE_ONNX OR ACTS_EXATRKX_ENABLE_TORCH))
+    message(FATAL_ERROR 
+      "When building the Exa.TrkX plugin, at least one of ACTS_EXATRKX_ENABLE_ONNX \
+      and ACTS_EXATRKX_ENABLE_TORCHSCRIPT must be enabled."
+    )
+  endif()
+  if(ACTS_EXATRKX_ENABLE_ONNX)
+    find_package(OnnxRuntime REQUIRED)
+    find_package(cugraph REQUIRED)
+  endif()
+  if(ACTS_EXATRKX_ENABLE_TORCH)
+    find_package(TorchScatter REQUIRED)
+  endif()
 endif()
 
 # examples dependencies
@@ -300,14 +330,6 @@ if(ACTS_BUILD_EXAMPLES)
   # for simplicity always request all potentially required components.
   find_package(ROOT ${_acts_root_version} REQUIRED CONFIG COMPONENTS Core Geom GenVector Hist Tree TreePlayer)
   check_root_compatibility()
-  # newer DD4hep version require TBB and search interally for TBB in
-  # config-only mode. to avoid mismatches we explicitely search using
-  # config-only mode first to be sure that we find the same version.
-  find_package(TBB ${_acts_tbb_version} CONFIG)
-  if(NOT TBB_FOUND)
-    # no version check possible when using the find module
-    find_package(TBB ${_acts_tbb_version} MODULE REQUIRED)
-  endif()
   add_subdirectory(thirdparty/dfelibs)
 endif()
 if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
@@ -316,7 +338,8 @@ elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
 endif()
 if(ACTS_BUILD_EXAMPLES_EDM4HEP)
-  find_package(EDM4HEP REQUIRED CONFIG)
+  find_package(podio ${_acts_podio_version} REQUIRED CONFIG)
+  find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
 endif()
 if(ACTS_BUILD_EXAMPLES_GEANT4)
   find_package(Geant4 REQUIRED CONFIG COMPONENTS gdml)

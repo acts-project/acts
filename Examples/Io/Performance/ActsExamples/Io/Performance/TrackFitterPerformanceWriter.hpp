@@ -8,7 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 #include "ActsExamples/Validation/EffPlotTool.hpp"
 #include "ActsExamples/Validation/ResPlotTool.hpp"
@@ -32,6 +34,8 @@ namespace ActsExamples {
 class TrackFitterPerformanceWriter final
     : public WriterT<TrajectoriesContainer> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// Input (fitted) trajectories collection.
     std::string inputTrajectories;
@@ -52,16 +56,24 @@ class TrackFitterPerformanceWriter final
   /// @param level The logger level
   TrackFitterPerformanceWriter(Config config, Acts::Logging::Level level);
 
-  ~TrackFitterPerformanceWriter() final override;
+  ~TrackFitterPerformanceWriter() override;
 
   /// Finalize plots.
-  ProcessCode endRun() final override;
+  ProcessCode finalize() override;
+
+  /// Get readonly access to the config parameters
+  const Config& config() const { return m_cfg; }
 
  private:
   ProcessCode writeT(const AlgorithmContext& ctx,
-                     const TrajectoriesContainer& trajectories) final override;
+                     const TrajectoriesContainer& trajectories) override;
 
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "inputMeasurementParticlesMap"};
+
   /// Mutex used to protect multi-threaded writes.
   std::mutex m_writeMutex;
   TFile* m_outputFile{nullptr};
@@ -73,7 +85,7 @@ class TrackFitterPerformanceWriter final
   EffPlotTool::EffPlotCache m_effPlotCache;
   /// Plot tool for track hit info
   TrackSummaryPlotTool m_trackSummaryPlotTool;
-  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache;
+  TrackSummaryPlotTool::TrackSummaryPlotCache m_trackSummaryPlotCache{};
 };
 
 }  // namespace ActsExamples

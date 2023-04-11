@@ -1,4 +1,5 @@
 import sys, inspect
+from typing import Optional, Protocol
 
 from acts.ActsPythonBindings._examples import *
 from acts import ActsPythonBindings
@@ -156,8 +157,9 @@ def NamedTypeArgs(**namedTypeArgs):
                 if k is None:
                     newargs.append(a)
                     if i > len(newargs):
+                        types = [type(a).__name__ for a in args]
                         raise TypeError(
-                            f"{func.__name__}() positional argument {i} follows named-type arguments, which were converted to keyword arguments"
+                            f"{func.__name__}() positional argument {i} of type {type(a)} follows named-type arguments, which were converted to keyword arguments. All argument types: {types}"
                         )
                 elif k in kwargs:
                     raise TypeError(f"{func.__name__}() keyword argument repeated: {k}")
@@ -285,3 +287,43 @@ def dump_args_calls(myLocal=None, mods=None, quiet=False):
     if not quiet and donemods:
         print("dump_args for module functions:", ", ".join(donemods))
     return alldone
+
+
+class CustomLogLevel(Protocol):
+    def __call__(
+        self,
+        minLevel: acts.logging.Level = acts.logging.VERBOSE,
+        maxLevel: acts.logging.Level = acts.logging.FATAL,
+    ) -> acts.logging.Level:
+        ...
+
+
+def defaultLogging(
+    s=None,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> CustomLogLevel:
+    """
+    Establishes a default logging strategy for the python examples interface.
+
+    Returns a function that determines the log level in the following schema:
+    - if `logLevel` is set use it otherwise use the log level of the sequencer `s.config.logLevel`
+    - the returned log level is bound between `minLevel` and `maxLevel` provided to `customLogLevel`
+
+    Examples:
+    - `customLogLevel(minLevel=acts.logging.INFO)` to get a log level that is INFO or higher
+      (depending on the sequencer and `logLevel` param) which is useful to suppress a component which
+      produces a bunch of logs below INFO and you are actually more interested in another component
+    - `customLogLevel(maxLevel=acts.logging.INFO)` to get a log level that is INFO or lower
+      (depending on the sequencer and `logLevel` param) which is useful to get more details from a
+      component that will produce logs of interest below the default level
+    - in summary `minLevel` defines the maximum amount of logging and `maxLevel` defines the minimum amount of logging
+    """
+
+    def customLogLevel(
+        minLevel: acts.logging.Level = acts.logging.VERBOSE,
+        maxLevel: acts.logging.Level = acts.logging.FATAL,
+    ) -> acts.logging.Level:
+        l = logLevel if logLevel is not None else s.config.logLevel
+        return acts.logging.Level(min(maxLevel.value, max(minLevel.value, l.value)))
+
+    return customLogLevel

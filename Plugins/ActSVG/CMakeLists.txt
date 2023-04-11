@@ -1,5 +1,6 @@
 add_library(
   ActsPluginActSVG SHARED
+  src/EventDataSvgConverter.cpp
   src/LayerSvgConverter.cpp
   src/SurfaceArraySvgConverter.cpp
   src/SurfaceSvgConverter.cpp

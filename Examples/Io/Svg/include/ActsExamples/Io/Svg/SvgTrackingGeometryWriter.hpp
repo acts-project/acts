@@ -37,7 +37,7 @@ class SvgTrackingGeometryWriter {
   class Config {
    public:
     Acts::Svg::TrackingGeometryConverter::Options converterOptions =
-        s_defaultTrackingGeometryOptions;
+        s_trackingGeometryOptions;
 
     std::string outputDir = "";
   };

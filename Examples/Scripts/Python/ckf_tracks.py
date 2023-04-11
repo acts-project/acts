@@ -37,9 +37,10 @@ def runCKFTracks(
         addSeeding,
         TruthSeedRanges,
         ParticleSmearingSigmas,
-        SeedfinderConfigArg,
+        SeedFinderConfigArg,
+        SeedFinderOptionsArg,
         SeedingAlgorithm,
-        TrackParamsEstimationConfig,
+        TruthEstimatedSeedingAlgorithmConfigArg,
         CKFPerformanceConfig,
         addCKFTracks,
     )
@@ -53,7 +54,7 @@ def runCKFTracks(
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
-        s = addParticleGun(
+        addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
             ParticleConfig(4, acts.PdgParticle.eMuon, True),
@@ -75,14 +76,14 @@ def runCKFTracks(
             )
         )
 
-    s = addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
     )
 
-    s = addDigitization(
+    addDigitization(
         s,
         trackingGeometry,
         field,
@@ -90,25 +91,25 @@ def runCKFTracks(
         rnd=rnd,
     )
 
-    s = addSeeding(
+    addSeeding(
         s,
         trackingGeometry,
         field,
         TruthSeedRanges(pt=(500.0 * u.MeV, None), nHits=(9, None)),
         ParticleSmearingSigmas(pRel=0.01),  # only used by SeedingAlgorithm.TruthSmeared
-        SeedfinderConfigArg(
+        SeedFinderConfigArg(
             r=(None, 200 * u.mm),  # rMin=default, 33mm
             deltaR=(1 * u.mm, 60 * u.mm),
             collisionRegion=(-250 * u.mm, 250 * u.mm),
             z=(-2000 * u.mm, 2000 * u.mm),
             maxSeedsPerSpM=1,
-            sigmaScattering=50,
+            sigmaScattering=5,
             radLengthPerSeed=0.1,
             minPt=500 * u.MeV,
-            bFieldInZ=1.99724 * u.T,
             impactMax=3 * u.mm,
         ),
-        TrackParamsEstimationConfig(deltaR=(10.0 * u.mm, None)),
+        SeedFinderOptionsArg(bFieldInZ=1.99724 * u.T, beamPos=(0.0, 0.0)),
+        TruthEstimatedSeedingAlgorithmConfigArg(deltaR=(10.0 * u.mm, None)),
         seedingAlgorithm=SeedingAlgorithm.TruthSmeared
         if truthSmearedSeeded
         else SeedingAlgorithm.TruthEstimated
@@ -119,7 +120,7 @@ def runCKFTracks(
         rnd=rnd,  # only used by SeedingAlgorithm.TruthSmeared
     )
 
-    s = addCKFTracks(
+    addCKFTracks(
         s,
         trackingGeometry,
         field,

@@ -67,6 +67,10 @@ struct PropState {
   } options;
 };
 
+struct MockNavigator {};
+
+static constexpr MockNavigator mockNavigator;
+
 /// @brief Aborter for the case that a particle leaves the detector or reaches
 /// a custom made threshold.
 ///
@@ -81,11 +85,18 @@ struct EndOfWorld {
   ///
   /// @tparam propagator_state_t State of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagation
   /// @param [in] stepper Stepper of the propagation
+  /// @param [in] navigator Navigator of the propagation
+  ///
   /// @return Boolean statement if the particle is still in the detector
-  template <typename propagator_state_t, typename stepper_t>
-  bool operator()(propagator_state_t& state, const stepper_t& stepper) const {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  bool operator()(propagator_state_t& state, const stepper_t& stepper,
+                  const navigator_t& /*navigator*/,
+                  const Logger& /*logger*/) const {
     const double tolerance = state.options.targetTolerance;
     if (maxX - std::abs(stepper.position(state.stepping).x()) <= tolerance ||
         std::abs(stepper.position(state.stepping).y()) >= 0.5_m ||
@@ -117,12 +128,17 @@ struct StepCollector {
   ///
   /// @tparam propagator_state_t Type of the propagator state
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagation
+  /// @param [in] navigator Navigator of the propagation
   /// @param [out] result Struct which is filled with the data
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   void operator()(propagator_state_t& state, const stepper_t& stepper,
-                  result_type& result) const {
+                  const navigator_t& /*navigator*/, result_type& result,
+                  const Logger& /*logger*/) const {
     result.position.push_back(stepper.position(state.stepping));
     result.momentum.push_back(stepper.momentum(state.stepping) *
                               stepper.direction(state.stepping));
@@ -263,7 +279,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   PropState ps(std::move(esState));
 
   ps.stepping.covTransport = false;
-  es.step(ps).value();
+  es.step(ps, mockNavigator).value();
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
@@ -273,7 +289,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   BOOST_CHECK_EQUAL(ps.stepping.jacTransport, FreeMatrix::Identity());
 
   ps.stepping.covTransport = true;
-  es.step(ps).value();
+  es.step(ps, mockNavigator).value();
   CHECK_CLOSE_COVARIANCE(ps.stepping.cov, cov, eps);
   BOOST_CHECK_NE(es.position(ps.stepping).norm(), newPos.norm());
   BOOST_CHECK_NE(es.direction(ps.stepping), newMom.normalized());
@@ -476,7 +492,7 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test a case where no step size adjustment is required
   ps.options.tolerance = 2. * 4.4258e+09;
   double h0 = esState.stepSize.value();
-  es.step(ps);
+  es.step(ps, mockNavigator);
   CHECK_CLOSE_ABS(h0, esState.stepSize.value(), eps);
 
   // Produce some errors
@@ -488,14 +504,14 @@ BOOST_AUTO_TEST_CASE(eigen_stepper_test) {
   // Test that we can reach the minimum step size
   nps.options.tolerance = 1e-21;
   nps.options.stepSizeCutOff = 1e20;
-  auto res = nes.step(nps);
+  auto res = nes.step(nps, mockNavigator);
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeStalled);
 
   // Test that the number of trials exceeds
   nps.options.stepSizeCutOff = 0.;
   nps.options.maxRungeKuttaStepTrials = 0.;
-  res = nes.step(nps);
+  res = nes.step(nps, mockNavigator);
   BOOST_CHECK(!res.ok());
   BOOST_CHECK_EQUAL(res.error(), EigenStepperError::StepSizeAdjustmentFailed);
 }
@@ -549,7 +565,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 100;
@@ -589,7 +605,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacuum_test) {
 
   // Set options for propagator
   PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-      propOptsDef(tgContext, mfContext, getDummyLogger());
+      propOptsDef(tgContext, mfContext);
   propOptsDef.actionList = aListDef;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 100;
@@ -656,7 +672,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.actionList = aList;
   propOpts.abortList = abortList;
   propOpts.maxSteps = 10000;
@@ -703,7 +719,7 @@ BOOST_AUTO_TEST_CASE(step_extension_material_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOptsDense(tgContext, mfContext, getDummyLogger());
+      propOptsDense(tgContext, mfContext);
   propOptsDense.actionList = aList;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 1000;
@@ -817,7 +833,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.abortList = abortList;
   propOpts.maxSteps = 1000;
   propOpts.maxStepSize = 1.5_m;
@@ -873,7 +889,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set options for propagator
 
   PropagatorOptions<ActionList<StepCollector>, AbortList<EndOfWorld>>
-      propOptsDef(tgContext, mfContext, getDummyLogger());
+      propOptsDef(tgContext, mfContext);
   abortList.get<EndOfWorld>().maxX = 1_m;
   propOptsDef.abortList = abortList;
   propOptsDef.maxSteps = 1000;
@@ -927,7 +943,7 @@ BOOST_AUTO_TEST_CASE(step_extension_vacmatvac_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector>,
                                 AbortList<EndOfWorld>>
-      propOptsDense(tgContext, mfContext, getDummyLogger());
+      propOptsDense(tgContext, mfContext);
   abortList.get<EndOfWorld>().maxX = 2_m;
   propOptsDense.abortList = abortList;
   propOptsDense.maxSteps = 1000;
@@ -1056,7 +1072,7 @@ BOOST_AUTO_TEST_CASE(step_extension_trackercalomdt_test) {
   // Set options for propagator
   DenseStepperPropagatorOptions<ActionList<StepCollector, MaterialInteractor>,
                                 AbortList<EndOfWorld>>
-      propOpts(tgContext, mfContext, getDummyLogger());
+      propOpts(tgContext, mfContext);
   propOpts.abortList.get<EndOfWorld>().maxX = 3._m;
   propOpts.maxSteps = 10000;
 

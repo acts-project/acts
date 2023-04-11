@@ -26,7 +26,7 @@ class LineBounds;
 ///
 ///  @note It leaves the type() method virtual, so it can not be instantiated
 ///
-/// @image html LineSurface.png
+/// @image html figures/LineSurface.png
 class LineSurface : public Surface {
 #ifndef DOXYGEN
   friend Surface;
@@ -54,7 +54,7 @@ class LineSurface : public Surface {
   ///
   /// @param lbounds The bounds describing the straw dimensions
   /// @param detelement for which this surface is (at least) one representation
-  LineSurface(const std::shared_ptr<const LineBounds>& lbounds,
+  LineSurface(std::shared_ptr<const LineBounds> lbounds,
               const DetectorElementBase& detelement);
 
   /// Copy constructor
@@ -176,7 +176,7 @@ class LineSurface : public Surface {
   /// onto \f$ \vec{measX} \f$:<br>
   /// \f$ sign = -sign(\vec{d} \cdot \vec{measX}) \f$
   ///
-  /// \image html SignOfDriftCircleD0.gif
+  /// @image html figures/SignOfDriftCircleD0.gif
   ///
   /// @param gctx The current geometry context object, e.g. alignment
   /// @param position global 3D position - considered to be on surface but not

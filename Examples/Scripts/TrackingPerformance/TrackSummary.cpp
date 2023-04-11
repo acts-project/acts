@@ -51,7 +51,7 @@ int main(int argc, char** argv) {
        "(Optionally) limit number of events to be processed.");
     ao("peak-events,p", value<unsigned long>()->default_value(0),
        "(Optionally) limit number of events for the range peaking.");
-    ao("input,i", value<std::vector<std::string>>(),
+    ao("input,i", value<std::vector<std::string>>()->required(),
        "Input ROOT file(s) containing the input TTree.");
     ao("tree,t", value<std::string>()->default_value("tracksummary"),
        "Input TTree/TChain name.");
@@ -71,7 +71,8 @@ int main(int argc, char** argv) {
     ao("phi-range",
        value<Interval>()->value_name("MIN:MAX")->default_value({-M_PI, M_PI}),
        "Range for the phi bins.");
-    ao("pt-borders", value<VariableReals>(), "Transverse momentum borders.");
+    ao("pt-borders", value<VariableReals>()->required(),
+       "Transverse momentum borders.");
     ao("config-output", value<std::string>()->default_value(""),
        "(Optional) output histrogram configuration json file.");
     ao("config-input", value<std::string>()->default_value(""),
@@ -97,12 +98,13 @@ int main(int argc, char** argv) {
     // Set up the variables map
     variables_map vm;
     store(command_line_parser(argc, argv).options(description).run(), vm);
-    notify(vm);
 
     if (vm.count("help") != 0u) {
       std::cout << description;
       return 1;
     }
+
+    notify(vm);
 
     // Events
     unsigned long nEntries = vm["events"].as<unsigned long>();

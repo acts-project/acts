@@ -29,12 +29,16 @@ namespace ActsExamples {
 class WhiteBoard {
  public:
   WhiteBoard(std::unique_ptr<const Acts::Logger> logger =
-                 Acts::getDefaultLogger("WhiteBoard", Acts::Logging::INFO));
+                 Acts::getDefaultLogger("WhiteBoard", Acts::Logging::INFO),
+             std::unordered_map<std::string, std::string> objectAliases = {});
 
   // A WhiteBoard holds unique elements and can not be copied
   WhiteBoard(const WhiteBoard& other) = delete;
   WhiteBoard& operator=(const WhiteBoard&) = delete;
 
+  bool exists(const std::string& name) const;
+
+ private:
   /// Store an object on the white board and transfer ownership.
   ///
   /// @param name Non-empty identifier to store it under
@@ -51,9 +55,12 @@ class WhiteBoard {
   template <typename T>
   const T& get(const std::string& name) const;
 
-  bool exists(const std::string& name) const;
-
  private:
+  /// Find similar names for suggestions with levenshtein-distance
+  std::vector<std::string_view> similarNames(const std::string_view& name,
+                                             int distThreshold,
+                                             std::size_t maxNumber) const;
+
   // type-erased value holder for move-constructible types
   struct IHolder {
     virtual ~IHolder() = default;
@@ -66,20 +73,31 @@ class WhiteBoard {
     T value;
 
     HolderT(T&& v) : value(std::move(v)) {}
-    const std::type_info& type() const { return typeid(T); }
+    const std::type_info& type() const override { return typeid(T); }
   };
 
   std::unique_ptr<const Acts::Logger> m_logger;
-  std::unordered_map<std::string, std::unique_ptr<IHolder>> m_store;
+  std::unordered_map<std::string, std::shared_ptr<IHolder>> m_store;
+  std::unordered_map<std::string, std::string> m_objectAliases;
 
   const Acts::Logger& logger() const { return *m_logger; }
+
+  static std::string typeMismatchMessage(const std::string& name,
+                                         const char* req, const char* act);
+
+  template <typename T>
+  friend class WriteDataHandle;
+
+  template <typename T>
+  friend class ReadDataHandle;
 };
 
 }  // namespace ActsExamples
 
 inline ActsExamples::WhiteBoard::WhiteBoard(
-    std::unique_ptr<const Acts::Logger> logger)
-    : m_logger(std::move(logger)) {}
+    std::unique_ptr<const Acts::Logger> logger,
+    std::unordered_map<std::string, std::string> objectAliases)
+    : m_logger(std::move(logger)), m_objectAliases(std::move(objectAliases)) {}
 
 template <typename T>
 inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
@@ -89,21 +107,41 @@ inline void ActsExamples::WhiteBoard::add(const std::string& name, T&& object) {
   if (0 < m_store.count(name)) {
     throw std::invalid_argument("Object '" + name + "' already exists");
   }
-  m_store.emplace(name, std::make_unique<HolderT<T>>(std::forward<T>(object)));
-  ACTS_VERBOSE("Added object '" << name << "'");
+  auto holder = std::make_shared<HolderT<T>>(std::forward<T>(object));
+  m_store.emplace(name, holder);
+  ACTS_VERBOSE("Added object '" << name << "' of type " << typeid(T).name());
+  if (auto it = m_objectAliases.find(name); it != m_objectAliases.end()) {
+    m_store[it->second] = holder;
+    ACTS_VERBOSE("Added alias object '" << it->second << "'");
+  }
 }
 
 template <typename T>
 inline const T& ActsExamples::WhiteBoard::get(const std::string& name) const {
+  ACTS_VERBOSE("Attempt to get object '" << name << "' of type "
+                                         << typeid(T).name());
   auto it = m_store.find(name);
   if (it == m_store.end()) {
-    throw std::out_of_range("Object '" + name + "' does not exists");
+    const auto names = similarNames(name, 10, 3);
+
+    std::stringstream ss;
+    if (not names.empty()) {
+      ss << ", similar ones are: [ ";
+      for (std::size_t i = 0; i < std::min(3ul, names.size()); ++i) {
+        ss << "'" << names[i] << "' ";
+      }
+      ss << "]";
+    }
+
+    throw std::out_of_range("Object '" + name + "' does not exists" + ss.str());
   }
+
   const IHolder* holder = it->second.get();
 
   const auto* castedHolder = dynamic_cast<const HolderT<T>*>(holder);
   if (castedHolder == nullptr) {
-    throw std::out_of_range("Type mismatch for object '" + name + "'");
+    throw std::out_of_range(
+        typeMismatchMessage(name, typeid(T).name(), holder->type().name()));
   }
 
   ACTS_VERBOSE("Retrieved object '" << name << "'");

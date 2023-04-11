@@ -12,6 +12,10 @@ on:
     paths-ignore:
       - "docs/**"
 
+concurrency: 
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+
 env:
   CTEST_OUTPUT_ON_FAILURE: 1
   CCACHE_DIR: ${{ github.workspace }}/ccache
@@ -24,7 +28,7 @@ env:
 jobs:
   build_debug:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v41
     steps:
       - uses: actions/checkout@v3
 
@@ -38,6 +42,7 @@ jobs:
 
       - name: Configure
         run: >
+          ccache -z &&
           cmake -B build -S .
           -GNinja
           -DCMAKE_CXX_COMPILER_LAUNCHER=ccache
@@ -47,6 +52,8 @@ jobs:
           -DACTS_LOG_FAILURE_THRESHOLD=WARNING
       - name: Build
         run: cmake --build build
+      - name: ccache stats
+        run: ccache -s
       - name: Unit tests
         run: cmake --build build --target test
       - name: Remove .o files
@@ -66,7 +73,7 @@ jobs:
 
   build_performance:
     runs-on: ubuntu-latest
-    container: ghcr.io/acts-project/ubuntu2004:v29
+    container: ghcr.io/acts-project/ubuntu2204:v41
     if: github.ref == 'refs/heads/main'
     steps:
       - uses: actions/checkout@v3
@@ -84,7 +91,7 @@ jobs:
         run: cmakeperf collect build/compile_commands.json -o perf.csv
       - name: Results
         run: cmakeperf print perf.csv
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v3
         with:
           name: cmakeperf
           path: perf.csv
@@ -114,4 +121,3 @@ jobs:
           git add -A
           git commit -m"update metrics"
           git push
-

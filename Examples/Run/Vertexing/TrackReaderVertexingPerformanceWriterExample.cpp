@@ -17,14 +17,15 @@
 #include "ActsExamples/Io/Root/RootParticleReader.hpp"
 #include "ActsExamples/Io/Root/RootTrajectorySummaryReader.hpp"
 #include "ActsExamples/Io/Root/RootVertexPerformanceWriter.hpp"
-#include "ActsExamples/MagneticField/MagneticFieldOptions.hpp"
 #include "ActsExamples/Options/CommonOptions.hpp"
+#include "ActsExamples/Options/MagneticFieldOptions.hpp"
+#include "ActsExamples/Options/ParticleSelectorOptions.hpp"
+#include "ActsExamples/Options/VertexingOptions.hpp"
 #include "ActsExamples/Printers/TrackParametersPrinter.hpp"
 #include "ActsExamples/TruthTracking/ParticleSelector.hpp"
-#include "ActsExamples/TruthTracking/TrackSelector.hpp"
+#include "ActsExamples/TruthTracking/TrackParameterSelector.hpp"
 #include "ActsExamples/Utilities/Paths.hpp"
 #include "ActsExamples/Vertexing/AdaptiveMultiVertexFinderAlgorithm.hpp"
-#include "ActsExamples/Vertexing/VertexingOptions.hpp"
 
 #include <memory>
 
@@ -40,7 +41,7 @@ int main(int argc, char* argv[]) {
   Options::addInputOptions(desc);
   Options::addMagneticFieldOptions(desc);
   Options::addOutputOptions(desc, OutputFormat::DirectoryOnly);
-  ActsExamples::ParticleSelector::addOptions(desc);
+  Options::addParticleSelectorOptions(desc);
   auto vars = Options::parse(desc, argc, argv);
   if (vars.empty()) {
     return EXIT_FAILURE;
@@ -67,7 +68,7 @@ int main(int argc, char* argv[]) {
       particleReaderConfig, Acts::Logging::INFO));
 
   // add additional particle selection
-  auto select = ActsExamples::ParticleSelector::readConfig(vars);
+  auto select = Options::readParticleSelectorConfig(vars);
   select.inputParticles = particleReaderConfig.particleCollection;
   select.outputParticles = "detectorAcceptanceSelectedTruthParticles";
   sequencer.addAlgorithm(
@@ -81,16 +82,14 @@ int main(int argc, char* argv[]) {
       trackSummaryReader, logLevel));
 
   // Apply some primary vertexing selection cuts
-  TrackSelector::Config trackSelectorConfig;
+  TrackParameterSelector::Config trackSelectorConfig;
   trackSelectorConfig.inputTrackParameters = trackSummaryReader.outputTracks;
   trackSelectorConfig.outputTrackParameters = "selectedTracks";
-  trackSelectorConfig.outputTrackIndices = "outputTrackIndices";
-  trackSelectorConfig.removeNeutral = true;
   trackSelectorConfig.absEtaMax = vars["vertexing-eta-max"].as<double>();
   trackSelectorConfig.loc0Max = vars["vertexing-rho-max"].as<double>() * 1_mm;
   trackSelectorConfig.ptMin = vars["vertexing-pt-min"].as<double>() * 1_MeV;
   sequencer.addAlgorithm(
-      std::make_shared<TrackSelector>(trackSelectorConfig, logLevel));
+      std::make_shared<TrackParameterSelector>(trackSelectorConfig, logLevel));
 
   // find vertices
   AdaptiveMultiVertexFinderAlgorithm::Config findVertices;
@@ -109,7 +108,7 @@ int main(int argc, char* argv[]) {
   vertexWriterConfig.inputSelectedTruthParticles = select.outputParticles;
   vertexWriterConfig.inputAssociatedTruthParticles =
       trackSummaryReader.outputParticles;
-  vertexWriterConfig.inputFittedTracks = trackSummaryReader.outputTracks;
+  vertexWriterConfig.inputTrackParameters = trackSummaryReader.outputTracks;
   vertexWriterConfig.inputVertices = findVertices.outputVertices;
   vertexWriterConfig.inputTime = findVertices.outputTime;
   vertexWriterConfig.filePath = outputDir + "/vertexperformance_AMVF.root";

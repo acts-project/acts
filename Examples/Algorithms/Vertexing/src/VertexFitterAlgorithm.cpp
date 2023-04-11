@@ -20,60 +20,61 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
 #include <stdexcept>
 
+#include "VertexingHelpers.hpp"
+
 ActsExamples::VertexFitterAlgorithm::VertexFitterAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("VertexFit", lvl), m_cfg(cfg) {
-  if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing input track parameters collection");
+    : ActsExamples::IAlgorithm("VertexFit", lvl), m_cfg(cfg) {
+  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
+    throw std::invalid_argument(
+        "You have to either provide track parameters or trajectories");
   }
   if (m_cfg.inputProtoVertices.empty()) {
     throw std::invalid_argument("Missing input proto vertices collection");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
+
+  m_inputProtoVertices.initialize(m_cfg.inputProtoVertices);
+  m_outputVertices.initialize(m_cfg.outputVertices);
 }
 
 ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using Propagator = Acts::Propagator<Acts::EigenStepper<>>;
-  using PropagatorOptions = Acts::PropagatorOptions<>;
-  using Linearizer = Acts::HelicalTrackLinearizer<Propagator>;
-  using VertexFitter =
-      Acts::FullBilloirVertexFitter<Acts::BoundTrackParameters, Linearizer>;
-  using VertexFitterOptions =
-      Acts::VertexingOptions<Acts::BoundTrackParameters>;
-
   // Set up EigenStepper
   Acts::EigenStepper<> stepper(m_cfg.bField);
 
   // Setup the propagator with void navigator
-  auto propagator = std::make_shared<Propagator>(stepper);
-  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext,
-                                   Acts::LoggerWrapper{logger()});
+  auto propagator = std::make_shared<Propagator>(
+      stepper, Acts::detail::VoidNavigator{}, logger().cloneWithSuffix("Prop"));
+  PropagatorOptions propagatorOpts(ctx.geoContext, ctx.magFieldContext);
   // Setup the vertex fitter
   VertexFitter::Config vertexFitterCfg;
   VertexFitter vertexFitter(vertexFitterCfg);
   VertexFitter::State state(m_cfg.bField->makeCache(ctx.magFieldContext));
   // Setup the linearizer
   Linearizer::Config ltConfig(m_cfg.bField, propagator);
-  Linearizer linearizer(ltConfig);
+  Linearizer linearizer(ltConfig, logger().cloneWithSuffix("HelLin"));
 
   ACTS_VERBOSE("Read from '" << m_cfg.inputTrackParameters << "'");
   ACTS_VERBOSE("Read from '" << m_cfg.inputProtoVertices << "'");
 
-  const auto& trackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
-  ACTS_VERBOSE("Have " << trackParameters.size() << " track parameters");
-  const auto& protoVertices =
-      ctx.eventStore.get<ProtoVertexContainer>(m_cfg.inputProtoVertices);
+  auto [inputTrackParameters, inputTrackPointers] =
+      makeParameterContainers(ctx, m_inputTrackParameters, m_inputTrajectories);
+
+  ACTS_VERBOSE("Have " << inputTrackParameters.size() << " track parameters");
+  const auto& protoVertices = m_inputProtoVertices(ctx);
   ACTS_VERBOSE("Have " << protoVertices.size() << " proto vertices");
 
   std::vector<const Acts::BoundTrackParameters*> inputTrackPtrCollection;
 
-  std::vector<Acts::Vertex<Acts::BoundTrackParameters>> fittedVertices;
+  VertexCollection fittedVertices;
 
   for (const auto& protoVertex : protoVertices) {
     // un-constrained fit requires at least two tracks
@@ -88,12 +89,12 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     inputTrackPtrCollection.clear();
     inputTrackPtrCollection.reserve(protoVertex.size());
     for (const auto& trackIdx : protoVertex) {
-      if (trackIdx >= trackParameters.size()) {
+      if (trackIdx >= inputTrackParameters.size()) {
         ACTS_ERROR("track parameters " << trackIdx << " does not exist");
         continue;
       }
 
-      inputTrackPtrCollection.push_back(&trackParameters[trackIdx]);
+      inputTrackPtrCollection.push_back(inputTrackPointers[trackIdx]);
     }
 
     if (!m_cfg.doConstrainedFit) {
@@ -137,6 +138,6 @@ ActsExamples::ProcessCode ActsExamples::VertexFitterAlgorithm::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputVertices, std::move(fittedVertices));
+  m_outputVertices(ctx, std::move(fittedVertices));
   return ProcessCode::SUCCESS;
 }

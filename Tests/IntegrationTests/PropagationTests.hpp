@@ -6,6 +6,8 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+#pragma once
+
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/NeutralTrackParameters.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
@@ -247,7 +249,7 @@ inline std::pair<Acts::CurvilinearTrackParameters, double> transportFreely(
   using Aborts = Acts::AbortList<>;
 
   // setup propagation options
-  options_t<Actions, Aborts> options(geoCtx, magCtx, Acts::getDummyLogger());
+  options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = (0 <= pathLength) ? Acts::NavigationDirection::Forward
                                         : Acts::NavigationDirection::Backward;
   options.pathLimit = pathLength;
@@ -275,7 +277,7 @@ inline std::pair<Acts::BoundTrackParameters, double> transportToSurface(
   using Aborts = Acts::AbortList<>;
 
   // setup propagation options
-  options_t<Actions, Aborts> options(geoCtx, magCtx, Acts::getDummyLogger());
+  options_t<Actions, Aborts> options(geoCtx, magCtx);
   options.direction = Acts::NavigationDirection::Forward;
   options.pathLimit = pathLimit;
   options.maxStepSize = 1_cm;

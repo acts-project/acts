@@ -35,10 +35,11 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     SurfaceArrayConverter::Options sacOptions;
     sacOptions.surfaceStyles = cOptions.surfaceStyles;
     sacOptions.logLevel = cOptions.logLevel;
-    auto [surfaces, grid] = SurfaceArrayConverter::convert(
+    auto [surfaces, grid, associations] = SurfaceArrayConverter::convert(
         gctx, *(layer.surfaceArray()), sacOptions);
     volume._surfaces = surfaces;
     volume._surface_grid = grid;
+    volume._grid_associations = associations;
   }
 
   // The sheet
@@ -87,7 +88,6 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     unsigned int m = 0;
     // Potential labels
     Acts::ActsScalar avgRadius = 0.;
-    Acts::ActsScalar avgZ = 0.;
 
     for (const auto& sf : layer.surfaceArray()->surfaces()) {
       // Surface center
@@ -98,7 +98,6 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
       Acts::ActsScalar z = sfCenter.z();
       // Get the average radius
       avgRadius += radius;
-      avgZ += z;
       // Raw display surfaces for projects
       actsvg::proto::surface<std::vector<Acts::Vector3>> projSurface;
       projSurface._vertices = sf->polyhedronRepresentation(gctx, 1u).vertices;
@@ -115,7 +114,6 @@ std::vector<actsvg::svg::object> Acts::Svg::LayerConverter::convert(
     }
     // Do the average
     avgRadius /= layer.surfaceArray()->surfaces().size();
-    avgZ /= layer.surfaceArray()->surfaces().size();
 
     // Add a measure iuf requested
     if (cOptions.labelProjection) {

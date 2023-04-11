@@ -1,3 +1,4 @@
+(propagation_impl)=
 # Propagation and extrapolation
 
 The track propagation is an essential part of track reconstruction. This section describes the high-level classes and concepts used for this task in Acts.
@@ -77,6 +78,10 @@ if( res.ok() ) {
 Acts comes with two navigators: The standard navigator {class}`Acts::Navigator` that performs the full navigation in the volume/layer/surface hierarchy, and the {class}`Acts::DirectNavigator` that takes a sequence of surfaces and just navigates to one after the other. This sequence must be initialized with a special actor, the {class}`Acts::DirectNavigator::Initializer`.
 
 The navigators provide information about the current position inside the geometry in their state variable ({struct}`Acts::Navigator::State` and {struct}`Acts::DirectNavigator::State`), e.g. pointers to the `currentSurface` and the `currentVolume`.
+
+:::{tip}
+The {class}`Acts::Navigator` by default does a straight-line extrapolation to resolve layer candidates. In certain geometries (e.g., telescope) this can lead to the effect that bent tracks miss some layers. This can be mitigated by disabling the bound-check for layer resolval with the `boundaryCheckLayerResolving` option in {struct}`Acts::Navigator::Config`.
+:::
 
 ## Steppers
 

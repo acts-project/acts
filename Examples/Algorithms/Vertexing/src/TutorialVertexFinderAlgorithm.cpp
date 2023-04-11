@@ -24,26 +24,29 @@
 #include "Acts/Vertexing/VertexingOptions.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
-#include "ActsExamples/Utilities/Options.hpp"
 
 #include "VertexingHelpers.hpp"
 
 ActsExamples::TutorialVertexFinderAlgorithm::TutorialVertexFinderAlgorithm(
     const Config& cfg, Acts::Logging::Level lvl)
-    : ActsExamples::BareAlgorithm("TutorialVertexFinder", lvl), m_cfg(cfg) {
-  if (m_cfg.inputTrackParameters.empty()) {
-    throw std::invalid_argument("Missing input track parameters collection");
+    : ActsExamples::IAlgorithm("TutorialVertexFinder", lvl), m_cfg(cfg) {
+  if (m_cfg.inputTrackParameters.empty() == m_cfg.inputTrajectories.empty()) {
+    throw std::invalid_argument(
+        "You have to either provide track parameters or trajectories");
   }
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
+  m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
 }
 
 ActsExamples::ProcessCode ActsExamples::TutorialVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // retrieve input tracks and convert into the expected format
-  const auto& inputTrackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  const auto& inputTrackParameters = m_inputTrackParameters(ctx);
   const auto& inputTrackPointers =
       makeTrackParametersPointerContainer(inputTrackParameters);
   //* Do not change the code above this line *//

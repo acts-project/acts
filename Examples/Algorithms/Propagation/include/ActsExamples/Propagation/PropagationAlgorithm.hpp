@@ -22,7 +22,8 @@
 #include "Acts/Propagator/detail/SteppingLogger.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/Utilities/Helpers.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -54,7 +55,7 @@ using PropagationOutput =
 ///
 /// If the propagator is equipped appropriately, it can
 /// also be used to test the Extrapolator within the geomtetry
-class PropagationAlgorithm : public BareAlgorithm {
+class PropagationAlgorithm : public IAlgorithm {
  public:
   struct Config {
     /// Instance of a propagator wrapper that performs the actual propagation
@@ -119,21 +120,27 @@ class PropagationAlgorithm : public BareAlgorithm {
   };
 
   /// Constructor
-  /// @param [in] cnf is the configuration struct
+  /// @param [in] config is the configuration struct
   /// @param [in] loglevel is the loggin level
-  PropagationAlgorithm(const Config& cnf, Acts::Logging::Level level);
+  PropagationAlgorithm(const Config& config, Acts::Logging::Level level);
 
   /// Framework execute method
   /// @param [in] the algorithm context for event consistency
   /// @return is a process code indicating succes or not
   ActsExamples::ProcessCode execute(
-      const AlgorithmContext& context) const final override;
+      const AlgorithmContext& context) const override;
 
   /// Get const access to the config
   const Config& config() const { return m_cfg; }
 
  private:
   Config m_cfg;  ///< the config class
+
+  WriteDataHandle<std::vector<std::vector<Acts::detail::Step>>>
+      m_outpoutPropagationSteps{this, "OutputPropagationSteps"};
+
+  WriteDataHandle<std::unordered_map<size_t, Acts::RecordedMaterialTrack>>
+      m_recordedMaterial{this, "RecordedMaterial"};
 
   /// Private helper method to create a corrleated covariance matrix
   /// @param[in] rnd is the random engine

@@ -25,23 +25,25 @@ namespace Test {
 /// @brief Simplified stepper state
 struct StepperState {
   Vector3 pos, dir;
-  double t, p, q;
-  bool covTransport;
-  NavigationDirection navDir;
+  double t = 0, p = 0, q = 0;
+  bool covTransport = false;
+  NavigationDirection navDir = NavigationDirection::Forward;
+};
+
+/// @brief Simplified navigator
+struct NaivgatorState {
+  TrackingVolume* currentVolume = nullptr;
 };
 
 /// @brief Simplified propgator state
 struct State {
   struct {
-    double mass;
-    int absPdgCode;
+    double mass = 0;
+    int absPdgCode = 0;
   } options;
 
-  struct {
-    TrackingVolume* currentVolume;
-  } navigation;
-
   StepperState stepping;
+  NaivgatorState navigation;
 };
 
 /// @brief Simplified stepper
@@ -59,13 +61,20 @@ struct Stepper {
   double charge(const StepperState& state) const { return state.q; };
 };
 
+/// @brief Simplified navigator
+struct Navigator {
+  const TrackingVolume* currentVolume(const NaivgatorState& state) const {
+    return state.currentVolume;
+  }
+};
+
 BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   // Create a Tracking Volume
   auto htrans = Transform3(Translation3{-10., -10., 0.});
   auto bound = std::make_shared<const CuboidVolumeBounds>(1_m, 1_m, 1_m);
   auto mat = makeSilicon();
   auto volMat = std::make_shared<const HomogeneousVolumeMaterial>(mat);
-  auto volume = (TrackingVolume::create(htrans, bound, volMat)).get();
+  auto volume = TrackingVolume::create(htrans, bound, volMat);
 
   // Create a propagator state
   State state;
@@ -78,13 +87,14 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   state.stepping.navDir = NavigationDirection::Backward;
   state.options.mass = 10.;
   state.options.absPdgCode = 11;
-  state.navigation.currentVolume = volume;
+  state.navigation.currentVolume = volume.get();
 
   Stepper stepper;
+  Navigator navigator;
 
   // Build the VolumeMaterialInteraction & test assignments
-  detail::VolumeMaterialInteraction volMatInt(volume, state, stepper);
-  BOOST_CHECK_EQUAL(volMatInt.volume, volume);
+  detail::VolumeMaterialInteraction volMatInt(volume.get(), state, stepper);
+  BOOST_CHECK_EQUAL(volMatInt.volume, volume.get());
   BOOST_CHECK_EQUAL(volMatInt.pos, state.stepping.pos);
   BOOST_CHECK_EQUAL(volMatInt.time, state.stepping.t);
   BOOST_CHECK_EQUAL(volMatInt.dir, state.stepping.dir);
@@ -98,7 +108,7 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
   BOOST_CHECK_EQUAL(volMatInt.nav, state.stepping.navDir);
 
   // Evaluate the material
-  bool result = volMatInt.evaluateMaterialSlab(state);
+  bool result = volMatInt.evaluateMaterialSlab(state, navigator);
   BOOST_CHECK(result);
   BOOST_CHECK_EQUAL(volMatInt.slab.material(), mat);
   BOOST_CHECK_EQUAL(volMatInt.slab.thickness(), 1.);
@@ -106,9 +116,10 @@ BOOST_AUTO_TEST_CASE(volume_material_interaction_test) {
 
   // Evaluate the material without a tracking volume
   state.navigation.currentVolume = nullptr;
-  result = volMatInt.evaluateMaterialSlab(state);
+  result = volMatInt.evaluateMaterialSlab(state, navigator);
   BOOST_CHECK(!result);
   BOOST_CHECK_EQUAL(volMatInt.pathCorrection, 0.);
 }
+
 }  // namespace Test
 }  // namespace Acts

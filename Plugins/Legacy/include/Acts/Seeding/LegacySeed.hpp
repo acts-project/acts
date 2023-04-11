@@ -24,13 +24,14 @@ class Seed {
 
  public:
   Seed();
-  Seed(const SpacePoint*, const SpacePoint*, const SpacePoint*, const double);
-  Seed(const Seed&);
-  Seed& operator=(const Seed&);
+  Seed(const SpacePoint* /*b*/, const SpacePoint* /*m*/,
+       const SpacePoint* /*u*/, const double /*vertex*/);
+  Seed(const Seed& /*s*/);
+  Seed& operator=(const Seed& /*s*/);
   virtual ~Seed();
   void erase();
-  void add(const SpacePoint*&);
-  void setZVertex(const double&);
+  void add(const SpacePoint*& /*sp*/);
+  void setZVertex(const double& /*z*/);
   const std::list<const SpacePoint*>& spacePoints() const;
   const double& zVertex() const;
 
@@ -40,7 +41,7 @@ class Seed {
 
  protected:
   std::list<const SpacePoint*> m_spacepoints;
-  double m_zvertex;
+  double m_zvertex = 0;
 };
 
 /// @cond
@@ -93,7 +94,7 @@ Seed<SpacePoint>& Seed<SpacePoint>::operator=(const Seed<SpacePoint>& s) {
 }
 
 template <typename SpacePoint>
-Seed<SpacePoint>::Seed() {}
+Seed<SpacePoint>::Seed() = default;
 
 template <typename SpacePoint>
 Seed<SpacePoint>::Seed(const SpacePoint* b, const SpacePoint* m,
@@ -105,7 +106,7 @@ Seed<SpacePoint>::Seed(const SpacePoint* b, const SpacePoint* m,
 }
 
 template <typename SpacePoint>
-Seed<SpacePoint>::~Seed() {}
+Seed<SpacePoint>::~Seed() = default;
 
 /// @endcond
 

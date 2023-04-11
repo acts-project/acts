@@ -45,10 +45,10 @@ def runTruthTrackingGsf(
     outputDir = Path(outputDir)
 
     if inputParticlePath is None:
-        s = addParticleGun(
+        addParticleGun(
             s,
             EtaConfig(-2.0, 2.0),
-            ParticleConfig(4, acts.PdgParticle.eMuon, True),
+            ParticleConfig(4, acts.PdgParticle.eElectron, True),
             PhiConfig(0.0, 360.0 * u.degree),
             multiplicity=2,
             rnd=rnd,
@@ -67,14 +67,15 @@ def runTruthTrackingGsf(
             )
         )
 
-    s = addFatras(
+    addFatras(
         s,
         trackingGeometry,
         field,
         rnd=rnd,
+        enableInteractions=True,
     )
 
-    s = addDigitization(
+    addDigitization(
         s,
         trackingGeometry,
         field,
@@ -82,7 +83,7 @@ def runTruthTrackingGsf(
         rnd=rnd,
     )
 
-    s = addSeeding(
+    addSeeding(
         s,
         trackingGeometry,
         field,
@@ -98,7 +99,7 @@ def runTruthTrackingGsf(
 
     s.addAlgorithm(truthTrkFndAlg)
 
-    s = addTruthTrackingGsf(s, trackingGeometry, field)
+    addTruthTrackingGsf(s, trackingGeometry, field)
 
     # Output
     s.addWriter(
@@ -120,6 +121,16 @@ def runTruthTrackingGsf(
             inputParticles="truth_seeds_selected",
             inputMeasurementParticlesMap="measurement_particles_map",
             filePath=str(outputDir / "tracksummary_gsf.root"),
+        )
+    )
+
+    s.addWriter(
+        acts.examples.TrackFitterPerformanceWriter(
+            level=acts.logging.INFO,
+            inputTrajectories="gsf_trajectories",
+            inputParticles="truth_seeds_selected",
+            inputMeasurementParticlesMap="measurement_particles_map",
+            filePath=str(outputDir / "performance_gsf.root"),
         )
     )
 

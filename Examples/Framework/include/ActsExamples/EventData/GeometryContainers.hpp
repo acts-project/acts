@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SourceLink.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Surfaces/Surface.hpp"
 #include "ActsExamples/Utilities/GroupBy.hpp"
@@ -226,12 +227,6 @@ struct GeometryIdMultisetAccessor {
 
   // pointer to the container
   const Container* container = nullptr;
-
-  // get the range of elements with requested geoId
-  std::pair<Iterator, Iterator> range(const Acts::Surface& surface) const {
-    assert(container != nullptr);
-    return container->equal_range(surface.geometryId());
-  }
 };
 
 }  // namespace ActsExamples

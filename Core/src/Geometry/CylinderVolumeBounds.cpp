@@ -158,7 +158,7 @@ std::ostream& Acts::CylinderVolumeBounds::toStream(std::ostream& sl) const {
 Acts::Volume::BoundingBox Acts::CylinderVolumeBounds::boundingBox(
     const Transform3* trf, const Vector3& envelope,
     const Volume* entity) const {
-  double xmax, xmin, ymax, ymin;
+  double xmax = 0, xmin = 0, ymax = 0, ymin = 0;
   xmax = get(eMaxR);
 
   if (get(eHalfPhiSector) > M_PI / 2.) {

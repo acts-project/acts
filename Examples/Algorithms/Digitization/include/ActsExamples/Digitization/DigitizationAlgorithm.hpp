@@ -16,7 +16,8 @@
 #include "ActsExamples/EventData/Cluster.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/SimHit.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 #include "ActsFatras/Digitization/Channelizer.hpp"
 #include "ActsFatras/Digitization/PlanarSurfaceDrift.hpp"
@@ -37,7 +38,7 @@ class TrackingGeometry;
 namespace ActsExamples {
 
 /// Algorithm that turns simulated hits into measurements by truth smearing.
-class DigitizationAlgorithm final : public BareAlgorithm {
+class DigitizationAlgorithm final : public IAlgorithm {
  public:
   /// Construct the smearing algorithm.
   ///
@@ -49,7 +50,7 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ///
   /// @param ctx is the algorithm context with event information
   /// @return a process code indication success or failure
-  ProcessCode execute(const AlgorithmContext& ctx) const final override;
+  ProcessCode execute(const AlgorithmContext& ctx) const override;
 
   /// Get const access to the config
   const DigitizationConfig& config() const { return m_cfg; }
@@ -103,6 +104,19 @@ class DigitizationAlgorithm final : public BareAlgorithm {
   ActsFatras::PlanarSurfaceDrift m_surfaceDrift;
   ActsFatras::PlanarSurfaceMask m_surfaceMask;
   ActsFatras::Channelizer m_channelizer;
+
+  ReadDataHandle<SimHitContainer> m_simContainerReadHandle{this,
+                                                           "SimHitContainer"};
+
+  WriteDataHandle<IndexSourceLinkContainer> m_sourceLinkWriteHandle{
+      this, "SourceLinks"};
+  WriteDataHandle<MeasurementContainer> m_measurementWriteHandle{
+      this, "Measurements"};
+  WriteDataHandle<ClusterContainer> m_clusterWriteHandle{this, "Clusters"};
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_measurementParticlesMapWriteHandle{this, "MeasurementParticlesMap"};
+  WriteDataHandle<IndexMultimap<Index>> m_measurementSimHitsMapWriteHandle{
+      this, "MeasurementSimHitsMap"};
 
   /// Construct a fixed-size smearer from a configuration.
   ///
