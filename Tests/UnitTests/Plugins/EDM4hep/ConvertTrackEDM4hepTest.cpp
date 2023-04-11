@@ -330,51 +330,57 @@ BOOST_AUTO_TEST_CASE(RoundTripTests) {
   auto origTrackIt = tracks.begin();
   auto readTrackIt = readTracks.begin();
   while (origTrackIt != tracks.end() && readTrackIt != readTracks.end()) {
-    BOOST_TEST_CONTEXT("Track #" << t) {
-      auto orig = *origTrackIt;
-      auto read = *readTrackIt;
+    BOOST_TEST_INFO_SCOPE("Track #" << t);
+    auto orig = *origTrackIt;
+    auto read = *readTrackIt;
 
-      CHECK_CLOSE_REL(orig.parameters(), read.parameters(), 1e-3);
-      CHECK_CLOSE_OR_SMALL(orig.covariance(), read.covariance(), 1e-5, 1e-8);
-      BOOST_CHECK_EQUAL(orig.referenceSurface().center(gctx),
-                        read.referenceSurface().center(gctx));
+    CHECK_CLOSE_OR_SMALL(orig.parameters(), read.parameters(), 1e-5, 1e-8);
+    CHECK_CLOSE_OR_SMALL(orig.covariance(), read.covariance(), 1e-5, 1e-8);
+    BOOST_CHECK_EQUAL(orig.referenceSurface().center(gctx),
+                      read.referenceSurface().center(gctx));
 
-      auto origTsIt = orig.trackStates().begin();
-      auto readTsIt = read.trackStates().begin();
+    auto origTsIt = orig.trackStates().begin();
+    auto readTsIt = read.trackStates().begin();
 
-      size_t tsi = 0;
-      while (origTsIt != orig.trackStates().end() &&
-             readTsIt != read.trackStates().end()) {
-        BOOST_TEST_CONTEXT("TS: #" << tsi) {
-          auto origTs = *std::find_if(
-              origTsIt, orig.trackStates().end(), [](const auto& ts) {
-                return ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
-              });
-          auto readTs = *readTsIt;
-          CHECK_CLOSE_OR_SMALL(origTs.smoothedCovariance(),
-                               readTs.smoothedCovariance(), 1e-5, 1e-6);
-          Vector3 newCenter = readTs.referenceSurface().center(
-              gctx);  // new center is a perigee, but should be on the other
-                      // surface
-          BOOST_CHECK(origTs.referenceSurface().isOnSurface(gctx, newCenter,
-                                                            Vector3::Zero()));
+    size_t tsi = 0;
+    while (origTsIt != orig.trackStates().end() &&
+           readTsIt != read.trackStates().end()) {
+      BOOST_TEST_INFO_SCOPE("TS: #" << tsi);
+      auto nextMeas =
+          std::find_if(origTsIt, orig.trackStates().end(), [](const auto& ts) {
+            return ts.typeFlags().test(TrackStateFlag::MeasurementFlag);
+          });
+      BOOST_CHECK(nextMeas != orig.trackStates().end());
+      origTsIt = nextMeas;
+      auto origTs = *origTsIt;
+      auto readTs = *readTsIt;
 
-          // global hit positions should be the same
-          Vector3 readGlobal = readTs.referenceSurface().localToGlobal(
-              gctx, readTs.parameters().template head<2>(), Vector3::Zero());
-          Vector3 origGlobal = origTs.referenceSurface().localToGlobal(
-              gctx, origTs.parameters().template head<2>(), Vector3::Zero());
-          CHECK_CLOSE_ABS(readGlobal, origGlobal, 1e-3);
-          ++origTsIt;
-          ++readTsIt;
-          tsi++;
-        }
-      }
-      ++origTrackIt;
-      ++readTrackIt;
+      BOOST_TEST_INFO_SCOPE(
+          "orig parameters: " << origTs.parameters().transpose());
+      BOOST_TEST_INFO_SCOPE(
+          "read parameters: " << readTs.parameters().transpose());
+      CHECK_CLOSE_OR_SMALL(origTs.smoothedCovariance(),
+                           readTs.smoothedCovariance(), 1e-5, 1e-6);
+      Vector3 newCenter = readTs.referenceSurface().center(
+          gctx);  // new center is a perigee, but should be on the other
+                  // surface
+      BOOST_CHECK(origTs.referenceSurface().isOnSurface(gctx, newCenter,
+                                                        Vector3::Zero()));
 
-      t++;
+      // global hit positions should be the same
+      Vector3 readGlobal = readTs.referenceSurface().localToGlobal(
+          gctx, readTs.parameters().template head<2>(), Vector3::Zero());
+      Vector3 origGlobal = origTs.referenceSurface().localToGlobal(
+          gctx, origTs.parameters().template head<2>(), Vector3::Zero());
+      CHECK_CLOSE_ABS(readGlobal, origGlobal, 1e-3);
+      ++origTsIt;
+      ++readTsIt;
+      tsi++;
     }
+    ++origTrackIt;
+    ++readTrackIt;
+
+    t++;
   }
 }
 
