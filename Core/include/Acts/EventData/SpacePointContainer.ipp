@@ -12,26 +12,61 @@ namespace Acts {
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
+								const Acts::SpacePointContainerConfig& config,
     const Acts::SpacePointContainerOptions& options,
     container_t& container)
-  : m_options(options.toInternalUnits()),
+  : m_config(config.toInternalUnits()),
+    m_options(options.toInternalUnits()),
     m_container(container)
-{}
+{
+  m_data.resize(this->size(), config.useDetailedDoubleMeasurementInfo);
+
+  // Dynamic variables
+  if (config.useDetailedDoubleMeasurementInfo) {
+    using namespace Acts::HashedStringLiteral;
+    for (std::size_t i(0); i<this->size(); ++i) {
+      m_data.setTopHalfStripLength(i, std::any_cast<float>(this->container().component_impl("TopHalfStripLength"_hash, i)));
+      m_data.setBottomHalfStripLength(i, std::any_cast<float>(this->container().component_impl("BottomHalfStripLength"_hash, i)));
+      m_data.setTopStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripDirection"_hash, i)));
+      m_data.setBottomStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("BottomStripDirection"_hash, i)));
+      m_data.setStripCenterDistance(i,  std::any_cast<Acts::Vector3>(this->container().component_impl("StripCenterDistance"_hash, i)));
+      m_data.setTopStripCenterPosition(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripCenterPosition"_hash, i)));
+    }
+  }
+}
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
+								const Acts::SpacePointContainerConfig& config,
 								const Acts::SpacePointContainerOptions& options,
     container_t&& container)
-  : m_options(options.toInternalUnits()),
-  m_container(std::move(container))
-{}
+  : m_config(config.toInternalUnits()),
+    m_options(options.toInternalUnits()),
+    m_container(std::move(container))
+{
+  m_data.resize(this->size(), config.useDetailedDoubleMeasurementInfo);
+
+  // Dynamic variables 
+  if (config.useDetailedDoubleMeasurementInfo) {
+    using namespace Acts::HashedStringLiteral;
+    for (std::size_t i(0); i<this->size(); ++i) {
+      m_data.setTopHalfStripLength(i, std::any_cast<float>(this->container().component_impl("TopHalfStripLength"_hash, i)));
+      m_data.setBottomHalfStripLength(i, std::any_cast<float>(this->container().component_impl("BottomHalfStripLength"_hash, i)));
+      m_data.setTopStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripDirection"_hash, i)));
+      m_data.setBottomStripDirection(i, std::any_cast<Acts::Vector3>(this->container().component_impl("BottomStripDirection"_hash, i)));
+      m_data.setStripCenterDistance(i, 	std::any_cast<Acts::Vector3>(this->container().component_impl("StripCenterDistance"_hash, i)));
+      m_data.setTopStripCenterPosition(i, std::any_cast<Acts::Vector3>(this->container().component_impl("TopStripCenterPosition"_hash, i)));
+    }
+  }
+}
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     SpacePointContainer<container_t, holder_t>& other)
-  : m_options(other.m_options),
+  : m_config(other.m_config),
+    m_options(other.m_options),
     m_container(*other.m_container.ptr)
 {}
 
@@ -41,6 +76,7 @@ SpacePointContainer<container_t, holder_t>&
 SpacePointContainer<container_t, holder_t>::operator=(
     SpacePointContainer<container_t, holder_t>& other)
 {
+  m_config = other.m_config;
   m_options = other.m_options;
   m_container.ptr = other.m_container.ptr;
   return *this;
@@ -49,14 +85,15 @@ SpacePointContainer<container_t, holder_t>::operator=(
 template <typename container_t, template <typename> class holder_t>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     SpacePointContainer<container_t, holder_t>&& other) noexcept
-  : m_options(other.m_options),
+  :  m_config(other.m_config),
+     m_options(other.m_options),
     m_container(std::exchange(other.m_container.ptr, nullptr))
 {}
   
 template <typename container_t, template <typename> class holder_t>
 template <typename T>
-T SpacePointContainer<container_t, holder_t>::component(HashedString key,
-                                                        std::size_t n) const {
+const T& SpacePointContainer<container_t, holder_t>::component(HashedString key,
+							       std::size_t n) const {
   using namespace Acts::HashedStringLiteral;
   switch (key) {
     case "TopHalfStripLength"_hash:
@@ -65,7 +102,7 @@ T SpacePointContainer<container_t, holder_t>::component(HashedString key,
     case "BottomStripDirection"_hash:
     case "StripCenterDistance"_hash:
     case "TopStripCenterPosition"_hash:
-      return std::any_cast<T>(container().component_impl(key, n));
+      return *std::any_cast<T*>(m_data.component(key, n));
     default:
       throw std::runtime_error("no such component " + std::to_string(key));
   }
@@ -179,6 +216,30 @@ template <typename container_t, template <typename> class holder_t>
 inline float SpacePointContainer<container_t, holder_t>::varianceZ(
     std::size_t n) const {
   return container().varianceZ_impl(n);
+}
+
+template <typename container_t, template <typename> class holder_t>
+inline const float&
+SpacePointContainer<container_t, holder_t>::quality(std::size_t n) const {
+  return m_data.quality(n);
+}
+
+template <typename container_t, template <typename> class holder_t>
+inline const float&
+SpacePointContainer<container_t, holder_t>::deltaR(std::size_t n) const {
+  return m_data.deltaR(n);
+}
+
+template <typename container_t, template <typename> class holder_t>
+inline void
+SpacePointContainer<container_t, holder_t>::setQuality(std::size_t n, const float& value) const {
+  m_data.setQuality(n, value);
+}
+
+template <typename container_t, template <typename> class holder_t>
+inline void
+SpacePointContainer<container_t, holder_t>::setDeltaR(std::size_t n, const float& value) const {
+  m_data.setDeltaR(n, value);
 }
 
 template <typename container_t, template <typename> class holder_t>

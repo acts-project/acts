@@ -192,9 +192,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
-
   auto start = std::chrono::high_resolution_clock::now();
-  
+
+  // Config
+  Acts::SpacePointContainerConfig spConfig;
+  spConfig.useDetailedDoubleMeasurementInfo = m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo;
   // Options
   Acts::SpacePointContainerOptions spOptions;
   spOptions.beamPos = {0., 0.};
@@ -203,7 +205,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   ActsExamples::SpacePointContainer container(spacePointPtrs);
   // Prepare Acts API
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-    spContainer(std::move(spOptions), container);
+    spContainer(spConfig, spOptions, container);
 
   using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;
@@ -233,37 +235,6 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   static thread_local std::vector<seed_type> seeds;
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
-  state.spacePointData.resize(
-      std::distance(spContainer.begin(), spContainer.end()),
-      m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo);
-
-  if (m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo) {
-    for (std::size_t grid_glob_bin(0);
-         grid_glob_bin < spacePointsGrouping.grid().size(); ++grid_glob_bin) {
-      const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
-      for (const auto& sp : collection) {
-        std::size_t index = sp.index();
-        state.spacePointData.setTopHalfStripLength(
-            index,
-            sp.template component<float>("TopHalfStripLength"_hash));
-        state.spacePointData.setBottomHalfStripLength(
-            index,
-            sp.template component<float>("BottomHalfStripLength"_hash));
-        state.spacePointData.setTopStripDirection(
-            index, sp.template component<Acts::Vector3>(
-                       "TopStripDirection"_hash));
-        state.spacePointData.setBottomStripDirection(
-            index, sp.template component<Acts::Vector3>(
-                       "BottomStripDirection"_hash));
-        state.spacePointData.setStripCenterDistance(
-            index, sp.template component<Acts::Vector3>(
-                       "StripCenterDistance"_hash));
-        state.spacePointData.setTopStripCenterPosition(
-            index, sp.template component<Acts::Vector3>(
-                       "TopStripCenterPosition"_hash));
-      }
-    }
-  }
 
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(

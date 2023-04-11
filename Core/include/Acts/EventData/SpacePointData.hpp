@@ -9,7 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Utilities/HashedString.hpp"
 
+#include <any>
 #include <limits>
 #include <vector>
 
@@ -55,6 +57,8 @@ class SpacePointData {
   ///
   bool hasDynamicVariable() const;
 
+  std::any component(Acts::HashedString key, std::size_t n) const;
+  
   const float& getTopHalfStripLength(std::size_t idx) const;
   const float& getBottomHalfStripLength(std::size_t idx) const;
   const Acts::Vector3& getTopStripDirection(std::size_t idx) const;

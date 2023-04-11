@@ -73,13 +73,16 @@ ActsExamples::ProcessCode ActsExamples::SeedingOrthogonalAlgorithm::execute(
     }
   }
 
+  // Config
+  Acts::SpacePointContainerConfig spConfig;
+  
   // Options
   Acts::SpacePointContainerOptions spOptions;
   spOptions.beamPos = {0., 0.};
   
   ActsExamples::SpacePointContainer container(spacePoints);
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-    spContainer(spOptions, container);
+    spContainer(spConfig, spOptions, container);
   /*
   Acts::SeedFinderOrthogonal<proxy_type> finder(m_cfg.seedFinderConfig);
   std::vector<Acts::Seed<proxy_type>> seeds = finder.createSeeds(m_cfg.seedFinderOptions,

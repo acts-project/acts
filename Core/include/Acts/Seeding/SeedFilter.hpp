@@ -62,7 +62,6 @@ class SeedFilter {
   /// @param seedFilterState holds quantities used in seed filter
   /// @param candidates_collector container for the seed candidates
   virtual void filterSeeds_2SpFixed(
-      Acts::SpacePointData& spacePointData,
       const external_spacepoint_t& bottomSP,
       const external_spacepoint_t& middleSP,
       const std::vector<const external_spacepoint_t*>&
@@ -80,7 +79,6 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
-      Acts::SpacePointData& spacePointData,
       CandidatesForMiddleSp<const external_spacepoint_t>&
           candidates_collector,
       std::size_t& numQualitySeeds,
@@ -94,7 +92,6 @@ class SeedFilter {
   /// @param outIt Output iterator for the seeds
   /// for all seeds with the same middle space point
   virtual void filterSeeds_1SpFixed(
-      Acts::SpacePointData& spacePointData,
       std::vector<typename CandidatesForMiddleSp<
           const external_spacepoint_t>::value_type>&
           candidates,

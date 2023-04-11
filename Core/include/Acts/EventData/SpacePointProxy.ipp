@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -69,8 +70,34 @@ inline float SpacePointProxy<container_t, read_only>::varianceZ() const {
 }
 
 template <typename container_t, bool read_only>
+inline const float&
+SpacePointProxy<container_t, read_only>::quality() const {
+  return container().quality(m_index);
+}
+
+template <typename container_t, bool read_only>
+inline const float&
+SpacePointProxy<container_t, read_only>::deltaR() const {
+  return container().deltaR(m_index);
+}
+
+template <typename container_t, bool read_only>
+inline void
+SpacePointProxy<container_t, read_only>::setQuality(const float& value) const {
+  // this is a mutable quantity
+  container().setQuality(m_index, value);
+}
+
+template <typename container_t, bool read_only>
+inline void
+SpacePointProxy<container_t, read_only>::setDeltaR(const float& value) const {
+  // this is a mutable quantity
+  container().setDeltaR(m_index, value);
+}
+  
+template <typename container_t, bool read_only>
 template <typename T>
-inline T SpacePointProxy<container_t, read_only>::component(
+inline const T& SpacePointProxy<container_t, read_only>::component(
     HashedString key) const {
   return container().template component<T>(key, m_index);
 }

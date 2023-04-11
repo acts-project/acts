@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -66,10 +67,11 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-inline void transformCoordinates(Acts::SpacePointData& spacePointData,
+inline void transformCoordinates(
                                  const std::vector<const external_spacepoint_t*>& vec,
                                  const external_spacepoint_t& spM, bool bottom,
                                  std::vector<LinCircle>& linCircleVec) {
+  std::cout << "transforming coordinates\n";
   float xM = spM.x();
   float yM = spM.y();
   float zM = spM.z();	
@@ -131,36 +133,25 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
     linCircleVec[idx].V = V;
     linCircleVec[idx].x = xNewFrame;
     linCircleVec[idx].y = yNewFrame;
-
-    spacePointData.setDeltaR(sp->index(),
-                             std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+    std::cout << "about to set deltaR\n";	
+    sp->setDeltaR(std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+    std::cout << "done setting deltaR\n";	
   }
 }
 
 template <typename external_spacepoint_t>
 inline bool xyzCoordinateCheck(
-    Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
     const external_spacepoint_t& sp,
     const double* spacepointPosition, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details
-  bool hasValueStored = spacePointData.hasDynamicVariable();
-  if (not hasValueStored) {
-    return false;
-  }
-
-  std::size_t index = sp.index();
-
-  const float& topHalfStripLength = spacePointData.getTopHalfStripLength(index);
-  const float& bottomHalfStripLength =
-      spacePointData.getBottomHalfStripLength(index);
-  const Acts::Vector3& topStripDirection =
-      spacePointData.getTopStripDirection(index);
-  const Acts::Vector3& bottomStripDirection =
-      spacePointData.getBottomStripDirection(index);
-  const Acts::Vector3& stripCenterDistance =
-      spacePointData.getStripCenterDistance(index);
+  using namespace Acts::HashedStringLiteral;
+  const float& topHalfStripLength = sp.template component<float>("TopHalfStripLength"_hash);
+  const float& bottomHalfStripLength = sp.template component<float>("BottomHalfStripLength"_hash);
+  const Acts::Vector3& topStripDirection = sp.template component<Acts::Vector3>("TopStripDirection"_hash);
+  const Acts::Vector3& bottomStripDirection = sp.template component<Acts::Vector3>("BottomStripDirection"_hash);
+  const Acts::Vector3& stripCenterDistance = sp.template component<Acts::Vector3>("StripCenterDistance"_hash);
 
   // prepare variables
   double xTopStripVector = topHalfStripLength * topStripDirection[0];
@@ -209,8 +200,7 @@ inline bool xyzCoordinateCheck(
   // if arive here spacepointPosition is compatible with strip directions and
   // detector elements
 
-  const Acts::Vector3& topStripCenterPosition =
-      spacePointData.getTopStripCenterPosition(index);
+  const Acts::Vector3& topStripCenterPosition = sp.template component<Acts::Vector3>("TopStripCenterPosition"_hash);
 
   // spacepointPosition corected with respect to the top strip position and
   // direction and the distance between the strips
