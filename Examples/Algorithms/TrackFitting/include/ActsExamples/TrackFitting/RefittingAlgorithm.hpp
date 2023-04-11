@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/TrackFitting/TrackFitterFunction.hpp"
 
@@ -43,6 +44,9 @@ class RefittingAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

@@ -29,13 +29,13 @@ ActsExamples::RefittingAlgorithm::RefittingAlgorithm(Config config,
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing output tracks collection");
   }
+
+  m_inputTracks.initialize(m_cfg.inputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  // Read input data
-  const auto& inputTracks =
-      ctx.eventStore.get<ConstTrackContainer>(m_cfg.inputTracks);
+  const auto& inputTracks = m_inputTracks(ctx);
 
   auto trackContainer = std::make_shared<Acts::VectorTrackContainer>();
   auto trackStateContainer = std::make_shared<Acts::VectorMultiTrajectory>();
@@ -47,7 +47,7 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
   RefittingCalibrator calibrator;
 
   auto itrack = 0ul;
-  for (const auto track : inputTracks) {
+  for (const auto& track : inputTracks) {
     // Check if you are not in picking mode
     if (m_cfg.pickTrack > -1 and
         m_cfg.pickTrack != static_cast<int>(itrack++)) {
@@ -115,6 +115,6 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
       std::make_shared<Acts::ConstVectorMultiTrajectory>(
           std::move(*trackStateContainer))};
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
+  m_outputTracks(ctx, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }
