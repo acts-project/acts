@@ -23,14 +23,14 @@ class TTree;
 
 namespace ActsExamples {
 
-/// @class RootVertexPerformanceWriter
+/// @class VertexPerformanceWriter
 ///
 /// Writes out the number of reconstructed primary vertices along with
 /// the number of primary vertices in detector acceptance as well as
 /// reconstructable primary vertices after track fitting.
 /// Additionally it matches the reco vertices to their truth vertices
 /// and write out the difference in x,y and z position.
-class RootVertexPerformanceWriter final
+class VertexPerformanceWriter final
     : public WriterT<std::vector<Acts::Vertex<Acts::BoundTrackParameters>>> {
  public:
   using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
@@ -71,9 +71,9 @@ class RootVertexPerformanceWriter final
   ///
   /// @param config Configuration struct
   /// @param level Message level declaration
-  RootVertexPerformanceWriter(const Config& config, Acts::Logging::Level level);
+  VertexPerformanceWriter(const Config& config, Acts::Logging::Level level);
 
-  ~RootVertexPerformanceWriter() override;
+  ~VertexPerformanceWriter() override;
 
   /// End-of-run hook
   ProcessCode finalize() override;
