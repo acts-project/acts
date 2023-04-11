@@ -108,4 +108,58 @@ BOOST_DATA_TEST_CASE(vacuum, thickness* particle* momentum, x, i, m, q, p) {
                     0);
 }
 
+// Silicon Bethe Energy Loss Validation
+// PDG value from https://pdg.lbl.gov/2022/AtomicNuclearProperties
+static const double momentum[] = {0.1003_GeV, 1.101_GeV, 10.11_GeV, 100.1_GeV};
+static const double energy_loss[] = {2.608, 1.803, 2.177, 2.451};
+
+BOOST_DATA_TEST_CASE(silicon_energy_loss,
+                     data::make(momentum) ^ data::make(energy_loss), p, loss) {
+  const Acts::Material silicon = Acts::Test::makeSilicon();
+
+  const auto thickness = 1_cm;
+
+  const auto slab = Acts::MaterialSlab(silicon, thickness);
+
+  const int pdg = Acts::eMuon;
+
+  const auto m = 105.7_MeV;
+
+  const auto qOverP = -1. / p;
+
+  const auto charge = -1_e;
+
+  // Difference is within 5% from PDG value
+  BOOST_CHECK_CLOSE(computeEnergyLossBethe(slab, pdg, m, qOverP, charge) /
+                        thickness / slab.material().massDensity() /
+                        (1_MeV * 1_cm2 / 1_g),
+                    loss, 5.);
+}
+
+// Silicon Landau Energy Loss Validation
+BOOST_AUTO_TEST_CASE(silicon_landau) {
+  const Acts::Material silicon = Acts::Test::makeSilicon();
+
+  const auto thickness = 0.17_cm;
+
+  const auto slab = Acts::MaterialSlab(silicon, thickness);
+
+  const int pdg = Acts::eMuon;
+
+  const float m = 105.7_MeV;
+
+  const float qOverP = -1. / 10_GeV;
+
+  const float charge = -1_e;
+
+  // Difference is within 5% from PDG value
+  const auto dE = computeEnergyLossLandau(slab, pdg, m, qOverP, charge) / 1_MeV;
+  BOOST_CHECK_CLOSE(dE, 0.525, 5.);
+
+  // Difference is within 10% from PDG value
+  const auto fwhm =
+      Acts::computeEnergyLossLandauFwhm(slab, {m, qOverP, charge}) / 1_MeV;
+  BOOST_CHECK_CLOSE(fwhm, 0.13, 10.);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
