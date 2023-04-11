@@ -122,8 +122,8 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
                 pt=(150 * u.MeV, None),
                 removeNeutral=True,
             ),
-            # outputDirRoot=outputDir,
-            outputDirCsv=outputDir,
+            outputDirRoot=outputDir,
+            # outputDirCsv=outputDir,
             rnd=rnd,
         )
     else:
@@ -196,7 +196,9 @@ with acts.FpeMonitor() if not g4_simulation else contextlib.nullcontext():
     else:
         addAmbiguityResolution(
             s,
-            AmbiguityResolutionConfig(maximumSharedHits=3, nMeasurementsMin=7),
+            AmbiguityResolutionConfig(
+                maximumSharedHits=3, maximumIterations=10000, nMeasurementsMin=7
+            ),
             CKFPerformanceConfig(
                 ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0,
                 nMeasurementsMin=7,

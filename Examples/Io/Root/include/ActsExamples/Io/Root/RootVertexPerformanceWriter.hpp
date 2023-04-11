@@ -12,6 +12,7 @@
 #include "Acts/Vertexing/Vertex.hpp"
 #include "ActsExamples/EventData/SimParticle.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <mutex>
@@ -32,6 +33,8 @@ namespace ActsExamples {
 class RootVertexPerformanceWriter final
     : public WriterT<std::vector<Acts::Vertex<Acts::BoundTrackParameters>>> {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// All input truth particle collection.
     std::string inputAllTruthParticles;
@@ -125,6 +128,26 @@ class RootVertexPerformanceWriter final
       const SimParticleContainer& collection) const;
 
   int getNumberOfTruePriVertices(const SimParticleContainer& collection) const;
+
+  ReadDataHandle<SimParticleContainer> m_inputAllTruthParticles{
+      this, "InputAllTruthParticles"};
+
+  ReadDataHandle<SimParticleContainer> m_inputSelectedTruthParticles{
+      this, "InputSelectedTruthParticles"};
+
+  ReadDataHandle<std::vector<Acts::BoundTrackParameters>>
+      m_inputTrackParameters{this, "InputTrackParameters"};
+
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  ReadDataHandle<SimParticleContainer> m_inputAssociatedTruthParticles{
+      this, "InputAssociatedTruthParticles"};
+
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
+
+  ReadDataHandle<int> m_inputTime{this, "InputTime"};
 };
 
 }  // namespace ActsExamples

@@ -17,6 +17,7 @@
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
 #include "Acts/EventData/SourceLink.hpp"
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/TrackParameters.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
@@ -324,13 +325,17 @@ class KalmanFitter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result is the mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     void operator()(propagator_state_t& state, const stepper_t& stepper,
-                    result_type& result, const Logger& /*logger*/) const {
+                    const navigator_t& navigator, result_type& result,
+                    const Logger& /*logger*/) const {
       assert(result.fittedStates && "No MultiTrajectory set");
 
       if (result.finished) {
@@ -348,16 +353,15 @@ class KalmanFitter {
         if (result.processedStates == 0) {
           for (auto measurementIt = inputMeasurements->begin();
                measurementIt != inputMeasurements->end(); measurementIt++) {
-            state.navigation.externalSurfaces.insert(
-                std::pair<uint64_t, GeometryIdentifier>(
-                    measurementIt->first.layer(), measurementIt->first));
+            navigator.insertExternalSurface(state.navigation,
+                                            measurementIt->first);
           }
         }
       }
 
       // Update:
       // - Waiting for a current surface
-      auto surface = state.navigation.currentSurface;
+      auto surface = navigator.currentSurface(state.navigation);
       std::string direction =
           (state.stepping.navDir == NavigationDirection::Forward) ? "forward"
                                                                   : "backward";
@@ -371,7 +375,7 @@ class KalmanFitter {
 
         if (not result.smoothed and not result.reversed) {
           ACTS_VERBOSE("Perform " << direction << " filter step");
-          auto res = filter(surface, state, stepper, result);
+          auto res = filter(surface, state, stepper, navigator, result);
           if (!res.ok()) {
             ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
@@ -379,7 +383,7 @@ class KalmanFitter {
         }
         if (result.reversed) {
           ACTS_VERBOSE("Perform " << direction << " filter step");
-          auto res = reversedFilter(surface, state, stepper, result);
+          auto res = reversedFilter(surface, state, stepper, navigator, result);
           if (!res.ok()) {
             ACTS_ERROR("Error in " << direction << " filter: " << res.error());
             result.result = res.error();
@@ -394,7 +398,7 @@ class KalmanFitter {
       if (not result.smoothed and not result.reversed) {
         if (result.measurementStates == inputMeasurements->size() or
             (result.measurementStates > 0 and
-             state.navigation.navigationBreak)) {
+             navigator.navigationBreak(state.navigation))) {
           // Remove the missing surfaces that occur after the last measurement
           result.missedActiveSurfaces.resize(result.measurementHoles);
           // now get track state proxy for the smoothing logic
@@ -406,7 +410,7 @@ class KalmanFitter {
             // Reverse navigation direction and reset navigation and stepping
             // state to last measurement
             ACTS_VERBOSE("Reverse navigation direction.");
-            auto res = reverse(state, stepper, result);
+            auto res = reverse(state, stepper, navigator, result);
             if (!res.ok()) {
               ACTS_ERROR("Error in reversing navigation: " << res.error());
               result.result = res.error();
@@ -447,7 +451,8 @@ class KalmanFitter {
             // Remember the track fitting is done
             result.finished = true;
           }
-        } else if (targetReached(state, stepper, *targetSurface, logger())) {
+        } else if (targetReached(state, stepper, navigator, *targetSurface,
+                                 logger())) {
           ACTS_VERBOSE("Completing with fitted track parameter");
           // Transport & bind the parameter to the final surface
           auto res = stepper.boundState(state.stepping, *targetSurface, true,
@@ -488,12 +493,16 @@ class KalmanFitter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param state is the mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result is the mutable result state objecte
-    template <typename propagator_state_t, typename stepper_t>
-    Result<void> reverse(propagator_state_t& state, stepper_t& stepper,
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
+    Result<void> reverse(propagator_state_t& state, const stepper_t& stepper,
+                         const navigator_t& navigator,
                          result_type& result) const {
       // Check if there is a measurement on track
       if (result.lastMeasurementIndex == SIZE_MAX) {
@@ -534,15 +543,15 @@ class KalmanFitter {
       result.passedAgainSurfaces.push_back(&st.referenceSurface());
 
       // Reset navigation state
-      state.navigation.reset(state.geoContext, stepper.position(state.stepping),
-                             stepper.direction(state.stepping),
-                             state.stepping.navDir, &st.referenceSurface(),
-                             targetSurface);
+      navigator.resetState(
+          state.navigation, state.geoContext, stepper.position(state.stepping),
+          stepper.direction(state.stepping), state.stepping.navDir,
+          &st.referenceSurface(), targetSurface);
 
       // Update material effects for last measurement state in reversed
       // direction
-      materialInteractor(state.navigation.currentSurface, state, stepper,
-                         MaterialUpdateStage::FullUpdate);
+      materialInteractor(navigator.currentSurface(state.navigation), state,
+                         stepper, navigator, MaterialUpdateStage::FullUpdate);
 
       return Result<void>::success();
     }
@@ -551,14 +560,18 @@ class KalmanFitter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the update happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result The mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     Result<void> filter(const Surface* surface, propagator_state_t& state,
-                        const stepper_t& stepper, result_type& result) const {
+                        const stepper_t& stepper, const navigator_t& navigator,
+                        result_type& result) const {
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements->find(surface->geometryId());
       if (sourcelink_it != inputMeasurements->end()) {
@@ -570,7 +583,7 @@ class KalmanFitter {
                                            freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper,
+        materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
         // do the kalman update (no need to perform covTransport here, hence no
@@ -603,7 +616,7 @@ class KalmanFitter {
         }
 
         // Update state and stepper with post material effects
-        materialInteractor(surface, state, stepper,
+        materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PostUpdate);
         // We count the processed state
         ++result.processedStates;
@@ -641,7 +654,7 @@ class KalmanFitter {
         }
         if (surface->surfaceMaterial() != nullptr) {
           // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper,
+          materialInteractor(surface, state, stepper, navigator,
                              MaterialUpdateStage::FullUpdate);
         }
       }
@@ -652,15 +665,19 @@ class KalmanFitter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the update happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param result The mutable result state object
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     Result<void> reversedFilter(const Surface* surface,
                                 propagator_state_t& state,
                                 const stepper_t& stepper,
+                                const navigator_t& navigator,
                                 result_type& result) const {
       // Try to find the surface in the measurement surfaces
       auto sourcelink_it = inputMeasurements->find(surface->geometryId());
@@ -672,8 +689,9 @@ class KalmanFitter {
 
         // No reversed filtering for last measurement state, but still update
         // with material effects
-        if (result.reversed and surface == state.navigation.startSurface) {
-          materialInteractor(surface, state, stepper,
+        if (result.reversed and
+            surface == navigator.startSurface(state.navigation)) {
+          materialInteractor(surface, state, stepper, navigator,
                              MaterialUpdateStage::FullUpdate);
           return Result<void>::success();
         }
@@ -683,7 +701,7 @@ class KalmanFitter {
                                            freeToBoundCorrection);
 
         // Update state and stepper with pre material effects
-        materialInteractor(surface, state, stepper,
+        materialInteractor(surface, state, stepper, navigator,
                            MaterialUpdateStage::PreUpdate);
 
         // Bind the transported state to the current surface
@@ -756,7 +774,7 @@ class KalmanFitter {
                          trackStateProxy.filteredCovariance(), *surface);
 
           // Update state and stepper with post material effects
-          materialInteractor(surface, state, stepper,
+          materialInteractor(surface, state, stepper, navigator,
                              MaterialUpdateStage::PostUpdate);
         }
       } else if (surface->associatedDetectorElement() != nullptr ||
@@ -780,7 +798,7 @@ class KalmanFitter {
         stepper.setIdentityJacobian(state.stepping);
         if (surface->surfaceMaterial() != nullptr) {
           // Update state and stepper with material effects
-          materialInteractor(surface, state, stepper,
+          materialInteractor(surface, state, stepper, navigator,
                              MaterialUpdateStage::FullUpdate);
         }
       }
@@ -792,15 +810,19 @@ class KalmanFitter {
     ///
     /// @tparam propagator_state_t is the type of Propagagor state
     /// @tparam stepper_t Type of the stepper
+    /// @tparam navigator_t Type of the navigator
     ///
     /// @param surface The surface where the material interaction happens
     /// @param state The mutable propagator state object
     /// @param stepper The stepper in use
+    /// @param navigator The navigator in use
     /// @param updateStage The materal update stage
     ///
-    template <typename propagator_state_t, typename stepper_t>
+    template <typename propagator_state_t, typename stepper_t,
+              typename navigator_t>
     void materialInteractor(const Surface* surface, propagator_state_t& state,
-                            stepper_t& stepper,
+                            const stepper_t& stepper,
+                            const navigator_t& navigator,
                             const MaterialUpdateStage& updateStage) const {
       // Indicator if having material
       bool hasMaterial = false;
@@ -810,7 +832,7 @@ class KalmanFitter {
         detail::PointwiseMaterialInteraction interaction(surface, state,
                                                          stepper);
         // Evaluate the material properties
-        if (interaction.evaluateMaterialSlab(state, updateStage)) {
+        if (interaction.evaluateMaterialSlab(state, navigator, updateStage)) {
           // Surface has material at this stage
           hasMaterial = true;
 
@@ -979,9 +1001,10 @@ class KalmanFitter {
     using action_type = Actor<parameters_t>;
 
     template <typename propagator_state_t, typename stepper_t,
-              typename result_t>
+              typename navigator_t, typename result_t>
     bool operator()(propagator_state_t& /*state*/, const stepper_t& /*stepper*/,
-                    const result_t& result, const Logger& /*logger*/) const {
+                    const navigator_t& /*navigator*/, const result_t& result,
+                    const Logger& /*logger*/) const {
       if (!result.result.ok() or result.finished) {
         return true;
       }
@@ -1104,6 +1127,9 @@ class KalmanFitter {
     }
     track.nMeasurements() = kalmanResult.measurementStates;
     track.nHoles() = kalmanResult.measurementHoles;
+
+    calculateTrackQuantities(track);
+
     if (trackContainer.hasColumn(hashString("smoothed"))) {
       track.template component<bool, hashString("smoothed")>() =
           kalmanResult.smoothed;
@@ -1237,6 +1263,9 @@ class KalmanFitter {
     }
     track.nMeasurements() = kalmanResult.measurementStates;
     track.nHoles() = kalmanResult.measurementHoles;
+
+    calculateTrackQuantities(track);
+
     if (trackContainer.hasColumn(hashString("smoothed"))) {
       track.template component<bool, hashString("smoothed")>() =
           kalmanResult.smoothed;

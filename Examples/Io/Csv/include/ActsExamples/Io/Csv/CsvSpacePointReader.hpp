@@ -10,6 +10,8 @@
 
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
@@ -62,6 +64,10 @@ class CsvSpacePointReader final : public IReader {
 
  private:
   Config m_cfg;
+
+  WriteDataHandle<SimSpacePointContainer> m_outputSpacePoints{
+      this, "OutputSpacePoints"};
+
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 

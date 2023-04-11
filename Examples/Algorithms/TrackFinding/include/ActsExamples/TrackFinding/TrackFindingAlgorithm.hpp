@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -18,6 +18,7 @@
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
@@ -102,6 +103,16 @@ class TrackFindingAlgorithm final : public IAlgorithm {
  private:
   Config m_cfg;
 
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
+
+  ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
+      this, "InputInitialTrackParameters"};
+
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
+
   mutable std::atomic<size_t> m_nTotalSeeds{0};
   mutable std::atomic<size_t> m_nFailedSeeds{0};
 
@@ -133,7 +144,7 @@ void TrackFindingAlgorithm::computeSharedHits(
         continue;
       }
 
-      std::size_t hitIndex = state.uncalibratedSourceLink()
+      std::size_t hitIndex = state.getUncalibratedSourceLink()
                                  .template get<IndexSourceLink>()
                                  .index();
 

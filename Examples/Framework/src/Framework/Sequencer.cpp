@@ -9,6 +9,7 @@
 #include "ActsExamples/Framework/Sequencer.hpp"
 
 #include "Acts/Utilities/Helpers.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/SequenceElement.hpp"
@@ -23,25 +24,29 @@
 #include <limits>
 #include <numeric>
 #include <stdexcept>
+#include <typeinfo>
 
 #ifndef ACTS_EXAMPLES_NO_TBB
 #include <TROOT.h>
 #endif
 
+#include <boost/algorithm/string.hpp>
+#include <boost/core/demangle.hpp>
 #include <dfe/dfe_io_dsv.hpp>
 #include <dfe/dfe_namedtuple.hpp>
 
 namespace ActsExamples {
+
 namespace {
 
 std::string_view getAlgorithmType(const SequenceElement& element) {
   if (dynamic_cast<const IWriter*>(&element) != nullptr) {
-    return "writer";
+    return "Writer";
   }
   if (dynamic_cast<const IReader*>(&element) != nullptr) {
-    return "reader";
+    return "Reader";
   }
-  return "algorithm";
+  return "Algorithm";
 }
 
 // Saturated addition that does not overflow and exceed SIZE_MAX.
@@ -52,6 +57,7 @@ size_t saturatedAdd(size_t a, size_t b) {
   res |= -static_cast<int>(res < a);
   return res;
 }
+
 }  // namespace
 
 Sequencer::Sequencer(const Sequencer::Config& cfg)
@@ -92,6 +98,7 @@ void Sequencer::addAlgorithm(std::shared_ptr<IAlgorithm> algorithm) {
   if (not algorithm) {
     throw std::invalid_argument("Can not add empty/NULL algorithm");
   }
+
   addElement(std::move(algorithm));
 }
 
@@ -102,13 +109,104 @@ void Sequencer::addWriter(std::shared_ptr<IWriter> writer) {
   addElement(std::move(writer));
 }
 
-void Sequencer::addElement(std::shared_ptr<SequenceElement> element) {
+void Sequencer::addElement(const std::shared_ptr<SequenceElement>& element) {
   if (not element) {
     throw std::invalid_argument("Can not add empty/NULL element");
   }
-  m_sequenceElements.push_back(std::move(element));
-  ACTS_INFO("Added " << getAlgorithmType(*m_sequenceElements.back()) << " '"
-                     << m_sequenceElements.back()->name() << "'");
+
+  m_sequenceElements.push_back(element);
+
+  std::string elementType{getAlgorithmType(*element)};
+  std::string elementTypeCapitalized = elementType;
+  elementTypeCapitalized[0] = std::toupper(elementTypeCapitalized[0]);
+  ACTS_INFO("Add " << elementType << " '" << element->name() << "'");
+
+  if (!m_cfg.runDataFlowChecks) {
+    return;
+  }
+
+  auto symbol = [&](const char* in) {
+    std::string s = boost::core::demangle(in);
+    size_t pos = 0;
+    while (pos + 80 < s.size()) {
+      ACTS_INFO("   " + s.substr(pos, pos + 80));
+      pos += 80;
+    }
+    ACTS_INFO("   " + s.substr(pos));
+  };
+
+  bool valid = true;
+
+  for (const auto* handle : element->readHandles()) {
+    if (!handle->isInitialized()) {
+      continue;
+    }
+
+    ACTS_INFO("<- " << handle->name() << " '" << handle->key() << "':");
+    symbol(handle->typeInfo().name());
+
+    if (auto it = m_whiteBoardState.find(handle->key());
+        it != m_whiteBoardState.end()) {
+      const auto& source = *it->second;
+      if (!source.isCompatible(*handle)) {
+        ACTS_ERROR("Adding "
+                   << elementType << " " << element->name() << ":"
+                   << "\n-> white board will contain key '" << handle->key()
+                   << "'"
+                   << "\nat this point in the sequence (source: "
+                   << source.fullName() << "),"
+                   << "\nbut the type will be\n"
+                   << "'" << boost::core::demangle(source.typeInfo().name())
+                   << "'"
+                   << "\nand not\n"
+                   << "'" << boost::core::demangle(handle->typeInfo().name())
+                   << "'");
+        valid = false;
+      }
+    } else {
+      ACTS_ERROR("Adding " << elementType << " " << element->name() << ":"
+                           << "\n-> white board will not contain key"
+                           << " '" << handle->key()
+                           << "' at this point in the sequence."
+                           << "\n   Needed for read data handle '"
+                           << handle->name() << "'")
+      valid = false;
+    }
+  }
+
+  if (valid) {  // only record outputs this if we're valid until here
+    for (const auto* handle : element->writeHandles()) {
+      if (!handle->isInitialized()) {
+        continue;
+      }
+
+      ACTS_INFO("-> " << handle->name() << " '" << handle->key() << "':");
+      symbol(handle->typeInfo().name());
+
+      if (auto it = m_whiteBoardState.find(handle->key());
+          it != m_whiteBoardState.end()) {
+        const auto& source = *it->second;
+        ACTS_ERROR("White board will already contain key '"
+                   << handle->key() << "'. Source: '" << source.fullName()
+                   << "' (cannot overwrite)");
+        valid = false;
+        break;
+      }
+
+      m_whiteBoardState.emplace(std::pair{handle->key(), handle});
+
+      if (auto it = m_whiteboardObjectAliases.find(handle->key());
+          it != m_whiteboardObjectAliases.end()) {
+        ACTS_DEBUG("Key '" << handle->key() << "' aliased to '" << it->second
+                           << "'");
+        m_whiteBoardState[it->second] = handle;
+      }
+    }
+  }
+
+  if (!valid) {
+    throw SequenceConfigurationException{};
+  }
 }
 
 void Sequencer::addWhiteboardAlias(const std::string& aliasName,
@@ -116,7 +214,13 @@ void Sequencer::addWhiteboardAlias(const std::string& aliasName,
   auto [it, success] =
       m_whiteboardObjectAliases.insert({objectName, aliasName});
   if (!success) {
-    throw std::invalid_argument("Alias to '" + objectName + "' already set");
+    throw std::invalid_argument("Alias to '" + aliasName + "' -> '" +
+                                objectName + "' already set");
+  }
+
+  if (auto oit = m_whiteBoardState.find(objectName);
+      oit != m_whiteBoardState.end()) {
+    m_whiteBoardState[aliasName] = oit->second;
   }
 }
 
@@ -127,11 +231,9 @@ std::vector<std::string> Sequencer::listAlgorithmNames() const {
   for (const auto& decorator : m_decorators) {
     names.push_back("Decorator:" + decorator->name());
   }
-  for (const auto& reader : m_readers) {
-    names.push_back("Reader:" + reader->name());
-  }
   for (const auto& algorithm : m_sequenceElements) {
-    names.push_back("Algorithm:" + algorithm->name());
+    names.push_back(std::string(getAlgorithmType(*algorithm)) + ":" +
+                    algorithm->name());
   }
 
   return names;
@@ -319,6 +421,7 @@ int Sequencer::run() {
                                                       Duration::zero());
 
           for (size_t event = r.begin(); event != r.end(); ++event) {
+            ACTS_DEBUG("start processing event " << event);
             m_cfg.iterationCallback();
             // Use per-event store
             WhiteBoard eventStore(
@@ -353,13 +456,13 @@ int Sequencer::run() {
             }
 
             nProcessedEvents++;
-            if (nTotalEvents <= 100) {
+            if (logger().level() <= Acts::Logging::DEBUG) {
+              ACTS_DEBUG("finished event " << event);
+            } else if (nTotalEvents <= 100) {
               ACTS_INFO("finished event " << event);
-            } else {
-              if (nProcessedEvents % 100 == 0) {
-                ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
-                                           << " events processed");
-              }
+            } else if (nProcessedEvents % 100 == 0) {
+              ACTS_INFO(nProcessedEvents << " / " << nTotalEvents
+                                         << " events processed");
             }
           }
 

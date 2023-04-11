@@ -10,9 +10,6 @@
 #include "Acts/Seeding/SeedFinderOrthogonalConfig.hpp"
 #include "Acts/TrackFinding/MeasurementSelector.hpp"
 #include "ActsExamples/TrackFinding/AmbiguityResolutionAlgorithm.hpp"
-#ifdef ACTS_PLUGIN_ONNX
-#include "ActsExamples/TrackFinding/AmbiguityResolutionMLAlgorithm.hpp"
-#endif
 #include "ActsExamples/TrackFinding/HoughTransformSeeder.hpp"
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SeedingOrthogonalAlgorithm.hpp"
@@ -54,7 +51,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(deltaRMin);
     ACTS_PYTHON_MEMBER(maxSeedsPerSpM);
     ACTS_PYTHON_MEMBER(compatSeedLimit);
-    ACTS_PYTHON_MEMBER(curvatureSortingInFilter);
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
@@ -111,7 +107,6 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rMinMiddle);
     ACTS_PYTHON_MEMBER(rMaxMiddle);
     ACTS_PYTHON_MEMBER(binSizeR);
-    ACTS_PYTHON_MEMBER(forceRadialSorting);
     ACTS_PYTHON_MEMBER(seedConfirmation);
     ACTS_PYTHON_MEMBER(centralSeedConfirmationRange);
     ACTS_PYTHON_MEMBER(forwardSeedConfirmationRange);
@@ -312,21 +307,14 @@ void addTrackFinding(Context& ctx) {
             .def(py::init(constructor));
   }
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AmbiguityResolutionAlgorithm, mex,
-      "AmbiguityResolutionAlgorithm", inputSourceLinks, inputTrajectories,
-      outputTrajectories, maximumSharedHits, nMeasurementsMin);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionAlgorithm, mex,
+                                "AmbiguityResolutionAlgorithm", inputTracks,
+                                outputTracks, maximumSharedHits,
+                                maximumIterations, nMeasurementsMin);
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::SeedsToPrototracks, mex,
                                 "SeedsToPrototracks", inputSeeds,
                                 outputProtoTracks);
-
-#ifdef ACTS_PLUGIN_ONNX
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
-                                mex, "AmbiguityResolutionMLAlgorithm",
-                                inputTrajectories, inputDuplicateNN,
-                                outputTrajectories, nMeasurementsMin);
-#endif
 }
 
 }  // namespace Acts::Python

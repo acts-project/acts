@@ -61,6 +61,12 @@ ActsExamples::RootTrackParameterWriter::RootTrackParameterWriter(
     throw std::invalid_argument("Missing tree name");
   }
 
+  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputSimHits.initialize(m_cfg.inputSimHits);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputMeasurementSimHitsMap.initialize(m_cfg.inputMeasurementSimHitsMap);
+
   // Setup ROOT I/O
   if (m_outputFile == nullptr) {
     auto path = m_cfg.filePath;
@@ -117,19 +123,12 @@ ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::finalize() {
 ActsExamples::ProcessCode ActsExamples::RootTrackParameterWriter::writeT(
     const ActsExamples::AlgorithmContext& ctx,
     const TrackParametersContainer& trackParams) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-  using HitSimHitsMap = IndexMultimap<Index>;
-
   // Read additional input collections
-  const auto& protoTracks =
-      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
-  const auto& hitSimHitsMap =
-      ctx.eventStore.get<HitSimHitsMap>(m_cfg.inputMeasurementSimHitsMap);
+  const auto& protoTracks = m_inputProtoTracks(ctx);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& simHits = m_inputSimHits(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& hitSimHitsMap = m_inputMeasurementSimHitsMap(ctx);
 
   // Exclusive access to the tree while writing
   std::lock_guard<std::mutex> lock(m_writeMutex);

@@ -13,7 +13,10 @@
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 
@@ -73,6 +76,11 @@ class SeedingAlgorithm final : public IAlgorithm {
   std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_bottomBinFinder;
   std::shared_ptr<const Acts::BinFinder<SimSpacePoint>> m_topBinFinder;
   Config m_cfg;
+
+  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
+      m_inputSpacePoints{};
+
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 };
 
 }  // namespace ActsExamples

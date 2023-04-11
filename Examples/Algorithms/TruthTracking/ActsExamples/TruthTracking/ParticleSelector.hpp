@@ -12,6 +12,8 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <limits>
@@ -60,6 +62,11 @@ class ParticleSelector final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

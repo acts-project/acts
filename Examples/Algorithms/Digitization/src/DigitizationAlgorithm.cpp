@@ -57,6 +57,15 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
     throw std::invalid_argument("Missing digitization configuration");
   }
 
+  m_simContainerReadHandle.initialize(m_cfg.inputSimHits);
+  m_sourceLinkWriteHandle.initialize(m_cfg.outputSourceLinks);
+  m_measurementWriteHandle.initialize(m_cfg.outputMeasurements);
+  m_clusterWriteHandle.initialize(m_cfg.outputClusters);
+  m_measurementParticlesMapWriteHandle.initialize(
+      m_cfg.outputMeasurementParticlesMap);
+  m_measurementSimHitsMapWriteHandle.initialize(
+      m_cfg.outputMeasurementSimHitsMap);
+
   // Create the digitizers from the configuration
   std::vector<std::pair<Acts::GeometryIdentifier, Digitizer>> digitizerInput;
 
@@ -112,7 +121,7 @@ ActsExamples::DigitizationAlgorithm::DigitizationAlgorithm(
 ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Retrieve input
-  const auto& simHits = ctx.eventStore.get<SimHitContainer>(m_cfg.inputSimHits);
+  const auto& simHits = m_simContainerReadHandle(ctx);
   ACTS_DEBUG("Loaded " << simHits.size() << " sim hits");
 
   // Prepare output containers
@@ -152,10 +161,10 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
 
     auto digitizerItr = m_digitizers.find(moduleGeoId);
     if (digitizerItr == m_digitizers.end()) {
-      ACTS_DEBUG("No digitizer present for module " << moduleGeoId);
+      ACTS_VERBOSE("No digitizer present for module " << moduleGeoId);
       continue;
     } else {
-      ACTS_DEBUG("Digitizer found for module " << moduleGeoId);
+      ACTS_VERBOSE("Digitizer found for module " << moduleGeoId);
     }
 
     // Run the digitizer. Iterate over the hits for this surface inside the
@@ -248,13 +257,11 @@ ActsExamples::ProcessCode ActsExamples::DigitizationAlgorithm::execute(
         *digitizerItr);
   }
 
-  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
-  ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
-  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
-                     std::move(measurementParticlesMap));
-  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
-                     std::move(measurementSimHitsMap));
+  m_sourceLinkWriteHandle(ctx, std::move(sourceLinks));
+  m_measurementWriteHandle(ctx, std::move(measurements));
+  m_clusterWriteHandle(ctx, std::move(clusters));
+  m_measurementParticlesMapWriteHandle(ctx, std::move(measurementParticlesMap));
+  m_measurementSimHitsMapWriteHandle(ctx, std::move(measurementSimHitsMap));
   return ProcessCode::SUCCESS;
 }
 
@@ -297,7 +304,7 @@ ActsExamples::DigitizationAlgorithm::localParameters(
   for (const auto& ch : channels) {
     auto bin = ch.bin;
     Acts::ActsScalar charge =
-        geoCfg.digital ? 1. : geoCfg.charge(ch.activation, ch.activation, rng);
+        geoCfg.digital ? 1. : geoCfg.charge(ch.activation, rng);
     if (geoCfg.digital or charge > geoCfg.threshold) {
       totalWeight += charge;
       size_t b0 = bin[0];

@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
@@ -451,6 +452,8 @@ struct GaussianSumFitter {
             GsfConstants::kFinalMultiComponentStateColumn) = fsr.pars;
       }
     }
+
+    calculateTrackQuantities(track);
 
     track.nMeasurements() = measurementStatesFinal;
     track.nHoles() = fwdGsfResult.measurementHoles;

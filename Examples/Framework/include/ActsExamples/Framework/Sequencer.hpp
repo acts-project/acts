@@ -19,7 +19,9 @@
 #include <cstddef>
 #include <memory>
 #include <optional>
+#include <stdexcept>
 #include <string>
+#include <typeinfo>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -27,6 +29,12 @@
 namespace ActsExamples {
 
 using IterationCallback = void (*)();
+
+class SequenceConfigurationException : public std::runtime_error {
+ public:
+  SequenceConfigurationException()
+      : std::runtime_error{"Sequence configuration error"} {}
+};
 
 /// A simple algorithm sequencer for event processing.
 ///
@@ -42,7 +50,8 @@ class Sequencer {
     std::optional<size_t> events = std::nullopt;
     /// logging level
     Acts::Logging::Level logLevel = Acts::Logging::INFO;
-    /// number of parallel threads to run, negative for automatic determination
+    /// number of parallel threads to run, negative for automatic
+    /// determination
     int numThreads = -1;
     /// output directory for timing information, empty for working directory
     std::string outputDir;
@@ -51,6 +60,9 @@ class Sequencer {
     /// Callback that is invoked in the event loop.
     /// @warning This function can be called from multiple threads and should therefore be thread-safe
     IterationCallback iterationCallback = []() {};
+    /// Run data flow consistency checks
+    /// Defaults to false right now until all components are migrated
+    bool runDataFlowChecks = true;
   };
 
   Sequencer(const Config &cfg);
@@ -73,7 +85,7 @@ class Sequencer {
   /// Append a sequence element to the sequence
   ///
   /// @throws std::invalid_argument if the element is NULL.
-  void addElement(std::shared_ptr<SequenceElement> element);
+  void addElement(const std::shared_ptr<SequenceElement> &element);
 
   /// Add a writer to the set of writers.
   ///
@@ -129,6 +141,8 @@ class Sequencer {
   std::unique_ptr<const Acts::Logger> m_logger;
 
   std::unordered_map<std::string, std::string> m_whiteboardObjectAliases;
+
+  std::unordered_map<std::string, const DataHandleBase *> m_whiteBoardState;
 
   const Acts::Logger &logger() const { return *m_logger; }
 };

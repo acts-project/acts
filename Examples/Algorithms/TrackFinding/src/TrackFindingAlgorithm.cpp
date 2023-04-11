@@ -9,7 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
@@ -42,17 +42,19 @@ ActsExamples::TrackFindingAlgorithm::TrackFindingAlgorithm(
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing tracks output collection");
   }
+
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
-      m_cfg.inputInitialTrackParameters);
+  const auto& measurements = m_inputMeasurements(ctx);
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
@@ -144,7 +146,7 @@ ActsExamples::ProcessCode ActsExamples::TrackFindingAlgorithm::execute(
   ConstTrackContainer constTracks{constTrackContainer,
                                   constTrackStateContainer};
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(constTracks));
+  m_outputTracks(ctx, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 

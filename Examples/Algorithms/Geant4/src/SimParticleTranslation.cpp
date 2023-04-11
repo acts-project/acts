@@ -28,11 +28,9 @@
 
 ActsExamples::SimParticleTranslation::SimParticleTranslation(
     const Config& cfg, std::unique_ptr<const Acts::Logger> logger)
-    : G4VUserPrimaryGeneratorAction(), m_cfg(cfg), m_logger(std::move(logger)) {
-  if (m_cfg.inputParticles.empty()) {
-    throw std::invalid_argument("Missing input particle collection");
-  }
-}
+    : G4VUserPrimaryGeneratorAction(),
+      m_cfg(cfg),
+      m_logger(std::move(logger)) {}
 
 ActsExamples::SimParticleTranslation::~SimParticleTranslation() = default;
 
@@ -49,9 +47,13 @@ void ActsExamples::SimParticleTranslation::GeneratePrimaries(G4Event* anEvent) {
     return;
   }
 
+  if (eventData.inputParticles == nullptr) {
+    ACTS_WARNING("No input particle handle found");
+    return;
+  }
+
   // Get the number of input particles
-  const auto inputParticles =
-      eventStore->get<ActsExamples::SimParticleContainer>(m_cfg.inputParticles);
+  const auto inputParticles = (*eventData.inputParticles)(*eventStore);
 
   // Reserve appropriate resources for initial/final particles
   eventData.particlesInitial.reserve(inputParticles.size());
