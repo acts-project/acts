@@ -79,9 +79,8 @@ ActsExamples::MockupSectorBuilder::buildChamber(
 
   std::array<std::pair<float, float>, 3> min_max;
   std::fill(min_max.begin(), min_max.end(),
-            std::make_pair<float, float>(
-                std::move(std::numeric_limits<float>::max()),
-                std::move(-std::numeric_limits<float>::max())));
+            std::make_pair<float, float>(std::numeric_limits<float>::max(),
+                                         -std::numeric_limits<float>::max()));
 
   // Convert the physical volumes of the detector elements to straw surfaces
   for (auto& detectorElement : detectorElements) {
@@ -134,6 +133,9 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   Acts::Vector3 chamber_position = {(maxValues.x() + minValues.x()) / 2,
                                     (maxValues.y() + minValues.y()) / 2,
                                     (maxValues.z() + minValues.z()) / 2};
+  std::cout << "chamber y pos=" << chamber_position.y() << std::endl;
+  std::cout << "chamber hy=" << hy << std::endl;
+  std::cin.ignore();
 
   // create the detector volume for the chamber
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
@@ -264,7 +266,8 @@ ActsExamples::MockupSectorBuilder::buildSector(
       auto detectorVolumeSec =
           Acts::Experimental::DetectorVolumeFactory::construct(
               Acts::Experimental::defaultPortalGenerator(), gctx,
-              "test-cylinder", shift_vol, std::move(bounds), shiftedSurfaces,
+              "detectorVolumeChamber_" + std::to_string(itr), shift_vol,
+              std::move(bounds), shiftedSurfaces,
               std::vector<
                   std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
               Acts::Experimental::allPortalsAndSurfaces());
@@ -281,10 +284,12 @@ ActsExamples::MockupSectorBuilder::buildSector(
     detectorCylinderVolumesOfSector.push_back(
         Acts::Experimental::DetectorVolumeFactory::construct(
             Acts::Experimental::defaultPortalGenerator(), gctx,
-            "cylinder_volume", transform, std::move(cylinderVolumesBounds[i]),
+            "cylinder_volume_" + std::to_string(i), transform,
+            std::move(cylinderVolumesBounds[i]),
             std::vector<std::shared_ptr<Acts::Surface>>{}, chambersOfSectors[i],
             Acts::Experimental::allPortalsAndSurfaces()));
-  }
+
+  }  // end of cylinder volumes
 
   auto cylinderVolumesBoundsOfMother =
       std::make_unique<Acts::CylinderVolumeBounds>(
@@ -293,7 +298,8 @@ ActsExamples::MockupSectorBuilder::buildSector(
 
   // creation of the mother volume
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
-      Acts::Experimental::defaultPortalGenerator(), gctx, "sector", transform,
+      Acts::Experimental::defaultPortalGenerator(), gctx,
+      "detectorVolumeSector", transform,
       std::move(cylinderVolumesBoundsOfMother),
       std::vector<std::shared_ptr<Acts::Surface>>{},
       detectorCylinderVolumesOfSector,
@@ -303,7 +309,8 @@ ActsExamples::MockupSectorBuilder::buildSector(
 }
 
 void ActsExamples::MockupSectorBuilder::drawSector(
-    std::shared_ptr<Acts::Experimental::DetectorVolume> detectorVolumeSector,
+    const std::shared_ptr<Acts::Experimental::DetectorVolume>
+        detectorVolumeSector,
     std::string nameObjFile) {
   Acts::ViewConfig sConfig = Acts::s_viewSensitive;
 
