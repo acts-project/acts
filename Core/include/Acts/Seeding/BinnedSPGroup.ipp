@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -161,35 +162,34 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
     float spX = sp.x();
     float spY = sp.y();
     float spZ = sp.z();
-
+    Acts::Vector3 spPosition{spX, spY, spZ};
+ 
     // store x,y,z values in extent
-    rRangeSPExtent.extend({spX, spY, spZ});
+    rRangeSPExtent.extend(spPosition);
 
+    // why do it here after the extend????
     if (spZ > zMax || spZ < zMin) {
       continue;
     }
-    float spPhi = std::atan2(spY, spX);
+    
+    float spPhi = sp.phi();
     if (spPhi > phiMax || spPhi < phiMin) {
       continue;
     }
 
-    Acts::Vector3 spPosition{spX, spY, spZ};
-    Acts::Vector2 variance{sp.varianceR(), sp.varianceZ()};
-    auto isp = std::make_unique<InternalSpacePoint<external_spacepoint_t>>(
-        sp.index(), sp, spPosition, options.beamPos, variance);
     // calculate r-Bin index and protect against overflow (underflow not
     // possible)
-    size_t rIndex = static_cast<size_t>(isp->radius() / config.binSizeR);
+    size_t rIndex = static_cast<size_t>(sp.radius() / config.binSizeR);
     // if index out of bounds, the SP is outside the region of interest
     if (rIndex >= numRBins) {
       continue;
     }
 
     // fill rbins into grid
-    Acts::Vector2 spLocation(isp->phi(), isp->z());
-    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
+    Acts::Vector2 spLocation(spPhi, sp.z());
+    std::vector<external_spacepoint_t>&
         rbin = grid->atPosition(spLocation);
-    rbin.push_back(std::move(isp));
+    rbin.push_back(std::move(sp));
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
@@ -200,13 +200,14 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 
   // sort SPs in R for each filled (z, phi) bin
   for (auto& binIndex : rBinsIndex) {
-    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>&
+    std::vector<external_spacepoint_t>&
         rbin = grid->atPosition(binIndex);
+    // this recomputes the radius every time .. we may want to save these values beforehand
     std::sort(
         rbin.begin(), rbin.end(),
-        [](std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& a,
-           std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>& b) {
-          return a->radius() < b->radius();
+        [](const external_spacepoint_t& a,
+           const external_spacepoint_t& b) {
+          return a.radius() < b.radius();
         });
   }
 
@@ -225,7 +226,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 }
 
 template <typename external_spacepoint_t>
-inline size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
+inline std::size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
   return m_grid->size();
 }
 

@@ -56,7 +56,6 @@ class SpacePointContainer {
   float x_impl(std::size_t idx) const;
   float y_impl(std::size_t idx) const;
   float z_impl(std::size_t idx) const;
-  float radius_impl(std::size_t idx) const;
   float varianceR_impl(std::size_t idx) const;
   float varianceZ_impl(std::size_t idx) const;
 
@@ -106,14 +105,6 @@ inline float SpacePointContainer<collection_t>::y_impl(std::size_t idx) const {
 template <typename collection_t>
 inline float SpacePointContainer<collection_t>::z_impl(std::size_t idx) const {
   return storage()[idx]->z();
-}
-
-template <typename collection_t>
-inline float SpacePointContainer<collection_t>::radius_impl(
-    std::size_t idx) const {
-  const float x = x_impl(idx);
-  const float y = y_impl(idx);
-  return std::sqrt(x * x + y * y);
 }
 
 template <typename collection_t>

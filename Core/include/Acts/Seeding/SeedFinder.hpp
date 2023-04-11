@@ -13,7 +13,6 @@
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/CandidatesForMiddleSp.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
-#include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/Neighbour.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
@@ -41,8 +40,8 @@ class SeedFinder {
  public:
   struct SeedingState {
     // bottom space point
-    std::vector<InternalSpacePoint<external_spacepoint_t>*> compatBottomSP;
-    std::vector<InternalSpacePoint<external_spacepoint_t>*> compatTopSP;
+    std::vector<const external_spacepoint_t*> compatBottomSP;
+    std::vector<const external_spacepoint_t*> compatTopSP;
     // contains parameters required to calculate circle with linear equation
     // ...for bottom-middle
     std::vector<LinCircle> linCircleBottom;
@@ -50,12 +49,12 @@ class SeedFinder {
     std::vector<LinCircle> linCircleTop;
 
     // create vectors here to avoid reallocation in each loop
-    std::vector<const InternalSpacePoint<external_spacepoint_t>*> topSpVec;
+    std::vector<const external_spacepoint_t*> topSpVec;
     std::vector<float> curvatures;
     std::vector<float> impactParameters;
 
     // managing seed candidates for SpM
-    CandidatesForMiddleSp<const InternalSpacePoint<external_spacepoint_t>>
+    CandidatesForMiddleSp<const external_spacepoint_t>
         candidates_collector;
 
     // managing doublet candidates
@@ -147,7 +146,7 @@ class SeedFinder {
       const Acts::SpacePointGrid<external_spacepoint_t>& grid,
       boost::container::small_vector<Neighbour<external_spacepoint_t>, 9>&
           otherSPsNeighbours,
-      const InternalSpacePoint<external_spacepoint_t>& mediumSP,
+      const external_spacepoint_t& mediumSP,
       std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
       const float& deltaRMinSP, const float& deltaRMaxSP, bool isBottom) const;
 
@@ -159,7 +158,7 @@ class SeedFinder {
   /// @param seedFilterState State object that holds memory used in SeedFilter
   /// @param state State object that holds memory used
   void filterCandidates(Acts::SpacePointData& spacePointData,
-                        const InternalSpacePoint<external_spacepoint_t>& SpM,
+                        const external_spacepoint_t& SpM,
                         const Acts::SeedFinderOptions& options,
                         SeedFilterState& seedFilterState,
                         SeedingState& state) const;

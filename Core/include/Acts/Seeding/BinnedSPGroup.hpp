@@ -119,7 +119,7 @@ class BinnedSPGroup {
   std::shared_ptr<const BinFinder<external_spacepoint_t>> m_topBinFinder;
   std::shared_ptr<const BinFinder<external_spacepoint_t>> m_bottomBinFinder;
 
-  std::vector<size_t> m_bins;
+  std::vector<std::size_t> m_bins;
 };
 
 }  // namespace Acts
