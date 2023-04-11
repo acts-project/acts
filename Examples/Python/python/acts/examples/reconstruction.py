@@ -144,6 +144,12 @@ AmbiguityResolutionMLConfig = namedtuple(
     defaults=[None] * 1,
 )
 
+AmbiguityResolutionMLDBScanConfig = namedtuple(
+    "AmbiguityResolutionMLDBScanConfig",
+    ["nMeasurementsMin", "epsilonDBScan", "minPointsDBScan"],
+    defaults=[None] * 3,
+)
+
 
 class VertexFinder(Enum):
     Truth = (1,)
@@ -1330,6 +1336,63 @@ def addAmbiguityResolutionML(
     addTrajectoryWriters(
         s,
         name="ambiML",
+        trajectories="trajectories",
+        ckfPerformanceConfig=ckfPerformanceConfig,
+        outputDirCsv=outputDirCsv,
+        outputDirRoot=outputDirRoot,
+        writeStates=writeTrajectories,
+        writeSummary=writeTrajectories,
+        writeCKFperformance=True,
+        writeFinderPerformance=False,
+        writeFitterPerformance=False,
+        logLevel=logLevel,
+    )
+
+    return s
+
+
+@acts.examples.NamedTypeArgs(
+    config=AmbiguityResolutionMLDBScanConfig,
+    ckfPerformanceConfig=CKFPerformanceConfig,
+)
+def addAmbiguityResolutionMLDBScan(
+    s,
+    config: AmbiguityResolutionMLDBScanConfig = AmbiguityResolutionMLDBScanConfig(),
+    ckfPerformanceConfig: CKFPerformanceConfig = CKFPerformanceConfig(),
+    onnxModelFile: Optional[Union[Path, str]] = None,
+    outputDirCsv: Optional[Union[Path, str]] = None,
+    outputDirRoot: Optional[Union[Path, str]] = None,
+    writeTrajectories: bool = True,
+    logLevel: Optional[acts.logging.Level] = None,
+) -> None:
+    from acts.examples import AmbiguityResolutionMLDBScanAlgorithm
+
+    customLogLevel = acts.examples.defaultLogging(s, logLevel)
+
+    alg = AmbiguityResolutionMLDBScanAlgorithm(
+        level=customLogLevel(),
+        inputTracks="selectedTracks",
+        inputDuplicateNN=onnxModelFile,
+        outputTracks="filteredTrajectoriesMLDBScan",
+        **acts.examples.defaultKWArgs(
+            nMeasurementsMin=config.nMeasurementsMin,
+            epsilonDBScan=config.epsilonDBScan,
+            minPointsDBScan=config.minPointsDBScan,
+        ),
+    )
+    s.addAlgorithm(alg)
+
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=alg.config.outputTracks,
+        outputTrajectories="trajectories-from-solved-tracks",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
+
+    addTrajectoryWriters(
+        s,
+        name="ambiMLDBScan",
         trajectories="trajectories",
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
