@@ -31,18 +31,17 @@ ActsExamples::HitsPrinter::HitsPrinter(
   if (m_cfg.inputHitIds.empty()) {
     throw std::invalid_argument("Input hit ids collection is not configured");
   }
+
+  m_inputClusters.initialize(m_cfg.inputClusters);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+  m_inputHitIds.initialize(m_cfg.inputHitIds);
 }
 
 ActsExamples::ProcessCode ActsExamples::HitsPrinter::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  using Clusters = ActsExamples::GeometryIdMultimap<Acts::PlanarModuleCluster>;
-  using HitParticlesMap = ActsExamples::IndexMultimap<ActsFatras::Barcode>;
-  using HitIds = std::vector<size_t>;
-
-  const auto& clusters = ctx.eventStore.get<Clusters>(m_cfg.inputClusters);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
-  const auto& hitIds = ctx.eventStore.get<HitIds>(m_cfg.inputHitIds);
+  const auto& clusters = m_inputClusters(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
+  const auto& hitIds = m_inputHitIds(ctx);
 
   if (clusters.size() != hitIds.size()) {
     ACTS_ERROR(

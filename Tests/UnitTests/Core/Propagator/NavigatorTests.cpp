@@ -88,10 +88,10 @@ struct PropagatorState {
     };
 
     /// State resetter
-    void resetState(State& /*unused*/, const BoundVector& /*unused*/,
-                    const BoundSymMatrix& /*unused*/, const Surface& /*unused*/,
-                    const NavigationDirection /*unused*/,
-                    const double /*unused*/) const {}
+    void resetState(State& /*state*/, const BoundVector& /*boundParams*/,
+                    const BoundSymMatrix& /*cov*/, const Surface& /*surface*/,
+                    const NavigationDirection /*navDir*/,
+                    const double /*stepSize*/) const {}
 
     /// Global particle position accessor
     Vector3 position(const State& state) const {
@@ -149,9 +149,9 @@ struct PropagatorState {
       return state.stepSize.toString();
     }
 
-    Result<BoundState> boundState(State& state, const Surface& surface,
-                                  bool /*unused*/,
-                                  const FreeToBoundCorrection& /*unused*/
+    Result<BoundState> boundState(
+        State& state, const Surface& surface, bool /*transportCov*/,
+        const FreeToBoundCorrection& /*freeToBoundCorrection*/
     ) const {
       auto bound =
           BoundTrackParameters::create(surface.getSharedPtr(), tgContext,
@@ -164,7 +164,7 @@ struct PropagatorState {
       return bState;
     }
 
-    CurvilinearState curvilinearState(State& state, bool /*unused*/
+    CurvilinearState curvilinearState(State& state, bool /*transportCov*/
     ) const {
       CurvilinearTrackParameters parameters(state.pos4, state.dir, state.p,
                                             state.q);
@@ -185,8 +185,8 @@ struct PropagatorState {
     void transportCovarianceToCurvilinear(State& /*state*/) const {}
 
     void transportCovarianceToBound(
-        State& /*unused*/, const Surface& /*surface*/,
-        const FreeToBoundCorrection& /*unused*/) const {}
+        State& /*state*/, const Surface& /*surface*/,
+        const FreeToBoundCorrection& /*freeToBoundCorrection*/) const {}
 
     Result<Vector3> getField(State& /*state*/, const Vector3& /*pos*/) const {
       // get the field from the cell
@@ -472,11 +472,10 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
   navigator.target(state, stepper);
   // A layer has been found
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
-  // The iterator should points to the begin
-  BOOST_CHECK(state.navigation.navLayerIter ==
-              state.navigation.navLayers.begin());
+  // The index should points to the begin
+  BOOST_CHECK(state.navigation.navLayerIndex == 0);
   // Cache the beam pipe radius
-  double beamPipeR = perp(state.navigation.navLayerIter->intersection.position);
+  double beamPipeR = perp(state.navigation.navLayer().intersection.position);
   // step size has been updated
   CHECK_CLOSE_ABS(state.stepping.stepSize.value(), beamPipeR,
                   s_onSurfaceTolerance);
@@ -499,9 +498,8 @@ BOOST_AUTO_TEST_CASE(Navigator_target_methods) {
                     state.navigation.startVolume);
   // The layer number has not changed
   BOOST_CHECK_EQUAL(state.navigation.navLayers.size(), 1u);
-  // The iterator still points to the begin
-  BOOST_CHECK(
-      (state.navigation.navLayerIter == state.navigation.navLayers.begin()));
+  // The index still points to the begin
+  BOOST_CHECK(state.navigation.navLayerIndex == 0);
   // ACTORS-ABORTERS-TARGET
   navigator.target(state, stepper);
 

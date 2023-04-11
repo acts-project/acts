@@ -10,7 +10,7 @@ import acts.examples
 u = acts.UnitConstants
 
 SeedingAlgorithm = Enum(
-    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal"
+    "SeedingAlgorithm", "Default TruthSmeared TruthEstimated Orthogonal HoughTransform"
 )
 
 TruthSeedRanges = namedtuple(
@@ -134,8 +134,8 @@ CKFPerformanceConfig = namedtuple(
 
 AmbiguityResolutionConfig = namedtuple(
     "AmbiguityResolutionConfig",
-    ["maximumSharedHits", "nMeasurementsMin"],
-    defaults=[None] * 2,
+    ["maximumSharedHits", "nMeasurementsMin", "maximumIterations"],
+    defaults=[None] * 3,
 )
 
 AmbiguityResolutionMLConfig = namedtuple(
@@ -177,6 +177,7 @@ def addSeeding(
     seedFilterConfigArg: SeedFilterConfigArg = SeedFilterConfigArg(),
     spacePointGridConfigArg: SpacePointGridConfigArg = SpacePointGridConfigArg(),
     seedingAlgorithmConfigArg: SeedingAlgorithmConfigArg = SeedingAlgorithmConfigArg(),
+    houghTransformConfig: acts.examples.HoughTransformSeeder.Config = acts.examples.HoughTransformSeeder.Config(),
     truthEstimatedSeedingAlgorithmConfigArg: TruthEstimatedSeedingAlgorithmConfigArg = TruthEstimatedSeedingAlgorithmConfigArg(),
     inputParticles: str = "particles",
     outputDirRoot: Optional[Union[Path, str]] = None,
@@ -216,9 +217,8 @@ def addSeeding(
         Defaults specified in Core/include/Acts/Seeding/SpacePointGrid.hpp
     seedingAlgorithmConfigArg : SeedingAlgorithmConfigArg(allowSeparateRMax, zBinNeighborsTop, zBinNeighborsBottom, numPhiNeighbors)
                                 Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/SeedingAlgorithm.hpp
-    trackParamsEstimationConfig : TrackParamsEstimationConfig(deltaR)
-        TrackParamsEstimationAlgorithm configuration. Currently only deltaR=(min,max) range specified here.
-        Defaults specified in Examples/Algorithms/TrackFinding/include/ActsExamples/TrackFinding/TrackParamsEstimationAlgorithm.hpp
+    truthEstimatedSeedingAlgorithmConfigArg : TruthEstimatedSeedingAlgorithmConfigArg(deltaR)
+        Currently only deltaR=(min,max) range specified here.
     inputParticles : str, "particles"
         input particles name in the WhiteBoard
     outputDirRoot : Path|str, path, None
@@ -292,6 +292,17 @@ def addSeeding(
                 seedFinderOptionsArg,
                 seedFilterConfigArg,
                 logLevel,
+            )
+        elif seedingAlgorithm == SeedingAlgorithm.HoughTransform:
+            logger.info("Using Hough Transform seeding")
+            houghTransformConfig.inputSpacePoints = [spacePoints]
+            houghTransformConfig.inputMeasurements = "measurements"
+            houghTransformConfig.inputSourceLinks = "sourcelinks"
+            houghTransformConfig.outputProtoTracks = "prototracks"
+            houghTransformConfig.outputSeeds = "seeds"
+            houghTransformConfig.trackingGeometry = trackingGeometry
+            inputProtoTracks, inputSeeds = addHoughTransformSeeding(
+                s, houghTransformConfig, logLevel
             )
         else:
             logger.fatal("unknown seedingAlgorithm %s", seedingAlgorithm)
@@ -428,7 +439,6 @@ def addTruthEstimatedSeeding(
         level=logLevel,
         inputParticles=inputParticles,
         inputMeasurementParticlesMap="measurement_particles_map",
-        inputSourceLinks="sourcelinks",
         inputSpacePoints=[spacePoints],
         outputParticles="truth_seeded_particles",
         outputProtoTracks="truth_particle_tracks",
@@ -719,6 +729,23 @@ def addOrthogonalSeeding(
     return seedingAlg.config.outputSeeds
 
 
+def addHoughTransformSeeding(
+    sequence: acts.examples.Sequencer,
+    config: acts.examples.HoughTransformSeeder.Config,
+    logLevel: acts.logging.Level = None,
+):
+    """
+    Configures HoughTransform (HT) for seeding, instead of extra proxy config objects it takes
+    directly the HT example algorithm config.
+    """
+    logLevel = acts.examples.defaultLogging(sequence, logLevel)()
+    ht = acts.examples.HoughTransformSeeder(config=config, level=logLevel)
+    sequence.addAlgorithm(ht)
+    # potentially HT can be extended to also produce seeds, but it is not yet implemented yet
+    # configuration option (outputSeeds) exists
+    return config.outputProtoTracks, ""
+
+
 def addSeedPerformanceWriters(
     sequence: acts.examples.Sequencer,
     outputDirRoot: Union[Path, str],
@@ -771,7 +798,6 @@ def addKalmanTracks(
     energyLoss: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     if directNavigation:
@@ -828,7 +854,6 @@ def addTruthTrackingGsf(
     inputProtoTracks: str = "truth_particle_tracks",
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     gsfOptions = {
@@ -1098,7 +1123,6 @@ def addTrackSelection(
     outputTracks: str,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> acts.examples.TrackSelector:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     trackSelector = acts.examples.TrackSelector(
@@ -1140,7 +1164,6 @@ def addExaTrkX(
     backend: Optional[ExaTrkXBackend] = ExaTrkXBackend.Torch,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     # Run the particle selection
@@ -1225,29 +1248,34 @@ def addAmbiguityResolution(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     from acts.examples import AmbiguityResolutionAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     alg = AmbiguityResolutionAlgorithm(
         level=customLogLevel(),
-        inputSourceLinks="sourcelinks",
-        inputTrajectories="trajectories",
-        outputTrajectories="filteredTrajectories",
+        inputTracks="selectedTracks",
+        outputTracks="filteredTrajectories",
         **acts.examples.defaultKWArgs(
             maximumSharedHits=config.maximumSharedHits,
             nMeasurementsMin=config.nMeasurementsMin,
+            maximumIterations=config.maximumIterations,
         ),
     )
     s.addAlgorithm(alg)
 
-    s.addWhiteboardAlias("trajectories", alg.config.outputTrajectories)
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=alg.config.outputTracks,
+        outputTrajectories="trajectories-from-solved-tracks",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     addTrajectoryWriters(
         s,
         name="ambi",
-        trajectories=alg.config.outputTrajectories,
+        trajectories="trajectories",
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
@@ -1276,28 +1304,33 @@ def addAmbiguityResolutionML(
     writeTrajectories: bool = True,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     from acts.examples import AmbiguityResolutionMLAlgorithm
 
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
 
     alg = AmbiguityResolutionMLAlgorithm(
         level=customLogLevel(),
-        inputTrajectories="trajectories",
+        inputTracks="selectedTracks",
         inputDuplicateNN=onnxModelFile,
-        outputTrajectories="filteredTrajectoriesML",
+        outputTracks="filteredTrajectoriesML",
         **acts.examples.defaultKWArgs(
             nMeasurementsMin=config.nMeasurementsMin,
         ),
     )
     s.addAlgorithm(alg)
 
-    s.addWhiteboardAlias("trajectories", alg.config.outputTrajectories)
+    trackConverter = acts.examples.TracksToTrajectories(
+        level=customLogLevel(),
+        inputTracks=alg.config.outputTracks,
+        outputTrajectories="trajectories-from-solved-tracks",
+    )
+    s.addAlgorithm(trackConverter)
+    s.addWhiteboardAlias("trajectories", trackConverter.config.outputTrajectories)
 
     addTrajectoryWriters(
         s,
         name="ambiML",
-        trajectories=alg.config.outputTrajectories,
+        trajectories="trajectories",
         ckfPerformanceConfig=ckfPerformanceConfig,
         outputDirCsv=outputDirCsv,
         outputDirRoot=outputDirRoot,
@@ -1326,7 +1359,6 @@ def addVertexFitting(
     trackSelectorRanges: Optional[TrackSelectorRanges] = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
-
     """This function steers the vertex fitting
 
     Parameters

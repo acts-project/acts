@@ -12,7 +12,7 @@
 #include <pybind11/stl.h>
 
 namespace Acts::Python {
-void addExaTrkXTrackFinding(Context& /*unused*/) {
+void addExaTrkXTrackFinding(Context& /*ctx*/) {
   // dummy function
 }
 }  // namespace Acts::Python

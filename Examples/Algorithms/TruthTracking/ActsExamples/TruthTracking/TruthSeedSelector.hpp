@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
 namespace ActsExamples {
@@ -27,6 +30,8 @@ namespace ActsExamples {
 //
 class TruthSeedSelector final : public IAlgorithm {
  public:
+  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
+
   struct Config {
     /// The input truth particles that should be used to create proto tracks.
     std::string inputParticles;
@@ -66,6 +71,13 @@ class TruthSeedSelector final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+  ReadDataHandle<HitParticlesMap> m_inputMeasurementParticlesMap{
+      this, "InputMeasurementParticlesMap"};
+
+  WriteDataHandle<SimParticleContainer> m_outputParticles{this,
+                                                          "OutputParticles"};
 };
 
 }  // namespace ActsExamples

@@ -12,6 +12,8 @@
 #include "ActsExamples/EventData/ProtoVertex.hpp"
 #include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/AlgorithmContext.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 
 #include <vector>
 
@@ -33,21 +35,20 @@ makeTrackParametersPointerContainer(
   return trackParametersPointers;
 }
 
-template <typename config_t>
-auto makeParameterContainers(const config_t& config,
-                             const ActsExamples::AlgorithmContext& ctx) {
+inline auto makeParameterContainers(
+    const ActsExamples::AlgorithmContext& ctx,
+    const ReadDataHandle<std::vector<Acts::BoundTrackParameters>>&
+        inputTrackParametersHandle,
+    const ReadDataHandle<TrajectoriesContainer>& inputTrajectoriesHandle) {
   std::vector<Acts::BoundTrackParameters> inputTrackParameters;
   std::vector<const Acts::BoundTrackParameters*> inputTrackPointers;
 
-  if (!config.inputTrackParameters.empty()) {
-    const auto& tmp =
-        ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
-            config.inputTrackParameters);
+  if (inputTrackParametersHandle.isInitialized()) {
+    const auto& tmp = inputTrackParametersHandle(ctx);
     inputTrackParameters = tmp;
     inputTrackPointers = makeTrackParametersPointerContainer(tmp);
   } else {
-    const auto& inputTrajectories =
-        ctx.eventStore.get<TrajectoriesContainer>(config.inputTrajectories);
+    const auto& inputTrajectories = inputTrajectoriesHandle(ctx);
 
     for (const auto& trajectories : inputTrajectories) {
       for (auto tip : trajectories.tips()) {

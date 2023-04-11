@@ -55,14 +55,20 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigtor_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
   /// @param [in] stepper Stepper of the propagation
-  template <typename propagator_state_t, typename stepper_t>
+  /// @param [in] navigator Navigator of the propagation
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigtor_t>
   bool validExtensionForStep(const propagator_state_t& state,
-                             const stepper_t& stepper) {
+                             const stepper_t& stepper,
+                             const navigtor_t& navigator) {
     const auto bids = std::apply(
         [&](const auto&... ext) {
-          return std::array<int, nExtensions>{ext.bid(state, stepper)...};
+          return std::array<int, nExtensions>{
+              ext.bid(state, stepper, navigator)...};
         },
         tuple());
 
@@ -76,10 +82,11 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// collects all arguments and extensions, test their validity for the
   /// evaluation and passes them forward for evaluation and returns a boolean as
   /// indicator if the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-         const int i, const double h = 0.,
+         const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+         std::array<double, 4>& kQoP, const int i, const double h = 0.,
          const Vector3& kprev = Vector3::Zero()) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, i, h](auto intType, auto& implRef) {
@@ -94,7 +101,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
         }
         // Continue as long as evaluations are 'true'
         if (std::get<N - 1>(this->tuple())
-                .template k(state, stepper, knew, bField, kQoP, i, h, kprev)) {
+                .template k(state, stepper, navigator, knew, bField, kQoP, i, h,
+                            kprev)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         } else {
           // Break at false
@@ -110,48 +118,54 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// all arguments and extensions, test their validity for the evaluation and
   /// passes them forward for evaluation and returns a boolean as indicator if
   /// the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k1(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP) {
-    return k(state, stepper, knew, bField, kQoP, 0);
+          const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+          std::array<double, 4>& kQoP) {
+    return k(state, stepper, navigator, knew, bField, kQoP, 0);
   }
 
   /// @brief This functions broadcasts the call for evaluating k2. It collects
   /// all arguments and extensions and passes them forward for evaluation and
   /// returns a boolean as indicator if the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k2(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-          const double h, const Vector3& kprev) {
-    return k(state, stepper, knew, bField, kQoP, 1, h, kprev);
+          const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+          std::array<double, 4>& kQoP, const double h, const Vector3& kprev) {
+    return k(state, stepper, navigator, knew, bField, kQoP, 1, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k3. It collects
   /// all arguments and extensions and passes them forward for evaluation and
   /// returns a boolean as indicator if the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k3(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-          const double h, const Vector3& kprev) {
-    return k(state, stepper, knew, bField, kQoP, 2, h, kprev);
+          const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+          std::array<double, 4>& kQoP, const double h, const Vector3& kprev) {
+    return k(state, stepper, navigator, knew, bField, kQoP, 2, h, kprev);
   }
 
   /// @brief This functions broadcasts the call for evaluating k4. It collects
   /// all arguments and extensions and passes them forward for evaluation and
   /// returns a boolean as indicator if the evaluation is valid.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k4(const propagator_state_t& state, const stepper_t& stepper,
-          Vector3& knew, const Vector3& bField, std::array<double, 4>& kQoP,
-          const double h, const Vector3& kprev) {
-    return k(state, stepper, knew, bField, kQoP, 3, h, kprev);
+          const navigator_t& navigator, Vector3& knew, const Vector3& bField,
+          std::array<double, 4>& kQoP, const double h, const Vector3& kprev) {
+    return k(state, stepper, navigator, knew, bField, kQoP, 3, h, kprev);
   }
 
   /// @brief This functions broadcasts the call of the method finalize(). It
   /// collects all extensions and arguments and passes them forward for
   /// evaluation and returns a boolean.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, FreeMatrix& D) {
+                const navigator_t& navigator, const double h, FreeMatrix& D) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, h](auto intType, auto& implRef) {
       constexpr int N = decltype(intType)::value;
@@ -164,7 +178,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         }
         // Continue as long as evaluations are 'true'
-        if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h, D)) {
+        if (std::get<N - 1>(this->tuple())
+                .finalize(state, stepper, navigator, h, D)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         } else {
           // Break at false
@@ -179,9 +194,10 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
   /// @brief This functions broadcasts the call of the method finalize(). It
   /// collects all extensions and arguments and passes them forward for
   /// evaluation and returns a boolean.
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h) {
+                const navigator_t& navigator, const double h) {
     // TODO replace with integer-templated lambda with C++20
     auto impl = [&, h](auto intType, auto& implRef) {
       constexpr int N = decltype(intType)::value;
@@ -195,7 +211,8 @@ struct StepperExtensionList : private detail::Extendable<extensions...> {
         }
 
         // Continue as long as evaluations are 'true'
-        if (std::get<N - 1>(this->tuple()).finalize(state, stepper, h)) {
+        if (std::get<N - 1>(this->tuple())
+                .finalize(state, stepper, navigator, h)) {
           return implRef(std::integral_constant<int, N - 1>{}, implRef);
         } else {
           // Break at false

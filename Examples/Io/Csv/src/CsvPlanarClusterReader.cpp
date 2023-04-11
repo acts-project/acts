@@ -46,6 +46,12 @@ ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader(
   if (not m_cfg.trackingGeometry) {
     throw std::invalid_argument("Missing tracking geometry");
   }
+
+  m_outputClusters.initialize(m_cfg.outputClusters);
+  m_outputMeasurementParticlesMap.initialize(
+      m_cfg.outputMeasurementParticlesMap);
+  m_outputSimHits.initialize(m_cfg.outputSimHits);
+  m_outputHitIds.initialize(m_cfg.outputHitIds);
 }
 
 std::string ActsExamples::CsvPlanarClusterReader::CsvPlanarClusterReader::name()
@@ -276,11 +282,10 @@ ActsExamples::ProcessCode ActsExamples::CsvPlanarClusterReader::read(
   }
 
   // write the data to the EventStore
-  ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
-  ctx.eventStore.add(m_cfg.outputHitIds, std::move(hitIds));
-  ctx.eventStore.add(m_cfg.outputMeasurementParticlesMap,
-                     std::move(hitParticlesMap));
-  ctx.eventStore.add(m_cfg.outputSimHits, std::move(simHits));
+  m_outputClusters(ctx, std::move(clusters));
+  m_outputHitIds(ctx, std::move(hitIds));
+  m_outputMeasurementParticlesMap(ctx, std::move(hitParticlesMap));
+  m_outputSimHits(ctx, std::move(simHits));
 
   return ActsExamples::ProcessCode::SUCCESS;
 }

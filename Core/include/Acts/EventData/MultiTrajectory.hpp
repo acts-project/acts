@@ -51,7 +51,7 @@ template <typename derived_t>
 class MultiTrajectory;
 class Surface;
 
-using ProjectorBitset = std::bitset<eBoundSize * eBoundSize>;
+using ProjectorBitset = unsigned long long;
 
 namespace detail_lt {
 /// Either type T or const T depending on the boolean.
@@ -508,14 +508,14 @@ class TrackStateProxy {
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed parameters
-  Parameters parameters() const;
+  ConstParameters parameters() const;
 
   /// Track parameters covariance matrix. This tries to be somewhat smart and
   /// return the
   /// first parameters that are set in this order: predicted -> filtered ->
   /// smoothed
   /// @return one of predicted, filtered or smoothed covariances
-  Covariance covariance() const;
+  ConstCovariance covariance() const;
 
   /// Predicted track parameters vector
   /// @return The predicted parameters
@@ -709,8 +709,9 @@ class TrackStateProxy {
     fullProjector.template topLeftCorner<rows, cols>() = projector;
 
     // convert to bitset before storing
+    auto projectorBitset = matrixToBitset(fullProjector);
     component<ProjectorBitset, hashString("projector")>() =
-        matrixToBitset(fullProjector);
+        projectorBitset.to_ullong();
   }
 
   /// Uncalibrated measurement in the form of a source link. Const version
@@ -1015,6 +1016,7 @@ class TrackStateRange {
   };
 
   TrackStateRange(ProxyType _begin) : m_begin{_begin} {}
+  TrackStateRange() : m_begin{std::nullopt} {}
 
   Iterator begin() { return m_begin; }
   Iterator end() { return Iterator{std::nullopt}; }
@@ -1131,7 +1133,13 @@ class MultiTrajectory {
   /// @return Iterator pair to iterate over
   /// @note Const version
   auto trackStateRange(IndexType iendpoint) const {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Range for the track states from @p iendpoint to the trajectory start
@@ -1140,7 +1148,13 @@ class MultiTrajectory {
   /// @note Mutable version
   template <bool RO = ReadOnly, typename = std::enable_if_t<!RO>>
   auto trackStateRange(IndexType iendpoint) {
-    return detail_lt::TrackStateRange{getTrackState(iendpoint)};
+    using range_t =
+        decltype(detail_lt::TrackStateRange{getTrackState(iendpoint)});
+    if (iendpoint == kInvalid) {
+      return range_t{};
+    }
+
+    return range_t{getTrackState(iendpoint)};
   }
 
   /// Apply a function to all previous states starting at a given endpoint.

@@ -77,7 +77,7 @@ Acts::Vector3 Acts::CylinderSurface::binningPosition(
 // return the measurement frame: it's the tangential plane
 Acts::RotationMatrix3 Acts::CylinderSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*unused*/) const {
+    const Vector3& /*momentum*/) const {
   RotationMatrix3 mFrame;
   // construct the measurement frame
   // measured Y is the z axis
@@ -100,7 +100,7 @@ Acts::Surface::SurfaceType Acts::CylinderSurface::type() const {
 
 Acts::Vector3 Acts::CylinderSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*unused*/) const {
+    const Vector3& /*momentum*/) const {
   // create the position in the local 3d frame
   double r = bounds().get(CylinderBounds::eR);
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -110,7 +110,7 @@ Acts::Vector3 Acts::CylinderSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::CylinderSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*unused*/, double tolerance) const {
+    const Vector3& /*momentum*/, double tolerance) const {
   double inttol = tolerance;
   if (tolerance == s_onSurfaceTolerance) {
     // transform default value!

@@ -697,6 +697,15 @@ class MultiEigenStepperLoop
       ACTS_VERBOSE("started stepCounterAfterFirstComponentOnSurface");
     }
 
+    // If there are no components onSurface, but the counter is switched on
+    // (e.g., if the navigator changes the target surface), we need to switch it
+    // off again
+    if (state.stepCounterAfterFirstComponentOnSurface &&
+        counts[static_cast<std::size_t>(Status::onSurface)] == 0) {
+      state.stepCounterAfterFirstComponentOnSurface.reset();
+      ACTS_VERBOSE("switch off stepCounterAfterFirstComponentOnSurface");
+    }
+
     // This is a 'any_of' criterium. As long as any of the components has a
     // certain state, this determines the total state (in the order of a
     // somewhat importance)
@@ -885,12 +894,14 @@ class MultiEigenStepperLoop
   ///
   /// @param [in,out] state is the propagation state associated with the track
   /// parameters that are being propagated.
+  /// @param [in] navigator is the navigator of the propagation
   ///
   /// The state contains the desired step size. It can be negative during
   /// backwards track propagation, and since we're using an adaptive
   /// algorithm, it can be modified by the stepper class during propagation.
-  template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const;
+  template <typename propagator_state_t, typename navigator_t>
+  Result<double> step(propagator_state_t& state,
+                      const navigator_t& navigator) const;
 };
 
 }  // namespace Acts

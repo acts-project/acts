@@ -44,6 +44,10 @@ struct MockPropagatorState {
   } options;
 };
 
+struct MockNavigator {};
+
+static constexpr MockNavigator navigator;
+
 // epsilon for floating point comparisons
 static constexpr auto eps = 1024 * std::numeric_limits<double>::epsilon();
 
@@ -251,7 +255,7 @@ BOOST_AUTO_TEST_CASE(Step) {
   state.stepping.covTransport = false;
 
   // ensure step does not result in an error
-  auto res = stepper.step(state);
+  auto res = stepper.step(state, navigator);
   BOOST_CHECK(res.ok());
 
   // extract the actual step size
@@ -284,7 +288,7 @@ BOOST_AUTO_TEST_CASE(StepWithCovariance) {
   state.stepping.covTransport = true;
 
   // ensure step does not result in an error
-  auto res = stepper.step(state);
+  auto res = stepper.step(state, navigator);
   BOOST_CHECK(res.ok());
 
   // extract the actual step size
@@ -320,7 +324,7 @@ BOOST_AUTO_TEST_CASE(Reset) {
   state.stepping.covTransport = true;
 
   // ensure step does not result in an error
-  stepper.step(state);
+  stepper.step(state, navigator);
 
   // Construct the parameters
   Vector3 newPos(1.5, -2.5, 3.5);

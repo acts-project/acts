@@ -7,9 +7,13 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 #pragma once
 
+#include "Acts/Digitization/PlanarModuleCluster.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Utilities/Logger.hpp"
+#include "ActsExamples/EventData/Index.hpp"
+#include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IReader.hpp"
 
 #include <memory>
@@ -74,6 +78,13 @@ class CsvPlanarClusterReader final : public IReader {
   Config m_cfg;
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
+
+  WriteDataHandle<GeometryIdMultimap<Acts::PlanarModuleCluster>>
+      m_outputClusters{this, "OutputClusters"};
+  WriteDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_outputMeasurementParticlesMap{this, "OutputMeasurementParticlesMap"};
+  WriteDataHandle<SimHitContainer> m_outputSimHits{this, "OutputSimHits"};
+  WriteDataHandle<std::vector<uint64_t>> m_outputHitIds{this, "OutputHitIds"};
 
   const Acts::Logger& logger() const { return *m_logger; }
 };

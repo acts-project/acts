@@ -9,6 +9,9 @@
 #pragma once
 
 #include "Acts/Definitions/Units.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/RandomNumbers.hpp"
 
@@ -64,6 +67,11 @@ class ParticleSmearing final : public IAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
+
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
 };
 
 }  // namespace ActsExamples
