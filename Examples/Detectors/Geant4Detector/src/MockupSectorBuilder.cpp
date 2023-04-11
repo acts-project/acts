@@ -308,7 +308,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
 void ActsExamples::MockupSectorBuilder::drawSector(
     const std::shared_ptr<Acts::Experimental::DetectorVolume>
         detectorVolumeSector,
-    std::string nameObjFile) {
+    const std::string nameObjFile) {
   Acts::ViewConfig sConfig = Acts::s_viewSensitive;
 
   Acts::ObjVisualization3D objSector;
