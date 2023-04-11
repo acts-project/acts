@@ -2,6 +2,7 @@
 
 #pragma once
 
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Seeding/InternalSeed.hpp"
 #include "Acts/Seeding/InternalSpacePoint.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
@@ -25,9 +26,12 @@ template <typename external_spacepoint_t>
 class SeedFinderFTF { 
  public: 
  //define memebers 
+  //since update 
+  static constexpr std::size_t NDims = 3;
 
- using seed_t = Seed<external_spacepoint_t>; 
-
+  using seed_t = Seed<external_spacepoint_t>; 
+  using internal_sp_t = InternalSpacePoint<external_spacepoint_t>;
+  using tree_t = KDTree<NDims, internal_sp_t *, ActsScalar, std::array, 4>;
 
  //constructors 
 
@@ -67,6 +71,8 @@ class SeedFinderFTF {
  //config object  
  Acts::SeedFinderFTFConfig<external_spacepoint_t> m_config;
 
+ //since update 
+ enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
 
 
 

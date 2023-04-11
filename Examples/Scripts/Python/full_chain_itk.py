@@ -87,7 +87,7 @@ addSeeding(
     if ttbar_pu200
     else TruthSeedRanges(),
     seedingAlgorithm=SeedingAlgorithm.Default,
-    # seedingAlgorithm=SeedingAlgorithm.FTF,
+    #seedingAlgorithm=SeedingAlgorithm.FTF,
     # seedingAlgorithm=SeedingAlgorithm.Orthogonal,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints

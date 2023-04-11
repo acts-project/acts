@@ -7,18 +7,21 @@
 //change these to FTF when done
 #include "Acts/Seeding/SeedFinderFTF.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
+//in core 
 #include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderConfig.hpp"
 #include "Acts/Seeding/SpacePointGrid.hpp"
+#include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/EventData/SimSpacePoint.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
    
 #include <string>
 #include <vector> 
 
 namespace ActsExamples { 
 
-class SeedingFTFAlgorithm final : public BareAlgorithm {
+class SeedingFTFAlgorithm final : public IAlgorithm {
  public:
   struct Config {
 
@@ -60,6 +63,13 @@ class SeedingFTFAlgorithm final : public BareAlgorithm {
   Config m_cfg; 
   Acts::SeedFinderFTF<SimSpacePoint> m_seedFinder; 
   //want to change to FTF version 
+
+  //new since update 
+
+  std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
+      m_inputSpacePoints{};
+
+  WriteDataHandle<SimSeedContainer> m_outputSeeds{this, "OutputSeeds"};
 
   //not copying print functions, think for debuging 
 };

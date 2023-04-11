@@ -98,7 +98,7 @@ struct SeedFinderFTFConfig {
 //   bool skipPreviousTopSP = false;
 //   // derived values, set on SeedFinder construction
   float highland = 0; 
-//   float maxScatteringAngle2 = 0;
+  float maxScatteringAngle2 = 0;
 //   bool isInInternalUnits = false;
 
 

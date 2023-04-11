@@ -1,8 +1,9 @@
 //basijng on seeding ortho and rosie test 
+#include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
 
 #include "Acts/Seeding/Seed.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
-#include "ActsExamples/TrackFinding/SeedingFTFAlgorithm.hpp"
+#include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/SimSeed.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
@@ -11,7 +12,7 @@
 ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
     ActsExamples::SeedingFTFAlgorithm::Config cfg, 
     Acts::Logging::Level lvl) 
-    : ActsExamples::BareAlgorithm("SeedingAlgorithm", lvl), 
+    : ActsExamples::IAlgorithm("SeedingAlgorithm", lvl), 
       m_cfg(std::move(cfg)) {
     //fill config struct
 
@@ -29,6 +30,7 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
           m_cfg.seedFinderConfig);
 
     //throw statements for differnet cases 
+    m_outputSeeds.initialize(m_cfg.outputSeeds);
 
 
     //filling the memeber of class (not const) from member of const 
@@ -48,6 +50,11 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
   std::vector<const SimSpacePoint *> spacePoints;
 
 //for loop filling space points, seeing if can do without 
+  for (const auto &isp : m_inputSpacePoints) {
+    for (const auto &spacePoint : (*isp)(ctx)) {
+      spacePoints.push_back(&spacePoint);
+    }
+  } 
 
   Acts::SeedFinderFTF<SimSpacePoint> finder(m_cfg.seedFinderConfig); 
   //want to change 50 to SeedFinderFTF
@@ -62,19 +69,25 @@ ActsExamples::ProcessCode ActsExamples::SeedingFTFAlgorithm::execute(
       };  
 
 
-  //output of function needed for seed 
+      //output of function needed for seed
+
+
  
   SimSeedContainer seeds = finder.createSeeds(m_cfg.seedFinderOptions,
                                               spacePoints, create_coordinates);
 
   //prototracks part, so far can just state, there is a loop over seeds  
+  //since update the last steps have changed: 
 
-  ProtoTrackContainer protoTracks;                                
 
-  //debug statement
+  // ProtoTrackContainer protoTracks;                                
+
+  // //debug statement
   
-  ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
-  ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
+  // ctx.eventStore.add(m_cfg.outputSeeds, std::move(seeds));
+  // ctx.eventStore.add(m_cfg.outputProtoTracks, std::move(protoTracks));
+  m_outputSeeds(ctx, std::move(seeds));
+
 
   return ActsExamples::ProcessCode::SUCCESS;
 }
