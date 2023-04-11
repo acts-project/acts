@@ -6,18 +6,21 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
+#include "ActsExamples/TrackFindingML/AmbiguityResolutionMLDBScanAlgorithm.hpp"
 
+#include "Acts/Plugins/mlpack/AmbiguityDBScanClustering.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
+#include "ActsExamples/Framework/WhiteBoard.hpp"
 
 #include <iterator>
 #include <map>
 
-ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
-    ActsExamples::AmbiguityResolutionMLAlgorithm::Config cfg,
-    Acts::Logging::Level lvl)
-    : ActsExamples::AmbiguityResolutionML("AmbiguityResolutionMLAlgorithm",
-                                          lvl),
+ActsExamples::AmbiguityResolutionMLDBScanAlgorithm::
+    AmbiguityResolutionMLDBScanAlgorithm(
+        ActsExamples::AmbiguityResolutionMLDBScanAlgorithm::Config cfg,
+        Acts::Logging::Level lvl)
+    : ActsExamples::AmbiguityResolutionML(
+          "AmbiguityResolutionMLDBScanAlgorithm", lvl),
       m_cfg(std::move(cfg)),
       m_duplicateClassifier(m_cfg.inputDuplicateNN.c_str()) {
   if (m_cfg.inputTracks.empty()) {
@@ -30,14 +33,17 @@ ActsExamples::AmbiguityResolutionMLAlgorithm::AmbiguityResolutionMLAlgorithm(
   m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
-ActsExamples::ProcessCode ActsExamples::AmbiguityResolutionMLAlgorithm::execute(
+ActsExamples::ProcessCode
+ActsExamples::AmbiguityResolutionMLDBScanAlgorithm::execute(
     const AlgorithmContext& ctx) const {
   // Read input data
   const auto& tracks = m_inputTracks(ctx);
   // Associate measurement to their respective tracks
   std::multimap<int, std::pair<int, std::vector<int>>> trackMap =
       mapTrackHits(tracks, m_cfg.nMeasurementsMin);
-  auto cluster = Acts::detail::clusterDuplicateTracks(trackMap);
+  // Cluster the tracks using DBscan
+  auto cluster = Acts::dbscanTrackClustering(
+      trackMap, tracks, m_cfg.epsilonDBScan, m_cfg.minPointsDBScan);
   // Select the ID of the track we want to keep
   std::vector<int> goodTracks =
       m_duplicateClassifier.solveAmbuguity(cluster, tracks);
