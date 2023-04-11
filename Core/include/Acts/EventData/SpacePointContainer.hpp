@@ -11,6 +11,7 @@
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/EventData/SpacePointProxy.hpp"
 #include "Acts/EventData/SpacePointProxyIterator.hpp"
+#include "Acts/EventData/SpacePointData.hpp"
 #include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/Utils.hpp"
 #include "Acts/Utilities/HashedString.hpp"
@@ -19,6 +20,22 @@
 #include <vector>
 
 namespace Acts {
+  struct SpacePointContainerConfig {
+    bool useDetailedDoubleMeasurementInfo = false;
+    bool isInInternalUnits = false;
+
+    SpacePointContainerConfig toInternalUnits() const {
+      if (isInInternalUnits) {
+        throw std::runtime_error(
+                                 "Repeated conversion to internal units for SpacePointContainerConfig");
+      }
+      using namespace Acts::UnitLiterals;
+      SpacePointContainerConfig config = *this;
+      config.isInInternalUnits = true;
+      return config;
+    };
+  };
+
   struct SpacePointContainerOptions {
     // location of beam in x,y plane.
     // used as offset for Space Points
@@ -29,7 +46,7 @@ namespace Acts {
     SpacePointContainerOptions toInternalUnits() const {
       if (isInInternalUnits) {
 	throw std::runtime_error(
-				 "Repeated conversion to internal units for SeedFinderOptions");
+				 "Repeated conversion to internal units for SpacePointContainerOptions");
       }
       using namespace Acts::UnitLiterals;
       SpacePointContainerOptions options = *this;
@@ -90,7 +107,8 @@ class SpacePointContainer {
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::RefHolder>::value>>
-  SpacePointContainer(const Acts::SpacePointContainerOptions& options,
+  SpacePointContainer(const Acts::SpacePointContainerConfig& confing,
+		      const Acts::SpacePointContainerOptions& options,
 		      container_t& container);
 
   // Take the ownership
@@ -98,7 +116,8 @@ class SpacePointContainer {
   template <template <typename> class H = holder_t,
             typename = std::enable_if_t<Acts::detail::is_same_template<
                 H, Acts::detail::ValueHolder>::value>>
-  SpacePointContainer(const Acts::SpacePointContainerOptions& options,
+  SpacePointContainer(const Acts::SpacePointContainerConfig& config,
+		      const Acts::SpacePointContainerOptions& options,
 		      container_t&& container);
 
   // If we take ownership, forbid copy operations
@@ -157,12 +176,20 @@ class SpacePointContainer {
   float varianceR(std::size_t n) const;
   float varianceZ(std::size_t n) const;
 
+  const float& quality(std::size_t n) const;
+  const float& deltaR(std::size_t n) const;
+
+  void setQuality(std::size_t n, const float& value) const;
+  void setDeltaR(std::size_t n, const float& value) const;
+  
   // component methods for additional quantities
   template <typename T>
-  T component(HashedString key, std::size_t n) const;
+  const T& component(HashedString key, std::size_t n) const;
 
  private:
+  Acts::SpacePointContainerConfig m_config;
   Acts::SpacePointContainerOptions m_options;
+  mutable Acts::SpacePointData m_data;
   holder_t<container_t> m_container;
 };
 

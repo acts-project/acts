@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -30,6 +31,27 @@ inline bool SpacePointData::hasDynamicVariable() const {
   return not m_topHalfStripLength.empty();
 }
 
+inline std::any SpacePointData::component(Acts::HashedString key,
+					  std::size_t n) const {
+  using namespace Acts::HashedStringLiteral;
+  switch (key) {
+  case "TopHalfStripLength"_hash:
+    return m_topHalfStripLength[n];
+  case "BottomHalfStripLength"_hash:
+    return m_bottomHalfStripLength[n];
+  case "TopStripDirection"_hash:
+    return m_topStripDirection[n];
+  case "BottomStripDirection"_hash:
+    return m_bottomStripDirection[n];
+  case "StripCenterDistance"_hash:
+    return m_stripCenterDistance[n];
+  case "TopStripCenterPosition"_hash:
+    return m_topStripCenterPosition[n];
+  default:
+    throw std::runtime_error("no such component " + std::to_string(key));
+  }
+}
+  
 inline const float& SpacePointData::getTopHalfStripLength(
     std::size_t idx) const {
   return m_topHalfStripLength[idx];
