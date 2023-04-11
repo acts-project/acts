@@ -9,7 +9,7 @@
 #pragma once
 
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
 #include "Acts/TrackFinding/detail/AmbiguityTrackClustering.hpp"
 
