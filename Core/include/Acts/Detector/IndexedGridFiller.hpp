@@ -25,7 +25,8 @@
 #include <string>
 #include <vector>
 
-namespace {
+namespace Acts {
+namespace Experimental {
 
 /// @brief Helper method to generate completely populated bin sequences
 /// that respect the boundary type of the axis
@@ -40,7 +41,7 @@ namespace {
 /// @return a vector of bins to be filled
 std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
                                      std::size_t expand, std::size_t nBins,
-                                     Acts::detail::AxisBoundaryType type) {
+                                     detail::AxisBoundaryType type) {
   // Return vector for iterations
   std::vector<std::size_t> rBins;
   /// Helper method to fill a range
@@ -56,7 +57,7 @@ std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
   std::size_t bmax = minMaxBins[1u];
 
   // Open/Bound cases
-  if (type != Acts::detail::AxisBoundaryType::Closed) {
+  if (type != detail::AxisBoundaryType::Closed) {
     rBins.reserve(bmax - bmin + 1u + 2 * expand);
     // handle bmin:/max expand it down (for bound, don't fill underflow)
     if (type == Acts::detail::AxisBoundaryType::Bound) {
@@ -74,7 +75,7 @@ std::vector<std::size_t> binSequence(std::array<std::size_t, 2u> minMaxBins,
     if (2 * span < nBins and (bmax + expand <= nBins) and
         (int(bmin) - int(expand) > 0)) {
       return binSequence({bmin, bmax}, expand, nBins,
-                         Acts::detail::AxisBoundaryType::Bound);
+                         detail::AxisBoundaryType::Bound);
     } else if (2 * span < nBins) {
       bmin = int(bmin) - int(expand) > 0 ? bmin - expand : 1u;
       bmax = bmax + expand <= nBins ? bmax + expand : nBins;
@@ -212,11 +213,6 @@ std::string outputIndices(const std::set<local_bin>& lbins) {
   return rString;
 }
 
-}  // namespace
-
-namespace Acts {
-namespace Experimental {
-
 /// A struct to access the center position
 ///
 /// This generator will provide only one filling point and hence
@@ -294,11 +290,12 @@ struct PolyhedronReferenceGenerator {
 
 /// A helper class that fills surfaces into predefined grids
 struct IndexedGridFiller {
-  // Bin expansion where needed
+  /// Bin expansion where needed
   std::vector<std::size_t> binExpansion = {};
 
-  // An ouput logging level
-  Logging::Level logLevel = Logging::INFO;
+  /// Screen output logger
+  std::unique_ptr<const Logger> oLogger =
+      getDefaultLogger("IndexedGridFiller", Logging::INFO);
 
   /// @brief This method takes a collection of objects and fills them
   /// into an index grid - it uses a reference generator for grid query points
@@ -315,6 +312,7 @@ struct IndexedGridFiller {
   /// @param iObjects the object container to be indexed
   /// @param rGenerator the reference point generator for position queries
   /// @param aToAll the indices that are assigned to all bins
+  /// @param logger the logging instance that can be handed through from the caller
   ///
   /// @note as this is a Detector module, the objects within the indexed_objects container
   /// are assumed to have pointer semantics
@@ -325,8 +323,6 @@ struct IndexedGridFiller {
       const GeometryContext& gctx, index_grid& iGrid,
       const indexed_objects& iObjects, const reference_generator& rGenerator,
       const typename index_grid::grid_type::value_type& aToAll = {}) const {
-    // Screen output
-    ACTS_LOCAL_LOGGER(getDefaultLogger("IndexedGridFiller", logLevel));
     // Loop over the surfaces to be filled
     for (auto [io, o] : enumerate(iObjects)) {
       // Exclude indices that should be handled differently
@@ -345,7 +341,7 @@ struct IndexedGridFiller {
       auto lIndices = localIndices<decltype(iGrid.grid)>(
           iGrid.grid, gridQueries, binExpansion);
       ACTS_DEBUG(lIndices.size() << " indices assigned.");
-      if (logLevel <= Logging::VERBOSE) {
+      if (oLogger->level() <= Logging::VERBOSE) {
         ACTS_VERBOSE("- list of indices: " << outputIndices(lIndices));
       }
       // Now fill the surface indices
@@ -379,6 +375,11 @@ struct IndexedGridFiller {
       }
     }
   }
+
+  /// Access to the logger
+  ///
+  /// @return a const reference to the logger
+  const Logger& logger() const { return (*oLogger); }
 };
 
 }  // namespace Experimental

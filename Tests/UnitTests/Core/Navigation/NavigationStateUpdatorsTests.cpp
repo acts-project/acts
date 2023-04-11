@@ -108,7 +108,7 @@ struct IndexedSurfacesExtractor {
 
 }  // namespace Experimental
 
-class TestAxis : virtual public IAxis {
+class TestAxis : public IAxis {
  public:
   bool isEquidistant() const final { return true; }
 
