@@ -385,10 +385,6 @@ jobs:
 
   linux-nodeps:
     runs-on: ubuntu-latest
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
->>>>>>> 7189dceac (use machines v41)
     container: ghcr.io/acts-project/${{ matrix.image }}:v41
     strategy:
       matrix:
