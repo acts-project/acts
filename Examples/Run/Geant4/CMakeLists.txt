@@ -26,8 +26,7 @@ target_link_libraries(
     ActsExamplesIoRoot
     ActsPluginGeant4
     ActsExamplesDetectorGeant4
-   PUBLIC
-    ActsCore actsvg::core actsvg::meta)
+  )
     
 install(
   TARGETS 
