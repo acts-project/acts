@@ -8,7 +8,6 @@
 
 #include "ActsExamples/Geant4Detector/MockupSectorBuilder.hpp"
 
-#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/PortalHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
