@@ -50,6 +50,7 @@ class TrackFitterFunction {
                                        const MeasurementCalibratorAdapter&,
                                        TrackContainer&) const = 0;
 
+  // TODO: unify...
   virtual TrackFitterResult operator()(const std::vector<Acts::SourceLink>&,
                                        const TrackParameters&,
                                        const GeneralFitterOptions&,

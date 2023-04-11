@@ -139,7 +139,7 @@ void ActsExamples::from_json(const nlohmann::json& j,
   gdc.threshold = j["threshold"];
   gdc.digital = j["digital"];
   if (j.contains("charge-smearing")) {
-      from_json(j["charge-smearing"], gdc.chargeSmearer);
+    from_json(j["charge-smearing"], gdc.chargeSmearer);
   }
 }
 

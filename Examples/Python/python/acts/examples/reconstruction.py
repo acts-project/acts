@@ -820,6 +820,7 @@ def addKalmanTracks(
     multipleScattering: bool = True,
     energyLoss: bool = True,
     clusters: str = None,
+    calibrationConfigFile: str = None,
     logLevel: Optional[acts.logging.Level] = None,
 ) -> None:
     customLogLevel = acts.examples.defaultLogging(s, logLevel)
@@ -843,6 +844,11 @@ def addKalmanTracks(
         "level": customLogLevel(),
     }
 
+    if calibrationConfigFile is None:
+        calibrator = acts.examples.makePassThroughCalibrator()
+    else:
+        calibrator = acts.examples.makeScalingCalibrator(calibrationConfigFile)
+
     fitAlg = acts.examples.TrackFittingAlgorithm(
         level=customLogLevel(),
         inputMeasurements="measurements",
@@ -855,7 +861,7 @@ def addKalmanTracks(
         fit=acts.examples.makeKalmanFitterFunction(
             trackingGeometry, field, **kalmanOptions
         ),
-        calibrator=acts.examples.makePassThroughCalibrator(),
+        calibrator=calibrator
     )
     s.addAlgorithm(fitAlg)
     s.addWhiteboardAlias("tracks", fitAlg.config.outputTracks)

@@ -45,11 +45,11 @@ class PassThroughCalibrator : public MeasurementCalibrator {
       const ClusterContainer* /*clusters*/,
       const Acts::GeometryContext& /*gctx*/,
       Acts::MultiTrajectory<Acts::VectorMultiTrajectory>::TrackStateProxy&
-          trackState) const override;
+          trackState) const;
 };
 
-// Adapter class that wraps a MeasurementCalibrator to conform to the
-// core ACTS calibration interface
+// Executor class that pairs together a MeasurementCalibrator and a
+// MeasurementContainer, to be passed to a Kalman Fitter, for instance
 class MeasurementCalibratorAdapter {
  public:
   MeasurementCalibratorAdapter(const MeasurementCalibrator& calibrator,
