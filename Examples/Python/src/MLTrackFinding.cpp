@@ -11,6 +11,7 @@
 #ifdef ACTS_PLUGIN_MLPACK
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLDBScanAlgorithm.hpp"
 #endif
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 
