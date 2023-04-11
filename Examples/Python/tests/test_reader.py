@@ -462,6 +462,7 @@ def test_edm4hep_particle_reader(tmp_path, conf_const, ptcl_gun):
 
     assert alg.events_seen == 10
 
+
 @pytest.mark.edm4hep
 @pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
 def test_edm4hep_tracks_reader(tmp_path):
@@ -502,11 +503,13 @@ def test_edm4hep_tracks_reader(tmp_path):
     del s
 
     s = Sequencer(numThreads=1)
-    s.addReader(EDM4hepTrackReader(
-        level=acts.logging.VERBOSE,
-        outputTracks="kfTracks",
-        inputPath=str(out),
-        Bz=2*u.T
-    ))
+    s.addReader(
+        EDM4hepTrackReader(
+            level=acts.logging.VERBOSE,
+            outputTracks="kfTracks",
+            inputPath=str(out),
+            Bz=2 * u.T,
+        )
+    )
 
     s.run()

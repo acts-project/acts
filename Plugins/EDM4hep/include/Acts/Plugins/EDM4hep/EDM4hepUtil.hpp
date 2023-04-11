@@ -166,7 +166,7 @@ void writeTrack(
 }
 template <typename track_container_t, typename track_state_container_t,
           template <typename> class holder_t>
-void readTrack(edm4hep::Track from,
+void readTrack(const edm4hep::Track& from,
                Acts::TrackProxy<track_container_t, track_state_container_t,
                                 holder_t, false>
                    track,
