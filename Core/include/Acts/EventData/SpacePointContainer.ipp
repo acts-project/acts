@@ -20,7 +20,13 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     m_container(container)
 {
   m_data.resize(this->size(), config.useDetailedDoubleMeasurementInfo);
-
+  for (std::size_t i(0); i<this->size(); ++i) {
+    m_data.setX(i, this->container().x_impl(i) - m_options.beamPos[0]);
+    m_data.setY(i, this->container().y_impl(i) - m_options.beamPos[1]);
+    m_data.setRadius(i, std::sqrt(m_data.x(i)*m_data.x(i) + m_data.y(i)*m_data.y(i)));
+    m_data.setPhi(i, std::atan2f(m_data.x(i), m_data.y(i)));
+  }
+  
   // Dynamic variables
   if (config.useDetailedDoubleMeasurementInfo) {
     using namespace Acts::HashedStringLiteral;
@@ -46,7 +52,13 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     m_container(std::move(container))
 {
   m_data.resize(this->size(), config.useDetailedDoubleMeasurementInfo);
-
+  for (std::size_t i(0); i<this->size(); ++i) {
+    m_data.setX(i, this->container().x_impl(i) - m_options.beamPos[0]);
+    m_data.setY(i, this->container().y_impl(i) - m_options.beamPos[1]);
+    m_data.setRadius(i, std::sqrt(m_data.x(i)*m_data.x(i) + m_data.y(i)*m_data.y(i)));
+    m_data.setPhi(i, std::atan2f(m_data.x(i), m_data.y(i)));
+  }
+  
   // Dynamic variables 
   if (config.useDetailedDoubleMeasurementInfo) {
     using namespace Acts::HashedStringLiteral;
@@ -175,13 +187,13 @@ SpacePointContainer<container_t, holder_t>::sp(std::size_t n) const {
 template <typename container_t, template <typename> class holder_t>
 inline float SpacePointContainer<container_t, holder_t>::x(
     std::size_t n) const {
-  return container().x_impl(n) - m_options.beamPos[0];
+  return m_data.x(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline float SpacePointContainer<container_t, holder_t>::y(
     std::size_t n) const {
-  return container().y_impl(n) - m_options.beamPos[1];
+  return m_data.y(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
@@ -193,17 +205,13 @@ inline float SpacePointContainer<container_t, holder_t>::z(
 template <typename container_t, template <typename> class holder_t>
 inline float SpacePointContainer<container_t, holder_t>::phi(
     std::size_t n) const {
-  float x = this->x(n);
-  float y = this->y(n);
-  return std::atan2f(x, y);
+  return m_data.phi(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline float SpacePointContainer<container_t, holder_t>::radius(
     std::size_t n) const {
-  float x = this->x(n);
-  float y = this->y(n);
-  return std::sqrt(x*x + y*y);
+  return m_data.radius(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
