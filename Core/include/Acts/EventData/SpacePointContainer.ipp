@@ -12,29 +12,36 @@ namespace Acts {
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
+    const Acts::SpacePointContainerOptions& options,
     container_t& container)
-    : m_container(container)
+  : m_options(options.toInternalUnits()),
+    m_container(container)
 {}
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
+								const Acts::SpacePointContainerOptions& options,
     container_t&& container)
-    : m_container(std::move(container))
+  : m_options(options.toInternalUnits()),
+  m_container(std::move(container))
 {}
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     SpacePointContainer<container_t, holder_t>& other)
-    : m_container(*other.m_container.ptr)
+  : m_options(other.m_options),
+    m_container(*other.m_container.ptr)
 {}
 
 template <typename container_t, template <typename> class holder_t>
 template <template <typename> class, typename>
 SpacePointContainer<container_t, holder_t>&
 SpacePointContainer<container_t, holder_t>::operator=(
-    SpacePointContainer<container_t, holder_t>& other) {
+    SpacePointContainer<container_t, holder_t>& other)
+{
+  m_options = other.m_options;
   m_container.ptr = other.m_container.ptr;
   return *this;
 }
@@ -42,9 +49,10 @@ SpacePointContainer<container_t, holder_t>::operator=(
 template <typename container_t, template <typename> class holder_t>
 SpacePointContainer<container_t, holder_t>::SpacePointContainer(
     SpacePointContainer<container_t, holder_t>&& other) noexcept
-    : m_container(std::exchange(other.m_container.ptr, nullptr))
+  : m_options(other.m_options),
+    m_container(std::exchange(other.m_container.ptr, nullptr))
 {}
-
+  
 template <typename container_t, template <typename> class holder_t>
 template <typename T>
 T SpacePointContainer<container_t, holder_t>::component(HashedString key,
@@ -130,13 +138,13 @@ SpacePointContainer<container_t, holder_t>::sp(std::size_t n) const {
 template <typename container_t, template <typename> class holder_t>
 inline float SpacePointContainer<container_t, holder_t>::x(
     std::size_t n) const {
-  return container().x_impl(n);
+  return container().x_impl(n) - m_options.beamPos[0];
 }
 
 template <typename container_t, template <typename> class holder_t>
 inline float SpacePointContainer<container_t, holder_t>::y(
     std::size_t n) const {
-  return container().y_impl(n);
+  return container().y_impl(n) - m_options.beamPos[1];
 }
 
 template <typename container_t, template <typename> class holder_t>
@@ -148,7 +156,9 @@ inline float SpacePointContainer<container_t, holder_t>::z(
 template <typename container_t, template <typename> class holder_t>
 inline float SpacePointContainer<container_t, holder_t>::radius(
     std::size_t n) const {
-  return container().radius_impl(n);
+  float x = this->x(n);
+  float y = this->y(n);
+  return std::sqrt(x*x + y*y);
 }
 
 template <typename container_t, template <typename> class holder_t>

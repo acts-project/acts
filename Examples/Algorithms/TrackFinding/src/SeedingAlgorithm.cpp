@@ -191,11 +191,14 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
+  // Options
+  Acts::SpacePointContainerOptions spOptions;
+  spOptions.beamPos = {0., 0.};
   // Prepare interface SpacePoint backend-ACTS
   ActsExamples::SpacePointContainer container(spacePointPtrs);
   // Prepare Acts API
   Acts::SpacePointContainer<decltype(container), Acts::detail::RefHolder>
-      spContainer(container);
+    spContainer(std::move(spOptions), container);
 
   using value_type = typename decltype(spContainer)::ConstSpacePointProxyType;
   using seed_type = Acts::Seed<value_type>;

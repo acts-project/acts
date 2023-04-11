@@ -1,3 +1,4 @@
+// -*- C++ -*-
 // This file is part of the Acts project.
 //
 // Copyright (C) 2023 CERN for the benefit of the Acts project
@@ -225,7 +226,7 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 }
 
 template <typename external_spacepoint_t>
-inline size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
+inline std::size_t Acts::BinnedSPGroup<external_spacepoint_t>::size() const {
   return m_grid->size();
 }
 
