@@ -49,6 +49,7 @@ class SpacePointProxy {
   float x() const;
   float y() const;
   float z() const;
+  float phi() const;
   float radius() const;
   float varianceR() const;
   float varianceZ() const;

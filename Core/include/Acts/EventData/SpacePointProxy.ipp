@@ -49,6 +49,11 @@ inline float SpacePointProxy<container_t, read_only>::z() const {
 }
 
 template <typename container_t, bool read_only>
+inline float SpacePointProxy<container_t, read_only>::phi() const {
+  return container().phi(m_index);
+}
+
+template <typename container_t, bool read_only>
 inline float SpacePointProxy<container_t, read_only>::radius() const {
   return container().radius(m_index);
 }

@@ -19,6 +19,9 @@
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/IAlgorithm.hpp"
 
+#include "Acts/EventData/SpacePointContainer.hpp"
+#include "ActsExamples/EventData/SpacePointContainer.hpp"
+
 #include <optional>
 #include <string>
 #include <vector>
@@ -28,6 +31,10 @@ namespace ActsExamples {
 /// Construct track seeds from space points.
 class SeedingOrthogonalAlgorithm final : public IAlgorithm {
  public:
+  using proxy_type = typename Acts::SpacePointContainer<
+      ActsExamples::SpacePointContainer<std::vector<const SimSpacePoint*>>,
+      Acts::detail::RefHolder>::ConstSpacePointProxyType;
+
   struct Config {
     /// Input space point collections.
     ///
@@ -40,7 +47,7 @@ class SeedingOrthogonalAlgorithm final : public IAlgorithm {
     std::string outputSeeds;
 
     Acts::SeedFilterConfig seedFilterConfig;
-    Acts::SeedFinderOrthogonalConfig<SimSpacePoint> seedFinderConfig;
+    Acts::SeedFinderOrthogonalConfig<proxy_type> seedFinderConfig;
     Acts::SeedFinderOptions seedFinderOptions;
   };
 
@@ -61,7 +68,7 @@ class SeedingOrthogonalAlgorithm final : public IAlgorithm {
 
  private:
   Config m_cfg;
-  Acts::SeedFinderOrthogonal<SimSpacePoint> m_finder;
+  Acts::SeedFinderOrthogonal<proxy_type> m_finder;
 
   std::vector<std::unique_ptr<ReadDataHandle<SimSpacePointContainer>>>
       m_inputSpacePoints{};

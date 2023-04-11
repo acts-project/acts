@@ -78,7 +78,8 @@ class SpacePointContainer {
   using ProxyType =
       typename std::conditional<read_only, ConstSpacePointProxyType,
                                 SpacePointProxyType>::type;
-
+  using value_type = ProxyType;
+  
  public:
   // Constructors
   // It makes sense to support both options of
@@ -151,6 +152,7 @@ class SpacePointContainer {
   float x(std::size_t n) const;
   float y(std::size_t n) const;
   float z(std::size_t n) const;
+  float phi(std::size_t n) const;
   float radius(std::size_t n) const;
   float varianceR(std::size_t n) const;
   float varianceZ(std::size_t n) const;

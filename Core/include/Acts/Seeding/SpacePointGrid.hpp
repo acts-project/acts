@@ -87,7 +87,7 @@ struct SpacePointGridOptions {
 
 template <typename external_spacepoint_t>
 using SpacePointGrid = detail::Grid<
-    std::vector<std::unique_ptr<InternalSpacePoint<external_spacepoint_t>>>,
+    std::vector<external_spacepoint_t>,
     detail::Axis<detail::AxisType::Equidistant,
                  detail::AxisBoundaryType::Closed>,
     detail::Axis<detail::AxisType::Variable, detail::AxisBoundaryType::Bound>>;

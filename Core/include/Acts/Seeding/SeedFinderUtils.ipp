@@ -66,31 +66,16 @@ inline LinCircle transformCoordinates(const external_spacepoint_t& sp,
 }
 
 template <typename external_spacepoint_t>
-inline void transformCoordinates(
-    Acts::SpacePointData& spacePointData,
-    const std::vector<InternalSpacePoint<external_spacepoint_t>*>& vec,
-    const InternalSpacePoint<external_spacepoint_t>& spM, bool bottom,
-    std::vector<LinCircle>& linCircleVec) {
-  auto extractFunction =
-      [](const InternalSpacePoint<external_spacepoint_t>& obj)
-      -> std::array<float, 6> {
-    std::array<float, 6> output{obj.x(),      obj.y(),         obj.z(),
-                                obj.radius(), obj.varianceR(), obj.varianceZ()};
-    return output;
-  };
-
-  transformCoordinates<InternalSpacePoint<external_spacepoint_t>>(
-      spacePointData, vec, spM, bottom, linCircleVec,
-      std::move(extractFunction));
-}
-
-template <typename external_spacepoint_t, typename callable_t>
 inline void transformCoordinates(Acts::SpacePointData& spacePointData,
-                                 const std::vector<external_spacepoint_t*>& vec,
+                                 const std::vector<const external_spacepoint_t*>& vec,
                                  const external_spacepoint_t& spM, bool bottom,
-                                 std::vector<LinCircle>& linCircleVec,
-                                 callable_t&& extractFunction) {
-  auto [xM, yM, zM, rM, varianceRM, varianceZM] = extractFunction(spM);
+                                 std::vector<LinCircle>& linCircleVec) {
+  float xM = spM.x();
+  float yM = spM.y();
+  float zM = spM.z();	
+  float rM = spM.radius();
+  float varianceRM = spM.varianceR();
+  float varianceZM = spM.varianceZ();
 
   // resize + operator[] is faster then reserve and push_back
   linCircleVec.resize(vec.size());
@@ -101,8 +86,13 @@ inline void transformCoordinates(Acts::SpacePointData& spacePointData,
   int bottomFactor = bottom ? -1 : 1;
 
   for (std::size_t idx(0); idx < vec.size(); ++idx) {
-    auto& sp = vec[idx];
-    auto [xSP, ySP, zSP, rSP, varianceRSP, varianceZSP] = extractFunction(*sp);
+    const external_spacepoint_t* sp = vec[idx];
+
+    float xSP = sp->x();
+    float ySP = sp->y();
+    float zSP = sp->z();
+    float varianceRSP = sp->varianceR();
+    float varianceZSP = sp->varianceZ();	
 
     float deltaX = xSP - xM;
     float deltaY = ySP - yM;
@@ -151,7 +141,7 @@ template <typename external_spacepoint_t>
 inline bool xyzCoordinateCheck(
     Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderConfig<external_spacepoint_t>& m_config,
-    const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
+    const external_spacepoint_t& sp,
     const double* spacepointPosition, double* outputCoordinates) {
   // check the compatibility of SPs coordinates in xyz assuming the
   // Bottom-Middle direction with the strip measurement details

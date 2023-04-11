@@ -154,6 +154,14 @@ inline float SpacePointContainer<container_t, holder_t>::z(
 }
 
 template <typename container_t, template <typename> class holder_t>
+inline float SpacePointContainer<container_t, holder_t>::phi(
+    std::size_t n) const {
+  float x = this->x(n);
+  float y = this->y(n);
+  return std::atan2f(x, y);
+}
+
+template <typename container_t, template <typename> class holder_t>
 inline float SpacePointContainer<container_t, holder_t>::radius(
     std::size_t n) const {
   float x = this->x(n);

@@ -237,24 +237,24 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
          grid_glob_bin < spacePointsGrouping.grid().size(); ++grid_glob_bin) {
       const auto& collection = spacePointsGrouping.grid().at(grid_glob_bin);
       for (const auto& sp : collection) {
-        std::size_t index = sp->index();
+        std::size_t index = sp.index();
         state.spacePointData.setTopHalfStripLength(
             index,
-            sp->sp().template component<float>("TopHalfStripLength"_hash));
+            sp.template component<float>("TopHalfStripLength"_hash));
         state.spacePointData.setBottomHalfStripLength(
             index,
-            sp->sp().template component<float>("BottomHalfStripLength"_hash));
+            sp.template component<float>("BottomHalfStripLength"_hash));
         state.spacePointData.setTopStripDirection(
-            index, sp->sp().template component<Acts::Vector3>(
+            index, sp.template component<Acts::Vector3>(
                        "TopStripDirection"_hash));
         state.spacePointData.setBottomStripDirection(
-            index, sp->sp().template component<Acts::Vector3>(
+            index, sp.template component<Acts::Vector3>(
                        "BottomStripDirection"_hash));
         state.spacePointData.setStripCenterDistance(
-            index, sp->sp().template component<Acts::Vector3>(
+            index, sp.template component<Acts::Vector3>(
                        "StripCenterDistance"_hash));
         state.spacePointData.setTopStripCenterPosition(
-            index, sp->sp().template component<Acts::Vector3>(
+            index, sp.template component<Acts::Vector3>(
                        "TopStripCenterPosition"_hash));
       }
     }
