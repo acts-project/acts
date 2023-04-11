@@ -1432,7 +1432,7 @@ def addVertexFitting(
     outputDirRoot : Path|str, path, None
         the output folder for the Root output, None triggers no output
     associatedParticles : str, "associatedTruthParticles"
-        RootVertexPerformanceWriter.inputAssociatedTruthParticles
+        VertexPerformanceWriter.inputAssociatedTruthParticles
     vertexFinder : VertexFinder, Truth
         vertexFinder algorithm: one of Truth, AMVF, Iterative
     logLevel : acts.logging.Level, None
@@ -1443,7 +1443,7 @@ def addVertexFitting(
         VertexFitterAlgorithm,
         IterativeVertexFinderAlgorithm,
         AdaptiveMultiVertexFinderAlgorithm,
-        RootVertexPerformanceWriter,
+        VertexPerformanceWriter,
     )
 
     trajectories = trajectories if trajectories is not None else ""
@@ -1521,11 +1521,11 @@ def addVertexFitting(
             outputDirRoot.mkdir()
         if associatedParticles == selectedParticles:
             warnings.warn(
-                "Using RootVertexPerformanceWriter with smeared particles is not necessarily supported. "
+                "Using VertexPerformanceWriter with smeared particles is not necessarily supported. "
                 "Please get in touch with us"
             )
         s.addWriter(
-            RootVertexPerformanceWriter(
+            VertexPerformanceWriter(
                 level=customLogLevel(),
                 inputAllTruthParticles=inputParticles,
                 inputSelectedTruthParticles=selectedParticles,
