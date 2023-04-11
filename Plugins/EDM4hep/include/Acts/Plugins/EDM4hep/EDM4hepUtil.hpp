@@ -75,8 +75,8 @@ void writeTrack(
   std::vector<edm4hep::TrackState> outTrackStates;
   outTrackStates.reserve(track.nTrackStates());
 
-  auto setParameters = [Bz](edm4hep::TrackState& trackState,
-                            const detail::Parameters& params) {
+  auto setParameters = [](edm4hep::TrackState& trackState,
+                          const detail::Parameters& params) {
     trackState.D0 = params.values[0];
     trackState.Z0 = params.values[1];
     trackState.phi = params.values[2];
