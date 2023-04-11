@@ -133,9 +133,6 @@ ActsExamples::MockupSectorBuilder::buildChamber(
   Acts::Vector3 chamber_position = {(maxValues.x() + minValues.x()) / 2,
                                     (maxValues.y() + minValues.y()) / 2,
                                     (maxValues.z() + minValues.z()) / 2};
-  std::cout << "chamber y pos=" << chamber_position.y() << std::endl;
-  std::cout << "chamber hy=" << hy << std::endl;
-  std::cin.ignore();
 
   // create the detector volume for the chamber
   auto detectorVolume = Acts::Experimental::DetectorVolumeFactory::construct(
