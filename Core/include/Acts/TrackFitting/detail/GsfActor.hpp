@@ -794,7 +794,7 @@ struct GsfActor {
   }
 };
 
-/// A actor that collects the final multi component state once the propagation
+/// An actor that collects the final multi component state once the propagation
 /// finished
 struct FinalStateCollector {
   using MultiPars = Acts::Experimental::GsfConstants::FinalMultiComponentState;
