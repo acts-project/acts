@@ -16,9 +16,8 @@
 #include <memory>
 #include <string>
 
-#include "edm4hep/MCParticleCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTReader.h"
+#include <edm4hep/MCParticleCollection.h>
+#include <podio/ROOTFrameReader.h>
 
 namespace ActsExamples {
 
@@ -60,10 +59,7 @@ class EDM4hepParticleReader final : public IReader {
   std::pair<size_t, size_t> m_eventsRange;
   std::unique_ptr<const Acts::Logger> m_logger;
 
-  podio::ROOTReader m_reader;
-  podio::EventStore m_store;
-
-  const edm4hep::MCParticleCollection* m_mcParticleCollection;
+  podio::ROOTFrameReader m_reader;
 
   WriteDataHandle<SimParticleContainer> m_outputParticles{this,
                                                           "OutputParticles"};
