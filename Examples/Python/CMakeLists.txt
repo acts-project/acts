@@ -168,15 +168,16 @@ if(ACTS_BUILD_PLUGIN_ONNX)
   target_link_libraries(ActsPythonBindings PUBLIC ActsExamplesTrackFindingML)
   target_sources(ActsPythonBindings PRIVATE src/Onnx.cpp)
   list(APPEND py_files examples/onnx/__init__.py)
+
+  if(ACTS_BUILD_PLUGIN_MLPACK)
+    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpack.cpp)
+    list(APPEND py_files examples/onnx/mlpack.py)
+  else()
+    target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
+  endif()
+
 else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
-endif()
-
-if(ACTS_BUILD_PLUGIN_MLPACK)
-  target_sources(ActsPythonBindings PRIVATE src/Mlpack.cpp)
-  list(APPEND py_files examples/onnx/mlpack.py)
-else()
-  target_sources(ActsPythonBindings PRIVATE src/MlpackStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)

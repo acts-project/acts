@@ -19,7 +19,7 @@ using namespace Acts;
 
 namespace Acts::Python {
 
-void addMlpack(Context& ctx) {
+void addOnnxMlpack(Context& ctx) {
   auto [m, mex, onnx] = ctx.get("main", "examples", "onnx");
   auto mlpack = mex.def_submodule("_mlpack");
 
