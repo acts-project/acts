@@ -90,6 +90,14 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
                                const MeasurementCalibrator& calibrator,
                                TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
+
+    using namespace Acts::Experimental::GsfConstants;
+    if (not tracks.hasColumn(
+            Acts::hashString(kFinalMultiComponentStateColumn))) {
+      std::string key(kFinalMultiComponentStateColumn);
+      tracks.template addColumn<FinalMultiComponentState>(key);
+    }
+
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       gsfOptions, tracks);
   }
@@ -102,6 +110,14 @@ struct GsfFitterFunctionImpl final : public ActsExamples::TrackFitterFunction {
       const std::vector<const Acts::Surface*>& surfaceSequence,
       TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options, calibrator);
+
+    using namespace Acts::Experimental::GsfConstants;
+    if (not tracks.hasColumn(
+            Acts::hashString(kFinalMultiComponentStateColumn))) {
+      std::string key(kFinalMultiComponentStateColumn);
+      tracks.template addColumn<FinalMultiComponentState>(key);
+    }
+
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                             initialParameters, gsfOptions, surfaceSequence,
                             tracks);

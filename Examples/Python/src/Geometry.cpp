@@ -7,6 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
@@ -84,6 +85,12 @@ void addGeometry(Context& ctx) {
   {
     py::class_<Acts::Experimental::Detector,
                std::shared_ptr<Acts::Experimental::Detector>>(m, "Detector");
+  }
+
+  {
+    py::class_<Acts::Experimental::DetectorVolume,
+               std::shared_ptr<Acts::Experimental::DetectorVolume>>(
+        m, "DetectorVolume");
   }
 }
 
