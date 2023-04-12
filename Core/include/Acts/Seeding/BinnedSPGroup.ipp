@@ -202,7 +202,6 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
   for (auto& binIndex : rBinsIndex) {
     std::vector<external_spacepoint_t>&
         rbin = grid->atPosition(binIndex);
-    // this recomputes the radius every time .. we may want to save these values beforehand
     std::sort(
         rbin.begin(), rbin.end(),
         [](const external_spacepoint_t& a,
