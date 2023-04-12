@@ -191,6 +191,9 @@ class MultiEigenStepperLoop
   /// .curvilinearState()
   FinalReductionMethod m_finalReductionMethod = FinalReductionMethod::eMean;
 
+  /// The logger (used if no logger is provided by caller of methods)
+  std::unique_ptr<const Acts::Logger> m_logger;
+
   /// Small vector type for speeding up some computations where we need to
   /// accumulate stuff of components. We think 16 is a reasonable amount here.
   template <typename T>
@@ -218,9 +221,12 @@ class MultiEigenStepperLoop
   /// Constructor from a magnetic field and a optionally provided Logger
   MultiEigenStepperLoop(
       std::shared_ptr<const MagneticFieldProvider> bField,
-      FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean)
+      FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean,
+      std::unique_ptr<const Logger> logger = getDefaultLogger("GSF",
+                                                              Logging::INFO))
       : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
-        m_finalReductionMethod(finalReductionMethod) {}
+        m_finalReductionMethod(finalReductionMethod),
+        m_logger(std::move(logger)) {}
 
   struct State {
     /// The struct that stores the individual components
@@ -881,12 +887,14 @@ class MultiEigenStepperLoop
   ///
   /// @param [in,out] state is the propagation state associated with the track
   /// parameters that are being propagated.
+  /// @param [in] navigator is the navigator of the propagation
   ///
   /// The state contains the desired step size. It can be negative during
   /// backwards track propagation, and since we're using an adaptive
   /// algorithm, it can be modified by the stepper class during propagation.
-  template <typename propagator_state_t>
-  Result<double> step(propagator_state_t& state) const;
+  template <typename propagator_state_t, typename navigator_t>
+  Result<double> step(propagator_state_t& state,
+                      const navigator_t& navigator) const;
 };
 
 }  // namespace Acts

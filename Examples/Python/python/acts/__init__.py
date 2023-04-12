@@ -31,6 +31,11 @@ def Propagator(stepper, navigator):
     for prefix in ("Eigen", "Atlas", "StraightLine"):
         _stepper = getattr(ActsPythonBindings, f"{prefix}Stepper")
         if isinstance(stepper, _stepper):
+            _nextNavigator = getattr(ActsPythonBindings, "NextNavigator")
+            if isinstance(navigator, _nextNavigator):
+                return getattr(
+                    ActsPythonBindings._propagator, f"{prefix}NextPropagator"
+                )(stepper, navigator)
             return getattr(ActsPythonBindings._propagator, f"{prefix}Propagator")(
                 stepper, navigator
             )

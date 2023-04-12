@@ -117,10 +117,9 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
     double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {
-  // Stepper should be copied into the fitters
-  const MultiStepper stepper(std::move(magneticField), finalReductionMethod);
-
   // Standard fitter
+  MultiStepper stepper(magneticField, finalReductionMethod,
+                       logger.cloneWithSuffix("Step"));
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
@@ -133,9 +132,12 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
                      logger.cloneWithSuffix("GSF"));
 
   // Direct fitter
+  MultiStepper directStepper(std::move(magneticField), finalReductionMethod,
+                             logger.cloneWithSuffix("Step"));
   Acts::DirectNavigator directNavigator{
       logger.cloneWithSuffix("DirectNavigator")};
-  DirectPropagator directPropagator(stepper, std::move(directNavigator),
+  DirectPropagator directPropagator(std::move(directStepper),
+                                    std::move(directNavigator),
                                     logger.cloneWithSuffix("DirectPropagator"));
   DirectFitter directTrackFitter(std::move(directPropagator),
                                  BetheHeitlerApprox(betheHeitlerApprox),

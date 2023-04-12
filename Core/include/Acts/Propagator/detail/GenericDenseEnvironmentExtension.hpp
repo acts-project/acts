@@ -66,10 +66,17 @@ struct GenericDenseEnvironmentExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagator
+  /// @param [in] navigator Navigator of the propagator
+  ///
   /// @return Boolean flag if the step would be valid
-  template <typename propagator_state_t, typename stepper_t>
-  int bid(const propagator_state_t& state, const stepper_t& stepper) const {
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
+  int bid(const propagator_state_t& state, const stepper_t& stepper,
+          const navigator_t& navigator) const {
     // Check for valid particle properties
     if (stepper.charge(state.stepping) == 0. || state.options.mass == 0. ||
         stepper.momentum(state.stepping) < state.options.momentumCutOff) {
@@ -77,8 +84,8 @@ struct GenericDenseEnvironmentExtension {
     }
 
     // Check existence of a volume with material
-    if (!state.navigation.currentVolume ||
-        !state.navigation.currentVolume->volumeMaterial()) {
+    if (!navigator.currentVolume(state.navigation) ||
+        !navigator.currentVolume(state.navigation)->volumeMaterial()) {
       return 0;
     }
     return 2;
@@ -89,23 +96,30 @@ struct GenericDenseEnvironmentExtension {
   ///
   /// @tparam stepper_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagator
+  /// @param [in] navigator Navigator of the propagator
   /// @param [out] knew Next k_i that is evaluated
   /// @param [out] kQoP k_i elements of the momenta
   /// @param [in] bField B-Field at the evaluation position
   /// @param [in] i Index of the k_i, i = [0, 3]
   /// @param [in] h Step size (= 0. ^ 0.5 * StepSize ^ StepSize)
   /// @param [in] kprev Evaluated k_{i - 1}
+  ///
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool k(const propagator_state_t& state, const stepper_t& stepper,
-         ThisVector3& knew, const Vector3& bField, std::array<Scalar, 4>& kQoP,
-         const int i = 0, const double h = 0.,
+         const navigator_t& navigator, ThisVector3& knew, const Vector3& bField,
+         std::array<Scalar, 4>& kQoP, const int i = 0, const double h = 0.,
          const ThisVector3& kprev = ThisVector3::Zero()) {
     // i = 0 is used for setup and evaluation of k
     if (i == 0) {
       // Set up container for energy loss
-      auto volumeMaterial = state.navigation.currentVolume->volumeMaterial();
+      auto volumeMaterial =
+          navigator.currentVolume(state.navigation)->volumeMaterial();
       ThisVector3 position = stepper.position(state.stepping);
       material = (volumeMaterial->material(position.template cast<double>()));
       initialMomentum = stepper.momentum(state.stepping);
@@ -124,7 +138,7 @@ struct GenericDenseEnvironmentExtension {
       kQoP[0] = Lambdappi[0];
     } else {
       // Update parameters and check for momentum condition
-      updateEnergyLoss(state.options.mass, h, state.stepping, stepper, i);
+      updateEnergyLoss(state.options.mass, h, state, stepper, i);
       if (currentMomentum < state.options.momentumCutOff) {
         return false;
       }
@@ -151,12 +165,17 @@ struct GenericDenseEnvironmentExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagator
   /// @param [in] h Step size
+  ///
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h) const {
+                const navigator_t& /*navigator*/, const double h) const {
     // Evaluate the new momentum
     auto newMomentum =
         stepper.momentum(state.stepping) +
@@ -196,14 +215,22 @@ struct GenericDenseEnvironmentExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
+  /// @param [in] stepper Stepper of the propagator
+  /// @param [in] navigator Navigator of the propagator
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
+  ///
   /// @return Boolean flag if the calculation is valid
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool finalize(propagator_state_t& state, const stepper_t& stepper,
-                const double h, FreeMatrix& D) const {
-    return finalize(state, stepper, h) && transportMatrix(state, stepper, h, D);
+                const navigator_t& navigator, const double h,
+                FreeMatrix& D) const {
+    return finalize(state, stepper, navigator, h) &&
+           transportMatrix(state, stepper, navigator, h, D);
   }
 
  private:
@@ -211,13 +238,18 @@ struct GenericDenseEnvironmentExtension {
   ///
   /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  /// @tparam navigator_t Type of the navigator
+  ///
   /// @param [in] state State of the propagator
   /// @param [in] h Step size
   /// @param [out] D Transport matrix
+  ///
   /// @return Boolean flag if evaluation is valid
-  template <typename propagator_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t,
+            typename navigator_t>
   bool transportMatrix(propagator_state_t& state, const stepper_t& stepper,
-                       const double h, FreeMatrix& D) const {
+                       const navigator_t& /*navigator*/, const double h,
+                       FreeMatrix& D) const {
     /// The calculations are based on ATL-SOFT-PUB-2009-002. The update of the
     /// Jacobian matrix is requires only the calculation of eq. 17 and 18.
     /// Since the terms of eq. 18 are currently 0, this matrix is not needed
@@ -408,23 +440,24 @@ struct GenericDenseEnvironmentExtension {
   /// @brief Update of the kinematic parameters of the RKN4 sub-steps after
   /// initialization with energy loss of a particle in material
   ///
-  /// @tparam stepper_state_t Type of the state of the stepper
+  /// @tparam propagator_state_t Type of the state of the propagator
   /// @tparam stepper_t Type of the stepper
+  ///
   /// @param [in] h Stepped distance of the sub-step (1-3)
   /// @param [in] state State of the stepper
   /// @param [in] i Index of the sub-step (1-3)
-  template <typename stepper_state_t, typename stepper_t>
+  template <typename propagator_state_t, typename stepper_t>
   void updateEnergyLoss(const double mass, const double h,
-                        const stepper_state_t& state, const stepper_t& stepper,
-                        const int i) {
+                        const propagator_state_t& state,
+                        const stepper_t& stepper, const int i) {
     // Update parameters related to a changed momentum
     currentMomentum = initialMomentum + h * dPds[i - 1];
     using std::sqrt;
     energy[i] = sqrt(currentMomentum * currentMomentum + mass * mass);
     dPds[i] = g * energy[i] / currentMomentum;
-    qop[i] = stepper.charge(state) / currentMomentum;
+    qop[i] = stepper.charge(state.stepping) / currentMomentum;
     // Calculate term for later error propagation
-    if (state.covTransport) {
+    if (state.stepping.covTransport) {
       dLdl[i] = (-qop[i] * qop[i] * g * energy[i] *
                      (3. - (currentMomentum * currentMomentum) /
                                (energy[i] * energy[i])) -
@@ -434,5 +467,4 @@ struct GenericDenseEnvironmentExtension {
 };
 
 }  // namespace detail
-
 }  // namespace Acts

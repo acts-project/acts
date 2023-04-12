@@ -51,6 +51,7 @@ METHOD_TRAIT(linTrack_t, linearizeTrack);
                                               state_exists>;
       };
 // clang-format on
+
 }  // namespace Linearizer
 }  // namespace Concepts
 
