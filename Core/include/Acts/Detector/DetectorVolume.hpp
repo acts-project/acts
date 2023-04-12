@@ -92,6 +92,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param bounds the volume bounds
   /// @param surfaces are the contained surfaces of this volume
   /// @param volumes are the containes volumes of this volume
+  /// @param detectorVolumeUpdator is a Delegate to find the assocaited volume
   /// @param surfaceCandidateUpdator the navigation state updator for surfaces/portals
   ///
   /// @note throws exception if misconfigured: no bounds
@@ -111,6 +112,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param name the volume name
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
+  /// @param detectorVolumeUpdator is a Delegate to find the assocaited volume
   /// @param surfaceCandidateUpdator the navigation state updator for surfaces/portals
   ///
   /// @note throws exception if misconfigured: no bounds
