@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   auto dVolume = DetectorVolumeFactory::construct(
       pGenerator, tContext, "dummy", dTransform,
       std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
-      tryAllPortalsAndSurfaces(), unconnectedUpdator());
+      tryAllPortalsAndSurfaces(), tryAllPortalsAndSurfaces());
 
   auto cBarPortals = generatePortals(dTransform, cBar, dVolume);
 
