@@ -1,23 +1,26 @@
 add_library(
-  ActsPluginmlpack SHARED
+  ActsPluginMlpack SHARED
   # header files
-  include/Acts/Plugins/mlpack/AmbiguityDBScanClustering.hpp)
+  include/Acts/Plugins/Mlpack/AmbiguityDBScanClustering.hpp)
 
 target_include_directories(
-  ActsPluginmlpack
+  ActsPluginMlpack
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>)
 
 target_link_libraries(
-  ActsPluginmlpack
+  ActsPluginMlpack
   PUBLIC ActsCore)
 
-set_target_properties(ActsPluginmlpack PROPERTIES LINKER_LANGUAGE CXX)
+target_include_directories(ActsPluginMlpack 
+  SYSTEM INTERFACE ${mlpack_INCLUDE_DIR})
+
+set_target_properties(ActsPluginMlpack PROPERTIES LINKER_LANGUAGE CXX)
 
 install(
-  TARGETS ActsPluginmlpack
-  EXPORT ActsPluginmlpackTargets
+  TARGETS ActsPluginMlpack
+  EXPORT ActsPluginMlpackTargets
   LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
 
 install(

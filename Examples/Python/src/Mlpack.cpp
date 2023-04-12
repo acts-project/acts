@@ -7,10 +7,7 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #include "Acts/Plugins/Python/Utilities.hpp"
-#include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
-#ifdef ACTS_PLUGIN_MLPACK
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLDBScanAlgorithm.hpp"
-#endif
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -22,20 +19,13 @@ using namespace Acts;
 
 namespace Acts::Python {
 
-void addMLTrackFinding(Context& ctx) {
-  auto [m, mex] = ctx.get("main", "examples");
-  auto onnx = mex.def_submodule("_onnx");
+void addMlpack(Context& ctx) {
+  auto [m, mex, onnx] = ctx.get("main", "examples", "onnx");
+  auto mlpack = mex.def_submodule("_mlpack");
 
-  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
-                                onnx, "AmbiguityResolutionMLAlgorithm",
-                                inputTracks, inputDuplicateNN, outputTracks,
-                                nMeasurementsMin);
-
-#ifdef ACTS_PLUGIN_MLPACK
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AmbiguityResolutionMLDBScanAlgorithm, onnx,
+      ActsExamples::AmbiguityResolutionMLDBScanAlgorithm, mlpack,
       "AmbiguityResolutionMLDBScanAlgorithm", inputTracks, inputDuplicateNN,
       outputTracks, nMeasurementsMin, epsilonDBScan, minPointsDBScan);
-#endif
 }
 }  // namespace Acts::Python
