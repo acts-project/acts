@@ -168,13 +168,13 @@ class SpacePointContainer {
   const ProxyType proxy(std::size_t n) const;
 
  private:
-  float x(std::size_t n) const;
-  float y(std::size_t n) const;
-  float z(std::size_t n) const;
-  float phi(std::size_t n) const;
-  float radius(std::size_t n) const;
-  float varianceR(std::size_t n) const;
-  float varianceZ(std::size_t n) const;
+  const float& x(std::size_t n) const;
+  const float& y(std::size_t n) const;
+  const float& z(std::size_t n) const;
+  const float& phi(std::size_t n) const;
+  const float& radius(std::size_t n) const;
+  const float& varianceR(std::size_t n) const;
+  const float& varianceZ(std::size_t n) const;
 
   const float& quality(std::size_t n) const;
   const float& deltaR(std::size_t n) const;

@@ -23,8 +23,11 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
   for (std::size_t i(0); i<this->size(); ++i) {
     m_data.setX(i, this->container().x_impl(i) - m_options.beamPos[0]);
     m_data.setY(i, this->container().y_impl(i) - m_options.beamPos[1]);
+    m_data.setZ(i, this->container().z_impl(i) );
     m_data.setRadius(i, std::sqrt(m_data.x(i)*m_data.x(i) + m_data.y(i)*m_data.y(i)));
     m_data.setPhi(i, std::atan2f(m_data.x(i), m_data.y(i)));
+    m_data.setVarianceR(i, this->container().varianceR_impl(i) );
+    m_data.setVarianceZ(i, this->container().varianceZ_impl(i) );
   }
   
   // Dynamic variables
@@ -55,8 +58,11 @@ SpacePointContainer<container_t, holder_t>::SpacePointContainer(
   for (std::size_t i(0); i<this->size(); ++i) {
     m_data.setX(i, this->container().x_impl(i) - m_options.beamPos[0]);
     m_data.setY(i, this->container().y_impl(i) - m_options.beamPos[1]);
+    m_data.setZ(i, this->container().z_impl(i) );
     m_data.setRadius(i, std::sqrt(m_data.x(i)*m_data.x(i) + m_data.y(i)*m_data.y(i)));
     m_data.setPhi(i, std::atan2f(m_data.x(i), m_data.y(i)));
+    m_data.setVarianceR(i, this->container().varianceR_impl(i) );
+    m_data.setVarianceZ(i, this->container().varianceZ_impl(i) );
   }
   
   // Dynamic variables 
@@ -185,45 +191,45 @@ SpacePointContainer<container_t, holder_t>::sp(std::size_t n) const {
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::x(
+inline const float& SpacePointContainer<container_t, holder_t>::x(
     std::size_t n) const {
   return m_data.x(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::y(
+inline const float& SpacePointContainer<container_t, holder_t>::y(
     std::size_t n) const {
   return m_data.y(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::z(
+inline const float& SpacePointContainer<container_t, holder_t>::z(
     std::size_t n) const {
-  return container().z_impl(n);
+  return m_data.z(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::phi(
+inline const float& SpacePointContainer<container_t, holder_t>::phi(
     std::size_t n) const {
   return m_data.phi(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::radius(
+inline const float& SpacePointContainer<container_t, holder_t>::radius(
     std::size_t n) const {
   return m_data.radius(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::varianceR(
+inline const float& SpacePointContainer<container_t, holder_t>::varianceR(
     std::size_t n) const {
-  return container().varianceR_impl(n);
+  return m_data.varianceR(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
-inline float SpacePointContainer<container_t, holder_t>::varianceZ(
+inline const float& SpacePointContainer<container_t, holder_t>::varianceZ(
     std::size_t n) const {
-  return container().varianceZ_impl(n);
+  return m_data.varianceZ(n);
 }
 
 template <typename container_t, template <typename> class holder_t>
