@@ -27,36 +27,14 @@ constexpr float K = 0.307075_MeV * 1_cm * 1_cm;
 // Energy scale for plasma energy.
 constexpr float PlasmaEnergyScale = 28.816_eV;
 
-/// Additional derived relativistic quantities.
-struct RelativisticQuantities {
-  float q2OverBeta2 = 0.0f;
-  float beta2 = 0.0f;
-  float betaGamma = 0.0f;
-  float gamma = 0.0f;
-
-  RelativisticQuantities(float mass, float qOverP, float q) {
-    // beta²/q² = (p/E)²/q² = p²/(q²m² + q²p²) = 1/(q² + (m²(q/p)²)
-    // q²/beta² = q² + m²(q/p)²
-    q2OverBeta2 = q * q + (mass * qOverP) * (mass * qOverP);
-    // 1/p = q/(qp) = (q/p)/q
-    const auto mOverP = mass * std::abs(qOverP / q);
-    const auto pOverM = 1.0f / mOverP;
-    // beta² = p²/E² = p²/(m² + p²) = 1/(1 + (m/p)²)
-    beta2 = 1.0f / (1.0f + mOverP * mOverP);
-    // beta*gamma = (p/sqrt(m² + p²))*(sqrt(m² + p²)/m) = p/m
-    betaGamma = pOverM;
-    // gamma = sqrt(m² + p²)/m = sqrt(1 + (p/m)²)
-    gamma = std::sqrt(1.0f + pOverM * pOverM);
-  }
-};
-
 /// Compute q/p derivative of beta².
-inline float deriveBeta2(float qOverP, const RelativisticQuantities& rq) {
+inline float deriveBeta2(float qOverP, const Acts::RelativisticQuantities& rq) {
   return -2 / (qOverP * rq.gamma * rq.gamma);
 }
 
 /// Compute the 2 * mass * (beta * gamma)² mass term.
-inline float computeMassTerm(float mass, const RelativisticQuantities& rq) {
+inline float computeMassTerm(float mass,
+                             const Acts::RelativisticQuantities& rq) {
   return 2 * mass * rq.betaGamma * rq.betaGamma;
 }
 
@@ -69,7 +47,7 @@ inline float logDeriveMassTerm(float qOverP) {
 /// Compute the maximum energy transfer in a single collision.
 ///
 /// Uses RPP2018 eq. 33.4.
-inline float computeWMax(float mass, const RelativisticQuantities& rq) {
+inline float computeWMax(float mass, const Acts::RelativisticQuantities& rq) {
   const auto mfrac = Me / mass;
   const auto nominator = 2 * Me * rq.betaGamma * rq.betaGamma;
   const auto denonimator = 1.0f + 2 * rq.gamma * mfrac + mfrac * mfrac;
@@ -78,7 +56,7 @@ inline float computeWMax(float mass, const RelativisticQuantities& rq) {
 
 /// Compute WMax logarithmic derivative w/ respect to q/p.
 inline float logDeriveWMax(float mass, float qOverP,
-                           const RelativisticQuantities& rq) {
+                           const Acts::RelativisticQuantities& rq) {
   // this is (q/p) * (beta/q).
   // both quantities have the same sign and the product must always be
   // positive. we can thus reuse the known (unsigned) quantity (q/beta)².
@@ -97,36 +75,36 @@ inline float logDeriveWMax(float mass, float qOverP,
 /// where (Z/A)*rho is the electron density in the material and x is the
 /// traversed length (thickness) of the material.
 inline float computeEpsilon(float molarElectronDensity, float thickness,
-                            const RelativisticQuantities& rq) {
+                            const Acts::RelativisticQuantities& rq) {
   return 0.5f * K * molarElectronDensity * thickness * rq.q2OverBeta2;
 }
 
 /// Compute epsilon logarithmic derivative w/ respect to q/p.
-inline float logDeriveEpsilon(float qOverP, const RelativisticQuantities& rq) {
+inline float logDeriveEpsilon(float qOverP,
+                              const Acts::RelativisticQuantities& rq) {
   // only need to compute d(q²/beta²)/(q²/beta²); everything else cancels.
   return 2 / (qOverP * rq.gamma * rq.gamma);
 }
 
 /// Compute the density correction factor delta/2.
-///
-/// Uses RPP2018 eq. 33.6 which is only valid for high energies.
-///
-/// @todo Should we use RPP2018 eq. 33.7 instead w/ tabulated constants?
 inline float computeDeltaHalf(float meanExitationPotential,
                               float molarElectronDensity,
-                              const RelativisticQuantities& rq) {
+                              const Acts::RelativisticQuantities& rq) {
+  /// Uses RPP2018 eq. 33.6 which is only valid for high energies.
   // only relevant for very high ernergies; use arbitrary cutoff
   if (rq.betaGamma < 10.0f) {
     return 0.0f;
   }
   // pre-factor according to RPP2019 table 33.1
-  const auto plasmaEnergy = PlasmaEnergyScale * std::sqrt(molarElectronDensity);
+  const auto plasmaEnergy =
+      PlasmaEnergyScale * std::sqrt(1000.f * molarElectronDensity);
   return std::log(rq.betaGamma) +
          std::log(plasmaEnergy / meanExitationPotential) - 0.5f;
 }
 
 /// Compute derivative w/ respect to q/p for the density correction.
-inline float deriveDeltaHalf(float qOverP, const RelativisticQuantities& rq) {
+inline float deriveDeltaHalf(float qOverP,
+                             const Acts::RelativisticQuantities& rq) {
   // original equation is of the form
   //     log(beta*gamma) + log(eplasma/I) - 1/2
   // which the resulting derivative as
@@ -153,7 +131,7 @@ float Acts::computeEnergyLossBethe(const MaterialSlab& slab, int /* unused */,
   const auto I = slab.material().meanExcitationEnergy();
   const auto Ne = slab.material().molarElectronDensity();
   const auto thickness = slab.thickness();
-  const auto rq = RelativisticQuantities(m, qOverP, q);
+  const auto rq = Acts::RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
   const auto u = computeMassTerm(Me, rq);
@@ -164,7 +142,7 @@ float Acts::computeEnergyLossBethe(const MaterialSlab& slab, int /* unused */,
   // the required modification only change the prefactor which becomes
   // identical to the prefactor epsilon for the most probable value.
   const auto running =
-      0.5f * std::log(u / I) + 0.5f * std::log(wmax / I) - rq.beta2 - dhalf;
+      std::log(u / I) + std::log(wmax / I) - 2.0f * rq.beta2 - 2.0f * dhalf;
   return eps * running;
 }
 
@@ -181,20 +159,20 @@ float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab,
   const auto I = slab.material().meanExcitationEnergy();
   const auto Ne = slab.material().molarElectronDensity();
   const auto thickness = slab.thickness();
-  const auto rq = RelativisticQuantities(m, qOverP, q);
+  const auto rq = Acts::RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
   const auto u = computeMassTerm(Me, rq);
   const auto wmax = computeWMax(m, rq);
   // original equation is of the form
   //
-  //     eps * (log(u/I)/2 + log(wmax/I)/2 - beta² - delta/2)
-  //     = eps * (log(u)/2 + log(wmax/I)/2 - log(I) - beta² - delta/2)
+  //     eps * (log(u/I) + log(wmax/I) - 2 * beta² - delta)
+  //     = eps * (log(u) + log(wmax) - 2 * log(I) - 2 * beta² - delta)
   //
   // with the resulting derivative as
   //
-  //     d(eps) * (log(u/I)/2 + log(wmax/I)/2 - beta² - delta/2)
-  //     + eps * (d(u)/(2*u) + d(wmax)/(2*wmax) - d(beta²) - d(delta/2))
+  //     d(eps) * (log(u/I) + log(wmax/I) - 2 * beta² - delta)
+  //     + eps * (d(u)/(u) + d(wmax)/(wmax) - 2 * d(beta²) - d(delta))
   //
   // where we can use d(eps) = eps * (d(eps)/eps) for further simplification.
   const auto logDerEps = logDeriveEpsilon(qOverP, rq);
@@ -202,9 +180,9 @@ float Acts::deriveEnergyLossBetheQOverP(const MaterialSlab& slab,
   const auto logDerU = logDeriveMassTerm(qOverP);
   const auto logDerWmax = logDeriveWMax(m, qOverP, rq);
   const auto derBeta2 = deriveBeta2(qOverP, rq);
-  const auto rel = logDerEps * (0.5f * std::log(u / I) +
-                                0.5f * std::log(wmax / I) - rq.beta2 - dhalf) +
-                   0.5f * logDerU + 0.5f * logDerWmax - derBeta2 - derDHalf;
+  const auto rel = logDerEps * (std::log(u / I) + std::log(wmax / I) -
+                                2.0f * rq.beta2 - 2.0f * dhalf) +
+                   logDerU + logDerWmax - 2.0f * derBeta2 - 2.0f * derDHalf;
   return eps * rel;
 }
 
@@ -220,10 +198,10 @@ float Acts::computeEnergyLossLandau(const MaterialSlab& slab, int /* unused */,
   const auto I = slab.material().meanExcitationEnergy();
   const auto Ne = slab.material().molarElectronDensity();
   const auto thickness = slab.thickness();
-  const auto rq = RelativisticQuantities(m, qOverP, q);
+  const auto rq = Acts::RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
-  const auto t = computeMassTerm(m, rq);
+  const auto t = computeMassTerm(Me, rq);
   // uses RPP2018 eq. 33.11
   const auto running =
       std::log(t / I) + std::log(eps / I) + 0.2f - rq.beta2 - 2 * dhalf;
@@ -243,10 +221,10 @@ float Acts::deriveEnergyLossLandauQOverP(const MaterialSlab& slab,
   const auto I = slab.material().meanExcitationEnergy();
   const auto Ne = slab.material().molarElectronDensity();
   const auto thickness = slab.thickness();
-  const auto rq = RelativisticQuantities(m, qOverP, q);
+  const auto rq = Acts::RelativisticQuantities(m, qOverP, q);
   const auto eps = computeEpsilon(Ne, thickness, rq);
   const auto dhalf = computeDeltaHalf(I, Ne, rq);
-  const auto t = computeMassTerm(m, rq);
+  const auto t = computeMassTerm(Me, rq);
   // original equation is of the form
   //
   //     eps * (log(t/I) - log(eps/I) - 0.2 - beta² - delta)
@@ -295,17 +273,14 @@ float Acts::computeEnergyLossLandauSigma(const MaterialSlab& slab,
 
   const auto Ne = slab.material().molarElectronDensity();
   const auto thickness = slab.thickness();
-  const auto rq = RelativisticQuantities(m, qOverP, q);
+  const auto rq = Acts::RelativisticQuantities(m, qOverP, q);
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
   const auto fwhm = 4 * computeEpsilon(Ne, thickness, rq);
   return convertLandauFwhmToGaussianSigma(fwhm);
 }
 
-float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
-                                               int /* unused */, float m,
-                                               float qOverP, float q) {
-  ASSERT_INPUTS(m, qOverP, q)
-
+float Acts::computeEnergyLossLandauFwhm(
+    const MaterialSlab& slab, const Acts::RelativisticQuantities& rq) {
   // return early in case of vacuum or zero thickness
   if (not slab) {
     return 0.0f;
@@ -313,9 +288,17 @@ float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
 
   const auto Ne = slab.material().molarElectronDensity();
   const auto thickness = slab.thickness();
-  const auto rq = RelativisticQuantities(m, qOverP, q);
   // the Landau-Vavilov fwhm is 4*eps (see RPP2018 fig. 33.7)
-  const auto fwhm = 4 * computeEpsilon(Ne, thickness, rq);
+  return 4 * computeEpsilon(Ne, thickness, rq);
+}
+
+float Acts::computeEnergyLossLandauSigmaQOverP(const MaterialSlab& slab,
+                                               int /* unused */, float m,
+                                               float qOverP, float q) {
+  ASSERT_INPUTS(m, qOverP, q)
+
+  const auto rq = Acts::RelativisticQuantities(m, qOverP, q);
+  const auto fwhm = computeEnergyLossLandauFwhm(slab, rq);
   const auto sigmaE = convertLandauFwhmToGaussianSigma(fwhm);
   //  var(q/p) = (d(q/p)/dE)² * var(E)
   // d(q/p)/dE = d/dE (q/sqrt(E²-m²))
@@ -506,7 +489,8 @@ float Acts::computeMultipleScatteringTheta0(const MaterialSlab& slab, int pdg,
   // 1/p = q/(pq) = (q/p)/q
   const auto momentumInv = std::abs(qOverP / q);
   // q²/beta²; a smart compiler should be able to remove the unused computations
-  const auto q2OverBeta2 = RelativisticQuantities(m, qOverP, q).q2OverBeta2;
+  const auto q2OverBeta2 =
+      Acts::RelativisticQuantities(m, qOverP, q).q2OverBeta2;
 
   if ((pdg == PdgParticle::eElectron) or (pdg == PdgParticle::ePositron)) {
     return theta0RossiGreisen(xOverX0, momentumInv, q2OverBeta2);
