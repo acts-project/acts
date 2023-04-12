@@ -56,7 +56,8 @@ class AmbiguityTrackClassifier {
         networkInput(inputID, 2) = trajState.nOutliers;
         networkInput(inputID, 3) = trajState.nHoles;
         networkInput(inputID, 4) = trajState.NDF;
-        networkInput(inputID, 5) = (trajState.chi2Sum * 1.0) / trajState.NDF;
+        networkInput(inputID, 5) = (trajState.chi2Sum * 1.0) /
+                                   (trajState.NDF != 0 ? trajState.NDF : 1);
         networkInput(inputID, 6) = Acts::VectorHelpers::eta(track.momentum());
         networkInput(inputID, 7) = Acts::VectorHelpers::phi(track.momentum());
         inputID++;
