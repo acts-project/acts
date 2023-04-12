@@ -8,7 +8,7 @@ from acts._adapter import _patch_config, _patch_detectors, _patchKwargsConstruct
 
 _propagators = []
 _concrete_propagators = []
-for prefix in ("Eigen", "Atlas", "StraightLine"):
+for prefix in ("Eigen", "Atlas", "StraightLine", "EigenNext"):
     _propagators.append(getattr(ActsPythonBindings._propagator, f"{prefix}Propagator"))
     _concrete_propagators.append(
         getattr(ActsPythonBindings._propagator, f"{prefix}ConcretePropagator")
