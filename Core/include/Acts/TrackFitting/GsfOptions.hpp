@@ -18,7 +18,15 @@
 #include "Acts/Utilities/Logger.hpp"
 
 namespace Acts {
+
 namespace Experimental {
+
+namespace GsfConstants {
+constexpr std::string_view kFinalMultiComponentStateColumn =
+    "gsf-final-multi-component-state";
+using FinalMultiComponentState =
+    std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>;
+}  // namespace GsfConstants
 
 /// The extensions needed for the GSF
 template <typename traj_t>
@@ -70,9 +78,11 @@ struct GsfOptions {
 
   double weightCutoff = 1.e-4;
 
-  bool abortOnError = true;
+  bool abortOnError = false;
 
   bool disableAllMaterialHandling = false;
+
+  std::string_view finalMultiComponentStateColumn = "";
 
   GsfOptions() = delete;
 };
