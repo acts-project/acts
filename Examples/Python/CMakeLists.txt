@@ -178,6 +178,7 @@ if(ACTS_BUILD_PLUGIN_ONNX)
 
 else()
   target_sources(ActsPythonBindings PRIVATE src/OnnxStub.cpp)
+  target_sources(ActsPythonBindings PRIVATE src/OnnxMlpackStub.cpp)
 endif()
 
 add_custom_target(ActsPythonGlueCode)
