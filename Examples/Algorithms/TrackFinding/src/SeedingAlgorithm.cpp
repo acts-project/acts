@@ -192,7 +192,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
-  auto start = std::chrono::high_resolution_clock::now();
+  auto start_preparation = std::chrono::high_resolution_clock::now();
   // Config
   Acts::SpacePointContainerConfig spConfig;
   spConfig.useDetailedDoubleMeasurementInfo = m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo;
@@ -234,16 +234,20 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   static thread_local std::vector<seed_type> seeds;
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
-
-
+  auto stop_preparation = std::chrono::high_resolution_clock::now();
+  
+  auto start = std::chrono::high_resolution_clock::now();
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
         m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
         std::back_inserter(seeds), bottom, middle, top, rMiddleSPRange);
   }
   auto stop = std::chrono::high_resolution_clock::now();
+
+  auto duration_preparation = std::chrono::duration_cast<std::chrono::nanoseconds>(stop_preparation - start_preparation).count();
   auto duration = std::chrono::duration_cast<std::chrono::nanoseconds>(stop - start).count();
-  std::cout << "time=" << duration << "\n";
+  std::cout <<"preparation time="<<duration_preparation<<"\n";
+  std::cout <<"seeding time="<<duration<<"\n";
   
   ACTS_DEBUG("Created " << seeds.size() << " track seeds from "
                         << spacePointPtrs.size() << " space points");
@@ -262,3 +266,4 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   m_outputSeeds(ctx, std::move(SeedContainerForStorage));
   return ActsExamples::ProcessCode::SUCCESS;
 }
+B
