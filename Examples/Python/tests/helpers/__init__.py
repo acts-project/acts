@@ -48,6 +48,13 @@ try:
 except ImportError:
     edm4hepEnabled = False
 
+try:
+    import acts.examples.onnx
+
+    onnxEnabled = True
+except ImportError:
+    onnxEnabled = False
+
 
 try:
     import acts.examples
