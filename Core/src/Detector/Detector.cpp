@@ -19,8 +19,8 @@
 Acts::Experimental::Detector::Detector(
     const std::string& name,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
-    DetectorVolumeUpdator&& volumeFinder)
-    : m_name(name), m_detectorVolumeUpdator(std::move(volumeFinder)) {
+    DetectorVolumeUpdator&& detectorVolumeUpdator)
+    : m_name(name), m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)) {
   if (volumes.empty()) {
     throw std::invalid_argument("Detector: no volumes were given.");
   }

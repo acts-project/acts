@@ -24,7 +24,8 @@ namespace Acts {
 namespace Experimental {
 
 struct NoopImpl : public INavigationDelegate {
-  inline void update(const GeometryContext&, NavigationState&) const {}
+  inline void update(const GeometryContext& /*gctx*/,
+                     NavigationState& /*nState*/) const {}
 };
 
 /// @brief The end of world sets the volume pointer of the
