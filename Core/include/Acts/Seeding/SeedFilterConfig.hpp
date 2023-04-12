@@ -56,7 +56,7 @@ struct SeedFilterConfig {
 
   // maximum number of lower quality seeds in seed confirmation
   std::size_t maxSeedsPerSpMConf = std::numeric_limits<std::size_t>::max();
-  // maximum number of quality seeds for each middle-bottom SP-duplet in seed
+  // maximum number of quality seeds for each middle-bottom SP-dublet in seed
   // confirmation if the limit is reached we check if there is a lower quality
   // seed to be replaced
   std::size_t maxQualitySeedsPerSpMConf =

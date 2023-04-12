@@ -37,13 +37,16 @@ ActsExamples::TutorialVertexFinderAlgorithm::TutorialVertexFinderAlgorithm(
   if (m_cfg.outputProtoVertices.empty()) {
     throw std::invalid_argument("Missing output proto vertices collection");
   }
+
+  m_inputTrackParameters.maybeInitialize(m_cfg.inputTrackParameters);
+  m_inputTrajectories.maybeInitialize(m_cfg.inputTrajectories);
+  m_outputProtoVertices.initialize(m_cfg.outputProtoVertices);
 }
 
 ActsExamples::ProcessCode ActsExamples::TutorialVertexFinderAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // retrieve input tracks and convert into the expected format
-  const auto& inputTrackParameters =
-      ctx.eventStore.get<TrackParametersContainer>(m_cfg.inputTrackParameters);
+  const auto& inputTrackParameters = m_inputTrackParameters(ctx);
   const auto& inputTrackPointers =
       makeTrackParametersPointerContainer(inputTrackParameters);
   //* Do not change the code above this line *//

@@ -24,6 +24,7 @@ namespace Acts {
 struct ProtoVolume;
 
 namespace Experimental {
+
 class DetectorVolume;
 class Portal;
 

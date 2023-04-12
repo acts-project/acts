@@ -16,16 +16,17 @@
 namespace Acts {
 /// @brief A partial description of a circle in u-v space.
 struct LinCircle {
-  float Zo;
-  float cotTheta;
-  float iDeltaR;
-  float Er;
-  float U;
-  float V;
-  float x;
-  float y;
-  float z;
-  float r;
+  LinCircle() = default;
+  LinCircle(float ct, float idr, float er, float u, float v, float X, float Y)
+      : cotTheta(ct), iDeltaR(idr), Er(er), U(u), V(v), x(X), y(Y) {}
+
+  float cotTheta{0.};
+  float iDeltaR{0.};
+  float Er{0.};
+  float U{0.};
+  float V{0.};
+  float x{0.};
+  float y{0.};
 };
 
 /// @brief Transform two spacepoints to a u-v space circle.
@@ -57,7 +58,6 @@ LinCircle transformCoordinates(const external_spacepoint_t& sp,
 /// @param[in] spM The middle spacepoint.
 /// @param[in] bottom Should be true if vec are bottom spacepoints.
 /// @param[out] linCircleVec The output vector to write to.
-/// @returns Vector of sorted indexes for the vectors (vec and linCircleVec)
 template <typename external_spacepoint_t>
 void transformCoordinates(
     Acts::SpacePointData& spacePointData,
@@ -76,6 +76,7 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
 ///
 /// @tparam external_spacepoint_t The external spacepoint type.
 ///
+/// @param[in] spacePointData Auxiliary variables used by the seeding
 /// @param[in] config SeedFinder config containing the delegates to the strip measurement details.
 /// @param[in] sp Input space point used in the check.
 /// @param[in] spacepointPosition Spacepoint coordinates in xyz plane.
@@ -83,6 +84,7 @@ void transformCoordinates(Acts::SpacePointData& spacePointData,
 /// @returns Boolean that says if spacepoint is compatible with being inside the detector element.
 template <typename external_spacepoint_t>
 bool xyzCoordinateCheck(
+    Acts::SpacePointData& spacePointData,
     const Acts::SeedFinderConfig<external_spacepoint_t>& config,
     const Acts::InternalSpacePoint<external_spacepoint_t>& sp,
     const double* spacepointPosition, double* outputCoordinates);

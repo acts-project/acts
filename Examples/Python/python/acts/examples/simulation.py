@@ -755,7 +755,6 @@ def addDigitization(
                 level=customLogLevel(),
                 inputMeasurements=digiAlg.config.outputMeasurements,
                 inputClusters=digiAlg.config.outputClusters,
-                inputSimHits=digiAlg.config.inputSimHits,
                 inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
                 outputDir=str(outputDirCsv),
             )

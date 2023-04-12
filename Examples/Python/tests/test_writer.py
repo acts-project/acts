@@ -36,7 +36,7 @@ from acts.examples import (
     RootSimHitWriter,
     RootTrajectoryStatesWriter,
     RootTrajectorySummaryWriter,
-    RootVertexPerformanceWriter,
+    VertexPerformanceWriter,
     RootMeasurementWriter,
     CsvParticleWriter,
     CsvPlanarClusterWriter,
@@ -263,7 +263,6 @@ def test_csv_meas_writer(tmp_path, fatras, trk_geo, conf_const):
             level=acts.logging.INFO,
             inputMeasurements=digiAlg.config.outputMeasurements,
             inputClusters=digiAlg.config.outputClusters,
-            inputSimHits=simAlg.config.outputSimHits,
             inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             outputDir=str(out),
         )
@@ -353,7 +352,7 @@ def test_csv_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
         RootSimHitWriter,
         RootTrajectoryStatesWriter,
         RootTrajectorySummaryWriter,
-        RootVertexPerformanceWriter,
+        VertexPerformanceWriter,
         SeedingPerformanceWriter,
     ],
 )
@@ -595,8 +594,6 @@ def test_edm4hep_measurement_writer(tmp_path, fatras):
             level=acts.logging.VERBOSE,
             inputMeasurements=digiAlg.config.outputMeasurements,
             inputClusters=digiAlg.config.outputClusters,
-            inputSimHits=simAlg.config.outputSimHits,
-            inputMeasurementSimHitsMap=digiAlg.config.outputMeasurementSimHitsMap,
             outputPath=str(out),
         )
     )

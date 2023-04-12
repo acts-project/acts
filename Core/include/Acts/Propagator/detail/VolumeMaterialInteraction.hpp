@@ -15,6 +15,7 @@
 
 namespace Acts {
 namespace detail {
+
 /// @brief Struct to handle volume material interaction
 struct VolumeMaterialInteraction {
   /// Data from the propagation state
@@ -72,24 +73,29 @@ struct VolumeMaterialInteraction {
   /// @brief This function evaluates the material properties to interact with
   ///
   /// @tparam propagator_state_t Type of the propagator state
+  /// @tparam navigator_t Type of the propagator state
   ///
   /// @param [in] state State of the propagation
-  /// @param [in] updateStage The stage of the material update
+  /// @param [in] navigator Navigator of the propagation
   ///
   /// @return Boolean statement whether the material is valid
-  template <typename propagator_state_t>
-  bool evaluateMaterialSlab(const propagator_state_t& state) {
+  template <typename propagator_state_t, typename navigator_t>
+  bool evaluateMaterialSlab(const propagator_state_t& state,
+                            const navigator_t& navigator) {
     pathCorrection = 0;
-    if (state.navigation.currentVolume != nullptr &&
-        state.navigation.currentVolume->volumeMaterial() != nullptr) {
-      slab = MaterialSlab(
-          state.navigation.currentVolume->volumeMaterial()->material(pos),
-          1);  // state.stepping.StepSize
+    if (navigator.currentVolume(state.navigation) != nullptr &&
+        navigator.currentVolume(state.navigation)->volumeMaterial() !=
+            nullptr) {
+      slab = MaterialSlab(navigator.currentVolume(state.navigation)
+                              ->volumeMaterial()
+                              ->material(pos),
+                          1);  // state.stepping.StepSize
     } else {
       slab = MaterialSlab();
     }
     return slab;
   }
 };
+
 }  // namespace detail
 }  // end of namespace Acts

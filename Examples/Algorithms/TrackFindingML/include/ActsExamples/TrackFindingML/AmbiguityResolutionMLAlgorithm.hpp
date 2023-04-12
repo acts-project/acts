@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,11 +8,12 @@
 
 #pragma once
 
-#include "Acts/Plugins/Onnx/OnnxRuntimeBase.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "Acts/Plugins/Onnx/AmbiguityTrackClassifier.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/TrackFindingML/AmbiguityResolutionML.hpp"
 
 #include <string>
-#include <vector>
 
 namespace ActsExamples {
 
@@ -22,15 +23,15 @@ namespace ActsExamples {
 ///  1) Cluster together nearby tracks using shared hits
 ///  2) For each track use a neural network to compute a score
 ///  3) In each cluster keep the track with the highest score
-class AmbiguityResolutionMLAlgorithm final : public BareAlgorithm {
+class AmbiguityResolutionMLAlgorithm final : public AmbiguityResolutionML {
  public:
   struct Config {
-    /// Input trajectories collection.
-    std::string inputTrajectories;
-    /// path to the ONNX model for the duplicate neural network
+    /// Input track collection.
+    std::string inputTracks;
+    /// Path to the ONNX model for the duplicate neural network
     std::string inputDuplicateNN;
-    /// Output trajectories collection.
-    std::string outputTrajectories;
+    /// Output track collection.
+    std::string outputTracks;
     /// Minumum number of measurement to form a track.
     int nMeasurementsMin = 7;
   };
@@ -52,10 +53,10 @@ class AmbiguityResolutionMLAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
-  // ONNX environement
-  Ort::Env m_env;
-  // ONNX model for the duplicate neural network
-  Acts::OnnxRuntimeBase m_duplicateClassifier;
+  // ONNX model for track selection
+  Acts::AmbiguityTrackClassifier m_duplicateClassifier;
+  ReadDataHandle<ConstTrackContainer> m_inputTracks{this, "InputTracks"};
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

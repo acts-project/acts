@@ -27,13 +27,15 @@ ActsExamples::ParticleSmearing::ParticleSmearing(const Config& config,
   if (m_cfg.outputTrackParameters.empty()) {
     throw std::invalid_argument("Missing output tracks parameters collection");
   }
+
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_outputTrackParameters.initialize(m_cfg.outputTrackParameters);
 }
 
 ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
     const AlgorithmContext& ctx) const {
   // setup input and output containers
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
+  const auto& particles = m_inputParticles(ctx);
   TrackParametersContainer parameters;
   parameters.reserve(particles.size());
 
@@ -122,6 +124,6 @@ ActsExamples::ProcessCode ActsExamples::ParticleSmearing::execute(
     }
   }
 
-  ctx.eventStore.add(m_cfg.outputTrackParameters, std::move(parameters));
+  m_outputTrackParameters(ctx, std::move(parameters));
   return ProcessCode::SUCCESS;
 }

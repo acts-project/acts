@@ -35,7 +35,7 @@ class LinkToVolumeImpl : public INavigationDelegate {
 
   /// @return the link to the contained volume
   /// @note the parameters are ignored
-  void link(const GeometryContext& /*unused*/, NavigationState& nState) const {
+  void link(const GeometryContext& /*gctx*/, NavigationState& nState) const {
     nState.currentVolume = dVolume.get();
   }
 };
@@ -60,7 +60,7 @@ using namespace Acts::Experimental;
 // A test context
 Acts::GeometryContext tContext;
 
-BOOST_AUTO_TEST_SUITE(Experimental)
+BOOST_AUTO_TEST_SUITE(Detector)
 
 auto volumeA = std::make_shared<DetectorVolume>();
 auto volumeB = std::make_shared<DetectorVolume>();

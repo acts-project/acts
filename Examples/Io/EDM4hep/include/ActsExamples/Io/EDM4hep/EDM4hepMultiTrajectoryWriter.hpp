@@ -9,13 +9,14 @@
 #pragma once
 
 #include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
+#include "ActsFatras/EventData/Hit.hpp"
+#include "ActsFatras/EventData/Particle.hpp"
 
 #include <string>
 
-#include "edm4hep/TrackCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTWriter.h"
+#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -62,10 +63,10 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
  private:
   Config m_cfg;
 
-  podio::ROOTWriter m_writer;
-  podio::EventStore m_store;
+  podio::ROOTFrameWriter m_writer;
 
-  edm4hep::TrackCollection* m_trackCollection;
+  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>
+      m_inputMeasurementParticlesMap{this, "InputMeasurementParticlesMaps"};
 };
 
 }  // namespace ActsExamples

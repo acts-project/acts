@@ -169,7 +169,7 @@ bool SeedFinderOrthogonal<external_spacepoint_t>::validTuple(
   }
 
   /*
-   * Cut: Ensure that the origin of the duplet (the intersection of the line
+   * Cut: Ensure that the origin of the dublet (the intersection of the line
    * between them with the z axis) lies within the collision region.
    */
   float zOrigin = zL - rL * cotTheta;
@@ -335,7 +335,6 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     }
 
     auto lb = linCircleBottom[b];
-    seedFilterState.zOrigin = lb.Zo;
     float cotThetaB = lb.cotTheta;
     float Vb = lb.V;
     float Ub = lb.U;
@@ -354,9 +353,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
     // resolving with pT to p scaling --> only divide by sin^2(theta)
     // max approximation error for allowed scattering angles of 0.04 rad at
     // eta=infinity: ~8.5%
-    float scatteringInRegion2 = m_config.maxScatteringAngle2 * iSinTheta2;
-    // multiply the squared sigma onto the squared scattering
-    scatteringInRegion2 *= m_config.sigmaScattering * m_config.sigmaScattering;
+    float scatteringInRegion2 = options.multipleScattering2 * iSinTheta2;
 
     // minimum number of compatible top SPs to trigger the filter for a certain
     // middle bottom pair if seedConfirmation is false we always ask for at
@@ -476,6 +473,8 @@ void SeedFinderOrthogonal<external_spacepoint_t>::filterCandidates(
       continue;
     }
 
+    seedFilterState.zOrigin = middle.z() - rM * lb.cotTheta;
+
     m_config.seedFilter->filterSeeds_2SpFixed(
         spacePointData, *bottom[b], middle, top_valid, curvatures,
         impactParameters, seedFilterState, candidates_collector);
@@ -498,7 +497,7 @@ void SeedFinderOrthogonal<external_spacepoint_t>::processFromMiddleSP(
    * bottom_lh_v denotes the candidates bottom seed points, assuming that the
    * track has monotonically _increasing_ z position. bottom_hl_v denotes the
    * candidate bottom points assuming that the track has monotonically
-   * _decreaing_ z position. top_lh_v are the candidate top points for an
+   * _decreasing_ z position. top_lh_v are the candidate top points for an
    * increasing z track, and top_hl_v are the candidate top points for a
    * decreasing z track.
    */

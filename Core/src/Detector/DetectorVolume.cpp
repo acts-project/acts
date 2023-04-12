@@ -46,7 +46,7 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 }
 
 Acts::Experimental::DetectorVolume::DetectorVolume(
-    const GeometryContext& /*unused*/, const std::string& name,
+    const GeometryContext& /*gctx*/, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : m_name(name),
@@ -114,23 +114,9 @@ bool Acts::Experimental::DetectorVolume::inside(const GeometryContext& gctx,
 
 void Acts::Experimental::DetectorVolume::updateNavigationState(
     const GeometryContext& gctx, NavigationState& nState) const {
-  // This volume still has sub volumes, it needs a double-check
-  // if the internal volumes can be excluded.
-  //
-  // This can be avoided by a precise volume finder
-  if (not m_volumes.external.empty()) {
-    for (const auto v : volumes()) {
-      if (v->inside(gctx, nState.position)) {
-        v->updateNavigationState(gctx, nState);
-        return;
-      }
-    }
-  }
-  // The state updator of the volume itself
   nState.currentVolume = this;
   m_surfaceCandidatesUpdator(gctx, nState);
   nState.surfaceCandidate = nState.surfaceCandidates.begin();
-  return;
 }
 
 void Acts::Experimental::DetectorVolume::assignSurfaceCandidatesUpdator(

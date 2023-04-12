@@ -9,7 +9,7 @@
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
 #include "Acts/EventData/MultiTrajectory.hpp"
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
