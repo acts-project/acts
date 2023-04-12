@@ -14,6 +14,7 @@ from helpers import (
     hepmc3Enabled,
     geant4Enabled,
     edm4hepEnabled,
+    podioEnabled,
     AssertCollectionExistsAlg,
 )
 
@@ -737,6 +738,14 @@ def test_edm4hep_tracks_writer(tmp_path):
 
     assert os.path.isfile(out)
     assert os.stat(out).st_size > 200
+
+    if not podioEnabled:
+        import warnings
+
+        warnings.warn(
+            "edm4hep output checks were skipped, because podio was not on the python path"
+        )
+        return
 
     from podio.root_io import Reader
     from podio.frame import Frame
