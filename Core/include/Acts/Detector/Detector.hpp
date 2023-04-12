@@ -134,27 +134,6 @@ class Detector : public std::enable_shared_from_this<Detector> {
   std::unordered_map<std::string, size_t> m_volumeNameIndex;
 };
 
-inline std::vector<std::shared_ptr<DetectorVolume>>& Detector::volumePtrs() {
-  return m_volumes.internal;
-}
-
-inline const std::vector<const DetectorVolume*>& Detector::volumes() const {
-  return m_volumes.external;
-}
-
-inline void Detector::updateDetectorVolumeFinder(
-    DetectorVolumeUpdator&& detectorVolumeUpdator) {
-  m_detectorVolumeUpdator = std::move(detectorVolumeUpdator);
-}
-
-inline const DetectorVolumeUpdator& Detector::detectorVolumeFinder() const {
-  return m_detectorVolumeUpdator;
-}
-
-inline const std::string& Detector::name() const {
-  return m_name;
-}
-
 }  // namespace Experimental
 
 }  // namespace Acts

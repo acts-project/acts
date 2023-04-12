@@ -8,10 +8,13 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
+#include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/SurfaceCandidatesUpdators.hpp"
 #include "Acts/Surfaces/PlaneSurface.hpp"
 #include "Acts/Surfaces/RectangleBounds.hpp"
 #include "Acts/Tests/CommonHelpers/FloatComparisons.hpp"
@@ -21,8 +24,6 @@
 
 namespace Acts {
 namespace Experimental {
-/// Define a dummy detector volume
-class DetectorVolume {};
 
 /// a simple link to volume struct
 class LinkToVolumeImpl : public INavigationDelegate {
@@ -62,11 +63,16 @@ Acts::GeometryContext tContext;
 
 BOOST_AUTO_TEST_SUITE(Detector)
 
-auto volumeA = std::make_shared<DetectorVolume>();
-auto volumeB = std::make_shared<DetectorVolume>();
-auto dTransform = Acts::Transform3::Identity();
-
 BOOST_AUTO_TEST_CASE(PortalTest) {
+  auto dTransform = Acts::Transform3::Identity();
+  auto pGenerator = defaultPortalGenerator();
+  auto volumeA = DetectorVolumeFactory::construct(
+      pGenerator, tContext, "dummyA", dTransform, nullptr,
+      tryAllPortalsAndSurfaces(), unconnectedUpdator());
+  auto volumeB = DetectorVolumeFactory::construct(
+      pGenerator, tContext, "dummyB", dTransform, nullptr,
+      tryAllPortalsAndSurfaces(), unconnectedUpdator());
+
   // A rectangle bound surface
   auto rectangle = std::make_shared<Acts::RectangleBounds>(10., 100.);
   auto surface =

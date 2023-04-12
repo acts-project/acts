@@ -47,6 +47,30 @@ Acts::Experimental::Detector::Detector(
   }
 }
 
+std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
+Acts::Experimental::Detector::volumePtrs() {
+  return m_volumes.internal;
+}
+
+const std::vector<const Acts::Experimental::DetectorVolume*>&
+Acts::Experimental::Detector::volumes() const {
+  return m_volumes.external;
+}
+
+void Acts::Experimental::Detector::updateDetectorVolumeFinder(
+    DetectorVolumeUpdator&& detectorVolumeUpdator) {
+  m_detectorVolumeUpdator = std::move(detectorVolumeUpdator);
+}
+
+const Acts::Experimental::DetectorVolumeUpdator&
+Acts::Experimental::Detector::detectorVolumeFinder() const {
+  return m_detectorVolumeUpdator;
+}
+
+const std::string& Acts::Experimental::Detector::name() const {
+  return m_name;
+}
+
 std::shared_ptr<Acts::Experimental::Detector>
 Acts::Experimental::Detector::getSharedPtr() {
   return shared_from_this();

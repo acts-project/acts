@@ -12,6 +12,7 @@
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Navigation/DetectorVolumeUpdators.hpp"
 #include "Acts/Utilities/Delegate.hpp"
 
 #include <exception>
@@ -21,56 +22,6 @@
 
 namespace Acts {
 namespace Experimental {
-
-/// The Portal genertor definition
-using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
-    const Transform3&, const VolumeBounds&,
-    const std::shared_ptr<DetectorVolume>&)>;
-
-/// @brief Calls the portal generation and adds registration to sub portals
-///
-/// This code is split off the PortalGenerator code in order to allow
-/// unit testing of the portal generation wihtout detector volume construction
-///
-/// @param dTransform a contextually resolved transform
-/// @param dBounds the detecor volume bounds
-/// @param dVolume the reference to the detector volume which generates this volume
-///
-/// @return a vector of newly created portals with registered inside volume
-inline static std::vector<std::shared_ptr<Portal>>
-generatePortalsUpdateInternals(
-    const Transform3& dTransform, const VolumeBounds& dBounds,
-    const std::shared_ptr<DetectorVolume>& dVolume) noexcept(false) {
-  if (dVolume == nullptr) {
-    throw std::runtime_error(
-        "generatePortalsUpdateInternals: no detector volume provided.");
-  }
-
-  // Setting link to the mother volume to all sub volumes of this volume
-  for (auto& vPtr : dVolume->volumePtrs()) {
-    for (auto& pPtr : vPtr->portalPtrs()) {
-      // Creating a link to the mother
-      auto motherLinkImpl =
-          std::make_unique<const SingleDetectorVolumeImpl>(dVolume.get());
-      DetectorVolumeUpdator motherLink;
-      motherLink.connect<&SingleDetectorVolumeImpl::update>(
-          std::move(motherLinkImpl));
-      pPtr->assignDetectorVolumeUpdator(std::move(motherLink), {dVolume});
-    }
-  }
-  // Return from the standard generator
-  return generatePortals(dTransform, dBounds, dVolume);
-}
-
-/// Create a default portal generator that connects to the
-/// static method.
-///
-/// @note parameters are ignored in this case
-inline static PortalGenerator defaultPortalAndSubPortalGenerator() {
-  PortalGenerator pGenerator;
-  pGenerator.connect<&generatePortalsUpdateInternals>();
-  return pGenerator;
-}
 
 /// Definition of a portal replacement when building proto containers
 /// It consists of the new portal, the index, the direction, the parameters
