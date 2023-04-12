@@ -8,9 +8,6 @@
 
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLAlgorithm.hpp"
-#ifdef ACTS_PLUGIN_MLPACK
-#include "ActsExamples/TrackFindingML/AmbiguityResolutionMLDBScanAlgorithm.hpp"
-#endif
 
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
@@ -22,19 +19,14 @@ using namespace Acts;
 
 namespace Acts::Python {
 
-void addMLTrackFinding(Context& ctx) {
+void addOnnx(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
+  auto onnx = mex.def_submodule("_onnx");
+  ctx.modules["onnx"] = onnx;
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
-                                mex, "AmbiguityResolutionMLAlgorithm",
+                                onnx, "AmbiguityResolutionMLAlgorithm",
                                 inputTracks, inputDuplicateNN, outputTracks,
                                 nMeasurementsMin);
-
-#ifdef ACTS_PLUGIN_MLPACK
-  ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AmbiguityResolutionMLDBScanAlgorithm, mex,
-      "AmbiguityResolutionMLDBScanAlgorithm", inputTracks, inputDuplicateNN,
-      outputTracks, nMeasurementsMin, epsilonDBScan, minPointsDBScan);
-#endif
 }
 }  // namespace Acts::Python
