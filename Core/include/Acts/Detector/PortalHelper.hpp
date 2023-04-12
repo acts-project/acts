@@ -22,6 +22,11 @@
 namespace Acts {
 namespace Experimental {
 
+/// The Portal genertor definition
+using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
+    const Transform3&, const VolumeBounds&,
+    const std::shared_ptr<DetectorVolume>&)>;
+
 /// @brief Calls the portal generation and adds registration to sub portals
 ///
 /// This code is split off the PortalGenerator code in order to allow
@@ -61,14 +66,8 @@ generatePortalsUpdateInternals(
 /// static method.
 ///
 /// @note parameters are ignored in this case
-inline static Delegate<std::vector<std::shared_ptr<Portal>>(
-    const Transform3&, const VolumeBounds&,
-    const std::shared_ptr<DetectorVolume>&)>
-defaultPortalAndSubPortalGenerator() {
-  Delegate<std::vector<std::shared_ptr<Portal>>(
-      const Transform3&, const VolumeBounds&,
-      const std::shared_ptr<DetectorVolume>&)>
-      pGenerator;
+inline static PortalGenerator defaultPortalAndSubPortalGenerator() {
+  PortalGenerator pGenerator;
   pGenerator.connect<&generatePortalsUpdateInternals>();
   return pGenerator;
 }

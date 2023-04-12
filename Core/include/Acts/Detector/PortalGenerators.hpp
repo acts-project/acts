@@ -23,6 +23,11 @@
 namespace Acts {
 namespace Experimental {
 
+/// The Portal genertor definition
+using PortalGenerator = Delegate<std::vector<std::shared_ptr<Portal>>(
+    const Transform3&, const VolumeBounds&,
+    const std::shared_ptr<DetectorVolume>&)>;
+
 /// @brief Generator function for creation of portal surfaces
 ///
 /// @param dTransform a contextually resolved transform
@@ -65,14 +70,8 @@ inline static std::vector<std::shared_ptr<Portal>> generatePortals(
 /// Create a default portal generator that connects to the
 /// static method.
 ///
-inline static Delegate<std::vector<std::shared_ptr<Portal>>(
-    const Transform3&, const VolumeBounds&,
-    const std::shared_ptr<DetectorVolume>&)>
-defaultPortalGenerator() {
-  Delegate<std::vector<std::shared_ptr<Portal>>(
-      const Transform3&, const VolumeBounds&,
-      const std::shared_ptr<DetectorVolume>&)>
-      pGenerator;
+inline static PortalGenerator defaultPortalGenerator() {
+  PortalGenerator pGenerator;
   pGenerator.connect<&generatePortals>();
   return pGenerator;
 }

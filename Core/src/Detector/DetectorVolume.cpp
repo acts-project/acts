@@ -23,10 +23,12 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
     const std::vector<std::shared_ptr<Surface>>& surfaces,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    DetectorVolumeUpdator&& detectorVolumeUpdator,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : m_name(name),
       m_transform(transform),
       m_bounds(std::move(bounds)),
+      m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)),
       m_surfaceCandidatesUpdator(std::move(surfaceCandidateUpdator)),
       m_volumeMaterial(nullptr) {
   if (m_bounds == nullptr) {
@@ -48,10 +50,12 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
 Acts::Experimental::DetectorVolume::DetectorVolume(
     const GeometryContext& /*gctx*/, const std::string& name,
     const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+    DetectorVolumeUpdator&& detectorVolumeUpdator,
     SurfaceCandidatesUpdator&& surfaceCandidateUpdator)
     : m_name(name),
       m_transform(transform),
       m_bounds(std::move(bounds)),
+      m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)),
       m_surfaceCandidatesUpdator(std::move(surfaceCandidateUpdator)),
       m_volumeMaterial(nullptr) {
   if (m_bounds == nullptr) {
@@ -102,12 +106,6 @@ bool Acts::Experimental::DetectorVolume::inside(const GeometryContext& gctx,
   }
   if (not excludeInserts or m_volumes.external.empty()) {
     return true;
-  }
-  // Check exclusion through subvolume
-  for (const auto v : volumes()) {
-    if (v->inside(gctx, position)) {
-      return false;
-    }
   }
   return true;
 }

@@ -13,6 +13,7 @@
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
+#include "Acts/Navigation/NavigationStateFillers.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Utilities/detail/Axis.hpp"
 #include "Acts/Utilities/detail/Grid.hpp"
@@ -21,6 +22,10 @@
 
 namespace Acts {
 namespace Experimental {
+
+struct NoopImpl : public INavigationDelegate {
+  inline void update(const GeometryContext&, NavigationState&) const {}
+};
 
 /// @brief The end of world sets the volume pointer of the
 /// navigation state to nullptr, usually indicates the end of
@@ -37,10 +42,11 @@ struct TrialAndErrorImpl : public INavigationDelegate {
           "DetectorVolumeFinders: no detector set to navigation state.");
     }
 
-    auto volumes = nState.currentDetector->volumes();
+    const auto& volumes = nState.currentDetector->volumes();
     for (const auto v : volumes) {
       if (v->inside(gctx, nState.position)) {
         nState.currentVolume = v;
+        v->detectorVolumeUpdator()(gctx, nState);
         return;
       }
     }
@@ -48,16 +54,46 @@ struct TrialAndErrorImpl : public INavigationDelegate {
   }
 };
 
+struct TrialAndErrorVolumeImpl : public INavigationDelegate {
+  inline void update(const GeometryContext& gctx,
+                     NavigationState& nState) const {
+    if (nState.currentVolume == nullptr) {
+      throw std::runtime_error(
+          "DetectorVolumeFinders: no detector set to navigation state.");
+    }
+
+    const auto& volumes = nState.currentVolume->volumes();
+    for (const auto v : volumes) {
+      if (v->inside(gctx, nState.position)) {
+        nState.currentVolume = v;
+        v->detectorVolumeUpdator()(gctx, nState);
+        return;
+      }
+    }
+  }
+};
+
 /// Generate a delegate to try all volume
-///
-/// @note this is a try-and error navigation, not recommended for production
-/// setup with many surfaces
-///
-/// @return a connected navigationstate updator
 inline static DetectorVolumeUpdator tryAllVolumes() {
   DetectorVolumeUpdator vFinder;
   auto tae = std::make_unique<const TrialAndErrorImpl>();
   vFinder.connect<&TrialAndErrorImpl::update>(std::move(tae));
+  return vFinder;
+}
+
+/// Generate a delegate to try all volume
+inline static DetectorVolumeUpdator tryAllSubVolumes() {
+  DetectorVolumeUpdator vFinder;
+  auto tae = std::make_unique<const TrialAndErrorVolumeImpl>();
+  vFinder.connect<&TrialAndErrorVolumeImpl::update>(std::move(tae));
+  return vFinder;
+}
+
+/// Generate a delegate to try no volume
+inline static DetectorVolumeUpdator tryNoVolumes() {
+  DetectorVolumeUpdator vFinder;
+  auto noop = std::make_unique<const NoopImpl>();
+  vFinder.connect<&NoopImpl::update>(std::move(noop));
   return vFinder;
 }
 

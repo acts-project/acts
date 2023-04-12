@@ -106,6 +106,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
       const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
       const std::vector<std::shared_ptr<Surface>>& surfaces,
       const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+      DetectorVolumeUpdator&& detectorVolumeUpdator,
       SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
 
   /// Create a detector volume - empty/gap volume constructor
@@ -122,6 +123,7 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   DetectorVolume(
       const GeometryContext& gctx, const std::string& name,
       const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      DetectorVolumeUpdator&& detectorVolumeUpdator,
       SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
@@ -260,6 +262,9 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
 
+  /// Const access to the detector volume updator
+  const DetectorVolumeUpdator& detectorVolumeUpdator() const;
+
   /// This method allows to udate the navigation state updator
   /// module.
   ///
@@ -360,6 +365,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// BoundingBox
   std::shared_ptr<const BoundingBox> m_boundingBox;
 
+  DetectorVolumeUpdator m_detectorVolumeUpdator;
+
   /// The navigation state updator
   SurfaceCandidatesUpdator m_surfaceCandidatesUpdator;
 
@@ -410,6 +417,11 @@ inline const std::vector<const Surface*>& DetectorVolume::surfaces() const {
 inline const std::vector<const DetectorVolume*>& DetectorVolume::volumes()
     const {
   return m_volumes.external;
+}
+
+inline const DetectorVolumeUpdator& DetectorVolume::detectorVolumeUpdator()
+    const {
+  return m_detectorVolumeUpdator;
 }
 
 inline const SurfaceCandidatesUpdator&

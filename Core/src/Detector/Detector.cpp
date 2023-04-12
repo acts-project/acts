@@ -20,26 +20,16 @@ Acts::Experimental::Detector::Detector(
     const std::string& name,
     const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
     DetectorVolumeUpdator&& volumeFinder)
-    : m_name(name), m_volumeFinder(std::move(volumeFinder)) {
+    : m_name(name), m_detectorVolumeUpdator(std::move(volumeFinder)) {
   if (volumes.empty()) {
     throw std::invalid_argument("Detector: no volumes were given.");
   }
-  if (not m_volumeFinder.connected()) {
+  if (not m_detectorVolumeUpdator.connected()) {
     throw std::invalid_argument(
         "Detector: volume finder delegate is not connected.");
   }
-  // Fill and make unique
-  std::vector<std::shared_ptr<DetectorVolume>> uniqueVolumes = volumes;
-  for (auto& v : volumes) {
-    for (auto& vv : v->volumePtrs()) {
-      uniqueVolumes.push_back(vv);
-    }
-  }
-  // Only keep the unique ones & fill the volume store
-  auto last = std::unique(uniqueVolumes.begin(), uniqueVolumes.end());
-  uniqueVolumes.erase(last, uniqueVolumes.end());
-  m_volumes = DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>>(
-      uniqueVolumes);
+  m_volumes =
+      DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
 
   // Check for unique names and fill the volume name / index map
   for (auto [iv, v] : enumerate(m_volumes.internal)) {
@@ -69,7 +59,7 @@ Acts::Experimental::Detector::getSharedPtr() const {
 
 void Acts::Experimental::Detector::updateDetectorVolume(
     const GeometryContext& gctx, NavigationState& nState) const {
-  m_volumeFinder(gctx, nState);
+  m_detectorVolumeUpdator(gctx, nState);
 }
 
 const Acts::Experimental::DetectorVolume*
@@ -78,7 +68,7 @@ Acts::Experimental::Detector::findDetectorVolume(
   NavigationState nState;
   nState.currentDetector = this;
   nState.position = position;
-  m_volumeFinder(gctx, nState);
+  m_detectorVolumeUpdator(gctx, nState);
   return nState.currentVolume;
 }
 
