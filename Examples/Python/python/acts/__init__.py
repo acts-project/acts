@@ -36,8 +36,9 @@ def Propagator(stepper, navigator):
                 return getattr(
                     ActsPythonBindings._propagator, f"{prefix}NextPropagator"
                 )(stepper, navigator)
-
-
+            return getattr(ActsPythonBindings._propagator, f"{prefix}Propagator")(
+                stepper, navigator
+            )
     raise TypeError(f"Unknown stepper {type(stepper).__name__}")
 
 
