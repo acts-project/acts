@@ -125,7 +125,7 @@ std::shared_ptr<TrackFitterFunction> ActsExamples::makeGsfFitterFunction(
   cfg.resolveMaterial = true;
   cfg.resolveSensitive = true;
   Acts::Navigator navigator(cfg, logger.cloneWithSuffix("Navigator"));
-  Propagator propagator(stepper, std::move(navigator),
+  Propagator propagator(std::move(stepper), std::move(navigator),
                         logger.cloneWithSuffix("Propagator"));
   Fitter trackFitter(std::move(propagator),
                      BetheHeitlerApprox(betheHeitlerApprox),

@@ -72,8 +72,8 @@ ActsExamples::ProcessCode ActsExamples::RefittingAlgorithm::execute(
         continue;
       }
 
-      auto sl = RefittingCalibrator::RefittingSourceLink{std::move(state)};
-      trackSourceLinks.push_back(Acts::SourceLink{std::move(sl)});
+      auto sl = RefittingCalibrator::RefittingSourceLink{state};
+      trackSourceLinks.push_back(Acts::SourceLink{sl});
     }
 
     if (surfSequence.empty()) {
