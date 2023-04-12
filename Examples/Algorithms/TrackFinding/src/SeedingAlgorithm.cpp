@@ -266,4 +266,3 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   m_outputSeeds(ctx, std::move(SeedContainerForStorage));
   return ActsExamples::ProcessCode::SUCCESS;
 }
-B
