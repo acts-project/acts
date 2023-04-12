@@ -192,6 +192,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
     }
   }
 
+  auto start = std::chrono::high_resolution_clock::now();
   // Config
   Acts::SpacePointContainerConfig spConfig;
   spConfig.useDetailedDoubleMeasurementInfo = m_cfg.seedFinderConfig.useDetailedDoubleMeasurementInfo;
@@ -234,7 +235,7 @@ ActsExamples::ProcessCode ActsExamples::SeedingAlgorithm::execute(
   seeds.clear();
   static thread_local decltype(m_seedFinder)::SeedingState state;
 
-  auto start = std::chrono::high_resolution_clock::now();
+
   for (const auto [bottom, middle, top] : spacePointsGrouping) {
     m_seedFinder.createSeedsForGroup(
         m_cfg.seedFinderOptions, state, spacePointsGrouping.grid(),
