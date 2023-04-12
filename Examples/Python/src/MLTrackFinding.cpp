@@ -24,15 +24,16 @@ namespace Acts::Python {
 
 void addMLTrackFinding(Context& ctx) {
   auto [m, mex] = ctx.get("main", "examples");
+  auto onnx = mex.def_submodule("_onnx");
 
   ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::AmbiguityResolutionMLAlgorithm,
-                                mex, "AmbiguityResolutionMLAlgorithm",
+                                onnx, "AmbiguityResolutionMLAlgorithm",
                                 inputTracks, inputDuplicateNN, outputTracks,
                                 nMeasurementsMin);
 
 #ifdef ACTS_PLUGIN_MLPACK
   ACTS_PYTHON_DECLARE_ALGORITHM(
-      ActsExamples::AmbiguityResolutionMLDBScanAlgorithm, mex,
+      ActsExamples::AmbiguityResolutionMLDBScanAlgorithm, onnx,
       "AmbiguityResolutionMLDBScanAlgorithm", inputTracks, inputDuplicateNN,
       outputTracks, nMeasurementsMin, epsilonDBScan, minPointsDBScan);
 #endif
