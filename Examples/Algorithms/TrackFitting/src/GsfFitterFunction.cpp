@@ -91,6 +91,14 @@ struct GsfFitterFunctionImpl
       const ActsExamples::TrackFittingAlgorithm::GeneralFitterOptions& options,
       TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options);
+
+    using namespace Acts::Experimental::GsfConstants;
+    if (not tracks.hasColumn(
+            Acts::hashString(kFinalMultiComponentStateColumn))) {
+      std::string key(kFinalMultiComponentStateColumn);
+      tracks.template addColumn<FinalMultiComponentState>(key);
+    }
+
     return fitter.fit(sourceLinks.begin(), sourceLinks.end(), initialParameters,
                       gsfOptions, tracks);
   }
@@ -102,6 +110,14 @@ struct GsfFitterFunctionImpl
       const std::vector<const Acts::Surface*>& surfaceSequence,
       TrackContainer& tracks) const override {
     const auto gsfOptions = makeGsfOptions(options);
+
+    using namespace Acts::Experimental::GsfConstants;
+    if (not tracks.hasColumn(
+            Acts::hashString(kFinalMultiComponentStateColumn))) {
+      std::string key(kFinalMultiComponentStateColumn);
+      tracks.template addColumn<FinalMultiComponentState>(key);
+    }
+
     return directFitter.fit(sourceLinks.begin(), sourceLinks.end(),
                             initialParameters, gsfOptions, surfaceSequence,
                             tracks);
@@ -118,9 +134,9 @@ ActsExamples::makeGsfFitterFunction(
     double weightCutoff, Acts::FinalReductionMethod finalReductionMethod,
     bool abortOnError, bool disableAllMaterialHandling,
     const Acts::Logger& logger) {
-  MultiStepper stepper(std::move(magneticField), finalReductionMethod);
-
   // Standard fitter
+  MultiStepper stepper(magneticField, finalReductionMethod,
+                       logger.cloneWithSuffix("Step"));
   Acts::Navigator::Config cfg{std::move(trackingGeometry)};
   cfg.resolvePassive = false;
   cfg.resolveMaterial = true;
@@ -133,9 +149,12 @@ ActsExamples::makeGsfFitterFunction(
                      logger.cloneWithSuffix("GSF"));
 
   // Direct fitter
+  MultiStepper directStepper(std::move(magneticField), finalReductionMethod,
+                             logger.cloneWithSuffix("Step"));
   Acts::DirectNavigator directNavigator{
       logger.cloneWithSuffix("DirectNavigator")};
-  DirectPropagator directPropagator(stepper, std::move(directNavigator),
+  DirectPropagator directPropagator(std::move(directStepper),
+                                    std::move(directNavigator),
                                     logger.cloneWithSuffix("DirectPropagator"));
   DirectFitter directTrackFitter(std::move(directPropagator),
                                  BetheHeitlerApprox(betheHeitlerApprox),
