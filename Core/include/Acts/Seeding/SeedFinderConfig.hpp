@@ -154,6 +154,9 @@ struct SeedFinderConfig {
   int nTrplPerSpBLimit = 100;
   int nAvgTrplPerSpBLimit = 2;
 
+  // sPHENIX quantities for alignment bypassing cuts
+  float helixcut = 1.;
+
   // Delegates for accessors to detailed information on double measurement that
   // produced the space point.
   // This is mainly referring to space points produced when combining
