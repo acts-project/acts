@@ -16,6 +16,10 @@ inline const float& SpacePointData::x(std::size_t idx) const {
 inline const float& SpacePointData::y(std::size_t idx) const {
   return m_y[idx];
 }
+  
+inline const float& SpacePointData::z(std::size_t idx) const {
+  return m_z[idx];
+}
 
 inline const float& SpacePointData::radius(std::size_t idx) const {
   return m_radius[idx];
@@ -25,6 +29,15 @@ inline const float& SpacePointData::phi(std::size_t idx) const {
   return m_phi[idx];
 }
 
+inline const float& SpacePointData::varianceZ(std::size_t idx) const {
+  return m_varianceZ[idx];
+}
+
+inline const float& SpacePointData::varianceR(std::size_t idx) const {
+  return m_varianceR[idx];
+}
+
+  
 inline void SpacePointData::setX(std::size_t idx, const float& value) {
   m_x[idx] = value;
 }
@@ -33,12 +46,24 @@ inline void SpacePointData::setY(std::size_t idx, const float& value) {
   m_y[idx] = value;
 }
 
+inline void SpacePointData::setZ(std::size_t idx, const float& value) {
+  m_z[idx] = value;
+}
+
 inline void SpacePointData::setRadius(std::size_t idx, const float& value) {
   m_radius[idx] = value;
 }
 
 inline void SpacePointData::setPhi(std::size_t idx, const float& value) {
   m_phi[idx] = value;
+}
+
+inline void SpacePointData::setVarianceZ(std::size_t idx, const float& value) {
+  m_varianceZ[idx] = value;
+}
+  
+inline void SpacePointData::setVarianceR(std::size_t idx, const float& value) {
+  m_varianceR[idx] = value;
 }
   
 inline const float& SpacePointData::quality(std::size_t idx) const {
@@ -149,8 +174,11 @@ inline void SpacePointData::resize(std::size_t n, bool resizeDynamic) {
 
   m_x.resize(n, 0.);
   m_y.resize(n, 0.);
+  m_z.resize(n, 0.);
   m_radius.resize(n, 0.);
   m_phi.resize(n, 0.);
+  m_varianceZ.resize(n, 0.);
+  m_varianceR.resize(n, 0.);
   
   m_quality.resize(n, -std::numeric_limits<float>::infinity());
   m_deltaR.resize(n, 0.);
@@ -169,8 +197,11 @@ inline void SpacePointData::clear() {
   //
   m_x.clear();
   m_y.clear();
+  m_z.clear();
   m_radius.clear();
   m_phi.clear();
+  m_varianceZ.clear();
+  m_varianceR.clear();
   // mutable variables
   m_quality.clear();
   m_deltaR.clear();

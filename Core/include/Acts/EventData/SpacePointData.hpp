@@ -43,8 +43,11 @@ class SpacePointData {
   /// @brief Getters
   const float& x(std::size_t idx) const;
   const float& y(std::size_t idx) const;
+  const float& z(std::size_t idx) const;
   const float& radius(std::size_t idx) const;
   const float& phi(std::size_t idx) const;
+  const float& varianceZ(std::size_t idx) const;
+  const float& varianceR(std::size_t idx) const;
   
   const float& quality(std::size_t idx) const;
   const float& deltaR(std::size_t idx) const;
@@ -52,8 +55,11 @@ class SpacePointData {
   /// @brief Setters
   void setX(std::size_t idx, const float& value);
   void setY(std::size_t idx, const float& value);
+  void setZ(std::size_t idx, const float& value);
   void setRadius(std::size_t idx, const float& value);
   void setPhi(std::size_t idx, const float& value);
+  void setVarianceZ(std::size_t idx, const float& value);
+  void setVarianceR(std::size_t idx, const float& value);
   
   void setQuality(std::size_t idx, const float& value);
   void setDeltaR(std::size_t idx, const float& value);
@@ -87,9 +93,12 @@ class SpacePointData {
   /// base variables
   std::vector<float> m_x{};
   std::vector<float> m_y{};
+  std::vector<float> m_z{};
   std::vector<float> m_radius{};
   std::vector<float> m_phi{};
-
+  std::vector<float> m_varianceR{};
+  std::vector<float> m_varianceZ{};
+  
   /// Mutable variables
   std::vector<float> m_quality{};
   std::vector<float> m_deltaR{};
