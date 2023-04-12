@@ -459,7 +459,7 @@ void SeedFinder<external_spacepoint_t, platform_t>::createSeedsForGroup(
 
         // sqrt(S2)/B = 2 * helixradius
         // calculated radius must not be smaller than minimum radius
-        if (S2 < B2 * m_config.minHelixDiameter2) {
+        if (S2 < B2 * m_config.minHelixDiameter2 * m_config.helixcut) {
           continue;
         }
 
