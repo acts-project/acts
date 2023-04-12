@@ -187,9 +187,9 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 
     // fill rbins into grid
     Acts::Vector2 spLocation(spPhi, sp.z());
-    std::vector<external_spacepoint_t>&
+    std::vector<const external_spacepoint_t*>&
         rbin = grid->atPosition(spLocation);
-    rbin.push_back(std::move(sp));
+    rbin.push_back(&sp);
 
     // keep track of the bins we modify so that we can later sort the SPs in
     // those bins only
@@ -200,13 +200,13 @@ Acts::BinnedSPGroup<external_spacepoint_t>::BinnedSPGroup(
 
   // sort SPs in R for each filled (z, phi) bin
   for (auto& binIndex : rBinsIndex) {
-    std::vector<external_spacepoint_t>&
+    std::vector<const external_spacepoint_t*>&
         rbin = grid->atPosition(binIndex);
     std::sort(
         rbin.begin(), rbin.end(),
-        [](const external_spacepoint_t& a,
-           const external_spacepoint_t& b) {
-          return a.radius() < b.radius();
+        [](const auto& a,
+           const auto& b) {
+          return a->radius() < b->radius();
         });
   }
 
