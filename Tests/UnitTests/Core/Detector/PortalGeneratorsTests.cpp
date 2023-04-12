@@ -10,6 +10,7 @@
 
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/CylinderVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
@@ -46,7 +47,8 @@ BOOST_AUTO_TEST_CASE(CylindricalPortalGenerator) {
   auto dTransform = Acts::Transform3::Identity();
   auto pGenerator = defaultPortalGenerator();
   auto dVolume = DetectorVolumeFactory::construct(
-      pGenerator, tContext, "dummy", dTransform, nullptr,
+      pGenerator, tContext, "dummy", dTransform,
+      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
       tryAllPortalsAndSurfaces(), unconnectedUpdator());
 
   auto cBarPortals = generatePortals(dTransform, cBar, dVolume);

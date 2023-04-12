@@ -11,6 +11,7 @@
 #include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/Portal.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
+#include "Acts/Geometry/CuboidVolumeBounds.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Navigation/NavigationDelegates.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
@@ -67,10 +68,12 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   auto dTransform = Acts::Transform3::Identity();
   auto pGenerator = defaultPortalGenerator();
   auto volumeA = DetectorVolumeFactory::construct(
-      pGenerator, tContext, "dummyA", dTransform, nullptr,
+      pGenerator, tContext, "dummyA", dTransform,
+      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
       tryAllPortalsAndSurfaces(), unconnectedUpdator());
   auto volumeB = DetectorVolumeFactory::construct(
-      pGenerator, tContext, "dummyB", dTransform, nullptr,
+      pGenerator, tContext, "dummyB", dTransform,
+      std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
       tryAllPortalsAndSurfaces(), unconnectedUpdator());
 
   // A rectangle bound surface
