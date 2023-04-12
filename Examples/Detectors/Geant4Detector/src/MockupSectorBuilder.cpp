@@ -8,6 +8,7 @@
 
 #include "ActsExamples/Geant4Detector/MockupSectorBuilder.hpp"
 
+#include "Acts/Detector/DetectorVolume.hpp"
 #include "Acts/Detector/PortalGenerators.hpp"
 #include "Acts/Detector/PortalHelper.hpp"
 #include "Acts/Geometry/CuboidVolumeBounds.hpp"
@@ -139,7 +140,7 @@ ActsExamples::MockupSectorBuilder::buildChamber(
       Acts::Transform3(Acts::Translation3(chamber_position)),
       std::move(detectorVolumeBounds), strawSurfaces,
       std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
-      Acts::Experimental::allPortalsAndSurfaces());
+      Acts::Experimental::tryAllPortalsAndSurfaces());
 
   return detectorVolume;
 }
@@ -266,7 +267,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
               std::move(bounds), shiftedSurfaces,
               std::vector<
                   std::shared_ptr<Acts::Experimental::DetectorVolume>>{},
-              Acts::Experimental::allPortalsAndSurfaces());
+              Acts::Experimental::tryAllPortalsAndSurfaces());
 
       chambersOfSectors[itr].push_back(detectorVolumeSec);
 
@@ -283,7 +284,7 @@ ActsExamples::MockupSectorBuilder::buildSector(
             "cylinder_volume_" + std::to_string(i), transform,
             std::move(cylinderVolumesBounds[i]),
             std::vector<std::shared_ptr<Acts::Surface>>{}, chambersOfSectors[i],
-            Acts::Experimental::allPortalsAndSurfaces()));
+            Acts::Experimental::tryAllPortalsAndSurfaces()));
 
   }  // end of cylinder volumes
 
@@ -299,15 +300,15 @@ ActsExamples::MockupSectorBuilder::buildSector(
       std::move(cylinderVolumesBoundsOfMother),
       std::vector<std::shared_ptr<Acts::Surface>>{},
       detectorCylinderVolumesOfSector,
-      Acts::Experimental::allPortalsAndSurfaces());
+      Acts::Experimental::tryAllPortalsAndSurfaces());
 
   return detectorVolume;
 }
 
 void ActsExamples::MockupSectorBuilder::drawSector(
-    const std::shared_ptr<Acts::Experimental::DetectorVolume>
+    const std::shared_ptr<Acts::Experimental::DetectorVolume>&
         detectorVolumeSector,
-    const std::string nameObjFile) {
+    const std::string& nameObjFile) {
   Acts::ViewConfig sConfig = Acts::s_viewSensitive;
 
   Acts::ObjVisualization3D objSector;

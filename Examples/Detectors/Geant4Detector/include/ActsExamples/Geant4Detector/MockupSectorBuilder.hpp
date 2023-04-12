@@ -70,9 +70,9 @@ class MockupSectorBuilder {
 
   /// Draw the sector in an obj file
   /// @param nameObjFile The name of the obj file where the sector will be saved
-  void drawSector(const std::shared_ptr<Acts::Experimental::DetectorVolume>
+  void drawSector(const std::shared_ptr<Acts::Experimental::DetectorVolume>&
                       detectorVolumeSector,
-                  const std::string nameObjFile);
+                  const std::string& nameObjFile);
 
  private:
   Config mCfg;
