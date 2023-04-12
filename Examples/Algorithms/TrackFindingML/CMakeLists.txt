@@ -1,6 +1,17 @@
+set(SOURCES 
+  src/AmbiguityResolutionML.cpp
+  src/AmbiguityResolutionMLAlgorithm.cpp
+)
+
+if(ACTS_BUILD_PLUGIN_MLPACK)
+  list(APPEND SOURCES 
+    src/AmbiguityResolutionMLDBScanAlgorithm.cpp   
+  )
+endif()
+
 add_library(
   ActsExamplesTrackFindingML SHARED
-  src/AmbiguityResolutionMLAlgorithm.cpp
+  ${SOURCES}
 )
 
 target_include_directories(
@@ -15,6 +26,11 @@ target_link_libraries(
     ActsPluginOnnx
     ActsExamplesFramework
 )
+
+if(ACTS_BUILD_PLUGIN_MLPACK)
+  target_link_libraries(
+    ActsExamplesTrackFindingML PUBLIC ActsPluginmlpack)
+endif()
 
 install(
   TARGETS ActsExamplesTrackFindingML
