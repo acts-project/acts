@@ -20,7 +20,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   // Navigator initialize state call
   m_navigator.status(state, m_stepper);
   // Pre-Stepping call to the action list
-  state.options.actionList.template operator()<PropagatorStage::start>(
+  state.options.actionList.template operator()<PropagatorStage::prePropagation>(
       state, m_stepper, m_navigator, result, logger());
   // assume negative outcome, only set to true later if we actually have
   // a positive outcome.
@@ -29,7 +29,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   bool terminatedNormally = true;
 
   // Pre-Stepping: abort condition check
-  if (!state.options.abortList.template operator()<PropagatorStage::start>(
+  if (!state.options.abortList.template operator()<PropagatorStage::prePropagation>(
           state, m_stepper, m_navigator, result, logger())) {
     // Pre-Stepping: target setting
     m_navigator.target(state, m_stepper);
@@ -82,7 +82,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
 
   // Post-stepping call to the action list
   ACTS_VERBOSE("Stepping loop done.");
-  state.options.actionList.template operator()<PropagatorStage::end>(
+  state.options.actionList.template operator()<PropagatorStage::postPropagation>(
       state, m_stepper, m_navigator, result, logger());
 
   // return progress flag here, decide on SUCCESS later
