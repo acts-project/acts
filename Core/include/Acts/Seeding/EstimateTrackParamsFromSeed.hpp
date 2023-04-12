@@ -181,7 +181,7 @@ std::optional<BoundVector> estimateTrackParamsFromSeed(
   for (size_t isp = 0; isp < 3; ++isp) {
     spacepoint_iterator_t it = std::next(spBegin, isp);
     const auto& sp = *it;
-    spGlobalPositions[isp] = Vector3(sp.x(), sp.y(), sp.z());
+    spGlobalPositions[isp] = Vector3(sp->x(), sp->y(), sp->z());
   }
 
   // Define a new coordinate frame with its origin at the bottom space point, z
