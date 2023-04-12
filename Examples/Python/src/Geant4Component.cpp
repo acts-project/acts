@@ -25,6 +25,7 @@
 #include "ActsExamples/Geant4/SensitiveSurfaceMapper.hpp"
 #include "ActsExamples/Geant4/SimParticleTranslation.hpp"
 #include "ActsExamples/Geant4Detector/Geant4Detector.hpp"
+#include "ActsExamples/Geant4Detector/MockupSectorBuilder.hpp"
 #include "ActsExamples/TelescopeDetector/TelescopeG4DetectorConstruction.hpp"
 
 #include <memory>
@@ -276,6 +277,34 @@ PYBIND11_MODULE(ActsPythonBindingsGeant4, mod) {
     ACTS_PYTHON_MEMBER(protoDetector);
     ACTS_PYTHON_MEMBER(geometryIdentifierHook);
     ACTS_PYTHON_MEMBER(logLevel);
+    ACTS_PYTHON_STRUCT_END();
+  }
+
+  {
+    using MockupSectorBuilder = ActsExamples::MockupSectorBuilder;
+    using Config = ActsExamples::MockupSectorBuilder::Config;
+    using ChamberConfig = ActsExamples::MockupSectorBuilder::ChamberConfig;
+
+    auto ms =
+        py::class_<MockupSectorBuilder, std::shared_ptr<MockupSectorBuilder>>(
+            mod, "MockupSectorBuilder")
+            .def(py::init<const Config&>())
+            .def("buildChamber", &MockupSectorBuilder::buildChamber)
+            .def("buildSector", &MockupSectorBuilder::buildSector)
+            .def("drawSector", &MockupSectorBuilder::drawSector);
+
+    auto c = py::class_<Config>(ms, "Config").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(c, Config);
+    ACTS_PYTHON_MEMBER(gdmlPath);
+    ACTS_PYTHON_MEMBER(NumberOfSectors);
+    ACTS_PYTHON_MEMBER(toleranceOverlap);
+    ACTS_PYTHON_STRUCT_END();
+
+    auto cch = py::class_<ChamberConfig>(ms, "ChamberConfig").def(py::init<>());
+    ACTS_PYTHON_STRUCT_BEGIN(cch, ChamberConfig);
+    ACTS_PYTHON_MEMBER(name);
+    ACTS_PYTHON_MEMBER(SensitiveNames);
+    ACTS_PYTHON_MEMBER(PassiveNames);
     ACTS_PYTHON_STRUCT_END();
   }
 
