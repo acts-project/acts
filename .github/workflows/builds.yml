@@ -241,6 +241,7 @@ jobs:
           && source /usr/local/bin/thisdd4hep_only.sh
           && source /usr/local/bin/geant4.sh
           && source build/python/setup.sh
+          && export PYTHONPATH=/usr/local/python:$PYTHONPATH
           && export LD_LIBRARY_PATH=$PWD/build/thirdparty/OpenDataDetector/factory:$LD_LIBRARY_PATH
           && pip3 install -r Examples/Python/tests/requirements.txt
           && pytest -rFsv -v
