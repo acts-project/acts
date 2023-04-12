@@ -93,7 +93,7 @@ outline:
 
 The fit can be customized with several options, e.g., the maximum number of components. All options can be found in the {struct}`Acts::GsfOptions`.
 
-To simplify integration, the GSF returns a {class}`Acts::KalmanFitterResult` object, the same as the {class}`Acts::KalmanFitter`. This allows to use the same analysis tools for both fitters.
+To simplify integration, the GSF returns an {class}`Acts::KalmanFitterResult` object, the same as the {class}`Acts::KalmanFitter`. This allows to use the same analysis tools for both fitters.
 
 If the GSF finds the column with the string identifier *"gsf-final-multi-component-state"* (defined in `Acts::Experimental::GsfConstants::kFinalMultiComponentStateColumn`) in the track container, it adds the final multi-component state to the track as a `std::optional<Acts::MultiComponentBoundTrackParameters<SinglyCharged>>` object.
 
