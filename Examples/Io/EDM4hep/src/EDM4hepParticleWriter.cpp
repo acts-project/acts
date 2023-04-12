@@ -15,7 +15,9 @@
 
 #include <stdexcept>
 
-#include "edm4hep/MCParticle.h"
+#include <edm4hep/MCParticle.h>
+#include <edm4hep/MCParticleCollection.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -23,16 +25,12 @@ EDM4hepParticleWriter::EDM4hepParticleWriter(
     const EDM4hepParticleWriter::Config& cfg, Acts::Logging::Level lvl)
     : WriterT(cfg.inputParticles, "EDM4hepParticleWriter", lvl),
       m_cfg(cfg),
-      m_writer(cfg.outputPath, &m_store) {
+      m_writer(cfg.outputPath) {
   ACTS_VERBOSE("Created output file " << cfg.outputPath);
 
   if (m_cfg.inputParticles.empty()) {
     throw std::invalid_argument("Missing particles input collection");
   }
-
-  m_mcParticleCollection =
-      &m_store.create<edm4hep::MCParticleCollection>(m_cfg.outputParticles);
-  m_writer.registerForWrite(m_cfg.outputParticles);
 }
 
 ActsExamples::ProcessCode EDM4hepParticleWriter::finalize() {
@@ -43,13 +41,18 @@ ActsExamples::ProcessCode EDM4hepParticleWriter::finalize() {
 
 ProcessCode EDM4hepParticleWriter::writeT(
     const AlgorithmContext& /*ctx*/, const SimParticleContainer& particles) {
+  podio::Frame frame;
+
+  edm4hep::MCParticleCollection mcParticleCollection;
+
   for (const auto& particle : particles) {
-    auto p = m_mcParticleCollection->create();
+    auto p = mcParticleCollection->create();
     EDM4hepUtil::writeParticle(particle, p);
   }
 
-  m_writer.writeEvent();
-  m_store.clearCollections();
+  frame.put(std::move(mcParticleCollection), m_cfg.outputParticles);
+
+  m_writer.writeFrame(frame, "events");
 
   return ProcessCode::SUCCESS;
 }

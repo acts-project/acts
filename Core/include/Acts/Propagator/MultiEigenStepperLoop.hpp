@@ -191,6 +191,9 @@ class MultiEigenStepperLoop
   /// .curvilinearState()
   FinalReductionMethod m_finalReductionMethod = FinalReductionMethod::eMean;
 
+  /// The logger (used if no logger is provided by caller of methods)
+  std::unique_ptr<const Acts::Logger> m_logger;
+
   /// Small vector type for speeding up some computations where we need to
   /// accumulate stuff of components. We think 16 is a reasonable amount here.
   template <typename T>
@@ -218,9 +221,12 @@ class MultiEigenStepperLoop
   /// Constructor from a magnetic field and a optionally provided Logger
   MultiEigenStepperLoop(
       std::shared_ptr<const MagneticFieldProvider> bField,
-      FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean)
+      FinalReductionMethod finalReductionMethod = FinalReductionMethod::eMean,
+      std::unique_ptr<const Logger> logger = getDefaultLogger("GSF",
+                                                              Logging::INFO))
       : EigenStepper<extensionlist_t, auctioneer_t>(std::move(bField)),
-        m_finalReductionMethod(finalReductionMethod) {}
+        m_finalReductionMethod(finalReductionMethod),
+        m_logger(std::move(logger)) {}
 
   struct State {
     /// The struct that stores the individual components

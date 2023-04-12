@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
@@ -441,6 +442,8 @@ struct GaussianSumFitter {
       track.covariance() = params.covariance().value();
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
     }
+
+    calculateTrackQuantities(track);
 
     track.nMeasurements() = measurementStatesFinal;
     track.nHoles() = fwdGsfResult.measurementHoles;
