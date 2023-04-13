@@ -18,13 +18,10 @@ sys.path += [
 
 import helpers
 import helpers.hash_root
-from helpers import isCI
 from common import getOpenDataDetectorDirectory
 from acts.examples.odd import getOpenDataDetector
 
 import pytest
-import _pytest.skipping
-import _pytest.outcomes
 
 import acts
 import acts.examples
@@ -53,15 +50,6 @@ except RuntimeError:
         "or `ACTS_ENABLE_LOG_FAILURE_THRESHOLD=OFF`. "
         f"The pytest test-suite can produce false-{errtype} results in this configuration"
     )
-
-
-if isCI:
-
-    @_pytest.outcomes._with_exception(Skipped)
-    def no_skip(*args, **kwargs):
-        return
-
-    _pytest.skipping.skip = no_skip
 
 
 u = acts.UnitConstants

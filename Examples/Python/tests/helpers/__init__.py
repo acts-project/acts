@@ -74,6 +74,10 @@ if exatrkxEnabled:
 
 isCI = os.environ.get("CI", "false") == "true"
 
+if isCI:
+    for k, v in dict(locals()).items():
+        if k.endswith("Enabled"):
+            locals()[k] = True
 
 class AssertCollectionExistsAlg(IAlgorithm):
     events_seen = 0
