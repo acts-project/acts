@@ -29,8 +29,8 @@ namespace Experimental {
 
 /// @brief relative to the surface normal
 enum class PortalDirection {
-  Positive = 0,
-  Negative = 1,
+  Negative = 0,
+  Positive = 1,
 };
 
 inline constexpr std::size_t indexFromPortalDirection(PortalDirection pDir) {
