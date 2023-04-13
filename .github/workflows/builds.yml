@@ -301,16 +301,13 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        image: 
-          - ubuntu2004
-          - ubuntu2204
-          - ubuntu2204_clang
-        std: [17, 20]
-        exclude:
-          - image: ubuntu2204
-            std: 17
+        include:
           - image: ubuntu2004
+            std: 17
+          - image: ubuntu2204_cpp20
             std: 20
+          - image: ubuntu2204_clang
+            std: 17
     container: ghcr.io/acts-project/${{ matrix.image }}:v41
     env:
       INSTALL_DIR: ${{ github.workspace }}/install
