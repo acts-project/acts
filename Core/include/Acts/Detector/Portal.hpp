@@ -158,22 +158,5 @@ class Portal : public std::enable_shared_from_this<Portal> {
   AttachedDetectorVolumes m_attachedVolumes;
 };
 
-inline const Surface& Portal::surface() const {
-  return *(m_surface.get());
-}
-
-inline Surface& Portal::surface() {
-  return *(m_surface.get());
-}
-
-inline const Portal::DetectorVolumeUpdators& Portal::detectorVolumeUpdators()
-    const {
-  return m_volumeUpdators;
-}
-
-inline Portal::AttachedDetectorVolumes& Portal::attachedDetectorVolumes() {
-  return m_attachedVolumes;
-}
-
 }  // namespace Experimental
 }  // namespace Acts

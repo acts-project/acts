@@ -68,6 +68,95 @@ Acts::Experimental::DetectorVolume::DetectorVolume(
   }
 }
 
+const Acts::Transform3& Acts::Experimental::DetectorVolume::transform(
+    const GeometryContext& /*gctx*/) const {
+  return m_transform;
+}
+
+Acts::Vector3 Acts::Experimental::DetectorVolume::center(
+    const GeometryContext& gctx) const {
+  return transform(gctx).translation();
+}
+
+const Acts::VolumeBounds& Acts::Experimental::DetectorVolume::volumeBounds()
+    const {
+  return (*m_bounds.get());
+}
+
+std::vector<std::shared_ptr<Acts::Experimental::Portal>>&
+Acts::Experimental::DetectorVolume::portalPtrs() {
+  return m_portals.internal;
+}
+
+std::vector<std::shared_ptr<Acts::Surface>>&
+Acts::Experimental::DetectorVolume::surfacePtrs() {
+  return m_surfaces.internal;
+}
+
+std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
+Acts::Experimental::DetectorVolume::volumePtrs() {
+  return m_volumes.internal;
+}
+
+const std::vector<const Acts::Experimental::Portal*>&
+Acts::Experimental::DetectorVolume::portals() const {
+  return m_portals.external;
+}
+
+const std::vector<const Acts::Surface*>&
+Acts::Experimental::DetectorVolume::surfaces() const {
+  return m_surfaces.external;
+}
+
+const std::vector<const Acts::Experimental::DetectorVolume*>&
+Acts::Experimental::DetectorVolume::volumes() const {
+  return m_volumes.external;
+}
+
+const Acts::Experimental::DetectorVolumeUpdator&
+Acts::Experimental::DetectorVolume::detectorVolumeUpdator() const {
+  return m_detectorVolumeUpdator;
+}
+
+const Acts::Experimental::SurfaceCandidatesUpdator&
+Acts::Experimental::DetectorVolume::surfaceCandidatesUpdator() const {
+  return m_surfaceCandidatesUpdator;
+}
+
+void Acts::Experimental::DetectorVolume::assignVolumeMaterial(
+    std::shared_ptr<IVolumeMaterial> material) {
+  m_volumeMaterial = std::move(material);
+}
+
+std::shared_ptr<Acts::IVolumeMaterial>
+Acts::Experimental::DetectorVolume::volumeMaterialPtr() {
+  return m_volumeMaterial;
+}
+
+const Acts::IVolumeMaterial*
+Acts::Experimental::DetectorVolume::volumeMaterial() const {
+  return m_volumeMaterial.get();
+}
+
+const Acts::GeometryIdentifier& Acts::Experimental::DetectorVolume::geometryId()
+    const {
+  return m_geometryId;
+}
+
+const std::string& Acts::Experimental::DetectorVolume::name() const {
+  return m_name;
+}
+
+void Acts::Experimental::DetectorVolume::assignDetector(
+    const Detector& detector) {
+  m_detector = &detector;
+}
+
+const Acts::Experimental::Detector*
+Acts::Experimental::DetectorVolume::detector() const {
+  return m_detector;
+}
+
 void Acts::Experimental::DetectorVolume::updatePortal(
     std::shared_ptr<Portal> portal, unsigned int pIndex) {
   if (pIndex >= m_portals.internal.size()) {

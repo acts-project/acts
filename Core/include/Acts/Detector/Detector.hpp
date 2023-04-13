@@ -22,7 +22,6 @@
 #include <vector>
 
 namespace Acts {
-
 namespace Experimental {
 
 class Detector : public std::enable_shared_from_this<Detector> {
@@ -136,5 +135,4 @@ class Detector : public std::enable_shared_from_this<Detector> {
 };
 
 }  // namespace Experimental
-
 }  // namespace Acts

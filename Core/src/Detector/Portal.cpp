@@ -13,6 +13,24 @@
 Acts::Experimental::Portal::Portal(std::shared_ptr<Surface> surface)
     : m_surface(std::move(surface)) {}
 
+const Acts::Surface& Acts::Experimental::Portal::surface() const {
+  return *(m_surface.get());
+}
+
+Acts::Surface& Acts::Experimental::Portal::surface() {
+  return *(m_surface.get());
+}
+
+const Acts::Experimental::Portal::DetectorVolumeUpdators&
+Acts::Experimental::Portal::detectorVolumeUpdators() const {
+  return m_volumeUpdators;
+}
+
+Acts::Experimental::Portal::AttachedDetectorVolumes&
+Acts::Experimental::Portal::attachedDetectorVolumes() {
+  return m_attachedVolumes;
+}
+
 std::shared_ptr<Acts::Experimental::Portal>
 Acts::Experimental::Portal::getSharedPtr() {
   return shared_from_this();
