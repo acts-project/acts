@@ -8,7 +8,7 @@
 
 #include "ActsExamples/TrackFindingML/AmbiguityResolutionMLDBScanAlgorithm.hpp"
 
-#include "Acts/Plugins/mlpack/AmbiguityDBScanClustering.hpp"
+#include "Acts/Plugins/Mlpack/AmbiguityDBScanClustering.hpp"
 #include "ActsExamples/Framework/ProcessCode.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 

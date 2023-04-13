@@ -205,7 +205,7 @@ BOOST_DATA_TEST_CASE(SpacePointBuilder_basic, bdata::xrange(1), index) {
   TestSpacePointContainer spacePoints;
   TestSpacePointContainer spacePoints_extra;
 
-  auto accessor = [](SourceLink slink) {
+  auto accessor = [](const SourceLink& slink) {
     auto testslink = slink.get<TestSourceLink>();
     BoundVector param;
     param.setZero();

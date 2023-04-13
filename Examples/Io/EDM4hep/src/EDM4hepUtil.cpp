@@ -9,8 +9,11 @@
 #include "ActsExamples/Io/EDM4hep/EDM4hepUtil.hpp"
 
 #include "Acts/Definitions/Units.hpp"
+#include "Acts/EventData/Charge.hpp"
 #include "Acts/EventData/MultiTrajectory.hpp"
 #include "Acts/EventData/MultiTrajectoryHelpers.hpp"
+#include "Acts/Geometry/GeometryContext.hpp"
+#include "Acts/Plugins/EDM4hep/EDM4hepUtil.hpp"
 #include "Acts/Utilities/Helpers.hpp"
 #include "ActsExamples/Digitization/MeasurementCreation.hpp"
 #include "ActsExamples/EventData/Index.hpp"
@@ -211,7 +214,7 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
 
         to.setTime(parameters[Acts::eBoundTime] / Acts::UnitConstants::ns);
 
-        to.setType(EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
+        to.setType(Acts::EDM4hepUtil::EDM4HEP_ACTS_POSITION_TYPE);
         // TODO set uv (which are in global spherical coordinates with r=1)
         to.setPosition({parameters[Acts::eBoundLoc0],
                         parameters[Acts::eBoundLoc1],
@@ -248,7 +251,8 @@ void EDM4hepUtil::writeMeasurement(const Measurement& from,
 }
 
 void EDM4hepUtil::writeTrajectory(
-    const Trajectories& from, edm4hep::MutableTrack to, std::size_t fromIndex,
+    const Acts::GeometryContext& gctx, double Bz, const Trajectories& from,
+    edm4hep::MutableTrack to, std::size_t fromIndex,
     const IndexMultimap<ActsFatras::Barcode>& hitParticlesMap) {
   const auto& multiTrajectory = from.multiTrajectory();
   auto trajectoryState =
@@ -272,38 +276,47 @@ void EDM4hepUtil::writeTrajectory(
       return true;
     }
 
-    Acts::BoundVector params = state.parameters();
-    Acts::BoundMatrix cov = state.covariance();
-
     edm4hep::TrackState trackState;
 
-    // @FIXME: Using D0/Z0 to store local 0/local 1
-    // For proper d0/z0 we'd have to propagate to the perigee here or convert to
-    // perigee relative to surface center, but it's also not really what we want
-    // to store anyway
-    trackState.D0 = params[Acts::eBoundLoc0];
-    trackState.Z0 = params[Acts::eBoundLoc1];
-    trackState.phi = params[Acts::eBoundPhi];
-    trackState.tanLambda = std::tan(M_PI_2 - params[Acts::eBoundTheta]);
-    trackState.omega = params[Acts::eBoundQOverP];  // TODO convert
-    trackState.referencePoint = {0, 0, 0};
+    // This makes the hard assumption that |q| = 1
+    Acts::SingleBoundTrackParameters<Acts::SinglyCharged> parObj{
+        state.referenceSurface().getSharedPtr(), state.parameters(),
+        state.covariance()};
 
-    // TODO apply jacobian to covariance
-    // TODO apply permutation
+    // Convert to LCIO track parametrization expected by EDM4hep
+    // This will create an ad-hoc perigee surface if the input parameters are
+    // not bound on a perigee surface already
+    Acts::EDM4hepUtil::detail::Parameters converted =
+        Acts::EDM4hepUtil::detail::convertTrackParametersToEdm4hep(gctx, Bz,
+                                                                   parObj);
 
-    // EDM4hep doc:
-    // lower triangular covariance matrix of the track parameters.  the order of
-    // parameters is  d0, phi, omega, z0, tan(lambda). the array is a row-major
-    // flattening of the matrix.
-    trackState.covMatrix = {
-        static_cast<float>(cov(0, 0)), static_cast<float>(cov(1, 0)),
-        static_cast<float>(cov(1, 1)), static_cast<float>(cov(2, 0)),
-        static_cast<float>(cov(2, 1)), static_cast<float>(cov(2, 2)),
-        static_cast<float>(cov(3, 0)), static_cast<float>(cov(3, 1)),
-        static_cast<float>(cov(3, 2)), static_cast<float>(cov(3, 3)),
-        static_cast<float>(cov(4, 0)), static_cast<float>(cov(4, 1)),
-        static_cast<float>(cov(4, 2)), static_cast<float>(cov(4, 3)),
-        static_cast<float>(cov(4, 4))};
+    trackState.D0 = converted.values[0];
+    trackState.Z0 = converted.values[1];
+    trackState.phi = converted.values[2];
+    trackState.tanLambda = converted.values[3];
+    trackState.omega = converted.values[4];
+    trackState.time = converted.values[5];
+
+    // Converted parameters are relative to an ad-hoc perigee surface created at
+    // the hit location
+    auto center = converted.surface->center(gctx);
+    trackState.referencePoint.x = center.x();
+    trackState.referencePoint.y = center.y();
+    trackState.referencePoint.z = center.z();
+
+    if (converted.covariance) {
+      const auto& c = converted.covariance.value();
+
+      trackState.covMatrix = {
+          static_cast<float>(c(0, 0)), static_cast<float>(c(1, 0)),
+          static_cast<float>(c(1, 1)), static_cast<float>(c(2, 0)),
+          static_cast<float>(c(2, 1)), static_cast<float>(c(2, 2)),
+          static_cast<float>(c(3, 0)), static_cast<float>(c(3, 1)),
+          static_cast<float>(c(3, 2)), static_cast<float>(c(3, 3)),
+          static_cast<float>(c(4, 0)), static_cast<float>(c(4, 1)),
+          static_cast<float>(c(4, 2)), static_cast<float>(c(4, 3)),
+          static_cast<float>(c(4, 4))};
+    }
 
     to.addToTrackStates(trackState);
 

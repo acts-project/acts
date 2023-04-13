@@ -8,7 +8,7 @@
 
 #pragma once
 
-#include "Acts/EventData/Track.hpp"
+#include "Acts/EventData/TrackContainer.hpp"
 #include "Acts/TrackFinding/detail/AmbiguityTrackClustering.hpp"
 
 #include <map>
@@ -74,7 +74,7 @@ std::unordered_map<int, std::vector<int>> dbscanTrackClustering(
   for (const auto& dbscanCluster : dbscanClusters) {
     auto subCluster = Acts::detail::clusterDuplicateTracks(dbscanCluster);
     cluster.merge(subCluster);
-    if (subCluster.size() != 0) {
+    if (!subCluster.empty()) {
       std::cout << "Overlapping track ID, there must be an error" << std::endl;
     }
   }
