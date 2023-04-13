@@ -38,7 +38,8 @@ Acts::Experimental::generatePortals(
     singleLink.connect<&SingleDetectorVolumeImpl::update>(
         std::move(singleLinkImpl));
     // Update the volume link and the store
-    NavigationDirection insideDir = oSurface.second;
+    PortalDirection insideDir =
+        portalDirectionFromNavigationDirection(oSurface.second);
     portal->assignDetectorVolumeUpdator(insideDir, std::move(singleLink),
                                         {dVolume});
     // Portal is prepared

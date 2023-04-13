@@ -27,6 +27,39 @@ class ISurfaceMaterial;
 
 namespace Experimental {
 
+/// @brief relative to the surface normal
+enum class PortalDirection {
+  Positive = 0,
+  Negative = 1,
+};
+
+inline constexpr std::size_t indexFromPortalDirection(PortalDirection pDir) {
+  return static_cast<std::size_t>(pDir);
+}
+
+inline constexpr PortalDirection portalDirectionFromIndex(std::size_t index) {
+  return static_cast<PortalDirection>(index);
+}
+
+inline constexpr PortalDirection invertPortalDirection(PortalDirection pDir) {
+  return portalDirectionFromIndex(1 - indexFromPortalDirection(pDir));
+}
+
+inline constexpr PortalDirection portalDirectionFromScalar(double scalar) {
+  if (scalar == 0) {
+    throw std::runtime_error(
+        "Portal: dot is 0 and therefore direction not decidable");
+  }
+  return scalar > 0 ? PortalDirection::Positive : PortalDirection::Negative;
+}
+
+/// I think this should be avoided but we have to live with it for now
+inline constexpr PortalDirection portalDirectionFromNavigationDirection(
+    NavigationDirection nDir) {
+  return nDir == NavigationDirection::Forward ? PortalDirection::Positive
+                                              : PortalDirection::Negative;
+}
+
 /// A portal description between the detector volumes
 ///
 /// It has a Surface representation for navigation and propagation
@@ -55,12 +88,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   friend class DetectorVolume;
 
   /// Factory for producing memory managed instances of Portal.
-  /// Will forward all parameters and will attempt to find a suitable
-  /// constructor.
-  template <typename... Args>
-  static std::shared_ptr<Portal> makeShared(Args&&... args) {
-    return std::shared_ptr<Portal>(new Portal(std::forward<Args>(args)...));
-  }
+  static std::shared_ptr<Portal> makeShared(std::shared_ptr<Surface> surface);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///
@@ -125,7 +153,7 @@ class Portal : public std::enable_shared_from_this<Portal> {
   ///
   /// @note this overwrites the existing link
   void assignDetectorVolumeUpdator(
-      NavigationDirection nDir, DetectorVolumeUpdator&& dVolumeUpdator,
+      PortalDirection pDir, DetectorVolumeUpdator&& dVolumeUpdator,
       const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes);
 
   /// Update the volume link, w/o directive, i.e. it relies that there's only

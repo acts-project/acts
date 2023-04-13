@@ -13,12 +13,17 @@
 Acts::Experimental::Portal::Portal(std::shared_ptr<Surface> surface)
     : m_surface(std::move(surface)) {}
 
+std::shared_ptr<Acts::Experimental::Portal>
+Acts::Experimental::Portal::makeShared(std::shared_ptr<Surface> surface) {
+  return std::shared_ptr<Portal>(new Portal(std::move(surface)));
+}
+
 const Acts::Surface& Acts::Experimental::Portal::surface() const {
-  return *(m_surface.get());
+  return *m_surface.get();
 }
 
 Acts::Surface& Acts::Experimental::Portal::surface() {
-  return *(m_surface.get());
+  return *m_surface.get();
 }
 
 const Acts::Experimental::Portal::DetectorVolumeUpdators&
@@ -48,24 +53,24 @@ void Acts::Experimental::Portal::assignGeometryId(
 
 void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
   // Determine this directioon
-  NavigationDirection tDir =
-      (not m_volumeUpdators[indexFromDirection(NavigationDirection::Backward)]
+  PortalDirection tDir =
+      (not m_volumeUpdators[indexFromPortalDirection(PortalDirection::Negative)]
                .connected())
-          ? NavigationDirection::Forward
-          : NavigationDirection::Backward;
+          ? PortalDirection::Positive
+          : PortalDirection::Negative;
 
-  if (not m_volumeUpdators[indexFromDirection(tDir)].connected()) {
+  if (not m_volumeUpdators[indexFromPortalDirection(tDir)].connected()) {
     throw std::invalid_argument(
         "Portal: trying to fuse portal (keep) with no links.");
   }
   // And now check other direction
-  NavigationDirection oDir = invertDirection(tDir);
-  if (not other->m_volumeUpdators[indexFromDirection(oDir)].connected()) {
+  PortalDirection oDir = invertPortalDirection(tDir);
+  if (not other->m_volumeUpdators[indexFromPortalDirection(oDir)].connected()) {
     throw std::runtime_error(
         "Portal: trying to fuse portal (waste) with no links.");
   }
 
-  auto odx = indexFromDirection(oDir);
+  auto odx = indexFromPortalDirection(oDir);
   m_volumeUpdators[odx] = std::move(other->m_volumeUpdators[odx]);
   m_attachedVolumes[odx] = other->m_attachedVolumes[odx];
   // And finally overwrite the original portal
@@ -73,9 +78,9 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
 }
 
 void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
-    NavigationDirection nDir, DetectorVolumeUpdator&& dVolumeUpdator,
+    PortalDirection pDir, DetectorVolumeUpdator&& dVolumeUpdator,
     const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
-  auto idx = indexFromDirection(nDir);
+  auto idx = indexFromPortalDirection(pDir);
   m_volumeUpdators[idx] = std::move(dVolumeUpdator);
   m_attachedVolumes[idx] = attachedVolumes;
 }
@@ -101,8 +106,8 @@ void Acts::Experimental::Portal::updateDetectorVolume(
   const auto& position = nState.position;
   const auto& direction = nState.direction;
   const Vector3 normal = surface().normal(gctx, position);
-  NavigationDirection nDir = directionFromStepSize(normal.dot(direction));
-  const auto& vUpdator = m_volumeUpdators[indexFromDirection(nDir)];
+  PortalDirection nDir = portalDirectionFromScalar(normal.dot(direction));
+  const auto& vUpdator = m_volumeUpdators[indexFromPortalDirection(nDir)];
   if (vUpdator.connected()) {
     vUpdator(gctx, nState);
   } else {

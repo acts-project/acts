@@ -10,6 +10,7 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
 #include "Acts/Utilities/BinningType.hpp"
 
@@ -21,14 +22,13 @@ namespace Acts {
 namespace Experimental {
 
 class DetectorVolume;
-class Portal;
 
 /// Definition of a portal replacement when building proto containers
 /// It consists of the new portal, the index, the direction, the parameters
 /// gathered from the sub volumes, the binning description
 using PortalReplacement =
     std::tuple<std::shared_ptr<Experimental::Portal>, unsigned int,
-               NavigationDirection, std::vector<ActsScalar>, BinningValue>;
+               PortalDirection, std::vector<ActsScalar>, BinningValue>;
 
 /// @brief Create and attach the multi link updator
 ///
