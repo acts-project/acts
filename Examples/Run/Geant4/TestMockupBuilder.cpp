@@ -46,7 +46,9 @@ int main() {
   auto mockup_chamberConfig_middle = MockupSectorBuilder::ChamberConfig();
   auto mockup_chamberConfig_outer = MockupSectorBuilder::ChamberConfig();
 
-  mockup_config.gdmlPath = "./MuonChamber.gdml";
+  mockup_config.gdmlPath =
+      " ../../../../acts/Examples/Detectors/MuonSpectrometerMockupDetector/"
+      "MuonChamber.gdml";
   mockup_config.NumberOfSectors = 8;
 
   mockup_chamberConfig_inner.name = "Inner_Detector_Chamber";
