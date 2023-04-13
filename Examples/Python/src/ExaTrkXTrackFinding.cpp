@@ -13,6 +13,7 @@
 #include "ActsExamples/TrackFinding/SeedingAlgorithm.hpp"
 #include "ActsExamples/TrackFinding/SpacePointMaker.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
+#include "ActsExamples/TrackFindingExaTrkX/TrackFindingAlgorithmExaTrkX.hpp"
 
 #include <memory>
 
@@ -70,7 +71,7 @@ void addExaTrkXTrackFinding(Context& ctx) {
             .def(py::init<const Config&>(), py::arg("config"))
             .def_property_readonly("config", &Alg::config);
 
-    auto c = py::class_<Config>(backend, "Config").def(py::init<>());
+    auto c = py::class_<Config>(alg, "Config").def(py::init<>());
     ACTS_PYTHON_STRUCT_BEGIN(c, Config);
     ACTS_PYTHON_MEMBER(modelDir);
     ACTS_PYTHON_MEMBER(spacepointFeatures);
@@ -78,16 +79,14 @@ void addExaTrkXTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(rVal);
     ACTS_PYTHON_MEMBER(knnVal);
     ACTS_PYTHON_MEMBER(filterCut);
-    ACTS_PYTHON_MEMBER(n_chunks);
-    ACTS_PYTHON_MEMBER(edgeCut);
     ACTS_PYTHON_STRUCT_END();
   }
 #endif
 
-    ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX,
-                                  "TrackFindingAlgorithmExaTrkX",
-                                  inputSpacePoints, outputProtoTracks,
-                                  trackFinderML, rScale, phiScale, zScale);
+  ACTS_PYTHON_DECLARE_ALGORITHM(ActsExamples::TrackFindingAlgorithmExaTrkX, mex,
+                                "TrackFindingAlgorithmExaTrkX",
+                                inputSpacePoints, outputProtoTracks,
+                                trackFinderML, rScale, phiScale, zScale);
 }
 
 }  // namespace Acts::Python
