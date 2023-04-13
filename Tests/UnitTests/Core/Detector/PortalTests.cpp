@@ -96,7 +96,7 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   auto linkToAImpl = std::make_unique<const LinkToVolumeImpl>(volumeA);
   DetectorVolumeUpdator linkToA;
   linkToA.connect<&LinkToVolumeImpl::link>(std::move(linkToAImpl));
-  portalA->assignDetectorVolumeUpdator(PortalDirection::Positive,
+  portalA->assignDetectorVolumeUpdator(Acts::NavigationDirection::Forward,
                                        std::move(linkToA), {volumeA});
 
   auto attachedDetectorVolumes = portalA->attachedDetectorVolumes();
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   DetectorVolumeUpdator linkToB;
   auto linkToBImpl = std::make_unique<const LinkToVolumeImpl>(volumeB);
   linkToB.connect<&LinkToVolumeImpl::link>(std::move(linkToBImpl));
-  portalB->assignDetectorVolumeUpdator(PortalDirection::Negative,
+  portalB->assignDetectorVolumeUpdator(Acts::NavigationDirection::Backward,
                                        std::move(linkToB), {volumeB});
 
   // Reverse: positive volume nullptr, negative volume volumeB
@@ -149,13 +149,13 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   auto portalAI = Portal::makeShared(surface);
   DetectorVolumeUpdator linkToAI;
   linkToAI.connect<&LinkToVolumeImpl::link>(std::move(linkToAIImpl));
-  portalAI->assignDetectorVolumeUpdator(PortalDirection::Positive,
+  portalAI->assignDetectorVolumeUpdator(Acts::NavigationDirection::Forward,
                                         std::move(linkToAI), {volumeA});
 
   auto portalBI = Portal::makeShared(surface);
   DetectorVolumeUpdator linkToBI;
   linkToBI.connect<&LinkToVolumeImpl::link>(std::move(linkToBIImpl));
-  portalBI->assignDetectorVolumeUpdator(PortalDirection::Positive,
+  portalBI->assignDetectorVolumeUpdator(Acts::NavigationDirection::Forward,
                                         std::move(linkToBI), {volumeB});
 
   BOOST_CHECK_THROW(portalAI->fuse(portalBI), std::runtime_error);

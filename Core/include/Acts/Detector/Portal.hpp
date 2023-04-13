@@ -27,39 +27,6 @@ class ISurfaceMaterial;
 
 namespace Experimental {
 
-/// @brief relative to the surface normal
-enum class PortalDirection {
-  Negative = 0,
-  Positive = 1,
-};
-
-inline constexpr std::size_t indexFromPortalDirection(PortalDirection pDir) {
-  return static_cast<std::size_t>(pDir);
-}
-
-inline constexpr PortalDirection portalDirectionFromIndex(std::size_t index) {
-  return static_cast<PortalDirection>(index);
-}
-
-inline constexpr PortalDirection invertPortalDirection(PortalDirection pDir) {
-  return portalDirectionFromIndex(1 - indexFromPortalDirection(pDir));
-}
-
-inline constexpr PortalDirection portalDirectionFromScalar(double scalar) {
-  if (scalar == 0) {
-    throw std::runtime_error(
-        "Portal: dot is 0 and therefore direction not decidable");
-  }
-  return scalar > 0 ? PortalDirection::Positive : PortalDirection::Negative;
-}
-
-/// I think this should be avoided but we have to live with it for now
-inline constexpr PortalDirection portalDirectionFromNavigationDirection(
-    NavigationDirection nDir) {
-  return nDir == NavigationDirection::Forward ? PortalDirection::Positive
-                                              : PortalDirection::Negative;
-}
-
 /// A portal description between the detector volumes
 ///
 /// It has a Surface representation for navigation and propagation
@@ -147,13 +114,13 @@ class Portal : public std::enable_shared_from_this<Portal> {
 
   /// Update the volume link
   ///
-  /// @param nDir the navigation direction for the link
+  /// @param dir the direction of the link
   /// @param dVolumeUpdator is the mangaged volume updator delegate
   /// @param attachedVolumes is the list of attached volumes for book keeping
   ///
   /// @note this overwrites the existing link
   void assignDetectorVolumeUpdator(
-      PortalDirection pDir, DetectorVolumeUpdator&& dVolumeUpdator,
+      NavigationDirection dir, DetectorVolumeUpdator&& dVolumeUpdator,
       const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes);
 
   /// Update the volume link, w/o directive, i.e. it relies that there's only
