@@ -16,5 +16,6 @@ add_unittest(ProtoBinning ProtoBinningTests.cpp)
 add_unittest(Portal PortalTests.cpp)
 add_unittest(PortalGenerators PortalGeneratorsTests.cpp)
 add_unittest(VolumeStructureBuilder VolumeStructureBuilderTests.cpp)
+add_unittest(MultiWireStructureBuilder MultiWireStructureBuilderTests.cpp)
 
 
