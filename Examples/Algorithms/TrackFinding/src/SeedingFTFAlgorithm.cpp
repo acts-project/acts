@@ -29,6 +29,20 @@ ActsExamples::SeedingFTFAlgorithm::SeedingFTFAlgorithm(
       m_cfg.seedFinderOptions.toInternalUnits().calculateDerivedQuantities(
           m_cfg.seedFinderConfig);
 
+
+  for (const auto &spName : m_cfg.inputSpacePoints) {
+    if (spName.empty()) {
+      throw std::invalid_argument("Invalid space point input collection");
+    }
+
+    auto &handle = m_inputSpacePoints.emplace_back(
+        std::make_unique<ReadDataHandle<SimSpacePointContainer>>(
+            this,
+            "InputSpacePoints#" + std::to_string(m_inputSpacePoints.size())));
+    handle->initialize(spName);
+  }
+
+
     //throw statements for differnet cases 
     m_outputSeeds.initialize(m_cfg.outputSeeds);
 

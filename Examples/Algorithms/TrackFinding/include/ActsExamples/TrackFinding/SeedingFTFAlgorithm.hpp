@@ -31,7 +31,7 @@ class SeedingFTFAlgorithm final : public IAlgorithm {
     /// Output track seed collection.
     std::string outputSeeds;
     /// Output proto track collection.
-    std::string outputProtoTracks;
+    // std::string outputProtoTracks;
 
     Acts::SeedFilterConfig seedFilterConfig;
     //change to FTF type

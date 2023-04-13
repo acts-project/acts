@@ -63,16 +63,19 @@ class SeedFinderFTF {
 
  private:  
 
+ //since update 
+  enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
+
+
  //declare valid tuple funcitons 
  //create tree function 
  //filter candidates function
  //proccess SP function
 
  //config object  
- Acts::SeedFinderFTFConfig<external_spacepoint_t> m_config;
+  Acts::SeedFinderFTFConfig<external_spacepoint_t> m_config;
 
- //since update 
- enum Dim { DimPhi = 0, DimR = 1, DimZ = 2 };
+
 
 
 

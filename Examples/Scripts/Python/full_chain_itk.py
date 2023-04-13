@@ -86,9 +86,9 @@ addSeeding(
     TruthSeedRanges(pt=(1.0 * u.GeV, None), eta=(-4.0, 4.0), nHits=(9, None))
     if ttbar_pu200
     else TruthSeedRanges(),
-    seedingAlgorithm=SeedingAlgorithm.Default,
-    #seedingAlgorithm=SeedingAlgorithm.FTF,
-    # seedingAlgorithm=SeedingAlgorithm.Orthogonal,
+    #seedingAlgorithm=SeedingAlgorithm.Default,
+    seedingAlgorithm=SeedingAlgorithm.FTF,
+    #seedingAlgorithm=SeedingAlgorithm.Orthogonal,
     *acts.examples.itk.itkSeedingAlgConfig(
         acts.examples.itk.InputSpacePointsType.PixelSpacePoints
     ),
@@ -97,27 +97,27 @@ addSeeding(
     outputDirRoot=outputDir,
 )
 
-addCKFTracks(
-    s,
-    trackingGeometry,
-    field,
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0)),
-    outputDirRoot=outputDir,
-)
+# addCKFTracks(
+#     s,
+#     trackingGeometry,
+#     field,
+#     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+#     TrackSelectorRanges(pt=(1.0 * u.GeV, None), absEta=(None, 4.0)),
+#     outputDirRoot=outputDir,
+# )
 
-addAmbiguityResolution(
-    s,
-    AmbiguityResolutionConfig(maximumSharedHits=3),
-    CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
-    outputDirRoot=outputDir,
-)
+# addAmbiguityResolution(
+#     s,
+#     AmbiguityResolutionConfig(maximumSharedHits=3),
+#     CKFPerformanceConfig(ptMin=1.0 * u.GeV if ttbar_pu200 else 0.0, nMeasurementsMin=6),
+#     outputDirRoot=outputDir,
+# )
 
-addVertexFitting(
-    s,
-    field,
-    vertexFinder=VertexFinder.Iterative,
-    outputDirRoot=outputDir,
-)
+# addVertexFitting(
+#     s,
+#     field,
+#     vertexFinder=VertexFinder.Iterative,
+#     outputDirRoot=outputDir,
+# )
 
 s.run()

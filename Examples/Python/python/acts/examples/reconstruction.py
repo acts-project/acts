@@ -850,7 +850,6 @@ def addFTFSeeding(
 
     ##using ortho algorithm to check the python part works 
     seedingAlg = acts.examples.SeedingFTFAlgorithm(
-    #seedingAlg = acts.examples.SeedingFTFAlgorithm(
         level=logLevel,
         inputSpacePoints=[spacePoints],
         outputSeeds="seeds",

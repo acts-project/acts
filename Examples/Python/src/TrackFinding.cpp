@@ -201,7 +201,7 @@ void addTrackFinding(Context& ctx) {
     ACTS_PYTHON_MEMBER(interactionPointCut);
     //ACTS_PYTHON_MEMBER(deltaPhiMax);
     ACTS_PYTHON_MEMBER(highland);
-    //ACTS_PYTHON_MEMBER(maxScatteringAngle2);
+    ACTS_PYTHON_MEMBER(maxScatteringAngle2);
     ACTS_PYTHON_MEMBER(useVariableMiddleSPRange);
     // ACTS_PYTHON_MEMBER(deltaRMiddleMinSPRange);
     // ACTS_PYTHON_MEMBER(deltaRMiddleMaxSPRange);
@@ -276,7 +276,7 @@ void addTrackFinding(Context& ctx) {
   ACTS_PYTHON_DECLARE_ALGORITHM(
       ActsExamples::SeedingFTFAlgorithm, mex,
       "SeedingFTFAlgorithm", inputSpacePoints, outputSeeds,
-      outputProtoTracks, seedFilterConfig, seedFinderConfig, seedFinderOptions);
+      seedFilterConfig, seedFinderConfig, seedFinderOptions);
 
 
   ACTS_PYTHON_DECLARE_ALGORITHM(

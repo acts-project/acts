@@ -5,6 +5,7 @@
 
 #include "Acts/Geometry/Extent.hpp"
 #include "Acts/Seeding/SeedFilter.hpp"
+#include "Acts/Seeding/SeedFinder.hpp"
 #include "Acts/Seeding/SeedFinderFTFConfig.hpp"
 #include "Acts/Seeding/SeedFinderUtils.hpp"
 #include "Acts/Utilities/BinningType.hpp"
@@ -52,13 +53,11 @@ void SeedFinderFTF<external_spacepoint_t>::createSeeds(
     const input_container_t &spacePoints, output_container_t &out_cont,
     callable_t &&extract_coordinates) const {
 
-  //tree_t tree = createTree(internalSpacePoints);
-
 } 
 
 template <typename external_spacepoint_t>
 template <typename input_container_t, typename callable_t>
-std::vector<Acts::Seed<external_spacepoint_t>>
+std::vector<Seed<external_spacepoint_t>>
 SeedFinderFTF<external_spacepoint_t>::createSeeds(
     const Acts::SeedFinderOptions &options,
     const input_container_t &spacePoints,
