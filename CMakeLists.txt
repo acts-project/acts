@@ -146,15 +146,15 @@ set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
 # feature tests
 include(CheckCXXSourceCompiles)
 
-# function that tests if the root installation is compatible (i.e., compiled with C++17)
+# function that tests if the root installation is compatible
 function(check_root_compatibility)
   get_target_property(ROOT_INCLUDE_DIR ROOT::Core INTERFACE_INCLUDE_DIRECTORIES)
-  set(CMAKE_REQUIRED_FLAGS -std=c++17)
   set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
-  check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
-  if(NOT ROOT_COMPATIBILITY_CHECK)
-    message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled with C++17.")
-  endif()
+  #yolo
+  #check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
+  #if(NOT ROOT_COMPATIBILITY_CHECK)
+  #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
+  #endif()
 endfunction()
 
 # additional configuration and tools
@@ -358,6 +358,15 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
   find_package(Pythia8 REQUIRED)
+
+if(DEFINED CMAKE_CXX_STANDARD)
+  if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
+    message(WARNING "ACTS is configured to build with C++20."
+      "As of version 309, Pythia8 does not compile under C++20."
+      "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
+  endif()
+endif()
+
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)

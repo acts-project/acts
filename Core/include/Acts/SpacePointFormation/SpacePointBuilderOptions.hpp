@@ -8,6 +8,9 @@
 
 #pragma once
 
+#include "Acts/Definitions/Algebra.hpp"
+#include "Acts/Definitions/TrackParametrization.hpp"
+#include "Acts/Definitions/Units.hpp"
 #include "Acts/EventData/SourceLink.hpp"
 
 namespace Acts {
@@ -27,7 +30,6 @@ struct SpacePointBuilderOptions {
   double stripLengthTolerance = 0.01;
   /// Allowed increase of strip length wrt gaps between strips
   double stripLengthGapTolerance = 0.01;
-  SpacePointBuilderOptions() = default;
 };
 
 struct StripPairOptions {
@@ -43,7 +45,6 @@ struct StripPairOptions {
   double diffPhi2 = 1.;
   /// Accepted distance between two clusters
   double diffDist = 100. * UnitConstants::mm;
-  StripPairOptions() = default;
 };
 
 }  // namespace Acts
