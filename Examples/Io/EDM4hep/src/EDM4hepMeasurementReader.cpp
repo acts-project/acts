@@ -17,8 +17,11 @@
 #include <list>
 #include <stdexcept>
 
-#include "edm4hep/TrackerHit.h"
-#include "edm4hep/TrackerHitPlane.h"
+#include <edm4hep/TrackerHit.h>
+#include <edm4hep/TrackerHitCollection.h>
+#include <edm4hep/TrackerHitPlane.h>
+#include <edm4hep/TrackerHitPlaneCollection.h>
+#include <podio/Frame.h>
 
 namespace ActsExamples {
 
@@ -31,14 +34,13 @@ EDM4hepMeasurementReader::EDM4hepMeasurementReader(
   }
 
   m_reader.openFile(m_cfg.inputPath);
-  m_store.setReader(&m_reader);
 
-  m_eventsRange = std::make_pair(0, m_reader.getEntries());
+  m_eventsRange = std::make_pair(0, m_reader.getEntries("events"));
 
-  m_trackerHitPlaneCollection =
-      &m_store.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");
-  m_trackerHitRawCollection =
-      &m_store.create<edm4hep::TrackerHitCollection>("ActsTrackerHitsRaw");
+  m_outputMeasurements.initialize(m_cfg.outputMeasurements);
+  m_outputMeasurementSimHitsMap.initialize(m_cfg.outputMeasurementSimHitsMap);
+  m_outputSourceLinks.initialize(m_cfg.outputSourceLinks);
+  m_outputClusters.maybeInitialize(m_cfg.outputClusters);
 }
 
 std::string EDM4hepMeasurementReader::EDM4hepMeasurementReader::name() const {
@@ -55,15 +57,18 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   // TODO what about those?
   IndexMultimap<Index> measurementSimHitsMap;
   IndexSourceLinkContainer sourceLinks;
-  std::list<IndexSourceLink> sourceLinkStorage;
 
-  m_store.clear();
-  m_reader.goToEvent(ctx.eventNumber);
+  podio::Frame frame = m_reader.readEntry("events", ctx.eventNumber);
 
-  for (const auto& trackerHitPlane : *m_trackerHitPlaneCollection) {
+  const auto& trackerHitPlaneCollection =
+      frame.get<edm4hep::TrackerHitPlaneCollection>("ActsTrackerHitsPlane");
+  const auto& trackerHitRawCollection =
+      frame.get<edm4hep::TrackerHitCollection>("ActsTrackerHitsRaw");
+
+  for (const auto& trackerHitPlane : trackerHitPlaneCollection) {
     Cluster cluster;
     auto measurement = EDM4hepUtil::readMeasurement(
-        trackerHitPlane, m_trackerHitRawCollection, &cluster,
+        trackerHitPlane, &trackerHitRawCollection, &cluster,
         [](std::uint64_t cellId) { return Acts::GeometryIdentifier(cellId); });
 
     measurements.push_back(std::move(measurement));
@@ -71,17 +76,12 @@ ProcessCode EDM4hepMeasurementReader::read(const AlgorithmContext& ctx) {
   }
 
   // Write the data to the EventStore
-  ctx.eventStore.add(m_cfg.outputMeasurements, std::move(measurements));
-  ctx.eventStore.add(m_cfg.outputMeasurementSimHitsMap,
-                     std::move(measurementSimHitsMap));
-  ctx.eventStore.add(m_cfg.outputSourceLinks, std::move(sourceLinks));
-  ctx.eventStore.add(m_cfg.outputSourceLinks + "__storage",
-                     std::move(sourceLinkStorage));
+  m_outputMeasurements(ctx, std::move(measurements));
+  m_outputMeasurementSimHitsMap(ctx, std::move(measurementSimHitsMap));
+  m_outputSourceLinks(ctx, std::move(sourceLinks));
   if (not m_cfg.outputClusters.empty()) {
-    ctx.eventStore.add(m_cfg.outputClusters, std::move(clusters));
+    m_outputClusters(ctx, std::move(clusters));
   }
-
-  m_reader.endOfEvent();
 
   return ProcessCode::SUCCESS;
 }

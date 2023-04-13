@@ -22,7 +22,7 @@
 #include "ActsExamples/EventData/Measurement.hpp"
 #include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/Framework/WhiteBoard.hpp"
 #include "ActsExamples/TrackFinding/TrackFindingAlgorithm.hpp"
 
@@ -31,7 +31,8 @@
 
 namespace ActsExamples {
 
-class TrackFindingFromPrototrackAlgorithm final : public BareAlgorithm {
+class TrackFindingFromPrototrackAlgorithm final : public IAlgorithm
+{
  public:
   struct Config {
     /// Input prototracks collection.
@@ -66,8 +67,7 @@ class TrackFindingFromPrototrackAlgorithm final : public BareAlgorithm {
   ///
   /// @param cfg is the config struct to configure the algorithm
   /// @param level is the logging level
-  TrackFindingFromPrototrackAlgorithm(Config cfg, Acts::Logging::Level lvl)
-      : BareAlgorithm("CkfFromProtoTracks", lvl), m_cfg(cfg) {}
+  TrackFindingFromPrototrackAlgorithm(Config cfg, Acts::Logging::Level lvl);
 
   virtual ~TrackFindingFromPrototrackAlgorithm() {}
 
@@ -82,6 +82,17 @@ class TrackFindingFromPrototrackAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+  
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                           "InputProtoTracks"};
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{
+      this, "InputMeasurements"};
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
+  ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
+      this, "InputInitialTrackParameters"};
+
+  WriteDataHandle<ConstTrackContainer> m_outputTracks{this, "OutputTracks"};
 };
 
 }  // namespace ActsExamples

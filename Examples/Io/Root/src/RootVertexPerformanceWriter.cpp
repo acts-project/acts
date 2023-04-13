@@ -54,6 +54,25 @@ ActsExamples::RootVertexPerformanceWriter::RootVertexPerformanceWriter(
         "Collection with selected truth particles missing");
   }
 
+  m_inputAllTruthParticles.initialize(m_cfg.inputAllTruthParticles);
+  m_inputSelectedTruthParticles.initialize(m_cfg.inputSelectedTruthParticles);
+
+  if (!m_cfg.inputAssociatedTruthParticles.empty()) {
+    m_inputAssociatedTruthParticles.initialize(
+        m_cfg.inputAssociatedTruthParticles);
+    if (!m_cfg.inputTrackParameters.empty()) {
+      m_inputTrackParameters.initialize(m_cfg.inputTrackParameters);
+    } else {
+      m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+    }
+  } else {
+    m_inputMeasurementParticlesMap.initialize(
+        m_cfg.inputMeasurementParticlesMap);
+    m_inputTrajectories.initialize(m_cfg.inputTrajectories);
+  }
+
+  m_inputTime.maybeInitialize(m_cfg.inputTime);
+
   // Setup ROOT I/O
   auto path = m_cfg.filePath;
   m_outputFile = TFile::Open(path.c_str(), m_cfg.fileMode.c_str());
@@ -97,7 +116,8 @@ ActsExamples::RootVertexPerformanceWriter::~RootVertexPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::endRun() {
+ActsExamples::ProcessCode
+ActsExamples::RootVertexPerformanceWriter::finalize() {
   m_outputFile->cd();
   m_outputTree->Write();
   m_outputFile->Close();
@@ -164,8 +184,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
   ACTS_DEBUG("Number of reco vertices in event: " << m_nrecoVtx);
 
   // Read truth particle input collection
-  const auto& allTruthParticles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputAllTruthParticles);
+  const auto& allTruthParticles = m_inputAllTruthParticles(ctx);
   // Get number of generated true primary vertices
   m_ntrueVtx = getNumberOfTruePriVertices(allTruthParticles);
 
@@ -175,8 +194,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
       "Total number of generated truth primary vertices : " << m_ntrueVtx);
 
   // Read selected truth particle input collection
-  const auto& selectedTruthParticles = ctx.eventStore.get<SimParticleContainer>(
-      m_cfg.inputSelectedTruthParticles);
+  const auto& selectedTruthParticles = m_inputSelectedTruthParticles(ctx);
   // Get number of detector-accepted true primary vertices
   m_nVtxDetAcceptance = getNumberOfTruePriVertices(selectedTruthParticles);
 
@@ -190,12 +208,9 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
 
   if (!m_cfg.inputAssociatedTruthParticles.empty()) {
     if (!m_cfg.inputTrackParameters.empty()) {
-      trackParameters =
-          ctx.eventStore.get<std::vector<Acts::BoundTrackParameters>>(
-              m_cfg.inputTrackParameters);
+      trackParameters = m_inputTrackParameters(ctx);
     } else {
-      const auto& inputTrajectories =
-          ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+      const auto& inputTrajectories = m_inputTrajectories(ctx);
 
       for (const auto& trajectories : inputTrajectories) {
         for (auto tip : trajectories.tips()) {
@@ -208,8 +223,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     }
 
     // Read track-associated truth particle input collection
-    associatedTruthParticles = ctx.eventStore.get<SimParticleContainer>(
-        m_cfg.inputAssociatedTruthParticles);
+    associatedTruthParticles = m_inputAssociatedTruthParticles(ctx);
 
     /*****************  Start x,y,z resolution plots here *****************/
     // Matching tracks at vertex to fitted tracks that are in turn matched
@@ -234,14 +248,11 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
     }
   } else {
     // get active tips
-    const auto& inputTrajectories =
-        ctx.eventStore.get<TrajectoriesContainer>(m_cfg.inputTrajectories);
+    const auto& inputTrajectories = m_inputTrajectories(ctx);
 
     std::vector<ParticleHitCount> particleHitCounts;
 
-    using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
-    const auto& hitParticlesMap =
-        ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+    const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
     for (const auto& trajectories : inputTrajectories) {
       for (auto tip : trajectories.tips()) {
@@ -376,7 +387,7 @@ ActsExamples::ProcessCode ActsExamples::RootVertexPerformanceWriter::writeT(
 
   // Retrieve and set reconstruction time
   if (!m_cfg.inputTime.empty()) {
-    const auto& reconstructionTimeMS = ctx.eventStore.get<int>(m_cfg.inputTime);
+    const auto& reconstructionTimeMS = m_inputTime(ctx);
     m_timeMS = reconstructionTimeMS;
   } else {
     m_timeMS = -1;

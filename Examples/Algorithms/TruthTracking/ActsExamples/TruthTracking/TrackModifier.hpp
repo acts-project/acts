@@ -8,7 +8,10 @@
 
 #pragma once
 
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/Track.hpp"
+#include "ActsExamples/EventData/Trajectories.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <limits>
 #include <string>
@@ -16,7 +19,7 @@
 namespace ActsExamples {
 
 /// Select tracks by applying some selection cuts.
-class TrackModifier final : public BareAlgorithm {
+class TrackModifier final : public IAlgorithm {
  public:
   struct Config {
     /// Optional. Input trajectories container. Mutually exclusive with track
@@ -49,6 +52,16 @@ class TrackModifier final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<TrackParametersContainer> m_inputTrackParameters{
+      this, "InputTrackParameters"};
+  ReadDataHandle<TrajectoriesContainer> m_inputTrajectories{
+      this, "InputTrajectories"};
+
+  WriteDataHandle<TrackParametersContainer> m_outputTrackParameters{
+      this, "OutputTrackParameters"};
+  WriteDataHandle<TrajectoriesContainer> m_outputTrajectories{
+      this, "OutputTrajectories"};
 };
 
 }  // namespace ActsExamples

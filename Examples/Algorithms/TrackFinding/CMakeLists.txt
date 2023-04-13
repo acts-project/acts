@@ -8,18 +8,24 @@ add_library(
   src/TrackFindingAlgorithmFunction.cpp
   src/HoughTransformSeeder.cpp
   src/TrackParamsEstimationAlgorithm.cpp
-  src/TrackFindingFromPrototrackAlgorithm.cpp)
+  src/TrackFindingFromPrototrackAlgorithm.cpp
+)
+
 target_include_directories(
   ActsExamplesTrackFinding
-  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>)
+  PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+)
+
 target_link_libraries(
   ActsExamplesTrackFinding
   PUBLIC
     ActsCore
     ActsExamplesFramework
     ActsExamplesIoJson
-    ActsExamplesMagneticField)
+    ActsExamplesMagneticField
+)
 
 install(
   TARGETS ActsExamplesTrackFinding
-  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR})
+  LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)

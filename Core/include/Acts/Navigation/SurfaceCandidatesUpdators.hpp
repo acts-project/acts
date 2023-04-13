@@ -10,9 +10,9 @@
 
 #include "Acts/Definitions/Algebra.hpp"
 #include "Acts/Definitions/Common.hpp"
-#include "Acts/Geometry/DetectorVolume.hpp"
+#include "Acts/Detector/DetectorVolume.hpp"
+#include "Acts/Detector/Portal.hpp"
 #include "Acts/Geometry/GeometryContext.hpp"
-#include "Acts/Geometry/Portal.hpp"
 #include "Acts/Navigation/NavigationState.hpp"
 #include "Acts/Navigation/NavigationStateUpdators.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -43,7 +43,8 @@ inline static void updateCandidates(const GeometryContext& gctx,
         (c.surface != nullptr) ? (*c.surface) : (c.portal->surface());
 
     // Get the intersection @todo make a templated intersector
-    auto sIntersection = sRep.intersect(gctx, position, direction, c.bCheck);
+    auto sIntersection =
+        sRep.intersect(gctx, position, direction, c.boundaryCheck);
     // Re-order and swap if necessary
     if (sIntersection.intersection.pathLength + s_onSurfaceTolerance <
             nState.overstepTolerance and

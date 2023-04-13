@@ -149,7 +149,7 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::SeedingPerformanceWriter, mex, "SeedingPerformanceWriter",
-      inputProtoTracks, inputMeasurementParticlesMap, inputParticles, filePath,
+      inputSeeds, inputMeasurementParticlesMap, inputParticles, filePath,
       fileMode, effPlotToolConfig, duplicationPlotToolConfig);
 
   ACTS_PYTHON_DECLARE_WRITER(
@@ -302,10 +302,10 @@ void addOutput(Context& ctx) {
                              "CsvParticleWriter", inputParticles, outputDir,
                              outputStem, outputPrecision);
 
-  ACTS_PYTHON_DECLARE_WRITER(
-      ActsExamples::CsvMeasurementWriter, mex, "CsvMeasurementWriter",
-      inputMeasurements, inputClusters, inputSimHits,
-      inputMeasurementSimHitsMap, outputDir, outputPrecision);
+  ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvMeasurementWriter, mex,
+                             "CsvMeasurementWriter", inputMeasurements,
+                             inputClusters, inputMeasurementSimHitsMap,
+                             outputDir, outputPrecision);
 
   ACTS_PYTHON_DECLARE_WRITER(ActsExamples::CsvPlanarClusterWriter, mex,
                              "CsvPlanarClusterWriter", inputClusters,
@@ -322,7 +322,7 @@ void addOutput(Context& ctx) {
 
   ACTS_PYTHON_DECLARE_WRITER(
       ActsExamples::CsvMultiTrajectoryWriter, mex, "CsvMultiTrajectoryWriter",
-      inputTrajectories, outputDir, inputMeasurementParticlesMap,
+      inputTrajectories, outputDir, fileName, inputMeasurementParticlesMap,
       outputPrecision, nMeasurementsMin, truthMatchProbMin, ptMin);
 
   ACTS_PYTHON_DECLARE_WRITER(

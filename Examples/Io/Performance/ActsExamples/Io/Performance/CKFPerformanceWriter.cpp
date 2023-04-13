@@ -40,6 +40,9 @@ ActsExamples::CKFPerformanceWriter::CKFPerformanceWriter(
     throw std::invalid_argument("Missing output filename");
   }
 
+  m_inputParticles.initialize(m_cfg.inputParticles);
+  m_inputMeasurementParticlesMap.initialize(m_cfg.inputMeasurementParticlesMap);
+
   // the output file can not be given externally since TFile accesses to the
   // same file from multiple threads are unsafe.
   // must always be opened internally
@@ -65,7 +68,7 @@ ActsExamples::CKFPerformanceWriter::~CKFPerformanceWriter() {
   }
 }
 
-ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
+ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::finalize() {
   float eff_tracks = float(m_nTotalMatchedTracks) / m_nTotalTracks;
   float fakeRate_tracks = float(m_nTotalFakeTracks) / m_nTotalTracks;
   float duplicationRate_tracks =
@@ -120,16 +123,13 @@ ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::endRun() {
 
 ActsExamples::ProcessCode ActsExamples::CKFPerformanceWriter::writeT(
     const AlgorithmContext& ctx, const TrajectoriesContainer& trajectories) {
-  using HitParticlesMap = IndexMultimap<ActsFatras::Barcode>;
   // The number of majority particle hits and fitted track parameters
   using RecoTrackInfo = std::pair<size_t, Acts::BoundTrackParameters>;
   using Acts::VectorHelpers::perp;
 
   // Read truth input collections
-  const auto& particles =
-      ctx.eventStore.get<SimParticleContainer>(m_cfg.inputParticles);
-  const auto& hitParticlesMap =
-      ctx.eventStore.get<HitParticlesMap>(m_cfg.inputMeasurementParticlesMap);
+  const auto& particles = m_inputParticles(ctx);
+  const auto& hitParticlesMap = m_inputMeasurementParticlesMap(ctx);
 
   // Counter of truth-matched reco tracks
   std::map<ActsFatras::Barcode, std::vector<RecoTrackInfo>> matched;

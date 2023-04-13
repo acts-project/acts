@@ -181,8 +181,8 @@ class CuboidVolumeBuilder : public ITrackingVolumeBuilder {
   /// @return Pointer to the created TrackingGeometry
   std::shared_ptr<TrackingVolume> trackingVolume(
       const GeometryContext& gctx,
-      std::shared_ptr<const TrackingVolume> /*unused*/,
-      std::shared_ptr<const VolumeBounds> /*unused*/) const override;
+      std::shared_ptr<const TrackingVolume> /*oppositeVolume*/,
+      std::shared_ptr<const VolumeBounds> /*outsideBounds*/) const override;
 
  private:
   /// Configuration of the world volume

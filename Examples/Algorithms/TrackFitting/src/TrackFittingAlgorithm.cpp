@@ -9,6 +9,7 @@
 #include "ActsExamples/TrackFitting/TrackFittingAlgorithm.hpp"
 
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
+#include "Acts/EventData/VectorTrackContainer.hpp"
 #include "Acts/Surfaces/PerigeeSurface.hpp"
 #include "Acts/TrackFitting/GainMatrixSmoother.hpp"
 #include "Acts/TrackFitting/GainMatrixUpdater.hpp"
@@ -19,7 +20,7 @@
 
 ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
     Config config, Acts::Logging::Level level)
-    : ActsExamples::BareAlgorithm("TrackFittingAlgorithm", level),
+    : ActsExamples::IAlgorithm("TrackFittingAlgorithm", level),
       m_cfg(std::move(config)) {
   if (m_cfg.inputMeasurements.empty()) {
     throw std::invalid_argument("Missing input measurement collection");
@@ -40,23 +41,26 @@ ActsExamples::TrackFittingAlgorithm::TrackFittingAlgorithm(
   if (m_cfg.outputTracks.empty()) {
     throw std::invalid_argument("Missing output tracks collection");
   }
+
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
+  m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_outputTracks.initialize(m_cfg.outputTracks);
 }
 
 ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
   // Read input data
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& protoTracks =
-      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
-      m_cfg.inputInitialTrackParameters);
+  const auto& measurements = m_inputMeasurements(ctx);
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  const auto& protoTracks = m_inputProtoTracks(ctx);
+  const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
   // Consistency cross checks
   if (protoTracks.size() != initialParameters.size()) {
-    ACTS_FATAL("Inconsistent number of proto tracks and parameters");
+    ACTS_FATAL("Inconsistent number of proto tracks and parameters "
+               << protoTracks.size() << " vs " << initialParameters.size());
     return ProcessCode::ABORT;
   }
 
@@ -148,6 +152,12 @@ ActsExamples::ProcessCode ActsExamples::TrackFittingAlgorithm::execute(
   trackStateContainer->statistics().toStream(ss);
   ACTS_DEBUG(ss.str());
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(tracks));
+  ConstTrackContainer constTracks{
+      std::make_shared<Acts::ConstVectorTrackContainer>(
+          std::move(*trackContainer)),
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*trackStateContainer))};
+
+  m_outputTracks(ctx, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }

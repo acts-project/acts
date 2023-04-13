@@ -52,7 +52,8 @@ class CombineSelectors {
   std::tuple<Selectors...> m_selectors;
 
   template <std::size_t... Is, typename... Ts>
-  bool impl(std::index_sequence<Is...> /*unused*/, const Ts &... things) const {
+  bool impl(std::index_sequence<Is...> /*indices*/,
+            const Ts &... things) const {
     Combine combine;
     // compute status for all selectors
     bool status[] = {std::get<Is>(m_selectors)(things...)...};

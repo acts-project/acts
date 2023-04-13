@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "Acts/EventData/TrackHelpers.hpp"
 #include "Acts/EventData/VectorMultiTrajectory.hpp"
 #include "Acts/Propagator/EigenStepper.hpp"
 #include "Acts/Propagator/MultiStepperAborters.hpp"
@@ -304,7 +305,7 @@ struct GaussianSumFitter {
     }
 
     if (fwdGsfResult.measurementStates == 0) {
-      return return_error_or_abort(GsfError::NoStatesCreated);
+      return return_error_or_abort(GsfError::NoMeasurementStatesCreatedForward);
     }
 
     ACTS_VERBOSE("Finished forward propagation");
@@ -367,6 +368,7 @@ struct GaussianSumFitter {
 
       r.currentTip = fwdGsfResult.lastMeasurementTip;
       r.visitedSurfaces.push_back(&proxy.referenceSurface());
+      r.surfacesVisitedBwdAgain.push_back(&proxy.referenceSurface());
       r.measurementStates++;
       r.processedStates++;
 
@@ -388,8 +390,9 @@ struct GaussianSumFitter {
       return return_error_or_abort(bwdGsfResult.result.error());
     }
 
-    if (bwdGsfResult.processedStates == 0) {
-      return return_error_or_abort(GsfError::NoStatesCreated);
+    if (bwdGsfResult.measurementStates == 0) {
+      return return_error_or_abort(
+          GsfError::NoMeasurementStatesCreatedBackward);
     }
 
     ////////////////////////////////////
@@ -408,8 +411,29 @@ struct GaussianSumFitter {
       ACTS_DEBUG("Fwd and bwd measuerement states do not match");
     }
 
-    auto track = trackContainer.getTrack(trackContainer.addTrack());
+    // Go through the states and assign outliers / unset smoothed if surface not
+    // passed in backward pass
+    const auto& foundBwd = bwdGsfResult.surfacesVisitedBwdAgain;
+    std::size_t measurementStatesFinal = 0;
 
+    for (auto state :
+         fwdGsfResult.fittedStates->trackStateRange(fwdGsfResult.currentTip)) {
+      const bool found = std::find(foundBwd.begin(), foundBwd.end(),
+                                   &state.referenceSurface()) != foundBwd.end();
+      if (not found && state.typeFlags().test(MeasurementFlag)) {
+        state.typeFlags().set(OutlierFlag);
+        state.typeFlags().reset(MeasurementFlag);
+      }
+
+      measurementStatesFinal +=
+          static_cast<std::size_t>(state.typeFlags().test(MeasurementFlag));
+    }
+
+    if (measurementStatesFinal == 0) {
+      return return_error_or_abort(GsfError::NoMeasurementStatesCreatedFinal);
+    }
+
+    auto track = trackContainer.getTrack(trackContainer.addTrack());
     track.tipIndex() = fwdGsfResult.lastMeasurementTip;
 
     if (options.referenceSurface) {
@@ -419,7 +443,9 @@ struct GaussianSumFitter {
       track.setReferenceSurface(params.referenceSurface().getSharedPtr());
     }
 
-    track.nMeasurements() = fwdGsfResult.measurementStates;
+    calculateTrackQuantities(track);
+
+    track.nMeasurements() = measurementStatesFinal;
     track.nHoles() = fwdGsfResult.measurementHoles;
 
     return track;

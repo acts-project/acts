@@ -227,7 +227,7 @@ Acts::Vector3 Acts::Surface::center(const GeometryContext& gctx) const {
 }
 
 Acts::Vector3 Acts::Surface::normal(const GeometryContext& gctx,
-                                    const Vector3& /*unused*/) const {
+                                    const Vector3& /*position*/) const {
   return normal(gctx, Vector2(Vector2::Zero()));
 }
 
@@ -245,8 +245,8 @@ bool Acts::Surface::insideBounds(const Vector2& lposition,
 }
 
 Acts::RotationMatrix3 Acts::Surface::referenceFrame(
-    const GeometryContext& gctx, const Vector3& /*unused*/,
-    const Vector3& /*unused*/) const {
+    const GeometryContext& gctx, const Vector3& /*position*/,
+    const Vector3& /*momentum*/) const {
   return transform(gctx).matrix().block<3, 3>(0, 0);
 }
 
@@ -332,7 +332,7 @@ const Acts::DetectorElementBase* Acts::Surface::associatedDetectorElement()
 }
 
 const Acts::Layer* Acts::Surface::associatedLayer() const {
-  return (m_associatedLayer);
+  return m_associatedLayer;
 }
 
 const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
@@ -342,6 +342,14 @@ const Acts::ISurfaceMaterial* Acts::Surface::surfaceMaterial() const {
 const std::shared_ptr<const Acts::ISurfaceMaterial>&
 Acts::Surface::surfaceMaterialSharedPtr() const {
   return m_surfaceMaterial;
+}
+
+void Acts::Surface::assignDetectorElement(
+    const DetectorElementBase& detelement) {
+  m_associatedDetElement = &detelement;
+  // resetting the transform as it will be handled through the detector element
+  // now
+  m_transform = Transform3::Identity();
 }
 
 void Acts::Surface::assignSurfaceMaterial(

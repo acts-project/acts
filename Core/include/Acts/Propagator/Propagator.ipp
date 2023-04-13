@@ -19,7 +19,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   // Navigator initialize state call
   m_navigator.status(state, m_stepper);
   // Pre-Stepping call to the action list
-  state.options.actionList(state, m_stepper, result, logger());
+  state.options.actionList(state, m_stepper, m_navigator, result, logger());
   // assume negative outcome, only set to true later if we actually have
   // a positive outcome.
 
@@ -27,7 +27,8 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   bool terminatedNormally = true;
 
   // Pre-Stepping: abort condition check
-  if (!state.options.abortList(result, state, m_stepper, logger())) {
+  if (!state.options.abortList(state, m_stepper, m_navigator, result,
+                               logger())) {
     // Pre-Stepping: target setting
     m_navigator.target(state, m_stepper);
     // Stepping loop
@@ -38,7 +39,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
     // Propagation loop : stepping
     for (; result.steps < state.options.maxSteps; ++result.steps) {
       // Perform a propagation step - it takes the propagation state
-      Result<double> res = m_stepper.step(state);
+      Result<double> res = m_stepper.step(state, m_navigator);
       if (res.ok()) {
         // Accumulate the path length
         double s = *res;
@@ -53,8 +54,9 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
       // Post-stepping:
       // navigator status call - action list - aborter list - target call
       m_navigator.status(state, m_stepper);
-      state.options.actionList(state, m_stepper, result, logger());
-      if (state.options.abortList(result, state, m_stepper, logger())) {
+      state.options.actionList(state, m_stepper, m_navigator, result, logger());
+      if (state.options.abortList(state, m_stepper, m_navigator, result,
+                                  logger())) {
         terminatedNormally = true;
         break;
       }
@@ -67,7 +69,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
   // if we didn't terminate normally (via aborters) set navigation break.
   // this will trigger error output in the lines below
   if (!terminatedNormally) {
-    state.navigation.navigationBreak = true;
+    m_navigator.navigationBreak(state.navigation, true);
     ACTS_ERROR("Propagation reached the step count limit of "
                << state.options.maxSteps << " (did " << result.steps
                << " steps)");
@@ -76,7 +78,7 @@ auto Acts::Propagator<S, N>::propagate_impl(propagator_state_t& state,
 
   // Post-stepping call to the action list
   ACTS_VERBOSE("Stepping loop done.");
-  state.options.actionList(state, m_stepper, result, logger());
+  state.options.actionList(state, m_stepper, m_navigator, result, logger());
 
   // return progress flag here, decide on SUCCESS later
   return Result<void>::success();
@@ -139,14 +141,15 @@ auto Acts::Propagator<S, N>::propagate(
   // Initialize the internal propagator state
   using StateType = State<OptionsType>;
   StateType state{
-      start, eOptions,
+      eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
                           eOptions.direction, eOptions.maxStepSize,
-                          eOptions.tolerance)};
+                          eOptions.tolerance),
+      m_navigator.makeState(&start.referenceSurface(), nullptr)};
 
   static_assert(
-      Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,
-                            StateType&>,
+      Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
+                           StateType&, const N&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 
@@ -225,15 +228,15 @@ auto Acts::Propagator<S, N>::propagate(
   // Initialize the internal propagator state
   using StateType = State<OptionsType>;
   StateType state{
-      start, eOptions,
+      eOptions,
       m_stepper.makeState(eOptions.geoContext, eOptions.magFieldContext, start,
                           eOptions.direction, eOptions.maxStepSize,
-                          eOptions.tolerance)};
-  state.navigation.targetSurface = &target;
+                          eOptions.tolerance),
+      m_navigator.makeState(&start.referenceSurface(), &target)};
 
   static_assert(
-      Concepts ::has_method<const S, Result<double>, Concepts ::Stepper::step_t,
-                            StateType&>,
+      Concepts::has_method<const S, Result<double>, Concepts::Stepper::step_t,
+                           StateType&, const N&>,
       "Step method of the Stepper is not compatible with the propagator "
       "state");
 

@@ -9,14 +9,15 @@
 #pragma once
 
 #include "ActsExamples/EventData/SimHit.hpp"
+#include "ActsExamples/EventData/SimParticle.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
 
 #include <string>
 
-#include "edm4hep/MCParticleCollection.h"
-#include "edm4hep/SimTrackerHitCollection.h"
-#include "podio/EventStore.h"
-#include "podio/ROOTWriter.h"
+#include <edm4hep/MCParticleCollection.h>
+#include <edm4hep/SimTrackerHitCollection.h>
+#include <podio/ROOTFrameWriter.h>
 
 namespace ActsExamples {
 
@@ -38,7 +39,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
     std::string outputPath;
     /// Name of the particle collection in EDM4hep.
     std::string outputParticles = "MCParticles";
-    /// Name of the particle collection in EDM4hep.
+    /// Name of the sim tracker hit collection in EDM4hep
     std::string outputSimTrackerHits = "ActsSimTrackerHits";
   };
 
@@ -48,7 +49,7 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
   /// @param level is the logging level
   EDM4hepSimHitWriter(const Config& config, Acts::Logging::Level level);
 
-  ProcessCode endRun() final;
+  ProcessCode finalize() final;
 
   /// Readonly access to the config
   const Config& config() const { return m_cfg; }
@@ -64,11 +65,9 @@ class EDM4hepSimHitWriter final : public WriterT<SimHitContainer> {
  private:
   Config m_cfg;
 
-  podio::ROOTWriter m_writer;
-  podio::EventStore m_store;
+  podio::ROOTFrameWriter m_writer;
 
-  edm4hep::MCParticleCollection* m_mcParticleCollection;
-  edm4hep::SimTrackerHitCollection* m_simTrackerHitCollection;
+  ReadDataHandle<SimParticleContainer> m_inputParticles{this, "InputParticles"};
 };
 
 }  // namespace ActsExamples

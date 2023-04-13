@@ -81,7 +81,7 @@ Acts::Vector3 Acts::ConeSurface::rotSymmetryAxis(
 
 Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*unused*/) const {
+    const Vector3& /*momentum*/) const {
   RotationMatrix3 mFrame;
   // construct the measurement frame
   // measured Y is the local z axis
@@ -102,7 +102,7 @@ Acts::RotationMatrix3 Acts::ConeSurface::referenceFrame(
 
 Acts::Vector3 Acts::ConeSurface::localToGlobal(
     const GeometryContext& gctx, const Vector2& lposition,
-    const Vector3& /*unused*/) const {
+    const Vector3& /*momentum*/) const {
   // create the position in the local 3d frame
   double r = lposition[Acts::eBoundLoc1] * bounds().tanAlpha();
   double phi = lposition[Acts::eBoundLoc0] / r;
@@ -112,7 +112,7 @@ Acts::Vector3 Acts::ConeSurface::localToGlobal(
 
 Acts::Result<Acts::Vector2> Acts::ConeSurface::globalToLocal(
     const GeometryContext& gctx, const Vector3& position,
-    const Vector3& /*unused*/, double tolerance) const {
+    const Vector3& /*momentum*/, double tolerance) const {
   Vector3 loc3Dframe = transform(gctx).inverse() * position;
   double r = loc3Dframe.z() * bounds().tanAlpha();
   if (std::abs(perp(loc3Dframe) - r) > tolerance) {

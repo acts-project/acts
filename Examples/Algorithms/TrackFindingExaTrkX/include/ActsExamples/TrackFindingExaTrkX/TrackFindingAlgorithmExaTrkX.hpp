@@ -9,14 +9,17 @@
 #pragma once
 
 #include "Acts/Plugins/ExaTrkX/ExaTrkXTrackFindingBase.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
+#include "ActsExamples/EventData/SimSpacePoint.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 
 #include <string>
 #include <vector>
 
 namespace ActsExamples {
 
-class TrackFindingAlgorithmExaTrkX final : public BareAlgorithm {
+class TrackFindingAlgorithmExaTrkX final : public IAlgorithm {
  public:
   struct Config {
     /// Input spacepoints collection.
@@ -54,6 +57,12 @@ class TrackFindingAlgorithmExaTrkX final : public BareAlgorithm {
  private:
   // configuration
   Config m_cfg;
+
+  ReadDataHandle<SimSpacePointContainer> m_inputSpacePoints{this,
+                                                            "InputSpacePoints"};
+
+  WriteDataHandle<ProtoTrackContainer> m_outputProtoTracks{this,
+                                                           "OutputProtoTracks"};
 };
 
 }  // namespace ActsExamples

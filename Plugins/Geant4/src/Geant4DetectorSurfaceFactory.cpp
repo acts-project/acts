@@ -41,26 +41,34 @@ void Acts::Geant4DetectorSurfaceFactory::construct(
                    option.sensitiveSurfaceSelector->select(g4PhysVol);
   bool passive = option.passiveSurfaceSelector != nullptr and
                  option.passiveSurfaceSelector->select(g4PhysVol);
+
   if (sensitive or passive) {
     // Conversion and selection code
     ++cache.matchedG4Volumes;
+
     // Attempt the conversion
     auto surface = Acts::Geant4PhysicalVolumeConverter{}.surface(
         g4PhysVol, Geant4AlgebraConverter{}.transform(newToGlobal),
         option.convertMaterial, option.convertedMaterialThickness);
+
     if (surface != nullptr) {
       ++cache.convertedSurfaces;
-      if (sensitive) {
-        cache.sensitiveSurfaces.push_back(
-            {std::make_shared<Acts::Geant4DetectorElement>(surface, 0.1,
-                                                           g4PhysVol),
-             surface});
-      } else {
-        cache.passiveSurfaces.push_back(surface);
-      }
       // Count the material conversion
       if (surface->surfaceMaterial() != nullptr) {
         ++cache.convertedMaterials;
+      }
+
+      if (sensitive) {
+        // empty gemetry context is fine as the transform was just passed down
+        // without context before
+        auto detectorElement = std::make_shared<Acts::Geant4DetectorElement>(
+            surface, g4PhysVol, surface->transform({}), 0.1);
+        surface->assignDetectorElement(*detectorElement);
+
+        cache.sensitiveSurfaces.push_back(
+            {std::move(detectorElement), std::move(surface)});
+      } else {
+        cache.passiveSurfaces.push_back(std::move(surface));
       }
     }
   }

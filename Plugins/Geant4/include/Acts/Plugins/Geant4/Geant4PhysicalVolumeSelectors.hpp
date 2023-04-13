@@ -31,7 +31,7 @@ namespace Geant4PhysicalVolumeSelectors {
 
 /// @brief  Struct that selects all G4VPhysicalVolume objects
 struct AllSelector : public IGeant4PhysicalVolumeSelector {
-  bool select(const G4VPhysicalVolume& /*unused*/) const final { return true; }
+  bool select(const G4VPhysicalVolume& /*g4Phys*/) const final { return true; }
 };
 
 /// @brief Struct that selects G4VPhysicalVolume objects

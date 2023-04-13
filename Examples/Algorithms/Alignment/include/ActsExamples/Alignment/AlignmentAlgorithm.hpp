@@ -12,8 +12,10 @@
 #include "ActsAlignment/Kernel/Alignment.hpp"
 #include "ActsExamples/EventData/IndexSourceLink.hpp"
 #include "ActsExamples/EventData/Measurement.hpp"
+#include "ActsExamples/EventData/ProtoTrack.hpp"
 #include "ActsExamples/EventData/Track.hpp"
-#include "ActsExamples/Framework/BareAlgorithm.hpp"
+#include "ActsExamples/Framework/DataHandle.hpp"
+#include "ActsExamples/Framework/IAlgorithm.hpp"
 #include "ActsExamples/MagneticField/MagneticField.hpp"
 
 #include <functional>
@@ -22,9 +24,11 @@
 
 namespace ActsExamples {
 
-class AlignmentAlgorithm final : public BareAlgorithm {
+class AlignmentAlgorithm final : public IAlgorithm {
  public:
   using AlignmentResult = Acts::Result<ActsAlignment::AlignmentResult>;
+  using AlignmentParameters =
+      std::unordered_map<Acts::DetectorElementBase*, Acts::Transform3>;
   /// Alignment function that takes sets of input measurements, initial
   /// trackstate and alignment options and returns some alignment-specific
   /// result.
@@ -95,6 +99,17 @@ class AlignmentAlgorithm final : public BareAlgorithm {
 
  private:
   Config m_cfg;
+
+  ReadDataHandle<MeasurementContainer> m_inputMeasurements{this,
+                                                           "InputMeasurements"};
+  ReadDataHandle<IndexSourceLinkContainer> m_inputSourceLinks{
+      this, "InputSourceLinks"};
+  ReadDataHandle<TrackParametersContainer> m_inputInitialTrackParameters{
+      this, "InputInitialTrackParameters"};
+  ReadDataHandle<ProtoTrackContainer> m_inputProtoTracks{this,
+                                                         "InputProtoTracks"};
+  WriteDataHandle<AlignmentParameters> m_outputAlignmentParameters{
+      this, "OutputAlignmentParameters"};
 };
 
 }  // namespace ActsExamples

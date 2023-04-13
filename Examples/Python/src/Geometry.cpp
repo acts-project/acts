@@ -6,9 +6,9 @@
 // License, v. 2.0. If a copy of the MPL was not distributed with this
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-#include "Acts/Geometry/Detector.hpp"
+#include "Acts/Detector/Detector.hpp"
+#include "Acts/Detector/ProtoDetector.hpp"
 #include "Acts/Geometry/GeometryIdentifier.hpp"
-#include "Acts/Geometry/ProtoDetector.hpp"
 #include "Acts/Geometry/TrackingGeometry.hpp"
 #include "Acts/Plugins/Python/Utilities.hpp"
 #include "Acts/Surfaces/Surface.hpp"
@@ -42,10 +42,25 @@ void addGeometry(Context& ctx) {
     py::class_<Acts::Surface, std::shared_ptr<Acts::Surface>>(m, "Surface")
         .def("geometryId",
              [](Acts::Surface& self) { return self.geometryId(); })
-        .def("center", [](Acts::Surface& self) {
-          return self.center(Acts::GeometryContext{});
-        });
+        .def("center",
+             [](Acts::Surface& self) {
+               return self.center(Acts::GeometryContext{});
+             })
+        .def("type", [](Acts::Surface& self) { return self.type(); });
   }
+
+  {
+    py::enum_<Acts::Surface::SurfaceType>(m, "SurfaceType")
+        .value("Cone", Acts::Surface::SurfaceType::Cone)
+        .value("Cylinder", Acts::Surface::SurfaceType::Cylinder)
+        .value("Disc", Acts::Surface::SurfaceType::Disc)
+        .value("Perigee", Acts::Surface::SurfaceType::Perigee)
+        .value("Plane", Acts::Surface::SurfaceType::Plane)
+        .value("Straw", Acts::Surface::SurfaceType::Straw)
+        .value("Curvilinear", Acts::Surface::SurfaceType::Curvilinear)
+        .value("Other", Acts::Surface::SurfaceType::Other);
+  }
+
   {
     py::class_<Acts::TrackingGeometry, std::shared_ptr<Acts::TrackingGeometry>>(
         m, "TrackingGeometry")

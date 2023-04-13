@@ -19,7 +19,6 @@ struct ProtoTrackSourceLinkAccessor
   using BaseIterator = GeometryIdMultisetAccessor<IndexSourceLink>::Iterator;
   using Iterator = Acts::SourceLinkAdapterIterator<BaseIterator>;
 
-  
   std::unique_ptr<const Acts::Logger> loggerPtr;
   Container protoTrackSourceLinks;
 
@@ -46,16 +45,23 @@ struct ProtoTrackSourceLinkAccessor
 }  // namespace
 
 namespace ActsExamples {
+
+TrackFindingFromPrototrackAlgorithm::TrackFindingFromPrototrackAlgorithm(
+    Config cfg, Acts::Logging::Level lvl)
+    : IAlgorithm("CkfFromProtoTracks", lvl), m_cfg(cfg) {
+  m_inputInitialTrackParameters.initialize(m_cfg.inputInitialTrackParameters);
+  m_inputMeasurements.initialize(m_cfg.inputMeasurements);
+  m_inputProtoTracks.initialize(m_cfg.inputProtoTracks);
+  m_inputSourceLinks.initialize(m_cfg.inputSourceLinks);
+  m_outputTracks.initialize(m_cfg.outputTracks);
+}
+
 ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
     const ActsExamples::AlgorithmContext& ctx) const {
-  const auto& measurements =
-      ctx.eventStore.get<MeasurementContainer>(m_cfg.inputMeasurements);
-  const auto& sourceLinks =
-      ctx.eventStore.get<IndexSourceLinkContainer>(m_cfg.inputSourceLinks);
-  const auto& protoTracks =
-      ctx.eventStore.get<ProtoTrackContainer>(m_cfg.inputProtoTracks);
-  const auto& initialParameters = ctx.eventStore.get<TrackParametersContainer>(
-      m_cfg.inputInitialTrackParameters);
+  const auto& measurements = m_inputMeasurements(ctx);
+  const auto& sourceLinks = m_inputSourceLinks(ctx);
+  const auto& protoTracks = m_inputProtoTracks(ctx);
+  const auto& initialParameters = m_inputInitialTrackParameters(ctx);
 
   // Construct a perigee surface as the target surface
   auto pSurface = Acts::Surface::makeShared<Acts::PerigeeSurface>(
@@ -86,7 +92,7 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
   ProtoTrackSourceLinkAccessor sourceLinkAccessor;
   sourceLinkAccessor.loggerPtr = logger().clone("SourceLinkAccessor");
   sourceLinkAccessor.container = &sourceLinks;
-  
+
   Acts::SourceLinkAccessorDelegate<IndexSourceLinkAccessor::Iterator>
       slAccessorDelegate;
   slAccessorDelegate.connect<&ProtoTrackSourceLinkAccessor::range>(
@@ -147,8 +153,17 @@ ActsExamples::ProcessCode TrackFindingFromPrototrackAlgorithm::execute(
 
   ACTS_DEBUG("Finalized track finding with " << tracks.size()
                                              << " track candidates.");
+  auto constTrackStateContainer =
+      std::make_shared<Acts::ConstVectorMultiTrajectory>(
+          std::move(*trackStateContainer));
 
-  ctx.eventStore.add(m_cfg.outputTracks, std::move(tracks));
+  auto constTrackContainer = std::make_shared<Acts::ConstVectorTrackContainer>(
+      std::move(*trackContainer));
+
+  ConstTrackContainer constTracks{constTrackContainer,
+                                  constTrackStateContainer};
+
+  m_outputTracks(ctx, std::move(constTracks));
   return ActsExamples::ProcessCode::SUCCESS;
 }
 }  // namespace ActsExamples
