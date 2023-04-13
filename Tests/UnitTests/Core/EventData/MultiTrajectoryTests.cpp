@@ -1139,8 +1139,8 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
 
   for (int t = 0; t < type_axis.size(); t++) {
     for (int c = 0; c < column_axis.size(); c++) {
-      int v = h.at(c, t);
-      BOOST_CHECK_EQUAL(v, 0);
+      double v = h.at(c, t);
+      BOOST_CHECK_EQUAL(v, 0.0);
     }
   }
 
@@ -1155,11 +1155,11 @@ BOOST_AUTO_TEST_CASE(MemoryStats) {
     for (int c = 0; c < column_axis.size(); c++) {
       std::string key = column_axis.bin(c);
       BOOST_TEST_CONTEXT("column: " << key) {
-        int v = h.at(c, t);
+        double v = h.at(c, t);
         if (t == 0) {
-          BOOST_CHECK_NE(v, 0);
+          BOOST_CHECK_NE(v, 0.0);
         } else {
-          BOOST_CHECK_EQUAL(v, 0);
+          BOOST_CHECK_EQUAL(v, 0.0);
         }
       }
     }
