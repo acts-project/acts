@@ -189,8 +189,12 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
     const InternalSpacePoint<external_spacepoint_t>& mediumSP,
     std::vector<LinCircle>& linCircleVec, out_range_t& outVec,
     const float& deltaRMinSP, const float& deltaRMaxSP) const {
-  constexpr int sign = candidateType == Acts::SpacePointCandidateType::BOTTOM ? -1 : 1;
 
+  float impactMax = m_config.impactMax;
+  if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
+    impactMax = -impactMax;
+  }
+  
   outVec.clear();
   linCircleVec.clear();
 
@@ -216,7 +220,7 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
   float vIPAbs = 0;
   if (m_config.interactionPointCut) {
     // equivalent to m_config.impactMax / (rM * rM);
-    vIPAbs = m_config.impactMax * uIP * uIP;
+    vIPAbs = impactMax * uIP * uIP;
   }
 
   float deltaR = 0.;
@@ -272,29 +276,23 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 
       if constexpr (candidateType == Acts::SpacePointCandidateType::BOTTOM) {
 	deltaZ = (zM - otherSP->z());
-	if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-	  continue;
-	}
       } else {
 	deltaZ = (otherSP->z() - zM);
-	if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
-	  continue;
-	}
       }
       
       // ratio Z/R (forward angle) of space point duplet
       float cotTheta = deltaZ / deltaR;
       if (cotTheta > m_config.cotThetaMax or cotTheta < -m_config.cotThetaMax) {
-        continue;
+	continue;
       }
-      
+
       // check if duplet origin on z axis within collision region
       float zOrigin = zM - rM * cotTheta;
-      if (zOrigin < m_config.collisionRegionMin ||
+      if (zOrigin < m_config.collisionRegionMin or
           zOrigin > m_config.collisionRegionMax) {
         continue;
       }
-
+      
       const float deltaX = otherSP->x() - xM;
       const float deltaY = otherSP->y() - yM;
 
@@ -315,25 +313,6 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
       const float uT = xNewFrame * iDeltaR2;
       const float vT = yNewFrame * iDeltaR2;
 
-      if (m_config.interactionPointCut and
-	  std::abs(rM * yNewFrame) > sign * m_config.impactMax * xNewFrame) {
-
-	// in the rotated frame the interaction point is positioned at x = -rM
-	// and y ~= impactParam
-	const float vIP = (sign * yNewFrame > 0.) ? -vIPAbs : vIPAbs;
-	// we can obtain aCoef as the slope dv/du of the linear function,
-	// estimated using du and dv between the two SP bCoef is obtained by
-	// inserting aCoef into the linear equation
-	const float aCoef = (vT - vIP) / (uT - uIP);
-	const float bCoef = vIP - aCoef * uIP;
-	// the distance of the straight line from the origin (radius of the
-	// circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
-	// aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
-	if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
-	  continue;
-	}
-      }      
-      
       const float iDeltaR = std::sqrt(iDeltaR2);
       cotTheta = deltaZ * iDeltaR;
       
@@ -342,6 +321,38 @@ SeedFinder<external_spacepoint_t, platform_t>::getCompatibleDoublets(
 	((varianceZM + otherSP->varianceZ()) +
 	 (cotTheta * cotTheta) * (varianceRM + otherSP->varianceR())) *
 	iDeltaR2;
+
+      
+      if (not m_config.interactionPointCut or
+	   std::abs(rM * yNewFrame) <= impactMax * xNewFrame) {
+	if (deltaZ > m_config.deltaZMax or deltaZ < -m_config.deltaZMax) {
+	  continue;
+	}
+
+	// fill output vectors
+	linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT,
+				xNewFrame, yNewFrame);
+	spacePointData.setDeltaR(otherSP->index(),
+			       std::sqrt(deltaR2 + (deltaZ * deltaZ)));
+	outVec.push_back(otherSP.get());	
+        continue;
+      }
+      
+      // in the rotated frame the interaction point is positioned at x = -rM
+      // and y ~= impactParam
+      const float vIP = (yNewFrame > 0.) ? -vIPAbs : vIPAbs;
+
+      // we can obtain aCoef as the slope dv/du of the linear function,
+      // estimated using du and dv between the two SP bCoef is obtained by
+      // inserting aCoef into the linear equation
+      const float aCoef = (vT - vIP) / (uT - uIP);
+      const float bCoef = vIP - aCoef * uIP;
+      // the distance of the straight line from the origin (radius of the
+      // circle) is related to aCoef and bCoef by d^2 = bCoef^2 / (1 +
+      // aCoef^2) = 1 / (radius^2) and we can apply the cut on the curvature
+      if ((bCoef * bCoef) * options.minHelixDiameter2 > (1 + aCoef * aCoef)) {
+	continue;
+      }
       
       // fill output vectors
       linCircleVec.emplace_back(cotTheta, iDeltaR, Er, uT, vT,
