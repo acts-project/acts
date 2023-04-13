@@ -63,6 +63,9 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   auto rootBounds =
       std::make_unique<Acts::CylinderVolumeBounds>(r0, r3, zHalfL);
 
+  auto rootBoundsCopy =
+      std::make_unique<Acts::CylinderVolumeBounds>(r0, r3, zHalfL);
+
   auto portalGenerator = Acts::Experimental::defaultPortalGenerator();
 
   auto cyl0 = Acts::Experimental::DetectorVolumeFactory::construct(
@@ -136,7 +139,7 @@ BOOST_AUTO_TEST_CASE(DetectorConstruction) {
   std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes002 =
       {cyl0, cyl0nameDup, cyl2};
   auto root002 = Acts::Experimental::DetectorVolumeFactory::construct(
-      portalGenerator, tContext, "root", nominal, std::move(rootBounds),
+      portalGenerator, tContext, "root", nominal, std::move(rootBoundsCopy),
       std::vector<std::shared_ptr<Acts::Surface>>(), volumes002,
       Acts::Experimental::tryAllSubVolumes(),
       Acts::Experimental::tryAllPortals());
