@@ -34,6 +34,7 @@ option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
+option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
@@ -120,6 +121,9 @@ set_option_if(
   ACTS_BUILD_PLUGIN_DD4HEP
   ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
   ACTS_BUILD_EXAMPLES_EDM4HEP)
+set_option_if(
+  ACTS_BUILD_PLUGIN_EDM4HEP
+  ACTS_BUILD_EXAMPLES_EDM4HEP OR ACTS_BUILD_EVERYTHING)
 set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
     ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)  
@@ -342,7 +346,7 @@ if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
 elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
 endif()
-if(ACTS_BUILD_EXAMPLES_EDM4HEP)
+if(ACTS_BUILD_PLUGIN_EDM4HEP)
   find_package(podio ${_acts_podio_version} REQUIRED CONFIG)
   find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
 endif()

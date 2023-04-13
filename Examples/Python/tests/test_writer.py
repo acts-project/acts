@@ -3,6 +3,7 @@ import os
 import inspect
 from pathlib import Path
 import shutil
+import math
 import sys
 import tempfile
 
@@ -13,6 +14,7 @@ from helpers import (
     hepmc3Enabled,
     geant4Enabled,
     edm4hepEnabled,
+    podioEnabled,
     AssertCollectionExistsAlg,
 )
 
@@ -695,3 +697,113 @@ def test_edm4hep_multitrajectory_writer(tmp_path):
 
     assert os.path.isfile(out)
     assert os.stat(out).st_size > 200
+
+
+@pytest.mark.edm4hep
+@pytest.mark.skipif(not edm4hepEnabled, reason="EDM4hep is not set up")
+def test_edm4hep_tracks_writer(tmp_path):
+    from acts.examples.edm4hep import EDM4hepTrackWriter
+
+    detector, trackingGeometry, decorators = GenericDetector.create()
+    field = acts.ConstantBField(acts.Vector3(0, 0, 2 * u.T))
+
+    from truth_tracking_kalman import runTruthTrackingKalman
+
+    s = Sequencer(numThreads=1, events=10)
+    runTruthTrackingKalman(
+        trackingGeometry,
+        field,
+        digiConfigFile=Path(
+            str(
+                Path(__file__).parent.parent.parent.parent
+                / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json"
+            )
+        ),
+        outputDir=tmp_path,
+        s=s,
+    )
+
+    out = tmp_path / "tracks_edm4hep.root"
+
+    s.addWriter(
+        EDM4hepTrackWriter(
+            level=acts.logging.VERBOSE,
+            inputTracks="kfTracks",
+            outputPath=str(out),
+            Bz=2 * u.T,
+        )
+    )
+
+    s.run()
+
+    assert os.path.isfile(out)
+    assert os.stat(out).st_size > 200
+
+    if not podioEnabled:
+        import warnings
+
+        warnings.warn(
+            "edm4hep output checks were skipped, because podio was not on the python path"
+        )
+        return
+
+    from podio.root_io import Reader
+    from podio.frame import Frame
+    import cppyy
+
+    reader = Reader(str(out))
+
+    expected = [
+        (31.986961364746094, 30, 16),
+        (28.64777374267578, 30, 16),
+        (11.607606887817383, 22, 12),
+        (5.585886001586914, 22, 12),
+        (20.560943603515625, 20, 11),
+        (28.742727279663086, 28, 15),
+        (27.446802139282227, 22, 12),
+        (30.82959747314453, 24, 13),
+        (24.671127319335938, 26, 14),
+        (16.479907989501953, 20, 11),
+        (10.594233512878418, 22, 12),
+        (25.174715042114258, 28, 15),
+        (27.9674072265625, 26, 14),
+        (4.3012871742248535, 22, 12),
+        (20.492422103881836, 22, 12),
+        (27.92759132385254, 24, 13),
+        (14.514887809753418, 22, 12),
+        (12.876864433288574, 22, 12),
+        (12.951473236083984, 26, 14),
+    ]
+
+    actual = []
+
+    for frame in reader.get("events"):
+        tracks = frame.get("ActsTracks")
+        for track in tracks:
+            actual.append(
+                (track.getChi2(), track.getNdf(), len(track.getTrackStates()))
+            )
+
+            locs = []
+
+            perigee = None
+            for ts in track.getTrackStates():
+                if ts.location == cppyy.gbl.edm4hep.TrackState.AtIP:
+                    perigee = ts
+                    continue
+                locs.append(ts.location)
+
+                rp = ts.referencePoint
+                r = math.sqrt(rp.x**2 + rp.y**2)
+                assert r > 25
+
+            assert locs[0] == cppyy.gbl.edm4hep.TrackState.AtLastHit
+            assert locs[-1] == cppyy.gbl.edm4hep.TrackState.AtFirstHit
+
+            assert perigee is not None
+            rp = perigee.referencePoint
+            assert rp.x == 0.0
+            assert rp.y == 0.0
+            assert rp.z == 0.0
+            assert abs(perigee.D0) < 1e-1
+            assert abs(perigee.Z0) < 1
