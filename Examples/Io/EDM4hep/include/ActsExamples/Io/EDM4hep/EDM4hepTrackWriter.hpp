@@ -1,6 +1,6 @@
 // This file is part of the Acts project.
 //
-// Copyright (C) 2022 CERN for the benefit of the Acts project
+// Copyright (C) 2023 CERN for the benefit of the Acts project
 //
 // This Source Code Form is subject to the terms of the Mozilla Public
 // License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -8,6 +8,7 @@
 
 #pragma once
 
+#include "ActsExamples/EventData/Track.hpp"
 #include "ActsExamples/EventData/Trajectories.hpp"
 #include "ActsExamples/Framework/DataHandle.hpp"
 #include "ActsExamples/Framework/WriterT.hpp"
@@ -20,35 +21,25 @@
 
 namespace ActsExamples {
 
-/// Write out the tracks reconstructed using Combinatorial Kalman Filter to
-/// EDM4hep.
-///
-/// Inpersistent information:
-/// - trajectory state incomplete
-/// - relation to the particles
-///
-/// Known issues:
-/// - curvature parameter
-/// - track state local coordinates are written to (D0,Z0)
-/// - covariance incorrect
-class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
+class EDM4hepTrackWriter : public WriterT<ConstTrackContainer> {
  public:
   struct Config {
-    /// Input trajectory collection
-    std::string inputTrajectories;
-    /// Input hit-particles map collection
-    std::string inputMeasurementParticlesMap;
+    /// Input track collection
+    std::string inputTracks;
+    /// Output track collection in edm4hep
+    std::string outputTracks = "ActsTracks";
     /// Where to place output file
     std::string outputPath;
-    /// B field in the longitudinal direction
+    /// Magnetic field along the z axis (needed for the conversion of
+    /// parameters)
     double Bz;
   };
 
   /// constructor
   /// @param config is the configuration object
   /// @param level is the output logging level
-  EDM4hepMultiTrajectoryWriter(
-      const Config& config, Acts::Logging::Level level = Acts::Logging::INFO);
+  EDM4hepTrackWriter(const Config& config,
+                     Acts::Logging::Level level = Acts::Logging::INFO);
 
   ProcessCode finalize() final;
 
@@ -60,15 +51,12 @@ class EDM4hepMultiTrajectoryWriter : public WriterT<TrajectoriesContainer> {
   /// @param [in] context is the algorithm context for consistency
   /// @param [in] tracks is the track collection
   ProcessCode writeT(const AlgorithmContext& context,
-                     const TrajectoriesContainer& trajectories) final;
+                     const ConstTrackContainer& tracks) final;
 
  private:
   Config m_cfg;
 
   podio::ROOTFrameWriter m_writer;
-
-  ReadDataHandle<IndexMultimap<ActsFatras::Barcode>>
-      m_inputMeasurementParticlesMap{this, "InputMeasurementParticlesMaps"};
 };
 
 }  // namespace ActsExamples
