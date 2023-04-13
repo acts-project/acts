@@ -105,6 +105,11 @@ public:
 };
 ```
 
+```{note}
+The `binningPosition(const GeometryContext& gctx, BinningValue& bVal)` method allows to define 
+a customized position of this object when being subject to ordering in some specific binnings, e.g. in a `BinnedArray` or a `SurfaceArray`.
+```
+
 ## Surface classes
 
 The `Surface` class builds the core class of all geometry objects and can be
@@ -126,6 +131,10 @@ surfaces, a special `InfiniteBounds` class is available.
 ![CylinderBounds](/figures/geometry/CylinderBounds.png)
 ![DiscBounds](/figures/geometry/DiscBounds.png)
 ![PlaneBounds](/figures/geometry/PlaneBounds.png)
+
+```{tip}
+The coordinate systems define - in an ideal setup - also the readout measurement directions. In such a case, a track prediction from the propagation, e.g. will already be in the correct frame of the measurement and residual or compatibility checks will not need additional coordinate transformations.
+```
 
 ## Layer classes
 
@@ -185,7 +194,7 @@ at creation.
 ![VolumeBounds](/figures/geometry/VolumeBounds.png)
 ![CylinderVolumeBounds](/figures/geometry/CylinderVolumeBounds.png)
 
-## Material description
+## Detector material description
 
 Two types of material description exist, one for a surface based material, one
 for a volume based material. They will be dealt with differently in the
@@ -197,6 +206,11 @@ The basic information for any material is:
 * the atomic charge Z the density of the material
 
 This information is confined together in the `Material` class.
+
+```{note}
+In track reconstruction, only an effective material description is needed, i.e. non-physical values in regards of the atomic number, the elementary charge or even the density are allowed, as long as the effective relative radiation length and `A/Z x rho` ratio can be retrieved.
+This enables compatictification of the material description, as the element composition record does not have to be kept.
+```
 
 Surface based material extends this material information by representative
 thickness, the corresponding object is called `MaterialSlab`. The
@@ -210,25 +224,29 @@ Possible extensions are:
  * `HomogeneousSurfaceMaterial`, homogeneous material description on a surface
  * `BinnedSurfaceMaterial`, an arbitrarily binned material description with a
     corresponding `BinUtility` object
+
+In addition, a dedicated extension exists to allow configuration of the material
+mapping process, that is in further described below.
+
  * `ProtoSurfaceMaterial`, only binning description (without material) to be
    used in the material mapping process
 
-# Geometry building
+## Geometry building
 
 The geometry building procedure follows the ATLAS TrackingGeometry philosophy of
 a static frame of *glued* volumes, that lead the navigation flow through the
 geometry,
 
-## Attaching a 3D detector geometry
+### Attaching a 3D detector geometry
 
 Usually, a 3D detector model geometry exists, which is either native to the full
 detector simulation (Geant4) or is translated into it. This model, however, is
 in general too detailed for track reconstruction: navigating through the
-detailed detector geometry
+detailed detector geometry is generally costly and one can profit greatly from a simplication mechanism.
 
 For most part of the track reconstruction, only a surface based description of
 the detector is needed, in order to allow (surface based) material integration
-and parametrization/ prediction of trajectories on detection surfaces. It is thus
+and parametrization/prediction of trajectories on detection surfaces. It is thus
 necessary that the detection surfaces are described to full detail in the
 reconstruction geometry (called `TrackingGeometry`). This is guaranteed by a
 proxy mechanism that connects the detection elements (conveniently called
@@ -236,15 +254,28 @@ proxy mechanism that connects the detection elements (conveniently called
 
 ![DetectorElement](/figures/geometry/DetectorElement.png)
 
-### Existing plugins for 3D geometry libraries
+#### Existing plugins for 3D geometry libraries
 
 Very simple helper methods for 3D libraries exist, they are certainly not
 optimised, but used for templating:
 
-* `TGeoDetectorElement` connects a TGeo volume to a `Surface` (see [](TGeo plugin))
-* `DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a `Surface` (see [](DD4hep plugin))
+* `TGeoDetectorElement` connects a TGeo volume to a `Surface`
+* `DD4HepDetectorElement` connects a DD4hep volume (based on TGeo) to a `Surface`
+* `Geant4DetectorElement` connects a Geant4 volume to a `Surface`
 
-## Layer building
+Further exensions exist in dedicated experiment contexts, such as e.g. a `GeoModel`
+binding for the ATLAS experiment.
+
+```{note}
+While `DD4hep` offers a descriptive language with a dedicated extension mechanism
+that can be used by Acts to interpret the underlying geometry hierarchy and and structure,
+there is no such guarantee when having the already as built `TGeo` geometry in hand.
+Therefor a dedicated Acts configuration file based on `json` can be provided that allows
+to specify parsing restrictions for sub detectors. 
+```
+
+
+### Layer building
 
 `Surface` object that are to be grouped on a layer should be put into a
 `SurfaceArray` and provided to the layer. Certain helper tools exist to ease the
@@ -253,7 +284,15 @@ can create cylindrical, disc-like & planar layers, where the dimensions of the
 layer are determined by parsing the provided surfaces. Additionally, an envelope
 covering the surfaces can be chosen.
 
-## Volume building, packing, and gluing
+```{note}
+There exist standard layer builders that are desinged to build cylindrical, disk like 
+and planar layers and perform the ordering of the surfaces onto those layers. These
+builders are called from the top level translation entry points from either `TGeo` 
+or `DD4hep`.
+```
+
+
+### Volume building, packing, and gluing
 
 The philosophy of the `TrackingGeometry` is a fully connective geometry setup,
 i.e. `TrackingVolume` objects are either pure containers for other contained
@@ -273,6 +312,10 @@ possible, they are *attached*.
 For cylindrical detector setups, a dedicated `CylinderVolumeBuilder` is
 provided, which performs a variety of volume building, packing and gluing.
 
+```{note}
+For most cylindrical detectors, there exist automated glueing and geometry building 
+modules that take care of the glueing process.
+```
 
 ## TrackingGeometry building using a KDTree and a Proto Description
 

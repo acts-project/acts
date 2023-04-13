@@ -710,7 +710,7 @@ void propagator_instatiation_test_function() {
   auto bField = std::make_shared<NullBField>();
   multi_stepper_t multi_stepper(bField);
   Propagator<multi_stepper_t, Navigator> propagator(
-      multi_stepper, Navigator{Navigator::Config{}});
+      std::move(multi_stepper), Navigator{Navigator::Config{}});
 
   auto surface = Acts::Surface::makeShared<Acts::PlaneSurface>(
       Vector3::Zero(), Vector3{1.0, 0.0, 0.0});

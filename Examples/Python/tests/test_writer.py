@@ -38,7 +38,7 @@ from acts.examples import (
     RootSimHitWriter,
     RootTrajectoryStatesWriter,
     RootTrajectorySummaryWriter,
-    RootVertexPerformanceWriter,
+    VertexPerformanceWriter,
     RootMeasurementWriter,
     CsvParticleWriter,
     CsvPlanarClusterWriter,
@@ -354,7 +354,7 @@ def test_csv_clusters_writer(tmp_path, fatras, conf_const, trk_geo, rng):
         RootSimHitWriter,
         RootTrajectoryStatesWriter,
         RootTrajectorySummaryWriter,
-        RootVertexPerformanceWriter,
+        VertexPerformanceWriter,
         SeedingPerformanceWriter,
     ],
 )
