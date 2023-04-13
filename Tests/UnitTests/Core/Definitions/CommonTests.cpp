@@ -15,45 +15,46 @@ using namespace Acts;
 
 BOOST_AUTO_TEST_SUITE(CommonDefinitions)
 
-BOOST_AUTO_TEST_CASE(NavigationDirectionTests) {
-  BOOST_CHECK(indexFromDirection(NavigationDirection::Backward) == 0u);
-  BOOST_CHECK(indexFromDirection(NavigationDirection::Forward) == 1u);
+BOOST_AUTO_TEST_CASE(DirectionTests) {
+  BOOST_CHECK(Direction::Negative == Direction::Backward);
+  BOOST_CHECK(Direction::Positive == Direction::Forward);
 
-  BOOST_CHECK(directionFromStepSize(-1.) == NavigationDirection::Backward);
-  BOOST_CHECK(directionFromStepSize(1.) == NavigationDirection::Forward);
+  BOOST_CHECK(indexFromDirection(Direction::Backward) == 0u);
+  BOOST_CHECK(indexFromDirection(Direction::Forward) == 1u);
 
-  BOOST_CHECK(invertDirection(NavigationDirection::Backward) ==
-              NavigationDirection::Forward);
-  BOOST_CHECK(invertDirection(NavigationDirection::Forward) ==
-              NavigationDirection::Backward);
+  BOOST_CHECK(directionFromScalar(-1.) == Direction::Backward);
+  BOOST_CHECK(directionFromScalar(1.) == Direction::Forward);
 
-  NavigationDirection nFwd = NavigationDirection::Forward;
-  NavigationDirection nBwd = NavigationDirection::Backward;
+  BOOST_CHECK(invertDirection(Direction::Backward) == Direction::Forward);
+  BOOST_CHECK(invertDirection(Direction::Forward) == Direction::Backward);
 
-  BOOST_CHECK(2. * nFwd == 2.);
-  BOOST_CHECK(7 * nFwd == 7);
-  BOOST_CHECK(Vector3(1., 1., 1.) * nFwd == Vector3(1., 1., 1.));
+  Direction fwd = Direction::Forward;
+  Direction bwd = Direction::Backward;
 
-  BOOST_CHECK(2. * nBwd == -2.);
-  BOOST_CHECK(7 * nBwd == -7);
-  BOOST_CHECK(Vector3(1., 1., 1.) * nBwd == Vector3(-1., -1., -1.));
+  BOOST_CHECK(2. * fwd == 2.);
+  BOOST_CHECK(7 * fwd == 7);
+  BOOST_CHECK(Vector3(1., 1., 1.) * fwd == Vector3(1., 1., 1.));
+
+  BOOST_CHECK(2. * bwd == -2.);
+  BOOST_CHECK(7 * bwd == -7);
+  BOOST_CHECK(Vector3(1., 1., 1.) * bwd == Vector3(-1., -1., -1.));
 
   double a = 7.;
-  a *= nFwd;
+  a *= fwd;
   BOOST_CHECK(a == 7.);
-  a *= nBwd;
+  a *= bwd;
   BOOST_CHECK(a == -7.);
 
   float b = 8.;
-  b *= nFwd;
+  b *= fwd;
   BOOST_CHECK(b == 8.);
-  b *= nBwd;
+  b *= bwd;
   BOOST_CHECK(b == -8.);
 
   Vector3 c(9., 9., 9.);
-  c *= nFwd;
+  c *= fwd;
   BOOST_CHECK(c == Vector3(9., 9., 9.));
-  c *= nBwd;
+  c *= bwd;
   BOOST_CHECK(c == Vector3(-9., -9., -9.));
 }
 

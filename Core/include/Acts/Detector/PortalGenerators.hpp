@@ -51,7 +51,7 @@ inline static std::vector<std::shared_ptr<Portal>> generatePortals(
     singleLink.connect<&SingleDetectorVolumeImpl::update>(
         std::move(singleLinkImpl));
     // Update the volume link and the store
-    NavigationDirection insideDir = oSurface.second;
+    Direction insideDir = oSurface.second;
     portal->assignDetectorVolumeUpdator(insideDir, std::move(singleLink),
                                         {dVolume});
     // Portal is prepared

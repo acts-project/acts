@@ -30,18 +30,18 @@ void Acts::Experimental::Portal::assignGeometryId(
 
 void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
   // Determine this directioon
-  NavigationDirection tDir =
-      (not m_volumeUpdators[indexFromDirection(NavigationDirection::Backward)]
+  Direction tDir =
+      (not m_volumeUpdators[indexFromDirection(Direction::Backward)]
                .connected())
-          ? NavigationDirection::Forward
-          : NavigationDirection::Backward;
+          ? Direction::Forward
+          : Direction::Backward;
 
   if (not m_volumeUpdators[indexFromDirection(tDir)].connected()) {
     throw std::invalid_argument(
         "Portal: trying to fuse portal (keep) with no links.");
   }
   // And now check other direction
-  NavigationDirection oDir = invertDirection(tDir);
+  Direction oDir = invertDirection(tDir);
   if (not other->m_volumeUpdators[indexFromDirection(oDir)].connected()) {
     throw std::runtime_error(
         "Portal: trying to fuse portal (waste) with no links.");
@@ -55,9 +55,9 @@ void Acts::Experimental::Portal::fuse(std::shared_ptr<Portal>& other) {
 }
 
 void Acts::Experimental::Portal::assignDetectorVolumeUpdator(
-    NavigationDirection nDir, DetectorVolumeUpdator&& dVolumeUpdator,
+    Direction dir, DetectorVolumeUpdator&& dVolumeUpdator,
     const std::vector<std::shared_ptr<DetectorVolume>>& attachedVolumes) {
-  auto idx = indexFromDirection(nDir);
+  auto idx = indexFromDirection(dir);
   m_volumeUpdators[idx] = std::move(dVolumeUpdator);
   m_attachedVolumes[idx] = attachedVolumes;
 }
@@ -83,8 +83,8 @@ void Acts::Experimental::Portal::updateDetectorVolume(
   const auto& position = nState.position;
   const auto& direction = nState.direction;
   const Vector3 normal = surface().normal(gctx, position);
-  NavigationDirection nDir = directionFromStepSize(normal.dot(direction));
-  const auto& vUpdator = m_volumeUpdators[indexFromDirection(nDir)];
+  Direction dir = directionFromScalar(normal.dot(direction));
+  const auto& vUpdator = m_volumeUpdators[indexFromDirection(dir)];
   if (vUpdator.connected()) {
     vUpdator(gctx, nState);
   } else {

@@ -42,7 +42,7 @@ std::optional<std::tuple<Acts::BoundVector, Acts::BoundSymMatrix>>
 Acts::detail::CorrectedFreeToBoundTransformer::operator()(
     const Acts::FreeVector& freeParams,
     const Acts::FreeSymMatrix& freeCovariance, const Acts::Surface& surface,
-    const Acts::GeometryContext& geoContext, NavigationDirection navDir,
+    const Acts::GeometryContext& geoContext, Direction navDir,
     const Logger& logger) const {
   // Get the incidence angle
   Vector3 dir = freeParams.segment<3>(eFreeDir0);

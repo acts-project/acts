@@ -24,7 +24,7 @@ namespace Acts {
 /// @brief TargetOptions struct for geometry interface
 struct TargetOptions {
   /// Navigation direction
-  NavigationDirection navDir = NavigationDirection::Forward;
+  Direction navDir = Direction::Forward;
 
   /// Target Boundary check directive - always false here
   BoundaryCheck boundaryCheck = false;
@@ -36,7 +36,7 @@ struct TargetOptions {
   double pathLimit = std::numeric_limits<double>::max();
 
   /// create target options
-  TargetOptions(NavigationDirection ndir) : navDir(ndir) {}
+  TargetOptions(Direction ndir) : navDir(ndir) {}
 };
 
 /// This is the condition that the pathLimit has been reached

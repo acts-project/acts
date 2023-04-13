@@ -226,7 +226,7 @@ struct FitterTester {
     options.referenceSurface = &start.referenceSurface();
     // this is the default option. set anyways for consistency
     options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::Forward;
+        Acts::Direction::Forward;
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};
@@ -286,7 +286,7 @@ struct FitterTester {
 
     options.referenceSurface = &startOuter.referenceSurface();
     options.propagatorPlainOptions.direction =
-        Acts::NavigationDirection::Backward;
+        Acts::Direction::Backward;
 
     Acts::TrackContainer tracks{Acts::VectorTrackContainer{},
                                 Acts::VectorMultiTrajectory{}};

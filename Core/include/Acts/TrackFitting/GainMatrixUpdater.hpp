@@ -49,7 +49,7 @@ class GainMatrixUpdater {
   Result<void> operator()(
       const GeometryContext& gctx,
       typename MultiTrajectory<traj_t>::TrackStateProxy trackState,
-      NavigationDirection direction = NavigationDirection::Forward,
+      Direction direction = Direction::Forward,
       const Logger& logger = getDummyLogger()) const {
     (void)gctx;
     ACTS_VERBOSE("Invoked GainMatrixUpdater");
@@ -103,7 +103,7 @@ class GainMatrixUpdater {
 
  private:
   std::tuple<double, std::error_code> visitMeasurement(
-      InternalTrackState trackState, NavigationDirection direction,
+      InternalTrackState trackState, Direction direction,
       const Logger& logger) const;
 };
 

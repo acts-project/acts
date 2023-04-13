@@ -10,24 +10,25 @@
 
 #include <ostream>
 
-namespace Acts {
-
-std::ostream& operator<<(std::ostream& os, NavigationDirection navDir) {
-  switch (navDir) {
-    case NavigationDirection::Forward:
-      os << "forward";
-      break;
-    case NavigationDirection::Backward:
-      os << "backward";
-      break;
+std::string Acts::toString(Direction dir) {
+  switch (dir) {
+    case Direction::Forward:
+      return "forward";
+    case Direction::Backward:
+      return "backward";
     default:
       assert(false && "Invalid direction (shouldn't happen)");
       std::abort();
   }
+}
+
+std::ostream& Acts::operator<<(std::ostream& os, Direction dir) {
+  os << toString(dir);
   return os;
 }
 
-std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate) {
+std::ostream& Acts::operator<<(std::ostream& os,
+                               MaterialUpdateStage matUpdate) {
   switch (matUpdate) {
     case MaterialUpdateStage::PreUpdate:
       os << "PreUpdate (-1)";
@@ -44,5 +45,3 @@ std::ostream& operator<<(std::ostream& os, MaterialUpdateStage matUpdate) {
   }
   return os;
 }
-
-}  // namespace Acts

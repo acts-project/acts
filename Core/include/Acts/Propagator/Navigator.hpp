@@ -37,7 +37,7 @@ namespace Acts {
 template <typename object_t>
 struct NavigationOptions {
   /// The navigation direction
-  NavigationDirection navDir = NavigationDirection::Forward;
+  Direction navDir = Direction::Forward;
 
   /// The boundary check directive
   BoundaryCheck boundaryCheck = true;
@@ -80,9 +80,9 @@ struct NavigationOptions {
   /// @param resolvep Boolean whether to resolve passives
   /// @param sobject Start object to check against
   /// @param eobject End object to check against
-  NavigationOptions(NavigationDirection ndir, BoundaryCheck bcheck,
-                    bool resolves = true, bool resolvem = true,
-                    bool resolvep = false, const object_t* sobject = nullptr,
+  NavigationOptions(Direction ndir, BoundaryCheck bcheck, bool resolves = true,
+                    bool resolvem = true, bool resolvep = false,
+                    const object_t* sobject = nullptr,
                     const object_t* eobject = nullptr)
       : navDir(ndir),
         boundaryCheck(std::move(bcheck)),
@@ -253,9 +253,8 @@ class Navigator {
   /// @param ssurface is the new starting surface
   /// @param tsurface is the target surface
   void resetState(State& state, const GeometryContext& geoContext,
-                  const Vector3& pos, const Vector3& dir,
-                  NavigationDirection navDir, const Surface* ssurface,
-                  const Surface* tsurface) const {
+                  const Vector3& pos, const Vector3& dir, Direction navDir,
+                  const Surface* ssurface, const Surface* tsurface) const {
     // Reset everything first
     state = State();
 
@@ -815,7 +814,7 @@ class Navigator {
           // ~ non-zero field
           double ir = (dir.cross(B).norm()) * q / mom;
           double s;
-          if (state.stepping.navDir == NavigationDirection::Forward) {
+          if (state.stepping.navDir == Direction::Forward) {
             s = state.stepping.stepSize.max();
           } else {
             s = state.stepping.stepSize.min();

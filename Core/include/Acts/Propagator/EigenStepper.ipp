@@ -19,9 +19,9 @@ template <typename charge_t>
 auto Acts::EigenStepper<E, A>::makeState(
     std::reference_wrapper<const GeometryContext> gctx,
     std::reference_wrapper<const MagneticFieldContext> mctx,
-    const SingleBoundTrackParameters<charge_t>& par, NavigationDirection ndir,
+    const SingleBoundTrackParameters<charge_t>& par, Direction navDir,
     double ssize, double stolerance) const -> State {
-  return State{gctx, m_bField->makeCache(mctx), par, ndir, ssize, stolerance};
+  return State{gctx, m_bField->makeCache(mctx), par, navDir, ssize, stolerance};
 }
 
 template <typename E, typename A>
@@ -29,7 +29,7 @@ void Acts::EigenStepper<E, A>::resetState(State& state,
                                           const BoundVector& boundParams,
                                           const BoundSymMatrix& cov,
                                           const Surface& surface,
-                                          const NavigationDirection navDir,
+                                          const Direction navDir,
                                           const double stepSize) const {
   // Update the stepping state
   update(state,

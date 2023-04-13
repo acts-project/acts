@@ -12,6 +12,7 @@
 
 #include <iosfwd>
 #include <limits>
+#include <string>
 
 namespace Acts {
 
@@ -31,118 +32,129 @@ static constexpr ActsScalar s_onSurfaceTolerance = 1e-4;
 /// validity tested with IntegrationTests/PropagationTest
 static constexpr ActsScalar s_curvilinearProjTolerance = 0.999995;
 
-/// @enum NavigationDirection
-/// The navigation direction is always with
-/// respect to a given momentum or direction
-enum class NavigationDirection : int { Backward = -1, Forward = 1 };
+/// @enum Direction
+/// The direction is always with respect to a given momentum, surface normal or
+/// other general axes
+enum class Direction : int {
+  Backward = -1,
+  Forward = 1,
 
-/// Convert navigation dir to index [0,1] which allows to
-/// store direction dependent objects in std::array<T,2u>
+  Negative = -1,
+  Positive = 1,
+};
+
+/// Convert dir to index [0,1] which allows to store direction dependent objects
+/// in std::array<T,2u>
 ///
-/// @param nDir is the navigation direction at input
+/// @param dir is the direction at input
 ///
 /// returns either 0 or 1
-inline constexpr size_t indexFromDirection(NavigationDirection nDir) {
-  if (nDir == NavigationDirection::Backward) {
+inline constexpr size_t indexFromDirection(Direction dir) {
+  if (dir == Direction::Backward) {
     return 0u;
   }
   return 1u;
 }
 
-/// Convert and ndex [0,1] to a navigation direction
-/// for sorting  in std::array<T,2u>
+/// Convert and ndex [0,1] to a direction for sorting  in std::array<T,2u>
 ///
-/// @param index is the navigation direction at input
+/// @param index is the direction at input
 ///
-/// returns either 0 or 1
-inline constexpr NavigationDirection directionFromIndex(size_t index) {
+/// @return either 0 or 1
+inline constexpr Direction directionFromIndex(size_t index) {
   if (index == 0u) {
-    return NavigationDirection::Backward;
+    return Direction::Backward;
   }
-  return NavigationDirection::Forward;
+  return Direction::Forward;
 }
 
-/// This turns a signed value into a navigation direction
+/// This turns a signed value into a direction
 ///
 /// @param value is the signed value
 ///
-/// @return a navigation direciton enum
-inline constexpr NavigationDirection directionFromStepSize(ActsScalar value) {
-  assert(value != 0);
-  return value > 0 ? NavigationDirection::Forward
-                   : NavigationDirection::Backward;
+/// @return a direciton enum
+inline constexpr Direction directionFromScalar(ActsScalar scalar) {
+  assert(scalar != 0);
+  return scalar > 0 ? Direction::Positive : Direction::Negative;
 }
 
-/// Invert a navigation direction enum
+/// This turns a direction into a signed value
 ///
-/// @param nDir is the navigation direction at input
+/// @param value is the direction
 ///
-/// return an opposite navigation direction
-inline constexpr NavigationDirection invertDirection(NavigationDirection nDir) {
-  return (nDir == NavigationDirection::Forward) ? NavigationDirection::Backward
-                                                : NavigationDirection::Forward;
+/// @return a signed value
+inline constexpr int scalarFromDirection(Direction dir) {
+  return static_cast<std::underlying_type_t<Direction>>(dir);
 }
 
-std::ostream& operator<<(std::ostream& os, NavigationDirection navDir);
-
-// NavigationDirection * T
-
-inline constexpr auto operator*(NavigationDirection dir, int value) {
-  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
+/// Invert a direction enum
+///
+/// @param dir is the direction at input
+///
+/// @return an opposite direction
+inline constexpr Direction invertDirection(Direction dir) {
+  return (dir == Direction::Forward) ? Direction::Backward : Direction::Forward;
 }
 
-inline constexpr auto operator*(NavigationDirection dir, float value) {
-  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
+std::string toString(Direction dir);
+
+std::ostream& operator<<(std::ostream& os, Direction navDir);
+
+// Direction * T
+
+inline constexpr auto operator*(Direction dir, int value) {
+  return scalarFromDirection(dir) * value;
 }
 
-inline constexpr auto operator*(NavigationDirection dir, double value) {
-  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
+inline constexpr auto operator*(Direction dir, float value) {
+  return scalarFromDirection(dir) * value;
 }
 
-inline Acts::Vector3 operator*(NavigationDirection dir,
-                               const Acts::Vector3& value) {
-  return static_cast<std::underlying_type_t<NavigationDirection>>(dir) * value;
+inline constexpr auto operator*(Direction dir, double value) {
+  return scalarFromDirection(dir) * value;
 }
 
-// T * NavigationDirection
-
-inline constexpr auto operator*(int value, NavigationDirection dir) {
-  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+inline Acts::Vector3 operator*(Direction dir, const Acts::Vector3& value) {
+  return scalarFromDirection(dir) * value;
 }
 
-inline constexpr auto operator*(float value, NavigationDirection dir) {
-  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+// T * Direction
+
+inline constexpr auto operator*(int value, Direction dir) {
+  return value * scalarFromDirection(dir);
 }
 
-inline constexpr auto operator*(double value, NavigationDirection dir) {
-  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+inline constexpr auto operator*(float value, Direction dir) {
+  return value * scalarFromDirection(dir);
 }
 
-inline Acts::Vector3 operator*(const Acts::Vector3& value,
-                               NavigationDirection dir) {
-  return value * static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+inline constexpr auto operator*(double value, Direction dir) {
+  return value * scalarFromDirection(dir);
 }
 
-// T *= NavigationDirection
+inline Acts::Vector3 operator*(const Acts::Vector3& value, Direction dir) {
+  return value * scalarFromDirection(dir);
+}
 
-inline constexpr auto operator*=(int& value, NavigationDirection dir) {
-  value *= static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+// T *= Direction
+
+inline constexpr auto operator*=(int& value, Direction dir) {
+  value *= scalarFromDirection(dir);
   return value;
 }
 
-inline constexpr auto operator*=(float& value, NavigationDirection dir) {
-  value *= static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+inline constexpr auto operator*=(float& value, Direction dir) {
+  value *= scalarFromDirection(dir);
   return value;
 }
 
-inline constexpr auto operator*=(double& value, NavigationDirection dir) {
-  value *= static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+inline constexpr auto operator*=(double& value, Direction dir) {
+  value *= scalarFromDirection(dir);
   return value;
 }
 
-inline Acts::Vector3& operator*=(Acts::Vector3& value,
-                                 NavigationDirection dir) {
-  value *= static_cast<std::underlying_type_t<NavigationDirection>>(dir);
+inline Acts::Vector3& operator*=(Acts::Vector3& value, Direction dir) {
+  value *= scalarFromDirection(dir);
   return value;
 }
 

@@ -24,9 +24,8 @@ Acts::Result<Acts::LinearizedTrack> Acts::
 
   // Create propagator options
   propagator_options_t pOptions(gctx, mctx);
-  pOptions.direction = intersection.intersection.pathLength >= 0
-                           ? NavigationDirection::Forward
-                           : NavigationDirection::Backward;
+  pOptions.direction =
+      directionFromScalar(intersection.intersection.pathLength);
 
   // Do the propagation to linPointPos
   auto result = m_cfg.propagator->propagate(params, *perigeeSurface, pOptions);
