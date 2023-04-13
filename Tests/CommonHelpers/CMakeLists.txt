@@ -11,9 +11,6 @@ target_compile_definitions(
   PRIVATE
     "ACTS_TEST_DATA_DIR=\"${acts_test_data_dir}\""
     BOOST_FILESYSTEM_NO_DEPRECATED)
-target_compile_features(
-  ActsTestsCommonHelpers
-  PUBLIC cxx_std_17)
 target_include_directories(
   ActsTestsCommonHelpers
   PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>)

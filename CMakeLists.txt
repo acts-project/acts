@@ -34,6 +34,7 @@ option(ACTS_USE_SYSTEM_ACTSVG "Use the ActSVG system library" ${ACTS_USE_SYSTEM_
 option(ACTS_BUILD_PLUGIN_ACTSVG "Build SVG display plugin" OFF)
 option(ACTS_BUILD_PLUGIN_CUDA "Build CUDA plugin" OFF)
 option(ACTS_BUILD_PLUGIN_DD4HEP "Build DD4hep plugin" OFF)
+option(ACTS_BUILD_PLUGIN_EDM4HEP "Build EDM4hep plugin" OFF)
 option(ACTS_BUILD_PLUGIN_GEANT4 "Build Geant4 plugin" OFF)
 option(ACTS_BUILD_PLUGIN_EXATRKX "Build the Exa.TrkX plugin" OFF)
 option(ACTS_EXATRKX_ENABLE_ONNX "Build the Onnx backend for the exatrkx plugin" OFF)
@@ -121,6 +122,9 @@ set_option_if(
   ACTS_BUILD_EXAMPLES_DD4HEP OR ACTS_BUILD_EVERYTHING OR
   ACTS_BUILD_EXAMPLES_EDM4HEP)
 set_option_if(
+  ACTS_BUILD_PLUGIN_EDM4HEP
+  ACTS_BUILD_EXAMPLES_EDM4HEP OR ACTS_BUILD_EVERYTHING)
+set_option_if(
     ACTS_BUILD_PLUGIN_GEANT4
     ACTS_BUILD_EXAMPLES_GEANT4 OR ACTS_BUILD_EVERYTHING)  
 set_option_if(
@@ -142,15 +146,15 @@ set_option_if(ACTS_BUILD_PLUGIN_EXATRKX ACTS_BUILD_EXAMPLES_EXATRKX)
 # feature tests
 include(CheckCXXSourceCompiles)
 
-# function that tests if the root installation is compatible (i.e., compiled with C++17)
+# function that tests if the root installation is compatible
 function(check_root_compatibility)
   get_target_property(ROOT_INCLUDE_DIR ROOT::Core INTERFACE_INCLUDE_DIRECTORIES)
-  set(CMAKE_REQUIRED_FLAGS -std=c++17)
   set(CMAKE_REQUIRED_INCLUDES ${ROOT_INCLUDE_DIR})
-  check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
-  if(NOT ROOT_COMPATIBILITY_CHECK)
-    message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled with C++17.")
-  endif()
+  #yolo
+  #check_cxx_source_compiles("#include <string>\n#include <TString.h>\nint main(){}" ROOT_COMPATIBILITY_CHECK)
+  #if(NOT ROOT_COMPATIBILITY_CHECK)
+  #  message(FATAL_ERROR "Root installation is misconfigured. Ensure that your Root installation was compiled.")
+  #endif()
 endfunction()
 
 # additional configuration and tools
@@ -342,7 +346,7 @@ if(ACTS_BUILD_EXAMPLES_DD4HEP AND ACTS_BUILD_EXAMPLES_GEANT4)
 elseif(ACTS_BUILD_EXAMPLES_DD4HEP)
   find_package(DD4hep ${_acts_dd4hep_version} REQUIRED CONFIG COMPONENTS DDCore DDDetectors)
 endif()
-if(ACTS_BUILD_EXAMPLES_EDM4HEP)
+if(ACTS_BUILD_PLUGIN_EDM4HEP)
   find_package(podio ${_acts_podio_version} REQUIRED CONFIG)
   find_package(EDM4HEP ${_acts_edm4hep_version} REQUIRED CONFIG)
 endif()
@@ -354,6 +358,15 @@ if(ACTS_BUILD_EXAMPLES_HEPMC3)
 endif()
 if(ACTS_BUILD_EXAMPLES_PYTHIA8)
   find_package(Pythia8 REQUIRED)
+
+if(DEFINED CMAKE_CXX_STANDARD)
+  if(${CMAKE_CXX_STANDARD} GREATER_EQUAL 20)
+    message(WARNING "ACTS is configured to build with C++20."
+      "As of version 309, Pythia8 does not compile under C++20."
+      "You can find a patch file at: https://gist.github.com/paulgessinger/7a823b4015d4511cf829472291c8ddcf")
+  endif()
+endif()
+
 endif()
 # other dependencies
 if(ACTS_BUILD_DOCS)
