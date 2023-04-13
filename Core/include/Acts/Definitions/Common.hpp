@@ -98,7 +98,7 @@ inline constexpr Direction invertDirection(Direction dir) {
 
 std::string toString(Direction dir);
 
-std::ostream& operator<<(std::ostream& os, Direction navDir);
+std::ostream& operator<<(std::ostream& os, Direction dir);
 
 // Direction * T
 
