@@ -10,7 +10,7 @@ from truth_tracking_kalman import runTruthTrackingKalman
 u = acts.UnitConstants
 
 srcdir = Path(__file__).resolve().parent.parent.parent.parent
-outputDir=Path.cwd()
+outputDir = Path.cwd()
 
 # detector, trackingGeometry, _ = getOpenDataDetector()
 detector, trackingGeometry, decorators = acts.examples.GenericDetector.create()
@@ -23,7 +23,7 @@ s = runTruthTrackingKalman(
     / "Examples/Algorithms/Digitization/share/default-smearing-config-generic.json",
     # "thirdparty/OpenDataDetector/config/odd-digi-smearing-config.json",
     outputDir=outputDir,
-)    
+)
 
 gsfOptions = {
     "betheHeitlerApprox": acts.examples.AtlasBetheHeitlerApprox.makeDefault(),
@@ -40,7 +40,7 @@ s.addAlgorithm(
         acts.logging.INFO,
         inputTracks="kfTracks",
         outputTracks="gsfTracks",
-        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions)
+        fit=acts.examples.makeGsfFitterFunction(trackingGeometry, field, **gsfOptions),
     )
 )
 

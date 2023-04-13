@@ -30,4 +30,5 @@ void RefittingCalibrator::calibrate(const Acts::GeometryContext& /*gctx*/,
 
   trackState.setProjectorBitset(sl.state.projectorBitset());
 }
-};  // namespace ActsExamples
+
+}  // namespace ActsExamples
