@@ -70,11 +70,11 @@ BOOST_AUTO_TEST_CASE(PortalTest) {
   auto volumeA = DetectorVolumeFactory::construct(
       pGenerator, tContext, "dummyA", dTransform,
       std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
-      tryAllPortalsAndSurfaces(), tryAllPortalsAndSurfaces());
+      tryAllPortalsAndSurfaces());
   auto volumeB = DetectorVolumeFactory::construct(
       pGenerator, tContext, "dummyB", dTransform,
       std::make_unique<Acts::CuboidVolumeBounds>(1, 1, 1),
-      tryAllPortalsAndSurfaces(), tryAllPortalsAndSurfaces());
+      tryAllPortalsAndSurfaces());
 
   // A rectangle bound surface
   auto rectangle = std::make_shared<Acts::RectangleBounds>(10., 100.);

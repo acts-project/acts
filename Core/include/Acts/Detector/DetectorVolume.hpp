@@ -113,7 +113,6 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @param name the volume name
   /// @param transform the transform defining the volume position
   /// @param bounds the volume bounds
-  /// @param detectorVolumeUpdator is a Delegate to find the assocaited volume
   /// @param surfaceCandidateUpdator the navigation state updator for surfaces/portals
   ///
   /// @note throws exception if misconfigured: no bounds
@@ -122,21 +121,26 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   DetectorVolume(
       const GeometryContext& gctx, const std::string& name,
       const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
-      DetectorVolumeUpdator&& detectorVolumeUpdator,
       SurfaceCandidatesUpdator&& surfaceCandidateUpdator) noexcept(false);
 
   /// Factory method for producing memory managed instances of DetectorVolume.
-  /// Will forward all parameters and will attempt to find a suitable
-  /// constructor.
   ///
   /// @note This is called by the @class DetectorVolumeFactory
+  static std::shared_ptr<DetectorVolume> makeShared(
+      const GeometryContext& gctx, const std::string& name,
+      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      const std::vector<std::shared_ptr<Surface>>& surfaces,
+      const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+      DetectorVolumeUpdator&& detectorVolumeUpdator,
+      SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
+
+  /// Factory method for producing memory managed instances of DetectorVolume.
   ///
-  /// @tparam Args the arguments that will be forwarded
-  template <typename... Args>
-  static std::shared_ptr<DetectorVolume> makeShared(Args&&... args) {
-    return std::shared_ptr<DetectorVolume>(
-        new DetectorVolume(std::forward<Args>(args)...));
-  }
+  /// @note This is called by the @class DetectorVolumeFactory
+  static std::shared_ptr<DetectorVolume> makeShared(
+      const GeometryContext& gctx, const std::string& name,
+      const Transform3& transform, std::unique_ptr<VolumeBounds> bounds,
+      SurfaceCandidatesUpdator&& surfaceCandidateUpdator);
 
  public:
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)

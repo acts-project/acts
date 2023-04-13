@@ -40,14 +40,9 @@ class Detector : public std::enable_shared_from_this<Detector> {
 
  public:
   /// Factory for producing memory managed instances of Detector.
-  /// Will forward all parameters and will attempt to find a suitable
-  /// constructor.
-  ///
-  /// @tparam Args the arguments that will be forwarded
-  template <typename... Args>
-  static std::shared_ptr<Detector> makeShared(Args&&... args) {
-    return std::shared_ptr<Detector>(new Detector(std::forward<Args>(args)...));
-  }
+  static std::shared_ptr<Detector> makeShared(
+      const std::string& name, std::shared_ptr<DetectorVolume> rootVolume,
+      DetectorVolumeUpdator&& detectorVolumeUpdator);
 
   /// Retrieve a @c std::shared_ptr for this surface (non-const version)
   ///

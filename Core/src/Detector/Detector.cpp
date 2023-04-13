@@ -61,6 +61,14 @@ Acts::Experimental::Detector::Detector(
   }
 }
 
+std::shared_ptr<Acts::Experimental::Detector>
+Acts::Experimental::Detector::makeShared(
+    const std::string& name, std::shared_ptr<DetectorVolume> rootVolume,
+    DetectorVolumeUpdator&& detectorVolumeUpdator) {
+  return std::shared_ptr<Detector>(new Detector(
+      name, std::move(rootVolume), std::move(detectorVolumeUpdator)));
+}
+
 const std::shared_ptr<Acts::Experimental::DetectorVolume>&
 Acts::Experimental::Detector::rootVolumePtr() {
   return m_rootVolume;
