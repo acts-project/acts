@@ -24,6 +24,7 @@ from acts.examples.odd import getOpenDataDetector
 
 import pytest
 import _pytest.skipping
+import _pytest.outcomes
 
 import acts
 import acts.examples
@@ -56,6 +57,7 @@ except RuntimeError:
 
 if isCI:
 
+    @_pytest.outcomes._with_exception(Skipped)
     def no_skip(*args, **kwargs):
         return
 
