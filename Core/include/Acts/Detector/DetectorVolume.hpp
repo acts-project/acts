@@ -76,7 +76,8 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
     /// Store constructor
     ///
     /// @param objects are the ones copied into the internal store
-    ObjectStore(const std::vector<internal_type>& objects) : internal(objects) {
+    ObjectStore(std::vector<internal_type> objects)
+        : internal(std::move(objects)) {
       external = unpack_shared_const_vector(internal);
     }
 
@@ -186,15 +187,23 @@ class DetectorVolume : public std::enable_shared_from_this<DetectorVolume> {
   /// @return const reference to the volume bounds object
   const VolumeBounds& volumeBounds() const;
 
-  /// Inside/outside method
+  /// Check if a point is inside this volume. Subvolumes will not be checked.
   ///
   /// @param gctx the geometry context
   /// @param position the position for the inside check
-  /// @param excludeInserts steers whether inserted volumes overwrite this
   ///
   /// @return a bool to indicate inside/outside
-  bool inside(const GeometryContext& gctx, const Vector3& position,
-              bool excludeInserts = true) const;
+  bool inside(const GeometryContext& gctx, const Vector3& position) const;
+
+  /// Check if a point is exclusively inside this volume i.e. this point is not
+  /// inside a subvolume.
+  ///
+  /// @param gctx the geometry context
+  /// @param position the position for the inside check
+  ///
+  /// @return a bool to indicate inside/outside
+  bool exclusivelyInside(const GeometryContext& gctx,
+                         const Vector3& position) const;
 
   /// The Extent for this volume
   ///

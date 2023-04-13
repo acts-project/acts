@@ -29,14 +29,13 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// Create a detector from volumes
   ///
   /// @param name the detecor name
-  /// @param volumes the objets contained by this detector
+  /// @param rootVolume the root detector volume
   /// @param detectorVolumeUpdator is a Delegate to find the assocaited volume
   ///
   /// @note will throw an exception if volumes vector is empty
   /// @note will throw an exception if duplicate volume names exist
   /// @note will throw an exception if the delegate is not connected
-  Detector(const std::string& name,
-           const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+  Detector(const std::string& name, std::shared_ptr<DetectorVolume> rootVolume,
            DetectorVolumeUpdator&& detectorVolumeUpdator) noexcept(false);
 
  public:
@@ -72,12 +71,22 @@ class Detector : public std::enable_shared_from_this<Detector> {
   /// @return The shared pointer
   std::shared_ptr<const Detector> getSharedPtr() const;
 
-  /// Non-const access to the volumes
+  /// Non-const access to the root volume
   ///
-  /// @return the volumes shared pointer store
+  /// @return the root volume shared pointer
+  const std::shared_ptr<DetectorVolume>& rootVolumePtr();
+
+  /// Const access to the root volume
+  ///
+  /// @return a vector to const DetectorVolume raw pointers
+  const DetectorVolume* rootVolume() const;
+
+  /// Non-const access to the root volume
+  ///
+  /// @return the root volume shared pointer
   std::vector<std::shared_ptr<DetectorVolume>>& volumePtrs();
 
-  /// Const access to sub volumes
+  /// Const access to the root volume
   ///
   /// @return a vector to const DetectorVolume raw pointers
   const std::vector<const DetectorVolume*>& volumes() const;
@@ -123,6 +132,9 @@ class Detector : public std::enable_shared_from_this<Detector> {
  private:
   /// Name of the detector
   std::string m_name = "Unnamed";
+
+  /// Root volume
+  std::shared_ptr<DetectorVolume> m_rootVolume;
 
   /// Volume store (internal/external)
   DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>> m_volumes;

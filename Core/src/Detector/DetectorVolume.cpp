@@ -150,6 +150,10 @@ const std::string& Acts::Experimental::DetectorVolume::name() const {
 void Acts::Experimental::DetectorVolume::assignDetector(
     const Detector& detector) {
   m_detector = &detector;
+
+  for (auto& v : m_volumes.internal) {
+    v->assignDetector(detector);
+  }
 }
 
 const Acts::Experimental::Detector*
@@ -187,14 +191,21 @@ Acts::Experimental::DetectorVolume::getSharedPtr() const {
 }
 
 bool Acts::Experimental::DetectorVolume::inside(const GeometryContext& gctx,
-                                                const Vector3& position,
-                                                bool excludeInserts) const {
-  Vector3 posInVolFrame((transform(gctx).inverse()) * position);
-  if (not volumeBounds().inside(posInVolFrame)) {
+                                                const Vector3& position) const {
+  Vector3 posInVolFrame(transform(gctx).inverse() * position);
+  return volumeBounds().inside(posInVolFrame);
+}
+
+bool Acts::Experimental::DetectorVolume::exclusivelyInside(
+    const GeometryContext& gctx, const Vector3& position) const {
+  if (!inside(gctx, position)) {
     return false;
   }
-  if (not excludeInserts or m_volumes.external.empty()) {
-    return true;
+  // Check exclusion through subvolume
+  for (const auto& v : volumes()) {
+    if (v->inside(gctx, position)) {
+      return false;
+    }
   }
   return true;
 }

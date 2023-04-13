@@ -17,19 +17,33 @@
 #include "Acts/Utilities/Helpers.hpp"
 
 Acts::Experimental::Detector::Detector(
-    const std::string& name,
-    const std::vector<std::shared_ptr<DetectorVolume>>& volumes,
+    const std::string& name, std::shared_ptr<DetectorVolume> rootVolume,
     DetectorVolumeUpdator&& detectorVolumeUpdator)
-    : m_name(name), m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)) {
-  if (volumes.empty()) {
-    throw std::invalid_argument("Detector: no volumes were given.");
+    : m_name(name),
+      m_rootVolume(std::move(rootVolume)),
+      m_detectorVolumeUpdator(std::move(detectorVolumeUpdator)) {
+  if (not m_rootVolume) {
+    throw std::invalid_argument("Detector: no volume were given.");
   }
   if (not m_detectorVolumeUpdator.connected()) {
     throw std::invalid_argument(
         "Detector: volume finder delegate is not connected.");
   }
-  m_volumes =
-      DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>>(volumes);
+
+  // Fill volumes
+  auto collectVolumes = [](DetectorVolume& root) {
+    std::vector<std::shared_ptr<DetectorVolume>> volumes;
+    auto recurse = [&volumes](DetectorVolume& volume, auto& callback) -> void {
+      for (const auto& v : volume.volumePtrs()) {
+        volumes.push_back(v);
+        callback(*v, callback);
+      }
+    };
+    recurse(root, recurse);
+    return volumes;
+  };
+  m_volumes = DetectorVolume::ObjectStore<std::shared_ptr<DetectorVolume>>(
+      collectVolumes(*m_rootVolume));
 
   // Check for unique names and fill the volume name / index map
   for (auto [iv, v] : enumerate(m_volumes.internal)) {
@@ -45,6 +59,16 @@ Acts::Experimental::Detector::Detector(
     }
     m_volumeNameIndex[vName] = iv;
   }
+}
+
+const std::shared_ptr<Acts::Experimental::DetectorVolume>&
+Acts::Experimental::Detector::rootVolumePtr() {
+  return m_rootVolume;
+}
+
+const Acts::Experimental::DetectorVolume*
+Acts::Experimental::Detector::rootVolume() const {
+  return m_rootVolume.get();
 }
 
 std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>>&
