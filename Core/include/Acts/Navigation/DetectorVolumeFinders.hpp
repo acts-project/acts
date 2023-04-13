@@ -51,7 +51,7 @@ struct TrialAndErrorVolumeFinder : public INavigationDelegate {
                      NavigationState& nState) const {
     if (nState.currentVolume == nullptr) {
       throw std::runtime_error(
-          "DetectorVolumeFinders: no detector set to navigation state.");
+          "DetectorVolumeFinders: no volume set to navigation state.");
     }
 
     const auto& volumes = nState.currentVolume->volumes();

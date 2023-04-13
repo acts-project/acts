@@ -65,7 +65,8 @@ std::vector<std::shared_ptr<Acts::Experimental::DetectorVolume>> volumes012 = {
     cyl0, cyl1, cyl2};
 
 auto root012 = Acts::Experimental::DetectorVolumeFactory::construct(
-    portalGenerator, tContext, "root", nominal, std::move(rootBounds),
+    portalGenerator, tContext, "root", nominal, std::move(rootBounds), {},
+    volumes012, Acts::Experimental::tryAllSubVolumes(),
     Acts::Experimental::tryAllPortals());
 
 auto det012 = Acts::Experimental::Detector::makeShared(
@@ -76,21 +77,25 @@ BOOST_AUTO_TEST_SUITE(Experimental)
 // Test finding detectors beu trial and error
 BOOST_AUTO_TEST_CASE(TrialAndErrorDetectorVolumeFinder) {
   nState.currentDetector = det012.get();
+  nState.currentVolume = root012.get();
   Acts::Experimental::TrialAndErrorVolumeFinder tae;
   // Cylinder 0
   nState.position = Acts::Vector3(5., 0., 0.);
+  nState.currentVolume = root012.get();
   tae.update(tContext, nState);
   BOOST_CHECK(nState.currentVolume == cyl0.get());
   // Cylinder 1
   nState.position = Acts::Vector3(50., 0., 0.);
+  nState.currentVolume = root012.get();
   tae.update(tContext, nState);
   BOOST_CHECK(nState.currentVolume == cyl1.get());
   // Cylinder 2
   nState.position = Acts::Vector3(150., 0., 0.);
+  nState.currentVolume = root012.get();
   tae.update(tContext, nState);
   BOOST_CHECK(nState.currentVolume == cyl2.get());
 
-  nState.currentDetector = nullptr;
+  nState.currentVolume = nullptr;
   BOOST_CHECK_THROW(tae.update(tContext, nState), std::runtime_error);
 }
 
