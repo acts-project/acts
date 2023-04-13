@@ -50,6 +50,7 @@ class MultiLayerSurfacesUpdaterImpl : public INavigationDelegate {
   MultiLayerSurfacesUpdaterImpl() = delete;
 
   void update(const GeometryContext& gctx, NavigationState& nState) const {
+
     auto step = std::sqrt(std::pow(grid.binWidth()[0], 2) +
                           std::pow(grid.binWidth()[1], 2));
     auto path = pgenerator(nState.position, nState.direction, step,
@@ -125,10 +126,11 @@ struct PathGridSurfacesGenerator {
                                   std::size_t numberOfSteps) const {
     std::vector<Vector3> pathCoordinates = {};
     pathCoordinates.reserve(numberOfSteps);
-
+    
     auto tposition = std::move(startPosition);
     auto stepSizeY = stepSize * sin(Acts::VectorHelpers::phi(direction));
     auto stepSizeX = stepSize * cos(Acts::VectorHelpers::phi(direction));
+
 
     for (std::size_t i = 0; i < numberOfSteps; i++) {
       pathCoordinates.push_back(tposition);
